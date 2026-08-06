@@ -26,10 +26,11 @@ parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
-  - ../active/active_plan_inventory_dashboard_2026_07_24.md
+  - ../active/ag_closeout_audit_rollout_2026_07_25.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
-  - ../active/docs_retrieval_layer_reconcile_2026_07_23.md
-  - ../archive/2026_07/l0_doc_index_generator_2026_06_24.md
+  - ../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
+  - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
+  - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
   - ../active/task_template.md
 last_updated: 2026-07-23
 locked_by: live-defi-rollout
@@ -189,16 +190,16 @@ load-bearing locks:
 This epic captures the design; the work splits into per-workstream child plans (D21). The current design-capture
 appendix's Phased DAG became **W1**.
 
-| WS  | Child plan                                           | Scope                                                                                                                | Serves          | Depends | Priority | Status             |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------- | ------- | -------- | ------------------ |
-| W1  | `dispatch_strict_vm_matching_2026_06_24`             | Strict `assigned_vm==backend` matcher in regen (D1–D6) + immediate `harsh_pc` relief + supersede-audit of priors     | dispatch        | —       | P0       | ✅ created — ready |
-| W2  | `doc_frontmatter_schema_and_validator_2026_06_24`    | Universal-core + per-type schema SSOT + machine validator (`docspec`) + closed-vocab enums grown organically         | RAG foundation  | —       | P0       | ✅ **shipped**     |
-| W3  | `plans_frontmatter_backfill_2026_06_24`              | `PLAN_FORMAT` matrix + `task_template` + backfill ~112 active plans (collision-aware batches)                        | RAG             | W2      | P1       | ✅ **shipped**     |
-| W4  | `l0_doc_index_generator_2026_06_24`                  | Consumer-side local gitignored deterministic L0 index + FF-cron trigger + AO/deployment-ui rendered view             | RAG (L0)        | W2      | P1       | ✅ **shipped**¹    |
-| W5  | `doc_frontmatter_qg_gate_2026_06_24`                 | `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST, active-only, archive exempt)                      | governance      | W3      | P1       | ✅ **shipped**²    |
-| W6  | `agent_role_charters_and_operating_model_2026_06_24` | Schema-ify 11 `agents/*.md` (0 FM today) + autonomy-gradient action decls + operating-model arch doc + rule-tagging  | operating model | W2      | P1       | ✅ **shipped**³    |
-| W7  | `codex_condense_and_frontmatter_2026_06_24`          | Condense over-verbose + fix stale/code-drifted codex (+ L4 module-level `code_refs` rider — see 2026-07-04 decision) | RAG (codex)     | W2      | P2       | **aspirational**   |
-| W8  | `retrieval_eval_loop_2026_06_24`                     | Audits-as-gate-staging retrieval-eval loop (an audit; logs what agents retrieved + whether the action was correct)   | eval            | W2, W4  | P2       | deferred (late)    |
+| WS  | Child plan                                           | Scope                                                                                                                | Serves          | Depends | Priority | Status                                                                                                                                                                |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------- | ------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W1  | `dispatch_strict_vm_matching_2026_06_24`             | Strict `assigned_vm==backend` matcher in regen (D1–D6) + immediate `harsh_pc` relief + supersede-audit of priors     | dispatch        | —       | P3       | N/A — superseded (child plan archived `status: superseded`; whole premise dropped by the 2026-06-27 single-VM pivot; corrected 2026-08-06, was: "✅ created — ready") |
+| W2  | `doc_frontmatter_schema_and_validator_2026_06_24`    | Universal-core + per-type schema SSOT + machine validator (`docspec`) + closed-vocab enums grown organically         | RAG foundation  | —       | P0       | ✅ **shipped**                                                                                                                                                        |
+| W3  | `plans_frontmatter_backfill_2026_06_24`              | `PLAN_FORMAT` matrix + `task_template` + backfill ~112 active plans (collision-aware batches)                        | RAG             | W2      | P1       | ✅ **shipped**                                                                                                                                                        |
+| W4  | `l0_doc_index_generator_2026_06_24`                  | Consumer-side local gitignored deterministic L0 index + FF-cron trigger + AO/deployment-ui rendered view             | RAG (L0)        | W2      | P1       | ✅ **shipped**¹                                                                                                                                                       |
+| W5  | `doc_frontmatter_qg_gate_2026_06_24`                 | `check_plan_frontmatter_completeness.py` warn→error (enforce-LAST, active-only, archive exempt)                      | governance      | W3      | P1       | ✅ **shipped**²                                                                                                                                                       |
+| W6  | `agent_role_charters_and_operating_model_2026_06_24` | Schema-ify 11 `agents/*.md` (0 FM today) + autonomy-gradient action decls + operating-model arch doc + rule-tagging  | operating model | W2      | P1       | ✅ **shipped**³                                                                                                                                                       |
+| W7  | `codex_condense_and_frontmatter_2026_06_24`          | Condense over-verbose + fix stale/code-drifted codex (+ L4 module-level `code_refs` rider — see 2026-07-04 decision) | RAG (codex)     | W2      | P2       | **aspirational**                                                                                                                                                      |
+| W8  | `retrieval_eval_loop_2026_06_24`                     | Audits-as-gate-staging retrieval-eval loop (an audit; logs what agents retrieved + whether the action was correct)   | eval            | W2, W4  | P2       | deferred (late)                                                                                                                                                       |
 
 ¹ W4 rendered view (AO/deployment-ui) remains open — P2 in `l0_doc_index_generator_2026_06_24`. ² W5 landed as the
 stronger consolidated blocking gate (pm@d47886909), not the named warn→error flip. ³ W6 rule-tagging portion unverified
@@ -301,11 +302,16 @@ Owned by [`../active/dispatch_strict_vm_matching_2026_06_24.md`](../active/dispa
 The fail-closed `assigned_vm==backend` matcher (D1–D6) + immediate `harsh_pc` relief + the supersede-audit of the two
 prior owners. Ships independently of the rest of the epic.
 
-- [ ] [CODE] P0. `_resolve_plan_vms` returns the plan's OWN `assigned_vm` only (drop `parent_epic` branch); strict is
-      the only mode; `_prune_stale` shares the gate. (W1)
-- [ ] [INFRA] P0. Immediate `harsh_pc` relief — strict mode + restart → the 33 mis-ingested tasks drop. (W1)
-- [ ] [DOCS] P0. Supersede-audit `orchestrator_v07_multi_vm_topology` + `agent_orchestrator_backlog_state_alignment`:
-      migrate overlapping tasks here or complete them; mark done/not-required. (W1)
+- [ ] [CODE] P3. **N/A — SUPERSEDED by the 2026-06-27 single-VM pivot** (child plan archived `status: superseded`;
+      retagged 2026-08-06 by /plan-reconcile ao): `_resolve_plan_vms` returns the plan's OWN `assigned_vm` only (drop
+      `parent_epic` branch); strict is the only mode; `_prune_stale` shares the gate. (W1)
+- [ ] [INFRA] P3. **N/A — SUPERSEDED by the 2026-06-27 single-VM pivot** (child plan archived `status: superseded`;
+      retagged 2026-08-06 by /plan-reconcile ao): Immediate `harsh_pc` relief — strict mode + restart → the 33
+      mis-ingested tasks drop. `harsh_pc` is itself a retired pre-2026-06-27 host id. (W1)
+- [ ] [DOCS] P3. **N/A — SUPERSEDED by the 2026-06-27 single-VM pivot** (child plan archived `status: superseded`;
+      retagged 2026-08-06 by /plan-reconcile ao): Supersede-audit `orchestrator_v07_multi_vm_topology` +
+      `agent_orchestrator_backlog_state_alignment`: migrate overlapping tasks here or complete them; mark
+      done/not-required. (W1)
 
 ### W2 — Doc frontmatter schema + machine validator (RAG foundation)
 
@@ -378,7 +384,7 @@ Everything else (W3–W8) depends on this shape.
 
 ## Assigned active plans
 
-_5 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
+_6 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -387,27 +393,31 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### [`docs_retrieval_layer_reconcile_2026_07_23`](../active/docs_retrieval_layer_reconcile_2026_07_23.md)
+### [`ag_closeout_audit_rollout_2026_07_25`](../active/ag_closeout_audit_rollout_2026_07_25.md)
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Docs retrieval-layer reconcile — AGENTS.md
-doctrine gap + schema/generator parity QG + /docs-reconcile skill
+**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: AG closeout-audit rollout —
+cefi/defi/tradfi/prediction (sports treatment, generalized)
 
-### [`l0_doc_index_generator_2026_06_24`](../archive/2026_07/l0_doc_index_generator_2026_06_24.md) — ARCHIVED 2026-07-27
+### [`data_pipeline_e2e_milestones_gate_2026_07_24`](../active/data_pipeline_e2e_milestones_gate_2026_07_24.md)
 
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: L0 doc-index generator (grep-native map) +
-FF-cron auto-regen
+**status**: active · **estimate**: 9.6 cal AI-days (class: research) **title**: Data-pipeline E2E milestones gate — 14
+cross-AG correctness criteria for the 5 asset-group consolidated closeouts
 
 ## P2 — useful; opportunistic
-
-### [`active_plan_inventory_dashboard_2026_07_24`](../active/active_plan_inventory_dashboard_2026_07_24.md)
-
-**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Active plan inventory + Done-vs-Left
-dashboard
 
 ### [`asset_class_to_asset_group_rename_2026_07_21`](../active/asset_class_to_asset_group_rename_2026_07_21.md)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: AssetClass → AssetGroup rename — domain
 enum only, cross-repo coordinated landing
+
+### [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Complete context_scout plumbing + close a
+frontmatter-schema drift + add a plan-brainstorm skill
+
+### [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md)
+
+**status**: active · **estimate**: 14.4 cal AI-days (class: research) **title**: >-
 
 ### [`task_template`](../active/task_template.md)
 

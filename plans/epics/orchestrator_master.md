@@ -29,7 +29,7 @@ created: 2026-05-21
 name: orchestrator_master
 tier: L5
 priority: P0
-assigned_vm: planning # was: vm-orchestrator — corrected 2026-07-16 (ao_docs_reconciliation F1). vm-orchestrator is a pre-2026-06-27 multi-VM host id retired by the single-VM pivot; valid values are {planning, NA} only. This epic's own body already carried a 2026-07-11 supersede notice saying so ("the assigned_vm: vm-orchestrator frontmatter is SUPERSEDED by the single-VM role-based dispatch architecture") — the field was simply never updated to match its own doc. Matches the agent_operating_framework_master + plan_hygiene_master precedent.
+assigned_vm: NA # corrected 2026-08-06 (operator ruling during /plan-reconcile ao, generalising the 2026-08-02 § 2e ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md); PLAN_FORMAT.md:204 — NA is the expected value on every current epic. (was: planning — corrected 2026-07-16 from vm-orchestrator, ao_docs_reconciliation F1; vm-orchestrator was a pre-2026-06-27 multi-VM host id retired by the single-VM pivot. Matches the agent_operating_framework_master precedent.)
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh]
 codex_ssots:
@@ -38,15 +38,21 @@ codex_ssots:
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
   ]
 related_plans:
+  - ../active/ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
-  - ../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md
-  - ../active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md
   - ../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md
   - ../active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md
+  - ../active/ao_satellite_ao_dispatch_batch3_2026_07_31.md
   - ../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md
   - ../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md
+  - ../active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md
+  - ../active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md
+  - ../active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md
   - ../active/deepseek_claude_blended_provider_routing_2026_07_28.md
+  - ../active/deepseek_flash_ab_routing_test_2026_08_05.md
   - ../active/omniroute_llm_gateway_pilot_design_2026_07_30.md
+  - ../active/omniroute_multi_provider_routing_evaluation_2026_08_03.md
+  - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -188,8 +194,12 @@ Implementation work is owned by the assigned active plans below. Status as of 20
 
 ## Composition with other epics
 
-- **Orchestrates all 18 other epics**: every epic VM in the registry hosts an instance of the agent-orchestrator stack
-  this epic owns. Topology changes (new VM, account roster expansion, planning VM moves) ripple to every other epic.
+- **Orchestrates all 22 other epics** (corrected 2026-08-06, /plan-reconcile ao — was: "18 other epics"; live registry
+  is 23 epics total per `epics/README.md`, 23 − 1 self = 22): the single central orchestrator VM (id `planning`) this
+  epic owns runs the agent-orchestrator stack that dispatches role/skill-based work for every other epic — there is no
+  longer one epic VM per epic (single-VM architecture, 2026-06-27; was: "every epic VM in the registry hosts an instance
+  of the agent-orchestrator stack this epic owns"). Topology changes (slot count, account roster expansion, planning VM
+  moves) ripple to every other epic.
 - **Audit-pool flow**: every audit row in `plans/active/issues/human_led_audit_pool_*.md` flows through the planning VM
   (defined here) → wrapper plans → target epic VM dispatch. See
   [`../../plans/epics/README.md`](../../plans/epics/README.md) for the audit→plan→epic flow.
@@ -259,17 +269,17 @@ this sweep found and each of which is more dangerous than a false done, because 
 
 ### Core AO runtime (the "make AO work properly" scope)
 
-| #   | Issue doc                                                                                                                                     | P   | Code verdict (2026-07-16)                                                                                                                                                                                                                                                                                                                                                                                                                                         | Disposition                                                                         |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------- | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 1   | [`ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07`](../active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md)            | P0  | **PARTIALLY-FIXED.** 3/3 done genuinely in code (RC-1/2/3; one _understates_ its fix — a later `69870f4` added a real queue-side role filter). 3 open **STILL-BROKEN** = R2 (mixed-tier spawn), R3 (monitor over-generalises a gate), R4 (Opus/Sonnet mixing guidance).                                                                                                                                                                                           | → plan (R2/R3/R4)                                                                   |
-| 2   | [`ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`](../active/../archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md)   | P1  | **STILL-OPEN = R1**, the best-specified description of the core defect (carries the live measurement: budget=6 vs claimable=1; **1014 autospawns / 954 worker-deaths → 101 done in 24h**). `rg slot_skip server/autospawn.py` → **0 hits**.                                                                                                                                                                                                                       | → plan (R1 — keystone)                                                              |
-| 3   | [`ao_dispatch_residuals_2026_07_15`](../active/issues/ao_dispatch_residuals_2026_07_15.md)                                                    | P1  | **All of R1–R7 STILL-BROKEN**, R7 narrower than framed (its dangerous half fixed @`4695db6`). Canonical residual list. Missing a `related:` link to `backlog_regen_id_reuse_stale_status_2026_07_15`.                                                                                                                                                                                                                                                             | → plan (canonical spec)                                                             |
-| 4   | [`ao_operator_message_silent_drop_no_reply_ack_2026_07_08`](../active/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md)      | P1  | **PARTIALLY-FIXED — 10/10 done verified in code.** 1 open (tmux nudge single-shot, no retry) genuinely open. **NEW (no doc covers it):** the `SlotMessageRow` task-worker channel still has the identical silent-drop bug; and `needs_operator_count` is computed (`routes/agents.py:226-231`) but **rendered nowhere** — 0 hits in the dashboard `.tsx`, no Slack wiring. A stuck agent is invisible.                                                            | → plan (+ 2 new items)                                                              |
-| 5   | [`dispatcher_role_eligibility_gap_review_slots_2026_07_13`](../active/issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md)      | P2  | **STILL-OPEN = R6.** Repro found: `prompts.py::_compose` unconditionally emits `STEP 0 — POST /api/slots/{id}/heartbeat` whenever `slot_id is not None`, and `ensure_review_agents`→`_do_spawn` **does** pass one for review slots → the review agent is told by its own boot prompt to call the endpoint that dispatches it worker tasks. Contradicts `test_slotless_render_skips_slot_boot_steps`'s comment. **Its own remedy is dangerous — see table above.** | → plan (R6)                                                                         |
-| 6   | [`ao_autospawn_role_blind_dispatch_starvation_2026_07_14`](../archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md)       | —   | **Was FALSELY ARCHIVED** — `resolved` with 2 live bugs and no `superseded_by`. Headline fix (`8a423bb`) IS live; archival was right, only incomplete.                                                                                                                                                                                                                                                                                                             | ✅ **CLOSED 2026-07-16** — todos struck + forwarded to R1/R5; `superseded_by` added |
-| 7   | [`empty_output_category_count_ssot_contradiction_2026_07_03`](../archive/issues/empty_output_category_count_ssot_contradiction_2026_07_03.md) | P2  | **Already fixed 2026-07-12** by `unified-trading-pm@4d42f50c2` (its own recommended option A). The doc's note claiming "NOT auto-applied" was wrong the day it was written.                                                                                                                                                                                                                                                                                       | ✅ **ARCHIVED 2026-07-16** — zero work                                              |
-| 8   | [`ao_recovery_audit_layer1_deleted_2026_07_15`](../active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)                              | P1  | Operator ruled **B (re-home the producer)** 2026-07-16. Consuming half of Layer-1 is live; only the producer is gone.                                                                                                                                                                                                                                                                                                                                             | **DEFERRED TO LAST** (operator)                                                     |
-| 9   | [`ao_docs_reconciliation_2026_07_15`](../archive/2026_08/ao_docs_reconciliation_2026_07_15.md)                                                | P1  | Meta-tracker. Its own tracked `- [ ]` items reached zero (both were stale checkboxes vs. already-shipped commits) — archived 2026-08-04. The X1/F1 prose items it never itself tracked as todos are a separate, still-open gap (this epic's `assigned_vm` + the codex single-VM sweep), not resolved by this archival.                                                                                                                                            | ✅ **ARCHIVED 2026-08-04**                                                          |
+| #   | Issue doc                                                                                                                                     | P   | Code verdict (2026-07-16)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Disposition                                                                         |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 1   | [`ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07`](../active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md)            | P0  | **PARTIALLY-FIXED.** 3/3 done genuinely in code (RC-1/2/3; one _understates_ its fix — a later `69870f4` added a real queue-side role filter). 3 open **STILL-BROKEN** = R2 (mixed-tier spawn), R3 (monitor over-generalises a gate), R4 (Opus/Sonnet mixing guidance).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | → plan (R2/R3/R4)                                                                   |
+| 2   | [`ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`](../active/../archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md)   | P1  | **STILL-OPEN = R1**, the best-specified description of the core defect (carries the live measurement: budget=6 vs claimable=1; **1014 autospawns / 954 worker-deaths → 101 done in 24h**). `rg slot_skip server/autospawn.py` → **0 hits**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | → plan (R1 — keystone)                                                              |
+| 3   | [`ao_dispatch_residuals_2026_07_15`](../active/issues/ao_dispatch_residuals_2026_07_15.md)                                                    | P1  | **All of R1–R7 STILL-BROKEN**, R7 narrower than framed (its dangerous half fixed @`4695db6`). Canonical residual list. Missing a `related:` link to `backlog_regen_id_reuse_stale_status_2026_07_15`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | → plan (canonical spec)                                                             |
+| 4   | [`ao_operator_message_silent_drop_no_reply_ack_2026_07_08`](../active/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md)      | P1  | **PARTIALLY-FIXED — 10/10 done verified in code.** 1 open (tmux nudge single-shot, no retry) genuinely open. **NEW (no doc covers it):** the `SlotMessageRow` task-worker channel still has the identical silent-drop bug; and `needs_operator_count` is computed (`routes/agents.py:226-231`) but **rendered nowhere** — 0 hits in the dashboard `.tsx`, no Slack wiring. A stuck agent is invisible.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | → plan (+ 2 new items)                                                              |
+| 5   | [`dispatcher_role_eligibility_gap_review_slots_2026_07_13`](../active/issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md)      | P2  | **STILL-OPEN = R6.** Repro found: `prompts.py::_compose` unconditionally emits `STEP 0 — POST /api/slots/{id}/heartbeat` whenever `slot_id is not None`, and `ensure_review_agents`→`_do_spawn` **does** pass one for review slots → the review agent is told by its own boot prompt to call the endpoint that dispatches it worker tasks. Contradicts `test_slotless_render_skips_slot_boot_steps`'s comment. **Its own remedy is dangerous — see table above.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | → plan (R6)                                                                         |
+| 6   | [`ao_autospawn_role_blind_dispatch_starvation_2026_07_14`](../archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md)       | —   | **Was FALSELY ARCHIVED** — `resolved` with 2 live bugs and no `superseded_by`. Headline fix (`8a423bb`) IS live; archival was right, only incomplete.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | ✅ **CLOSED 2026-07-16** — todos struck + forwarded to R1/R5; `superseded_by` added |
+| 7   | [`empty_output_category_count_ssot_contradiction_2026_07_03`](../archive/issues/empty_output_category_count_ssot_contradiction_2026_07_03.md) | P2  | **Already fixed 2026-07-12** by `unified-trading-pm@4d42f50c2` (its own recommended option A). The doc's note claiming "NOT auto-applied" was wrong the day it was written.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | ✅ **ARCHIVED 2026-07-16** — zero work                                              |
+| 8   | [`ao_recovery_audit_layer1_deleted_2026_07_15`](../active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)                              | P1  | Operator ruled **B (re-home the producer)** 2026-07-16. Consuming half of Layer-1 is live; only the producer is gone.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **DEFERRED TO LAST** (operator)                                                     |
+| 9   | [`ao_docs_reconciliation_2026_07_15`](../archive/2026_08/ao_docs_reconciliation_2026_07_15.md)                                                | P1  | Meta-tracker. Its own tracked `- [ ]` items reached zero (both were stale checkboxes vs. already-shipped commits) — archived 2026-08-04. The X1/F1 prose items it never itself tracked as todos are now **CLOSED** (re-verified 2026-08-06, `/plan-reconcile ao`): F1 (this epic's `assigned_vm`) is fixed to `NA` (see frontmatter line 32 + the "Known stale field" section above); X1's 6 named codex targets were independently re-checked and all read **CURRENT** — `canonical-plan-flow.md` (explicit 2026-07-23 correction banner), `agent-orchestrator-overview.md` (documents epic-VM removal + a "Host-offline failover" section correctly marked dormant-on-single-VM), `agent-orchestrator-backlog-state-alignment.md` (flags any `vm-*` value as a STALE multi-VM-era artifact), the worker-liveness doc (no "10/11 VMs" string), `runtime-deployment-topology.md` (`status: current`, no stale multi-VM strings), `agent-orchestrator-autospawn.md` (current skip-budget/spawn-budget docs). No open gap remains. | ✅ **ARCHIVED 2026-08-04**                                                          |
 
 ### AO-adjacent — verified NOT AO-runtime; do not pull into AO remediation
 
@@ -303,17 +313,20 @@ in the very repo the remediation work is about to touch. Recorded as a P1 todo o
 along with 5 unbanked DOWN-ratchets (incl. market-tick-data-service **199→62**, a 137-site improvement never banked —
 unbanked headroom is exactly how `agent-orchestrator` reached 26 unnoticed).
 
-### Known stale field in THIS epic (finding F1, `ao_docs_reconciliation_2026_07_15`)
+### Known stale field in THIS epic — RESOLVED 2026-08-06 (was open under finding F1, `ao_docs_reconciliation_2026_07_15`)
 
-This epic's own frontmatter still declares `assigned_vm: vm-orchestrator` — a pre-2026-06-27 multi-VM host id retired by
-the single-VM pivot. Valid values are `{planning, NA}` only. The sibling `agent_operating_framework_master` already
-carries the corrected `assigned_vm: planning` (+ an inline note recording the same class of fix). Repointing this one is
-tracked as X1/F1 in `ao_docs_reconciliation_2026_07_15` — **not** silently fixed here, so the reconciliation doc stays
-the single audit trail.
+Historical: this section originally flagged that this epic's own frontmatter still declared
+`assigned_vm: vm-orchestrator` — a pre-2026-06-27 multi-VM host id retired by the single-VM pivot — tracked as X1/F1 in
+`ao_docs_reconciliation_2026_07_15` and deliberately **not** silently fixed here, so that doc stayed the single audit
+trail. Two corrections landed since: `vm-orchestrator` → `planning` (2026-07-16, the F1 fix), then `planning` → `NA`
+(2026-08-06, operator ruling during `/plan-reconcile ao`, generalising the 2026-08-02 § 2e ruling on
+`plan_reconcile_parked_operator_decisions_2026_08_02.md` — `NA` is the expected value on every current epic per
+`PLAN_FORMAT.md`; see line 32). No open gap remains — this section is kept only as the historical pointer for
+`ao_docs_reconciliation_2026_07_15`'s audit trail, not as a live to-do.
 
 ## Assigned active plans
 
-_8 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
+_15 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -324,14 +337,9 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P1 — important; post-current-gate
 
-### [`ao_satellite_ao_dispatch_batch1_2026_07_26`](../active/ao_satellite_ao_dispatch_batch1_2026_07_26.md)
+### [`ao_done_categorization_display_and_quickmerge_gate_2026_08_06`](../active/ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md)
 
-**status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: AO satellite AO batch 1 — first dispatch
-batch extracted from the AO tranche's satellite docs
-
-### [`ao_satellite_ao_dispatch_batch1_finalize_2026_07_26`](../active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
-
-**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: AO satellite AO batch 1 — finalize
+**status**: active · **estimate**: 0.6 cal AI-days (class: refactor)
 
 ### [`ao_satellite_ao_dispatch_batch2_2026_07_30`](../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md)
 
@@ -342,9 +350,26 @@ dispatch batch extracted from the AO tranche's satellite docs
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 2 — finalize
 
+### [`ao_satellite_ao_dispatch_batch3_2026_07_31`](../active/ao_satellite_ao_dispatch_batch3_2026_07_31.md)
+
+**status**: active · **estimate**: 1.4 cal AI-days (class: refactor) **title**: AO satellite AO batch 3 — third dispatch
+batch extracted from the AO tranche's satellite docs
+
 ### [`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31`](../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 3 — finalize
+
+### [`ao_satellite_ao_dispatch_batch5_finalize_2026_08_03`](../active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 5 — finalize
+
+### [`ao_satellite_ao_dispatch_batch6_finalize_2026_08_04`](../active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 6 — finalize
+
+### [`ao_satellite_ao_dispatch_batch7_finalize_2026_08_06`](../active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: AO satellite AO batch 7 — finalize
 
 ### [`deepseek_claude_blended_provider_routing_2026_07_28`](../active/deepseek_claude_blended_provider_routing_2026_07_28.md)
 
@@ -353,7 +378,24 @@ for agent-orchestrator
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### [`ao_satellite_ao_dispatch_batch4_finalize_2026_08_01`](../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 4 — finalize
+
+### [`deepseek_flash_ab_routing_test_2026_08_05`](../active/deepseek_flash_ab_routing_test_2026_08_05.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: DeepSeek flash-vs-pro A/B routing test —
+cost, throughput, and completion-quality comparison
+
+### [`omniroute_multi_provider_routing_evaluation_2026_08_03`](../active/omniroute_multi_provider_routing_evaluation_2026_08_03.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: research) **title**: OmniRoute multi-provider LLM routing —
+evaluation, per-provider benchmark matrix, go/no-go
+
+### [`quality_gates_quickmerge_timing_baseline_2026_07_31`](../active/quality_gates_quickmerge_timing_baseline_2026_07_31.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: research) **title**: quality-gates.sh / quickmerge.sh timing
+baseline (PM repo) — single-host vs planning-vm
 
 ## P3 — backlog; revisit quarterly
 
