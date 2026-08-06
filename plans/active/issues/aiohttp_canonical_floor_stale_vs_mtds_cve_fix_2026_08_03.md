@@ -76,8 +76,9 @@ being permanently red for market-tick-data-service. Low urgency, low risk, strai
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Bump `workspace-constraints.toml`'s aiohttp entry to `aiohttp>=3.14.3,<4.0.0` (comment already exists
-      documenting the CVE lineage — just needs the version number and a note on why 3.14.3 not 3.14.1).
+- [x] ✅ [SCRIPT] P2. Bump `workspace-constraints.toml`'s aiohttp entry to `aiohttp>=3.14.3,<4.0.0` (comment already
+      exists documenting the CVE lineage — just needs the version number and a note on why 3.14.3 not 3.14.1). —
+      unified-trading-pm@89c194c67
 - [ ] [SCRIPT] P2. Regenerate `canonical-dependency-manifest.json` via
       `scripts/manifest/generate_canonical_dependency_manifest.py` (reads only from workspace-constraints.toml, safe).
 - [ ] [SCRIPT] P2. Run `scripts/workspace/propagate-canonical-versions.py` (or the equivalent per-repo pyproject.toml
