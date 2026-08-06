@@ -319,7 +319,11 @@ to compact — YES.**
 **Wait-loop cycle 1 2026-08-06 ~21:54 UTC:** bxmxi5mlo completed — 12/12 heartbeats 200, then
 `WAIT-TIMEOUT-1H-NO-ANSWERS`. Q1-Q6 still open (can_continue: true). Per STEP 8 rule, re-armed the wait-loop: cycle 2
 (task bx1qe43th, 12×285s) was externally KILLED ~21:56 (~2 min in, empty output, queue confirmed empty) — re-armed as
-cycle 2b (task bxw5z7w6, 12×285s, ~22:57 expiry). On ANSWERS-ARRIVED apply → checkpoint-commit BY NAME → push →
+cycle 2b (task bxw5z7w6, 12×285s) which was ALSO externally KILLED ~21:58 (~1 min in, empty output). Two identical kills
+~1-2 min in vs cycle 1's full 57 min — post-compaction background-Bash reaping, not operator signals (queue checked
+empty each time). SWITCHED MECHANISM ~22:00: persistent Monitor (`wait_cefi_answers`, poll /api/slots/12/messages +
+heartbeat every 285s, emits ONLY on ANSWERS-ARRIVED) + recurring cron backstop (:17/:47, "check answers, process if any,
+verify monitor alive else re-arm"). On ANSWERS-ARRIVED apply → checkpoint-commit BY NAME → push →
 `POST /api/slots/12/done` (THE LAST ACTION). Never /done with questions open.
 
 **Candidate registry:** all pending candidates are above, per hunter. Writable-doc fixes with CONFIRMED-verification
