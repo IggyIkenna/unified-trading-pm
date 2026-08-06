@@ -141,5 +141,5 @@ skip the worktree step even for "quick" spawns.
 - [coverage_targets.yaml](../scripts/quality_gates/coverage_targets.yaml) — surface→target map
 - [check_coverage_targets.py](../scripts/quality_gates/check_coverage_targets.py) — ratchet
 - [per-tab-worktrees.md](/codex/05-infrastructure/per-tab-worktrees.md) — worktree bootstrap
-- [deployment_and_qg_strategy_implementation_2026_05_13.md](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md)
-  — Phase 7 + 8
+- [deployment_and_qg_strategy_implementation_2026_05_13.md](/plans/archive/deployment_and_qg_strategy_implementation_2026_05_13.md)
+  — Phase 7 + 8 (repointed to archive + converted to leading-slash form 2026-08-06, /plan-reconcile ao)

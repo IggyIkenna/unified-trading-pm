@@ -16,7 +16,7 @@ tags: [e2e, playwright, testing-infra, login, regression-risk]
 related:
   [
     /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
-    tests/e2e/user-management.spec.ts,
+    unified-trading-system-ui/tests/e2e/user-management.spec.ts,
   ]
 created: "2026-07-22"
 author: unknown
@@ -131,3 +131,6 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **fixed 2026-08-06 (/plan-reconcile ao)**: frontmatter `related:` cited the bare path
+  `tests/e2e/user-management.spec.ts`, which does not resolve from this repo (unified-trading-pm). Repointed to
+  `unified-trading-system-ui/tests/e2e/user-management.spec.ts`, matching `context_scope`'s already-correct form.
