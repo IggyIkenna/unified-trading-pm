@@ -108,10 +108,10 @@ concrete, currently-failing symptom; the classification question is the census a
 - Decide the registry fix: add `kalshi_perp` to `SOURCE_PRIORITY[("defi", "perp_funding")]`, or confirm the asset_group
   should be something else for this venue/data_type pair. **Effectively already decided for NEW writes**: the routing
   fix shipped earlier in this batch1 plan (`market-tick-data-service@2aa23de5`) reroutes captures to `asset_group=cefi`
-  instead (option b) — confirmed live above (zero new defi-labeled objects after 2026-07-26). **RULED 2026-08-06
-  (operator, chat): option (b)** — re-emit the 567 already-written, still-GCS-present, still-manifest-absent
-  2026-05-29..2026-07-25 DEFI objects into the CEFI manifest to match the now-shipped routing fix (not backfilled into
-  DEFI as-is, not accepted as a historical gap). See the execution todo below.
+  instead (option b) — confirmed live above (zero new defi-labeled objects after 2026-07-26). **Still open**: whether
+  the 567 already-written, still-GCS-present, still-manifest-absent 2026-05-29..2026-07-25 DEFI objects above should be
+  (a) backfilled into the DEFI manifest as-is, (b) migrated/re-emitted into the CEFI manifest to match the new routing,
+  or (c) left as an accepted historical gap — an operator/design decision, not resolved here.
 - Once decided, ship the fix and re-run affected-day manifest rebuilds to backfill the missing rows.
 
 ## Follow-up (filed 2026-07-28, from the corpus-wide scope audit above)
@@ -131,13 +131,6 @@ concrete, currently-failing symptom; the classification question is the census a
       from 2026-07-18 onward. All markers are 0-row empty parquet files — safe to delete via existing tooling. The
       abrupt stop is unrelated to the gap-day finding (the two phenomena share a trigger date but have different root
       causes). Full analysis in `defi_satellite_ao_dispatch_batch6_2026_07_30.md` Progress Log (2026-08-05, slot-4).
-- [ ] [DATA] P1. **Execute the 2026-08-06 operator ruling (option b, above).** Re-emit all 567 GCS-present/
-      manifest-absent KALSHI_PERP/POLYMARKET_PERP perp_funding (day, symbol) instances (2026-05-29..2026-07-25) into the
-      CEFI manifest under the now-shipped cefi-routing classification — NOT the DEFI manifest, and NOT left as a gap.
-      This is `defi_satellite_ao_dispatch_batch2_2026_07_26.md` todo `-011`'s own blocked prerequisite
-      (`defi_kalshi_perp_perp_funding_recovery_operator_decision`) — once this re-emit ships and is verified
-      (`quality-gates.sh` green, manifest row count == 567 under `asset_group=cefi`), flip that prerequisite so `-011`
-      unparks. Repo: market-tick-data-service (manifest rebuild), unified-trading-pm (unpark).
 
 ## Codex SSOTs
 
