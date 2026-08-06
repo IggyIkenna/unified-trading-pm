@@ -58,7 +58,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile D15 + the codex SSOTs.** Confirm the source plan's Phase 5 closed D15 in
+- [x] ✅ [REVIEW] P2. **Reconcile D15 + the codex SSOTs.** Confirm the source plan's Phase 5 closed D15 in
       `defi_code_codex_drift_2026_05_27.md` (flip to ✅ RESOLVED citing the migration's completion evidence) and that
       `/codex/02-data/defi-data-pipeline.md` / `defi-canonical-naming-ssot.md` no longer document HYPERLIQUID/ASTER as
       dual-classified or `asset_group=defi`-resident, per Phase 5's own todo. **Done when**: the reconciliation is
@@ -72,6 +72,17 @@ context_scope:
       `plans/archive/2026_08/` and `regenerate_active_plan_inventory.py` shows 0 orphaned referrers.
 
 ## Progress Log
+
+- 2026-08-06 (slot 9, task `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02_finalize-001`): **Todo 1
+  DONE — reconciliation complete.** Confirmed source plan all-5-phases-done (all checkboxes `[x] ✅`). Codex SSOT check:
+  (1) `defi-canonical-naming-ssot.md` — CLEAN, has explicit "On-chain perp CLOBs are CeFi, NOT DeFi" section (lines
+  132-145) classifying HYPERLIQUID/ASTER as CeFi with no defi-resident claim. (2) `defi-data-pipeline.md` — Phase 5
+  claimed "already updated" but had 3 stale references: lines 157/172/207 still listed Hyperliquid/Aster as active DeFi
+  perp sources without the "MOVED TO CEFI" notation (unlike GMX/Drift which had "(REMOVED)" notes). Updated all 3 to
+  document "No DeFi perp venue currently live" + HYPERLIQUID/ASTER MOVED TO CEFI 2026-06-21 note. D15 in
+  `defi_code_codex_drift_2026_05_27.md` was already `[x] ✅` but had stale text "NOT executed yet" — appended migration
+  completion addendum citing market-tick-data-service@55d88025. Shipped: unified-trading-pm@<SHA> (D15 addendum +
+  defi-data-pipeline.md 3 stale-ref fixes + this Progress Log + checkbox flip).
 
 - 2026-08-06 (governance sweep, interactive session): drafted alongside the operator's activation ruling on the source
   plan, per the finalize-plan-coverage rule (`check_finalize_plan_coverage.py`). `status: active` from the start —
