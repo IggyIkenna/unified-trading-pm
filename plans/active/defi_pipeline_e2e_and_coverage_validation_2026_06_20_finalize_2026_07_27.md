@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-30"
+last_updated: "2026-08-06" # plan-reconcile agt-bf8439 touch (see Progress Log/findings doc)
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
