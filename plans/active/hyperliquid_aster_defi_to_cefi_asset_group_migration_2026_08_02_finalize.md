@@ -81,7 +81,7 @@ context_scope:
   perp sources without the "MOVED TO CEFI" notation (unlike GMX/Drift which had "(REMOVED)" notes). Updated all 3 to
   document "No DeFi perp venue currently live" + HYPERLIQUID/ASTER MOVED TO CEFI 2026-06-21 note. D15 in
   `defi_code_codex_drift_2026_05_27.md` was already `[x] ✅` but had stale text "NOT executed yet" — appended migration
-  completion addendum citing market-tick-data-service@55d88025. Shipped: unified-trading-pm@<SHA> (D15 addendum +
+  completion addendum citing market-tick-data-service@55d88025. Shipped: unified-trading-pm@75f1105f8 (D15 addendum +
   defi-data-pipeline.md 3 stale-ref fixes + this Progress Log + checkbox flip).
 
 - 2026-08-06 (governance sweep, interactive session): drafted alongside the operator's activation ruling on the source
