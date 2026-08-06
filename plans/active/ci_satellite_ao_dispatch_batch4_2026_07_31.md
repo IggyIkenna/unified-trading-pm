@@ -165,11 +165,15 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     batch2 Deferred E5 / batch1 D3(4)). **Step 3 of the source doc (broadening `quickmerge.sh`'s branch check) is
     EXPLICITLY OUT OF SCOPE for this todo** — see `## Deferred` D4-2 below.
 
-- [ ] [DOC] P2. **Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
-      1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model.** The doc still describes the
-      retired staging-mediated promotion pipeline; `/codex/08-workflows/ci-cd-flow.md` already got the equivalent
-      rewrite (`unified-trading-pm@b9d0b9209`) — mirror that pattern and cross-reference it. **Done when**: the diagram
-      and Gate 1/2/3 walkthrough match the shipped LDR-direct model, `prettier` + `check_reference_paths.py` clean.
+- [x] ✅ [DOC] P2. **Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram +
+      Gate 1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model.** —
+      unified-trading-pm@445f02081. The doc still described the retired staging-mediated promotion pipeline;
+      `/codex/08-workflows/ci-cd-flow.md` already got the equivalent rewrite (`unified-trading-pm@b9d0b9209`) — mirrored
+      that pattern and cross-referenced it. Rewrote § "Full Pipeline: LDR → Cloud Build" (7-step ASCII diagram →
+      LDR-direct model with dormant staging), § "Gate 2 — Quickmerge (Pass 2)" (renamed from "Staging via Quickmerge",
+      lands on LDR not staging), and § "Gate 3 — Main Promotion + Semver Bump" (LDR→main direct via fleet promoter with
+      3-gate MVP set, semver on push:[main], main-backmerge-to-ldr). `prettier` + `check_reference_paths.py` both clean
+      on the edited file.
   - Source: `issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md` ([DOC] P2) — filed 2026-07-30 as a
     byproduct of batch2 todo 1's own post-phase codex audit, never previously extracted into any batch.
 
