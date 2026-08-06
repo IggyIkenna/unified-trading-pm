@@ -1,31 +1,42 @@
 ---
 doc_type: issue
 title: >-
-  pipeline_e2e_check.py's local process is silently killed ~3.5-5.5min in — reproducible 2/2, during the skip-leg
-  EXIT_STATUS poll, no traceback despite full stdout+stderr capture
+  pipeline_e2e_check.py's local process is silently killed at a FIXED ~300-330s wall-clock mark — reproducible 3/3
+  across two different code paths (force+skip AND live), no traceback despite full stdout+stderr capture
 summary: >-
-  Reproduced twice (2026-08-06, cefi_mtds_smoke_tester's first-ever run, day=2026-08-05): 5 parallel `python3
-  scripts/pipeline_e2e_check.py --asset-group <AG> --legs force,skip --mvp-only --require-captured --auto-day
-  --wall-clock-timeout-sec 2400` invocations (CEFI/TRADFI/SPORTS/PREDICTION) each got through a real force-leg VM
-  launch+poll+verify, launched the skip-leg VM, logged `launcher exited 0 ... polling for EXIT_STATUS`, then the LOCAL
-  python process vanished with ZERO further output (no Python traceback, no cleanup log, no report write) — both times
-  ~3.5-4.3 minutes into that specific poll (real elapsed since process start: attempt 1 ~330s watchdog-observed window;
-  attempt 2 the same shape, per-process ~245-289s). DEFI (2958 MVP candidates vs. 225/5/110/4 for the others) died even
-  earlier BOTH times — right after Phase-0 manifest consolidation, before its first VM launch — a distinct failure
-  point, possibly related to its far larger candidate-precheck volume. Ruled out as the cause: (a) the script's own
-  `--wall-clock-timeout-sec` SIGALRM backstop (set to 2400s = 40min, ~8-13x longer than the observed death); (b) every
-  other `os._exit()`/timeout site in `pipeline_e2e_check.py` and the shared
-  `unified_trading_library/pipeline_e2e_check/launcher.py` polling module (grepped both files — the launcher's own
-  timeouts raise a catchable `subprocess.TimeoutExpired`/return a `launcher_script_timeout` reason, not a silent kill).
-  Real infra impact was contained both times: every VM the dying local process had already launched went on to
-  self-terminate cleanly (`EXIT_STATUS=0`, `VM_SHUTDOWN_ON_COMPLETION=true` fired) — confirmed via GCS
-  `vm-logs/<vm>/EXIT_STATUS` reads and `gcloud compute instances list` showing zero leftover instances after each
-  attempt — so no orphaned/billing-leaking VMs resulted, but the LOCAL report was never written either time (no
-  `.md`/`.json` in `--report-dir`), meaning the checker's whole reason to exist (proving + recording the result) failed
-  silently. This pattern, if it reproduces host-wide, would explain why no prior run of this smoke-test role (or any
-  full-MVP-matrix `pipeline_e2e_check.py` sweep found in `plans/audit/results/`) has a total shard count anywhere close
-  to a real full sweep — every historical report found was small-scope (1-20 total shards), consistent with every past
-  attempt also dying partway through.
+  Reproduced THREE times (2026-08-06, cefi_mtds_smoke_tester's first-ever run, day=2026-08-05), across TWO structurally
+  different invocations: Phase 1 (`--legs force,skip`, 2 attempts) and Phase 2 (`--legs live`, 1 attempt). All three
+  times, 5 parallel per-asset-group `python3 scripts/pipeline_e2e_check.py` processes were killed with ZERO output (no
+  Python traceback, no cleanup log, no report file) at almost exactly the SAME wall-clock offset since process start —
+  attempt 1 (force,skip): watchdog observed all 5 dead by its t=330s check. Attempt 2 (force,skip): 4/5 died at real
+  elapsed 245-289s (the last log line in every case is `launcher exited 0 ... polling for EXIT_STATUS` for the SKIP leg
+  specifically). **Attempt 3 (Phase 2, `--legs live` — a DIFFERENT code path with no force/skip split at all) died at
+  the SAME mark**: watchdog t=300s showed 4/5 alive, t=330s showed 0/5 alive — i.e. genuinely killed somewhere in [300s,
+  330s) again, this time mid-`live` leg (each process had just launched a `--max-duration-seconds 90` live smoke VM and
+  was polling its `EXIT_STATUS`). Because the live leg shares almost no code with the force/skip path (different
+  launcher script `launch-mtds-live.sh` vs `launch-mtds-backfill-vm.sh`, different polling call site) and still died at
+  the identical ~300-330s wall-clock offset, the death is NOT tied to a specific line/workflow-position in
+  `pipeline_e2e_check.py` — it is a FIXED-INTERVAL kill independent of what the process is doing. Ruled out as the
+  cause: (a) the script's own `--wall-clock-timeout-sec` SIGALRM backstop (set to 2400s/1200s across the runs, 4-8x
+  longer than the observed ~300-330s death — confirmed the only `os._exit()`/`SIGALRM` site in the script); (b) every
+  timeout site in the shared `unified_trading_library/pipeline_e2e_check/launcher.py` polling module (raises a catchable
+  `subprocess.TimeoutExpired`/returns a `launcher_script_timeout` reason string, not a silent kill — grepped, no
+  `os._exit()` there either). DEFI additionally died even earlier in BOTH Phase-1 attempts (before its first VM launch,
+  during precheck of its unusually large 2958-candidate MVP set) AND a 3rd narrowly-scoped Phase-1 retry (1 real cell,
+  still died before even logging its shard-enumeration line) — but Phase 2's live leg (2958 candidates, same DEFI)
+  completed 2 full cells cleanly before the ~330s mark hit, so DEFI's Phase-1-specific pattern looks like a distinct,
+  second problem layered on top of the universal ~330s kill, not the same mechanism. Real infra impact was contained
+  every time: every VM a since-killed local process had already launched went on to self-terminate cleanly
+  (`EXIT_STATUS=0`, `VM_SHUTDOWN_ON_COMPLETION=true` fired, or a live smoke VM's own `--max-duration-seconds 90` bound)
+  — confirmed via GCS `vm-logs/<vm>/EXIT_STATUS` reads and `gcloud compute instances list` — so no orphaned/billing-
+  leaking VMs resulted, but the LOCAL report was never written any of the 3 times (no `.md`/`.json` in `--report-dir`),
+  meaning the checker's whole reason to exist (proving + recording the result) failed silently every run. This pattern,
+  if it reproduces host-wide, would explain why no prior run of this smoke-test role (or any full-MVP-matrix
+  `pipeline_e2e_check.py` sweep found in `plans/audit/results/`) has a total shard count anywhere close to a real full
+  sweep — every historical report found was small-scope (1-20 total shards), consistent with every past attempt also
+  dying partway through. A ~300-330s (5-5.5min) fixed kill window is suggestive of a session/sandbox-level background-
+  process lifetime cap rather than a `unified-trading-system` codebase bug — see the updated "what I could not confirm"
+  section.
 status: open
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
@@ -89,6 +100,14 @@ the SKIP leg specifically — then silence. Real death timestamps: cefi 03:47:12
 Confirmed via `kill -0 <pid>` (fails, process genuinely gone, not just quiet) and log-file byte-count (stops growing at
 the exact same point). `ps -p <pid>` after the fact returns nothing.
 
+**Attempt 3** (Phase 2, `--legs live --mvp-only`, 03:53:20 start, `--wall-clock-timeout-sec 1200`): identical shape on a
+STRUCTURALLY DIFFERENT code path (no force/skip split — `--mode live` launches one `launch-mtds-live.sh` VM per venue
+with `--max-duration-seconds 90`). Watchdog: 5/5 alive through t=270s, 4/5 at t=300s, 0/5 at t=330s — the same [300s,
+330s) window as both Phase-1 attempts, this time mid-live-leg `EXIT_STATUS` poll. DEFI notably did NOT die early this
+time (unlike both Phase-1 attempts) — it completed 2 full live-leg cells (dex_pool_state, dex_pool_swaps) before the
+universal ~330s cutoff hit, suggesting DEFI's Phase-1-specific early-death pattern is a SEPARATE problem from the
+universal ~330s kill, not the same root cause.
+
 ## What I ruled out
 
 - **Not the script's own `--wall-clock-timeout-sec` SIGALRM backstop.** Set explicitly to 2400s (40 min); every death
@@ -117,6 +136,16 @@ function) — meaning if the guard also isn't active in whichever session issued
 `pipeline_e2e_check.py` processes (a shared script basename every slot would invoke identically) would be exactly the
 kind of victim that incident class describes. This is a plausible, NOT a confirmed, explanation — flagging the
 possibility rather than asserting it.
+
+**Revised after attempt 3**: a plain `pkill -f pipeline_e2e_check.py` sweep predicts a kill aligned to WHEN the sweep
+fires (e.g. every N minutes of wall-clock), not aligned to WHEN EACH TARGET PROCESS STARTED — yet all 3 attempts died at
+almost exactly the same OFFSET FROM THEIR OWN START (~300-330s), across attempts that started at 03:33, 03:42, and 03:53
+(i.e. NOT aligned to a shared wall-clock cadence like `:00`/`:05`/`:30`). An age-based reaper (kill any process matching
+a pattern once it's been alive >~5min) fits the evidence better than a fixed-schedule sweep, and an age-based policy is
+more consistent with a session/sandbox-level background-process lifetime cap than a human/another-agent's cron-style
+cleanup. I cannot distinguish "age-based pattern-match reaper elsewhere on the host" from "this Claude Code execution
+sandbox's own detached-child-process lifetime limit" without kernel-level access — flagging both as live possibilities
+for whoever picks this up with more access than this session has.
 
 ## Why this matters
 
