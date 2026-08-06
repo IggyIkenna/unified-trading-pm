@@ -309,9 +309,11 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
 
 ## Follow-ups (added 2026-08-06 ~07:57Z)
 
-- [ ] [CICD] P0. Complete strategy-service LDR→main: PR #496 (head `f369eda7`) v2 run 31082724876 → auto-merge → verify
-      main HEAD is the promote squash → POST /done (`one_shot_complete: true`). If superseded by a newer promote PR,
-      repeat the conflict-resolution recipe above. Provenance: agt-e33f21.
+- [ ] [CICD] P0. Complete strategy-service LDR→main: PR #496 (head `f369eda7`) v2 run **31085361119** (31082724876
+      cancelled 08:33Z — cache-save hang) → auto-merge → verify main HEAD is the promote squash → POST /done
+      (`one_shot_complete: true`). If superseded by a newer promote PR, repeat the conflict-resolution recipe above. If
+      v2 STILL hangs on `Post Cache uv package cache`, that is the systematic infra-block below, NOT code. Provenance:
+      agt-e33f21.
 - [ ] [OPERATOR] P0. Remove `/tmp/test_slice.log` on the shared fleet host (199 MB, live `ghp_` fine-grained PATs,
       world-readable, abandoned 05:57Z, foreign session's). Slot-15 deliberately leaves it untouched. Provenance:
       agt-e33f21 security finding.
@@ -319,6 +321,30 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       `main`; without it a 2-repo BREAKING-delta tick recurs the 06:45Z 3-dispatch storm (which re-poisons the
       full-workspace-sit top-10 and re-reds fleet-green). It is currently only on LDR + promote PR
       `promote/unified-trading-pm/1dacca9be5e1`. Provenance: agt-e33f21.
+- [ ] [OPERATOR] P0. Remediate the glue runner `glue-ip-172-31-3-59-1` cache-save hang — FREE DISK or patch the reusable
+      `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml` cache step (e.g. `save: false` on self-hosted,
+      or disk-low detection) so `Post Cache uv package cache` stops hanging. Blocks ALL fleet v2 on the glue runner +
+      promotion PR #496. Precedent: PR #491 0MB-disk cache-save failure (08-05 06:48Z). Provenance: agt-e33f21.
+
+## agt-e33f21 follow-up — glue-runner cache-save hang is SYSTEMATIC (2026-08-06 ~09:15Z)
+
+**The v2 gate on PR #496 is blocked by a recurring `actions/cache` save-hang on the glue runner — NOT by code.**
+
+- Run `31082724876` (dispatch 07:54Z, head `f369eda7`): content sentinel ✅ · checks ✅ · **tests ✅** (leg-tests step
+  success 08:20:44Z) · then `Post Cache uv package cache` HUNG → cancelled 08:33Z after 12+ min.
+- Re-dispatch `31085361119` (08:33Z, same head): content sentinel ✅ · **checks ✅** (leg-checks step success 09:03:32Z)
+  · then `Post Cache uv package cache` HUNG AGAIN (started 09:03:32Z; still in_progress at 09:14Z = 10.6 min).
+- **2/2 consecutive identical hangs at the same step on the same runner** (`glue-ip-172-31-3-59-1`) — matches the
+  documented PR #491 precedent (08-05 06:48Z: runner at **0 MB free disk**, cache-save "No space left on device").
+- The cache steps live in the REUSABLE `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml` (NOT the
+  per-repo copy, which only sets `self_hosted_runner_labels: '["self-hosted","glue"]'`). The workflow has NO
+  `timeout-minutes` → a hung job sits the default **360 min**, holding the single shared glue runner hostage fleet-wide.
+- **Verdict: NOT a transient flake and NOT code** (both legs pass on `f369eda7`). This is a FLEET-INFRA blocker: the
+  runner's disk state makes the large uv-cache SAVE hang. Retry-discipline (2 identical = stop blind-retrying) says a
+  3rd re-dispatch would hang identically. PR #496 cannot go green through v2 until the runner's disk/cache-save is
+  remediated at the fleet level.
+- Slot-15's plan: bounded wait on `31085361119` (~09:22Z) in case the save completes, then cancel to free the runner; NO
+  further blind re-dispatch.
 
 ## Lessons / traps (agt-e33f21, re-learned at cost)
 
