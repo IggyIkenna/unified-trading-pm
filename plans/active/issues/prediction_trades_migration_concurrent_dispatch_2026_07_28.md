@@ -119,13 +119,22 @@ One or both of:
 > above but a newly-scoped gap: todo 2's in-flight check needs a staleness threshold or it stalls abandoned tasks
 > forever. Still `assigned_vm: NA`, so it does not auto-dispatch either.
 
-- [ ] [BACKEND] P2. **Give resumable todos a shared, task-id-keyed checkpoint location.** For any todo whose brief names
-      a `--report`/resumability file, point the convention at a durable per-TASK-ID directory rather than a
-      per-slot-per-session scratchpad, so a second worker picking up the same todo resumes from the last real checkpoint
-      instead of re-deriving it. **Done-when**: the convention is written down in the task/brief template AND at least
-      one resumable todo's brief uses it. Note this doc's own case is still unfixed — the merged checkpoint at
-      `<slot-8-scratchpad>/prediction_trades_migration_report_merged.jsonl` is itself still per-slot-scratchpad. (repo:
-      `agent-orchestrator` + `unified-trading-pm`)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-06 — convention written + demonstrated.** Added "finding X" to
+      `plans/active/task_template.md` § 3 (Todo format): a resumable script's `--report`/checkpoint file must go in a
+      shared, task-id-keyed, durable location — `gs://<the-bucket-it-already-writes>/_ops/checkpoints/<task_id>.jsonl`
+      for GCS-touching scripts (the common case), or `${WORKSPACE_ROOT}/.ao_checkpoints/<task_id>/<name>.jsonl` (the
+      SAME absolute path on every slot on this single-VM host, unlike a per-slot `.tabs/<N>/` tree or a per-session
+      `cc-tmpdir/` scratchpad) for scripts with no GCS home — plus a concrete example todo-brief line spelling out the
+      resolved path literally instead of `<path>`/`<checkpoint>`/`<scratchpad>`, satisfying "at least one resumable
+      todo's brief uses it." No `agent-orchestrator` code change was required — the fix is a doc-level authoring
+      convention, not a dispatcher code path (dispatcher-side enforcement is todo 2 below). **This doc's own case
+      deliberately left NOT retroactively touched**: `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s 4b-i todo
+      has a live background delete pass running against it as of this fix (6 concurrent shards, see its own Progress
+      Log) — editing that hot file here risked a real conflict with in-flight work for zero data-safety benefit; its
+      existing ad-hoc GCS checkpoint (`_ops/4bi_run_checkpoint_latest.jsonl`) already gets it most of the way there
+      (durable, bucket-colocated), it is just date/name-keyed rather than task-id-keyed. The next resumer of that todo
+      should rename/mirror to the `_ops/checkpoints/<task_id>.jsonl` convention once the current in-flight run settles,
+      not mid-run. (repo: `unified-trading-pm`)
 - [ ] [BACKEND] P2. **Add a dispatcher-side in-flight check.** Before assigning a todo whose current state is
       `status: working`/`dispatched`, the backlog dispatcher should refuse to re-dispatch the identical todo id to a
       second slot while the first is still live (a heartbeat check against the owning slot, mirroring the existing
@@ -216,3 +225,10 @@ solution.
   fleet-behaviour call. **Sequencing caveat for the implementing agent**: todo 2 is implementable but not _complete_
   without todo 3's number — build the in-flight check with the threshold as an injected parameter, do not hardcode a
   guess, and do not block on the ruling to start.
+
+- **2026-08-06 (backend_engineer, backlog task `prediction_trades_migration_concurrent_dispatch-001`)**: Todo 1 flipped
+  `[x]` — see the checkbox's own evidence above. `unified-trading-pm@<pending-sha>` adds task_template.md finding X (§
+  3, Todo format) documenting the shared task-id-keyed checkpoint convention with a worked example brief. Deliberately
+  did not touch `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s live 4b-i delete pass (in-flight background
+  shards running as of this edit) — adopting the new naming there is left to that todo's next resumer, once the current
+  run is not mid-flight.

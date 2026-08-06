@@ -352,6 +352,31 @@ version.
   it could become real work)._ When a design/split pass finds a todo like this, leave it explicitly flagged
   non-dispatchable (not folded into any child) until scoped — a scope-undefined todo becomes an unbounded judgment call
   for whoever executes it, exactly what the dispatch-scope-eligibility rule bans.
+- **A resumable script's `--report`/checkpoint file goes in a shared, task-id-keyed, durable location — never a
+  per-slot-per-session scratchpad** _(finding X, 2026-08-06,
+  `plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`: the same resumable-migration todo
+  was independently dispatched to 3 concurrent slots, each writing its own `--report` checkpoint under its own
+  `/home/ubuntu/.claude-configs/orch-slot-*/cc-tmpdir/**/scratchpad/` — none could see the others' progress, so two of
+  the three slots re-derived 60+ date-shards' worth of already-done work as pure GCS-read cost, and the first slot's
+  140-day head start was nearly lost entirely when its session ended without a closing Progress Log entry)._ When a
+  todo's brief names a `--report`/checkpoint/resume-log flag, its checkpoint path MUST be a location every future worker
+  that picks up the SAME task id can find and resume from, not an ephemeral per-session tmpdir:
+  - **If the script already writes to a GCS bucket** (the common case for a data-migration/backfill script): put the
+    checkpoint at `gs://<the-bucket-it-already-writes>/_ops/checkpoints/<task_id>.jsonl` — bucket-colocated with the
+    data it tracks, durable, and readable by any slot regardless of host. (A live precedent for the bucket-colocated
+    half of this pattern already exists — `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s 4b-i todo started
+    uploading its merged checkpoint to `gs://<bucket>/_ops/prediction_trades_migration_checkpoint_<date>.jsonl`
+    mid-incident; this finding is what makes the naming task-id-keyed instead of date-keyed, so a SECOND worker can
+    locate it deterministically from the task id alone rather than having to know which date a prior worker happened to
+    pick.)
+  - **If the script has no natural GCS home** (a local analysis/audit driver): put it at
+    `${WORKSPACE_ROOT}/.ao_checkpoints/<task_id>/<name>.jsonl` — `WORKSPACE_ROOT`
+    (`/home/ubuntu/unified-trading-system-repos` on this deployment) is the SAME absolute path on every slot on this
+    single-VM architecture host, so a path directly under it (never under a `.tabs/<N>/` slot subtree, and never under a
+    per-session `cc-tmpdir/` scratchpad) is genuinely shared across slots and survives any one session ending.
+  - State the resolved path literally in the todo brief — not `<path>`/`<checkpoint>`/`<scratchpad>` — so a cold-start
+    worker knows exactly where to look before re-deriving anything. Example brief using the convention:
+    `- [ ] [DATA] P2. Resume scripts/some_migration.py --apply --report gs://my-bucket/_ops/checkpoints/my-migration-task-007.jsonl (idempotent per-cell; pull this checkpoint first — do not restart from day 0). Repo: some-service. Done-when: all N shards report 0 anomalies.`
 
 ---
 
