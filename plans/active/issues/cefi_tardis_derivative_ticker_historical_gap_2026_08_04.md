@@ -89,6 +89,21 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, P2 todo)**: RC3
+  tarball **VERIFIED already in GCS** —
+  `gs://deployment-scripts-central-element-323112/code/mtds-code@b2cc274219acf0b25750a25a4ec4570a3e44d642.{tar.gz,manifest.json}`
+  (built 2026-08-06T09:01:30Z by slot-14, `commit_sha` matches RC3 fix `b2cc2742` "return None from catalogue path when
+  all entries have available_from after target"). No rebuild needed. DERIBIT gap re-confirmed reader-exact (list-only,
+  bounded): `venue=DERIBIT/instrument_type=perpetual/data_type=derivative_ticker/` = **0 objects** on
+  2026-05-23/05-25/07-01/07-29/08-05. Launcher extended for the DERIBIT-only launch (the "code shipped" half of this
+  todo): `deployment-service@2f1b36d` adds `--venue/--force-download/--mtds-sha` to `launch-cefi-forward-poll.sh`
+  (VM_VENUE→setup `--venues`, VM_FORCE→`--force`, MTDS_TARBALL_SHA→pinned mtds-code tarball; dry-run verified the
+  metadata flows). Also fixed a pre-existing QG-red found during the QG pass: `deployment-service@c6707cb` raises
+  `launch-backfill-defi-legacy-datatype-fold-vm.sh` boot disk 100GB→250GB (QG `check_backfill_vm_disk_provisioning.py`
+  disk-min gate). **Ready-to-run launch (once VM `cefi-fwd-20260806-065837` TERMINATES + Tardis fleet clear)**:
+  `bash scripts/vm/launch-cefi-forward-poll.sh --venue DERIBIT --force-download --mtds-sha b2cc274219acf0b25750a25a4ec4570a3e44d642 2026-05-23 2026-08-05`.
+  VM still RUNNING at day=2026-05-25 (of 05-23→08-05), ~1h50m/day → multi-day ETA. P2 checkbox stays unchecked until the
+  DERIBIT backfill is launched + GCS-verified.
 - **slot-9 2026-08-06 (data_engineering, task `defi_cefi_venue_chain_axis_contamination-011`)**: **CORRECTION — the ✅
   backfill todo above overstates what landed.** The VM completed all 94 days, but the raw `derivative_ticker` for the
   CEX-Tardis target venues (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES/DERIBIT) is essentially ABSENT
