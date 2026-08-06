@@ -331,7 +331,15 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       #499 will conflict on BOTH `unified-api-contracts` (main `>=0.92.0` → LDR `>=0.96.0`) and `aiohttp` (`>=3.14.1` →
       `>=3.14.3`) → resolve take-LDR (same recipe) → post fleet-green on its head → let its PR-triggered v2 gate it → on
       SUCCESS it auto-merges → verify main HEAD → POST /done (`one_shot_complete: true`). Do NOT manually merge #498
-      (stale tree, CVE-missing). Provenance: agt-e33f21.
+      (stale tree, CVE-missing). Provenance: agt-e33f21. **State (11:05Z): #499 RESOLVED** — v2 31092068911 went SUCCESS
+      10:55Z (all slices); the 11:00Z fleet tick closed #498 (ref deleted) + opened **#499** (ref
+      `promote/strategy-service/308bdfd31bbb` @ 308bdfd3, created 11:01:10Z). Resolved #499 take-LDR: merge main
+      `19565cd3` → `git checkout --ours pyproject.toml` (both floors) → commit `dd11550a`
+      (`fix(promote): resolve LDR->main promote conflict ... take LDR floors unified-api-contracts>=0.96.0,     aiohttp>=3.14.3`),
+      tree == 308bdfd3 verified, pushed to the promote ref. #499 MERGEABLE; fleet-green posted on `dd11550a` (identical
+      bot signal, SIT run 31094524862 SUCCESS, desc "full-workspace-sit @ 10:45:34Z"); auto-merge ARMED (SQUASH). **v2
+      PR run 31095759328 QUEUED on dd11550a — MUST COMPLETE, do NOT cancel**; on SUCCESS #499 auto-merges → verify main
+      HEAD == promote squash (tree 308bdfd3) → POST /done (`one_shot_complete: true`). Provenance: agt-e33f21.
 - [ ] [OPERATOR] P2. Delete the orphaned remote branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my
       #497 resolution merge — the bot deleted the ref for superseded PR #497 at 10:01:05Z before my push, so the push
       recreated it as a stray). Not an LDR tip, so it should be inert to the bot's promote-ref scan, but it should be
