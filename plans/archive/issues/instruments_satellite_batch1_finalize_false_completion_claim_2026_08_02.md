@@ -13,7 +13,7 @@ summary: >-
   was never moved to `plans/archive/` at all (it's the exact doc the orchestrator dispatched my live task from). This is
   a confirmed false-progress incident, not a misreading on my part — evidenced via git log (no "flip item 4" commit ever
   exists for the parent) and the parent's own frontmatter (`status: active`, currently in `plans/active/`).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, false-progress, ssot-contradiction, archival, finalize-twin, process-integrity, instruments]
 related:
   [
-    /plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
+    /plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
     /plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -33,6 +33,7 @@ author: unknown
 parent_epic: instruments_master
 assigned_vm: planning
 resolved_by:
+  plan_reconciler agt-4fdce1 2026-08-06 -- executed both routed actions directly (correction note + real archival)
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
@@ -44,7 +45,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
+    /plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
     /plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
@@ -237,3 +238,11 @@ No design call needed — every piece here is independently checkable, not a jud
   marked here because infra is the machine-assigned owning tranche; the retag itself is outside this skill's apply set.
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — still accurate against current content.
+- **plan_reconciler agt-4fdce1 2026-08-06**: executed both `[PLAN_RECONCILER]`-routed items directly (this doc named
+  exactly this authority for both). P2: appended a dated `**CORRECTION 2026-08-02:**` block to the archived finalize
+  doc's false-claim todo, identifying which sub-claims were false, without deleting the original text. P1: the parent
+  (`instruments_satellite_ao_dispatch_batch1_2026_07_27.md`) was re-verified live 5/5 `[x]` (0 remaining `- [ ]`),
+  unlocked, non-grace (last edit 2026-08-03) — ran the 6-step archival ritual, `git mv`'d to `plans/archive/2026_08/`,
+  fixed all 3 corpus referrers (this doc, the finalize doc, and
+  `uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`). Both routed items done, no other open todos in this
+  doc — `status: open` → `resolved`, archiving.

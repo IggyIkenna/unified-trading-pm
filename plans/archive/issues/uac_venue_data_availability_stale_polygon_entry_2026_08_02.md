@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [tradfi, polygon, stale-registry, reference-data, conflation, ui-reference-data, hygiene]
 related:
   [
-    /plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
+    /plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     /plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md,
     /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,

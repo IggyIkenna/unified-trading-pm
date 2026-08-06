@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [instruments, ao-dispatch, na-eligibility-audit, finalize, batch-1]
 related:
   [
-    /plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
+    /plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
 created: "2026-07-27"
@@ -64,3 +64,12 @@ source: >-
       source doc left `status: active`/NA, NOT archived. (3) Ran the standard 6-step archival ritual on this finalize
       plan + its parent (banner, status→complete, moved to `plans/archive/2026_07/`, no new codex contract needed, no
       other live referrer paths found needing a fix). — `unified-trading-pm` (this batch).
+
+      > **CORRECTION 2026-08-02** (discovered via `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`):
+              > sub-claims (1) and (3) above were FALSE at the time this was checked off — the parent's todo 4 checkbox was
+              > still `- [ ]` with zero evidence text (not genuinely closed), and the parent plan was never actually moved to
+              > `plans/archive/` (it stayed `status: active` in `plans/active/` until 2026-08-06). Real resolution: todo 4 was
+              > flipped for real 2026-08-02 (`instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4, POLYGON dead-code
+              > removed via `unified-api-contracts@e34afc1d`, FRED confirmed not conflated), and the parent was archived for
+              > real 2026-08-06 (plan_reconciler agt-4fdce1) once genuinely 5/5 `[x]` and out of the 12h grace window — see
+              > `plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md`.
