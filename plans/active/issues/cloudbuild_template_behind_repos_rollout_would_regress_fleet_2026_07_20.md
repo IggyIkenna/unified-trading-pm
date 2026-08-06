@@ -300,6 +300,16 @@ silently regresses the fleet again.
     checkbox in `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 is flipped with the SHAs + the end-to-end proof
     build id. **A fresh session resumes HERE.**
 
+- **2026-08-06 (batch5 todo 1 worker, slot 15) — shipping progress checkpoint (pre-compact).** 3/8 repos now SHIPPED and
+  verified on `origin/live-defi-rollout` (`git merge-base --is-ancestor` ✓, ahead=0): **strategy-service@86256091**,
+  **trading-agent-service@2a940a2**, **ml-service@220e3ac** — each QG-green (Pass 1, sentinel matches HEAD) +
+  `quickmerge --agent --files cloudbuild.yaml` landed on LDR. **5 repos remain committed-but-unpushed (ahead=1)** and
+  need the same QG→quickmerge flow: market-tick-data-service@841cf94f, deployment-api@9c5e615, deployment-ui@ed0fe02,
+  unified-trading-system-ui@2e0f44d2, ibkr-gateway-infra@9dfd827. Then: end-to-end proof (`gcloud builds submit`,
+  storageSource → VERSION-fallback recovers), flip `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1, flip this
+  doc's `- [ ] [DEVOPS] P2. Run the end-to-end proof` follow-up (line ~341), then `/done`. **A fresh session resumes at
+  the 5-repo quickmerge batch.**
+
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — closest-to-eligible candidate in this
