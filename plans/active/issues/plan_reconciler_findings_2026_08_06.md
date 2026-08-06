@@ -80,6 +80,18 @@ open).
 - **Terminal-status violations from hygiene sweep**: the 3 flagged docs are not tradfi-primary (one is `omniroute_*`
   sports-adjacent, one is `instruments_service_sports_*` sports, and `ag_closeout_audit_rollout` has a comment "was:
   complete" but is correctly `status: active` after being reopened). No tradfi-primary action needed.
+- **4 missed-flip candidates from hunter (REFUTED on closer read)**: the hunter reported 4 "nested checkboxes" in
+  Progress Log narratives of `tradfi_manifest_content_recovery_completion_2026_07_24.md` (lines 505, 681, 843) and
+  `tradfi_phase_d_terminal_gate_2026_07_24.md` (line 433) as missed flips with HARD evidence (SHAs all verified
+  reachable). On closer inspection, ALL FOUR are backtick-enclosed quoted representations (`` - `- [ ] ...` ``) inside
+  Progress Log narratives — NOT real actionable checkboxes. They cannot be flipped without editing the narrative text.
+  The actual top-level checkboxes tracking this work are in separate docs or were already flipped there. The SHAs are
+  real, the work shipped, but the quoted `- [ ]` in Progress Log prose is a narrative device, not a tracked todo.
+- **2 contradiction candidates from hunter (REFUTED as non-actionable)**: DOC 8's Phase-0 layout audit (line 105) — the
+  cited SSOT report exists but the checkbox is a narrative gate-marker in a doc with 15 genuinely-open todos, not a
+  simple missed flip. DOC 8's EIA BLOCKED-CREDENTIALS (line 474) — operator declined the credential; the checkbox
+  correctly stays open as a declined-credential record per the same pattern as other operator-ruled record-keeping
+  checkboxes in the same doc.
 
 ## Coverage (hunters / batches / docs)
 
@@ -89,8 +101,7 @@ open).
 - Epic: `tradfi_master.md` (locked, `locked_by: live-defi-rollout`)
 - Zero-checkbox sweep: 3 docs found (1 actionable, deferred; 1 this run's own scaffold; 1 false positive
   `task_template.md`)
-- Hunters launched: 3 (zero-checkbox ✓, archival eligibility ✓, missed flips — timed out; direct grep found 0 open todos
-  with inline SHAs in non-grace tradfi docs, so no candidates expected)
+- Hunters launched: 3 (all complete: zero-checkbox ✓, archival eligibility ✓, missed flips ✓ — see Refuted section)
 
 ## Plans not reached
 
