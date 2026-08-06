@@ -101,7 +101,7 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       estimate. No new churn mechanism found; writer-side investigation NOT required at this stage. (repo:
       deployment-service, verification-only.)
 
-- [x] ✅ [INFRA] P3. **Final drain confirmation on/after 2026-08-09.** Re-run `gcs_bucket_stats.py` for
+- [x] [INFRA] P3. **Final drain confirmation on/after 2026-08-09.** Re-run `gcs_bucket_stats.py` for
       `deployment-scripts-central-element-323112` — **VERIFIED 2026-08-06 (slot-6, infra, PRE-GATE)**: NOT yet drained —
       48,549.5 GiB total / 98.6% bloat_pct / 47,887 GiB soft-deleted (681,428 objects / 51,418,720,022,176 B),
       byte-identical to the three earlier 08-06 reads (11:07Z/13:46Z/14:09Z), series flat since ~08-05 (accumulation
