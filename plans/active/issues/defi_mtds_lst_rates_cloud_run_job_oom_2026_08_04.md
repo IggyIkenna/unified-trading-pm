@@ -156,12 +156,18 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
 
 ## Todos
 
-- [ ] [INFRA] P1. **RULED 2026-08-06 (operator): approved, AO-dispatchable.** `[INFRA]` tag (was `[OPERATOR]`) — the
+- [x] ✅ [INFRA] P1. **RULED 2026-08-06 (operator): approved, AO-dispatchable.** `[INFRA]` tag (was `[OPERATOR]`) — the
       doc's own text already says this is mechanical, not a judgment call; per the operator's standing policy on
       plan-scoped infra changes, dispatch it directly. Bump
       `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s `"lst-rates"` entry `memory = "2Gi"` to a higher
       value (e.g. `"4Gi"`) and `terraform apply` — the fast, low-risk mitigation while the real memory driver is
-      investigated.
+      investigated. — **deployment-service@51f9fbe** (memory `2Gi`→`4Gi` IaC, already on `live-defi-rollout`; live job
+      already at 4Gi — verified `gcloud run jobs describe uts-prod-mtds-collect-lst-rates` = `4Gi`, manual 4Gi execution
+      `uts-prod-mtds-collect-lst-rates-b5f4t` completed 2026-08-05 in 2m53s, all 15 LST venues written). TARGETED
+      `tofu     apply` 2026-08-06 (slot 11): synced the only remaining lst-rates drift —
+      `defi_collect_cron["lst-rates"]` scheduler description (in-place, 0 add / 1 change / 0 destroy) — because the
+      natural full plan carries 26 add / 17 change / 2 destroy of UNRELATED pending drift. Terraform state now fully in
+      sync for the lst-rates entry (no pending resource change).
 - [ ] [DIAG] P1. Root-cause the actual memory driver in `market-tick-data-service`'s `collect-lst-rates` path (11 EVM +
       4 Solana venues in one process) — candidates to check first: (a) whether
       `_gas_fee_helpers.bounded_freshness_warmup`'s manifest read is bounded the same way
@@ -174,6 +180,12 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
 - [ ] [DIAG] P2. Once (a) is confirmed either way, check whether SOME venues in this job still got written on
       08-02/08-03/08-04 before the crash (per-venue processing order in `lst_rates_handler.py` vs. which venues show
       recent `written_at` in the manifest) — determines whether this is a total daily-data-loss event or a partial one.
+- [ ] [INFRA] P2. Prod terraform state holds 26 add / 17 change / 2 destroy of un-applied drift beyond this fix
+      (observed 2026-08-06 while syncing the lst-rates scheduler description): includes creation of the
+      `liquidation-events` + `risk-params` Cloud Run jobs/crons (wired by deployment-service@b370df8, never applied) and
+      removal of 2 t1-batch Secret IAM members. The next FULL prod `tofu apply` (`deployment-service/terraform/gcp`,
+      backend prefix `terraform/state/prod`) needs human review before it runs — do NOT fold it into a memory-bump-style
+      dispatch.
 
 ## Progress Log
 
@@ -192,3 +204,14 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
   investigations with named candidates and a stated done-when. Conflict-check cleared (no overlapping claim in
   `parent_epic: infrastructure_master`). `assigned_role` was the placeholder value `NA`; filled `infra` (terraform +
   Cloud Run scope).
+
+- **infra dispatch 2026-08-06 (slot 11)**: Todo 1 DONE. The IaC bump (`2Gi`→`4Gi`) was already shipped on
+  `live-defi-rollout` as `deployment-service@51f9fbe`; the live job was already at `4Gi` (ad-hoc
+  `gcloud run jobs update --memory=4Gi` + verified execution `-b5f4t` on 2026-08-05). Re-initialized the prod terraform
+  backend (`tofu init -backend-config="prefix=terraform/state/prod"`, `tofu` v1.12.5 — the lock file is OpenTofu-
+  maintained, so `terraform` init would rewrite it; avoided) and applied TARGETED to the lst-rates resources only:
+  `google_cloud_scheduler_job.defi_collect_cron["lst-rates"]` description was the sole pending lst-rates drift (memory
+  was already in state) — applied in-place (0 add / 1 change / 0 destroy), verified live description matches IaC.
+  Deliberately did NOT run a blanket apply: the full plan carries 26 add / 17 change / 2 destroy of unrelated pending
+  drift, and a naive `-target` on the scheduler alone would have CREATED the `liquidation-events` + `risk-params` Cloud
+  Run jobs (never applied, from deployment-service@b370df8). That residual drift is now a tracked P2 todo above.
