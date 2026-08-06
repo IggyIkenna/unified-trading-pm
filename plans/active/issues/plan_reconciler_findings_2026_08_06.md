@@ -106,6 +106,12 @@ transcripts, not worth individual issue docs.
   flagged, not auto-fixed, since it's narrative content outside the auto-populated section. **Needs an operator-visible
   fix**, filed below.
 
+- `unified-trading-pm/agents/plan_reconciler.md` STEP 6b instructs appending a line to
+  `ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md` — both retired 2026-07-04 ("Do NOT append
+  pings here... AO agents are explicitly forbidden from polling this file"). Skipped this run (the retirement notice is
+  current and authoritative; my own role file is stale on this one point). The modern channel (`/blocked` alerts,
+  already fired 3x this run) supersedes it. **Filed below.**
+
 ## Hygiene fixes
 
 - **Reference-path mechanical fix**: `fix_reference_paths.py` — 90 codex-ref occurrences normalized, 12 files (7 more
@@ -143,6 +149,11 @@ transcripts, not worth individual issue docs.
 - Recurring `status: active` (frontmatter) vs `` `status: draft` `` (body banner) bug in finalize-twin plans (≥8
   confirmed instances, P1 above) — recommend a bounded follow-up plan: grep the exact banner string corpus-wide,
   cross-check each hit's frontmatter, fix the ones that disagree.
+
+- `unified-trading-pm/agents/plan_reconciler.md` STEP 6b's ping-ledger-append instruction is stale (see Doc-drift) —
+  should be edited to point at the modern `/blocked` channel instead. A role file, not a plan; noted here since I cannot
+  self-edit my own boot instructions mid-run, but this is a same-shape fix to the codex-drift class STEP 5c already
+  reserves for a human/follow-up.
 
 ## Archive candidates (operator review)
 
