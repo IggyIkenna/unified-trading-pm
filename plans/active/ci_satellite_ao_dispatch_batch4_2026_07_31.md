@@ -169,7 +169,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     covering doc; a clean, small, previously-untriaged orphan.
 
 - [x] ✅ [REVIEW] P2. **Decide + implement whether `deployment-api` should be REMOVED from
-      `scripts/workflow-templates/self-hosted-qg-repos.txt`** — unified-trading-pm@274d54634. **DECISION: YES, remove
+      `scripts/workflow-templates/self-hosted-qg-repos.txt`** — unified-trading-pm@917fc626a. **DECISION: YES, remove
       (already done 2026-08-05).** `deployment-api` is a PUBLIC repo (confirmed `gh repo view --json visibility` →
       `PUBLIC`) — GitHub-hosted runners are unmetered for public repos; self-hosting wastes shared VM capacity for zero
       billing benefit. The entry was already removed from the active allowlist on 2026-08-05 as part of the
