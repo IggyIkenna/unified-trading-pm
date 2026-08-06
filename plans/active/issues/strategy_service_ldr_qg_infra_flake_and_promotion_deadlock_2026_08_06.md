@@ -315,11 +315,18 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       opened #497 then #498). **Root cause (09:40Z, still governs):** only a PR-triggered v2 run satisfies the PR's
       required check `Quality Gates (strategy-service) / quality-gates-v2` — a workflow_dispatch run's same-named check
       does NOT count (cancelled PR run 31082724876 left it FAILED; dispatch 31085361119 passed 09:33Z but the PR stayed
-      BLOCKED). **Current (10:1xZ):** #498 pyproject.toml conflict (main `>=0.92.0` → LDR `>=0.96.0`) resolved take-LDR
+      BLOCKED). **State (10:16Z):** #498 pyproject.toml conflict (main `>=0.92.0` → LDR `>=0.96.0`) resolved take-LDR
       via merge commit **c744644b** (tree == LDR, `git diff` empty); fleet-green posted on the PR head (SIT run
-      31090281798 SUCCESS, fleet-shared signal — bot stamps it only on the LDR tip); **v2 PR run 31092068911 QUEUED —
-      MUST COMPLETE, do NOT cancel**. On success → #498 auto-merge (SQUASH) → verify main HEAD is the promote squash →
-      POST /done (`one_shot_complete: true`). If LDR advances again, repeat on the new PR. Provenance: agt-e33f21.
+      31090281798 SUCCESS, fleet-shared signal — bot stamps it only on the LDR tip); **v2 PR run 31092068911 RUNNING:
+      content sentinel SUCCESS, QG-checks leg PASSED (10:14:06Z), now in the ~15-min uv-cache save (started 10:14Z),
+      tests slice queued — MUST COMPLETE, do NOT cancel**. **NEW (10:16Z): LDR advanced a 3rd time → `308bdfd3`
+      "fix(deps): bump aiohttp floor >=3.14.3 (CVE-2026-59881/-69243/-69244)" (10:08:40Z).** #498's tree (based on
+      `4393c2a4`) LACKS the CVE fix — promoting it would put a stale, CVE-floor-missing tree on main. **Auto-merge
+      DISABLED on #498 (10:16Z) as a stale-tree guard.** Expect the fleet bot to supersede #498 → open a fresh PR for
+      `308bdfd3` (~18-min cadence, ~10:27Z). On that PR: resolve take-LDR (same recipe) → post fleet-green on its head →
+      let its PR-triggered v2 gate it → on SUCCESS it auto-merges → verify main HEAD → POST /done
+      (`one_shot_complete: true`). If the bot does NOT supersede and #498's v2 completes first, do NOT let #498 merge
+      (stale tree) — re-check why the bot hasn't moved before any manual action. Provenance: agt-e33f21.
 - [ ] [OPERATOR] P2. Delete the orphaned remote branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my
       #497 resolution merge — the bot deleted the ref for superseded PR #497 at 10:01:05Z before my push, so the push
       recreated it as a stray). Not an LDR tip, so it should be inert to the bot's promote-ref scan, but it should be
