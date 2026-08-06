@@ -54,8 +54,11 @@ context_scope:
 
 # defi_pipeline_e2e_and_coverage_validation_2026_06_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
+> every todo below until the gated plan's todos are `done`, regardless of that plan's own `status` (draft or active) —
+> see `cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md`'s header for the ruling record; banner aligned
+> 2026-08-06 by plan-reconcile (the earlier "STATUS: draft — NOT dispatched" body banner was the stale side of a
+> frontmatter/body contradiction).
 
 ## Todos
 
