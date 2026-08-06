@@ -91,7 +91,7 @@ causes**, all pre-existing (none touch PREDICTION/book_snapshot_5):
    is **27055** (`defi: 35 dt × 101 venues × 7 tf = 24745` dominates). This threshold is stale relative to the current
    DEFI venue/data-type registry size and would fail on ANY commit, unrelated to this session's diff.
 3. **1/138 — `test_defi_specific_data_types`.** Asserts `"dex_swaps" in defi_types`, but the canonical name was
-   operator-locked to `"dex_pool_swaps"` per `codex/02-data/defi-canonical-naming-ssot.md` (the sibling
+   operator-locked to `"dex_pool_swaps"` per `/codex/02-data/defi-canonical-naming-ssot.md` (the sibling
    `test_adapter_registry_coverage.py` already carries a comment documenting this exact rename) — this assertion was
    never updated after the rename.
 4. **1/138 — `test_instruments_domain_separation`** (integration test): raises
@@ -149,9 +149,10 @@ full `quality-gates.sh --no-fix` processes during this investigation).
       `market-data-processing-service@a0c822e2b6f08857e80e8bff5fc159dcfe36660e`.
 - [x] ✅ [SCRIPT] P3. ~~**Fix the stale `test_defi_specific_data_types` assertion**
       (`tests/smoke/test_shard_combinatorics.py:118`) — replace the retired `"dex_swaps"` expectation with the canonical
-      `"dex_pool_swaps"` name per `codex/02-data/defi-canonical-naming-ssot.md`. Repo: market-data-processing-service.~~
-      — **FIXED 2026-08-04**: same commit as todo 2 above, same reason (blocking QG for todo 1). Replaced `"dex_swaps"`
-      with `"dex_pool_swaps"`. `market-data-processing-service@a0c822e2b6f08857e80e8bff5fc159dcfe36660e`.
+      `"dex_pool_swaps"` name per `/codex/02-data/defi-canonical-naming-ssot.md`. Repo:
+      market-data-processing-service.~~ — **FIXED 2026-08-04**: same commit as todo 2 above, same reason (blocking QG
+      for todo 1). Replaced `"dex_swaps"` with `"dex_pool_swaps"`.
+      `market-data-processing-service@a0c822e2b6f08857e80e8bff5fc159dcfe36660e`.
 
 ## Progress Log
 

@@ -22,7 +22,7 @@ tags: [defi, ao-dispatch, na-eligibility-audit, reclassification, batch-8, satel
 related:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

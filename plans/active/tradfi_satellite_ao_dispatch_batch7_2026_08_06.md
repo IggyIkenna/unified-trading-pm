@@ -343,5 +343,5 @@ mirroring the batch1-6 finalize pattern.
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
-`/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md`,
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`,
 `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.

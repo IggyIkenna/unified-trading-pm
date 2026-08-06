@@ -8,7 +8,7 @@ summary: >-
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch5 via the
   standard 6-step ritual. Activated 2026-07-30 alongside its parent batch5 (operator go-ahead); execution stays
   machine-gated on batch5's todos via depends_on + gate_on_depends, not via a draft status.
-status: active
+status: complete # (was: active) 2026-08-06 archival sweep: all todos [x], no locked_by
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [defi, ao-dispatch, close-out, batch-5, satellite-docs, archival]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

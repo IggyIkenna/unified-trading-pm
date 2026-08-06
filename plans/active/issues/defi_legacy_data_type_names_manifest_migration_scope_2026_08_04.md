@@ -16,7 +16,7 @@ summary: >-
   `dex_pools` only in a catalog-freshness probe context, not a migration todo. Filed as a standalone, properly-scoped
   issue doc (cannot add to the capped master doc) rather than executed inline — a migration at this row count needs its
   own dedicated dry-run + content-verification pass, per this exact workspace's own R5 precedent
-  (`/plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`: a superficially-safe-looking `dex_pools/`
+  (`/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`: a superficially-safe-looking `dex_pools/`
   delete order was overturned by a content-verify that found 32 legacy-only high-TVL pools NOT present in the
   "canonical" set — "the paths looked duplicated; the content was not"). Rushing a rename across 4M rows without
   per-shard content verification risks exactly that failure mode at much larger scale.
@@ -42,7 +42,7 @@ related:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
-    /plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]

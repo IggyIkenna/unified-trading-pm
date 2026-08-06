@@ -364,8 +364,8 @@ new pool is confirmed green, (3) only then resize AO down.
       human-planning-VM-retirement section below): the VM's termination went ahead WITHOUT cross-checking an
       already-filed P1 WIP-preservation warning for that exact host, and the flagged uncommitted work in 5 repos is now
       very likely permanently lost (no snapshot/volume survives). Resolved + escalated in
-      `/plans/active/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md` and
-      `/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (both now
+      `/plans/archive/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md` and
+      `/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (both now
       `status:     resolved`), plus the duplicate now-moot allowlist todo in
       `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.
 

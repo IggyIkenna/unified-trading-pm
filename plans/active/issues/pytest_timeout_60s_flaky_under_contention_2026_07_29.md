@@ -12,7 +12,7 @@ summary: >-
   base-library.sh` PARGS line (used by every repo's pytest slice, unlike the two sibling knobs on the same line block —
   PYTEST_WORKERS/PYTEST_UNIT_DIR — which ARE env-overridable). Two subsequent LDR gate runs on later commits came back
   green (via content-sentinel skip). This is the same bug CLASS as
-  `/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md` (a fixed
+  `/plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md` (a fixed
   60s `run_timeout` wall-clock wrapper flaking under shared-host I/O contention) — but that issue's own todo 3 left open
   "does GH Actions CI see the same contention profile, or is this slot-worktree-local only?" This occurrence answers it:
   YES, the pattern also fires on GH Actions-hosted `quality-gates-v2` runs, not only local multi-slot hosts — likely via
@@ -123,8 +123,8 @@ uses elsewhere in the same file. This flag is applied to **every test, in every 
 ## Why this matters / relation to the precedent issue
 
 This is the same bug CLASS as
-`/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`: a fixed 60s
-wall-clock timeout that fires under contention regardless of whether the underlying check would have passed, on a
+`/plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`: a fixed
+60s wall-clock timeout that fires under contention regardless of whether the underlying check would have passed, on a
 completely unrelated diff. That issue diagnosed the mechanism as **shared-host I/O contention** (3-7 concurrent
 `quality-gates.sh` processes across slots on the same physical host) and fixed it by raising the specific script's
 `run_timeout` 60→300 in each of 4 repos' own `scripts/quality-gates.sh` copies (a repo-local, low-blast-radius change

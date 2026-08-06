@@ -9,7 +9,7 @@ summary: >-
   2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1 reclassification pass, per
   task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a companion gated finalize plan)
   -- this doc's single-todo exemption did not apply since its total todo count (done + open) exceeds 1.
-status: active
+status: complete # (was: active) 2026-08-06 archival sweep: all todos [x], no locked_by
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

@@ -54,7 +54,7 @@ context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
-    /plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
+    /plans/archive/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -91,7 +91,7 @@ context_scope:
       grew ~3.5x while the numerator fell, so the "~50%" framing overstates a correctness problem that is already ~95%
       attributed to open P0 work. Edit that line item to (a) strike the stale ~50%/1.33M figure, (b) cite 11.61% /
       1,060,613 as the current measurement, and (c) link
-      `/plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` as the measurement +
+      `/plans/archive/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` as the measurement +
       attribution record. Also strike the same line's "COINBASE↔COINBASE-SPOT mismatch" relabel premise — that doc
       measured bare `venue == "COINBASE"` at **0 rows** (already fully canonical), so there is no relabel to do. Do NOT
       touch the blank-`data_type` half of that line item — it is PARKED as a cross-tranche conflict (see Deferred).

@@ -52,7 +52,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
+    /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /codex/02-data/orphan-object-detection.md,
   ]

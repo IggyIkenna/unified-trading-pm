@@ -350,8 +350,8 @@ bash unified-trading-pm/scripts/sync-workspace.sh
 
 ## Related Documents
 
-| Document                                       | Description                            |
-| ---------------------------------------------- | -------------------------------------- |
-| [new-repo-setup.md](new-repo-setup.md)         | Complete repo setup workflow           |
-| [workspace-setup.md](workspace-setup.md)       | Initial workspace configuration        |
-| [ci-cd-flow.md](../08-workflows/ci-cd-flow.md) | CI/CD setup (uses repo-relative paths) |
+| Document                                           | Description                            |
+| -------------------------------------------------- | -------------------------------------- |
+| [new-repo-setup.md](new-repo-setup.md)             | Complete repo setup workflow           |
+| [workspace-setup.md](workspace-setup.md)           | Initial workspace configuration        |
+| [ci-cd-flow.md](/codex/08-workflows/ci-cd-flow.md) | CI/CD setup (uses repo-relative paths) |

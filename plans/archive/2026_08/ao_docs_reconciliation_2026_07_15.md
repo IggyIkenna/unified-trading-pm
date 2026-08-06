@@ -503,10 +503,11 @@ post-pivot re-sweep.
       code) — agent-orchestrator@3abe56c" — both halves of the gate (explicit reopen AND re-verification date)
       satisfied. Checkbox lagged reality by ~6 days.
 - [x] ✅ [DOCS] P3. **DONE (found stale 2026-08-04, `/ag-closeout-audit ao`).** Gate met via
-      `unified-trading-pm@7a3cc1289` (2026-07-24): `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`'s
-      Host-Behaviour-Matrix row now reads "Per-slot Path-B reference-clone on `live-defi-rollout`" (bare `tab/<op>/N`
-      cell removed) and its interactive-session bullet explicitly bannered "RETIRED — corrected 2026-07-23." No
-      unbannered `tab/<...>` instruction remains. Checkbox lagged reality by ~11 days.
+      `unified-trading-pm@7a3cc1289` (2026-07-24):
+      `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`'s Host-Behaviour-Matrix row now reads
+      "Per-slot Path-B reference-clone on `live-defi-rollout`" (bare `tab/<op>/N` cell removed) and its
+      interactive-session bullet explicitly bannered "RETIRED — corrected 2026-07-23." No unbannered `tab/<...>`
+      instruction remains. Checkbox lagged reality by ~11 days.
 - [x] ✅ [REVIEW] P2. **The Tier-6 remainder is now its own issue doc — track it there, not here.** Tier-6's per-file
       dispositions were executed as a blanket delete, leaving 5 dead doc-references in shipped code and a tracker
       Progress Log claiming "0 dead links" that never covered that batch. Filed 2026-07-23 as

@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [iam, gcp, vm-launcher, service-account, prod-env, cron, honest-coverage, data-status]
 related:
   [
-    /plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
+    /plans/archive/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
@@ -56,7 +56,7 @@ source:
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
+    /plans/archive/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,

@@ -63,7 +63,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/ci_status_consolidator_skip_ci_starves_ldr_backmerge_2026_08_03.md,
+    /plans/archive/issues/ci_status_consolidator_skip_ci_starves_ldr_backmerge_2026_08_03.md,
     /plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
@@ -87,7 +87,7 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/ci_status_consolidator_skip_ci_starves_ldr_backmerge_2026_08_03.md,
+    /plans/archive/issues/ci_status_consolidator_skip_ci_starves_ldr_backmerge_2026_08_03.md,
     /codex/08-workflows/ci-cd-flow.md,
     .github/workflows/ci-status-consolidator.yml,
     .github/workflows/quality-gates-v2.yml,

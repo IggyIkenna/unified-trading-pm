@@ -35,7 +35,7 @@ tags:
 related:
   [
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
-    /plans/active/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md,
+    /plans/archive/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md,
   ]
 created: 2026-08-03
 author: unknown

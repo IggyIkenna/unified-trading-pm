@@ -258,7 +258,7 @@ from `calculators/__init__.py`'s module-level registry):
   run.
 - 2026-08-03 (slot-4, data_pipeline_failure escalation agt-285d66): Dispatched via `POST /api/escalate`
   (`DP_VM_EXIT_NONZERO`/DP-VM-001, VM `features-e2e-tradfi-20260803-113749-c81739`, exit_code=1) with a default RELAUNCH
-  suggestion per `codex/15-runbooks/incidents/rb_infra_relaunch.md`. Diagnosed instead of blindly relaunching: read the
+  suggestion per `/codex/15-runbooks/incidents/rb_infra_relaunch.md`. Diagnosed instead of blindly relaunching: read the
   VM's `run.log` directly —
   `FileNotFoundError: No delta-one features found under gs://features-tradfi-test-central-element-323112/delta_one/by_date/day=2026-01-21/ for timeframe=15s. Run features-delta-one-service for TRADFI/2026-01-21 first.`
   — the exact same cascade already root-caused above (INTERIM #4/#5 entries) and gated on this doc's still-open Root

@@ -72,7 +72,7 @@ depends_on: []
 > archived per
 > [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
 > Combined cross-repo lineage report (this doc's todo 4 deliverable) lives at
-> [`mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/active/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+> [`mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/archive/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
 > Every per-stage finding's own follow-up work stays tracked in its own doc (see that report's "Stage-by-stage findings"
 > section for the full pointer list) — nothing here evaporates with the archive.
 
@@ -364,7 +364,7 @@ lets each one be built, validated, and run to real completion on its own timelin
       `data_pipeline_check_mdps_features_2026_07_20.md` todo 11b actually asks for, then flip that todo. **Done
       2026-08-03** (`unified-trading-pm`): synthesized all 4 stage docs (raw-MTDS + the 3 new todo-1/2/2b-2d/3-3c
       sweeps) into one report —
-      [`mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/active/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+      [`mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/archive/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
       Headline: every pipeline stage now has working, real-prod-data-validated orphan tooling (a corpus-wide gap this
       doc's own scoping found didn't exist before todos 1-3c); every real orphan population found across all 4 stages is
       either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown

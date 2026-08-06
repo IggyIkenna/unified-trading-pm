@@ -32,6 +32,7 @@ tags:
   ]
 related:
   [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
     /plans/archive/issues/features_smoke_matrix_verification_findings_2026_08_01.md,
     /plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md,

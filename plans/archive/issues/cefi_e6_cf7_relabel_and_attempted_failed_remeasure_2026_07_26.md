@@ -128,10 +128,10 @@ rows) is real but small and not urgent.
       at this doc for the current 11.61%/1,060,613 measurement + attribution.
 
 > **📤 THE OPEN P3 BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-04,
-> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` `[DATA] P2` (`status: active`,
-> `assigned_vm: planning`) carries the same 9,743-row backfill + 7-row bare-`OKX` reclassify verbatim (same row split,
-> same framing, same done-when). Leave `assigned_vm: NA` here — flip this checkbox only by citing batch3's execution
-> once it lands, not independently.
+> tranche=cefi).** `/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` `[DATA] P2`
+> (`status: active`, `assigned_vm: planning`) carries the same 9,743-row backfill + 7-row bare-`OKX` reclassify verbatim
+> (same row split, same framing, same done-when). Leave `assigned_vm: NA` here — flip this checkbox only by citing
+> batch3's execution once it lands, not independently.
 
 - [x] ✅ [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) + EXECUTED batch3 item 6 (2026-07-31,
       `unified-trading-pm@a3922f9c9`): 0 blank-`data_type` `captured` rows in live manifest, bare-`OKX`×7 reclassified,

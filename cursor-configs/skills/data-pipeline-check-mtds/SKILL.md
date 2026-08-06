@@ -453,7 +453,7 @@ cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
 > active backfill, monitor the backfill VM's `run.log` for 403s during the live VM's window — a zero count confirms no
 > contention this run, but does not structurally guarantee it for future connector changes.
 >
-> Full evidence: `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1/P2 closed NOT-A-BUG
+> Full evidence: `/plans/archive/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1/P2 closed NOT-A-BUG
 > 2026-08-02; P3 tracked here),
 > `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`.
 

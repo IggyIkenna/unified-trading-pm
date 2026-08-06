@@ -41,7 +41,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/active/issues/instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md,
-    /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
+    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
     /plans/active/issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md,
@@ -139,7 +139,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `instruments-service@aaa0866c` already recognizes + maps both to the canonical trailing-key target). Run a fresh
       `migrate_instrument_availability_hive_2026_08_03.py --asset-group prediction` dry-run to confirm current counts,
       then `--apply-prod --confirm-prod-write` to copy-and-verify (never delete source, mirrors the already-proven
-      cefi/defi/tradfi apply pattern), and update `codex/02-data/canonical-cutover-register.md` §6b's prediction
+      cefi/defi/tradfi apply pattern), and update `/codex/02-data/canonical-cutover-register.md` §6b's prediction
       residual row to reflect the applied state. Source:
       `instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md`. Done when: fresh dry-run +
       apply-prod run completes with 0 failed, prediction's `unrecognized` count for these two specific shapes (excluding

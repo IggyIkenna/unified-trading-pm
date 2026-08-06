@@ -19,7 +19,7 @@ related:
   [
     /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
-    /plans/active/issues/qg_v2_digest_refresh_fastpath_gap_2026_08_05.md,
+    /plans/archive/issues/qg_v2_digest_refresh_fastpath_gap_2026_08_05.md,
     /plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]

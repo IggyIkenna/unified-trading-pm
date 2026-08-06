@@ -12,7 +12,11 @@ stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [test-failure, qg-red, blocking]
-related: [macro_micro_econ_data_capture_audit_2026_06_05]
+related:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+  ]
 created: 2026-08-05
 author: slot-3 (data_engineering worker)
 parent_epic: mtds_mdps_master

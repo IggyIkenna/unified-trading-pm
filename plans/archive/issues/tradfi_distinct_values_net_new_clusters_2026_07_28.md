@@ -53,7 +53,7 @@ context_scope:
   [
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
+    /plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
@@ -107,7 +107,7 @@ scope).
 > `assigned_vm` would dispatch a duplicate, so the shared conflict-check
 > (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
 > only. Note also that the `YAHOO_FINANCE` half (todo 2) is the SAME question batch5's sibling todo sourced from
-> `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` owns; batch5 already encodes the
+> `/plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` owns; batch5 already encodes the
 > "investigate once, cite from all three" sequencing. Live blocker = batch5's draft status (operator item 5 in
 > `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
 
@@ -123,8 +123,8 @@ scope).
       Confirm whether `YAHOO_FINANCE` should be added to `VENUES_BY_ASSET_GROUP['tradfi']` (real, working daily-source
       venue per the 2026-07-19 sourcing decision) or is a mis-stamped `source=` value leaking into the `venue` column.
       **Measured live 2026-08-04: 0 `venue=YAHOO_FINANCE` rows in the live manifest. The sibling investigation
-      (`/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`, resolved 2026-08-04) confirmed: 0 live
-      rows, `write_canonical_shard()` is dead code (the active `_umi_yahoo.py` route never calls it), and
+      (`/plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md`, resolved 2026-08-04) confirmed: 0
+      live rows, `write_canonical_shard()` is dead code (the active `_umi_yahoo.py` route never calls it), and
       `YAHOO_FINANCE` was DELIBERATELY removed 2026-07-15 as a source-as-venue modeling error per UAC's
       `market_data_categories.py` + `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`. Do NOT re-register it. This doc's own
       YAHOO_FINANCE question is fully answered by that investigation — cite, do not re-derive.** Source: this doc.
@@ -134,7 +134,7 @@ scope).
       (`capture_status=captured`, venue=CME, source=databento, `ohlcv_1m`=1,092 + `trades`=7), ALL `instrument_id=None`,
       ALL `underlying=None`, ALL written in the 2026-07-27T16:46:31-40Z phantom batch — the IDENTICAL signature as the
       UD/OPTION/FUTURE/COMBO phantom rows already root-caused + tracked in
-      `/plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` (traced to
+      `/plans/archive/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` (traced to
       `market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py`). `UD` is already
       quarantined as `TRADFI_INSTRUMENT_TYPE_ACCEPTED_UNRESOLVED_RESIDUE` in
       `unified-api-contracts/registry/market_data_categories.py`. This cluster is a subset of the broader phantom-batch

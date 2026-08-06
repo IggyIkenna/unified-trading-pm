@@ -19,7 +19,7 @@ tags: [ao-dispatch, close-out, mtds, mdps, tradfi, data-correctness, ts_event]
 related:
   [
     /plans/archive/2026_08/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05.md,
-    /plans/active/issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md,
+    /plans/archive/issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md,
   ]
 created: "2026-08-05"
 last_updated: "2026-08-05"

@@ -46,7 +46,7 @@ superseded_by:
 source: "Operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md § 1b, option B, 2026-08-03."
 context_scope:
   [
-    /plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md,
+    /plans/archive/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
@@ -153,7 +153,7 @@ pending exactly this migration.
   4,735 objects). The original 2026-07-22 triage doc (`sports_legacy_duplicate_triage_2026_07_22.md` §2/§7)
   independently recommended folding these 1,492 rows into that same wipe (delete), not copying them forward — a
   recommendation that appears to have been lost between then and the § 1b conflict-resolution framing. Filed
-  `/plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` (full evidence + recommendation)
+  `/plans/archive/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` (full evidence + recommendation)
   and a `/blocked` question rather than executing the copy. No GCS object read or written; no code changed for this
   todo. Todo 1 (re-run the census) also not executed — pending the disposition ruling, since a fresh census only matters
   if the copy path is confirmed as correct.

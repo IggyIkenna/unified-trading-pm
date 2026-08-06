@@ -49,14 +49,14 @@ context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
     unified-trading-library/unified_trading_library/manifest_writer,
   ]
 ---
 
 > **ARCHIVED 2026-08-05** — all 16 todos complete across prediction/tradfi/defi backfill + infra guardrail; closeout
-> tracked in `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md`.
+> tracked in `/plans/archive/2026_07/mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md`.
 
 # Cross-asset-group available_at manifest backfill (market-data-tick)
 

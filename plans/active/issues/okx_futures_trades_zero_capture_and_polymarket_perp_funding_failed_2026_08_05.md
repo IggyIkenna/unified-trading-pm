@@ -19,6 +19,7 @@ tags: [data-correctness, cefi, live-capture, batch-pipeline, manifest, okx-futur
 related:
   [
     /plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]

@@ -38,7 +38,7 @@ related:
     /plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
     /plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md,
+    /plans/archive/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md,
     /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
     /codex/02-data/availability-manifest-and-data-status.md,

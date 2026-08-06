@@ -7,7 +7,7 @@ summary: >-
   (lst_rate_honest_coverage_2026_07_21.md Phase 3) once the batch-8 todo lands, re-check the 2 Deferred
   classified-but-not-extracted items for whether their blocking condition has since cleared, then archive batch8 via the
   standard 6-step ritual.
-status: active
+status: complete # (was: active) 2026-08-06 archival sweep: all todos [x], no locked_by
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [defi, ao-dispatch, close-out, batch-8, satellite-docs, archival]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]

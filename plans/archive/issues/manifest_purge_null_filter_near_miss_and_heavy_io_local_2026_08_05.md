@@ -34,7 +34,7 @@ related:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
   ]
 created: "2026-08-05"
 author: unknown

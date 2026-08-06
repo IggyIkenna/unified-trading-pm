@@ -46,8 +46,8 @@ tags: [ci-cd, quality-gates-v2, reusable-workflow, workflow-file-issue, fast-che
 related:
   [
     /plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md,
-    /plans/active/issues/main_backmerge_conflict_wall_digest_churn_2026_08_05.md,
-    /plans/active/issues/qg_v2_digest_refresh_fastpath_gap_2026_08_05.md,
+    /plans/archive/issues/main_backmerge_conflict_wall_digest_churn_2026_08_05.md,
+    /plans/archive/issues/qg_v2_digest_refresh_fastpath_gap_2026_08_05.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-05

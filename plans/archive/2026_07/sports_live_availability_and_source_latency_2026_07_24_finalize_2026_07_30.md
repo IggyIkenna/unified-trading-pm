@@ -10,7 +10,7 @@ summary: >-
   rotated `odds-api-key` to a 5,000,000-credit/month subscription 2026-07-29 — what remains is deterministic wiring plus
   a stated verification, not a business or design call. This twin verifies that todo against its own "Done when" text
   and checks whether the source doc is then an archival candidate.
-status: active
+status: complete # (was: active) 2026-08-06 archival sweep: all todos [x], no locked_by
 nature: process
 asset_group: [sports]
 stage: [data]

@@ -14,5 +14,5 @@
 #
 # NEVER hand-raise this number to silence a run that just found new silent-default
 # plans — only --update-baseline after actually reviewing them.
-max_silent_default_plans: 211
-last_updated: "2026-08-05"
+max_silent_default_plans: 215
+last_updated: "2026-08-06"

@@ -41,8 +41,8 @@ tags:
   ]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
     /plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -64,7 +64,7 @@ locked_since:
 context_scope:
   [
     /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
   ]

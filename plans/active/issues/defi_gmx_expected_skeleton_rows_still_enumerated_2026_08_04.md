@@ -11,14 +11,15 @@ summary: >-
   freshly-dated skeleton rows, meaning some enumerator (the Layer-1 `enumerate_expected_universe.py` v2
   skeleton-builder, per `/codex/02-data/honest-coverage-model.md`) is STILL treating GMX as a valid in-scope venue as of
   today — almost certainly triggered by this same session's own `--asset-group all` honest-coverage measurement run (see
-  `/plans/active/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md`, resolved same session).
-  Checked instruments-service's own source (`reference_data/factory.py`, `reference_data/adapters/defi/morpho.py`,
-  `engine/orchestrator/defi.py`, the dex-pool-glued-pair-id script) — all clean, only dated 2026-07-25 removal comments
-  + one unrelated legitimate exception (a GMX-issued token accepted as Morpho vault collateral, a different namespace,
-  same class as the UAC `defi_reserve_params.py` collateral entry). Did NOT locate the actual source before this session
-  ran out of context budget — most likely the IS instrument/venue CATALOGUE itself (a data artifact, not code — e.g.
-  `build_instrument_catalogue.py`'s output, or a similar reference-data store) still has a GMX pool instrument entry
-  that was never pruned when the 2026-07-25 removal touched only Python source registries.
+  `/plans/archive/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md`, resolved same
+  session). Checked instruments-service's own source (`reference_data/factory.py`,
+  `reference_data/adapters/defi/morpho.py`, `engine/orchestrator/defi.py`, the dex-pool-glued-pair-id script) — all
+  clean, only dated 2026-07-25 removal comments + one unrelated legitimate exception (a GMX-issued token accepted as
+  Morpho vault collateral, a different namespace, same class as the UAC `defi_reserve_params.py` collateral entry). Did
+  NOT locate the actual source before this session ran out of context budget — most likely the IS instrument/venue
+  CATALOGUE itself (a data artifact, not code — e.g. `build_instrument_catalogue.py`'s output, or a similar
+  reference-data store) still has a GMX pool instrument entry that was never pruned when the 2026-07-25 removal touched
+  only Python source registries.
 status: open
 nature: issue
 asset_group: [defi]
@@ -30,7 +31,7 @@ related:
   [
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md,
-    /plans/active/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md,
+    /plans/archive/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]

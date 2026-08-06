@@ -26,7 +26,7 @@ tags: [ci-cd, promote, backmerge, github-actions, notify-slack, self-hosted-runn
 related:
   - /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md
   - /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md
-  - /plans/active/pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md
+  - /plans/archive/2026_07/pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md
   - /codex/08-workflows/ci-cd-flow.md
 created: "2026-08-06"
 author: ikennaigboaka [slot-4·planning]

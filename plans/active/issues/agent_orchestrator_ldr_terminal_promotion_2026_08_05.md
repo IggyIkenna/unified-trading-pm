@@ -27,6 +27,7 @@ tags: [agent-orchestrator, ci-cd, promotion-model, ldr-terminal, ci-cost, big-fi
 related:
   [
     /plans/archive/2026_08/task_usage_schema_drift_done_outage_2026_08_05.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]

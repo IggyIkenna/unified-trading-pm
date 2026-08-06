@@ -660,8 +660,8 @@ Stale generated audit artifacts (`orphan-report.txt`, `type_usage_audit.json`) a
   `ZETA-SOLANA`, `FLASH`, `FLASH-SOLANA`) on either asset group. This is stronger evidence than a single manual
   confirmation run — it proves the no-op-diff property held across 5+ real production regen cycles over 18 days. All
   todos now done, no lock — archiving per the 6-step ritual
-  (codex/12-agent-workflow/plan-completion-and-archival-discipline.md): fixed every corpus-active referrer's path
-  (`codex/04-architecture/solana-defi-coverage.md`,
+  (/codex/12-agent-workflow/plan-completion-and-archival-discipline.md): fixed every corpus-active referrer's path
+  (`/codex/04-architecture/solana-defi-coverage.md`,
   `plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`,
   `plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
   `plans/active/cefi_consolidated_closeout_2026_07_18.md`,

@@ -37,7 +37,7 @@ context_scope:
   [
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
-    /plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
+    /plans/archive/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md,
     instruments-service/scripts/census_fixture_events_schema_variants_2026_07_25.py,
     instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
     deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
@@ -730,7 +730,7 @@ even `get-iam-policy` on it). Neither the `orchestrator-cloud-identity-self-serv
 can't reauth non-interactively) was reachable to self-grant. **Workaround (no extra grant needed):
 `LC_RUNTIME_SA=<your-own-identity-email>` — attaching a VM to the SAME identity you're already authenticated as needs no
 delegation permission.** Full writeup + the durable one-line fix (needs an operator or AO-orchestrator-identity
-session): `/plans/active/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md`. Relaunched
+session): `/plans/archive/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md`. Relaunched
 FIXTURE_EVENTS pass-2 with this workaround as `af-backfill-20260802-152210` — running, resuming via skip-if-fresh from
 wherever the manifest shows work remains (no manual resume-state tracking needed).
 

@@ -35,9 +35,9 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
+    /plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
     market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
@@ -230,7 +230,7 @@ actively written into, not static. This is a separate, currently-uncharacterized
    stamps a VENDOR name (Yahoo) into the `venue` field instead of the registered venue token silently gets NO
    canonicalization, of either the itype or the id. This would explain both this finding and finding 2 (CBOE rows) in
    one root cause, and is structurally the SAME class of bug as a sibling finding that landed in this same corpus today:
-   `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` documents
+   `/plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` documents
    `market_tick_data_service/market_interface/adapters/tradfi/yahoo_finance_adapter.py::write_canonical_shard`
    unconditionally stamping `venue="YAHOO"` (a DIFFERENT Yahoo adapter than `_umi_yahoo.py`, note — two separate Yahoo
    code paths exist) for every row it writes. **Not confirmed as the same bug** (that doc explicitly did not trace the
@@ -323,7 +323,7 @@ not a live regression), but real enough to need their own scoped root-cause-and-
       the accepted-exceptions list — **no code fix, no venue-registry change, and no further historical repair needed
       for this sub-finding** (unlike (a) and findings 1/2, these 6 rows don't pollute any live-scope denominator). This
       ALSO answers the sibling coordination question in
-      `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` and
+      `/plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` and
       `tradfi_distinct_values_net_new_clusters_2026_07_28.md`'s todo item 2 (same YAHOO_FINANCE venue question) — cite
       this finding rather than re-deriving it. `yahoo_finance_adapter.py::write_canonical_shard`'s unconditional
       `venue="YAHOO"` stamp (the sibling doc's own finding) is confirmed DEAD CODE — grepped every call site in

@@ -63,7 +63,7 @@ related:
     /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
-    /plans/active/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md,
+    /plans/archive/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-04"

@@ -363,7 +363,7 @@ fixture-linked before MVP backfill.
     — **added to this index 2026-07-31** (`/ag-closeout-audit prediction` Finding 3 fix). 2 open, covered by
     `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6 (secret reshape DONE 2026-07-31; live paper-order
     verify BLOCKED-OPERATOR-DECISION, same gate as the item above).
-  - [`plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`](/plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md)
+  - [`plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`](/plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md)
     — **added to this index 2026-07-31** (Finding 3 fix). 3 open, covered by
     `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 7 (recurrence check + reclassification + contingent
     fix, not yet dispatched).

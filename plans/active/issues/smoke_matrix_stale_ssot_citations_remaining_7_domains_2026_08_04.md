@@ -37,7 +37,7 @@ source: >-
 context_scope:
   [
     e2e-testing/scripts/calendar/smoke_matrix.py,
-    codex/15-runbooks/smoke-testing-playbook.md,
+    /codex/15-runbooks/smoke-testing-playbook.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
   ]
 ---
@@ -73,14 +73,14 @@ Replace stale citations fleet-wide (same 2-citation swap that fixed the sports f
 
 - `launch-features-backfill-vm.sh` → `launch-features-vm.sh` (cell map)
 - `plans/active/institutional_smoke_matrix_2026_04_20.plan.md` (archived) →
-  `codex/15-runbooks/smoke-testing-playbook.md`
+  `/codex/15-runbooks/smoke-testing-playbook.md`
 
 ## Todos
 
 - [x] ✅ [DOC] P3. Fix stale SSOT citations in the 7 remaining e2e-testing smoke_matrix.py files (calendar,
       cross_instrument, commodity, delta_one, multi_timeframe, onchain, volatility) — same swap as sports:
       `launch-features-backfill-vm.sh` → `launch-features-vm.sh`,
-      `plans/active/institutional_smoke_matrix_2026_04_20.plan.md` → `codex/15-runbooks/smoke-testing-playbook.md`.
+      `plans/active/institutional_smoke_matrix_2026_04_20.plan.md` → `/codex/15-runbooks/smoke-testing-playbook.md`.
       Repo: e2e-testing. Done when: all 7 files cite only current, live docs and `quality-gates.sh` green —
       e2e-testing@2bee452
 

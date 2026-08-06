@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [defi, onchain, dep-check, lst-rates, lending-indices, blazestake, data-availability]
 related:
   [
-    /plans/active/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md,
+    /plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md,
     /plans/active/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]

@@ -43,7 +43,7 @@ tags:
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
+    /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md,
   ]

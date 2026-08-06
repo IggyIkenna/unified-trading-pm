@@ -485,8 +485,8 @@ cap, not ones a marker would push over); flagged for a future pass rather than r
 
 - **2026-08-05 (interactive session) — 4 MORE test files confirmed hit by this exact class, found via an unrelated
   re-run of the test-impact-selector backtest**
-  (`/plans/active/issues/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`). Re-ran
-  `test_impact_backtest.py` against `features-service` now that the CI-runner fleet split
+  (`/plans/active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`). Re-ran `test_impact_backtest.py`
+  against `features-service` now that the CI-runner fleet split
   (`/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) has meaningfully reduced (not eliminated)
   fleet contention — got a usable sample for the first time (5, up from 0) and all 5 flagged as "selector divergences"
   (narrowed test set missed the actual failing test). Investigated each one's real CI log directly rather than trusting

@@ -27,7 +27,7 @@ related:
   [
     /plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
@@ -89,9 +89,9 @@ exception does not reach it. The consequences compound rather than sit still:
   every single run of a job that fires every 2 hours. It is the most expensive doc in the defi tranche to read (1001L)
   and the only one guaranteed to be re-read every time.
 - **Duplicate-extraction risk is real, not theoretical.** This run extracted its Phase-3 `-test-`-bucket force/skip todo
-  to `/plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md` after a clean conflict-check, but could not
-  annotate the source checkbox to cite that extraction. A future run reads the same unannotated open checkbox and has
-  nothing in the doc telling it the work is already dispatched — the precise failure the KEEP-NA-STALE citation
+  to `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md` after a clean conflict-check, but could
+  not annotate the source checkbox to cite that extraction. A future run reads the same unannotated open checkbox and
+  has nothing in the doc telling it the work is already dispatched — the precise failure the KEEP-NA-STALE citation
   mechanism exists to prevent.
 - **It is not one doc.** Any `plans/active/*.md` over 1000L with ≥1 open todo has the same property. This is the third
   recorded instance of the over-cap-blocks-edit class after the two in

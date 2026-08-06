@@ -9,7 +9,7 @@ summary: >-
   closed. Authored 2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1
   reclassification pass, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a
   companion gated finalize plan).
-status: active
+status: complete # (was: active) 2026-08-06 archival sweep: all todos [x], no locked_by
 nature: process
 asset_group: [tradfi, defi, prediction]
 stage: [meta]

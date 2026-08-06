@@ -50,7 +50,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md,
+    /plans/archive/2026_08/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md,
     unified-trading-library/unified_trading_library/manifest_writer/_maintenance.py,
     unified-trading-library/tests/unit/test_manifest_v4_migration.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,

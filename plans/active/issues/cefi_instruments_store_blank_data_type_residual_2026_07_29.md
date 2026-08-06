@@ -36,7 +36,7 @@ context_scope:
     /plans/active/data_completion_cefi_2026_07_15.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     unified-trading-library/unified_trading_library/manifest_writer_normalising.py,
-    /plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
+    /plans/archive/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md,
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     unified-trading-library/unified_trading_library/manifest_writer/_rows.py,
   ]
@@ -107,7 +107,7 @@ downloaded index copy; no prod manifest writes were made).
 > **✅ OWNERSHIP RESOLVED 2026-07-31 (corpus-wide ownership-conflict sweep).** Three docs looked like they were fighting
 > over "the cefi blank-`data_type` population". They are not — the split is by **bucket**, and it is clean: **THIS doc
 > owns `instruments-store-cefi-prd-central-element-323112`** (the IS instruments manifest) and nothing else.
-> `/plans/active/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` owns the entirely separate
+> `/plans/archive/issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` owns the entirely separate
 > `market-data-tick-cefi-prd-central-element-323112` MTDS tick manifest (9,750 rows: 9,743 backfill + 7 bare-`OKX`
 > reclassify) — **do not touch that population from here**, and do not treat its numbers as describing these rows.
 > `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md` is **not a competing owner** — it is the

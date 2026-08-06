@@ -210,7 +210,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       `launch-expected-universe-v2-vm.sh --apply-write` per chunk sequentially (waits for each chunk's VM to reach a
       terminal state before the next — respects the child launcher's own singleton lock, no `--force`), with
       `ENUM_START_DATE`/`ENUM_END_DATE` per chunk (env hooks the child launcher already supported). Sports defaults
-      `--floor-date` to `2020-06-06` (codex/02-data/sports-2020-06-data-floor.md); every other asset_group requires an
+      `--floor-date` to `2020-06-06` (/codex/02-data/sports-2020-06-data-floor.md); every other asset_group requires an
       explicit `--floor-date` (no codified floor yet — that's job (3) below). Rolling boundary is computed live
       (`today - 120d`, mirroring job (1)'s fix) so a re-run correctly narrows to only the still-uncovered range. Safe to
       re-run: the enumerator only ADDS `expected_unattempted` rows to cells with no existing capture_status row, and
@@ -305,7 +305,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
 - **data_engineering worker (slot 14) 2026-08-04 (continued)**: found + fixed a 4th real bug and filed a 5th (separate
   issue doc, cross-cutting — not part of the numbered fix list since it's an environment issue, not a launcher-code
   bug): 4. **deployment-service@16e8de3 + @e7c9510** — the shared-host `gcloud` active identity (`~/.config/gcloud` is
-  HOST-WIDE, not per-slot — see `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern") got
+  HOST-WIDE, not per-slot — see `/codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern") got
   clobbered by a sibling slot's `gcloud config set account` call THREE separate times during this run, each time
   aborting the backfill with `PERMISSION_DENIED` on `compute.instances.create` (caught cleanly each time only because of
   fix 2 above — the error surfaced instead of dying silently). Both `launch-expected-universe-v2-vm.sh` and the
