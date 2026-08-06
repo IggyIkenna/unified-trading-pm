@@ -210,7 +210,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       reusable workflow") turned out to live in `rollout-workflow-templates.sh`'s own header listing (line 14), not
       inside `request-major-bump.yml` itself — corrected to describe what the file actually does (a self-contained
       canonical flat copy; its only `uses:` is `actions/checkout@v5`, no reusable-workflow call).
-      `unified-trading-pm@<pending, shipping alongside this flip>`.
+      `unified-trading-pm@037e181559`.
 - [ ] 3. [INFRA] P0. **Convert ONE file end-to-end as the pattern-proof, including a live (non-local) CI run** — pick
       the smallest, lowest-blast-radius flat-copy candidate (`version-registry-notify.yml`, 48 lines, likely the
       simplest) as the canary: host it in `unified-trading-ci/.github/workflows/`, replace its copy in ONE low-churn
