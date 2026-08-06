@@ -559,3 +559,23 @@ deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finaliz
 - A5 CONFIRMED — cefi_master:631 "5 active plans" vs actual 19 active non-issue plans (46 incl. 27 issue docs);
   populate_epic_bodies_2026_05_21.py has NO --epic flag (only --dry-run/--apply, non-recursive over active/*.md) → full
   regen (dry-run first) or flagged hand-fix. → scope question to STEP 6.
+
+### Cluster A — CONFIRMER DONE (A1/A2/A3/A5 match refuter; A4 SPLIT verdict)
+
+- A1 — same verdict; flip split text refined: [x] resolved-half cites `instruments-service@97801b5d` (content-verified
+  at HEAD :209-221; v2 reuse :401); new todo = promote investigate_chain_lossy_20260724.py from scratchpad to scripts/
+  then re-run/decide. Never cite 1284606a (pre-rewrite twin).
+- A2 — same verdict; fix text: "archived-resolved, not deleted; sweep 82d6d6bf7 removed active copy; batch7 todo 2
+  DONE-ELSEWHERE".
+- A3 — KEEP [x] (flip commit 65f653fd9 verified; batch1 todo 4 + uac@e34afc1d on origin/LDR) + ANNOTATE leading bold →
+  "**CLOSED 2026-08-03 (na-eligibility-audit; evidence below) — was NOT closed 2026-07-29/30 here: genuinely contested,
+  left open rather than force a premature verdict.**" (kills the on-its-face contradiction). Trap: batch1 FINALIZE
+  false-completion-claim issue exists — do not attribute this flip to the finalize twin.
+- **A4 SPLIT → operator route**: refuter = NOT archive-ready (status: open + locked_by → human [unlock-plan] per
+  archival-discipline:44, agents never auto-unlock); confirmer = YES (locked_by is corpus-wide boilerplate — 62 active
+  - 715 archived docs; status flip is part of the archive commit; 4 referrers repointable: track2:125, closeout:252,
+    launcher-guard:136, archived cefi_consolidated_native_ao_extract:470). BOTH agree on in-doc fixes (writable, no
+    archive): sha cite f9fa7587→82d86feb (pre-rewrite twin), stale :130-131 "pending" caveat → prose fix (window now
+    fetchable, _CDE_REGISTRATION_DATE=2025-12-12). → STEP 6 unlock-or-keep question.
+- A5 — regen via populate_epic_bodies_2026_05_21.py --dry-run → --apply (whole-corpus, generator-owned since
+  2026-07-16); NEVER hand-fix. Dry-run blast radius to be inspected in STEP 5.
