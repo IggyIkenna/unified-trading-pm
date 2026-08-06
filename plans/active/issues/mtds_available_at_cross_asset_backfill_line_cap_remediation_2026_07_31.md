@@ -112,7 +112,16 @@ running against it) — check the plan's own status before starting.
       from the trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active
       plan, landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
       splitting. (repo: unified-trading-pm) — ✅ 2026-08-01 (slot-11, cicd): see Progress Log for full evidence.
-- [ ] [PLAN] P2. While splitting (todo above), add explicit per-todo sequencing between each asset group's "Apply
+- [ ] [PLAN] P2. **RE-TRIAGE (plan_reconciler agt-65e60a, 2026-08-06): very likely MOOT.** Target plan
+      `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` is now
+      `/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`, `status: complete`, banner
+      `ARCHIVED 2026-08-05 — all 16 todos complete` — verified live. This todo's own verification criterion (confirm the
+      post-split `-006`-equivalent apply/resume pair doesn't dispatch prematurely) no longer has a live target: the plan
+      completed and archived without the extra `depends_on`/`gate_on_depends` sequencing this todo asked for, and no
+      apply/resume pair is still open anywhere in it. Leaving open (not auto-closing) since the ORIGINAL action (add
+      explicit sequencing) was never actually performed — this is a moot-target finding, not a shipped fix; an
+      operator/next pass should confirm and close rather than the checkbox being silently flipped `[x]`. While splitting
+      (todo above), add explicit per-todo sequencing between each asset group's "Apply
       `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos via the
       **cross-plan `depends_on` + `gate_on_depends: true` split** (see 2026-07-31 Progress Log entry below — the
       `prereqs.completed_tasks`-on-a-single-todo mechanism this todo originally suggested is NOT a valid authoring

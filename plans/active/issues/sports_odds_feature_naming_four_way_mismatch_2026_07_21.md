@@ -128,11 +128,21 @@ scope a design decision first, then a real parity test becomes possible against 
       correctly gated behind that plan's naming-decision + 3-repo migration todos (it cannot be written until those land
       — there is still no real contract to test parity against). Flipping this duplicate closed instead of leaving it
       open prevents the backlog dispatcher from re-queuing a currently-unactionable duplicate of the same work here.
-- [ ] [SCRIPT] P1. The actual four-way naming migration has not started — the two `[x]` todos above only covered the
-      decision/scoping step (operator ruling BLK-a1ce4719 + authoring the migration plan); re-grepped
-      `SportsFeatureVector` across features-service/ml-service/strategy-service on 2026-07-23 and found zero hits,
-      confirming the real 3-repo migration (`sports_odds_feature_naming_canonicalization_2026_07_21.md`, 8 of 9 todos
-      still `[ ]`) is unstarted.
+- [ ] [SCRIPT] P1. **RE-TRIAGE (plan_reconciler agt-65e60a, 2026-08-06): migration is now ~80% LANDED, not unstarted —
+      this todo's premise was stale.** The check method every prior pass used (grepping the literal class name
+      `SportsFeatureVector`) genuinely returns zero hits, but that's a false negative: the migration adopted the new
+      field NAMES, not a literal class import. Independently re-verified live: sibling
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md` is now **8 of 9 todos done**, and the new naming
+      scheme is confirmed shipped in 3 repos — `unified-api-contracts/.../_features_venue_referee_player_odds.py`
+      (`OddsFeaturesMixin`: `prob_implied_home`, `odds_market_overround`, `prob_fair_home`),
+      `features-service/.../odds_columns.py` (`ODDS_COLUMNS` matches), and
+      `strategy-service/.../arbitrage_structural/sports_arb_dutching.py` +
+      `.../rules_directional/sports_value_betting.py` (both keyed on `odds_decimal_<outcome>_<venue>` /
+      `prob_fair_outcome`). **Genuine residual found**: `strategy-service/.../rules_directional/event_settled.py` (lines
+      17/23/108) still uses the OLD `decimal_odds_<outcome>` naming, not `odds_decimal_`. Remaining scope for this todo:
+      (a) migrate `event_settled.py` to the new naming, (b) land the sibling's 2 remaining `[REVIEW] P3` todos (parity
+      test + cross-reference to the sports-end-to-end wiring plan — both gated on todos 2-6, which are now done, so that
+      gate has cleared).
 
 ## Codex SSOTs
 

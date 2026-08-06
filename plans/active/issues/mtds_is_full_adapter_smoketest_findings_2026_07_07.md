@@ -406,27 +406,28 @@ the todos already promised.
 - [x] [DECISION] P1. GMX V2 coverage — **operator decision applied**: see new § 3a below. Do not integrate V2; GMX
       capture stays scoped to the V1 vault.
 - [ ] [CODE] P2. Update both drilldown mockups — not attempted this session (out of dispatched scope).
-- [~] [FIX] P3. P2/P3 minor/cosmetic sweep — partial: `drift.py` class-docstring self-contradiction fixed (real source
-  is SDK TS constants, not the dead Data API) and the SolBlaze/BlazeStake dead `/api/v1/exchange_rate` endpoint fixed
-  (real live endpoint is `/api/v1/stats`, confirmed live 2026-07-10 — this one was NOT actually dead code,
-  `_tier3_bsol_rest` in `solana_lst_archival.py` is a real live production code path that could never succeed before
-  this fix; parser + APY unit conversion updated to match, shipped `market-tick-data-service@f4a118be`). **2026-07-14
-  addition**: `bridge_events_handler.py` (~256, "Across deposit `symbol` hardcoded `USDC`") also fixed —
-  `market-tick-data-service@f4b19bad` (quickmerge-landed on `live-defi-rollout`, ancestor-verified) — added a real
-  `inputToken`-address→symbol lookup (`_ACROSS_TOKEN_SYMBOLS`, covers USDC/USDT/WETH/DAI/WBTC/native-ETH, the tokens
-  that dominate Across's real Ethereum volume) with honest fallback to the raw address for unknown tokens (never a
-  fabricated symbol), matching the Stargate sibling function's real-symbol behavior in the same file. Also fixed the
-  test suite's mock-matches-the-bug: the existing test asserted `symbol == "USDC"` against a FAKE `"0xusdc"` mock
-  address (would have passed even with the bug fixed to always-return-fake-USDC) — updated to a real checksum USDC
-  address, plus 2 new regression tests (real-WETH-address→"WETH" and unknown-address→raw-address-fallback). Note: this
-  handler is currently DEAD CODE in production — confirmed still true 2026-07-14 — `across`/`stargate` are never
-  registered in `SUBGRAPH_IDS`, so `_fetch_bridge_events` returns `[]` before reaching this code path (see the P2/P3
-  bug-list entry right above the one this item addresses) — fixing the mislabeling now closes the "landmine" this doc's
-  own P2/P3 note already flagged ("a latent corruption risk if that gap is ever fixed without also fixing this") before
-  someone registers the subgraph IDs and ships real, silently-mislabeled data. Remaining ~12 items in the P2/P3 list not
-  attempted (low value, several already cross-referenced/deferred elsewhere, some touch `instrument_key` format which
-  needs the dedicated canonicalization effort, not a cosmetic batch pass) — see the 2026-07-14 Progress Log entry below
-  for a one-line diagnosis on each.
+- [ ] [FIX] P3. **[PARTIAL — ~12 of ~15 items still undiagnosed-to-done, per this item's own text below]** P2/P3
+      minor/cosmetic sweep — partial: `drift.py` class-docstring self-contradiction fixed (real source is SDK TS
+      constants, not the dead Data API) and the SolBlaze/BlazeStake dead `/api/v1/exchange_rate` endpoint fixed (real
+      live endpoint is `/api/v1/stats`, confirmed live 2026-07-10 — this one was NOT actually dead code,
+      `_tier3_bsol_rest` in `solana_lst_archival.py` is a real live production code path that could never succeed before
+      this fix; parser + APY unit conversion updated to match, shipped `market-tick-data-service@f4a118be`).
+      **2026-07-14 addition**: `bridge_events_handler.py` (~256, "Across deposit `symbol` hardcoded `USDC`") also fixed
+      — `market-tick-data-service@f4b19bad` (quickmerge-landed on `live-defi-rollout`, ancestor-verified) — added a real
+      `inputToken`-address→symbol lookup (`_ACROSS_TOKEN_SYMBOLS`, covers USDC/USDT/WETH/DAI/WBTC/native-ETH, the tokens
+      that dominate Across's real Ethereum volume) with honest fallback to the raw address for unknown tokens (never a
+      fabricated symbol), matching the Stargate sibling function's real-symbol behavior in the same file. Also fixed the
+      test suite's mock-matches-the-bug: the existing test asserted `symbol == "USDC"` against a FAKE `"0xusdc"` mock
+      address (would have passed even with the bug fixed to always-return-fake-USDC) — updated to a real checksum USDC
+      address, plus 2 new regression tests (real-WETH-address→"WETH" and unknown-address→raw-address-fallback). Note:
+      this handler is currently DEAD CODE in production — confirmed still true 2026-07-14 — `across`/`stargate` are
+      never registered in `SUBGRAPH_IDS`, so `_fetch_bridge_events` returns `[]` before reaching this code path (see the
+      P2/P3 bug-list entry right above the one this item addresses) — fixing the mislabeling now closes the "landmine"
+      this doc's own P2/P3 note already flagged ("a latent corruption risk if that gap is ever fixed without also fixing
+      this") before someone registers the subgraph IDs and ships real, silently-mislabeled data. Remaining ~12 items in
+      the P2/P3 list not attempted (low value, several already cross-referenced/deferred elsewhere, some touch
+      `instrument_key` format which needs the dedicated canonicalization effort, not a cosmetic batch pass) — see the
+      2026-07-14 Progress Log entry below for a one-line diagnosis on each.
 
 ## Progress Log
 

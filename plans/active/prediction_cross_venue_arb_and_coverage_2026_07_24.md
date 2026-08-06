@@ -603,17 +603,20 @@ Residual data-correctness items captured as todos below (lowercase-venue manifes
       market-tick-data-service@d6edd704 + instruments-service (VM). Provenance: autonomous catalogue/backfill session
       2026-06-23 / fix 2026-06-26. (Composes with the line-339 Kalshi-historical residual.)
 
-- [ ] [DATA] P2. **Residual lowercase `venue=kalshi` + blank/UNKNOWN venue rows in the prediction `_index` manifest**
-      (DISCOVERED 2026-06-23 verifying Item A): the consolidated
-      `market-data-tick-pred-prd-…/_index/availability_index.parquet` carries ~124 `venue=kalshi` (lowercase,
-      pre-venue-case-fix) + ~168 blank-venue + ~21 `UNKNOWN` rows alongside canonical `KALSHI` 25,605 / `POLYMARKET`
-      168,249. These split the Kalshi denominator (a lowercase `kalshi` row is a phantom of `KALSHI`). The catalogue
-      (instruments-store) was cleaned this session; the MANIFEST (market-data-tick) was NOT (a manual phantom-reconcile
-      `--apply` is risky per CLAUDE.md — flips real captured→attempted_failed on a false positive). Fix = a scoped
-      manifest canonicalisation that maps lowercase `kalshi`→`KALSHI` + resolves blank/UNKNOWN venue, bundled into the
-      next prediction single-walk (NOT a standalone whole-corpus walk — single-walk discipline). Repo:
-      market-tick-data-service (manifest canonicalisation). **NICE-TO-HAVE** — ~313 of 194k rows (~0.16%), does not
-      materially move the 99.73% denominator.
+- [ ] [DATA] P3. **Residual blank/UNKNOWN venue rows in the prediction `_index` manifest** (DISCOVERED 2026-06-23
+      verifying Item A; **RE-SCOPED by plan_reconciler agt-65e60a 2026-08-06** — the lowercase `venue=kalshi` portion of
+      this todo is ALREADY DONE, see below): the consolidated
+      `market-data-tick-pred-prd-…/_index/availability_index.parquet` carries ~168 blank-venue + ~21 `UNKNOWN` rows
+      alongside canonical `KALSHI` 25,605 / `POLYMARKET` 168,249. Fix = a scoped manifest canonicalisation that resolves
+      blank/UNKNOWN venue, bundled into the next prediction single-walk (NOT a standalone whole-corpus walk —
+      single-walk discipline). Repo: market-tick-data-service (manifest canonicalisation). **NICE-TO-HAVE** — ~189 of
+      194k rows (~0.1%), does not materially move the 99.73% denominator. **ALREADY DONE (verified 2026-08-06): the ~124
+      lowercase `venue=kalshi` (pre-venue-case-fix) portion of this todo was purged 2026-07-11** —
+      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md:150-153`: "124 lowercase `venue="kalshi"`
+      duplicate rows — PURGED... Re-verified 100% exact-key match... `_index` now: 0 lowercase `kalshi` rows, 160,865
+      canonical `KALSHI` rows unchanged." That fix landed 13 days before this doc was even created (2026-07-24) — this
+      todo was carried forward verbatim from the pre-split parent without checking it against the sibling issue doc.
+      Downgraded P2→P3 given the reduced residual scope.
 - [ ] [DATA] P3. **1,454 prediction `_index` rows still at schema v4** (vs 192,713 at v9; DISCOVERED 2026-06-23): the
       Kalshi-history tail not yet re-walked to v9 (the POLYMARKET v9 re-walk completed; Kalshi-bulk seed rode a later
       stack). v9-schema polish only (rows already captured); rides the next prediction canonicalisation walk. Repo:

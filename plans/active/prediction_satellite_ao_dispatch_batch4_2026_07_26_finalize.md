@@ -53,9 +53,12 @@ context_scope:
 
 # Prediction satellite AO batch 4 — finalize
 
-> **Status: draft — NOT dispatched.** Gated (`gate_on_depends: true`) behind
-> `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. It will not dispatch until batch4 is flipped `active` by the
-> operator AND every batch4 dispatched todo is done. Do NOT flip this to `active` independently of batch4.
+> **Status: active, but held by `gate_on_depends: true`** on `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` —
+> per the 2026-07-30 no-double-gate finding, `gate_on_depends` alone already machine-holds this doc's todos, so no
+> separate `status: draft` pre-check is needed (this banner previously said "draft — NOT dispatched," which contradicted
+> the frontmatter and predated that convention — corrected by plan_reconciler agt-65e60a 2026-08-06). This doc will not
+> actually dispatch until every batch4 todo is done — batch4 itself still has open work (4b-i in progress, 4b-iii not
+> yet a tracked checkbox — see batch4's own Progress Log) as of this correction.
 
 ## Todos
 

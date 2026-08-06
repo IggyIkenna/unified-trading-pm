@@ -17,7 +17,7 @@ tags: [sports, odds-features, schema-parity, naming-migration, uac-ssot]
 related:
   [
     plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
-    plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
+    /plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
     plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]

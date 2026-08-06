@@ -10,7 +10,16 @@ nature: process
 asset_group: [prediction]
 stage: [meta]
 repos:
-  [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
+  [
+    agent-orchestrator,
+    deployment-api,
+    deployment-service,
+    e2e-testing,
+    features-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: [prediction, kalshi, polymarket, clob, live-data, websocket, capture, book-snapshot]
 related:

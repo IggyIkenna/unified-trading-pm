@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [sports, predictions, backtest, execution, matching-engine, group-c, scope-note]
 related:
   [
-    plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
+    /plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
     /codex/04-architecture/backtest-groups.md,
   ]
 created: "2026-07-21"

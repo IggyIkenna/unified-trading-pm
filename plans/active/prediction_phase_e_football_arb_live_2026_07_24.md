@@ -123,7 +123,7 @@ context_scope:
       API-Football FIXTURES parquet `af_home_name`; canonical ids pre-existed → closes the odds-side ~66% cap. Kalshi
       home/away title-order caveat ✅ CLOSED `instruments-service@ba3528d4` (order-robust lookup: probes both orderings,
       home/away from the matched fixture). (repos: instruments-service ✅, unified-api-contracts ✅ / South-American
-      remaining))
+      remaining)
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
 

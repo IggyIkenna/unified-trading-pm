@@ -183,3 +183,21 @@ proven this run.
   argues against a whole-session teardown and toward a NAME/PATTERN-targeted kill instead, but is not conclusive.
 - If a cross-slot `pkill` is confirmed as the mechanism: get `install-pkill-guard-shell-env.sh` running host-wide (every
   slot's shell init, not opt-in per-session) so the guard actually protects against the failure mode it was built for.
+
+## Todos
+
+**Added by plan_reconciler agt-65e60a 2026-08-06 — this doc had zero `- [ ]`/`- [x]` checkboxes despite genuine open
+remaining work (the "Suggested follow-up" section above), invisible to every checkbox-based tool. Converting per the
+standing zero-checkbox sweep rule (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2).**
+
+- [ ] [VERIFY] P1. Reproduce `pipeline_e2e_check.py`'s ~300-330s silent kill with `strace -f`/`py-spy dump` attached, or
+      run under `setsid` in a fully detached session, to capture the actual signal number instead of inferring "silent
+      death = SIGKILL-shaped."
+- [ ] [VERIFY] P1. [OPERATOR] Determine (needs root/kernel access this sandboxed session lacks — `sudo dmesg`/
+      `sudo journalctl -k` both refused) whether the shared host runs a systemd `user@.service` /
+      `loginctl     KillUserProcesses` / idle-session-reaper policy tearing down a user's cgroup slice after ~5min — the
+      age-based- reaper mechanism this doc's evidence favors over a fixed-schedule `pkill` sweep.
+- [ ] [SCRIPT] P2. Contingent on the above: if a cross-slot `pkill` sweep (rather than an age-based reaper) is confirmed
+      as the kill mechanism, roll out `install-pkill-guard-shell-env.sh` host-wide (every slot's shell init, not opt-in
+      per-session) so the guard documented in `agents/RULES.md` §1 actually protects `pipeline_e2e_check.py` runs the
+      way it was designed to.

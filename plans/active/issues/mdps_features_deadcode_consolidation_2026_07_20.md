@@ -77,13 +77,22 @@ launcher deletions. Other: operator free-text.
       registry (pending operator A/B/C).
 - [ ] 2. [SCRIPT] P2. S1-b — `launch-mdps-features-live.sh` non-runnable (no dispatcher branch;
       `VM_SERVICE=market_data_processing_service+features_service` → ModuleNotFoundError; plan archived) but registered
-      in `vm_prefix_registry.py:841-851` (5 rows). DELETE launcher + 5 rows OR finish the dispatcher branch (pending
-      operator).
-- [ ] 3. [SCRIPT] P1. S1-c — `mdps-sports-<year>-<ts>` emitted by `launch-mdps-sharded-backfill.sh:206` but registered
-      in NEITHER `vm_prefix_registry.py` NOR `launcher_registry.py` → sports MDPS shard invisible to zombie watchdog +
-      no relaunch binding; parity test misses it (both registries agree). Add `mdps-sports-` (bucket `_TICK_SPORTS`,
-      EPHEMERAL_BATCH) to both, OR drop `sports` from the sharded launcher default set. Add a launcher→emitted-name
-      test.
+      in `vm_prefix_registry.py:841-851` (5 rows). **UPDATE (plan_reconciler agt-65e60a 2026-08-06): option B (finish
+      the dispatcher branch) was already chosen and substantially executed** — `setup-data-pipeline-vm.sh` now has real
+      compound-`VM_SERVICE` dispatch handling — so this is no longer "pending operator A/B/C." The remaining scope is
+      tracked in 2 still-open follow-up docs instead:
+      `issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` (1/6 open) and
+      `issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md` (1/12 open). This todo
+      should close once those 2 residual items land — not a fresh DELETE-vs-finish decision.
+- [x] ✅ 3. [SCRIPT] P1. S1-c — `mdps-sports-<year>-<ts>` emitted by `launch-mdps-sharded-backfill.sh:206` but
+      registered in NEITHER `vm_prefix_registry.py` NOR `launcher_registry.py` → sports MDPS shard invisible to zombie
+      watchdog + no relaunch binding; parity test misses it (both registries agree). Add `mdps-sports-` (bucket
+      `_TICK_SPORTS`, EPHEMERAL_BATCH) to both, OR drop `sports` from the sharded launcher default set. Add a
+      launcher→emitted-name test. **DONE — `deployment-service@c79f984`** (dated 2026-07-20, the same day this issue was
+      filed): `vm_prefix_registry.py:364` has
+      `"mdps-sports-": VmPrefixSpec(bucket=_TICK_SPORTS,     lifecycle_class=EPHEMERAL_BATCH)`;
+      `data_pipeline_monitors/launcher_registry.py:153` has `"mdps-sports-":     "launch-mdps-sharded-backfill.sh"` —
+      exactly matching the fix spec above. Verified live by plan_reconciler agt-65e60a 2026-08-06.
 - [x] ✅ 4. [SCRIPT] P3. S2-a — trim `launch-features-backfill-vm.sh` to the redirect stub (lines 170-309 unreachable
       dead body; duplicate `lc_verify_tarball_freshness` 274-278/280-284; pre-consolidation module names in
       `_python_module_for`). **DONE (na-eligibility-audit 2026-08-03)** — closed via
