@@ -394,6 +394,54 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       backend / 225 frontend). Landed `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for
       full detail and live numbers.
 
+- [x] 24. ✅ [BACKEND] P1. **Task Token Usage role-group filters (todo 23) were reading zero for CI/CD, conflict
+      resolver, and every scheduled role — two real bugs, not "no completions yet" as todo 23's own final Progress Log
+      entry claimed.** Operator noticed the role-group buttons showing 0 in the live dashboard and asked for it to be
+      root-caused and fixed properly, not assumed benign. Investigated directly against the live orchestrator VM
+      (`state.db` + `journalctl -u orchestrator.service`), not guessed: **bug 1** — `_done_one_off` (the completion path
+      for every escalation/scheduled one-off) computed `assigned_at` from `AgentRow.registered_at` WITHOUT running it
+      through `ss.to_utc()` first (unlike `done_slot`'s own `slot_assigned_at`, which already does), so it stayed a
+      NAIVE datetime while the transcript's parsed timestamps are tz-AWARE — `build_task_usage_snapshot`'s window
+      comparison then raised `TypeError: can't compare offset-naive and offset-aware datetimes` on every single one-off
+      completion, crashing `/done` (though AFTER the agent-archive transaction had already committed, so the crash was
+      invisible anywhere except the server log) and skipping the `TaskUsageRow` write entirely. Confirmed live: 1,428
+      `task_usage` rows total, ZERO with `task_id LIKE 'one-off:%'`, despite 51+ archived
+      cicd/conflict_resolver/data_pipeline_failure/scheduled completions in the `agents` table; matching tracebacks
+      repeating all day in `journalctl` at this exact call site. Fixed: wrap `agent.registered_at` in `ss.to_utc(...)`.
+      **Bug 2, found while re-verifying bug 1's fix covered every role**: a SEPARATE, narrower gap in the "direct-boot"
+      lazy-`AgentRow`-creation branch (`boot_slot`, for a plan_health-family role booted straight against
+      `/api/slots/{N}/boot` instead of through `/api/plan-health/dispatch` — the path
+      `ag_closeout_auditor_one_shot_     complete_no_agentrow_2026_07_26` added) — its `register_agent(...)` call was
+      the ONE call site in the codebase that omitted `claude_session_id`, unlike every other one
+      (escalation.py/plan_health.py/main_agent_keeper.py). No crash from this one — `_compute_done_task_usage`'s
+      `if claude_session_id is None: return None` guard makes it a silent skip — but permanently zero usage for any role
+      hitting this path. Confirmed live: 3 of `docs_reconciler`'s AgentRows had `claude_session_id IS NULL`, all created
+      via this exact branch. Fixed: pass `claude_session_id=slot.claude_session_id` (already populated by spawn time —
+      the orchestrator generates the session uuid and passes it as `--session-id` before the worker's first `/boot` ever
+      lands). **Verification, both fixes**: standalone repro scripts reproducing the exact production `TypeError`
+      against the real `build_task_usage_snapshot`; new regression tests that fail on the pre-fix code and pass after
+      (`test_one_off_done_task_usage_survives_naive_registered_at`,
+      `test_direct_boot_lazy_agentrow_inherits_slot_claude_session_id`); a new end-to-end test
+      (`tests/test_task_usage_full_pipeline.py`) pushing a real transcript with four DISTINCT non-zero token values
+      (input/cache-write/cache-read/output) through both dispatch shapes into
+      `window_task_usage_totals(role_group=...)`, confirming every category lands exactly and only in the correct
+      bucket, never double-counted or misfiled. Full `quality-gates.sh` green both ships (2524→2546 backend tests).
+      Landed `agent-orchestrator@5d1a8a6` (bug 1) and `agent-orchestrator@acd6d70` (bug 2), both on `live-defi-rollout`.
+      **Correction to todo 23's own final Progress Log entry** (2026-08-06, quoted below): "all correctly read zero...
+      expected, not a bug" was WRONG — it was bug 1 above, silently swallowing every one-off completion. This fixes it
+      going forward from whichever deploy picks up `acd6d70`; it does NOT backfill the historical gap — see todo 25.
+- [ ] 25. [BACKEND] [OPERATOR] P3. **Decide + (if approved) run a historical backfill for the one-off completions lost
+      to todo 24's bug 1 while it was live** (`agent-orchestrator@de73f93` deploy through whenever `acd6d70` reaches the
+      VM) — an unknown-but-nonzero number of cicd/conflict_resolver/data_pipeline_failure/scheduled completions in that
+      window have no `TaskUsageRow` at all. Their transcripts may still be recoverable on disk
+      (`scripts/orchestrator/backfill_task_usage.py` precedent exists for the normal Class-A path, keyed off
+      `SlotHistoryRow`/`TaskRow.dispatched_at` — it would need extending to also match one-off `AgentRow.registered_at`
+      windows and `task_id=f"one-off:{agent_id}"`, since one-offs have no `SlotHistoryRow`/backlog `TaskRow` entry at
+      all). Not started — genuinely optional (the numbers are gone from the historical rolling-window totals either way
+      until this runs; going-forward correctness doesn't depend on it) and the transcript-retention window may have
+      already rotated some of the affected sessions out. **Operator call**: worth the backfill effort, or accept the
+      historical gap and move on?
+
 ## Codex SSOTs
 
 - `/codex/06-coding-standards/model-tier-selection.md` — model tier discipline this routing choice must not violate.
@@ -642,6 +690,25 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   VM deploy is now done too. Live-verified: all 1,409 existing completed tasks correctly bucket as "planning"
   (pre-migration `dispatch_role=NULL` defaults there); scheduled/cicd/conflict_resolver/ data_pipeline_failure all
   correctly read zero (no one-off has completed since deploy yet — expected, not a bug).
+- **2026-08-06 — todo 24: the "expected, not a bug" call above was wrong; two real bugs found + fixed**: operator
+  noticed the role-group filters still reading zero and asked for a proper root-cause, not another benign assumption.
+  Live investigation (direct `state.db` query + `journalctl`, per this workspace's async-wait-and-poll-discipline —
+  measured, not guessed) found `_done_one_off` was crashing on EVERY one-off completion with
+  `TypeError: can't compare offset-naive and offset-aware datetimes` (`agent.registered_at` never ran through
+  `ss.to_utc()`, unlike the normal `done_slot` path's `slot_assigned_at`) — the crash landed after the agent-archive
+  transaction had already committed, so completion looked fine everywhere except the usage row, which was silently never
+  written. Zero `task_id LIKE 'one-off:%'` rows existed against 51+ archived one-off completions; matching tracebacks
+  repeated all day in `journalctl`. Fixed (`agent-orchestrator@5d1a8a6`: `ss.to_utc(agent.registered_at)`). While
+  re-verifying the fix covered every role, found a second, narrower gap: the "direct-boot" lazy-`AgentRow`-create branch
+  in `boot_slot` (for a plan_health-family role booted outside `/api/plan-health/dispatch`) omitted `claude_session_id`
+  on `register_agent(...)` — the one call site in the codebase that did, confirmed live via 3 `docs_reconciler`
+  AgentRows with `claude_session_id IS NULL`. No crash from this one (the `if claude_session_id is None: return None`
+  guard makes it silent), just permanently-zero usage for any role hitting that path. Fixed
+  (`agent-orchestrator@acd6d70`: inherit `slot.claude_session_id`). New end-to-end regression coverage
+  (`tests/test_task_usage_full_pipeline.py`) proves all four token categories (not just input/output) flow correctly
+  through BOTH dispatch shapes into the role-group-filtered aggregate. Full QG green both ships (2524→2546 backend). See
+  todo 24 for the complete writeup. **Not yet done**: todo 25, the historical backfill for completions lost while bug 1
+  was live — operator-gated, not started.
 
 ## Deferred work after 2026-08-05
 
@@ -657,6 +724,7 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 | Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                         | Nothing — pick up directly                                        |
 | `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`'s own todos (confirm blast radius, decide + implement the fix direction)       | **Not done** — separate issue doc; leaves one pre-existing, unrelated test red in `deepseek-per-turn-metrics.spec.ts`                                                                   | Nothing — pick up directly, independent of this plan              |
 | `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
+| Todo 25 — historical backfill for one-off completions lost while todo 24's bug 1 was live                                                              | **Not started** — operator-gated (worth the effort vs accept the gap), transcript retention may have already rotated some sessions out                                                  | Operator decision                                                 |
 
 **Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
 selection). Do not re-poll the fleet for the A/B split itself in the meantime — todo 7 already confirmed the mechanism
