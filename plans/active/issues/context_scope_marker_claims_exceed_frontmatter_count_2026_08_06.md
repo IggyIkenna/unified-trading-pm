@@ -262,19 +262,35 @@ for a human glance instead of being dropped.
   (skips TESTS+TYPECHECK); no coverage lost for the sweep script (PM `scripts/` are ruff-gated; basedpyright fully
   excluded, quality-gates.sh:26-38, operator ruling 2026-07-27 finding 87).
 
+- **2026-08-06 (data_engineering, slot 6, task context_scope_marker_claims_exceed_frontmatter_count-002) — SHIP BLOCKED
+  #2 (post-drift), pre-existing FOREIGN gate violation**: quickmerge Pass 2 re-gate now fails a DIFFERENT post-gate,
+  `finalize-plan-coverage` (workflow-template-parity is GREEN — the wave-4 landing held). Standalone
+  `check_finalize_plan_coverage.py --workspace-root .tabs/6` AND the pre-drift archive test
+  (`git archive c48bf1475~7 plans/active` → checker) BOTH fail with the same 1 violation:
+  `plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md` — `assigned_vm: planning`, **0 open / 14 closed
+  todos** (a COMPLETED plan; per plan-completion discipline its owner must archive it), no gating
+  `depends_on`+`gate_on_depends: true` anywhere (cross-repo grep empty), `locked_by` empty. Ownership: slot-7
+  (2026-08-05, `8e39617f9`/`d9d170be3`) + slot-6 context-scout batch touch (`421c69f8d`). NOT my commits (proven: zero
+  touches in my diff; pre-drift tree fails identically). Anomaly noted: the 11:15 full-QG green run (`bozh63zne`) PASSED
+  this gate on the same tree content — discrepancy not yet explained; the gate is deterministically RED now. NOT fixing
+  myself: archiving a foreign slot-7-owned plan (or authoring its finalize plan) is the owner's job. Escalated via
+  /blocked (BLK-…) with the owner remediation. Watch armed: poll the checker until exit 0 (→ "FINALIZE COVERAGE GREEN"),
+  then re-run QG → quickmerge → /done.
+
 ## Deferred work after 2026-08-06
 
-| Item                                                                                    | State / why deferred                                                                                                                                      | Blocked on                                                                                                                      |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Push 4 ship commits (sweep script + 3 marker fixes + flips + block record) + POST /done | Cannot be done yet — PM QG RED on `workflow-template-parity` post-gate (4 NEW drifted `image-build-gate.yml` copies), condition stable, foreign in-flight | `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 14 (Wave 4) landing; watcher `bidxjckrg` re-invokes on "ROLLOUT LANDED" |
-| `data_completion_defi_2026_07_15.md` marker 5v3 (1000L line cap)                        | Operator-owned — human line-cap trim                                                                                                                      | [OPERATOR] P1 todo (above)                                                                                                      |
-| Todo 3 — COUNT_MISMATCH detection gap in Phase-0 inventory                              | Not done — owned by the issue's other assignee                                                                                                            | —                                                                                                                               |
-| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob` doc `+depends_on: []`         | Knowingly ignored — `fix_frontmatter.py` autofix artifact (quality-gates.sh:651) on a foreign doc; never staged by name                                   | —                                                                                                                               |
+| Item                                                                               | State / why deferred                                                                                                                                                                                              | Blocked on                                                                                            |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Push 6 ship commits (sweep script + 3 marker fixes + flips + records) + POST /done | Cannot be done yet — quickmerge re-gate RED on `finalize-plan-coverage` (pre-existing FOREIGN violation: `canonical_id_builder_retrofit_checklist_2026_07_08.md`, 0-open/14-closed, owner slot-7 must archive it) | Owner archival (or operator nudge); watcher polls the checker until green ("FINALIZE COVERAGE GREEN") |
+| `data_completion_defi_2026_07_15.md` marker 5v3 (1000L line cap)                   | Operator-owned — human line-cap trim                                                                                                                                                                              | [OPERATOR] P1 todo (above)                                                                            |
+| Todo 3 — COUNT_MISMATCH detection gap in Phase-0 inventory                         | Not done — owned by the issue's other assignee                                                                                                                                                                    | —                                                                                                     |
+| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob` doc `+depends_on: []`    | Knowingly ignored — `fix_frontmatter.py` autofix artifact (quality-gates.sh:651) on a foreign doc; never staged by name                                                                                           | —                                                                                                     |
 
 **Lessons (pre-compact Step 6)**: `bash scripts/quality-gates.sh 2>&1 | tail -40` MASKS the exit code (tail's wins) — a
 failed QG can report exit 0. Run to a file and check the real `$?` (e.g.
 `bash scripts/quality-gates.sh > /tmp/qg.log 2>&1; tail -5 /tmp/qg.log`), or the harness output file.
 
-**Recommended next item** (IN FLIGHT — watcher fired, QG re-run `bozh63zne` running): on GREEN, quickmerge Pass 2
-`--agent --files '<5 changed paths>'` (issue doc included) → verify SHA on origin → POST `/api/slots/6/done` → flip
-harness task #4 → ✅ CLOSE the `BLK-bea57103` bookend.
+**Recommended next item** (IN FLIGHT — quickmerge re-gate blocked on foreign `finalize-plan-coverage`; watcher
+`bidxjckrg2` polls the checker): on "FINALIZE COVERAGE GREEN", re-run PM QG (real exit code) → quickmerge Pass 2
+`--agent --files '<6 changed paths>'` (issue doc included) → verify SHA on origin → POST `/api/slots/6/done` → flip
+harness task #4 → ✅ CLOSE the `BLK-bea57103` and the new BLK bookends.
