@@ -32,13 +32,29 @@ last drain. An already-drained commit (≤ marker) drops out of range permanentl
 genuine new direct-push (after the marker) is still flagged.
 
 FAIL-SAFE (HARD): if no merged promote PR exists yet (first drain), OR the marker SHA
-is empty/unreachable as a commit object in the current git repo, FALL BACK to the raw
-`<base_ref>..<ldr_ref>` range. A stale/missing marker must WIDEN the range (over-flag),
-NEVER narrow it to miss a genuine new bypass. (The pre-push hook range
+is empty/unreachable as a commit object in the current git repo, OR the marker SHA — even
+though it exists as an object — is NOT a true git ANCESTOR of `ldr_ref`, FALL BACK to the
+raw `<base_ref>..<ldr_ref>` range. A stale/missing/non-ancestor marker must WIDEN the range
+(over-flag), NEVER narrow it to miss a genuine new bypass. (The pre-push hook range
 `origin/live-defi-rollout..HEAD` is already a since-base range and is unaffected — this
 helper is only for the promote bots.)
 
+WHY OBJECT-EXISTENCE ALONE IS NOT ENOUGH (the bug this ALSO fixes —
+`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`): a marker SHA
+can keep resolving as a git object long after it is USELESS as a range start. GitHub serves
+any SHA it still has, including one orphaned by a `git filter-repo`-style history rewrite (a
+2026-08-05T11:24:53Z security-driven rewrite did exactly this to several repos). A pre-rewrite
+marker then sits on a disconnected history line with essentially no useful common ancestor
+against the post-rewrite `ldr_ref` — `commit_reachable()` alone still returns true, so the
+"marker" mode range balloons to `<marker>..<ldr_ref>` spanning nearly the ENTIRE repo history
+(observed: 3,701 commits back to a repo's Nov-2025 initial commit) instead of the real handful
+of commits since the last promote, which then false-flags as quickmerge-bypass content and
+deadlocks promotion. The fix: verify true ancestry via `git merge-base --is-ancestor <marker>
+<ldr_ref>` (exit 0 = true ancestor) in addition to object existence — a marker that fails
+ancestry falls through to the SAME safe fallback range as an unreachable one.
+
 SSOT: `plans/active/issues/provenance_gate_squash_perpetual_block_2026_06_17.md`,
+`plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`,
 `codex/08-workflows/ci-cd-flow.md` § "The promote bot promotes only quickmerge-provenanced
 content (D1)".
 
@@ -63,15 +79,19 @@ def resolve_range(
     *,
     base_ref: str,
     ldr_ref: str,
-    marker_reachable: bool,
+    marker_usable: bool,
 ) -> tuple[str, str]:
     """Return ``(range, mode)`` for the provenance check.
 
-    A present, reachable marker → ``"<marker>..<ldr_ref>"`` (``mode="marker"``): only the
+    A present, USABLE marker → ``"<marker>..<ldr_ref>"`` (``mode="marker"``): only the
     commits added to LDR since the last drain. Otherwise → ``"<base_ref>..<ldr_ref>"``
     (``mode="fallback"``): the FAIL-SAFE raw range — widen (over-flag), never narrow.
+
+    "Usable" is the caller's job to establish and means BOTH the marker SHA exists as a
+    commit object AND it is a true git ancestor of ``ldr_ref`` — object existence alone is
+    NOT sufficient (see module docstring's "WHY OBJECT-EXISTENCE ALONE IS NOT ENOUGH").
     """
-    if marker and marker_reachable:
+    if marker and marker_usable:
         return f"{marker}..{ldr_ref}", "marker"
     return f"{base_ref}..{ldr_ref}", "fallback"
 
@@ -151,17 +171,67 @@ def last_promoted_marker(
 
 
 def commit_reachable(ref: str, cwd: str | None = None) -> bool:
-    """True iff ``ref`` resolves to a commit object in the repo at ``cwd``."""
+    """True iff ``ref`` resolves to a commit object in the repo at ``cwd``.
+
+    OBJECT EXISTENCE ONLY — NOT ancestry. A marker can pass this check while sitting on a
+    disconnected history line (e.g. after a `git filter-repo`-style history rewrite) if the
+    remote still serves the object; see `marker_is_ancestor` for the ancestry check that
+    additionally guards against exactly that
+    (`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`).
+    """
     rc, _ = _run(["git", "cat-file", "-e", f"{ref}^{{commit}}"], cwd=cwd)
     return rc == 0
 
 
+def marker_is_ancestor(marker: str, ldr_ref: str, cwd: str | None = None) -> bool:
+    """True iff ``marker`` is a true git ANCESTOR of ``ldr_ref`` — not merely an existing object.
+
+    THE BUG THIS FIXES (`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`):
+    a history rewrite can leave a pre-rewrite marker SHA still resolvable as a git object (the
+    remote keeps serving it) while it sits on a now-disconnected history line with essentially no
+    useful common ancestor against the post-rewrite ``ldr_ref``. Object existence alone
+    (`commit_reachable`) cannot detect this — only true ancestry can. Uses
+    ``git merge-base --is-ancestor`` (exit 0 = true ancestor; exit 1 = not an ancestor; any other
+    exit code, e.g. one ref not found locally, is also treated as NOT an ancestor — the safe
+    direction, since it forces the caller's fail-safe fallback range rather than trusting an
+    unverifiable marker).
+    """
+    rc, _ = _run(["git", "merge-base", "--is-ancestor", marker, ldr_ref], cwd=cwd)
+    return rc == 0
+
+
 def try_fetch_sha(remote: str, sha: str, cwd: str | None = None) -> None:
-    """Best-effort: make a non-ancestor marker reachable (GitHub allows reachable-SHA fetch).
+    """Best-effort: make a non-local marker reachable (GitHub allows reachable-SHA fetch).
 
     A no-op on failure — the caller re-checks reachability and falls back if still absent.
     """
     _run(["git", "fetch", "-q", "--no-tags", remote, sha], cwd=cwd)
+
+
+def marker_usability(
+    marker: str,
+    *,
+    ldr_ref: str,
+    cwd: str | None = None,
+    fetch_remote: str | None = None,
+) -> tuple[bool, bool]:
+    """Resolve whether ``marker`` is safe to use as the provenance range start.
+
+    Two independent checks, BOTH required for the marker to be usable: (1) the SHA resolves
+    to a commit object locally — best-effort fetched from ``fetch_remote`` first if not
+    already present — and (2) the SHA is a true git ancestor of ``ldr_ref``
+    (`marker_is_ancestor`). Check (2) only runs once (1) is satisfied, since an absent object
+    can never be an ancestor of anything.
+
+    Returns ``(reachable, ancestor)`` as two separate flags (rather than a single bool) so the
+    caller can log both for diagnostics — overall usability is ``reachable and ancestor``.
+    """
+    reachable = commit_reachable(marker, cwd=cwd)
+    if not reachable and fetch_remote:
+        try_fetch_sha(fetch_remote, marker, cwd=cwd)
+        reachable = commit_reachable(marker, cwd=cwd)
+    ancestor = marker_is_ancestor(marker, ldr_ref, cwd=cwd) if reachable else False
+    return reachable, ancestor
 
 
 def main() -> int:
@@ -189,19 +259,18 @@ def main() -> int:
 
     marker = last_promoted_marker(owner, repo, base_branch)
     reachable = False
+    ancestor = False
     if marker:
-        reachable = commit_reachable(marker, cwd=cwd)
-        if not reachable and fetch_remote:
-            try_fetch_sha(fetch_remote, marker, cwd=cwd)
-            reachable = commit_reachable(marker, cwd=cwd)
+        reachable, ancestor = marker_usability(marker, ldr_ref=ldr_ref, cwd=cwd, fetch_remote=fetch_remote)
 
-    rng, mode = resolve_range(marker, base_ref=base_ref, ldr_ref=ldr_ref, marker_reachable=reachable)
+    rng, mode = resolve_range(marker, base_ref=base_ref, ldr_ref=ldr_ref, marker_usable=reachable and ancestor)
     # Range → stdout (the workflow captures it). Diagnostic → stderr (never echoes the
-    # token-bearing fetch remote). A stale/missing marker is the EXPECTED fail-safe, not an error.
+    # token-bearing fetch remote). A stale/missing/non-ancestor marker is the EXPECTED
+    # fail-safe, not an error.
     print(rng)
     print(
         f"promote-provenance-range[{repo}→{base_branch}]: mode={mode} "
-        f"marker={marker or '∅'} reachable={reachable} → {rng}",
+        f"marker={marker or '∅'} reachable={reachable} ancestor={ancestor} → {rng}",
         file=sys.stderr,
     )
     return 0
