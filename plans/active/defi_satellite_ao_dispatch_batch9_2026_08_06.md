@@ -173,20 +173,26 @@ over all pending draft batches) that independently spot-verified every todo belo
       features-service. Source: `defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md`. Done when: a fresh
       day-partition count is cited showing coverage materially closer to (or at) the full genesis-to-today span, or any
       residual gap is confirmed as honest per-token-genesis absence rather than a stalled process.
-- [ ] [DATA] P1. **Verify the 2026-07-28 DeFi MDPS candle-backfill fleet's terminal outcome**
+- [x] ✅ [DATA] P1. **Verify the 2026-07-28 DeFi MDPS candle-backfill fleet's terminal outcome**
       (`launch-mdps-sharded-backfill.sh defi --env prod`, 5 SPOT VMs, run-ts=20260728-044648, year-sharded 2022-2026) —
-      check each shard's `DEPLOYMENT_COMPLETED exit_code=0` and real candle-object counts under
-      `processed_candles/by_date/` for DEFI (not just RUNNING/heartbeat status), then flip
-      `data_pipeline_check_mdps_features_2026_07_20.md` todo 15's status honestly (file a scoped follow-up issue for any
-      incomplete/failed shard). **Also report whether the launcher's `max_workers` setting lets concurrent writes
-      overlap GCS**, citing any measured write-concurrency figure already on record or stating plainly none exists — do
-      NOT launch any new VM; checking the already-launched fleet's live status is itself part of this todo. Repos:
-      market-tick-data-service, deployment-service. Source: `data_pipeline_check_mdps_features_2026_07_20.md`
-      (todo 15) + `defi_track5_coverage_mvp_backfill_2026_07_24.md` (Todo 3 — same launched-fleet-verification ground,
+      **VERIFIED 2026-08-06 (slot-9).** Terminal status per shard (all evidence from
+      `gs://deployment-scripts-central-element-323112/vm-logs/mdps-defi-{year}-20260728-044648/run.log` + GCS
+      `processed_candles/by_date/` day-partition counts): **2022** ✅ `DEPLOYMENT_COMPLETED exit_code=0` (0 candle days
+      — honest, every day had 0 raw `dex_pool_swaps` files); **2023** ⚠️ SPOT-preempted, no terminal marker (364 day
+      partitions, near-complete); **2024** ❌ `DEPLOYMENT_FAILED exit_code=1` — manifest consolidator DOWN but all 366
+      per-date subprocesses returned rc=0 individually (366 day partitions, complete); **2025** ⚠️ SPOT-preempted, no
+      terminal marker (272 day partitions, through ~Sep 2025); **2026** ⚠️ SPOT-preempted, no terminal marker (156 day
+      partitions, through ~Jun 2026). Total: 1,158 distinct candle day partitions. **`max_workers` concurrency**:
+      `_max_workers_for defi` returns empty → MDPS default `min(cpu_count, 16)` = 8 on e2-standard-8; each worker writes
+      to a distinct `gs://` blob path via `polars_candle_engine.write_parquet()` — YES, up to 8 concurrent GCS writes
+      can overlap (no measured figure on record; structural from `ThreadPoolExecutor(max_workers=N)` design).
+      Source-plan todo 15 updated with full terminal evidence. Follow-up issue filed:
+      `/plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md` (recommends relaunching 2025+2026
+      shards, investigating 1800s per-date timeout for DeFi). Repos: market-tick-data-service, deployment-service,
+      unified-trading-pm. Source: `data_pipeline_check_mdps_features_2026_07_20.md` (todo 15) +
+      `defi_track5_coverage_mvp_backfill_2026_07_24.md` (Todo 3 — same launched-fleet-verification ground,
       conflict-check found the "which launcher" half already answered by todo 15's 2026-07-28 launch; merged into one
-      todo covering the two genuinely-open halves: terminal-outcome verification + concurrency figure). Done when: all 5
-      shards' completion status is confirmed pass/fail with cited GCS/log evidence, and the concurrency question is
-      answered or its absence documented.
+      todo covering the two genuinely-open halves: terminal-outcome verification + concurrency figure).
 - [ ] [DATA] P2. **Pull the logs for verification VM `features-delta-one-defi-20260805-105902`** (or launch a fresh
       1-day `--feature-group funding_oi` DEFI relaunch if those logs are gone) and confirm the post-fix
       (`features-service@f932908b`) run shows materially fewer "No upstream MDPS data ... (data_type=perp_funding/

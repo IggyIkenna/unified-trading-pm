@@ -986,3 +986,15 @@ Issue: `/plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2
 **Status of -056**: commodity DONE (39 s/shard-day). Volatility + onchain blocked upstream. ☑ Commodity number committed
 (`plans/audit/results/data_pipeline_e2e_check_features_2026_08_05.md`). Remaining two families require operator
 decisions (see issue docs above).
+
+### 2026-08-06 (slot-9) — todo 15 TERMINAL VERIFICATION: DeFi MDPS candle-backfill fleet outcome
+
+Verified 2026-07-28 fleet (5 SPOT VMs, `run-ts=20260728-044648`) via `run.log` + GCS `processed_candles/by_date/`
+day-partition counts. Per-shard: **2022** ✅ `DEPLOYMENT_COMPLETED exit=0` (0 candles — honest, every day "Listed 0
+files"); **2023** ⚠️ SPOT-preempted, 364 day partitions (near-complete; Jan 9-18 hit 1800s timeout); **2024** ❌
+`DEPLOYMENT_FAILED exit=1` — manifest consolidator DOWN but all 366 per-date subprocesses rc=0 (366 day partitions,
+complete); **2025** ⚠️ SPOT-preempted, 272 day partitions (through ~Sep 2025); **2026** ⚠️ SPOT-preempted, 156 day
+partitions (through ~Jun 2026). Total: 1,158 day partitions. **`max_workers` concurrency**: default 8 on e2-standard-8,
+each worker writes distinct `gs://` blob via `polars_candle_engine.write_parquet()` — YES, up to 8 concurrent GCS writes
+overlap (structural from `ThreadPoolExecutor`, no measured figure). Follow-up in
+`/plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`. ☑ Done.
