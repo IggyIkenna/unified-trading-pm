@@ -251,3 +251,32 @@ Same wall family as agt-5709e0, same outcome. **No code fix on live-defi-rollout
 PATs**, world-readable in shared /tmp. NOT created by slot-15 (foreign session's QG test output). NOT deleted by slot-15
 (foreign file — do not touch). Recommend operator/main-agent remove it (`rm /tmp/test_slice.log`) and add a
 guard/cleanup for QG runs that log env vars to /tmp. Tracked here as a finding; slot-15 leaves it untouched.
+
+### agt-e33f21 follow-up — TRUE root cause found + deadlock released (2026-08-06 07:37Z)
+
+**CORRECTION to the "resume steps" above: the fleet-wide SIT deadlock is root-caused and the lock is released.**
+
+- **Measurement trap (the 07:03Z "SIT successes" were NOT full-workspace-sit)**:
+  `gh api /actions/runs?workflow_id=full-workspace-sit.yml` does a FUZZY name match and returns `quality-gates-v2` runs
+  too (workflow id 285865223) — the 4 "successes" at 07:03Z were the SIT repo's OWN promote-QG, not full-workspace-sit.
+  Authoritative query = numeric workflow id `/actions/workflows/283775901/runs` (or
+  `gh run list --workflow full-workspace-sit.yml`): BOTH show **EVERY full-workspace-sit dispatch today = cancelled**
+  (repository_dispatch only; none ever completed non-cancelled).
+- **True root cause (a concurrency-group deadlock, NOT a runner shortage)**: run **31048942447** (full-workspace-sit,
+  created 2026-08-05 21:30:38Z) sat **queued ~10h** — its single job `cross-repo-invariants` never acquired a runner, so
+  it occupied the workflow concurrency group (`group: full-workspace-sit`, `cancel-in-progress: false`) forever. Every
+  later dispatch queued BEHIND it; each new dispatch then cancelled the previously-QUEUED run — queued-then-cancelled
+  every */15 tick, none ever started. ubuntu-latest capacity was fine (SIT repo's own QG ran on GitHub-hosted runners at
+  07:03Z).
+- **Fix (07:35Z)**: `gh run cancel 31048942447` (safe: 0 jobs executed, no work done, no evidence lost). Immediately
+  after: dispatch **31081197089** went `pending → in_progress`, job `cross-repo-invariants` started **07:36:18Z** on a
+  GitHub-hosted runner — the first full-workspace-sit execution today.
+- **Updated resume (supersedes steps 1-4 above)**: when 31081197089 completes **success**, the fleet bot's next */15
+  tick posts `sit-gate/fleet-green=success` on LDR tip 4733a7e7 → then POST the identical status on PR #495 head
+  `6ef522d3` (recipe above, slot PAT has statuses:write) → PR auto-merges → verify. If 31081197089 **FAILS** (not
+  cancels), SIT content is genuinely red — treat as a real SIT failure, do NOT fake-green.
+- **Stale-main follow-up (fleet-infra, operator/nudge — NOT slot-15's wall)**: the dispatch-storm mutex
+  `unified-trading-pm@16c9653eb` is **on LDR + promote PR `promote/unified-trading-pm/1dacca9be5e1` but NOT on `main`**
+  — and the fleet bot (`ldr-to-main-promote-fleet.yml`) executes from `main` (scheduled workflows fire from the default
+  branch only). So the 06:45Z 3-dispatch storm could recur if two repos hit BREAKING-delta in one tick. The promote PR's
+  gates will auto-merge it eventually; no slot-15 action needed beyond this note.
