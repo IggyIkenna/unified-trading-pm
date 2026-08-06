@@ -208,16 +208,12 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
       citation to this doc. The plan's own text ("§U... already-approved... the scale differs by ~10x, so this must not
       be assumed") anticipated exactly this outcome. Ordering: do this LAST — it records the other two's results. (repo:
       `unified-trading-pm`)
-- [ ] [OPERATOR] P2. **Apply the RULES.md §4 mechanical park to the item-3 backlog task** (`priority: 999` +
-      `priority_override: true` + a false `prereqs.prerequisites: [sports-g1-rebaseline-decided]` condition on the
-      derived backlog task for the todo immediately above) so the dispatcher stops offering it before items 1+2 land.
-      **A slot worker cannot do this itself**: `agent-orchestrator/data/config/backlog.yaml` only exists in the ROOT
-      `agent-orchestrator` clone (confirmed absent from every `.tabs/<N>/agent-orchestrator/` slot clone), and
-      slot-scope rules (RULES.md § 1) forbid editing outside the assigned slot — same standing gap already documented
-      for the `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` park. Un-park by flipping
-      `sports-g1-rebaseline-decided` true (`POST /api/prerequisites/sports-g1-rebaseline-decided {"value": true}`) once
-      items 1+2 are both done; clearing the condition clears `priority_override` on the next regen tick too (no separate
-      priority reset needed, per `server/auto_park.py`'s unpark contract).
+- [x] ✅ [OPERATOR] P2. **RESOLVED-MOOT (governance-sweep stale-tag cleanup, 2026-08-06).** This todo asked to apply a
+      mechanical park to item-3's backlog task so the dispatcher wouldn't offer it before items 1+2 landed. By the time
+      anyone acted on this, items 1+2 had already both landed (2026-08-03) and item-3 itself had already been picked up
+      and completed the same day ("UNPARKED 2026-08-03 — items 1+2 above both landed, this is now actionable", see the
+      already-`[x]` item above) — there was never a live dispatcher-ordering race to actually park. No park action was
+      ever taken or needed. Checkbox was never flipped; closing now as a bookkeeping correction, not a live decision.
 
 ## Census script (read-only, no writes)
 

@@ -122,17 +122,16 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
       unified-trading-library. Done when: a DEFI `perp_funding` manifest row with blank `instrument_id` is returned by
       `get_captured_instruments()`, verified by a new unit test; `bash     scripts/quality-gates.sh` green in both
       unified-trading-library and features-service (post wheel-bump). — unified-trading-library@9fb3a73d
-- [ ] [DATA] P2. BLOCKED-OPERATOR-DECISION (SUPERSEDED — the funding_oi resume is now authoritatively tracked in
-      `/plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md`'s `[BACKEND] P2`
-      (implement direction B) + gated `[DATA] P3` (resume). 2026-08-02 CORRECTION: the earlier "structurally infeasible"
-      framing was WRONG — OI _is_ available at source and already in the corpus under `derivative_ticker` (Hyperliquid
-      `asset_ctxs` archive; ETH-USD 2023-07-11 = 1442/1442 non-zero open_interest). Fix-direction RULED = B. This
-      relaunch stays non-dispatchable until the `[BACKEND] B` fix lands — a relaunch before then still fails the NaN
-      gate. DO NOT relaunch until then). Once the `[BACKEND] B` fix lands, resume
-      `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 delta_one `funding_oi` leg: relaunch
-      `--feature-family delta_one --asset-group DEFI --feature-group funding_oi     --start-date 2023-05-12 --end-date 2026-06-09 --timeframe 15m`
-      (SPOT). Repo: features-service. Done when: `features-delta-one-defi` has real funding_oi rows for HYPERLIQUID, not
-      empty_confirmed/failed.
+- [x] ✅ [DATA] P2. **DONE, tracked+closed elsewhere (governance-sweep stale-tag cleanup, 2026-08-06).** SUPERSEDED —
+      the funding_oi resume was authoritatively tracked in
+      `/plans/archive/issues/defi_delta_one_funding_oi_hyperliquid_missing_open_interest_2026_07_31.md` (now
+      `status: resolved`, archived), which fully completed the chain this todo describes: fix-direction B implemented, a
+      second BUCKET/asset_group-mismatch bug found + fixed (HYPERLIQUID's `derivative_ticker` writes to the CEFI bucket,
+      not DEFI, since its 2026-07-06 reclassification), then two independent verification VMs
+      (`features-delta-one-defi-20260803-055219` and `-055145`, both `exit_code=0`) confirmed real captured `funding_oi`
+      rows for HYPERLIQUID — 454/455 shards across 147 dates, corroborated by both runs. Sibling doc's `resolved_by:`
+      cites this exact evidence. Checkbox here was never flipped despite ownership having moved; closing now as a
+      bookkeeping correction, not a live decision.
 
 # Progress Log
 

@@ -214,16 +214,18 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       fetched successfully and then silently discarded by `_filter_pyth_rows_to_is` every day since 2026-07-19 (will
       resolve going forward once shipped; does NOT backfill the already-lost 2026-07-19..2026-08-03 window, which is
       unrecoverable — Hermes only serves recent history per feed availability).
-- [ ] [OPERATOR] P1 (DO FIRST — direction-independent, ongoing data loss). Trigger `instruments-service` redeployment
-      (Cloud Run deploy or the `instruments-service-daily` Workflow re-trigger) so `instruments-service@6fbaae90`
-      (already merged to `origin/live-defi-rollout`, restores BTC/ETH/INF to `PYTH_PRICE_FEEDS`) actually goes live.
-      **Confirmed still blocking as of 2026-08-06**: the daily trigger (Cloud Scheduler → Workflow, 08:30 UTC) is still
-      running the pre-fix image — both the 2026-08-05 and 2026-08-06 published IS blobs were checked directly and still
-      only enumerate 9 pairs (no BTC/ETH/INF), so `_filter_pyth_rows_to_is` will keep silently dropping BTC/ETH/INF
-      every day this stays undeployed. Repo: instruments-service (deploy/trigger only, no code change — the fix already
-      shipped). Source: added by na-eligibility-audit 2026-08-06 (agt-e00d37) — this action existed only as Progress Log
-      prose (see the 2026-08-06 slot-12 entry below) and was never converted to a tracked checkbox, per the workspace
-      HARD RULE "every follow-up is a `- [ ]` todo, never prose."
+- [ ] [OPERATOR] P2. **DOWNGRADED from P1 DO-FIRST (governance-sweep stale-tag cleanup, 2026-08-06)** — the "ongoing
+      data loss" premise this todo was filed under no longer holds: the same-day 03:50Z RESOLUTION entry below shipped
+      `market-tick-data-service@202bacc9`, a self-contained MTDS union fix (unions IS-enumerated pairs with the
+      collector's own static `_PYTH_FEEDS` set) that stops BTC/ETH/INF from being silently dropped **independent of
+      whether `instruments-service` ever redeploys** — verified via a fresh 1-day VM capturing all 12 PYTH SOLANA feeds
+      including BTC/ETH/INF. Triggering the `instruments-service` redeploy so `instruments-service@6fbaae90` goes live
+      is still worth doing (a complementary SSOT-catalogue-accuracy fix, and IS `quality-gates-v2` was separately found
+      red on `064e2560` per the 01:35Z CI-check note below, which may itself be blocking promotion) — but it is no
+      longer a data-loss emergency, just routine catalogue cleanup. Repo: instruments-service (deploy/trigger only, no
+      code change — the fix already shipped). Source: added by na-eligibility-audit 2026-08-06 (agt-e00d37) — this
+      action existed only as Progress Log prose (see the 2026-08-06 slot-12 entry below) and was never converted to a
+      tracked checkbox, per the workspace HARD RULE "every follow-up is a `- [ ]` todo, never prose."
 
 ## Progress Log
 

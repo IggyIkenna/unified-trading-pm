@@ -137,12 +137,20 @@ identically.
       `unified_api_contracts.InstrumentType.PREDICTION_MARKET.value` instead of the stale local literal; add a
       regression test pinning the value. (repo: market-tick-data-service) — ✅ 2026-08-01 (data_engineering slot-4):
       `market-tick-data-service@b8a8fa7a`, quality-gates.sh green.
-- [ ] [OPERATOR] P2. Review + decide whether to lift `canonicalize_prediction_manifest_2026_07_18.py`'s HELD prod-run
-      status now that its checklist's writer-root-fix step 0 is fully landed (live writer 1ec415f8 + this rebuild script
-      b8a8fa7a); if authorized, run a fresh `--remove-stragglers` dry-run against the LIVE prediction index to size the
-      current straggler count, then (separately, after review) `--remove-stragglers --apply --confirm-prod-write` per
-      that script's own operator-review checklist (pause/snapshot/apply/resume the consolidator cron). (repo:
-      market-tick-data-service) — **Step 2 (dry-run) DONE 2026-08-03 (interactive session)**:
+- [x] ✅ [OPERATOR] P2. **DONE (governance-sweep stale-tag cleanup, 2026-08-06)** — the review+decide ask was fully
+      executed, twice: Round 1 (dry-run + pause + `--apply --confirm-prod-write` + resume + verify, 1,970,331 →
+      1,947,690 rows) found a fresh 869,743-row resurrection ~20 min later, traced to the per-CID writer's live
+      websocket path never actually being fixed; Round 2 (same operator authorization, since this was diagnosed as the
+      SAME durability gap, not a new ask) removed those 869,743 stragglers too. The actual root cause (the live
+      websocket-streaming canonicalization gap) was then fixed at `market-tick-data-service@12992663` with 4 new
+      regression tests — see the `[DATA] P3` todo below for that fix's own evidence. Checkbox was never flipped despite
+      the full authorized action having run to completion; closing now as a bookkeeping correction. Review + decide
+      whether to lift `canonicalize_prediction_manifest_2026_07_18.py`'s HELD prod-run status now that its checklist's
+      writer-root-fix step 0 is fully landed (live writer 1ec415f8 + this rebuild script b8a8fa7a); if authorized, run a
+      fresh `--remove-stragglers` dry-run against the LIVE prediction index to size the current straggler count, then
+      (separately, after review) `--remove-stragglers --apply --confirm-prod-write` per that script's own
+      operator-review checklist (pause/snapshot/apply/resume the consolidator cron). (repo: market-tick-data-service) —
+      **Step 2 (dry-run) DONE 2026-08-03 (interactive session)**:
       `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python     scripts/canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers`
       (bundle-mode=normalize, default) run live against the real 1,970,331-row canonical index. Results: **22,641
       stragglers** would be removed (rows_in 1,970,331 -> rows_out 1,947,690); corrected-target rows 2,477 `data_type` +
