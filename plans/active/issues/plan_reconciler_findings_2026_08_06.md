@@ -249,9 +249,9 @@ relative `plans/...` refs; find_moved_doc_referrers.sh same. 36+ cefi refs and c
 
 ## Resume guide (written at /pre-compact 2026-08-06 ~20:25 UTC — context was compacted mid-run)
 
-**Run state:** STEP 1-3 complete (6/8 hunters in: B0, B1, B2, B3, T, M). PENDING: hunter B4 (batch 4) + codex-alignment
-hunter results (background agents — completion re-invokes the session). STEP 4 (adversarial verify) → STEP 5 (apply on
-review branch `plan_reconciler/agt-bf8439`) → STEP 6 (route) → STEP 7 (PR + result POST) → STEP 8 (/done) NOT started.
+**Run state:** STEP 1-3 COMPLETE (8/8 hunters in: B0-B4, T, M, C — both B4 and codex-alignment results recorded, see
+their sections below). STEP 4 (adversarial verify) → STEP 5 (apply on review branch `plan_reconciler/agt-bf8439`) → STEP
+6 (route) → STEP 7 (PR + result POST) → STEP 8 (/done) NOT started.
 
 **Candidate registry:** all pending candidates are above, per hunter. Writable-doc fixes with CONFIRMED-verification
 needed (dedup'd across hunters):
@@ -373,3 +373,109 @@ instruments-service@1284606a, market-tick-data-service@8a6bbc97 via `git merge-b
   data_completion_finalize DISPATCH HAZARD until C1 fixed; instruments_batch1 moot.
 - Hedge-pointers — deribit_dated_option:103/:110 root cause untraced (open), closeout:224 operator-acceptance inference
   question, bybit honest-absence question, mtds_backfill:371 adaptive chunk-size consideration.
+
+### C (codex-alignment hunter) — plan↔codex drift, 50-doc cefi corpus vs codex SSOTs
+
+**27 verified findings** (quotes verified verbatim; all 41 cited codex paths exist; 6 docs have zero /codex refs =
+nothing to drift). Split: 9 PLAN-WRONG (3 P1), 14 CODEX-STALE (7 P1 — **flag only, codex edits operator-gated**), 3
+mis-citations, 1 codex-wording.
+
+**PLAN-WRONG (writable-doc fixes — pending STEP 4 verify):**
+
+- C1 [P1] — adapter_findings:210-213 "consolidated by a standing `*/1 * * * *` … shows up within ~1 minute" vs
+  manifest-consolidator-ssot.md:527-530 — RULED 2026-07-29, shipped 2026-07-30: 12 of 18 consolidator jobs now run
+  HOURLY (`0 * * * *`), instruments-bucket consolidation ≤60 min not ~1 min. Plan's DONE-07-29 verdict predates the
+  cadence change.
+- C2 [P2] — backfill_smoke:302-305 todo 6 open ("decide whether market_lifecycle/futures_contracts are in canonical
+  shard grammar scope") vs non-canonical-path-inventory.md:243 + canonical-cutover-register.md:378 — R2 (2026-07-21/22)
+  answered by action (co-fixed, co-migrated). Close/reframe todo 6 as done.
+- C3 [P2] — cefi_content_migration_shard24:139-140 "flat ≤2/(vm-prefix,day) bound (no preemption carve-out)" vs
+  rb_infra_relaunch.md:69-74 — ROOT-CAUSE-DIAGNOSED carve-out ruled 2026-08-02 (bound resets for fix-live relaunch).
+  Doc's 08-03/08-06 progress entries never absorbed it.
+- C4 [P2] — cefi_legacy_bucket_deleted_before_l3_gate:137-138 "very likely gone — GCS bucket deletion is not a
+  soft/reversible operation" vs gcs-and-manifest-delete-safety-protocol.md:266-267 — whole-bucket destroy restorable
+  within retention (extended 2026-07-28 operator ruling); qualify with §3a fresh
+  `gcs_bucket_soft_delete_retention_seconds()` check (:272).
+- C5 [P2] — cryptovenue:225-226 "DEPRECATE + REMOVE all Barchart … IN PROGRESS (this session)" vs
+  tradfi-databento-sourcing-ssot.md:325-327 — Barchart RETIRED 2026-06-24 (finding 375), no longer wired. Close/re-scope
+  to pure verification. (Side note: codex's own citation of tradfi_massive_dual_source:64 actually reads "Keep existing
+  pattern (Yahoo + Barchart)" — retirement rests on finding 375.)
+- C6 [P2] — cryptovenue:605-608 "**BLOCKED-DATA** — HYUNDAI/SAMSUNG/SK Hynix … needs operator credential/vendor
+  decision" vs tradfi-databento-sourcing-ssot.md:137-140 — KRX hard-not-blocked, freely available via Yahoo, adapters
+  exist; plan's own shipped evidence (uac@844c5ee6b "005930/000660/005380 .KS" venue=KRX source=yahoo). Retag from
+  BLOCKED-DATA; residual = low-latency basis feed (Option C, ruled 2026-06-28).
+- C7 [P2] — cefi_4surface:867 context-scout note "the cross-cutting codex doc (superseded here by the CeFi-specific
+  blueprint)" vs cross-asset-canonical-target-ssot.md:16 (`status: current`, cited live at availability-manifest:1117).
+  A plan cannot supersede a live codex SSOT. Reword: "dropped as redundant for this log's focus".
+- C8 [P1] — cefi_deribit_binance_futures_bundle_verification_finalize:34 `archive_exempt: true` + :83-84 "also NOT
+  archived, despite its own only todo now being [x]" vs plan-completion-and-archival-discipline.md:39-44 (locked plans
+  the one exception). DUAL DIRECTION: `check_archive_candidates.sh:43,166,204,326` honors archive_exempt since
+  2026-08-02 — tooling real, codex (created 07-28) undocumented. Plan should use locked_by OR codex should document
+  archive_exempt. → ROUTE, not unilateral plan edit.
+
+**Mis-citations (plan-side re-points):**
+
+- C9 [P2] — adapter_findings:99-100 cites data-status-endpoint-contract.md for "the actual coverage.json v2 response" —
+  that doc has zero "coverage.json" occurrences; SSOT = honest-coverage-model.md:522 (## coverage.json v2 schema (CK1)).
+- C10 [P2] — candle_feature:206 "the aggregated key deriv_ohlcv appears NOWHERE in codex/plans" now false —
+  mdps-candle-canonical-reconciliation.md:174 + per-asset-group-bucket-layouts.md:172 reference deriv_ohlcv_*.
+  Historically true (token added by plan's own todo-1 amendment, mdps@752eaff). Mark sentence as pre-amendment history.
+- C11 [P2] — mtds_is_full_adapter_smoketest:128-130 "never silent placeholders HARD RULE" cites
+  data-pipeline-correctness-hard-rule.md (grep-0 "placeholder"); rule's home = honest-absence-downstream-handling.md:97.
+  Claim true, SSOT pointer wrong.
+
+**CODEX-STALE (flag only — operator-gated; P1 cluster first):**
+
+- CS1 [P1] — orphan-object-detection.md:291-294 (+:174-177 §2c) "no known orphan coverage … capped at unknown" vs
+  data_pipeline_check_mdps_features:313-318 (DONE 2026-08-03: MDPS candle, features, ml/strategy sweeps built+validated;
+  issue archived resolved).
+- CS2 [P1] — honest-absence-downstream-handling.md:1246-1248,1256-1258 "content-side check … not yet built into
+  /data-pipeline-check-mdps / -features" vs data_pipeline_check_mdps_features:449-454 (DONE 2026-07-31: shared
+  `check_inverse_phantom()` in utl@8b894105, consumed by mdps@12a3f6b + features@6afdb414, informational-only).
+- CS3 [P1] — per-asset-group-bucket-layouts.md:129 instrument_availability flat `by_date/…/instruments.parquet` vs
+  non-canonical-path-inventory.md:243 (RULED HIVE 2026-07-21 (R2), RETIRED-2026-08-03-partial → hive = live-written +
+  migrated shape) + cutover-register:377-378.
+- CS4 [P1] — availability-manifest-and-data-status.md:69-70 + shard-level-failure-isolation.md:97-98 "instrument_type
+  for instruments-service: NOT a shard axis" vs honest_coverage_shard_dimension:203-206/399-404 (D6 approved 2026-07-07;
+  `_split_by_instrument_type()` shipped; real `_ROW_KEY_COLUMNS` member). Future agent would treat shipped rows as
+  violations.
+- CS5 [P1] — availability-manifest:813/834 Layer-1/Layer-2 CEFI venue tables omit KRAKEN-SPOT, KRAKEN-FUTURES,
+  BITGET-FUTURES, BINANCE-DELIVERY, OKX-SWAP vs cefi_4surface:107/114/564 + cross-asset-canonical-target-ssot:156/468.
+- CS6 [P1] — data-lineage-MTDS-features-ml.md:123-128 "CeFi on-chain-perp 4-venue gap … deliberately deferred" vs
+  aster_and_cefi_rolling_adv_feature:179-183 (DONE 2026-07-26: HYPERLIQUID trades candles confirmed non-zero volume;
+  full-range VM mdps-backfill-cefi-20260726-165959; ASTER re-scoped+relaunched).
+- CS7 [P1] — vm-launcher-runbook.md:364-369 launch-prediction-features-vm.sh as working vs
+  mdps_features_deadcode_consolidation:73-77 (BROKEN — packages removed; superseded by launch-features-vm.sh
+  --feature-family cross_instrument; re-verified on disk :249).
+- CS8 [P2] — vm-launcher-runbook.md:510-516 launch-ml-training-vm.sh as working vs ml_training_launchers:10-13
+  (VM_SERVICE=ml_training_service, no such package; internal contradiction with ml-service-architecture.md:140-145
+  "deleted").
+- CS9 [P2] — data-pipeline-alerts.md:144 DP-VM-007 marker-only preempt detection vs shard24:114-120
+  (deployment-service@09a23745 preemption_op_checker + ComputeEngineClient.was_instance_preempted(), benign not page).
+- CS10 [P2] — pipeline-mode-partition.md:167-168 rows batch_lighter_candles/batch_pacifica_kline vs UAC
+  pipeline_mode.py:160-161 (BATCH_LIGHTER_API; BATCH_PACIFICA removed 2026-07-16 ruling); evidence at
+  onchain_venues_mislabeled:136/154-155.
+- CS11 [P2] — availability-manifest:986 Data Status Page tree instruments row lacks instrument_type level vs
+  honest_coverage_shard_dimension:445-449 (CLOSED 2026-07-27 deployment-api@554cde9, deployment-ui@8f6c4bc). Same D6
+  root as CS4.
+- CS12 [P2] — instruments-foundation-and-catalogue-completeness.md:319-320 "daily-trigger PAUSED … root cause of
+  06-19/20/21 gap" vs instruments_cefi_g1_g5:304/309-310 (G2 signed off 2026-07-06; per-AG scheduler LIVE
+  deployment-service@9d0e457; gap-days filled 2026-06-26).
+- CS13 [P2] — instruments-foundation-and-catalogue-completeness.md:514-515 "SSOT plan … does not exist yet — needs
+  writing" vs instruments_cefi_g1_g5:5/69-70 (extracted 2026-07-24, exists on disk).
+- CS14 [P2] — tradfi-databento-sourcing-ssot.md:328 `SOURCE_PRIORITY ["databento","massive","yahoo"]` self-contradicts
+  same doc :45-47 + removal-complete banner (massive DELETED uac@a2beed46 + mtds@362a487e). Line 328 should read
+  ["databento","yahoo"]. Evidence pre-removal: instruments_batch1:219-221.
+- CS15 [P2] — cross-asset-canonical-target-ssot.md:469-470 "PACIFICA CULLED 2026-07-16" + availability-manifest:888 vs
+  cefi_4surface:134 (open todo: register PACIFICA-SOLANA (265) in fail-hard quarantine set; verified still open
+  2026-08-06 :871-879). Purge incomplete.
+- CS16 [P2] — pipeline-mode-partition.md:127 "pipeline_mode is the outermost hive partition" self-contradicts its own
+  :130 example + four-surface-reconciliation-procedure.md:266 (day= first). Wording fix only.
+
+**Clean docs (zero drift — 27 verified clean):** all 3 batch finalizes, cefi_track2 + finalize, data_pipeline_check
+finalize + data_completion finalize + defi_pipeline_e2e + finalize, canonical_path_oracle, fail_hard_canonical,
+cefi_batch_manifest_blank, cefi_chain_drop, cefi_consolidated_vm_aster, cefi_residual_followups, cefi_onchain_perp,
+cefi_enumeration_audit, coinbase_cde, estate_orphan, tardis_impossible, mtds_backfill_vm_memory_hang, mtds_cefi_docker,
+uac_per_venue_seed, mtds_pipeline_check x2, no_active_paper_run, onchain_venues_mislabeled, prediction_capture,
+cefi_ml_directional, instruments_batch1, + 6 no-codex-ref docs (phantom_audit, features_universe_filter,
+deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finalize).
