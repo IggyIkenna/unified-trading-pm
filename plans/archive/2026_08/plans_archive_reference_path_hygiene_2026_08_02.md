@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, reference-paths, ratchet, mechanical]
 related:
   [
-    /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
+    /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/11-project-management/cross-reference-path-convention.md,
   ]
 created: 2026-08-02

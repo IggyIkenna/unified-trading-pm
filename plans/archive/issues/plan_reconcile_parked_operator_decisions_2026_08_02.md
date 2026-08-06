@@ -15,7 +15,7 @@ summary: >-
   `[OPERATOR]` retag so a dispatched worker cannot execute the stale instruction while the ruling is pending — that is
   the skill's "superseded content with no banner -> add banner" auto-fix, and for § 1b it also executes an amendment
   already RULED on 2026-07-28 but never applied. Neither banner picks an option.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,6 +44,9 @@ assigned_role: review
 drift_direction: correct-codex
 depends_on: []
 resolved_by:
+  "All 11 todos RULED 2026-08-02 (operator) and applied; last remaining item ([DOC] P2, name the register in SKILL.md)
+  closed 2026-08-04 (na-eligibility-audit) via unified-trading-pm@d872efb3a. Each individual ruling's substance is
+  restated inline at its point of application (not solely dependent on this register)."
 locked_by:
 locked_since:
 supersedes:
@@ -60,6 +63,10 @@ context_scope:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 ---
+
+> **🔴 ARCHIVED 2026-08-06 — RESOLVED** (all todos `[x]`, unlocked). All 11 parked items RULED by the operator
+> 2026-08-02 and applied; each ruling's substance is restated inline at its point of application across the corpus, not
+> solely dependent on this register. Archived by /plan-reconcile ao.
 
 # Parked operator decisions — `/plan-reconcile` whole-corpus run, 2026-08-02
 
