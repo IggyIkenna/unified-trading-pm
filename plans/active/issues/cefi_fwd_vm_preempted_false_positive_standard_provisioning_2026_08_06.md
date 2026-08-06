@@ -1,0 +1,203 @@
+---
+doc_type: issue
+title: >-
+  cefi-fwd-20260806-064507 (GCE STANDARD/on-demand, deliberately instances.stop'd) classified PREEMPTED and paged
+  CRITICAL DP_VM_PREEMPTED_NO_RELAUNCH — closed with an is_spot veto in classify_terminated_vm
+summary: >-
+  A cefi-fwd forward-poll VM launched by `launch-cefi-forward-poll.sh` (no `--provisioning-model=SPOT` — always
+  on-demand) was deliberately `instances.stop`'d by `unified-trading-sa` (two `instances.insert` 13s apart, two
+  `instances.stop` ~2-2.5 min apart, zero `compute.instances.preempted` operations — all confirmed via `gcloud compute
+  instances describe` + `gcloud logging read`), yet `exit_code_fleet_monitor.classify_terminated_vm` resolved
+  `TerminationVerdict.PREEMPTED` and the `RelaunchPreemptedVm` actuator's failure-to-relaunch (correctly — there was
+  nothing to resume) self-emitted a CRITICAL `DP_VM_PREEMPTED_NO_RELAUNCH` page. Root cause: BOTH existing preemption
+  signals (the in-guest GCS `PREEMPTED` marker written by the shared `setup-data-pipeline-vm.sh` shutdown seam, and the
+  `was_instance_preempted` Compute-Operations-API fallback) are trusted unconditionally once either says `True` —
+  neither is cross-checked against the instance's OWN `scheduling.provisioning_model`, so a stale/incorrect signal from
+  either source flows straight through to a false PREEMPTED verdict. Fixed with a defense-in-depth veto: a new
+  `ComputeEngineClient.aggregated_list_instances` field (`scheduling_provisioning_model`, unified-trading-library) feeds
+  a new `deployment_service._compute_ops.make_scheduling_model_checker`, consulted only on the candidate-preempted path,
+  which lets `classify_terminated_vm`'s new `is_spot` parameter veto `preempted=True` whenever the instance is confirmed
+  non-SPOT — making a STANDARD VM structurally incapable of producing a PREEMPTED verdict regardless of which upstream
+  signal was wrong. The exact shutdown-script bug (if any) that produced the false GCS marker for this specific VM was
+  NOT pinned down (see "What I did not resolve" below) — the veto closes the observable symptom either way.
+status: open
+nature: issue
+asset_group: [cefi]
+stage: [meta]
+repos: [deployment-service, unified-trading-library]
+scope: [engineer, admin]
+tags: [cefi, vm, preemption, false-positive, monitoring, data-pipeline, dp-vm-008, alerting]
+related:
+  [
+    /plans/active/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
+    /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+  ]
+created: "2026-08-06"
+author: unknown
+priority: P2
+parent_epic: observability_master
+source:
+  "Operator live-diagnosed via gcloud compute instances describe + gcloud logging read (2026-08-06), handed to a
+  sub-agent to verify against code and fix at the root."
+assigned_vm: NA
+execution_scope: local-only
+estimate_class: refactor
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.12
+assigned_role: data_engineering
+drift_direction: none
+depends_on: []
+resolved_by:
+locked_by:
+context_scope:
+  [
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/deployment_service/data_pipeline_monitors/_compute_ops.py,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    deployment-service/scripts/vm/launch-cefi-forward-poll.sh,
+    unified-trading-library/unified_trading_library/cloud_interface/providers/gcp_compute.py,
+  ]
+---
+
+# cefi-fwd VM PREEMPTED false positive on a STANDARD (on-demand) instance — closed with a scheduling-config veto
+
+## What I found
+
+**The evidence (operator-supplied, re-verified against code, not re-run live):**
+
+- VM `cefi-fwd-20260806-064507`: `gcloud compute instances describe` showed `scheduling.provisioningModel: STANDARD`,
+  `preemptible: false`. `launch-cefi-forward-poll.sh` (the launcher `LAUNCHER_FOR_VM_PREFIX["cefi-fwd-"]` maps to) never
+  passes `--provisioning-model=SPOT` — confirmed by reading the launcher's `gcloud compute instances create` invocation
+  directly. GCE structurally cannot preempt a STANDARD instance.
+- `gcloud logging read` audit logs: two `v1.compute.instances.insert` 13 seconds apart (06:45:13Z, 06:45:26Z), then two
+  `v1.compute.instances.stop` (06:53:26Z, 06:55:45Z) — all by `unified-trading-sa`. A separate query for
+  `jsonPayload.event_subtype="compute.instances.preempted"` scoped to this project/timeframe returned **zero rows** for
+  this VM.
+- The monitor still fired CRITICAL `DP_VM_PREEMPTED_NO_RELAUNCH`.
+
+**Root cause, traced through the actual code (not assumed):**
+
+`exit_code_fleet_monitor.sweep()` resolves `is_preempted` two ways, in order: (1) `_gcs.is_vm_preempted` — a GCS
+`vm-logs/{vm}/PREEMPTED` blob written by an in-guest shutdown-script; (2) if that blob is absent AND the VM would
+otherwise resolve to the `GONE_NO_CAPTURE` candidate path, `preemption_op_checker` — the
+`ComputeEngineClient.was_instance_preempted` Operations-API fallback (added 2026-07-31 for a DIFFERENT, opposite-
+direction bug: an early preemption whose in-guest marker never got written in time — see
+`cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`). **Whichever one says `True` is trusted
+unconditionally** — `classify_terminated_vm` had no way to cross-check it against the instance's own scheduling config,
+so a stale/incorrect signal from EITHER source flows straight through to `TerminationVerdict.PREEMPTED` ->
+`DP_VM_PREEMPTED` (AUTO_RECOVER) -> `escalation._recover_preempted_vm` -> `RelaunchPreemptedVm`, which (correctly, per
+its own contract) found no `LAUNCH_PARAMS.json`/checkpoint to resume for a VM that ran ~8-10 minutes and captured
+nothing, failed the relaunch, and self-emitted the CRITICAL `DP_VM_PREEMPTED_NO_RELAUNCH` page — precisely as designed
+for "a relaunch legitimately could not happen," just fed a false premise.
+
+**What I did NOT resolve — the exact write path for this specific VM's false signal.** I read the shared shutdown-
+script seam (`setup-data-pipeline-vm.sh` § "0b. SPOT-preemption signal", installed on EVERY VM booted from this script —
+including non-SPOT `cefi-fwd-*`, since it's the SAME shared `startup-script-url` every launcher uses, SPOT or not) end
+to end: it gates the actual blob-write on `curl .../computeMetadata/v1/instance/preempted` returning literally `"true"`,
+which per GCP's documented semantics should read `false` for a STANDARD instance on ANY shutdown trigger (including a
+deliberate `instances.stop`). I could not find a logic bug in that gate by static reading, and I have no live access to
+this specific VM's serial console / shutdown-script execution log to confirm whether the blob genuinely existed (my
+hypothesis) or whether the Operations-API fallback path was consulted and returned an incorrect `True` (I could not find
+a bug there either — `was_instance_preempted`'s server-side filter + client-side exact-match both read correctly against
+the user's own "zero preemption operations" finding). **I chose not to over-fit a specific narrative to unverifiable
+runtime state** — the shipped fix is a defense-in-depth veto that closes the OBSERVABLE symptom regardless of which
+upstream signal was wrong, per this task's own explicitly-endorsed acceptable resolution ("gate `preempted=True` so it
+can never be set for a VM whose scheduling config is STANDARD/on-demand").
+
+**The double-`instances.insert` (13s apart) — investigated, NOT fixed, flagging only — UPGRADED to P2, it recurs on
+every relaunch, not a one-off.** This looks like the launcher's own singleton-lock check
+(`gcloud compute instances list --filter='name~"^cefi-fwd-[0-9]" AND status=RUNNING'`) racing a near-simultaneous second
+invocation: a freshly-inserted VM takes some seconds to reach `RUNNING`, so two invocations within that window can both
+see "no existing running VM" and both proceed to create. **Operator-supplied follow-up evidence (same incident window,
+post-fix): a SECOND near-simultaneous double-launch happened on the very relaunch of the first.**
+`cefi-fwd-20260806-064507` (06:45:13/06:45:26Z double-insert, the original false-positive-preempted VM) TERMINATED, then
+`cefi-fwd-20260806-065757` (06:57:57Z — ~12 min later, apparently a relaunch of the first) ALSO TERMINATED, and
+`cefi-fwd-20260806-065837` (06:58:43Z — only **46 seconds** after `-065757`) is the one left RUNNING. So the race fired
+TWICE in one incident window, once per launch attempt — this is a recurring pattern tied to every cefi-fwd launch
+(manual/cron-triggered or relaunch alike), not a rare fluke. I searched `plans/active/issues/` for an existing cefi-fwd
+duplicate-launch doc and found none (the operator's own search also came up empty) — this is a genuinely new
+observation, not a known/tracked issue. I did NOT fix it here: it is a separate mechanism (a launcher-side TOCTOU race,
+not the classifier) from this doc's false-PREEMPTED-page root cause (the veto closes that regardless of whether the
+duplicate-insert race is ever fixed) — bounding it properly (a short-lived GCS/Firestore lock, or a
+create-then-verify-singleton retry) deserves its own scoped fix rather than a rushed addition here. Upgraded from P3 to
+P2 given it recurs deterministically rather than being a one-off — see the follow-up todo below.
+
+## What shipped
+
+1. **`unified-trading-library`** — `ComputeEngineClient.aggregated_list_instances` (GCP impl) now additionally carries a
+   `scheduling_provisioning_model` key (`"STANDARD"`/`"SPOT"`/...) per instance dict, read from
+   `instance.scheduling.provisioning_model` — same "strictly additive, no consumer unpacks the dict" convention already
+   established for the `metadata` key (2026-07-20). New unit tests:
+   `tests/cloud_interface/unit/test_gcp_compute_scheduling_provisioning_model.py`.
+2. **`deployment-service`**:
+   - `_compute_ops.make_scheduling_model_checker(project_id)` — `vm_name -> scheduling.provisioning_model | None`,
+     mirroring the existing `make_preemption_op_checker`'s never-raises contract.
+   - `exit_code_fleet_monitor.classify_terminated_vm(..., is_spot: bool | None = None)` — when `is_spot is False`
+     (confirmed non-SPOT), a `preempted=True` input is VETOED: classification falls through to the normal
+     exit_code/captured-based path instead of resolving PREEMPTED. `is_spot is None` (unresolvable) preserves prior
+     behavior exactly.
+   - `exit_code_fleet_monitor.sweep(..., scheduling_model_checker=...)` — consults the checker ONLY when a candidate-
+     preempted verdict is about to fire (bounded extra API call, same discipline as `preemption_op_checker`), logs a
+     WARNING when it vetoes a false signal, and passes the resolved `is_spot` through to `classify_terminated_vm`.
+   - `cli.py` wires `scheduling_model_checker=_compute_ops.make_scheduling_model_checker(_project_id())` into the live
+     `exit-code` sweep, next to the existing `preemption_op_checker` wiring.
+   - New unit tests in `tests/unit/test_data_pipeline_monitors.py`: pure-classification veto cases (`is_spot=False` over
+     both `EXIT_NONZERO`- and `GONE_NO_CAPTURE`-shaped inputs, `is_spot=True`/`None` preserve prior behavior), a full
+     `sweep()` reproduction of this exact VM's shape (STANDARD + false GCS marker -> vetoed to `GONE_NO_CAPTURE`, no
+     `DP_VM_PREEMPTED_NO_RELAUNCH`), a bounded-cost guard (checker never called off the candidate-preempted path), and
+     direct `_compute_ops.make_scheduling_model_checker` tests.
+
+Evidence: deployment-service@5bd0017b96c9a79811a966033b875e165a010c11 (QG-green,
+`bash scripts/quality-gates.sh --no-fix` sentinel matched HEAD before commit),
+unified-trading-library@59acbe2fa5910c28357c35fe1d0969dd0c8326f0 (QG-green, same sentinel discipline). Both landed on
+`live-defi-rollout` via `quickmerge.sh --agent`.
+
+## Why it matters
+
+A false `PREEMPTED` verdict on a deliberately-stopped VM burns an on-call CRITICAL page (`DP_VM_PREEMPTED_NO_RELAUNCH`)
+for zero actual incident — worse than a silent miss, because it actively misdirects triage toward "check the SPOT
+relaunch path" for a VM that was never SPOT at all. Any launcher sharing `setup-data-pipeline-vm.sh` as its
+`startup-script-url` while NOT itself passing `--provisioning-model=SPOT` (cefi-fwd is one; there may be others) was
+exposed to this class before the veto shipped.
+
+## Recommended decision
+
+- [ ] [OPERATOR] P2. Once `deployment-service`/`unified-trading-library` land on `live-defi-rollout` and promote to
+      `main`, confirm (or trigger) a fresh `deployment-api` build+deploy so the live `uts-prod-dp-exit-code-monitor`
+      Cloud Run job actually picks up the fix (same deploy-lag gap
+      `cefi_content_migration_shard24_early_preemption_     false_page_2026_07_31.md` flagged for the prior preemption
+      fix — `deployment-service` is vendored into `deployment-api`'s image at BUILD time, not a versioned wheel pin, so
+      a code-only merge does not update the live monitor). Done when
+      `gcloud artifacts docker images list     asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags     --sort-by=~UPDATE_TIME --limit=1`
+      shows an `UPDATE_TIME` after this fix's merge commit.
+- [ ] [SCRIPT] P2. Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU race — CONFIRMED RECURRING, not a
+      one-off: it fired on BOTH the original launch (`-064507`/`-064513`/`-064526`, insert timestamps 13s apart) AND its
+      own relaunch 12 minutes later (`-065757` then `-065837`, only 46s apart) in the same incident window. Bound the
+      singleton check with a short-lived GCS/Firestore lock, or accept a brief `sleep`+re-check before create. Repo:
+      deployment-service. Separate from this doc's root-cause fix (the `is_spot` veto is unaffected by whether this race
+      is ever fixed); upgraded from P3 given the confirmed recurrence.
+- [ ] [SCRIPT] P3. If runtime/serial-console access to a freshly-`instances.stop`'d `cefi-fwd-*` VM is ever available
+      before it self-cleans, capture the shutdown-script's own log line
+      (`[preemption-shutdown] wrote PREEMPTED signal for ...` vs "FAILED") to pin down whether the false signal came
+      from the GCS blob write itself or the Operations-API fallback — closes the "What I did not resolve" gap above. Not
+      blocking: the veto already closes the observable symptom either way.
+
+## Progress Log
+
+- 2026-08-06: filed after verifying the operator's live `gcloud` diagnosis against the actual code (confirmed:
+  `launch-cefi-forward-poll.sh` never passes `--provisioning-model=SPOT`; `classify_terminated_vm` and
+  `preemption_op_checker` both trusted their respective signals unconditionally with no scheduling-config cross-check).
+  Shipped the `is_spot` veto (deployment-service + unified-trading-library, both QG-green) rather than chasing the
+  unverifiable exact write-path bug. Searched `plans/active/issues/` for a prior cefi-fwd duplicate-launch doc per this
+  task's instruction — found none; the double-insert race was initially filed as a new, separate P3 flag.
+- 2026-08-06 (same day, follow-up): shipped both fixes —
+  `unified-trading-library@59acbe2fa5910c28357c35fe1d0969dd0c8326f0` (`aggregated_list_instances`
+  scheduling_provisioning_model field) then `deployment-service@5bd0017b96c9a79811a966033b875e165a010c11` (the `is_spot`
+  veto), both via `quickmerge.sh --agent` after a genuinely QG-green tree (sentinel verified == HEAD before each
+  commit). Received further live evidence mid-ship: the duplicate-launch race recurred a SECOND time in the same
+  incident window, on the relaunch of the original VM (`-065757`/`-065837`, 46s apart) — confirms it is a deterministic
+  recurring pattern, not a one-off, so upgraded that follow-up from P3 to P2 (still not fixed in this pass — a
+  launcher-side TOCTOU fix is a separate, scoped piece of work). Status stays `open` pending the `deployment-api`
+  redeploy confirmation ([OPERATOR] todo above) and the P2 launcher-race follow-up.
