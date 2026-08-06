@@ -128,16 +128,20 @@ workspace).
 > until the operator activates it. That is an activation decision, not a reason to reclassify this doc (which would
 > create a second, competing dispatch path for the same read-only diff); see this run's report for the parked item.
 
-- [ ] [DATA] P1. **MIGRATED 2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (never shipped)**
-      — **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Extend the archived
-      migration plan's 5-day sample to every day the existing Phase-1 scope-audit output
+- [x] ✅ [DATA] P1. **MIGRATED 2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (never
+      shipped)** — **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Extend the
+      archived migration plan's 5-day sample to every day the existing Phase-1 scope-audit output
       (`_index/audit/bybit_futures_chain_shape_scope_2026_07_13.parquet`, `market-tick-data-service@5e367479`)
       classified `bare_flat_only`/`bundled_flat_only`/`mixed` — row-level diff each bare_flat/bundled_flat object
       against its hive/canonical counterpart using the same columns Phase 1 Todo 2 used, and write a per-day
       duplicate-verdict audit parquet. Read-only verification only — does NOT delete anything (the actual cleanup stays
       BLOCKED-OPERATOR-DECISION). Repo: market-tick-data-service. **Done when**: a new audit parquet gives a per-day
       duplicate/not-duplicate verdict for every day the Phase-1 scope audit classified
-      bare_flat_only/bundled_flat_only/mixed, closing the "sample-based, not exhaustive" caveat.
+      bare_flat_only/bundled_flat_only/mixed, closing the "sample-based, not exhaustive" caveat. **DONE 2026-08-06 (slot
+      8, `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1)** — full-scope audit shipped +
+      `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet` (1114 rows); **result:
+      duplicate=490, not_duplicate=290, no_counterpart=334 — see Progress Log, incl. the Phase-4-gating finding
+      `issues/bybit_futures_chain_shape2_exhaustive_audit_not_confirmed_duplicates_2026_08_06.md`.**
 
 ## Progress Log
 
@@ -185,3 +189,22 @@ workspace).
   `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1, which remains `status: draft` (unactivated 6+ days,
   confirmed via today's `ag_closeout_audit_cefi_parked_2026_08_06.md`). Nothing to fix; revisit only if batch4 stalls
   without ever activating.
+- **2026-08-06 (slot 8, `data_engineering`, `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 — the folded-back
+  P1 above)**: **FULL-SCOPE shape-2 duplicate verification COMPLETE.** New script
+  `market-tick-data-service/scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py`
+  (`market-tick-data-service@1a32b6e7`) diffs EVERY bare_flat/bundled_flat BYBIT futures_chain object against its
+  same-day hive/canonical counterpart across all **546 days** the Phase-1 scope audit classified
+  bare_flat_only/bundled_flat_only/mixed (2023-04-05 → 2025-09-23), using Phase 1 Todo 2's comparison columns
+  (exchange/symbol/timestamp/local_timestamp/id/side/price/amount, intersected with present columns). Read-only on the
+  corpus — no data mutated. Audit parquet: `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet`
+  (**1114 objects**). **Verdicts**: duplicate=490, not_duplicate=290, no_counterpart=334. **Day-level** (546 days):
+  duplicate=220, not_duplicate=175, no_counterpart=151. **Robustness**: 0/80 sampled objects flip verdict under a strict
+  `(timestamp, id)` key. **FINDING (data-correctness — refutes Phase 1 Todo 2's sample-based "always a subset / safe to
+  supersede-then-delete" verdict)**: only 490/1114 (44%) flat objects are confirmed same-day duplicates (0 rows unique
+  to the flat form). The 290 not_duplicate objects (all on mixed days) carry **1,151,992 rows absent** from their
+  same-day counterpart (per object 125–38,407 rows), and the 334 no_counterpart objects (bare_flat_only +
+  bundled_flat_only days and 103 objects on mixed days) have **no same-day canonical form at all (2,597,103 rows exist
+  only in flat form that day)**. Phase 4 deletion under the old assumption would lose ~3.7M rows. Phase 4's gate must be
+  re-gated on this — tracked as
+  `issues/bybit_futures_chain_shape2_exhaustive_audit_not_confirmed_duplicates_2026_08_06.md`. This doc now has zero
+  open todos but stays `assigned_vm: NA` (locked_by live-defi-rollout; finding carries the open work, not this doc).

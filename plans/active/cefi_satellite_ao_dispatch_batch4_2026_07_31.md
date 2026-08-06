@@ -83,14 +83,19 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Migrated
+- [x] ✅ [SCRIPT] P1. **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Migrated
       2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (batch1's one undone todo out of 33,
       folded back into the source doc rather than left to evaporate in the archived batch). Run the row-level diff of
       `bare_flat`/`bundled_flat` objects vs their hive counterparts across every day classified
       `bare_flat_only`/`bundled_flat_only`/`mixed` in the Phase-1 scope-audit parquet (the archived predecessor plan
       only sampled 5 days). Read-only verification, no writes. Source:
       `issues/bybit_futures_chain_write_shape_2026_07_13.md`. **Done when**: the full-scope diff completes, results are
-      recorded in the source doc, and its open P1 todo is flipped citing this run.
+      recorded in the source doc, and its open P1 todo is flipped citing this run. **DONE 2026-08-06 (slot 8)** —
+      `market-tick-data-service@1a32b6e7` shipped `scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py`;
+      full-scope diff across all 546 scope days →
+      `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet` (1114 objects: duplicate=490,
+      not_duplicate=290, no_counterpart=334). Source doc P1 flipped + results logged; Phase-4-gating finding filed at
+      `issues/bybit_futures_chain_shape2_exhaustive_audit_not_confirmed_duplicates_2026_08_06.md`.
 
 - [ ] [DATA] P2. **Re-check ASTER + spot-check 2 other venues for post-relaunch live data landing.** Run the cited
       `gcloud storage ls gs://market-data-tick-cefi-prd-central-element-323112/pipeline_mode=live_aster/...` check for
