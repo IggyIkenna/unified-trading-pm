@@ -238,16 +238,16 @@ open questions).
 
 ## Deferred work after 2026-08-06
 
-| Item                                                                              | State / why deferred                                        | Blocked-on                     |
-| --------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------ |
-| STEP 4 — adversarial verification                                                 | DONE (10 hunters + mechanical checks; pair-check in flight) | —                              |
-| STEP 5 — apply confirmed fixes                                                    | COMMITTED checkpoint #1 (30 docs)                           | —                              |
-| STEP 6 — route hard items via /blocked                                            | 3 questions POSTed                                          | operator answers               |
-| STEP 7 — PR plan_reconciler/agt-24f4b0 → live-defi-rollout                        | Not done                                                    | STEP 5 commit + pair verdicts  |
-| STEP 8 — POST /api/plan_health/result + /done                                     | Not done                                                    | STEP 7 + operator answers      |
-| GRACE-skipped orphan linkage (dex_pool_swaps_733, delta_one, lighter, blazestake) | deferred — docs <12h old today                              | next reconciler run            |
-| dex_pool_state archival                                                           | deferred — refs in grace docs batch6:440/batch10:219        | batch6/batch10 land + next run |
-| axis_contamination 1001L split                                                    | operator-gated (GRACE doc)                                  | operator                       |
-| batch9_finalize duplicate [DOC] P1 tags                                           | GRACE doc (created today)                                   | next reconciler run            |
+| Item                                                                              | State / why deferred                                                             | Blocked-on                       |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------- |
+| STEP 4 — adversarial verification                                                 | DONE (10 hunters + mechanical checks; pair-check in flight)                      | —                                |
+| STEP 5 — apply confirmed fixes                                                    | COMMITTED checkpoint #1 (30 docs)                                                | —                                |
+| STEP 6 — route hard items via /blocked                                            | 3 questions POSTed (BLK-997409b9 / BLK-555a42f7 / BLK-68917b3e)                  | operator answers                 |
+| STEP 7 — PR plan_reconciler/agt-24f4b0 → live-defi-rollout                        | DONE — PR #2397 open; plan-health result POSTed (7 contradictions + 4 doc-drift) | —                                |
+| STEP 8 — POST /api/plan_health/result + /done                                     | /done pending                                                                    | pair verdicts + operator answers |
+| GRACE-skipped orphan linkage (dex_pool_swaps_733, delta_one, lighter, blazestake) | deferred — docs <12h old today                                                   | next reconciler run              |
+| dex_pool_state archival                                                           | deferred — refs in grace docs batch6:440/batch10:219                             | batch6/batch10 land + next run   |
+| axis_contamination 1001L split                                                    | operator-gated (GRACE doc)                                                       | operator                         |
+| batch9_finalize duplicate [DOC] P1 tags                                           | GRACE doc (created today)                                                        | next reconciler run              |
 
 **Next item**: collect hunter results → dedup → STEP 4 refuter/confirmer pass.
