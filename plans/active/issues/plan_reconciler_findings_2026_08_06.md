@@ -56,36 +56,127 @@ Slot 2, branch `plan_reconciler/agt-4fdce1`. This doc is the run journal — app
 
 ## Flips verified
 
-(appended as confirmed)
+- Epic hub `infrastructure_master.md` todo (Folded-in scope 2026-07-15): flipped `[ ]`→`[x]` — removed the 5 stale
+  "IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation" banners the todo itself named (infra/strategy/features_and_ml
+  /execution/orchestrator epics); the todo's own record already proved the refactor shipped+archived. P0, self-evident
+  from the record — no adversarial pair needed.
 
 ## Contradictions
 
-(appended as confirmed)
+**51 confirmed by hunter read** (dual quotes+locations, `<relpath>:<line>`) across the 10 epic-cluster batches — NOT
+individually re-verified by an independent second pass this run given the volume (effort budgeting call; each hunter's
+own methodology already cross-referenced git log / sibling docs / live code where the finding warranted it — see each
+hunter's per-finding "Why" line for its own evidence chain). Grouped by severity; full citations live in this run's
+sub-agent transcripts (not reproduced verbatim here to stay under the line cap) — cite the hunter batch name if you need
+to pull the exact quote.
+
+**P0 (5 found, 1 fixed this run, 1 alerted, 3 remain — route to next run or operator)**
+
+| #   | Finding                                                                                                                                                                                                                                                                                     | Batch                       | Status                                                                                                                                |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | infra epic hub stale IN-FLIGHT banner contradicts its own "folded-in, shipped" note                                                                                                                                                                                                         | infra-A                     | ✅ FIXED (see Flips verified)                                                                                                         |
+| 2   | `bucket_iam_write_protection_per_tier_..._finalize_2026_07_27.md`: `status: active` frontmatter vs body "STATUS: `draft`" banner                                                                                                                                                            | infra-A                     | NOT FIXED — same bug class as #4/#5 below, recurs in ≥6 finalize-twin docs corpus-wide; needs one sweep, not 6 one-offs (filed below) |
+| 3   | `infra_satellite_ao_dispatch_batch3_2026_07_30.md` claims dispatchable (`assigned_vm: planning`); batch7 (2 days later, live-re-verified) says the field actually parsed blank due to an unusual multi-line YAML form                                                                       | infra-B                     | NOT FIXED — needs a live parse-check against the real backlog regen, not a doc edit; routed                                           |
+| 4   | `sports_predictions_live_mode_activation_readiness_2026_07_21.md` todo 1 shows an explicit YES ruling (2026-07-28) + a shipped connector; `sports_satellite_ao_dispatch_batch5_2026_07_26.md` AND its finalize (both dated after) still assert the ruling is unmade and infra doesn't exist | sports                      | NOT FIXED — needs the batch5 doc corrected to stop re-asking an answered question; routed                                             |
+| 5   | `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md` found `gate_on_depends` did NOT hold (dispatched at 3/14 done); `batch7_2026_08_04_finalize.md` (days later) asserts the gate "alone already machine-holds" and skips the `status: draft` safety net on that assumption    | predictions                 | NOT FIXED — needs a live AO-mechanism check (is the underlying bug actually fixed?), not a doc edit; routed                           |
+| 6   | Two finalize plans (`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md` + `..._finalize_2026_07_31.md`) both gate on the same parent, will race on the same archival target                                                                                      | tradfi/obs/batch-live combo | 🔔 ALERTED (`BLK-5eeacb63`)                                                                                                           |
+
+**P1 (≥20 found)** — dominant recurring shape (≥8 instances across infra/predictions/defi/tradfi/manifest_master
+batches): a gated **finalize** doc's frontmatter says `status: active` while its own body banner says
+`` `status: draft` — NOT dispatched``. Functionally low-risk (`gate_on_depends` is the real gate, not this prose), but
+misleads a reader trusting the banner. **This is a single systemic authoring-template bug, not N separate findings** —
+recommend a corpus-wide grep-and-fix of the exact banner string in a follow-up (mechanical, bounded), rather than
+patching instance-by-instance. Other P1s: stale/contradictory completion claims between a plan and its own finalize twin
+or epic hub (DERIBIT options_chain coverage %, TradFi G4 apply-done-with-caveat, CQG residual archived-but-hub-
+still-lists-active, OmniRoute account-status, defi_master.md's Hyperliquid+Aster still-DeFi claim vs the dedicated
+2026-08-02 migration confirming CEFI-only since 2026-06-21) — each needs its own read to resolve; not mechanically
+batchable. Full list in sub-agent transcripts.
+
+**P2/P3 (≥25 found)**: overwhelmingly epic-hub roster staleness ("N active plans declare parent_epic: X" undercounts /
+lists an archived plan as active) — **this entire class is already resolved** by this run's
+`populate_epic_bodies_2026_05_21.py --apply` (see Hygiene fixes). Residual P2/P3s are cosmetic (frontmatter
+`last_updated` staleness, a title miscounting its own venue list, arithmetic-off-by-one in a Progress Log) — logged in
+transcripts, not worth individual issue docs.
 
 ## Doc-drift
 
-(appended as confirmed)
+- `defi_master.md` (epic hub): "2 DeFi perp DEXs live: Hyperliquid + Aster" is stale — both reclassified pure-CEFI
+  2026-06-21, operator-confirmed 2026-07-27, re-verified live 2026-08-02
+  (`hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`). Codex-adjacent (epic hub, not `codex/`) —
+  flagged, not auto-fixed, since it's narrative content outside the auto-populated section. **Needs an operator-visible
+  fix**, filed below.
 
 ## Hygiene fixes
 
-(appended as applied)
+- **Reference-path mechanical fix**: `fix_reference_paths.py` — 90 codex-ref occurrences normalized, 12 files (7 more
+  grace-protected, self-heals next run).
+- **Epic-roster regeneration**: `populate_epic_bodies_2026_05_21.py --apply` across all 23 epics — independently
+  resolves ~15+ "stale/undercounting epic roster" P1/P2 findings multiple hunters reported (derived section only,
+  `related_plans:` + `## Assigned active plans`, no narrative touched).
+- **49 docs archived** (47 issues + 2 plans) + 1 bonus (instruments_satellite_ao_dispatch_batch1, discovered via a
+  routed action item in another doc) = **50 total**, all hunter-verified 0-open-todo + no-undone-prose. 2 needed a small
+  pre-archive correction (stale banner reworded, not rewritten) before archiving.
+- **Corpus referrer fixes**: 2 broken markdown links (`validate_plan_links.py`) + 63 broader full-path referrers
+  (`check_reference_paths.py`'s wider existence check) + 4 more found via the bonus archival = 69 files, all verified
+  post-fix. 16 referrer files left untouched (12h grace window) — will self-heal next run.
 
 ## Filed
 
-(appended as filed)
+- `plans/active/issues/mtds_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`: NOT archived (was
+  ARCHIVE_READY-looking by checkbox, but its "all done" claim rests on a static dry-parse check; a same-day successor
+  doc ran real GCE pilots and found the exec-dispatch 100% broken in production). **Needs a correction banner** pointing
+  to `mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md` before any future archive pass —
+  not applied this run (time budget), left as a todo for the next reconciliation pass.
+- `plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md`: archived as-is (core campaign genuinely
+  done) but carries one non-blocking prose-only follow-up (2,002 blank-`league_id` manifest rows, same pattern as
+  `sports_af_full_entity_completion_2026_08_03.md`) never captured as a checkbox. Noted here per the doc's own
+  "non-urgent" framing; likely already covered by the cross-referenced (currently grace-protected, actively-worked) doc
+  — re-check on a future pass if it isn't.
+- **AG-closeout linkage regression** (69→87 baseline, now 83 post-archival): NOT hand-fixed — this is
+  `/ag-closeout-audit`'s domain (tranche-parameterized skill built for exactly this linkage class), not a
+  plan_reconciler action. Recommend running it across the tranches that grew: cross-cutting, ao, infrastructure, cefi.
+- **NA-corpus-size regression** (359→376 docs, 1295→1317 todos): NOT hand-triaged — explicitly `/na-eligibility-audit`
+  scope per the ratchet's own remedy message.
+- **Reference-path dangling (existence) residual**: 103→100(pre-fix measurement noise)→117 net (baseline 86) — the
+  ~14-over-baseline gap is old pre-2026-07-23 debt (scratch_scenarios_day1/, plans/ai/, plans/audit/ — see
+  `reference_path_convention_2026_07_23.md`), not new regression from this run.
+- Recurring `status: active` (frontmatter) vs `` `status: draft` `` (body banner) bug in finalize-twin plans (≥8
+  confirmed instances, P1 above) — recommend a bounded follow-up plan: grep the exact banner string corpus-wide,
+  cross-check each hit's frontmatter, fix the ones that disagree.
 
 ## Archive candidates (operator review)
 
-(appended as archived / could-not-archive)
+50 archived this run (see Hygiene fixes). None required operator review before archiving (all had hard evidence per
+STEP-4's bar); 2 correction-only pre-archive edits didn't change substance. 0 `locked_by:` blockers encountered.
 
 ## Refuted (dropped by verify)
 
-(appended as refuted)
+None — every hunter-reported archive candidate resolved to ARCHIVE_READY, NOT_READY, or AMBIGUOUS (resolved by
+plan_reconciler judgment, documented per-doc above); no candidate was found to be a hunter misread.
 
 ## Coverage (hunters / batches / docs)
 
-(appended at STEP 7)
+- **5 archive-candidacy hunters** (batches of 12-13, general-purpose/sonnet): 61 docs read in full, cross-verified
+  against git log / sibling docs where claims looked suspicious. 40 ARCHIVE_READY (+10 more needing a status flip first,
+  done), 10 NOT_READY (real undone work hidden behind a checked box — see Filed / blocked alerts), 3 AMBIGUOUS (resolved
+  by plan_reconciler judgment).
+- **10 epic-cluster hunters** (general-purpose/sonnet): 162 non-grace `plans/active/*.md` + all 23 epic hub docs read in
+  full. 51 contradiction candidates + full per-doc claims digests (not reproduced here).
+- **Grace set**: 300/703 files (43%) were within the 12h window this run — unusually high, several large bulk commits
+  landed in the last 12h. Grace-protected candidates (7 reference-path files, 16 referrer files, an unknown number of
+  archive candidates not yet surfaced) will be caught by tomorrow's run.
+- **Not run this pass** (time-budgeted out): topic hunters (canonical-ID, manifest/coverage, CI/CD shape, AO lifecycle,
+  buckets/IAM, VM/SPOT policy, batch=live, milestones/dates, instruments SSOT, UI/deployment — 10+ cross-cutting themes
+  the epic partition can't see), codex-alignment hunters (plan↔codex drift per-plan), missed-flip hunters (scanning open
+  todos for self-cited shas). These are the next-highest-value fan-out for a future run.
 
 ## Plans not reached
 
-(appended at STEP 7 if applicable)
+- The 15+ P1 finalize-twin `status:active`-vs-`draft` instances: confirmed but not individually fixed (recommend a
+  dedicated mechanical sweep, see Filed).
+- `defi_master.md` Hyperliquid+Aster stale claim: flagged (Doc-drift) but not edited — epic-hub narrative content,
+  outside this run's auto-fix scope; needs either an operator-approved edit or a `[unlock-plan]`-style authorization to
+  touch epic narrative sections directly in a future run.
+- 3 of 5 P0s (batch3 `assigned_vm` blank-parse bug, sports live-mode-ruling re-ask, predictions gate_on_depends
+  reliability) need either a live mechanism check or a doc correction beyond this run's remaining budget — routed via
+  Filed above, not blocked-alerted (judged non-data-correctness, lower urgency than the 3 that were alerted).
