@@ -216,3 +216,18 @@ activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned 
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — steps 2+4 extracted to
 ci_satellite_ao_dispatch_batch4_2026_07_31.md todo 2 (draft)
+
+- **worker slot-15 2026-08-06**: Completed steps 2+4 (ci_satellite_ao_dispatch_batch4-002).
+  - **Caller audit**: Grep of all `UnifiedCloudServicesConfig(` instantiations in UTL — zero callers pass `environment=`
+    kwarg to the real constructor (only `model_construct` callers, which bypass alias resolution). Fix is safe: no
+    caller currently relies on the silently-dropped-kwarg behavior.
+  - **Fix shipped**: `unified_trading_library/core/config.py` — added `populate_by_name=True` to `model_config` and
+    `"environment"` to `AliasChoices("ENVIRONMENT", "ENV")`. Matches `BaseConfig.environment`'s pattern exactly.
+    Regression test `test_environment_kwarg_wins_over_ambient` added to `tests/unit/test_config.py` proving
+    `environment=` kwarg wins when ambient `ENVIRONMENT=production` is set. Quality gates green (147s). Shipped
+    `unified-trading-library@dc1dc7df`.
+  - **Fleet grep (step 4)**: Grepped 23 repos for ambient-default-reliant test pattern (tests asserting
+    `is_development`/`environment==development` defaults without `monkeypatch.delenv("ENVIRONMENT"/"DEPLOYMENT_ENV")`).
+    Result: **none found** — no other repo carries the risky pattern. All checked repos either use `model_construct`,
+    `monkeypatch`/`setdefault` to set env explicitly, accept flexible multi-value assertions, or mock settings objects
+    directly. Fleet is clean.

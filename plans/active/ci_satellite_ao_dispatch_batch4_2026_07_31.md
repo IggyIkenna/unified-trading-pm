@@ -139,31 +139,15 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3, batch2 Deferred E4 /
     batch1 D4).
 
-- [ ] [INFRA] P2. **Align `UnifiedCloudServicesConfig.environment`'s pydantic alias precedence with
+- [x] ✅ [INFRA] P2. **Align `UnifiedCloudServicesConfig.environment`'s pydantic alias precedence with
       `BaseConfig.environment`'s (caller audit first), then grep the fleet for the same ambient-default-reliant test
-      pattern.** Does NOT touch `scripts/quickmerge.sh` (unlike this doc's step 3, which stays Deferred below). Two-step
-      chain in `unified-trading-library`:
-  1. **Caller audit.** `core/config.py`'s `UnifiedCloudServicesConfig.environment` has
-     `validation_alias=AliasChoices("ENVIRONMENT", "ENV")` (bare `"environment"` OMITTED) and no `populate_by_name`, so
-     an explicit `environment=` constructor kwarg is silently DROPPED in favor of the ambient env var — confirmed via
-     direct repro (`UnifiedCloudServicesConfig(environment='development')` with ambient `ENVIRONMENT=production` set →
-     `.environment == 'production'`). Before changing this, audit every in-repo caller passing `environment=` to this
-     constructor and confirm none currently RELIES on the silently-dropped-kwarg behavior (i.e. currently expects the
-     ambient value to win, not the explicit kwarg).
-  2. **Fix.** Add `populate_by_name=True` + the bare `"environment"` entry to `AliasChoices`, matching
-     `BaseConfig.environment`'s already-correct pattern (`config_interface/base_config.py`), only if the caller audit in
-     step 1 finds no caller relying on the old (broken) precedence — if it does, note the conflict instead of forcing
-     the change.
-  3. **Fleet grep.** Grep the other ~20 repos for the same ambient-default-reliant test pattern (a test asserting a
-     "nothing set" default without `monkeypatch.delenv("ENVIRONMENT"/"DEPLOYMENT_ENV")` first) — this repo's own fix
-     (`tests/cloud_interface/unit/test_constants.py` etc., already shipped 2026-07-25) is the template to check other
-     repos against. Record findings (or "none found") in the source doc.
-  - **Done when**: the caller audit is recorded in the source doc; the alias fix lands (or is explicitly held with the
-    conflicting caller named) with a regression test proving `environment=` kwarg now wins when passed; the fleet grep
-    result (found sites, or a clean "none found") is recorded. `unified-trading-library` `quality-gates.sh` green.
-  - Source: `issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` (Suggested next steps 2 + 4;
-    batch2 Deferred E5 / batch1 D3(4)). **Step 3 of the source doc (broadening `quickmerge.sh`'s branch check) is
-    EXPLICITLY OUT OF SCOPE for this todo** — see `## Deferred` D4-2 below.
+      pattern.** — unified-trading-library@dc1dc7df. Caller audit: zero in-repo callers pass `environment=` to the real
+      constructor (all use `model_construct`, which bypasses alias resolution) — fix safe. Fix: added
+      `populate_by_name=True` to `model_config` + `"environment"` to `AliasChoices("ENVIRONMENT", "ENV")` in
+      `core/config.py`, matching `BaseConfig.environment`'s pattern. Regression test
+      `test_environment_kwarg_wins_over_ambient` proves kwarg wins over ambient env. Fleet grep of 23 repos: none found
+      — no other repo has the ambient-default-reliant test pattern. Findings recorded in source doc Progress Log.
+      `unified-trading-library` QG green (147s).
 
 - [x] ✅ [DOC] P2. **Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram +
       Gate 1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model.** —
