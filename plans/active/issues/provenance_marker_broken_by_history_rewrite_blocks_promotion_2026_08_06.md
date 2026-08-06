@@ -2,8 +2,10 @@
 doc_type: issue
 title: >-
   LDR→main provenance-marker computation is corrupted for every repo whose last successful promote predates the
-  2026-08-05T11:24:53Z security-driven git history rewrite — instruments-service, unified-trading-library, and
-  market-data-processing-service are stuck in a closed/superseded promote-PR loop with NO merge since the rewrite
+  2026-08-05T11:24:53Z security-driven git history rewrite — instruments-service, unified-trading-library,
+  market-data-processing-service, AND alerting-service are stuck in a closed/superseded promote-PR loop with NO merge
+  since the rewrite (alerting-service confirmed 2026-08-06, ~4h after this doc was first filed — this is actively
+  blocking a live production fix from reaching the running service, not just a hygiene concern)
 summary: >-
   Discovered while investigating why instruments-service PR #1084 (the DP-CATALOG-001 sports-catalogue fix, `497c4f5e`)
   was closed by the provenance gate — see
@@ -43,6 +45,7 @@ repos:
     instruments-service,
     unified-trading-library,
     market-data-processing-service,
+    alerting-service,
     execution-service,
     e2e-testing,
   ]
@@ -109,13 +112,14 @@ context_scope:
 - **Cross-repo correlation (all 5 repos sharing the 2026-08-05T11:24:53Z history rewrite, evidenced by each
   `<repo>.stale-pre-history-rewrite-20260805T112453Z` sibling clone on disk):**
 
-  | repo                           | last successful main-promote | vs. rewrite (11:24:53Z) | current state                         |
-  | ------------------------------ | ---------------------------- | ----------------------- | ------------------------------------- |
-  | instruments-service            | 2026-08-05T06:48:16Z         | BEFORE                  | stuck — 5 closed PRs, 0 merges since  |
-  | unified-trading-library        | 2026-08-05T08:49:47Z         | BEFORE                  | stuck — many closed PRs (#753-#758)   |
-  | market-data-processing-service | 2026-08-05T08:49:47Z         | BEFORE                  | stuck — many closed PRs (#592-#597)   |
-  | execution-service              | 2026-08-06T10:33:04Z         | AFTER                   | healthy — merged again 10:33Z         |
-  | e2e-testing                    | 2026-08-06T11:06:40Z         | AFTER                   | healthy — merged again 09:14Z, 11:06Z |
+  | repo                           | last successful main-promote | vs. rewrite (11:24:53Z) | current state                                                                                                                            |
+  | ------------------------------ | ---------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+  | instruments-service            | 2026-08-05T06:48:16Z         | BEFORE                  | stuck — 5 closed PRs, 0 merges since                                                                                                     |
+  | unified-trading-library        | 2026-08-05T08:49:47Z         | BEFORE                  | stuck — many closed PRs (#753-#758)                                                                                                      |
+  | market-data-processing-service | 2026-08-05T08:49:47Z         | BEFORE                  | stuck — many closed PRs (#592-#597)                                                                                                      |
+  | alerting-service               | 2026-08-04T21:47:27Z (#334)  | BEFORE                  | stuck — 10 closed PRs (#335-#343), 0 merges since; #344 (a live-production alerting fix, `4e252b4`) is OPEN now and blocked the same way |
+  | execution-service              | 2026-08-06T10:33:04Z         | AFTER                   | healthy — merged again 10:33Z                                                                                                            |
+  | e2e-testing                    | 2026-08-06T11:06:40Z         | AFTER                   | healthy — merged again 09:14Z, 11:06Z                                                                                                    |
 
   The 3-stuck/2-healthy split lines up exactly with pre-/post-rewrite marker timing — not a coincidence. A repo
   self-heals the instant one promote clears (new marker = a valid post-rewrite SHA), but reaching that first clean
@@ -164,3 +168,15 @@ Two reasons, mirroring the UTL-34-bypass precedent
   correctly quickmerge-provenanced — nothing to re-ship there — so the closed PR #1084 sent me looking at what actually
   blocked it, surfacing this much larger cross-repo finding. Flagged for operator decision per the established
   "bulk-bless / gate-code-change needs a human call" precedent; not fixed autonomously.
+- **2026-08-06, ~4h later** — Confirmed a 4th affected repo while verifying whether a same-day production alerting fix
+  (`alerting-service@4e252b43b303`, a PagerDuty-crash + email-fallback + refire-storm dedup fix) had actually reached
+  the running Cloud Run service (`dp-alerting-subscriber`). It had NOT: the live revision
+  (`dp-alerting-subscriber-00015-lcn`) is running an image built 2026-07-28, over a week stale. Root cause: identical
+  pattern — `gh pr list` shows alerting-service's last successful `chore(promote)` merge was PR #334
+  (2026-08-04T21:47:27Z, before the rewrite), followed by 10 straight closed-not-merged promote PRs (#335-#343) through
+  today, and the OPEN PR #344 carrying the production fix (`4e252b4`) is checks-green (`sit-gate/fleet-green`,
+  `semver-agent/label-check` both pass) but not merging — consistent with the same provenance-marker-range corruption,
+  not a distinct new bug. This directly answers this doc's own P2 audit todo (partially — confirms the blast radius is
+  wider than the original 3, at least one more repo affected) and raises the practical urgency: this isn't just a
+  hygiene/cleanliness issue, it is actively preventing a live incident fix from reaching production. Not fixed
+  autonomously, same reasoning as above.
