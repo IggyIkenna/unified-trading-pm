@@ -394,6 +394,11 @@ gap**, not a delete-safety question:
 
 - [ ] [DATA] P1. Resolve the BLAZESTAKE/SOLBLAZE-SOLANA zero-live-producer residual: operator/design decision (Options
       A/B/C) on adapter ownership, then wire the producer (1 remaining live-data-gap venue of 4).
+- [ ] [DATA] P2. Backfill the 2026-08-01..08-03 `lst_rates` gap for `SOLBLAZE-SOLANA` (the OOM window — those dates are
+      absent from the canonical captured set). Mechanism per the chosen ownership option: Option A → re-run the legacy
+      `collect-lst-rates` path for those dates (after `2c451c33` deploys); Option B → adapter-based backfill. Repo:
+      market-tick-data-service. Note: if the LDR→main promote stays stalled past 2026-08-07, pre-deploy daily runs keep
+      re-creating `venue=BLAZESTAKE` rows that need the same relabel+retire re-run.
 
 > **2026-08-06 archive-candidate audit**: Summary says 'RESOLVED for 3 of 4 venues, 1 remaining live-data-gap finding' —
 > BLAZESTAKE/SOLBLAZE-SOLANA has zero live producer, explicitly 'NOT fixed in this dispatch', operator/design decision
