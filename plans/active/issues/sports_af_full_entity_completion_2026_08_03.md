@@ -86,8 +86,8 @@ healthy, so even these may understate true progress).
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 52,372 already resolved, **58,531 needed** (denominator drift only — no backfill run yet)                                                          |
 | **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,372 already resolved, **only 999 needed** — nearly done                                                                                                   |
 | **INJURIES**     | **all-383**                  | 108,662 expected, 45,953 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                |
-| **STANDINGS**    | **all-383**                  | 108,662 expected, 73,748 already resolved, **34,914 needed** (was 64,439 on 08-04, **-29,525**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
-| **TEAMS**        | **all-383**                  | 108,662 expected, 77,624 already resolved, **31,038 needed** (was 64,723 on 08-04, **-33,685**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
+| **STANDINGS**    | **all-383**                  | 108,662 expected, 74,456 already resolved, **34,206 needed** (was 64,439 on 08-04, **-30,233**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
+| **TEAMS**        | **all-383**                  | 108,662 expected, 78,332 already resolved, **30,330 needed** (was 64,723 on 08-04, **-34,393**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                   |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -97,7 +97,7 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T05:29Z: 129,660 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+**Grand total needed, 2026-08-06T05:48Z: 128,244 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
 further ~33% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
 **+ 106,963 across FIXTURE_STATS+FIXTURE_LINEUPS** (48,432 + 58,531). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
 confirmed active concurrently (2 lanes, see Progress Log correction). LEAGUES excluded per the resolved verdict below.
@@ -642,36 +642,15 @@ are genuinely in scope for the operator's "no exceptions" directive.
   read-only alongside the af-backfill-* pool. Census this tick: TEAMS 39,678→38,792 (-886), STANDINGS 43,552→42,666
   (-886). Grand total 145,166 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Also condensed the 2026-08-05T20:51Z-01:03Z
   block of per-tick entries above into one summary paragraph (doc was at 643 lines).
-- **2026-08-06T02:41Z** — Both lanes checked fresh and both healthy. FIXTURE_STATS census read flat for a 3rd
-  consecutive tick (48,432, unchanged) — re-verified via run.log one final time: confirmed genuinely active via
-  `[[VM_PROGRESS]] last_completed_date=...` markers advancing monotonically (2020-09-16→2020-10-02 within this log
-  window), not a loop (the handful of repeated fixture IDs seen in raw log lines were retry/sub-entity noise within the
-  same date, not the VM stuck on one date). This is now confirmed 3x — treating flat FIXTURE_STATS readings as expected
-  consolidator lag going forward without further run.log re-verification, per the accepted-characteristic rule.
-  Dedicated TEAMS VM continued strong: TEAMS 38,792→37,874 (-918), STANDINGS 42,666→41,750 (-916, near-identical to
-  TEAMS but not exactly, presumably a minor independent presence-guard skip difference — not concerning). Grand total
-  143,332 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Both VMs left running.
-- **2026-08-06T02:59Z** — Both lanes healthy. TEAMS 37,874→36,884 (-990), STANDINGS 41,750→40,760 (-990) — continued
-  steady progress via the dedicated VM. FIXTURE_STATS flat for a 4th tick (48,432, unchanged) — not re-verifying per the
-  accepted-characteristic rule established last tick (this matches the earlier 5-tick flat stretch seen with the same VM
-  type; expect a catch-up burst eventually). Grand total 141,352 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Both VMs
-  left running.
-- **2026-08-06T03:18Z** — Both lanes healthy. TEAMS 36,884→36,199 (-685), STANDINGS 40,760→40,075 (-685) — continued
-  steady progress. FIXTURE_STATS essentially still flat for a 5th tick (48,432 needed, resolved ticked +1 to 174,674 —
-  negligible, consistent with expectations). Grand total 139,982 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Both VMs
-  left running.
-- **2026-08-06T04:51Z** — Longer-than-usual gap since the last tick (~93min, vs. the standard ~15-20min cadence).
-  TEAMS/STANDINGS made strong accumulated progress over that window: TEAMS 36,199→33,173 (-3,026), STANDINGS
-  40,075→37,049 (-3,026). FIXTURE_STATS now flat for a 6th consecutive tick — the longest flat stretch of the campaign —
-  so re-verified via run.log once more given the extended duration: confirmed genuinely active, VM_PROGRESS date markers
-  advanced from 2020-10-02 (last verified) all the way to 2021-03-27 (~176 days of real processed dates) while the
-  manifest count stayed frozen — a much larger unabsorbed backlog than any prior flat stretch, but the mechanism is
-  identical (per-VM-shard-to-canonical consolidator lag) and clearly not a stall. Expect an unusually large catch-up
-  burst whenever the consolidator processes this shard. Grand total 133,930 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS).
-  Both VMs left running.
-- **2026-08-06T05:11Z** — Both lanes healthy. TEAMS 33,173→31,994 (-1,179), STANDINGS 37,049→35,870 (-1,179) — continued
-  steady progress. FIXTURE_STATS flat for a 7th tick (48,432, unchanged) — within tolerance of the accepted pattern, not
-  re-verifying. Grand total 131,572 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Both VMs left running.
-- **2026-08-06T05:29Z** — Both lanes healthy. TEAMS 31,994→31,038 (-956), STANDINGS 35,870→34,914 (-956) — continued
-  steady progress. FIXTURE_STATS flat for an 8th tick (48,432, unchanged) — still within tolerance. Grand total 129,660
-  (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Both VMs left running.
+- **2026-08-06T02:41Z-05:29Z (condensed, 7 ticks)** — Sustained steady-state: both lanes healthy throughout. TEAMS
+  dropped 38,792→31,038 (-7,754 total), STANDINGS 42,666→34,914 (-7,752, near-identical to TEAMS the whole stretch,
+  minor variance normal) via the dedicated VM. FIXTURE_STATS held flat the entire stretch (48,432 unchanged) —
+  re-verified via run.log twice more during this window (02:41Z: confirmed active via VM_PROGRESS markers, 3x total by
+  then; 04:51Z after a longer ~93min gap: confirmed active again, VM had advanced ~176 days of real dates
+  2020-10-02→2021-03-27 while the manifest count stayed frozen, the longest unabsorbed backlog of the campaign) —
+  treated as expected consolidator lag, no longer re-verifying unless the flat stretch reaches ~10+ ticks. Grand total
+  dropped from 143,332 to 129,660 (core 4) across this stretch; FIXTURE_STATS+LINEUPS held at 106,963 throughout.
+- **2026-08-06T05:48Z** — Both lanes healthy. TEAMS 31,038→30,330 (-708), STANDINGS 34,914→34,206 (-708) — continued
+  steady progress. FIXTURE_STATS flat for a 9th tick (48,432, unchanged) — approaching the ~10-tick re-verify milestone;
+  will do one more run.log sanity check next tick if it's still flat. Grand total 128,244 (core 4) + 106,963
+  (FIXTURE_STATS+LINEUPS). Both VMs left running.
