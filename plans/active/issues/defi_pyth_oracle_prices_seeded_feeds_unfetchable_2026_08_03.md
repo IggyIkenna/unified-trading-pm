@@ -390,3 +390,9 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   never prose" HARD RULE. Fixed in this same commit: added a new `[OPERATOR] P1` todo above tracking the IS redeploy
   action. Flagging to the operator via this run's completion report — this is an ongoing, cross-repo, P1
   data-correctness regression that did not actually resolve when the code merged.
+  - **2026-08-06 01:35Z (slot-12, CI check)**: IS `quality-gates-v2` is FAILING on `064e2560` (current LDR HEAD) —
+    pre-existing `pytest` failure from stale UAC dependency resolution (known issue documented in the QG script's own
+    comments: "resolving an OLD UAC → false pytest FAILING that re-stales tier-0 ci_status overnight"). LDR→main
+    promotion also failing. This CI red gate may be blocking IS from being redeployed, keeping the PYTH-SOLANA
+    `instrument_availability` blob stuck on the pre-fix 9-feed set. Not a Pyth-specific issue — IS CI has been red since
+    at least 2026-08-05. Operator may need to unblock this separately from the Pyth fix itself.
