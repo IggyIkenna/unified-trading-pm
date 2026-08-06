@@ -172,7 +172,7 @@ checkbox signal alone, but confirming it actually IS requires reading:
       one still fails. Repo: unified-trading-ci (workflow) + unified-trading-pm (checker). **Cross-ref**:
       `/plans/active/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` is the live incident
       this prevents recurring.
-- [ ] [SCRIPT] P2. Once the backlog is cleared (or the residual is small + all `archive_exempt`-justified), consider
+- [x] ✅ [SCRIPT] P2. Once the backlog is cleared (or the residual is small + all `archive_exempt`-justified), consider
       whether this check's remediation should get its own dedicated skill (mirroring `/na-eligibility-audit`'s tranche +
       incremental-mode pattern) so future backlog growth from routine AO churn doesn't require another one-off
       CI-firefighting session to clear — a standing skill can also make the `archive_exempt: true` escape hatch a
@@ -217,6 +217,20 @@ checkbox signal alone, but confirming it actually IS requires reading:
   228 referrer rewrites (active→archive path) across 134 corpus files. Shipped `unified-trading-pm@622c4342c`.
   **Operator OOM directive acknowledged (2026-08-06)**: no process launched by this task was OOM-killed — classification
   was read-only sub-agents + grep-only scans; the memory-bound rule applies to all downstream fix work.
+- **2026-08-06 (slot 4, data_engineering/review, Todo 5)**: **Decision: YES, create the skill.** Verified the backlog is
+  still at 0 candidates (`check_archive_candidates.sh` → `0 candidate(s) (baseline 0)`) before acting. Rationale: the
+  backlog re-accumulated 112→120 within hours on 2026-08-06, proving this is not a one-off even with the `--diff-base`
+  fix in place (which prevents CI-blocking but not corpus debt accumulation). Created
+  `cursor-configs/skills/archive-candidates-audit/SKILL.md` — a lightweight skill (not a full tranche-parameterized
+  system like `/na-eligibility-audit`) that: (1) re-runs `check_archive_candidates.sh` as its inventory step (no
+  separate generator needed — the candidate set is tens, not hundreds), (2) documents the same 4-verdict rubric proven
+  across 121 docs by slot-10 (ARCHIVE / NEEDS_TODO / KEEP_OPEN / ARCHIVE_EXEMPT), (3) includes the full archival ritual
+  (status flip → banner → `git mv` → referrer sweep), (4) provides a batching pattern by `asset_group` for large
+  candidate sets, and (5) makes `archive_exempt: true` a first-class reviewed decision with a required Progress Log
+  justification. **Why lightweight and not tranche-parameterized**: the candidate set is an order of magnitude smaller
+  than NA’s ~390 docs and the per-doc work is inherently agent-judgment (content reading), not scriptable — a full
+  tranche/incremental-mode system would add complexity without proportionate benefit. If future growth proves this wrong
+  (candidate sets routinely >50), the skill’s own doc points to `/na-eligibility-audit` as the upgrade path.
 
 ## Operational lessons (cicd, from resolving a PM ldr_qg_failure wall)
 
