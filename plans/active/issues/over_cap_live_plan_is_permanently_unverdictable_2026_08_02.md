@@ -35,8 +35,8 @@ created: 2026-08-02
 author: unknown
 last_updated: "2026-08-02"
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 0.5
@@ -177,3 +177,8 @@ than acted on:
   (`473cccf03`/`b381cbb11`) since it could not be persisted into the source doc; the doc's own content is unchanged from
   HEAD.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. The A/B/C/D policy call on `check_line_caps.sh`'s over-cap edit exception was resolved
+  this same session ("RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception", retagged
+  `[OPERATOR] -> [SCRIPT]"; a leftover "BLOCKED-OPERATOR-DECISION" body string in the same checkbox is stale prose, not a live re-block). All 3 remaining open todos are now worker-determinable: implement the diff-shape carve-out in `check_line_caps.sh`+ update the codex SSOT + a regression test, land the already-drafted deferred annotation, and a bounded corpus-wide report of over-cap live plans. Conflict-check cleared (no overlapping claim in`parent_epic:
+  plan_hygiene_master`).

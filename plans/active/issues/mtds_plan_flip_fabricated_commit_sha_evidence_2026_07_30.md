@@ -32,10 +32,11 @@ parent_epic: agent_operating_framework_master
 source:
   "mtds_empty_string_fallback_baseline_drift-001 (slot 6), 2026-07-30 — discovered while shipping the real fix for the
   same issue"
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-assigned_vm: NA
+assigned_vm: planning
 resolved_by: ""
 locked_by: ""
 context_scope:
@@ -187,3 +188,15 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass, later same day) — CORRECTS the marker
+  above.** RECLASSIFY, `assigned_vm: NA -> planning`. The KEEP-NA marker immediately above is generic boilerplate that
+  predates or missed this session's own resolution: the `[OPERATOR]` "isolated vs pattern" item is now checked done,
+  citing "RULED 2026-08-06 (operator, interactive): PATTERN, not isolated" with a concrete second-incident citation
+  (tradfi Finding E-1). The single remaining open todo (`[SCRIPT] P1`, extend evidence verification to non-SHA
+  operator-ruling citations) was rewritten as part of that same reconciliation into a bounded, single-script
+  implementation task mirroring the already-shipped `check_plan_commit_sha_evidence.py` pattern, with an explicit "Done
+  when" — worker-determinable, no further judgment call. No hard-rule veto (no redirect banner, no stated revert, empty
+  `depends_on`, single-file QG-script extension, not dispatch-critical-path machinery). Conflict-check cleared (no
+  overlapping claim in `parent_epic: agent_operating_framework_master`). `assigned_role` was unset; filled `infra`
+  (PM-repo QG-tooling scope).

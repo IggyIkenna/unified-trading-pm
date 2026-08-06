@@ -34,8 +34,8 @@ created: 2026-08-06
 author: interactive-session (tab 1)
 priority: P2
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
@@ -116,3 +116,12 @@ and nothing on the server side catches the mismatch.
 - [ ] [SCRIPT] P3. Audit whether the SAME self-report-without-cross-check pattern exists for `effort`/`thinking` (both
       self-reported per `req.effort`/`req.thinking` in the same `/boot` call) — those flags may be equally meaningless
       for a non-Anthropic provider; scope only if todo 1 confirms the pattern generalizes.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. Freshly-filed doc, never previously assessed by any audit — purely a bounded
+  engineering bug fix (cross- check `req.model` against `provider_for_account_id` in `slots_worker.py`'s `/boot`
+  handler, stated unit-test done-when) plus two worker-determinable follow-on todos. No operator gate, no
+  design/judgment call, no hard-rule veto. Conflict-check cleared (no overlapping claim in
+  `parent_epic: orchestrator_master`).

@@ -33,8 +33,8 @@ created: 2026-07-30
 author: unknown
 last_updated: 2026-07-30
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -330,3 +330,8 @@ not a bounded worker todo). No new batch drafted; concurs with the conclusion ab
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped an accidental repeat entry, dropped 2
   weakly-relevant codex/plan links, kept the source script + the doc where the actual shipped fix landed.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. The sole open todo's `[OPERATOR]` A/B/C decision was resolved this same session ("RULED
+  2026-08-06 (operator), option A [WORKER REC]", retagged `[OPERATOR] -> [DOCS]`) — the retag mechanism (2026-07-27
+  precedent, partially pre-scoped by name in this doc's own Progress Log) is worker-determinable with no further
+  judgment call. Conflict-check cleared (no overlapping claim in `parent_epic: plan_hygiene_master`).

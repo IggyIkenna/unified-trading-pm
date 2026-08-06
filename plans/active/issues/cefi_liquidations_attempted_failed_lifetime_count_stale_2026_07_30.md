@@ -42,10 +42,11 @@ author: unknown
 parent_epic: observability_master
 priority: P2
 source: ["data_pipeline_failure escalation agt-029155, slot 5, 2026-07-30"]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-02
@@ -220,3 +221,11 @@ not lost if the bound expires unanswered.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — body unchanged since 2026-08-01, existing list
   still accurate.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. Todo 1's A/B/C policy choice was resolved this same session ("RULED 2026-08-06
+  (operator), option A: approved", retagged `[OPERATOR] -> [CODE]`) — the remaining work (trailing-window threshold
+  instead of lifetime count in `check_high_attempted_failed`,
+  `deployment-service/data_pipeline_monitors/meta_watchers.py`) is a bounded, single-file change; todo 2's `[DIAG]`
+  follow-up is a bounded log-pull conditional on the same decision. Conflict-check cleared (no overlapping claim in
+  `parent_epic: observability_master`). `assigned_role` was unset in this doc; filled `data_engineering` per the corpus
+  convention for `data_pipeline_monitors`-touching docs.

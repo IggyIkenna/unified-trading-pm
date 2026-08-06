@@ -38,13 +38,13 @@ related:
 created: 2026-08-04
 author: slot-3
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-assigned_role: NA
+assigned_role: infra
 drift_direction: correct-code
 resolved_by:
 locked_by:
@@ -184,3 +184,11 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
   and still failing as of 2026-08-04 (confirmed on the newest available image). BLAZESTAKE naming bug fixed + migrated
   separately in the same session (see the source doc's BLAZESTAKE section for that outcome) — this OOM is the reason the
   WRITER overall has produced zero fresh `lst_rates` data (any venue) since 2026-08-01, independent of the naming fix.
+
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. Todo 1 was resolved this same session ("RULED 2026-08-06 (operator): approved,
+  AO-dispatchable", retagged `[OPERATOR] -> [INFRA]`) for a bounded one-line terraform memory bump
+  (`deployment-service/terraform/gcp/defi_collection_scheduler.tf`) + terraform apply; todos 2-3 are bounded `[DIAG]`
+  investigations with named candidates and a stated done-when. Conflict-check cleared (no overlapping claim in
+  `parent_epic: infrastructure_master`). `assigned_role` was the placeholder value `NA`; filled `infra` (terraform +
+  Cloud Run scope).

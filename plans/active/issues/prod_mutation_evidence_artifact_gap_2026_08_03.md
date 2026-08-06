@@ -29,8 +29,9 @@ created: 2026-08-03
 author: unknown
 parent_epic: agent_operating_framework_master
 priority: P3
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 resolved_by:
 locked_by:
 source:
@@ -110,3 +111,13 @@ not a code defect.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): sole todo is an [OPERATOR]
   policy-scope-change ruling request (extend PLAN_FORMAT.md §8b), not a worker-determinable fact.
+
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass, later same day) — CORRECTS the marker
+  above.** RECLASSIFY, `assigned_vm: NA -> planning`. The stale audit-log entries above predate this session's own
+  ruling: "RULED 2026-08-06: YES, extend it" with an `[OPERATOR] -> [SCRIPT]` retag resolves the operator policy
+  question. The remaining work — add the artifact-convention section to `PLAN_FORMAT.md` and a prod-mutation branch to
+  `check_evidence_backed_completion.py` — is a bounded, precedented QG-script extension following the existing
+  §8b/cloudbuild pattern, not open-ended judgment. No hard-rule veto (no redirect banner, no revert, no `depends_on`
+  gate, scoped single-script change, not dispatch-critical-path machinery). Conflict-check cleared (no overlapping claim
+  in `parent_epic: agent_operating_framework_master`). `assigned_role` was unset; filled `infra` (PM-repo QG-tooling
+  scope).

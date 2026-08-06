@@ -59,34 +59,87 @@ context_scope:
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Run the NA-eligibility-style reclassification pass this sweep's rulings unlock.** Every P0-P3
-      ruling this session made (see the session's governance report) potentially clears the blocker on one or more
-      `assigned_vm: NA` docs — e.g. any NA doc whose sole open item was gated on a decision that's now RULED should be
-      re-evaluated for `NA → planning`. Re-run (or hand-drive) `/na-eligibility-audit` across the 9 tranches with this
-      session's rulings as fresh input, prioritizing docs that cite any of the 58 docs this sweep edited. **Done when**:
-      a fresh `check_na_corpus_ratchet.py` count is recorded showing the NA-corpus delta from this pass, and each
-      reclassified doc's `assigned_vm` flip is committed with a citation back to the specific ruling that unblocked it.
-- [ ] [SCRIPT] P2. **Clean up the 16 STALE_OR_RESOLVED `[OPERATOR]` tags this sweep's triage found but did not fix.**
-      The governance-sweep Workflow (29 agents) classified 16 open `[OPERATOR]`/`BLOCKED-OPERATOR` items as "already
-      resolved elsewhere, checkbox/tag never flipped" — a bookkeeping gap, not a live decision. List:
-      `cefi_track7_candle_namespace_residual_2026_07_25.md`, `defi_consolidated_closeout_2026_07_18.md`,
-      `l2_book_microstructure_capture_2026_07_13.md`,
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-06 — ran the NA-eligibility-style reclassification pass this sweep's rulings
+      unlocked.** Built a candidate set of 122 `assigned_vm: NA` docs (35 docs this sweep edited directly that were
+      still NA + 87 more found citing one of the 80 docs this sweep touched, via `rg -f` stem-matching against the full
+      NA inventory, filtered to drop aggregator/closeout-tracker false-positives). Ran a Workflow (13 classify batches +
+      7 per-`parent_epic` conflict-check groups, 20 agents total) against the na-eligibility-audit rubric. Verdict
+      split: 89 KEEP_NA_VALID, 13 RECLASSIFY, 11 KEEP_NA_STALE_DUPLICATE, 6 KEEP_NA_STALE_ITEMS, 3 ARCHIVE. Of the 13
+      RECLASSIFY candidates, conflict-check cleared 7 and found 6 genuine conflicts (see the new todo below — filed per
+      protocol, not flipped). Flipped `assigned_vm: NA → planning` on the 7 cleared docs (all `doc_type: issue`, so
+      structurally exempt from needing a finalize twin), each citing the specific `RULED 2026-08-06` marker that
+      unblocked it: `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+      `issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md`,
+      `issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`,
+      `issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`,
+      `issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`,
+      `issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`,
+      `issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`. **Ratchet**: `check_na_corpus_ratchet.py` went from
+      389 docs/1326 open todos (failing, 5 over the 384 baseline) to **382 docs/1311 open todos** (green, below
+      baseline) — re-ran with `--update-baseline` to lock in the shrink (382/1311, was 384/1347). Evidence:
+      `unified-trading-pm@<pending — see this commit>`.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-06 — cleaned up all 16 STALE_OR_RESOLVED `[OPERATOR]` tags this sweep's triage
+      found.** Verified each against live doc state (not from the stale triage read alone) before touching anything —
+      one (`cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`) turned out to be a case where the
+      ORIGINAL triage was wrong: a dedicated same-day `na-eligibility-audit` had already re-examined it and reaffirmed
+      KEEP-NA (the redeploy half resolved, but the test-pass-confirmation half genuinely remains open) — left untouched,
+      per the na-eligibility-audit rubric's own "never re-litigate an established ruling" rule. Breakdown: **5 real
+      checkbox flips** (`cefi_track7_candle_namespace_residual_2026_07_25.md` — real archaeology needed, the gating
+      parent plan had archived with the delete confirmed done;
+      `issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`;
+      `issues/delta_one_get_captured_instruments_blank_id_perp_funding_2026_07_30.md`;
+      `issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`;
+      `issues/sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md`), **1 severity downgrade**
+      (`issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md` — P1 DO-FIRST → P2, the "ongoing data
+      loss" premise no longer held once an independent same-day fix landed), **1 confirmed-genuinely-still-blocked**
+      (`issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md` — legitimately waiting on a scheduled
+      maintenance window, re-verified as recently as yesterday), **1 confirmed-original-triage-wrong**
+      (`cefi_content_migration_shard24...` above), and **8 already correctly resolved, no action needed**
+      (`defi_consolidated_closeout_2026_07_18.md`, `l2_book_microstructure_capture_2026_07_13.md`,
       `issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`,
-      `issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`,
       `issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`,
-      `issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`,
-      `issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`,
-      `issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`,
-      `issues/delta_one_get_captured_instruments_blank_id_perp_funding_2026_07_30.md`,
-      `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`,
-      `issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`,
-      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
-      `issues/sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md`,
+      `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` — grep false-positive, matches were
+      inside a fenced quote block, not live checkboxes; `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
       `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`,
-      `issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`. For each: verify the stated resolution still holds
-      (state may have drifted since the triage read), then flip the checkbox/tag citing the resolving commit/doc. **Done
-      when**: all 16 carry a flipped checkbox or an explicit "still genuinely open, triage was wrong" correction,
-      whichever the fresh check finds.
+      `issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`). Evidence: `unified-trading-pm@09cdfaad65`.
+- [ ] [OPERATOR] P2. **6 RECLASSIFY candidates from the 2026-08-06 na-eligibility-audit reclassification pass hit a
+      genuine conflict-check CONFLICT — filed here per protocol, not flipped.** Each needs an explicit operator ruling
+      (or a fresh re-check once the cited sibling doc's own state settles) before it can be either reclassified or
+      closed as duplicate: 1. `plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` — **genuine
+      same-day factual contradiction, highest priority of the 6.** This doc's own text claims "RULED 2026-08-06
+      (operator): go-ahead to run --apply" with no cited session/decision-doc provenance, but
+      `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (same date, `status: active`) lists the identical item under
+      "Deferred — operator-gated ... unchanged, NOT re-asked if already asked", asserting it is STILL unruled. Needs a
+      direct read to determine which doc is actually current before either can be trusted. 2.
+      `plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` — todo 1 duplicates an
+      already-open `[CI] P1` todo in `instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`, and
+      this doc's own premise (PR #1084 "merges via the standard auto-merge pipeline") is stale — PR #1084 was actually
+      CLOSED (not merged) by the fleet provenance gate at 2026-08-06T10:30:44Z; the real blocker is the larger
+      provenance-marker-corruption issue tracked in
+      `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`. 3.
+      `plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` — todo 3's lending_indices
+      stall premise ("no captured data since 2026-07-31") is contradicted by
+      `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 and
+      `defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`, both showing KAMINO-SOLANA lending_indices
+      rows captured through 2026-08-05; already independently conflict-parked by
+      `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`'s own open todo 2 — re-read the live per-venue
+      availability_index before drafting any stall-diagnosis todo. 4.
+      `plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` — todo 1 (split
+      `lst_rate_honest_coverage_2026_07_21.md` under the line cap) presupposes the SPLIT approach (option B), but the
+      governing meta-issue's own RULED-2026-08-06 answer chose option A (narrow `check_line_caps.sh`'s exception)
+      explicitly instead of B — todo 1 is not the ruled path; also independently conflict-parked by
+      `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`'s open todo 2. 5.
+      `plans/active/issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md` — todo 1's CME
+      `instrument_id`-format verification sub-task near-verbatim duplicates the `[DIAG] P2` todo already tracked above
+      in this same doc — dispatching both risks two workers independently verifying the same thing. 6.
+      `plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` — remaining todos 2 and 3 are
+      verbatim-duplicated by `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`'s own open todos (explicitly sourced from
+      this exact doc); todo 1's docstring sub-part is separately already resolved via
+      `cefi_satellite_ao_dispatch_batch8_2026_08_06.md` (needs a stale-checkbox correction citing `8a6bbc97`, not a
+      planning-dispatch). Net: none of this doc's 3 remaining open todos represent fresh reclassify-eligible work.
+      **Done when**: each of the 6 is either reclassified (if the conflict resolves in its favor), closed as a
+      stale-checkbox/duplicate correction against the doc it collides with, or explicitly re-affirmed KEEP-NA with the
+      conflict cited.
 - [ ] [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
       this sweep ruled the provider-pin sub-question (v5-align, recommended) but explicitly did not fabricate answers to
       the IAM-policy-drift-specific D1-D4 rows without reading them directly. (repo: unified-trading-pm)
