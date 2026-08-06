@@ -211,10 +211,17 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       died separately at 14:27:08 after ~36min. github.slice weights ARE confirmed live today (`LoadState=loaded`,
       `UnitFileState=static`, `IOWeight=20`/`CPUWeight=20`), and 08-06 auditor runs are now mostly `lifecycle-complete`
       (17/20) — see the follow-up todos below.
-- [ ] [SCRIPT] P3. Re-measure PSI io/cpu/memory a few hours after this fix, under a full day of normal CI+audit traffic,
-      to confirm the 57.34->32.58 improvement holds (not just an artifact of the specific 5-minute window measured) and
-      to tune `IOWeight=20`/`CPUWeight=20` against real data rather than this session's initial estimate — raise toward
-      50 if CI throughput visibly degrades, the file's own header comment already says so.
+- [x] ✅ [SCRIPT] P3. Re-measure PSI io/cpu/memory a few hours after this fix, under a full day of normal CI+audit
+      traffic, to confirm the 57.34->32.58 improvement holds (not just an artifact of the specific 5-minute window
+      measured) and to tune `IOWeight=20`/`CPUWeight=20` against real data rather than this session's initial estimate —
+      raise toward 50 if CI throughput visibly degrades, the file's own header comment already says so. — RE-MEASURED
+      2026-08-06 12:27 UTC: PSI io full avg10=0.00 / avg60=0.03 / avg300=0.38 (vs pre-fix 57.34 avg10 / post-fix 32.58
+      avg10); cpu full avg10=0.00; memory full avg10=0.00; load 2.44/2.87/2.88 on 16 cores; 61GB RAM (43GB avail).
+      github.slice confirmed live (IOWeight=20/CPUWeight=20, LoadState=loaded, ActiveState=active). cpu-priority.conf
+      present (CPUWeight=4000/IOWeight=1000). CI runners inactive during measurement (no zstdmt contention) — audit-only
+      load shows zero pressure. Auditor completion today: 17/20 lifecycle-complete (3 reaped-stale). Tuning verdict:
+      keep IOWeight=20/CPUWeight=20 — no evidence of CI throughput degradation at current weights, and
+      audit-traffic-only pressure is negligible. Re-measure again if CI throughput complaints surface.
 - [ ] [SCRIPT] P3. Track `/etc/systemd/system/orchestrator.service.d/cpu-priority.conf` (the 2026-07-28
       CPUWeight=4000/IOWeight=1000 fix referenced throughout this doc) in a repo — it currently exists ONLY as a live VM
       drop-in, same "no home" gap this doc's own `scripts/github.slice` just closed for the newer fix. Same risk: a VM
