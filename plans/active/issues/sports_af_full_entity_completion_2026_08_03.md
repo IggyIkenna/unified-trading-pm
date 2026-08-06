@@ -79,8 +79,8 @@ healthy, so even these may understate true progress).
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,370 expected, 41,372 already resolved, **only 998 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,653 expected, 45,944 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
-| **STANDINGS**    | **all-383**                  | 108,653 expected, 60,332 already resolved, **48,321 needed** (was 64,439 on 08-04, **-16,118**)           |
-| **TEAMS**        | **all-383**                  | 108,653 expected, 64,206 already resolved, **44,447 needed** (was 64,723 on 08-04, **-20,276**)           |
+| **STANDINGS**    | **all-383**                  | 108,662 expected, 61,219 already resolved, **47,443 needed** (was 64,439 on 08-04, **-16,996**)           |
+| **TEAMS**        | **all-383**                  | 108,662 expected, 65,093 already resolved, **43,569 needed** (was 64,723 on 08-04, **-21,154**)           |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.               |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -591,3 +591,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   46,457→46,333→46,013→45,378→44,447; STANDINGS 50,359→50,207→49,887→49,252→48,321, across 4 checks spanning
   217min→272min elapsed (VM now past 4.5 hours continuous runtime, by far the campaign's longest single run). VM healthy
   throughout, left running.
+- **2026-08-06T00:06Z** — Continued strong progress (~292min elapsed, nearly 5 hours): TEAMS 44,447→43,569 (-878),
+  STANDINGS 48,321→47,443 (-878). Denominators grew slightly (108,653→108,662) as a new day rolled into scope —
+  expected, not concerning. VM still healthy, left running.
