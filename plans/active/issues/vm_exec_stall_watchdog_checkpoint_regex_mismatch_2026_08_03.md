@@ -18,7 +18,7 @@ summary: >-
   incident. STALL_PROGRESS_REGEX in the launcher has been corrected in this session (deployment-service, pending ship)
   to "day=" (the tool's actual per-day log marker). The RELAUNCHED VM (backfill-defi-dex-swaps-20260803-103749, launched
   10:37:55Z) is running the OLD (pre-fix) metadata and is on track to hit the same stall-kill around 11:38-11:43Z.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, cross-cutting]
 stage: [data, meta]
@@ -32,7 +32,7 @@ related:
   ]
 created: "2026-08-03"
 author: unknown
-last_updated: "2026-08-03"
+last_updated: "2026-08-05"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,6 +46,8 @@ source: >-
   Surfaced 2026-08-03 (slot 6, infra) while executing reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md's todo
   2 (audit for other reap-zombies.sh false-positive kills).
 resolved_by:
+  deployment-service@87ad58c, instruments-service@e09080c, instruments-service@5406f207 (re-landed sha, content-verified
+  on origin), PM@9fab6e82, PM@0ced39a0
 locked_by:
 locked_since:
 context_scope:
@@ -224,9 +226,9 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
       write, so `streamed` covers the fetch-phase gap).
 
       **Net result: zero regex-token mismatches found** (the DEX-swaps `checkpoint`→`day=` bug fixed by todo 1 was the
-                                                                                                                                                  only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
-                                                                                                                                                  `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
-                                                                                                                                                  todos 6 and 7 below.
+                                                                                                                                                          only live one) — but the sweep surfaced two related, still-open **missing-regex** gaps (categories that set NO
+                                                                                                                                                          `STALL_PROGRESS_REGEX` at all, exposed to the same `PIPELINE_HEARTBEAT`-defeats-byte-growth mechanism), filed as
+                                                                                                                                                          todos 6 and 7 below.
 
 - [x] ✅ [INFRA] P0. **Monitor `backfill-defi-dex-swaps-20260803-103749` and relaunch promptly once it self-kills**
       (expected ~11:38-11:43Z per this doc's analysis, may have already happened by the time this todo is picked up) —
@@ -602,3 +604,10 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   and it is already archived — no further edit needed there. Flipped this todo `[x]` above with that evidence. Doc-only,
   read-verify pass — no code shipped, no GCS/VM mutations. Two todos remain open in this doc (`tradfi-catalogue-canon`
   shard-log fan-in gap, `*-iah`/`*-iah-purge` candidate-count risk) so it stays active, not archived.
+- **2026-08-05** — the two remaining todos (`tradfi-catalogue-canon` shard-log fan-in gap, `*-iah`/`*-iah-purge`
+  candidate-count risk) shipped: `deployment-service@87ad58c`, `instruments-service@e09080c`,
+  `instruments-service@5406f207` (re-landed under a different sha post-rebase; content independently confirmed present
+  on `origin/live-defi-rollout` HEAD), plus PM checkbox flips `@9fab6e82`/`@0ced39a0`. 10/10 todos now done.
+- **2026-08-06 (plan_reconciler agt-4fdce1)**: verified all 5 shas above (`git merge-base --is-ancestor` against
+  `origin/live-defi-rollout`), flipped `status: open` → `resolved`, filled `resolved_by`, corrected the stale
+  `last_updated` below, and archived this doc — no open todos, no dangling prose remain.

@@ -65,8 +65,11 @@ context_scope:
 > them here would double-dispatch the same MTDS/codex edits. This plan stays `active` + `assigned_vm: NA` on purpose:
 > its `- [ ]` boxes are the flip targets batch1b's Done-when points at, and keeping them open is what keeps the work
 > visible to `count_open_tasks.py` (which deliberately excludes satellite/batch aggregators from the deduped total, so
-> closing them here would make the work vanish from the count entirely). They were **not** marked `[x]` — the work is
-> genuinely not done, and a false `[x]` is the exact anti-pattern this sweep exists to remove.
+> closing them here would make the work vanish from the count entirely).
+>
+> **UPDATE 2026-08-04**: batch1b's `[BACKEND] P3` todo executed and, per its own Done-when, all 5 todos below are now
+> flipped `[x]` with evidence (see Progress Log). **UPDATE 2026-08-06 (plan_reconciler agt-4fdce1)**: archiving this
+> plan — 5/5 done, no open work remains.
 
 ## Context — what already shipped (do NOT redo)
 

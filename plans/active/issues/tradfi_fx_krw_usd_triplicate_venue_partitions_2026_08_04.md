@@ -22,7 +22,7 @@ summary: >-
   that it shows BOTH wrong-venue partitions carry REAL duplicated GCS objects (not just manifest bookkeeping drift), and
   adds a third, previously-unseen wrong-venue value (`SPOT`) to that same defect family. Not fixed or deleted here —
   read-only investigation, filed per the findings-triage rule.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -52,6 +52,8 @@ assigned_role: data_engineering
 drift_direction: investigate
 depends_on: []
 resolved_by:
+  see Progress Log — 14 duplicate GCS objects + 20 manifest rows deleted, verified 0 remain, fresh honest-coverage
+  rollup triggered
 locked_by:
 locked_since:
 supersedes:

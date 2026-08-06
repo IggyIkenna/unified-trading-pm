@@ -24,7 +24,7 @@ summary: >-
   unified_trading. This is a NEW, independent finding — not a duplicate of
   issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md (that doc's Finding 2 is
   about the GCP *default compute* SA, a different identity).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -56,6 +56,8 @@ source: >-
   Surfaced 2026-07-31 (slot-14, infra) while executing bucket_iam_write_protection_per_tier_2026_06_09.md P2.2b
   (bucket_iam_write_protection_per_tier-010) — a credential-availability side-investigation, not the task's own scope.
 resolved_by:
+  28 IAM roles terraform-imported and 0-diff-verified; see bucket_iam_write_protection_per_tier_2026_06_09.md lines
+  49,320 for cross-ref
 locked_by:
 locked_since:
 depends_on: []
