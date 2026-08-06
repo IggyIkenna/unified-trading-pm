@@ -86,8 +86,8 @@ healthy, so even these may understate true progress).
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,283 expected (non-MVP), 52,372 already resolved, **58,523 needed** (unchanged — no backfill run yet)   |
 | **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,372 already resolved, **only 999 needed** — nearly done                               |
 | **INJURIES**     | **all-383**                  | 108,662 expected, 45,953 already resolved, **62,709 needed** (unchanged — no backfill run yet)            |
-| **STANDINGS**    | **all-383**                  | 108,662 expected, 63,098 already resolved, **45,564 needed** (was 64,439 on 08-04, **-18,875**)           |
-| **TEAMS**        | **all-383**                  | 108,662 expected, 66,972 already resolved, **41,690 needed** (was 64,723 on 08-04, **-23,033**)           |
+| **STANDINGS**    | **all-383**                  | 108,662 expected, 63,582 already resolved, **45,080 needed** (was 64,439 on 08-04, **-19,359**)           |
+| **TEAMS**        | **all-383**                  | 108,662 expected, 67,456 already resolved, **41,206 needed** (was 64,723 on 08-04, **-23,517**)           |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.               |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -97,7 +97,7 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T00:45Z: 150,962 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+**Grand total needed, 2026-08-06T01:03Z: 149,994 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
 further ~22% drop — mostly STANDINGS/TEAMS backlog draining via the paired TEAMS/STANDINGS run, see Progress Log) **+
 107,965 across FIXTURE_STATS+FIXTURE_LINEUPS** (49,442 + 58,523, FIXTURE_STATS paused, LINEUPS untouched). LEAGUES
 excluded per the resolved verdict below. **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth
@@ -610,3 +610,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   TEAMS 42,549→41,690 (-859), STANDINGS 46,423→45,564 (-859) — deltas slightly below the prior tick's -1,020 but still
   solid, not a clear-slowdown signal warranting a switch. Grand total 150,962. Left running as-is.
 - **context-scout 2026-08-06**: populated context_scope (4 entries).
+- **2026-08-06T01:03Z** — `af-backfill-20260805-201310` past 6.8 hours (~409min elapsed), still RUNNING. TEAMS
+  41,690→41,206 (-484), STANDINGS 45,564→45,080 (-484) — third consecutive tick of declining delta (1,020→859→484).
+  Grand total 149,994. Still above the ~300-400/check sustained-slowdown threshold that would warrant a deliberate
+  switch, so left running, but flagging the trend to watch closely next tick or two — if it drops below ~300-400 and
+  stays there, will stop this VM and redirect the lock to FIXTURE_STATS (resume) or PLAYER_STATS.
