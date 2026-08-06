@@ -974,3 +974,4 @@ themselves required manual VM backfill triggers.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in batch4/batch6 (sole executing owners
   of this doc's extracted cqg/fixture-pairing residuals) + rebuild_prediction_manifest.py (active `--apply` script).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

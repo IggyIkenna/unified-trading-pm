@@ -251,3 +251,4 @@ context_scope:
     Line 457 `- [VERIFY]**[UI] P0.**` is non-standard but NOT parseable by regen
     (`_UNCHECKED_RE = r"^\s*-\s+\[ \]\s+(.+)$"`; `[VERIFY]` ≠ `[ ]`, does not match). Verdict:
     `prediction_consolidated_closeout_2026_07_18.md` passes adversarial AO-dispatch-readiness review clean.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

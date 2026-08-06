@@ -46,7 +46,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -76,3 +76,5 @@ context_scope:
   SHAs on origin (2 on wip-preserve with documented explanations), executed 6-step archival: no DEFERRED items, archive
   banner + `superseded_by` added, codex-alignment check clean (execution vehicle, no new contracts), 13 referrers
   path-updated via bulk sed. Source plan archived to `plans/archive/2026_08/`.
+- **context-scout 2026-08-06**: re-scouted; corrected the stale `/plans/active/...` context_scope entry to
+  `/plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md` (source plan archived 2026-08-05), now 3 entries.

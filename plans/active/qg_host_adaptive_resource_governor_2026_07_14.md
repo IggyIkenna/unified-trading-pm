@@ -755,3 +755,4 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   todos, not orphaned. All 9 open items re-verified as correctly self-triaged (deferred-with-condition or open design
   question) under the standing 2026-07-14 operator ruling; none duplicated into any active `assigned_vm: planning`
   sibling. No RECLASSIFY, no ARCHIVE.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

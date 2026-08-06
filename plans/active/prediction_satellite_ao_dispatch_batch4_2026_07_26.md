@@ -749,3 +749,4 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `_ops/4bi_scratchpad_2026_08_06/run_4bi_delete_s13.py` + `4bi_watchdog_s13.sh`; inputs `legacy_348_days.txt` +
   `legacy_presence.json` already there. On completion: verify all 348 dates deleted (0 legacy objects remaining via
   `gcs_describe_object`/presence re-scan), 0 anomalies, then flip 4b-i's checkbox with final counts.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

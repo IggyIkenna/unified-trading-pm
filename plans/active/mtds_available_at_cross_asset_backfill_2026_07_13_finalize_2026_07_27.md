@@ -75,3 +75,4 @@ context_scope:
   `status: active → complete`, `git mv` to `/plans/archive/2026_08/`. No new codex contracts to document (pure execution
   plan). Referrer-path updates deferred to automated tooling (`regenerate_active_plan_index.py`,
   `check_reference_paths.py`). This finalize plan's sole todo flipped `- [x]`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

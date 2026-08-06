@@ -715,3 +715,4 @@ separate citation trails across 3 audit passes all agree.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the AO-overview codex + epic pointer for
   the two open P0 source targets (rollout-ratchet panel + template-drift script).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

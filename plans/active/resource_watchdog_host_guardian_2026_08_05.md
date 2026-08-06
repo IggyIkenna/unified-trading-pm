@@ -41,6 +41,14 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+context_scope:
+  [
+    scripts/infra/resource-watchdog/resource-watchdog.sh,
+    agent-orchestrator/server/routes/resource_watchdog.py,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+  ]
 ---
 
 # Resource Watchdog — Host Guardian
@@ -283,6 +291,8 @@ Completed all three hardening items:
 
 Completed Phases 1–3. Watchdog is live on planning VM, killed its first violator within the first tick. Cgroup memory
 stable at 13-23 GB. Orchestrator kill-relay endpoint deployed and tested. Bootstrap + ao-self-pull integration shipped.
+
+- **context-scout 2026-08-06**: populated context_scope (5 entries).
 
 ---
 

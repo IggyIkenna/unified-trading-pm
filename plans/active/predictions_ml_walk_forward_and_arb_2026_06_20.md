@@ -221,3 +221,5 @@ route to OTHER instead.
 expected keys). The 6 dead Kalshi ticker-prefix entries (`KXBTCI`/`KXETHI`) are harmless dead code — remove or annotate
 as preemptive. The existing `[UAC] P2` politics/geo canonicalization todo in batch6 already covers the
 ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a follow-up in the batch6 plan.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

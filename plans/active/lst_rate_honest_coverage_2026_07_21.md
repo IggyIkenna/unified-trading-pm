@@ -51,8 +51,6 @@ context_scope:
   [
     /codex/02-data/lst-exchange-rate-surfaces.md,
     /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/,
-    instruments-service/instruments_service/reference_data/adapters/defi/,
     features-service/features_service/onchain/engine/lst_features.py,
   ]
 supersedes:

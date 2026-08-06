@@ -836,6 +836,7 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added batch4 (owns the extracted depth-retention
   item) + 2 source paths (websocket_runner.py's overwrite behavior, the prediction adapters dir).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 ## Deferred work — migrated to:
 

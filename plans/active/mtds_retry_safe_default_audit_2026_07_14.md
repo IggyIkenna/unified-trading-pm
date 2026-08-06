@@ -175,3 +175,4 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
   `else True` with `# QG-allow: retry-safe` annotations (mtds@0041a8a6); (5) parent issue doc closeout → verified
   already archived + resolved, `resolved_by:` populated with all 4 fix shas. The batch1b plan's `[BACKEND] P3` todo is
   being flipped simultaneously with this commit.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

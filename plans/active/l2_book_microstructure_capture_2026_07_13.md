@@ -431,3 +431,4 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- swapped in the real capture/extractor
   source modules + the two blocking issue docs (both now ARCHIVED, corrected from the doc's own stale `issues/...`
   active-relative links) that the 2 open BLOCKED-DATA-CORRECTNESS todos actually gate on.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

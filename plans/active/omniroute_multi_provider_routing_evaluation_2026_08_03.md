@@ -510,6 +510,7 @@ first hard evidence for the routing thesis this whole evaluation exists to test.
 - [ ] [REVIEW] P1. **Diff DeepSeek's 19-file patch against Sonnet's 125-file patch for correctness.** Both passed the
       gate; whether Sonnet's extra 106 files are real fixes or churn decides whether "minimum to pass" is efficiency or
       gaming. Both patches are preserved in the results dir. This is the single most decision-relevant open question.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 ## Token / context / cost measurements (2026-08-04) — the numbers behind the verdicts
 

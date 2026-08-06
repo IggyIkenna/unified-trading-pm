@@ -81,3 +81,4 @@ context_scope:
   coverage rule. `status: active` from the start (not draft) — `gate_on_depends: true` already fully holds both todos
   above until batch7's own todo is `done`, so no second manual flip is needed later (2026-07-30 no-double-gate finding,
   `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`).
+- **context-scout 2026-08-06**: populated context_scope (3 entries).

@@ -762,3 +762,4 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   confirmed-absent note to the Distinct Values section (a `prediction_phase_ab_residuals` todo-4 partial-slice
   side-effect) — non-substantive to this doc's own classification. Still the live index for its 4 Phase A-E children
   (all still open); not archived. Doc stays NA.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
