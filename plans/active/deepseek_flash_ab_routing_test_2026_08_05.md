@@ -344,21 +344,37 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       `agent-orchestrator@e936d05`. No live env-var change needed — whatever `ORCHESTRATOR_REVIEW_SLOTS` says at each
       sweep is now captured correctly going forward; **not yet deployed to the live VM as of this entry** (ships on the
       next LDR→VM deploy cycle).
-- [ ] 22. [BACKEND] P2. **Slot 10 repeated spawn failures for `deepseek-v4-pro` — root cause not found, self-resolved,
-      needs monitoring.** Same investigation surfaced 16 `spawn_retry_cap_reached` events for slot 10 +
-      `deepseek-v4-pro` between 2026-08-05 23:45 and 2026-08-06 07:15 (`session_alive: false, pane_state: "no_session"`,
-      pane_tail always EMPTY — the tmux session never comes up far enough to capture anything, pointing at the
-      `tmux_spawn._start_session` pre-flight checks, not a CLI-level crash after start). A same-day fix
-      (`agent-orchestrator@bc37d03`, already live) resets `spawn_retry_count` on every successful spawn path so a slot
-      that trips the cap once doesn't permanently lose the smarter pane-diagnosis retry — but that fix addresses losing
-      diagnostics on retry, not the underlying spawn failure. Checked `instruments-service`'s worktree under `.tabs/10/`
-      directly (an earlier `autospawn_failed` event at 00:13/00:54 blamed a
-      `instruments-service.broken-empty-clone-20260805` quarantine) — it's clean now (`git status`: nothing to commit,
-      real `.git/`), so that specific cause no longer reproduces, if it ever was the cause. No further
-      `spawn_retry_cap_reached` for slot 10 since 07:15; a `plan_health`/`na_eligibility_auditor` scheduled dispatch
-      successfully spawned `deepseek-v4-pro` on slot 10 from 07:47-08:05 and completed normally. Left open rather than
-      guessing further: needs live `tmux_spawn.py` tracing (or reproducing the failure) to actually pin the cause, not
-      more activity-log archaeology.
+- [x] 22. ✅ [BACKEND] P2. **Slot 10 repeated spawn failures for `deepseek-v4-pro` — root cause confirmed, fix already
+      shipped + deployed live; verified the fix has no fleet-wide false-positive risk.** Operator asked to properly
+      root-cause and fix rather than leave it a mystery. Root cause: a genuinely dead quarantine artifact
+      (`instruments-service.broken-empty-clone-20260805`, ~32K, `.git` present but not a functional repo) sat in
+      `.tabs/10/` — every pre-spawn `resolve_dirty_state()` → `check_slot_clean()` walk hit it, classified it an
+      unresolvable dirty repo, and returned `action="quarantined"`, so the spawn was refused BEFORE `tmux new-session`
+      ever ran (exactly matching the always-empty `pane_tail` / `"no_session"` symptom — the failure is in the
+      pre-flight dirty-state gate, not `tmux_spawn._start_session`). 81 occurrences all-time
+      (`2026-07-13`→`2026-08-06 07:15`, per `state.db`), 16 in the investigation window. Fix already exists and is
+      already live: `agent-orchestrator@72ac00d` ("self-heal dead quarantine artifacts instead of re-quarantining
+      forever", landed 07:58 UTC 2026-08-06 — same-session, different agent, found via the same
+      `ao_human_gated_recovery_audit_closable_gaps_2026_08_06` investigation) added `_is_dead_quarantine_artifact()` +
+      `_remove_dead_quarantine_artifact()` to `check_slot_clean()`: a dotted-suffix sibling (no repo in this org is ever
+      cloned under a dotted name) whose `git rev-parse --git-dir` fails outright gets auto-removed; confirmed
+      `agent-orchestrator@72ac00d` IS an ancestor of the VM's actually-deployed HEAD (`4b26e90`, verified via local
+      `git merge-base --is-ancestor`) — live, not just committed. Slot 10's original artifact was cleared by manual
+      intervention before this fix's own auto-heal ever got a chance to run on it (`quarantine_artifact_auto_cleaned`
+      has never fired, anywhere, per `activity_log`) — the auto-heal path itself is unit-tested (63+37 new test lines in
+      `72ac00d`) but not yet live-proven end-to-end; low risk, not blocking. **Verification catch worth recording**: a
+      naive fleet-wide scan (`git rev-parse --git-dir` over every dotted sibling across all 16 slots) initially found
+      ~80 matches — every slot's `*.stale-pre-history-rewrite-     20260805T112618Z/` backup directories (real, 42MB,
+      functional repos with full history, deliberately kept alongside a 2026-08-05 git-history-rewrite maintenance op) —
+      which looked like a serious false-positive/data- -loss risk in the shipped fix. Root cause of THAT scare: the scan
+      ran via SSM as `root`, which doesn't own those files (`ubuntu:ubuntu`) — hit git's own "dubious ownership"
+      protection, an ownership-mismatch artifact of the diagnostic method, not a defect in the repos or the fix. Re-ran
+      identically as `ubuntu` (`orchestrator.service`'s actual `User=`/`Group=`, confirmed via `systemctl show`) —
+      `git rev-parse --git-dir` resolves clean, `git     status`/`git log` both work, real history intact. So
+      `_is_dead_quarantine_artifact()`'s discrimination is confirmed CORRECT in the context that actually matters (the
+      orchestrator's own process, running as `ubuntu`): it will NOT touch these history-rewrite backups. No code change
+      from this catch — it disproved a real-looking but ultimately spurious risk; recorded here so a future
+      re-investigation doesn't have to re-derive the same "wrong user" trap.
 
 ## Codex SSOTs
 
@@ -546,10 +562,31 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   of the transcript evidence. Operator then asked to fix both the review-slot misattribution and dig into a live slot-10
   spawn-failure pattern found along the way ("both"). Review misattribution: root-caused to `ORCHESTRATOR_REVIEW_SLOTS`
   drifting live from 2 (Aug 5, when todo 20's backfill ran) to 1 (Aug 6) — see todo 21 for the full root-cause + fix
-  (shipped `agent-orchestrator@e936d05`, QG green, not yet deployed to the live VM). Slot 10: found a real ~7.5h
-  spawn-retry crash loop for `deepseek-v4-pro` (16 occurrences, always empty pane_tail) that had already stopped by the
-  time of live investigation and hasn't recurred since — left as an open follow-up (todo 22) rather than claiming a root
-  cause the evidence doesn't support.
+  (shipped `agent-orchestrator@e936d05`, QG green, not yet deployed to the live VM at that point). Slot 10: found a real
+  ~7.5h spawn-retry crash loop for `deepseek-v4-pro` (16 occurrences, always empty pane_tail) that had already stopped
+  by the time of live investigation and hasn't recurred since — left as an open follow-up (todo 22) rather than claiming
+  a root cause the evidence doesn't support.
+- **2026-08-06 — todo 22 closed: root cause confirmed + fix already shipped/deployed; todo 21's deploy confirmed live
+  too**: operator pushed back — "check properly lets diagnose and fix now and at root cause" — rather than leaving todo
+  22 open. Traced `spawn_retry_cap_reached`'s pre-flight gate to `resolve_dirty_state()` → `check_slot_clean()` and
+  found `server/worktree_clean_check/_report.py` ALREADY documents this exact incident (a different agent, same
+  investigation thread, `ao_human_gated_recovery_audit_closable_gaps_2026_08_06`): a dead
+  `instruments-service.broken-empty-clone-20260805` artifact made `resolve_dirty_state` return `action="quarantined"` on
+  slot 10 every ~2-4 min for a full day (81 occurrences all-time, `2026-07-13`→`2026-08-06 07:15`), blocking the spawn
+  before `tmux new-session` ever ran — matching the always-empty `pane_tail` exactly. Fixed in
+  `agent-orchestrator@72ac00d` (self-heal dead dotted-suffix artifacts); confirmed via local
+  `git merge-base --is-ancestor` that it's an ancestor of the VM's actually-deployed HEAD, i.e. genuinely live, not just
+  committed. Then stress-tested the fix's own safety claim rather than trusting the docstring: a naive fleet-wide scan
+  for the same dotted-suffix + dead-`.git-dir` pattern found ~80 apparent matches — every slot's
+  `*.stale-pre-history-rewrite-20260805T112618Z/` backups (real 42MB repos, full history, kept deliberately from a
+  2026-08-05 history-rewrite op) — which looked like an imminent fleet-wide data-loss risk in the shipped fix. Traced it
+  to the scan itself running via SSM as `root` (hitting git's dubious-ownership protection against files owned by
+  `ubuntu`) rather than a real defect; re-ran as `ubuntu` (confirmed via `systemctl show orchestrator -p User` — the
+  real service identity) and the same backups resolved clean (`git status`/`git log` both work). The shipped fix's
+  discrimination is correct in the context that actually matters. No code change needed from this catch — recorded so a
+  future re-check doesn't re-derive the same wrong-user trap. Separately re-verified todo 21's `is_review_slot` fix
+  (`agent-orchestrator@e936d05`): also now confirmed live (VM HEAD advanced to `a2a254d` since the earlier check, which
+  includes it). Both todos flipped to done; nothing left open on either.
 
 ## Deferred work after 2026-08-05
 
@@ -563,8 +600,6 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 | Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
 | Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                              | Nothing — pick up directly                                        |
 | Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                         | Nothing — pick up directly                                        |
-| Todo 22 — slot 10 repeated `deepseek-v4-pro` spawn-retry-cap failures, root cause not found                                                            | **Not done** — self-resolved as of 2026-08-06 07:15 UTC with no recurrence yet; needs live `tmux_spawn.py` tracing or a reproduction, not more log archaeology                          | Nothing — pick up directly, or wait for recurrence                |
-| Todo 21's `is_review_slot` fix — deploy to the live orchestrator VM                                                                                    | **Not done** — shipped to LDR (`agent-orchestrator@e936d05`, QG green) but not yet on the live VM as of this entry                                                                      | Next deploy cycle                                                 |
 | `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
 
 **Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
