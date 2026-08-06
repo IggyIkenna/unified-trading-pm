@@ -45,6 +45,13 @@ superseded_by:
 resolved_by:
 source: ["sports_satellite_ao_dispatch_batch2, autonomous continuation, 2026-08-03 — operator directive"]
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
+    /codex/02-data/mvp-scope-canonical.md,
+    /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
+    instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py,
+  ]
 ---
 
 ## Why this doc exists (not folded into the parent plan or the FIXTURE_EVENTS issue doc)
@@ -602,3 +609,4 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-06T00:45Z** — `af-backfill-20260805-201310` past 6.5 hours (~391min elapsed), still RUNNING and healthy.
   TEAMS 42,549→41,690 (-859), STANDINGS 46,423→45,564 (-859) — deltas slightly below the prior tick's -1,020 but still
   solid, not a clear-slowdown signal warranting a switch. Grand total 150,962. Left running as-is.
+- **context-scout 2026-08-06**: populated context_scope (4 entries).

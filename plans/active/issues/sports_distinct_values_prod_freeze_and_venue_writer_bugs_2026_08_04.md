@@ -355,6 +355,7 @@ confirming before scoping a re-stamp for it.
   verified state: sports distinct-values panel — venues/instrument_types/data_types/chains all 0/0 non-canonical across
   the board** (started this session at 44 non-canonical). This doc's scope is now fully resolved; only 2 small,
   unrelated follow-up todos remain (see below) — neither blocks anything or affects the panel.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 ## Deferred work after 2026-08-05
 

@@ -934,3 +934,4 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
   73.92%→71.71%, triggered by a GMX-purge-forced full-merge) — a NEW, not-yet-root-caused manifestation, distinct from
   this doc's own already-fixed `available_at` serializer bug. Filed separately (this doc is near its 1000-line cap):
   `defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

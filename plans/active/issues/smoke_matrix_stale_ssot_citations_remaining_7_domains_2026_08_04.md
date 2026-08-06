@@ -34,6 +34,12 @@ depends_on: []
 source: >-
   Found by slot-7 infra agent while fixing infra_satellite_ao_dispatch_batch2-004 (sports smoke_matrix.py). The other 7
   domain smoke_matrix.py files in e2e-testing have the identical stale citation pattern.
+context_scope:
+  [
+    e2e-testing/scripts/calendar/smoke_matrix.py,
+    codex/15-runbooks/smoke-testing-playbook.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+  ]
 ---
 
 # Fix stale SSOT citations in 7 remaining domain smoke_matrix.py files
@@ -77,3 +83,5 @@ Replace stale citations fleet-wide (same 2-citation swap that fixed the sports f
       `plans/active/institutional_smoke_matrix_2026_04_20.plan.md` → `codex/15-runbooks/smoke-testing-playbook.md`.
       Repo: e2e-testing. Done when: all 7 files cite only current, live docs and `quality-gates.sh` green —
       e2e-testing@2bee452
+
+- **context-scout 2026-08-06**: populated context_scope (3 entries).

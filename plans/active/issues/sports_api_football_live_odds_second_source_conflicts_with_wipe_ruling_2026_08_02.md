@@ -163,3 +163,4 @@ LIVE_ODDS/odds_horizon_bucket gate this todo exists to close.
   the non-conflicting primary `odds_api` live-VM resume in parallel (see
   `/plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md` Progress Log for that thread).
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

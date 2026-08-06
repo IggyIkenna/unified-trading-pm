@@ -40,6 +40,14 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch7_2026_07_27.md,
+    /plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md,
+    /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+    instruments-service/instruments_service/engine/orchestrator/transfermarkt.py,
+  ]
 ---
 
 # Decision 16 investigation — standings/teams day-partition + player_values cartesian-junk
@@ -288,3 +296,5 @@ a current-only API data source. No code change, no design issue filed. Close.
       archives), not a cache-key change in the current adapter. The phantom-auditor noise and duplicate-data concerns
       are presentation/waste issues, not correctness bugs — the data written IS real, just attributed across many
       processing dates. Close.
+
+- **context-scout 2026-08-06**: populated context_scope (5 entries).

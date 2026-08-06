@@ -131,3 +131,4 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
   sole open item ("author a dedicated implementation plan when this becomes a priority") remains a plan-authoring
   timing/prioritization call, an operator judgment, not a bounded task. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

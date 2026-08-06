@@ -53,6 +53,7 @@ context_scope:
     /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     ml-service/ml_service/training/app/core/sports_target_generator.py,
+    features-service/features_service/sports/exporters/odds_features_exporter.py,
   ]
 ---
 
@@ -121,3 +122,7 @@ they would silently inherit the same architecture gap this whole chain exists to
   `CLVTargetBuilder.build()`, OR (b) confirm `pregame_clv_family` is not used in any real production retrain and mark
   this doc resolved as moot. `pregame_clv_family` IS defined in `sports_ml_config.py` and `config_loader.py` as a valid
   preset; whether it drives actual retrains was not determined in this session.
+
+- **context-scout 2026-08-06**: re-scouted; added
+  `features-service/features_service/sports/exporters/odds_features_exporter.py` (concrete PIT-gate + schema-absence
+  evidence source from the 2026-08-05 verdict), now 4 entries.

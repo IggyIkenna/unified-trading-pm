@@ -132,3 +132,4 @@ launches on-demand, violating the workspace's "Backfill VMs default to SPOT (HAR
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
