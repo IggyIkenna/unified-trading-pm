@@ -135,11 +135,20 @@ One or both of:
       (durable, bucket-colocated), it is just date/name-keyed rather than task-id-keyed. The next resumer of that todo
       should rename/mirror to the `_ops/checkpoints/<task_id>.jsonl` convention once the current in-flight run settles,
       not mid-run. (repo: `unified-trading-pm`)
-- [ ] [BACKEND] P2. **Add a dispatcher-side in-flight check.** Before assigning a todo whose current state is
-      `status: working`/`dispatched`, the backlog dispatcher should refuse to re-dispatch the identical todo id to a
-      second slot while the first is still live (a heartbeat check against the owning slot, mirroring the existing
-      `completed_tasks`/`prerequisites` gating mechanism). **Done-when**: a second dispatch of an in-flight todo id is
-      demonstrably skipped. (repo: `agent-orchestrator`)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-06 — `agent-orchestrator@9e28a36`.** Added a new FLEET-scope `in_flight_elsewhere`
+      eligibility filter to `server/dispatch.py`'s `_FILTERS` table: if a `SlotRow` still shows a task as its
+      `current_task` with a live heartbeat (silence under the new `tuning.in_flight_task_owner_stale_after_seconds`
+      knob, default 900s — matching the two precedents todo 3 below names, since both already agree at 900s), no OTHER
+      slot may claim the same task id, even if the TaskRow's own `status`/`dispatched_to` bookkeeping reads free. This
+      is defense-in-depth alongside the existing `status == 'queued'` precondition, for exactly this doc's incident
+      shape: a resumable long-running script (e.g. a GCS backfill/migration) whose real-world work can outlive its
+      owning slot's TRACKED session ending. Also wired into `_detailed_fleet_reasons` so `/api/backlog/{id}/blockers`
+      reports the block by name instead of falling through to "ready (no blockers)". The staleness threshold is an
+      INJECTED tuning parameter (not hardcoded) per the sequencing note below — todo 3's eventual ruling updates the
+      knob's default, not the filter logic. **Done-when** evidence: `tests/test_dispatch_in_flight_elsewhere.py` (5
+      tests: live-owner blocks a second slot; stale-owner releases it; the owning slot may still claim its own task; the
+      threshold is configurable via `set_tuning`; a live-owned in-flight task is excluded from the spawn budget) — full
+      `quality-gates.sh` green (2572 passed, 2 skipped) both pre- and post-commit. (repo: `agent-orchestrator`)
 - [ ] [OPERATOR] P2. **Define the heartbeat-staleness threshold that marks an in-flight attempt ABANDONED, so a second
       slot knows it is safe to resume.** Todo 2 deadlocks without this: slot 7's session ended with no closing Progress
       Log entry, so under a naive "is it still live?" gate its claim reads in-flight FOREVER and permanently blocks
@@ -232,3 +241,9 @@ solution.
   not touch `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s live 4b-i delete pass (in-flight background shards
   running as of this edit) — adopting the new naming there is left to that todo's next resumer, once the current run is
   not mid-flight.
+
+- **2026-08-06 (backend_engineer, backlog task `prediction_trades_migration_concurrent_dispatch-002`)**: Todo 2 flipped
+  `[x]` — see the checkbox's own evidence above. `agent-orchestrator@9e28a36`. Built per the sequencing caveat: the
+  in-flight check ships now with `tuning.in_flight_task_owner_stale_after_seconds` (default 900s) as an injected,
+  overridable parameter — todo 3 still resolves the actual threshold value and the stale-claim takeover rule; only the
+  knob's default (not the dispatcher's filter logic) needs to change once that ruling lands.
