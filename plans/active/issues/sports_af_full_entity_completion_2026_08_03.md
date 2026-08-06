@@ -82,12 +82,12 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                          |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                        |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 201,652 already resolved, **45,711 needed** (continued progress, -523 this tick) — ACTIVE via `af-backfill-20260806-022033`                        |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 209,114 already resolved, **45,127 needed** (continued progress, -584 this tick) — ACTIVE via `af-backfill-20260806-022033`                        |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                |
 | **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,373 already resolved, **only 998 needed** — nearly done                                                                                                   |
 | **INJURIES**     | **all-383**                  | 108,662 expected, 45,953 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                |
-| **STANDINGS**    | **all-383**                  | 108,662 expected, 82,519 already resolved, **26,143 needed** (was 64,439 on 08-04, **-38,296**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
-| **TEAMS**        | **all-383**                  | 108,662 expected, 86,395 already resolved, **22,267 needed** (was 64,723 on 08-04, **-42,456**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
+| **STANDINGS**    | **all-383**                  | 108,662 expected, 83,683 already resolved, **24,979 needed** (was 64,439 on 08-04, **-39,460**) — **ACTIVE** via a separately-discovered dedicated VM, see below              |
+| **TEAMS**        | **all-383**                  | 108,662 expected, 87,559 already resolved, **21,103 needed** (was 64,723 on 08-04, **-43,620**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk ~31/76) |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                   |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -97,9 +97,9 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T09:38Z: 112,117 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~42% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
-**+ 104,234 across FIXTURE_STATS+FIXTURE_LINEUPS** (45,711 + 58,523). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
+**Grand total needed, 2026-08-06T10:01Z: 109,789 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~43% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
+**+ 103,650 across FIXTURE_STATS+FIXTURE_LINEUPS** (45,127 + 58,523). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
 confirmed active concurrently (2 lanes, see Progress Log correction). LEAGUES excluded per the resolved verdict below.
 **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since it could converge quickly
 once dispatched.
@@ -688,28 +688,19 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-06T08:24Z** — Both lanes healthy. TEAMS 25,185→24,613 (-572), STANDINGS 29,061→28,489 (-572) — continued
   progress. FIXTURE_STATS hit a new acceleration record: 47,532→47,049 (-483). Grand total 116,809 (core 4) + 105,572
   (FIXTURE_STATS+LINEUPS). Both VMs left running.
-- **2026-08-06T08:43Z** — Both lanes healthy. TEAMS 24,613→24,441 (-172), STANDINGS 28,489→28,317 (-172) — smaller
-  delta, dedicated non-switch-eligible VM, not concerning. FIXTURE_STATS 47,049→46,842 (-207), continued progress. Grand
-  total 116,465 (core 4) + 105,365 (FIXTURE_STATS+LINEUPS). Both VMs left running.
-- **2026-08-06T09:17Z** — Both lanes healthy, TEAMS/STANDINGS rebounded strongly: TEAMS 24,441→23,169 (-1,272),
-  STANDINGS 28,317→27,045 (-1,272). FIXTURE_STATS 46,842→46,234 (-608). Grand total 113,921 (core 4) + 104,757
-  (FIXTURE_STATS+LINEUPS). Both VMs left running. **Side note (out of this doc's scope, not acted on)**: operator asked
-  in live chat about completion status of 5 OTHER sports vendors (odds_api, footystats, understat, open_meteo/weather,
-  soccer_football_info, transfermarkt) — a general-purpose agent investigation found 4/6 already ≥97-100% resolved at
-  MVP-96 (understat/transfermarkt=0 needed, footystats~~920, odds_api~~6,076-but-gated-on-an-open-canonicalization-bug),
-  with only WEATHER (~1,105 fixed + ~60-96/day growing) and SFI (~1,145 fixed + ~63/day growing) showing genuine active
-  gaps. Proposed launching footystats+weather+sfi backfills next (odds_api deferred pending the canonicalization fix);
-  operator has not yet confirmed — pending their reply, not started, not this doc's scope regardless (separate vendors,
-  unrelated to the API-Football downgrade goal this doc tracks).
-- **2026-08-06T09:38Z** — TEAMS 23,169→22,267 (-902), STANDINGS 27,045→26,143 (-902) — continued progress. FIXTURE_STATS
-  46,234→45,711 (-523). Grand total 112,117 (core 4) + 104,234 (FIXTURE_STATS+LINEUPS). **Git-discipline finding**: hit
-  an unresolved-merge-conflict state on `git pull` this tick — `git stash list` showed 8 accumulated `autostash` entries
-  on this checkout (evidence of repeated failed autostash-pops from prior sessions, not caused by this tick). The
-  specific blocking conflict was on `plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` (not owned by this doc's
-  work) — verified read-only that its working-tree content was byte-identical (md5-matched) to both HEAD and origin
-  before marking it resolved via `git add`, so nothing was discarded; the stash's content had already been independently
-  committed by another agent (`28f357806`) moments earlier, making the conflict a redundant echo, not a real divergence.
-  Unstaged (not deleted) an unrelated foreign new-file artifact from the same stash-pop (`e2e_deepseek_poller_...md`,
-  confirmed already separately committed under the same SHA) so it wouldn't ride along in my commit. Left the 8 stash
-  entries untouched (not mine to drop) and left `scripts/plan-hygiene/check_archive_candidates.sh` (unrelated modified
-  file) alone. Both VMs left running throughout, no impact to the campaign itself.
+- **2026-08-06T08:43Z-09:38Z (condensed, 3 ticks)** — Both lanes healthy throughout. TEAMS dropped 24,613→22,267 (-2,346
+  total), STANDINGS 28,489→26,143 (-2,346, lockstep as usual) via the dedicated VM; FIXTURE_STATS dropped 47,049→45,711
+  (-1,338 total). Grand total fell from 116,465 to 112,117 (core 4) across this stretch. Two notable events during this
+  window: (1) **operator side-question (out of this doc's scope)**: asked in live chat about completion status of 5
+  OTHER sports vendors (odds_api/footystats/understat/open_meteo-weather/soccer_football_info/ transfermarkt) — agent
+  investigation found 4/6 already ≥97-100% done at MVP-96, only WEATHER (~1,105 fixed + ~60-96/day growing) and SFI
+  (~1,145 fixed + ~63/day growing) show real active gaps; proposed launching footystats+weather+sfi backfills, operator
+  has NOT yet confirmed, not started, not acted on. (2) **git-discipline finding**: hit an unresolved autostash-pop
+  conflict (8 accumulated stash entries found on this checkout, pre-existing not caused by this campaign) on an
+  unrelated file (`deepseek_flash_ab_routing_test_2026_08_05.md`) — verified its content was byte-identical to
+  HEAD/origin (already independently committed by another agent, `28f357806`) before marking resolved via `git add`, so
+  nothing was discarded; unstaged (not deleted) an unrelated foreign new-file artifact from the same stash-pop; left the
+  8 stash entries and an unrelated modified script untouched (not mine to manage). No impact to the campaign itself.
+- **2026-08-06T10:01Z** — Both lanes healthy. TEAMS 22,267→21,103 (-1,164), STANDINGS 26,143→24,979 (-1,164).
+  FIXTURE_STATS 45,711→45,127 (-584). Grand total 109,789 (core 4) + 103,650 (FIXTURE_STATS+LINEUPS). Both VMs left
+  running.
