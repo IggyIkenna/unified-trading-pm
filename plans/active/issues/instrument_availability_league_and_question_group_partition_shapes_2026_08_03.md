@@ -172,10 +172,12 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
       `canonical_question_group=` key alone (confirm or revise the "Recommended decision" above for prediction), write
       that ruling into `cross-asset-canonical-target-ssot.md` §8. Still blocks todos 3-5 below for the prediction half;
       todo 3's sports half can now proceed against the already-ruled shape without waiting further.
-- [ ] 2. [DATA] P1. Re-verify prediction's `canonical_question_group=` shape is genuinely historical-only (sample all 78
-      top-level prefixes, not just 3 — bounded per-prefix listing, not a corpus walk; confirm zero objects on any day
-      after ~2026-07-22) OR find it is still being written and escalate to the SAME urgency as sports below if so. Does
-      not depend on todo 1.
+- [x] ✅ 2. [DATA] P1. Re-verify prediction's `canonical_question_group=` shape is genuinely historical-only (sample all
+      78 top-level prefixes, not just 3 — bounded per-prefix listing, not a corpus walk; confirm zero objects on any day
+      after ~2026-07-22) — **CONFIRMED HISTORICAL-ONLY 2026-08-06**: all 78 `canonical_question_group=` prefixes sampled
+      via bounded GCS per-prefix listing (16-thread parallel, `instruments-store-pred-prd-central-element-323112`);
+      latest day=2026-07-22 across all groups (the `a9be6ce9` writer-fix cutover), 0 still-live writes, 0 exceptions. No
+      escalation needed. — unified-trading-pm@<sha> (investigation only, no code change). Does not depend on todo 1.
 - [ ] 3. [DATA] P1. Locate the sports writer codepath that emits `day=/league=/venue=/instruments.parquet` (distinct
       from `_write_venue`/`_instrument_availability_sink_for` — likely in `sports.py`, `footystats.py`, or a per-league
       team/fixture/standings catalog writer in `process_enrichment.py`) and fix it to the ruled canonical shape from
