@@ -11,7 +11,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [plan_reconciler, findings, reconciliation, cefi]
-related: [cefi_consolidated_closeout_2026_07_18.md]
+related: [/plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-06
 author: plan_reconciler
 source: agt-bf8439
@@ -175,3 +175,39 @@ resolved_by:
 - AO — track2_finalize 4 open todos READY (machine-held, sequential, done-when on all).
 - Structural — mtds_smoketest:409 `[~]` non-standard checkbox marker (regen silently drops); estate:143-174 grotesque
   indentation (P3); aster:83-84 bold span crosses physical lines (P3).
+
+### M (mechanical adjudicator) — Phase-0 flag rulings
+
+**AG-closeout orphans — all 6 REAL** (checker: BFS≤3 over resolvable related: + filename-stem mention in family docs;
+family = cefi_consolidated_closeout + aggregated_sources + cefi_consolidated_vm_aster + 2 archive family docs; fixing
+all 6 → gate back to 69 baseline). Fix per doc: add `/plans/active/cefi_consolidated_closeout_2026_07_18.md` to
+`related:`. **2 WRITABLE → apply:**
+
+1. features_universe_filter_settlement_suffix_and_vm_tarball_staleness:20 (related: currently
+   [data_pipeline_check_mdps_features_2026_07_20] — 1-hop dead end)
+2. mtds_cefi_docker_image_stale_5mo:31-35 (related: currently [cefi_book_snapshot5, codex] — dead end) **4 GRACE →
+   report only:** cefi_book_snapshot5, cefi_derivative_ticker_aiodns, cefi_liquidations_count_stale,
+   mtds_live_mode_tardis_datasets.
+
+**Todo-format — all 5 REAL (soft):** backfill_smoke:284 (`- [ ] 3. [DOCS] P2.` → `- [ ] [DOCS] P2.`), backfill_smoke:302
+(`6.`), candle_divergence:442 (`9.`), candle_divergence:485 (`13.`), canonical_path_oracle:321
+(`- [ ] BLOCKED-UPSTREAM-DESIGN [DATA] P2.` → `- [ ] [DATA] P2. BLOCKED-UPSTREAM-DESIGN — …` manual edit,
+fix_todo_format.sh has no rule). Checked `[x] N.` numbered style deliberately not flagged — leave.
+
+**Reference-path:** 1 checker-visible violation = THIS findings doc related: bare basename (fixed this run). Plus 36
+checker-INVISIBLE dangling relative refs in 10 cefi docs (targets verified moved to plans/archive/). **WRITABLE subset
+(4 docs, 8 refs) → repoint to leading-slash archive path:**
+
+- candle_feature:311 → /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md; :390 →
+  /plans/archive/2026_07/mdps_candle_manifest_population_disconnect_2026_07_25.md; :497/:505 →
+  /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md
+- backfill_smoke:279 → /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md
+- cefi_4surface:57 → /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md
+- instruments_cefi_g1_g5:63/:72 → /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md GRACE subset → report
+  (aggregated_sources 15 refs, data_completion_cefi 6, batch7 4, book_snapshot5 2, track7 1, e4_e8 1).
+
+**Moved-doc referrers:** 3 hard findings — NONE in cefi docs (infra_parked×3, governance_sweep, codex naming-convention
+merged-away→LEAVE). mtds_qg_red:27/:65 stale ref to archived features_gas_fees doc — GRACE → report.
+
+**Checker blind-spot finding (recommended follow-up, out of shard):** check_reference_paths.py BARE_MD_RE misses
+relative `plans/...` refs; find_moved_doc_referrers.sh same. 36+ cefi refs and counting → future all-run / tooling fix.
