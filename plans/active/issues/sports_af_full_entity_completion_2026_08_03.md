@@ -735,3 +735,34 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-06T12:43Z** — FIXTURE_STATS back to normal pace: 38,554→38,077 (-477), confirming last tick's -173 was
   one-off noise, not a sustained decline — no entity-switch needed. TEAMS 15,724→14,823 (-901), STANDINGS 19,605→18,704
   (-901). Grand total 97,234 (core 4) + 96,600 (FIXTURE_STATS+LINEUPS). Both VMs confirmed RUNNING.
+- **2026-08-06T~13:05-13:20Z — OTHER-VENDOR BACKFILLS launched, operator explicit go-ahead received.** Operator
+  clarified live-chat scope twice: (1) "we just need the prediction leagues... thats the mvp for those data sources...
+  its api football that has an expanded list" — weather/sfi/footystats/understat's correct "MVP" denominator is each
+  vendor's own Prediction-tier league set via `get_expected_leagues_for_source(source, ["Prediction"])`
+  (`unified_api_contracts.canonical.domain.sports.league_data`), NOT api_football's wider 96-league
+  `get_mvp_football_league_ids()` — those are two genuinely different lists; (2) rationale: "we predict on the
+  prediction leagues, thats the odds_api data we have — no point having rich features for others; the extra AF leagues
+  help with basic game summary + adjacent-game fatigue/injury context." Wrote
+  `instruments-service/scripts/census_other_vendors_gap_2026_08_06.py` (mirrors the AF census script's denominator +
+  resolved-status logic) and censused at Prediction-tier scope:
+  - **WEATHER** (open_meteo, 34 leagues): needed=1 — essentially DONE, no launch.
+  - **SFI_PROGRESSIVE_STATS** (34 leagues): needed=12 — essentially DONE, no launch.
+  - **MATCHES/PREDICTIONS** (footystats, 29 leagues): needed=0 — DONE.
+  - **ODDS** (footystats, 29 leagues): needed=1 — essentially DONE, no launch.
+  - **XG/XG_SHOTS** (understat, 5 leagues): needed=0 — DONE.
+  - **SFI_LEAGUES** (34 leagues): needed=20,068 of 22,132 expected (~91% missing!), range 2020-06-06..2026-08-02 — the
+    ONE genuine large gap. Launched `sfi-backfill-20260806-140802` via
+    `launch-sfi-backfill-vm.sh --entity SFI_LEAGUES 2020-06-06 2026-08-02` (single-stream — the launcher's own guard
+    REFUSES `--chunks` for SFI: the RapidAPI key's 4 req/s limit is per-account, so N parallel chunks would 429-storm
+    each other, confirmed via the launcher's own error message). No singleton-lock conflict with the AF campaign
+    (different launcher family/API key).
+  - **odds_api** (MTDS, not instruments-service — different bucket, not covered by the census script above): its own
+    launcher `launch-mtds-sports-odds-backfill-vm.sh` defaults to a HARDCODED `END_DATE=2026-03-28`, ~4 months stale vs
+    today — launched a trailing-gap catchup `mtds-backfill-odds-catchup-20260806`
+    (`--start 2026-03-28 --end 2026-08-06`, default unscoped = Prediction-tier only per the launcher's own doc comment,
+    `--force` omitted so already-captured shards skip). `odds-api-guard` confirmed 0 running + 1 planned <= cap 1 before
+    launch. RUNNING confirmed.
+  - Both new VMs are independent lanes — different API keys/quotas from the af-backfill-* pool and the TEAMS/STANDINGS
+    chunk-loop VM, genuinely concurrent, no lock contention. Monitor read-only alongside the existing two lanes going
+    forward; SFI_LEAGUES is the long pole (single-stream over ~91% of a 6-year range) — expect this to run for a while,
+    no need to babysit closely, just fold into the periodic VM-health check.
