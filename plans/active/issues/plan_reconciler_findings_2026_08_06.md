@@ -41,11 +41,11 @@ docs in grace (modified <12h ago) — READ-ONLY
 
 ## Contradictions
 
-(None confirmed — hunters still running)
+(None confirmed)
 
 ## Doc-drift
 
-(None confirmed — hunters still running)
+(None confirmed)
 
 ## Hygiene fixes
 
@@ -62,17 +62,18 @@ docs in grace (modified <12h ago) — READ-ONLY
 
 ## Archive candidates (operator review)
 
-**5 fully-done (0 open todos) non-grace tradfi docs assessed**:
+**5 fully-done (0 open todos) non-grace tradfi docs assessed** (archival eligibility hunter, agt-041a96):
 
-| Doc                                                                | Locked?                     | Cross-refs?                                           | Verdict           | Reason                                                                                               |
-| ------------------------------------------------------------------ | --------------------------- | ----------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------- |
-| `instruments_satellite_ao_dispatch_batch1_2026_07_27.md`           | No (`archive_exempt: true`) | No                                                    | **EXEMPT**        | Archival routed through `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md` |
-| `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md` | Yes (`live-defi-rollout`)   | No                                                    | **LOCKED**        | Cannot auto-archive; suggest in findings                                                             |
-| `issues/tradfi_backfill_oom_remediation_2026_06_24.md`             | Yes (`live-defi-rollout`)   | Yes (ag_closeout_audit, tradfi_consolidated_closeout) | **LOCKED**        | Cannot auto-archive; suggest in findings                                                             |
-| `issues/tradfi_canonical_path_migration_design_2026_07_19.md`      | Yes (`live-defi-rollout`)   | Yes (ag_closeout_audit, tradfi_consolidated_closeout) | **LOCKED**        | Cannot auto-archive; suggest in findings                                                             |
-| `issues/autonomous_session_operator_decisions_2026_07_25.md`       | No                          | Yes (6 tranches!)                                     | **CROSS-TRANCHE** | Sharded run cannot safely archive; leave for `all` pass                                              |
+| Doc                                                                | Locked?                     | Actual open       | Cross-refs?                                       | Verdict           | Reason                                                                                                |
+| ------------------------------------------------------------------ | --------------------------- | ----------------- | ------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `instruments_satellite_ao_dispatch_batch1_2026_07_27.md`           | No (`archive_exempt: true`) | 0/5               | No                                                | **EXEMPT**        | Archival routed through `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`  |
+| `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md` | Yes (`live-defi-rollout`)   | 0/3               | batch2 parent, batch7 open todo sourced from it   | **LOCKED**        | Locked + still a live source for batch7's open `[CODE] P1` todo; un-migrated prose recommendations    |
+| `issues/tradfi_backfill_oom_remediation_2026_06_24.md`             | Yes (`live-defi-rollout`)   | **1**/12 (NOT 0!) | Yes (tradfi closeout, ag rollout, +4 active refs) | **LOCKED + OPEN** | Has genuinely open `[DATA] P3` checkbox (MDPS candle-writer); actively self-worked per batch7; locked |
+| `issues/tradfi_canonical_path_migration_design_2026_07_19.md`      | Yes (`live-defi-rollout`)   | 0/1               | Yes (tradfi closeout, batch6, 2 active issues)    | **LOCKED**        | Steps 4-8 are explicit `[GATE]` operator-go items; MIXED evidence; locked                             |
+| `issues/autonomous_session_operator_decisions_2026_07_25.md`       | No                          | 0/2               | Yes (6 tranches!)                                 | **CROSS-TRANCHE** | `archive_exempt: true` — standing running log by design; sharded run cannot safely archive            |
 
-**Verdict**: 0 archivable this run (3 locked, 1 exempt, 1 cross-tranche).
+**Verdict**: 0 archivable this run (3 locked, 1 exempt, 1 cross-tranche). One candidate had a miscount (actually 1
+open).
 
 ## Refuted (dropped by verify)
 
@@ -88,8 +89,14 @@ docs in grace (modified <12h ago) — READ-ONLY
 - Epic: `tradfi_master.md` (locked, `locked_by: live-defi-rollout`)
 - Zero-checkbox sweep: 3 docs found (1 actionable, deferred; 1 this run's own scaffold; 1 false positive
   `task_template.md`)
-- Hunters launched: 3 (zero-checkbox ✓, archival eligibility ✓, missed flips — running)
+- Hunters launched: 3 (zero-checkbox ✓, archival eligibility ✓, missed flips — timed out; direct grep found 0 open todos
+  with inline SHAs in non-grace tradfi docs, so no candidates expected)
 
 ## Plans not reached
 
 (None — all non-grace tradfi docs were catalogued; hunters covered key candidate classes)
+
+---
+
+**Run completed**: 2026-08-06 ~20:25 UTC. No questions raised to operator (all findings are deferrals or
+non-actionable).
