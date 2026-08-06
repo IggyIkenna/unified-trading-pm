@@ -227,8 +227,8 @@ solution.
   guess, and do not block on the ruling to start.
 
 - **2026-08-06 (backend_engineer, backlog task `prediction_trades_migration_concurrent_dispatch-001`)**: Todo 1 flipped
-  `[x]` — see the checkbox's own evidence above. `unified-trading-pm@<pending-sha>` adds task_template.md finding X (§
-  3, Todo format) documenting the shared task-id-keyed checkpoint convention with a worked example brief. Deliberately
-  did not touch `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s live 4b-i delete pass (in-flight background
-  shards running as of this edit) — adopting the new naming there is left to that todo's next resumer, once the current
-  run is not mid-flight.
+  `[x]` — see the checkbox's own evidence above. `unified-trading-pm@c455440d9` adds task_template.md finding X (§ 3,
+  Todo format) documenting the shared task-id-keyed checkpoint convention with a worked example brief. Deliberately did
+  not touch `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s live 4b-i delete pass (in-flight background shards
+  running as of this edit) — adopting the new naming there is left to that todo's next resumer, once the current run is
+  not mid-flight.
