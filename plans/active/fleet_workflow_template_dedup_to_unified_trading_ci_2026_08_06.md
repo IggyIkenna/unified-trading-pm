@@ -206,11 +206,11 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
 
 - [x] 1. [INFRA] P0. **Per-repo distribution + `notify-slack.yml` dependency audit** — see "Todo 1 findings" below.
       Live-bug fix shipped: execution-service@d537b812e, e2e-testing@14bec17, market-data-processing-service@8c5430aa.
-- [ ] 2. [INFRA] P0. **Correct `request-major-bump.yml`'s stale header comment** — its own text claims "(thin caller ->
-      PM reusable workflow)", verified false by direct read (only `uses:` line is `actions/checkout@v5`); fix the
-      comment to describe what it actually does before or as part of converting it, so the eventual
-      `unified-trading-ci`-hosted version doesn't ship the same inaccurate self-description. Done-when: comment matches
-      verified behavior, shipped with the file's own conversion todo.
+- [x] 2. [INFRA] P0. **Correct `request-major-bump.yml`'s stale header comment** — the false claim ("thin caller -> PM
+      reusable workflow") turned out to live in `rollout-workflow-templates.sh`'s own header listing (line 14), not
+      inside `request-major-bump.yml` itself — corrected to describe what the file actually does (a self-contained
+      canonical flat copy; its only `uses:` is `actions/checkout@v5`, no reusable-workflow call).
+      `unified-trading-pm@<pending, shipping alongside this flip>`.
 - [ ] 3. [INFRA] P0. **Convert ONE file end-to-end as the pattern-proof, including a live (non-local) CI run** — pick
       the smallest, lowest-blast-radius flat-copy candidate (`version-registry-notify.yml`, 48 lines, likely the
       simplest) as the canary: host it in `unified-trading-ci/.github/workflows/`, replace its copy in ONE low-churn

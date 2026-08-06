@@ -11,7 +11,9 @@
 # Target: <repo>/.github/workflows/<template-name>.yml
 #
 # Generic per-repo workflows (tier 1):
-#   - request-major-bump.yml        (thin caller -> PM reusable workflow)
+#   - request-major-bump.yml        (canonical flat copy — creates a GitHub Issue +
+#                                     Slack alert directly; its only `uses:` is
+#                                     actions/checkout@v5, no reusable-workflow call)
 #   - major-bump-issue-handler.yml   (canonical flat copy)
 #   - staging-lock-check.yml         (canonical flat copy)
 #   - update-dependency-version.yml  (canonical flat copy)
