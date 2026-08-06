@@ -106,6 +106,51 @@ These were verified directly by the orchestrator with commands run this turn (gu
 
 (none yet)
 
+## Hunter results — A (infra-satellite batch family, 10 docs) — 2026-08-06
+
+11 findings; hunter measured grace per-doc: batch1_finalize (08-03) + batch3_finalize (~14h) writable; batch1, batch3,
+batch6, batch7, hub grace (re-verified at apply). Clean docs: batch4, batch6_finalize, batch7_finalize.
+
+1. **W** `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md:66-67` — P2: body banner still says "`status: draft`
+   — NOT ingested, NOT dispatched... flips only with parent on operator approval" vs frontmatter `status: active` (:16);
+   stale since the 2026-07-30 no-double-gate ruling (233ebd614), parent batch active. → fix: replace banner with
+   accurate note (draft-gate mechanism retired by ruling).
+2. **W** `infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md:59-60` — P2: "⚠️ STATUS: `draft`" banner vs
+   frontmatter active (:13); parent batch3 active since authoring — doubly stale. → fix: strike banner.
+3. **G** `infra_consolidated_closeout_2026_07_25.md:473-478` + `batch7_2026_08_04.md:169-170` — P2: hub 08-03/08-04 +
+   batch7 Deferred claim batch3's `assigned_vm` flip "landed BLANK" — FALSE per `git show dfdb0887f` (flip landed
+   `planning` in valid multi-line YAML) + batch3 L39 now single-line `planning` (001112aaf). The "blank" verdicts
+   misread block-scalar format. Corroborates D-2 (ag_closeout "5th day blank" claim). GRACE — report only.
+4. **W** `infra_satellite_ao_dispatch_batch1_2026_07_26.md:886-887` — P2: "14 deferred items are conflict-gated" vs the
+   doc's own Deferred section = 18 items, exactly 10 conflict-gated (1-10; 11-13 resolved-by-logic, 14 BLOCKED-OPERATOR,
+   15-17 TOO-LARGE, 18 human-only); finalize twin (:103) + hub (:271) both say 10. → fix: 14→10.
+5. **W** `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md:70-71,77,L8` — P2: scoping text says "all 25 tasks"
+   / "batch 1's 25 now-done todos" but batch1 now has 30 todos (5 added post-creation: G-TRACE, stash-pile smoke test,
+   slot-git-status-report, reference-path hunter, prefix-scoped lifecycle; verified at creation commit 89469c6b2 = 25).
+   A literal worker run would under-reconcile 5 todos. → fix: 25→30 with a note.
+6. **G** `infra_consolidated_closeout_2026_07_25.md:109,124-125` vs `:206-207,327` — P2: org-migration cancellation
+   dated two ways — CANCELLED 2026-07-27 (citing vintage-audit §5#39, which says "still undecided") vs 2026-07-28
+   (§5-RESOLVED #36, DONE `unified-trading-pm@cd5c0bde1`). Source audit records the ruling DONE 07-28 → 07-27 cites
+   misattribute. GRACE — report only.
+7. **W** `infra_satellite_ao_dispatch_batch1_2026_07_26.md:702` — P3: [x] REVIEW todo evidence ends with literal
+   `pm@<commit-pending>`; real ship = `b555f4b86` "extend /plan-reconcile with moved-doc referrer hunter" (SKILL.md L305
+   entry, landed 08-02). → fix: replace placeholder with b555f4b86 (verify reachable first).
+8. **G** `infra_satellite_ao_dispatch_batch6_2026_08_02.md:162-163` — P3: garbled operator-gate sentence ("Flipped from
+   `draft`... is the operator's call" — flip already happened); L116-117 "(batch is still `status: draft`)" stale after
+   08-06 activation. GRACE — report only.
+9. **G** `infra_satellite_ao_dispatch_batch7_2026_08_04.md:178-182` — P3: "that source doc's own finalize twin will
+   citation-close them" — na-eligibility source doc has NO finalize twin (verified find); actual mechanism = batch7's
+   OWN finalize twin todo 1 (:66-67). Same garbled template tail as batch6 (shared template bug). GRACE — report only.
+10. **W** `infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md:28` — P3: `last_updated` "2026-07-30" vs 08-06 edit
+    (7accf8ecf). → fix: bump. (batch1_finalize:28 same drift vs 08-03 edit 99ebc3137 — same fix.)
+11. **G** `infra_consolidated_closeout_2026_07_25.md:31` — P3: `last_updated` "2026-08-04" vs 08-06 Progress Log entry
+    (:220). GRACE — report only.
+
+Digest extras (all grace): batch1 L974 "24/25 shipped, only agent-orchestrator remains" superseded ~26 min later by the
+real flip (agent-orchestrator@89ca717, sha verified) — never annotated; batch1 L4/L12 "25 AO-eligible todos" historical
+vs 30; batch3 L80 "22 open of 25" stale historical snapshot (current 30/1 open); batch3 L154 genuine open [BACKEND] P3
+git-health root-cause — no missed flip.
+
 ## Hunter results — B (governance legacy, 6 docs) — 2026-08-06
 
 All verified quotes by hunter B (line-precise); orchestrator re-verify pending/confirming — items marked **W** are in
@@ -287,6 +332,73 @@ shard. FLIP candidates (all but #4 need STEP-4 verify):
 5. Out-of-shard echo: `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` (0 open / 3 checked) and
    `pm_scripts_typecheck_debt_2026_06_11.md` (0 open / 6 checked) flagged as archive-candidate shapes — the former is
    ui-tranche (ui shard owns), the latter is the LOCKED archive candidate already listed above.
+
+## Hunter results — D (infra issues batch 1, 14 docs) — 2026-08-06
+
+16 findings; hunter reported the ENTIRE batch grace — orchestrator re-measured individually: 13 of 14 are grace,
+`ag_closeout_audit_infra_parked_2026_08_01.md` is WRITABLE (14h) — its findings stay report-only anyway (same-day
+in-flight audit-family doc, collision risk). Root cause of same-day staleness: governance sweep `de1d795de1` (21 files,
+2026-08-06 ~15:04 UTC) landed after docs' carried-forward sections were drafted.
+
+1. **G** `ag_closeout_audit_infra_parked_2026_08_06.md:157-159` vs `:208-211` — P1 internal contradiction: carried item
+   4 claims all 4 draft batches "still `status: draft`, zero flipped" vs todo 4 RESOLVED (sweep
+   `unified-trading-pm@de1d795de1`). Live-verified: batch4/6/7 active, batch5 archived — the F14 register is stale, todo
+   4's flip is accurate. Same stale claim carried in _08_04:157-159.
+2. **G** `ag_closeout_audit_infra_parked_2026_08_06.md:148-151` — P1: F10 carried item 2 + [OPERATOR] P1 todo 1 claim
+   batch3:39 is still blank `assigned_vm:` (5th consecutive day); live grep = `assigned_vm: planning` (fixed 08-02,
+   _08_03:273-274 verified). Stale operands → the [OPERATOR] P1 "re-apply" todos at _08_06:198-200 and _08_04:161-163
+   are flip candidates (verify at STEP 4).
+3. **G** `cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md:203-209` — P2: 08-06 archive-audit note says
+   the (a)(b)(c) Slack-routing items "have no separate `- [ ]` todos" but the Follow-ups section has exactly that open
+   `[INFRA] P2` todo (both added same commit 0acf56a54). Also contradicts _08_06:95's F15 "zero open checkboxes" claim.
+4. **G** `bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md:301-310` — P2:
+   archive-audit note asserts the 30-launcher follow-up "never converted to a `- [ ]` todo" (follow-up-must-be-todo
+   violation) but the doc's Follow-ups section contains exactly that open `[CODE] P3` todo (:301-303). Premise false;
+   doc correctly NOT archive-ready.
+5. **G** `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md:227` vs ag_closeout docs — P2: doc 7 says the
+   tranche-level mistag deadlock "no longer applies" (owning_tranche() fallback fixed 08-02, `--tranche ao` now includes
+   it) but ag_closeout _08_04:117-119/_08_06 still frame F6 as "BLOCKED-OPERATOR-DECISION with 3 unresolved options"
+   (option C = change the fallback). Mistag itself (line 23) persists so the retag todo stays legitimately open; the
+   deadlock framing is stale. Report-only.
+6. **G** `ag_closeout_audit_infra_parked_2026_08_01.md:199-212` — P2 false-complete flip: todo 6 [x] CLOSED 2026-08-06
+   while its body still asserts "The retag half of this todo is still open and undone" (undigested 08-03 STALE note);
+   retag itself IS done (live `asset_group: [ao]` verified). Dangling fragments :191/:216, backtick glitches :102. Doc
+   is WRITABLE but same-day in-flight → file-only (collision risk).
+7. **G** `bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md:149-152` — P2 **AO-DISPATCH candidate**: open
+   `[TERRAFORM] P2` carries 08-06 note — operator ruled APPROVED in sibling doc P2.1b
+   (bucket_iam_write_protection_per_tier :297, `[OPERATOR]` tag removed), gate satisfied (P2.2e [x] 08-04 @ :593; P2.3
+   [x] 08-02 @ :604). Execution itself NOT done (plan P2.1b still `- [ ]`) → dispatch candidate, not a close. → ROUTE
+   (STEP 6).
+8. **G** `ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md:10-11` — P2 dead ref: cites
+   `ao_deepseek_model_flag_misalignment_2026_08_05` — no such file anywhere in plans/. No `last_updated` field.
+9. **G** `ao_worker_context_thrash_no_recycle_escape_2026_08_06.md:11-12` — P2 dead ref: cites
+   `cefi_tardis_derivative_ticker_historical_gap_ao_context_pct_stuck_post_compact_2026_08_06` — nonexistent; `related:`
+   empty (:27) despite the cross-ref. No `last_updated`.
+10. **G** `cve_affected_pinned_deps_remediation_2026_06_18.md:358-394` — P2 resolved-but-unclosed candidate: sole open
+    todo documented twice (07-31) as inherently unbounded, intentionally left unflipped with reason PARKED; CVE exercise
+    fully complete (all ignores dropped, 21-repo cryptography sweep) → close/convert-to-standing-check candidate
+    (operator). + whitespace corruption (230-291, 302-304, 332-340, 361-394 — hundreds of lead spaces), truncated
+    summary table, last_updated 07-30 vs 08-05 body, `issues/fleet_fastapi...` cite to archived doc.
+11. **G** `client_reporting_api_promote_wedge_backmerge_dead_2026_08_06.md:95` — P2 zero-checkbox escalation record
+    (status open, assigned_vm: planning): 4-step Recommended resolution is prose-only; "fleet recovery" tracker (:103)
+    names no doc/todo; no `last_updated`. Same doc as G-hunter zero-checkbox finding — orchestration decision pending
+    (convert-to-todos vs stay-as-is).
+12. **G** `cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md:174` — P2 unresolved evidence placeholder: [x]
+    todo 3 cites `unified-trading-pm@<SHA>`; todo 1 [x] false-complete (body lists NOT-DONE (a)(b)(c)) — mitigated only
+    by the open Follow-ups todo (:203-205).
+13. **G** last_updated drift cluster — `ag_closeout_audit_infra_parked` _07_31:36 (07-31 vs 08-02/08-06), _08_01:40,
+    _08_03:49, _08_04:46, `bucket_iam_p2_god_sa_removal...:42`, `bucket_iam_p2_tier_sa_scope_gap...:48`,
+    `cve_affected_pinned_deps...:35`; docs 6/8/11/12 (ci_registry_drift, ao_deepseek, ao_worker_context_thrash,
+    client_reporting) lack `last_updated` entirely.
+14. **G** `ag_closeout_audit_infra_parked_2026_08_06.md:143-148` — P3 day-count inconsistency: F6 "4th consecutive day"
+    (flagged 07-31, 5 runs by audit record) vs F10 "5th consecutive day" (flagged 08-02, 3 runs) — counts wrong both
+    ways.
+15. **G** `ag_closeout_audit_infra_parked_2026_07_31.md:166-169` — P2: finding-3 retag todo open + 08-06 entry still
+    frames ao_self_pull as "owning-tranche deadlock, BLOCKED-OPERATOR-DECISION" (contradicts doc 7:227, same as #5).
+16. **G** `bucket_iam_p2_god_sa_removal...:127-137,159-172` +
+    `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md:122-148` — clean-pass notes: retag addenda
+    consistent; ci_registry todo 3 correctly open (3-consecutive-green done-when unmet), todo 4 CONCLUSIVE [x]. No
+    findings beyond the above.
 
 ## Hunter results — F (infra issues batch 3, 13 docs) — 2026-08-06
 
