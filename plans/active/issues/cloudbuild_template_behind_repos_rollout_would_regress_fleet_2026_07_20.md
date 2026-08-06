@@ -114,12 +114,16 @@ silently regresses the fleet again.
       content contains markers absent from the rendered output; default flipped to `--dry-run`, write requires
       `--apply`. unified-trading-pm@ddf0b89f4. Full details + the drift measurement below in the Progress Log; also
       recorded on `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` item 5.
-- [ ] [DEVOPS] P2. **Roll the empty-tag guard out to the 19 consumer repos — RE-SCOPED 2026-08-02 per operator ruling
-      into two explicit, ordered steps.** The original one-line wording ("roll the guard out once the drift check
-      exists") assumed a clean `rollout-cloudbuild.py --apply` sweep. That mechanism no longer exists: the
-      would-drop-content guard shipped 2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19
-      consumers, so an `--apply` sweep would simply decline most of the fleet. Do the steps in order — step 2 is not
-      startable for a repo until step 1 has cleared that repo.
+- [x] ✅ [DEVOPS] P2. **DONE 2026-08-06 (batch5 todo 1, slot 4)** — re-scoped rollout executed end-to-end; see the
+      2026-08-06 Progress Log entry for the full classification + evidence (template forward-ports landed in
+      `configs/cloudbuild-*-template.yaml`; empty-tag guard hand-applied to all 17 image-building consumers; drift
+      baseline ratcheted down to the residual category-(b) set; drift checker GREEN). **Roll the empty-tag guard out to
+      the 19 consumer repos — RE-SCOPED 2026-08-02 per operator ruling into two explicit, ordered steps.** The original
+      one-line wording ("roll the guard out once the drift check exists") assumed a clean
+      `rollout-cloudbuild.py --apply` sweep. That mechanism no longer exists: the would-drop-content guard shipped
+      2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19 consumers, so an `--apply` sweep
+      would simply decline most of the fleet. Do the steps in order — step 2 is not startable for a repo until step 1
+      has cleared that repo.
   1. **Resolve the per-repo drift first.** Ground truth is
      `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` (seeded 2026-07-28): **15 of 19 consumers carry
      content their mapped template does not** — `deployment-api` (26), `strategy-service` (13), `features-service` (12),
@@ -200,6 +204,48 @@ silently regresses the fleet again.
   shipped in this change; the 15/19 drift figures quoted in the re-scoped todo were re-verified against
   `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` at the time of writing (19 consumers listed, 15 with a
   non-zero count) and the batch-5 todo instructs its worker to re-measure live before acting on them.
+
+- **2026-08-06 (batch5 todo 1 worker, slot 4) — re-scoped rollout executed.** Live re-measure on pickup showed the drift
+  had GROWN since the 2026-07-28 baseline (8 repos over baseline). Executed the two ordered steps + the baseline
+  ratchet:
+
+  1. **Per-repo drift resolved (classification, 15 drifted repos).**
+     - **(a) forward-ported into `configs/cloudbuild-*-template.yaml`**: the `fetch-tags` step (service + infra
+       templates; identical across the 10 service + ibkr consumers), the `_RUN_INIMAGE_QG` in-image-QG skip guard
+       (service template, with the substitution declared `_RUN_INIMAGE_QG: "false"`), the `auth-precheck` gar_token
+       BuildKit-secret persistence (service + api templates), the `publish-wheel` git-install +
+       `SETUPTOOLS_SCM_PRETEND_VERSION` hatch-vcs pin (service template), the api template's AUTHENTICATED `--unshallow`
+       extract-version + `availableSecrets`/`GH_PAT`
+       - `0.0.0.dev0` fallback (from client-reporting-api), and the UI template's pnpm quality-gates (from
+         deployment-ui).
+     - **(b) intentional permanent per-repo divergence, baselined (recorded WHY in the baseline comment)**:
+       deployment-api's bespoke `vendor-deps`/`deploy`/`redeploy-monitor-jobs`/`operability-probe`/`fetch-ui` steps +
+       custom build (list-args, SCM_PRETEND_VERSION=0.0.0) — the baseline's own archetype; the per-service
+       `operability-probe` (probe target differs per service, not expressible in one template block); execution-service
+       `stage-siblings`; features-service `redeploy-features-jobs`; market-tick-data
+       `image-import-smoke`/`stage-workspace-deps` (dep-skew gates); the build-step SCM build-arg form (plain
+       `SETUPTOOLS_SCM_PRETEND_VERSION` vs the template's dist-specific `_FOR_<PKG_UPPER>` — functionally equivalent,
+       not worth forcing); greeks-service's short-SHA version fallback (static repo, no v-tags); and assorted per-repo
+       comment text.
+     - **(c) stale repo-local content**: NONE found — every marker was either forward-portable or intentional.
+  2. **Empty-tag guard applied to every image-building consumer (17/17).** The `SHORT_SHA`→`VERSION` fail-fast guard was
+     hand-applied to each consumer's `build`/`build-terraform-image` step and the tag re-pointed to `:$$SAFE_SHA`
+     (hand-apply chosen over `rollout-cloudbuild.py --apply` because the category-(b) residual set makes a full render
+     refuse — the plan explicitly sanctions hand-applying the guard hunk for such repos). 13 service/api consumers had
+     bash-block builds (guard hunk inserted after the `VERSION=` line); deployment-api + deployment-ui +
+     unified-trading-system-ui had list-args builds and were converted to bash-block with the fail-fast guard
+     (deployment-api/UI have no extract-version, so no VERSION fallback — an empty SHORT_SHA is genuinely unresolvable);
+     ibkr-gateway-infra's `build-terraform-image` got the fail-fast variant. e2e-testing/system-integration-tests (sit,
+     no image) are N/A. The guard is now also in the api/infra/ui templates so future renders carry it. Side-fixes while
+     converging: unified-trading-system-ui's stale `npm ci` quality-gates → pnpm (its lockfile is pnpm);
+     market-tick-data adopted the template's `_RUN_INIMAGE_QG` + gar_token + SCM-version pin; execution-service adopted
+     the gar_token auth-precheck.
+  3. **Baseline ratcheted DOWN** from the 2026-07-28 seed to the residual category-(b) set (e.g. deployment-api 26→16,
+     strategy 13→8, greeks 10→5, alerting 10→8, client-reporting-api 5→3, ibkr 4→1, execution/market-tick-data unchanged
+     at 10/8), with the WHY recorded in the baseline comment. `check_cloudbuild_template_drift.py` exits 0 (GREEN) at
+     the new baseline. All 17 touched consumers + the 4 templates pass `check_cloudbuild_substitutions.py` and parse as
+     valid YAML. The guard logic was simulated (manual submit → recovers via VERSION; both-empty → FATAL diagnostic;
+     trigger → SHORT_SHA).
 
 ## na-eligibility-audit verdict
 
