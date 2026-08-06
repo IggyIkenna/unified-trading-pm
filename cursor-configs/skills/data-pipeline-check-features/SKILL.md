@@ -58,6 +58,44 @@ never silently guessed at or skipped either way.
   `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` first, then run on the self-paced loop (step 7). No-pause contract
   applies.
 
+## 1a. Run the driver on its own VM — DEFAULT, do not run inline on the shared host
+
+Live evidence 2026-08-06: the driver process itself (not the per-shard VMs it launches — those were already on their own
+SPOT VMs) reached **15.7GB RSS** on a `--legs benchmark` run and got OOM-killed by the AO host's resource-watchdog after
+competing with every other slot for the shared host's fixed memory pool. Every invocation in §3/§5 below — whether run
+interactively or under `/autonomous` — goes through
+`deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh` instead of a bare
+`cd features-service && python3 ...`: swap the command's head, keep every flag below it identical.
+
+```bash
+bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
+  --service features --day <DAY> --legs force,skip --require-captured --auto-day \
+  [--asset-group CEFI] [--family delta_one] [--lookback-days N] \
+  --project central-element-323112
+```
+
+Prints `vm_name=...` immediately, then returns — the launch is async (the driver VM self-deletes on completion,
+`VM_SHUTDOWN_ON_COMPLETION=true`). Poll the SAME way any other launch-and-wait caller does:
+
+```python
+from unified_trading_library.pipeline_e2e_check.launcher import launch_vm_and_wait
+result = launch_vm_and_wait(
+    launcher_script="deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh",
+    argv=["--service", "features", "--day", "<DAY>", "--legs", "force,skip", ...],
+    vm_name=vm_name,  # from the launch script's own output
+    project_id="central-element-323112",
+    code_bucket="deployment-scripts-central-element-323112",
+    timeout_sec=...,
+)
+```
+
+or poll `gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/{run.log,EXIT_STATUS}` directly. The rendered
+report lands at
+`gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_features/<run_date>/`
+(mirrored there in addition to the local `plans/audit/results/...md` path in §6 — the local copy doesn't survive the
+driver VM's self-delete). Running the raw `pipeline_e2e_check.py` command inline (as shown for reference in §3/§5) is
+acceptable only for a quick dev-local dry-run against a tiny scope — never for a real force/skip/benchmark sweep.
+
 ## 2. Phase 0 — provisioning gate (object-level probe only)
 
 Features use the **folded per-asset_group** `features` bucket kind (Fold A, 2026-07-18/19) — the retired per-family
@@ -109,6 +147,9 @@ the skill-layer fail-closed guard the launcher itself does not provide. There is
 of scope for `/data-pipeline-check-features` entirely, so this assertion never has a legitimate reason to fail open.
 
 ## 3. Phase 1 — force + skip matrix (with per-family multi-day lookback)
+
+**Run via the §1a driver-VM launcher, not inline.** The underlying command (what the launcher actually runs on the
+driver VM):
 
 ```bash
 cd features-service && python3 scripts/pipeline_e2e_check.py \
@@ -219,7 +260,8 @@ made to pass by broadening the matcher:
 | Only captured input for the window is non-canonically shaped          | `skipped: non_canonical_input`              |
 | Written feature ids/paths fail the canonical assert (`canonical` leg) | `content_check=non_canonical` (own verdict) |
 
-Retired per-family bucket aliases now **RAISE** — the driver always resolves `kind="features"`. Run the canonical leg:
+Retired per-family bucket aliases now **RAISE** — the driver always resolves `kind="features"`. Run the canonical leg
+via the §1a driver-VM launcher (`--service features --legs force,canonical ...`); underlying command:
 
 ```bash
 cd features-service && python3 scripts/pipeline_e2e_check.py \
@@ -255,6 +297,9 @@ dispatcher branch; see `plans/active/issues/mdps_features_deadcode_consolidation
 
 > **A single smoke force-leg CANNOT measure throughput** — it is boot-dominated. Never quote a force-leg duration as a
 > compute rate.
+
+**Run via the §1a driver-VM launcher, not inline** — the benchmark leg is the heaviest of the three (15.7GB RSS observed
+live). Underlying command:
 
 ```bash
 cd features-service && python3 scripts/pipeline_e2e_check.py \

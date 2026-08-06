@@ -3277,6 +3277,7 @@ while IFS= read -r -d '' _df_579; do
 done < <(find . \( -name "Dockerfile" -o -name "Dockerfile.*" \) \
     -not -path "./.venv*/*" -not -path "./build/*" \
     -not -path "./node_modules/*" -not -path "./.git/*" \
+    -not -path "./.claude/*" \
     -print0 2>/dev/null)
 if [ ${#_DF_VIOLATIONS_579[@]} -gt 0 ]; then
     if [[ "$_TODAY_579" < "$_RATCHET_579" ]]; then
