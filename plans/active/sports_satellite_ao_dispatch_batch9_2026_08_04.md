@@ -149,20 +149,21 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       apply-prod run completes with 0 failed, prediction's `unrecognized` count for these two specific shapes (excluding
       the still-pending third `market=` shape gated on the sibling doc's todo 8) drops to 0, and
       `canonical-cutover-register.md` §6b is updated with the result.
-- [ ] [DIAG] P1. Root-cause the sports-prd manifest consolidator's frozen canonical rows_out (bit-for-bit identical at
-      9,239,513 across 35+ successful merges, 2026-08-04T08:06:48Z-13:08:48Z, despite shards=3-15 and
-      dedup_dropped=187-2,000,000 varying per cycle) by reading
-      `unified-trading-library/unified_trading_library/manifest_consolidator.py`'s incremental anti-join/UNION ALL merge
-      and dedup-key logic (SSOT `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Incremental cycle (steady
-      state)", `_stale_drop_predicate` and dedup-key computation are the flagged starting points) to identify why
-      genuinely-new per-VM shard rows are being classified as duplicates of existing canonical rows. Read-only
-      investigation — no production code change or deploy. Source:
-      `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md`. Done when: a specific root-cause is
-      documented with a code citation (file+line/function) explaining why the exact `dedup_dropped = rows_in - rows_out`
-      arithmetic holds every cycle while shards/rows_in/dedup_dropped vary, cross-checked by re-running the doc's own
-      reproduction command to confirm current rows_out state before concluding. This blocks
-      `sports_af_full_entity_completion_2026_08_03.md`'s convergence declaration and several other docs' verification
-      steps — prioritize accordingly.
+- [x] ✅ [DIAG] P1. Root-cause the sports-prd manifest consolidator's frozen canonical rows_out — FALSE ALARM, confirmed
+      2026-08-06 (slot 5). **Root cause**: `dedup_dropped` is DERIVED arithmetic, not an independent measurement —
+      `manifest_consolidator.py:1028` (`dedup_dropped=rows_in - rows_out`). When all incoming shard rows match existing
+      canonical rows on their dedup key (`_resolve_dedup_cols`, line 2127: `(date, venue, data_type, service_name)` +
+      optional dims), the merge UPDATEs them in place via `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` with
+      last-write-wins — row COUNT is conserved, `dedup_dropped` rises in lockstep with the shard purely because the
+      shard is growing. This is the EXPECTED signature of idempotent re-capture, documented as SSOT "Diagnostic caveat
+      #2" (`/codex/05-infrastructure/manifest-consolidator-ssot.md` lines 267-285). The 2026-08-04 freeze was transient:
+      the source issue doc (`manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md`, archived 2026-08-05,
+      status=false-positive) already self-identified as likely false alarm citing the identical prior investigation in
+      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`. **Reproduction confirmation**
+      (2026-08-06T18:15-19:58Z): `rows_out` is now actively growing — 10,377,663 → 10,432,192 (+54,529 rows across 10
+      cycles, ~5-7k per cycle). No code change needed. The upstream backfill skip-logic fix (`check_shard_freshness`
+      source/data_type blindness) identified in the 07-29 doc is the actual defect; the consolidator itself is working
+      correctly.
 - [ ] [DATA] P3. Re-run `ManifestWriter.lookup()` for exactly 2025-09-04 and 2025-11-13 against the completed VM run
       `mdps-sports-bucket-20260803-134154` (use a pyarrow/polars venv via `run-bounded-analysis.sh`, one lookup call per
       date, memory-bounded per the existing recipe in this doc), record the authoritative per-date manifest status
