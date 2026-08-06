@@ -80,11 +80,13 @@ Slot 2, branch `plan_reconciler/agt-4fdce1`. This doc is the run journal — app
       two then raced on the same `depends_on`+`gate_on_depends: true` target (de-raced this run by superseding the
       duplicate, see Flips verified). Make the existence check resilient to a `_2026_MM_DD` date-suffix variant of the
       expected filename, not just the exact string.
-- [ ] [ADMIN] P1. **Resume STEP 8 of this dispatch (agt-4fdce1)**: check `GET /api/slots/2/messages` for answers to
-      `BLK-136e69bf` (sports_rebuild_delta_la_liga2 data-correctness), `BLK-0e7e0794` (upbit 72-day data gap),
-      `BLK-5eeacb63` (duplicate finalize-plan race) — apply per plan_reconciler.md STEP 8, then POST `/done`. Session
-      was interrupted for a context-compaction checkpoint before any answer arrived (0 messages as of 2026-08-06 ~00:56
-      UTC); this was NOT abandoned, it's a resume point.
+- [x] ✅ [ADMIN] P1. **Resume STEP 8 of this dispatch (agt-4fdce1).** Operator answered all 3 questions 2026-08-06
+      ~13:12 UTC, ~12.5h after they were raised. All 3 applied: `BLK-5eeacb63` (duplicate finalize-plan race — kept
+      `..._finalize.md`, ported the other's `[REVIEW]` todo in first, then superseded+archived the duplicate,
+      `unified-trading-pm@511ba5da0`), `BLK-136e69bf` (sports LA_LIGA_2 — re-verified live, 846/846 target cells now
+      captured under the aliased `SEGUNDA_DIVISION` key, filed the alias-removal question as a new judgment-call todo,
+      `unified-trading-pm@95c107a98`), `BLK-0e7e0794` (upbit — reopened the falsely-checked todo, tagged
+      `BLOCKED-CREDENTIALS`, dropped the placeholder citation, `unified-trading-pm@c06649920`). `/done` next.
 
 ## Run context
 
