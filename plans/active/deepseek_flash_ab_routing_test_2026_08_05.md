@@ -221,6 +221,29 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       or silently ignores it. Label the Fleet table's thinking-brain icon honestly either way once known. Not started —
       needs real investigation (does DeepSeek's OpenAI/Anthropic-compatible endpoint accept/use a thinking param?), not
       a guess.
+- [x] 18. ✅ [BACKEND] P1. **Fix cross-account
+      $ contamination in the Accounts panel** — operator finding (2026-08-06):
+      the Accounts panel's pro/flash lifetime $
+      totals didn't reconcile with each other or with Task Token Usage. Root-caused: `_sweep_account` attributed EVERY
+      priced message it found to whichever account was currently sweeping, with NO check that the message's own `model`
+      actually matched — confirmed live: 4,964 flash-model messages
+      ($4.60) sitting in the pro account's own ledger, 573 pro-model messages ($1.08) sitting in flash's. Compounded by
+      `ProcessedTranscriptRow`'s fingerprint cache being keyed by `file_path` alone (a GLOBAL cache shared across every
+      deepseek account) — whichever account's sweep touched a file FIRST silently starved every OTHER account's sweep of
+      that same unchanged file forever, even once the model filter would otherwise correctly exclude non-matching
+      messages. Fix: (a) filter `_sweep_account`'s attribution by `message.model == account_id` (this fleet's deepseek
+      account_ids ARE their exact model string), exempting `<synthetic>` turns so they still count toward every
+      account's own turn_count; (b) scope `ProcessedTranscriptRow`'s primary key to `(account_id, file_path)`; (c) two
+      bootstrap migrations — drop+recreate `processed_transcripts` on the old schema (forces one full re-sweep per
+      account under the fixed logic), and a self-healing purge of already- contaminated `deepseek_message_usage` rows.
+      Done-when: live verification shows 0 remaining cross-attributed rows and each account's ledger contains only its
+      own model's messages. — `agent-orchestrator@fadc74b`; 8 new pytest
+      (`test_deepseek_account_scoped_attribution.py`), full QG green (also caught + fixed an unrelated stale-venv
+      pip-audit finding — `uv sync` picked up an already-patched `uv.lock`, see Progress Log); deployed live
+      (`i-0c9b283b31d6b5ca7`, `HEAD=fadc74b`, `systemctl is-active`→`active`); post-deploy verification query:
+      `REMAINING_CROSS_ATTRIBUTED_ROWS=0`, `processed_transcripts` PK now `(account_id, file_path)`, pro's ledger now
+      shows ONLY `model=deepseek-v4-pro` rows ($59.95) + `<synthetic>` ($0), flash's ledger now shows ONLY
+      `model=deepseek-v4-flash` rows ($1.23) — no more cross-contamination either direction.
 
 ## Codex SSOTs
 
@@ -308,6 +331,28 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   `scripts/orchestrator/repair_unpriced_deepseek_spend.py` (**confirmed deleted from disk** per todo 16 — was a stale
   dead reference); added `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` (already self-cited
   twice in this doc's own Codex SSOTs/related but missing from context_scope).
+- **2026-08-06 — cross-account
+  $ contamination found + fixed (todo 18)**: operator flagged, from a live dashboard
+  screenshot, that the Accounts panel's pro/flash lifetime $
+  totals didn't add up to each other or to Task Token Usage. Investigation (direct SQL against `state.db`, not guessed)
+  found `_sweep_account` had NO filter checking a found message's own `model` against the account being swept — it
+  attributed EVERYTHING it found to whichever account was currently running, live numbers: 4,964 flash-model messages
+  ($4.60) inside pro's own ledger, 573
+  pro-model messages ($1.08) inside flash's. A SECOND, compounding bug:
+  `ProcessedTranscriptRow`'s fingerprint cache was keyed by `file_path` alone — a GLOBAL cache shared across every
+  deepseek account — so whichever account's sweep touched a file FIRST silently starved every OTHER account's later
+  sweep of that same unchanged file, even once a model filter would otherwise correctly separate them. Fixed both
+  (model-match filter + per-account composite-PK fingerprint scoping) plus a one-time self-healing purge migration,
+  shipped `agent-orchestrator@fadc74b`, deployed live, verified: `REMAINING_CROSS_ATTRIBUTED_ROWS=0`; pro's ledger now
+  shows ONLY `deepseek-v4-pro` messages ($59.95)
+  - `<synthetic>` ($0); flash's ledger now shows ONLY `deepseek-v4-flash` messages ($1.23). **Remaining, EXPECTED gap**:
+    Accounts-panel sum (~$61.18) still exceeds Task Token Usage's sum (~$43.35) — this is the ALREADY-explained
+    real-time-activity-including-in-progress-work vs. completed-tasks-only distinction between the two panels (see the
+    `usage-panel-hint` captions shipped alongside todo 14), not a bug; a task mid-flight contributes to the Accounts
+    panel immediately but to Task Token Usage only once it completes. Side effect during shipping: full QG caught a
+    stale `.venv` in this checkout (msgpack/pip/pyasn1/setuptools all several patch versions behind an ALREADY-fixed
+    `uv.lock` — `uv sync` resolved it; not a new vulnerability, `cve_affected_pinned_deps_remediation_2026_06_18.md`
+    already tracks the fleet-wide effort this was part of).
 
 ## Deferred work after 2026-08-05
 
