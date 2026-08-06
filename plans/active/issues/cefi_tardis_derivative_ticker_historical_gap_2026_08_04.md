@@ -167,6 +167,26 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 - **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
   entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
   recompute (task `defi_cefi_venue_chain_axis_contamination-011`).
+- **slot-14 2026-08-06 ~07:42Z (data_engineering, heartbeat checkpoint #5)**: VM `cefi-fwd-20260806-065837` RUNNING. At
+  07:37Z log on day=2026-05-23, BITGET-SPOT book_snapshot_5 phase. Venue processing order is alphabetical:
+  BINANCE-DELIVERY→BINANCE-FUTURES→BINANCE-SPOT→BITFINEX-FUTURES→BITFINEX-SPOT→BITGET-FUTURES→BITGET-SPOT; next = BYBIT.
+  Catalogue analysis (catalogue.parquet read, 430200 rows, `mvp` bool column confirmed):
+  - BINANCE-FUTURES ✓: 721 mvp=True rows; VM log `508 symbols` on 2026-05-23; derivative_ticker confirmed written
+    07:02Z.
+  - BINANCE-DELIVERY: `mvp=True` count = **0** → `_catalogue_symbols_for_venue_date` returns `[]` (not `None`) → IS
+    by_date fallback never triggered → derivative_ticker = 0 **by design** (coin-margined delivery futures not
+    MVP-tagged in catalogue). The "IS lookup failure" root cause was on the by_date fallback path; catalogue path was
+    always correct. 4 futures_chain/trades shard write failures for non-canonical path (pre-existing separate issue, not
+    derivative_ticker scope). BINANCE-DELIVERY derivative_ticker = 0 is expected and correct.
+  - BYBIT: 1237 mvp=True rows (593 PERPETUAL + 327 SPOT_PAIR + 317 FUTURE) → will produce derivative_ticker.
+  - DERIBIT: 339178 mvp=True rows (OPTIONS/COMBO/FUTURE/PERPETUAL/SPOT_PAIR) → will produce derivative_ticker.
+  - OKX-SWAP: 485 mvp=True PERPETUAL rows → will produce derivative_ticker. Both repos clean: `unified-trading-pm`
+    ahead=0 (`25207a7ee`), `market-tick-data-service` ahead=0 (`467a3cd1`). Scratchpad empty. Memory dir empty (HARD
+    RULE compliant). No dangling refs. VM expected to process BYBIT at ~08:00-09:00Z, then COINBASE→DERIBIT→…→OKX-SWAP
+    over subsequent hours. Full 74-day run ETA ~01:00-07:00Z 2026-08-07. **Resume**: once BYBIT processed, verify
+    derivative_ticker GCS objects for BYBIT/DERIBIT/ OKX-SWAP; note BINANCE-DELIVERY=0 as correct; flip RE-OPENED [DATA]
+    P1 todo with evidence; `docs(plans):` commit + quickmerge; POST /done to `http://localhost:8765` with
+    `task_id=cefi_tardis_derivative_ticker_historical_gap-002`.
 - **slot-14 2026-08-06 ~07:34Z (data_engineering, pre-compact checkpoint #4)**: VM `cefi-fwd-20260806-065837` still
   `RUNNING`. At 07:31Z log still on day=2026-05-23 — writing BITGET-SPOT book_snapshot_5 (very early in first day's
   processing; derivative_ticker for BINANCE-FUTURES confirmed written at 07:02Z, other target venues expected within
