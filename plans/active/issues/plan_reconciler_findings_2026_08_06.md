@@ -476,6 +476,36 @@ not-fixed work) + one spurious-lock discovery (unlocks an archival candidate). O
     e2e_login_persona_handoff_helper, git_health_not_clean (citations live — batch3:154 open todo matches),
     gitignore_sync_script (todo 1 [x] pm@78a3740bf real), lc_verify_tarball_freshness.
 
+## Hunter results — H (codex-alignment, 24 plans) — 2026-08-06
+
+~40 entries; most cross-confirm earlier ledgers (noted once here). NEW material:
+
+1. **CODEX-STALE (flag only — never edit codex)** —
+   `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:62`: §1a still says a finalize plan stays
+   "`status: draft` until the source plan's todos are done" — superseded by the 2026-07-30 no-double-gate ruling (corpus
+   audit found 46 finalize plans stuck in draft; finalize twins now ship `status: active`; all 3 infra finalize twins
+   ship active). The ruling lives only in `cursor-configs/skills/ag-closeout-audit/SKILL.md:490-500`. → FLAG + NOTIFY
+   OPERATOR (SSOT contradiction class — codex is the stale side; next operator/ag-closeout-audit run should amend §1a).
+2. **W** `repo_scripts_governance_audit_2026_06_18.md:165,278` — broken-codex-ref: cites `script-homes.md:97` and
+   `:97,100,154-155`; content shifted +8 lines by 2a64f8e8a (2026-07-30 worked-example section). Actual:
+   lifecycle-marker block :102-105, QG-enforcement :108-110, worked-example :158-164. → fix: repoint line refs.
+3. Cross-confirmations (no new action): image-build-gate P1 (C-1), todo 24 dead-file P1 (C-2), todo 15 flip (C-4/G-3),
+   batch3 blank-claims false (A-3/D-2), batch6/7 draft-staleness + garbled gate sentence (A-8/9), na_eligibility P1
+   stale-draft premise (E-15), ci_runner downsize hold (I-3/C-5), docs_reconcile P0-A P1 (E-8/9), coldstart P1 (E-2),
+   defi_gas P1 (E-1), na_inventory "Real: 0" wrong (E-16), bucket_iam god-sa dispatch (D-7), deployment_scripts drain
+   [x]-unmet-done-when (E-6), issue_docs_remediation mangling (E-11), deployment_ui spurious lock (E-6/7), pm_scripts
+   archive (F-6/7/8 + inline), prod_terraform (F-9/10/11), shared_host 145G (F-15), s5_7 9-vs-8 (F-1),
+   vm_launcher_class_b 6-vs-7 (F-2), vm_launcher_setup DEFAULT-RULED (F-17), reference_path_convention (F-12/13/14),
+   cloud_run_traffic (D-3), bucket_iam tier (D-4), ao_self_pull (D-5), ag_closeout_08_01 todo 6 (D-6), ao_deepseek +
+   ao_worker dead refs (D-8/9), cve_affected (D-10), client_reporting zero-checkbox (D-11/G), dualwrite whitespace
+   (E-3/4), legacy_bucket ../ refs (E-13), host_root_disk (E-10), plan_quality (E-17), stale_agentwork (F-19),
+   vm_billing_waste (F-20), INDEX regen (J-3), batch6:126 + batch7:148 line-number refs (I-1/2), batch1:702
+   <commit-pending> (A-7), session_bound cross-doc (F-18).
+4. Clean passes: batch4, batch6_finalize, batch7_finalize, batch3 (30 todos/1 open), production_readiness_checklist,
+   silent_wrong_answer, e2e_login, git_health, gitignore_sync, lc_verify_tarball, deployment_api_inventory_alert_gate,
+   ci_registry_drift, na_doc_tranche, per_venue_scope_key, deployment_service_live_event_log.
+5. GRACE: all 2026-08-06 docs + per-hunter notes — read-only context, report-only.
+
 ## Hunter results — F (infra issues batch 3, 13 docs) — 2026-08-06
 
 19 findings; 2 docs clean (production_readiness_checklist_file_missing, silent_wrong_answer_audit). No true missed-flip
