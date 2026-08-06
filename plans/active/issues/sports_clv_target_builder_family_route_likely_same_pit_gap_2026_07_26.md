@@ -145,6 +145,20 @@ they would silently inherit the same architecture gap this whole chain exists to
   verification step still needs `odds_targets` re-run over ≥1 date to confirm the `odds_closing_*` columns appear in the
   parquet.
 
+- **slot-4 2026-08-06**: SHIPPED the ml-service [CODE] P2 todo (ml-service@38edeba, QG green 87s full pass, quickmerge
+  landed on LDR, SHA verified on origin). `merge_clv_target_columns()` now pulls `odds_closing_{home/draw/away}` +
+  `odds_opening_{home/draw/away}` alongside `odds_clv_*` from the PIT-unrestricted `odds_targets` export;
+  `CLVTargetBuilder.build()` defaults + the `COL_CLOSING_*`/`COL_OPENING_*` constants renamed from the phantom
+  `odds_*_open`/`odds_*_close` names to the odds_targets-emitted names; `_FT_REALIZED_COLUMNS` now lists
+  `odds_closing_*` (the old `odds_*_close` entries were phantom, so the closing line was never actually stripped).
+  Tests: `test_builds_non_degenerate_clv_with_odds_targets_column_names` (non-degenerate `*_clv_bps` under the
+  odds_targets names), `test_merge_clv_target_columns` extended (`odds_closing_*`/`odds_opening_*` merge in;
+  `odds_closing_*` stripped by the leakage shield while `odds_opening_*` survives as a legitimate T-24h feature).
+  GCS-backfill re-run over a real date to confirm `odds_closing_*` in the parquet: NOT run this session
+  (features-service @b4b7ad82's own unit test `test_odds_targets_exporter.py` asserts `odds_closing_home` emits; the
+  prod parquet re-run is filed as a tracked follow-up below rather than run here to avoid racing the daily batch on the
+  same date).
+
 ## Follow-ups
 
 - [x] ✅ [DECISION] P2. File the fix-or-moot decision for CLVTargetBuilder's ALWAYS-NULL raw closing-odds columns:
@@ -163,7 +177,7 @@ they would silently inherit the same architecture gap this whole chain exists to
       `_closing_{home/draw/away}`, rename them to `odds_closing_{home/draw/away}` and include them in the return
       DataFrame. Update the `export_odds_targets()` docstring in `odds_targets_exporter.py` to list these 3 new columns.
       QG green. (repo: features-service) — features-service@b4b7ad82
-- [ ] [CODE] P2. ml-service: (a) extend `merge_clv_target_columns()` in
+- [x] ✅ [CODE] P2. ml-service: (a) extend `merge_clv_target_columns()` in
       `ml_service/training/app/core/training_targets.py` to also pull `odds_closing_home`, `odds_closing_draw`,
       `odds_closing_away` and `odds_opening_home`, `odds_opening_draw`, `odds_opening_away` from `odds_targets` into
       `features_df` (same merge pattern as existing `odds_clv_*`); (b) update `CLVTargetBuilder.build()` in
@@ -172,7 +186,14 @@ they would silently inherit the same architecture gap this whole chain exists to
       phantom `COL_CLOSING_*`/`COL_OPENING_*` constants accordingly). Gate: features-service todo above shipped + GCS
       backfill of `odds_targets` re-run over at least one date to verify `odds_closing_*` columns appear. Done when:
       `--operation pipeline --family pregame_clv_family` logs non-degenerate `*_clv_bps` distribution and QG green.
-      (repos: ml-service; depends on features-service todo above)
+      (repos: ml-service; depends on features-service todo above) — ml-service@38edeba (QG green, 87s full pass; unit
+      test `test_builds_non_degenerate_clv_with_odds_targets_column_names` proves non-degenerate `*_clv_bps` with the
+      odds_targets column names; `test_merge_clv_target_columns` proves the closing/opening legs merge in;
+      `_FT_REALIZED_COLUMNS` now strips `odds_closing_*` so the closing line stays out of the model-input matrix)
+- [ ] [DATA] P3. Re-run the `odds_targets` export over ≥1 recent date (features-service batch handler, idempotent
+      overwrite) and confirm `odds_closing_{home/draw/away}` appear in the GCS parquet — the standing data-side
+      verification for the CLVTargetBuilder repoint (features-service @b4b7ad82 proves the columns emit at unit level;
+      this confirms on real parquets). (repo: features-service)
 
 > **2026-08-06 archive-candidate audit**: The sole [DATA] P3 todo (verdict ALWAYS-NULL) is checked but its own text and
 > the 2026-08-05 Progress Log defer an explicit follow-up — 'either (a) file [DESIGN]->2 implementation todos ... OR (b)
