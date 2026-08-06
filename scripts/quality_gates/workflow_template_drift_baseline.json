@@ -112,6 +112,7 @@
     "market-tick-data-service/staging-lock-check.yml",
     "market-tick-data-service/update-dependency-version.yml",
     "market-tick-data-service/version-registry-notify.yml",
+    "ml-service/image-build-gate.yml",
     "ml-service/main-backmerge-to-ldr.yml",
     "ml-service/major-bump-issue-handler.yml",
     "ml-service/request-major-bump.yml",

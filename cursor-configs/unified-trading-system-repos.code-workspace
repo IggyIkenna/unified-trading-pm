@@ -2,90 +2,93 @@
   "folders": [
     {
       "path": "../../",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "name": "📁 Workspace Root",
     },
     {
-      "path": "../../unified-trading-api"
+      "path": "../../unified-trading-api",
     },
     {
-      "path": "../../unified-trading-library"
+      "path": "../../unified-trading-library",
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb Project Management"
+      "name": "📋 Project Management",
+    },
+    {
+      "path": "../../unified-trading-ci",
     },
     {
       "path": "../../unified-trading-system-ui",
-      "name": "\ud83c\udfa8 UI"
+      "name": "🎨 UI",
     },
     {
-      "path": "../../batch-live-reconciliation-service"
+      "path": "../../batch-live-reconciliation-service",
     },
     {
-      "path": "../../client-reporting-api"
+      "path": "../../client-reporting-api",
     },
     {
-      "path": "../../deployment-api"
+      "path": "../../deployment-api",
     },
     {
-      "path": "../../deployment-service"
+      "path": "../../deployment-service",
     },
     {
-      "path": "../../deployment-ui"
+      "path": "../../deployment-ui",
     },
     {
-      "path": "../../execution-service"
+      "path": "../../execution-service",
     },
     {
-      "path": "../../alerting-service"
+      "path": "../../alerting-service",
     },
     {
-      "path": "../../features-service"
+      "path": "../../features-service",
     },
     {
-      "path": "../../ibkr-gateway-infra"
+      "path": "../../ibkr-gateway-infra",
     },
     {
-      "path": "../../instruments-service"
+      "path": "../../instruments-service",
     },
     {
-      "path": "../../market-data-processing-service"
+      "path": "../../market-data-processing-service",
     },
     {
-      "path": "../../market-tick-data-service"
+      "path": "../../market-tick-data-service",
     },
     {
-      "path": "../../ml-service"
+      "path": "../../ml-service",
     },
     {
-      "path": "../../strategy-service"
+      "path": "../../strategy-service",
     },
     {
-      "path": "../../system-integration-tests"
+      "path": "../../system-integration-tests",
     },
     {
-      "path": "../../trading-agent-service"
+      "path": "../../trading-agent-service",
     },
     {
-      "path": "../../unified-api-contracts"
+      "path": "../../unified-api-contracts",
     },
     {
       "path": "../../e2e-testing",
-      "name": "\ud83e\uddea E2E Testing"
+      "name": "🧪 E2E Testing",
     },
     {
-      "path": "../../agent-orchestrator"
+      "path": "../../agent-orchestrator",
     },
     {
-      "path": "../../fund-administration-service"
+      "path": "../../fund-administration-service",
     },
     {
-      "path": "../../greeks-service"
-    }
+      "path": "../../greeks-service",
+    },
   ],
   "settings": {
     "terminal.integrated.env.osx": {
-      "UNIFIED_TRADING_WORKSPACE_ROOT": "/Users/ikennaigboaka/Code/unified-trading-system-repos"
+      "UNIFIED_TRADING_WORKSPACE_ROOT": "/Users/ikennaigboaka/Code/unified-trading-system-repos",
     },
     "scm.repositories.visible": 10,
     "scm.alwaysShowRepositories": false,
@@ -352,7 +355,7 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/unified-trading-api",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/unified-trading-library",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/unified-trading-pm",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/unified-trading-system-ui"
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/unified-trading-system-ui",
     ],
     "git.scanRepositories": [
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-api",
@@ -376,7 +379,7 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/trading-agent-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-api-contracts",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/e2e-testing",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/agent-orchestrator"
+      "/Users/ikennaigboaka/Code/unified-trading-system-repos/agent-orchestrator",
     ],
     "git.maxRepositoryCount": 30,
     "git.repositoryScanMaxDepth": 0,
@@ -388,9 +391,7 @@
     "git.showProgress": false,
     "python.defaultInterpreterPath": "/Users/ikennaigboaka/Code/unified-trading-system-repos/.venv-workspace/bin/python",
     "python.venvPath": "/Users/ikennaigboaka/Code/unified-trading-system-repos",
-    "python.venvFolders": [
-      ".venv-workspace"
-    ],
+    "python.venvFolders": [".venv-workspace"],
     "python.terminal.activateEnvironment": true,
     "python.languageServer": "None",
     "mypy-type-checker.enabled": false,
@@ -407,40 +408,29 @@
     "cursorpyright.analysis.extraPaths": [],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [
-      "tests",
-      "-v"
-    ],
+    "python.testing.pytestArgs": ["tests", "-v"],
     "files.autoSave": "off",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "explicit",
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": [
-      "E",
-      "F",
-      "W",
-      "I"
-    ],
+    "ruff.lint.select": ["E", "F", "W", "I"],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "/Users/ikennaigboaka/Code/unified-trading-system-repos/.venv-workspace/bin/ruff",
-    "ruff.format.args": [
-      "--line-length",
-      "120"
-    ],
+    "ruff.format.args": ["--line-length", "120"],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -452,7 +442,7 @@
       "**/.venv.backup": true,
       "**/.extra": true,
       "**/.tabs": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -477,7 +467,7 @@
       "**/htmlcov/**": true,
       "**/coverage/**": true,
       "**/.tabs/**": true,
-      "**/.git/worktrees/**": true
+      "**/.git/worktrees/**": true,
     },
     "search.exclude": {
       "**/__pycache__": true,
@@ -487,19 +477,19 @@
       "**/.venv-workspace": true,
       "**/.extra": true,
       "**/.tabs": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true
+    "files.trimFinalNewlines": true,
   },
   "extensions": {
     "unwantedRecommendations": [
       "ms-python.pylance",
       "ms-python.mypy-type-checker",
       "ms-python.black-formatter",
-      "ms-python.isort"
-    ]
-  }
+      "ms-python.isort",
+    ],
+  },
 }

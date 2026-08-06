@@ -1532,6 +1532,32 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
+    },
+    "unified-trading-ci": {
+      "type": "infrastructure",
+      "arch_tier": "devops",
+      "status": "active",
+      "version_source": "none",
+      "description": "Shared reusable GitHub Actions workflows (python-quality-gates-v2.yml, image-build-validate.yml, notify-slack.yml, setup-python-tools, setup-agent-tools) that every other repo's quality-gates-v2.yml calls via uses:. Extracted from unified-trading-pm 2026-08-06 so that repo's visibility can never again break fleet-wide CI.",
+      "dependencies": [],
+      "completion_path": "all",
+      "notes": "Single-branch repo (main only) — no LDR/staging promotion tiers, nothing here is a Python package to version/publish. See shared_ci_workflow_repo_extraction_2026_08_06.md.",
+      "ci_status": null,
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": [],
+      "doc_standard": "infrastructure-canonical",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-ci",
+      "codex_sections": [],
+      "tier": 0,
+      "role": "infrastructure",
+      "tags": [
+        "ci-cd",
+        "github-actions",
+        "infrastructure",
+        "cross-domain"
+      ]
     }
   },
   "topologicalOrder": {
@@ -1539,9 +1565,10 @@
     "levels": [
       {
         "level": 0,
-        "description": "Project management — manifest, templates, scripts, cursor rules.",
+        "description": "Project management + shared CI workflow host — manifest, templates, scripts, cursor rules, reusable GitHub Actions workflows.",
         "repos": [
-          "unified-trading-pm"
+          "unified-trading-pm",
+          "unified-trading-ci"
         ]
       },
       {
