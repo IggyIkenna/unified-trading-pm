@@ -269,7 +269,16 @@ run_check "Priority vs. asset-group tier policy (candidate signal)" soft python3
 # was purely informational (`|| true`) until now — the recurring gap CLAUDE.md's archival rule
 # calls out ("MUST be archived immediately (HARD RULE, recurring gap)") had nothing actually
 # enforcing it. Same shrinking-ratchet shape as the checks above (archive_candidates_baseline.yaml).
-run_check "Archive candidates (0 open todos, unlocked -> plans/archive/, ratchet)" hard "$SCRIPT_DIR/check_archive_candidates.sh"
+#
+# In CI mode (promote path), pass --diff-base origin/main so the check is DIFF-SCOPED: only a
+# candidate NEW since origin/main (i.e. introduced by this promote PR's diff) fails the gate;
+# pre-existing corpus debt at origin/main is tolerated. Operator ruling 2026-08-06 —
+# /plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md.
+ARCHIVE_DIFF_ARGS=()
+if [ -n "$CI_MODE" ]; then
+  ARCHIVE_DIFF_ARGS=(--diff-base origin/main)
+fi
+run_check "Archive candidates (0 open todos, unlocked -> plans/archive/, ratchet)" hard "$SCRIPT_DIR/check_archive_candidates.sh" "${ARCHIVE_DIFF_ARGS[@]}"
 
 # Model-tier coverage is informational — surfaces opus-candidates + plans on the
 # silent Sonnet default for human review (SSOT: codex/06-coding-standards/model-tier-selection.md).
