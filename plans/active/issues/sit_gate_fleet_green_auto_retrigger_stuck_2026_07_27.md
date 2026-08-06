@@ -182,3 +182,18 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
         conflict + the take-LDR resolver's safety check correctly refused because main had unique non-merge content from
         Option-B squashes that hadn't been backmerged yet — not unsatisfiable, working as designed).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-06 recurrence (dispatch-flood variant)**: `full-workspace-sit` runs CANCELLED 20+ times between 06:00-07:30
+  UTC (runs 31075871744 through 31081197089), blocking `deployment-service` PR #716 (and likely all other repos' promote
+  PRs) on `sit-gate/fleet-green=failure`. New symptom vs prior occurrences: this was a **dispatch flood**, not a
+  poll-timeout. `ldr-to-main-promote-fleet.yml` ran 3 times within 6 min (07:39, 07:43, 07:45), each firing the
+  auto-retrigger (`sit_fleet_green_auto_retrigger()`), each creating a new `full-workspace-sit` `repository_dispatch`
+  event. With `concurrency.group: full-workspace-sit` + `cancel-in-progress: false`, GitHub keeps at most ONE queued run
+  — each new dispatch cancelled its predecessor while the first stayed IN_PROGRESS, creating a treadmill where the
+  IN_PROGRESS run (31081197089, started 07:30) appeared to survive but the "Stamp SIT_VALIDATED" step ran 25+ min
+  (normally ~13 min total job) and was still in progress at task end. The PENDING run 31082189352 (dispatched 07:46)
+  awaits behind it. Prior fix (wider poll budget, system-integration-tests@69b93bc) addresses a different failure mode
+  (poll-loop timeout on ci-status-update writes); this flood variant is new — the auto-retrigger debounce
+  (`SIT_INFLIGHT` check) SHOULD suppress dispatches when a run is already queued/in_progress, but appears ineffective
+  under high-frequency promoter ticks. Unblocked manually via `gh run rerun`? No — the IN_PROGRESS run was not forcibly
+  recovered; diagnosis filed as escalation `agt-f85daa` (cicd slot 8). The deployment-service PR #716 code is clean
+  (quality-gates-v2=SUCCESS on PR head, run 31077855577) — the ONLY blocker is `sit-gate/fleet-green`.
