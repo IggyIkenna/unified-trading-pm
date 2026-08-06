@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 233 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 232 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -241,7 +241,7 @@ by hand._
   true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched
   todo…
 
-### tradfi (24)
+### tradfi (22)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -311,14 +311,6 @@ by hand._
   — Gated closeout for tradfi_satellite_ao_dispatch_batch2_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 11 of that plan's todos are done. Mirrors the batch1_finalize pattern (reconcile each
   of the 11 distinct…
-- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29`](../archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md)
-  — Fifth AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-07-29 (autonomous
-  mode, scheduled daily worker), run via a 32-agent Workflow classifying every tradfi-primary non-covering doc against
-  the… **🟢 ARCHIVED 2026-08-05 — all 15 todos done.**
-- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize`](../archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md)
-  — Gated closeout for tradfi_satellite_ao_dispatch_batch5_2026_07_29.md — machine-held via depends_on plus
-  gate_on_depends: true until all 15 of that plan's todos are done. Mirrors the batch1/batch2/batch3/batch4-finalize
-  pattern: reconcile… **🟢 ARCHIVED 2026-08-05 — all 3 todos done.**
 - [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](./tradfi_satellite_ao_dispatch_batch6_2026_08_01.md) **[draft]** —
   Sixth AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-08-01 (autonomous
   mode, scheduled daily worker). Phase 0 rediscovered the covering set as 13 docs (up from the 11 a stale…
@@ -744,9 +736,6 @@ by hand._
 
 ### ao (17)
 
-- [`ao_fleet_cache_tokens_and_task_count_2026_08_05`](./ao_fleet_cache_tokens_and_task_count_2026_08_05.md) — Two small,
-  related agent-orchestrator dashboard gaps found while answering an operator question about the Fleet table's token
-  badge. (1) The live per-task and per-session token badges (Fleet table + Agents panel) show blended input+output…
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
@@ -793,6 +782,9 @@ by hand._
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
   policy…
+- [`deepseek_flash_ab_routing_test_2026_08_05`](./deepseek_flash_ab_routing_test_2026_08_05.md) — DeepSeek's own backend
+  already silently substitutes deepseek-v4-flash for a small, uncontrolled fraction of deepseek-v4-pro-declared requests
+  (confirmed live 2026-08-05, ~8 of 364 task_usage rows) — a confounded sample that can't answer…
 - [`omniroute_llm_gateway_pilot_design_2026_07_30`](./omniroute_llm_gateway_pilot_design_2026_07_30.md) — Operator
   flagged omniroute.online (a self-hosted, OpenAI/Anthropic-compatible local gateway that auto-routes across 268
   providers' free/cheap tiers) as a possible cost-routing layer, given the fleet already has a DeepSeek-swap precedent…
@@ -925,12 +917,16 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (1)
+### meta (2)
 
 - [`quality_gates_quickmerge_timing_baseline_2026_07_31`](./quality_gates_quickmerge_timing_baseline_2026_07_31.md) —
   Measure wall-clock + per-phase timing of `quality-gates.sh` (across its mode/scope flags) and `quickmerge.sh` on
   unified-trading-pm — first a single-agent baseline on this host, then the same measurements on the planning-vm where
   ~15…
+- [`watchdog_kill_events_deployment_observability_2026_08_05_finalize`](./watchdog_kill_events_deployment_observability_2026_08_05_finalize.md)
+  — Gated closeout for watchdog_kill_events_deployment_observability_2026_08_05.md — machine-held via depends_on +
+  gate_on_depends: true until all its todos are done. Reconciles the source plan's checkboxes, re-checks the Deferred
+  item, and…
 
 <!-- AUTO-INDEX-END -->
 
