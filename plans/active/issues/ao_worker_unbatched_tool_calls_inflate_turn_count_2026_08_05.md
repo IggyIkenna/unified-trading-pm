@@ -102,3 +102,9 @@ them"), but the instruction is not being followed in practice, at least in this 
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **`/ag-closeout-audit ao` 2026-08-06 (autonomous)**: genuinely orphaned — cited nowhere in any covering plan/batch for
+  this tranche. Its own NA self-classification stays out of scope (that's `/na-eligibility-audit`'s call, re-affirmed
+  above the same day). Extracted the 2 bounded, sequential items (confirm-systemic sample, then strengthen the worker
+  prompt if confirmed) into `ao_satellite_ao_dispatch_batch7_2026_08_06.md` todo 1 as one combined todo (internally
+  sequential — item 2 is conditional on item 1's finding). Item 3 ("consider a soft turn-count circuit breaker") stays
+  here — unscoped design fork, not batch material.

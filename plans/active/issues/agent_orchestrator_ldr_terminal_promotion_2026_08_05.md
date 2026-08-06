@@ -192,3 +192,12 @@ Confirmed by direct code/config reading before changing anything (not assumed):
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **`/ag-closeout-audit ao` 2026-08-06 (autonomous)**: genuinely orphaned, all 3 open items reviewed — none extracted
+  into a batch. Item 1 (LDR-triggered `quality-gates-v2` template extension) is **CONFLICT-GATED**: it targets the same
+  files (`quality-gates-v2.yml.tmpl`, `rollout-workflow-templates.sh`) as
+  `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18 ("update the template sources... so any FUTURE repo's
+  render is correct out of the box"), a large, actively-shipping plan created the same day — not resolvable from
+  evidence alone whether todo 18 already covers a `ci_trigger_branch`-style parameterization or is a narrower fix;
+  drafting a competing todo here risks colliding with in-flight work. Item 2 is explicitly `[OPERATOR]`-tagged
+  stretch/not-needed-today. Item 3 (propagation-lag fix) is blocked on a separate repo's `RB-04f4f852` qg_red blocker —
+  time/dependency-gated, not directly actionable here. Parked, not silently dropped.

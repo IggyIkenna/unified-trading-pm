@@ -26,13 +26,16 @@ summary: >-
   starved.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ao] # corrected 2026-08-06 (/ag-closeout-audit ao) -- was [meta]; content is entirely agent-orchestrator's
+  # WorkerLivenessWatchdog/AutoSpawn self-healing internals, not generic/spans-everything meta content.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [self-healing, watchdog, autospawn, account-failover, capacity, resource-contention]
 related:
   - /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
+  - /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md
 created: "2026-08-06"
 author: ikennaigboaka [slot-4·laptop]
 source: [interactive session, operator question "when do we need a human vs auto recover in AO"]
@@ -122,3 +125,8 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **`/ag-closeout-audit ao` 2026-08-06 (autonomous)**: retagged `asset_group: [meta] -> [ao]` — content is entirely AO
+  watchdog/autospawn internals, a genuine mistag caught by this run's meta-population sweep. Conflict-check clear (no
+  active plan/batch claims `spawn_retry_count` or this `_tick_once()` reorder). Extracted the 2 bounded items (spawn-
+  retry-count reset, `_tick_once` reorder + stale-docstring fix) into `ao_satellite_ao_dispatch_batch7_2026_08_06.md`
+  todos 2-3; the 3rd item ("worth an operator decision") stays here, operator-gated, not batch material.

@@ -21,7 +21,7 @@ related:
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/06-coding-standards/quality-gates-memory-governance.md,
     /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
-    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
+    /plans/archive/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
   ]
 created: 2026-05-15
 authoritative_for:

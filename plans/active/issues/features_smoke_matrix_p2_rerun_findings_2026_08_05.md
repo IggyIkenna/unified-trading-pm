@@ -35,7 +35,7 @@ related:
     /plans/archive/issues/features_e2e_smoke_matrix_writes_to_prod_bucket_2026_08_01.md,
     /plans/archive/issues/features_smoke_matrix_verification_findings_2026_08_01.md,
     /plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md,
-    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
+    /plans/archive/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
@@ -61,7 +61,7 @@ context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
+    /plans/archive/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
     e2e-testing/scripts/multi_timeframe/smoke_matrix.py,
     features-service/features_service/onchain/app/core/dependency_checker.py,
   ]

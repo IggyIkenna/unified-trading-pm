@@ -10,7 +10,9 @@ summary:
   promotion-PR time, and the actual root cause behind 82% of live dirty-worktree done-rejections.
 status: active
 nature: process
-asset_group: [meta]
+asset_group:
+  [ao] # corrected 2026-08-06 (/ag-closeout-audit ao) -- was [meta]; content is squarely agent-orchestrator dashboard
+  # + /done-gate + quickmerge-provenance internals, not generic/spans-everything meta content.
 stage: [meta]
 repos: [agent-orchestrator, market-tick-data-service]
 scope: [engineer]
@@ -20,6 +22,7 @@ related:
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"
@@ -223,3 +226,8 @@ Backlog Detail gets all three of retry-count-on-done, rejection-count-on-dispatc
   Remaining open item: Track B's `[REVIEW] P3` stretch/optional follow-up (auto-filing an AO backlog task from
   `promotion_lag_monitor.py`'s `provenance_blocked` finding) — intentionally left as a scoping note, not built this
   session; plan stays `active` (not archived) until that's either scoped into its own todo or explicitly dropped.
+- **`/ag-closeout-audit ao` 2026-08-06 (autonomous)**: retagged `asset_group: [meta] -> [ao]` — content is entirely
+  agent-orchestrator-internal (dashboard, `/done` gate, quickmerge provenance), a genuine mistag caught by this run's
+  meta-population sweep, not the corpus-wide `meta` triage this same category otherwise defers to
+  (`ag_closeout_audit_scope_widening_triage_2026_07_26.md`). Self-covering (its own remaining `[REVIEW] P3` stretch item
+  is tracked in this doc's own Todos) — no batch extraction needed.
