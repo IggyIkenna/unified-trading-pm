@@ -24,11 +24,23 @@ asset_group:
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [agent-orchestrator, one-shot-lifecycle, escalation, data_pipeline_failure, done-endpoint, agentrow]
+tags:
+  [
+    agent-orchestrator,
+    one-shot-lifecycle,
+    escalation,
+    data_pipeline_failure,
+    done-endpoint,
+    agentrow,
+    plan_reconciler,
+    singleton-agent-kind,
+    reap_orphan_agents,
+  ]
 related:
   [
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md,
   ]
 created: 2026-07-29
 author: unknown
@@ -48,7 +60,7 @@ supersedes:
 superseded_by:
 resolved_by:
 source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-79063c"
-last_updated: 2026-07-29
+last_updated: 2026-08-06
 context_scope:
   [
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
@@ -140,6 +152,24 @@ still in flight.
       widen/guard `_done_one_off`'s active-agent lookup), and add a regression test mirroring
       `test_direct_boot_lazy_agentrow_then_one_shot_complete_succeeds` but for the `escalation.py` dispatch path rather
       than the `plan_health` boot path.
+- [ ] [DATA] P2. **NEW 2026-08-06, a distinct sub-mechanism for the SINGLETON-kind roles specifically** (see Progress
+      Log entry below for full detail): query the live `AgentRow` table for every `agent_kind='plan_reconciler'` record
+      whose `dispatch window` overlaps 2026-08-06 00:01 UTC–13:39 UTC (slot 2, `agent_id=agt-4fdce1`) — confirm (a)
+      whether `agt-4fdce1`'s own row was archived with `exit_reason="reaped-stale"` (`server/state_store/agents.py`
+      `_sessionless_singleton_duplicates`/`reap_orphan_agents`), (b) whether a same-kind sibling record existed with
+      `tmux_session` live at the same time (the dedup precondition — `_sessionless_singleton_duplicates` only archives a
+      record whose OWN `_owns_live()` check reads False while a sibling's reads True), and (c) if slot 2's tmux session
+      was in fact continuously live the whole time (it was — this worker never stopped), whether `is_session_live()`
+      logged a transient miss at the reap timestamp (the function's own docstring names this exact false-positive risk:
+      "a transient `has_session()` miss under host load" — and
+      `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` independently documents repeated
+      high-load episodes, load avg 30-60+ on a 16-core box, around this same period).
+- [ ] [CODE] P3. If (c) above confirms a transient `is_session_live()` false-negative caused the archive: add a
+      debounce/retry (e.g. require 2 consecutive False reads N seconds apart) to `_owns_live()`/`is_session_live()`
+      before treating a SINGLETON-kind sibling as dead — the current single-sample check has no tolerance for a
+      momentary `tmux has-session` miss under fleet load, and archiving the WRONG sibling of a singleton pair is silent
+      (no error, no alert — just an unrecoverable `/done` 400 discovered only when the genuinely-alive worker tries to
+      exit cleanly hours later).
 
 ## Progress Log
 
@@ -249,3 +279,42 @@ still in flight.
   `claim-interactive` FIRST, then retry the SAME `/done` call before concluding it is still broken; that single retry is
   the missing data point every report so far (including this one) has left open.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **2026-08-06 (plan_reconciler, slot 2, `agt-4fdce1`, dispatched ~2026-08-06 00:01 UTC):** eighth corroboration, first
+  from a SINGLETON-kind role (`review`/`plan_health`/`plan_reconciler`/`docs_reconciler` — `_SINGLETON_AGENT_KINDS`,
+  `server/state_store/agents.py:333`) rather than an `escalation.py`-dispatched one-shot role, and the first to close
+  one of this doc's own open caveats with a decisive negative result. Context: this session ran the daily deep
+  plan-reconciliation pass, applied 3 operator-answered blocked questions (STEP 8), shipped 3 commits, all confirmed
+  ancestors of `origin` (`plan_reconciler/agt-4fdce1` branch HEAD == `origin`'s ref for that branch, PR #2327 open) —
+  then hit the identical 400 this doc tracks on `/done {task_id: "agt-4fdce1", one_shot_complete: true}`, twice, ~13
+  hours apart (once before the long STEP-8 wait, once after).
+  - **New fact 1 — `claim-interactive` does NOT fix the `one_shot_complete` 400** (closes the open caveat the 2026-08-04
+    `cicd` entry above explicitly left for "whoever revisits this"). Sequence run this session: `GET /api/slots/2/claim`
+    → `present:true` but for a STALE, unrelated claim (`agent_id: "slot2-interactive-20260804-064910-91bd"`,
+    `role:"interactive"`, `spawned_at: 2026-08-04T06:49:10Z` — literally the artifact the 2026-08-04 entry's own
+    diagnostic probe left behind, still on file 2 days later, `expires_at` about to lapse) →
+    `POST /api/slots/2/claim-interactive` (fresh claim written, confirmed via a follow-up `GET`) → retried the EXACT
+    SAME `/done` payload that 400'd before → **same 400, verbatim message**. Confirms the file-based `.agent-claim` and
+    the AgentRow-based `find_active_agent_for_session` check (`_done_one_off`'s actual gate) are independent systems —
+    refreshing the former has no effect on the latter.
+  - **New fact 2 — the erroneous-backlog-reassignment variant (2026-08-01 `na_eligibility_auditor` / 2026-08-03
+    `ag_closeout_auditor` entries above) reproduces here too.** A plain `/heartbeat` mid-session returned a fresh,
+    unrelated Class-A backlog task (`ao_scheduled_job_reserve_and_staggering-005`, `dispatch_reason:"resume"`) — the
+    server had silently stopped associating slot 2 with the `plan_reconciler` dispatch and treated it as an idle generic
+    worker. Released it via `POST /api/slots/2/skip-current-task {reason_code:"OTHER"}` (never started, out of scope)
+    per the 2026-08-03 entry's precedent, rather than silently absorbing or ghosting it.
+  - **New, more precise hypothesis for the DATA todo below**: unlike every prior (escalation-path) entry in this doc,
+    `plan_reconciler` is a SINGLETON kind — its reaper path is `_sessionless_singleton_duplicates` /
+    `reap_orphan_agents`, not the `escalation.py` registration gap this doc's original two todos target. Read in full
+    this session (`server/state_store/agents.py:333-426`): a SINGLETON-kind record is archived
+    (`exit_reason="reaped-stale"`) only when a same-`agent_kind` sibling's session reads live WHILE this record's own
+    `_owns_live()` reads false — and the function's own docstring names a known false-positive path: "a transient
+    `has_session()` miss under host load." This slot's tmux session was continuously live this entire session (never
+    stopped, sent heartbeats throughout) — so if this mechanism is what hit `agt-4fdce1`, the likely trigger is either
+    (a) a genuine same-kind sibling dispatch (e.g. the standing daily trigger re-firing near this session's own 00:01
+    UTC start) racing a transient `is_session_live()` false-negative on THIS session under host load, or (b) some other
+    path not yet identified. **Not confirmed** — this worker slot has no DB/dashboard access, same constraint every
+    prior entry in this doc hit. Filed as a sharper, testable hypothesis (see new todos) rather than a claimed root
+    cause. Ending session without a clean `/done` per this doc's now 8-deep established precedent; all of this session's
+    actual reconciliation work is independently git-verified complete and durable regardless (3 commits,
+    `plan_reconciler_findings_2026_08_06.md` STEP 8 marked resolved, PR #2327 open).
