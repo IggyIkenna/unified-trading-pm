@@ -348,3 +348,4 @@ specific to any one task.
   action needed.
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — still accurate).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

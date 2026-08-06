@@ -121,3 +121,4 @@ in the same way and at the same time when they're the same physical connection.
   marker is not a reliable fleet-wide signal; a mitigation (write earlier/more defensively, or make the monitor rely on
   the Compute Operations API `preemption_op_checker` fallback rather than the in-guest blob) is warranted. Cross-ref:
   `/plans/archive/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

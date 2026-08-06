@@ -164,3 +164,4 @@ Two independent fix directions, either or both:
   an explicit "Recommended decision" header framing two independent fix directions as an open choice; todo 2 modifies
   per-slot bootstrap tooling inherited by every slot at clone time, todo 1 modifies production VM-launcher scripts —
   both are shared-blast-radius infra changes needing a direction decision first, not worker-determinable alone.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

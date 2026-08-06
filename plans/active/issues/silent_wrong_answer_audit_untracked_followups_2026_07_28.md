@@ -114,3 +114,4 @@ should be filed as its own todo against that decision's outcome.
   explicitly undecided design/schema-contract question ("nobody has decided what the per-pair schema/NaN-tolerance
   contract should say"), citing the dispatch-scope-eligibility SSOT directly. The bounded P0 half was already split out
   2026-07-30 into its own AO-dispatchable doc.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

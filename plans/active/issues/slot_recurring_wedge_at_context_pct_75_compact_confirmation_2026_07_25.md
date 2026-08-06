@@ -166,3 +166,4 @@ recurrence-prone and episode 1 needed manual intervention.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries — added
   `agent-orchestrator/server/worker_liveness/_respawn.py`, the module the doc's own unresolved item-2 investigation
   targets directly).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

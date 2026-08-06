@@ -245,3 +245,4 @@ risk). Doc stays NA overall — 2 genuinely open items remain (the direction rul
   `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (where the stuck-gate monitor actually shipped) and
   `system-integration-tests/.github/workflows/full-workspace-sit.yml` (the second file touched by the status-clobber
   fix)).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

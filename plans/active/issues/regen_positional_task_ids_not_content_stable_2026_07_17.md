@@ -294,3 +294,4 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   present); the inline `assigned_vm: NA #`-comment still states "NOT AO-dispatchable" citing the 2026-07-31
   RECLASSIFY-then-revert (BLK-29884333). No content drift since the 2026-08-03 marker (only incidental context-scout
   touches). Not re-deriving the underlying judgment.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

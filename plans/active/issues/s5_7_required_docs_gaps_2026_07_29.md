@@ -120,3 +120,4 @@ the dispatch-scope-eligibility ruling):
   documentation-standards SSOT + the parent Phase-5 audit plan). No source-code path added — this doc is a code-free
   scoping-judgment recommendation (tiering S5.1's required-doc set by repo type), not an implementation fix, so no
   source target applies. No changes.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.

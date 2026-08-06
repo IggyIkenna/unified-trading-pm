@@ -181,3 +181,4 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
         by-design, not structural. The AGENT-ORCHESTRATOR PR #783 case was a different mechanism (Dockerfile digest
         conflict + the take-LDR resolver's safety check correctly refused because main had unique non-merge content from
         Option-B squashes that hadn't been backmerged yet — not unsatisfiable, working as designed).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
