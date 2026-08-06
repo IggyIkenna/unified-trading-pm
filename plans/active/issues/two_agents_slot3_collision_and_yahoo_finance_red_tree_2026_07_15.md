@@ -170,3 +170,4 @@ is not complete until the counterpart's files build again, not just until your o
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — marker was stale (claimed 2, held 5, missing
   epic-vs-source balance); dropped the generic `cefi_master` epic pointer, kept the named `quickmerge.sh` source file.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

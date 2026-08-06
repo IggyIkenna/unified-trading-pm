@@ -38,6 +38,13 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    instruments-service/scripts/migration_orphan_sweep.py,
+    instruments-service/scripts/cleanup_legacy_twins.py,
+  ]
 ---
 
 # TradFi — legacy-twin candidate set 995 → 900 unexplained shrink
@@ -169,3 +176,10 @@ updating all operational references from 995→900 in the signoff plan — close
       conflated (the report was regenerated 2026-07-30, overwriting the 2026-07-10 version at the same GCS URI). (b)
       secondary: 95-object delta from real GCS/manifest state changes between the two sweep dates. (a) and (c) ruled
       out. The 2026-07-10 per-object identity list is unrecoverable (report overwritten). (repo: unified-trading-pm)
+
+## Progress Log
+
+- **context-scout 2026-08-06**: populated context_scope (4 entries) — first scout (doc had no field). All 3 todos are
+  already DONE, so scoped to the corrected signoff plan, the finalize plan that dispatched this investigation, and the
+  two scripts (`migration_orphan_sweep.py`/`cleanup_legacy_twins.py`) whose interaction this doc's root-cause finding is
+  entirely about.

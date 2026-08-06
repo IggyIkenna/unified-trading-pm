@@ -61,11 +61,8 @@ source:
   session."
 context_scope:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
-    /plans/active/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
     /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
-    market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
-    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
@@ -183,3 +180,8 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
   object (D_SINGLE_NOOP path) and `venue=SPOT` object (D_NONHIVE_EQ bare-segment extraction, ~7 min later) were both
   produced by the same migration run. Manifest rows registered only on 2026-08-02 by the consolidation job (not on
   2026-07-20 when the GCS objects were created). Investigation script committed: market-tick-data-service@332f405b.
+- **context-scout 2026-08-06**: re-scouted; all 3 todos are now DONE (traced + measured + purged). Trimmed context_scope
+  from 6 to 3 entries — dropped the two doc-only siblings whose content this doc already distinguishes itself from in
+  prose, and `_umi_yahoo.py`/`venue_fetch.py` (neither is the confirmed root cause), swapped in the actually-implicated
+  `migrate_tradfi_canonical_2026_07.py` (missing `_VENUE_REMAP`, the root cause per the 2026-08-04 code-trace — a repeat
+  occurrence is not structurally prevented until that gap is closed).

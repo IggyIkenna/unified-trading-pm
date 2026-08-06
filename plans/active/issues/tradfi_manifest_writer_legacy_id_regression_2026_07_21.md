@@ -462,3 +462,4 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   remains open-ended investigation, and the remediation is a live-manifest CAS-write lacking a stated safe-idempotent
   justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout `context_scope` touches
   since. Nothing to reclassify.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

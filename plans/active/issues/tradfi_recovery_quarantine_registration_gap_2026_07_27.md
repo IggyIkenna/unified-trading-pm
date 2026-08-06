@@ -213,3 +213,5 @@ wound), but should be tracked rather than silently absorbed.
   (`storage.objects.delete` on `_quarantine/raw_tick_data/` prefix, 2026-07-20 to 2026-07-27). The `_rel()` bug
   (stripping `_quarantine/` prefix on already-quarantined objects) should be filed as a separate preventative fix — it's
   a latent correctness issue even though it doesn't cause this specific problem.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

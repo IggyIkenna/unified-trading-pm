@@ -289,3 +289,5 @@ leave both here until [A] is decided, accepting they stay unshipped; **C** — `
 thing to `assigned_vm: planning` (NOT recommended — [A] is explicitly not an autonomous ship). Note item (i) embeds a
 second clause ("and decide whether a red SIT should escalate to a background worker") that is a genuine design call and
 should stay NA regardless of which option is picked.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

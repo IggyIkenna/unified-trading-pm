@@ -165,3 +165,4 @@ codebase).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped a discovery-provenance-only plan link and
   added `scheduler_maintenance.py`, the maintenance-window primitive the sole remaining P3 auto-resume todo would reuse.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

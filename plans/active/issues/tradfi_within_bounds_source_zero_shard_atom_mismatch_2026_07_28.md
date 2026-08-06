@@ -348,3 +348,4 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   2026-07-30/07-31/08-01 entries above (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo 3
   remains conditionally-scoped ("if it is found to cause..."); todo 4 stays sequenced after todo 1. No content drift
   since 2026-08-02 — only a context-scout `context_scope` touch since. Nothing to reclassify.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

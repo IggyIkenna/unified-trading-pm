@@ -145,3 +145,4 @@ dangling inside a closed plan todo.
   RECLASSIFY was explicitly REVERTED back to NA by the integrator over a contested reading of the 2026-07-26 operator
   ruling's scope; per the never-re-litigate rule (citation class e) this is a standing revert ruling, not honored on a
   fresh independent re-derivation. Unchanged since.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

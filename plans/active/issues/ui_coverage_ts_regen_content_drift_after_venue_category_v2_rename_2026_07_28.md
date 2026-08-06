@@ -123,3 +123,4 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — prior list was codex/plan-only; added the two real
   source targets (the regen script + its generated `coverage.ts` output), dropped the generic epic pointer.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

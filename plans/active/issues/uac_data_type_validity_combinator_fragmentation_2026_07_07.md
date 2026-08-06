@@ -414,3 +414,4 @@ just belongs on a different layer than instrument_type does, and conflating the 
   Start dates `"2024-06-01"` match the existing `trades` entry (honest: venues always had these conceptually, just not
   captured). Kept out of `EXPECTED_COVERAGE_BY_ASSET_GROUP` intentionally — that update belongs with the deployment-api
   `PREDICTION_DATA_TYPE_META` retirement follow-up. QG green, 2 files touched (8 insertions).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
