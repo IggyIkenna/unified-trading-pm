@@ -303,3 +303,11 @@ bounded mechanical pass closes ≥8 P1s at once, same shape as this run's epic-r
   question/blocked_id before applying anything. No `GET`-by-`blocked_id` status endpoint exists
   (`/api/blocked/{id}/answer` is POST-only, for submitting); `/api/blocked/stats` gives only a global unanswered count,
   not per-ID lookup — content-matching the inbox is the only available mechanism today.
+- **A `run_in_background` polling script inherits the caller's shell variables only if `export`ed** — my STEP-8
+  wait-loop script referenced `$SCRATCH` internally (to log irrelevant-but-non-empty messages) but only had it set as a
+  plain (non-exported) shell variable in the INVOKING command, not inside the script itself. Under `set -u` this crashed
+  with `unbound variable` — but only on the specific code path reached when a non-empty, non-matching message arrived
+  (i.e., it worked fine for many silent ticks, then broke the moment there was something to log). Diagnostic silver
+  lining: the crash location itself proved the message was NOT a real answer (a genuine match exits earlier, cleanly) —
+  but the bug still cost visibility into what the broadcast said and one relaunch cycle. Fix: hardcode path constants
+  INSIDE a background script rather than relying on inherited environment, especially under `set -u`.
