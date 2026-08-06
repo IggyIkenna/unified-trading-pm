@@ -294,6 +294,14 @@ relative `plans/...` refs; find_moved_doc_referrers.sh same. 36+ cefi refs and c
   `{"task_id":"agt-bf8439","sha":"<head>","evidence":"...","one_shot_complete":true}` — THE LAST ACTION. If the
   wait-loop times out with no answers: re-arm it and keep waiting (do NOT /done with questions open).
 
+**3rd /pre-compact audit 2026-08-06 (post-compaction re-run, no state change since 2nd):** git clean + ahead=0 (HEAD
+133c87add); wait-loop bxmxi5mlo verified ALIVE (PID 3317685, 12×285s, ~21:54 expiry); stale STEP-4 heartbeat watchdog
+killed (was posting outdated phase, self-expired ~21:14 anyway); dangling-ref grep-0 in this doc (only corpus match was
+a false positive `run_hygiene_sweep.sh` in PLAN_FORMAT.md:306); /tmp scan — the 5 scratchpad inputs (cefi_writable.txt /
+grace_set.txt / hygiene_sweep.txt / plan_health_digest.md / plan_skeleton.md) remain regenerable deliberate drops;
+`diag_cred.yaml` is another slot's Cloud Build diagnostic YAML (not a credential), `ffpulltokens.*` is the slot cron
+ff-pull's empty transient token file — neither mine. **Verdict: safe to compact — YES.**
+
 **Candidate registry:** all pending candidates are above, per hunter. Writable-doc fixes with CONFIRMED-verification
 needed (dedup'd across hunters):
 
