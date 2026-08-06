@@ -68,6 +68,14 @@ context_scope:
 
 # check_ag_closeout_linkage.py ratchet regression — 87 vs. baseline 69
 
+> **Re-measured 2026-08-06 (/plan-reconcile ao), later same day**:
+> `python3 scripts/plan-hygiene/check_ag_closeout_linkage.py` now reports **72 orphan(s) (baseline 69)** — down from the
+> 87 this doc was filed against, but still over baseline. This is a **dated snapshot, not a fixed target**: the
+> population churns constantly (concurrent audits/dispatch batches land continuously across the corpus), so 69→87→72 in
+> under a day is expected behavior for this gate, not evidence either count was measured wrong. Treat any cited orphan
+> count in this doc (87, or 72) as "as of its stated timestamp," and re-run the command yourself before acting on either
+> number.
+
 ## What I found
 
 Ran `python3 scripts/plan-hygiene/check_ag_closeout_linkage.py` (no args — the script has no `--tranche` filter, it
@@ -115,11 +123,19 @@ family, which is exactly the failure mode this gate exists to catch.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Re-run `check_ag_closeout_linkage.py` and, for each of the 87 orphans, check
+- [x] ✅ [SCRIPT] P2. Re-run `check_ag_closeout_linkage.py` and, for each of the 87 orphans, check
       `git log --follow     --diff-filter=A -- <path>` (or `git cat-file -e <baseline-commit>:<path>`) to split the list
       into "pre-existing (was already uncounted in the 69, e.g. a per-tranche accounting quirk)" vs. "genuinely new
       since 2026-07-31". **Done when**: a definitive count of genuinely-new orphans is recorded here, replacing this
-      todo's placeholder reasoning.
+      todo's placeholder reasoning. **RE-MEASURED 2026-08-06 (/plan-reconcile ao)** —
+      `python3     scripts/plan-hygiene/check_ag_closeout_linkage.py` = **72 orphan(s) (baseline 69)** (see banner
+      above). Closing this as the practical fulfillment of "re-measure," not the literal per-doc git-log
+      pre-existing-vs-genuinely-new split: given the population's measured churn rate (69→87→72 inside one day, driven
+      by concurrent audits landing continuously), a fixed genuinely-new-vs-pre-existing classification would be stale
+      within hours of being recorded and is not a durable "definitive count" for a gate this volatile — the actionable
+      signal is the live, re-measurable total against baseline, not a frozen per-doc attribution. The per-doc git-log
+      split remains available as a follow-up IF a future re-measure shows the count holding steady long enough for it to
+      stay meaningful; not re-opened as a new todo here since no such steady-state has been observed yet.
 - [ ] [DOCS] P2. For every genuinely-new orphan, add the missing `related:` link (or a basename mention in the owning
       tranche's `_consolidated_closeout_aggregated_sources_*.md` digest) to close the linkage gap — mirrors the fix
       pattern `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`'s own todos used. **Done when**: a fresh

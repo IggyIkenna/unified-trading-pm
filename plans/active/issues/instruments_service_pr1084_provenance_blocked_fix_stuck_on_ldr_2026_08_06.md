@@ -69,8 +69,13 @@ context_scope:
 - `git merge-base --is-ancestor 497c4f5e origin/live-defi-rollout` → true (fix is safely on LDR).
 - `git merge-base --is-ancestor 497c4f5e origin/main` → false (fix has NOT reached main).
 - A second commit, `8ae53f7a` ("feat(capture): G1.4 junk-symbol rejection at capture-time — reject non-ASCII/test bases
-  (CJK/meme) before by_date/ (§1.5 noise guard)"), is also on LDR but not on main. Not investigated further in this
-  session — unclear whether it supersedes, complements, or duplicates 497c4f5e's fix.
+  (CJK/meme) before by_date/ (§1.5 noise guard)"), is on LDR **AND on `origin/main`** — **corrected 2026-08-06
+  (/plan-reconcile ao)**: `git merge-base --is-ancestor 8ae53f7a origin/main` = true (was wrongly stated as "also on LDR
+  but not on main"). This commit was made 2026-06-27, over 5 weeks before this doc was filed, and reached main well
+  before PR #1084 existed. Only `497c4f5e` is genuinely stuck off main
+  (`git merge-base --is-ancestor 497c4f5e origin/main` = false, re-confirmed). Still not investigated further whether
+  `8ae53f7a` supersedes, complements, or duplicates `497c4f5e`'s fix — that determination needs a real diff read (see
+  todo 1), not just the ancestry facts corrected here.
 - `gsutil stat gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`:
   `Update time: Thu, 06 Aug 2026 08:37:26 GMT` — 2.2h old at the time of this check, healthy, well under the 24h budget.
   DP-CATALOG-001 is NOT currently firing.
@@ -78,10 +83,17 @@ context_scope:
 ## Why this matters despite not being an active incident
 
 The fix code is not lost (safely on LDR), and the catalogue is currently fresh, so there is no immediate action
-required. But `main` (and whatever the deployed Cloud Run image actually builds from) has NEITHER fix. The
-`lifecycle-catalogue-regen-sports` cron runs daily at 01:00 UTC. If it encounters another corrupted/mojibake name before
-one of these fixes reaches main and a fresh image is built, DP-CATALOG-001 will recur with the exact same crash
-signature already diagnosed once today.
+required. **Corrected 2026-08-06 (/plan-reconcile ao)**: the claim that `main` (and whatever the deployed Cloud Run
+image actually builds from) "has NEITHER fix" is **WRONG** — main already has `8ae53f7a` (the G1.4 capture-time
+junk-symbol rejection guard, live on main since 2026-06-27). Only `497c4f5e` (the shard-isolation/catalogue-build-time
+tolerate-and-skip fix) is genuinely stuck off main. This narrows the stated risk: main already carries SOME protection
+against junk/non-ASCII symbol names reaching the catalogue build via the capture-time guard — whether that guard alone
+is sufficient to prevent a DP-CATALOG-001 recurrence, or whether `497c4f5e`'s shard-isolation approach covers a distinct
+failure mode capture-time rejection does not, is exactly the still-open overlap/supersession question in todo 1 below
+(not resolved by this correction — only the ancestry facts it reasoned from were wrong). The
+`lifecycle-catalogue-regen-sports` cron runs daily at 01:00 UTC. If it encounters another corrupted/mojibake name that
+`8ae53f7a`'s capture-time guard does not catch, before `497c4f5e` reaches main and a fresh image is built,
+DP-CATALOG-001 could still recur — but the risk is narrower than "main has no protection at all."
 
 ## Todos
 
@@ -89,14 +101,21 @@ signature already diagnosed once today.
       `497c4f5e`'s diff via `quickmerge --agent --files '<paths>'` (proper provenance trailer, opens a clean new
       promotion PR), or revert it on `live-defi-rollout` if `8ae53f7a` already supersedes it. Requires reading both
       diffs together to determine overlap/supersession — not done in this session (bounded live-diagnosis check, not a
-      full re-investigation).
+      full re-investigation). **Annotation, corrected 2026-08-06 (/plan-reconcile ao) — does NOT change this decision,
+      only its context**: `8ae53f7a` is already live on `main` (has been since 2026-06-27); `497c4f5e` is the only one
+      of the two actually stuck. The "revert if 8ae53f7a already supersedes it" branch is now lower-urgency than the
+      original "main has neither fix" framing implied (main already has some capture-time protection), but the
+      diff-overlap read this todo calls for still has not been done — do not treat this annotation as resolving it.
 - [ ] [OPS] P1. Once re-shipped/reconciled, verify the resulting promotion PR passes the provenance gate cleanly and
       merges to main, then confirm the deployed `:latest` image digest actually changed (per the same verification gap
       noted in the original issue doc — a manual re-trigger of `lifecycle-catalogue-regen-sports` proved the running
       image was stale even after LDR had the fix).
 - [ ] [DATA] P3. Reconcile whether `8ae53f7a` (capture-time rejection) is the same follow-up work as this issue's
       sibling doc's P3 todo ("trace the upstream encoding defect... most likely an MTDS api_football lineups adapter") —
-      if so, cross-link and close whichever todo is now redundant.
+      if so, cross-link and close whichever todo is now redundant. **Annotation, corrected 2026-08-06 (/plan-reconcile
+      ao)**: `8ae53f7a` is confirmed already on `main` (2026-06-27, 5+ weeks before this doc was filed) — this todo's
+      reconciliation is about which OPEN tracking doc should own the follow-up, not about whether the commit itself
+      still needs to ship (it already has).
 
 ## Progress Log
 
