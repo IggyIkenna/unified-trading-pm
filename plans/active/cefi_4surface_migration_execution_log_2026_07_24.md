@@ -37,7 +37,7 @@ related:
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-25" # 2026-07-25: appended the parent's 4 remaining DELTA sections (01:30Z/01:20Z/05:55Z/13:35Z) + Deferred-work table + Step 8 verdict, completing the migration this file's header always intended
+last_updated: "2026-08-06" # 2026-08-06: plan-reconcile — split the dry-run chain-drop todo (code half flipped [x] @97801b5d, re-run half its own todo), corrected 1284606a→97801b5d sha cites, reworded the context-scout "superseded" note, fixed a leading-slash ref. (Prior: 2026-07-25 appended the parent's 4 remaining DELTA sections + Deferred-work table + Step 8 verdict)
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -54,7 +54,7 @@ superseded_by:
 depends_on:
 source: >-
   Split out of cefi_consolidated_closeout_2026_07_18.md (2103 lines, over the 1000L hard line-cap) per the plan-hygiene
-  remediation job driven by plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #4 — the ~1566-1568-line
+  remediation job driven by /plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #4 — the ~1566-1568-line
   Progress Log moved verbatim into this dedicated execution-log child so the parent can trim to a lean coordination
   index. Operator-approved via interactive Q&A 2026-07-23/24. **2026-07-24**: this execution-log child itself grew to
   1635 lines (over cap again) — re-extracted per `plans/active/task_template.md` §3 finding J into 2 history children
@@ -790,15 +790,15 @@ schema were never re-measured this tick. **Nothing was mutated**: this was a pur
 
 **New tracked todo (do not lose this finding)**:
 
-- [ ] [SCRIPT] P0. Fix (or explicitly justify) `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`'s dry-run
-      chain-drop blind spot: `_DRYRUN_COLS` excludes `"chain"`, so `_chain_merge_safety()` always reports `(0, 0)` in
-      dry-run mode regardless of the real data — the STOP-ON-SURPRISE gate for this invariant only ever fires at
-      `--apply` time. Either add `"chain"` to `_DRYRUN_COLS` (small perf cost, real safety value: a dry-run would then
-      give an honest early warning) or add an explicit log line when the check is structurally skipped, so a clean
-      dry-run is never mistaken for a proven-safe one. Re-run `investigate_chain_lossy_20260724.py` (scratchpad, this
-      session — promote it to `scripts/` first per the one-off lifecycle rule if it earns its keep) against the FULL
-      schema to get the actual current lossy-group count and inspect a sample before deciding `--keep-chain` vs. a
-      repair vs. a fixed dry-run + clean `--apply`.
+- [x] ✅ [SCRIPT] P0. **Code half DONE 2026-07-24** — `"chain"` added to `_DRYRUN_COLS` (`instruments-service@97801b5d`,
+      2026-07-24 "include chain in dry-run column projection…"; the sha `1284606a` cited below in the 2026-08-04 DELTA
+      is the pre-history-rewrite twin of that commit — not on `origin/live-defi-rollout`, do not cite it; identical
+      tree, content-verified at HEAD). The v2 script reuses v1's `_DRYRUN_COLS` via `importlib`, so both paths read
+      `chain` in dry-run. Re-run/decide half split to its own todo below (2026-08-06, plan-reconcile).
+- [ ] [SCRIPT] P0. Re-run `investigate_chain_lossy_20260724.py` against the FULL schema — promote the script from the
+      session scratchpad to `scripts/` first per the one-off lifecycle rule (it does not exist in
+      `instruments-service/scripts/` today) — to get the actual current lossy-group count, inspect a sample, then decide
+      `--keep-chain` vs. a repair vs. a fixed dry-run + clean `--apply` (the "Recommended next" text below).
 
 **Operator returned and said stop** (not the 6-hour window elapsing — an explicit interrupt). Per the autonomous skill's
 own instruction ("On operator 'stop': kill the loop/sleeper PID immediately and don't re-arm"), this session is ending
@@ -832,9 +832,11 @@ only uncommitted change at stop time, shipped via the standard `docs(plans):` di
 
 ✅ **DONE 2026-08-04 — dry-run chain-drop blind spot (candidate 12 of
 `cefi_consolidated_native_ao_extract_2026_07_25.md`):** `"chain"` already in `_DRYRUN_COLS` at
-`instruments-service@1284606a` (2026-07-24, "include chain in dry-run column projection so chain-drop safety gate isn't
-a no-op"). Fix predates even the triage plan's creation — no code change needed. The v2 script reuses v1's
-`_DRYRUN_COLS` via `importlib`, so the fix reaches both paths. Confirmed: `'chain' in v1._DRYRUN_COLS → True`.
+`instruments-service@97801b5d` (2026-07-24, "include chain in dry-run column projection so chain-drop safety gate isn't
+a no-op"; the `1284606a` sha cited at write time is the pre-history-rewrite twin — identical tree, not on
+origin/live-defi-rollout, corrected 2026-08-06 by plan-reconcile). Fix predates even the triage plan's creation — no
+code change needed. The v2 script reuses v1's `_DRYRUN_COLS` via `importlib`, so the fix reaches both paths. Confirmed:
+`'chain' in v1._DRYRUN_COLS → True`.
 
 **Recommended next (on resume)**: with the dry-run chain-drop blind spot now closed, re-run the chain-drop investigation
 against the full schema for real numbers, decide `--keep-chain` vs. repair vs. clean apply, then proceed to 2b (LATE
@@ -864,9 +866,10 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — trimmed 7→6, dropped the operator-owned
-  deribit_combo_perpetual_partition_move issue + the cross-cutting codex doc (superseded here by the CeFi-specific
-  blueprint), added the verify_cefi_canonical_4surface_2026_07_20.py source path (the migration's central verification
-  tool, cited throughout).
+  deribit_combo_perpetual_partition_move issue + the cross-cutting codex doc (dropped as redundant for this log's focus
+  — `cross-asset-canonical-target-ssot.md` is `status: current`, not superseded; corrected 2026-08-06 by
+  plan-reconcile), added the verify_cefi_canonical_4surface_2026_07_20.py source path (the migration's central
+  verification tool, cited throughout).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, stale items — flipped 1 of 3 open checkboxes
   to `[x]` this run: the LIGHTER-ZKSYNC market-index map (done 2026-07-28 per `market-tick-data-service@feeb8a6e`,
@@ -874,6 +877,8 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   Independently re-verified the chain-drop dry-run blind-spot item is only PARTIALLY done — the `_DRYRUN_COLS` sub-fix
   is confirmed (`instruments-service@1284606a`) but this doc's own "Recommended next" text still calls for re-running
   the investigation and deciding a remediation approach, so that checkbox stays open (correcting a first read that would
-  have over-closed it). Doc stays NA overall — PACIFICA-SOLANA quarantine registration and the doc's live
-  migration-execution character (operator sign-off gates, an SSOT contradiction referred to the operator) remain genuine
-  judgment work.
+  have over-closed it). **2026-08-06 (plan-reconcile)**: that split is now formal — the `_DRYRUN_COLS` code half flipped
+  `[x]` citing `instruments-service@97801b5d` (the `1284606a` here cited is the pre-rewrite twin, not on
+  origin/live-defi-rollout) and the re-run/decide half lives in its own `- [ ]` todo above. Doc stays NA overall —
+  PACIFICA-SOLANA quarantine registration and the doc's live migration-execution character (operator sign-off gates, an
+  SSOT contradiction referred to the operator) remain genuine judgment work.
