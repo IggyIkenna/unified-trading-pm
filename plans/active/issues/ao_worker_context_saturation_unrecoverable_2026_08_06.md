@@ -64,7 +64,7 @@ locked_by:
 depends_on: []
 ---
 
-# AO worker context saturation is unrecoverable (auto-compact disabled + non-re-arming force latch + resume loop)
+# AO worker context saturation is unrecoverable (non-re-arming force latch + resume loop; auto-compact leg FIXED)
 
 ## Evidence
 
@@ -102,8 +102,11 @@ formula would be `high`. The displayed band is a stale snapshot, not current sta
       re-registrations are swept by `scripts/workspace/link-claude-skills.sh` step (4.5), whose `del(.["PreCompact"])`
       now serves that purpose explicitly. `server/context_lifecycle.py`'s docstring claim ("Client-side auto-compact
       stays underneath as the final safety net") needed no edit — it is TRUE again as of this change. —
-      unified-trading-pm@<pending-commit>, verified: `settings.json` parses and its `hooks` keys are exactly
-      `['PreToolUse', 'UserPromptSubmit']`.
+      unified-trading-pm@3dfe85837, verified: `settings.json` parses and its `hooks` keys are exactly
+      `['PreToolUse', 'UserPromptSubmit']`; `cursor-configs/hooks/` now contains only `context-threshold-nudge.sh`.
+      Rollout note: hooks are read at SESSION START, so sessions already running keep the old registration — but that is
+      fail-safe here, because the deleted script makes the stale hook exit 127, a NON-blocking hook error (only exit 2
+      blocks), so auto-compact proceeds on those sessions too rather than staying blocked until respawn.
 
 - [ ] [INFRA] P1. **Re-arm the worker force-compact latch on a FAILED compaction, not only on an observed drop.**
       `_tick_worker` (`server/context_lifecycle.py`) early-returns while `state.forced_at is not None`, and the caller
