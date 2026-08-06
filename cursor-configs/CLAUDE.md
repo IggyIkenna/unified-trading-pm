@@ -126,16 +126,16 @@ checkbox in the SAME turn**: `N. ✅ [item] — <repo>@<sha> + evidence`, commit
 
 ## Multi-agent safety (per-slot worktrees)
 
-Each slot = a `git clone --reference` with its OWN `.git` on `live-defi-rollout` (the `tab/<op>/N` model is RETIRED —
-any such instruction is STALE); stay current `git pull --ff-only origin live-defi-rollout`; one invariant = HEAD
-ancestor-or-equal of `origin/live-defi-rollout` (`slot_drift_check.py`). **Never** edit
-unfamiliar/untracked/recently-pushed files, `git checkout origin/<b> -- .` / `… HEAD -- <file>` a dirty file you don't
-own, verify against `FETCH_HEAD` (use `git merge-base --is-ancestor`), or force-push a shared branch. LDR push rejected
-→ ahead=0 ff-only-only; ahead>0 `--rebase --autostash`+`restore --staged .` pre-add; conflict `rebase --abort` + stash
-by name (never `git stash drop` foreign WIP). Inherited-dirty-WIP is **LIVENESS-gated** (dead claim → inherit + commit;
-live claim / mtime <120s → PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker anti-pattern;
-`slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`
-(`Troubleshooting`: stale sibling `.venv`s → `uv sync`).
+Each slot = a `git clone --reference` with its OWN `.git` on `live-defi-rollout` (`tab/<op>/N` RETIRED — ignore stale
+refs to it); stay current `git pull --ff-only origin live-defi-rollout`; one invariant = HEAD ancestor-or-equal of
+`origin/live-defi-rollout` (`slot_drift_check.py`). **Never** edit unfamiliar/untracked/recently-pushed files,
+`git checkout origin/<b> -- .` / `… HEAD -- <file>` a dirty file you don't own, verify against `FETCH_HEAD` (use
+`git merge-base --is-ancestor`), or force-push a shared branch. LDR push rejected → ahead=0 ff-only-only; ahead>0
+`--rebase --autostash`+`restore --staged .` pre-add — same after a failed commit: restore-staged first, else a peer
+session absorbs it; conflict `rebase --abort` + stash by name (never `git stash drop` foreign WIP). Inherited-dirty-WIP
+is **LIVENESS-gated** (dead claim → inherit + commit; live claim / mtime <120s → PROTECT). An interactive session IS
+slot N (long uncommitted WIP = stale-worker anti-pattern; `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5
+min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Agent behavior
 
