@@ -270,27 +270,27 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       git@github.com:IggyIkenna/unified-trading-ci.git
 
       # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
-              #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
-              cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+                      #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+                      cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
 
-              # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
-              cd unified-trading-pm
-              bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
-              bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
-              bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
-              # ...etc for however many slots Harsh has
+                      # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+                      cd unified-trading-pm
+                      bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+                      # ...etc for however many slots Harsh has
 
-              # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
-              for n in 1 2 3; do   # substitute his real slot numbers
-                d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
-                echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
-              done
-              # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
-              # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
-              #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
-              #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
-              ```
-              Evidence: paste the sanity-check output back into this plan's Progress Log once run.
+                      # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+                      for n in 1 2 3; do   # substitute his real slot numbers
+                        d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+                        echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+                      done
+                      # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+                      # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+                      #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+                      #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+                      ```
+                      Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 
 - [ ] 7d. [OPERATOR] P0. **AO planning VM + central orchestrator VM — same mechanism, needs VM access this session
       doesn't have.** Confirmed via `codex/05-infrastructure/per-tab-worktrees.md`: `setup-tab-worktrees.sh` is "also
@@ -403,6 +403,15 @@ here only for todo-count sanity, not for skipping per-repo verification.
       `scripts/workflow-templates/image-build-gate.yml`) so any FUTURE repo's `rollout-workflow-templates.sh` render is
       correct out of the box, not just the 25 repos hand-migrated above. Evidence: a fresh render for one
       already-migrated repo (dry-run / diff against its current committed file) shows zero unintended change.
+- [ ] 19. [INFRA] P2. **Update `/codex/08-workflows/ci-cd-flow.md`** once this plan is fully done (todos 16-18 land) to
+      point future readers at `unified-trading-ci` as the actual host of the reusable QG/image-build gates — it
+      currently documents PM as the host, which becomes stale the moment todo 17 deletes PM's copies. Do this as the
+      LAST step of the plan, not before, since the doc should describe the final state, not a mid-migration one.
+- [ ] 20. [INFRA] P3. _(stretch, optional)_ **Add a `.pre-commit-config.yaml` to `unified-trading-ci`** — it currently
+      only has the pre-push strict-quickmerge hook (installed at slot-provisioning time, todo 7b); it has no `prek`
+      pre-commit hook, so no commit-time gate (gitleaks, conventional-commit, trailing-whitespace) runs there the way it
+      does on every other fleet repo. Low risk given the repo's tiny, YAML-only surface, but worth closing for
+      consistency.
 
 ## Codex SSOTs
 
