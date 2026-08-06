@@ -32,7 +32,7 @@ related:
   ]
 created: "2026-08-03"
 author: unknown
-last_updated: "2026-08-03"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -168,12 +168,42 @@ not something an AO worker should guess at.
       same functional classification (still `C_manifest_infra`, still excluded), but a FUTURE non-parquet object that
       ISN'T this known sidecar now stays distinguishable in the `reason` column instead of reading identically to this
       one. New unit test asserts the explicit reason string; full suite 44/44 passed.
-- [ ] 4. [DIAG] P1. **RULED 2026-08-06 (operator): investigate first, don't assume.** `[DIAG]` tag (was `[OPERATOR]`),
-      AO-dispatchable — run the live-vs-historical determination this todo already specifies (check whether the calendar
-      writer is STILL producing phantom captured rows today, or whether this is a one-time historical artifact), then
-      file the actual fix ("patch the live writer" or "retract 6 manifest rows") as a separate follow-up todo once the
-      finding is in. **Root-cause the calendar phantom-captured anomaly** (6 manifest rows, 0 backing objects, confirmed
-      via direct bucket listing).
+- [x] ✅ 4. [DIAG] P1. **RULED 2026-08-06 (operator): investigate first, don't assume.** `[DIAG]` tag (was
+      `[OPERATOR]`), AO-dispatchable — run the live-vs-historical determination this todo already specifies (check
+      whether the calendar writer is STILL producing phantom captured rows today, or whether this is a one-time
+      historical artifact), then file the actual fix ("patch the live writer" or "retract 6 manifest rows") as a
+      separate follow-up todo once the finding is in. **Root-cause the calendar phantom-captured anomaly** (6 manifest
+      rows, 0 backing objects, confirmed via direct bucket listing). — **DONE 2026-08-06 (slot 14): HISTORICAL ARTIFACT,
+      not a live writer defect — and both fix halves ("patch the live writer" + "retract 6 rows") were ALREADY shipped +
+      verified before this todo became AO-dispatchable, so the follow-up todo this one was to file is MOOT.**
+      Live-verified (bounded direct reads of the consolidated index + bucket, no prod writes): all 6 phantom rows are
+      `empty_confirmed` in the consolidated `_index/availability_index.parquet`; the only `captured` row as of today
+      (economic_results/2026-08-04, row_count=6) has a real backing object with 6 real FRED rows. Root causes: (1) 2
+      time_features rows (2026-07-04/05) — the pre-`23d03fef` WriteGate silent-`return` marked success despite no GCS
+      write; the writer now raises `WriteGateRejectedError` → `record_empty` (never a phantom captured row); (2) 4
+      calendar rows (yield_curve + economic_results 2024-01-22, economic_events 2026-07-29, economic_results 2026-08-01)
+      — smoke/test-invocation debris + the broad `except Exception` in `_write_success_manifest` swallowing transient
+      recording failures; objects already deleted, rows retracted to `empty_confirmed` (`features-service@5706e1a3` +
+      `@66919769`). Residual gaps surfaced by this live verification are filed as new todos 5 + 6 below. Full evidence
+      in the Progress Log.
+- [ ] 5. [SCRIPT] P2. **Close the 2026-08-04 calendar manifest-completeness gap (2 cells)** — `economic_events` and
+      `yield_curve` 0-row parquet objects exist for `day=2026-08-04`
+      (`calendar/{group}/by_date/day=2026-08-04/features.parquet`) but the manifest has NO rows for them (only
+      `economic_results` got its captured row; row_count=6, real FRED data, backing object confirmed). Root-cause
+      whether `_write_success_manifest`'s broad `except Exception` swallowed the recording failure (same class as the
+      historical part-(b) finding; no Cloud Logging records retrievable for the 2026-08-04T05:46Z run window to
+      confirm), then record `empty_confirmed` for the 2 cells via CAS `record_empty` (0-row objects = honest empty), and
+      harden `_write_success_manifest` so a swallowed recording failure is at least visible (metric / log event) instead
+      of silent. Repo: features-service.
+- [ ] 6. [SCRIPT] P3. **Reconcile the stale `_legacy_seed.parquet` phantom rows** — the per-VM seed
+      (`_index/per_vm/_legacy_seed.parquet`) still carries the 2 phantom `captured` time_features rows (2026-07-04/05,
+      written 2026-07-27). The consolidated index is correct (`empty_confirmed`), but `read_availability_index`'s
+      fallback to per-VM shards when the consolidated blob is >120s stale resurrects them (verified live:
+      `correct_calendar_time_features_phantom_manifest_rows_2026_08_05.py --dry-run` read them via the fallback). The
+      2026-08-05 corrections landed only in the consolidated index, not the per-VM shard the fallback reads. Fix: write
+      `record_empty` superseding rows into a per-VM shard (or refresh the seed); the 2026-07-15 legacy-seed taint guard
+      (`_merge_shard_frames`) ensures a newer untainted `empty_confirmed` row beats the stale seed's captured row. Repo:
+      features-service.
 
 ## Progress Log
 
@@ -250,3 +280,28 @@ not something an AO worker should guess at.
   fully covered (built, wired, validated, backfilled) alongside the other 7 wired families.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-06** (AO dispatch, slot 14, todo 4 DIAG) — Live-vs-historical determination COMPLETE (investigate-first per
+  the 2026-08-06 operator ruling). Bounded direct live verification, no prod writes:
+  1. **Consolidated `_index/availability_index.parquet` (12 rows, calendar family)**: all 6 phantom captured rows →
+     `empty_confirmed` (2024-01-22 economic_results/time_features/yield_curve, 2026-07-04/05 time_features, 2026-07-29
+     time_features/economic_results/economic_events, 2026-08-01 time_features/economic_results). Only `captured` row as
+     of today = economic_results/2026-08-04 (row_count=6) with a real backing object
+     (`calendar/economic_results/by_date/day=2026-08-04/features.parquet`, 6 real FRED rows, fetched
+     2026-08-04T05:46:54Z). **The calendar writer is NOT producing phantom captured rows today — the 6-row anomaly is a
+     one-time historical artifact.** The write-gate-rejection path is live (time_features/2026-08-04 →
+     `empty_confirmed`).
+  2. **Root causes** (per `features-service@23d03fef`, `@5706e1a3`, `@66919769`): (a) pre-2026-07-30 WriteGate
+     silent-`return` marked success without a GCS write (2 time_features rows, written 2026-07-27); (b) smoke/test
+     invocation debris + the broad `except Exception` in `_write_success_manifest` swallowing transient manifest
+     recording failures (4 rows; objects already deleted by the P1 audit). Both fix halves were already shipped +
+     verified — todo 4's prescribed follow-up ("patch the live writer" / "retract 6 rows") is moot.
+  3. **Residual findings surfaced by this verification (filed as todos 5 + 6)**: (B) 2026-08-04 economic_events +
+     yield_curve 0-row parquet objects exist
+     (`calendar/economic_events|yield_curve/by_date/day=2026-08-04/features.parquet`, written 05:46:45Z/05:46:53Z, same
+     run as the captured economic_results) but the manifest has NO rows for them — manifest-completeness gap, prime
+     suspect = `_write_success_manifest` swallow (same class as part (b)); (A) the `_index/per_vm/_legacy_seed.parquet`
+     still holds the 2 stale `captured` time_features rows (written 2026-07-27), resurrected by
+     `read_availability_index`'s >120s-stale per-VM fallback — confirmed live because
+     `correct_calendar_time_features_phantom_manifest_rows_2026_08_05.py --dry-run` fell back to the seed (consolidated
+     blob 3056s old) and re-read the 2 phantoms, while the same check against the consolidated index shows 0. The
+     corrections landed only in the consolidated index, not the per-VM shard the fallback reads.
