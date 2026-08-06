@@ -202,6 +202,55 @@ formula would be `high`. The displayed band is a stale snapshot, not current sta
       `…::test_main_saturation_gate_is_none_on_an_unreadable_pane` (fail-open on a bad measurement),
       `…::test_wedged_main_is_recovered_not_just_logged`.
 
+## Lessons / traps (re-learned at cost — 2026-08-06 session)
+
+- **A guard that cannot fire looks fixed, which is worse than no guard.** The first MAIN saturation gate (@33b3415) read
+  main's context% from its tmux pane. Verified against the LIVE session, that parse returned `None` (the readout had
+  scrolled out of the captured window) while main's `AgentRow` held a perfectly good 44% — so the gate would have
+  silently no-opped on the exact session it exists to protect. @6d791f6 reads the durable row first. The general rule:
+  **verify a guard against live state, not only against unit tests you wrote to pass.**
+- **Writing ABOUT a lint/CI directive in a comment triggers the directive.** Removing a malformed suppression from
+  `slack.py`, the replacement comment explained what had been removed — and quoted the directive's literal spelling, so
+  ruff parsed the explanation as two more directives and the warning count went 1 → 2. Identical class to CLAUDE.md's
+  rule that the CI-skip marker fires from a commit BODY that merely describes it. Describe such markers in prose, never
+  verbatim.
+- **A feature can look dead because something else already did its job.** The staleness re-remind's first manual sweep
+  returned `stale_reminded=0` across 27 questions, 24 of them >8h old — which reads exactly like a broken feature. The
+  periodic sweep had fired seconds earlier and the cooldown correctly deduped. **Check the logs before concluding a
+  no-op**: `journalctl -u orchestrator | grep 'standing unanswered'` showed 23 successful re-reminds.
+- **`worker_liveness_watchdog` does `del _CFG` (module scope) after deriving its constants.** Referencing `_CFG` inside
+  a function raises `NameError` at runtime — use `get_config()` there. Cost: a broken edit that also failed two
+  PRE-EXISTING tests, which is what caught it.
+- **Slack rejects the ENTIRE post when any section exceeds 3000 chars** — it does not truncate. One 4,654-char question
+  meant that row never paged at all, silently, including its original alert.
+- **Rejected: recomputing the context-pressure band on read** (todo 6's other option). A band recomputed from a stale
+  `compactions_last_hour` is still built from stale inputs — a different confident lie rather than an honest "unknown".
+  Marking the reading stale was chosen instead.
+- **Corrections to claims made earlier in this same session**, recorded so the wrong version does not survive: (1)
+  `POST /api/slots/{id}/bootstrap` provisions WORKTREES, not sessions — it would not have rebooted slot 3;
+  `DELETE /api/slots/{id}` was the correct lever. (2) The external-PR predicate was initially parked pending an operator
+  ruling on "whether the orchestrator may make outbound network calls" — a false premise the operator challenged: it
+  already shells to `gh` from `gh_rate_monitor`, `ci_status`, `ci_reconcile` and `escalation`, and monitors its own
+  rate-limit pools. (3) The blocked queue was hypothesised to be full of moot questions; measured `retired=0` of 27 —
+  the real problem was week-old questions being invisible, not moot.
+
+## Deferred work after 2026-08-06
+
+Both issues from this session are CLOSED (7/7 and 6/6). These are the loose findings it surfaced, now tracked where each
+class already lives rather than duplicated into new docs:
+
+| Item                                                                                                                       | Kind               | Blocked on                                                                                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Re-mint `~/.orch_token` on operator host `hk` (expired 2026-08-05; that host's Fleet git-status has been 401-silent since) | **Operator-owned** | Operator minting a dashboard JWT — tracked in `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`                         |
+| `main-backmerge-to-ldr` hanging fleet-wide (UAC runs cancelled at 1h9m / 4h41m, one pending 48m)                           | **Not done**       | Nobody — needs CI investigation; tracked in `/plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md`                  |
+| Dashboard prettier 3.6.2 vs wrapper pin 3.9.5 disagree on formatting                                                       | **Not done**       | Nobody, but needs a judgment call (3.9.5 has a known proseWrap defect) — `/plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` |
+| Duplicate-finalize-plan root cause (idempotency guard + corpus detector)                                                   | **Not done**       | Nobody — `/plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md` (3 todos)                                                      |
+
+**Recommended NEXT: the `~/.orch_token` re-mint.** It is a one-minute operator action that restores fleet observability
+for a whole host, and it is currently _silent_ — the Fleet tab shows stale git state rather than an error, which is the
+same class of invisible-wrongness this session's issue was about. Then the backmerge hang: it deadlocks promotions
+across repos, so it blocks more work than its P2 suggests.
+
 ## Progress Log
 
 ### 2026-08-06 (later) — MAIN-agent coverage closed; issue fully resolved

@@ -89,6 +89,16 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 
 ## Todos
 
+- [ ] [OPERATOR] P2. **Re-mint `~/.orch_token` on the OPERATOR'S LOCAL host `hk`** (distinct from the `ip-172-31-5-118`
+      instance already tracked in `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`). Measured 2026-08-06:
+      the token on `hk` expired **2026-08-05T06:08:07Z**, so `slot-git-status-report.sh`'s POST to the public URL 401s
+      and the AO Fleet tab has been showing STALE git state for that host's slots ever since — the exact host-wide
+      silent-blindness this doc was filed for, now recurring on a second host. `hk` is a laptop-style checkout, NOT the
+      orchestrator VM, so the 2026-07-26 loopback fix above does not rescue it: there is no local `:8765` backend to
+      fall back to, which makes the public-URL token the only path and its expiry a hard outage for that host.
+      **Operator-owned** — minting a new dashboard JWT is a human action. Evidence: `exp` decoded from the JWT payload;
+      `/api/state` returned 401 for that token during the 2026-08-06 session.
+
 - [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@804fa2b9a`.** Make `slot-git-status-report.sh`
       prefer `http://localhost:8765` (trusted-local, no token) when the loopback backend is reachable, falling back to
       the public `ORCH_URL` + `ORCH_TOKEN_FILE` when it is not (off-VM operator laptops). Do NOT unconditionally flip

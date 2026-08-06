@@ -155,6 +155,16 @@ outage), not on strategy-service — escalate via this issue doc (BLOCKED-UPSTRE
 
 ## Follow-ups (tracked work, not prose)
 
+- [ ] [CICD] P2. **`main-backmerge-to-ldr` is hanging on unified-api-contracts too, not just strategy-service.** This
+      doc already names a "broken main-backmerge-to-ldr on main" as the deadlock cause; measured evidence that the
+      condition is FLEET-WIDE rather than strategy-service-specific, collected 2026-08-06 ~15:55Z on
+      `IggyIkenna/unified-api-contracts`: run `31114224091` **pending at 48m**, and the two prior runs both reached
+      terminal state `cancelled` only after **1h8m58s** (`31108397641`) and **4h41m26s** (`31088355450`). Runs that sit
+      for hours and then cancel are hanging, not merely being superseded by a newer push — a concurrency-superseded run
+      cancels promptly. Worth checking whether the same root cause explains both repos before fixing them separately.
+      Provenance: observed incidentally while verifying an unrelated UAC promotion during the AO context-saturation
+      session (see `/plans/active/issues/ao_blocked_question_not_retired_when_condition_resolves_2026_08_06.md`).
+
 - [x] [CICD] P0. Quality-gates-v2 on promote PR #495 (run 31074521897, head `6ef522d3`) is VERIFIED GREEN (06:14Z).
       SUPERSEDED 2026-08-06 07:44Z: PR #495 closed-UNMERGED by the fleet bot (LDR moved to 9af7501d80 → PR #496). The
       v2-green verification stands; the post-fleet-green-on-head action moved to PR #496 (see agt-e33f21 below).
