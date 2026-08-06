@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 238 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 231 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (33)
+### cefi (31)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -29,14 +29,6 @@ by hand._
 - [`aster_and_cefi_rolling_adv_feature_2026_07_21`](./aster_and_cefi_rolling_adv_feature_2026_07_21.md) — Strategy code
   needs a rolling-N-day average-daily-volume (ADV) signal per CeFi instrument, both to cap position size as a % of ADV
   and to gate an instrument as "not yet tradeable" until it has a minimum history of real volume. Surfaced…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08`](./canonical_id_builder_retrofit_checklist_2026_07_08.md) — The
-  operator-decided one-builder architecture (instrument_id_format_canonicalization_2026_07_08.md — "one builder for
-  everything... every asset group, every instrument type, can get its canonical instrument IDs, same with fixtures, just
-  by…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27`](./canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27.md)
-  — Gated closeout for canonical_id_builder_retrofit_checklist_2026_07_08.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its…
 - [`cefi_4surface_migration_execution_log_2026_07_24`](./cefi_4surface_migration_execution_log_2026_07_24.md) — Verbatim
   extraction of the Progress Log from cefi_consolidated_closeout_2026_07_18.md (line-cap remediation, 2026-07-24) — the
   day-by-day narrative + PRE-COMPACT checkpoints + DELTA updates + deferred-work tables tracking the CeFi…
@@ -140,19 +132,11 @@ by hand._
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
   UTL…
 
-### defi (30)
+### defi (24)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
   cefi, defi, tradfi, prediction — each of which already carries its own…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08`](./canonical_id_builder_retrofit_checklist_2026_07_08.md) — The
-  operator-decided one-builder architecture (instrument_id_format_canonicalization_2026_07_08.md — "one builder for
-  everything... every asset group, every instrument type, can get its canonical instrument IDs, same with fixtures, just
-  by…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27`](./canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27.md)
-  — Gated closeout for canonical_id_builder_retrofit_checklist_2026_07_08.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its…
 - [`cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27`](./cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md)
   — Gated closeout for cefi_deribit_binance_futures_bundle_verification_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -197,10 +181,6 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
   true until all 12 of that plan's todos are done. Mirrors batch1/batch2-finalize's pattern (reconcile each distinct
   source…
-- [`defi_satellite_ao_dispatch_batch5_2026_07_27_finalize`](./defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md)
-  — Gated closeout for defi_satellite_ao_dispatch_batch5_2026_07_27.md — machine-held via depends_on + gate_on_depends:
-  true until all 7 of that plan's todos are done. Mirrors batch1-4-finalize's pattern (reconcile each distinct source
-  doc's…
 - [`defi_satellite_ao_dispatch_batch6_2026_07_30`](./defi_satellite_ao_dispatch_batch6_2026_07_30.md) — Sixth
   AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` role running the `/ag-closeout-audit`
   skill's Phase-1 (per-doc classify) + Phase-3 (conflict-check + draft) triage over all 66 defi AG-primary docs…
@@ -208,9 +188,6 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
   doc's…
-- [`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize`](./defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md)
-  — Gated closeout for defi_satellite_ao_dispatch_batch8_2026_08_02.md — machine-held via depends_on + gate_on_depends:
-  true until that plan's todo is done. Mirrors batch1-7-finalize: reconcile the single source doc…
 - [`defi_satellite_ao_dispatch_batch9_2026_08_06`](./defi_satellite_ao_dispatch_batch9_2026_08_06.md) **[draft]** —
   Ninth AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` running `/ag-closeout-audit defi`
   (2026-08-06). Phase 0 discovered 12 real covering docs (consolidated closeout + batch2/3/5/6/8 base+finalize pairs +
@@ -239,16 +216,8 @@ by hand._
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. #1 CEX spot = a Tardis backfill (denominator already complete — adding pairs is…
-- [`mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27`](./mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md)
-  — Gated closeout for mtds_available_at_cross_asset_backfill_2026_07_13.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its AO-dispatched…
-- [`mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27`](./mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27.md)
-  — Gated closeout for mvp_backfill_defi_onchain_v10_2026_06_27.md -- machine-held via depends_on + gate_on_depends:
-  true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched
-  todo…
 
-### tradfi (24)
+### tradfi (23)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -274,10 +243,6 @@ by hand._
   Split out of instruments_foundation_completeness_2026_06_24.md (2026-07-24 line-cap remediation, 4-way split,
   operator- approved). Owns tradfi's gated G1→G5 rebuild — billable-venue guard, calendar/session fail-closed, CME/ES
   ohlcv + Yahoo…
-- [`mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27`](./mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md)
-  — Gated closeout for mtds_available_at_cross_asset_backfill_2026_07_13.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its AO-dispatched…
 - [`tradfi_backfill_throughput_followups_2026_07_24`](./tradfi_backfill_throughput_followups_2026_07_24.md) — Forked
   from tradfi_consolidated_closeout_2026_07_18.md's 2026-07-24 line-cap remediation split. Carries Phase A3
   (download/backfill throughput — DNS-starvation executor, T+1 forward-fill job, OOM/SIGKILL hardening, phantom-row
@@ -337,19 +302,11 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (29)
+### sports (26)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
   cefi, defi, tradfi, prediction — each of which already carries its own…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08`](./canonical_id_builder_retrofit_checklist_2026_07_08.md) — The
-  operator-decided one-builder architecture (instrument_id_format_canonicalization_2026_07_08.md — "one builder for
-  everything... every asset group, every instrument type, can get its canonical instrument IDs, same with fixtures, just
-  by…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27`](./canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27.md)
-  — Gated closeout for canonical_id_builder_retrofit_checklist_2026_07_08.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its…
 - [`data_completion_sports_2026_07_24`](./data_completion_sports_2026_07_24.md) — Sports slice of the
   data-completion-to-100% program, split out of data_completion_to_100_all_ag_2026_06_21 (M-1) on 2026-07-24 per the
   plan line-cap remediation (plans/active/issues/plan_line_cap_remediation_2026_07_23.md,…
@@ -403,10 +360,6 @@ by hand._
   Scopes a `run_sports_backtest` CLI in execution-service, mirroring the 3 existing domain runners
   (run_cefi_backtest/run_tradfi_backtest/run_defi_backtest), so sports/predictions gets a real Group-C execution-alpha
   harness. Decided…
-- [`sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30`](./sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md)
-  — Gated closeout for sports_live_availability_and_source_latency_2026_07_24.md, reclassified
-  `assigned_vm: NA -> planning` by the na-eligibility-audit sports-tranche run 2026-07-30 (retroactive-reclassification
-  shape, codex…
 - [`sports_odds_feature_naming_canonicalization_2026_07_21`](./sports_odds_feature_naming_canonicalization_2026_07_21.md)
   — Operator-ruled 2026-07-21 (BLK-a1ce4719) resolution of sports_odds_feature_naming_four_way_mismatch_2026_07_21.md —
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
@@ -438,19 +391,11 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (28)
+### prediction (25)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
   cefi, defi, tradfi, prediction — each of which already carries its own…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08`](./canonical_id_builder_retrofit_checklist_2026_07_08.md) — The
-  operator-decided one-builder architecture (instrument_id_format_canonicalization_2026_07_08.md — "one builder for
-  everything... every asset group, every instrument type, can get its canonical instrument IDs, same with fixtures, just
-  by…
-- [`canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27`](./canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27.md)
-  — Gated closeout for canonical_id_builder_retrofit_checklist_2026_07_08.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its…
 - [`data_completion_prediction_2026_07_15`](./data_completion_prediction_2026_07_15.md) — Prediction slice of the
   data-completion-to-100% program, split out of data_completion_to_100_all_ag_2026_06_21 (M-1) on 2026-07-15 per
   operator ruling (plan-reconcile §8) when M-1 breached the absolute 5000-line ceiling. Carries the…
@@ -464,10 +409,6 @@ by hand._
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
   operator/judgment-gated (stay NA),…
-- [`mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27`](./mtds_available_at_cross_asset_backfill_2026_07_13_finalize_2026_07_27.md)
-  — Gated closeout for mtds_available_at_cross_asset_backfill_2026_07_13.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its AO-dispatched…
 - [`prediction_capture_incident_remediation_2026_07_06`](./prediction_capture_incident_remediation_2026_07_06.md) —
   "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence:
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
@@ -742,7 +683,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (16)
+### ao (18)
 
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
@@ -777,6 +718,14 @@ by hand._
   autonomous mode, scheduled `ag_closeout_auditor` dispatch). Phase 1 ran a real `Workflow` fan-out over all 64 current…
 - [`ao_satellite_ao_dispatch_batch6_finalize_2026_08_04`](./ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md) —
   Gated closeout for ao_satellite_ao_dispatch_batch6_2026_08_04.md — machine-held via depends_on + gate_on_depends until
+  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
+  (the…
+- [`ao_satellite_ao_dispatch_batch7_2026_08_06`](./ao_satellite_ao_dispatch_batch7_2026_08_06.md) **[draft]** — SEVENTH
+  AO-dispatch batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-06,
+  autonomous mode, scheduled `ag_closeout_auditor` dispatch, slot 10). Phase 0 re-derived the tranche's covering-plan
+  set…
+- [`ao_satellite_ao_dispatch_batch7_finalize_2026_08_06`](./ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md) —
+  Gated closeout for ao_satellite_ao_dispatch_batch7_2026_08_06.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
   (the…
 - [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](./context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
