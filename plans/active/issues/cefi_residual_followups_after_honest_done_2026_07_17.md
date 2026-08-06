@@ -118,8 +118,11 @@ context_scope:
    > pre-measurement blueprint ESTIMATE. It is superseded by the Canonical-completeness program's own Script-4 dry-run
    > (Phase C, 2026-07-18, run against live prod — see history doc §Progress Log), which measured the actual count:
    > **9,850 drops** — EXTENDED-STARKNET 9,817 + DERIBIT 24 + OKX-FUTURES 9, **no PACIFICA-SOLANA twins present live**.
-   > Use 9,850 as the authoritative pending count; the fix (Phase 1 "Close residual #3" todo below) still needs
-   > `--apply`.
+   > Use 9,850 as the (then-)authoritative pending count — **DONE 2026-07-27, both figures superseded**: the live
+   > re-measure grew the count to 28,755 (HYPERLIQUID 28,748 / ASTER 5 / BITGET-FUTURES 2) and the Phase-1 "Close
+   > residual #3" todo below applied it (`canonical-migration-cefi-eu-twin-apply-20260727-043653`): 28,755 rows dropped,
+   > 0 residual; idempotency re-verified (0 further drops). No `--apply` pending. (Annotated 2026-08-06 by
+   > plan-reconcile — the earlier "still needs --apply" line was stale.)
 
 4. **[P3] Manifest consolidator lost-update redeploy — watch item, likely unnecessary.** The maintenance-window
    durability fix (purging `_legacy_seed.parquet` so aliases can't re-merge) held across the resumed consolidator +
