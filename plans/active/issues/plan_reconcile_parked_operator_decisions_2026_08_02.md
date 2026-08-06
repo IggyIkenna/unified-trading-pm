@@ -248,8 +248,9 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
 
 - **10 resolved issue docs archived** to `plans/archive/issues/` with banners, all 22 path referrers repointed
   corpus-wide — `unified-trading-pm@a04f74e` + `@ff619d4`. Resolution evidence spot-verified reachable on
-  `origin/live-defi-rollout` for `instruments-service@a340e34c`, `features-service@f57d11ae`,
-  `unified-trading-library@6c0ca59b`, `deployment-service@b1f0a22`.
+  `origin/live-defi-rollout` for `instruments-service@fa931784` (repointed 2026-08-06 — original sha orphaned by the
+  2026-08-05 history rewrite; content verified identical), `features-service@f57d11ae`,
+  `unified-trading-library@e1da2c7f`, `deployment-service@b1f0a22`.
 - **Two P0 delete-safety STOP banners + `[OPERATOR]` retags** — `unified-trading-pm@b710bbd`. § 1a's Track C todo in
   `sports_consolidated_closeout_2026_07_19.md` now carries the disproof of its UNIBET-fold and SMARKETS-purge premises
   inline; § 1b's two `sports_reference_v2/by_date/` cull todos (in that same doc and in
@@ -285,7 +286,7 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
       ~4.5M-file backfill confirmed still in progress via the fleet doc, `status: open`); legacy-bucket cross-cutting
       doc corrected to "deleted 2026-07-14" citing both corroborating docs. (repo: `unified-trading-pm`)
 - [x] ✅ [CODE] P1. **Rule § 2a** — Massive/Polygon.io removal status. RULED 2026-08-02: option A (finish the removal in
-      instruments-service) — **EXECUTED 2026-08-03**. `instruments-service@e7933317` deletes
+      instruments-service) — **EXECUTED 2026-08-03**. `instruments-service@4b594a6d` deletes
       `reference_data/adapters/tradfi/massive.py` + `tests/unit/test_massive_adapter.py` and unwires every call site
       (factory `_ADAPTERS`/`ADAPTER_DATA_SOURCES`, `_resolve_source_aware_adapter_key`,
       `_DATE_AWARE_TRADFI_ADAPTER_KEYS`, the `--source` CLI flag + its whole `source=` plumbing through

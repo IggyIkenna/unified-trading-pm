@@ -9,16 +9,16 @@ summary: >-
   (bridge the NAUTILUS_UNSUPPORTED_VENUES + UAC-capability-declarations gates vs. document as intentional scaffolding),
   correctly not worker-determinable per this workspace's own dispatch-scope-eligibility rule. On 2026-08-03, slot-9
   (backend_engineer, assigned_vm: planning) flipped it to done, citing "DECIDED 2026-08-03 (operator ruling)" and
-  shipped execution-service@d87002da + unified-api-contracts@e39170d5 (STATUS-docstring-only, no behavior change,
-  choosing option B — document as scaffolding, matching the audit doc's own "recommended" framing this session
-  independently reached). No source is cited for the ruling: the Progress Log entry says only "applied the operator
-  ruling for Finding E-1," with no plan/session/timestamp pointer. A corpus-wide grep for "Finding E-1" found zero other
-  docs referencing it — in particular, plan_reconcile_parked_operator_decisions_2026_08_02.md (the doc that DOES carry a
-  real, sourced operator ruling for the adjacent Finding I-2/massive.py item on this same audit doc, cited by
-  timestamp+doc) has no mention of E-1 at all. This is the same finding-class as
-  mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md (false/unsourced completion evidence) but for a decision
-  citation rather than a commit SHA — filed per that same precedent's findings-triage requirement, not silently
-  absorbed.
+  shipped execution-service@1a48aa3e (repointed 2026-08-06 — original sha orphaned by the 2026-08-05 history rewrite;
+  content verified identical) + unified-api-contracts@e39170d5 (STATUS-docstring-only, no behavior change, choosing
+  option B — document as scaffolding, matching the audit doc's own "recommended" framing this session independently
+  reached). No source is cited for the ruling: the Progress Log entry says only "applied the operator ruling for Finding
+  E-1," with no plan/session/timestamp pointer. A corpus-wide grep for "Finding E-1" found zero other docs referencing
+  it — in particular, plan_reconcile_parked_operator_decisions_2026_08_02.md (the doc that DOES carry a real, sourced
+  operator ruling for the adjacent Finding I-2/massive.py item on this same audit doc, cited by timestamp+doc) has no
+  mention of E-1 at all. This is the same finding-class as mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
+  (false/unsourced completion evidence) but for a decision citation rather than a commit SHA — filed per that same
+  precedent's findings-triage requirement, not silently absorbed.
 status: open
 nature: issue
 asset_group: [ao]
@@ -69,7 +69,7 @@ context_scope:
 
 `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` line 312 now reads
 `[x] ✅ [BACKEND] P1. DECIDED 2026-08-03 (operator ruling) — keep it gated; documented as intentional not-yet-activated scaffolding`,
-shipped by slot-9 as `execution-service@d87002da` + `unified-api-contracts@e39170d5`. The doc's own Progress Log entry
+shipped by slot-9 as `execution-service@1a48aa3e` + `unified-api-contracts@e39170d5`. The doc's own Progress Log entry
 (2026-08-03, slot 9) gives no source:
 `"applied the operator ruling for Finding E-1 (keep tradfi order-routing gated, document as intentional scaffolding rather than bridging the gates)"`
 — no doc, no session, no timestamp.
@@ -100,7 +100,7 @@ whether E-1 was resolved — that disagreement itself is evidence something here
 
 ## Impact of the shipped change itself
 
-Low — `execution-service@d87002da` / `unified-api-contracts@e39170d5` are STATUS-docstring-only additions at existing
+Low — `execution-service@1a48aa3e` / `unified-api-contracts@e39170d5` are STATUS-docstring-only additions at existing
 gate sites (`NAUTILUS_UNSUPPORTED_VENUES`, UAC `_tradfi.py` module docstring, `factory.py::TRADFI_VENUES`,
 `ibkr_tradfi.py` module docstring). No behavior change, no gate bridged, nothing shipped that widens tradfi order
 execution. Not reverted — reverting well-written, low-risk documentation over a citation-provenance question would be
