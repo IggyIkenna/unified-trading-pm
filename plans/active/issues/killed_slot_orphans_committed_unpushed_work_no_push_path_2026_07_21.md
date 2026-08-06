@@ -42,7 +42,7 @@ locked_by:
 context_scope:
   [
     /codex/04-architecture/autonomous-recovery-matrix.md,
-    /plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
+    /plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/worktree_clean_check/_branch_state.py,
     agent-orchestrator/server/worker_liveness_watchdog.py,

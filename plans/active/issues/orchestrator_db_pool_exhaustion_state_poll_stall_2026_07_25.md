@@ -45,7 +45,7 @@ context_scope:
     agent-orchestrator/server/db.py,
     agent-orchestrator/server/autospawn.py,
     /codex/04-architecture/autonomous-recovery-matrix.md,
-    /plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md,
+    /plans/archive/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 depends_on: []
@@ -253,8 +253,8 @@ throughout (DB-independent), every DB-backed endpoint (`/poll`, `/api/state`) ha
 
 - **#9 ~05:55–05:57Z** — `sqlite3.OperationalError: database is locked` (busy_timeout variant), tightly correlated with
   repeated PlanRegenLoop `sync_backlog_to_db: REFUSING to reset task id …` positional-id collisions thrashing writes
-  (see `/plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` P3).
-  **Self-cleared ~2 min.**
+  (see `/plans/archive/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md`
+  P3). **Self-cleared ~2 min.**
 - **#10 ~06:13:58Z** — `QueuePool limit of size 5 overflow 10 reached, connection timed out` (pool-timeout variant),
   holder `_do_spawn` (slot-1 spawn after a "late account re-check raised; proceeding" retry). Did NOT self-clear on its
   own: a **controlled `systemctl` SIGTERM stop at 06:15:37 + clean restart at 06:16:14 (new PID 159866, ~37s downtime,

@@ -182,7 +182,7 @@ event. `agent-orchestrator@4c5267d`, QG green (2076 passed).
 request; new `ProviderBadge` wired into `SlotTable`/`SlotCards`/`AccountRow`. A Playwright spec caught a real bug
 pre-ship (badge blanked on dead rows, inconsistent with sibling fields) — fixed before commit.
 `agent-orchestrator@12ae7c2`, QG green (2086 passed), 2 new Playwright tests passed. Unrelated flake found+filed, not
-fixed: `plans/active/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md`.
+fixed: `plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md`.
 
 **2026-07-30 — `[INFRA] P2` local-dev isolation runbook SHIPPED.** New
 `/codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md` documenting the 5 real gaps hit by the

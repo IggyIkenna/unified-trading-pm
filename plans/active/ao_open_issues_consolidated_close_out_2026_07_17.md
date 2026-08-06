@@ -62,7 +62,7 @@ related:
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_03.md,
   ]
 created: 2026-07-17
-last_updated: 2026-08-03 # line-cap remediation split — extracted 07-17..07-28 Progress Log history to the archive doc above; context_scope backfilled
+last_updated: 2026-08-06 # AO issue-doc re-verification sweep (7 archived, 1 new todo, 1 partial). File now 980/1000 lines — near the hard cap again, next touch should split Progress Log history to the archive doc per the 08-03 precedent
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -162,6 +162,69 @@ linked 2026-07-31. NOT linked: `infra_satellite_ao_dispatch_batch3_2026_07_30.md
 | Unclear, needs a closer read before bucketing                                                                                                                                                | 6   | `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29`, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28`, `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25`, ~~`na_eligibility_auditor_timer_not_yet_installed_2026_07_27`~~ **ARCHIVED 2026-08-06** (`/ag-closeout-audit ao` — all 4 todos were already `[x]`, `plans/archive/issues/`), `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29`, `plan_health_tests_leak_real_slack_alerts_2026_07_24`, `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Found 2026-07-31 audit, self-owned, never referenced                                                                                                                                         | 7   | `ag_closeout_audit_ao_parked_2026_07_31`, `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30`, `ao_done_gate_checkbox_flip_blind_to_paragraph_restructure_2026_07_31`, `ao_orphan_audit_followup_triage_2026_07_30`, `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30`, `orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31`, `orphaned_commit_recovery_has_no_dispatch_path_2026_07_30`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Found 2026-07-31 audit, genuine AO content but `asset_group` MISTAGGED (`meta`/`cross-cutting`/`infrastructure` — invisible to `/ag-closeout-audit ao`'s own membership rule until retagged) | 23  | `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22`, `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`, `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26`, `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29`, `ao_park_disposition_blocked_answer_no_follow_through_2026_07_31`, `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30`, `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30` (⚠️ likely duplicate of `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26` — same `backlog-detail.spec.ts` queue-lag/sort symptom, filed 4 days apart, neither cross-references the other), `backlog_park_lost_across_sibling_todo_insertion_2026_07_30`, `blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28`, `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31`, `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29`, `context_scope_consumption_enforcement_2026_07_30`, `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29`, `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29`, `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25`, `git_health_not_clean_since_pinned_constant_2026_07_27`, `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30`, `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27`, `orchestrator_vm_disk_io_contention_runner_burst_2026_07_28`, `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29`, `wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21`, `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27`, `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27` |
+
+## 2026-08-06 re-verification sweep of the 51 still-open docs — every doc individually checked against current code
+
+All 51 docs the tables above track as still-open were re-verified this session (6 parallel read-only agents, each doc
+read in full + cross-checked against current `agent-orchestrator` code / `git log` since filing, not just checkbox-
+counted). Verdicts: **12 candidate-RESOLVED → 7 confirmed and archived**, **18 PARTIAL** (root cause fixed, one residual
+sub-item), **21 STILL-OPEN** (defect confirmed still present, or genuinely operator-gated).
+
+**Archived 2026-08-06** (5-step ritual applied, now `plans/archive/issues/`, corpus-wide referrer paths fixed):
+`orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25` (dup routed elsewhere, closed),
+`plan_health_tests_leak_real_slack_alerts_2026_07_24` (stale `status: open` corrected),
+`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26` (DEVOPS P1 shipped via `qg-host-governor.sh`,
+checkbox never flipped), `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27`,
+`ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26` (fixed live today, `agent-orchestrator@e761cb1`, verified
+2/2 × 3 runs), `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30` (confirmed duplicate of the prior doc, closed
+via the same fix), `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29` (sole residual self-admittedly
+non-actionable, descoped).
+
+**NOT archived despite looking done — caught by full-doc re-read, not just checkbox count**:
+`gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25` — `## Todos` was fully `[x]`, but the doc's own Progress
+Log documents a confirmed, still-unresolved third root-cause ("zero-derived-parent-row": the parent plan's task rows go
+entirely missing from the backlog, reproduced twice, most recently 2026-08-02) that had only ever been narrated in prose
+across multiple bounce notes — never given a real `- [ ]` todo. Added one (`[BACKEND] P1`) directly to the doc. This is
+exactly the failure mode `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2 warns about ("every
+follow-up is a todo, never prose") — worth a corpus-wide grep for the same shape (Progress Log narrating an unresolved
+finding with no matching checkbox) if this recurs.
+
+**Partial fix, stays active**: `orchestrator_vm_disk_io_contention_runner_burst_2026_07_28` — closed the `[OPERATOR] P2`
+memory-cap item (moot, superseded by `rescale-memory-cap.sh`'s unconditional cron self-heal); the `[SCRIPT] P3` item is
+a genuine conditional watch-condition (fleet-wide `PYRIGHT_TIMEOUT` bump, only actionable if a timeout-kill recurs
+outside a burst window) — correctly stays open, not archived.
+
+**Not touched, flagged for follow-up**:
+
+- `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30` — `archive_exempt: true`, its archival is
+  explicitly owned by `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s own `[REVIEW] P0` todo; archiving it
+  here would duplicate already-queued work. Left as-is per the standing ruling.
+- `git_status_reporter_stale_public_url_token_expiry_2026_07_24` — genuinely has one real open `[INFRA] P3` (refresh
+  `~/.orch_token`, a credential op, correctly operator-only) — not resolved, left open as-is, no new todo needed (it's
+  already self-tracking).
+- `ao_park_disposition_blocked_answer_no_follow_through_2026_07_31` — all todos `[x]`, `status: resolved`, but carries
+  `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` — a date that PREDATES this doc's own
+  `created: 2026-07-31`, which cannot be a genuine lock. Looks like a stale copy-paste frontmatter artifact, not a real
+  lock. Per the archival discipline's hard rule ("locked plans are a human-only unlock — MUST NEVER unlock
+  autonomously"), **not archived here** — flagging for an operator decision: confirm the `locked_by` field is bogus and
+  clear it, or explain what it's actually protecting.
+
+**Remaining 39 non-archived docs (18 PARTIAL + 21 STILL-OPEN)**: every one already carries its own `- [ ]` todo(s) in
+its own file (this corpus's standing convention — issue docs are self-tracking units, not orphaned prose) —
+re-verification did not surface a second corpus-wide "prose-only, no todo" gap beyond the `gate_on_depends` case above.
+The bucket table above is otherwise still accurate for these: most of the "Operator-gated" (9) and several of the
+"Unclear"/"Mistagged" buckets are genuine operator/design-judgment calls per `task_template.md`'s
+dispatch-scope-eligibility rule, not AO-dispatchable work — a batch7 satellite plan duplicating their todos was
+considered and deliberately NOT drafted (would violate "a plan references, it does not duplicate" and risks
+double-dispatch on work these docs already track). Operator-gated decisions ready for a ruling:
+`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24`,
+`external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25`,
+`mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27`,
+`prediction_trades_migration_concurrent_dispatch_2026_07_28`,
+`two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15`,
+`checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31`,
+`context_scope_consumption_enforcement_2026_07_30`, `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29` —
+each doc states its own options; see the doc for the precise A/B/C framing.
 
 ## Verified classification of the 10 open docs (2026-07-17, this session)
 

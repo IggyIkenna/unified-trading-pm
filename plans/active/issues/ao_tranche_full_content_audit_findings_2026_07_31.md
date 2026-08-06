@@ -41,8 +41,8 @@ context_scope:
   [
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
-    /plans/active/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md,
+    /plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
+    /plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md,
   ]
 source:
   [

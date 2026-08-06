@@ -28,7 +28,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, incident, cgroup, memory-cap, systemd, api-outage, instance-resize, bootstrap_vm]
-related: [/plans/active/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md]
+related: [/plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md]
 created: "2026-07-30"
 author: unknown
 last_updated: "2026-07-30"
@@ -52,7 +52,7 @@ context_scope:
   [
     agent-orchestrator/scripts/rescale-memory-cap.sh,
     agent-orchestrator/scripts/bootstrap_vm.sh,
-    /plans/active/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
+    /plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 locked_since:
