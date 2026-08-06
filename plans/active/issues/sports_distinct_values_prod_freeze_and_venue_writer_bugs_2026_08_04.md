@@ -357,6 +357,12 @@ confirming before scoping a re-stamp for it.
   unrelated follow-up todos remain (see below) — neither blocks anything or affects the panel.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — sole open todo (`[INFRA] P3`,
+  `LC_TARBALL_FRESHNESS=enforce` default proposal) matches the doc's own self-framing in the Deferred-work table below
+  ("a scoping/design todo, small") — filing a proposal to change a launcher-wide default is a design call (what the
+  right default even is, blast radius across other `mtds-live-*` shapes), not a mechanical fact-check. Everything else
+  in this doc is already resolved (0/0/0/0 non-canonical, verified live).
+
 ## Deferred work after 2026-08-05
 
 | Item                                                              | State              | Blocked on                                                                      |

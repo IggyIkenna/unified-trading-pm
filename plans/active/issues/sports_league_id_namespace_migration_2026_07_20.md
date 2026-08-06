@@ -856,3 +856,8 @@ offered to the queue once these are the only real blockers.
   (`PRIMERA_DIVISION`/`PREMIER_LEAGUE`/`CHAMPIONSHIP`/`2._BUNDESLIGA`/`SUPER_LEAGUE`) and
   `canonicalize_sports_league_id_schema_2026_06_24.py` (already cross-linked in this doc's own 2026-08-03 entry above,
   not a fresh find).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-07-30. The
+  sole open todo (Track H's honest-coverage denominator) remains gated on 2 prerequisites that don't exist yet
+  (`odds_horizon_bucket` MDPS reprocess re-run, `batch_footystats` copy+swap apply script) — confirmed still outstanding
+  per this doc's own 2026-07-28 re-dispatch checks, no newer evidence contradicts that.

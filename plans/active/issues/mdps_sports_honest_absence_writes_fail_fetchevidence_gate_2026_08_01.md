@@ -412,3 +412,12 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   open `[DIAG]` todos); the original 4 entries (Finding 2's FetchEvidence-gate call sites) remain accurate and kept.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — re-verified, no substantive change since
+  2026-08-03 (only the 2026-08-06 context-scout touch, content-neutral). Same reasoning holds across all 7 open todos:
+  the now-unblocked `[DATA] P2` implementation todo (route `SOURCE_RETURNED_ZERO` fallback to `record_failed_for_shard`)
+  is bounded, but this doc remains an ACTIVE incident-tracking surface for a live multi-escalation DP-VM-001 chain (5
+  escalations now, per Finding 5's 2026-08-03 addition) still accumulating new findings, with an existing faster-than-AO
+  direct-escalation channel already covering dispatch — not stable backlog work. The 3 `[DIAG]` crash-hunt todos remain
+  open-ended root-cause investigation; the `[SCRIPT]` no-relaunch item is a standing STOP; Finding 5's 2 todos (bounded
+  fix + grep check) don't independently justify splitting this doc while it's still mid-incident.

@@ -177,19 +177,29 @@ same CLI path would hit the identical wall.
       `features-sports-prd`: the exact repro command now loads **2,383 fixtures x 956 features across the full
       2026-04-01..17 window** (previously: zero features, every time). `quality-gates.sh` green on ml-service (2103
       passed, 4 skipped, coverage 80.00%).
-- [ ] [ML] P2. Once the above ships, retrain the 3 CLV model variants (`training-period-2026-04`, `pregame_clv_family`,
-      `timeframes=fixture`, date range matching the original 2026-04-17 training run if recoverable) and independently
-      re-verify against real prod features-sports-prd data before promoting/citing. The 3 quarantined artifacts stay in
-      place, untouched, as the leak reference. Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` Open Todo #5.
-      — **ATTEMPTED 2026-07-26, genuinely BLOCKED one layer deeper** (slot-6, `data_engineering`): with Bugs 1+3 fixed,
-      the retrain got past feature loading for the first time ever, then crashed in the pipeline's `feature_selection`
-      phase — `GradientBoostingClassifier.fit()` received 32 non-numeric (object-dtype) columns from the SPORTS feature
-      frame (identity columns like `fixture_id`/`event_id` plus several `xg_*` columns mis-typed upstream). A second,
-      independent finding surfaced in the same run: the CLV target resolves 100% "flat" for this exact date window
+- [x] ✅ [ML] P2. Once the above ships, retrain the 3 CLV model variants (`training-period-2026-04`,
+      `pregame_clv_family`, `timeframes=fixture`, date range matching the original 2026-04-17 training run if
+      recoverable) and independently re-verify against real prod features-sports-prd data before promoting/citing. The 3
+      quarantined artifacts stay in place, untouched, as the leak reference. Source:
+      `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` Open Todo #5. — **ATTEMPTED 2026-07-26, genuinely BLOCKED one
+      layer deeper** (slot-6, `data_engineering`): with Bugs 1+3 fixed, the retrain got past feature loading for the
+      first time ever, then crashed in the pipeline's `feature_selection` phase — `GradientBoostingClassifier.fit()`
+      received 32 non-numeric (object-dtype) columns from the SPORTS feature frame (identity columns like
+      `fixture_id`/`event_id` plus several `xg_*` columns mis-typed upstream). A second, independent finding surfaced in
+      the same run: the CLV target resolves 100% "flat" for this exact date window
       (`pinnacle_closing_odds_home`/`odds_home_avg` missing), so even a dtype-fixed retrain of this specific window may
       not produce a meaningful model. Both filed with full diagnostic evidence in
       `/plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`.
-      The 3 quarantined artifacts remain untouched/unpromoted. This todo stays open, now blocked on that new doc.
+      **CLOSED-BY-CITATION 2026-08-06 (na-eligibility-audit, sports tranche, KEEP-NA-STALE)**: the retrain this todo
+      asks for was independently completed and GCS-verified in
+      `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` (an
+      `assigned_vm: planning` doc) — its 2026-08-03 Progress Log records 3 CLV model variants trained via
+      `--operation train --skip-dependency-check --task-type regression` against real prod `features-sports-prd` data
+      (window 2026-04-01..17, matching this todo's date range), non-degenerate target
+      (`up=64/10.7%, flat=505/84.6%, down=28/4.7%`), independently GCS-verified at
+      `gs://ml-store-prd-central-element-323112/models/models/CEFI_UNKNOWN_clv_LIGHTGBM_fixture_V20260803{191857,192941,193831}/training-period-2026-08/model.joblib`
+      (372,665 bytes each). Not reclassifying this doc — the work is already done, just tracked under a different doc's
+      checkbox; this is a citation fix only.
 
 ## Progress Log
 
@@ -216,3 +226,9 @@ same CLI path would hit the identical wall.
   model artifacts) — this doc's own open `[ML] P2` todo 2 ("retrain the 3 CLV model variants") may already be satisfied
   in substance by that separate doc's work; not verified in enough depth this pass to flip the checkbox myself (out of
   this skill's scope).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — verified and flipped the `[ML] P2` retrain todo
+  to closed-by-citation (KEEP-NA-STALE: the retrain was independently completed and GCS-verified in
+  `ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`, confirming the 2026-08-06
+  context-scout's flagged note). Doc stays NA — the sole remaining open todo (`[CODE] P3`, wire vs. drop `--family`) is
+  unchanged, still an explicit design decision per every prior pass's reasoning.
