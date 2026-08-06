@@ -140,12 +140,12 @@ checkbox signal alone, but confirming it actually IS requires reading:
       `resolved`/`false-positive`/`superseded` + `git mv` to `plans/archive/issues/` + fix referrers) or apply
       `archive_exempt: true` with justification. Re-run the check after each chunk to confirm the live count is trending
       down, not just churning.
-- [ ] [SCRIPT] P1. **Make `check_archive_candidates.sh` DIFF-SCOPED on the promote path — the gate's shape is the root
-      cause, not just the backlog.** Operator ruling 2026-08-06 (interactive): clear the backlog AND fix the shape,
-      because clearing alone re-arms the same trap the next time the corpus drifts — which on current evidence is days,
-      not months (the count grew 112 → **120** within hours on 2026-08-06, while `check_ag_closeout_linkage` went 77 →
-      81 against a baseline of 69). **The defect**: this check is enforced corpus-wide inside
-      `run_hygiene_sweep.sh --ci`, which is folded into the REQUIRED `quality-gates-v2` check by
+- [x] ✅ [SCRIPT] P1. **Make `check_archive_candidates.sh` DIFF-SCOPED on the promote path — the gate's shape is the
+      root cause, not just the backlog.** — unified-trading-pm@876347ff9 + unified-trading-ci@855e4a8 (slot 9, review,
+      2026-08-06) because clearing alone re-arms the same trap the next time the corpus drifts — which on current
+      evidence is days, not months (the count grew 112 → **120** within hours on 2026-08-06, while
+      `check_ag_closeout_linkage` went 77 → 81 against a baseline of 69). **The defect**: this check is enforced
+      corpus-wide inside `run_hygiene_sweep.sh --ci`, which is folded into the REQUIRED `quality-gates-v2` check by
       `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml:818` ("Plan hygiene hard gate (PM only)"). So an
       LDR→main promote PR that touches **zero** plan docs still fails on ~15 other slots' accumulated doc debt. That is
       not actionable by the promoter it blocks, and it is inconsistent with this workspace's own stated convention for
