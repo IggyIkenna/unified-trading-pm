@@ -127,12 +127,42 @@ they would silently inherit the same architecture gap this whole chain exists to
   `features-service/features_service/sports/exporters/odds_features_exporter.py` (concrete PIT-gate + schema-absence
   evidence source from the 2026-08-05 verdict), now 4 entries.
 
+- **slot-11 2026-08-06**: **DECISION: FIX**. Confirmed `pregame_clv_family` is in both `SPORTS_PRODUCTION_GRID` and
+  `SPORTS_DEVELOPMENT_GRID` (`config_loader.py` lines 613, 632); targets are canonical in UTL `sports_ml_config.py` (6
+  `pregame.market.*` entries). Moot path rejected. Fix path identified: `compute_opening_odds()` (`odds_velocity.py`)
+  already extracts T-0 closing odds as `_closing_{home/draw/away}` internally but drops them (line ~207). Viable fix:
+  expose these as `odds_closing_{outcome}` in `odds_targets` (features-service, ~5-line change), extend
+  `merge_clv_target_columns()` to pull them alongside `odds_clv_*`, update `CLVTargetBuilder.build()` defaults from
+  phantom `COL_CLOSING_*` (`odds_home_close`) to the `odds_targets`-emitted `odds_closing_*` names. Two [CODE] P2
+  implementation todos filed in Follow-ups below.
+
 ## Follow-ups
 
-- [ ] [DECISION] P2. File the fix-or-moot decision for CLVTargetBuilder's ALWAYS-NULL raw closing-odds columns: either
-      file [DESIGN] implementation todos for a structurally-separated export of
+- [x] ✅ [DECISION] P2. File the fix-or-moot decision for CLVTargetBuilder's ALWAYS-NULL raw closing-odds columns:
+      either file [DESIGN] implementation todos for a structurally-separated export of
       odds_home_close/odds_draw_close/odds_away_close piped into CLVTargetBuilder.build(), or confirm pregame_clv_family
-      is not used in any real production retrain and mark the doc resolved as moot
+      is not used in any real production retrain and mark the doc resolved as moot — **DECISION: FIX** (2026-08-06,
+      slot-11). `pregame_clv_family` IS in `SPORTS_PRODUCTION_GRID` + `SPORTS_DEVELOPMENT_GRID`
+      (`ml-service/ml_service/training/app/core/config_loader.py` lines 613, 632); targets are canonical in UTL
+      `sports_ml_config.py`. Fix is viable without a new data export: `odds_targets_exporter.py` already calls
+      `compute_opening_odds()` which extracts closing odds internally (`_closing_{home/draw/away}`) but drops them (line
+      207 of `odds_velocity.py`). Expose these as `odds_closing_{home/draw/away}` in `odds_targets`; extend
+      `merge_clv_target_columns()` to pull them; update `CLVTargetBuilder.build()` defaults to match. Implementation
+      todos below.
+- [ ] [CODE] P2. features-service: in `compute_opening_odds()` (`features_service/sports/calculators/odds_velocity.py`
+      line ~207), instead of dropping `_closing_{home/draw/away}`, rename them to `odds_closing_{home/draw/away}` and
+      include them in the return DataFrame. Update the `export_odds_targets()` docstring in `odds_targets_exporter.py`
+      to list these 3 new columns. QG green. (repo: features-service)
+- [ ] [CODE] P2. ml-service: (a) extend `merge_clv_target_columns()` in
+      `ml_service/training/app/core/training_targets.py` to also pull `odds_closing_home`, `odds_closing_draw`,
+      `odds_closing_away` and `odds_opening_home`, `odds_opening_draw`, `odds_opening_away` from `odds_targets` into
+      `features_df` (same merge pattern as existing `odds_clv_*`); (b) update `CLVTargetBuilder.build()` in
+      `ml_service/training/app/core/sports_target_generator.py` so its default `closing_*_col`/`opening_*_col`
+      parameters match the `odds_closing_{outcome}` / `odds_opening_{outcome}` names from `odds_targets` (rename the
+      phantom `COL_CLOSING_*`/`COL_OPENING_*` constants accordingly). Gate: features-service todo above shipped + GCS
+      backfill of `odds_targets` re-run over at least one date to verify `odds_closing_*` columns appear. Done when:
+      `--operation pipeline --family pregame_clv_family` logs non-degenerate `*_clv_bps` distribution and QG green.
+      (repos: ml-service; depends on features-service todo above)
 
 > **2026-08-06 archive-candidate audit**: The sole [DATA] P3 todo (verdict ALWAYS-NULL) is checked but its own text and
 > the 2026-08-05 Progress Log defer an explicit follow-up — 'either (a) file [DESIGN]->2 implementation todos ... OR (b)
