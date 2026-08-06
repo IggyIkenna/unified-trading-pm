@@ -14,7 +14,7 @@
     },
     {
       "path": "unified-trading-api",
-      "name": "🔌 API",
+      "name": "🔌 API"
     },
     {
       "path": "e2e-testing",
@@ -27,7 +27,7 @@
     {
       "path": ".",
       "name": "📁 Workspace Root"
-    },
+    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",

@@ -2,35 +2,35 @@
   "folders": [
     {
       "path": ".",
-      "name": "📁 Workspace Root",
+      "name": "📁 Workspace Root"
     },
     {
       "path": ".cursor",
-      "name": "⚙️ Cursor Config",
+      "name": "⚙️ Cursor Config"
     },
     {
       "path": ".venv-workspace",
-      "name": "🐍 Venv",
+      "name": "🐍 Venv"
     },
     {
       "path": "unified-trading-pm",
-      "name": "📋 Project Management",
+      "name": "📋 Project Management"
     },
     {
-      "path": "unified-trading-ci",
+      "path": "unified-trading-ci"
     },
     {
-      "path": "deployment-api",
+      "path": "deployment-api"
     },
     {
-      "path": "deployment-service",
+      "path": "deployment-service"
     },
     {
-      "path": "deployment-ui",
+      "path": "deployment-ui"
     },
     {
-      "path": "ibkr-gateway-infra",
-    },
+      "path": "ibkr-gateway-infra"
+    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
@@ -53,15 +53,15 @@
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit",
+      "source.organizeImports": "explicit"
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit",
-      },
+        "source.organizeImports": "explicit"
+      }
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
@@ -79,7 +79,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -102,14 +102,14 @@
       "**/.cache/**": true,
       "**/.nyc_output/**": true,
       "**/htmlcov/**": true,
-      "**/coverage/**": true,
+      "**/coverage/**": true
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
@@ -118,9 +118,9 @@
     "cursorpyright.analysis.extraPaths": [
       "${workspaceFolder}/unified-api-contracts",
       "${workspaceFolder}/unified-trading-library",
-      "${workspaceFolder}/unified-market-interface",
+      "${workspaceFolder}/unified-market-interface"
     ],
     "editor.rulers": [100],
-    "editor.tabSize": 4,
-  },
+    "editor.tabSize": 4
+  }
 }

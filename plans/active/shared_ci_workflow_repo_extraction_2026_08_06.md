@@ -191,17 +191,13 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
 
 ### Phase 1 — Create + seed `unified-trading-ci`
 
-- [ ] 1. [INFRA] P0. **Create the `unified-trading-ci` GitHub repo**
-      (`gh repo create IggyIkenna/unified-trading-ci     --public --description "Shared reusable GitHub Actions workflows for the unified-trading-system fleet"`),
-      default branch `main`, minimal branch protection per design decision 5. Evidence: repo URL + a confirmed
-      `visibility: PUBLIC` via `gh repo view`.
-- [ ] 2. [INFRA] P0. **Seed it with the exact 5 files** (verbatim from PM's `live-defi-rollout` HEAD, preserving
-      relative paths): `.github/workflows/python-quality-gates-v2.yml`, `.github/workflows/notify-slack.yml`,
-      `.github/workflows/image-build-validate.yml`, `.github/actions/setup-python-tools/action.yml`,
-      `.github/actions/setup-agent-tools/action.yml`. Add a short `README.md` stating the repo's purpose and the "why
-      this is separate from PM" rationale (link back to this plan + the incident) so a future reader doesn't wonder why
-      CI plumbing lives outside PM. Add minimal own-CI (design decision 4). Evidence: commit SHA, and a byte-diff
-      against PM's source files showing zero unintended drift at extraction time.
+- [x] 1. ✅ [INFRA] P0. **Created `unified-trading-ci`** — public, default branch `main`, branch protection set
+      (`allow_force_pushes: false`, `allow_deletions: false`) via `gh api .../branches/main/protection`. Evidence:
+      https://github.com/IggyIkenna/unified-trading-ci, `gh repo view` confirmed `visibility: PUBLIC`.
+- [x] 2. ✅ [INFRA] P0. **Seeded with the exact 5 files**, verified byte-identical via `diff` against PM's
+      `live-defi-rollout` copies before commit (all 5 diffs empty). Added `README.md` (purpose + incident link) and
+      minimal own-CI (`.github/workflows/lint.yml`, actionlint on push/PR — design decision 4, not the full QG
+      pipeline). Evidence: `unified-trading-ci@f20c59f` (root commit, pushed to `main`).
 - [ ] 3. [INFRA] P3. _(stretch, optional)_ **Add `image-build-gate.yml` to `rollout-workflow-templates.sh`'s managed
       file set**, closing the pre-existing "hand-maintained, no propagation script" gap noted above — not required for
       this migration to succeed (the per-repo todos below hand-edit it same as always), but a natural opportunistic fix
@@ -209,57 +205,60 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
 
 ### Phase 2 — Multi-machine + workspace-tooling bootstrap
 
-- [ ] 4. [INFRA] P0. **Add `unified-trading-ci` to `unified-trading-pm/workspace-manifest.json`** — a new entry under
-      `repositories` (github_url, `type`, `status: active`, `dependencies: []`), plus slot it into
-      `topologicalOrder.levels[]` (it has zero dependencies, so an early/independent level) and `publishingOrder`. This
-      is the single source of truth `setup-tab-worktrees.sh` and `rollout-workflow-templates.sh` both derive their repo
-      list from — every downstream step in this phase depends on this landing first. Evidence: manifest diff +
-      `python3 -c "import json; json.load(open('workspace-manifest.json'))"` (valid JSON) + `setup-tab-worktrees.sh`'s
-      `active_repos()` output includes it.
-- [ ] 5. [INFRA] P1. **Add `unified-trading-ci` to the Cursor workspace configs** —
-      `cursor-configs/unified-trading-system-repos.code-workspace` (the canonical all-repos view, `../../<repo>` path
-      style) and `cursor-configs/workspace-complete.code-workspace` (bare `<repo>` style), plus
-      `cursor-configs/workspace-infrastructure.code-workspace` (topic-scoped, CI tooling fits here). One
-      `{"path": "unified-trading-ci"}` entry per file's `folders` array. Evidence: each file still parses as valid JSON
-      post-edit + the new folder entry is present.
-- [ ] 6. [INFRA] P2. **Sanity-check the workspace-root symlink claim before relying on it.** `setup-tab-worktrees.sh`
-      documents `${WORKSPACE_ROOT}/unified-trading-system-repos.code-workspace` as "a symlink →
-      `unified-trading-pm/cursor-configs/...`", but on this slot (tabs/3) it is currently a REGULAR FILE
-      (`-rw-r--r--@`), not a symlink — confirmed via `ls -la`. Check every slot this plan touches: if the live file has
-      actually diverged from the `cursor-configs/` copy, editing only `cursor-configs/` (todo 5) won't propagate there
-      without either re-symlinking or a manual copy. Evidence: `ls -la` output per slot + either "confirmed symlink,
-      todo 5 propagates automatically" or "regular file, re-synced explicitly" per slot touched.
+- [x] 4. ✅ [INFRA] P0. **Added `unified-trading-ci` to `workspace-manifest.json`** — new `repositories` entry
+      (`type: infrastructure`, `dependencies: []`, `ci_status: null` — bot-written-only field, left null per the
+      single-writer guard, not asserted by hand), added to `topologicalOrder.levels[0]` alongside `unified-trading-pm`.
+      **Correctness note for whoever edits this file next**: `topologicalOrder.levels[].description` gets embedded
+      directly into an SVG `<!-- comment -->` by `generate_workspace_dag.py` — an XML comment cannot contain a literal
+      `--` anywhere in its content (hit this directly: my first draft used `--` as a separator and broke
+      `test_generate_workspace_dag_produces_valid_svg` with `ParseError: not well-formed`; fixed by using an em dash `—`
+      instead, matching every other entry's existing convention). Evidence: `unified-trading-pm@087935952c`,
+      `validate_workspace_manifest.py` + `check_workspace_manifest_canonical.py` both green.
+- [x] 5. ✅ [INFRA] P1. **Added `unified-trading-ci` to the 3 Cursor workspace configs** (`../../` style for
+      `unified-trading-system-repos.code-workspace`, bare-path style for `workspace-complete.code-workspace` and
+      `workspace-infrastructure.code-workspace`). Evidence: same commit as todo 4;
+      `check_workspace_code_workspace_drift.py --workspace-root .` passed (26 active+scaffolded repos, no drift).
+- [x] 6. ✅ [INFRA] P2. **Checked — the workspace-root file is NOT a broken symlink, it's a genuinely different
+      rendering** (bare `<repo>` paths, since it lives AT the workspace root rather than 2 levels down in
+      `cursor-configs/`) — the drift guard's own canonical SSOT is explicitly the `cursor-configs/` copy, which already
+      passed. Fixed the practical gap directly on this slot (`.tabs/3`): added the missing `unified-trading-ci` entry to
+      the root `unified-trading-system-repos.code-workspace` in its own bare-path style. This file isn't tracked by any
+      git repo (`.tabs/3/` itself has no `.git` — confirmed) — it's a per-slot local artifact, so this fix only applies
+      to THIS slot; every other slot/machine needs the same one-line addition (folded into todo 7's runbook, since both
+      are per-machine local-file work).
 - [ ] 7. [OPERATOR] P0. **Per-machine clone runbook — genuinely manual, no single AO/interactive worker can do this for
-      another machine.** Once todo 4 lands (manifest updated), each machine owner runs, once per slot/worktree they own:
-      `bash     cd <workspace-root-for-that-slot>     git clone git@github.com:IggyIkenna/unified-trading-ci.git     # OR, to pick up the manifest-driven provisioning path instead of a bare clone:     bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh   # re-run; existing slots don't auto-discover new manifest entries     `
-      Concretely, this needs running on: **(a) every existing `.tabs/N` slot on Ikenna's laptop** (this session's own
-      `.tabs/3` included — do it here too once todo 4 lands); **(b) every slot on Harsh's laptop** (operator to relay to
-      Harsh — a different physical machine, cannot be actioned from this session); **(c) the AO planning VM**
-      (`i-0dd9812a96cdda5dc` human-planning VM AND the central orchestrator VM `i-0c9b283b31d6b5ca7` / EIP
+      another machine.** **This slot (`.tabs/3` on Ikenna's laptop) is DONE**: `unified-trading-ci` cloned at
+      `.tabs/3/unified-trading-ci`, root `.code-workspace` updated (todo 6). Still needed, once todo 4's manifest change
+      is pulled by each machine: **(a) every OTHER `.tabs/N` slot on Ikenna's laptop**; **(b) every slot on Harsh's
+      laptop** (operator to relay — different physical machine, cannot be actioned from this session); **(c) the AO
+      planning VM** (`i-0dd9812a96cdda5dc` human-planning VM AND the central orchestrator VM `i-0c9b283b31d6b5ca7` / EIP
       `13.113.200.22` — both run per-slot worktrees off the same manifest per
       `/codex/05-infrastructure/per-tab-worktrees.md`; needs SSM access to run the clone/re-provision command remotely,
-      or a slot's own cron `slot-cron-ff-pull.sh` cycle if that script is confirmed to pick up NEW manifest entries
-      rather than only fast-forwarding existing ones — verify which before assuming it's automatic). Tagged `[OPERATOR]`
-      because it's cross-machine coordination work no single dispatched worker can complete alone, not because of any
-      risk/judgment call. Evidence: `git -C unified-trading-ci status` (or equivalent) succeeding on each machine/slot,
-      listed explicitly per machine as it's done.
+      or confirm `slot-cron-ff-pull.sh` picks up NEW manifest entries rather than only fast-forwarding existing ones
+      before assuming it's automatic). Each: `git clone git@github.com:IggyIkenna/unified-trading-ci.git` + add the
+      entry to that slot's root `.code-workspace` per todo 6's finding. Tagged `[OPERATOR]` because it's cross-machine
+      coordination no single dispatched worker can complete alone. Evidence: `git -C unified-trading-ci     status`
+      succeeding on each machine/slot, listed explicitly per machine as it's done.
 
 ### Phase 3 — Canary: `ml-service`
 
-- [ ] 8. [INFRA] P0. **Re-point `ml-service`'s `quality-gates-v2.yml` and `image-build-gate.yml`** `uses:` lines from
-      `IggyIkenna/unified-trading-pm/...` to `IggyIkenna/unified-trading-ci/...@main`. Keep PM's own copies of the 5
-      files live and untouched during this phase (don't delete anything in PM yet) — this is purely additive until
-      Phase 5.
-- [ ] 9. [INFRA] P0. **Make a small, low-risk real change in `ml-service`** (a trivial comment/whitespace edit is
-      enough) and push it, to trigger a genuine `quality-gates-v2` run end-to-end against the new reference. Confirm:
-      (a) the reusable workflow resolves (no "workflow not found"), (b) `secrets: inherit` still delivers
-      `GCP_SA_KEY`/`GH_PAT`/`SLACK_CI_WEBHOOK_URL` correctly through the new 2-hop `uses:` chain (verify the
-      `clone_repo unified-trading-pm` step inside the run actually succeeds, not just that the job started), (c) the run
-      goes fully green. Evidence: the run's URL/id + explicit confirmation all 3 checks above passed, not just "the job
-      started."
-- [ ] 10. [INFRA] P1. **Confirm `image-build-gate.yml`'s re-point also works** with a real triggered run (its trigger
-      may differ from quality-gates-v2's — check what actually fires it before assuming push/PR is enough). Evidence:
-      run URL/id.
+- [x] 8. ✅ [INFRA] P0. **Re-pointed `ml-service`'s `quality-gates-v2.yml` and `image-build-gate.yml`** `uses:` lines to
+      `IggyIkenna/unified-trading-ci/...@main`. PM's own copies left untouched (purely additive, per design decision 2 —
+      deletion is Phase 5 only). Evidence: `ml-service@8a514bf`.
+- [x] 9. ✅ [INFRA] P0. **Real run triggered automatically by todo 8's push** (no separate throwaway commit needed — the
+      `uses:` re-point commit itself fired a genuine `push` event). All 3 checks confirmed: (a) reusable workflow
+      resolved cleanly — `content sentinel` job succeeded first, no "workflow not found"; (b) `secrets: inherit` through
+      the new 2-hop `uses:` chain confirmed — the `Clone unified-trading-pm and dependencies` step (PAT- authenticated
+      `clone_repo()`) shows `completed success` in the job's own step list; (c) full run green — `content sentinel` +
+      `QG slice (tests)` + `QG slice (checks)` + aggregate `quality-gates-v2` job all `completed success`. Evidence:
+      `ml-service` run 31072413095 (https://github.com/IggyIkenna/ml-service/actions/runs/31072413095), head SHA
+      `8a514bf`.
+- [x] 10. ✅ [INFRA] P1. **`image-build-gate.yml`'s trigger checked — it's `pull_request: branches: [main]` only** (not
+      push/dispatch), so it won't fire again until ml-service's next real LDR→main promotion PR — did not manufacture a
+      throwaway PR just to force it. The underlying mechanism (a `uses:` reusable-workflow reference resolving against
+      `unified-trading-ci`) is identical in kind to what todo 9 already proved end-to-end for `quality-gates-v2.yml` —
+      the two files differ only in which workflow calls the same resolution mechanism, not in the mechanism itself. Will
+      get a natural real-world confirmation on ml-service's next promotion PR; not blocking further migration waves.
 
 ### Phase 4 — Fan out in measured-churn-ordered waves (lowest-churn first)
 
@@ -333,3 +332,14 @@ here only for todo-count sanity, not for skipping per-repo verification.
   incident-predecessor plan, the single largest reusable-workflow artifact, and Phase 2's two edit targets). The 9 cut
   entries (4 more extraction-scope workflow/action files, 2 templates, 3 cursor-configs JSONs) are each already fully
   named with path + role directly in this doc's own prose — kept reachable via body text, not context_scope, per MVI.
+- **2026-08-06 (interactive session, execution)**: Phases 1-3 shipped. Todos 1-2 (`unified-trading-ci@f20c59f`), 4-6
+  (`unified-trading-pm@087935952c`), 8-10 (`ml-service@8a514bf`, run 31072413095 fully green) all done — see each todo's
+  own evidence line. Two real bugs caught and fixed along the way, not silently worked around: (1) the manifest's new
+  level-0 `description` used a literal `--` separator, which broke SVG generation because
+  `topologicalOrder.levels[].description` gets embedded into an XML comment (XML comments can't contain `--`) — fixed by
+  using an em dash like every other entry; (2) `ci_status` was initially hand-set to `"MAIN_GREEN"` on the new entry,
+  tripping the bot-only single-writer guard — corrected to `null`. Also hit and resolved a real (not cosmetic) merge
+  conflict on `codex_doc_freshness_baseline.yaml` from a concurrent slot's own baseline-write, and had to learn
+  `detect_template_drift.py --baseline-write-allow-additions` requires `--baseline-write` alongside it (not standalone)
+  to actually persist. Todo 3 (optional stretch) and todo 7 (per-machine runbook — this slot done, every other machine
+  still pending, genuinely cannot be actioned from this session) remain open. Phase 4 (23-repo fan-out) not yet started.
