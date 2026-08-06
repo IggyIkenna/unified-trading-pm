@@ -115,3 +115,22 @@ together.
   index + the still-open completion criterion (a verified-live deploy), not a duplicate of their content. At time of
   writing: layers 1 and 2 confirmed fixed and verified; layer 3's fix agent was dispatched and had not yet reported
   back; the final end-to-end deploy verification had not yet been attempted.
+- **2026-08-06 ~16:10 UTC**: layer 3 (backmerge chicken-and-egg) fix agent resolved `alerting-service` PR #345's
+  Dockerfile conflict (took-LDR base-image digest; tree now matches LDR exactly incl. `notify-slack.yml`) — PR is
+  `mergeable=MERGEABLE` but `mergeStateStatus=BLOCKED` on the required `sit-gate/fleet-green` check. Two consecutive
+  `full-workspace-sit` dispatches (runs `31116696092` @15:50-15:53, `31118400832` @16:05-16:09) both failed identically
+  on `cross-repo-invariants` / "Set up job" with `Failed to resolve action download info: Service Unavailable` — **not a
+  code or invariant failure**. Confirmed via githubstatus.com: GitHub has an active **major** incident ("Incident with
+  Actions", status=investigating, created `2026-08-06T15:22:49Z`) — both failure windows fall squarely inside it. Redi
+  rected the fix agent to (a) stop blind-retrying SIT dispatches until GitHub reports the incident resolved, (b) instead
+  do the other 6 affected repos' `notify-slack.yml` single-file direct-push to `main` (plain git pushes, unaffected by
+  the Actions outage) — full list independently derived via a fleet-wide grep for `main-backmerge-to-ldr.yml`
+  referencing `notify-slack.yml` with it absent from `main`: `agent-orchestrator`, `alerting-service` (this PR),
+  `batch-live-reconciliation-service`, `client-reporting-api`, `features-service`, `instruments-service`,
+  `unified-trading-library`. Also corrected early scope creep: the fix agent had started inspecting
+  `agent-orchestrator`'s full LDR→main `git merge-tree`, which surfaces real, unrelated content conflicts across 7+
+  files (`dashboard/src/layout.tsx`, `dashboard/src/types.ts`, `server/config.py`, `server/context_lifecycle.py`,
+  `server/main_agent_keeper.py`, `server/models/agents.py`, `server/routes/agents.py`) — that full-conflict resolution
+  is explicitly OUT OF SCOPE for this layer-3 fix (only the single missing workflow file is in scope via the
+  `.github/**`-must-reach-main carve-out); redirected to a blob-level single-file push instead, which has zero conflict
+  surface. Will re-dispatch `full-workspace-sit` once the GitHub incident clears.
