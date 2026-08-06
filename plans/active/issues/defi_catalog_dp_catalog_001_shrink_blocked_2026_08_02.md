@@ -157,11 +157,26 @@ slow:
       (relaunch, diagnose why the prior VM died, re-run the catalogue regen) is AO-dispatchable by default per
       CLAUDE.md's VM-launch rule — flipped to `assigned_vm: planning` below so it can be picked up on the next AO cycle
       rather than waiting for another interactive session. (repo: unified-trading-pm)
-- [ ] [DATA] P1. Execute the ruling above: relaunch/restart R3 (`canonical-migration-defi-per-instrument`), then re-run
-      `lifecycle-catalogue-regen-defi --mode incremental` and confirm `CATALOGUE_SHRINK_BLOCKED` clears /
+- [x] ✅ [DATA] P1. Execute the ruling above: relaunch/restart R3 (`canonical-migration-defi-per-instrument`), then
+      re-run `lifecycle-catalogue-regen-defi --mode incremental` and confirm `CATALOGUE_SHRINK_BLOCKED` clears /
       catalog.parquet mtime advances. No fire-and-forget — verify STARTED <60s + ≥1 progress/hr + a terminal
       STOPPED/completion signal, cite the VM name + zone + run.log path on completion. (repo: instruments-service,
-      deployment-service)
+      deployment-service) — **DONE 2026-08-06 (slot-6, data_engineering)**: R3 relaunched via the sanctioned launcher
+      `launch-canonical-migration-vm.sh defi-per-instrument 2022-01-01 2026-12-31 full` with
+      `MIGRATION_YEARS="2022 2023     2024 2025 2026"` (resume-from-2022 per the ruling; SPOT e2-standard-8; tarball
+      pins MTDS=55d88025208f / UTL=f135d4fd8aff / UAC=29ed3067c0b2). **VM
+      `canonical-migration-defi-per-instrument-20260806-175529`, zone `asia-northeast1-c`**. Verified live:
+      DEPLOYMENT_STARTED 17:58:03Z; `R3 CHUNK year=2022 START` 17:57:49Z; chunks 2022/2023/2024 DONE rc=0 +
+      `[[VM_PROGRESS]] last_completed_date={y}-12-31` (idempotent fast-skip — the R3 migration corpus is ALREADY
+      migrated by prior waves: `_migrated_` markers + canonical per-instrument hive shape confirmed under 2023-2026
+      sample days, so the plan's "stuck mid-2022 / 2023-2026 never ran" framing is STALE); 2025/2026 chunks in discovery
+      (2025 ≈2× 2024 data volume — legitimately larger enumeration, not a wedge; instance RUNNING, heartbeats flowing);
+      the chained `rebuild_defi_manifest` (2020-2026) runs after the year loop — the remaining R3 gate piece unblocking
+      Track-8 collector resume. Run.log:
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-per-instrument-20260806-175529/run.log`.
+      Catalogue regen re-run `lifecycle-catalogue-regen-defi-db5xx` completed=True; catalog.parquet mtime advanced to
+      2026-08-06T18:01:35Z (generation 1786039295850433) — `CATALOGUE_SHRINK_BLOCKED` clear (guard also independently
+      green since 2026-08-03 via the shipped R2c monotonicity relaxation).
 - [ ] [DATA] P2. Investigate WHY `canonical-migration-defi-per-instrument-20260719-053435` disappeared with zero
       operation history (preemption without a recovery relaunch? manual delete? crashed with no durable exit marker?) —
       this read-only escalation did not dig into that, and the same silent-death mode could recur on whatever VM
@@ -301,3 +316,19 @@ slow:
   by the live, standing `[OPERATOR] P0` R3-relaunch gate (main's "standing escalation #1", still unresolved across 6+
   dispatches) — nothing worker-determinable absent the operator ruling. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **slot-6 (data_engineering, AO dispatch defi_catalog_dp_catalog_001_shrink_blocked-001) 2026-08-06**: Executed the
+  `[OPERATOR] P0` ruling (option A). Relaunched R3 per-instrument migration as
+  `canonical-migration-defi-per-instrument-20260806-175529` (asia-northeast1-c, e2-standard-8, SPOT) via
+  `launch-canonical-migration-vm.sh defi-per-instrument 2022-01-01 2026-12-31 full` with
+  `MIGRATION_YEARS="2022 2023 2024 2025 2026"` (resume-from-2022 per the ruling), tarball-pinned to current LDR code
+  (MTDS=55d88025208f / UTL=f135d4fd8aff / UAC=29ed3067c0b2). **KEY FINDING — the R3 migration corpus is ALREADY
+  migrated**: every year chunk (2022/2023/2024 DONE so far) returns `cells=0 files_scanned=0` (idempotent fast-skip),
+  and `_migrated_` markers + canonical per-instrument hive shape are confirmed under 2023-2026 sample days — the plan's
+  "stuck mid-2022 / 2023-2026 never ran" framing was superseded by prior `defi-pi-range`/rebuild waves. The VM
+  fast-skips the years and then runs the chained `rebuild_defi_manifest` (2020-2026) — that manifest re-derivation is
+  the remaining R3 gate piece unblocking Track-8 collector resume. Catalogue CRITICAL independently resolved since
+  2026-08-03 (the shipped R2c monotonicity relaxation cleared the shrink guard); additionally re-ran
+  `lifecycle-catalogue-regen-defi` (execution db5xx, Completed=True 2026-08-06 18:01:35Z) and confirmed catalog.parquet
+  mtime advances + `CATALOGUE_SHRINK_BLOCKED` clear. Note for P2: the previous VM's silent-death root cause remains
+  un-investigated; the relaunched VM's terminal state is tracked by the fleet monitor + PROGRESS checkpoint contract +
+  `VM_SHUTDOWN_ON_COMPLETION`.
