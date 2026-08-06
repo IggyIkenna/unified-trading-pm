@@ -78,17 +78,17 @@ as resolved (see Progress Log). Numbers below are the LATEST re-census, post con
 Log 2026-08-05T16:04Z entry — treat these as more current than the 08-04 figures but the consolidator is still not fully
 healthy, so even these may understate true progress).
 
-| Entity           | Scope                        | Status (2026-08-05)                                                                                                                                                                           |
-| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                                          |
-| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                        |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 174,673 already resolved, **48,432 needed** (flat this tick, confirmed genuinely active via run.log — consolidator lag) — ACTIVE via `af-backfill-20260806-022033` |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 52,372 already resolved, **58,531 needed** (denominator drift only — no backfill run yet)                                                                          |
-| **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,372 already resolved, **only 999 needed** — nearly done                                                                                                                   |
-| **INJURIES**     | **all-383**                  | 108,662 expected, 45,953 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                                |
-| **STANDINGS**    | **all-383**                  | 108,662 expected, 65,110 already resolved, **43,552 needed** (was 64,439 on 08-04, **-20,887**) — PAUSED, still draining (trailing consolidator absorption)                                   |
-| **TEAMS**        | **all-383**                  | 108,662 expected, 68,984 already resolved, **39,678 needed** (was 64,723 on 08-04, **-25,045**) — PAUSED, still draining (trailing consolidator absorption)                                   |
-| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                                   |
+| Entity           | Scope                        | Status (2026-08-05)                                                                                                                                                                             |
+| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                                            |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                          |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 174,673 already resolved, **48,432 needed** (flat 2 ticks now, confirmed genuinely active via run.log — consolidator lag) — ACTIVE via `af-backfill-20260806-022033` |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,291 expected (non-MVP), 52,372 already resolved, **58,531 needed** (denominator drift only — no backfill run yet)                                                                            |
+| **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,372 already resolved, **only 999 needed** — nearly done                                                                                                                     |
+| **INJURIES**     | **all-383**                  | 108,662 expected, 45,953 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                                  |
+| **STANDINGS**    | **all-383**                  | 108,662 expected, 65,996 already resolved, **42,666 needed** (was 64,439 on 08-04, **-21,773**) — **ACTIVE** via a separately-discovered dedicated VM, see below                                |
+| **TEAMS**        | **all-383**                  | 108,662 expected, 69,870 already resolved, **38,792 needed** (was 64,723 on 08-04, **-25,931**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk 29/76)                    |
+| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                                     |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
@@ -97,11 +97,12 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T01:59Z: 146,938 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~24% drop — mostly STANDINGS/TEAMS backlog draining via the paired TEAMS/STANDINGS run, see Progress Log) **+
-106,963 across FIXTURE_STATS+FIXTURE_LINEUPS** (48,432 + 58,531, TEAMS/STANDINGS paused, FIXTURE_STATS active). LEAGUES
-excluded per the resolved verdict below. **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth
-launching soon** since it could converge quickly once dispatched.
+**Grand total needed, 2026-08-06T02:18Z: 145,166 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~25% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
+**+ 106,963 across FIXTURE_STATS+FIXTURE_LINEUPS** (48,432 + 58,531). TEAMS/STANDINGS and FIXTURE_STATS are now BOTH
+confirmed active concurrently (2 lanes, see Progress Log correction). LEAGUES excluded per the resolved verdict below.
+**PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since it could converge quickly
+once dispatched.
 
 ## ✅ RESOLVED 2026-08-03 — LEAGUES verdict: retired entity, 0 real work, do not launch
 
@@ -584,37 +585,15 @@ are genuinely in scope for the operator's "no exceptions" directive.
   like FIXTURE_STATS/PLAYER_STATS/INJURIES). **Practical implication: this TEAMS run is already advancing STANDINGS for
   free** — may not need a separate dedicated STANDINGS launch at all if this run continues; will re-evaluate once TEAMS
   converges or this run ends.
-- **2026-08-05T20:51Z** — `af-backfill-20260805-201310` still healthy, ~97min elapsed, left running. Dual progress
-  continues: TEAMS 46,593→46,457 (-136), STANDINGS 50,628→50,359 (-269).
-- **2026-08-05T21:28Z-22:28Z (condensed)** — TEAMS/STANDINGS census flat for 5 CONSECUTIVE checks now (~117min→194min
-  elapsed, all reading 46,457/50,359). Verified via run.log at checks 2-4 that this is genuinely NOT a stall — the VM
-  kept advancing through real dates the whole time (2020-12-17→2021-02-13, ~60 days processed) and its per-VM shard
-  chunk (`-c3`) grew substantially (11,505→33,747+ entries) — this is the campaign's longest single stretch without
-  consolidator absorption, but the underlying mechanism is fully understood (same per-VM-shard-to-canonical lag seen
-  throughout this campaign) and not a new failure mode. Per the accepted-characteristic rule, not re-verifying via
-  run.log every subsequent tick — VM confirmed still RUNNING as of 22:28Z, left running.
-- **2026-08-05T22:52Z-23:47Z (condensed)** — Movement resumed after the 5-check flat stretch and has been strong and
-  accelerating since (confirms the consolidator caught up on the accumulated chunk `-c3` work): TEAMS
-  46,457→46,333→46,013→45,378→44,447; STANDINGS 50,359→50,207→49,887→49,252→48,321, across 4 checks spanning
-  217min→272min elapsed (VM now past 4.5 hours continuous runtime, by far the campaign's longest single run). VM healthy
-  throughout, left running.
-- **2026-08-06T00:06Z** — Continued strong progress (~292min elapsed, nearly 5 hours): TEAMS 44,447→43,569 (-878),
-  STANDINGS 48,321→47,443 (-878). Denominators grew slightly (108,653→108,662) as a new day rolled into scope —
-  expected, not concerning. VM still healthy, left running.
-- **2026-08-06T00:26Z** — `af-backfill-20260805-201310` now past 6 hours continuous runtime (~372min elapsed), still
-  RUNNING, the campaign's longest single run by a wide margin. TEAMS 43,569→42,549 (-1,020), STANDINGS 47,443→46,423
-  (-1,020) — identical deltas again, consistent with the paired-entity mechanism. Grand total across the 4 in-scope
-  per-fixture entities now 152,680 (was 192,877 pre-window). Neither entity is near the ~10k-15k convergence threshold
-  yet, so left running as-is; no action needed this tick beyond the journal update.
-- **2026-08-06T00:45Z** — `af-backfill-20260805-201310` past 6.5 hours (~391min elapsed), still RUNNING and healthy.
-  TEAMS 42,549→41,690 (-859), STANDINGS 46,423→45,564 (-859) — deltas slightly below the prior tick's -1,020 but still
-  solid, not a clear-slowdown signal warranting a switch. Grand total 150,962. Left running as-is.
-- **context-scout 2026-08-06**: populated context_scope (4 entries).
-- **2026-08-06T01:03Z** — `af-backfill-20260805-201310` past 6.8 hours (~409min elapsed), still RUNNING. TEAMS
-  41,690→41,206 (-484), STANDINGS 45,564→45,080 (-484) — third consecutive tick of declining delta (1,020→859→484).
-  Grand total 149,994. Still above the ~300-400/check sustained-slowdown threshold that would warrant a deliberate
-  switch, so left running, but flagging the trend to watch closely next tick or two — if it drops below ~300-400 and
-  stays there, will stop this VM and redirect the lock to FIXTURE_STATS (resume) or PLAYER_STATS.
+- **2026-08-05T20:51Z-01:03Z (condensed)** — `af-backfill-20260805-201310` ran continuously through this whole stretch
+  (97min→409min elapsed, past 6.8hrs by the end). TEAMS/STANDINGS dropped in lockstep throughout (paired-entity
+  mechanism confirmed repeatedly): 46,457→46,333→46,013→45,378→44,447→43,569→42,549→41,690→41,206 (TEAMS), STANDINGS
+  mirroring exactly. Included one 5-check flat stretch (21:28Z-22:28Z, ~117min→194min elapsed) verified via run.log to
+  be genuine consolidator-absorption lag, not a stall (VM kept advancing through real dates, per-VM shard grew
+  substantially) — followed by a strong catch-up burst once the consolidator processed the backlog. From 00:26Z onward
+  the per-tick delta began a genuine decline (1,020→859→484), tracked closely since it was approaching the established
+  ~300-400/check switch threshold. Grand total dropped from 152,680 to 149,994 across this stretch. _(context-scout also
+  populated context_scope frontmatter on this doc during this window — harmless, unrelated.)_
 - **2026-08-06T01:16Z-01:25Z — SWITCH: TEAMS/STANDINGS paused, FIXTURE_STATS resumed.** 4th consecutive tick confirmed
   the trend below threshold: TEAMS 41,206→40,941 (-265), STANDINGS 45,080→44,815 (-265). Verified via run.log before
   acting (not just assuming): the VM was genuinely still advancing through real dates (~1 date/40s, into Nov 2021,
@@ -641,3 +620,25 @@ are genuinely in scope for the operator's "no exceptions" directive.
   per-VM-shard-absorption mechanism (the consolidator cron can batch a larger chunk of the leftover shard in one cycle
   than another), not treated as a new concern; will keep an eye out but not investigating further unless it persists
   past another tick or two. Grand total 146,938 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Left FIXTURE_STATS running.
+- **2026-08-06T02:18Z — CORRECTION: TEAMS/STANDINGS were never actually paused.** The "trailing consolidator absorption"
+  explanation for continued TEAMS/STANDINGS drainage (2 prior ticks, growing delta 533→730→886 on this tick) was wrong —
+  investigated because a 3rd consecutive tick of growing post-stop drainage crossed the standing "worth a closer look"
+  threshold. Widened the VM search beyond the `af-backfill-*` name filter this doc has used all campaign and found
+  **`instr-backfill-sports-teams-20260805-055622`**, RUNNING continuously since **2026-08-05T05:59:14Z** (~20.3hrs by
+  this check) — a separate, dedicated, chunked TEAMS backfill (`instruments_chunk_loop.sh`, 76 chunks covering
+  2020-06-06→2026-08-06, `Entity-scoped mode: restricting to TEAMS only`, currently at chunk 29/76 ≈ Oct 2022) launched
+  via a different script/naming convention than the `launch-api-football-backfill-vm.sh` → `af-backfill-*` pool this doc
+  has been actively managing. This VM — not consolidator lag — has been the real, continuous driver of TEAMS/STANDINGS
+  progress this entire session (likely concurrently with `af-backfill-20260805-201310` for the portion of this window
+  before that VM was stopped). Checked for similar hidden VMs against FIXTURE_LINEUPS/INJURIES/PLAYER_STATS
+  (`name~'instr-backfill' OR name~'sports'` across all VMs) — found none; those three are confirmed genuinely untouched
+  as documented. **Implication for the "singleton lock" model**: it was incomplete — there can be (and have been) two
+  concurrent API-Football-consuming VMs at once (this dedicated TEAMS chunk-loop + whatever's in the `af-backfill-*`
+  pool), sharing the same vendor quota rather than being mutually exclusive. This doesn't invalidate the earlier switch
+  decision (FIXTURE_STATS redirect was still reasonable given that VM's own declining rate), but it does mean
+  TEAMS/STANDINGS should be reclassified ACTIVE, not PAUSED, and this VM should be included in VM-state checks going
+  forward (`name~'af-backfill' OR name~'instr-backfill-sports'`). At current pace (29/76 chunks in ~20.3hrs) this TEAMS
+  VM has roughly another 30+ hours to run before its full 2020-2026 sweep completes — no action needed, just monitor
+  read-only alongside the af-backfill-* pool. Census this tick: TEAMS 39,678→38,792 (-886), STANDINGS 43,552→42,666
+  (-886). Grand total 145,166 (core 4) + 106,963 (FIXTURE_STATS+LINEUPS). Also condensed the 2026-08-05T20:51Z-01:03Z
+  block of per-tick entries above into one summary paragraph (doc was at 643 lines).
