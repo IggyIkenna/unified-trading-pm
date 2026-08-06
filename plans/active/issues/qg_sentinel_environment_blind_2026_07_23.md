@@ -256,3 +256,5 @@ was already closed 2026-07-31). No RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 5 entries resolve on disk and
   remain the minimal-correct set (SSOT + 1 related issue doc + 2 source scripts) — no changes.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

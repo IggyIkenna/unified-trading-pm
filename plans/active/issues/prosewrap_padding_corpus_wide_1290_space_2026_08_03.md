@@ -134,6 +134,8 @@ Mechanical, bounded remediation — not a design/judgment call:
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
 
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
 - **na-eligibility-audit 2026-08-03 (cross-cutting tranche)**: RECLASSIFY, conflict-check CLEAR — this doc's own
   Progress Log explicitly invited reclassification, and the sole open todo is bounded/mechanical (run an existing
   script, collapse whitespace per its output, verify content-only via `git diff -w`) with a stated done-when. Cleared

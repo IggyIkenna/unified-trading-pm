@@ -188,3 +188,5 @@ at the broken line.
   clean, REST API exposes no error detail for this failure class). Left open per operator direction ("write it up
   leaving it undone") — next session/operator should start from the recommended web-UI step above rather than re-derive
   this investigation.
+
+- **context-scout 2026-08-06**: populated context_scope (3 entries).

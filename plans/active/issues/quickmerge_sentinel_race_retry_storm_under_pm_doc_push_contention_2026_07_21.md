@@ -147,3 +147,4 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
   cache) or fix 3 (serialized PM-doc-push queue) — no duplication. No RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (SSOT +
   related issue + archived sibling fix doc + quickmerge.sh) — no changes.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

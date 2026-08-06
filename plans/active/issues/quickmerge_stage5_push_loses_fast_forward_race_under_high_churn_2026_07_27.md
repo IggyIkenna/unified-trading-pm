@@ -199,3 +199,4 @@ context_scope:
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 6 entries resolve on disk (SSOT + 2
   related plans + the 3 source files the todos actually fixed) — no changes.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -77,11 +77,8 @@ source:
 context_scope:
   [
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
-    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
-    deployment-service/scripts/quality-gates.sh,
-    features-service/scripts/quality-gates.sh,
   ]
 ---
 

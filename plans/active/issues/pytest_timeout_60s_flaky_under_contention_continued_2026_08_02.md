@@ -937,3 +937,4 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
   `cicd.md`, skipped the authoring-slot ping. Slot left clean (`execution-service` and `unified-trading-pm` both on
   `live-defi-rollout`, 0 commits ahead of origin beyond this doc edit; no branch changes made in either repo). This doc
   is now at its 1000-line hard cap -- the NEXT occurrence for ANY repo MUST split rather than append.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

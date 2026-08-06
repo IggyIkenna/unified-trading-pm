@@ -62,7 +62,7 @@ context_scope:
     /codex/02-data/honest-coverage-model.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     /plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md,
-    features-service/features_service/volatility/core/orchestration_service.py,
+    scripts/quality_gates/check_bare_read_availability_index.py,
   ]
 locked_since:
 ---
@@ -473,3 +473,7 @@ not a mechanical column-list copy.
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 6 entries resolve on disk (UTL
   reader + deployment-api wrapper + codex SSOT + related plan + archived sibling issue + the dead-code-investigation
   target file) — no changes.
+- **context-scout 2026-08-06**: re-scouted; the dead-code target `features-service/.../orchestration_service.py` was
+  DELETED per this doc's own final P3 todo (confirmed-dead-code cleanup, shipped `features-service@c8627c64`) so it no
+  longer resolves on disk — swapped it for `scripts/quality_gates/check_bare_read_availability_index.py` (the enforcing
+  QG gate this audit's P2 todo shipped), now 6 entries.

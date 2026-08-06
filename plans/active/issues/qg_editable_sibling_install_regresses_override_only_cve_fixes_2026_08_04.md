@@ -20,7 +20,7 @@ related:
   [
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
-    /plans/active/ci_local_qg_parity_2026_06_08.md,
+    plans/active/ci_local_qg_parity_2026_06_08.md,
   ]
 created: 2026-08-04
 author: slot-9
@@ -45,7 +45,7 @@ context_scope:
     scripts/quality-gates-base/base-service.sh,
     scripts/quality-gates.sh,
     /codex/06-coding-standards/quality-gates.md,
-    plans/active/ci_local_qg_parity_2026_06_08.md,
+    /plans/archive/2026_06/ci_local_qg_parity_2026_06_08.md,
   ]
 ---
 
@@ -192,3 +192,7 @@ detection: only **2 repos** are actually affected — `unified-trading-pm` (`uni
   — genuinely operator-gated per its own text. Also filed
   `fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md` as an unrelated side-finding (this repo's
   own hygiene fixer strips the RULES.md-required `author` field from issue-doc frontmatter).
+
+- **context-scout 2026-08-06**: re-scouted; `ci_local_qg_parity_2026_06_08.md` archived to `plans/archive/2026_06/`
+  since first scouted, so its context_scope entry now points at the correct archived path (was a dead `plans/active/...`
+  reference); otherwise re-verified context_scope (4 entries), unchanged.

@@ -209,3 +209,5 @@ picked up and flagged as a malformed runbook. (This doc is deliberately named `q
 
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 existing entries resolve on disk
   and remain the minimal-correct set (codex QG SSOT + related plan + verified source script) — no changes.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

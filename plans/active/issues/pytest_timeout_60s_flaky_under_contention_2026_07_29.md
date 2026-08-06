@@ -637,3 +637,4 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   discharged; the class is confirmed NOT closed by the timeout raise alone — the underlying mechanism is
   OS-scheduler/xdist contention, not an absolute wall-clock threshold that any single raise can fix. Checkbox flipped
   with this entry. Slot left clean (0 commits ahead of `origin/live-defi-rollout` in every repo; only this doc touched).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
