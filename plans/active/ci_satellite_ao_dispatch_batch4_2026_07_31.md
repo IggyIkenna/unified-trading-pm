@@ -168,13 +168,17 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `issues/uv_bootstrap_fallback_test_structural_anchor_stale_2026_07_30.md` (sole todo) — never cited by any
     covering doc; a clean, small, previously-untriaged orphan.
 
-- [ ] [REVIEW] P2. **Decide + implement whether `deployment-api` should be REMOVED from
-      `scripts/workflow-templates/self-hosted-qg-repos.txt`** (not just hand-reverted in its own workflow copy, which is
-      how the 2 prior recurrences were patched) so a future template rollout can't silently re-flip it onto self-hosted
-      a 3rd time. The doc's own "Recommended fix path" (self-hosted allowlist posture) was operator-ruled live
-      2026-07-28; this is the one follow-up item the ruling didn't cover. **Done when**: the decision is recorded with
-      rationale, and if "remove" — the entry is deleted from the template allowlist + verified deployment-api's own
-      workflow copy stays on `ubuntu-latest` after the next template rollout dry-run.
+- [x] ✅ [REVIEW] P2. **Decide + implement whether `deployment-api` should be REMOVED from
+      `scripts/workflow-templates/self-hosted-qg-repos.txt`** — unified-trading-pm@274d54634. **DECISION: YES, remove
+      (already done 2026-08-05).** `deployment-api` is a PUBLIC repo (confirmed `gh repo view --json visibility` →
+      `PUBLIC`) — GitHub-hosted runners are unmetered for public repos; self-hosting wastes shared VM capacity for zero
+      billing benefit. The entry was already removed from the active allowlist on 2026-08-05 as part of the
+      15-public-repos cleanup (`self_hosted_runner_public_repo_revert_2026_08_05.md`, `self-hosted-qg-repos.txt` lines
+      68-77). Verified: (1) `deployment-api` is NOT in the 8 active allowlist entries (lines 80-87, private repos only);
+      (2) `deployment-api`'s own `quality-gates-v2.yml` uses `runs-on: ubuntu-latest` on all 3 jobs (lines 99/154/184);
+      (3) template rollout `--dry-run --repo deployment-api` confirms `get_qg_runner_labels("deployment-api")` returns
+      empty → `ubuntu-latest` fallback — all 8 updated templates render `ubuntu-latest`. No code change needed — the
+      removal was already implemented and verified.
   - Source: `issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (`## Follow-up`, `[REVIEW] P2`) —
     never cited by any covering doc.
 
