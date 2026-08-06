@@ -302,6 +302,20 @@ grace_set.txt / hygiene_sweep.txt / plan_health_digest.md / plan_skeleton.md) re
 `diag_cred.yaml` is another slot's Cloud Build diagnostic YAML (not a credential), `ffpulltokens.*` is the slot cron
 ff-pull's empty transient token file — neither mine. **Verdict: safe to compact — YES.**
 
+**4th /pre-compact audit 2026-08-06 (~21:05 UTC, post-2nd-compaction re-run):** git clean + ahead=0 (HEAD 655e228e9,
+unchanged since 3rd); wait-loop bxmxi5mlo verified ALIVE (PID 3317685, ps etime ~5min of the 57min loop, ~10 ticks
+remaining, expiry ~21:54); /tmp scan — the same 5 regenerable scratchpad inputs (cefi_writable.txt / grace_set.txt /
+hygiene_sweep.txt / plan_health_digest.md / plan_skeleton.md) + confirmed-not-mine `diag_cred.yaml` (other slot's Cloud
+Build diagnostic YAML) + `ffpullresult.BQl1iQ` (empty ff-pull token file, 0 bytes) — no secrets; **NEW DISCOVERY —
+dangling scratchpad handoff FIXED**: cefi_4surface:798's todo said "promote `investigate_chain_lossy_20260724.py` from
+the session scratchpad", but the script exists NOWHERE on disk (originating 2026-07-24 session's /tmp long wiped) —
+unfulfillable handoff; reworded the todo to re-create-the-diagnostic-from-documented-procedure
+(/plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md:94 + 4surface body :760-789), see
+cefi_4surface@6b0bad47f; the Cluster A notes :594-595/:614-616 ("promote it first") are historical, the todo is now
+authoritative; no other dangling /tmp refs (3rd's grep-0 stands for the rest of the corpus; the other 3 grep hits in
+this doc are this audit + the acknowledged handoff, now resolved); no new chat-only findings since 3rd. **Verdict: safe
+to compact — YES.**
+
 **Candidate registry:** all pending candidates are above, per hunter. Writable-doc fixes with CONFIRMED-verification
 needed (dedup'd across hunters):
 
