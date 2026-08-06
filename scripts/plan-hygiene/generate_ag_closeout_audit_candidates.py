@@ -254,6 +254,7 @@ def main(argv=None) -> int:
                     "total_members": len(candidates),
                     "never_cited_count": len(never_cited),
                     "never_cited": never_cited,
+                    "candidates": candidates,
                     "cited_somewhere_count": len(cited_somewhere),
                 },
                 indent=1,
