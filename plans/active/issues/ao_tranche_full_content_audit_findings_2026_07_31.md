@@ -24,6 +24,7 @@ related:
   [
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 author: unknown
@@ -56,7 +57,7 @@ source:
 ## §1 — The 26 excluded false-positives, with reasoning
 
 Started from the union of `repos:` contains `agent-orchestrator` OR `parent_epic` in
-`{orchestrator_master, agent_operating_framework_master}` across `plans/active/issues/*.md` (89 candidates, 88 after
+`{orchestrator_master, agent_operating_framework_master}` across `plans/archive/issues/*.md` (89 candidates, 88 after
 excluding 1 already-`resolved` doc). Read every title/summary/`asset_group`/repos-breadth individually rather than
 trusting the filter. 62 survived as genuinely AO-subject (now in the tracker); these 26 did not — grouped by why:
 

@@ -20,6 +20,7 @@ related:
     plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
     /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-09
 parent_epic: infrastructure_master
@@ -572,7 +573,7 @@ Two independent gates because Group A and Group B are at different stages:
       `issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md` (removed `gcs-migration-bundle-*` from the P2
       6-launcher list), `plans/epics/infrastructure_master.md` (closed the now-moot `launch-gcs-migration-bundle-vm.sh`
       GCS-script-staging P3 todo as MOOT — the launcher no longer exists) and
-      `codex/05-infrastructure/vm-tarball-deployment.md` (dropped its stale Pattern-B-exception table row) — all
+      `/codex/05-infrastructure/vm-tarball-deployment.md` (dropped its stale Pattern-B-exception table row) — all
       adjacent stale references to the deleted launcher, found while verifying scope. `deployment-service`'s
       `quality-gates.sh` green (224s, `.qg_last_passed_sha=557247c`); all 3 commits verified reachable on
       `origin/live-defi-rollout` via `git merge-base --is-ancestor`. Repo-wide grep for both launcher filenames in

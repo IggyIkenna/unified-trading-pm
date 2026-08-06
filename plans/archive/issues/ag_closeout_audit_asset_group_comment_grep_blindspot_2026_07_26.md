@@ -75,11 +75,12 @@ asset_group:
 The retag itself is correct and the audit trail is genuinely valuable. The problem is purely mechanical, and it cuts
 both ways:
 
-1. **Single-line grep misses it.** `rg -l '^asset_group:.*prediction' plans/active/*.md plans/active/issues/*.md`
-   returns 63 docs and this is not one of them — the key line ends at the colon, and the value is on the next line. The
-   skill's own Phase 0.3 wording ("enumerate every `plans/active/*.md` ... whose frontmatter `asset_group` list contains
-   `<ag>`") is naturally implemented as exactly this grep; the closeout-linkage helper and the ad-hoc greps quoted
-   inside several closeout docs use that form too.
+1. **Single-line grep misses it.**
+   `rg -l '^asset_group:.*prediction' plans/archive/2026_08/*.md plans/archive/issues/*.md` returns 63 docs and this is
+   not one of them — the key line ends at the colon, and the value is on the next line. The skill's own Phase 0.3
+   wording ("enumerate every `plans/archive/2026_08/*.md` ... whose frontmatter `asset_group` list contains `<ag>`") is
+   naturally implemented as exactly this grep; the closeout-linkage helper and the ad-hoc greps quoted inside several
+   closeout docs use that form too.
 2. **Naive block-aware parsing ALSO misses it, for the opposite reason.** Collapse the continuation lines and tokenise
    without stripping `#` comments, and the quoted `[cross-cutting]` reads as a live second tag → the doc looks like
    `[prediction, cross-cutting]` → the Phase 0.3 peer-AG exclusion drops it as a "deterministic cross-cutting
@@ -145,5 +146,5 @@ way: the audit reports a clean orphan count and a plausible-looking doc total, s
 ## Provenance
 
 Second `/ag-closeout-audit prediction` run, 2026-07-26 (autonomous). The prediction-side consequence is tracked as
-`/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todos 1-2 (`status: draft`); this doc tracks the
-skill/tooling defect itself so it stops recurring.
+`/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todos 1-2 (`status: draft`); this doc
+tracks the skill/tooling defect itself so it stops recurring.

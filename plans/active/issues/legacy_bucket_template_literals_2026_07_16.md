@@ -30,6 +30,7 @@ related:
     ../sports_legacy_bucket_cutover_2026_07_16.md,
     ../bucket_name_ssot_canonicalisation_2026_05_10.md,
     ../../epics/sports_master.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-16
 author: unknown

@@ -593,7 +593,7 @@ depends_on: []
   [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)”
   vs `epics/defi_master.md:1443`: “this block is tracked in
   [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md”
-  - why: features_and_ml_master cites this plan as living under plans/active/ and gates two open P0 todos (UAC
+  - why: features_and_ml_master cites this plan as living under plans/archive/2026_08/ and gates two open P0 todos (UAC
     FEATURE_REQUIRED_INPUTS expansion; Tab-12 wire-in) on its Phase 0/1/4 progress, treating it as an in-flight
     coordinator. defi_master (edited later, 2026-06-20) correctly points to plans/archive/2026_05/ for the same pl
 

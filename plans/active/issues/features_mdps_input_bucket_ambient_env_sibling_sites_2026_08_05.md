@@ -25,6 +25,7 @@ related:
   - /plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md
 created: 2026-08-05
 author: slot-8
+  /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
 source: ["data_pipeline_check_mdps_features-056 dispatch 2026-08-05; bucket estate `gcloud storage ls` 2026-08-05"]
 assigned_vm: planning
 execution_scope: orchestrator-agent

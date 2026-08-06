@@ -2,7 +2,7 @@
 doc_type: issue
 title: Issue-docs remediation sweep — code-fixable items across the 2026-05/06 issue-doc backlog
 summary:
-  'A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current
+  'A 2026-06-02 (slot 7) code-audit of every `plans/archive/issues/*.md` doc verified each open claim against current
   code (with git-log dates, since docs predate today). Outcome: a large fraction of "...'
 status: open
 nature: process
@@ -25,6 +25,7 @@ related:
     plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-02
 author: unknown
@@ -67,7 +68,7 @@ depends_on: []
 
 ## Why this exists
 
-A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current code
+A 2026-06-02 (slot 7) code-audit of every `plans/archive/issues/*.md` doc verified each open claim against current code
 (with git-log dates, since docs predate today). Outcome: a large fraction of "open" items were **already fixed in code**
 after the docs were written; what remains is consolidated here as canonical `- [ ]` todos so it is dispatchable +
 auditable in one place. This tracker IS the dispatch (per CLAUDE.md "the plan todo is the dispatch"). Items flip to

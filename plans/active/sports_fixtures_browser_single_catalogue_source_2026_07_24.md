@@ -22,6 +22,7 @@ related:
     /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
     /plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

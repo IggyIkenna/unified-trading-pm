@@ -30,6 +30,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/task_template.md,
     /plans/PLAN_FORMAT.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-26"
 last_updated: "2026-07-26"
@@ -218,22 +219,22 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       post-land**: `bec54efeb` landed with the delete-side of all 35 renames silently dropped (repeated stash-restore
       cycles across 10 retry attempts on this one commit — an exceptionally busy branch that night — eventually lost the
       staged deletion half while the archive/-side content landed correctly), leaving 35 stale duplicate copies live in
-      `plans/active/` alongside the correct `plans/archive/` copies. Caught by directly diffing `git show <sha> --stat`
-      against expectations (a `git log` success message and clean `rev-list` alone were NOT sufficient evidence — this
-      is now the standing verification bar for every future quickmerge on a busy branch: check the actual committed
-      diff, not just the exit code). 31 of the 35 duplicates fixed via a clean pure-deletion follow-up
-      (`unified-trading-pm@42d570211`). **4 duplicates deliberately left unresolved**:
+      `plans/archive/2026_08/` alongside the correct `plans/archive/` copies. Caught by directly diffing
+      `git show <sha> --stat` against expectations (a `git log` success message and clean `rev-list` alone were NOT
+      sufficient evidence — this is now the standing verification bar for every future quickmerge on a busy branch:
+      check the actual committed diff, not just the exit code). 31 of the 35 duplicates fixed via a clean pure-deletion
+      follow-up (`unified-trading-pm@42d570211`). **4 duplicates deliberately left unresolved**:
       `manifest_hygiene_red_2026_06_27.md`, `manifest_hygiene_red_2026_06_29.md`,
       `mtds_plan_reconciliation_2026_06_29.md`, `phantom_captures_tradfi_2026_06_28.md` carry a genuine pre-existing
       `locked_by: live-defi-rollout` in their ORIGINAL frontmatter (confirmed real for these 4 specifically, not the
       wider corpus-wide boilerplate coincidence most `locked_by: live-defi-rollout` values are — the
       locked-plan-deletion gate correctly blocked their removal). Per CLAUDE.md, unlocking requires an explicit operator
-      `[unlock-plan]` — never autonomous — so both copies (stale `plans/active/issues/` + correct
+      `[unlock-plan]` — never autonomous — so both copies (stale `plans/archive/issues/` + correct
       `plans/archive/issues/`) currently coexist for these 4 pending that decision. New follow-up todo below.
 - [x] [REVIEW] P2. **RETAGGED 2026-07-28 (stale-tag audit — this item's own operator gate already resolved and executed,
       `[OPERATOR]` never removed).** 4 duplicate doc pairs needed an explicit `[unlock-plan]` decision before the stale
-      `plans/active/issues/` copy could be removed — unified-trading-pm@0703cb288 (`[unlock-plan]`, operator-granted).
-      Verified: all 4 stale `plans/active/issues/` copies removed, `plans/archive/issues/` copies confirmed present and
+      `plans/archive/issues/` copy could be removed — unified-trading-pm@0703cb288 (`[unlock-plan]`, operator-granted).
+      Verified: all 4 stale `plans/archive/issues/` copies removed, `plans/archive/issues/` copies confirmed present and
       correct, 7 live referrers repointed onto the archive path.
 - [ ] [SCRIPT] P3. **Widen `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership rule** — currently
       `parent_epic in DATA_EPICS` alone lets ci/infra-scoped docs sharing `infrastructure_master` leak into
@@ -276,8 +277,8 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `sports_odds_team_name_alias_gap_south_america_2026_07_09`,
       `sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20`,
       `tradfi_manifest_writer_legacy_id_regression_2026_07_21`,
-      `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15` (all `plans/active/issues/`).
-      NEEDS_CHECKBOX_CONVERSION (19): `defi_venue_lst_rates_residual_2026_07_24` (`plans/active/`),
+      `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15` (all `plans/archive/issues/`).
+      NEEDS_CHECKBOX_CONVERSION (19): `defi_venue_lst_rates_residual_2026_07_24` (`plans/archive/2026_08/`),
       `aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26`,
       `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16`,
       `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24`,
@@ -293,7 +294,7 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23`,
       `onchain_manifest_dishonest_and_recompute_blocked_2026_07_21`, `phantom_audit_estate_coverage_gap_2026_07_10`,
       `plan_issue_epic_consolidation_2026_06_30`,
-      `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25` (all `plans/active/issues/` unless
+      `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25` (all `plans/archive/issues/` unless
       noted). Full per-doc reasoning in the workflow journal (`wf_f263f118-37a`, `whqfflv82.output`) — do not re-derive
       verdicts, re-read each doc against its own cited evidence before converting.
 - [x] [SCRIPT] P2. **DONE (2026-08-03) — re-ran `check_na_duplicate_staleness.py`'s candidate list (65 dup-stale + 57
@@ -477,8 +478,8 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 
   **Executed: 60 of the 61 clean docs flipped `assigned_vm: NA → planning`**
   (`unified-trading-pm@<pending, see next commit>`) directly, with no companion finalize doc — confirmed via reading
-  `check_finalize_plan_coverage.py`'s source that it only globs the top-level `plans/active/*.md`, never
-  `plans/active/issues/*.md`, so issue docs are structurally exempt from that gate. One candidate,
+  `check_finalize_plan_coverage.py`'s source that it only globs the top-level `plans/archive/2026_08/*.md`, never
+  `plans/archive/issues/*.md`, so issue docs are structurally exempt from that gate. One candidate,
   `issues/instrument_id_format_canonicalization_2026_07_08.md`, was otherwise clean but already sits at 1,309 lines
   (pre-existing, not caused by this pass) — over the 1,000-line hard cap — so it was reverted back to `NA` and left for
   a future split-then-reclassify pass rather than blocking the other 60. Full per-doc evidence is in each sub-agent's
@@ -677,7 +678,7 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 - **na-eligibility-audit 2026-08-03 (RECLASSIFY + blocker-currency pass, 10 parallel agents over the 122-doc set from
   this same date's staleness-audit rerun)**: full doc-level re-read (not line-level) of every doc, applying the
   RECLASSIFY rubric + the shared conflict-check protocol before any flip. **4 docs RECLASSIFIED `NA` → `planning`** (all
-  `plans/active/issues/*.md`, so no `_finalize` companion owed):
+  `plans/archive/issues/*.md`, so no `_finalize` companion owed):
   `manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` (gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md`
   cleared 2026-08-03 — archived, 0 real objects needed migrating; also backfilled a missing
   `assigned_role: data_engineering` and cleared the now-stale `depends_on`/ `gate_on_depends`),

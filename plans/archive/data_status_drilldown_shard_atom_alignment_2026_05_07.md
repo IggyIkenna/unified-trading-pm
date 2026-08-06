@@ -231,7 +231,7 @@ Both belong in this plan — they are the math behind the drill-down hierarchy t
 
 **unified-trading-pm** (codex docs + plan):
 
-- This plan moves to `plans/active/` after user approval.
+- This plan moves to `plans/archive/2026_08/` after user approval.
 - `/codex/02-data/availability-manifest-and-data-status.md` — new section "Drill-down hierarchy = shard atom" pointing
   at the new endpoint.
 - `/codex/06-coding-standards/cli-convention.md` — extend with the `--shard-key` convention so other services follow the

@@ -5,11 +5,11 @@ title:
   phantom/4pillar subprocess calls fail without GCP_PROJECT_ID in the invoking shell"
 summary:
   "Discovered 2026-07-14 while running the G2 verification todo in mvp_backfill_defi_onchain_v10_2026_06_27.md. (1)
-  `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue` writes to `plans/active/issues/{slug}_{date}.md` with
-  a FIXED slug (`manifest_hygiene_red`) and no asset_group in the path. The docstring assumes one invocation per UTC day
-  covering ALL asset_groups, but the CLI accepts `--asset-group` and is routinely invoked per-asset_group (a defi-only
-  run and a cefi-only run, same day) — the second invocation silently overwrites the first's file, discarding its
-  frontmatter (`status: resolved`, `resolved_by`) and its completed root-cause-analysis todo, replacing them with an
+  `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue` writes to `plans/archive/issues/{slug}_{date}.md`
+  with a FIXED slug (`manifest_hygiene_red`) and no asset_group in the path. The docstring assumes one invocation per
+  UTC day covering ALL asset_groups, but the CLI accepts `--asset-group` and is routinely invoked per-asset_group (a
+  defi-only run and a cefi-only run, same day) — the second invocation silently overwrites the first's file, discarding
+  its frontmatter (`status: resolved`, `resolved_by`) and its completed root-cause-analysis todo, replacing them with an
   unresolved todo for the new asset_group. Caught in this session before it reached git (working tree only, restored via
   `git restore`); nothing was actually lost, but this is the second occurrence of this failure CLASS after
   `audit_writes_escalation_artifacts_but_never_commits_them_2026_07_06.md` (resolved) — that fix added commit/push logic

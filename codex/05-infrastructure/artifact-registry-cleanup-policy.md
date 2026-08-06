@@ -196,7 +196,7 @@ bucket first for reversibility.
 
 ## Reference
 
-- Policy JSONs and dry-run reports live alongside the implementation plans in `plans/active/`.
+- Policy JSONs and dry-run reports live alongside the implementation plans in `plans/archive/2026_08/`.
 - The reusable standard 2-rule template (no keep-deployed-digests):
   `docker_artifact_registry_cleanup_policy_standard_2rule.json`
 - All policy application is via the `unified-trading-sa` service account (self-service IAM: grant

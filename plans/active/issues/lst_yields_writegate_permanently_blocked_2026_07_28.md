@@ -21,6 +21,7 @@ related:
   [
     /plans/active/issues/defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown

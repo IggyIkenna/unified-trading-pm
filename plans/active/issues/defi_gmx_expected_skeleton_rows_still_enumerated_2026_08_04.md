@@ -33,6 +33,7 @@ related:
     /plans/active/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown
@@ -188,7 +189,8 @@ under critical context pressure.
   be stated yet; the executing worker resolves the tag once `[DIAG] P1` lands (see inline note on that todo). No
   companion finalize plan authored — `doc_type: issue`, structurally exempt from the finalize-plan-coverage rule per
   `cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 3 (`check_finalize_plan_coverage.py` only globs
-  `plans/active/*.md`, not `plans/active/issues/*.md`); ordinary archival applies once this doc's own todos close.
+  `plans/archive/2026_08/*.md`, not `plans/archive/issues/*.md`); ordinary archival applies once this doc's own todos
+  close.
 - **slot-12 data_engineering 2026-08-04** (dispatch `defi_gmx_expected_skeleton_rows_still_enumerated-003`): **[DIAG] P2
   COMPLETE.** Checked both surfaces (bounded live reads, not corpus walks) — (a) DeFi availability manifest via UTL
   `read_availability_index` with column projection: 0 rows `venue∈{DRIFT,PACIFICA}`; (b) instrument catalogue

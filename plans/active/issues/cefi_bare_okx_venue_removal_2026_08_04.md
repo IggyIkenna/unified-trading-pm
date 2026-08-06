@@ -24,6 +24,7 @@ related:
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /plans/archive/issues/cefi_bare_venue_manifest_residue_2026_07_26.md,
     /plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

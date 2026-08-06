@@ -42,6 +42,7 @@ related:
     /plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
     /plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-01"
 last_updated: "2026-08-01"

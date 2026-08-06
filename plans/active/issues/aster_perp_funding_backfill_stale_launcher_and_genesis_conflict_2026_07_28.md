@@ -23,6 +23,7 @@ related:
   [
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown
@@ -188,8 +189,8 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   separately states "2023-07-22 should win for any coverage %, missing-days, or **backfill-target** calculation." Slot
   15's 2026-07-29 research read this same passage but treated it as insufficient because it isn't a raw conversation
   transcript; I don't think that's the right bar — a written, dated, operator-attributed decision in an issue doc IS the
-  standard form a plan decision-record takes here (per `plans/active/issues/*` being the durable record), and main's own
-  gate summary already quotes this exact fact ("2023-07-22 was the operator-confirmed Binance-proxied (synthetic)
+  standard form a plan decision-record takes here (per `plans/archive/issues/*` being the durable record), and main's
+  own gate summary already quotes this exact fact ("2023-07-22 was the operator-confirmed Binance-proxied (synthetic)
   start") without disputing it. **What's still a genuine judgment call, not something I'm resolving myself**: whether
   that documented genesis/coverage-start decision also constitutes authorization to spend compute physically running the
   backfill VM over the disputed window, vs. being a config/labeling-only decision that a human still needs to extend

@@ -26,8 +26,8 @@ but did not file an issue doc.
 
 Step 6 in `base-service.sh` runs
 `unified-trading-pm/codex/scripts/run-all-validators.sh --asset-group all --failed-only` and fails with "fix
-unified-trading-pm/workspace-manifest.json and plans/active/\*.md". The exact validator output was not captured in the
-ping — needs a QG run to get the full failure message.
+unified-trading-pm/workspace-manifest.json and plans/archive/2026_08/\*.md". The exact validator output was not captured
+in the ping — needs a QG run to get the full failure message.
 
 Note: strategy-service already sets `MANIFEST_ALIGNMENT_SKIP=true` (for the import-alignment step 4), but step 6 is the
 separate production-readiness validators check.
@@ -44,7 +44,7 @@ strategy-service will hit this failure.
    exact failure.
 2. If the failure is a stale `workspace-manifest.json` ci_status field, update it via the PM-level validator script or
    fix the manifest entry for strategy-service.
-3. If it is a plan-validator failure (plans/active/\*.md out of spec), triage the offending plan.
+3. If it is a plan-validator failure (plans/archive/2026_08/\*.md out of spec), triage the offending plan.
 4. Re-run QG to confirm green after fix.
 
 execution: owner: slot 4 cadence: one-shot verifier: bash scripts/quality-gates.sh exit code 0 in strategy-service
@@ -58,7 +58,7 @@ production-readiness validators return OK:
 ```text
 OK: All checklists have phase_9_deployable_enhancements (items 38-41)
 OK: workspace-manifest.json valid (schema + topological)
-OK: No broken links in plans/active/*.md
+OK: No broken links in plans/archive/2026_08/*.md
 ```
 
 The 2026-05-14 failure was a transient state from in-flight manifest/plan churn during the freeze-gate cycle. Subsequent

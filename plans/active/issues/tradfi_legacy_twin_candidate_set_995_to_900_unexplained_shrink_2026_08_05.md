@@ -20,6 +20,7 @@ related:
   [
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-05"
 author: slot-13 (infra worker, finalize-plan todo 2)

@@ -21,6 +21,7 @@ related:
     citadel_paper_batch_live_reconciliation_2026_06_19,
     plans/epics/strategy_master.md,
     plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 parent_epic: strategy_master
@@ -89,9 +90,9 @@ context_scope:
 ## §C — Open alpha-research / book-sizing decisions (verbatim from the parent's Remaining-work register)
 
 > Moved verbatim from the parent plan's "Remaining-work register + operator gating" §C. The
-> `plans/active/ crypto_alpha_research_2026_06_23.md` filename this text names below is this file's PRE-extraction
-> proposed name; the actual file lands at today's date per the line-cap remediation's mechanical date-suffix rule
-> (2026_06_23 → 2026_07_24, same slug, not a scope change).
+> `plans/archive/2026_08/ crypto_alpha_research_2026_06_23.md` filename this text names below is this file's
+> PRE-extraction proposed name; the actual file lands at today's date per the line-cap remediation's mechanical
+> date-suffix rule (2026_06_23 → 2026_07_24, same slug, not a scope change).
 
 **C — Operator-gated: LIVE RESEARCH / trading-judgment (the strategy-alpha workstream — recommend its OWN plan):**
 

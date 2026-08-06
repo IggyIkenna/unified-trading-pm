@@ -20,6 +20,7 @@ related:
   [
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown

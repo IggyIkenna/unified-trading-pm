@@ -63,6 +63,7 @@ related:
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-27
 author: unknown

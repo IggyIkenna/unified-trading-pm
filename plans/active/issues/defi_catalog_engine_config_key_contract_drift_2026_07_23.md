@@ -21,6 +21,7 @@ related:
   [
     defi_archetype_universe_no_curtailment_mechanism_2026_07_23,
     pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-23
 author: unknown
@@ -713,8 +714,8 @@ rows + 28 `DEFI_SLOTS` rows (0 unexpected failures, 0 unexpected passes) before 
 concurrent shared checkout dropped it from the first attempt; verified both commits are on `origin/live-defi-rollout`
 and the working tree matches origin exactly with zero drift).
 
-**Incidental fix, unblocked shipping fleet-wide**: while shipping, `run_validators.py`'s plans/active/\*.md link checker
-(which every repo's `quickmerge.sh` re-gate runs regardless of target repo) was failing on a stale link in
+**Incidental fix, unblocked shipping fleet-wide**: while shipping, `run_validators.py`'s plans/archive/2026_08/\*.md
+link checker (which every repo's `quickmerge.sh` re-gate runs regardless of target repo) was failing on a stale link in
 `master_to_live_defi_2026_05_23.md` → a `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` deleted
 by an unrelated, in-flight 3-way plan split that missed updating this one referrer — blocking every repo's quickmerge,
 not just this one. Fixed via the sanctioned path (re-ran `scripts/plans/regenerate_active_plan_inventory.py`, the

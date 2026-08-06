@@ -32,6 +32,7 @@ related:
     /plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-03
 author: unknown

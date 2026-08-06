@@ -29,6 +29,7 @@ related:
     /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

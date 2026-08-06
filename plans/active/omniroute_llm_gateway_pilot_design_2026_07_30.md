@@ -25,6 +25,7 @@ related:
     /codex/06-coding-standards/model-tier-selection.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 last_updated: 2026-08-02

@@ -83,7 +83,8 @@ Replaces ad-hoc "deferred" language:
 - `BLOCKED-OPERATOR-DECISION` — closed-set design call needed (e.g. which vendor among 3 candidates); waits on operator
   pick
 - `BLOCKED-UPSTREAM-OUTAGE` — third-party degraded; ping logged; auto-resumes on health check
-- `DEFERRED` — only valid with NAMED successor plan in `plans/active/` + operator-acked migration line in current plan
+- `DEFERRED` — only valid with NAMED successor plan in `plans/archive/2026_08/` + operator-acked migration line in
+  current plan
 
 ## MVP Archetype × Asset-Group Coverage Target (May-23 gate)
 

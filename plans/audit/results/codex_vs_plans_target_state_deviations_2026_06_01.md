@@ -29,7 +29,7 @@ lib_version:
 doc_versions_checked:
 type: analysis
 epic: plan_hygiene_master
-source: [plans/active/*.md (46 active plans; ~36 reference codex), codex/ (801 docs)]
+source: [plans/archive/2026_08/*.md (46 active plans; ~36 reference codex), codex/ (801 docs)]
 method:
   6 read-only sonnet workers, one per codex-dir cluster (02-data; 04-architecture; 05-infrastructure;
   06-coding-standards+08-workflows; 12-agent-workflow+governance; 09-strategy+security+master). Each given the focused

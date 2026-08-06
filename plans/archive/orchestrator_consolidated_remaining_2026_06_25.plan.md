@@ -356,11 +356,11 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-G — Strict VM dispatch matcher (source ▸ dispatch_strict_vm_matching)
 
-- [x] ✅ [SCRIPT] P0. **Phase 0 pre-audit:** enumerate every `plans/active/*.md` — current `assigned_vm` coverage vs the
-      registry-valid VM ids (`orchestrator_vm_registry.yaml` — 13 ids incl. `harsh_pc`); list the ~20 active plans
-      lacking own `assigned_vm` and the value each _should_ get (its epic's VM, or `NA` if future). Output a table into
-      this plan's Progress Log. **Gate**: table present + delegating-plan list confirmed against registry. (source ▸
-      dispatch_strict_vm_matching_2026_06_24)
+- [x] ✅ [SCRIPT] P0. **Phase 0 pre-audit:** enumerate every `plans/archive/2026_08/*.md` — current `assigned_vm`
+      coverage vs the registry-valid VM ids (`orchestrator_vm_registry.yaml` — 13 ids incl. `harsh_pc`); list the ~20
+      active plans lacking own `assigned_vm` and the value each _should_ get (its epic's VM, or `NA` if future). Output
+      a table into this plan's Progress Log. **Gate**: table present + delegating-plan list confirmed against registry.
+      (source ▸ dispatch_strict_vm_matching_2026_06_24)
 
 - [x] [CODE] P0. **Phase 1 strict matcher** ✅ — in `server/regen_backlog_from_plan.py`: `_resolve_plan_vms` returns the
       plan's OWN `assigned_vm` only (drop the `parent_epic` resolution branch — D8); matcher fail-closed on unset/`NA`;

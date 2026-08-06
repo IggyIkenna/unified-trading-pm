@@ -127,7 +127,7 @@ follow-up on whatever the original SIGABRT crash-loop symptom was.
   `bucket_iam_write_protection_per_tier_2026_06_09.md` cross-references the same underlying SIGABRT investigation for an
   unrelated Cloud Run cold-start issue, not this citation-fix todo itself — zero genuine claim overlap, cleared.
   `doc_type: issue` — exempt from the finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
-  `plans/active/*.md`, not `plans/active/issues/*.md`), no companion finalize doc authored.
+  `plans/archive/2026_08/*.md`, not `plans/archive/issues/*.md`), no companion finalize doc authored.
 - **review 2026-08-01 (slot 9)**: todo closed above — the citation was already fixed pre-filing (stale-clone false
   positive), re-verified live on trunk. All todos now `[x]`, `locked_by:` empty → archiving per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. No codex SSOT update needed (this is a one-off

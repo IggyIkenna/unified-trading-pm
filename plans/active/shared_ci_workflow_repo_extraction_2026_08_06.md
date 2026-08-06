@@ -62,6 +62,7 @@ related:
     /plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"
@@ -228,7 +229,7 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       are per-machine local-file work).
 - [x] 7a. ✅ [INFRA] P0. **Root cause of the provisioning gap found + fixed — `unified-trading-ci` needs a
       `live-defi-rollout` branch, not just `main`.** `setup-tab-worktrees.sh --add-slot <N>` (the canonical per-slot
-      provisioning script, confirmed via `codex/05-infrastructure/per-tab-worktrees.md` line 88 as "also used on every
+      provisioning script, confirmed via `/codex/05-infrastructure/per-tab-worktrees.md` line 88 as "also used on every
       VM worker host") derives each repo's slot-working branch from `workspace-manifest.json`'s
       `repositories.<repo>.integration_branch`, falling back to the GLOBAL default `live-defi-rollout` when unset — and
       EVERY existing fleet repo (PM included) relies on that fallback; there is no precedent for a repo using a
@@ -264,7 +265,7 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       identity and `branch --show-current` shows `live-defi-rollout` for all 11 slots.
 - [ ] 7c. [OPERATOR] P0. **Harsh's laptop — genuinely manual, cannot be actioned from this session (different physical
       machine).** Exact commands (mirrors what this session just did on Ikenna's laptop, confirmed against the
-      documented Harsh onboarding transcript in `codex/05-infrastructure/per-tab-worktrees.md`): ```bash # 1. Clone the
+      documented Harsh onboarding transcript in `/codex/05-infrastructure/per-tab-worktrees.md`): ```bash # 1. Clone the
       new sibling repo at Harsh's workspace root (same level as his other repo clones, NOT inside .tabs/N) cd
       /Users/harsh/Code/unified-trading-system-repos # or wherever his workspace root actually is git clone
       git@github.com:IggyIkenna/unified-trading-ci.git
@@ -293,7 +294,7 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
                       Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 
 - [ ] 7d. [OPERATOR] P0. **AO planning VM + central orchestrator VM — same mechanism, needs VM access this session
-      doesn't have.** Confirmed via `codex/05-infrastructure/per-tab-worktrees.md`: `setup-tab-worktrees.sh` is "also
+      doesn't have.** Confirmed via `/codex/05-infrastructure/per-tab-worktrees.md`: `setup-tab-worktrees.sh` is "also
       used on every VM worker host" — NOT a separate provisioning path — and AO's own worker-spawn mechanism
       (`agent-orchestrator/server/tmux_spawn.py`) only opens tmux shells INSIDE already-provisioned slots, it doesn't
       provision repos itself. So the fix is identical to todo 7c's Harsh runbook, run via SSH/SSM against each VM

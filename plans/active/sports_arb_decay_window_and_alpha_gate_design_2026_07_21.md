@@ -22,6 +22,7 @@ related:
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
     /codex/04-architecture/promote-workflow-architecture.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"

@@ -27,6 +27,7 @@ related:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master

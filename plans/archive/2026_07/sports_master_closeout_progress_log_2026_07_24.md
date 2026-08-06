@@ -55,7 +55,7 @@ drift_direction: advance-code
 > `/plans/archive/2026_07/sports_master_closeout_2026_07_21.md`, was archived per operator ruling: its 6 open todos
 > moved into the canonical `/plans/active/sports_consolidated_closeout_2026_07_19.md`. This companion has 0 open todos
 > of its own (pure narrative history) and archives alongside its parent for the same reason — orphaned once the parent
-> left `plans/active/`. Nothing below was rewritten; it remains the verbatim historical Progress Log.
+> left `plans/archive/2026_08/`. Nothing below was rewritten; it remains the verbatim historical Progress Log.
 
 > **This is a companion history doc, not the live plan.** It holds the verbatim historical Progress Log extracted from
 > `plans/active/sports_master_closeout_2026_07_21.md` (plan-hygiene line-cap remediation, 2026-07-24 — see

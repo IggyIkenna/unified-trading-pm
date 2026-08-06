@@ -18,6 +18,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-01"
 last_updated: "2026-08-01"
@@ -119,7 +120,7 @@ source: >-
       archival bar regardless of the P3-idempotency caution alone. No archival ritual run; no referrer repointing needed
       since nothing moved. Verified via
       `grep -rl orchestrator_failover_double_dispatch_duplicate_work_2026_07_25 plans/ codex/` — 13 referrer hits, all
-      still pointing at the live `plans/active/issues/` path (no archived copy exists to repoint to).
+      still pointing at the live `plans/archive/issues/` path (no archived copy exists to repoint to).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, move the file to `plans/archive/2026_08/`, fix
       every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run

@@ -37,6 +37,7 @@ source:
   [
     "DEFI:onchain benchmark relaunch 2026-08-05 — features-e2e-defi-20260805-223356-060995 run.log; live 404 on
     instruments-store-defi-stg-central-element-323112",
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 assigned_vm: planning
 execution_scope: orchestrator-agent

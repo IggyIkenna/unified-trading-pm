@@ -135,22 +135,22 @@ todos:
         Q(event). Therefore: P_yes maps directly to delta of a deep-in/out digital option.
 
         Translations to implement:
-          1. `binary_to_digital_option_params(market)` → `DigitalOptionParams`:
-               - strike = resolution condition (e.g. "BTC > $100k by Dec 31")
-               - current_delta = P_yes (already the risk-neutral prob)
-               - implied_vol = derived from time-to-resolution + price uncertainty
-               - theta = -∂P_yes/∂t (time decay of probability — markets converge)
-          2. `implied_probability_to_bs_delta(p, T, r)` → equivalent BS delta
-               for a vanilla option with similar payoff profile
-          3. `binary_spread_to_vertical_spread(yes_price, no_price)` →
-               equivalent debit/credit spread levels in options terms
-          4. `prob_path_to_vol_surface(market_history)` → reconstructed
-               implied vol surface from historical binary price paths
+              1. `binary_to_digital_option_params(market)` → `DigitalOptionParams`:
+                   - strike = resolution condition (e.g. "BTC > $100k by Dec 31")
+                   - current_delta = P_yes (already the risk-neutral prob)
+                   - implied_vol = derived from time-to-resolution + price uncertainty
+                   - theta = -∂P_yes/∂t (time decay of probability — markets converge)
+              2. `implied_probability_to_bs_delta(p, T, r)` → equivalent BS delta
+                   for a vanilla option with similar payoff profile
+              3. `binary_spread_to_vertical_spread(yes_price, no_price)` →
+                   equivalent debit/credit spread levels in options terms
+              4. `prob_path_to_vol_surface(market_history)` → reconstructed
+                   implied vol surface from historical binary price paths
 
-        Key insight for ML: binary market prices give you a FORWARD-LOOKING
-        crowd probability estimate, which is a strong feature for any model
-        predicting the underlying outcome (e.g. BTC price, election winner).
-        This is fundamentally different from historical price data.
+            Key insight for ML: binary market prices give you a FORWARD-LOOKING
+            crowd probability estimate, which is a strong feature for any model
+            predicting the underlying outcome (e.g. BTC price, election winner).
+            This is fundamentally different from historical price data.
 
     status: pending blocked_by: p4-binary-market-feature-engineering note: ""
 
@@ -158,24 +158,24 @@ todos:
   - [ ] [AGENT] P1. Build prediction market ML signal generator. Three signal types:
 
         A. CROWD WISDOM SIGNAL:
-           When prediction market implied_prob diverges significantly from
-           underlying asset model price (e.g. "BTC > $100k" market at 72% but
-           quant model says 45%), flag as CROWD_MODEL_DIVERGENCE signal.
-           Actionable: if crowd has historically been right in this category,
-           adjust model or enter a position betting on convergence.
+               When prediction market implied_prob diverges significantly from
+               underlying asset model price (e.g. "BTC > $100k" market at 72% but
+               quant model says 45%), flag as CROWD_MODEL_DIVERGENCE signal.
+               Actionable: if crowd has historically been right in this category,
+               adjust model or enter a position betting on convergence.
 
-        B. LATE-RESOLUTION MOMENTUM SIGNAL:
-           In the last 20% of a market's life, prob_velocity typically
-           accelerates toward resolution. Detect abnormal early acceleration
-           as a leading indicator of information leakage or insider activity.
-           Signal: EARLY_RESOLUTION_MOMENTUM.
+            B. LATE-RESOLUTION MOMENTUM SIGNAL:
+               In the last 20% of a market's life, prob_velocity typically
+               accelerates toward resolution. Detect abnormal early acceleration
+               as a leading indicator of information leakage or insider activity.
+               Signal: EARLY_RESOLUTION_MOMENTUM.
 
-        C. CROSS-MARKET CORRELATION SIGNAL:
-           When two markets that should be correlated (e.g. "BTC > $80k by
-           Jan 1" and "ETH > $4k by Jan 1") have diverging implied probs,
-           flag as CROSS_MARKET_ARBITRAGE opportunity.
+            C. CROSS-MARKET CORRELATION SIGNAL:
+               When two markets that should be correlated (e.g. "BTC > $80k by
+               Jan 1" and "ETH > $4k by Jan 1") have diverging implied probs,
+               flag as CROSS_MARKET_ARBITRAGE opportunity.
 
-        Each signal → UEI event type, consumed by strategy-service.
+            Each signal → UEI event type, consumed by strategy-service.
 
     status: pending blocked_by: p4-options-translation-framework note: ""
 
@@ -203,7 +203,8 @@ isProject: false
 
 # Prediction Market Wallet Intelligence
 
-**Status: BLOCKED** — Waiting on Polymarket + Kalshi data access. Promote to `plans/active/` when API keys confirmed.
+**Status: BLOCKED** — Waiting on Polymarket + Kalshi data access. Promote to `plans/archive/2026_08/` when API keys
+confirmed.
 
 ## Overview
 

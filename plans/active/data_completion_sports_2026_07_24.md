@@ -25,6 +25,7 @@ related:
     /plans/active/data_completion_prediction_2026_07_15.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
@@ -376,7 +377,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
 
 - [x] ✅ [CODE] P0. **CLOSE THE LOOP — a DP `file_issue` finding becomes a backlog task the orchestrator can assign.**
       The path EXISTS + is now PROVEN end-to-end: `escalation.py::_write_issue_doc` writes a
-      `plans/active/issues/<slug>.md` with `assigned_vm: vm-cross-cutting` + `parent_epic: observability_master` + a
+      `plans/archive/issues/<slug>.md` with `assigned_vm: vm-cross-cutting` + `parent_epic: observability_master` + a
       dispatchable `- [ ] [CODE] P1.` todo; `regen_backlog_from_plan.py` ingests opt-in `issues/` docs that declare an
       `assigned_vm` (the issues/ scan at L666-668 + `_plan_contributes_briefs` opt-in gate). `vm-cross-cutting` is a
       real registry VM (the observability epic VM). Added the SYNTHETIC-DP-ISSUE → BACKLOG ingestion proof: a doc in
@@ -517,7 +518,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       429-thrashing ✅. ODDS/PREDICTIONS 3255 blank-reason `empty_confirmed` remain — April-2026 non-match-day writes
       (written_at 2026-04-28); VM correctly short-circuited (all dates already `empty_confirmed`);
       `is_out_of_coverage_window()` does not exclude SRZ for enrichment types → these count as in-window gaps. Separate
-      relabeling/re-fetch task needed to clear the 3255 cells (see plans/active/issues/ if filed). This todo
+      relabeling/re-fetch task needed to clear the 3255 cells (see plans/archive/issues/ if filed). This todo
       (WINDOW-SCOPING fix + misdirected-VM diagnosis) is COMPLETE.
 - [x] ✅ [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']` corrected 450000→300000 + made the live `/status`
       read AUTHORITATIVE (query, don't hardcode)** — deployment-service@cbf8b73 (quota fix) +

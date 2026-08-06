@@ -28,6 +28,7 @@ repos: [deployment-service]
 scope: [engineer]
 tags: [deployment-service, naming-drift, execution-service, shard-builder, fleet-scripts, silent-gap]
 related:
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   [/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md, /codex/05-infrastructure/spot-vms-for-backfill.md]
 created: "2026-08-03"
 author: unknown

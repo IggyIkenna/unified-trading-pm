@@ -32,8 +32,8 @@ Codex SSOTs: `/codex/11-project-management/active-plan-inventory-tracker.md` · 
 
 ## Phase 1 — Core scripts
 
-- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_todo_regression.sh` — compare every `plans/active/*.md` open todo
-      count vs `origin/live-defi-rollout`; exit 1 on any regression. (PM@2026-05-21)
+- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_todo_regression.sh` — compare every `plans/archive/2026_08/*.md` open
+      todo count vs `origin/live-defi-rollout`; exit 1 on any regression. (PM@2026-05-21)
 - [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_frontmatter.sh` — assert `---` on own first line; required fields; no
       deprecated fields. (PM@2026-05-21)
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_line_caps.sh` — soft-warn >500L, hard-fail >1000L; umbrella exemption
@@ -62,8 +62,8 @@ path is Phase 6 (daily cron on planning VM). These todos are superseded:
       verify files exist; report broken refs. (Soft check — 16 broken refs found on first run.) (PM@2026-05-21)
 - [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_estimate_sanity.sh` — verify
       `estimate_calibrated ≈ baseline × class_multiplier`; flag >20% drift. (PM@2026-05-21)
-- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_superseded_in_active.sh` — grep `plans/active/` for filenames + body
-      text containing `SUPERSEDED`; those should be in `plans/archive/`. (PM@2026-05-21)
+- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_superseded_in_active.sh` — grep `plans/archive/2026_08/` for
+      filenames + body text containing `SUPERSEDED`; those should be in `plans/archive/`. (PM@2026-05-21)
 - [x] ✅ [SCRIPT] P2. Wire Phase 4 scripts into `run_hygiene_sweep.sh` as additional soft checks. (PM@2026-05-21)
 
 ## Phase 5 — Pre-push hook

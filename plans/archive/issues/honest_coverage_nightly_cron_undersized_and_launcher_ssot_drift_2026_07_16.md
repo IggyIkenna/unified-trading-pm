@@ -169,4 +169,4 @@ Also: the tarball publisher (`create-code-tarballs.sh`) publishes launchers to
   verified all 4 commits are real ancestors of `origin/live-defi-rollout`, verified the launcher's current
   `MACHINE_TYPE` and the single-launcher-file state directly against the checked-out tree, then flipped both checkboxes
   with the evidence chain. All todos now done + doc unlocked — archiving per the issue-doc-lifecycle ACKED-INTO-CODE
-  trigger (`codex/11-project-management/issue-doc-lifecycle.md`).
+  trigger (`/codex/11-project-management/issue-doc-lifecycle.md`).

@@ -180,14 +180,14 @@ census docs as this session ultimately did instead).
 
 - 2026-07-29 (slot-6, data_engineering): Filed while investigating whether `data_pipeline_check_mdps_features-050`'s
   DEFI:onchain gate had cleared. Did not resolve the contradiction — see "What I ruled out" above. Also confirmed
-  (separately, via grep of `plans/active/`) that the CEFI billing-waste operator go-ahead named in the same gating todo
-  has NOT been granted as of this session (no matching approval text found anywhere in `plans/active/`).
-  TRADFI:volatility's options/futures raw-tick backfill status was not independently re-checked this session beyond what
-  the plan already documents.
+  (separately, via grep of `plans/archive/2026_08/`) that the CEFI billing-waste operator go-ahead named in the same
+  gating todo has NOT been granted as of this session (no matching approval text found anywhere in
+  `plans/archive/2026_08/`). TRADFI:volatility's options/futures raw-tick backfill status was not independently
+  re-checked this session beyond what the plan already documents.
 - 2026-07-29 (slot-6, data_engineering, re-dispatched to `data_pipeline_check_mdps_features-056` — the same gated parent
   todo): Resolved the P2 todo above. Re-checked all 3 gates fresh first: CEFI operator go-ahead still not granted
-  (re-grepped `plans/active/`, no new approval text); TRADFI:volatility's raw-tick backfill status unchanged (no new
-  evidence found). Then ran the 12-day `DependencyChecker` sweep documented in the now-flipped todo — confirmed
+  (re-grepped `plans/archive/2026_08/`, no new approval text); TRADFI:volatility's raw-tick backfill status unchanged
+  (no new evidence found). Then ran the 12-day `DependencyChecker` sweep documented in the now-flipped todo — confirmed
   `perp_funding` (not all 5 data_types) is the sole live blocker for `DEFI:onchain`. Corrected
   `data_pipeline_check_mdps_features_2026_07_20.md`'s gating note to name `perp_funding` specifically (same commit).
   Filed the new perp_funding-scheduler follow-up todo above. **Net: all 3 upstream gates (CEFI/TRADFI/DEFI) for the

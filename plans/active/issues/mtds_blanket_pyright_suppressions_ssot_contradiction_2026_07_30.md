@@ -44,6 +44,7 @@ related:
     /plans/archive/issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md,
     /codex/06-coding-standards/README.md,
     /codex/06-coding-standards/quality-gates.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 author: unknown

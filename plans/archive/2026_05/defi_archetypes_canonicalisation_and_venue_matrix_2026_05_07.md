@@ -98,7 +98,7 @@ Stream B  —  leveraged_funding_arb → ARBITRAGE_PRICE_DISPERSION canonicalisa
                                                           [UAC + codex + plans + strategy-service]
 Stream C  —  LeveragedLegController codex doc backport    [codex archetypes/]
 Stream D  —  target_leverage / target_net_delta schemas   [codex archetypes/ + deployment-UI]
-Stream E  —  Master plan + defi_master alignment sweep    [PM plans/active/]
+Stream E  —  Master plan + defi_master alignment sweep    [PM plans/archive/2026_08/]
 ```
 
 ---

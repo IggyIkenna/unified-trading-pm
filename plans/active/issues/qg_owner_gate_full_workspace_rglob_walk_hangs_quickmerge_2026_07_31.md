@@ -127,7 +127,7 @@ trees, so scoping the walk to those roots (or to `git ls-files`) would be strict
 
 # Note for anyone filing a related issue
 
-Do **not** put the literal word `runbook` in an issue-doc _filename_ under `plans/active/issues/` — the gate's
+Do **not** put the literal word `runbook` in an issue-doc _filename_ under `plans/archive/issues/` — the gate's
 `*runbook*.md` glob matches on filename substring and that path is NOT in `EXCLUDED_DIRS`, so such a file would be
 picked up and flagged as a malformed runbook. (This doc is deliberately named `qg_owner_gate_…` for that reason.)
 

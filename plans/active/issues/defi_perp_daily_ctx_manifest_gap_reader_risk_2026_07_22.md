@@ -42,6 +42,7 @@ related:
     /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md,
     plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-22"
 author: unknown

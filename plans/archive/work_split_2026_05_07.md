@@ -38,7 +38,7 @@ plan-of-record, all now archived complete or absorbed into a later closed epic (
 ## Why this doc exists
 
 - 16 days to live-DeFi deadline; 26 active plans post-2026-05-07 audit cleanup (was 25 → 18 via consolidations A/B/C/D,
-  then +8 from ai/→active/ promotion `169451b6`).
+  then +8 from ai/→archive/2026_08/ promotion `169451b6`).
 - Both colleagues run multiple parallel agents per session (Cursor + Claude Code), so each effectively has 3-5×
   amplification — but file-level collisions clobber each other's work (reference incidents PM@961980db, PM@611b9501).
 - Without an explicit split, both agents converge on the highest-leverage critical-path files (UAC alerting, writegate,
@@ -68,10 +68,9 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 - [x] [DESIGN] P0. Author UAC `AlertCode` taxonomy (StrEnum + threshold dataclass + severity-vs-alert-code separation).
       Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 1. Repo: UAC.
       Why nuanced: closed-set philosophy decisions; sets workspace-wide alert vocabulary for years; codex SSOTs at
-      [`/codex/15-runbooks/alerting/alert-code-taxonomy.md`](/codex/15-runbooks/alerting/alert-code-taxonomy.md)
-      expect this StrEnum to land here. **DONE 2026-05-07 (Agent 1)** — UAC@`d00326d` shipped + alerting plan Phase 1
-      checkbox flips per PM@`7624ab21`. Phase 2-9 of alerting plan (KillSwitchBus rule wiring + consumer wiring)
-      pending.
+      [`/codex/15-runbooks/alerting/alert-code-taxonomy.md`](/codex/15-runbooks/alerting/alert-code-taxonomy.md) expect
+      this StrEnum to land here. **DONE 2026-05-07 (Agent 1)** — UAC@`d00326d` shipped + alerting plan Phase 1 checkbox
+      flips per PM@`7624ab21`. Phase 2-9 of alerting plan (KillSwitchBus rule wiring + consumer wiring) pending.
 - [x] [DESIGN] P0. writegate Phase 4.A: deployment-api typed-error rendering (UTL classifier → `error_reason` API field
       → UI typed badge). Plan:
       [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 4.A.
@@ -328,5 +327,5 @@ The audit cleanup work that preceded this doc:
 | 4     | `58fc6d8c`              | `consolidated_operational_validation` folded into master Group F + 4 master-body anomalies fixed        |
 | 5     | `e8902c37`              | `venue_axis_asset_group_vocabulary` archived after 3-item fold-in                                       |
 
-Net active-plan count went 25 → 18 from consolidation, then +8 from `169451b6` semver-rollout ai/→active/ promotion,
-settling at 26.
+Net active-plan count went 25 → 18 from consolidation, then +8 from `169451b6` semver-rollout ai/→archive/2026_08/
+promotion, settling at 26.

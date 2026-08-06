@@ -348,7 +348,7 @@ Escalate to the other operator or stop autonomous work when:
 | Spawn returns 30s `did not become ready`                            | Verify `/tmp` is in `ReadWritePaths`; re-run `install-orchestrator-service.sh --restart`        |
 
 For data-correctness issues (trading pipeline, manifest, GCS parquets): those are outside this service's scope — raise a
-worker `/blocked` question with `authority=operator` (pages Slack) or file an issue doc under `plans/active/issues/`.
+worker `/blocked` question with `authority=operator` (pages Slack) or file an issue doc under `plans/archive/issues/`.
 
 ---
 

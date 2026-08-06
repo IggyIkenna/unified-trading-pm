@@ -408,7 +408,7 @@ cadence + completeness matters more than any single subsystem.
 #### M.5 — End-to-end PM-plan → completed-work trace (the literal "trigger from PM active plans")
 
 - [ ] **(m5) Add → regen → dispatch → done → flip.** On a dev/mock instance (`ORCHESTRATOR_MODE=mock`), add a canonical
-      `- [ ] [SCRIPT] P3. <noop>` todo to a test plan under `plans/active/` with matching `assigned_vm` → POST
+      `- [ ] [SCRIPT] P3. <noop>` todo to a test plan under `plans/archive/2026_08/` with matching `assigned_vm` → POST
       `/api/backlog/regen` → confirm the task appears in `/api/backlog` (one regen tick) → confirm
       `dispatch.pick_next_task` returns it for an idle slot → spawn services it → `/done` → checkbox-flip path
       exercised. **Nothing in A–L tests this full chain; it is the definition of the operator's "24/7 from PM plans"

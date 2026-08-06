@@ -12,7 +12,7 @@ stage: [meta]
 repos: [trading-agent-service]
 scope: [engineer, admin]
 tags: [trading-agent, strategy, execution, orchestrator, reconciliation, ml]
-related: [../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md] # was: ../active/trading_agent_service_architecture_unlock_2026_05_22.md -- corrected 2026-07-14, verify-rerun-2 finding 230: plan archived 2026-05-23, path never existed under active/ post-archival, body (line ~50) already used the correct archive path
+related: [../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md] # was: ../active/trading_agent_service_architecture_unlock_2026_05_22.md -- corrected 2026-07-14, verify-rerun-2 finding 230: plan archived 2026-05-23, path never existed under archive/2026_08/ post-archival, body (line ~50) already used the correct archive path
 created: 2026-05-21
 name: trading_agent_master
 tier: L2

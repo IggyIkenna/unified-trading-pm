@@ -31,6 +31,7 @@ related:
     /plans/archive/issues/code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-01"
 author: unknown

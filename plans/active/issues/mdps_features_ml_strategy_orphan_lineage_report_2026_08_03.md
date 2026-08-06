@@ -31,6 +31,7 @@ related:
     /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     /plans/active/issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-03"
 author: unknown

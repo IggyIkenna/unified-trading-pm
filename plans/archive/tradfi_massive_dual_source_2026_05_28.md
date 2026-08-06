@@ -508,7 +508,7 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ## Deferred work — migrated to / pending operator action
 
-> Pre-archival banner. Plan remains in `active/` until all OPERATOR-BLOCKED items below are resolved.
+> Pre-archival banner. Plan remains in `archive/2026_08/` until all OPERATOR-BLOCKED items below are resolved.
 
 | Item                                                                | Status               | Successor / action                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

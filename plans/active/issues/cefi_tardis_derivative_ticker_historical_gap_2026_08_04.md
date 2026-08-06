@@ -15,6 +15,7 @@ related:
   [
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     /plans/active/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-04
 author: unknown

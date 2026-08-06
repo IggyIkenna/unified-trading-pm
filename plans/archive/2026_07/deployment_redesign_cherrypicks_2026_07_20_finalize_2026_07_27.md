@@ -70,9 +70,9 @@ was already satisfied by a separate same-day plan-hygiene sweep; nothing left to
       plan is fully closed. If real work remains after the AO-dispatched todos land, leave
       `/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md` active (do not force-archive) and note
       what's still open here instead. — **DONE 2026-07-28 (verified, not re-executed).** Read the gated plan directly:
-      it is no longer even sitting at `plans/active/` — a same-day (2026-07-28) plan-hygiene sweep already reconciled
-      and archived it before this finalize doc was picked up. All 5 A-E todos carry `[x]` + a cited landing commit
-      (`deployment-api@c503d35`/`@349946a`/`@b8f7507`, `deployment-ui@2c4e950`/`@615bddf`), frontmatter reads
+      it is no longer even sitting at `plans/archive/2026_08/` — a same-day (2026-07-28) plan-hygiene sweep already
+      reconciled and archived it before this finalize doc was picked up. All 5 A-E todos carry `[x]` + a cited landing
+      commit (`deployment-api@c503d35`/`@349946a`/`@b8f7507`, `deployment-ui@2c4e950`/`@615bddf`), frontmatter reads
       `status: complete` with an inline dated note ("2026-07-28 plan-hygiene sweep: verified all five A-E cherry-picks
       [x] with shipped-commit + test evidence, Progress Log confirms this plan is complete"), the body carries the
       `🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled` banner, and its own "Deferred work — migrated to:"

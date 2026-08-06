@@ -17,6 +17,7 @@ related:
   [
     /plans/epics/features_and_ml_master.md,
     /plans/archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-06-21"
 parent_epic: features_and_ml_master

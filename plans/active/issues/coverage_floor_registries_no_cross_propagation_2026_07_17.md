@@ -47,6 +47,7 @@ related:
   [
     /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-17
 author: unknown

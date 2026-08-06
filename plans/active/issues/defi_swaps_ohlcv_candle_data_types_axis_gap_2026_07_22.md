@@ -44,6 +44,7 @@ related:
     plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
     plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-22"
 author: unknown

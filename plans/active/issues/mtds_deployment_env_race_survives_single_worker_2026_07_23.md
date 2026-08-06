@@ -28,6 +28,7 @@ related:
   [
     /plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md,
     /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-23
 author: unknown

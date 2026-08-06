@@ -16,6 +16,7 @@ related:
   [
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-05"
 author: slot-5 (data_engineering)

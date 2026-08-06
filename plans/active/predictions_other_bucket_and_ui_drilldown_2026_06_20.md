@@ -16,6 +16,7 @@ related:
     ../epics/predictions_master.md,
     ./prediction_manifest_canonicalisation_2026_06_01.md,
     ../epics/infrastructure_master.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-06-12"
 parent_epic: predictions_master
@@ -45,10 +46,10 @@ context_scope:
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
 > restructure (L0 umbrellas had accumulated ~30+ stale May-07 inline todos that `regen_backlog_from_plan.py` never
-> scanned, because it reads `plans/active/*.md` not `plans/epics/`). This plan is the **genuinely net-new, unowned**
-> predictions consumer-surface work: the synthetic `OTHER` canonical-question-group bucket end-to-end (UAC seeding,
-> classifier event, data-status rendering, writer rebundle coverage) + the deployment-ui 3-level drilldown + the
-> data-status predictions panel shape. The manifest/parquet canonicalisation + writer-rebundling work is owned by
+> scanned, because it reads `plans/archive/2026_08/*.md` not `plans/epics/`). This plan is the **genuinely net-new,
+> unowned** predictions consumer-surface work: the synthetic `OTHER` canonical-question-group bucket end-to-end (UAC
+> seeding, classifier event, data-status rendering, writer rebundle coverage) + the deployment-ui 3-level drilldown +
+> the data-status predictions panel shape. The manifest/parquet canonicalisation + writer-rebundling work is owned by
 > [`prediction_manifest_canonicalisation_2026_06_01.md`](./prediction_manifest_canonicalisation_2026_06_01.md) — do NOT
 > duplicate it here. The deployment-ui drilldown also aligns with `infrastructure_master` Data-status multi-axis
 > follow-up (cross-link only — this plan owns the predictions-specific slice).
@@ -181,6 +182,6 @@ in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% r
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added 3 source paths (UAC `PREDICTION_GROUPS`/
   `OTHER`-bucket registry, the MTDS sentinel fan-out orchestrator, and the deployment-ui hierarchical drilldown
   component), previously epic-only. Note: the doc's own `related:` frontmatter cites
-  `./prediction_manifest_canonicalisation_2026_06_01.md`, which no longer resolves under `plans/active/` — it was
-  archived to `plans/archive/2026_07/`; left out of context_scope, not flagged for a body rewrite (out of this skill's
-  scope).
+  `./prediction_manifest_canonicalisation_2026_06_01.md`, which no longer resolves under `plans/archive/2026_08/` — it
+  was archived to `plans/archive/2026_07/`; left out of context_scope, not flagged for a body rewrite (out of this
+  skill's scope).

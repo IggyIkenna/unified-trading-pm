@@ -7,8 +7,8 @@ title:
 summary: >-
   Discovered while shipping an unrelated fix (ao_satellite_ao_dispatch_batch1_2026_07_26.md item 3,
   slot-git-status-report.sh loopback preference) — quickmerge.sh's corpus-wide pre-flight re-gate failed on
-  check_finalize_plan_coverage.py, which scans ALL of plans/active/ (not just changed files) for assigned_vm:planning
-  plans with more than 1 open todo and no companion finalize plan. Root-caused via git log —
+  check_finalize_plan_coverage.py, which scans ALL of plans/archive/2026_08/ (not just changed files) for
+  assigned_vm:planning plans with more than 1 open todo and no companion finalize plan. Root-caused via git log —
   /plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md (unified-trading-pm@6af68d7b2,
   slot-12, "author the derived_features postfloor residue census+purge follow-up plan") shipped `assigned_vm: planning`
   but has no `<slug>_finalize_*.md` companion with `depends_on: [<slug>]` + `gate_on_depends: true` (task_template.md §4
@@ -58,7 +58,7 @@ depends_on: []
 `check_finalize_plan_coverage.py --workspace-root <ws>` reports:
 
 ```
-Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — 2 violation(s).
+Scanned plans/archive/2026_08/ for assigned_vm: planning plans lacking a gated finalize plan — 2 violation(s).
 
 Plans missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true to a new/existing
 companion plan — see task_template.md §4):
@@ -73,8 +73,9 @@ companion plan — see task_template.md §4):
 `scripts/quality_gates/finalize_plan_coverage_baseline.yaml`'s `baseline_files` (the one accepted pre-existing
 violation) — the NEW regression is
 `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (`unified-trading-pm@6af68d7b2`,
-authored 2026-07-27 01:48 UTC by slot-12). This is a corpus-wide scan (runs over ALL of `plans/active/`, not scoped to a
-changeset), so it blocks every slot's `quickmerge.sh` on this repo until fixed, not just the session that discovered it.
+authored 2026-07-27 01:48 UTC by slot-12). This is a corpus-wide scan (runs over ALL of `plans/archive/2026_08/`, not
+scoped to a changeset), so it blocks every slot's `quickmerge.sh` on this repo until fixed, not just the session that
+discovered it.
 
 ## Why it matters
 

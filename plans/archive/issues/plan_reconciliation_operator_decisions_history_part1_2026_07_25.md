@@ -340,8 +340,8 @@ depends_on: []
   sub-plans are now archived...Auto-populated by scripts/plans/populate_epic_bodies_2026_05_21.py (next regeneration
   will surfa” vs `active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md:17,40`: “status: active / parent_epic:
   orchestrator_master (last_updated 2026-07-10)”
-  - why: The epic explicitly predicts zero active children going forward, but grep of plans/active/\*.md shows 8 plans
-    currently declare parent_epic: orchestrator_master, including one last-updated the day before this audit
+  - why: The epic explicitly predicts zero active children going forward, but grep of plans/archive/2026_08/\*.md shows
+    8 plans currently declare parent_epic: orchestrator_master, including one last-updated the day before this audit
     (2026-07-10) and none of them are surfaced anywhere in the epic body — an agent trusting the epic's own cl
 - **DECISION NEEDED**: options TBD (P1/P2 drafting wave — next tick)
 
@@ -923,13 +923,13 @@ depends_on: []
 #### [P1] archive/2026_06/sports_phantom_recon_and_coverage_windows_2026_06_20.md ↔ epics/sports_master.md
 
 - finding ids: 251
-- **Epic lists a P0 foundation-gate plan as active with a link into active/, but the plan is archived+complete** —
-  `epics/sports_master.md:1333,1335-1338`: “###
+- **Epic lists a P0 foundation-gate plan as active with a link into archive/2026_08/, but the plan is
+  archived+complete** — `epics/sports_master.md:1333,1335-1338`: “###
   [`sports_phantom_recon_and_coverage_windows_2026_06_20`](../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md)\n\n**status**:
   active ” vs `archive/2026_06/sports_phantom_recon_and_coverage_windows_2026_06_20.md:6`: “status: complete”
   - why: The epic's 'P0 — must complete before next foundation gate' section (claims the auto-populate script 'keeps it
     in sync from frontmatter', L1300-1302) still shows sports_phantom_recon_and_coverage_windows_2026_06_20 as
-    status:active linking to plans/active/..., but that file has moved to plans/archive/2026_06/ with fron
+    status:active linking to plans/archive/2026_08/..., but that file has moved to plans/archive/2026_06/ with fron
 - **DECISION NEEDED**: options TBD (P1/P2 drafting wave — next tick)
 
 #### [P1] epics/README.md ↔ epics/orchestrator_master.md

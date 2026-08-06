@@ -161,7 +161,7 @@ A3 audit also confirmed:
 - Two unrelated `MarketState` definitions exist (`domain/market/__init__.py:11` +
   `internal/domain/market_data_processing/candle_schema.py:18`) — **not in row_key**, not at-risk, out-of-scope for this
   freeze. Capture as a post-cutover SSOT-consolidation finding (per CLAUDE.md Findings Triage Discipline case 4 → file a
-  `plans/active/issues/<slug>.md` doc post-May-23).
+  `plans/archive/issues/<slug>.md` doc post-May-23).
 
 ## Phased execution DAG (Citadel § 2 + § 4)
 
@@ -677,16 +677,16 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 13.A — Operator triggers live wallet enable; carry_staked_basis +
       leveraged_funding_arb run on real wallet for ≥7 continuous days per master plan G23 DART manual-trade gate.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 13.B — Banner removal across all `plans/active/*.md` plans
-      bannered Phase 0; status flip on this: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13) plan from
-      `active` → `complete` once 7-day continuous run validates. **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on
-      Phase 13.A 7-day run completing. Post-cutover cleanup action.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. Phase 13.B — Banner removal across all `plans/archive/2026_08/*.md`
+      plans bannered Phase 0; status flip on this: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13) plan
+      from `active` → `complete` once 7-day continuous run validates. **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]**
+      Gated on Phase 13.A 7-day run completing. Post-cutover cleanup action.
 - **Done-definition**: live wallet active + 7-day continuous run started + this plan archived after the 7-day window
   completes.
 
 ## Cross-plan coordination banners (Citadel § 4 + CLAUDE.md "Cross-Plan Coordination Banners")
 
-This plan banners every `plans/active/*.md` whose work touches MTDS / MDPS / features / manifest:
+This plan banners every `plans/archive/2026_08/*.md` whose work touches MTDS / MDPS / features / manifest:
 
 ```markdown
 > **🟡 IN-FLIGHT REFACTOR — manifest v8 FINAL by 2026-05-23 (manifest_schema_final_gate_2026_05_09). Bundled gcs Phase 3
@@ -797,4 +797,4 @@ real data)._
 - **Phase 13.A — Live cutover (OPERATOR ACTION)**: Operator triggers live wallet enable; `carry_staked_basis` +
   `leveraged_funding_arb` on real wallet for ≥7 continuous days.
 - **Phase 13.B — Banner removal (DEFERRED-POST-CUTOVER)**: Flip plan `active` → `complete`; remove Phase 0 banners from
-  `plans/active/` plans. Gated on Phase 13.A 7-day run completing.
+  `plans/archive/2026_08/` plans. Gated on Phase 13.A 7-day run completing.

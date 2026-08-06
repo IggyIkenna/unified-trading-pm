@@ -188,7 +188,7 @@ not a caller-side workaround.
       merge function is called (never the wholesale-replacing sibling) and that the call scopes to this script's own
       prefix. Full `quality-gates.sh` green (529s, 7162 passed).
 - [x] 4. ✅ [DATA] P2. **DONE 2026-07-30 (slot-3)**. Grepped the full corpus (`*.py` across all repos, VM-launcher shell
-      scripts, and `plans/active/**/*.md` prose) for other callers/recommenders of
+      scripts, and `plans/archive/2026_08/**/*.md` prose) for other callers/recommenders of
       `rebuild_manifest_from_canonical_paths`, and empirically checked all 4 co-located tick buckets' manifest
       `written_at` distributions for a mass-drop signature. Full findings: § "Fourth risk site" below. Summary: found
       and fixed one LIVE code landmine (`launch-mdps-backfill-vm.sh`), found and fixed one more doc leading-indicator
@@ -256,7 +256,7 @@ importable Python):
 5. **`launch-features-sharded-backfill.sh`** — same non-destructive-today shape as `launch-features-vm.sh`, live and
    current (not deprecated), not covered by any existing todo. New todo 5 above.
 
-**`plans/active/**/*.md` prose grep** (per the Third-risk-site addendum's own recommendation to re-check this
+**`plans/archive/2026_08/**/*.md` prose grep** (per the Third-risk-site addendum's own recommendation to re-check this
 periodically): 8 files matched. `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (risk site 1) and
 `mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md` (risk site 3) are already corrected. Three more matches
 are the two sports docs above (now amended) and this doc's own text/todo 4 wording (expected — it names the function to
@@ -298,8 +298,9 @@ co-located `market-data-tick-cefi-prd-central-element-323112` bucket. Not execut
 same as risk site 1 was before its catch) — corrected in place to cite `merge_manifest_from_canonical_paths` instead,
 same fix pattern as todo 1 above. This confirms the fix (todos 1-3) closed the two ORIGINAL call sites but did not
 prevent a THIRD, independently-authored doc from re-introducing the same unsafe recipe by name — todo 4's corpus grep
-should also periodically re-check `plans/active/**/*.md` prose (not just `*.py` callers) for the unsafe function name,
-since a plan/issue doc recommending it is a leading indicator that catches the mistake before it ever executes.
+should also periodically re-check `plans/archive/2026_08/**/*.md` prose (not just `*.py` callers) for the unsafe
+function name, since a plan/issue doc recommending it is a leading indicator that catches the mistake before it ever
+executes.
 
 ## Evidence
 

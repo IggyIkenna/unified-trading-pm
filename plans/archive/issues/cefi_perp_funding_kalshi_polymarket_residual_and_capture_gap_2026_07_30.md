@@ -282,8 +282,8 @@ workspace has already been burned by once.
   `execution_scope: local-only → orchestrator-agent`, `assigned_role: data_engineering` (verified against the live
   `agents/*.md` registry). **No companion finalize plan authored** — this is a `doc_type: issue` doc, structurally
   exempt from `task_template.md`'s finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
-  `plans/active/*.md`, not `plans/active/issues/*.md`), per the skill's own explicit carve-out. **Caveat for the
-  dispatched worker**: the P1 todo's cited corrective script lives at an ephemeral scratch path
+  `plans/archive/2026_08/*.md`, not `plans/archive/issues/*.md`), per the skill's own explicit carve-out. **Caveat for
+  the dispatched worker**: the P1 todo's cited corrective script lives at an ephemeral scratch path
   (`/private/tmp/claude-501/.../scratchpad/restamp_perp_funding_manifest_FINAL.py`) that will almost certainly not exist
   by dispatch time — re-derive the script from the todo's own fully-enumerated row-level spec (4 KALSHI_PERP captured
   rows → `venue=KALSHI-PERP`; 2 KALSHI_PERP captured rows → `record_failed`/`PHANTOM_CAPTURED_ROW`; 4 POLYMARKET_PERP

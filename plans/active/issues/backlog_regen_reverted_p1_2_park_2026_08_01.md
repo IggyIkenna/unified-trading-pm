@@ -29,6 +29,7 @@ related:
   [
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
     /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-01"
 author: unknown

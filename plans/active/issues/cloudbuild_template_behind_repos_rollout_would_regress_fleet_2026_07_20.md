@@ -25,6 +25,7 @@ related:
     /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
     /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-20
 author: unknown

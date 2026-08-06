@@ -163,10 +163,10 @@ whole file for `timeout` -- zero hits). If the underlying `unified_trading_libra
 client has no read timeout (or a very long one) and hits a stalled connection, this call blocks forever -- the
 `try/except Exception` only catches a raised exception, never a hang. **This is the identical failure class already
 root-caused and fixed THIS SAME WEEK in a different repo/script**:
-`plans/active/issues/ mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` documents `gcsfs`-backed reads with
-no timeout anywhere in the call chain hanging a `ThreadPoolExecutor` consumer indefinitely in `market-tick-data-service`
--- same defect shape (untimed cloud-storage read inside a time-bounded execution context), different repo and different
-specific call site.
+`plans/archive/issues/ mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` documents `gcsfs`-backed reads
+with no timeout anywhere in the call chain hanging a `ThreadPoolExecutor` consumer indefinitely in
+`market-tick-data-service` -- same defect shape (untimed cloud-storage read inside a time-bounded execution context),
+different repo and different specific call site.
 
 **Why the currently-logged VM (`gone_no_capture`) doesn't fully explain it**: `read_progress_checkpoint` is gated
 `if is_preempted`, and the VM logged in every recent execution has verdict `gone_no_capture`, not `preempted` -- so that
@@ -203,7 +203,7 @@ the `dp-*` fleet monitors.
   2026-07-15 for **this exact symptom**: `deployment_service/data_pipeline_monitors/renag_tracker.py`'s own docstring
   states it was built because "`meta_watchers.MissTracker` gates ONSET only... it has no ongoing re-fire suppression, so
   a detector wired only with `MissTracker` re-emits an identical CRITICAL page every sweep for as long as the underlying
-  condition stays true," citing `plans/active/issues/ dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` as the
+  condition stays true," citing `plans/archive/issues/ dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` as the
   incident that motivated it.
 - **That fix was never generalized to `check_cron_fired`/`DP_CRON_DID_NOT_FIRE`.** So this alert (and structurally any
   OTHER `check_cron_fired`-sourced page, plus possibly `DP_VM_GONE_NO_CAPTURE` if it shares the same gap -- not verified

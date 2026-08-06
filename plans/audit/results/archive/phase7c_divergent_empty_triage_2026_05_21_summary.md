@@ -67,5 +67,5 @@ adapter-level bug (handler returned 0 data when protocol had activity) — NOT a
 ## Next steps
 
 - Phase 11 owner: queue MTDS handler investigation for AAVE_V3-OPTIMISM (5 data_types) + COMPOUND_V3-BASE (4 data_types)
-- D4 plan (`plans/active/...`) should track the per-venue re-backfill tasks
+- D4 plan (`plans/archive/2026_08/...`) should track the per-venue re-backfill tasks
 - 0 label-flip actions needed in Phase 7 — no capture_status changes in Phase 7 for these cells

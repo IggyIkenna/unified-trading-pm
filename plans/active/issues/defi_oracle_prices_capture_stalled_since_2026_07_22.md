@@ -143,7 +143,7 @@ rows, that's a separate write-path bug to diagnose via its logs.
       gate. No new automation is needed; un-pausing IS the standing mechanism once the gate clears. (repo:
       deployment-service)
 - [x] ✅ [DOCS] P3. **Fix the stale referrer in `plans/active/lst_rate_honest_coverage_2026_07_21.md`** — fixed body
-      "Audit:" line `plans/active/issues/`→`/plans/archive/issues/` (frontmatter `related:`+`context_scope:` were
+      "Audit:" line `plans/archive/issues/`→`/plans/archive/issues/` (frontmatter `related:`+`context_scope:` were
       already correct); condensed 8 repetitive VM health re-check entries into one summary to bring file from 1017 to
       986 lines (below 1000-line cap). — `unified-trading-pm@4718f3532` (repo: unified-trading-pm)
 

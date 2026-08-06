@@ -21,6 +21,7 @@ related:
   [
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
     /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 author: unknown

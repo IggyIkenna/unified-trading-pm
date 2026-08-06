@@ -2,9 +2,9 @@
 doc_type: plan
 title: Active plan inventory + Done-vs-Left dashboard
 summary: >-
-  Workspace-wide auto-regenerated inventory of every plans/active/*.md plan's checkbox progress, calibrated AI-days
-  remaining, and epic-orphan status. Extracted 2026-07-24 from master_to_live_defi_2026_05_23.md (archived that same day
-  per the plan line-cap remediation) so the daily auto-regeneration keeps a live, non-archived host.
+  Workspace-wide auto-regenerated inventory of every plans/archive/2026_08/*.md plan's checkbox progress, calibrated
+  AI-days remaining, and epic-orphan status. Extracted 2026-07-24 from master_to_live_defi_2026_05_23.md (archived that
+  same day per the plan line-cap remediation) so the daily auto-regeneration keeps a live, non-archived host.
 status:
   complete # (was: active) 2026-07-28 plan-hygiene sweep: verified auto-regenerated inventory table, no
   # Todos section, no unfinished work of its own -- regeneration continues in place at this archived path

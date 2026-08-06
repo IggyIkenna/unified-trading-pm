@@ -170,7 +170,7 @@ not exceptional**, and form the primary reconciliation surface for the slot mast
 
 The trick: **plan-aware merge resolution**. The slot master has full local context (the plan-of-record it's executing
 against, every commit it's made today, every sub-agent's output). When `git pull --rebase origin live-defi-rollout`
-surfaces a conflict in `plans/active/<some-plan>.md` from another slot's edit, the master:
+surfaces a conflict in `plans/archive/2026_08/<some-plan>.md` from another slot's edit, the master:
 
 1. Reads the incoming commit message + the affected plan section.
 2. Cross-references against its own plan-of-record's `## Open questions` + `## Done` blocks.

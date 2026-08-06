@@ -42,6 +42,7 @@ related:
     /plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-02
 author: unknown

@@ -25,6 +25,7 @@ related:
     plans/epics/global_ledger_pnl_attribution_master.md,
     plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md,
     plans/active/crypto_alpha_research_2026_07_24.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master

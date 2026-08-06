@@ -3538,8 +3538,9 @@ behind the exact drift this whole audit is about.
 
 - v1 workflow **FILE** removal (distinct from the required-CHECK migration in Phase 1) — held for
   `cleanup_v1_quality_gates_workflows_<date>.md` once GH Support ticket #4422570 clears (per archived ci_canonical).
-- The active/archive **duplicate** of `ci_canonical_v2_migration_2026_05_29.md` (present in both `plans/active/` and
-  `plans/archive/2026_05/`) is a plan-hygiene artifact, not CI/CD machinery — leave for the plan-hygiene sweep.
+- The active/archive **duplicate** of `ci_canonical_v2_migration_2026_05_29.md` (present in both
+  `plans/archive/2026_08/` and `plans/archive/2026_05/`) is a plan-hygiene artifact, not CI/CD machinery — leave for the
+  plan-hygiene sweep.
 
 ## Tab-branch divergence detection → CI alert (operator-requested 2026-06-04; headless-fleet visibility)
 

@@ -22,6 +22,7 @@ related:
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 author: unknown

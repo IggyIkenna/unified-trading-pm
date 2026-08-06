@@ -71,6 +71,7 @@ related:
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown

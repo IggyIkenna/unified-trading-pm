@@ -20,6 +20,7 @@ related:
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /codex/02-data/reconciliation-census-and-compute-tiers.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 author: unknown

@@ -27,8 +27,9 @@ depends_on: []
 > **🟢 ARCHIVED 2026-08-02** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (deployment-service@b1f0a22). Moved by the
-> `/plan-reconcile` whole-corpus run of 2026-08-02, which found this doc sitting in `plans/active/issues/` at a terminal
-> status — `check_terminal_status_archived` was RED at 13 violations against a baseline of 1. No content was rewritten.
+> `/plan-reconcile` whole-corpus run of 2026-08-02, which found this doc sitting in `plans/archive/issues/` at a
+> terminal status — `check_terminal_status_archived` was RED at 13 violations against a baseline of 1. No content was
+> rewritten.
 
 # launch-instruments-backfill-vm.sh has no `--sports-provider` passthrough
 

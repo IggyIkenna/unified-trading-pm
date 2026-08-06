@@ -180,7 +180,7 @@ own coded definition): `codex_vs_repo_docs_ssot_audit_2026_06_01.md`,
 `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`,
 `unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md`, `vm_launcher_setup_script_freshness_gap_2026_07_31.md`.
 
-`regen_backlog_from_plan.py` globs `plans/active/issues/*.md` (and plan docs) DIRECTLY for `assigned_vm: planning`
+`regen_backlog_from_plan.py` globs `plans/archive/issues/*.md` (and plan docs) DIRECTLY for `assigned_vm: planning`
 checkboxes — a doc does not need to be cited by a satellite batch to be dispatchable, it only needs its own frontmatter
 set correctly. This skill's covering-doc-citation test (the mechanism used to compute
 `orphaned_partial_coverage`/`orphaned_never_touched`) answers "is this doc mentioned by the closeout/batch machinery,"

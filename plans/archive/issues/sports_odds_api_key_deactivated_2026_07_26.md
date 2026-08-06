@@ -289,9 +289,9 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   P2 _sub-todo inside this issue doc_ — that fix only stopped the issue-doc's own derived task, not the original plan
   checkbox that dispatched me. Fixed by moving the marker onto the checkbox's own line in the plan
   (`unified-trading-pm@<pending>` — see commit). Also found this is a GENERAL fleet-wide pattern (grep across
-  `plans/active/*.md` found ~50 checkboxes where a `BLOCKED-*` marker exists only in continuation text, not on the
-  checkbox's own line) — filed a dedicated dispatcher-bug doc rather than mass-editing every occurrence myself (many are
-  already resolved/moot; blast radius needs its own scoped audit):
+  `plans/archive/2026_08/*.md` found ~50 checkboxes where a `BLOCKED-*` marker exists only in continuation text, not on
+  the checkbox's own line) — filed a dedicated dispatcher-bug doc rather than mass-editing every occurrence myself (many
+  are already resolved/moot; blast radius needs its own scoped audit):
   `/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`. Not running the backfill (still
   BLOCKED-CREDENTIALS); skipping this task.
 - 2026-07-28 (slot-7): Dispatched via `sports_odds_api_scattered_multiyear_gaps-002`'s P1 todo (which points here as

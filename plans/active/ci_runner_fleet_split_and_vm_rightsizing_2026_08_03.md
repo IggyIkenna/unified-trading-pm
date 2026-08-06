@@ -21,6 +21,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-03"
 last_updated: "2026-08-03"
@@ -352,11 +353,11 @@ new pool is confirmed green, (3) only then resize AO down.
       BST, re-arm it or terminate manually:
       `aws ec2 terminate-instances --region ap-northeast-1 --instance-ids     i-0dd9812a96cdda5dc` after confirming idle
       via `ssh human-planning-vm "who; w; tmux ls; uptime"`.
-- [x] ✅ [INFRA] P1. **Done 2026-08-05.** Full `grep -rn "i-0dd9812a96cdda5dc" codex/ plans/active/` sweep (10 hits) —
-      fixed the 2 load-bearing codex SSOTs (`agent-orchestrator-single-vm-architecture.md`'s "unaffected" framing,
-      `orchestrator-cloud-identity-self-service.md`'s per-VM ADC note, both now state the termination as fact); the rest
-      were historical/dated records, left as-is except one genuine, more serious finding surfaced along the way (see the
-      human-planning-VM-retirement section below): the VM's termination went ahead WITHOUT cross-checking an
+- [x] ✅ [INFRA] P1. **Done 2026-08-05.** Full `grep -rn "i-0dd9812a96cdda5dc" codex/ plans/archive/2026_08/` sweep (10
+      hits) — fixed the 2 load-bearing codex SSOTs (`agent-orchestrator-single-vm-architecture.md`'s "unaffected"
+      framing, `orchestrator-cloud-identity-self-service.md`'s per-VM ADC note, both now state the termination as fact);
+      the rest were historical/dated records, left as-is except one genuine, more serious finding surfaced along the way
+      (see the human-planning-VM-retirement section below): the VM's termination went ahead WITHOUT cross-checking an
       already-filed P1 WIP-preservation warning for that exact host, and the flagged uncommitted work in 5 repos is now
       very likely permanently lost (no snapshot/volume survives). Resolved + escalated in
       `/plans/active/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md` and

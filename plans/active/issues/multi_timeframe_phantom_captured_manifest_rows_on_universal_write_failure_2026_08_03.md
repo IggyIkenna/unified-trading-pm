@@ -39,6 +39,7 @@ related:
     /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-03
 author: unknown

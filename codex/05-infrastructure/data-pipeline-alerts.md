@@ -62,7 +62,7 @@ running VM / watcher / daily audit
             └─ router.route_event()       # fnmatch rule → channels + severity   (rules/data_pipeline_rules.py)
                  ├─ data_pipeline_slack   # mirror to #data-pipeline-alerts  (verbose)
                  ├─ incident gateway       # dedup / ack / re-nag / recovery-verify  (execution/strategy incidents only — see caveat below)
-                 └─ escalation             # auto-recover  ▸  file plans/active/issues/<slug>_<date>.md  ▸  page
+                 └─ escalation             # auto-recover  ▸  file plans/archive/issues/<slug>_<date>.md  ▸  page
 ```
 
 > **Wiring caveat (found 2026-07-15, `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`):** the
@@ -82,7 +82,7 @@ running VM / watcher / daily audit
   channel + PagerDuty/Telegram, deduped via the cooldown-map mechanism above (not the incident gateway — see caveat).
 - **Escalation tiers** (mirror CI-failure-watcher's auto-recover-vs-escalate):
   1. **auto-recover** — deterministic, in-band (e.g. consolidator restart, key-pool rotate, stale-shard re-merge).
-  2. **file issue** — a non-empty deterministic candidate list auto-files `plans/active/issues/<slug>_<date>.md` and
+  2. **file issue** — a non-empty deterministic candidate list auto-files `plans/archive/issues/<slug>_<date>.md` and
      pings the orchestrator inbox (the standard audit→issue→plan flow). The **LLM-judgment** verdicts (Phase 5 of the
      plan) escalate to a **planning-VM slot** from here.
   3. **page operator** — protective/safety only (CRITICAL with no auto-recover scope).

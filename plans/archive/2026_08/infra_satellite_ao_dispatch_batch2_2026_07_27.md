@@ -150,7 +150,7 @@ once the corresponding todo below is actually done — not this plan.
       features-service. Source: `mdps_features_deadcode_consolidation_2026_07_20.md` #7. Done when: the script's header
       comment cites only current, live docs. — e2e-testing@e117593 (file had already been relocated from
       features-service@7717fbee; fixed at new location). 4 citations replaced: launch-features-backfill-vm.sh →
-      launch-features-vm.sh (×3), archived plan → codex/15-runbooks/smoke-testing-playbook.md. 7 other domain
+      launch-features-vm.sh (×3), archived plan → /codex/15-runbooks/smoke-testing-playbook.md. 7 other domain
       smoke_matrix.py files have identical stale citations → filed
       /plans/active/issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md.
 - [x] ✅ [DOC] P3. **Update `build_canonical_candle_path()`'s docstring example** (unified-trading-library) — it still

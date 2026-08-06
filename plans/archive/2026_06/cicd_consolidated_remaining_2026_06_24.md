@@ -1528,18 +1528,18 @@ Cure-B's in-place resolve.
 - [ ] [DOCS] P3. Physical archive-move of the 7 superseded source plans
       (`cicd_promotion_pipeline`/`cicd_quality_gates`/`cicd_release_machinery`/`cicd_sit_and_fleet`/`cicd_docs_and_consolidation`/`dependency_promotion_range_pins_and_major_bump_sit`/`issues/staging_to_main_promotion_starvation`)
       → `plans/archive/2026_06/`. Status flipped active→superseded + banners present (slot-2 2026-06-25, PM@a237bff34) —
-      but they're STILL in `plans/active/` because they're path-referenced by 13 live files incl. fleet templates
-      (`base-service.sh`/`base-library.sh`/`semver-agent.yml.tmpl` — editing those triggers a fleet rollout). The move
-      needs: update the 13 path-refs (or leave script/template COMMENT refs stale) + `[unlock-plan]` (all 7
+      but they're STILL in `plans/archive/2026_08/` because they're path-referenced by 13 live files incl. fleet
+      templates (`base-service.sh`/`base-library.sh`/`semver-agent.yml.tmpl` — editing those triggers a fleet rollout).
+      The move needs: update the 13 path-refs (or leave script/template COMMENT refs stale) + `[unlock-plan]` (all 7
       `locked_by: live-defi-rollout`). (consolidation closeout)
 - [x] ✅ [SCRIPT] P3. DONE 2026-06-25 (slot-2) — `check_superseded_in_active.sh` now has check (3): scan every active
       plan's `supersedes:` list (handles the multi-line YAML list AND the inline `supersedes: <slug>` form; bare slug /
-      `issues/<slug>` subpath / `plans/active/…md` path, parenthetical-stripped) → any listed slug still
-      `status: active` in `plans/active/` is flagged `SUPERSEDED_BUT_ACTIVE`. Also flipped the script from `exit 0`
-      always (toothless — its `soft` registration in `run_hygiene_sweep.sh` keys off the EXIT CODE, so it could never
-      surface a WARN) to exit-nonzero-on-flag → now visible as a ⚠️ SOFT_WARN. **Negative-tested**: extracts all 7 cicd
-      source slugs (incl the `issues/` subpath), resolves each to `status:superseded` (clean), and FIRES when one is
-      flipped back to active. Closes the exact gap that let the 7 source plans masquerade as active for a day
+      `issues/<slug>` subpath / `plans/archive/2026_08/…md` path, parenthetical-stripped) → any listed slug still
+      `status: active` in `plans/archive/2026_08/` is flagged `SUPERSEDED_BUT_ACTIVE`. Also flipped the script from
+      `exit 0` always (toothless — its `soft` registration in `run_hygiene_sweep.sh` keys off the EXIT CODE, so it could
+      never surface a WARN) to exit-nonzero-on-flag → now visible as a ⚠️ SOFT_WARN. **Negative-tested**: extracts all 7
+      cicd source slugs (incl the `issues/` subpath), resolves each to `status:superseded` (clean), and FIRES when one
+      is flipped back to active. Closes the exact gap that let the 7 source plans masquerade as active for a day
       (operator-caught 2026-06-25, not tooling). **unified-trading-pm@118f9cb6f** → LDR. (consolidation closeout)
 - [ ] [OPS] P0. **[DEFERRED-AWS — leave as-is per operator 2026-06-24]** AWS-VM half — verify `ROOT_PM`/`SLOT_DIR` +
       crons + not-stranded on the fleet VM (Harsh-laptop half done). (quality_gates ▸ qg_commit L435/L441)

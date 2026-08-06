@@ -63,6 +63,7 @@ related:
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/archive/issues/defi_kamino_solend_lending_indices_legacy_shape_fabricated_history_2026_07_28.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 last_updated: "2026-08-04"

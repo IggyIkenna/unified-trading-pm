@@ -13,10 +13,26 @@ related: []
 created: 2026-05-08
 partial_resolved: 2026-05-09
 author: ikenna-tab1-main
-source: [plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md (RESOLVED 2026-05-08), cursor-configs/CLAUDE.md § "Citadel-Grade Planning Standards", cursor-configs/CLAUDE.md § "VM launcher script SSOT (codified 2026-05-07)", cursor-configs/CLAUDE.md § "No fire-and-forget VM launches", cursor-configs/CLAUDE.md § "Findings Triage Discipline", master_to_live_defi_2026_05_23.md Group F item 17 (paper-trade smoke gating step)]
+source:
+  [
+    plans/active/issues/paper_trade_smoke_blocker_get_strategy_factories_2026_05_08.md (RESOLVED 2026-05-08),
+    cursor-configs/CLAUDE.md § "Citadel-Grade Planning Standards",
+    cursor-configs/CLAUDE.md § "VM launcher script SSOT (codified 2026-05-07)",
+    cursor-configs/CLAUDE.md § "No fire-and-forget VM launches",
+    cursor-configs/CLAUDE.md § "Findings Triage Discipline",
+    master_to_live_defi_2026_05_23.md Group F item 17 (paper-trade smoke gating step),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-execution: {owner: Tab 5 (governance) — meta doc, cadence: one-shot, verifier: session_loose_ends_2026_05_08.md items 3-7 all flip to DONE, last_executed: 2026-05-08 (HARD RULES codified PM@1d74f617; retroactive sweeps tracked in session_loose_ends_2026_05_08.md items 3-7)}
+execution:
+  {
+    owner: Tab 5 (governance) — meta doc,
+    cadence: one-shot,
+    verifier: session_loose_ends_2026_05_08.md items 3-7 all flip to DONE,
+    last_executed:
+      2026-05-08 (HARD RULES codified PM@1d74f617; retroactive sweeps tracked in session_loose_ends_2026_05_08.md items
+      3-7),
+  }
 ---
 
 ## ✅ PARTIAL-RESOLUTION 2026-05-09
@@ -86,7 +102,7 @@ for symbol-walking: workspace QG STEP 5.64 already AST-walks `record_captured(` 
 
 ### Gap 2 — No runbook-execution-owner SSOT
 
-**Fix shape**: every runbook in `plans/active/issues/` (or as a master-plan success criterion) MUST declare:
+**Fix shape**: every runbook in `plans/archive/issues/` (or as a master-plan success criterion) MUST declare:
 
 - **Periodic execution path**: cron VM, daily Tab assignment, or QG-wired smoke.
 - **Owner**: explicit named Tab or service for the periodic execution.

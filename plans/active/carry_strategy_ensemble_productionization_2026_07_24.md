@@ -20,6 +20,7 @@ related:
     carry_staked_basis_funding_scan_experiment_2026_06_16,
     cross_venue_funding_reversion_research_2026_07_24,
     ../epics/strategy_master.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: strategy_master

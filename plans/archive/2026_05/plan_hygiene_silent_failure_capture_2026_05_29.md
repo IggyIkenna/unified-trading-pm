@@ -51,9 +51,9 @@ estimate_calibration_note: "Refactor (0.4×): three discrete additions, each wit
 
 # Plan-hygiene cron — silent-failure capture (3 remaining gaps)
 
-The 2026-05-29 conversation enumerated 4 silent-failure modes for plans/active/. The first one (malformed todo format)
-shipped in commit `58d11b78e` (`scripts/plan-hygiene/check_todo_format.sh` + `fix_todo_format.sh` wired into the sweep).
-The other 3 are tracked here.
+The 2026-05-29 conversation enumerated 4 silent-failure modes for plans/archive/2026_08/. The first one (malformed todo
+format) shipped in commit `58d11b78e` (`scripts/plan-hygiene/check_todo_format.sh` + `fix_todo_format.sh` wired into the
+sweep). The other 3 are tracked here.
 
 Note: regen_backlog_from_plan.py is more permissive than originally framed — it ingests any `- [ ]` line and extracts
 `\bP[0-3]\b` from anywhere. So the "silent skip" narrative was partly wrong. The real gaps are: (a) wrong `parent_epic`
@@ -92,9 +92,9 @@ indefinitely with no auto-unblock when blockers complete.
       `{"reported_at":"<ISO>","host":"<hostname>","repos":[{"name","branch","state","dirty_files","ahead","behind","local_sha","integration_branch","dirty_oldest_mtime?"}]}`. -
       **Dirty-file loop stanza** (lines 134-148 of the script): This is the extension point for Phase 2. After the
       `while IFS= read -r line; do` loop that finds the oldest mtime, insert a parallel loop (or combined pass) that
-      detects any `file` path matching `plans/active/*.md` or `plans/active/issues/*.md` and appends to a local
-      `unpushed_plans` array. This array gets passed as a new column in the TSV row (or as a separate JSON field built
-      in `post_snapshot`'s Python block). - **Slack alert chain**: `post_snapshot` → server's
+      detects any `file` path matching `plans/archive/2026_08/*.md` or `plans/archive/issues/*.md` and appends to a
+      local `unpushed_plans` array. This array gets passed as a new column in the TSV row (or as a separate JSON field
+      built in `post_snapshot`'s Python block). - **Slack alert chain**: `post_snapshot` → server's
       `POST /api/slots/{slot_id}/git-status` → `_maybe_send_sync_nudge()` (in-slot queue message, not Slack). Slack
       fires separately via `WorkerLivenessKicker._maybe_alert_git_staleness()` in `worker_liveness.py:285` — it reads
       `slot.git_status_json` on each liveness tick, checks if the cron is stale (>5 min) AND any repo is red for >15
@@ -112,9 +112,9 @@ indefinitely with no auto-unblock when blockers complete.
       Seed each epic's keywords by scanning the epic master plan + its currently-active child plans for distinctive
       tokens (the audit doc from Phase 0 lists existing plan→epic mappings).
 - [x] ✅ [AGENT] P1. Write `scripts/plan-hygiene/check_parent_epic_alignment.py` (style matching
-      `check_todo_format.sh`): for each `plans/active/*.md`, score the plan body against every epic's keyword surface;
-      if the highest-scoring epic differs from the declared `parent_epic`, emit a WARN with the top-3 epic scores. Soft
-      check (operator decides; no auto-fix). — unified-trading-pm@<sha>
+      `check_todo_format.sh`): for each `plans/archive/2026_08/*.md`, score the plan body against every epic's keyword
+      surface; if the highest-scoring epic differs from the declared `parent_epic`, emit a WARN with the top-3 epic
+      scores. Soft check (operator decides; no auto-fix). — unified-trading-pm@<sha>
 - [x] ✅ [AGENT] P1. Wire into `scripts/plan-hygiene/run_hygiene_sweep.sh` as a SOFT check (warn-only — semantic guess
       shouldn't block hygiene-green). — same commit
 - [x] ✅ [AGENT] P1. Run on current plans. Expect a small list (≤5) of suspect mismatches; report and let operators
@@ -130,10 +130,10 @@ indefinitely with no auto-unblock when blockers complete.
 ## Phase 2 — Unpushed plan-file detection (P1)
 
 - [x] ✅ [AGENT] P1. Extend `scripts/dev/slot-git-status-report.sh`: when iterating dirty / untracked files in a slot's
-      `unified-trading-pm` worktree, detect any path matching `plans/active/*.md` or `plans/active/issues/*.md` and
-      escalate severity in the reported payload (a new field `unpushed_plans: [list]`). Classify_repo: added
-      unpushed_plans 10th TSV column (pipe-separated basenames). post_snapshot Python block: parses col 10 →
-      `unpushed_plans: [list]`. RepoStatus Pydantic model gains `unpushed_plans: list[str]`. —
+      `unified-trading-pm` worktree, detect any path matching `plans/archive/2026_08/*.md` or
+      `plans/archive/issues/*.md` and escalate severity in the reported payload (a new field `unpushed_plans: [list]`).
+      Classify_repo: added unpushed_plans 10th TSV column (pipe-separated basenames). post_snapshot Python block: parses
+      col 10 → `unpushed_plans: [list]`. RepoStatus Pydantic model gains `unpushed_plans: list[str]`. —
       unified-trading-pm@<sha> + agent-orchestrator@<sha>
 - [x] ✅ [AGENT] P1. Extend the Slack alert template that consumes the git-status report to fire a higher-priority alert
       (e.g. `🔴 Slot N has unpushed plan(s): X.md, Y.md`) when `unpushed_plans` is non-empty. Existing 5-min

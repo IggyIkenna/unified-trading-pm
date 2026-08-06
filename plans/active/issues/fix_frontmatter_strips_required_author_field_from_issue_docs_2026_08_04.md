@@ -3,10 +3,10 @@ doc_type: issue
 title: fix_frontmatter.py's DEPRECATED_PLAN_FIELDS strips the author field REQUIRED on issue docs
 summary:
   "scripts/plan-hygiene/fix_frontmatter.py's DEPRECATED_PLAN_FIELDS set includes `author`, and
-  `remove_deprecated_fields()` is applied blanket to every doc under plans/active/ (including plans/active/issues/) with
-  no doc_type gate — so any hygiene sweep or quality-gates.sh plan-hygiene step silently strips `author:` from issue
-  docs too, even though RULES.md § 4.5 (Findings Closure) explicitly REQUIRES `title` / `created` / `author` /
-  `source[]` on every issue doc. Confirmed live, reproduced twice in one session: this repo's own
+  `remove_deprecated_fields()` is applied blanket to every doc under plans/archive/2026_08/ (including
+  plans/archive/issues/) with no doc_type gate — so any hygiene sweep or quality-gates.sh plan-hygiene step silently
+  strips `author:` from issue docs too, even though RULES.md § 4.5 (Findings Closure) explicitly REQUIRES `title` /
+  `created` / `author` / `source[]` on every issue doc. Confirmed live, reproduced twice in one session: this repo's own
   qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md lost its `author: slot-9` line on two
   separate quality-gates.sh / quickmerge runs."
 status: resolved
@@ -50,12 +50,12 @@ DEPRECATED_PLAN_FIELDS = {
 }
 ```
 
-and its `fix_active_plan()` (or equivalent) walks every doc under `plans/active/` — including `plans/active/issues/*.md`
-— calling `remove_deprecated_fields(new_fm, DEPRECATED_PLAN_FIELDS)` unconditionally, with no `doc_type` gate. `author`
-is a legitimate DEPRECATED field for `doc_type: plan` docs (per PLAN_FORMAT.md's canonical schema, which has no `author`
-field), but `unified-trading-pm/agents/RULES.md` § 4.5 "FINDINGS CLOSURE" explicitly requires every `doc_type: issue`
-doc to carry `author` in its frontmatter: "Frontmatter MUST include `assigned_vm` ... plus `title` / `created` /
-`author` / `source[]`."
+and its `fix_active_plan()` (or equivalent) walks every doc under `plans/archive/2026_08/` — including
+`plans/archive/issues/*.md` — calling `remove_deprecated_fields(new_fm, DEPRECATED_PLAN_FIELDS)` unconditionally, with
+no `doc_type` gate. `author` is a legitimate DEPRECATED field for `doc_type: plan` docs (per PLAN_FORMAT.md's canonical
+schema, which has no `author` field), but `unified-trading-pm/agents/RULES.md` § 4.5 "FINDINGS CLOSURE" explicitly
+requires every `doc_type: issue` doc to carry `author` in its frontmatter: "Frontmatter MUST include `assigned_vm` ...
+plus `title` / `created` / `author` / `source[]`."
 
 **Confirmed reproduction**:
 `plans/active/issues/qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md` declared

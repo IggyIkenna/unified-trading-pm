@@ -116,5 +116,5 @@ possible. Assigned to `arbitrage_price_dispersion_finalisation_2026_05_09.md`.
 - [x] Matrix filed with current state for `carry_staked_basis` (paper-shippable) + `APD` (backtest-only)
 - [x] Blockers named per SSOT taxonomy (not "DEFERRED — no data")
 - [x] Component inventory complete for both archetypes
-- [x] Named successor plans in `plans/active/` for each blocker
+- [x] Named successor plans in `plans/archive/2026_08/` for each blocker
 - [x] State promotion rationale documented (carry_staked_basis: backtest-only → paper-shippable)

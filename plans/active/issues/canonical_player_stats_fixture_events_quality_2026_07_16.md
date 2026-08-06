@@ -26,6 +26,7 @@ related:
     ../sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/archive/issues/sports_legacy_canonical_row_gap_2026_07_16.md,
     ../../epics/sports_master.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-16
 author: unknown

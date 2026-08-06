@@ -26,6 +26,7 @@ related:
   [
     /plans/archive/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
     /codex/05-infrastructure/deployment-observability.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: 2026-07-17
 author: unknown

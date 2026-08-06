@@ -31,6 +31,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /scripts/plan-hygiene/ag_closeout_linkage_baseline.yaml,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-06
 author: ag_closeout_auditor (cefi tranche, dispatch agt-02411c, slot 3)

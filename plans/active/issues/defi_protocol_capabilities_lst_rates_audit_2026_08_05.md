@@ -21,6 +21,7 @@ related:
     /plans/active/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-05"
 author: slot-7 (data_engineering craft)

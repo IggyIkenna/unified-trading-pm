@@ -28,6 +28,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-05"
 author: interactive session (/autonomous)

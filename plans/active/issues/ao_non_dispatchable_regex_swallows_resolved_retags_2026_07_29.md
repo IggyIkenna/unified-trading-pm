@@ -83,7 +83,7 @@ plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md:3
   -> operator_gated=False -> todo correctly ingested as a normal dispatchable task
 ```
 
-Corpus-wide replication (`_parse_open_todos` logic, all of `plans/active/**/*.md`, 2,242 open todos):
+Corpus-wide replication (`_parse_open_todos` logic, all of `plans/archive/2026_08/**/*.md`, 2,242 open todos):
 
 | Metric                                                                                   | Count  |
 | ---------------------------------------------------------------------------------------- | ------ |

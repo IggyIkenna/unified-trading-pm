@@ -31,6 +31,7 @@ related:
     /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     ../../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
     ../../archive/2026_07/work_split_2026_05_22_ikenna.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-13
 author: unknown

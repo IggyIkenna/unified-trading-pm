@@ -26,6 +26,7 @@ related:
   [
     /plans/archive/issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
 author: unknown

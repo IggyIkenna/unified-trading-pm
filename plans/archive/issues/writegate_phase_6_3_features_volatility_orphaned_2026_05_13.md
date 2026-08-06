@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title: 'Phase 6.3 features-volatility: Orphaned ownership decision — ✅ AUTO-RESOLVED'
+title: "Phase 6.3 features-volatility: Orphaned ownership decision — ✅ AUTO-RESOLVED"
 summary:
 status: RESOLVED
 nature: record
@@ -36,7 +36,7 @@ Ikenna inherits per `Phase 6.3-6.9 = Ikenna slots 6/7/8` ownership annotation in
 **Verification**: `grep _check_emission_policy features-service/features_service/volatility/` returns 3 callsites (37,
 68, 257). `git show d7514a08 --stat` confirms wire-in shape.
 
-Moved from `plans/active/issues/` → `plans/archive/issues/` on 2026-05-13.
+Moved from `plans/archive/issues/` → `plans/archive/issues/` on 2026-05-13.
 
 ---
 

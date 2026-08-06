@@ -50,7 +50,7 @@ locked_by:
 > **✅ ARCHIVED 2026-07-28** (plan_health gate remediation — `check_terminal_status_archived` ratchet). Fix fully
 > shipped + verified per the Verification section below (agent-orchestrator backend/dashboard/dispatch-script changes,
 > full QG green, live VM redeploy confirmed). ACKED-INTO-CODE per `/codex/11-project-management/issue-doc-lifecycle.md`
-> — archiving now rather than leaving it dual-tracked in `plans/active/issues/`. The two Follow-ups items below
+> — archiving now rather than leaving it dual-tracked in `plans/archive/issues/`. The two Follow-ups items below
 > (na-eligibility-auditor timeout re-tuning; branch-state-quarantine friction awareness) remain open observations, not
 > blocking this issue's own resolution — no other active plan/issue currently owns them.
 

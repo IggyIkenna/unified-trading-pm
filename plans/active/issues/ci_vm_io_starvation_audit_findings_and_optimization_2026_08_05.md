@@ -29,6 +29,7 @@ related:
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md,
     /codex/07-security/self-hosted-runner-security-posture.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-05"
 author: ikennaigboaka [interactive session]

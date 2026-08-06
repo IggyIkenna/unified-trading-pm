@@ -161,12 +161,13 @@ locked_since: 2026-05-20
 > re-verification mechanism. Two same-day plans — `aster_cefi_data_defi_bucket_migration_2026_07_13` and
 > `bybit_futures_chain_write_shape_migration_2026_07_13` (both `status: active`, both `parent_epic: mtds_mdps_master`,
 > filed the same day, hours after this banner) — sit outside the named roster (doc-reconciliation findings 176/177).
-> Separately, the roster's candidate-enumeration only ever scanned `plans/active/*.md` non-recursively and never
-> `plans/active/issues/*.md`, so issue docs carrying `parent_epic: mtds_mdps_master` (e.g.
+> Separately, the roster's candidate-enumeration only ever scanned `plans/archive/2026_08/*.md` non-recursively and
+> never `plans/archive/issues/*.md`, so issue docs carrying `parent_epic: mtds_mdps_master` (e.g.
 > `issues/cefi_universe_capture_rule_2026_06_23.md`, `status: open`, unfinished P0 IS-layer todos) were silently
 > excluded from the roster too (doc-reconciliation finding 168). Read the roster above as "themed-consolidation
 > survivors as of 2026-07-13", not as an exhaustive enumeration of live `parent_epic: mtds_mdps_master` work — re-derive
-> the current live set via `rg -l '^parent_epic: mtds_mdps_master' plans/active/*.md plans/active/issues/*.md`.
+> the current live set via
+> `rg -l '^parent_epic: mtds_mdps_master' plans/archive/2026_08/*.md plans/archive/issues/*.md`.
 >
 > **[2026-07-25 correction]**: `sports_manifest_canonicalisation_2026_06_01`, named above (line 147/153) as a live
 > "delegated vertical" child of this epic, was subsequently **archived/superseded** — folded into
@@ -719,8 +720,8 @@ layer**, not a re-statement of the work.
       execution-ordering reference. — pm@HEAD
 - [x] ✅ `/codex/11-project-management/foundation-completion-gate-discipline.md` — cite this plan as the example of how
       layers 1-3 are sequenced together for a major migration. — pm@HEAD
-- [x] ✅ CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — path corrected `plans/active/` → `plans/epics/`
-      (pointer already existed, wrong path). — pm@HEAD
+- [x] ✅ CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — path corrected `plans/archive/2026_08/` →
+      `plans/epics/` (pointer already existed, wrong path). — pm@HEAD
 
 ## Assigned active plans
 

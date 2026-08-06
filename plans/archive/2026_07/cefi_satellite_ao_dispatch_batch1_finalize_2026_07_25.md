@@ -59,9 +59,9 @@ context_scope:
 > (`issues/bybit_futures_chain_write_shape_2026_07_13.md`) as a fresh open todo (never marked done) per the
 > near-complete-plan "fold the remnant" guidance — see the parent's own Progress Log for the full rationale. Parent
 > moved to `/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md`, corpus referrers updated (17 files
-> with a literal `plans/active/...` path to the parent + referrers to this finalize doc's own path). No new durable
-> contract from this batch — codex-alignment check: nothing to update (every todo executed an already-decided spec, per
-> the parent's own banner).
+> with a literal `plans/archive/2026_08/...` path to the parent + referrers to this finalize doc's own path). No new
+> durable contract from this batch — codex-alignment check: nothing to update (every todo executed an already-decided
+> spec, per the parent's own banner).
 >
 > **Machine-gated on `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue any todo below until all 33 tasks in that plan are `done`. `sequential: true` because todo 2
@@ -145,17 +145,18 @@ context_scope:
       target was unambiguous (the item's own cited Source doc), so no operator ruling was needed. Archive banner added
       to the parent; codex-alignment check found nothing to update (every todo executed an already-decided spec).
       Grepped the corpus for every referrer of `cefi_satellite_ao_dispatch_batch1_2026_07_25` and repointed the 17 files
-      using the literal `plans/active/...` path form to `/plans/archive/2026_07/...` (left 1 verbatim historical
-      API-response JSON quote in `issues/backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_27.md`
-      untouched — a code block reproducing an exact past `GET /api/backlog` response, not a live reference). `locked_by`
-      confirmed empty on both docs. **Archive `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard
-      6-step ritual (per CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo
-      elsewhere (todos 2 and 3 above should have already resolved the too-large-doc and LATE-renames exclusions — verify
-      none remain untracked) → add the archive banner → run the codex-alignment check → grep the corpus for every
-      referrer of `cefi_satellite_ao_dispatch_batch1_2026_07_25` and fix each path to point at the archived location →
-      clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`,
-      every corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the
-      same commit.
+      using the literal `plans/archive/2026_08/...` path form to `/plans/archive/2026_07/...` (left 1 verbatim
+      historical API-response JSON quote in
+      `issues/backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_27.md` untouched — a code block
+      reproducing an exact past `GET /api/backlog` response, not a live reference). `locked_by` confirmed empty on both
+      docs. **Archive `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
+      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todos 2 and 3
+      above should have already resolved the too-large-doc and LATE-renames exclusions — verify none remain untracked) →
+      add the archive banner → run the codex-alignment check → grep the corpus for every referrer of
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25` and fix each path to point at the archived location → clear
+      `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
+      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
+      commit.
 
 ## Progress Log
 
@@ -296,10 +297,10 @@ context_scope:
     `plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md` path form (frontmatter `related:` lists +
     line-numbered prose citations) — all repointed to `plans/archive/2026_07/...`. Left
     `issues/backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_27.md`'s one
-    `"plan_ref": "plans/active/..."` line untouched — it's inside a fenced code block reproducing a verbatim historical
-    `GET /api/backlog` JSON response, not a live doc reference; rewriting it would falsify the quote. Bare-name prose
-    mentions with no `plans/active/` path prefix (dozens, mostly in already-archived Progress Log narrative describing
-    past events) were left as-is — they are historical narrative, not machine-checked path references. Referrers to this
-    finalize doc's own path were also repointed.
+    `"plan_ref": "plans/archive/2026_08/..."` line untouched — it's inside a fenced code block reproducing a verbatim
+    historical `GET /api/backlog` JSON response, not a live doc reference; rewriting it would falsify the quote.
+    Bare-name prose mentions with no `plans/archive/2026_08/` path prefix (dozens, mostly in already-archived Progress
+    Log narrative describing past events) were left as-is — they are historical narrative, not machine-checked path
+    references. Referrers to this finalize doc's own path were also repointed.
   - `locked_by` confirmed empty on both docs (no unlock needed).
   - Both docs moved to `plans/archive/2026_07/` in the same commit as this final edit.

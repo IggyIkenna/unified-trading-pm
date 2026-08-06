@@ -48,10 +48,10 @@ depends_on: []
 
 ## What's true today (corrected 2026-08-01 — see Progress Log)
 
-`context_scope` is a `plans/active/*.md` + `plans/active/issues/*.md` frontmatter field: the minimal, verified list of
-codex SSOTs (+ occasional script paths) that doc's remaining work depends on. **It is ELECTIVE, not required, and the
-corpus backfill is still in progress** — the two sentences below correct the two false "done" claims this section
-previously made (2026-07-30 version), per the data-correctness contradiction filed in
+`context_scope` is a `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` frontmatter field: the minimal, verified
+list of codex SSOTs (+ occasional script paths) that doc's remaining work depends on. **It is ELECTIVE, not required,
+and the corpus backfill is still in progress** — the two sentences below correct the two false "done" claims this
+section previously made (2026-07-30 version), per the data-correctness contradiction filed in
 `/plans/archive/issues/ag_closeout_audit_ao_parked_2026_07_31.md` Finding 1.
 
 1. **Field requirement — ELECTIVE (`Req.E`), not required.** Direct read of `scripts/docs/docspec.py` (2026-08-01,

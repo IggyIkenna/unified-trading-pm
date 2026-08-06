@@ -30,6 +30,7 @@ related:
     /codex/06-coding-standards/strategy-identity-versioning.md,
     /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 author: unknown
@@ -285,13 +286,13 @@ zero violations · `check_doc_body_links` 1897 docs / zero new broken links (aga
 
 **Concurrency note (the run was not alone in the repo).** Corpus counts drifted downward mid-run (1898→1897→1896)
 despite `git status` showing zero deletions, which was chased rather than hand-waved: the cause is peer agents moving
-issue docs between `plans/active/` and `plans/archive/` while this run was in progress (`plans/archive/**` is excluded
-from both scanners' corpora), with the slot ff-pull cron bringing those commits into the working tree. Local HEAD moved
-`a2c264df4 → aacf460f2` during the run. Confirmed by the final fast-forward, which restored
-`deployment_ui_vitest_coverage_gate_broadly_red_2026_07_29.md` to `active/` and took the counts straight back up to
-1897/1851. Nothing was lost. The practical consequence for future runs: **any corpus count in a `/docs-reconcile` report
-is a sample, not a stable measurement**, and the tightened link ratchets were deliberately re-verified against the
-post-merge state (still green) rather than only against the pre-merge state they were generated from.
+issue docs between `plans/archive/2026_08/` and `plans/archive/` while this run was in progress (`plans/archive/**` is
+excluded from both scanners' corpora), with the slot ff-pull cron bringing those commits into the working tree. Local
+HEAD moved `a2c264df4 → aacf460f2` during the run. Confirmed by the final fast-forward, which restored
+`deployment_ui_vitest_coverage_gate_broadly_red_2026_07_29.md` to `archive/2026_08/` and took the counts straight back
+up to 1897/1851. Nothing was lost. The practical consequence for future runs: **any corpus count in a `/docs-reconcile`
+report is a sample, not a stable measurement**, and the tightened link ratchets were deliberately re-verified against
+the post-merge state (still green) rather than only against the pre-merge state they were generated from.
 
 ## Incidental blocker found while shipping — PM `quality-gates.sh` is RED for everyone right now
 

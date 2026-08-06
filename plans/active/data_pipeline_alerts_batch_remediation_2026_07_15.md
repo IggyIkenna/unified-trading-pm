@@ -32,6 +32,7 @@ related:
     plans/active/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
     plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-15
 last_updated: 2026-07-15
@@ -79,8 +80,9 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 > 2026-07-16 close) was extracted verbatim to
 > `plans/archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` — see it for the full record.
 > That child was itself fully-closed history (all 14 todos `[x]`, 0 open) so it was archived outright the same day
-> rather than left in `plans/active/`. This parent now carries only the condensed ground truth, the genuinely-still-open
-> todos, and 2 todos this history shows were closed later but never had their checkbox flipped here.
+> rather than left in `plans/archive/2026_08/`. This parent now carries only the condensed ground truth, the
+> genuinely-still-open todos, and 2 todos this history shows were closed later but never had their checkbox flipped
+> here.
 
 ## Ground truth (condensed — see the closeout child for the full version)
 

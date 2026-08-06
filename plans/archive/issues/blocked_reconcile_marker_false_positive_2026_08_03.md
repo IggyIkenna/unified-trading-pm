@@ -101,7 +101,7 @@ near the BLK id; workers narrating unrelated pending state stop tripping it).
 - 2026-08-03 (slot-14): implemented option 1 (same-line requirement) — `find_resolution_in_plans()` now requires the
   resolution marker on the SAME line as the `BLK-xxxxxxxx` mention; the +/-12 line window is kept only for assembling
   the displayed context text, not for match detection. Verified against the live plans corpus (grepped real `BLK-` usage
-  across `plans/active/`) that this preserves every genuine same-line match convention already in use
+  across `plans/archive/2026_08/`) that this preserves every genuine same-line match convention already in use
   (`BLK-xxxx ANSWERED`, `operator ruling BLK-xxxx`, etc.) while closing the cross-line false-positive. Updated
   `test_matches_operator_ruling_marker_within_window` (renamed, expectation flipped to non-match — that test validated
   exactly the loose-window behavior being removed) and added a dedicated regression test reproducing the live incident

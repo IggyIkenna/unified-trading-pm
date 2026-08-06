@@ -128,7 +128,7 @@ revert commits mid-flight at time of writing).
 - Root cause worth naming: I encountered the alignment-gate failure, formed a hypothesis ("canonical is stale"), and
   acted on a large blast-radius fix without first checking whether the specific contradiction had already been triaged
   by someone else working the same file that same day. The fix for next time: **before widening a shared canonical
-  constraint to resolve an alignment-gate failure, grep `plans/active/issues/` for the package name first** — a
+  constraint to resolve an alignment-gate failure, grep `plans/archive/issues/` for the package name first** — a
   same-day, same-file conflict is exactly the kind of thing a fast-moving multi-agent fleet produces.
 
 ## Todos

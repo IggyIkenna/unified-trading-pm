@@ -21,6 +21,7 @@ related:
     /plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

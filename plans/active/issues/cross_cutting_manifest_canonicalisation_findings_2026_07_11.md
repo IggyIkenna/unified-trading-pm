@@ -37,6 +37,7 @@ related:
     /plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
     /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-11
 author: unknown

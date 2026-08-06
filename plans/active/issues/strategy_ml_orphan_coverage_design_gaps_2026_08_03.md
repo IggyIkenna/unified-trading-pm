@@ -25,6 +25,7 @@ related:
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-03"
 author: unknown

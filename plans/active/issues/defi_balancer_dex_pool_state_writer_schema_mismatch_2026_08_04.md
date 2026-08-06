@@ -33,6 +33,7 @@ related:
   [
     /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

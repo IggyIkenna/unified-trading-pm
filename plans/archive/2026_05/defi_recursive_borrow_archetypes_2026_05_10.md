@@ -16,9 +16,9 @@ descope_reversal_reason: >
   by 2026-05-23.
 prior_descope: 2026-05-14 by harsh-slot-9 (now REVERSED per operator direction 2026-05-13 evening)
 successor_plan: >
-  /plans/archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md (NOTE: post-cutover plan now covers ONLY
-  post-cutover scope-expansion items, NOT the May-23 implementation half which is back in this plan's scope per operator
-  direction 2026-05-13)
+  /plans/archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md (NOTE: post-cutover plan now covers
+  ONLY post-cutover scope-expansion items, NOT the May-23 implementation half which is back in this plan's scope per
+  operator direction 2026-05-13)
 target_deadline: 2026-05-23
 priority: P0
 related_plans:
@@ -1716,7 +1716,7 @@ round-trip place-and-monitor test executed via the UI's manual-trade gate.
       5bps over 7 days = green. **BLOCKED-DATA** — gates on Phase 12 backtest run completion. **DEFERRED-POST-CUTOVER**
       → successor plan.
 - [x] [findings] P0. Capture any divergences as plan todos in this plan body or as
-      `plans/active/issues/<slug>_2026_05_xx.md` per Findings Triage Discipline. **BLOCKED-DATA** — gates on Phase 12
+      `plans/archive/issues/<slug>_2026_05_xx.md` per Findings Triage Discipline. **BLOCKED-DATA** — gates on Phase 12
       backtest + reconciliation. **DEFERRED-POST-CUTOVER** → successor plan.
 
 **Done definition:** 2-year backtest committed; 7-day paper-smoke green; batch-vs-live recon < 5bps.
@@ -1970,4 +1970,4 @@ end-to-end. Fits the May-23 cutover if started no later than 2026-05-12.
 | `PM@3acaae6f` | unified-trading-pm | Master plan inventory regenerated: 74 plans / 43% done / 575 cal AI-days remaining; successor plan row added.                                                                                                                                                                                                                                                                                                           |
 
 **Done-def met**: current plan annotated with descope decision + successor banner ✅; successor plan filed at
-`plans/active/` ✅; master plan inventory regenerated ✅.
+`plans/archive/2026_08/` ✅; master plan inventory regenerated ✅.

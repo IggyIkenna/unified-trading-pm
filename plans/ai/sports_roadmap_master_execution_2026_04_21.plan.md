@@ -94,8 +94,8 @@ overwrite.
 
 Orchestrator agent spawns 8 sub-agent sessions via the Agent tool, each with this dispatch prompt prefix:
 
-> **Master-plan sub-agent dispatch.** You are executing `plans/active/<PLAN_NAME>.plan.md`. Follow the plan's pre-audit
-> manifest and phased DAG strictly. **Two amendments to the plan's own commit protocol:**
+> **Master-plan sub-agent dispatch.** You are executing `plans/archive/2026_08/<PLAN_NAME>.plan.md`. Follow the plan's
+> pre-audit manifest and phased DAG strictly. **Two amendments to the plan's own commit protocol:**
 >
 > 1. **Commit locally, but DO NOT push.** The master orchestrator handles all pushes after auditing. Use `git commit`
 >    (with `--no-verify` if prek races cause "Restored working tree" loops per the 2026-04-21 feedback memory). Never

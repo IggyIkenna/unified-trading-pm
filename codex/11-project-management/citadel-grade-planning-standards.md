@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Citadel-Grade Planning Standards
 summary:
-  The Nine Requirements every plan in `plans/active/`, `plans/epics/`, `plans/audit/` MUST meet (pre-audit, phased DAG,
-  no tech debt, parallelization, per-phase success criteria, downstream-consumer audit, UAC-only types,
+  The Nine Requirements every plan in `plans/archive/2026_08/`, `plans/epics/`, `plans/audit/` MUST meet (pre-audit,
+  phased DAG, no tech debt, parallelization, per-phase success criteria, downstream-consumer audit, UAC-only types,
   foundation-completion-gate, issue-doc-lifecycle) + the plan review checklist + review-blocking anti-patterns.
 status: current
 nature: ssot
@@ -35,8 +35,8 @@ code_refs:
 
 > **CLAUDE.md anchor**: "Citadel-Grade Planning Standards".
 >
-> Workspace-wide planning requirements for all plans in `plans/active/`, `plans/epics/`, and `plans/audit/`. These
-> standards ensure plans are thorough, parallelisable, and production-ready.
+> Workspace-wide planning requirements for all plans in `plans/archive/2026_08/`, `plans/epics/`, and `plans/audit/`.
+> These standards ensure plans are thorough, parallelisable, and production-ready.
 
 ## The Nine Requirements
 
@@ -83,10 +83,10 @@ Master tracker: `plans/active/issues/mega_audit_and_plan_beefup_progression_2026
 
 ### 9. Issue-Doc Lifecycle Discipline
 
-Issue docs in `plans/active/issues/` exist to surface UNACKED work. Once acked (into a plan / shipped code /
+Issue docs in `plans/archive/issues/` exist to surface UNACKED work. Once acked (into a plan / shipped code /
 out-of-scope with named successor), they archive immediately.
 
-Banner-marked-in-`active/issues/` is a transitional convenience, NOT a permanent state. "Stays until parent closes"
+Banner-marked-in-`archive/issues/` is a transitional convenience, NOT a permanent state. "Stays until parent closes"
 lifecycles are dual-tracking and review-blocking.
 
 State machine + audit recipe + anti-patterns: `/codex/11-project-management/issue-doc-lifecycle.md`.

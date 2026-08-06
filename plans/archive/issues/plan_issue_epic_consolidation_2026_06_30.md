@@ -594,8 +594,8 @@ Same rubric on the 6 IS+MTDS-relevant epics (2 Opus agents). Result:
 - **Superseded manifest epics** (`manifest_evolution_SUPERSEDED`, `manifest_migration_SUPERSEDED`): genuinely superseded
   (successor `manifest_master`, **0 `parent_epic` dependents**) — **LEFT IN `plans/epics/` per the established
   convention** (all 4 SUPERSEDED epics live there marked; the hygiene check only flags SUPERSEDED filenames in
-  `plans/active/`, not `epics/`; moving them would break archaeology refs). Already terminally disposed — no move
-  needed.
+  `plans/archive/2026_08/`, not `epics/`; moving them would break archaeology refs). Already terminally disposed — no
+  move needed.
 - **Flagged for a separate codex follow-up** (out of epic scope): `/codex/02-data/mvp-scope-canonical.md` says
   `MVP_SCOPE_CONFIG_VERSION = 11` but code is **12** live; plus pre-existing dangling `../active/` epic links not in the
   consolidation set (frozen-history banners — not safe to auto-edit).

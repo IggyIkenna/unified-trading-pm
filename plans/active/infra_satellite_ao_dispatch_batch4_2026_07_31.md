@@ -91,8 +91,8 @@ finalize twin would normally do is folded directly into that todo's own "Done wh
 
 ## Conflict check performed before drafting
 
-- **`instruments_service/reference_data/adapters/defi/_solana_utils.py`** — `rg` across ALL of `plans/active/` (not just
-  infra-tagged docs) for the file's basename and its full relative path returns exactly 3 hits:
+- **`instruments_service/reference_data/adapters/defi/_solana_utils.py`** — `rg` across ALL of `plans/archive/2026_08/`
+  (not just infra-tagged docs) for the file's basename and its full relative path returns exactly 3 hits:
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (an OBSERVATION only — "the only genuine residual named in the
   doc," recommending the source doc's own todo be rewritten, never drafting the split itself),
   `codex_violations_ratchet_to_five_2026_06_10.md` (the source doc, `[CODE] P3`, still open), and

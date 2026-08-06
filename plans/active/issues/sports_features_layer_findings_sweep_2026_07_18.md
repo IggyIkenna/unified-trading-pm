@@ -724,8 +724,8 @@ read is a coverage blind spot.
 
 ## Continues in PART 2 and PART 3
 
-**This doc was split 2026-07-26 (line-cap remediation — was 1,843L, over the `plans/active/` 1,000L hard cap; see
-`check_line_caps.sh` / precedent `sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`) into 3 files by
+**This doc was split 2026-07-26 (line-cap remediation — was 1,843L, over the `plans/archive/2026_08/` 1,000L hard cap;
+see `check_line_caps.sh` / precedent `sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`) into 3 files by
 section boundary, verbatim, byte-for-byte, in original order. No content was moved between open/closed status — each
 part carries whatever mix of `[x]`/`[ ]` items fell in its line range.** Total open checkboxes: 73 (18 here in Part 1 §
 A-F, 24 in Part 2 § G-N, 31 in Part 3 § O-AA) — unchanged from the pre-split count.

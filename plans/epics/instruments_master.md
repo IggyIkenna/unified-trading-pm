@@ -188,8 +188,8 @@ This is a SUMMARY for plan-anchored navigation. The authoritative version is the
 - **`launcher_scripts_consolidation_into_deployment_service_2026_05_07.md`** — depends_on. Owns launcher SSOT migration;
   THIS plan's Phase F.1 adds Cloud Scheduler config under the same `deployment-service/scripts/` root.
 - [`trigger_based_reference_data_2026_04_13.md`](../active/trigger_based_reference_data_2026_04_13.md) — **active
-  sibling** (promoted from `plans/ai/` to `plans/active/` on 2026-05-14 per operator decision = option b). Owns the
-  sports trigger calendar design; THIS plan's Phase B references it and completes in parallel (no fold). Phase B.0
+  sibling** (promoted from `plans/ai/` to `plans/archive/2026_08/` on 2026-05-14 per operator decision = option b). Owns
+  the sports trigger calendar design; THIS plan's Phase B references it and completes in parallel (no fold). Phase B.0
   unlock-request RESOLVED.
 
 ## Active issues this plan references (does NOT duplicate)

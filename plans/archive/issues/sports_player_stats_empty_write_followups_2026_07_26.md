@@ -6,7 +6,7 @@ summary: >-
   Two unacked follow-up items carried over while archiving
   `sports_player_stats_normalize_empty_write_incident_2026_07_26.md` (RESOLVED — 240/240 objects remediated via live
   api_football re-fetch, root cause fixed in the normalization script). Splitting these into their own UNACKED issue doc
-  rather than leaving them stranded in the now-archived incident doc, since `plans/active/issues/` docs archive on ack
+  rather than leaving them stranded in the now-archived incident doc, since `plans/archive/issues/` docs archive on ack
   per `/codex/11-project-management/issue-doc-lifecycle.md` and the incident's own parent batch plan
   (`sports_satellite_ao_dispatch_batch5_2026_07_26.md`) is already at its 1000-line hard cap with no room to absorb
   them. (1) the affected bucket has no GCS object versioning / soft-delete retention, which is why the original 240
@@ -53,9 +53,9 @@ resolved_by: cross-repo quick-fix batch, 2026-07-28
 ## What I found
 
 While archiving the resolved incident doc (mechanical fix for the `check_terminal_status_archived.py` plan-hygiene gate
-— resolved issues must not sit in `plans/active/issues/`), it carried two open `- [ ]` follow-up todos that would
-otherwise be stranded in `plans/archive/` (invisible to the backlog derivation, which only reads `plans/active/*.md`).
-Filing them here as their own UNACKED issue so they stay dispatchable.
+— resolved issues must not sit in `plans/archive/issues/`), it carried two open `- [ ]` follow-up todos that would
+otherwise be stranded in `plans/archive/` (invisible to the backlog derivation, which only reads
+`plans/archive/2026_08/*.md`). Filing them here as their own UNACKED issue so they stay dispatchable.
 
 ## Todos
 

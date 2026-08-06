@@ -25,6 +25,7 @@ related:
   [
     /plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-26
 author: unknown
@@ -323,7 +324,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   shard-19 delete mystery, the P0 dispatch-deadlock escalation) archived VERBATIM (no rewrite) to
   `/plans/archive/issues/cefi_content_migration_fleet_half_incomplete_progress_log_archive_2026_07_31.md` — parent doc
   line-cap management (slot-8, 2026-07-31T13:24Z), mirroring this doc's own established split-when-at-cap pattern.
-  (Archived 2026-08-04 by na-eligibility-audit, cefi tranche — path updated from its pre-archive `plans/active/issues/`
+  (Archived 2026-08-04 by na-eligibility-audit, cefi tranche — path updated from its pre-archive `plans/archive/issues/`
   location.)
 
 ## 2026-07-30 root cause + fix shipped (slot 2, `cefi_content_migration_fleet_half_incomplete-006`)

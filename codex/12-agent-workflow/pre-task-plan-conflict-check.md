@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Pre-Task Plan/Issue Conflict Check
 summary:
-  SSOT for the point-in-time rule that every task START (not just the periodic corpus sweeps) must grep `plans/active/`
-  + `plans/active/issues/` for existing/prior coverage before implementing, so work doesn't regress or duplicate
-  something already done or superseded; explains why `/plan-reconcile` and the other daily/on-demand sweeps don't close
-  this gap by themselves, and gives the concrete grep + verify procedure.
+  SSOT for the point-in-time rule that every task START (not just the periodic corpus sweeps) must grep
+  `plans/archive/2026_08/` + `plans/archive/issues/` for existing/prior coverage before implementing, so work doesn't
+  regress or duplicate something already done or superseded; explains why `/plan-reconcile` and the other
+  daily/on-demand sweeps don't close this gap by themselves, and gives the concrete grep + verify procedure.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -43,8 +43,8 @@ Before starting ANY task — writing a new plan, picking up an existing plan's t
 corpus for existing coverage FIRST:
 
 ```
-rg -li '<topic keywords>' plans/active/ plans/active/issues/
-rg -l '^asset_group:.*<asset_group>' plans/active/ | xargs grep -l '<topic keyword>'
+rg -li '<topic keywords>' plans/archive/2026_08/ plans/archive/issues/
+rg -l '^asset_group:.*<asset_group>' plans/archive/2026_08/ | xargs grep -l '<topic keyword>'
 ```
 
 - **0 hits ≠ clear.** Same grep-then-READ discipline as codex retrieval (`CLAUDE.md` § "Agent behavior") — a miss can

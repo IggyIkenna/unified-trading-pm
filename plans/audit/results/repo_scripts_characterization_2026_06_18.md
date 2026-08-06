@@ -63,7 +63,7 @@ method:
 | Disposition                       | ~count | Notes                                                                                                                                                                                                                                                                                                          |
 | --------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **KEEP-PERMANENT**                | ~620   | The vast majority — per-family dev quintet (`quality-gates.sh`/`setup.sh`/`setup-workspace.sh`/`seed_mock_data.py`/`smoke_matrix.py`), deployment-service's ~230 VM launchers + lifecycle + recovery + provisioning, e2e-testing's ~78 verification harnesses, UAC/UTL codegen+QG checkers. **Not throwaway.** |
-| **KEEP-ONEOFF** (active campaign) | ~65    | Live in-flight migration/tracer scripts whose parent plan is still in `plans/active/` — **must NOT be deleted** (esp. the `*_2026_06_01.py` canonicalisation set + the May-23 DeFi tracers).                                                                                                                   |
+| **KEEP-ONEOFF** (active campaign) | ~65    | Live in-flight migration/tracer scripts whose parent plan is still in `plans/archive/2026_08/` — **must NOT be deleted** (esp. the `*_2026_06_01.py` canonicalisation set + the May-23 DeFi tracers).                                                                                                          |
 | **DELETE** (ran-once-DONE)        | ~127   | Dated 2026-03/04/05 migrations/backfills/reconciles/purges/flips. **HEAVILY campaign-gated** — see Finding 1. Only ~40 are immediately safe.                                                                                                                                                                   |
 | **DEPRECATE** (out-of-shape)      | ~75    | The systemic `google.cloud`-direct / hardcoded-`central-element-323112` / inline-`gs://` pattern — fix in place (Finding 2).                                                                                                                                                                                   |
 | **PROMOTE-TO-CLI**                | ~8     | Recurring production logic living as a loose script (Finding 3).                                                                                                                                                                                                                                               |
@@ -77,7 +77,7 @@ method:
 ## Finding 1 (🔴 the gating rule) — DO NOT mass-delete mid-campaign
 
 The big DELETE cohort (instruments-service **64**, MTDS **22**) reads as dead — old dated migrations — **but the 2026-06
-manifest-canonicalisation campaign is ACTIVE** (its plans are still in `plans/active/`:
+manifest-canonicalisation campaign is ACTIVE** (its plans are still in `plans/archive/2026_08/`:
 `master_data_canonicalisation_migration_catalogue_2026_06_07`, `*_manifest_canonicalisation_2026_06_01` per-AG,
 `defi_venue_name_canonicalisation_and_reth_2026_06_17`, `solana_defi_legacy_migration_2026_05_27`,
 `migration_verification_orphan_safety_2026_06_10`). Two consequences flagged by both data-repo agents:

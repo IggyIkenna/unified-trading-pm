@@ -348,7 +348,7 @@ caveat 2) — no fix is currently scoped for those two, since neither has a real
 - Adding a new sports adapter → add a row to §3 and add the venue key to `_API_FOOTBALL_DEPENDENT_VENUES` in
   `sports_dependency.py`.
 - Replacing api-football with a different canonical fixtures source → this doc needs a rewrite, not a patch. Cross-ref
-  the migration plan from `plans/active/`.
+  the migration plan from `plans/archive/2026_08/`.
 - Changing the sports bucket naming convention → update §1 diagram and §4.4 test-bucket-divergence section.
 - New entity partition introduced under `sports_reference/by_date/` → add to §3 matrix AND to
   `/codex/02-data/per-asset-group-bucket-layouts.md`.

@@ -168,7 +168,8 @@ cross-references resolve.
    verify screenshots render (non-zero bounding box), verify keyboard arrow navigation advances slides.
 4. Assert visibility-slicing vs G1.6 `access_control` formula once G1.6 lands; deck is admin-audience so admin sees all;
    stub until G1.6 lands.
-5. Include orphan-reachability assertion — every slide references a plan file that exists under `plans/active/`.
+5. Include orphan-reachability assertion — every slide references a plan file that exists under
+   `plans/archive/2026_08/`.
 6. Wired into `scripts/quality-gates.sh` Playwright step.
 
 ## AGENT EXECUTION PROMPT

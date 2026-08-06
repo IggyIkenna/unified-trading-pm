@@ -43,6 +43,7 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
 author: unknown

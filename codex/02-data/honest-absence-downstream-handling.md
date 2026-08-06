@@ -69,7 +69,7 @@ code_refs:
 > no longer contains, `is_resolved_schedule_empty()` will silently start returning `False` for all of them, and the OOW
 > reclassification documented below regresses back to under-counting sports coverage — silently: a frozenset miss raises
 > nothing and logs nothing. **Flagged as a likely live-bug-in- waiting; C1 needs this constant + helper added to its
-> checklist before it ships.** No dedicated issue doc exists for this specific gap (checked `plans/active/issues/`
+> checklist before it ships.** No dedicated issue doc exists for this specific gap (checked `plans/archive/issues/`
 > 2026-07-23 — nothing named for this constant); tracked instead as the Track C1 checklist gap called out here and in
 > the plan's own Canonical-target section. Also note: sports `data_type` casing is separately being reconciled to
 > LOWER-case for all types (2026-07-23 operator decision, reverting the 2026-07-18 UPPER call) — that revert had not
@@ -182,7 +182,7 @@ pipeline would actually have had that row — never midnight UTC, never read-tim
 `record_captured` calls `assert_available_at_present` internally — a parquet missing or with null `available_at` →
 `LookaheadBiasError`. The sports stamp helpers were lifted to UTL by `wave3x_residual_ssots_2026_05_08.md` Track E; the
 features-sports / MTDS-sports-adapter wire-in of these helpers at the calculator emission boundaries is the per-service
-half (Harsh slot 4 MTDS sports adapter stamping + Ikenna slot 3 available_at Phase 1 — see `plans/active/issues/` for
+half (Harsh slot 4 MTDS sports adapter stamping + Ikenna slot 3 available_at Phase 1 — see `plans/archive/issues/` for
 the MTDS-slice sports `available_at` wiring issue doc).
 
 ---
@@ -471,7 +471,7 @@ availability index, credential-free selector core):
 5. **Ambiguous verdict → Phase-5 issue file.** When the disagreement is non-deterministic to classify (oracle says
    should-have-data but a re-fetch also returns 0, or the coverage map itself is suspect), the deterministic script
    writes a candidate CSV to `plans/audit/results/<slug>_<date>.csv` and auto-files
-   `plans/active/issues/<slug>_<date>.md` (standard `title`/`created`/`author`/`source`/`locked_by` frontmatter +
+   `plans/archive/issues/<slug>_<date>.md` (standard `title`/`created`/`author`/`source`/`locked_by` frontmatter +
    `## What I found` / `## Why it matters` / `## Recommended decision`) for a planning-VM slot to adjudicate. This is
    the scripted→LLM escalation hop.
 

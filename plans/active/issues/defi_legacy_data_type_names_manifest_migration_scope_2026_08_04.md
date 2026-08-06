@@ -45,6 +45,7 @@ related:
     /plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

@@ -37,6 +37,7 @@ estimate_calibrated_ai_days: 4.8
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+  /plans/active/cefi_consolidated_closeout_2026_07_18.md,
 depends_on: []
 locked_by:
 locked_since:
@@ -177,10 +178,10 @@ context_scope:
   `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`). **First ship attempt landed a HALF-migration**: a
   concurrent, unrelated commit (`9aed72662`, "verify + flip 3 tradfi cheap-win checkpoints") picked up only the ADD half
   of the `git mv` rename (both archived docs' new-path content, correct) but NOT the DELETE half — leaving a stale
-  duplicate at BOTH the old `plans/active/...` path AND the new `plans/archive/2026_07/...` path simultaneously — and
-  separately dropped this doc's own todo-1-flip and this whole Progress Log entry back to the session-start version
-  (confirmed via `git ls-files` showing both paths tracked at HEAD, and this file reverting to 83 lines). This is
-  exactly the class of bug `/plan-reconcile`'s Phase 5.9(c) warns about ("VERIFY AT HEAD — never trust a commit
+  duplicate at BOTH the old `plans/archive/2026_08/...` path AND the new `plans/archive/2026_07/...` path simultaneously
+  — and separately dropped this doc's own todo-1-flip and this whole Progress Log entry back to the session-start
+  version (confirmed via `git ls-files` showing both paths tracked at HEAD, and this file reverting to 83 lines). This
+  is exactly the class of bug `/plan-reconcile`'s Phase 5.9(c) warns about ("VERIFY AT HEAD — never trust a commit
   summary... a hook conflicts, the restore fails, and your edits are silently rolled back while the working tree still
   LOOKS right"), now confirmed on THIS branch under heavy concurrent load, not just a hypothetical. `git rm` on the 2
   stale active-path duplicates is BLOCKED for autonomous workers by agent-orchestrator's `block_destructive_commands.py`

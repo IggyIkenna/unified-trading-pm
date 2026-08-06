@@ -30,6 +30,7 @@ related:
     /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
     /plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
     /plans/active/issues/na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-02"
 author: unknown
@@ -181,7 +182,7 @@ by a subsequent `/na-eligibility-audit` pass applying that same self-assessment.
   (asset_group-vs-parent_epic tranche-membership mistagging, not checkbox counting). Clear — no conflict found. Also
   corrected `execution_scope: local-only -> orchestrator-agent` (was stale for a now-dispatchable doc). No finalize-plan
   companion authored: `doc_type: issue`, structurally exempt from the finalize-plan-coverage rule
-  (`check_finalize_plan_coverage.py` only globs `plans/active/*.md` plan docs).
+  (`check_finalize_plan_coverage.py` only globs `plans/archive/2026_08/*.md` plan docs).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added `check_todo_format.sh`, confirmed affected
   by the same fence-blindness bug per the doc's own "Recommended fix" evidence and todo 2.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

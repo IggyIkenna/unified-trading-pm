@@ -28,6 +28,7 @@ related:
     /plans/archive/2026_07/mtds_data_status_page_parity_2026_07_21.md,
     /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

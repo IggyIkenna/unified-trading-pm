@@ -36,6 +36,7 @@ related:
     /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
     /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     /plans/archive/2026_07/data_status_page_ux_and_canonicalisation_history_2026_07_24.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: 2026-07-16
 last_updated: 2026-07-24

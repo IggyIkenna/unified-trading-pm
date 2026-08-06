@@ -30,6 +30,7 @@ related:
     /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-26
 author: unknown

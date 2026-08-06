@@ -63,9 +63,9 @@ context_scope:
 > `/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` via `depends_on` +
 > `gate_on_depends: true` — that gate is now satisfied. Verified safe to archive despite the gate being a LIVE
 > re-derivation-on-every-tick (not one-time, contra a possible fast reading): `regen_backlog_from_plan.py` rebuilds
-> `stem_to_path` fresh each regen tick by scanning `plans/active/`, but every gating code path degrades to "satisfied"
-> once the upstream file is absent from that scan — `_wire_gate_on_depends_prereqs`'s `upstream_path is None` branch,
-> `_scrub_completed_upstream_prereqs`'s stale-id cleanup, and the dispatch-hot-path
+> `stem_to_path` fresh each regen tick by scanning `plans/archive/2026_08/`, but every gating code path degrades to
+> "satisfied" once the upstream file is absent from that scan — `_wire_gate_on_depends_prereqs`'s
+> `upstream_path is None` branch, `_scrub_completed_upstream_prereqs`'s stale-id cleanup, and the dispatch-hot-path
 > `gate_on_depends_unmet_upstreams_on_disk`'s explicit "archived/pruned == done" handling all agree. Corroborated
 > against `scripts/plan-hygiene/check_depends_on_graph.py` (the actual machine check — its docstring states a live doc's
 > `depends_on` resolving to an archived-only slug is the CORRECT terminal state, not a violation) and 8 live corpus
@@ -160,20 +160,20 @@ ordering hazard).
       `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` carries
       `depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]` + `gate_on_depends: true`, and
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_wire_gate_on_depends_prereqs` resolves that upstream
-      slug by scanning `plans/active/*.md` — moving this doc out of `plans/active/` could make a future regen tick fail
-      to find it. First verify (read `_wire_gate_on_depends_prereqs` + `_scrub_completed_upstream_prereqs` in
-      `regen_backlog_from_plan.py`) whether the gate's `prereqs.completed_tasks` wiring is a one-time derivation
-      (already-recorded SQLite task IDs, safe to archive — the dependent plan's gate stays satisfied via its own DB
-      state regardless of the source doc's path) or a live re-derivation-on-every-tick (NOT safe to archive without
-      first re-pointing the dependent plan's `depends_on` at the archived path or confirming archived docs are still
-      scanned). Then run the 6-step archival ritual
+      slug by scanning `plans/archive/2026_08/*.md` — moving this doc out of `plans/archive/2026_08/` could make a
+      future regen tick fail to find it. First verify (read `_wire_gate_on_depends_prereqs` +
+      `_scrub_completed_upstream_prereqs` in `regen_backlog_from_plan.py`) whether the gate's `prereqs.completed_tasks`
+      wiring is a one-time derivation (already-recorded SQLite task IDs, safe to archive — the dependent plan's gate
+      stays satisfied via its own DB state regardless of the source doc's path) or a live re-derivation-on-every-tick
+      (NOT safe to archive without first re-pointing the dependent plan's `depends_on` at the archived path or
+      confirming archived docs are still scanned). Then run the 6-step archival ritual
       (/codex/12-agent-workflow/plan-completion-and-archival-discipline.md): fix the 2 referrers
       (`plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
       `plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` — the latter's
       `depends_on`/`gate_on_depends`/banner all cite this doc by slug), add the archived-banner, `git mv` to
       `plans/archive/2026_08/`. Evidence: read both functions — confirmed the wiring IS a live re-derivation every regen
-      tick (`stem_to_path` is rebuilt from a fresh `plans/active/` scan each call, `regen_backlog_from_plan.py` line
-      ~1920), NOT one-time — but archival is safe anyway because every gating path (the `gate-upstream-open:<stem>`
+      tick (`stem_to_path` is rebuilt from a fresh `plans/archive/2026_08/` scan each call, `regen_backlog_from_plan.py`
+      line ~1920), NOT one-time — but archival is safe anyway because every gating path (the `gate-upstream-open:<stem>`
       disambiguation in `_wire_gate_on_depends_prereqs`, `_scrub_completed_upstream_prereqs`'s stale-id scrub, and the
       dispatch-hot-path `gate_on_depends_unmet_upstreams_on_disk`) treats a missing upstream file as "finished, not
       blocking" by design (`upstream_path is None` → `has_open=False`; explicit comment "archived/pruned == done,
@@ -211,9 +211,9 @@ ordering hazard).
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` means this doc is due for immediate archival —
   but it gates `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` via `depends_on` +
   `gate_on_depends: true`, and I haven't verified whether `regen_backlog_from_plan.py`'s gate-wiring is a one-time
-  derivation (archival-safe) or re-derived every tick by scanning `plans/active/*.md` (archival-risky without first
-  re-pointing the dependent plan). Rather than archive blind on a P3 audit task's narrow scope, added a new tracked P3
-  todo above scoping the exact check + the 6-step ritual (2 referrers named) for whoever picks it up next.
+  derivation (archival-safe) or re-derived every tick by scanning `plans/archive/2026_08/*.md` (archival-risky without
+  first re-pointing the dependent plan). Rather than archive blind on a P3 audit task's narrow scope, added a new
+  tracked P3 todo above scoping the exact check + the 6-step ritual (2 referrers named) for whoever picks it up next.
 - **2026-08-03 (slot-5)**: Ran todo 5. Confirmed the gate-wiring IS a live re-derivation every regen tick (not
   one-time), but proved archival safe regardless — every gating code path in `regen_backlog_from_plan.py`
   (`_wire_gate_on_depends_prereqs`, `_scrub_completed_upstream_prereqs`, `gate_on_depends_unmet_upstreams_on_disk`)

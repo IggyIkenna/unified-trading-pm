@@ -27,6 +27,7 @@ related:
     /codex/04-architecture/live-strategy-config-hot-reload.md,
     /codex/06-coding-standards/config-reloader-pattern.md,
     /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 author: unknown

@@ -23,6 +23,7 @@ related:
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
 author: unknown

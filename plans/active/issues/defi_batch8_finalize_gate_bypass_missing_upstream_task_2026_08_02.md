@@ -46,6 +46,7 @@ related:
     /plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-02"
 author: unknown

@@ -4,10 +4,10 @@ title:
   mtds_available_at_cross_asset_backfill_2026_07_13.md is over its 1000-line hard cap (1003/1000) — needs archival/split
 summary: >-
   `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` is at 1003 lines, over `check_line_caps.sh`'s
-  1000-line hard cap for `plans/active/*.md`. Not yet a scoped-commit blocker (the SCOPED prek gate only refuses a
-  commit that stages the over-cap file itself; the full-corpus baseline mode currently tolerates it as pre-existing
-  debt), but it blocks any future todo that needs to ADD content to this plan (a new P3 retrofit todo was deferred out
-  of it for exactly this reason — see
+  1000-line hard cap for `plans/archive/2026_08/*.md`. Not yet a scoped-commit blocker (the SCOPED prek gate only
+  refuses a commit that stages the over-cap file itself; the full-corpus baseline mode currently tolerates it as
+  pre-existing debt), but it blocks any future todo that needs to ADD content to this plan (a new P3 retrofit todo was
+  deferred out of it for exactly this reason — see
   `plans/active/issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md`, now archived) and it is a
   genuinely large Progress Log read for every `/plan-reconcile`/`/ag-closeout-audit` sweep. Per the sibling prediction
   issue's own finding, prediction's todos all read `[x]` except the still-open apply/resume pair (gated on the same
@@ -26,6 +26,7 @@ related:
     /plans/archive/issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md,
     /plans/archive/issues/dp_consolidator_scheduler_paused_prediction_recurrence_2026_07_31.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
 author: unknown
@@ -57,7 +58,7 @@ context_scope:
 ## What I found
 
 `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` is 1003 lines, 3 over `check_line_caps.sh`'s
-1000-line hard cap for `plans/active/*.md` (see `/codex/11-project-management/` line-cap policy, enforced via
+1000-line hard cap for `plans/archive/2026_08/*.md` (see `/codex/11-project-management/` line-cap policy, enforced via
 `scripts/plan-hygiene/check_line_caps.sh`). It is not currently a HARD gate failure (full-corpus mode tolerates
 pre-existing debt against the shrinking-ratchet baseline in `line_caps_baseline.yaml`), but it already blocked one
 concrete piece of work: `dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md`'s pause-retrofit todo had to

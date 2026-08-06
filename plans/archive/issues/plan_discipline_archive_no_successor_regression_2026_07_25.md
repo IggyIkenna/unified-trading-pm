@@ -9,8 +9,8 @@ summary: >-
   discipline check" post-gate step (`scripts/quality_gates/check_plan_discipline.py`) fails with 5
   `C-archive-no-successor` violations against a baseline of 0 — 5 docs already sitting in `plans/archive/` mention
   DEFERRED/post-cutover/out-of-scope language without a machine-detectable successor pointer (`MIGRATED
-  TO:`/`successor:`/`→ plans/active/...`). Confirmed pre-existing (reproduces on a clean tree with my diff stashed) and
-  NOT caused by my change — my diff only touches `scripts/plan-hygiene/run_hygiene_sweep.sh` and
+  TO:`/`successor:`/`→ plans/archive/2026_08/...`). Confirmed pre-existing (reproduces on a clean tree with my diff
+  stashed) and NOT caused by my change — my diff only touches `scripts/plan-hygiene/run_hygiene_sweep.sh` and
   `scripts/validators/validate_plan_links.py`, neither of which this checker reads. Repo-scoped, not fleet-wide:
   `check_plan_discipline.py` is invoked only from unified-trading-pm's own `scripts/quality-gates.sh` (not from the
   shared `base-service.sh`/`base-library.sh` every other repo sources), so this blocks unified-trading-pm's own
@@ -48,7 +48,7 @@ resolved_by: slot-6
 `bash scripts/quality-gates.sh` in unified-trading-pm fails its "Plan discipline check (ratchet mode)" post-gate step:
 
 ```
-Scanned plans/active/ (209 plans) + issues + archive — 5 violation(s).
+Scanned plans/archive/2026_08/ (209 plans) + issues + archive — 5 violation(s).
 Per-rule: {'C-archive-no-successor': 5}
 ❌ Regression: 5 > baseline 0.
 ```
@@ -89,7 +89,7 @@ bulk re-baseline.
 Per file, read the flagged DEFERRED/post-cutover/out-of-scope mention(s) in context and either:
 
 - (a) it genuinely names a successor plan in prose already → add the exact machine-matched marker
-  (`**MIGRATED TO:** <path>` / `successor: <path>` / `→ plans/active/<path>`) pointing at it, or
+  (`**MIGRATED TO:** <path>` / `successor: <path>` / `→ plans/archive/2026_08/<path>`) pointing at it, or
 - (b) the archived doc's overall remaining/deferred work truly has no successor yet → file the missing successor work as
   a fresh plan/issue-doc todo, then add the marker pointing at it, or
 - (c) it's a check false-positive (ordinary prose, not a whole-doc deferral claim) → do NOT hand-edit the checker's
@@ -115,7 +115,7 @@ Per file, read the flagged DEFERRED/post-cutover/out-of-scope mention(s) in cont
       `plans/archive/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (line ~311 "out of scope here") per
       the (a)/(b)/(c) triage above. **Case (a)**: the doc's own SUPERSEDED banner already named the successor
       (`sports_consolidated_closeout_2026_07_19.md`) in prose; added a `**MIGRATED TO:**` marker into that same banner
-      pointing at its `plans/active/` path. — unified-trading-pm (this commit)
+      pointing at its `plans/archive/2026_08/` path. — unified-trading-pm (this commit)
 - [x] ✅ [DOCS] P1. Resolve the `C-archive-no-successor` flag on
       `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md` (line ~281 "out of scope for a
       launcher task") per the (a)/(b)/(c) triage above. **Case (a)**: the "filed as its own P2 todo" claim resolved to

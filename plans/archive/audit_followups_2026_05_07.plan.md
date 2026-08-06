@@ -10,7 +10,7 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-07'
+created: "2026-05-07"
 type: plan
 priority: P2
 deadline: 2026-05-23
@@ -69,18 +69,19 @@ of the audit pass).
       no current matrix row references this archived plan; the only remaining mentions are at line 197 (snapshot list of
       18 self-tagged superseded plans → all 17 archived via Stage 1 line 788), line 717 (documenting the archival), line
       788 (the [x] flip itself); no edit needed)
-- [x] [QG] P2. Verify matrix consistency: every plan reference in the matrix exists in `plans/active/` (not
+- [x] [QG] P2. Verify matrix consistency: every plan reference in the matrix exists in `plans/archive/2026_08/` (not
       `plans/archive/`). (PM@8d33d97 — extracted all 12 primary plan refs from matrix lines 540-559; all confirmed in
-      plans/active/. Historical "(folds in X)" annotations correctly note archived plans as such.)
+      plans/archive/2026_08/. Historical "(folds in X)" annotations correctly note archived plans as such.)
 
 ### #3 — Plan-hygiene work-stream-G obsolete item counts (audit §6 #4)
 
-Master plan work-stream-G claims "140/142/31 plans affected" but Stage 7 batch consolidation reduced `plans/active/` to
-~23 plans + `plans/ai/` to ~111. Counts must re-derive against current state.
+Master plan work-stream-G claims "140/142/31 plans affected" but Stage 7 batch consolidation reduced
+`plans/archive/2026_08/` to ~23 plans + `plans/ai/` to ~111. Counts must re-derive against current state.
 
-- [x] [SCRIPT] P2. Re-derive: `ls plans/active/*.plan.md | wc -l` (should be ~23) + `ls plans/ai/*.plan.md | wc -l`
-      (~111). Update master plan work-stream-G item counts to actual values. (PM@8d33d97 — actual counts re-derived
-      2026-05-08: 28 active / 66 ai / ~437 archive; updated master plan work-stream-G snapshot at lines 810-812)
+- [x] [SCRIPT] P2. Re-derive: `ls plans/archive/2026_08/*.plan.md | wc -l` (should be ~23) +
+      `ls plans/ai/*.plan.md | wc -l` (~111). Update master plan work-stream-G item counts to actual values. (PM@8d33d97
+      — actual counts re-derived 2026-05-08: 28 active / 66 ai / ~437 archive; updated master plan work-stream-G
+      snapshot at lines 810-812)
 - [x] [SCRIPT] P2. Re-derive per-todo scope where work-stream-G items reference specific plan-counts: each todo should
       describe the action (e.g. "add `audit_run` field to all active-plan frontmatter") + the count derives at script
       time, not hardcoded. (PM@8d33d97 — verified existing work-stream-G todos already describe the action with
@@ -132,7 +133,7 @@ just delete the old stuff"_ (captured in audit). `STRATEGY_DISPATCH_MODE` Litera
       `[AUDIT 2026-05-07: STALE — V1-RETIRE bypassed Phase 3 shadow window per operator directive 2026-05-01. STRATEGY_DISPATCH_MODE collapsed to v2_prod only.]`.
       (PM@b9593b2 — RESOLVED BY ARCHIVAL: `strategy_architecture_v2_finalization_2026_04_19.plan.md` archived 2026-05-07
       via PM@b638c37 (consolidation-B: strategy + DART umbrella folds 3 plans). Phase 3 markers moot since the plan no
-      longer exists in plans/active/. Folded successor: `strategy_and_dart_master_2026_05_07.md`.)
+      longer exists in plans/archive/2026_08/. Folded successor: `strategy_and_dart_master_2026_05_07.md`.)
 - [x] [SCRIPT] P2. Recommend: drop Phase 3 from the plan entirely in next housekeeping pass (single-line removal per
       todo). Leave the marker for now so audit history is preserved. (PM@b9593b2 — moot after archival; Phase 3 lives in
       plans/archive/ for audit history preservation.)
@@ -143,7 +144,7 @@ just delete the old stuff"_ (captured in audit). `STRATEGY_DISPATCH_MODE` Litera
 ## Validation across all 6 anomalies
 
 - [x] [SCRIPT] P2. After all 6 fixes land, re-run a quick audit grep on the affected 4 plans:
-      `for f in master_to_live_defi_2026_05_23 manifest_migration_master_2026_05_07 infrastructure_master_2026_05_07 strategy_architecture_v2_finalization_2026_04_19; do grep -c "AUDIT 2026-05-07" "plans/active/$f.plan.md"; done`
+      `for f in master_to_live_defi_2026_05_23 manifest_migration_master_2026_05_07 infrastructure_master_2026_05_07 strategy_architecture_v2_finalization_2026_04_19; do grep -c "AUDIT 2026-05-07" "plans/archive/2026_08/$f.plan.md"; done`
       to confirm markers landed (or commit references in `git log --oneline`). (Run 2026-05-08 by Tab 8: master=1
       marker, manifest_migration_master=1, infrastructure_master=32,
       strategy_architecture_v2_finalization=ARCHIVED-moot. Commit refs: PM@8286cf4, 8d33d97, b9593b2.)
@@ -187,8 +188,8 @@ items). Dependency-graph audit doc §"Anomalies from §6 still open" table flipp
 | Anomaly | Action shipped                                                                                                                                                                                                                                                       | Code commit  |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
 | §1      | master plan: 5 live-context refs replaced (`defi_e2e_pipeline_2026_04_30` / `leveraged_leg_controller_2026_05_01` / `defi_pipeline_extension_2026_05_01` → `defi_master_2026_05_07` Fork 1) at lines 152/170/179/352/964; STALE-marked the [SCRIPT] todo at line 827 | PM@`8286cf4` |
-| §2      | service-readiness matrix verified: zero rows reference archived `manual_trade_booking_reconciliation_2026_03_22`; all 12 primary refs in plans/active/                                                                                                               | PM@`8d33d97` |
-| §3      | master plan work-stream-G snapshot count re-derived 2026-05-08: 28 active / 66 ai / ~437 archive (was `~20 active/ + ~73 ai/`)                                                                                                                                       | PM@`8d33d97` |
+| §2      | service-readiness matrix verified: zero rows reference archived `manual_trade_booking_reconciliation_2026_03_22`; all 12 primary refs in plans/archive/2026_08/                                                                                                      | PM@`8d33d97` |
+| §3      | master plan work-stream-G snapshot count re-derived 2026-05-08: 28 active / 66 ai / ~437 archive (was `~20 archive/2026_08/ + ~73 ai/`)                                                                                                                              | PM@`8d33d97` |
 | §4      | manifest_migration_master verified: canonical `honest_coverage` module path documented at lines 96-99; zero stale module-path imports workspace-wide                                                                                                                 | PM@`8d33d97` |
 | §5      | infrastructure_master MDPS-1440-NaN STALE marker verified at line 130; audit-header STALE-count reconciled 4→2 (Phase 0→1 handover + MDPS-1440-NaN)                                                                                                                  | PM@`b9593b2` |
 | §6      | strategy_architecture_v2_finalization_2026_04_19 verified ARCHIVED (PM@`b638c37` consolidation-B umbrella fold); Phase 3 markers moot                                                                                                                                | PM@`b9593b2` |

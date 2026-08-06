@@ -33,12 +33,12 @@ last_verified: 2026-05-12
 >
 > **Every named component was verified ABSENT from the workspace on 2026-07-20:**
 >
-> | This doc names                                                  | Reality                                                            |
-> | --------------------------------------------------------------- | ------------------------------------------------------------------ |
-> | `deployment_service.data_status.manifest_writer.ManifestWriter` | No `deployment_service/data_status/` package exists anywhere       |
-> | `deployment_service.data_status.manifest_reader.ManifestReader` | Same — the package does not exist                                  |
-> | `catalogue_updater.py` (auto-updater of `last_updated`)         | No file of that name exists in the workspace                       |
-> | `data_catalogue_refresh.plan.md` (the validating plan)          | No file of that name exists in `plans/active/` or `plans/archive/` |
+> | This doc names                                                  | Reality                                                                     |
+> | --------------------------------------------------------------- | --------------------------------------------------------------------------- |
+> | `deployment_service.data_status.manifest_writer.ManifestWriter` | No `deployment_service/data_status/` package exists anywhere                |
+> | `deployment_service.data_status.manifest_reader.ManifestReader` | Same — the package does not exist                                           |
+> | `catalogue_updater.py` (auto-updater of `last_updated`)         | No file of that name exists in the workspace                                |
+> | `data_catalogue_refresh.plan.md` (the validating plan)          | No file of that name exists in `plans/archive/2026_08/` or `plans/archive/` |
 >
 > **The documented SCHEMA is also wrong.** This doc specifies a top-level `datasets:` list keyed on `dataset_id` /
 > `bucket_lookup` / `partition_keys` / `mvp_tier` / `status`. The **17 live**

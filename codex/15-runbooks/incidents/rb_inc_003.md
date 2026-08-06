@@ -57,7 +57,7 @@ Category: **Core** · Runbook ID: **RB-INC-003**.
 - If satisfied: click Audit Ack button. Incident transitions to HUMAN_AUDIT_ACKED → RESOLVED → CLOSED.
 - If the report is INSUFFICIENT: click 'Request more evidence' which fires evidence_collector again + extends
   audit_ack_due_at.
-- If you DISPUTE the automated action: file an issue doc in plans/active/issues/ + escalate to operator chat.
+- If you DISPUTE the automated action: file an issue doc in plans/archive/issues/ + escalate to operator chat.
 
 ## Rollback
 
@@ -73,7 +73,7 @@ Audit-ack queue size <= 5 entries pending.
 
 ## Post-incident
 
-If multiple incidents share a pattern, file a remediation plan in plans/active/.
+If multiple incidents share a pattern, file a remediation plan in plans/archive/2026_08/.
 
 ## Related
 

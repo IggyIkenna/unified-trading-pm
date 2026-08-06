@@ -539,8 +539,8 @@ context_scope:
       `DEFI_DATA_TYPE_OVERRIDES`) — flipped the source doc's `status: open` → `resolved`, populated `resolved_by:` with
       file:line evidence for all 4 decisions + 3 CeFi-pivot bugs, cleared `locked_by:`, added a RESOLVED banner, and
       archived it to `plans/archive/2026_07/features_service_defi_data_loading_blockers_2026_05_29.md` per the
-      issue-doc-lifecycle rule (a `status: resolved` doc must not sit in `plans/active/issues/`). Corpus referrers fixed
-      (6 files). **Close out `features_service_defi_data_loading_blockers_2026_05_29.md` (status still `open`, no
+      issue-doc-lifecycle rule (a `status: resolved` doc must not sit in `plans/archive/issues/`). Corpus referrers
+      fixed (6 files). **Close out `features_service_defi_data_loading_blockers_2026_05_29.md` (status still `open`, no
       `resolved_by`) — verify + flip, do not re-implement.** Direct code inspection (this audit pass) already confirms
       every substantive item in the doc is SHIPPED: (1)
       `DEFI_DATA_TYPE_OVERRIDES`/`volume_analysis`/`vwap`/`microstructure` now route through UAC
@@ -607,7 +607,7 @@ context_scope:
       **Done when**: a finding is appended to the issue doc's Progress Log stating, per active defi
       OHLCV/dex_pool_swaps/gas_fees writer handler, whether `record_captured` happens strictly after a verified
       successful parquet write (with exact code-line citations), and either confirms the phantom-recreation risk is
-      closed across all of them or files a new dated issue doc under `plans/active/issues/` for any handler found still
+      closed across all of them or files a new dated issue doc under `plans/archive/issues/` for any handler found still
       vulnerable.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6) — verified, correctly NOT closeable yet, no false-completion
       claim.** Already investigated in full by an earlier pass this session (`unified-trading-pm@170ba61fb`, 07:37 UTC):

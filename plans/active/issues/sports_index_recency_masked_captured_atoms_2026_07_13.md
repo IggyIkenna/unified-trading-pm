@@ -51,6 +51,7 @@ context_scope:
     instruments-service/scripts/enumerate_expected_universe.py,
     instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
     unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code

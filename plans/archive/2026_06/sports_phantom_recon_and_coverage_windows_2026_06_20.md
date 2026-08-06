@@ -9,8 +9,13 @@ stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [../epics/sports_master.md, ./sports_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/d2_uac_continuity_2026_05_20.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/sports_master.md,
+    ./sports_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/d2_uac_continuity_2026_05_20.md,
+  ]
+created: "2026-06-12"
 parent_epic: sports_master
 priority: P0
 execution_scope: orchestrator-agent
@@ -23,7 +28,7 @@ locked_since: 2026-06-20
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella
 > restructure (the L0 umbrellas carried stale May-07 inline todos the backlog regen never dispatched — it scans
-> `plans/active/*.md`, never `plans/epics/`). Migrated from the epic's "Phantom recon + failure triage
+> `plans/archive/2026_08/*.md`, never `plans/epics/`). Migrated from the epic's "Phantom recon + failure triage
 > (`sports_phantom_recon_and_failure_triage`)" section (originally folded from
 > `sports_phantom_recon_and_failure_triage_2026_05_01.md`).
 >

@@ -17,6 +17,7 @@ related:
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-06-12"
 parent_epic: tradfi_master
@@ -48,10 +49,10 @@ context_scope:
 
 > **Provenance**: extracted 2026-06-20 from the inline `tradfi_master` epic body during the asset-group-umbrella
 > restructure (the L0 umbrellas had accumulated stale May-07/08 inline todos the backlog regen never scanned —
-> `regen_backlog_from_plan.py` reads `plans/active/*.md`, never `plans/epics/`). This plan carries the **TradFi-owned,
-> net-new** slice of the two folded May-23 deliverables (S&P prediction "deliverable A" + price-arbitrage "deliverable
-> B"): the ES/VIX feature-calculator runs, the ml-training ES smoke, and the full S&P backtest run — the parts that are
-> genuinely TradFi-data work and were never dispatched.
+> `regen_backlog_from_plan.py` reads `plans/archive/2026_08/*.md`, never `plans/epics/`). This plan carries the
+> **TradFi-owned, net-new** slice of the two folded May-23 deliverables (S&P prediction "deliverable A" +
+> price-arbitrage "deliverable B"): the ES/VIX feature-calculator runs, the ml-training ES smoke, and the full S&P
+> backtest run — the parts that are genuinely TradFi-data work and were never dispatched.
 >
 > **POINTERS, NOT extractions (do NOT duplicate):**
 >

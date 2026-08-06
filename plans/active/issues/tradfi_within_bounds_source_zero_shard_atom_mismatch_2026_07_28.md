@@ -60,6 +60,7 @@ related:
     /plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown

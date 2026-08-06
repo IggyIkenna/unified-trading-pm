@@ -69,6 +69,7 @@ related:
     /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-25
 last_updated: "2026-08-02"
@@ -227,10 +228,10 @@ VM sanction (still genuinely operator-decision-gated). MANTLE gas-fees RPC clear
   checkboxes remain open on the parent (ASTER data-landing verification, Live-ODDS second-source scaffold,
   rate-limit-probe VM) — parent updated with citations, archival still deferred. **Archiving it would break a hard
   shared gate**: it is the parent's ONLY `depends_on`+`gate_on_depends: true` coverage, so removing it from
-  `plans/active/` regresses `scripts/quality_gates/check_finalize_plan_coverage.py` from baseline 1 to 2 — a post-gate
-  `exit 1` blocking every future `unified-trading-pm` commit (empirically verified by simulating the move; see that
-  doc's own 🟡 banner). Re-attempt archival only once the parent's remaining items clear (archive both together) or the
-  coverage-gate design changes.
+  `plans/archive/2026_08/` regresses `scripts/quality_gates/check_finalize_plan_coverage.py` from baseline 1 to 2 — a
+  post-gate `exit 1` blocking every future `unified-trading-pm` commit (empirically verified by simulating the move; see
+  that doc's own 🟡 banner). Re-attempt archival only once the parent's remaining items clear (archive both together) or
+  the coverage-gate design changes.
 
 **Close-out criterion**: not AO-eligible as a whole — the remaining items each need a human credential/decision, a
 scaffold shipped, or a live-data confirmation; this Track stays a pointer until all clear.
@@ -819,7 +820,7 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   `config.run_subscriber_in_api` + the `api/main.py` lifespan in-tree), as has that doc's prose-only "codify
   `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions + subscriber IAM in terraform" item
   (`alerting_relay_pubsub.tf` carries both subscriptions, both IAM members, and import blocks) — dropped from the batch
-  rather than re-dispatched; (3) `issues/gcs_data_access_audit_log_cost_2026_07_24.md` exists in `plans/active/issues/`
+  rather than re-dispatched; (3) `issues/gcs_data_access_audit_log_cost_2026_07_24.md` exists in `plans/archive/issues/`
   (`status: open`, 1 open todo) **and** `plans/archive/2026_07/` (`status: resolved`,
   `resolved_by: operator … 2026-07-25`, 0 open) **simultaneously** — Track 6 above was right that it is done; the batch1
   finalize's instruction to "archive it via the 6-step ritual" would have overwritten the resolved archived copy with

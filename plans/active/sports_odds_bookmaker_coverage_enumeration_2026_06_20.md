@@ -77,10 +77,10 @@ context_scope:
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella
 > restructure (the L0 umbrellas were carrying stale May-08 inline todos that the backlog regen — which only scans
-> `plans/active/*.md`, never `plans/epics/` — never dispatched). This plan is the **genuinely net-new, unowned**
-> ODDS-coverage residual: per-league-tier expected bookmaker/market enumeration + the orchestrator NaN-fill step + ODDS
-> cluster-validation kwargs. Migrated from the epic's "EXPECTED_BOOKMAKER_MARKET_SETS NaN-fill enumeration" section
-> (originally migrated from issue `odds_fixture_anchored_nan_fill_2026_05_08`).
+> `plans/archive/2026_08/*.md`, never `plans/epics/` — never dispatched). This plan is the **genuinely net-new,
+> unowned** ODDS-coverage residual: per-league-tier expected bookmaker/market enumeration + the orchestrator NaN-fill
+> step + ODDS cluster-validation kwargs. Migrated from the epic's "EXPECTED_BOOKMAKER_MARKET_SETS NaN-fill enumeration"
+> section (originally migrated from issue `odds_fixture_anchored_nan_fill_2026_05_08`).
 >
 > **Why this is net-new here and NOT a duplicate of `sports_manifest_canonicalisation_2026_06_01`**: that plan
 > **EXPLICITLY DELEGATES** the odds-coverage / bookmaker-coverage backfill to `epics/sports_master.md` — it states it

@@ -38,6 +38,7 @@ related:
   [
     /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md,
     /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-25
 author: unknown

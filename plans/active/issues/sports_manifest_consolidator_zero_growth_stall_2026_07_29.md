@@ -43,6 +43,7 @@ related:
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
     /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-29
 author: unknown

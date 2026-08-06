@@ -144,7 +144,7 @@ the auto-inventory already serves the canonical-index role.
       AUTO-GENERATE, not deprecate — matches `infra_plan_reconcile_parked_decisions_2026_07_26.md` §3 option B's own
       reasoning (the grouped/by-theme view the plain checkbox-progress table doesn't carry). Built
       `scripts/plans/regenerate_active_plan_index.py` (mirrors `regenerate_active_plan_inventory.py`): reads every
-      `plans/active/*.md` plan's own `asset_group:`/`summary:` frontmatter and regenerates a domain-grouped
+      `plans/archive/2026_08/*.md` plan's own `asset_group:`/`summary:` frontmatter and regenerates a domain-grouped
       `<!-- AUTO-INDEX-START/END -->` block in `plans/active/INDEX.md`; wired into
       `scripts/plan-hygiene/run_hygiene_sweep.sh` right after the inventory regenerator. Regenerated live 2026-07-27:
       263 plans across all 10 `plans/PLAN_FORMAT.md`-declared `asset_group` domains, 0 uncategorized, confirmed

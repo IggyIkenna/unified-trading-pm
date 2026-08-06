@@ -21,6 +21,7 @@ related:
     /plans/archive/2026_07/cost_obs_ui_unified_breakdown_2026_07_08.md,
     /plans/archive/2026_07/cost_obs_backend_sku_usage_enrichment_2026_07_08.md,
     /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-07-10"
 author: unknown

@@ -109,7 +109,7 @@ double-gate that finalize plans used to carry was removed corpus-wide in `unifie
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch5 is in
       `plans/archive/2026_07/` with a superseded_by/archived banner and zero remaining referrers to its old
-      `plans/active/` path. — unified-trading-pm@5486337b3
+      `plans/archive/2026_08/` path. — unified-trading-pm@5486337b3
 
 ## Progress Log
 

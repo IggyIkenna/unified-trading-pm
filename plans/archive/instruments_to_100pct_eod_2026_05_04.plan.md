@@ -136,8 +136,8 @@ sections below are preserved as-is for the audit trail; this closeout summarizes
       honest coverage: CEFI 15/15, TRADFI 6/6, DEFI 74/74, PREDICTION 14/14, SPORTS 18/18.
 
 - [x] **Plan archive** — all open items closed; frontmatter `status` flipped from `active` to `complete`; file moved
-      from `plans/active/` to `plans/archive/`. No `locked_by` field is set on this plan, so the CLAUDE.md "Plan
-      Locking" `[unlock-plan]` commit-tag requirement does not apply.
+      from `plans/archive/2026_08/` to `plans/archive/`. No `locked_by` field is set on this plan, so the CLAUDE.md
+      "Plan Locking" `[unlock-plan]` commit-tag requirement does not apply.
 
 ## Adapter health summary (2026-05-04 13:36 IST)
 
@@ -1599,14 +1599,14 @@ scripts default is `false`). With `force=true`, the orchestrator re-fetches ever
       --data-type <X> --start-date 2020-06-01
 
       # transfermarkt (PLAYER_VALUES, TRANSFERMARKT_LEAGUES)
-                                                                                  bash .../launch-transfermarkt-backfill-vm.sh --data-type <X> --start-date 2020-06-01
+                                                                                      bash .../launch-transfermarkt-backfill-vm.sh --data-type <X> --start-date 2020-06-01
 
-                                                                                  # footystats / understat / openmeteo — same pattern
-                                                                                  ```
-                                                                                  For non-prediction reference leagues, scope to FIXTURES + FIXTURE_EVENTS + STANDINGS
-                                                                                  only — per parent-epic prediction-vs-reference cutoff rule. The orchestrator's
-                                                                                  `_should_skip_shard` + `_should_skip_reference_league` guards handle this; pass
-                                                                                  `--leagues prediction|reference|all` if the launcher accepts it.
+                                                                                      # footystats / understat / openmeteo — same pattern
+                                                                                      ```
+                                                                                      For non-prediction reference leagues, scope to FIXTURES + FIXTURE_EVENTS + STANDINGS
+                                                                                      only — per parent-epic prediction-vs-reference cutoff rule. The orchestrator's
+                                                                                      `_should_skip_shard` + `_should_skip_reference_league` guards handle this; pass
+                                                                                      `--leagues prediction|reference|all` if the launcher accepts it.
 
 - [ ] [SCRIPT] P0. After each non-SFI launcher batch completes, re-run sports phantom recon (no `--dry-run`) **with the
       same `--data-types` scope as Phase 0.5** (i.e. excluding SFI_LEAGUES / SFI_PROGRESSIVE_STATS until the SFI VM is
@@ -1654,7 +1654,7 @@ scripts default is `false`). With `force=true`, the orchestrator re-fetches ever
 | deployment-service    | `scripts/vm/launch-{api-football,transfermarkt,footystats,understat,openmeteo}-backfill-vm.sh` (sports instruments only) | 2     |
 | deployment-service    | `scripts/vm/launch-instruments-smoke-vm.sh` (single-day, \*-test buckets)                                                | ref   |
 | unified-api-contracts | `unified_api_contracts/canonical/coverage_starts.py`                                                                     | ref   |
-| unified-trading-pm    | `/codex/15-runbooks/backfill-completion-playbook.md`                                                                    | ref   |
+| unified-trading-pm    | `/codex/15-runbooks/backfill-completion-playbook.md`                                                                     | ref   |
 
 **Explicitly NOT used** (these run MTDS / market-tick-data, not instruments-service): `launch-cefi-sharded-backfill.sh`,
 `launch-tradfi-backfill-vm.sh`, `launch-mdps-*-backfill*.sh`.

@@ -10,18 +10,58 @@ repos: [deployment-service, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-04'
-overview: A cohesive flow from PM (manifest + active plans) to Codex (target-state docs) to service implementation, with zero drift. Problem → Target → Solution in staged phases, rollable by agents.
+created: "2026-03-04"
+overview:
+  A cohesive flow from PM (manifest + active plans) to Codex (target-state docs) to service implementation, with zero
+  drift. Problem → Target → Solution in staged phases, rollable by agents.
 todos:
-- {id: phase-0-manifest-sync, content: 'Phase 0: Add PM sync-manifest-versions.yml (repository_dispatch); update version-bump workflows; remove broken manifest steps', status: completed}
-- {id: phase-0b-cleanup, content: 'Phase 0b: Codex + PM cleanup; fix paths, merge archives, create SSOT indexes', status: completed}
-- {id: phase-1-manifest-validation, content: 'Phase 1: JSON schema + topological validation for workspace-manifest.json', status: completed}
-- {id: phase-2-active-plans, content: 'Phase 2: Create plans/active/INDEX.md; add index-completeness quality gate', status: completed}
-- {id: phase-3-codex-merge-gate, content: 'Phase 3: Plan-incorporation validator; Codex CI clones PM; doc-only quality gates', status: completed}
-- {id: phase-4-pm-triggers-codex, content: 'Phase 4: Codex sync-with-pm.yml (workflow_run on PM)', status: completed}
-- {id: phase-5-ci-clone, content: 'Phase 5: PM and services clone Codex (and PM) as siblings in CI', status: completed}
-- {id: phase-6-per-repo-drift, content: 'Phase 6: run_validators.py --scope/--repo-type; add drift step to quality-gates.sh', status: completed}
-- {id: phase-7-diff-checker, content: 'Phase 7: Refactor 02-run-diff-checker.py to use validators', status: completed}
+  - {
+      id: phase-0-manifest-sync,
+      content:
+        "Phase 0: Add PM sync-manifest-versions.yml (repository_dispatch); update version-bump workflows; remove broken
+        manifest steps",
+      status: completed,
+    }
+  - {
+      id: phase-0b-cleanup,
+      content: "Phase 0b: Codex + PM cleanup; fix paths, merge archives, create SSOT indexes",
+      status: completed,
+    }
+  - {
+      id: phase-1-manifest-validation,
+      content: "Phase 1: JSON schema + topological validation for workspace-manifest.json",
+      status: completed,
+    }
+  - {
+      id: phase-2-active-plans,
+      content: "Phase 2: Create plans/active/INDEX.md; add index-completeness quality gate",
+      status: completed,
+    }
+  - {
+      id: phase-3-codex-merge-gate,
+      content: "Phase 3: Plan-incorporation validator; Codex CI clones PM; doc-only quality gates",
+      status: completed,
+    }
+  - {
+      id: phase-4-pm-triggers-codex,
+      content: "Phase 4: Codex sync-with-pm.yml (workflow_run on PM)",
+      status: completed,
+    }
+  - {
+      id: phase-5-ci-clone,
+      content: "Phase 5: PM and services clone Codex (and PM) as siblings in CI",
+      status: completed,
+    }
+  - {
+      id: phase-6-per-repo-drift,
+      content: "Phase 6: run_validators.py --scope/--repo-type; add drift step to quality-gates.sh",
+      status: completed,
+    }
+  - {
+      id: phase-7-diff-checker,
+      content: "Phase 7: Refactor 02-run-diff-checker.py to use validators",
+      status: completed,
+    }
 isProject: false
 ---
 
@@ -44,8 +84,9 @@ triggered when other repos bump. The manifest is not the real SSOT for versions.
 content. There are two archive directories in Codex, duplicate workflow diagrams in PM, and no single index that says
 "this is canonical."
 
-**Plans are not enforced.** Active plans live in `plans/active/` but there is no index. Codex does not require that
-plans are incorporated before merge. Implementers can drift from the intended architecture because nothing checks it.
+**Plans are not enforced.** Active plans live in `plans/archive/2026_08/` but there is no index. Codex does not require
+that plans are incorporated before merge. Implementers can drift from the intended architecture because nothing checks
+it.
 
 **CI does not have Codex or PM.** PM CI creates an empty `unified-trading-codex` directory. Service CI clones path deps
 but not Codex. Validators are skipped. Drift checks never run in CI.
@@ -229,7 +270,7 @@ cross-repo reference table.
 flowchart TB
     subgraph pm [PM Repo]
         Manifest[workspace-manifest.json]
-        ActivePlans[plans/active/ - canonical index]
+        ActivePlans[plans/archive/2026_08/ - canonical index]
         PlanDocs[Plan design docs]
     end
 

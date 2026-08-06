@@ -144,8 +144,8 @@ outside the prediction tranche's file ownership for today's concurrent-sharded-w
 tranche, to avoid N workers racing the same file). Flagging here for that tranche/the operator to fold in.
 
 **Recommendation (mechanical, no judgment):** extend `_covering_paths()` to also resolve the closeout hub doc's OWN
-`depends_on:` (not just each discovered `_finalize` doc's) to real `plans/active/` files, unioning them into the
-covering set — mirrors the fix already applied for the finalize→main direction. A minimal repro: any AG whose
+`depends_on:` (not just each discovered `_finalize` doc's) to real `plans/archive/2026_08/` files, unioning them into
+the covering set — mirrors the fix already applied for the finalize→main direction. A minimal repro: any AG whose
 line-cap-split children were forked directly off the closeout hub (via `depends_on:`) rather than getting their own
 paired `_finalize` sibling will show the same gap; prediction is a confirmed live instance.
 
@@ -224,10 +224,10 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   `generate_ag_closeout_audit_candidates.py --tranche prediction --json` returned an IDENTICAL corpus fingerprint to the
   morning run — `total_members=52`, `never_cited_count=11` (spot-checked 3 of the 11 basenames: all still carry 4-5
   `asset_group` tags each, confirmed genuinely cross-cutting, not a fresh mistag), `covering_paths=7` unchanged.
-  `git log --since="2026-07-31 06:08:26" --diff-filter=A` across `plans/active/*.md` + `plans/active/issues/*.md` found
-  ~30 new docs created workspace-wide since the morning run; none carry `asset_group: [..., prediction, ...]` (checked
-  every one). The two Finding-1 issue docs are untouched (still `status: open` / `assigned_vm: NA`);
-  `prediction_consolidated_closeout_2026_07_18.md`,
+  `git log --since="2026-07-31 06:08:26" --diff-filter=A` across `plans/archive/2026_08/*.md` +
+  `plans/archive/issues/*.md` found ~30 new docs created workspace-wide since the morning run; none carry
+  `asset_group: [..., prediction, ...]` (checked every one). The two Finding-1 issue docs are untouched (still
+  `status: open` / `assigned_vm: NA`); `prediction_consolidated_closeout_2026_07_18.md`,
   `prediction_consolidated_native_ao_extract_2026_07_25.md`(+finalize), and
   `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`(+finalize) have zero commits since 06:08. The ONLY in-corpus
   activity was normal AO worker churn on `batch6`'s own todos (todo `batch6-008` fixture-pairing closed 18:51Z per main

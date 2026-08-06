@@ -56,12 +56,12 @@ source:
 > proposed mapping the operator ordered, gated on their approval before anything is touched.
 >
 > **2026-07-12 verification-pass correction**: the figure above was originally written as "13 more" — re-verified this
-> session (todo 1) against `grep -l "^parent_epic: mtds_mdps_master" plans/active/*.md`: **20 files match**, of which 2
-> are the named survivors and 1 is this audit plan itself (also carries the epic tag, since it lives under the same
-> consolidation — it is not a candidate for its own mapping). That leaves **17** real candidates, not 13 — the original
-> count under-counted by not excluding this plan's own file from the "remainder" arithmetic (20 − 2 survivors = 18, then
-> off-by-one against the 17 actual candidates). Confirmed breakdown: **12** in the fold/archive/keep table below + **5**
-> in the plan-hygiene-debt table = 17. See Progress Log for full audit trail.
+> session (todo 1) against `grep -l "^parent_epic: mtds_mdps_master" plans/archive/2026_08/*.md`: **20 files match**, of
+> which 2 are the named survivors and 1 is this audit plan itself (also carries the epic tag, since it lives under the
+> same consolidation — it is not a candidate for its own mapping). That leaves **17** real candidates, not 13 — the
+> original count under-counted by not excluding this plan's own file from the "remainder" arithmetic (20 − 2 survivors =
+> 18, then off-by-one against the 17 actual candidates). Confirmed breakdown: **12** in the fold/archive/keep table
+> below + **5** in the plan-hygiene-debt table = 17. See Progress Log for full audit trail.
 
 ## Codex SSOTs
 
@@ -74,15 +74,15 @@ source:
 | `cursor-configs/CLAUDE.md` § Plans authoring discipline                          | Archival ritual (5-step): migrate DEFERRED → banner → codex-alignment check → update CLAUDE.md/codex → clear lock                                                                                                                                                                                                                                                                                                                              |
 | `plans/active/task_template.md`                                                  | Plan-authoring rules this plan + its spawned edits must conform to                                                                                                                                                                                                                                                                                                                                                                             |
 
-## Pre-audit manifest — candidates found via `rg -l '^parent_epic: mtds_mdps_master' plans/active/*.md`
+## Pre-audit manifest — candidates found via `rg -l '^parent_epic: mtds_mdps_master' plans/archive/2026_08/*.md`
 
-Full command run this session: `grep -l "^parent_epic: mtds_mdps_master" plans/active/*.md` cross-checked against
-`^status:` per file. 20 files matched; 2 are the named survivors (excluded below); **1 is this audit plan itself**
-(`mtds_consolidation_foldin_mapping_2026_07_12.md` — also carries the epic tag, correctly excluded, not a candidate for
-its own mapping); **5 are already functionally done** (3 literally `status: complete`, 2 `status: active` with 0 open
-todos — corrected 2026-07-12; the original pass's "5 are `status: complete`" framing was imprecise, listed separately
-below as simple-archive, not fold/keep decisions); the remaining **12** are the real fold/archive/keep candidates. 20 −
-2 (survivors) − 1 (self) − 5 (hygiene-debt) = **12**, matching the table below.
+Full command run this session: `grep -l "^parent_epic: mtds_mdps_master" plans/archive/2026_08/*.md` cross-checked
+against `^status:` per file. 20 files matched; 2 are the named survivors (excluded below); **1 is this audit plan
+itself** (`mtds_consolidation_foldin_mapping_2026_07_12.md` — also carries the epic tag, correctly excluded, not a
+candidate for its own mapping); **5 are already functionally done** (3 literally `status: complete`, 2 `status: active`
+with 0 open todos — corrected 2026-07-12; the original pass's "5 are `status: complete`" framing was imprecise, listed
+separately below as simple-archive, not fold/keep decisions); the remaining **12** are the real fold/archive/keep
+candidates. 20 − 2 (survivors) − 1 (self) − 5 (hygiene-debt) = **12**, matching the table below.
 
 ### Survivors (excluded — not candidates)
 
@@ -154,11 +154,11 @@ below as simple-archive, not fold/keep decisions); the remaining **12** are the 
 ## Todos
 
 - [x] [AUDIT] P0. **Confirm the candidate enumeration is complete** — re-run
-      `grep -l "^parent_epic: mtds_mdps_master" plans/active/*.md` and cross-check `^status:` for every hit against the
-      tables above; the seed tables were built this session and should be treated as a draft, not final. Gate: explicit
-      confirmation the candidate count (13 non-survivor, non-trivially-complete plans) is accurate or a corrected count
-      with the delta explained. — unified-trading-pm@(uncommitted, docs-only per-plan edit, no ship gate applies to a
-      local-only human plan). **Corrected count = 17 total non-survivor plans (12 fold/archive/keep + 5
+      `grep -l "^parent_epic: mtds_mdps_master" plans/archive/2026_08/*.md` and cross-check `^status:` for every hit
+      against the tables above; the seed tables were built this session and should be treated as a draft, not final.
+      Gate: explicit confirmation the candidate count (13 non-survivor, non-trivially-complete plans) is accurate or a
+      corrected count with the delta explained. — unified-trading-pm@(uncommitted, docs-only per-plan edit, no ship gate
+      applies to a local-only human plan). **Corrected count = 17 total non-survivor plans (12 fold/archive/keep + 5
       plan-hygiene-debt), not 13** — the original "13" omitted excluding this audit plan's own file
       (`mtds_consolidation_foldin_mapping_2026_07_12.md`, which also carries `parent_epic: mtds_mdps_master`) from the
       arithmetic (20 grep hits − 2 survivors − 1 self − 5 hygiene-debt = 12; delta fully explained in the "Why this plan
@@ -258,14 +258,14 @@ below as simple-archive, not fold/keep decisions); the remaining **12** are the 
       reconfirmation) held only at write-time (09:29:58 UTC) — two brand-new same-day > plans
       (`aster_cefi_data_defi_bucket_migration_2026_07_13`, `bybit_futures_chain_write_shape_migration_2026_07_13`, >
       both filed hours later, both `parent_epic: mtds_mdps_master`, both outside the named roster), plus the >
-      pre-existing `plans/active/issues/*.md` scope gap in this plan's own candidate-enumeration grep (it never >
+      pre-existing `plans/archive/issues/*.md` scope gap in this plan's own candidate-enumeration grep (it never >
       scanned that directory), show the claim needs a recurring re-derivation, not a one-time reconfirmation. See the >
       parallel 2026-07-14 correction on `plans/epics/mtds_mdps_master.md`'s roster banner (findings 168/176/177) for >
       the current re-derivation command.
 - [x] [DOCS] P1. **Post-phase codex-alignment check** — grep `codex/` for stale references to any folded/archived plan
       name from this mapping; update or SUPERSEDED-banner as needed. — **DONE.** Grepped `codex/` for all 14
-      folded/archived plan slugs; found 10 codex docs with `plans/active/<slug>.md` path references that would 404
-      post-move (`availability-manifest-and-data-status.md`, `bar-boundary-candle-edge-convention.md`,
+      folded/archived plan slugs; found 10 codex docs with `plans/archive/2026_08/<slug>.md` path references that would
+      404 post-move (`availability-manifest-and-data-status.md`, `bar-boundary-candle-edge-convention.md`,
       `bucket-naming-and-config.md`, `defi-canonical-naming-ssot.md`, `prediction-schema-paths.md`,
       `e2e-pipeline-manifest-wiring.md`, `prediction-batch-live.md`, `tradfi-batch-live.md`, `gcs-object-operations.md`,
       `carry-basis-perp.md`); all repointed to `plans/archive/2026_07/<slug>.md`. Bare (path-less) prose citations of a
@@ -282,9 +282,10 @@ below as simple-archive, not fold/keep decisions); the remaining **12** are the 
   `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2: "ENFORCE 2 survivors... fold-in/
   archive mapping authored as HUMAN plan for operator approval; sports_manifest stays mtds_mdps child, sports_master
   wording fixed"). Candidate enumeration + seed mapping table drafted this session via
-  `grep -l "^parent_epic: mtds_mdps_master" plans/active/*.md` cross-checked against `status:`/todo-counts/summaries; 13
-  non-survivor active/draft/paused candidates + 5 plan-hygiene-debt (functionally-done, un-archived) files found. No
-  fold/archive action executed — this plan's own HARD GATE todo blocks execution until operator approval.
+  `grep -l "^parent_epic: mtds_mdps_master" plans/archive/2026_08/*.md` cross-checked against
+  `status:`/todo-counts/summaries; 13 non-survivor active/draft/paused candidates + 5 plan-hygiene-debt
+  (functionally-done, un-archived) files found. No fold/archive action executed — this plan's own HARD GATE todo blocks
+  execution until operator approval.
 - **2026-07-12 (verification pass, todos 1-4)** — Executed the VERIFICATION phase only (enumerate/verify candidates +
   finalize the mapping table); stopped at the HARD GATE per explicit instruction — no fold/archive/edit touched any
   candidate plan or epic, no git commands run. Findings:
@@ -340,8 +341,9 @@ below as simple-archive, not fold/keep decisions); the remaining **12** are the 
     (`mdps_book_microstructure_precompute_columns_2026_06_28`, `mdps_features_full_month_benchmark_binance_2026_06_28`,
     `tradfi_mdps_passthrough_dependency_gap_2026_06_28`, `solana_defi_legacy_migration_2026_05_27` — the last one's
     stale `status: active` corrected to `complete` + unlocked). Evidence: unified-trading-pm@4336c38f6.
-  - **10 codex docs** repointed from stale `plans/active/<slug>.md` references to `plans/archive/2026_07/<slug>.md` for
-    the 8 folded/archived slugs that had path-style citations. Evidence: unified-trading-pm@e4dd7871e.
+  - **10 codex docs** repointed from stale `plans/archive/2026_08/<slug>.md` references to
+    `plans/archive/2026_07/<slug>.md` for the 8 folded/archived slugs that had path-style citations. Evidence:
+    unified-trading-pm@e4dd7871e.
   - **`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`** got a "KEPT STANDALONE" banner;
     **`mdps_features_reduced_artifact_tracker_2026_06_28`** got its Plans 1/5/7/8 rows updated to point at their
     archive/M-2 destination, kept as the live tracker; **`epics/mtds_mdps_master.md`** got a 2026-07-13

@@ -21,6 +21,7 @@ related:
   [
     /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

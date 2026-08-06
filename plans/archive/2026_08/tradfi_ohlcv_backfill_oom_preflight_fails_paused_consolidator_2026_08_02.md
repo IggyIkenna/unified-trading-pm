@@ -98,11 +98,11 @@ context_scope:
 Dispatched as the `data_pipeline_failure` escalation for DP-VM-001 (`repository_dispatch`, `action=relaunch_vm`) to
 relaunch `tradfi-bf-nasdaq-ohlcv-1m-2024-d01-20260802-030450` (reported `exit_code=78`) per RB-INFRA-RELAUNCH.
 
-1. **Registry lookup**: `DeploymentsRegistry` had NO row for this VM (neither `active/` nor `archive/` over 3 days) — it
-   crashed before ever calling `register()`. Cross-checked the vm-name family (`tradfi-bf-nasdaq-ohlcv-1m-2024-d0*`) and
-   confirmed this is a recurring ~3-hourly batch launch (all 5 date-range shards `d01..d05` launched together, e.g. 6
-   successful waves on 2026-08-01 at 05:13/07:50/09:05/12:05/15:05/18:05) — today's ~03:04 wave's `d01` shard is the one
-   flagged.
+1. **Registry lookup**: `DeploymentsRegistry` had NO row for this VM (neither `archive/2026_08/` nor `archive/` over 3
+   days) — it crashed before ever calling `register()`. Cross-checked the vm-name family
+   (`tradfi-bf-nasdaq-ohlcv-1m-2024-d0*`) and confirmed this is a recurring ~3-hourly batch launch (all 5 date-range
+   shards `d01..d05` launched together, e.g. 6 successful waves on 2026-08-01 at 05:13/07:50/09:05/12:05/15:05/18:05) —
+   today's ~03:04 wave's `d01` shard is the one flagged.
 2. **Launcher resolution**:
    `launcher_registry.LAUNCHER_FOR_VM_PREFIX["tradfi-bf-nasdaq-ohlcv-1m-"] = "launch-tradfi-bf-nasdaq-ohlcv-1m.sh"`.
    Reconstructed the exact `d01`/2024 date-range slice (`2024-01-01..2024-03-14`, deterministic via

@@ -182,9 +182,9 @@ changelog/docstring comment describing the historical removal itself (never insi
       `venue=GMX` rows dropped (24,742,605 -> 24,737,231), matching the pre-authorized census exactly.
 - [x] ✅ [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
       (`defi_consolidated_closeout_2026_07_18.md`), and related issue docs that describe GMX as active/supported.
-      Done-when: a grep across `codex/` + `plans/active/` for "GMX" shows only historical/changelog-style references
-      (e.g. this plan itself, the root-cause issue doc), none describing it as a currently-supported venue. (repo:
-      unified-trading-pm) -- unified-trading-pm@bfda5df5b. Fanned out to 6 sub-agents covering 26 codex docs + 15
+      Done-when: a grep across `codex/` + `plans/archive/2026_08/` for "GMX" shows only historical/changelog-style
+      references (e.g. this plan itself, the root-cause issue doc), none describing it as a currently-supported venue.
+      (repo: unified-trading-pm) -- unified-trading-pm@bfda5df5b. Fanned out to 6 sub-agents covering 26 codex docs + 15
       plans/active docs (40 files changed, 1 excluded: `instrument_id_format_canonicalization_2026_07_08.md` was already
       1309L, over the 1000L hard cap pre-existing this change -- deferred, not shipped). Each mention was judged
       CURRENTLY-ACTIVE (edited to a removal note) vs. HISTORICAL/dated (left unchanged to preserve the audit trail);

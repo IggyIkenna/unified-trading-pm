@@ -32,9 +32,9 @@ last_updated: 2026-07-12 # was 2026-05-23 — stale vs newer body entries; corre
 
 # Plan Hygiene Master
 
-Routine maintenance of `plans/active/` and `plans/epics/` run by Ikenna and Harsh on the planning VM. Prevents the
-recurring failure mode where agent refactors silently collapse todos, leave orphaned plans, or let the plan corpus drift
-from codex.
+Routine maintenance of `plans/archive/2026_08/` and `plans/epics/` run by Ikenna and Harsh on the planning VM. Prevents
+the recurring failure mode where agent refactors silently collapse todos, leave orphaned plans, or let the plan corpus
+drift from codex.
 
 **Why this epic exists**: this sweep has been done manually 5+ times. Each time it surfaces 50-100 lost todos, stale
 frontmatter, broken codex refs, and orphaned plans. Automating the checks and making the runbook a standard daily step
@@ -57,20 +57,20 @@ removes the manual cost and catches regressions before they compound.
 
 ## Phase 1 — Core scripts (tooling that makes everything else automatable)
 
-- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_todo_regression.sh` — compare every `plans/active/*.md` `^- \[ \]`
-      count vs `origin/live-defi-rollout` baseline; exit 1 if any plan lost open todos. Wire as pre-push hook + optional
-      QG step. **Root-cause fix for the todo-collapse failure mode.** (PM@a85f151e9)
-- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_frontmatter.sh` — for every `plans/active/*.md` + `plans/epics/*.md`:
-      assert `---` on own first line; required fields present (`parent_epic` for plans, `name` for epics); deprecated
-      fields absent (`slug`, `type`, `deadline`, `owner`, `asset_group`, `horizon`); `estimate_*` fields numeric. Exit 1
-      on any violation, print file + field. (PM@a85f151e9)
+- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_todo_regression.sh` — compare every `plans/archive/2026_08/*.md`
+      `^- \[ \]` count vs `origin/live-defi-rollout` baseline; exit 1 if any plan lost open todos. Wire as pre-push
+      hook + optional QG step. **Root-cause fix for the todo-collapse failure mode.** (PM@a85f151e9)
+- [x] ✅ [SCRIPT] P0. `scripts/plan-hygiene/check_frontmatter.sh` — for every `plans/archive/2026_08/*.md` +
+      `plans/epics/*.md`: assert `---` on own first line; required fields present (`parent_epic` for plans, `name` for
+      epics); deprecated fields absent (`slug`, `type`, `deadline`, `owner`, `asset_group`, `horizon`); `estimate_*`
+      fields numeric. Exit 1 on any violation, print file + field. (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_line_caps.sh` — soft-warn >500L, hard-fail >1000L. Umbrella plans with
       `locked_by` AND >247 todos are exempt (writegate pattern). Print sorted table of offenders. (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_codex_refs.sh` — grep all `codex/...` paths cited in active plans;
       resolve relative to workspace root; report broken refs (file moved, renamed, or deleted). (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_archive_candidates.sh` — find plans where `^- \[ \]` count == 0 AND
       all `^- \[x\]` > 0; print candidates with todo counts. Does not archive — outputs a list for operator review.
-      (PM@a85f151e9) — **UPGRADED 2026-07-29**: was purely informational and missed `plans/active/issues/` + used
+      (PM@a85f151e9) — **UPGRADED 2026-07-29**: was purely informational and missed `plans/archive/issues/` + used
       non-portable `grep -P` (silently blind outside an interactive PCRE-aliased shell — every non-interactive run,
       incl. CI/prek/cron, saw ~0 candidates regardless of the real corpus). Now scans both dirs with portable POSIX ERE
       and is a real shrinking-ratchet hard gate (`archive_candidates_baseline.yaml`), same shape as
@@ -79,8 +79,8 @@ removes the manual cost and catches regressions before they compound.
 - [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_estimate_sanity.sh` — verify `estimate_calibrated_ai_days` ≈
       `estimate_baseline_ai_days × multiplier` for the declared `estimate_class` (refactor 0.4×, design 0.6×, infra
       0.8×, brand-new 1.0×, research 1.2×). Flag >20% drift as typos. (PM@a85f151e9)
-- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_superseded_in_active.sh` — grep `plans/active/` for filenames or body
-      text containing `SUPERSEDED`; those plans should be in `plans/archive/`. (PM@a85f151e9)
+- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_superseded_in_active.sh` — grep `plans/archive/2026_08/` for filenames
+      or body text containing `SUPERSEDED`; those plans should be in `plans/archive/`. (PM@a85f151e9)
 
 ## Phase 2 — Runbook (what Ikenna and Harsh run daily on the planning VM)
 
@@ -119,10 +119,10 @@ removes the manual cost and catches regressions before they compound.
 > Script checks (Phase 1-3) are blind to SEMANTIC drift — a plan can pass all formatting checks but reference a codex
 > doc that contradicts what it says to do. That requires agent judgment.
 
-- [x] ✅ [AGENT] P1. Spawn a read-only agent against `plans/active/` + `codex/`: for each plan, verify the codex SSOTs
-      it cites (a) exist, (b) still describe the same pattern the plan's todos assume. Flag deviations for operator
-      review. Output: `plans/active/issues/codex_alignment_deviations_<date>.md`. — Result: CLEAN. 1 broken ref (planned
-      future doc, not a regression); 0 semantic deviations across 8 plans with open todos × codex refs.
+- [x] ✅ [AGENT] P1. Spawn a read-only agent against `plans/archive/2026_08/` + `codex/`: for each plan, verify the
+      codex SSOTs it cites (a) exist, (b) still describe the same pattern the plan's todos assume. Flag deviations for
+      operator review. Output: `plans/active/issues/codex_alignment_deviations_<date>.md`. — Result: CLEAN. 1 broken ref
+      (planned future doc, not a regression); 0 semantic deviations across 8 plans with open todos × codex refs.
       `plans/archive/issues/codex_alignment_deviations_2026_06_25.md` — PM@e8e1f189f (slot-1)
 - [x] ✅ [AGENT] P2. For each flagged deviation: determine whether the plan is stale (codex evolved, plan didn't) or the
       codex is incomplete (plan captured a rule change that wasn't propagated to codex). Propose targeted codex augments

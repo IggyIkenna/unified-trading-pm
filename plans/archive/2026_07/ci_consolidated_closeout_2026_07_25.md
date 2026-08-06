@@ -191,9 +191,9 @@ unblocked on a CI runner.
 - **2026-07-26 — `/ag-closeout-audit ci` (autonomous mode). Headline: THIS TRANCHE HAS NO DISPATCH VEHICLE.** Phase 0
   measured it: this doc carries **zero `- [ ]` todos** (it is a reachability digest, `assigned_vm: NA` +
   `execution_scope: local-only`), **no `ci_satellite_ao_dispatch_batch*` plan has ever existed** (checked
-  `plans/active/` and `plans/archive/2026_*/`), and all 30 Source docs above are `assigned_vm: NA`/unset. Being listed
-  in a Track's Sources is discoverability, not dispatch — so every remaining open item in this tranche is currently
-  tracked-but-unworked. Phase 1 read all 34 tranche-primary docs end-to-end: **30 orphaned** (20
+  `plans/archive/2026_08/` and `plans/archive/2026_*/`), and all 30 Source docs above are `assigned_vm: NA`/unset. Being
+  listed in a Track's Sources is discoverability, not dispatch — so every remaining open item in this tranche is
+  currently tracked-but-unworked. Phase 1 read all 34 tranche-primary docs end-to-end: **30 orphaned** (20
   `orphaned_partial_coverage`, 10 `orphaned_never_touched`), 2 `archivable_now`
   (`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`, now a pure redirect index that says so
   itself, and `github_actions_cost_reduction_options_analysis_2026_07_15.md`, a closed decision record whose Appendix-4

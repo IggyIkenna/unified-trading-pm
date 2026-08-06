@@ -54,7 +54,7 @@ Per `autonomous-recovery-matrix.md` (protective + in-scope-reversible = autonomo
 | `DP_KEY_POOL_EXHAUSTED`                            | 429-aware key rotation already rotated; exhaustion = all keys 429'd in-window                          | emits CRITICAL → page             |
 
 A `file_issue`-tier finding (e.g. `DP_DIVERGENT_EMPTY`, `DP_PHANTOM_ROWS`, `DP_NOT_V9`) **auto-files
-`plans/active/issues/<dp>_<date>.md`** and (via wall-type `data_pipeline_failure`) can **auto-spawn a worker** that
+`plans/archive/issues/<dp>_<date>.md`** and (via wall-type `data_pipeline_failure`) can **auto-spawn a worker** that
 diagnoses + fixes + ships. **You only get paged for `page_operator`-tier** (DP_MISSING_CREDENTIAL, DP_RUN_MOSTLY_EMPTY,
 DP_VM_GONE_NO_CAPTURE, DP_CATALOG_NOT_RUNNING, DP_WATCHER/CRON down) — the genuinely-novel cases.
 

@@ -55,6 +55,7 @@ related:
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
     /plans/archive/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-27
 author: unknown

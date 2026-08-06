@@ -29,6 +29,7 @@ related:
   - /plans/active/pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md
   - /codex/08-workflows/ci-cd-flow.md
 created: "2026-08-06"
+  /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
 author: ikennaigboaka [slot-4·planning]
 source: [escalation agt-57645a — ldr_qg_failure, client-reporting-api#642, run 30990644645]
 assigned_vm: planning

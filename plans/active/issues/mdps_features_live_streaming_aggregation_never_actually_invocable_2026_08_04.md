@@ -59,6 +59,7 @@ related:
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
     /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-04"
 author: unknown

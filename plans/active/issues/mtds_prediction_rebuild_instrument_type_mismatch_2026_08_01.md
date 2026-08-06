@@ -32,6 +32,7 @@ related:
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
 author: unknown

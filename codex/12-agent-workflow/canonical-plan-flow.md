@@ -50,9 +50,9 @@ code_refs:
 ```
 [1] Audit finds something            (audit-instructions docs in codex/10-audit/)
        ↓
-[2] Issue filed in plans/active/issues/   (the WHAT and WHY)
+[2] Issue filed in plans/archive/issues/   (the WHAT and WHY)
        ↓
-[3] Decision → Plan in plans/active/      (the HOW — phased, canonical-format todos)
+[3] Decision → Plan in plans/archive/2026_08/      (the HOW — phased, canonical-format todos)
        ↓
 [4] git push origin live-defi-rollout     (the operator/worker pushes)
        ↓
@@ -79,7 +79,7 @@ Each numbered step is described below with its current implementation, known gap
 - Output: findings filed as an issue in step [2].
 - See also: `plans/audit/results/` for completed audit reports.
 
-## [2] Issues — `plans/active/issues/`
+## [2] Issues — `plans/archive/issues/`
 
 - Filename convention: `<slug>_<YYYY_MM_DD>.md` (date-suffixed).
 - Frontmatter (minimal): `title`, `created`, `author`, `source` (list of evidence), `locked_by`.
@@ -87,12 +87,12 @@ Each numbered step is described below with its current implementation, known gap
   - `## What I found` — the empirical evidence.
   - `## Why it matters` — impact + downstream consequences.
   - `## Recommended decision` — proposed solution / the _what_ of the plan that will follow.
-  - `## Scope` — link to the plan file in `plans/active/` once the plan exists.
+  - `## Scope` — link to the plan file in `plans/archive/2026_08/` once the plan exists.
   - `## Unblocks` — what flips green when the plan ships.
 - Status: an issue exists to surface UNACKED work. Once acked into a plan, the issue is archived **immediately** (per
   Issue-Doc Lifecycle Discipline in CLAUDE.md).
 
-## [3] Plans — `plans/active/`
+## [3] Plans — `plans/archive/2026_08/`
 
 > **CORRECTED 2026-07-23 (operator ruling, `/plan-reconcile` AO run).** This section previously mandated
 > `assigned_vm: vm-<id>` as REQUIRED and described `parent_epic` as routing "to the right VM via
@@ -177,7 +177,7 @@ The parser is **liberal**:
 - `_TITLE_PREFIX_RE = r"^\s*(?:\[[A-Z]+\]\s+)?(?:P[0-3]\.\s*)?"` — strips OPTIONAL `[TAG]` and `P<n>.` prefix to produce
   a clean title.
 - Skipped: `index.md`, `_agent_pings.md`, any filename starting with `_`.
-- Skipped: `plans/active/issues/*.md` (the regen only scans `plans/active/*.md`).
+- Skipped: `plans/archive/issues/*.md` (the regen only scans `plans/archive/2026_08/*.md`).
 - Skipped: a plan with `status: draft` (WIP / not finalised) or `execution_scope: local-only` — neither is ingested, and
   a flip `active`→`draft` GCs the plan's already-queued tasks (shared SSOT `_plan_contributes_briefs`). Flip to
   `status: active` to green-light dispatch.

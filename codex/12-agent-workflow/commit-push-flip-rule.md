@@ -72,7 +72,7 @@ cd ${WORKSPACE_ROOT}/unified-trading-pm
 #   N. [item description]
 # becomes
 #   N. ✅ [item description] — <repo>@<SHA> + brief evidence
-git add plans/active/<plan>.md
+git add plans/archive/2026_08/<plan>.md
 git commit -m "docs(plans): flip item N — <one-line evidence>" && git push origin HEAD:live-defi-rollout
 ```
 

@@ -10,106 +10,671 @@ repos: [execution-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-13'
-overview: 'Remediates all P0/P1/P2 issues identified in the 2026-03-13 CI/CD pipeline audit. Adds diagram auto-regeneration to PM quickmerge so the YAML remains the SSOT and the SVG/HTML are always current. Extends the diagram and CI-CD-FLOW.md to show the active-plan-driven agent context cascade: plan → codex → cursor rules → agent context → implementation → dual TG approval gates (plan sign-off + merge sign-off). Adds E2E tests for every fix, exercised via admin sync scripts where GHA trigger is needed. Hardens race conditions (manifest concurrency, heredoc exits, dispatch retries, conflict retry-promotion, SIT debounce starvation). Ensures human-readable semver is the headline at every layer — manifest history, Telegram alerts, deployment UI, Docker tags — with SHAs as metadata only.
+created: "2026-03-13"
+overview: "Remediates all P0/P1/P2 issues identified in the 2026-03-13 CI/CD pipeline audit. Adds diagram
+  auto-regeneration to PM quickmerge so the YAML remains the SSOT and the SVG/HTML are always current. Extends the
+  diagram and CI-CD-FLOW.md to show the active-plan-driven agent context cascade: plan → codex → cursor rules → agent
+  context → implementation → dual TG approval gates (plan sign-off + merge sign-off). Adds E2E tests for every fix,
+  exercised via admin sync scripts where GHA trigger is needed. Hardens race conditions (manifest concurrency, heredoc
+  exits, dispatch retries, conflict retry-promotion, SIT debounce starvation). Ensures human-readable semver is the
+  headline at every layer — manifest history, Telegram alerts, deployment UI, Docker tags — with SHAs as metadata only.
 
-  '
+  "
 type: infra
 epic: epic-infra
 superseded_by: cicd_code_rollout_master_2026_03_13
 superseded_date: 2026-03-13
-completion_gates: {code: C4, deployment: none, business: none}
+completion_gates: { code: C4, deployment: none, business: none }
 repo_gates:
-- {repo: unified-trading-pm, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: infra-only. BR N/A: internal tooling.'}
-- {repo: system-integration-tests, code: C3, deployment: none, business: none, readiness_note: P0 rollback + SHA-pinning tests live here.}
-- {repo: deployment-ui, code: C3, deployment: none, business: none, readiness_note: BuildSelector multi-env + human-readable deployment IDs.}
-- {repo: deployment-service, code: C3, deployment: none, business: none, readiness_note: deployed_versions writeback + deployment ID format.}
+  - {
+      repo: unified-trading-pm,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note: "DR N/A: infra-only. BR N/A: internal tooling.",
+    }
+  - {
+      repo: system-integration-tests,
+      code: C3,
+      deployment: none,
+      business: none,
+      readiness_note: P0 rollback + SHA-pinning tests live here.,
+    }
+  - {
+      repo: deployment-ui,
+      code: C3,
+      deployment: none,
+      business: none,
+      readiness_note: BuildSelector multi-env + human-readable deployment IDs.,
+    }
+  - {
+      repo: deployment-service,
+      code: C3,
+      deployment: none,
+      business: none,
+      readiness_note: deployed_versions writeback + deployment ID format.,
+    }
 depends_on: []
 todos:
-- {id: diagram-regen-in-quickmerge, content: "Make the CI/CD diagram regenerate automatically as part of PM quality gates so it can never drift from the YAML SSOT. Steps: (1) In scripts/quality-gates.sh, after the final `source` line, add:\n    echo \"Regenerating CI/CD pipeline diagram...\"\n    python3 \"${REPO_ROOT}/scripts/generate-cicd-diagram.py\"\n(2) Add generate-cicd-diagram.py to all codex EXCLUDE_GLOBS arrays in\n    quality-gates.sh so basedpyright/codex checks skip it.\n(3) Verify: run bash scripts/quality-gates.sh, confirm SVG/HTML updated. Acceptance: every PM quickmerge that touches cicd-pipeline-definition.yaml or generate-cicd-diagram.py auto-regenerates the outputs.\n", status: done}
-- {id: fix-conflict-node-semantics, content: "The 'conflict detected?' diamond has inverted YES/NO visual semantics: red NO badge goes to staging_to_main (proceed), confusing readers. Fix in cicd-pipeline-definition.yaml: (1) Rename node label to \"merge\\nconflict?\" (shorter, unambiguous). (2) Connection conflict_detected → staging_to_main: change outcome to\n    \"yes\" (green — \"yes, conflict free, proceed\") and label \"clean\".\n    Wait — actually flip: rename label to \"conflict\\nfree?\" so:\n    YES (green) → staging_to_main (no conflict, proceed)\n    NO (red)    → conflict_agent + tg_conflict_detected (conflict exists)\n(3) Update all connection labels and outcomes accordingly. (4) Regenerate diagram. Acceptance: green YES goes to staging_to_main, red NO goes to conflict agent.\n", status: done}
-- {id: fix-staging-locked-swimlane, content: 'staging_locked_decision is in ''developer'' swimlane but the decision is made by GHA (reads staging_status.locked from workspace-manifest.json via staging-lock-gate required status check). Move to ''gha_repo'' swimlane. Check col spacing against gha_repo neighbours after move. Regenerate diagram.
+  - {
+      id: diagram-regen-in-quickmerge,
+      content:
+        "Make the CI/CD diagram regenerate automatically as part of PM quality gates so it can never drift from the YAML
+        SSOT. Steps: (1) In scripts/quality-gates.sh, after the final `source` line, add:\n    echo \"Regenerating CI/CD
+        pipeline diagram...\"\n    python3 \"${REPO_ROOT}/scripts/generate-cicd-diagram.py\"\n(2) Add
+        generate-cicd-diagram.py to all codex EXCLUDE_GLOBS arrays in\n    quality-gates.sh so basedpyright/codex checks
+        skip it.\n(3) Verify: run bash scripts/quality-gates.sh, confirm SVG/HTML updated. Acceptance: every PM
+        quickmerge that touches cicd-pipeline-definition.yaml or generate-cicd-diagram.py auto-regenerates the
+        outputs.\n",
+      status: done,
+    }
+  - {
+      id: fix-conflict-node-semantics,
+      content:
+        "The 'conflict detected?' diamond has inverted YES/NO visual semantics: red NO badge goes to staging_to_main
+        (proceed), confusing readers. Fix in cicd-pipeline-definition.yaml: (1) Rename node label to
+        \"merge\\nconflict?\" (shorter, unambiguous). (2) Connection conflict_detected → staging_to_main: change outcome
+        to\n    \"yes\" (green — \"yes, conflict free, proceed\") and label \"clean\".\n    Wait — actually flip: rename
+        label to \"conflict\\nfree?\" so:\n    YES (green) → staging_to_main (no conflict, proceed)\n    NO (red)    →
+        conflict_agent + tg_conflict_detected (conflict exists)\n(3) Update all connection labels and outcomes
+        accordingly. (4) Regenerate diagram. Acceptance: green YES goes to staging_to_main, red NO goes to conflict
+        agent.\n",
+      status: done,
+    }
+  - { id: fix-staging-locked-swimlane, content: "staging_locked_decision is in 'developer' swimlane but the decision is
+        made by GHA (reads staging_status.locked from workspace-manifest.json via staging-lock-gate required status
+        check). Move to 'gha_repo' swimlane. Check col spacing against gha_repo neighbours after move. Regenerate
+        diagram.
 
-    ', status: done}
-- {id: add-missing-connections, content: "Add connections that are real but missing from the diagram: (1) staging_to_main → manifest_sync  (implicit PM push triggers it; make\n    it explicit so codex sync on SIT path is visible).\n(2) plan_alignment annotation: add to annotations section —\n    text \"advisory: no merge gate\" position below.\n(3) Add 'no SIT path' annotation near breaking_decision for PM/codex. Regenerate.\n", status: done}
-- {id: add-plan-cascade-nodes, content: "Add the plan-driven agent context cascade to the diagram. This is the central governance model: plans are the canonical context for all agent decisions. New nodes:\nplan_lifecycle (gha_pm, col 1.5, branch agent):\n  \"Plan created/updated\\nactive plans/\\nagent or human\"\n  actor: \"Human or agent writes plan;\\nPM main push fires cascade\"\n\ntg_plan_ready (telegram, col 3.5, branch agent):\n  \"Plan ready\\nfor human\\nreview\"\n  tooltip: \"Telegram notification on plan creation. Human must sign off\n    before agent begins implementation. Only two human gates in the\n    system: (1) plan approval, (2) merge approval.\"\n\ntg_merge_ready (telegram, col 6.0, branch agent):\n  \"Agent PR ready\\nhuman review\\n& TG merge gate\"\n  tooltip: \"Second and final human gate. Agent-opened PRs require\n    explicit human approval in TG before auto-merge fires. Ensures\n    human oversight on all agent-driven changes.\"\n\ntg_cloud_build_fail (telegram,\
-    \ col 4.8, branch both):\n  \"Build failed\\n$REPO $BRANCH\\nCloud Build\"\n  tooltip: \"Sent when GCP Cloud Build returns non-zero exit. Currently\n    NOT IMPLEMENTED — tracked in add-cloud-build-fail-alert todo.\n    Marked pending in diagram.\"\n\nNew connections:\n  plan_lifecycle → rules_alignment   (cascades to cursor rules)\n  plan_lifecycle → manifest_sync     (cascades to codex)\n  plan_lifecycle → tg_plan_ready     (human review notification)\n  conflict_agent → tg_merge_ready   (agent PR → second TG gate)\n  build_dev → tg_cloud_build_fail    (dashed, pending impl)\n  build_staging → tg_cloud_build_fail (dashed, pending impl)\n  build_prod → tg_cloud_build_fail   (dashed, pending impl)\n\nAdd annotation on conflict_agent:\n  \"Context: active plans + codex\\n+ AGENTS.md + cursor rules\\n\n   Human approves plan first\"\n\nRegenerate diagram.\n", status: done}
-- {id: unify-manifest-concurrency-groups, content: "RACE CONDITION: sit-gate.yml and sit-unlock.yml use concurrency group \"manifest-update\", but staging-to-main.yml uses \"staging-to-main\". These are DIFFERENT groups — if SIT fails at the same moment staging-to-main fires (race between staging-validated and sit-failed dispatches), both workflows mutate staging_status concurrently. One write wins, one is silently lost. Fix: (1) ALL workflows that mutate workspace-manifest.json must use a SINGLE concurrency group:\n    concurrency:\n      group: manifest-update\n      cancel-in-progress: false\n    Affected workflows: sit-gate.yml, sit-unlock.yml, staging-to-main.yml, update-repo-version.yml,\n    hotfix-mode.yml, major-bump-approval.yml.\n(2) Within each workflow's manifest mutation step, add a compare-and-swap guard:\n    MANIFEST_SHA_BEFORE=$(git rev-parse HEAD -- workspace-manifest.json)\n    # ... mutate manifest ...\n    MANIFEST_SHA_AFTER=$(git rev-parse HEAD -- workspace-manifest.json)\n\
-    \    if [ \"$MANIFEST_SHA_BEFORE\" != \"$MANIFEST_SHA_AFTER\" ]; then\n      echo \"CONFLICT: manifest changed during mutation — retrying\"\n      git pull --rebase origin main\n      # re-run mutation\n    fi\n(3) Add JSON schema validation after every manifest write (see add-manifest-json-validation). Test: run sit-gate.yml and staging-to-main.yml concurrently via workflow_dispatch — verify serialization, no lost writes. Acceptance: zero possibility of concurrent manifest mutations.\n", status: done}
-- {id: fix-heredoc-exit-propagation, content: "SILENT CORRUPTION: Multiple workflows (sit-gate.yml, sit-unlock.yml, update-repo-version.yml, staging-to-main.yml, hotfix-mode.yml) use python3 heredocs to mutate workspace-manifest.json. If the Python block raises an exception (corrupted JSON, disk full, key error), bash continues and commits corrupted or empty manifest. Fix: (1) Every python3 heredoc block must have || exit 1 after the PYEOF terminator:\n    python3 - <<PYEOF || exit 1\n    import json\n    ...\n    PYEOF\n(2) Add set -eo pipefail at the top of every run: block that mutates manifest. (3) After every manifest write, validate JSON:\n    python3 -c \"import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d\" || {\n      git checkout -- workspace-manifest.json\n      echo \"FATAL: manifest corruption detected — reverted\"\n      exit 1\n    }\nAffected files: sit-gate.yml, sit-unlock.yml, staging-to-main.yml, update-repo-version.yml, hotfix-mode.yml. Test:\
-    \ introduce a deliberate KeyError in a test branch heredoc — verify workflow fails immediately, manifest is not committed in corrupted state. Acceptance: no silent manifest corruption possible.\n", status: done}
-- {id: fix-semver-staging-trigger, content: 'Blocked on: full_autonomous_agent_ci plan § fix-semver-agent-template-staging-trigger. The semver-agent.yml template currently fires on ''main'' push. Must be fixed to fire on ''staging'' push only. Also: atomically disable version-bump.yml (set if: false) when semver-agent rolls out to prevent double-bump. Test: push feat: commit to a T2 repo, verify ONLY one version bump fires, verify it fires on staging push not main push.
+        ", status: done }
+  - {
+      id: add-missing-connections,
+      content:
+        "Add connections that are real but missing from the diagram: (1) staging_to_main → manifest_sync  (implicit PM
+        push triggers it; make\n    it explicit so codex sync on SIT path is visible).\n(2) plan_alignment annotation:
+        add to annotations section —\n    text \"advisory: no merge gate\" position below.\n(3) Add 'no SIT path'
+        annotation near breaking_decision for PM/codex. Regenerate.\n",
+      status: done,
+    }
+  - { id: add-plan-cascade-nodes, content: "Add the plan-driven agent context cascade to the diagram. This is the
+        central governance model: plans are the canonical context for all agent decisions. New nodes:\nplan_lifecycle
+        (gha_pm, col 1.5, branch agent):\n  \"Plan created/updated\\nactive plans/\\nagent or human\"\n  actor: \"Human
+        or agent writes plan;\\nPM main push fires cascade\"\n\ntg_plan_ready (telegram, col 3.5, branch
+        agent):\n  \"Plan ready\\nfor human\\nreview\"\n  tooltip: \"Telegram notification on plan creation. Human must
+        sign off\n    before agent begins implementation. Only two human gates in the\n    system: (1) plan approval,
+        (2) merge approval.\"\n\ntg_merge_ready (telegram, col 6.0, branch agent):\n  \"Agent PR ready\\nhuman
+        review\\n& TG merge gate\"\n  tooltip: \"Second and final human gate. Agent-opened PRs require\n    explicit
+        human approval in TG before auto-merge fires. Ensures\n    human oversight on all agent-driven
+        changes.\"\n\ntg_cloud_build_fail (telegram,\
+        \ col 4.8, branch both):\n  \"Build failed\\n$REPO $BRANCH\\nCloud Build\"\n  tooltip: \"Sent when GCP Cloud
+        Build returns non-zero exit. Currently\n    NOT IMPLEMENTED — tracked in add-cloud-build-fail-alert
+        todo.\n    Marked pending in diagram.\"\n\nNew connections:\n  plan_lifecycle → rules_alignment   (cascades to
+        cursor rules)\n  plan_lifecycle → manifest_sync     (cascades to codex)\n  plan_lifecycle →
+        tg_plan_ready     (human review notification)\n  conflict_agent → tg_merge_ready   (agent PR → second TG
+        gate)\n  build_dev → tg_cloud_build_fail    (dashed, pending impl)\n  build_staging → tg_cloud_build_fail
+        (dashed, pending impl)\n  build_prod → tg_cloud_build_fail   (dashed, pending impl)\n\nAdd annotation on
+        conflict_agent:\n  \"Context: active plans + codex\\n+ AGENTS.md + cursor rules\\n\n   Human approves plan
+        first\"\n\nRegenerate diagram.\n", status: done }
+  - { id: unify-manifest-concurrency-groups, content: "RACE CONDITION: sit-gate.yml and sit-unlock.yml use concurrency
+        group \"manifest-update\", but staging-to-main.yml uses \"staging-to-main\". These are DIFFERENT groups — if SIT
+        fails at the same moment staging-to-main fires (race between staging-validated and sit-failed dispatches), both
+        workflows mutate staging_status concurrently. One write wins, one is silently lost. Fix: (1) ALL workflows that
+        mutate workspace-manifest.json must use a SINGLE concurrency group:\n    concurrency:\n      group:
+        manifest-update\n      cancel-in-progress: false\n    Affected workflows: sit-gate.yml, sit-unlock.yml,
+        staging-to-main.yml, update-repo-version.yml,\n    hotfix-mode.yml, major-bump-approval.yml.\n(2) Within each
+        workflow's manifest mutation step, add a compare-and-swap guard:\n    MANIFEST_SHA_BEFORE=$(git rev-parse HEAD
+        -- workspace-manifest.json)\n    # ... mutate manifest ...\n    MANIFEST_SHA_AFTER=$(git rev-parse HEAD --
+        workspace-manifest.json)\n\
+        \    if [ \"$MANIFEST_SHA_BEFORE\" != \"$MANIFEST_SHA_AFTER\" ]; then\n      echo \"CONFLICT: manifest changed
+        during mutation — retrying\"\n      git pull --rebase origin main\n      # re-run mutation\n    fi\n(3) Add JSON
+        schema validation after every manifest write (see add-manifest-json-validation). Test: run sit-gate.yml and
+        staging-to-main.yml concurrently via workflow_dispatch — verify serialization, no lost writes. Acceptance: zero
+        possibility of concurrent manifest mutations.\n", status: done }
+  - { id: fix-heredoc-exit-propagation, content: "SILENT CORRUPTION: Multiple workflows (sit-gate.yml, sit-unlock.yml,
+        update-repo-version.yml, staging-to-main.yml, hotfix-mode.yml) use python3 heredocs to mutate
+        workspace-manifest.json. If the Python block raises an exception (corrupted JSON, disk full, key error), bash
+        continues and commits corrupted or empty manifest. Fix: (1) Every python3 heredoc block must have || exit 1
+        after the PYEOF terminator:\n    python3 - <<PYEOF || exit 1\n    import json\n    ...\n    PYEOF\n(2) Add set
+        -eo pipefail at the top of every run: block that mutates manifest. (3) After every manifest write, validate
+        JSON:\n    python3 -c \"import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d\" ||
+        {\n      git checkout -- workspace-manifest.json\n      echo \"FATAL: manifest corruption detected —
+        reverted\"\n      exit 1\n    }\nAffected files: sit-gate.yml, sit-unlock.yml, staging-to-main.yml,
+        update-repo-version.yml, hotfix-mode.yml. Test:\
+        \ introduce a deliberate KeyError in a test branch heredoc — verify workflow fails immediately, manifest is not
+        committed in corrupted state. Acceptance: no silent manifest corruption possible.\n", status: done }
+  - { id: fix-semver-staging-trigger, content: "Blocked on: full_autonomous_agent_ci plan §
+        fix-semver-agent-template-staging-trigger. The semver-agent.yml template currently fires on 'main' push. Must be
+        fixed to fire on 'staging' push only. Also: atomically disable version-bump.yml (set if: false) when
+        semver-agent rolls out to prevent double-bump. Test: push feat: commit to a T2 repo, verify ONLY one version
+        bump fires, verify it fires on staging push not main push.
 
-    ', status: pending, blocks: fix-semver-agent-template-staging-trigger (full_autonomous_agent_ci)}
-- {id: add-sit-rollback, content: "When SIT fails, sit-unlock.yml clears the lock but leaves broken code in staging with no automated recovery signal. Add: (1) In sit-unlock.yml, after clearing the lock, create a GH Issue with human-readable title:\n    \"SIT failed: $REPO v$VERSION needs fix or revert\" (semver, not SHA)\n    with label 'sit-failure' and assignee the last PR author.\n(2) Optionally: open a revert PR to last_known_good_sha (the SHA before\n    the failing commit set). Record last_known_good_sha in\n    staging_status when sit-gate.yml fires.\n(3) Update diagram: add sit_rollback_issue node in gha_pm, connection\n    from sit_unlock_fail → sit_rollback_issue.\nTest: force a SIT failure via admin sync, verify issue is opened with semver in title. Acceptance: engineers know immediately what broke (by version, not SHA) and can act without checking GHA logs manually.\n", status: done}
-- {id: add-cascade-cycle-guard, content: "update-repo-version.yml dispatches dependency-update to all direct dependents per manifest DAG. A cycle (repo A depends B depends A) causes infinite dispatch. Fix: (1) Before dispatching in update-repo-version.yml, run a DFS cycle check on the dependency subgraph for the triggering repo. (2) If cycle detected: send Telegram alert with human-readable context:\n    \"Dependency cycle detected: $REPO_A v$VER_A -> $REPO_B v$VER_B -> $REPO_A — cascade aborted.\"\n    and exit 1 (do NOT dispatch).\n(3) Add cycle-check to validate-alignment.py or a new\n    validate-manifest-dag.py script, run in quality-gates.sh.\nTest: introduce a deliberate cycle in a test manifest branch, verify cascade aborts and Telegram fires. Acceptance: no infinite dispatch loops possible.\n", status: done}
-- {id: fix-sha-pinning-toctou, content: "Current flow: staging push → 10-min debounce → sit-gate.yml fires → records staging_commits SHAs. But if a [skip ci] constraint commit lands during the debounce, it's in staging but not in the tested SHA set. staging_to_main promotes the full current staging (including untested [skip ci] commits), creating a gap between tested and deployed state. Fix: (1) Record staging_commits at END of smoke-test-gate.yml debounce\n    (immediately before dispatching to SIT), not when sit-gate.yml fires.\n    This captures the full staging state at the moment testing begins.\n    Record BOTH sha AND version for each repo (see enrich-staging-commits-with-semver).\n(2) In staging-to-main.yml, verify that current staging HEAD is within\n    the tested SHA set (or is a [skip ci] descendant of a tested SHA).\n    If not, re-trigger SIT before promoting.\nTest: push a [skip ci] commit during SIT run, verify it gets included in the next SIT set or blocked from promotion.\n",
-  status: done}
-- {id: wire-conflict-resolution-retry-promotion, content: "DEADLOCK: staging-to-main.yml detects a merge conflict → dispatches merge-conflict-detected → conflict agent opens a resolution PR → human approves → PR merges. But then NOBODY retriggers staging-to-main.yml. The promotion is stuck — the workflow that detected the conflict already exited, and no workflow re-fires it. Fix: (1) In conflict-resolution-agent.yml, after the resolution PR is created, add metadata to the PR body:\n    \"<!-- AUTO_RETRY_PROMOTION: true -->\"\n(2) Create .github/workflows/conflict-resolution-merged.yml:\n    trigger: pull_request (closed, merged) on branches matching auto-resolve/*\n    Steps: if PR body contains AUTO_RETRY_PROMOTION marker:\n      - Wait 30s for GitHub state to settle\n      - Re-dispatch staging-validated to PM (retries the promotion)\n      - Telegram: \"Conflict resolved for $REPO v$VERSION — retrying staging→main promotion\"\n(3) Add idempotency: staging-to-main.yml checks if current\
-    \ staging SHAs have already been promoted\n    (compare staging_commits to main_commits). If already promoted, exit early — no duplicate promotion.\nTest: create a merge conflict, let agent resolve it, merge resolution PR — verify staging-to-main fires automatically. Acceptance: no manual intervention needed after conflict resolution PR merges.\n", status: done}
-- {id: verify-staging-lock-gate-all-repos, content: "The SHA-pinning TOCTOU fix (fix-sha-pinning-toctou) depends on staging-lock-gate being a REQUIRED status check on every repo's staging branch protection rules. If any repo is missing it, commits slip through during SIT. Fix: (1) Script: scripts/repo-management/verify-staging-lock-gate.sh\n    For each repo in workspace-manifest.json with arch_tier T0-T3:\n      gh api repos/$OWNER/$REPO/branches/staging/protection/required_status_checks\n      Verify \"staging-lock-gate\" is in the contexts list.\n      If missing: log and optionally add via gh api PUT.\n(2) Add to quality-gates.sh as a manifest validation step. (3) Run in overnight orchestrator as a pre-check. Acceptance: 100% of repos with staging branch have staging-lock-gate as required check.\n", status: done}
-- {id: add-dispatch-retry-with-alerting, content: "SILENT FAILURE: All repository_dispatch calls across the pipeline are fire-and-forget (curl with || echo WARNING). If a dispatch fails (archived repo, network blip, GitHub API degradation), the target repo never receives the event. Examples: staging-locked dispatch to 65 repos — if 3 fail, those repos never learn staging is locked. staging-unlocked — if 5 fail, those repos stay locked forever. dependency-update — if 2 of 10 dependents miss it, they build against stale deps. Fix: (1) Create unified-trading-pm/scripts/dispatch-helpers.sh:\n    Function dispatch_with_retry(repo, event_type, payload):\n      for attempt in 1 2 3; do\n        HTTP=$(curl -s -o /dev/null -w \"%{http_code}\" -X POST \\\n          \"https://api.github.com/repos/$OWNER/$repo/dispatches\" ...)\n        [[ \"$HTTP\" == \"204\" ]] && return 0\n        sleep $((attempt * 5))\n      done\n      send_telegram \"Dispatch $event_type to $repo failed after 3 attempts\"\n\
-    \      return 1\n    Function dispatch_to_all(event_type, payload, repo_list):\n      FAILED=()\n      for repo in $repo_list; do\n        dispatch_with_retry \"$repo\" \"$event_type\" \"$payload\" || FAILED+=(\"$repo\")\n      done\n      if [ ${#FAILED[@]} -gt 0 ]; then\n        send_telegram \"Dispatch $event_type failed for: ${FAILED[*]}\"\n      fi\n(2) Source dispatch-helpers.sh in: sit-gate.yml, sit-unlock.yml, staging-to-main.yml, update-repo-version.yml,\n    manifest-sync.yml, overnight-agent-orchestrator.yml.\n(3) Replace all bare curl dispatch calls with dispatch_with_retry. Test: temporarily block a test repo's webhook — verify 3 retries fire, then Telegram alert. Acceptance: no silent dispatch failures possible.\n", status: done}
-- {id: add-sit-debounce-starvation-cap, content: "If PRs keep merging to staging every 5 minutes during business hours, the 10-min debounce in smoke-test-gate.yml resets each time and SIT NEVER runs. Staging stays locked indefinitely — a liveness failure. Fix: (1) In smoke-test-gate.yml, add a max-debounce counter.\n    If debounce has been reset more than 3 times consecutively, fire SIT immediately regardless.\n    Implementation: use GH Actions cache key \"debounce-reset-count\" — increment on each cancellation,\n    reset to 0 when SIT actually fires.\n(2) Alternative (simpler): use a fixed window instead of rolling debounce.\n    \"Run SIT at most every 20 min. If staging has new commits since last SIT, fire immediately after 20-min\n    cooldown expires.\"\n(3) Telegram alert when starvation cap triggers: \"SIT debounce capped at 3 resets — forcing SIT run for\n    staging HEAD $VERSION\" (version, not SHA).\nAcceptance: SIT always runs within 30 min of first staging push, regardless\
-    \ of subsequent push frequency.\n", status: pending}
-- {id: add-manifest-json-validation, content: "If a manifest-mutating workflow writes corrupted JSON (partial write, race condition, Python exception), there is no automated recovery. The corrupted manifest gets committed to git and breaks all downstream workflows. Fix: (1) Create unified-trading-pm/scripts/validate-manifest-json.sh:\n    python3 -c \"\n    import json, sys\n    d = json.load(open('workspace-manifest.json'))\n    required = ['versions', 'repositories', 'staging_status', 'staging_versions']\n    missing = [k for k in required if k not in d]\n    if missing:\n        print(f'FATAL: manifest missing keys: {missing}', file=sys.stderr)\n        sys.exit(1)\n    # Validate all versions are valid semver\n    import re\n    semver = re.compile(r'^\\d+\\.\\d+\\.\\d+$')\n    for repo, ver in d.get('versions', {}).items():\n        if not semver.match(ver):\n            print(f'FATAL: {repo} version {ver!r} is not valid semver', file=sys.stderr)\n            sys.exit(1)\n    print('Manifest\
-    \ valid')\n    \" || {\n      git checkout -- workspace-manifest.json\n      echo \"FATAL: manifest corruption detected and auto-reverted\"\n      # Telegram alert\n      exit 1\n    }\n(2) Call validate-manifest-json.sh after EVERY manifest write in all mutating workflows. (3) Add to quality-gates.sh as a pre-check. Test: write invalid JSON to manifest on a test branch — verify validation catches it, reverts, and alerts. Acceptance: corrupted manifest never reaches a committed state.\n", status: done}
-- {id: add-cloud-build-fail-alert, content: "Cloud Build failures are currently silent — GHA dispatches fire-and-forget. Fix options (in priority order): (1) Configure Cloud Build to publish build results to a GCP Pub/Sub topic.\n    Create a GHA workflow cloud-build-status.yml that subscribes via\n    Cloud Build webhook (or polls the Cloud Build API) and fires Telegram\n    on non-SUCCESS status.\n(2) Alternative (simpler): Add a polling step in cloud-build-router.yml\n    after each trigger — poll gcloud builds list --filter=\"id=$BUILD_ID\"\n    every 30s until COMPLETE or FAILURE, then send Telegram.\nPreferred: option (2) is simpler, no new GCP infra needed. Poll timeout: max 60 min, max 120 poll iterations. On timeout:\n    Telegram \"Build status unknown after 60 min — check manually: $BUILD_URL\"\nTelegram format (human-readable, semver not SHA):\n    \"Cloud Build FAILED\\nRepo: $REPO v$VERSION\\nBranch: $BRANCH\\nBuild: $BUILD_URL\"\nUpdate diagram: add tg_cloud_build_fail connections\
-    \ from build nodes. Test: introduce a deliberate Docker build failure, verify alert fires with version in message.\n", status: done}
-- {id: add-major-bump-approval-handler, content: "MAJOR bump creates a GitHub Issue and fires Telegram but there is no workflow listening for human /approve or /reject. This means MAJOR bumps are permanently blocked. Fix: Create .github/workflows/major-bump-approval.yml in PM:\n  - trigger: issue_comment (created)\n  - filter: issue has label 'major-bump-pending'\n  - AUTHORIZATION CHECK: verify commenter is in the authorized approvers list:\n      if: contains(fromJSON('[\"IggyIkenna\"]'), github.event.comment.user.login)\n      Reject with comment \"Only authorized maintainers can approve major bumps\" if actor is not in list.\n      This prevents bots, external contributors, or unauthorized team members from approving breaking changes.\n  - if comment body starts with '/approve':\n      update manifest.versions[$REPO] to MAJOR version,\n      dispatch version-updated to $REPO,\n      close issue, Telegram \"MAJOR bump approved: $REPO v$OLD_VERSION -> v$NEW_VERSION\"\n  - if comment body\
-    \ starts with '/reject':\n      close issue with 'rejected' label,\n      Telegram \"MAJOR bump rejected: $REPO — staying at v$CURRENT\"\nTest: manually trigger request-major-bump.yml, comment /approve from authorized user, verify version promoted and issue closed. Test with unauthorized user — verify rejection. Acceptance: only authorized humans can approve breaking version changes.\n", status: done}
-- {id: add-conflict-agent-timeout, content: "conflict-resolution-agent.yml has no timeout. If Claude API is degraded the job hangs indefinitely, team sees \"working on it...\" forever. Fix: (1) Add 'timeout-minutes: 30' to the conflict-resolution-agent job. (2) Add a final step with 'if: failure()' that sends Telegram:\n    \"Conflict agent timed out on $REPO v$VERSION — resolve manually. Branch:\n     $BRANCH. Conflicting files: $FILES_LIST.\"\n(3) Set the Telegram message from step (a) (the \"working\" message) to\n    include an ETA: \"agent active, ~10 min, will notify when done.\"\nTest: mock a long-running agent by adding sleep 2000 in a test workflow, verify timeout fires and Telegram message is sent.\n", status: done}
-- {id: add-overnight-t0-escalation, content: "Overnight orchestrator currently sends one Telegram summary at end. If T0 (core libraries) has any failures, the whole system may be running against broken interfaces — but this isn't surfaced until someone reads the morning message. Fix in overnight-agent-orchestrator.yml: (1) After T0 tier completes, check if any T0 repos failed. (2) If any T0 failures: immediately send a PRIORITY Telegram alert\n    (separate from morning summary): \"T0 FAILURE — overnight audit.\n     Core libraries failing: $FAILING_REPOS (with versions). T1-T3 results unreliable.\n     Immediate action required.\"\n(3) Open a GitHub Issue in PM: \"Overnight T0 failure: $DATE — $REPOS\"\n    with label 'critical-audit-failure'.\n(4) Morning summary includes per-repo version info (see enrich-telegram-with-versions). Test: force a T0 repo to fail in overnight audit (set exit 1 in test job), verify priority Telegram fires before T1 runs, and message includes repo version numbers.\n",
-  status: done}
-- {id: add-staging-to-main-idempotency, content: "If staging-to-main.yml fires twice (GitHub API hiccup, manual re-run, conflict-resolution-merged retrigger), it dispatches staging-unlocked to 65 repos twice and attempts to merge staging→main twice. The second merge may succeed on already-merged state or create duplicate PRs. Fix: (1) At the start of staging-to-main.yml, before any mutation:\n    Read staging_commits from manifest.\n    Read main_commits.history[0].commits.\n    If staging_commits is a subset of main_commits.history[0].commits: exit 0 early.\n    \"Staging already promoted — skipping duplicate run.\"\n(2) Before creating the merge PR, check if a staging→main PR already exists:\n    EXISTING=$(gh pr list --base main --head staging --json number --jq '.[0].number')\n    If exists: reuse it instead of creating a new one.\nAcceptance: running staging-to-main.yml twice with the same staging state produces exactly one promotion.\n", status: done}
-- {id: add-conflict-agent-dedup, content: "If merge-conflict-detected fires twice for the same conflict (dispatch retry, manual re-trigger), the conflict agent opens TWO resolution PRs for the same conflict. Both contain Claude-generated code. Human must close one. Fix: (1) In conflict-resolution-agent.yml, before creating a resolution branch:\n    Check if branch auto-resolve/$SOURCE-to-$TARGET-* already exists:\n      git ls-remote --heads origin \"auto-resolve/$SOURCE-to-$TARGET-*\" | head -1\n    If exists: update the existing branch + PR instead of creating a new one.\n(2) Before opening PR, check if a resolution PR already exists:\n    gh pr list --head \"auto-resolve/$SOURCE-to-$TARGET\" --json number\nAcceptance: duplicate conflict dispatches produce exactly one resolution PR.\n", status: done}
-- {id: add-three-tier-bot-api-keys, content: "All agent workflows share a single ANTHROPIC_API_KEY. When overnight audit (65 repos in parallel) exhausts the rate limit it blocks conflict-resolution agent — which the team needs immediately to unblock a stuck staging merge. Three bot tiers map cleanly to three separate Anthropic project keys:\n  ANTHROPIC_API_KEY_CICD      — conflict-resolution-agent.yml,\n                                 rules-alignment-agent.yml, codex-sync-agent.yml,\n                                 semver-agent.yml. Critical path, low volume,\n                                 must never be rate-limited by batch work.\n  ANTHROPIC_API_KEY_SYSHEALTH — overnight-agent-orchestrator.yml,\n                                 agent-audit.yml (all 65 repos via propagate),\n                                 claude-api-health-monitor.yml,\n                                 cassette-drift-check.yml. Scheduled/batch.\n                                 Rate limits here are deferrable; conflicts\
-    \ are not.\n  ANTHROPIC_API_KEY_ANALYSIS  — FUTURE: trading-quality-agent, performance-analysis,\n                                 scenario-analysis. Separate Anthropic project so\n                                 analysis quota never touches CI/CD or health.\n                                 Not wired yet — placeholder secret only.\nFix: (1) Create and register the three GH secrets (PM repo + propagate SYSHEALTH to\n    all 65 service repos via propagate-github-secrets.sh).\n(2) Update each workflow env block with fallback to shared key:\n      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_CICD\n                            || secrets.ANTHROPIC_API_KEY }}\n    Fallback enables gradual rollout without breaking existing workflows.\n(3) Document in docs/repo-management/agent-api-keys.md:\n    tier → key → workflows → quota budget → rotation cadence.\n(4) Update diagram annotations (done: overnight=SYSHEALTH, conflict=CICD). (5) POST-ROLLOUT: after confirming all tier-specific keys work\
-    \ (verify via\n    claude-api-health-monitor.yml for each tier), REMOVE the fallback:\n      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_CICD }}\n    The fallback masks key misconfiguration — if CICD key is wrong, it silently falls back to the shared key,\n    defeating isolation. classify_claude_error (add-api-failure-classification) catches 401s explicitly, so\n    the fallback is unnecessary once keys are validated. Target: remove within 1 week of rollout.\nAcceptance: overnight audit rate-limit does not affect conflict-resolution or semver agents in the same time window. No silent key fallbacks after rollout is confirmed.\n", status: done}
-- {id: add-api-failure-classification, content: "All agent workflows treat any Claude API error identically — job fails, timeout fires, no context. Different error modes need different responses:\n  401/403 → key invalid/expired: NEVER retry. Open GH Issue\n            \"ANTHROPIC_API_KEY_<TIER> invalid — rotate immediately.\"\n            Telegram \"Auth error — {tier} key needs rotation.\"\n  429/529 → rate limited / model overloaded: retry 3x with 15s/60s/300s\n            backoff. If still failing after 3 attempts: graceful skip +\n            Telegram \"{tier} rate limited — deferred to next cycle.\"\n  503 / connection refused → Claude infra down: no retry. Telegram\n            \"Claude unreachable — check status.anthropic.com. {tier}\n            agents skipped; will retry at next scheduled run.\" Exit 0.\n  Timeout → job exceeded timeout-minutes: Telegram with repo + version + branch\n            + CLAUDE_ERROR_CLASS=timeout. Exit 1.\n  Unknown → Telegram with first 200 chars of\
-    \ stderr for triage.\nFix: (1) Create unified-trading-pm/scripts/claude-helpers.sh:\n    Function classify_claude_error(stderr_file, tier, repo, branch):\n      - Grep stderr for \"401\"/\"403\"/\"unauthorized\", \"429\"/\"529\"/\"rate\",\n        \"503\"/\"unavailable\"/\"connection refused\", to set CLAUDE_ERROR_CLASS.\n      - Export CLAUDE_ERROR_CLASS + CLAUDE_ERROR_MSG.\n      - Send typed Telegram alert (emoji + class + tier + repo + branch).\n      - Return 0 on service_down; 1 on auth_error; 2 on rate_limited.\n(2) Create composite action .github/actions/handle-claude-api-error/action.yml:\n    Inputs: stderr_path, tier (cicd|syshealth|analysis), agent_name.\n    Calls classify_claude_error; outputs error_type + should_retry + retry_delay_s.\n(3) Source claude-helpers.sh in all CICD and SYSHEALTH agent workflows.\n    agent-audit.yml retry loop already exists — just classify before re-dispatch.\n(4) conflict-resolution-agent.yml already has timeout-minutes: 30;\n    add 'if:\
-    \ failure()' final step calling classify_claude_error with\n    CLAUDE_ERROR_CLASS=timeout.\nTest: run workflow with invalid key (wrong last char) — verify exactly one Telegram \"Auth error — cicd key needs rotation\" fires, job exits, no retry.\n", status: done}
-- {id: add-claude-api-health-preflight, content: "Agents begin cloning repos and installing Claude CLI before discovering the API is unreachable — wasting 3-5 min per job and producing uninformative failures. Two-layer fix:\nLayer A — Per-agent pre-flight (first step in every agent workflow):\n  env:\n    ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_CICD || secrets.ANTHROPIC_API_KEY }}\n  run: |\n    timeout 30 claude --print \"ping: respond with OK\" 2>preflight_err.txt \\\n      | grep -qi \"ok\" && echo \"Claude API: healthy\" \\\n      || { source unified-trading-pm/scripts/claude-helpers.sh\n           classify_claude_error preflight_err.txt cicd $(basename $PWD) preflight\n           exit $?; }\n  On service_down (exit 0): skip gracefully, no pipeline failure.\n  On key_invalid (exit 1): alert + fail job so key rotation is visible.\n  Overnight orchestrator: runs health check ONCE before dispatching T0\n  to prevent 65 agent-audit.yml jobs all failing silently. On failure:\n  Telegram\
-    \ \"Overnight audit SKIPPED — Claude unreachable at <UTC>.\n  Next cron: 01:00 UTC. No T0-T3 runs fired.\" and exit 0.\n\nLayer B — Dedicated health monitor cron (state-transition alerts only):\n  File: .github/workflows/claude-api-health-monitor.yml\n  Schedule: \"*/15 * * * *\"  (every 15 min, uses ANTHROPIC_API_KEY_SYSHEALTH)\n  timeout-minutes: 2\n  Logic:\n    - Run 30s preflight ping.\n    - Read previous state from GH Actions cache key \"claude-health-state\".\n    - If state CHANGED (healthy→degraded or degraded→healthy): send Telegram.\n      \"Claude API degraded at 14:30 UTC — 429 on SYSHEALTH key.\" or\n      \"Claude API recovered at 14:45 UTC.\"\n    - Do NOT send Telegram if state unchanged (no spam every 15 min).\n    - Write new state to cache.\n  This gives proactive alerting BEFORE the overnight cron fires.\n  Also covers: can Claude itself be pinged to check for issues? Yes —\n  this workflow IS that check, running independently of all agent work.\nDiagram: api_health_preflight\
-    \ + tg_api_key_failure nodes already added (2026-03-13). Annotations updated to show tier key assignments. Acceptance: Anthropic incident → no agent wastes >30s, clear Telegram fires once, all SYSHEALTH skips gracefully, CICD agents unaffected.\n", status: done}
-- {id: add-conflict-plan-context, content: "conflict-resolution-agent.yml currently reads AGENTS.md + plans in its prompt. Strengthen this to ensure plans are the PRIMARY context: (1) In the agent prompt, add explicit instruction: \"Read ALL files in\n    active plans/ directory. The active plans define WHAT should be\n    implemented and WHY. When resolving a conflict, determine which\n    resolution is consistent with the relevant active plan's intent.\n    If the conflict touches a planned feature, preserve the plan's\n    design. Reference the plan in your PR description.\"\n(2) Clone PM repo in agent workflow (already done), ensure\n    plans/active/*.md are read in the prompt construction step.\n(3) Add plan context to the PR body template: \"Resolution guided by\n    plan: [plan-name] §[relevant-todo-id]\"\n(4) Before opening a resolution PR, check if a resolution branch already exists (see add-conflict-agent-dedup). This is the core of plan-driven conflict resolution — the plan is\
-    \ the tie-breaker when two changes conflict.\n", status: done}
-- {id: add-tg-plan-approval-gate, content: "Currently there is no Telegram notification when a new plan is created or updated in PM active plans/. Human review of plans happens out-of-band. Fix: add a new step to rules-alignment-agent.yml or create a separate plan-notification.yml that fires when plans/active/*.md changes: (1) Trigger: push to PM main touching plans/active/*.md. (2) Read the changed plan file, extract name + overview + first 3 todos. (3) Send Telegram: \"Plan ready for review: [plan-name]\\n\n    Overview: [first 200 chars]\\nTodos: [count] pending\\n\n    Review: [link to file on GitHub]\\nApprove with: /approve-plan [name]\"\n(4) Human replies /approve-plan [name] → plan-approval.yml marks plan\n    status: approved in frontmatter. Agents check status: approved before\n    implementing plan todos.\nENFORCEMENT (not advisory): (5) Plans start as status: active (not approved). All agent workflows that implement\n    plan todos MUST check plan status before acting:\n    \
-    \  grep -q 'status: approved' plan.md || { echo \"Plan not approved — skipping\"; exit 0; }\n    Affected: conflict-resolution-agent.yml, rules-alignment-agent.yml (implementation steps only — notification\n    steps still fire on active plans so the human gets the review request).\n(6) Alternative (stronger): plans start as status: draft. The PM push trigger for agent cascades only fires\n    if at least one plan has status: approved. Draft plans are invisible to implementation agents.\nThis closes the governance loop: no agent starts implementing until human has explicitly reviewed the plan.\n", status: done}
-- {id: add-tg-merge-approval-gate, content: "Second human gate: all agent-opened PRs currently can auto-merge once quality gates pass. For conflict resolution PRs, humans must review. But for other agent PRs (codex sync, rules alignment, semver bumps) there is no explicit approval gate. Fix: (1) For conflict-resolution PRs: tg_conflict_done already fires with PR\n    URL. Explicitly note in the Telegram message: \"PR will NOT auto-merge.\n    Review and approve in GitHub.\"\n(2) For other agent PRs (codex-sync-agent, rules-alignment-agent): add a\n    Telegram message on PR creation: \"Agent PR opened: [title]\\n\n    [PR URL]\\nApprove merge with: /approve-merge [PR#]\"\n(3) Implement /approve-merge handler (PR comment workflow) that sets\n    auto-merge on the PR when human sends this.\n(4) AUTHORIZATION: /approve-merge handler must validate commenter:\n    if: contains(fromJSON('[\"IggyIkenna\"]'), github.event.comment.user.login)\n    Same authorized approvers list as add-major-bump-approval-handler.\n\
-    Net effect: two mandatory human touchpoints for any agent-driven change:\n  Gate 1: /approve-plan [name] — before implementation starts\n  Gate 2: review PR in GitHub or /approve-merge [PR#] — before code lands\n", status: done}
-- {id: enrich-staging-commits-with-semver, content: "staging_commits and main_commits currently store raw SHAs only — not human-readable. Nobody can glance at the manifest and know what version was tested or promoted without cross-referencing staging_versions. Fix: (1) Change staging_commits structure from:\n    \"staging_commits\": {\"execution-service\": \"4c0f38a...\"}\n  to:\n    \"staging_commits\": {\n      \"execution-service\": {\n        \"version\": \"0.1.23\",\n        \"sha\": \"4c0f38adef...\",\n        \"branch\": \"feat/defi-rollout\"\n      }\n    }\n(2) Change main_commits.history entries from:\n    {\"promoted_at\": \"...\", \"commits\": {\"repo\": \"sha\"}}\n  to:\n    {\"promoted_at\": \"...\", \"promotions\": {\n      \"execution-service\": {\n        \"from\": \"0.1.22\",\n        \"to\": \"0.1.23\",\n        \"sha\": \"4c0f38a...\",\n        \"branch\": \"feat/defi-rollout\"\n      }\n    }}\n  This makes every promotion record immediately readable: \"execution-service\
-    \ went from 0.1.22 to 0.1.23 via\n  feat/defi-rollout at 08:45 UTC.\"\n(3) Update all workflows that read/write staging_commits and main_commits:\n    sit-gate.yml (writes staging_commits), staging-to-main.yml (reads staging_commits, writes main_commits),\n    sit-unlock.yml (clears staging_commits).\n(4) Update validate-manifest-json.sh to validate new structure. Acceptance: git log of workspace-manifest.json is human-readable without SHA cross-referencing.\n", status: done}
-- {id: enrich-telegram-with-versions, content: "Telegram messages currently show tier-level pass/fail (overnight), \"SIT running\" (lock), or repo+branch (conflicts) — but never the VERSION being tested, promoted, or failing. Operators must check GHA logs to know which version broke. Fix: (1) Overnight summary — change from:\n    \"T0 (libraries): success\"\n  to:\n    \"T0 (libraries): success\n     unified-trading-library v0.2.1\n     unified-config-interface v0.1.56\"\n    Include version for every repo tested, with pass/fail indicator per repo.\n(2) SIT lock alert — change from:\n    \"SIT locked: staging under test\"\n  to:\n    \"SIT locked: testing execution-service v0.1.23 + 2 deps\"\n(3) Conflict alert — change from:\n    \"Conflict detected: $REPO staging→main\"\n  to:\n    \"Conflict detected: $REPO v$STAGING_VERSION → main (v$MAIN_VERSION)\"\n(4) SIT failure — change from:\n    \"SIT failed — staging unlocked\"\n  to:\n    \"SIT failed: execution-service v0.1.23 — staging unlocked,\
-    \ revert needed\"\n(5) Promotion — add new message:\n    \"Promoted to main: execution-service v0.1.22 → v0.1.23 (feat/defi-rollout)\"\nSource version from enriched staging_commits (see enrich-staging-commits-with-semver). Acceptance: every Telegram message includes human-readable semver, never raw SHAs.\n", status: pending}
-- {id: populate-deployed-versions, content: "The manifest has deployed_versions: {dev: {}, staging: {}, prod: {}} but it is NEVER populated. Cloud Build pushes images but never writes back which version is actually running where. The deployment UI cannot show \"what's running in prod right now\" from the manifest — it has to query Artifact Registry directly. Fix: (1) In cloud-build-router.yml, after Cloud Build succeeds (poll returns SUCCESS), write back to manifest:\n    \"deployed_versions\": {\n      \"$ENV\": {\n        \"$REPO\": {\n          \"version\": \"$VERSION\",\n          \"image_tag\": \"$IMAGE_TAG\",\n          \"deployed_at\": \"2026-03-13T09:00:00Z\",\n          \"build_id\": \"$BUILD_ID\"\n        }\n      }\n    }\n    Commit with [skip ci] to avoid triggering cascades.\n(2) In deployment-service/monitor.py: read deployed_versions from manifest as secondary source,\n    with Cloud Run / Artifact Registry as primary (for live state).\n(3) In deployment-ui BuildSelector:\
-    \ show deployed_versions per env with visual badges (see\n    deployment-ui-multi-env-selector).\nAcceptance: manifest always reflects what is deployed where, with semver tags (not SHAs).\n", status: done}
-- {id: deployment-ui-multi-env-selector, content: "BuildSelector.tsx currently reads only manifest.versions (main/prod). Operators cannot see or select staging or feature branch versions from the deployment UI — they must know the exact image tag. Fix: (1) Extend BuildSelector to read from three sources:\n    - manifest.versions (main/prod) — green badge\n    - manifest.staging_versions (staging) — yellow badge\n    - manifest.deployed_versions.dev (feature branches) — blue badge\n    Dropdown groups: \"Production (main)\" | \"Staging (under test)\" | \"Development (feature branches)\"\n(2) Each entry shows: \"$REPO v$VERSION ($BRANCH)\" with environment badge.\n    Example: \"execution-service v0.1.23-staging (staging)\" [yellow]\n    Example: \"execution-service v0.1.23-feat-defi-rollout (dev)\" [blue]\n(3) DeploymentHistory.tsx: add \"from_version\" column alongside existing \"tag\" column.\n    Show: \"v0.1.22 → v0.1.23\" instead of just \"0.1.23\".\n(4) ServiceVersion in deployment-service/monitor.py\
-    \ already has image_tag (semver) + git_commit (SHA).\n    Surface both in API response, but UI shows only semver by default with SHA as tooltip/expandable detail.\nAcceptance: operator can see all versions across all environments in one dropdown, select any for deployment, and never needs to type or remember a SHA.\n", status: pending}
-- {id: human-readable-deployment-id, content: "DeploymentState.deployment_id is currently a generated UUID — not human-readable. When operators discuss deployments (\"roll back deploy abc123\"), nobody knows what abc123 refers to without looking it up. Fix: (1) Change deployment_id format to:\n    deploy-{service}-{version}-{env}-{sequence}\n    Example: deploy-execution-service-0.1.23-prod-1\n    If someone retries: deploy-execution-service-0.1.23-prod-2\n    The sequence number makes retries visible and distinguishable without reading UUIDs.\n(2) In deployment-service, update deployment_id generation:\n    Generate sequence by counting existing deployments for same service+version+env in GCS.\n(3) In DeploymentHistory.tsx, deployment_id is now directly meaningful — no tooltip or lookup needed. (4) Telegram deploy notifications use this ID: \"Deployed: deploy-execution-service-0.1.23-prod-1\" (5) GCS path becomes: gs://{bucket}/deployments/deploy-execution-service-0.1.23-prod-1/state.json\n\
-    \    (still unique, but human-navigable in GCS console).\nAcceptance: every deployment ID is self-describing — service, version, environment, and retry count visible at a glance.\n", status: pending}
-- {id: enforce-branch-slug-convention, content: "Cloud Build tags use {semver}-{branch-slug} for Docker images, but branch names are free-form. Long or special-character branch names produce unreadable image tags (e.g., 0.1.23-feat-my-cool-thing-that-is-really- long-and-has-special-chars). Fix: (1) In quickmerge.sh, validate feature branch names before creating PRs:\n    BRANCH_SLUG=$(echo \"$BRANCH\" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-30)\n    If original != slug: warn \"Branch name will be slugified to: $BRANCH_SLUG\"\n(2) Document convention in docs/repo-management/branch-naming.md:\n    - Max 30 chars after feat/ or fix/ prefix\n    - Lowercase alphanumeric + hyphens only\n    - Examples: feat/defi-rollout, fix/auth-timeout, chore/deps-update\n(3) In cloud-build-router.yml, apply the same slugification to IMAGE_TAG construction\n    (defensive — even if branch name is long, tag stays readable).\nAcceptance: all Docker image tags are human-readable and under\
-    \ 50 chars total.\n", status: done}
-- {id: test-p0-remediation, content: "E2E test each P0 fix using admin sync scripts or workflow_dispatch: (a) Rollback: Force a SIT failure using admin script (push known-bad commit to staging). Verify GH Issue opened WITH SEMVER in title. Verify staging unlocked. (b) Cascade cycle: Edit workspace-manifest.json on a test branch to add\n    a cycle (repo A → B → A). Run validate-manifest-dag.py, verify it\n    exits non-zero with cycle description.\n(c) SHA pinning: Push a [skip ci] constraint commit during a running SIT\n    (using admin merge script). Verify staging_commits captures the full\n    SHA set including the constraint commit, or that promotion is deferred.\n(d) Semver trigger: After fix, push feat: to a T2 staging. Verify version\n    bump fires on staging push, not on subsequent main push. Verify only\n    one bump (not two).\n(e) Manifest concurrency: Run sit-gate.yml and staging-to-main.yml via workflow_dispatch simultaneously.\n    Verify serialization via concurrency group\
-    \ — no lost writes.\n(f) Heredoc exit: On test branch, introduce a deliberate KeyError in sit-gate.yml heredoc.\n    Verify workflow fails immediately, manifest is not committed corrupted.\n(g) Dispatch retry: Temporarily disable webhook on a test repo. Verify dispatch_with_retry fires 3x,\n    then Telegram alert.\n(h) Conflict retry-promotion: Create merge conflict, let agent resolve, merge resolution PR.\n    Verify staging-to-main retriggers automatically.\nAcceptance: all 8 scenarios behave correctly with no manual recovery needed.\n", status: pending}
-- {id: test-plan-cascade, content: "Split into FAST PATH (scripted, deterministic) and SLOW PATH (AI-gated, external deps).\nFAST PATH (run in PR CI — no external deps): (1) Validate plan YAML structure: frontmatter has name, overview, status, todos. (2) Validate manifest DAG: no cycles, all repos referenced exist. (3) Validate dispatch payloads: mock dispatch_with_retry, verify correct event_type + payload shape. (4) Validate Telegram message format: template renders with version, not SHA. (5) Validate staging_commits enriched structure: version + sha + branch present. (6) Validate deployment_id format: matches deploy-{service}-{version}-{env}-{seq} pattern.\nSLOW PATH (run in overnight orchestrator or manual workflow_dispatch — requires Claude API + GitHub + Telegram): (1) Create a new test plan in plans/active/ (minimal, 1 todo). (2) Verify: push to PM main → manifest-sync fires → codex updated. (3) Verify: rules-alignment-agent fires → cursor rule created for the new plan constraint.\
-    \ (4) Verify: Telegram plan-ready notification received with correct content. (5) Send /approve-plan [test-plan-name] via Telegram → verify plan frontmatter updated to status: approved. (6) Create a deliberate merge conflict in a test repo. (7) Verify: conflict-resolution-agent fires, reads active plans, references the test plan in its resolution\n    PR body.\n(8) Verify: tg_merge_ready notification fires with PR URL. (9) Send /approve-merge [PR#] → verify PR auto-merges. Acceptance: fast path runs in <30s with zero external deps. Slow path works end-to-end with exactly two human TG actions.\n", status: pending}
-- {id: test-version-readability, content: 'Verify human-readable versioning end-to-end: (1) Push a feat: commit to staging → verify staging_commits has {version, sha, branch} structure. (2) Trigger SIT → verify Telegram lock message includes "v$VERSION" not raw SHA. (3) SIT passes → verify Telegram promotion message shows "v0.1.22 → v0.1.23 (feat/branch)". (4) Cloud Build succeeds → verify deployed_versions in manifest is populated with semver. (5) Open deployment UI → verify BuildSelector shows all 3 environments with badges. (6) Verify deployment_id format: deploy-{service}-{version}-{env}-{seq}. (7) Verify Docker image tag is under 50 chars and human-readable. (8) Verify main_commits.history entry has from/to versions, not just SHAs. Acceptance: a non-engineer can read every version surface and understand what version is where.
+        ", status: pending, blocks: fix-semver-agent-template-staging-trigger (full_autonomous_agent_ci) }
+  - {
+      id: add-sit-rollback,
+      content:
+        "When SIT fails, sit-unlock.yml clears the lock but leaves broken code in staging with no automated recovery
+        signal. Add: (1) In sit-unlock.yml, after clearing the lock, create a GH Issue with human-readable
+        title:\n    \"SIT failed: $REPO v$VERSION needs fix or revert\" (semver, not SHA)\n    with label 'sit-failure'
+        and assignee the last PR author.\n(2) Optionally: open a revert PR to last_known_good_sha (the SHA
+        before\n    the failing commit set). Record last_known_good_sha in\n    staging_status when sit-gate.yml
+        fires.\n(3) Update diagram: add sit_rollback_issue node in gha_pm, connection\n    from sit_unlock_fail →
+        sit_rollback_issue.\nTest: force a SIT failure via admin sync, verify issue is opened with semver in title.
+        Acceptance: engineers know immediately what broke (by version, not SHA) and can act without checking GHA logs
+        manually.\n",
+      status: done,
+    }
+  - {
+      id: add-cascade-cycle-guard,
+      content:
+        "update-repo-version.yml dispatches dependency-update to all direct dependents per manifest DAG. A cycle (repo A
+        depends B depends A) causes infinite dispatch. Fix: (1) Before dispatching in update-repo-version.yml, run a DFS
+        cycle check on the dependency subgraph for the triggering repo. (2) If cycle detected: send Telegram alert with
+        human-readable context:\n    \"Dependency cycle detected: $REPO_A v$VER_A -> $REPO_B v$VER_B -> $REPO_A —
+        cascade aborted.\"\n    and exit 1 (do NOT dispatch).\n(3) Add cycle-check to validate-alignment.py or a
+        new\n    validate-manifest-dag.py script, run in quality-gates.sh.\nTest: introduce a deliberate cycle in a test
+        manifest branch, verify cascade aborts and Telegram fires. Acceptance: no infinite dispatch loops possible.\n",
+      status: done,
+    }
+  - {
+      id: fix-sha-pinning-toctou,
+      content:
+        "Current flow: staging push → 10-min debounce → sit-gate.yml fires → records staging_commits SHAs. But if a
+        [skip ci] constraint commit lands during the debounce, it's in staging but not in the tested SHA set.
+        staging_to_main promotes the full current staging (including untested [skip ci] commits), creating a gap between
+        tested and deployed state. Fix: (1) Record staging_commits at END of smoke-test-gate.yml
+        debounce\n    (immediately before dispatching to SIT), not when sit-gate.yml fires.\n    This captures the full
+        staging state at the moment testing begins.\n    Record BOTH sha AND version for each repo (see
+        enrich-staging-commits-with-semver).\n(2) In staging-to-main.yml, verify that current staging HEAD is
+        within\n    the tested SHA set (or is a [skip ci] descendant of a tested SHA).\n    If not, re-trigger SIT
+        before promoting.\nTest: push a [skip ci] commit during SIT run, verify it gets included in the next SIT set or
+        blocked from promotion.\n",
+      status: done,
+    }
+  - { id: wire-conflict-resolution-retry-promotion, content: "DEADLOCK: staging-to-main.yml detects a merge conflict →
+        dispatches merge-conflict-detected → conflict agent opens a resolution PR → human approves → PR merges. But then
+        NOBODY retriggers staging-to-main.yml. The promotion is stuck — the workflow that detected the conflict already
+        exited, and no workflow re-fires it. Fix: (1) In conflict-resolution-agent.yml, after the resolution PR is
+        created, add metadata to the PR body:\n    \"<!-- AUTO_RETRY_PROMOTION: true -->\"\n(2) Create
+        .github/workflows/conflict-resolution-merged.yml:\n    trigger: pull_request (closed, merged) on branches
+        matching auto-resolve/*\n    Steps: if PR body contains AUTO_RETRY_PROMOTION marker:\n      - Wait 30s for
+        GitHub state to settle\n      - Re-dispatch staging-validated to PM (retries the promotion)\n      - Telegram:
+        \"Conflict resolved for $REPO v$VERSION — retrying staging→main promotion\"\n(3) Add idempotency:
+        staging-to-main.yml checks if current\
+        \ staging SHAs have already been promoted\n    (compare staging_commits to main_commits). If already promoted,
+        exit early — no duplicate promotion.\nTest: create a merge conflict, let agent resolve it, merge resolution PR —
+        verify staging-to-main fires automatically. Acceptance: no manual intervention needed after conflict resolution
+        PR merges.\n", status: done }
+  - {
+      id: verify-staging-lock-gate-all-repos,
+      content:
+        "The SHA-pinning TOCTOU fix (fix-sha-pinning-toctou) depends on staging-lock-gate being a REQUIRED status check
+        on every repo's staging branch protection rules. If any repo is missing it, commits slip through during SIT.
+        Fix: (1) Script: scripts/repo-management/verify-staging-lock-gate.sh\n    For each repo in
+        workspace-manifest.json with arch_tier T0-T3:\n      gh api
+        repos/$OWNER/$REPO/branches/staging/protection/required_status_checks\n      Verify \"staging-lock-gate\" is in
+        the contexts list.\n      If missing: log and optionally add via gh api PUT.\n(2) Add to quality-gates.sh as a
+        manifest validation step. (3) Run in overnight orchestrator as a pre-check. Acceptance: 100% of repos with
+        staging branch have staging-lock-gate as required check.\n",
+      status: done,
+    }
+  - { id: add-dispatch-retry-with-alerting, content: "SILENT FAILURE: All repository_dispatch calls across the pipeline
+        are fire-and-forget (curl with || echo WARNING). If a dispatch fails (archived repo, network blip, GitHub API
+        degradation), the target repo never receives the event. Examples: staging-locked dispatch to 65 repos — if 3
+        fail, those repos never learn staging is locked. staging-unlocked — if 5 fail, those repos stay locked forever.
+        dependency-update — if 2 of 10 dependents miss it, they build against stale deps. Fix: (1) Create
+        unified-trading-pm/scripts/dispatch-helpers.sh:\n    Function dispatch_with_retry(repo, event_type,
+        payload):\n      for attempt in 1 2 3; do\n        HTTP=$(curl -s -o /dev/null -w \"%{http_code}\" -X POST
+        \\\n          \"https://api.github.com/repos/$OWNER/$repo/dispatches\" ...)\n        [[ \"$HTTP\" == \"204\" ]]
+        && return 0\n        sleep $((attempt * 5))\n      done\n      send_telegram \"Dispatch $event_type to $repo
+        failed after 3 attempts\"\n\
+        \      return 1\n    Function dispatch_to_all(event_type, payload, repo_list):\n      FAILED=()\n      for repo
+        in $repo_list; do\n        dispatch_with_retry \"$repo\" \"$event_type\" \"$payload\" ||
+        FAILED+=(\"$repo\")\n      done\n      if [ ${#FAILED[@]} -gt 0 ]; then\n        send_telegram \"Dispatch
+        $event_type failed for: ${FAILED[*]}\"\n      fi\n(2) Source dispatch-helpers.sh in: sit-gate.yml,
+        sit-unlock.yml, staging-to-main.yml, update-repo-version.yml,\n    manifest-sync.yml,
+        overnight-agent-orchestrator.yml.\n(3) Replace all bare curl dispatch calls with dispatch_with_retry. Test:
+        temporarily block a test repo's webhook — verify 3 retries fire, then Telegram alert. Acceptance: no silent
+        dispatch failures possible.\n", status: done }
+  - { id: add-sit-debounce-starvation-cap, content: "If PRs keep merging to staging every 5 minutes during business
+        hours, the 10-min debounce in smoke-test-gate.yml resets each time and SIT NEVER runs. Staging stays locked
+        indefinitely — a liveness failure. Fix: (1) In smoke-test-gate.yml, add a max-debounce counter.\n    If debounce
+        has been reset more than 3 times consecutively, fire SIT immediately regardless.\n    Implementation: use GH
+        Actions cache key \"debounce-reset-count\" — increment on each cancellation,\n    reset to 0 when SIT actually
+        fires.\n(2) Alternative (simpler): use a fixed window instead of rolling debounce.\n    \"Run SIT at most every
+        20 min. If staging has new commits since last SIT, fire immediately after 20-min\n    cooldown expires.\"\n(3)
+        Telegram alert when starvation cap triggers: \"SIT debounce capped at 3 resets — forcing SIT run
+        for\n    staging HEAD $VERSION\" (version, not SHA).\nAcceptance: SIT always runs within 30 min of first staging
+        push, regardless\
+        \ of subsequent push frequency.\n", status: pending }
+  - { id: add-manifest-json-validation, content: "If a manifest-mutating workflow writes corrupted JSON (partial write,
+        race condition, Python exception), there is no automated recovery. The corrupted manifest gets committed to git
+        and breaks all downstream workflows. Fix: (1) Create
+        unified-trading-pm/scripts/validate-manifest-json.sh:\n    python3 -c \"\n    import json, sys\n    d =
+        json.load(open('workspace-manifest.json'))\n    required = ['versions', 'repositories', 'staging_status',
+        'staging_versions']\n    missing = [k for k in required if k not in d]\n    if missing:\n        print(f'FATAL:
+        manifest missing keys: {missing}', file=sys.stderr)\n        sys.exit(1)\n    # Validate all versions are valid
+        semver\n    import re\n    semver = re.compile(r'^\\d+\\.\\d+\\.\\d+$')\n    for repo, ver in d.get('versions',
+        {}).items():\n        if not semver.match(ver):\n            print(f'FATAL: {repo} version {ver!r} is not valid
+        semver', file=sys.stderr)\n            sys.exit(1)\n    print('Manifest\
+        \ valid')\n    \" || {\n      git checkout -- workspace-manifest.json\n      echo \"FATAL: manifest corruption
+        detected and auto-reverted\"\n      # Telegram alert\n      exit 1\n    }\n(2) Call validate-manifest-json.sh
+        after EVERY manifest write in all mutating workflows. (3) Add to quality-gates.sh as a pre-check. Test: write
+        invalid JSON to manifest on a test branch — verify validation catches it, reverts, and alerts. Acceptance:
+        corrupted manifest never reaches a committed state.\n", status: done }
+  - { id: add-cloud-build-fail-alert, content: "Cloud Build failures are currently silent — GHA dispatches
+        fire-and-forget. Fix options (in priority order): (1) Configure Cloud Build to publish build results to a GCP
+        Pub/Sub topic.\n    Create a GHA workflow cloud-build-status.yml that subscribes via\n    Cloud Build webhook
+        (or polls the Cloud Build API) and fires Telegram\n    on non-SUCCESS status.\n(2) Alternative (simpler): Add a
+        polling step in cloud-build-router.yml\n    after each trigger — poll gcloud builds list
+        --filter=\"id=$BUILD_ID\"\n    every 30s until COMPLETE or FAILURE, then send Telegram.\nPreferred: option (2)
+        is simpler, no new GCP infra needed. Poll timeout: max 60 min, max 120 poll iterations. On
+        timeout:\n    Telegram \"Build status unknown after 60 min — check manually: $BUILD_URL\"\nTelegram format
+        (human-readable, semver not SHA):\n    \"Cloud Build FAILED\\nRepo: $REPO v$VERSION\\nBranch: $BRANCH\\nBuild:
+        $BUILD_URL\"\nUpdate diagram: add tg_cloud_build_fail connections\
+        \ from build nodes. Test: introduce a deliberate Docker build failure, verify alert fires with version in
+        message.\n", status: done }
+  - { id: add-major-bump-approval-handler, content: "MAJOR bump creates a GitHub Issue and fires Telegram but there is
+        no workflow listening for human /approve or /reject. This means MAJOR bumps are permanently blocked. Fix: Create
+        .github/workflows/major-bump-approval.yml in PM:\n  - trigger: issue_comment (created)\n  - filter: issue has
+        label 'major-bump-pending'\n  - AUTHORIZATION CHECK: verify commenter is in the authorized approvers
+        list:\n      if: contains(fromJSON('[\"IggyIkenna\"]'), github.event.comment.user.login)\n      Reject with
+        comment \"Only authorized maintainers can approve major bumps\" if actor is not in list.\n      This prevents
+        bots, external contributors, or unauthorized team members from approving breaking changes.\n  - if comment body
+        starts with '/approve':\n      update manifest.versions[$REPO] to MAJOR version,\n      dispatch version-updated
+        to $REPO,\n      close issue, Telegram \"MAJOR bump approved: $REPO v$OLD_VERSION -> v$NEW_VERSION\"\n  - if
+        comment body\
+        \ starts with '/reject':\n      close issue with 'rejected' label,\n      Telegram \"MAJOR bump rejected: $REPO
+        — staying at v$CURRENT\"\nTest: manually trigger request-major-bump.yml, comment /approve from authorized user,
+        verify version promoted and issue closed. Test with unauthorized user — verify rejection. Acceptance: only
+        authorized humans can approve breaking version changes.\n", status: done }
+  - {
+      id: add-conflict-agent-timeout,
+      content:
+        "conflict-resolution-agent.yml has no timeout. If Claude API is degraded the job hangs indefinitely, team sees
+        \"working on it...\" forever. Fix: (1) Add 'timeout-minutes: 30' to the conflict-resolution-agent job. (2) Add a
+        final step with 'if: failure()' that sends Telegram:\n    \"Conflict agent timed out on $REPO v$VERSION —
+        resolve manually. Branch:\n     $BRANCH. Conflicting files: $FILES_LIST.\"\n(3) Set the Telegram message from
+        step (a) (the \"working\" message) to\n    include an ETA: \"agent active, ~10 min, will notify when
+        done.\"\nTest: mock a long-running agent by adding sleep 2000 in a test workflow, verify timeout fires and
+        Telegram message is sent.\n",
+      status: done,
+    }
+  - {
+      id: add-overnight-t0-escalation,
+      content:
+        "Overnight orchestrator currently sends one Telegram summary at end. If T0 (core libraries) has any failures,
+        the whole system may be running against broken interfaces — but this isn't surfaced until someone reads the
+        morning message. Fix in overnight-agent-orchestrator.yml: (1) After T0 tier completes, check if any T0 repos
+        failed. (2) If any T0 failures: immediately send a PRIORITY Telegram alert\n    (separate from morning summary):
+        \"T0 FAILURE — overnight audit.\n     Core libraries failing: $FAILING_REPOS (with versions). T1-T3 results
+        unreliable.\n     Immediate action required.\"\n(3) Open a GitHub Issue in PM: \"Overnight T0 failure: $DATE —
+        $REPOS\"\n    with label 'critical-audit-failure'.\n(4) Morning summary includes per-repo version info (see
+        enrich-telegram-with-versions). Test: force a T0 repo to fail in overnight audit (set exit 1 in test job),
+        verify priority Telegram fires before T1 runs, and message includes repo version numbers.\n",
+      status: done,
+    }
+  - {
+      id: add-staging-to-main-idempotency,
+      content:
+        "If staging-to-main.yml fires twice (GitHub API hiccup, manual re-run, conflict-resolution-merged retrigger), it
+        dispatches staging-unlocked to 65 repos twice and attempts to merge staging→main twice. The second merge may
+        succeed on already-merged state or create duplicate PRs. Fix: (1) At the start of staging-to-main.yml, before
+        any mutation:\n    Read staging_commits from manifest.\n    Read main_commits.history[0].commits.\n    If
+        staging_commits is a subset of main_commits.history[0].commits: exit 0 early.\n    \"Staging already promoted —
+        skipping duplicate run.\"\n(2) Before creating the merge PR, check if a staging→main PR already
+        exists:\n    EXISTING=$(gh pr list --base main --head staging --json number --jq '.[0].number')\n    If exists:
+        reuse it instead of creating a new one.\nAcceptance: running staging-to-main.yml twice with the same staging
+        state produces exactly one promotion.\n",
+      status: done,
+    }
+  - {
+      id: add-conflict-agent-dedup,
+      content:
+        "If merge-conflict-detected fires twice for the same conflict (dispatch retry, manual re-trigger), the conflict
+        agent opens TWO resolution PRs for the same conflict. Both contain Claude-generated code. Human must close one.
+        Fix: (1) In conflict-resolution-agent.yml, before creating a resolution branch:\n    Check if branch
+        auto-resolve/$SOURCE-to-$TARGET-* already exists:\n      git ls-remote --heads origin
+        \"auto-resolve/$SOURCE-to-$TARGET-*\" | head -1\n    If exists: update the existing branch + PR instead of
+        creating a new one.\n(2) Before opening PR, check if a resolution PR already exists:\n    gh pr list --head
+        \"auto-resolve/$SOURCE-to-$TARGET\" --json number\nAcceptance: duplicate conflict dispatches produce exactly one
+        resolution PR.\n",
+      status: done,
+    }
+  - { id: add-three-tier-bot-api-keys, content: "All agent workflows share a single ANTHROPIC_API_KEY. When overnight
+        audit (65 repos in parallel) exhausts the rate limit it blocks conflict-resolution agent — which the team needs
+        immediately to unblock a stuck staging merge. Three bot tiers map cleanly to three separate Anthropic project
+        keys:\n  ANTHROPIC_API_KEY_CICD      —
+        conflict-resolution-agent.yml,\n                                 rules-alignment-agent.yml,
+        codex-sync-agent.yml,\n                                 semver-agent.yml. Critical path, low
+        volume,\n                                 must never be rate-limited by batch
+        work.\n  ANTHROPIC_API_KEY_SYSHEALTH —
+        overnight-agent-orchestrator.yml,\n                                 agent-audit.yml (all 65 repos via
+        propagate),\n                                 claude-api-health-monitor.yml,\n                                 cassette-drift-check.yml.
+        Scheduled/batch.\n                                 Rate limits here are deferrable; conflicts\
+        \ are not.\n  ANTHROPIC_API_KEY_ANALYSIS  — FUTURE: trading-quality-agent,
+        performance-analysis,\n                                 scenario-analysis. Separate Anthropic project
+        so\n                                 analysis quota never touches CI/CD or
+        health.\n                                 Not wired yet — placeholder secret only.\nFix: (1) Create and register
+        the three GH secrets (PM repo + propagate SYSHEALTH to\n    all 65 service repos via
+        propagate-github-secrets.sh).\n(2) Update each workflow env block with fallback to shared
+        key:\n      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_CICD\n                            ||
+        secrets.ANTHROPIC_API_KEY }}\n    Fallback enables gradual rollout without breaking existing workflows.\n(3)
+        Document in docs/repo-management/agent-api-keys.md:\n    tier → key → workflows → quota budget → rotation
+        cadence.\n(4) Update diagram annotations (done: overnight=SYSHEALTH, conflict=CICD). (5) POST-ROLLOUT: after
+        confirming all tier-specific keys work\
+        \ (verify via\n    claude-api-health-monitor.yml for each tier), REMOVE the fallback:\n      ANTHROPIC_API_KEY:
+        ${{ secrets.ANTHROPIC_API_KEY_CICD }}\n    The fallback masks key misconfiguration — if CICD key is wrong, it
+        silently falls back to the shared key,\n    defeating isolation. classify_claude_error
+        (add-api-failure-classification) catches 401s explicitly, so\n    the fallback is unnecessary once keys are
+        validated. Target: remove within 1 week of rollout.\nAcceptance: overnight audit rate-limit does not affect
+        conflict-resolution or semver agents in the same time window. No silent key fallbacks after rollout is
+        confirmed.\n", status: done }
+  - { id: add-api-failure-classification, content: "All agent workflows treat any Claude API error identically — job
+        fails, timeout fires, no context. Different error modes need different responses:\n  401/403 → key
+        invalid/expired: NEVER retry. Open GH Issue\n            \"ANTHROPIC_API_KEY_<TIER> invalid — rotate
+        immediately.\"\n            Telegram \"Auth error — {tier} key needs rotation.\"\n  429/529 → rate limited /
+        model overloaded: retry 3x with 15s/60s/300s\n            backoff. If still failing after 3 attempts: graceful
+        skip +\n            Telegram \"{tier} rate limited — deferred to next cycle.\"\n  503 / connection refused →
+        Claude infra down: no retry. Telegram\n            \"Claude unreachable — check status.anthropic.com.
+        {tier}\n            agents skipped; will retry at next scheduled run.\" Exit 0.\n  Timeout → job exceeded
+        timeout-minutes: Telegram with repo + version + branch\n            + CLAUDE_ERROR_CLASS=timeout. Exit
+        1.\n  Unknown → Telegram with first 200 chars of\
+        \ stderr for triage.\nFix: (1) Create unified-trading-pm/scripts/claude-helpers.sh:\n    Function
+        classify_claude_error(stderr_file, tier, repo, branch):\n      - Grep stderr for
+        \"401\"/\"403\"/\"unauthorized\", \"429\"/\"529\"/\"rate\",\n        \"503\"/\"unavailable\"/\"connection
+        refused\", to set CLAUDE_ERROR_CLASS.\n      - Export CLAUDE_ERROR_CLASS + CLAUDE_ERROR_MSG.\n      - Send typed
+        Telegram alert (emoji + class + tier + repo + branch).\n      - Return 0 on service_down; 1 on auth_error; 2 on
+        rate_limited.\n(2) Create composite action .github/actions/handle-claude-api-error/action.yml:\n    Inputs:
+        stderr_path, tier (cicd|syshealth|analysis), agent_name.\n    Calls classify_claude_error; outputs error_type +
+        should_retry + retry_delay_s.\n(3) Source claude-helpers.sh in all CICD and SYSHEALTH agent
+        workflows.\n    agent-audit.yml retry loop already exists — just classify before re-dispatch.\n(4)
+        conflict-resolution-agent.yml already has timeout-minutes: 30;\n    add 'if:\
+        \ failure()' final step calling classify_claude_error with\n    CLAUDE_ERROR_CLASS=timeout.\nTest: run workflow
+        with invalid key (wrong last char) — verify exactly one Telegram \"Auth error — cicd key needs rotation\" fires,
+        job exits, no retry.\n", status: done }
+  - { id: add-claude-api-health-preflight, content: "Agents begin cloning repos and installing Claude CLI before
+        discovering the API is unreachable — wasting 3-5 min per job and producing uninformative failures. Two-layer
+        fix:\nLayer A — Per-agent pre-flight (first step in every agent workflow):\n  env:\n    ANTHROPIC_API_KEY: ${{
+        secrets.ANTHROPIC_API_KEY_CICD || secrets.ANTHROPIC_API_KEY }}\n  run: |\n    timeout 30 claude --print \"ping:
+        respond with OK\" 2>preflight_err.txt \\\n      | grep -qi \"ok\" && echo \"Claude API: healthy\" \\\n      || {
+        source unified-trading-pm/scripts/claude-helpers.sh\n           classify_claude_error preflight_err.txt cicd
+        $(basename $PWD) preflight\n           exit $?; }\n  On service_down (exit 0): skip gracefully, no pipeline
+        failure.\n  On key_invalid (exit 1): alert + fail job so key rotation is visible.\n  Overnight orchestrator:
+        runs health check ONCE before dispatching T0\n  to prevent 65 agent-audit.yml jobs all failing silently. On
+        failure:\n  Telegram\
+        \ \"Overnight audit SKIPPED — Claude unreachable at <UTC>.\n  Next cron: 01:00 UTC. No T0-T3 runs fired.\" and
+        exit 0.\n\nLayer B — Dedicated health monitor cron (state-transition alerts only):\n  File:
+        .github/workflows/claude-api-health-monitor.yml\n  Schedule: \"*/15 * * * *\"  (every 15 min, uses
+        ANTHROPIC_API_KEY_SYSHEALTH)\n  timeout-minutes: 2\n  Logic:\n    - Run 30s preflight ping.\n    - Read previous
+        state from GH Actions cache key \"claude-health-state\".\n    - If state CHANGED (healthy→degraded or
+        degraded→healthy): send Telegram.\n      \"Claude API degraded at 14:30 UTC — 429 on SYSHEALTH key.\"
+        or\n      \"Claude API recovered at 14:45 UTC.\"\n    - Do NOT send Telegram if state unchanged (no spam every
+        15 min).\n    - Write new state to cache.\n  This gives proactive alerting BEFORE the overnight cron
+        fires.\n  Also covers: can Claude itself be pinged to check for issues? Yes —\n  this workflow IS that check,
+        running independently of all agent work.\nDiagram: api_health_preflight\
+        \ + tg_api_key_failure nodes already added (2026-03-13). Annotations updated to show tier key assignments.
+        Acceptance: Anthropic incident → no agent wastes >30s, clear Telegram fires once, all SYSHEALTH skips
+        gracefully, CICD agents unaffected.\n", status: done }
+  - { id: add-conflict-plan-context, content: "conflict-resolution-agent.yml currently reads AGENTS.md + plans in its
+        prompt. Strengthen this to ensure plans are the PRIMARY context: (1) In the agent prompt, add explicit
+        instruction: \"Read ALL files in\n    active plans/ directory. The active plans define WHAT should
+        be\n    implemented and WHY. When resolving a conflict, determine which\n    resolution is consistent with the
+        relevant active plan's intent.\n    If the conflict touches a planned feature, preserve the plan's\n    design.
+        Reference the plan in your PR description.\"\n(2) Clone PM repo in agent workflow (already done),
+        ensure\n    plans/archive/2026_08/*.md are read in the prompt construction step.\n(3) Add plan context to the PR
+        body template: \"Resolution guided by\n    plan: [plan-name] §[relevant-todo-id]\"\n(4) Before opening a
+        resolution PR, check if a resolution branch already exists (see add-conflict-agent-dedup). This is the core of
+        plan-driven conflict resolution — the plan is\
+        \ the tie-breaker when two changes conflict.\n", status: done }
+  - { id: add-tg-plan-approval-gate, content: "Currently there is no Telegram notification when a new plan is created or
+        updated in PM active plans/. Human review of plans happens out-of-band. Fix: add a new step to
+        rules-alignment-agent.yml or create a separate plan-notification.yml that fires when plans/archive/2026_08/*.md
+        changes: (1) Trigger: push to PM main touching plans/archive/2026_08/*.md. (2) Read the changed plan file,
+        extract name + overview + first 3 todos. (3) Send Telegram: \"Plan ready for review:
+        [plan-name]\\n\n    Overview: [first 200 chars]\\nTodos: [count] pending\\n\n    Review: [link to file on
+        GitHub]\\nApprove with: /approve-plan [name]\"\n(4) Human replies /approve-plan [name] → plan-approval.yml marks
+        plan\n    status: approved in frontmatter. Agents check status: approved before\n    implementing plan
+        todos.\nENFORCEMENT (not advisory): (5) Plans start as status: active (not approved). All agent workflows that
+        implement\n    plan todos MUST check plan status before acting:\n    \
+        \  grep -q 'status: approved' plan.md || { echo \"Plan not approved — skipping\"; exit 0; }\n    Affected:
+        conflict-resolution-agent.yml, rules-alignment-agent.yml (implementation steps only — notification\n    steps
+        still fire on active plans so the human gets the review request).\n(6) Alternative (stronger): plans start as
+        status: draft. The PM push trigger for agent cascades only fires\n    if at least one plan has status: approved.
+        Draft plans are invisible to implementation agents.\nThis closes the governance loop: no agent starts
+        implementing until human has explicitly reviewed the plan.\n", status: done }
+  - { id: add-tg-merge-approval-gate, content: "Second human gate: all agent-opened PRs currently can auto-merge once
+        quality gates pass. For conflict resolution PRs, humans must review. But for other agent PRs (codex sync, rules
+        alignment, semver bumps) there is no explicit approval gate. Fix: (1) For conflict-resolution PRs:
+        tg_conflict_done already fires with PR\n    URL. Explicitly note in the Telegram message: \"PR will NOT
+        auto-merge.\n    Review and approve in GitHub.\"\n(2) For other agent PRs (codex-sync-agent,
+        rules-alignment-agent): add a\n    Telegram message on PR creation: \"Agent PR opened: [title]\\n\n    [PR
+        URL]\\nApprove merge with: /approve-merge [PR#]\"\n(3) Implement /approve-merge handler (PR comment workflow)
+        that sets\n    auto-merge on the PR when human sends this.\n(4) AUTHORIZATION: /approve-merge handler must
+        validate commenter:\n    if: contains(fromJSON('[\"IggyIkenna\"]'), github.event.comment.user.login)\n    Same
+        authorized approvers list as add-major-bump-approval-handler.\n\
+        Net effect: two mandatory human touchpoints for any agent-driven change:\n  Gate 1: /approve-plan [name] —
+        before implementation starts\n  Gate 2: review PR in GitHub or /approve-merge [PR#] — before code lands\n", status: done }
+  - { id: enrich-staging-commits-with-semver, content: "staging_commits and main_commits currently store raw SHAs only —
+        not human-readable. Nobody can glance at the manifest and know what version was tested or promoted without
+        cross-referencing staging_versions. Fix: (1) Change staging_commits structure from:\n    \"staging_commits\":
+        {\"execution-service\": \"4c0f38a...\"}\n  to:\n    \"staging_commits\": {\n      \"execution-service\":
+        {\n        \"version\": \"0.1.23\",\n        \"sha\": \"4c0f38adef...\",\n        \"branch\":
+        \"feat/defi-rollout\"\n      }\n    }\n(2) Change main_commits.history entries from:\n    {\"promoted_at\":
+        \"...\", \"commits\": {\"repo\": \"sha\"}}\n  to:\n    {\"promoted_at\": \"...\", \"promotions\":
+        {\n      \"execution-service\": {\n        \"from\": \"0.1.22\",\n        \"to\": \"0.1.23\",\n        \"sha\":
+        \"4c0f38a...\",\n        \"branch\": \"feat/defi-rollout\"\n      }\n    }}\n  This makes every promotion record
+        immediately readable: \"execution-service\
+        \ went from 0.1.22 to 0.1.23 via\n  feat/defi-rollout at 08:45 UTC.\"\n(3) Update all workflows that read/write
+        staging_commits and main_commits:\n    sit-gate.yml (writes staging_commits), staging-to-main.yml (reads
+        staging_commits, writes main_commits),\n    sit-unlock.yml (clears staging_commits).\n(4) Update
+        validate-manifest-json.sh to validate new structure. Acceptance: git log of workspace-manifest.json is
+        human-readable without SHA cross-referencing.\n", status: done }
+  - { id: enrich-telegram-with-versions, content: "Telegram messages currently show tier-level pass/fail (overnight),
+        \"SIT running\" (lock), or repo+branch (conflicts) — but never the VERSION being tested, promoted, or failing.
+        Operators must check GHA logs to know which version broke. Fix: (1) Overnight summary — change from:\n    \"T0
+        (libraries): success\"\n  to:\n    \"T0 (libraries): success\n     unified-trading-library
+        v0.2.1\n     unified-config-interface v0.1.56\"\n    Include version for every repo tested, with pass/fail
+        indicator per repo.\n(2) SIT lock alert — change from:\n    \"SIT locked: staging under test\"\n  to:\n    \"SIT
+        locked: testing execution-service v0.1.23 + 2 deps\"\n(3) Conflict alert — change from:\n    \"Conflict
+        detected: $REPO staging→main\"\n  to:\n    \"Conflict detected: $REPO v$STAGING_VERSION → main
+        (v$MAIN_VERSION)\"\n(4) SIT failure — change from:\n    \"SIT failed — staging unlocked\"\n  to:\n    \"SIT
+        failed: execution-service v0.1.23 — staging unlocked,\
+        \ revert needed\"\n(5) Promotion — add new message:\n    \"Promoted to main: execution-service v0.1.22 → v0.1.23
+        (feat/defi-rollout)\"\nSource version from enriched staging_commits (see enrich-staging-commits-with-semver).
+        Acceptance: every Telegram message includes human-readable semver, never raw SHAs.\n", status: pending }
+  - { id: populate-deployed-versions, content: "The manifest has deployed_versions: {dev: {}, staging: {}, prod: {}} but
+        it is NEVER populated. Cloud Build pushes images but never writes back which version is actually running where.
+        The deployment UI cannot show \"what's running in prod right now\" from the manifest — it has to query Artifact
+        Registry directly. Fix: (1) In cloud-build-router.yml, after Cloud Build succeeds (poll returns SUCCESS), write
+        back to manifest:\n    \"deployed_versions\": {\n      \"$ENV\": {\n        \"$REPO\": {\n          \"version\":
+        \"$VERSION\",\n          \"image_tag\": \"$IMAGE_TAG\",\n          \"deployed_at\":
+        \"2026-03-13T09:00:00Z\",\n          \"build_id\": \"$BUILD_ID\"\n        }\n      }\n    }\n    Commit with
+        [skip ci] to avoid triggering cascades.\n(2) In deployment-service/monitor.py: read deployed_versions from
+        manifest as secondary source,\n    with Cloud Run / Artifact Registry as primary (for live state).\n(3) In
+        deployment-ui BuildSelector:\
+        \ show deployed_versions per env with visual badges (see\n    deployment-ui-multi-env-selector).\nAcceptance:
+        manifest always reflects what is deployed where, with semver tags (not SHAs).\n", status: done }
+  - { id: deployment-ui-multi-env-selector, content: "BuildSelector.tsx currently reads only manifest.versions
+        (main/prod). Operators cannot see or select staging or feature branch versions from the deployment UI — they
+        must know the exact image tag. Fix: (1) Extend BuildSelector to read from three sources:\n    -
+        manifest.versions (main/prod) — green badge\n    - manifest.staging_versions (staging) — yellow badge\n    -
+        manifest.deployed_versions.dev (feature branches) — blue badge\n    Dropdown groups: \"Production (main)\" |
+        \"Staging (under test)\" | \"Development (feature branches)\"\n(2) Each entry shows: \"$REPO v$VERSION
+        ($BRANCH)\" with environment badge.\n    Example: \"execution-service v0.1.23-staging (staging)\"
+        [yellow]\n    Example: \"execution-service v0.1.23-feat-defi-rollout (dev)\" [blue]\n(3) DeploymentHistory.tsx:
+        add \"from_version\" column alongside existing \"tag\" column.\n    Show: \"v0.1.22 → v0.1.23\" instead of just
+        \"0.1.23\".\n(4) ServiceVersion in deployment-service/monitor.py\
+        \ already has image_tag (semver) + git_commit (SHA).\n    Surface both in API response, but UI shows only semver
+        by default with SHA as tooltip/expandable detail.\nAcceptance: operator can see all versions across all
+        environments in one dropdown, select any for deployment, and never needs to type or remember a SHA.\n", status: pending }
+  - { id: human-readable-deployment-id, content: "DeploymentState.deployment_id is currently a generated UUID — not
+        human-readable. When operators discuss deployments (\"roll back deploy abc123\"), nobody knows what abc123
+        refers to without looking it up. Fix: (1) Change deployment_id format
+        to:\n    deploy-{service}-{version}-{env}-{sequence}\n    Example:
+        deploy-execution-service-0.1.23-prod-1\n    If someone retries: deploy-execution-service-0.1.23-prod-2\n    The
+        sequence number makes retries visible and distinguishable without reading UUIDs.\n(2) In deployment-service,
+        update deployment_id generation:\n    Generate sequence by counting existing deployments for same
+        service+version+env in GCS.\n(3) In DeploymentHistory.tsx, deployment_id is now directly meaningful — no tooltip
+        or lookup needed. (4) Telegram deploy notifications use this ID: \"Deployed:
+        deploy-execution-service-0.1.23-prod-1\" (5) GCS path becomes:
+        gs://{bucket}/deployments/deploy-execution-service-0.1.23-prod-1/state.json\n\
+        \    (still unique, but human-navigable in GCS console).\nAcceptance: every deployment ID is self-describing —
+        service, version, environment, and retry count visible at a glance.\n", status: pending }
+  - { id: enforce-branch-slug-convention, content: "Cloud Build tags use {semver}-{branch-slug} for Docker images, but
+        branch names are free-form. Long or special-character branch names produce unreadable image tags (e.g.,
+        0.1.23-feat-my-cool-thing-that-is-really- long-and-has-special-chars). Fix: (1) In quickmerge.sh, validate
+        feature branch names before creating PRs:\n    BRANCH_SLUG=$(echo \"$BRANCH\" | tr '[:upper:]' '[:lower:]' | sed
+        's/[^a-z0-9-]/-/g' | cut -c1-30)\n    If original != slug: warn \"Branch name will be slugified to:
+        $BRANCH_SLUG\"\n(2) Document convention in docs/repo-management/branch-naming.md:\n    - Max 30 chars after
+        feat/ or fix/ prefix\n    - Lowercase alphanumeric + hyphens only\n    - Examples: feat/defi-rollout,
+        fix/auth-timeout, chore/deps-update\n(3) In cloud-build-router.yml, apply the same slugification to IMAGE_TAG
+        construction\n    (defensive — even if branch name is long, tag stays readable).\nAcceptance: all Docker image
+        tags are human-readable and under\
+        \ 50 chars total.\n", status: done }
+  - { id: test-p0-remediation, content: "E2E test each P0 fix using admin sync scripts or workflow_dispatch: (a)
+        Rollback: Force a SIT failure using admin script (push known-bad commit to staging). Verify GH Issue opened WITH
+        SEMVER in title. Verify staging unlocked. (b) Cascade cycle: Edit workspace-manifest.json on a test branch to
+        add\n    a cycle (repo A → B → A). Run validate-manifest-dag.py, verify it\n    exits non-zero with cycle
+        description.\n(c) SHA pinning: Push a [skip ci] constraint commit during a running SIT\n    (using admin merge
+        script). Verify staging_commits captures the full\n    SHA set including the constraint commit, or that
+        promotion is deferred.\n(d) Semver trigger: After fix, push feat: to a T2 staging. Verify version\n    bump
+        fires on staging push, not on subsequent main push. Verify only\n    one bump (not two).\n(e) Manifest
+        concurrency: Run sit-gate.yml and staging-to-main.yml via workflow_dispatch simultaneously.\n    Verify
+        serialization via concurrency group\
+        \ — no lost writes.\n(f) Heredoc exit: On test branch, introduce a deliberate KeyError in sit-gate.yml
+        heredoc.\n    Verify workflow fails immediately, manifest is not committed corrupted.\n(g) Dispatch retry:
+        Temporarily disable webhook on a test repo. Verify dispatch_with_retry fires 3x,\n    then Telegram alert.\n(h)
+        Conflict retry-promotion: Create merge conflict, let agent resolve, merge resolution PR.\n    Verify
+        staging-to-main retriggers automatically.\nAcceptance: all 8 scenarios behave correctly with no manual recovery
+        needed.\n", status: pending }
+  - { id: test-plan-cascade, content: "Split into FAST PATH (scripted, deterministic) and SLOW PATH (AI-gated, external
+        deps).\nFAST PATH (run in PR CI — no external deps): (1) Validate plan YAML structure: frontmatter has name,
+        overview, status, todos. (2) Validate manifest DAG: no cycles, all repos referenced exist. (3) Validate dispatch
+        payloads: mock dispatch_with_retry, verify correct event_type + payload shape. (4) Validate Telegram message
+        format: template renders with version, not SHA. (5) Validate staging_commits enriched structure: version + sha +
+        branch present. (6) Validate deployment_id format: matches deploy-{service}-{version}-{env}-{seq} pattern.\nSLOW
+        PATH (run in overnight orchestrator or manual workflow_dispatch — requires Claude API + GitHub + Telegram): (1)
+        Create a new test plan in plans/archive/2026_08/ (minimal, 1 todo). (2) Verify: push to PM main → manifest-sync
+        fires → codex updated. (3) Verify: rules-alignment-agent fires → cursor rule created for the new plan
+        constraint.\
+        \ (4) Verify: Telegram plan-ready notification received with correct content. (5) Send /approve-plan
+        [test-plan-name] via Telegram → verify plan frontmatter updated to status: approved. (6) Create a deliberate
+        merge conflict in a test repo. (7) Verify: conflict-resolution-agent fires, reads active plans, references the
+        test plan in its resolution\n    PR body.\n(8) Verify: tg_merge_ready notification fires with PR URL. (9) Send
+        /approve-merge [PR#] → verify PR auto-merges. Acceptance: fast path runs in <30s with zero external deps. Slow
+        path works end-to-end with exactly two human TG actions.\n", status: pending }
+  - { id: test-version-readability, content: 'Verify human-readable versioning end-to-end: (1) Push a feat: commit to
+        staging → verify staging_commits has {version, sha, branch} structure. (2) Trigger SIT → verify Telegram lock
+        message includes "v$VERSION" not raw SHA. (3) SIT passes → verify Telegram promotion message shows "v0.1.22 →
+        v0.1.23 (feat/branch)". (4) Cloud Build succeeds → verify deployed_versions in manifest is populated with
+        semver. (5) Open deployment UI → verify BuildSelector shows all 3 environments with badges. (6) Verify
+        deployment_id format: deploy-{service}-{version}-{env}-{seq}. (7) Verify Docker image tag is under 50 chars and
+        human-readable. (8) Verify main_commits.history entry has from/to versions, not just SHAs. Acceptance: a
+        non-engineer can read every version surface and understand what version is where.
 
-    ', status: pending}
-- {id: fix-zero-test-silent-pass, content: "CRITICAL: If tests/unit/ is empty or all tests are @pytest.mark.skip, pytest exits 0 and QG passes. base-library.sh has NO file-existence check (base-service.sh partially mitigates via test_event_logging.py check). Fix: (1) In both base-service.sh and base-library.sh, after pytest completes, verify test count:\n    TESTS_RAN=$(grep -oP '\\d+(?= passed)' pytest_output.txt || echo 0)\n    if [ \"$TESTS_RAN\" -eq 0 ]; then\n      log_fail \"ZERO TESTS RAN — QG cannot pass with no test execution\"\n      exit 1\n    fi\n(2) Also check for 100% skip rate:\n    TESTS_SKIPPED=$(grep -oP '\\d+(?= skipped)' pytest_output.txt || echo 0)\n    TESTS_TOTAL=$((TESTS_RAN + TESTS_SKIPPED))\n    if [ \"$TESTS_RAN\" -eq 0 ] && [ \"$TESTS_SKIPPED\" -gt 0 ]; then\n      log_fail \"ALL $TESTS_SKIPPED TESTS SKIPPED — QG cannot pass with all tests skipped\"\n      exit 1\n    fi\nAcceptance: no repo can pass QG with zero executed tests.\n", status: done}
-- {id: fix-quickmerge-dev-extras, content: "HIGH: quickmerge.sh line 365 uses `uv pip install -e \".[dev]\"` which violates the flat deps rule (CLAUDE.md: \"Never use .[dev] extras\"). The fallback to `-e .` partially mitigates but masks repos that accidentally have [project.optional-dependencies]. Fix: (1) Remove `.[dev]` from quickmerge.sh line 365 — use `uv pip install -e .` only. (2) Add a check in quality-gates-base scripts:\n    if grep -q 'optional-dependencies' pyproject.toml; then\n      log_fail \"FLAT DEPS VIOLATION: [project.optional-dependencies] found in pyproject.toml\"\n      exit 1\n    fi\nAcceptance: `.[dev]` never used; optional-dependencies blocked by QG.\n", status: done}
-- {id: enforce-files-in-agent-mode, content: "MEDIUM: quickmerge.sh `git add -A` when --files not specified can commit another agent's partial work, .env files, or untracked artifacts. Fix: (1) In quickmerge.sh, when --agent is set and --files is NOT provided, fail with error:\n    if [ \"$AGENT_MODE\" = true ] && [ -z \"$FILES_ARG\" ]; then\n      echo \"ERROR: --agent mode requires --files to prevent accidental staging\"\n      echo \"Usage: quickmerge.sh 'message' --agent --files 'file1 file2'\"\n      exit 1\n    fi\nAcceptance: agents cannot accidentally commit unintended files.\n", status: done}
-- {id: add-coverage-floor-governance, content: "HIGH LOOPHOLE: Coverage floors are adjustable per-repo with no governance. Elysium lowered MIN_COVERAGE from 70 to 68 to pass. DeFi protocol adapters at 37-41% handle real money. Fix: (1) Create scripts/coverage-floor-guard.sh that runs in QG:\n    Read MIN_COVERAGE from repo stub; read fail_under from pyproject.toml.\n    If MIN_COVERAGE < 70 (default floor): require a signed-off justification file\n    at .coverage-floor-exception.md with format:\n      Approved by: [human name]\n      Date: [date]\n      Reason: [justification]\n      Expiry: [date — must re-approve after this]\n    If file missing or expired: fail QG.\n(2) Reconcile MIN_COVERAGE and pyproject fail_under — they MUST match. QG fails if they differ:\n    alerting (89 vs 78), strategy (72 vs 69), risk (73 vs 71) must be fixed.\n(3) For DeFi money-handling paths (elysium-defi-system handlers/): require per-handler minimum\n    80% branch coverage even if repo-wide floor is lower.\n\
-    Acceptance: no coverage floor reduction without human sign-off; MIN_COVERAGE = fail_under always.\n", status: done}
-- {id: add-tier-gate-enforcement-script, content: "CRITICAL AUTOMATION GAP: The tier invariant (\"never touch N until N-1 green\") is enforced by human discipline only. No CI check prevents a T4 commit when T3 QG is failing. Fix: (1) Create scripts/tier-gate-check.sh:\n    Read workspace-manifest.json for repo tier assignments.\n    For the target repo's tier N, check QG status of ALL tier N-1 repos:\n      for repo in $(get_repos_at_tier $((N-1))); do\n        STATUS=$(jq -r \".repositories[\\\"$repo\\\"].quality_gate_status\" workspace-manifest.json)\n        if [ \"$STATUS\" != \"passing\" ]; then\n          echo \"TIER GATE BLOCKED: $repo (tier $((N-1))) is not green — cannot work on tier $N\"\n          exit 1\n        fi\n      done\n(2) Wire into quality-gates.sh as a pre-check (runs before any repo-specific gates). (3) Wire into quickmerge.sh — block PR creation if tier gate is violated. (4) Override: --skip-tier-gate for emergency hotfixes (requires --agent to be absent). Acceptance:\
-    \ automated enforcement of tier ordering invariant.\n", status: done}
-- {id: add-cross-validation-protocol, content: "HIGH LOOPHOLE: Same agent validates its own work — \"VALIDATED BY CLAUDE\" with no independent check. Fix: (1) In overnight-agent-orchestrator.yml, after an agent completes a repo:\n    dispatch a SEPARATE validation job to a different agent instance:\n      gh workflow run agent-audit.yml --repo $REPO \\\n        --field mode=validate-only \\\n        --field prior_agent_run_id=$RUN_ID\n    The validation agent runs QG independently (fresh .venv, fresh checkout).\n    If QG fails: Telegram alert \"Cross-validation FAILED for $REPO v$VERSION —\n    agent self-report was incorrect.\"\n(2) For tier-green declarations: require TWO independent QG passes (original + cross-validation)\n    before updating manifest quality_gate_status.\n(3) Cross-validation uses ANTHROPIC_API_KEY_SYSHEALTH (separate from implementing agent's key). Acceptance: no repo is declared green based on a single agent's self-report.\n", status: pending}
-- {id: add-baseline-growth-ci-guard, content: "MEDIUM: The invariant \"never run --writebaseline to re-suppress\" is not enforced. Fix: In quality-gates-base scripts, after basedpyright completes:\n    if git diff --name-only | grep -q '.basedpyright-baseline.json'; then\n      BASELINE_ADDITIONS=$(git diff .basedpyright-baseline.json | grep '^+' | grep -v '^+++' | wc -l)\n      if [ \"$BASELINE_ADDITIONS\" -gt 0 ]; then\n        log_fail \"BASELINE GROWTH: $BASELINE_ADDITIONS new suppressions added to .basedpyright-baseline.json\"\n        log_fail \"Fix the type errors instead of suppressing them\"\n        exit 1\n      fi\n    fi\nAcceptance: baseline files can only shrink, never grow.\n", status: done}
-- {id: add-secondary-notification-channel, content: "HIGH: Telegram is the sole notification channel. Bot token expiry, chat archive, or Telegram outage = all operational visibility lost. Fix: (1) Add a GitHub Issue fallback for all critical alerts. In scripts/telegram-helpers.sh (or create), wrap send_telegram:\n    function notify_critical() {\n      send_telegram \"$@\" || true  # best-effort TG\n      gh issue create --repo IggyIkenna/unified-trading-pm \\\n        --title \"ALERT: $1\" --body \"$2\" --label \"critical-alert\" || true  # GH Issue fallback\n    }\n(2) Use notify_critical for: SIT failures, T0 overnight failures, conflict agent timeouts,\n    Claude API auth errors, manifest corruption. Regular notifications (lock/unlock, promotion)\n    stay Telegram-only. (3) Add email notification via GitHub Actions notification settings\n    as a tertiary channel (already built into GHA — just enable).\nAcceptance: critical alerts have at least 2 delivery channels.\n", status: done}
-- {id: register-ssot-index, content: 'Add this plan to unified-trading-codex/00-SSOT-INDEX.md in the Plans section (after cicd_e2e_test_plan_2026_03_13 row). Entry format: | cicd_audit_remediation_2026_03_13.md | CI/CD audit P0/P1/P2 remediation + plan-driven governance + human-readable versioning | unified-trading-pm/plans/active/ |
+        ', status: pending }
+  - {
+      id: fix-zero-test-silent-pass,
+      content:
+        "CRITICAL: If tests/unit/ is empty or all tests are @pytest.mark.skip, pytest exits 0 and QG passes.
+        base-library.sh has NO file-existence check (base-service.sh partially mitigates via test_event_logging.py
+        check). Fix: (1) In both base-service.sh and base-library.sh, after pytest completes, verify test
+        count:\n    TESTS_RAN=$(grep -oP '\\d+(?= passed)' pytest_output.txt || echo 0)\n    if [ \"$TESTS_RAN\" -eq 0
+        ]; then\n      log_fail \"ZERO TESTS RAN — QG cannot pass with no test execution\"\n      exit 1\n    fi\n(2)
+        Also check for 100% skip rate:\n    TESTS_SKIPPED=$(grep -oP '\\d+(?= skipped)' pytest_output.txt || echo
+        0)\n    TESTS_TOTAL=$((TESTS_RAN + TESTS_SKIPPED))\n    if [ \"$TESTS_RAN\" -eq 0 ] && [ \"$TESTS_SKIPPED\" -gt
+        0 ]; then\n      log_fail \"ALL $TESTS_SKIPPED TESTS SKIPPED — QG cannot pass with all tests
+        skipped\"\n      exit 1\n    fi\nAcceptance: no repo can pass QG with zero executed tests.\n",
+      status: done,
+    }
+  - {
+      id: fix-quickmerge-dev-extras,
+      content:
+        "HIGH: quickmerge.sh line 365 uses `uv pip install -e \".[dev]\"` which violates the flat deps rule (CLAUDE.md:
+        \"Never use .[dev] extras\"). The fallback to `-e .` partially mitigates but masks repos that accidentally have
+        [project.optional-dependencies]. Fix: (1) Remove `.[dev]` from quickmerge.sh line 365 — use `uv pip install -e
+        .` only. (2) Add a check in quality-gates-base scripts:\n    if grep -q 'optional-dependencies' pyproject.toml;
+        then\n      log_fail \"FLAT DEPS VIOLATION: [project.optional-dependencies] found in
+        pyproject.toml\"\n      exit 1\n    fi\nAcceptance: `.[dev]` never used; optional-dependencies blocked by QG.\n",
+      status: done,
+    }
+  - {
+      id: enforce-files-in-agent-mode,
+      content:
+        "MEDIUM: quickmerge.sh `git add -A` when --files not specified can commit another agent's partial work, .env
+        files, or untracked artifacts. Fix: (1) In quickmerge.sh, when --agent is set and --files is NOT provided, fail
+        with error:\n    if [ \"$AGENT_MODE\" = true ] && [ -z \"$FILES_ARG\" ]; then\n      echo \"ERROR: --agent mode
+        requires --files to prevent accidental staging\"\n      echo \"Usage: quickmerge.sh 'message' --agent --files
+        'file1 file2'\"\n      exit 1\n    fi\nAcceptance: agents cannot accidentally commit unintended files.\n",
+      status: done,
+    }
+  - { id: add-coverage-floor-governance, content: "HIGH LOOPHOLE: Coverage floors are adjustable per-repo with no
+        governance. Elysium lowered MIN_COVERAGE from 70 to 68 to pass. DeFi protocol adapters at 37-41% handle real
+        money. Fix: (1) Create scripts/coverage-floor-guard.sh that runs in QG:\n    Read MIN_COVERAGE from repo stub;
+        read fail_under from pyproject.toml.\n    If MIN_COVERAGE < 70 (default floor): require a signed-off
+        justification file\n    at .coverage-floor-exception.md with format:\n      Approved by: [human
+        name]\n      Date: [date]\n      Reason: [justification]\n      Expiry: [date — must re-approve after
+        this]\n    If file missing or expired: fail QG.\n(2) Reconcile MIN_COVERAGE and pyproject fail_under — they MUST
+        match. QG fails if they differ:\n    alerting (89 vs 78), strategy (72 vs 69), risk (73 vs 71) must be
+        fixed.\n(3) For DeFi money-handling paths (elysium-defi-system handlers/): require per-handler minimum\n    80%
+        branch coverage even if repo-wide floor is lower.\n\
+        Acceptance: no coverage floor reduction without human sign-off; MIN_COVERAGE = fail_under always.\n", status: done }
+  - { id: add-tier-gate-enforcement-script, content: "CRITICAL AUTOMATION GAP: The tier invariant (\"never touch N until
+        N-1 green\") is enforced by human discipline only. No CI check prevents a T4 commit when T3 QG is failing. Fix:
+        (1) Create scripts/tier-gate-check.sh:\n    Read workspace-manifest.json for repo tier assignments.\n    For the
+        target repo's tier N, check QG status of ALL tier N-1 repos:\n      for repo in $(get_repos_at_tier $((N-1)));
+        do\n        STATUS=$(jq -r \".repositories[\\\"$repo\\\"].quality_gate_status\"
+        workspace-manifest.json)\n        if [ \"$STATUS\" != \"passing\" ]; then\n          echo \"TIER GATE BLOCKED:
+        $repo (tier $((N-1))) is not green — cannot work on tier $N\"\n          exit 1\n        fi\n      done\n(2)
+        Wire into quality-gates.sh as a pre-check (runs before any repo-specific gates). (3) Wire into quickmerge.sh —
+        block PR creation if tier gate is violated. (4) Override: --skip-tier-gate for emergency hotfixes (requires
+        --agent to be absent). Acceptance:\
+        \ automated enforcement of tier ordering invariant.\n", status: done }
+  - {
+      id: add-cross-validation-protocol,
+      content:
+        "HIGH LOOPHOLE: Same agent validates its own work — \"VALIDATED BY CLAUDE\" with no independent check. Fix: (1)
+        In overnight-agent-orchestrator.yml, after an agent completes a repo:\n    dispatch a SEPARATE validation job to
+        a different agent instance:\n      gh workflow run agent-audit.yml --repo $REPO \\\n        --field
+        mode=validate-only \\\n        --field prior_agent_run_id=$RUN_ID\n    The validation agent runs QG
+        independently (fresh .venv, fresh checkout).\n    If QG fails: Telegram alert \"Cross-validation FAILED for
+        $REPO v$VERSION —\n    agent self-report was incorrect.\"\n(2) For tier-green declarations: require TWO
+        independent QG passes (original + cross-validation)\n    before updating manifest quality_gate_status.\n(3)
+        Cross-validation uses ANTHROPIC_API_KEY_SYSHEALTH (separate from implementing agent's key). Acceptance: no repo
+        is declared green based on a single agent's self-report.\n",
+      status: pending,
+    }
+  - {
+      id: add-baseline-growth-ci-guard,
+      content:
+        "MEDIUM: The invariant \"never run --writebaseline to re-suppress\" is not enforced. Fix: In quality-gates-base
+        scripts, after basedpyright completes:\n    if git diff --name-only | grep -q '.basedpyright-baseline.json';
+        then\n      BASELINE_ADDITIONS=$(git diff .basedpyright-baseline.json | grep '^+' | grep -v '^+++' | wc
+        -l)\n      if [ \"$BASELINE_ADDITIONS\" -gt 0 ]; then\n        log_fail \"BASELINE GROWTH: $BASELINE_ADDITIONS
+        new suppressions added to .basedpyright-baseline.json\"\n        log_fail \"Fix the type errors instead of
+        suppressing them\"\n        exit 1\n      fi\n    fi\nAcceptance: baseline files can only shrink, never grow.\n",
+      status: done,
+    }
+  - {
+      id: add-secondary-notification-channel,
+      content:
+        "HIGH: Telegram is the sole notification channel. Bot token expiry, chat archive, or Telegram outage = all
+        operational visibility lost. Fix: (1) Add a GitHub Issue fallback for all critical alerts. In
+        scripts/telegram-helpers.sh (or create), wrap send_telegram:\n    function notify_critical()
+        {\n      send_telegram \"$@\" || true  # best-effort TG\n      gh issue create --repo
+        IggyIkenna/unified-trading-pm \\\n        --title \"ALERT: $1\" --body \"$2\" --label \"critical-alert\" ||
+        true  # GH Issue fallback\n    }\n(2) Use notify_critical for: SIT failures, T0 overnight failures, conflict
+        agent timeouts,\n    Claude API auth errors, manifest corruption. Regular notifications (lock/unlock,
+        promotion)\n    stay Telegram-only. (3) Add email notification via GitHub Actions notification settings\n    as
+        a tertiary channel (already built into GHA — just enable).\nAcceptance: critical alerts have at least 2 delivery
+        channels.\n",
+      status: done,
+    }
+  - { id: register-ssot-index, content: "Add this plan to unified-trading-codex/00-SSOT-INDEX.md in the Plans section
+        (after cicd_e2e_test_plan_2026_03_13 row). Entry format: | cicd_audit_remediation_2026_03_13.md | CI/CD audit
+        P0/P1/P2 remediation + plan-driven governance + human-readable versioning | unified-trading-pm/plans/active/ |
 
-    ', status: done}
+        ", status: done }
 isProject: false
 ---
 

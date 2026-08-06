@@ -22,6 +22,7 @@ related:
     tradfi_backfill_throughput_followups_2026_07_24,
     tradfi_phase_d_terminal_gate_2026_07_24,
     tradfi_chain_bundle_sampler_root_mismatch_2026_07_23,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-25
 author: unknown

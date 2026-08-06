@@ -29,6 +29,7 @@ related:
     /plans/archive/2026_08/task_usage_schema_drift_done_outage_2026_08_05.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/runtime-deployment-topology.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-05
 author: ikennaigboaka [interactive session]

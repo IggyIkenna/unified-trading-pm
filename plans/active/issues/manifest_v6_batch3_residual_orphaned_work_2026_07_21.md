@@ -40,6 +40,7 @@ related:
     plans/archive/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md,
     plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
     plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-21"
 author: unknown
@@ -203,8 +204,8 @@ overhead.
   above) — 0 real v5 cefi chain objects needed migrating, so the "surfacing pre-migration data would be misleading"
   reason for the gate is moot. Both remaining todos are now bounded, worker-determinable engineering (add
   `quote_asset`/`margin_type` to a deployment-api response + a deployment-ui heatmap filter on those fields, pw:L2 spec
-  required) with no judgment/design call left. Conflict-check clear: grepped `plans/active/*.md` +
-  `plans/active/issues/*.md` for `quote_asset`/`margin_type`; no other `assigned_vm: planning` doc claims this exact
+  required) with no judgment/design call left. Conflict-check clear: grepped `plans/archive/2026_08/*.md` +
+  `plans/archive/issues/*.md` for `quote_asset`/`margin_type`; no other `assigned_vm: planning` doc claims this exact
   work — corroborated by `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s own prior conflict-check on this
   same doc ("No genuine conflict found, and nothing is stealthily duplicating this doc's ground"). `locked_by` empty.
   `execution_scope` was already `orchestrator-agent` (no change needed); only `assigned_vm` flipped. A companion

@@ -224,10 +224,11 @@ Their refs sit largely in `plans/active/issues/plan_reconciliation_operator_deci
 not a live link. The worker deliberately did not rewrite these.
 
 - **A: Archive all 10 — repoint the 4 codex refs (and fix the "in-flight" wording), and leave historical-record
-  citations untouched as point-in-time (accepting they name an `active/` path that no longer exists). [WORKER REC]** —
-  matches how the corpus already annotates archived refs ("path never existed under active/ post-archival").
+  citations untouched as point-in-time (accepting they name an `archive/2026_08/` path that no longer exists). [WORKER
+  REC]** — matches how the corpus already annotates archived refs ("path never existed under archive/2026_08/
+  post-archival").
 - **B:** Archive Group B only (6); hold Group A until the codex sync is ruled on separately.
-- **C:** Archive none; keep all 10 in `plans/active/` until a dedicated archival+codex-sync pass.
+- **C:** Archive none; keep all 10 in `plans/archive/2026_08/` until a dedicated archival+codex-sync pass.
 - **Other:** operator free-text.
 
 ## §6 — Near-complete plans (≤1 open todo): fold destination needs a ruling

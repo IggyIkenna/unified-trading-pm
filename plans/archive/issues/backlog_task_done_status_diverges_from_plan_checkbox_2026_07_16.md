@@ -529,14 +529,14 @@ found two confirmed, adjacent bugs in the exact mechanism my fix now hard-enforc
    ENTIRE cross-repo M3 plan-flip check (the pre-existing warning, and now my hard-409) has been silently inert for the
    PM-integration-default cross-repo case (agents/RULES.md § 2) this whole time. Fixed to try both layouts (umbrella
    first, then repo-level fallback).
-2. `regen_backlog_from_plan.py` derived every task's `plan_ref` as `f"plans/active/{plan_path.name}"` — correct for
-   plans directly under `plans/active/`, but WRONG for the `plans/active/issues/` docs the same regen also ingests (line
-   ~1137, the 2026-06-10 close-the-loop fix): it drops the `issues/` segment, so `plan_ref` never matches the real file.
-   Confirmed via this task's OWN `plan_ref` (reported at boot: no `issues/`, but the real file — this doc — lives at
-   `plans/active/issues/...`). Combined with fix #1 making `applicable=True` for real, this would have permanently
-   409-rejected `/done` for EVERY issue-doc-sourced task fleet-wide (found_in_commit can never match a wrong path) — a
-   materially worse outcome than the warning-only gap Todo 2 was fixing. Fixed to derive the ref relative to `plans_dir`
-   (preserves any subdirectory).
+2. `regen_backlog_from_plan.py` derived every task's `plan_ref` as `f"plans/archive/2026_08/{plan_path.name}"` — correct
+   for plans directly under `plans/archive/2026_08/`, but WRONG for the `plans/archive/issues/` docs the same regen also
+   ingests (line ~1137, the 2026-06-10 close-the-loop fix): it drops the `issues/` segment, so `plan_ref` never matches
+   the real file. Confirmed via this task's OWN `plan_ref` (reported at boot: no `issues/`, but the real file — this doc
+   — lives at `plans/archive/issues/...`). Combined with fix #1 making `applicable=True` for real, this would have
+   permanently 409-rejected `/done` for EVERY issue-doc-sourced task fleet-wide (found_in_commit can never match a wrong
+   path) — a materially worse outcome than the warning-only gap Todo 2 was fixing. Fixed to derive the ref relative to
+   `plans_dir` (preserves any subdirectory).
 
 Re-simulated after both fixes: `check_plan_flip` now correctly reports `applicable=True` for this task's real cross-repo
 layout. Added regression coverage: `test_detect_sibling_pm_worktree_resolves_umbrella_and_repo_level` +
@@ -557,10 +557,10 @@ this task exists to ship, so both are in-scope here rather than a separate escal
 
 Fresh-pulled every slot repo to LDR HEAD before starting. Ran the audit: `GET /api/backlog?status=done` returned 7 tasks
 total, all 7 carrying a non-empty `plan_ref`. For each, resolved the plan file in the freshly-pulled PM sibling clone
-(`plans/active/<name>.md` or its `issues/` subpath, both searched), matched the task's `title` text to the corresponding
-checkbox line, and independently verified via `git show --stat <done_sha>` in whichever repo actually contains that SHA
-(not assumed — searched every repo in the slot for it, since `done_sha` for a code-repo task lives outside
-`unified-trading-pm`).
+(`plans/archive/2026_08/<name>.md` or its `issues/` subpath, both searched), matched the task's `title` text to the
+corresponding checkbox line, and independently verified via `git show --stat <done_sha>` in whichever repo actually
+contains that SHA (not assumed — searched every repo in the slot for it, since `done_sha` for a code-repo task lives
+outside `unified-trading-pm`).
 
 **Result: 7/7 (100%) are confirmed false-`done`** — every single currently-`done` task with a `plan_ref` has its
 matching checkbox still `- [ ]` at LDR HEAD, and every cited `done_sha` is either an explicit "re-verify, declining, no

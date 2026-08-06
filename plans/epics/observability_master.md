@@ -209,8 +209,8 @@ _(no plans currently assigned at this priority)_
 
 **status**: ✅ ARCHIVED 2026-07-24 — closeout & historical narrative for
 [`data_pipeline_alerts_batch_remediation_2026_07_15`](../active/data_pipeline_alerts_batch_remediation_2026_07_15.md);
-all 14 todos it carried are `[x]`, 0 open. Moved from `plans/active/` to `plans/archive/2026_07/` the same day it was
-extracted (plan line-cap remediation) since it was already fully-closed history, not just an over-cap trim.
+all 14 todos it carried are `[x]`, 0 open. Moved from `plans/archive/2026_08/` to `plans/archive/2026_07/` the same day
+it was extracted (plan line-cap remediation) since it was already fully-closed history, not just an over-cap trim.
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 

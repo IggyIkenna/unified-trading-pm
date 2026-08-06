@@ -17,6 +17,7 @@ related:
   [
     /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
     tests/e2e/user-management.spec.ts,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-22"
 author: unknown

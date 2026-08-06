@@ -87,9 +87,9 @@ drift_direction: advance-code
 > cited by name/anchor) or this file's new archive path. Historical narrative citations elsewhere in the corpus (dated
 > audit findings, Progress Log provenance notes) were left as-is — they remain accurate as point-in-time records and
 > this file continues to exist (just relocated) for anyone who follows them. This file itself carries zero todos and was
-> not a target of any other doc's `entry_point_for:`, so archiving it orphans nothing. Moved from `plans/active/` to
-> `plans/archive/2026_07/` per the standard 6-step archival ritual; `locked_by`/`locked_since` were already cleared by
-> the 2026-07-24 trim.
+> not a target of any other doc's `entry_point_for:`, so archiving it orphans nothing. Moved from
+> `plans/archive/2026_08/` to `plans/archive/2026_07/` per the standard 6-step archival ritual;
+> `locked_by`/`locked_since` were already cleared by the 2026-07-24 trim.
 >
 > **🟢 TRIMMED TO A COORDINATION INDEX (2026-07-24) — plan-hygiene line-cap remediation.** This plan was 2168 lines
 > (over the 1000-line hard-fail cap; `locked_by: live-defi-rollout`). Per

@@ -236,9 +236,9 @@ Checked whether the two remaining `[ ]` P3 todos have since been done — they h
   (`sports-gcs-path-ssot.md` governs the IS `sports_reference/` bucket, not `sports_features/`, as this doc itself
   already notes); `sports_consolidated_closeout_2026_07_19.md`'s sweep (item **I**) still lists this as outstanding.
   Genuinely still open.
-- **`[DATA] P3` `odds_api_team_mapping` coverage gap (Burgos CF etc.)** — grepped `plans/active/` for follow-ups; only
-  this doc and `sports_p2_features_history_to_ml_ready_2026_06_27.md` reference it, no fix/extension found. Genuinely
-  still open.
+- **`[DATA] P3` `odds_api_team_mapping` coverage gap (Burgos CF etc.)** — grepped `plans/archive/2026_08/` for
+  follow-ups; only this doc and `sports_p2_features_history_to_ml_ready_2026_06_27.md` reference it, no fix/extension
+  found. Genuinely still open.
 
 Flipping `status` to `resolved` (the doc's core cross-repo data-correctness findings are shipped + verified) while
 leaving both P3 todos unchecked — this mirrors the convention used elsewhere in this sweep

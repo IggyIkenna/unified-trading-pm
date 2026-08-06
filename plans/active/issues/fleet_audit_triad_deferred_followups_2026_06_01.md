@@ -16,6 +16,7 @@ related:
     /codex/05-infrastructure/vm-log-archival.md,
     plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
     plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-01
 author: unknown

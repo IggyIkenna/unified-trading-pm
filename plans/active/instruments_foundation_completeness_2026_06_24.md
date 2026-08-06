@@ -47,6 +47,7 @@ related:
     plans/active/sports_fixture_completeness_oracle_2026_06_24.md,
     plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-24
 parent_epic: instruments_master
@@ -330,7 +331,7 @@ This plan is the gated umbrella standard + rolling status index. The per-AG / cr
 - **sports** — `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (was: pointing to
   `sports_fixture_completeness_oracle_2026_06_24.md` + `sports_golden_window_attempted_failed_remediation_2026_06_24.md`
   — corrected 2026-07-14, doc-reconciliation vr2#117: both moved (the former to `archive/2026_06/`, the latter to
-  `active/issues/`) when the 2026-06-27 RE-HOMED banner above handed ALL sports G1→G5 dispatch to the coordinator plan;
+  `archive/issues/`) when the 2026-06-27 RE-HOMED banner above handed ALL sports G1→G5 dispatch to the coordinator plan;
   this section had not been updated to match). Already delegated pre-split — unchanged.
 
 Per-AG plans MUST stay consistent with this umbrella's gates (G0→G5) + §0–§9 of the standard; this plan is the SSOT for

@@ -100,16 +100,16 @@ context_scope:
       source docs' corresponding checkboxes are flipped with verified evidence, and any doc that genuinely reaches 0
       open todos (checkbox + prose) is flipped to `status: resolved` with `resolved_by` citing the batch-2 commit(s).
 - [x] ✅ [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
-      flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
-      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
-      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
-      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
-      auto-archived 11 docs nobody's plan owned. For every one of the 15 source docs todo 1 flips to `resolved` with 0
-      open todos: re-verify the 0-open-todos count and the resolution banner one more time, then archive it to
-      `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix every corpus referrer of the archived doc's
-      pre-archive path (grep for the basename). If todo 1 already ran before this todo existed in the plan, archive any
-      already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
-      plan drives to a terminal status remains under `plans/active/`,
+      flip, never left sitting in `plans/archive/2026_08/`.** `check_terminal_status_archived.py` HARD-fails on any doc
+      whose frontmatter reads a terminal status while it still lives under `plans/archive/2026_08/` (including
+      `plans/archive/issues/`) — the omission of this exact step across the sports finalize-plan family already forced
+      one such HARD-fail: the `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation
+      `agt-9a5061`, PR #1545) auto-archived 11 docs nobody's plan owned. For every one of the 15 source docs todo 1
+      flips to `resolved` with 0 open todos: re-verify the 0-open-todos count and the resolution banner one more time,
+      then archive it to `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix every corpus referrer of
+      the archived doc's pre-archive path (grep for the basename). If todo 1 already ran before this todo existed in the
+      plan, archive any already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**:
+      no source doc this plan drives to a terminal status remains under `plans/archive/2026_08/`,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
       to the archived path. — **Done unified-trading-pm@8563781d3 + evidence below.** Source:
       `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2. **Evidence**: 0 of 15 source docs
@@ -141,7 +141,7 @@ context_scope:
       instruments-service@2be5698d; source doc `[VERIFY] P2` marked `[x]` deferred here; new todo added below (P2b). (4)
       SportsMatchingEngine-vs-L0Matcher decision gate STILL OPEN — confirmed via direct read of
       `sports_group_c_execution_backtest_harness_2026_07_21.md` (`[DESIGN] P3` todo 3 still `[ ]`) + batch5-finalize
-      (2026-07-28) + prediction batch6 (2026-07-29) + grep of plans/active/issues/ (0 results); explicitly not
+      (2026-07-28) + prediction batch6 (2026-07-29) + grep of plans/archive/issues/ (0 results); explicitly not
       dispatching 3 todos speculatively. — unified-trading-pm@d35a9b4ba
 - [x] ✅ [REVIEW] P2. **FSS-output ↔ ml-service-input ↔ strategy-service-input parity test (P2a)** — gate from batch 2's
       deferred section now cleared (all 5 naming-migration todos done 2026-08-04). Wrote cross-repo parity regression

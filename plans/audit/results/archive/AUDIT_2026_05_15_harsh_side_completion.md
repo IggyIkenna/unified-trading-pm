@@ -34,7 +34,7 @@ sources:
     harsh_orchestrator/LEDGER.md (current shift table + Day-4 close),
     "harsh_orchestrator/pings/slot_{2..9}.md (per-slot dispatch + DONE pings)",
     plans/active/continuation_prompts_harsh_2026_05_15.md (Day-1 dispatch SSOT),
-    plans/active/issues/*_2026_05_15.md (20 issue docs filed today),
+    plans/archive/issues/*_2026_05_15.md (20 issue docs filed today),
     "origin/live-defi-rollout per affected repo (SHA verification, all repos fetched at 2026-05-15 22:30 UTC)",
   ]
 ---

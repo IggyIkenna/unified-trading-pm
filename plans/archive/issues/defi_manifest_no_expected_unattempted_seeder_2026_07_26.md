@@ -172,36 +172,36 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       guardrail: do not add `fluid` to `lending_indices_handler.py` without a real collector).
 
       | protocol | lending_indices | risk_params | liquidations | `SUBGRAPH_IDS` |
-                                                                                                                          |---|---|---|---|---|
-                                                                                                                          | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
-                                                                                                                          | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
-                                                                                                                          | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
-                                                                                                                          | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
-                                                                                                                          | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                                                                                                                              |---|---|---|---|---|
+                                                                                                                              | `aave_v3` / `spark` / `compound_v3` / `morpho` | Y | Y | Y | Y |
+                                                                                                                              | `fluid` | **N** (no `cascades` entry — confirmed real gap, already tracked as this doc's finding #5) | Y (`_CATALOGUE_ONLY_PROTOCOLS`, deliberate) | Y (dedicated `_FLUID_LIQUIDATIONS_QUERY`/`_parse_fluid_liquidations`) | Y |
+                                                                                                                              | `kamino_lending` | Y (dedicated RPC fetcher) | Y | **N** (absent, no rationale found) | N (Solana, RPC-based) |
+                                                                                                                              | `solend` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
+                                                                                                                              | `marginfi` | Y (dedicated RPC fetcher) | **N** | **N** | N (Solana) |
 
-                                                                                                                          **Findings**:
-                                                                                                                          1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
-                                                                                                                             frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
-                                                                                                                             588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
-                                                                                                                             `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
-                                                                                                                          2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
-                                                                                                                             constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
-                                                                                                                             Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
-                                                                                                                             branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
-                                                                                                                             line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
-                                                                                                                             though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
-                                                                                                                             `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
-                                                                                                                             unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
-                                                                                                                             into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
-                                                                                                                             follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
-                                                                                                                             for a read-only reconciliation todo).
-                                                                                                                          3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
-                                                                                                                             `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
-                                                                                                                             intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
-                                                                                                                             asserting it's a bug.
-                                                                                                                          4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
-                                                                                                                             handlers and `SUBGRAPH_IDS` — no mismatch.
-                                                                                                                          (repo: market-tick-data-service)
+                                                                                                                              **Findings**:
+                                                                                                                              1. `fluid`'s gap is lending_indices-ONLY, confirmed — `risk_params_handler.py` (`_CATALOGUE_ONLY_PROTOCOLS =
+                                                                                                                                 frozenset({"morpho", "fluid"})`, line 115) and `liquidations_handler.py` (dedicated fluid query, lines
+                                                                                                                                 588/724/739) both have REAL, working, deliberate `fluid` paths; only `lending_indices_handler.py`'s
+                                                                                                                                 `_query_and_parse` cascades dict lacks a `fluid` entry. No new work needed beyond what #5 already tracks.
+                                                                                                                              2. **New, previously-unflagged gap**: `risk_params_handler.py`'s own imported `SOLANA_LENDING_PROTOCOLS`
+                                                                                                                                 constant (`_risk_params_stage.py:23`, `frozenset({"kamino_lending", "solend", "marginfi"})`) declares all 3
+                                                                                                                                 Solana lending protocols as catalogue-fallback-capable (the dispatch logic at lines 330/408 correctly
+                                                                                                                                 branches on `protocol in SOLANA_LENDING_PROTOCOLS`), but `_DEFAULT_PROTOCOLS` (the actual iteration list,
+                                                                                                                                 line 380) only includes `kamino_lending` — `solend`/`marginfi` risk_params are silently NEVER collected even
+                                                                                                                                 though the underlying mechanism already supports them. Unlike the documented `fluid`/`morpho`
+                                                                                                                                 `_CATALOGUE_ONLY_PROTOCOLS` reasoning, no comment justifies omitting `solend`/`marginfi` here — reads as an
+                                                                                                                                 unintentional oversight (the 3-Solana-protocol set exists as a real shared constant, just not fully wired
+                                                                                                                                 into this one handler's dispatch list), not a documented scope decision. Filed as a fresh, precisely-scoped
+                                                                                                                                 follow-up (P3) below rather than fixed inline (adding them changes runtime dispatch behavior, out of scope
+                                                                                                                                 for a read-only reconciliation todo).
+                                                                                                                              3. `liquidations_handler.py` has ZERO Solana-protocol coverage (no `kamino_lending`/`solend`/`marginfi`, no
+                                                                                                                                 `SOLANA_LENDING_PROTOCOLS` import at all) — no comment either way; flagging as unconfirmed (may be an
+                                                                                                                                 intentional scope limit if Solana lending liquidations genuinely have no equivalent data source) rather than
+                                                                                                                                 asserting it's a bug.
+                                                                                                                              4. The 4 core EVM protocols (`aave_v3`/`spark`/`compound_v3`/`morpho`) are fully consistent across all 3
+                                                                                                                                 handlers and `SUBGRAPH_IDS` — no mismatch.
+                                                                                                                              (repo: market-tick-data-service)
 
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-5, `data_engineering`) — BLOCKED-BY-DEEPER-BUG, not fixed inline, not a
       simple oversight/deliberate-exclusion question.** Traced the mechanism `solend`/`marginfi` would dispatch through
@@ -327,8 +327,8 @@ Either way, C8's DRIFT-SOLANA requirement must be dropped from any future done-c
       `quality-gates.sh` green (1755 passed, 1 skipped). (repo: agent-orchestrator)
 - [x] ✅ [DOCS] P3. **DONE 2026-07-26 (slot 9)** — Corrected `data_completion_defi_2026_07_15.md` item C8: dropped the
       stale "DRIFT-SOLANA... confirmed present" done-criterion (deliberately removed 2026-07-16, must never reappear)
-      and the FRAX category-mismatch framing, with a pointer to this doc's full re-diagnosis. A `plans/active/` grep for
-      the same stale framing turned up one more instance —
+      and the FRAX category-mismatch framing, with a pointer to this doc's full re-diagnosis. A `plans/archive/2026_08/`
+      grep for the same stale framing turned up one more instance —
       `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`'s C8 summary bullet (line 152) repeated the
       identical "genuine absentees DRIFT-SOLANA/FRAX/MORPHO/FLUID" line — corrected there too, same pointer added. The
       plan's own `defi_satellite_ao_dispatch_batch2_2026_07_26.md` C8 todo (lines 82-101) still states the original

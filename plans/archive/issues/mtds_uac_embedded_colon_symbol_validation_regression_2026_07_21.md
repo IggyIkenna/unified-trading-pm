@@ -106,7 +106,7 @@ adjudicated here:
 
 Whichever direction is right, it is NOT a DeFi-lending-writer concern and is out of
 `defi_lending_writer_retire_prerequisite_2026_07_20`'s scope — flagged here per workspace findings-triage ("outside
-every plan → `plans/active/issues/`").
+every plan → `plans/archive/issues/`").
 
 ## Resolved 2026-07-26 (slot-7, `data_engineering`)
 

@@ -87,7 +87,7 @@ context_scope:
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch6 is in
       `plans/archive/2026_07/` (or the current month's archive dir) with a superseded_by/archived banner and zero
-      remaining referrers to its old `plans/active/` path.
+      remaining referrers to its old `plans/archive/2026_08/` path.
 
 ## Progress Log
 

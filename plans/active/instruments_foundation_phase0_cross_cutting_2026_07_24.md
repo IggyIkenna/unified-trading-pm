@@ -31,6 +31,7 @@ related:
     instruments_cefi_g1_g5_gate_execution_2026_07_24,
     instruments_tradfi_g1_g5_gate_execution_2026_07_24,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-28"

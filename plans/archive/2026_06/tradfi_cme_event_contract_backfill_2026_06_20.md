@@ -1,7 +1,8 @@
 ---
 doc_type: plan
 title: TradFi CME event-contract Phase 0 catalog backfill + manifest legacy-blank apply-flips
-summary: Backfill the CME Phase 0 event-contract catalog and apply manifest legacy-blank flip-fixes for TradFi instruments.
+summary:
+  Backfill the CME Phase 0 event-contract catalog and apply manifest legacy-blank flip-fixes for TradFi instruments.
 status: complete
 nature: process
 asset_group: [tradfi]
@@ -9,8 +10,13 @@ stage: [meta]
 repos: [deployment-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [cme, backfill, manifest, event-contract, tradfi, catalog]
-related: [../epics/tradfi_master.md, ./tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/tradfi_master.md,
+    ./tradfi_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/cme_polymarket_arb_2026_05_08.md,
+  ]
+created: "2026-06-12"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -30,14 +36,14 @@ drift_direction: advance-code
 ---
 
 > **✅ ARCHIVED — 2026-06-30 — TRULY-DONE.** CME EC Phase-0 backfill VM `exit_code=0` (214k rows, 9 EC roots, 100%
-> coverage); 77,766 legacy-blank rows reconciled on real infra (manifest-verified). Phases 1-5 unblocked. Content-verified
-> (§6 B3.6 of `plan_issue_epic_consolidation_2026_06_30`).
+> coverage); 77,766 legacy-blank rows reconciled on real infra (manifest-verified). Phases 1-5 unblocked.
+> Content-verified (§6 B3.6 of `plan_issue_epic_consolidation_2026_06_30`).
 
 > **Provenance**: extracted 2026-06-20 from the inline `tradfi_master` epic body during the asset-group-umbrella
 > restructure (the L0 umbrellas had accumulated ~stale May-07/08 inline todos that the backlog regen
-> `regen_backlog_from_plan.py` never scans — it only reads `plans/active/*.md`, never `plans/epics/`). This plan is the
-> **genuinely net-new, unowned** CME event-contract Phase-0 catalog backfill (epic L536–545), which unblocks the
-> archived CME↔Polymarket arb sub-plan's Phases 1-5. It also absorbs the small genuine residual TradFi manifest
+> `regen_backlog_from_plan.py` never scans — it only reads `plans/archive/2026_08/*.md`, never `plans/epics/`). This
+> plan is the **genuinely net-new, unowned** CME event-contract Phase-0 catalog backfill (epic L536–545), which unblocks
+> the archived CME↔Polymarket arb sub-plan's Phases 1-5. It also absorbs the small genuine residual TradFi manifest
 > legacy-blank `--apply-flips` VM run (epic L386, scan already complete with 0 uncertain cases). Broader TradFi manifest
 > / source / canonicalisation work is owned separately by
 > [`tradfi_manifest_canonicalisation_2026_06_01.md`](./tradfi_manifest_canonicalisation_2026_06_01.md) — do NOT

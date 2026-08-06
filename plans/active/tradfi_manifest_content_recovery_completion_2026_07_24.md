@@ -41,6 +41,7 @@ related:
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/tradfi_manifest_content_recovery_completion_history_2026_07_24.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

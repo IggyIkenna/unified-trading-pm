@@ -35,6 +35,7 @@ related:
     plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/sports_features_readiness_for_predictions_2026_06_20.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-14
 author: unknown

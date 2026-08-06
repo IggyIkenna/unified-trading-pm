@@ -292,7 +292,7 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
      (currently-unwired) `_cross_reference_fixture()` method already sits in Polymarket's adapter for exactly this
      alignment.
    - **Migration scope** (adapter-level `underlying` population + cross-venue `canonical_instrument_id` wiring + sports
-     fixture_id alignment) tracked in [[prediction_canonical_identity_migration_2026_07_08]] (`plans/active/`,
+     fixture_id alignment) tracked in [[prediction_canonical_identity_migration_2026_07_08]] (`plans/archive/2026_08/`,
      `assigned_vm: NA`) — not implemented in this pass; requires adapter changes + a cross-venue join step that doesn't
      exist in the per-day write path today.
    - **Bucket-naming split — fixed for INSTRUMENTS, deliberately left for MARKET_DATA.**

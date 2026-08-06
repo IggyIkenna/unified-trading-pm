@@ -24,6 +24,7 @@ related:
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/PLAN_FORMAT.md,
     /plans/active/task_template.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-23"
 author: unknown
@@ -85,11 +86,11 @@ depends_on: []
       back down.
 - [ ] [REVIEW] P2. Reconcile the archival-mechanics inconsistency this surfaced: `plans/archive/` holds 1,564 files (so
       plans DO get physically moved by some process), but this session's own archival work (4 sports fold-in plans,
-      2026-07-23) added a banner + `status: superseded` and left the files IN `plans/active/` — meaning 2 of those 4 are
-      still being scanned (and hard-failing) by `check_line_caps.sh`. Decide: does "archival" mean physical move (get it
-      out of the actively-scanned corpus, but then every referrer needs updating per the todo above) or
-      stay-in-place-with-banner (referrers never break, but active/ never shrinks)? Whichever is chosen, state it as the
-      SSOT rule, not two competing practices.
+      2026-07-23) added a banner + `status: superseded` and left the files IN `plans/archive/2026_08/` — meaning 2 of
+      those 4 are still being scanned (and hard-failing) by `check_line_caps.sh`. Decide: does "archival" mean physical
+      move (get it out of the actively-scanned corpus, but then every referrer needs updating per the todo above) or
+      stay-in-place-with-banner (referrers never break, but archive/2026_08/ never shrinks)? Whichever is chosen, state
+      it as the SSOT rule, not two competing practices.
 - [ ] [DOC] P3. **109 format violations** (baseline-seeded, `scripts/plan-hygiene/reference_paths_baseline.yaml`) — bare
       `related:` filenames the migration could not safely resolve: some are genuinely ambiguous (multiple files share
       the basename, e.g. `README.md` in ~35 places), some are genuinely dangling (target doesn't exist anywhere under
@@ -109,11 +110,11 @@ depends_on: []
       `codex/14-playbooks/` → `codex/14-customer-journeys/` rename (with a `infra-spec/` subset moving to
       `codex/16-strategy-playbooks/infra-spec/` instead) left 78 distinct `/codex/14-playbooks/...` targets dangling
       across 104 files; (2) `plans/active/issues/plan_line_cap_remediation_2026_07_23.md`'s archival to
-      `plans/archive/issues/...` (commit `61618a105`) left 66 referrers pointing at the old active/ path. Applied a
-      mechanical corpus-wide path substitution (old target → verified-real new target only; left the ~14 genuinely
-      unmapped `14-playbooks/...` refs untouched — those predate both renames and are part of the existing backlog
-      below, not this regression) — `existence_count` now 956 (< prior baseline 1257, a net IMPROVEMENT since the fix
-      touched every occurrence of each stale target, not just the new ones), baseline ratcheted down via
+      `plans/archive/issues/...` (commit `61618a105`) left 66 referrers pointing at the old archive/2026_08/ path.
+      Applied a mechanical corpus-wide path substitution (old target → verified-real new target only; left the ~14
+      genuinely unmapped `14-playbooks/...` refs untouched — those predate both renames and are part of the existing
+      backlog below, not this regression) — `existence_count` now 956 (< prior baseline 1257, a net IMPROVEMENT since
+      the fix touched every occurrence of each stale target, not just the new ones), baseline ratcheted down via
       `--update-baseline`. `pm@<commit-pending>`.
 - [x] [DOC] P3. **2026-07-25 plan_health regression (agt-4b54e5)**: 3 new dangling refs landed from the 2026-07-25
       terminal-status archival sweep (`ad4b1952c`) not updating referrers — `/plans/active/issues/<slug>.md` targets

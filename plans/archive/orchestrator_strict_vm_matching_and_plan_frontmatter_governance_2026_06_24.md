@@ -197,7 +197,7 @@ silently misses), **normalized closed-set values** (no prose in enums), and **ex
 rg -l '^asset_group: defi' plans/active | xargs rg -l '^assigned_vm: vm-defi'   # defi work owned by vm-defi
 rg -l '^repos:.*\bmtds\b'  plans/active                                          # everything touching mtds
 rg -l '^tags:.*backfill'   plans/active                                          # topical sweep
-rg '^(title|summary):'      plans/active/<slug>.md                               # 2-line gist, no full read
+rg '^(title|summary):'      plans/archive/2026_08/<slug>.md                               # 2-line gist, no full read
 ```
 
 The single-line inline-list convention for `repos` / `tags` / `related_plans` is the key RAG optimization — each axis is
@@ -581,8 +581,8 @@ before trusting it in the fleet — never a copy of anyone's v1 code.
 
 ### Phase 0 — Pre-audit (no code change)
 
-- [ ] [SCRIPT] P0. Enumerate every `plans/active/*.md`: current field coverage vs the target matrix, the ~18 plans
-      lacking own `assigned_vm`, and the registry-valid VM ids (from
+- [ ] [SCRIPT] P0. Enumerate every `plans/archive/2026_08/*.md`: current field coverage vs the target matrix, the ~18
+      plans lacking own `assigned_vm`, and the registry-valid VM ids (from
       `scripts/orchestrator/orchestrator_vm_registry.yaml`). Output a coverage table into this plan's Progress Log.
       **Gate**: table present + the delegating-plan list confirmed.
 

@@ -30,6 +30,7 @@ related:
     /plans/archive/2026_07/sports_reference_backfill_oom_2026_06_22.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-08
 author: unknown

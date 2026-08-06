@@ -103,7 +103,7 @@ QG did not confirm green for either repo before this session had to checkpoint o
       clean (428s; the `partition_paths.py` 900-line flag seen mid-run is warn-only, does not gate exit code — confirmed
       pre-existing, untouched by this diff). Shipped `unified-api-contracts@a6346f95`.
 - [x] [CODE] P3. ✅ Confirmed already fixed: `python3 scripts/run_validators.py --scope all` now reports "OK: No broken
-      links in plans/active/*.md" clean (the stale row referencing
+      links in plans/archive/2026_08/*.md" clean (the stale row referencing
       `data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` is gone — a subsequent inventory regen by another
       slot resolved it; that target plan file no longer exists anywhere, active or archived, confirming the archival
       completed). Recreated the staged `docs/SPORTS_INSTRUMENTS.md` diff (slot 10's fix lived only in its own `.tabs/10`

@@ -155,7 +155,7 @@ Traced the gap:
    no-op. This is the same "verify the write, don't trust the HTTP-accept" lesson as the Cloud Build trigger incident.
 4. **[INFRA]** Once (1)-(3) land, re-run `deployment_registry_reaper_not_draining_stale_entries-002`'s remaining chain:
    confirm `deployment-api`'s promote PR (past #377) merges to `main`, a fresh Cloud Build + Cloud Run revision deploys,
-   then re-verify `active/` convergence per that issue doc's Todo 5.
+   then re-verify `archive/2026_08/` convergence per that issue doc's Todo 5.
 
 ## Todos
 

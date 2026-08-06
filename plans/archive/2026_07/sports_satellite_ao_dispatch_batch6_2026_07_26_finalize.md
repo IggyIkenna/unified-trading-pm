@@ -7,7 +7,8 @@ summary: >-
   distinct source doc's checkboxes once its batch-6 todo lands, then re-check the Deferred conflict-gated +
   operator-gated items for any that have since cleared), and then carries the 4th step batch2-5's finalize plans are all
   missing and which batch6 todo 7 adds to them: archive every source doc this batch drove to terminal status, in the
-  same commit as the status flip, so `check_terminal_status_archived.py` never sees a terminal doc in `plans/active/`.
+  same commit as the status flip, so `check_terminal_status_archived.py` never sees a terminal doc in
+  `plans/archive/2026_08/`.
 status: archived
 archive_date: 2026-08-05
 nature: process

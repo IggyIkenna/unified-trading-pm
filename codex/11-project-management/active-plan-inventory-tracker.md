@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Active Plan Inventory + Done-vs-Left Dashboard
 summary:
-  "`regenerate_active_plan_inventory.py` — scans `plans/active/*.md` for estimate/checkbox state, computes cal-AI-days
-  remaining + orphan/owner detection, and writes the auto-tracked dashboard table into the master plan."
+  "`regenerate_active_plan_inventory.py` — scans `plans/archive/2026_08/*.md` for estimate/checkbox state, computes
+  cal-AI-days remaining + orphan/owner detection, and writes the auto-tracked dashboard table into the master plan."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -49,8 +49,9 @@ last_executed: 2026-07-31
 
 > **✅ RESOLVED 2026-07-28 — re-verified 2026-07-31.** The `MASTER_FILE not found` breakage this banner used to warn
 > about is fixed. History: `master_to_live_defi_2026_05_23.md` closed out 2026-07-24 (98% done) and moved to
-> `plans/archive/2026_07/`, which broke the regen step because `MASTER_FILE` still pointed into `plans/active/`. The
-> inventory table was then **extracted into its own host doc**, and `MASTER_FILE` repointed at it:
+> `plans/archive/2026_07/`, which broke the regen step because `MASTER_FILE` still pointed into
+> `plans/archive/2026_08/`. The inventory table was then **extracted into its own host doc**, and `MASTER_FILE`
+> repointed at it:
 >
 > ```python
 > MASTER_FILE = PM_ROOT / "plans" / "archive" / "2026_07" / "active_plan_inventory_dashboard_2026_07_24.md"
@@ -63,8 +64,8 @@ last_executed: 2026-07-31
 > ARCHIVED banner and Deferred-work section are untouched.
 
 > SSOT for the auto-tracked workspace-wide plan inventory, now hosted in
-> `active_plan_inventory_dashboard_2026_07_24.md`. Shipped
-> 2026-05-12 (PM@ab1a471f) to solve two coupled problems surfaced in the calibration thread:
+> `active_plan_inventory_dashboard_2026_07_24.md`. Shipped 2026-05-12 (PM@ab1a471f) to solve two coupled problems
+> surfaced in the calibration thread:
 >
 > 1. **"What's done vs left across the workspace?"** — was a 20-line grep + manual tally every time.
 > 2. **"Is the master plan truly wrapping every active plan?"** — was hidden until the orphan column made it visible (19
@@ -76,7 +77,7 @@ last_executed: 2026-07-31
 
 A script (`unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py`) that:
 
-1. Scans `plans/active/*.md` for every plan carrying `estimate_class` frontmatter.
+1. Scans `plans/archive/2026_08/*.md` for every plan carrying `estimate_class` frontmatter.
 2. Counts done/todo checkboxes in plan body (regex `- [x]` / `- [ ]`).
 3. Computes `cal_remaining = estimate_calibrated_ai_days × todo / (done + todo)`.
 4. Determines the **owner** by grepping each plan's filename stem across `master_to_live_defi_2026_05_23.md`

@@ -7,7 +7,7 @@ title: >-
 summary: >-
   Companion history doc (part 2 of 2) to /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md —
   the verbatim Progress Log narrative (2026-07-22 P6 drain through 2026-07-23 P8 verify/reconcile) extracted for
-  line-cap compliance (plans/active/task_template.md §3 finding J, plans/active/issues/*.md 1000-line hard cap — the
+  line-cap compliance (plans/active/task_template.md §3 finding J, plans/archive/issues/*.md 1000-line hard cap — the
   combined narrative itself exceeded 1000 lines, hence the 2-part split). Covers: the P6 drain/snapshot (including the
   JIT-redrain lessons); the full P7 per-AG SPOT --apply sequence for DEFI, PREDICTION, CEFI (2 SPOT preemption bursts, a
   149-object permanent KEPT_SRC residual root-caused to a genuine `_copy_verify_delete()` retry-idempotency gap, now
@@ -64,7 +64,7 @@ resolved_by: >-
   todos)
 source: >-
   Extracted 2026-07-25 from plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md (1453 lines, over
-  the plans/active/issues/*.md 1000-line hard cap, scripts/plan-hygiene/check_line_caps.sh) per the established
+  the plans/archive/issues/*.md 1000-line hard cap, scripts/plan-hygiene/check_line_caps.sh) per the established
   extract-to-archive-bound-history-child pattern (plans/active/issues/plan_line_cap_remediation_2026_07_23.md's FINAL
   RESOLUTION section); split into 2 parts because the combined extracted narrative (1088 lines) itself exceeded the cap.
   Verbatim Progress Log content in original document order — no checkbox lines were excised from this half (the

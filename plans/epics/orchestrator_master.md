@@ -220,7 +220,7 @@ Implementation work is owned by the assigned active plans below. Status as of 20
 > more regression then fixing it."_
 >
 > **Enumeration method (do not regress it).** The list below is the union of THREE axes, because no single axis is
-> complete: (1) `rg -l '^repos:.*agent-orchestrator' plans/active/issues/`; (2)
+> complete: (1) `rg -l '^repos:.*agent-orchestrator' plans/archive/issues/`; (2)
 > `parent_epic ∈ {orchestrator_master, agent_operating_framework_master}` — this axis alone caught 5 docs the `repos:`
 > filter misses; (3) `plans/archive/issues/` re-scanned for AO docs that are archived **yet still carry open `- [ ]`
 > todos**. A filename-prefix (`ao_*`) filter is NOT sufficient — it undercounted this corpus by 5 on 2026-07-15.

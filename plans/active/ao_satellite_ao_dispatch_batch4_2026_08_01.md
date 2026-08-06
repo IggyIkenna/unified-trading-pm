@@ -28,6 +28,7 @@ related:
     /plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-01"
 last_updated: "2026-08-01"
@@ -145,9 +146,9 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
 
 - **2026-08-01** — Authored during `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`'s todo 3 (Deferred-gate
   re-check), originally as "batch 2" with 2 todos. Both todos independently confirmed: their originally-stated gate
-  cleared, AND a fresh `grep -rl <target-file> plans/active/*.md plans/active/issues/*.md` conflict-check (excluding
-  their own source doc and the batch1/finalize plans) returned zero competing open todos. Left `status: draft`
-  deliberately — flipping to `active` is the operator's call.
+  cleared, AND a fresh `grep -rl <target-file> plans/archive/2026_08/*.md plans/archive/issues/*.md` conflict-check
+  (excluding their own source doc and the batch1/finalize plans) returned zero competing open todos. Left
+  `status: draft` deliberately — flipping to `active` is the operator's call.
 - **2026-08-01 (same day, before dispatch)** — Operator caught the "batch 2" naming collision against the pre-existing
   `ao_satellite_ao_dispatch_batch2_2026_07_30.md`; renamed to batch 4 (title/H1/frontmatter/filename), drafted the
   missing paired `batch4_finalize` plan, and fixed every corpus referrer. A direct code read (triggered by the

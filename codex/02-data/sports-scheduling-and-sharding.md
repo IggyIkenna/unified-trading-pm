@@ -700,8 +700,8 @@ For each plan, the executing agent needs exactly:
 integration QG, pushes all repos serially (avoiding concurrent-push races), then dispatches the 2 chained plans.
 Sub-agents commit locally but don't push; orchestrator owns origin.
 
-**Solo dispatch** (if not using the master plan): "Execute `plans/active/<plan_name>.md`. Follow pre-audit manifest
-strictly. Flip checkboxes as you go. Commit + quickmerge per repo in the phases."
+**Solo dispatch** (if not using the master plan): "Execute `plans/archive/2026_08/<plan_name>.md`. Follow pre-audit
+manifest strictly. Flip checkboxes as you go. Commit + quickmerge per repo in the phases."
 
 Also update the shard-migration plan's gated-on to include the UTL primitives plan — once the UTL refactor ships, the
 shard-migration plan's Phase 1 is "use the UTL primitives" not "extend the rescan script".

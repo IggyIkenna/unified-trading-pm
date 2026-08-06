@@ -5,9 +5,9 @@ summary:
   SSOT for how `priority:` gets assigned/triaged going forward, not just a one-time resort — the asset-group tier
   ordering (cross-cutting > cefi > defi > sports > tradfi, with a billing-critical backfill carve-out for
   sports/tradfi); that CI escalations + daily/on-demand scheduled audit findings ALWAYS outrank the tier ordering (they
-  can block the whole fleet, a tier ranking cannot); and that `plans/active/issues/*.md` docs must be actively diagnosed
-  and absorbed into AO-dispatchable work, never left as passive undiagnosed prose. Operator ruling 2026-07-28 (Ikenna) —
-  apply this to every NEW plan/issue's priority assignment, not only the one-time audit that produced it.
+  can block the whole fleet, a tier ranking cannot); and that `plans/archive/issues/*.md` docs must be actively
+  diagnosed and absorbed into AO-dispatchable work, never left as passive undiagnosed prose. Operator ruling 2026-07-28
+  (Ikenna) — apply this to every NEW plan/issue's priority assignment, not only the one-time audit that produced it.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -70,7 +70,7 @@ code_refs:
 
 ## 2. Issues must be diagnosed and absorbed into the AO workflow — never left passive
 
-A doc in `plans/active/issues/*.md` is not "done" by existing. Per this workspace's Findings-triage rule (CLAUDE.md §
+A doc in `plans/archive/issues/*.md` is not "done" by existing. Per this workspace's Findings-triage rule (CLAUDE.md §
 "Findings triage"), every issue doc must resolve to one of:
 
 - **Folded into an owning plan** as real `- [ ]` todos (never a prose mention — see
@@ -81,7 +81,7 @@ A doc in `plans/active/issues/*.md` is not "done" by existing. Per this workspac
 - **A genuinely operator-gated decision** (`BLOCKED-OPERATOR-DECISION`/`BLOCKED-CREDENTIALS`), which still needs the
   decision actively sought, not the issue doc left to age silently.
 
-An issue doc that just sits in `plans/active/issues/` with no plan referencing it and no `assigned_vm: planning` scope
+An issue doc that just sits in `plans/archive/issues/` with no plan referencing it and no `assigned_vm: planning` scope
 of its own is an orphan — exactly what `/ag-closeout-audit` exists to find, and exactly what this rule means to prevent
 from accumulating in the first place. Diagnosing an issue means reading it enough to know WHICH of the three outcomes
 above applies, not just triaging its severity label.

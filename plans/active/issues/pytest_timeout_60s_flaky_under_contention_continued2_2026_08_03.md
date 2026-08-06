@@ -52,6 +52,7 @@ related:
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-03
 author: unknown

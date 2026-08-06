@@ -26,6 +26,7 @@ related:
   [
     /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-24
 author: unknown

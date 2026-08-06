@@ -132,8 +132,8 @@ exhaustion evidence a day earlier and already contained the full root-cause trai
 doc had to redo ~215k tokens of fleet-wide grepping before finding it, 2026-08-03).
 
 **This costs you nothing extra to do**: CLAUDE.md's pre-task plan/issue conflict-check HARD RULE already requires
-grepping `plans/active/` + `.../issues/` before starting any task — capture that grep's output into `context_scope`
-instead of discarding it. Two additions worth the extra 30 seconds beyond a plain topic/keyword grep:
+grepping `plans/archive/2026_08/` + `.../issues/` before starting any task — capture that grep's output into
+`context_scope` instead of discarding it. Two additions worth the extra 30 seconds beyond a plain topic/keyword grep:
 
 - **Grep by evidence fingerprint, not just topic** — if your doc's evidence includes a distinctive literal (an exact
   error code, an HTTP header value, a secret/resource name, a VM name), grep the corpus for that EXACT string, not just
@@ -208,13 +208,13 @@ version.
 - **A plan gated on a FORKED-OUT child's work states it as `depends_on` + `gate_on_depends: true`, not just prose**
   _(finding I, 2026-07-24: splitting an over-cap plan into a coordination-index parent + child plans is now a routine
   pattern — see `check_line_caps.sh`'s hard 1000L cap (no exemption; a genuinely large hub belongs in `plans/epics/`,
-  which gets its own flat 2000L cap, not a free pass while still in `plans/active/`) — and it is easy to leave the real
-  ordering constraint as header prose only, e.g. "Track 5 (C-GREEN gated on T1→T3)" after Track 1 moved to a separate
-  child plan. Prose alone is invisible to the dispatcher: if the parent is ever flipped to `assigned_vm: planning`, the
-  gated track's todos would be dispatchable immediately, concurrently with the child's still-open prerequisite work)._
-  The SAME edit that forks a section out to a child plan must ALSO add that child's slug to the parent's `depends_on:`
-  frontmatter (+ `gate_on_depends: true` if the parent has any remaining todo that genuinely can't start before the
-  child finishes) — do not defer this to a follow-up.
+  which gets its own flat 2000L cap, not a free pass while still in `plans/archive/2026_08/`) — and it is easy to leave
+  the real ordering constraint as header prose only, e.g. "Track 5 (C-GREEN gated on T1→T3)" after Track 1 moved to a
+  separate child plan. Prose alone is invisible to the dispatcher: if the parent is ever flipped to
+  `assigned_vm: planning`, the gated track's todos would be dispatchable immediately, concurrently with the child's
+  still-open prerequisite work)._ The SAME edit that forks a section out to a child plan must ALSO add that child's slug
+  to the parent's `depends_on:` frontmatter (+ `gate_on_depends: true` if the parent has any remaining todo that
+  genuinely can't start before the child finishes) — do not defer this to a follow-up.
 - **Don't let a plan's own history balloon past cap — extract completed Progress Log sections AS YOU GO, don't wait for
   a remediation pass** _(finding J, 2026-07-24: `plan_line_cap_remediation_2026_07_23.md` had to clean up 30 plans that
   had silently grown to 1000-4780 lines, almost entirely from accumulated, fully-closed, dated Progress Log entries
@@ -519,8 +519,8 @@ commit + push + flip the plan checkbox in the SAME turn (`docs(plans):` prefix) 
 
 ---
 
-**This template is a LOCAL doc (not ingested). Copy §2 into a new `<slug>_<YYYY_MM_DD>.md` in `plans/active/` to
-start.**
+**This template is a LOCAL doc (not ingested). Copy §2 into a new `<slug>_<YYYY_MM_DD>.md` in `plans/archive/2026_08/`
+to start.**
 
 ## Progress Log
 

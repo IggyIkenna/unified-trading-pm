@@ -32,6 +32,7 @@ related:
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown

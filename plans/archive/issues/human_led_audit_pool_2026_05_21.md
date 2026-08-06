@@ -92,10 +92,10 @@ Verbatim from operator note to Harsh ahead of meet, 2026-05-21:
             ▼
 [plans upgraded — favour upgrading existing plans over creating new ones]
    • each finding → todo in the most-relevant existing active plan
-   • new findings without an existing plan home → new plan in `plans/active/`
+   • new findings without an existing plan home → new plan in `plans/archive/2026_08/`
             │
             ▼
-[wrapper remediation plan — `plans/active/<slug>_remediation_2026_05_21.md`]
+[wrapper remediation plan — `plans/archive/2026_08/<slug>_remediation_2026_05_21.md`]
    • envelopes the upgraded existing plans + new ones as sub-plans
    • single plan-of-record for the AWS background-agent pool to dispatch from
    • inherits priority + ack from operator at wrapper-plan create time
@@ -130,7 +130,7 @@ execution defaults to Sonnet 4.6.
 | `SEEDED`               | row proposed here; no human picked up yet                                      |
 | `PICKED-UP <owner>`    | human owner started the audit                                                  |
 | `AUDIT-COMPLETE`       | audit doc landed in `plans/audit/results/`; wrapper plan not yet created       |
-| `WRAPPER-PLAN-CREATED` | wrapper plan in `plans/active/`; dispatched to AWS pool                        |
+| `WRAPPER-PLAN-CREATED` | wrapper plan in `plans/archive/2026_08/`; dispatched to AWS pool               |
 | `IN-FLIGHT`            | wrapper plan being executed by agents; some todos open                         |
 | `DONE`                 | wrapper plan resolved; archives both this row + the wrapper plan               |
 | `BLOCKED-*`            | per CLAUDE.md § "External Data Is Always Available" closed-set blocking states |
@@ -213,7 +213,7 @@ rendering).
 | Mockability       | **YES** — mock historical features data; real ml-training-service + ml-inference-service code; mock subscribers for inference-output routing |
 | Deps              | ML repo consolidation (`ml_repo_consolidation_preaudit_2026_05_19.md`) clean; per-archetype feature schemas locked                           |
 | Wrapper plan      | `plans/active/ml_three_path_audit_remediation_2026_05_21.md` (TBD)                                                                           |
-| Wraps existing    | `ml_repo_consolidation_preaudit_2026_05_19.md` + any per-archetype ML plans in `plans/active/`                                               |
+| Wraps existing    | `ml_repo_consolidation_preaudit_2026_05_19.md` + any per-archetype ML plans in `plans/archive/2026_08/`                                      |
 | Operator approval | required — touches deployment topology + subscriptions                                                                                       |
 | Status            | `SEEDED`                                                                                                                                     |
 

@@ -63,6 +63,7 @@ related:
     /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/honest-coverage-model.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-15
 parent_epic: tradfi_master

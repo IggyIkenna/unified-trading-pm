@@ -3,7 +3,7 @@ title: Plans Reconciliation Evidence Map
 date: 2026-04-25
 status: audit-record
 type: audit
-scope: 143 plans in plans/active/ as of 2026-04-25
+scope: 143 plans in plans/archive/2026_08/ as of 2026-04-25
 audit_passes: [evidence-map, classification, duplication-scan, orphan-integration, sports-register-drift]
 ---
 
@@ -14,8 +14,8 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 
 # Reconciliation Evidence Map — 2026-04-25
 
-Read-only audit of every file in `plans/active/` (143 plan files + 6 meta files) against committed code state on
-`origin/live-defi-rollout`. Each plan classified into one of:
+Read-only audit of every file in `plans/archive/2026_08/` (143 plan files + 6 meta files) against committed code state
+on `origin/live-defi-rollout`. Each plan classified into one of:
 
 - `shipped` — substantially all phases done with cited commit/file evidence
 - `partial` — some phases shipped, others genuinely open
@@ -34,11 +34,11 @@ The dispatch prompt referenced `/codex/09-strategy/cross-cutting/12-sports-tradi
 [`/codex/02-data/sports-scheduling-and-sharding.md`](/codex/02-data/sports-scheduling-and-sharding.md) §12.0 "Live
 progress register". Last register audit: 2026-04-22 late.
 
-### §12.0 register vs plans/active/ checkbox state (verified 2026-04-25)
+### §12.0 register vs plans/archive/2026_08/ checkbox state (verified 2026-04-25)
 
 | § Plan                                               | Register claim (2026-04-22) | Actual checkbox state (2026-04-25)                                                        | Drift                         |
 | ---------------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------- |
-| 1 utl_manifest_migration_primitives                  | 17/0 DONE                   | not in active/ — already promoted to §12.1                                                | none                          |
+| 1 utl_manifest_migration_primitives                  | 17/0 DONE                   | not in archive/2026_08/ — already promoted to §12.1                                       | none                          |
 | 2 apifootball_enrichment_historical_backfill         | 3/7 in-flight               | done=7 open=3 (post-2026-04-22 commits flipped)                                           | register stale; plan correct  |
 | 3 non_apifootball_provider_backfill_launchers        | 5/2 near-C5                 | unverified — chunk AE retry pending                                                       | tbd                           |
 | 4 instruments_service_orchestrator_reliability_fixes | 12/8 half-way               | unverified — chunk AC retry pending                                                       | tbd                           |
@@ -84,7 +84,8 @@ These have unambiguous superseder declarations already in their frontmatter — 
 
 ## G1 / G2 / G3 baseline (2026-04-25)
 
-- **G1 (14 plans)**: ALL ARCHIVED on a prior pass — `plans/archive/refactor_g1_*.md`. None present in `plans/active/`.
+- **G1 (14 plans)**: ALL ARCHIVED on a prior pass — `plans/archive/refactor_g1_*.md`. None present in
+  `plans/archive/2026_08/`.
 - **G2 (11 plans, 185 total todos)**: 6 done (3.2%) per raw checkbox grep. Full evidence in chunk-AD agent output.
 - **G3 (5 plans, 58 total todos)**: 5 done (8.6%) per raw checkbox grep. Full evidence in chunk-AE agent output.
 

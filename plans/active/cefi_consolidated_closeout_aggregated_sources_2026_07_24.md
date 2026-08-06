@@ -129,7 +129,7 @@ context_scope:
     - **[BACKEND] P3.** Grep `trade_handler.py`/`serializer.py` for bare COINBASE usage; re-key if lookup, leave if
       label/comment.
   - [`plans/archive/issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`](/plans/archive/issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md)
-    (archived — path updated 2026-07-29, was pointing at the pre-archival `active/issues/` location)
+    (archived — path updated 2026-07-29, was pointing at the pre-archival `archive/issues/` location)
     - 1. **[DATA] P1.** Decide the CEFI `future` candle policy — standalone contract vs chain-bundle-only routing.
     - 2. **[DATA] P2.** Corpus-wide scan: which CEFI venues/instrument_types besides DERIBIT hit this.
     - 3. **[SCRIPT] P2.** Once ruled, register the contract (or fix routing) + add a regression test.

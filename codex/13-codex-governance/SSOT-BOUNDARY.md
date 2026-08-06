@@ -105,7 +105,7 @@ operational.
 | **Scope spec / Epic** | What is being built, success criteria, ownership                 | Codex `11-project-management/epics/`                     |
 | **Agent procedure**   | How to task agents, how to recover, how to review                | Codex `12-agent-workflow/`                               |
 | **Runbook**           | Step-by-step commands for executing a task right now             | PM `docs/runbooks/`                                      |
-| **Active plan**       | Time-bounded plan with targets, metrics, status                  | PM `plans/active/`                                       |
+| **Active plan**       | Time-bounded plan with targets, metrics, status                  | PM `plans/archive/2026_08/`                              |
 | **CI/CD plan**        | Pipeline infrastructure, coverage milestones                     | PM `plans/cicd/`                                         |
 | **Archive**           | Historical content with reference value, no longer active        | Nearest `archive/` subdirectory in the correct repo      |
 

@@ -12,7 +12,16 @@ tags: []
 related: []
 created: 2026-05-07
 author: harsh
-source: ['plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run, VM stopped after diagnosis)"', 'VM `mtds-lending-indices-20260507-140418` (stopped 2026-05-07 ~15:30 IST after diagnosis)', 'gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260507-140418.parquet', 'gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260507-140418/run.log', market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py (subgraph routing), instruments-service (DeFi instrument-discovery launch-date floor handling)]
+source:
+  [
+    'plans/active/defi_master_2026_05_07.md § "Lending-indices VM run-quality bugs (discovered 2026-05-07 mid-run, VM
+    stopped after diagnosis)"',
+    "VM `mtds-lending-indices-20260507-140418` (stopped 2026-05-07 ~15:30 IST after diagnosis)",
+    "gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260507-140418.parquet",
+    "gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260507-140418/run.log",
+    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py (subgraph routing),
+    instruments-service (DeFi instrument-discovery launch-date floor handling),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -482,7 +491,7 @@ UAC + MTDS + instruments-service all pushed cleanly (zero incoming). PM has inco
 
 - `origin/live-defi-rollout` ahead by 1:
   `150c1d5 docs(plans): file 9 issue docs surfacing data-correctness gaps for May 23 cutover` (semver-rollout[bot] —
-  operator-driven 9-issue audit batch, additive only — files all NEW under `plans/active/issues/`, no overlap with this
+  operator-driven 9-issue audit batch, additive only — files all NEW under `plans/archive/issues/`, no overlap with this
   issue doc).
 - Local PM ahead by 2:
   `e870111 plan(D2): Tab 10 ✅ DONE verified; Tab 9 Q1 ✅ RESOLVED — scope extended to ship UAC SSOT fix` (operator's
@@ -527,7 +536,7 @@ Operator direction (Harsh, 2026-05-08 chat): _"so we can do the rebase later on.
 **For coordination with parallel agents**: this PM stack now has 4 local commits ahead (e870111 + a687dc5
 
 - 69ebe5b + this main commit answering Q2). All will rebase cleanly on top of 150c1d5 — incoming is additive (9 new
-  issue files under `plans/active/issues/`, zero overlap with the local-ahead surface).
+  issue files under `plans/archive/issues/`, zero overlap with the local-ahead surface).
 
 UAC + MTDS + instruments-service are already pushed; Bug 1 / Bug 3 are validated end-to-end via the shipped fixes; Tab 9
 can go quiet after the VM-validation step.

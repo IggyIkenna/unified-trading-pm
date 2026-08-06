@@ -418,7 +418,7 @@ under-utilisation is fine, mid-cycle collision is not.
   [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
   freeze-gate items 8 + 9.
 - **Repos owned**: read-only across UAC + UTL + every service repo + codex docs. Issue docs filed in
-  `plans/active/issues/` for any failure attribution.
+  `plans/archive/issues/` for any failure attribution.
 - **Read-first**: CLAUDE.md § "Post-Plan-Phase Codex Audit" + § "QG failure attribution" + § "Manifest phantom audit" +
   § "CI Verification After Every Push".
 - **Sub-agent fan-out**: 1-2 sub-agents (one per QG sweep run; one per codex audit pass).
@@ -538,7 +538,7 @@ Slot-2-specific:
 Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-features-consolidation-tab — STARTED slot 2
 (plans/active/features_repo_consolidation_2026_05_08.md)" to harsh_orchestrator/pings/slot_<N>.md (your own per-slot ping file — no collision; see harsh_orchestrator/pings/README.md), then start.
 Final: "## DONE-2026-05-11" block at the bottom of the features_repo_consolidation plan body with every
-code + plan-flip commit sha + EOD deferral-audit (grep each deferral against plans/active/*.md per
+code + plan-flip commit sha + EOD deferral-audit (grep each deferral against plans/archive/2026_08/*.md per
 AGENT_ONBOARDING § plan-of-record curation), then go quiet.
 ```
 
@@ -703,13 +703,13 @@ has a message") — same thing.
 Slot-6-specific:
   - Per CLAUDE.md "QG failure attribution": when a workspace QG failure surfaces, git-blame the failing file.
     Your commit caused it → fix in same logical unit. Foreign-side commit caused it → file an issue doc in
-    plans/active/issues/ and continue with your own work (they fix on their own commits).
+    plans/archive/issues/ and continue with your own work (they fix on their own commits).
   - Per CLAUDE.md "Findings Triage Discipline" temporary exception (in effect until QG is workspace-clean):
     QG-failure findings on someone else's code are EXEMPT from the case-3/4/5 documentation requirement —
     they'll be cleaned up in bulk. Non-QG findings (data correctness, in-flight VM bugs, SSOT contradictions)
     stay case-1-to-5 normally.
   - You are read-only across UAC + UTL + every service repo + codex docs; issue docs for failure attribution
-    go in plans/active/issues/. Sub-agent fan-out hint: 1-2 sub-agents (one per QG sweep run; one per codex audit pass).
+    go in plans/archive/issues/. Sub-agent fan-out hint: 1-2 sub-agents (one per QG sweep run; one per codex audit pass).
 
 Boot ack: append "[YYYY-MM-DD HH:MM UTC] harsh-workspace-qg-tab — STARTED slot 6
 (plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)" to harsh_orchestrator/pings/slot_<N>.md (your own per-slot ping file — no collision; see harsh_orchestrator/pings/README.md), then start.

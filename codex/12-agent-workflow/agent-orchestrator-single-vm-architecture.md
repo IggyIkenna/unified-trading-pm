@@ -387,9 +387,9 @@ task no live worker can complete does not churn the fleet.
 **Intent**: `backlog.yaml` is a pure projection of the active plans; editing a plan checkbox is the only way to change
 the fleet's work, and a task's identity is stable across regens.
 
-- **Derivation** (`server/regen_backlog_from_plan.py`): `- [ ]` checkboxes in `plans/active/*.md` → backlog tasks, for
-  plans with `assigned_vm: planning` and NOT `execution_scope: local-only` and NOT `status: draft`. **Never hand-edit
-  `backlog.yaml`** — the backend owns it.
+- **Derivation** (`server/regen_backlog_from_plan.py`): `- [ ]` checkboxes in `plans/archive/2026_08/*.md` → backlog
+  tasks, for plans with `assigned_vm: planning` and NOT `execution_scope: local-only` and NOT `status: draft`. **Never
+  hand-edit `backlog.yaml`** — the backend owns it.
 - **Cadence**: `PlanRegenLoop` fires 60s after boot then every `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` (default
   1800s); `pm-pull.timer` FF-pulls `unified-trading-pm` every 5 min, so push→pickup latency is ≤35 min
   (`POST /api/backlog/regen` for immediate).

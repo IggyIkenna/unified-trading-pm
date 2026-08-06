@@ -27,7 +27,7 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 # `plans/questions/` — Architectural question staging
 
 This directory is the **pre-plan staging surface** for big architectural topics the operator wants worked through
-end-to-end before they become canonical plans in `plans/active/` or `plans/epics/`.
+end-to-end before they become canonical plans in `plans/archive/2026_08/` or `plans/epics/`.
 
 The workflow exists because the operator has a backlog of architectural questions (client reporting, risk, custody,
 treasury, ML lifecycle, etc.) that aren't ready to be plans yet — they need an audit-and-discuss cycle first to surface
@@ -51,8 +51,8 @@ Each question doc moves through 5 phases:
    gaps; both converge on the ideal shape. Iterations live in `## Operator notes` + `## Iteration log` sections of the
    question doc.
 4. **Plan extraction** — once shape is converged, the question doc spawns a canonical plan in
-   `plans/active/<slug>_<YYYY_MM_DD>.md` (or fold-into existing master / epic). Plan body cites the question doc as
-   `spawned_from:`.
+   `plans/archive/2026_08/<slug>_<YYYY_MM_DD>.md` (or fold-into existing master / epic). Plan body cites the question
+   doc as `spawned_from:`.
 5. **Codex SSOT alignment** — plan body lists every codex doc that NEW or UPDATE describes the architecture being built.
    Plan-of-record links to the codex SSOTs; codex SSOTs back-link to the plan.
 
@@ -114,7 +114,7 @@ findings against it. Use bullets / numbered lists; don't try to write prose at t
 
 3-6 bullet points enumerating what would close the question:
 
-- a canonical plan exists in `plans/active/`
+- a canonical plan exists in `plans/archive/2026_08/`
 - codex SSOT(s) at <paths> describe the architecture
 - a real-data run / e2e completion has shipped (or is scheduled with named owner + cron)
 - service-readiness checklist gates are X / Y / Z green
@@ -143,7 +143,7 @@ Iterative — operator adds direction, decisions, context the audit can't surfac
 
 ## Plan-shape decisions (filled before plan extraction)
 
-- **Plan name + path**: <plans/active/<slug>\_<date>.md or plans/epics/<slug>.md>
+- **Plan name + path**: <plans/archive/2026_08/<slug>\_<date>.md or plans/epics/<slug>.md>
 - **Plan type**: code / infra / business / mixed
 - **Owner side**: ikenna / harsh / both
 - **Codex SSOTs touched** (list every NEW + UPDATE):
@@ -156,7 +156,7 @@ Iterative — operator adds direction, decisions, context the audit can't surfac
 
 Filled when the plan ships:
 
-- Plan path: <plans/active/...>
+- Plan path: <plans/archive/2026_08/...>
 - Spawned commit: <PM@sha>
 - Codex updates committed: <list of codex@sha>
 - Question doc closes (status: closed) when: <criterion>
@@ -196,15 +196,15 @@ Filled when the plan ships:
 
 ## Status as of 2026-05-10 — directory is now archaeology
 
-> **🟢 ALL QUESTIONS PLAN-SPAWNED.** Every doc in this directory has a corresponding active plan in `plans/active/` (or
-> a multi-plan fold-in for cross-cutting questions) with a complete-by-2026-05-23 phased process, full-execution
-> criteria per phase, codex SSOT updates enumerated, and cutover-gate integration. Per operator direction 2026-05-10
-> (_"questions directory is pointless and active has all the answers and the processes to complete everything before
-> 23rd May, no exceptions"_), this directory is no longer the staging surface — the active plans are. New architectural
-> questions should land directly as active plans (or as `plans/active/issues/<slug>_<date>.md` issue docs if scope isn't
-> owner-clear yet, per Findings Triage Discipline). The question docs preserved here are the **archaeology** — they
-> record the operator's framing + the audit findings + the back-and-forth that informed the plan, but the active
-> orchestration surface is the spawned plan(s).
+> **🟢 ALL QUESTIONS PLAN-SPAWNED.** Every doc in this directory has a corresponding active plan in
+> `plans/archive/2026_08/` (or a multi-plan fold-in for cross-cutting questions) with a complete-by-2026-05-23 phased
+> process, full-execution criteria per phase, codex SSOT updates enumerated, and cutover-gate integration. Per operator
+> direction 2026-05-10 (_"questions directory is pointless and active has all the answers and the processes to complete
+> everything before 23rd May, no exceptions"_), this directory is no longer the staging surface — the active plans are.
+> New architectural questions should land directly as active plans (or as `plans/archive/issues/<slug>_<date>.md` issue
+> docs if scope isn't owner-clear yet, per Findings Triage Discipline). The question docs preserved here are the
+> **archaeology** — they record the operator's framing + the audit findings + the back-and-forth that informed the plan,
+> but the active orchestration surface is the spawned plan(s).
 >
 > Every active plan listed below carries the May-23 deadline, full-execution criterion per phase per the _"Plans Run To
 > Actual Completion, Not Smoke-Test Green"_ HARD RULE, and a deferred-work table for breadth that physically cannot ship
@@ -245,10 +245,10 @@ codepaths; per-archetype regression matrix gating cutover.
 
 If you have a new architectural question after 2026-05-10, prefer one of:
 
-1. **Drop it directly as a plan in `plans/active/<slug>_<date>.md`** (or `plans/epics/<slug>.md` for an umbrella) using
-   `plans/PLAN_FORMAT.md`. Most questions about real surfaces are now plans-in-disguise; spend the 30 min auditing what
-   exists and ship the plan.
-2. **Drop it as an issue doc in `plans/active/issues/<slug>_<date>.md`** if scope isn't owner-clear yet — per Findings
+1. **Drop it directly as a plan in `plans/archive/2026_08/<slug>_<date>.md`** (or `plans/epics/<slug>.md` for an
+   umbrella) using `plans/PLAN_FORMAT.md`. Most questions about real surfaces are now plans-in-disguise; spend the 30
+   min auditing what exists and ship the plan.
+2. **Drop it as an issue doc in `plans/archive/issues/<slug>_<date>.md`** if scope isn't owner-clear yet — per Findings
    Triage Discipline. Issue docs triage to (1) within ≤7 calendar days.
 3. **Question doc only as a last resort** — when the topic is genuinely too unstructured to plan against today and needs
    an audit pass first. Even then, the question doc must close to a plan within 7 days; longer-lived question docs are

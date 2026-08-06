@@ -335,7 +335,7 @@ live, each re-downloading the full canonical, which is what produced the repeati
 **Why this doc was left stale**: the fix landed via a different, unrelated task (chasing a DeFi backfill OOM issue,
 `mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`) that didn't know this doc existed / didn't cross-reference it.
 **Lesson for future fleet-wide fixes**: when a fix incidentally resolves a DIFFERENT tracked issue, grep
-`plans/active/issues/` for the symptom before declaring only the originally-targeted issue closed — this doc sat `open`
+`plans/archive/issues/` for the symptom before declaring only the originally-targeted issue closed — this doc sat `open`
 for a full day after its actual root cause shipped, which could have caused duplicate investigation effort (and nearly
 did, in the session that found this while compiling a list of "still open" decisions).
 

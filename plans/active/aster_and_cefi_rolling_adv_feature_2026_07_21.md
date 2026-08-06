@@ -35,6 +35,7 @@ related:
     /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
     /codex/02-data/data-lineage-MTDS-features-ml.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21

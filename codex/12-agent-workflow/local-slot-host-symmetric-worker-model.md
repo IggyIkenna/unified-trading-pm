@@ -103,8 +103,8 @@ rules, same accountability.
 The drift reporter runs every 5 minutes and posts repo state to `/api/slots/<N>/git-status`. In addition to standard
 dirty/ahead/behind detection, it **also detects unpushed plan files**:
 
-- Any dirty or untracked path matching `plans/active/*.md` or `plans/active/issues/*.md` in a `unified-trading-pm`
-  worktree is collected into an `unpushed_plans` field in the JSON payload.
+- Any dirty or untracked path matching `plans/archive/2026_08/*.md` or `plans/archive/issues/*.md` in a
+  `unified-trading-pm` worktree is collected into an `unpushed_plans` field in the JSON payload.
 - The `WorkerLivenessKicker` reads this field on every liveness tick and fires a Slack alert **immediately** (no
   15-minute threshold) when any plan file is unpushed. Throttled to 1 alert per slot per 30 min.
 - Alert text: `:warning: Slot N has unpushed plan(s): X.md, Y.md`

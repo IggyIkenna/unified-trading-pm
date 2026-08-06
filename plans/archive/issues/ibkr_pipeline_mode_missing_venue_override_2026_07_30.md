@@ -158,8 +158,8 @@ inside an unrelated test-widening todo.
   IBKR/pipeline_mode. Corrected `assigned_role: backend` → `backend_engineer` (the former is not a valid role in the
   live `agents/*.md` registry). Added `sequential: true` — todos 2→3→4 are a real ordering chain (UAC enum must exist
   before the UTL override references it; the test un-xfail needs both). Per `check_finalize_plan_coverage.py` (globs
-  `plans/active/*.md` only, not `issues/`), this `doc_type: issue` doc is structurally exempt from the companion
-  finalize-plan requirement — none authored.
+  `plans/archive/2026_08/*.md` only, not `issues/`), this `doc_type: issue` doc is structurally exempt from the
+  companion finalize-plan requirement — none authored.
 - **2026-07-30** — Found while executing `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11 (widen MTDS's ungated
   test coverage). Two long-ungated tests (`test_ibkr_equity_bars_write`, `test_partition_path_uses_category_tradfi`)
   asserted `pipeline_mode=batch_databento` for IBKR writes; live re-verification showed the code actually produces

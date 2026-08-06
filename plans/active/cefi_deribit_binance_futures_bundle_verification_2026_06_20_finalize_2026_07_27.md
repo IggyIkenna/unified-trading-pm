@@ -21,6 +21,7 @@ related:
     /plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-27"
 last_updated: "2026-07-31"
@@ -84,8 +85,8 @@ context_scope:
       gating `cefi_deribit_binance_futures_bundle_verification_2026_06_20` (`assigned_vm:planning`, 7 todos, not itself
       a finalize plan) via `depends_on`+`gate_on_depends: true`, which would regress
       `scripts/quality_gates/check_finalize_plan_coverage.py`'s coverage baseline (no other active plan gates that
-      slug). This doc stays in `plans/active/`, `status: active`, purely to keep serving that structural gate until the
-      residual closes. **Re-check trigger tracked as a real todo** (not left as prose): added todo 4 to
+      slug). This doc stays in `plans/archive/2026_08/`, `status: active`, purely to keep serving that structural gate
+      until the residual closes. **Re-check trigger tracked as a real todo** (not left as prose): added todo 4 to
       `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md` (machine-gated on Track-2's own 5 todos being
       `done`) to re-verify the DERIBIT gap and complete this deferred close-out once Track-2 genuinely finishes.
 

@@ -104,6 +104,7 @@ related:
     issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-18
 last_updated: "2026-08-02"

@@ -26,6 +26,7 @@ related:
     mvp_backfill_cefi_tick_v10_2026_06_27,
     /plans/active/issues/cefi_universe_capture_rule_2026_06_23.md,
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-06-22
 author: unknown

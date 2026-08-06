@@ -31,6 +31,7 @@ related:
     instruments_tradfi_g1_g5_gate_execution_2026_07_24,
     plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

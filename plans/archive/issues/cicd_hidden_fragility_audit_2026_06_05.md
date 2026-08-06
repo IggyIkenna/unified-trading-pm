@@ -6,12 +6,24 @@ status: RESOLVED
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, batch-live-reconciliation-service, client-reporting-api, deployment-api, instruments-service, market-tick-data-service]
+repos:
+  [
+    agent-orchestrator,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: [plans/active/cicd_contract_hardening_2026_06_01.md]
 created: 2026-06-05
-source: ['6-agent parallel CI/CD subsystem audit (slot-1, 2026-06-05)', independent verification against live workflows + GitHub Actions run history]
+source:
+  [
+    "6-agent parallel CI/CD subsystem audit (slot-1, 2026-06-05)",
+    independent verification against live workflows + GitHub Actions run history,
+  ]
 resolved: 2026-06-07
 priority: P2
 ---
@@ -204,8 +216,8 @@ Not one bug — a **class**, all created by the fast migration:
     `:41-43` batch-live-reconciliation-service / client-reporting-api / deployment-api) — a `terraform apply` rolls them
     back to a context no run emits.
   - `scripts/repo-management/verify_branch_protection_check_names.py:73` only
-    `m[0].startswith(f"Quality Gates ({repo})")` → blind to v1↔v2 _suffix_ drift; iterates a static 17-repo list
-    (misses agent-orchestrator + new repos). So the drift detector reports GREEN on the most likely drift.
+    `m[0].startswith(f"Quality Gates ({repo})")` → blind to v1↔v2 _suffix_ drift; iterates a static 17-repo list (misses
+    agent-orchestrator + new repos). So the drift detector reports GREEN on the most likely drift.
 - **Fix:** sync/delete the stale IaC; verifier should assert the full derived context + drive the repo list from
   `workspace-manifest.json`.
 
@@ -272,17 +284,16 @@ independent and parallelizable.
 
 ## Reconciliation vs existing issue docs + plans
 
-Checked all of `plans/active/issues/` + the CI/CD master plan `cicd_contract_hardening_2026_06_01.md` (2532 lines).
+Checked all of `plans/archive/issues/` + the CI/CD master plan `cicd_contract_hardening_2026_06_01.md` (2532 lines).
 **None of the 15 findings is a duplicate.** Several intersect existing items whose status is now **stale** — those are
 the highest-value reconciliation outputs (a green-looking plan hiding a still-broken mechanism).
 
 ### Existing items my findings prove STALE (plan/CLAUDE.md need correction)
 
-- **C2** ↔ plan **line 1362** `[x] ✅ DONE 2026-06-02` ("semver-agent watches DEAD name → fixed on 8 repos"). The
-  item's own list **excludes `unified-trading-pm`**, and the live file `semver-agent.yml:38` is still
-  `["Quality Gates"]`. **The ✅ is incomplete — PM was missed.** `CLAUDE.md` § Version/Workflow ("Promotion automation …
-  REPAIRED 2026-06-02 — semver-agent now watches quality-gates-v2 … pipeline flows again") inherits the same overclaim.
-  → reopen + add PM.
+- **C2** ↔ plan **line 1362** `[x] ✅ DONE 2026-06-02` ("semver-agent watches DEAD name → fixed on 8 repos"). The item's
+  own list **excludes `unified-trading-pm`**, and the live file `semver-agent.yml:38` is still `["Quality Gates"]`.
+  **The ✅ is incomplete — PM was missed.** `CLAUDE.md` § Version/Workflow ("Promotion automation … REPAIRED 2026-06-02
+  — semver-agent now watches quality-gates-v2 … pipeline flows again") inherits the same overclaim. → reopen + add PM.
 - **C1** ↔ plan **line 248** `[ ]` says "PM `escalate-to-orchestrator.yml` **does NOT exist**" (2026-06-02 re-audit),
   consolidated into "Observability+Reconciliation B". The workflow **exists now** and carries the wrong-host bug. →
   update: workflow present; root cause is the SPA-host default (`:151`), not absence.

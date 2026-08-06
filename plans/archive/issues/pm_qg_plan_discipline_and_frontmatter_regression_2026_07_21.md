@@ -96,21 +96,21 @@ normally.
       left in this plan") — added the honest closing banner. `vm_launcher_durable_log_observability_2026_06_19` had
       exactly 1 open item, already correctly migrated to
       `plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md` in prose but in a form (`& MIGRATED** to` +
-      markdown link, no literal `successor:`/`MIGRATED TO:`/`→ plans/active/` token) the regex didn't recognize — added
-      a proper banner naming that real successor doc. Verified each via direct re-run of `check_plan_discipline.py`: 102
-      → 98 (all 4 confirmed resolved, no other counts moved). Re-baselined 102 → 98 via `--baseline-write` (real
-      fix-driven improvement, no operator sign-off needed — matches the P2 precedent's own reasoning). Did NOT touch
-      `leveraged_leg_controller_2026_05_01` (2 open items: a real unshipped test-coverage gap + an operator-side Docker
-      rebuild gate, neither has an existing successor plan) or
+      markdown link, no literal `successor:`/`MIGRATED TO:`/`→ plans/archive/2026_08/` token) the regex didn't recognize
+      — added a proper banner naming that real successor doc. Verified each via direct re-run of
+      `check_plan_discipline.py`: 102 → 98 (all 4 confirmed resolved, no other counts moved). Re-baselined 102 → 98 via
+      `--baseline-write` (real fix-driven improvement, no operator sign-off needed — matches the P2 precedent's own
+      reasoning). Did NOT touch `leveraged_leg_controller_2026_05_01` (2 open items: a real unshipped test-coverage
+      gap + an operator-side Docker rebuild gate, neither has an existing successor plan) or
       `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22` (2 unchecked `[HUMAN]` gates on an
       already-archived-complete plan — ambiguous whether they were satisfied out-of-band; no fabricated checkmarks) —
       both need real operator/plan-owner judgment, not a scripted close; left for the split-out todos below. (repo:
       unified-trading-pm)
 - [x] [DOCS] P3. ✅ Remaining archived-plan debt, batch 1 — sports/predictions (14 plans, 3–49 open items each) —
       unified-trading-pm@\<pending\>. Fanned out 14 parallel read-only research agents (one per plan) to extract every
-      open item's context and search `plans/active/` for an existing successor; made the closure call myself on each (no
-      blanket-close). Result: **all 14 plans got a real `## Deferred work — migrated to:` banner** naming their actual
-      successor(s) — `apifootball_enrichment_historical_backfill_2026_04_21` →
+      open item's context and search `plans/archive/2026_08/` for an existing successor; made the closure call myself on
+      each (no blanket-close). Result: **all 14 plans got a real `## Deferred work — migrated to:` banner** naming their
+      actual successor(s) — `apifootball_enrichment_historical_backfill_2026_04_21` →
       `sports_p2_history_apifootball_2015_to_present_2026_06_27`; `features_sports_pipeline_deployment_2026_04_21` →
       `features_sports_service_consolidation_deploy_2026_07_15` + `sports_p2_features_history_to_ml_ready_2026_06_27`;
       `features_sports_upstream_coverage_gaps_2026_04_21` →

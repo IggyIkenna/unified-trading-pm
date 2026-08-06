@@ -31,6 +31,7 @@ related:
     /plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md,
     /plans/archive/issues/instruments_service_qg_red_golden_drift_2026_07_10.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-05"
 author: slot-14 (data_engineering craft)

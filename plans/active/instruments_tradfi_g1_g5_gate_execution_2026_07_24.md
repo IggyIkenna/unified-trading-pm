@@ -32,6 +32,7 @@ related:
     instruments_cefi_g1_g5_gate_execution_2026_07_24,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-30" # ES manifest-count check executed: ZERO capture found (not "proven"), filed as tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md; ES_OPT launch attempted, deferred (singleton lock genuinely held by a live concurrent backfill, not stale)

@@ -79,12 +79,13 @@ drift_direction: correct-codex
 
 - [x] ✅ [AUDIT] P0. Re-run the conflict scan to produce the CURRENT authoritative list of plans whose MVP/scope
       disagrees with v10 (the scan below was run 2026-06-27 at authoring time; re-run because plans move). Repo:
-      `unified-trading-pm`. **Run:** `rg -n -i "EPL.*LA_LIGA|2.league|SportsMvpRule.*4 leagues" plans/active/*.md`;
-      `rg -n "ohlcv_1s" plans/active/*.md`; `rg -n "BINANCE-DELIVERY" plans/active/*.md`;
-      `rg -n -i "LIGHTER|EXTENDED-STARKNET|PACIFICA" plans/active/*.md`;
-      `rg -n -i "kalshi.*(post.mvp|not.*mvp|excluded)" plans/active/*.md`;
-      `rg -n -i "options.*(trades|book_snapshot_5).*MVP|per-strike.*MVP" plans/active/*.md`. **Gate:** an updated
-      conflict table in this plan's Progress Log (plan path + line + the v10 rule it violates + verdict: FIX /
+      `unified-trading-pm`. **Run:**
+      `rg -n -i "EPL.*LA_LIGA|2.league|SportsMvpRule.*4 leagues" plans/archive/2026_08/*.md`;
+      `rg -n "ohlcv_1s" plans/archive/2026_08/*.md`; `rg -n "BINANCE-DELIVERY" plans/archive/2026_08/*.md`;
+      `rg -n -i "LIGHTER|EXTENDED-STARKNET|PACIFICA" plans/archive/2026_08/*.md`;
+      `rg -n -i "kalshi.*(post.mvp|not.*mvp|excluded)" plans/archive/2026_08/*.md`;
+      `rg -n -i "options.*(trades|book_snapshot_5).*MVP|per-strike.*MVP" plans/archive/2026_08/*.md`. **Gate:** an
+      updated conflict table in this plan's Progress Log (plan path + line + the v10 rule it violates + verdict: FIX /
       HISTORICAL-CONTEXT-OK). SPOT N/A.
 - [x] ✅ [SCRIPT] P0. Fix the SPORTS pre-v10 MVP-rule references. **Known conflict (2026-06-27):**
       `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` L1223/L1234 describes
@@ -189,7 +190,7 @@ _(R1 produces the authoritative re-scanned table; append below.)_
 
 ### R1 re-scan — slot-4 2026-06-27 (authoritative current table)
 
-Ran all 6 rg commands against `plans/active/*.md`. Results:
+Ran all 6 rg commands against `plans/archive/2026_08/*.md`. Results:
 
 | Plan | Line | v10 rule | Verdict |     | ----------------------------------------------------------------------------- |
 | ---- | ---- | -------- | ------- | --- | ----------------------------------------------------------------------------- |
@@ -337,7 +338,7 @@ No gap found. No new launcher built. Checkbox flipped.
 
 **Scan method**: checked all active plans in v10 scope (TradFi/CeFi/DeFi catalogue + backfill domain); verified
 `superseded_by` fields (only `cicd_staging_main_deadcode_retirement` has a non-empty value, CI/CD scope); ran all-done
-check across `plans/active/*.md`.
+check across `plans/archive/2026_08/*.md`.
 
 **Finding**: No unlocked plan is fully superseded by v10 and eligible for archival today. The v10 plans do not declare
 `supersedes:` any specific plan (all `supersedes:` fields are empty). The one all-done candidate in TradFi domain

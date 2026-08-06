@@ -20,6 +20,7 @@ related:
     plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     plans/archive/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-12
 author: unknown

@@ -513,11 +513,11 @@ quickmerge contract (lines 245-262) — the gaps are a stale section + a lane th
       (`_resolve_plans_dir` snapshots `plans/active` from `origin/live-defi-rollout`, working-tree fallback; +2 tests).
       slot-22's `carveout=scripts` commit `unified-trading-pm@2dc131639` (lifecycle-marker frontmatter on 493 scripts)
       reddened PM `quality-gates-v2` (PR #506 LDR→main) on pre-existing ratchet debt → PM `main` blocked → fleet
-      dispatch starved (the central VM's PM clone tracks `main`; `regen_backlog_from_plan` reads its `plans/active/`, so
-      a stuck `main` froze the backlog for everyone). Decouple dispatch from PM-`main` currency:
-      `regen_backlog_from_plan` reads the PM clone's `live-defi-rollout` content (or falls back to it when `main` is
-      behind LDR), so a blocked PM gate degrades gracefully — work keeps dispatching from LDR plans instead of freezing
-      the fleet. Repo: agent-orchestrator (`server/regen_backlog_from_plan.py`). +regression test.
+      dispatch starved (the central VM's PM clone tracks `main`; `regen_backlog_from_plan` reads its
+      `plans/archive/2026_08/`, so a stuck `main` froze the backlog for everyone). Decouple dispatch from PM-`main`
+      currency: `regen_backlog_from_plan` reads the PM clone's `live-defi-rollout` content (or falls back to it when
+      `main` is behind LDR), so a blocked PM gate degrades gracefully — work keeps dispatching from LDR plans instead of
+      freezing the fleet. Repo: agent-orchestrator (`server/regen_backlog_from_plan.py`). +regression test.
 - [x] ✅ [ORCHESTRATOR] P1. **Carve-out pushes must still pass LOCAL QG — RESOLVED-BY-DIAGNOSIS (NOT a bug;
       2026-06-24).** The premise was wrong. Verified: PM's `quickmerge` REQUIRES the `.qg_last_passed_sha` sentinel (PM
       has `scripts/quality-gates.sh`; the agent-mode fast-path at `quickmerge.sh:1217+` verifies sentinel==HEAD with NO

@@ -124,5 +124,5 @@ on `data_status_hierarchical.py` — needs a follow-up Playwright probe after th
 - Two bugs caught + fixed via Playwright (manifest URI + render gate); known follow-up is the CEFI/DEFI 502 pagination
   work (already in flight by another agent on the same file).
 
-This handoff doc is in `plans/active/` so the next agent / operator session sees it on plan-mode load. Once the deferred
-items are picked up, archive this doc.
+This handoff doc is in `plans/archive/2026_08/` so the next agent / operator session sees it on plan-mode load. Once the
+deferred items are picked up, archive this doc.

@@ -23,6 +23,7 @@ related:
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-30"
 last_updated: "2026-07-30"

@@ -32,6 +32,7 @@ related:
     /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-03
 author: unknown

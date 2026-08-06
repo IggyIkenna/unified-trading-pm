@@ -36,6 +36,7 @@ related:
     /plans/audit/results/data_pipeline_reconciliation_sports_2026_08_01.md,
     ./sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
     ./sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-08-01
 author: unknown

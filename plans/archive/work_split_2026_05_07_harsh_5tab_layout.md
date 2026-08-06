@@ -110,7 +110,7 @@ direction-setting + Q&A dispatch + push approval.
    observations).
 3. **Document findings per Findings Triage Discipline** (CLAUDE.md). Case 1 (in-scope) → fix in the same commit; case 2
    (adjacent to your plan) → annotate your plan body; case 3-4 (someone else's plan) → annotate their plan body with
-   owner pointer; case 5 (big) → notify Harsh in chat AND file an issue doc in `plans/active/issues/`.
+   owner pointer; case 5 (big) → notify Harsh in chat AND file an issue doc in `plans/archive/issues/`.
 4. **Final**: when your done-definition is met, append a `## DONE-<YYYY-MM-DD>` block at the bottom of the plan body
    listing every code + plan-flip commit sha. Then push per the conditional rule (fetch + zero incoming → push freely;
    any incoming → flag in `## Open questions` for main + operator). Then go quiet — don't pick up new work autonomously.
@@ -153,13 +153,13 @@ number is addressable. Both go in the registry entry for clarity.
 
 Harsh interacts with ONE main agent. That agent decides per-task:
 
-| Task size                                                                                  | Where it goes                                                                                                                                                                     |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **30s–1min** (verify a file, run one gcloud command, flip a checkbox)                      | Main agent does it in chat. No doc update.                                                                                                                                        |
-| **~5min mechanical** (small audit, simple wire-up, single-file edit)                       | Main agent writes a 5-line inline task in this doc's "Ready to spawn" section. Harsh opens a fresh Claude Code tab + paste the task as the prompt; that agent runs it.            |
-| **15min+ deep work** (multi-file, multi-hour, full plan execution)                         | Main agent writes a brief entry in "Ready to spawn" pointing at a self-contained sub-doc OR an existing `plans/active/` plan. Fresh tab agent reads the doc + runs independently. |
-| **Audit / research / scan** the main agent needs answers from but doesn't want to block on | Main agent fans out a background `Task(run_in_background=true)` sub-agent. Returns 5-10 min later with a summary. Main agent stays responsive to Harsh in the meantime.           |
-| **Existing plan in `plans/active/`**                                                       | Main agent points at it from "Ready to spawn". No rewrite needed — the plan IS the assignment.                                                                                    |
+| Task size                                                                                  | Where it goes                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **30s–1min** (verify a file, run one gcloud command, flip a checkbox)                      | Main agent does it in chat. No doc update.                                                                                                                                                 |
+| **~5min mechanical** (small audit, simple wire-up, single-file edit)                       | Main agent writes a 5-line inline task in this doc's "Ready to spawn" section. Harsh opens a fresh Claude Code tab + paste the task as the prompt; that agent runs it.                     |
+| **15min+ deep work** (multi-file, multi-hour, full plan execution)                         | Main agent writes a brief entry in "Ready to spawn" pointing at a self-contained sub-doc OR an existing `plans/archive/2026_08/` plan. Fresh tab agent reads the doc + runs independently. |
+| **Audit / research / scan** the main agent needs answers from but doesn't want to block on | Main agent fans out a background `Task(run_in_background=true)` sub-agent. Returns 5-10 min later with a summary. Main agent stays responsive to Harsh in the meantime.                    |
+| **Existing plan in `plans/archive/2026_08/`**                                              | Main agent points at it from "Ready to spawn". No rewrite needed — the plan IS the assignment.                                                                                             |
 
 **Hard rule for the main agent**: never tied up >1 minute on a single thing. Anything longer either delegates (spawn
 fresh tab via this doc) or backgrounds (`run_in_background=true` Task). Harsh wants the main agent always available for
@@ -346,8 +346,8 @@ Status badges in the heading make scan-for-open-questions instant: 🟡 = needs 
 
 Each morning during boot, main agent:
 
-1. Sweep all `plans/active/*.md` for `## Open questions` blocks. **Remove resolved Q&A entries entirely** (don't archive
-   — Q&A clutter is more costly than Q&A loss; the trail survives in commits/chat if it survived at all).
+1. Sweep all `plans/archive/2026_08/*.md` for `## Open questions` blocks. **Remove resolved Q&A entries entirely**
+   (don't archive — Q&A clutter is more costly than Q&A loss; the trail survives in commits/chat if it survived at all).
 2. Verify [`_agent_pings.md`](_agent_pings.md) has no stale entries (>24h without resolution = either re-prompt the
    sub-agent or escalate to Harsh as a stuck task).
 
@@ -409,7 +409,7 @@ ORCHESTRATION RULES:
    Commit cadence is unchanged (per CLAUDE.md HARD RULE — 5-6 small commits, NOT one mega-commit).
 5. **Findings Triage Discipline (HARD RULE)** — any side-discovery during execution: classify
    case-1-to-5 per CLAUDE.md and route appropriately. Big findings (case 5) → write in chat
-   summary IF you're conversing with Harsh, AND file an issue doc in plans/active/issues/.
+   summary IF you're conversing with Harsh, AND file an issue doc in plans/archive/issues/.
    Small QG-failure findings on someone else's code are EXEMPT until ~2026-05-09 per the
    temporary exception in CLAUDE.md.
 
@@ -855,7 +855,7 @@ ORCHESTRATION RULES:
    (per CLAUDE.md HARD RULE — 5-6 small commits, NOT one mega-commit).
 5. Findings Triage Discipline (HARD RULE) — any side-discovery during execution: classify
    case-1-to-5 per CLAUDE.md and route appropriately. Big findings (case 5) → file an issue
-   doc in plans/active/issues/. Small QG-failure findings on someone else's code are EXEMPT
+   doc in plans/archive/issues/. Small QG-failure findings on someone else's code are EXEMPT
    until ~2026-05-09 per the temporary exception in CLAUDE.md.
 
 YOUR TASK:
@@ -1214,7 +1214,7 @@ REPOS OWNED:
 
 Selection rule (pick the 10 that matter most for May-23):
 - Anything called by an active (running) backfill or audit operation today is HIGH priority.
-- Anything referenced by a plan in plans/active/ critical-path is HIGH priority.
+- Anything referenced by a plan in plans/archive/2026_08/ critical-path is HIGH priority.
 - Anything that hasn't been used in 7+ days is LOW priority (defer post-May-23).
 
 For each migrated launcher:

@@ -227,5 +227,5 @@ re-derives from the 4 new plans only. (67bc7deba / 8c506a127 / 70ccf39a5)
 
 **Residual (tracked, not dropped):** the 3 `[BUG?]` verify-then-fix items in `cicd_release_machinery`
 (conflict-resolution-agent dup-env-key · hotfix-mode bare-push race · rollout-action-ref v1-filename) are real findings
-from the workflow read, captured for a worker to verify. This tracker stays in `plans/active/` as the provenance anchor
-the 19 archived banners reference.
+from the workflow read, captured for a worker to verify. This tracker stays in `plans/archive/2026_08/` as the
+provenance anchor the 19 archived banners reference.

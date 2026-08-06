@@ -19,6 +19,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-02"
 last_updated: "2026-08-05"
@@ -106,4 +107,4 @@ these until batch8 is fully done.**
   — batch8 moved to `plans/archive/2026_08/`, INDEX.md referrers updated. This finalize plan itself is now fully checked
   and eligible for archival (all 3 todos `[x]`, no `locked_by`).
 - **context-scout 2026-08-05**: refreshed context_scope (4 entries) -- fixed stale batch8 path (moved to
-  plans/archive/2026_08/ by this doc's own todo 3, was still pointing at the deleted plans/active/ path).
+  plans/archive/2026_08/ by this doc's own todo 3, was still pointing at the deleted plans/archive/2026_08/ path).

@@ -36,6 +36,7 @@ related:
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-06
 author: context_scout_auditor (dispatch agt-23f116, slot 4)

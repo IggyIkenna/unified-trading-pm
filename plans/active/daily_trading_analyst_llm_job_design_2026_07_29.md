@@ -32,6 +32,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
 last_updated: 2026-07-29
@@ -279,7 +280,7 @@ stages don't reach (absolute PnL/signal/decision quality, not just symmetry).
   standard AO-eligibility test), `source: [daily-trading-analyst-<date>]`, `created: <date>`.
 - Body: `## What I found` / `## Why it matters` / `## Recommended decision`, checkboxed remediation todos — same shape
   as plan_reconciler's existing findings docs and every issue doc in this corpus.
-- **Dedup, so it doesn't re-file the same finding daily**: before filing, grep `plans/active/issues/` (and
+- **Dedup, so it doesn't re-file the same finding daily**: before filing, grep `plans/archive/issues/` (and
   `plans/archive/issues/` for already-resolved instances of the SAME root cause recurring) for the same category+symptom
   signature — mirrors the exact pre-task plan/issue conflict check every worker in this workspace already performs
   (`/codex/12-agent-workflow/pre-task-plan-conflict-check.md`). If an open doc already covers the same finding, add a

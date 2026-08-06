@@ -32,6 +32,7 @@ related:
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /plans/archive/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-28
 author: unknown

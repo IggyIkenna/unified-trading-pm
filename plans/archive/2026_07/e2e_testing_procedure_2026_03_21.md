@@ -8,8 +8,8 @@
 ## Purpose
 
 Systematically run each service through every valid infrastructure configuration combination. Find bugs at the service
-level before they reach staging. Each service is tested, issues are logged in `plans/active/issues/`, fixes are applied,
-then we move to the next service — carrying forward all fixes so each iteration gets faster.
+level before they reach staging. Each service is tested, issues are logged in `plans/archive/issues/`, fixes are
+applied, then we move to the next service — carrying forward all fixes so each iteration gets faster.
 
 ## Test Axes (the grid)
 

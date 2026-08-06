@@ -88,7 +88,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 - [ ] [DOCS] P3. `/codex/09-strategy/architecture-v2/README.md` cites `templates/archetype-doc.md` — no `templates/` dir
       exists under `architecture-v2/`; the real `archetypes/` dir holds ~19 fully-written archetype docs with no shared
       template file ever created. **Re-verified 2026-08-05 (docs-reconcile): still no confident successor, left open.**
-- [ ] [DOCS] P3. `/codex/15-runbooks/custody-onboarding-checklist.md` cites a `plans/active/` slug,
+- [ ] [DOCS] P3. `/codex/15-runbooks/custody-onboarding-checklist.md` cites a `plans/archive/2026_08/` slug,
       `fireblocks_copper_client_integration_2026_06_01.md` — no plan under this or any similar slug exists anywhere.
       Plausibly this custody/wallet-adjacent plan was simply never authored.
 - [ ] [DOCS] P3. `codex/README.md` cites `.github/PRE_COMMIT_SETUP.md` — `.github/` contains only `actionlint.yaml`,
@@ -133,7 +133,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       link check, not a broken link per se. Needs a human who can either refresh the matrix (retired repo names →
       current fleet) or determine there's no live consumer left and archive it with QUICK_REFERENCE.md repointed
       elsewhere.
-- [x] ✅ [DOCS] P3. `/codex/02-data/contracts-scope-and-layout.md` cited the `plans/active/` slug
+- [x] ✅ [DOCS] P3. `/codex/02-data/contracts-scope-and-layout.md` cited the `plans/archive/2026_08/` slug
       `uac_citadel_architecture_2026_05_07.md` — `plans/archive/INDEX.md` (line 177) tracks this exact slug's
       disposition as "Superseded by completed execution plan," but neither that slug nor
       `uac_citadel_implementation_execution` (the row directly above) corresponds to any actual file on disk anywhere in

@@ -30,6 +30,7 @@ related:
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-26
 author: unknown

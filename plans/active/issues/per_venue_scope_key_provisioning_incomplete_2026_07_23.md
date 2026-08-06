@@ -26,6 +26,7 @@ related:
   [
     /codex/05-infrastructure/secret-manager-naming.md,
     /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-23
 author: unknown

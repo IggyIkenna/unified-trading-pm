@@ -27,6 +27,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-28"
 author: unknown

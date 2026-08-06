@@ -26,6 +26,7 @@ related:
   [
     /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-21
 author: unknown

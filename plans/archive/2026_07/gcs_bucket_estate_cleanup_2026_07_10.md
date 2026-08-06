@@ -412,15 +412,15 @@ diff content is substantial, coherent, well-commented engineering (a real MVP-sc
 `MVP_CME_EXCHANGE_CODES` from a canonical SSOT) explicitly tied to issue doc
 `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08` / `mvp_universal_fetch_mode` — and this same session independently
 observed matching uncommitted changes to that exact issue doc plus a new sibling
-(`mvp_mode_live_streaming_flag_unreachable_2026_07_10.md`) in this PM repo's `plans/active/issues/`, strongly indicating
-a real, separate, in-flight workstream (another slot/agent) rather than abandoned WIP. A 12h-stale mtime on one pair of
-files doesn't prove that workstream is dead — it may simply not have touched those exact two files recently while
-working elsewhere. Given the stakes of wrongly hijacking someone else's unreviewed, unrelated, substantial cross-repo
-change under my own commit authorship, this was judged higher-risk than leaving my own fix unshipped one more cycle.
-**Not resolved this session** — this is the one genuinely open item (§5). Next step for whoever picks this up: check
-`cd unified-api-contracts && git status` — if clean (that workstream shipped or was abandoned + cleaned up), just retry
-`bash scripts/quickmerge.sh` in unified-trading-library then deployment-service with the same commands logged above; if
-still dirty, coordinate with whoever owns the tradfi-MVP-scope work rather than overriding it.
+(`mvp_mode_live_streaming_flag_unreachable_2026_07_10.md`) in this PM repo's `plans/archive/issues/`, strongly
+indicating a real, separate, in-flight workstream (another slot/agent) rather than abandoned WIP. A 12h-stale mtime on
+one pair of files doesn't prove that workstream is dead — it may simply not have touched those exact two files recently
+while working elsewhere. Given the stakes of wrongly hijacking someone else's unreviewed, unrelated, substantial
+cross-repo change under my own commit authorship, this was judged higher-risk than leaving my own fix unshipped one more
+cycle. **Not resolved this session** — this is the one genuinely open item (§5). Next step for whoever picks this up:
+check `cd unified-api-contracts && git status` — if clean (that workstream shipped or was abandoned + cleaned up), just
+retry `bash scripts/quickmerge.sh` in unified-trading-library then deployment-service with the same commands logged
+above; if still dirty, coordinate with whoever owns the tradfi-MVP-scope work rather than overriding it.
 
 ## 5c. Ship blocker resolved + missing-bucket sweep (2026-07-12 follow-up, operator-driven)
 

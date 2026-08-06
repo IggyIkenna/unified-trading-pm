@@ -18,6 +18,7 @@ related:
     data_pipeline_reconciliation_tradfi_2026_07_21,
     tradfi_manifest_row_loss_regression_2026_07_12,
     tradfi_yahoo_venue_vendor_conflation_2026_07_27,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 stage: [data]
 repos: [market-tick-data-service, unified-trading-pm]

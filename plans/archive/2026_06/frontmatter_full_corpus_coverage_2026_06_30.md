@@ -78,16 +78,16 @@ Verification target per tree: `python3 scripts/docs/docspec.py --check <glob>` e
 
 ## Baseline (docspec, 2026-06-30, non-exempt live docs)
 
-| doc_type           | location                    | non-exempt | clean | needs work |
-| ------------------ | --------------------------- | ---------: | ----: | ---------: |
-| codex-ssot/runbook | `codex/**`                  |        807 |    10 |        797 |
-| cursor-rule        | `**/*.mdc`                  |        179 |     0 |        179 |
-| plan               | `plans/active/*.md`         |        121 |    27 |         94 |
-| audit-result       | `plans/audit/results`       |         84 |     5 |         79 |
-| issue              | `plans/active/issues`       |         81 |     9 |         72 |
-| epic               | `plans/epics`               |         27 |     1 |         26 |
-| audit-instruction  | `plans/audit/instructions`  |         20 |     5 |         15 |
-| agent-role         | `agent-orchestrator/agents` |         15 |    14 |          1 |
+| doc_type           | location                     | non-exempt | clean | needs work |
+| ------------------ | ---------------------------- | ---------: | ----: | ---------: |
+| codex-ssot/runbook | `codex/**`                   |        807 |    10 |        797 |
+| cursor-rule        | `**/*.mdc`                   |        179 |     0 |        179 |
+| plan               | `plans/archive/2026_08/*.md` |        121 |    27 |         94 |
+| audit-result       | `plans/audit/results`        |         84 |     5 |         79 |
+| issue              | `plans/active/issues`        |         81 |     9 |         72 |
+| epic               | `plans/epics`                |         27 |     1 |         26 |
+| audit-instruction  | `plans/audit/instructions`   |         20 |     5 |         15 |
+| agent-role         | `agent-orchestrator/agents`  |         15 |    14 |          1 |
 
 Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None` by design — frozen historical state).
 
@@ -95,11 +95,12 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 
 - [x] ✅ [SCRIPT] P2. **Fix the one malformed-YAML doc.** `/codex/15-runbooks/vm-log-observability-verify.md` had a
       backtick-started `verifier:` value (invalid YAML) — now double-quoted + seeded. **Gate**: docspec parses + HARD=0.
-- [x] ✅ [SCRIPT] P2. **plans/active (top-level) — enum-normalize.** Ran the fix over `plans/active/*.md` (mostly
-      already seeded; was failing on `cross-asset`/`data-ingestion`). **Gate**: `docspec --check plans/active/*.md`
-      HARD=0 on all 121 files I may touch (lone holdout `master_to_live_defi` is foreign-dirty WIP — skipped, not mine).
+- [x] ✅ [SCRIPT] P2. **plans/active (top-level) — enum-normalize.** Ran the fix over `plans/archive/2026_08/*.md`
+      (mostly already seeded; was failing on `cross-asset`/`data-ingestion`). **Gate**:
+      `docspec --check plans/archive/2026_08/*.md` HARD=0 on all 121 files I may touch (lone holdout
+      `master_to_live_defi` is foreign-dirty WIP — skipped, not mine).
 - [x] ✅ [SCRIPT] P2. **plans/active/issues — seed + normalize + parent_epic backfill.** **Gate**:
-      `docspec --check     plans/active/issues/*.md` HARD=0 (82 docs); every issue carries a real `parent_epic` (38
+      `docspec --check     plans/archive/issues/*.md` HARD=0 (82 docs); every issue carries a real `parent_epic` (38
       inferred by filename token, default `infrastructure_master`).
 - [x] ✅ [SCRIPT] P2. **plans/epics — seed (legacy name/type → doc_type).** Kept `name` (the one place it survives),
       retired legacy `type:`, broke the related/related_plans YAML anchor. **Gate**: `docspec --check plans/epics/*.md`

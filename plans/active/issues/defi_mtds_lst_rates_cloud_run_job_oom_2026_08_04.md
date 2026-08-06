@@ -34,6 +34,7 @@ related:
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
     /plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-04
 author: slot-3

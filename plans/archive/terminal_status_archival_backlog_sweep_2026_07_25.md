@@ -2,16 +2,16 @@
 doc_type: plan
 title:
   Archive the terminal-status backlog — 53 resolved/false-positive/superseded issue docs + 13 complete/superseded plans
-  dual-tracked in plans/active/
+  dual-tracked in plans/archive/2026_08/
 summary:
   /codex/11-project-management/issue-doc-lifecycle.md already mandates archive-on-resolve for issue docs and calls a
   resolved-but-still-in-active/issues/ doc review-blocking dual-tracking — but its own audit recipe grepped for a
   frontmatter field (resolved:) that no longer exists in the schema, so it silently caught zero real violations. A
   corrected, machine-enforced version (scripts/plan-hygiene/check_terminal_status_archived.py, wired into
   run_hygiene_sweep.sh, shrinking-ratchet baseline seeded at 66) found the true backlog — 53 issue docs plus the
-  parallel plan-side case (13 plans/active/*.md docs whose terminal status is complete/superseded/cancelled). This plan
-  archives every one of them per the SSOT's process — banner, git mv to plans/archive/[issues/], corpus-wide referrer
-  fixup — so the ratchet baseline can shrink to 0.
+  parallel plan-side case (13 plans/archive/2026_08/*.md docs whose terminal status is complete/superseded/cancelled).
+  This plan archives every one of them per the SSOT's process — banner, git mv to plans/archive/[issues/], corpus-wide
+  referrer fixup — so the ratchet baseline can shrink to 0.
 status: complete
 nature: process
 asset_group: [cross-cutting]
@@ -329,7 +329,7 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   `plans/archive/issues/`, `check_terminal_status_archived.py` confirmed clean. Step 4 (corpus-wide referrer fixup)
   completed for 5 of 6 referrers. **One referrer left un-fixed**:
   `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (its `related:` frontmatter still
-  points at the old `plans/active/issues/...` path) — that file is 1216 lines, already over the 1000L hard line-cap
+  points at the old `plans/archive/issues/...` path) — that file is 1216 lines, already over the 1000L hard line-cap
   (pre-existing, unrelated to this edit), and `check_line_caps.sh`'s scoped pre-commit check refuses ANY staged commit
   touching an over-cap file (by design, no exceptions — see the script's own comments). Fixing the referrer requires
   first splitting that doc under the cap, which is out of scope for a single-line path fix. Leaving as a known, tracked

@@ -15,6 +15,7 @@ related:
   [
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     ../../archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-11
 author: unknown

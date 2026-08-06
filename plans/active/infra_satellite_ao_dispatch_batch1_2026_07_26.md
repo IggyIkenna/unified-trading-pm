@@ -111,8 +111,8 @@ structural gap `/ag-closeout-audit`'s SKILL.md documents for every AG. For infra
   (`grep -cE '^\s*-\s*\[[ xX]\]' plans/active/infra_consolidated_closeout_2026_07_25.md` → `0`).
 - Its `depends_on:` is `[]` and its `related:` names only the 3 sibling tranche closeouts + the audit SKILL — so the
   dependency-graph discovery path finds **no forked children** either.
-- `ls plans/active/ | grep -E 'infra.*(satellite|ao_dispatch|batch)'` → **nothing**; `plans/archive/*/` has no archived
-  infra batch. The 5 AGs have 41 such plans between them; infra has 0.
+- `ls plans/archive/2026_08/ | grep -E 'infra.*(satellite|ao_dispatch|batch)'` → **nothing**; `plans/archive/*/` has no
+  archived infra batch. The 5 AGs have 41 such plans between them; infra has 0.
 
 So the audit question "if the closeout plan's own todos and every active batch ran to completion, what is left
 orphaned?" resolves to "everything," because nothing in the covering set does anything. This plan starts the drain.

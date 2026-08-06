@@ -106,7 +106,7 @@ returning real `file:line` evidence; key findings independently spot-verified by
 - **strategy (f) — batch=live code-path identity**: GREEN — no `if mode=="live"` in signal logic; `_pnl_mode` branches
   tag PnL metadata only.
 
-## Gap items (ready to wire into active plans — dedup against `plans/active/` + `issues/` first)
+## Gap items (ready to wire into active plans — dedup against `plans/archive/2026_08/` + `issues/` first)
 
 - [ ] [DATA-CORRECTNESS] P1. MTDS `dex_swaps` silently truncates at 5,000 swaps/day/pool (`for page in range(5)`,
       `market-tick-data-service/.../cli/handlers/dex_swaps_handler.py:569`) — high-volume pools lose trades with no

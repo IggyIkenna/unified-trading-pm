@@ -169,7 +169,7 @@ authoritative; a `nature: notes` + `status: draft` doc is not.
 `ssot` (THE source of truth) · `guideline` (recommended practice) · `process` (a how-to / runbook procedure) · `design`
 (architecture / rationale / why) · `spec` (a contract / schema / API surface) · `record` (an immutable log: audit
 result, handoff, decision) · `notes` (working notes, not normative) · `issue` (an incident / defect / gap report — the
-natural value for `plans/active/issues/` docs; added 2026-07-06 after three independent authors reached for it against
+natural value for `plans/archive/issues/` docs; added 2026-07-06 after three independent authors reached for it against
 the enum).
 
 ## 5. Closed-vocab enums (seed values — grown organically)
@@ -181,7 +181,7 @@ day-1). Target ≤~10–15 values each; past ~15 → consolidate, OR it should h
   `plan · epic · issue · audit-result · audit-instruction · codex-ssot · codex-runbook · agent-role · cursor-rule` —
   **PATH-derived and path-checked (HARD, 2026-07-06)**: the validator derives the true type from the doc's location
   (`docspec.doc_type_for_path`) and a declared `doc_type:` that contradicts it is a HARD violation ("fix the field or
-  move the doc"). A doc in `plans/active/issues/` IS an issue — declaring `doc_type: plan` there was the recurring
+  move the doc"). A doc in `plans/archive/issues/` IS an issue — declaring `doc_type: plan` there was the recurring
   authoring mistake this check kills.
 - `nature` (8): `ssot · guideline · process · design · spec · record · notes · issue`
 - `asset_group` (11):
@@ -276,8 +276,8 @@ D7 "soak"), and only after the corpus it gates has converged. Each workstream is
 
 - **W2 (`doc_frontmatter_schema_and_validator`) — THIS deliverable.** Ships the shape (this doc) + the `docspec`
   validator + CLI **ONLY**. No tree-wide enforcement, no backfill, no new blocking QG step. The schema "soaks" first.
-- **W3 (plans backfill).** Backfills `plans/active/*` + `plans/archive/*` frontmatter to this schema using the CLI until
-  the plans corpus is HARD-green.
+- **W3 (plans backfill).** Backfills `plans/archive/2026_08/*` + `plans/archive/*` frontmatter to this schema using the
+  CLI until the plans corpus is HARD-green.
 - **W5 (plan-gate flip).** Flips the plan-hygiene completeness gate **warn → error** once the plans corpus is green —
   the first place enforcement actually blocks.
 - **W6 / W7 (per-type coverage).** Extend coverage to the remaining doc types (W7 = codex; W6 = role-charters), converge

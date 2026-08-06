@@ -14,7 +14,7 @@ summary: >-
   worker.md §4.5 ("FINDINGS CLOSURE", HARD RULE codified 2026-06-10: issue frontmatter MUST include
   title/created/author/source[]) — trivial string correction in the 2 mutable places (comment + docstring; the commit
   message is immutable). (2) The genuine SSOT contradiction: worker.md §4.5 mandates `author` on issue docs, but BOTH
-  `codex/11-project-management/doc-frontmatter-schema.md` (issue required-fields table, ~line 101:
+  `/codex/11-project-management/doc-frontmatter-schema.md` (issue required-fields table, ~line 101:
   parent_epic/priority/source only) AND `scripts/docs/docspec.py` PER_TYPE["issue"] (7 fields, verified directly) omit
   `author` entirely — not required, not optional. Confirmed NOT an active QG breakage (validate_frontmatter() only
   iterates known specs and never flags unrecognized extra keys, so author-bearing issue docs do not fail docspec) — it
@@ -32,6 +32,7 @@ related:
   [
     /codex/11-project-management/doc-frontmatter-schema.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
 author: ikennaigboaka [main·planning]
@@ -67,7 +68,7 @@ context_scope:
   (grep confirmed zero hits). The actual rule is **worker.md §4.5** ("FINDINGS CLOSURE", HARD RULE codified 2026-06-10:
   issue-doc frontmatter MUST include `title`/`created`/`author`/`source[]`).
 - **(2) SSOT contradiction (the substantive finding).** worker.md §4.5 requires `author` on issue docs, but:
-  - `codex/11-project-management/doc-frontmatter-schema.md` — the issue required-fields table (~line 101) lists only
+  - `/codex/11-project-management/doc-frontmatter-schema.md` — the issue required-fields table (~line 101) lists only
     `parent_epic`/`priority`/`source`; `author` appears nowhere (not required, not optional).
   - `scripts/docs/docspec.py` — `PER_TYPE["issue"]` carries 7 fields (verified directly); `author` is absent. So the
     schema SSOT and worker.md's HARD RULE disagree on whether issue docs need `author`. **Not an active QG failure**
@@ -87,7 +88,7 @@ context_scope:
       mandates: (i) add `author` to `scripts/docs/docspec.py` `PER_TYPE["issue"]` (required, matching worker.md §4.5 —
       or elective/Req.O if a same-file precedent for other doc types shows author is conventionally elective, worker's
       judgement on the exact tier), and (ii) add the corresponding `author` row to the issue required/optional-fields
-      table in `codex/11-project-management/doc-frontmatter-schema.md` (~line 101). Run `bash scripts/quality-gates.sh`
+      table in `/codex/11-project-management/doc-frontmatter-schema.md` (~line 101). Run `bash scripts/quality-gates.sh`
       for the PM repo and confirm existing issue docs (which do NOT all currently carry `author`) do not newly fail — if
       making it _required_ would red the tree against the existing corpus, land it as elective/Req.O and note the
       backfill as a P3 follow-up todo rather than reflex-breaking the gate. **Only pick option (b) — narrowing worker.md
@@ -98,7 +99,7 @@ context_scope:
 - [x] ✅ [DOC] P3. **Backfill `author` on the 438 existing issue docs that lack it.** Only 6 of 444 issue docs carry
       `author` today (2026-08-04); the schema now recognizes it as elective (validated when present, no gate break when
       absent). worker.md §4.5 mandates it for new issue docs. Run a scripted backfill pass over
-      `plans/active/issues/*.md` to populate `author` from each doc's git-log author or the Progress Log's most recent
+      `plans/archive/issues/*.md` to populate `author` from each doc's git-log author or the Progress Log's most recent
       entry, defaulting to `unknown` where neither source exists. done-when: ≥90% of issue docs carry `author`, QG green
       (no new violations — elective fields don't gate). Repo: unified-trading-pm. — unified-trading-pm@a6e5eae25
 
@@ -129,7 +130,7 @@ context_scope:
   remains open, untouched.
 - **2026-08-04 (slot-11)** — Todo 2 done. Reconciled the SSOT: added `author` (Elective, `Req.E`) to
   `scripts/docs/docspec.py` `PER_TYPE["issue"]` and the corresponding `author` (elective) entry to the issue row in
-  `codex/11-project-management/doc-frontmatter-schema.md` §3 table + a note explaining the tier choice. Option (a)
+  `/codex/11-project-management/doc-frontmatter-schema.md` §3 table + a note explaining the tier choice. Option (a)
   confirmed — no evidence of deliberate exclusion found (grep of codex/ + plans/ for exclusion rationale returned zero
   hits). Elective (not Required): only 6 of 444 existing issue docs carry `author`; Required would have red-lit 438
   docs. Filed a P3 backfill todo for the existing corpus. All three sources now agree: worker.md §4.5 mandates `author`

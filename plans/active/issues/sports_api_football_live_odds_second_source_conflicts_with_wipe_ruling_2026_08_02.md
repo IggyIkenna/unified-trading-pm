@@ -55,6 +55,7 @@ related:
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
     plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md,
     plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-08-02
 author: unknown

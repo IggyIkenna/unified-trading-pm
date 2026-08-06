@@ -9,7 +9,7 @@ summary: >-
   `_DEFERRED_RE` matches the bare `DEFERRED —` token regardless of quoting context, so it demands a `## Deferred work —
   migrated to:` banner on a document that has no actual deferred work of its own — adding one would be a fabricated
   banner, not a real fix. This regressed PM's `plan-discipline` post-gate (baseline 0 → 1), blocking `quality-gates.sh`
-  for anyone touching unrelated `plans/active/*.md` files (worked around this session via the CLAUDE.md `pure
+  for anyone touching unrelated `plans/archive/2026_08/*.md` files (worked around this session via the CLAUDE.md `pure
   doc/plan-flip → prek only` carve-out, which does not run this corpus-wide check).
 status: resolved
 nature: issue
@@ -53,9 +53,10 @@ rule would mean adding a `## Deferred work — migrated to:` section that doesn'
 
 This is the same false-positive CLASS already documented in the checker's own comments (quoting/prose vs a live marker)
 — this is a fresh instance of it, not a new class. It currently blocks `quality-gates.sh`'s `plan-discipline` post-gate
-for ANY agent touching unrelated `plans/active/*.md` files (the check scans the whole corpus, not just staged files),
-which is why the `pure doc/plan-flip → prek only` carve-out exists — but that carve-out is a workaround, not a fix, and
-doesn't help an agent that genuinely needs the full `quality-gates.sh` green (e.g. shipping code + docs together).
+for ANY agent touching unrelated `plans/archive/2026_08/*.md` files (the check scans the whole corpus, not just staged
+files), which is why the `pure doc/plan-flip → prek only` carve-out exists — but that carve-out is a workaround, not a
+fix, and doesn't help an agent that genuinely needs the full `quality-gates.sh` green (e.g. shipping code + docs
+together).
 
 ## Recommended decision
 

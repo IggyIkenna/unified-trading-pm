@@ -20,6 +20,7 @@ related:
     pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21,
     e2e_testing_collateral_validation_dead_import_2026_07_23,
     defi_catalog_engine_config_key_contract_drift_2026_07_23,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-23
 author: unknown

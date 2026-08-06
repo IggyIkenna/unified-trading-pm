@@ -31,6 +31,7 @@ related:
     ../data_completion_cefi_2026_07_15.md,
     ../legacy_bucket_dual_write_decommission_2026_07_24.md,
     ../cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
 author: unknown

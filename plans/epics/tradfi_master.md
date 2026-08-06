@@ -48,11 +48,11 @@ locked_since: 2026-05-07
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated open `- [ ]` todos INLINE in
 > its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
-> (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never
-> dispatched. The inline blocks have been **reconciled, not deleted**: net-new unowned work extracted to child active
-> plans (see § "Workstream routing" + "Assigned active plans"); already-owned work pointed at its owning plan; cutover
-> success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence. **NOTE**:
-> tradfi_master already had active children (`tradfi_massive_dual_source_2026_05_28` +
+> (`regen_backlog_from_plan.py`) only scans `plans/archive/2026_08/*.md`, never `plans/epics/`, so those inline todos
+> were never dispatched. The inline blocks have been **reconciled, not deleted**: net-new unowned work extracted to
+> child active plans (see § "Workstream routing" + "Assigned active plans"); already-owned work pointed at its owning
+> plan; cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence.
+> **NOTE**: tradfi_master already had active children (`tradfi_massive_dual_source_2026_05_28` +
 > `tradfi_manifest_canonicalisation_2026_06_01`) — their work was NOT re-extracted. See § "Workstream routing" below for
 > the full map.
 
@@ -79,8 +79,9 @@ locked_since: 2026-05-07
 
 ## Workstream routing (restructured 2026-06-20)
 
-The TradFi work is dispatched through child active plans (the backlog regen scans `plans/active/`, not this epic). Every
-former inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
+The TradFi work is dispatched through child active plans (the backlog regen scans `plans/archive/2026_08/`, not this
+epic). Every former inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without
+evidence:
 
 | Former inline block                                                                                                                                                                                                            | Disposition                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

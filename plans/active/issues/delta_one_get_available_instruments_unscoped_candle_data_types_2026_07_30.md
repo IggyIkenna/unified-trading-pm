@@ -33,6 +33,7 @@ related:
   - /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
 created: "2026-07-30"
 author: unknown
+  /plans/active/defi_consolidated_closeout_2026_07_18.md,
 source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
 parent_epic: defi_master
 assigned_vm: planning

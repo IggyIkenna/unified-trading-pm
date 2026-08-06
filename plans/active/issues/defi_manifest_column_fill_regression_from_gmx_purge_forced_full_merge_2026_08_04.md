@@ -34,6 +34,7 @@ related:
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

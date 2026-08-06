@@ -182,7 +182,7 @@ unified-trading-system-ui, and the ml-service+trading-agent-service baseline-rat
 market-tick-data-service again afterward: still live (6-second-old mtime on the same file set) — deferred a second time
 rather than collide; likely another concurrent session already working this exact backlog. Separately found and fixed an
 incomplete archival left over from the unified-trading-library agent's work: 3 issue docs had an archive copy created on
-origin but the stale `plans/active/issues/` duplicate was never removed (a shared-clone commit race dropped the
+origin but the stale `plans/archive/issues/` duplicate was never removed (a shared-clone commit race dropped the
 delete-half of the move) — completed via `unified-trading-pm@e2f568370`. **Remaining**: market-tick-data-service (~15
 items) + its coordinated cqg-wiring item, both blocked purely on that repo's live concurrent activity, not on any
 decision or credential. Recheck liveness before dispatching; if another session already finished it, verify via

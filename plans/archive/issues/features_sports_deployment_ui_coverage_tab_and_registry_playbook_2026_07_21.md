@@ -46,9 +46,9 @@ depends_on: []
   treatment automatically (UAC `FEATURE_UPSTREAM_REQUIREMENTS` entry, `_gate_then_run` wiring, deployment-api
   per-calc-meta entry).
 
-Grepped all of `plans/active/*.md` and `codex/02-data/` for any reference to a features-sports coverage tab or a
-feature-registration playbook — none found. The architecture these two items would surface/document is real and shipped;
-only the presentation layer and the docs are missing.
+Grepped all of `plans/archive/2026_08/*.md` and `codex/02-data/` for any reference to a features-sports coverage tab or
+a feature-registration playbook — none found. The architecture these two items would surface/document is real and
+shipped; only the presentation layer and the docs are missing.
 
 # Why it matters
 

@@ -27,6 +27,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/runtime-deployment-topology.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-25
 author: unknown

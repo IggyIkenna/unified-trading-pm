@@ -27,6 +27,7 @@ related:
   [
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_20.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-08-01
 author: unknown

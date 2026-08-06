@@ -35,10 +35,10 @@ land here. Update this file when the workflow evolves; codex docs are pointers, 
 
 ## What an epic is
 
-An **epic** is the planning orchestrator for one persistent code surface. Every active plan in `plans/active/` is
-assigned to exactly one epic via `parent_epic:` frontmatter. **No orphan active plans** — if you can't name the epic,
-the plan doesn't belong in `plans/active/`. Epics are everlasting: they have no deadline; there's always more work as
-audits surface gaps.
+An **epic** is the planning orchestrator for one persistent code surface. Every active plan in `plans/archive/2026_08/`
+is assigned to exactly one epic via `parent_epic:` frontmatter. **No orphan active plans** — if you can't name the epic,
+the plan doesn't belong in `plans/archive/2026_08/`. Epics are everlasting: they have no deadline; there's always more
+work as audits surface gaps.
 
 **The model (SSOT: [`/codex/12-agent-workflow/work-philosophy.md`](/codex/12-agent-workflow/work-philosophy.md)).**
 Codex docs are the **target state**, the codebase is the **current state**, and an epic is the **gap** between them. The
@@ -51,11 +51,11 @@ small** — conflating the two is what produced 1000-line plans and the quality 
 
 **Three persistent entities**:
 
-| Entity          | Where                                      | Lifecycle                                                      | Carries                                                                                                               |
-| --------------- | ------------------------------------------ | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Epic**        | `plans/epics/<slug>.md`                    | Everlasting (status: active/paused/cancelled — NEVER complete) | `assigned_vm`, `tier`, `priority`, scope, list of all assigned active plans organised in priority blocks              |
-| **Audit**       | `plans/audit/results/<slug>_YYYY_MM_DD.md` | One-shot, timestamped                                          | Findings from a periodic review of an epic; produces gap items that become new active plans                           |
-| **Active plan** | `plans/active/<slug>_YYYY_MM_DD.md`        | Cycles (active → complete → archive)                           | `parent_epic`, `estimate_class`, `estimate_baseline_ai_days`, `estimate_calibrated_ai_days`; one shippable workstream |
+| Entity          | Where                                        | Lifecycle                                                      | Carries                                                                                                               |
+| --------------- | -------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Epic**        | `plans/epics/<slug>.md`                      | Everlasting (status: active/paused/cancelled — NEVER complete) | `assigned_vm`, `tier`, `priority`, scope, list of all assigned active plans organised in priority blocks              |
+| **Audit**       | `plans/audit/results/<slug>_YYYY_MM_DD.md`   | One-shot, timestamped                                          | Findings from a periodic review of an epic; produces gap items that become new active plans                           |
+| **Active plan** | `plans/archive/2026_08/<slug>_YYYY_MM_DD.md` | Cycles (active → complete → archive)                           | `parent_epic`, `estimate_class`, `estimate_baseline_ai_days`, `estimate_calibrated_ai_days`; one shippable workstream |
 
 The continuous loop: audits identify gaps → active plans spawn to close them → epics absorb the new active plans into
 their priority blocks → epic VMs continuously work the items → audits run again periodically (Ikenna + Harsh) and the
@@ -72,7 +72,7 @@ PLANNING VM (Ikenna + Harsh interactive, Opus 4.7 1M context)
    ├── upgrades existing active plans (favoured) OR creates new active plans for gap items
    │      → each carries parent_epic: <epic-slug>
    │      → each carries estimate_class + estimate_baseline_ai_days + estimate_calibrated_ai_days
-   ├── wrapper remediation plan in plans/active/<slug>_remediation_YYYY_MM_DD.md
+   ├── wrapper remediation plan in plans/archive/2026_08/<slug>_remediation_YYYY_MM_DD.md
    │      → carries parent_epic: + assigned_vm: vm-<epic>
    └── epic file body absorbs new active plans into its priority blocks
                 │
@@ -93,7 +93,7 @@ VM orchestrator + worker + review agents work the items continuously per
 [`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md). Ikenna + Harsh continuously feed the loop
 by running audits + spinning new plans/epics from issues identified.
 
-**Rule**: no orphan active plans. Every file in `plans/active/*.md` declares `parent_epic:` in frontmatter. The
+**Rule**: no orphan active plans. Every file in `plans/archive/2026_08/*.md` declares `parent_epic:` in frontmatter. The
 inventory regenerator flags orphans as review-blocking.
 
 ## Epic frontmatter (canonical schema)
@@ -116,8 +116,8 @@ last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout
 locked_since: YYYY-MM-DD
 related_plans:
-  - plans/active/<sub-plan>.md # the list grows continuously as audits spawn new active plans
-  - plans/active/<another-sub-plan>.md
+  - plans/archive/2026_08/<sub-plan>.md # the list grows continuously as audits spawn new active plans
+  - plans/archive/2026_08/<another-sub-plan>.md
 ---
 ```
 
@@ -134,7 +134,7 @@ flags it as a violation. (`asset_group:` was previously listed here too, but `ch
 
 ## Active plan frontmatter (must declare parent_epic)
 
-Every file in `plans/active/*.md` MUST carry:
+Every file in `plans/archive/2026_08/*.md` MUST carry:
 
 ```yaml
 ---
@@ -153,7 +153,7 @@ related_plans:
 ```
 
 **Orphan = review-blocking**. `regenerate_active_plan_inventory.py` flags any active plan without `parent_epic:` as an
-orphan. Resolve before next PR merge — assign the right epic OR file the plan in `plans/active/issues/` if scope is
+orphan. Resolve before next PR merge — assign the right epic OR file the plan in `plans/archive/issues/` if scope is
 unclear.
 
 ## Priority blocks within an epic
@@ -217,11 +217,10 @@ Regenerated 2026-07-12 from `epics/*.md` frontmatter per operator ruling (plan-r
 `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`. Tier count also corrected 5→6 in the heading: the table has always
 spanned `L0`–`L5` (six distinct tiers); the pre-existing "5 tiers" phrasing undercounted.
 
-**Caveat (added 2026-07-25, plan-reconcile)**: this "Assigned VM" column is NOT kept in sync with per-epic
-`assigned_vm` frontmatter corrections made after 2026-07-12 (e.g. `escalation_and_disaster_recovery_master` and
-`trading_agent_master` both had `assigned_vm` corrected to `planning` on 2026-07-21) — consistent with the
-epic-owns-VM model already being SUPERSEDED/archival-only per the top banner. Treat this table's VM column as a
-2026-07-12 snapshot, not a live registry.
+**Caveat (added 2026-07-25, plan-reconcile)**: this "Assigned VM" column is NOT kept in sync with per-epic `assigned_vm`
+frontmatter corrections made after 2026-07-12 (e.g. `escalation_and_disaster_recovery_master` and `trading_agent_master`
+both had `assigned_vm` corrected to `planning` on 2026-07-21) — consistent with the epic-owns-VM model already being
+SUPERSEDED/archival-only per the top banner. Treat this table's VM column as a 2026-07-12 snapshot, not a live registry.
 
 - [ ] [SCRIPT] P2. Script this regeneration (scripts/plan-hygiene or scripts/docs) so the registry can't drift again —
       wire into the hygiene sweep.
@@ -256,9 +255,10 @@ Registry SSOT: [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_reg
 
 - **Epics**: `plans/epics/<slug>.md` — kebab-case slug, **NO date suffix**. Everlasting. Examples: `defi_master.md`,
   `strategy_master.md`, `batch_live_symmetry_master.md`.
-- **Active plans + wrapper plans**: `plans/active/<slug>_YYYY_MM_DD.md` — date suffix MANDATORY (dated work units).
+- **Active plans + wrapper plans**: `plans/archive/2026_08/<slug>_YYYY_MM_DD.md` — date suffix MANDATORY (dated work
+  units).
 - **Audit docs**: `plans/audit/results/<slug>_YYYY_MM_DD.md` — timestamped output of an audit-pool row.
-- **Issue docs / audit pool**: `plans/active/issues/<slug>_YYYY_MM_DD.md` — surfaces UNACKED scope.
+- **Issue docs / audit pool**: `plans/archive/issues/<slug>_YYYY_MM_DD.md` — surfaces UNACKED scope.
 - **Archive**: `plans/archive/<slug>.plan.md` — frozen historical state; DO NOT rename (breaks archaeology in commit
   messages + external refs).
 
@@ -289,9 +289,9 @@ handshakes, cross-cutting inherited. Reading the epic in 5 minutes gives you the
 hold the tactical work.
 
 **Don't duplicate.** If you need to add a new todo, it goes in the relevant sub-plan (or a new sub-plan in
-`plans/active/`), and the epic updates only its **sub-plans consumed** table to reference it. Epics are **read-mostly**
-— the only writes are: (a) updating the consumed-plans table when a sub-plan is added/removed; (b) updating the
-end-state at May 23 if scope changes (operator-approved); (c) closing open questions.
+`plans/archive/2026_08/`), and the epic updates only its **sub-plans consumed** table to reference it. Epics are
+**read-mostly** — the only writes are: (a) updating the consumed-plans table when a sub-plan is added/removed; (b)
+updating the end-state at May 23 if scope changes (operator-approved); (c) closing open questions.
 
 **Status flow.** Sub-plan checkboxes flip in their own files per the workspace `Commit + Push + Flip Plan Checkboxes`
 HARD RULE. Epics do not track per-sub-plan checkbox state — they track **completion of the May-23 deliverable** as a
@@ -308,7 +308,7 @@ deliverables they own directly (typically the end-state criteria + cross-epic ha
 - **Cross-Plan Coordination Banners.** When a VM launches or an in-flight refactor starts, the banner lands on every
   affected sub-plan AND on every affected epic that consumes those sub-plans.
 - **Findings Triage Discipline.** Findings from epic-execution sessions follow the case-1-to-5 routing. Issues that span
-  multiple sub-plans get an issue doc under `plans/active/issues/`.
+  multiple sub-plans get an issue doc under `plans/archive/issues/`.
 - **Daily work-split.** The two-side daily splits (Ikenna ↔ Harsh) reference epics for the day's domain target +
   reference sub-plans for the tactical scope.
 

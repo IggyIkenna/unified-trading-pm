@@ -676,9 +676,9 @@ phases where a build depends on an audit/decision.
   consolidation) were already physically archived, unlocked, zero open todos. Found + fixed two hygiene gaps before
   archiving this file: (1) WS-1/WS-2-3/WS-4 still carried a stale `status: active` despite being fully done and already
   archived — flipped to `complete` in each; (2) this tracker's own Split-map/WS-section links used bare relative
-  filenames that assumed a `plans/active/` sibling — now dangling since the children moved to `plans/archive/2026_07/` —
-  rewritten to full repo-root-relative paths. Also cross-checked `plans/active/issues/` for anything still open against
-  this tracker's scope: found one genuinely open, unrelated-lifecycle item —
+  filenames that assumed a `plans/archive/2026_08/` sibling — now dangling since the children moved to
+  `plans/archive/2026_07/` — rewritten to full repo-root-relative paths. Also cross-checked `plans/archive/issues/` for
+  anything still open against this tracker's scope: found one genuinely open, unrelated-lifecycle item —
   `alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md` (an N+1 GCS-read perf bug WS-5A's own scale
   measurement surfaced) — left open and untouched, flagged in the archival banner rather than silently resolved by this
   sweep. This tracker's own 25 `- [ ]` lines were confirmed to be pre-split historical record only (each WS section

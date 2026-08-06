@@ -24,6 +24,7 @@ related:
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-03"
 author: unknown

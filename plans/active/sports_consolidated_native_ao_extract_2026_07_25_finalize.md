@@ -87,21 +87,21 @@ context_scope:
       explicitly recorded if still blocking), each citing a verified commit, with the 4 partial-scope todos' remaining
       sub-items left visibly open.
 - [ ] [DOC] P1. **Archive every doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the flip,
-      never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
-      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
-      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
-      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
-      auto-archived 11 docs nobody's plan owned. **This plan's shape differs from the other 4 sports finalize plans**:
-      todo 1 flips checkboxes back into ONE parent doc (`sports_consolidated_closeout_2026_07_19.md`), not into many
-      separate small source docs — so the expected outcome here is usually a no-op, since the master closeout doc is
-      very unlikely to reach 0 open todos from this one extract's reconciliation alone. Still: if todo 1's
-      reconciliation (or a subsequent audit) ever DOES drive `sports_consolidated_closeout_2026_07_19.md`, or any other
-      doc this extraction touches, to a genuine terminal status with 0 open todos, archive it to
-      `plans/archive/2026_07/` IN THE SAME COMMIT as that status flip — fix every corpus referrer of the archived doc's
-      pre-archive path. **Done when**: either (a) an explicit confirmation is recorded that no doc reached a terminal
-      status via todo 1 (the expected case), or (b) every doc that did is archived in the same commit as its flip, and
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures. Source:
-      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      never left sitting in `plans/archive/2026_08/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
+      frontmatter reads a terminal status while it still lives under `plans/archive/2026_08/` (including
+      `plans/archive/issues/`) — the omission of this exact step across the sports finalize-plan family already forced
+      one such HARD-fail: the `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation
+      `agt-9a5061`, PR #1545) auto-archived 11 docs nobody's plan owned. **This plan's shape differs from the other 4
+      sports finalize plans**: todo 1 flips checkboxes back into ONE parent doc
+      (`sports_consolidated_closeout_2026_07_19.md`), not into many separate small source docs — so the expected outcome
+      here is usually a no-op, since the master closeout doc is very unlikely to reach 0 open todos from this one
+      extract's reconciliation alone. Still: if todo 1's reconciliation (or a subsequent audit) ever DOES drive
+      `sports_consolidated_closeout_2026_07_19.md`, or any other doc this extraction touches, to a genuine terminal
+      status with 0 open todos, archive it to `plans/archive/2026_07/` IN THE SAME COMMIT as that status flip — fix
+      every corpus referrer of the archived doc's pre-archive path. **Done when**: either (a) an explicit confirmation
+      is recorded that no doc reached a terminal status via todo 1 (the expected case), or (b) every doc that did is
+      archived in the same commit as its flip, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard
+      failures. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [ ] [REVIEW] P1. **Re-check whether any of the excluded/scoped-down sub-items' gates have since cleared.**
       Specifically: (1) the KALSHI/POLYMARKET cross-AG bleed exclusion (venue vocabulary todo) — check whether
       `sports_satellite_ao_dispatch_batch3_2026_07_25.md:132`'s disposition candidate has shipped; if so, the parent

@@ -37,6 +37,7 @@ related:
     cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
 author: unknown

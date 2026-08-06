@@ -16,6 +16,7 @@ related:
     /plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
     plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-21
 author: unknown

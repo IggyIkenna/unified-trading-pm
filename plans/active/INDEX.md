@@ -5,8 +5,8 @@
 > `issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md` Finding 2): this file was hand-maintained with no
 > regenerator and had drifted to **226 stale entries** against the live plan set (dangling links into `archive/`, plans
 > added without an INDEX bump, dozens of dated correction banners papering over the drift instead of fixing it).
-> Replaced with `scripts/plans/regenerate_active_plan_index.py`, which reads every `plans/active/*.md` plan's own
-> `asset_group:`/`summary:` frontmatter and regenerates the block below between the AUTO-INDEX markers — the same
+> Replaced with `scripts/plans/regenerate_active_plan_index.py`, which reads every `plans/archive/2026_08/*.md` plan's
+> own `asset_group:`/`summary:` frontmatter and regenerates the block below between the AUTO-INDEX markers — the same
 > self-healing pattern `active_plan_inventory_dashboard_2026_07_24.md` already uses for checkbox-progress tracking, now
 > wired into `scripts/plan-hygiene/run_hygiene_sweep.sh` alongside it. **Never hand-edit between the markers** — re-run
 > the script instead; edits there are overwritten on the next regen. The prior hand-maintained content (307 lines,
@@ -18,8 +18,8 @@
 <!-- AUTO-INDEX-START -->
 
 _Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 233 plans across 10 domains. A plan tagged with
-multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
-by hand._
+multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning
+`plans/archive/2026_08/` by hand._
 
 ### cefi (31)
 

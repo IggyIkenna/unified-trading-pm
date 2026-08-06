@@ -58,9 +58,9 @@ source: >-
   children) — the parent's Progress Log was the last remaining oversized section (~917 of the parent's 1478 lines) after
   the Phase-body content had already been split out. Content moved verbatim, no rewrite; mirrors the pattern
   `tradfi_consolidated_closeout_2026_07_18.md` and `plans/active/defi_consolidated_closeout_history_2026_07_18.md` used
-  for their own siblings. Filed under `plans/archive/` (not `plans/active/`) because it is a closed `status: complete` /
-  `nature: record` doc with no dispatchable todos — `check_line_caps.sh` scans `plans/active/*.md` only, so archiving
-  here is both the architecturally correct home and sidesteps the line-cap question entirely.
+  for their own siblings. Filed under `plans/archive/` (not `plans/archive/2026_08/`) because it is a closed `status:
+  complete` / `nature: record` doc with no dispatchable todos — `check_line_caps.sh` scans `plans/archive/2026_08/*.md`
+  only, so archiving here is both the architecturally correct home and sidesteps the line-cap question entirely.
 ---
 
 # Prediction consolidated close-out — history (archived 2026-07-24)

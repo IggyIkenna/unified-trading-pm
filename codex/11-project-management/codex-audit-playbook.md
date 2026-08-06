@@ -64,16 +64,16 @@ Priority: P0 = agent assumption violated; P1 = next-agent confusion; P2 = cleanu
 
 ## Phase 0 — Structural scan (automated)
 
-Run against `plans/active/*.md`, `plans/epics/*.md`, `codex/**/*.md`:
+Run against `plans/archive/2026_08/*.md`, `plans/epics/*.md`, `codex/**/*.md`:
 
 ```bash
 # Broken-ref scan: extract codex/ path refs from plans → check existence
-grep -roh 'codex/[a-zA-Z0-9/_.-]*\.md' plans/active/ plans/epics/ | sort -u | while read ref; do
+grep -roh 'codex/[a-zA-Z0-9/_.-]*\.md' plans/archive/2026_08/ plans/epics/ | sort -u | while read ref; do
   [ -f "$ref" ] || echo "BROKEN-REF: $ref"
 done
 
 # Orphan plan scan: active plans without parent_epic
-grep -rL "^parent_epic:" plans/active/*.md
+grep -rL "^parent_epic:" plans/archive/2026_08/*.md
 
 # SUPERSEDED doc scan: codex docs with SUPERSEDED banners
 grep -rl "SUPERSEDED" codex/ --include="*.md"
@@ -123,7 +123,7 @@ Stub minimum:
 
 ```bash
 # Broken-ref count must be 0
-grep -roh 'codex/[a-zA-Z0-9/_.-]*\.md' plans/active/ plans/epics/ | sort -u | while read ref; do
+grep -roh 'codex/[a-zA-Z0-9/_.-]*\.md' plans/archive/2026_08/ plans/epics/ | sort -u | while read ref; do
   [ -f "$ref" ] && echo "OK: $ref" || echo "BROKEN: $ref"
 done | grep BROKEN | wc -l
 

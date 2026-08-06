@@ -6,7 +6,7 @@ title:
   findings/corrections through end-to-end validation)
 summary:
   'Verbatim, byte-for-byte extraction (2026-07-26, plan line-cap remediation — the original 1,843-line doc exceeded the
-  `plans/active/` 1,000L hard cap) of the final third of
+  `plans/archive/2026_08/` 1,000L hard cap) of the final third of
   `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md`, PART 1 of 3. Continues directly from Part 2
   (§ G-N). Carries § O (round is ~50% populated in RAW — the 3.2% catalogue figure was measuring the ROLLUP, not
   capture), § P (derive `round` for the confident majority, spend API calls only on the clustered remainder — sizing,
@@ -37,7 +37,7 @@ created: 2026-07-18
 author: unknown
 source:
   - Split 2026-07-26 from `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` for line-cap
-    remediation (1,843L, over the `plans/active/` 1,000L hard cap enforced by `check_line_caps.sh`) — precedent
+    remediation (1,843L, over the `plans/archive/2026_08/` 1,000L hard cap enforced by `check_line_caps.sh`) — precedent
     `sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`. The findings below were originally captured
     2026-07-18/2026-07-19 during and after the sports round-derivation backfill campaign documented in Part 1's
     frontmatter.

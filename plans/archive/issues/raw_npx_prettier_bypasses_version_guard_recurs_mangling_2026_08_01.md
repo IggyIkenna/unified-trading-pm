@@ -10,13 +10,13 @@ summary: >-
   `<3.9.5` deterministically rewrites underscore identifiers as asterisks in prose:
   `asset_group`→`asset*group`/`data_type`→`data*type`/etc.). Bare `npx prettier` in this environment resolves **3.6.2**
   — no local `node_modules/.bin/prettier` exists in this checkout, no pinned version, so npx falls through to whatever
-  its cache/registry gives it. This silently corrupted ~15-17 docs across `plans/active/`. Caught before any of it
-  reached the shared branch (verified `HEAD` clean, scanned all upstream commits with zero hits) — the corrupted local
-  working-tree copies were discarded (`git checkout HEAD --`), not shipped. `check_prettier_mangling.sh` (the backstop
-  gate) is only wired into the prek pre-commit hook path, not into an ad-hoc interactive `npx prettier --write` call —
-  so an agent (or human) who reaches for prettier directly, rather than via the hook or `quality-gates.sh`, gets zero
-  warning until the pre-commit gate (if reached at all — this incident's corruption was all in the pre-stage working
-  tree, one step before that gate would even run).
+  its cache/registry gives it. This silently corrupted ~15-17 docs across `plans/archive/2026_08/`. Caught before any of
+  it reached the shared branch (verified `HEAD` clean, scanned all upstream commits with zero hits) — the corrupted
+  local working-tree copies were discarded (`git checkout HEAD --`), not shipped. `check_prettier_mangling.sh` (the
+  backstop gate) is only wired into the prek pre-commit hook path, not into an ad-hoc interactive `npx prettier --write`
+  call — so an agent (or human) who reaches for prettier directly, rather than via the hook or `quality-gates.sh`, gets
+  zero warning until the pre-commit gate (if reached at all — this incident's corruption was all in the pre-stage
+  working tree, one step before that gate would even run).
 status: resolved
 nature: process
 asset_group: [ao]

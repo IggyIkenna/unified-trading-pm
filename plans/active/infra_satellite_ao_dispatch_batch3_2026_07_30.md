@@ -211,8 +211,8 @@ Measured 2026-07-30 against the live corpus, not carried forward on trust:
 ## Conflict check performed before drafting
 
 - **`scripts/workspace/sync-gitignore-cursorignore.py` / `untrack-ignored-files.py` /
-  `scripts/templates/.gitignore.central`** — `rg` across all of `plans/active/` (plans + issues) returns **zero** other
-  claimants. Clean.
+  `scripts/templates/.gitignore.central`** — `rg` across all of `plans/archive/2026_08/` (plans + issues) returns
+  **zero** other claimants. Clean.
 - **`agent-orchestrator/server/routes/git_health.py` / `scripts/dev/slot-git-status-report.sh`** — checked against every
   active `parent_epic: orchestrator_master` planning doc (todo 2's source doc lives in that epic, not
   `infrastructure_master`). `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s two git-health todos are both `[x]` done

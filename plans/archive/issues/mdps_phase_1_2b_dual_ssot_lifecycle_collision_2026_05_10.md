@@ -213,8 +213,8 @@ landing.
 ## Exit criteria (closing this issue)
 
 - Operator triage decision logged (A / B / C). — `[ ]` open
-- If A or C: new sub-plan `mdps_canonical_writer_lifecycle_unification_2026_05_NN.md` filed in `plans/active/` with the
-  Phase 1A/1B/1C structure described above. — `[ ]` open
+- If A or C: new sub-plan `mdps_canonical_writer_lifecycle_unification_2026_05_NN.md` filed in `plans/archive/2026_08/`
+  with the Phase 1A/1B/1C structure described above. — `[ ]` open
 - If B: streaming-and-backpressure plan body acknowledges the dual-SSOT temporary state + names the successor plan
   filename per the "Temporary state must have a named successor plan" rule. — `[ ]` open
 - Phase 1.2B + Phase 2 + Phase 4 ship under whichever plan owns them post-decision. — `[ ]` open

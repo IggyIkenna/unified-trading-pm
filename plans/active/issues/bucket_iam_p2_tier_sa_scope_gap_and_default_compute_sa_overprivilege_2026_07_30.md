@@ -42,6 +42,7 @@ related:
     /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-30"
 author: unknown

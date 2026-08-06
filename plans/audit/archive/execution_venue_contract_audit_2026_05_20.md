@@ -456,8 +456,8 @@ orchestrator.
 - C3 (IS→execution): `plans/audit/is_execution_contract_audit_2026_05_20.md` — 3 P0 findings
 - A6 (batch-live parity): `plans/audit/results/batch_live_adapter_parity_2026_05_20_summary.md` — 13 BATCH_ONLY cells
   (MTDS layer)
-- D6 (strategy + execution plan): `plans/active/` — TBD, consumes C5/C6/C7/C8
-- D7 (live adapters plan): `plans/active/` — TBD, consumes C4/C8 live-mode rows
+- D6 (strategy + execution plan): `plans/archive/2026_08/` — TBD, consumes C5/C6/C7/C8
+- D7 (live adapters plan): `plans/archive/2026_08/` — TBD, consumes C4/C8 live-mode rows
 - Bucket SSOT canonicalisation plan: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`
 - TradFi epic: `plans/epics/tradfi_master.md`
 - Predictions epic: `plans/epics/predictions_master.md`

@@ -21,6 +21,7 @@ related:
   [
     plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-12
 author: unknown

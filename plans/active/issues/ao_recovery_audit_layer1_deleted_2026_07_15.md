@@ -26,6 +26,7 @@ related:
     /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
     /codex/04-architecture/recovery-defence-in-depth-layers.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-15
 author: unknown

@@ -21,6 +21,7 @@ related:
     ../epics/defi_master.md,
     ./defi_manifest_canonicalisation_2026_06_01.md,
     ../archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-06-12"
 parent_epic: defi_master

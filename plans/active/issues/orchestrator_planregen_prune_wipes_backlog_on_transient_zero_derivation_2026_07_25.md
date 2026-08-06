@@ -33,6 +33,7 @@ related:
     /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/runtime-deployment-topology.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-25
 author: unknown

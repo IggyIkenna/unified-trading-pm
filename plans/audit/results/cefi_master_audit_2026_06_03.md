@@ -110,7 +110,7 @@ acts only on survivors:
   (`orchestrator.py:3084-3102`). Only TradFi enforces mandatory source. Matches existing cefi item (i) RED +
   `data_source_provenance_all_asset_groups_2026_06_01.md`.
 
-## Gap items (dedup against `plans/active/` + `issues/` before filing)
+## Gap items (dedup against `plans/archive/2026_08/` + `issues/` before filing)
 
 - [ ] [BATCH-LIVE] P1. Non-HL CeFi `book_snapshot_5` + `derivative_ticker` have **no live WS connector** (only `trades`
       live; only Hyperliquid has live book+ticker) — live perp mark/funding (derivative_ticker) is absent for

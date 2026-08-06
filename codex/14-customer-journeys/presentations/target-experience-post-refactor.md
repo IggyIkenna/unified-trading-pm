@@ -999,8 +999,8 @@ Rules:
   must be mirrored in a committed spec.
 - **Durable specs** sit under `unified-trading-system-ui/tests/e2e/playbooks/refactor/` and are named after the G1 plan.
 - **Persona seeding** goes through `tests/e2e/playbooks/seed-persona.ts` — never inline localStorage poking in specs.
-- **Orphan-reachability** assertions verify every cross-referenced plan file exists under `plans/active/` — the deck
-  spec enforces this for its own 14 plan cross-links.
+- **Orphan-reachability** assertions verify every cross-referenced plan file exists under `plans/archive/2026_08/` — the
+  deck spec enforces this for its own 14 plan cross-links.
 - Specs are wired into `scripts/quality-gates.sh` so the Pass 1 gate blocks merges on spec failure.
 
 ---

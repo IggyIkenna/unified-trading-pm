@@ -46,6 +46,7 @@ related:
     /plans/archive/2026_07/instruments_service_docs_consolidation_2026_07_08.md,
     /codex/02-data/honest-coverage-model.md,
     /plans/archive/2026_08/instruments_completion_tracker_progress_log_history_2026_08_03.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-06
 last_updated: 2026-08-03 # line-cap remediation split -- extracted 07-06/07-07 Progress Log history to the archive doc above; context_scope backfilled

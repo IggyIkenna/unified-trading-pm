@@ -36,6 +36,7 @@ related:
     /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
     /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
     /codex/04-architecture/ci-alerting.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-05"
 author: unknown

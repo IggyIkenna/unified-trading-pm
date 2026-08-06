@@ -194,7 +194,7 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
 >   (gross/credit/net already shipped; only the effective-discount-rate residual) · `234` usage quantity+unit · `240`
 >   cheaper standard table (explicitly "revisit only if needed") · `243` "other resources" leaf.
 >
-> **Open question for the operator:** migrate the 3 real ones to a small `plans/active/issues/` fast-follow doc (and
+> **Open question for the operator:** migrate the 3 real ones to a small `plans/archive/issues/` fast-follow doc (and
 > drop the 5 nice-to-haves), or leave them parked here under this banner? Not decided unilaterally — where residual work
 > lives is your call.
 

@@ -41,7 +41,8 @@ code_refs:
 > Codified 2026-05-21 from an operator-shared reference doc following the 2026-05-21 cascade incident.
 >
 > Authoritative over: `plans/epics/orchestrator_master.md § Auth & accounts r3`,
-> `plans/active/ issues/claude_credentials_rotation_in_memory_staleness_2026_05_21.md § 9e` (both reference this file).
+> `plans/archive/2026_08/ issues/claude_credentials_rotation_in_memory_staleness_2026_05_21.md § 9e` (both reference
+> this file).
 >
 > Supersedes: `plans/active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` (banner- marked SUPERSEDED).
 

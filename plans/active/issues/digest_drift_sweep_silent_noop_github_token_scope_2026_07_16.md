@@ -54,6 +54,7 @@ related:
     /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
     /plans/archive/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-16
 author: unknown
@@ -323,7 +324,7 @@ still open and concluded the root cause "is still unparked/unresolved, so no bou
 Recommendations 2b/2c/3 already shipped via ci batch1 todo 3.
 
 **na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — re-confirmed. The sole open todo is
-still an unresolved root-cause investigation with no bounded fix identified; grepped `plans/active/*.md` for
+still an unresolved root-cause investigation with no bounded fix identified; grepped `plans/archive/2026_08/*.md` for
 "dormant"+"cascade" — the only hit (`ci_satellite_ao_dispatch_batch1_2026_07_26.md:142`) explicitly states this
 investigation "remains open and out of this todo's scope," corroborating it is un-owned, not duplicated. Not
 RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change).

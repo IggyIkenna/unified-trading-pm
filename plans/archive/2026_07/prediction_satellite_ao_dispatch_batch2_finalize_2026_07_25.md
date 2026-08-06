@@ -197,10 +197,11 @@ standard. Nothing to update.
 **Step 4** — no new CLAUDE.md contract to add (same reasoning as step 3).
 
 **Step 5 (corpus referrer fixup)** — grepped the full corpus for `prediction_satellite_ao_dispatch_batch2_2026_07_25`
-and `prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25`. Fixed all 6 path-shaped (`plans/active/...`-prefixed
-`related:`/citation) hits, per the batch1-finalize precedent (path-shaped references only — bare-filename prose
-citations of "what happened" left as historical narrative): `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (2
-refs, `related:`), `prediction_consolidated_closeout_ 2026_07_18.md` (`related:`),
+and `prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25`. Fixed all 6 path-shaped
+(`plans/archive/2026_08/...`-prefixed `related:`/citation) hits, per the batch1-finalize precedent (path-shaped
+references only — bare-filename prose citations of "what happened" left as historical narrative):
+`prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (2 refs, `related:`),
+`prediction_consolidated_closeout_ 2026_07_18.md` (`related:`),
 `prediction_consolidated_native_ao_extract_2026_07_25.md` (`related:`),
 `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (Source citation),
 `plans/epics/manifest_master.md` (Source citation) — all now point at `/plans/archive/2026_07/...`.
@@ -214,7 +215,7 @@ as-is, per the same precedent. Bare-filename prose citations in
 `prediction_phase_ab_residuals_2026_07_24.md`, `predictions_ml_walk_forward_and_arb_2026_06_20.md`, and
 `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md` (all
 "`prediction_satellite_ao_dispatch_batch2_2026_ 07_25.md` todo N" / "batch2's own finalize" style narrative, no
-`plans/active/` prefix) left as-is, same precedent.
+`plans/archive/2026_08/` prefix) left as-is, same precedent.
 
 **Step 6** — `locked_by` confirmed empty on both docs (was already empty). Both docs moved to `plans/archive/2026_07/`
 in this same commit.

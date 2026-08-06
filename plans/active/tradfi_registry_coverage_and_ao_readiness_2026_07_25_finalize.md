@@ -29,6 +29,7 @@ related:
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"

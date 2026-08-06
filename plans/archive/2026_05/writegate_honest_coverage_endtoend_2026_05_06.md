@@ -2014,10 +2014,10 @@ weekend/holiday rows over 5 years; CeFi has ~few hundred chain-genesis rows; DeF
 rows; sports has ~thousands of paused-league rows). Operator decision per asset_group on when to run `--apply-flips`:
 
 - [x] [DOCS] P0. Document the per-asset-group expected backfill volume in
-      `unified-trading-pm/codex/15-runbooks/expected-absence-backfill-runbook.md`. Operator picks scan-only first to verify
-      volume, then `--apply-flips` per asset_group sequentially. ✅ File shipped 2026-05-07 with full per-asset-group
-      volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260; total 1,455,901
-      rows). PM@codex-update-slot5.
+      `unified-trading-pm/codex/15-runbooks/expected-absence-backfill-runbook.md`. Operator picks scan-only first to
+      verify volume, then `--apply-flips` per asset_group sequentially. ✅ File shipped 2026-05-07 with full
+      per-asset-group volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260;
+      total 1,455,901 rows). PM@codex-update-slot5.
 - [x] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side fallback
       helper. ✅ Updated stale "(planned)" reference at honest-absence-downstream-handling.md § "Cross-references for
       the reason taxonomy" to "shipped 2026-05-07" + proper links to reconciler script, enumerator script, and
@@ -2151,11 +2151,11 @@ sub-phase ships the enumerator that physically writes those rows.
       pass on the data-status panel. Fine-grained per-instrument lifecycle (cefi instrument-listed-since / prediction
       `PREDICTION_GROUPS` per-day) is the v2 universe in Phase 3.D.5 below, not Phase 3.D.4.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Updated
-      [`/codex/15-runbooks/expected-absence-backfill-runbook.md`](/codex/15-runbooks/expected-absence-backfill-runbook.md) from
-      PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes table
-      (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard + canonical
-      merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement, dtype-correct
-      fill-default fix), re-run cadence, open follow-ups.
+      [`/codex/15-runbooks/expected-absence-backfill-runbook.md`](/codex/15-runbooks/expected-absence-backfill-runbook.md)
+      from PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes
+      table (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard +
+      canonical merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement,
+      dtype-correct fill-default fix), re-run cadence, open follow-ups.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Marked
       [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **SHIPPED** with VM commit
@@ -2689,7 +2689,7 @@ been empty_confirmed" finding adds:
 
 **Process — when an operator flags a "shouldn't be empty_confirmed" pattern:**
 
-1. File a finding doc in `plans/active/issues/<short-name>_<YYYY_MM_DD>.md` per the Findings Triage Discipline rule.
+1. File a finding doc in `plans/archive/issues/<short-name>_<YYYY_MM_DD>.md` per the Findings Triage Discipline rule.
    Include sample row, suspected root cause, suggested typed-reason class.
 2. Add the typed error class to UAC honest_coverage.py exports.
 3. Add a UTL migration script (templated on `reconcile_blank_error_reason_rows.py`) that flips historical rows. Run
@@ -2992,18 +2992,18 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       tradfi+defi+sports+prediction DONE 2026-05-22 (slot-2); cefi follow-up item below. UAC@6498446 + PM@this commit.
 
       **APPLIED 2026-05-22 (slot-2) for tradfi+defi+sports+prediction (cefi blocked — see follow-up item below):**
-                                                                                                                  - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
-                                                                                                                  - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
-                                                                                                                    EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
-                                                                                                                  - Applied results:
-                                                                                                                    | asset_group | candidates | applied | breakdown | shard |
-                                                                                                                    |-------------|-----------|---------|-----------|-------|
-                                                                                                                    | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
-                                                                                                                    | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
-                                                                                                                    | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
-                                                                                                                    | prediction | 51 | 0 | No upgrades | — |
-                                                                                                                    | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
-                                                                                                                  - Consolidator merges tradfi+defi shards within ~5 min of apply.
+                                                                                                                      - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
+                                                                                                                      - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
+                                                                                                                        EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
+                                                                                                                      - Applied results:
+                                                                                                                        | asset_group | candidates | applied | breakdown | shard |
+                                                                                                                        |-------------|-----------|---------|-----------|-------|
+                                                                                                                        | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
+                                                                                                                        | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
+                                                                                                                        | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
+                                                                                                                        | prediction | 51 | 0 | No upgrades | — |
+                                                                                                                        | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
+                                                                                                                      - Consolidator merges tradfi+defi shards within ~5 min of apply.
 
 **Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the reconciler
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
@@ -4027,7 +4027,7 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 ### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
 
 Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**` annotation in
-`plans/active/`:
+`plans/archive/2026_08/`:
 
 - "Phase 5.5 deployment-api/ui surfaces deferred-after manifest_schema_final_gate Phase 2" — annotated in plan body
   Phase 5.5 (this file).
@@ -4108,7 +4108,7 @@ Cross-plan items NOT addressed this session (still open in their own plans-of-re
 ### EOD-audit (per CLAUDE.md "Capture Discoveries As Plan Todos Immediately" § "End-of-cycle audit clause")
 
 Every deferral in this DONE block is grep-verified as a `- [ ]` plan todo or `**DEFERRED**` annotation in
-`plans/active/`:
+`plans/archive/2026_08/`:
 
 - "Phase 6.2 P1 audit for OTHER MDPS calculators emitting derived outputs" — Phase 6.2 P1 todo in plan body (this file,
   line ~3134-3136).
@@ -4321,8 +4321,8 @@ The slot-1 work-split task brief for slot 2
 Phase 5.1-5.7 (UAC v8 manifest schema columns: `service_emission_state`, `pipeline_mode`, `feature_family`)".
 Cross-reading this plan body's Phase 5.1-5.7 (lines 2811-2922) + the active P0 plan
 [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md) Phase 1 + the cross-side ping
-[plans/active/\_agent_pings.md:89-93](_agent_pings.md) (harsh-main 2026-05-11 07:10 UTC F3 v8-schema-owner ambiguity)
-surfaces **three concrete contradictions** the work-split brief did not account for:
+[plans/archive/2026_08/\_agent_pings.md:89-93](_agent_pings.md) (harsh-main 2026-05-11 07:10 UTC F3 v8-schema-owner
+ambiguity) surfaces **three concrete contradictions** the work-split brief did not account for:
 
 1. **SSOT-ownership conflict (F3 known-open).** code_freeze plan `:139` + `:174-179` says writegate slice (b) Phase 5.1
    owns the v8 column declaration "(NOT a separate `manifest_v8_schema_migration_design` file)"; the active P0 plan
@@ -4602,7 +4602,7 @@ Root cause: `run_validators.py --scope all` runs `validate_plan_links.py` which 
    a backtick code span was false-positived by the validator's raw-text link regex. Fixed validator to strip fenced
    blocks + inline code spans before link extraction.
 
-QG step 6 now: `OK: No broken links in plans/active/*.md` ✅
+QG step 6 now: `OK: No broken links in plans/archive/2026_08/*.md` ✅
 
 ---
 

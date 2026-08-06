@@ -21,6 +21,7 @@ related:
     /codex/02-data/defi-data-types-catalog.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-05-27
 author: unknown

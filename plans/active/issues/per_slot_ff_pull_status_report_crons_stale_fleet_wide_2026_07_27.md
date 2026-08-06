@@ -191,7 +191,7 @@ uncommitted work above must be preserved before any decommission/reclaim action 
       `unified-trading-pm` (5 files, dated 2026-07-22..24) were never pushed or replicated elsewhere, they are gone.
       **Escalated directly to the operator in the same session that found this** (2026-08-05) rather than silently
       closing the todo — flagging this as a real, if now-unfixable, process gap: decommission actions must grep
-      `plans/active/issues/` for the target resource ID before acting, not just check live-session idleness.
+      `plans/archive/issues/` for the target resource ID before acting, not just check live-session idleness.
 - [x] [OPERATOR] P3. **MOOT 2026-08-05** — the human-planning VM no longer exists (terminated 2026-08-03, confirmed
       above), so there is no cron/ff-pull health left to check or re-arm on it. The fleet git-health scanner will
       naturally stop reporting slots 0-2 once its own stale-host cache ages out; no scanner-side allowlist action is

@@ -480,7 +480,7 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
 **Full-execution criterion**:
 
 - **What ran**: 4 parallel sub-phase verification commands; outputs captured in plan completion notes.
-- **Verification**: per-sub-phase probe outputs preserved in `plans/active/issues/` if any failed.
+- **Verification**: per-sub-phase probe outputs preserved in `plans/archive/issues/` if any failed.
 
 ## Phase 5 — Reconciliation + alerting wire-up (P0, ~2-3d, PARALLEL with Phase 4)
 

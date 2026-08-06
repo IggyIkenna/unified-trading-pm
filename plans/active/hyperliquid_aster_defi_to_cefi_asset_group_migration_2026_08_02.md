@@ -19,6 +19,7 @@ related:
     /plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md,
     /plans/archive/2026_07/aster_cefi_data_defi_bucket_migration_2026_07_13.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-02
 parent_epic: mtds_mdps_master

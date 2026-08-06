@@ -31,6 +31,7 @@ related:
   - /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
 created: "2026-08-03"
 author: unknown
+  /plans/active/defi_consolidated_closeout_2026_07_18.md,
 source: [backlog task delta_one_candle_loader_no_pass_through_path_defi-003, slot 8]
 parent_epic: defi_master
 assigned_vm: planning

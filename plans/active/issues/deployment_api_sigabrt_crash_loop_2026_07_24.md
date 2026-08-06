@@ -444,11 +444,11 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       cases rules out application code and revision config as the cause. Timing is suggestive (not proven) of a
       connection to a CONCURRENT, unrelated investigation tagging revisions `iam-fix-verify`/`iam-fix-retest` on this
       SAME service in the SAME window (`19:32Z`-`19:35Z`) — no matching plan/issue doc was found for that work
-      (`grep -rl "iam-fix" plans/active/` — 0 hits), so its scope/author/status is unknown; find and coordinate with
-      whoever owns it FIRST rather than re-diagnosing blind. Candidate angles (none confirmed): (1) an IAM policy change
-      (runtime service account role, Secret Manager accessor binding, or Artifact Registry pull permission) that broke
-      cold-start secret/credential resolution while leaving an already-initialized warm instance unaffected — grep Cloud
-      Audit Logs (`protoPayload.methodName:"SetIamPolicy" OR "google.iam"`) scoped to this project +
+      (`grep -rl "iam-fix" plans/archive/2026_08/` — 0 hits), so its scope/author/status is unknown; find and coordinate
+      with whoever owns it FIRST rather than re-diagnosing blind. Candidate angles (none confirmed): (1) an IAM policy
+      change (runtime service account role, Secret Manager accessor binding, or Artifact Registry pull permission) that
+      broke cold-start secret/credential resolution while leaving an already-initialized warm instance unaffected — grep
+      Cloud Audit Logs (`protoPayload.methodName:"SetIamPolicy" OR "google.iam"`) scoped to this project +
       `unified-trading-sa@`/the Cloud Run runtime SA around `19:00Z`-`19:35Z` for the actual change; (2) a Cloud Run
       quota/capacity limit for `cpu=4`/`memory=16Gi` instances in `asia-northeast1` being exhausted by the high
       concurrent-deploy volume this SAME crash-loop investigation is generating fleet-wide (7+ revisions of this ONE

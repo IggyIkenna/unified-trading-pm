@@ -254,7 +254,7 @@ A draft plan (or set of plans) that:
    cutover gate.
 
 Operator iterates on the answers above with the agent. When the answers stabilise, this Q-group spawns one or more plans
-in `plans/active/` and migrates to status: `closed-spawned-plans`.
+in `plans/archive/2026_08/` and migrates to status: `closed-spawned-plans`.
 
 ---
 

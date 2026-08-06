@@ -156,7 +156,7 @@ available; a 240-fixture pull is a modest, well-bounded cost), with four mandato
 
 Moved to their own UNACKED issue doc at archival time (this doc's own status is terminal/`resolved`, so per
 `/codex/11-project-management/issue-doc-lifecycle.md` it archives immediately — the two items below are still open and
-need to stay dispatchable from `plans/active/`, not stranded here):
+need to stay dispatchable from `plans/archive/2026_08/`, not stranded here):
 `/plans/archive/issues/sports_player_stats_empty_write_followups_2026_07_26.md`.
 
 1. Consider enabling GCS object versioning (or a bucket-level soft-delete retention window) on the sports prd buckets
@@ -169,7 +169,7 @@ need to stay dispatchable from `plans/active/`, not stranded here):
 - 2026-07-26 (slot 2): Incident discovered via the sibling script's own verification methodology, escalated live
   (BLK-bf61980b), root-cause fixed, remediated (240/240), independently re-verified clean, this doc filed.
 - 2026-07-26 (cicd, slot 6): Archived to `plans/archive/issues/` to clear the `plan_health` hygiene-sweep hard failure
-  (`check_terminal_status_archived.py` — a `status: resolved` issue doc may not sit in `plans/active/issues/`); split
+  (`check_terminal_status_archived.py` — a `status: resolved` issue doc may not sit in `plans/archive/issues/`); split
   the 2 still-open follow-up todos into `sports_player_stats_empty_write_followups_2026_07_26.md`; fixed 2 now-broken
   relative links from the directory move; corrected 3 corpus-wide referrers
   (`sports_satellite_ao_dispatch_batch5_2026_07_26.md`, `canonical_player_stats_fixture_events_quality_2026_07_16.md`

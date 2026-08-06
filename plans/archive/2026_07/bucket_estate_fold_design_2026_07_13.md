@@ -464,7 +464,7 @@ Structured per the escalation rule (options + recommendation):
   code changed — this is the design that spawns the successor split execution plans (§3 todo 1, gated on the §5 Q1
   operator destination ruling).
 - **2026-07-17, §3 todo 1 executed — successor plans authored.** Operator ruled §5 **Q1 = A (all 5 folds as HUMAN plans,
-  `assigned_vm: NA`)**. Five successor plans created in `plans/active/`: `bucket_fold_ml_2026_07_17`,
+  `assigned_vm: NA`)**. Five successor plans created in `plans/archive/2026_08/`: `bucket_fold_ml_2026_07_17`,
   `bucket_fold_features_2026_07_17`, `bucket_fold_execution_strategy_2026_07_17` (Folds C+D bundled — same services),
   `bucket_fold_portfolio_state_2026_07_17` (LAST, live-trading-adjacent, delete operator-gated per Q2-A), and
   `bucket_fold_closeout_2026_07_17` (`depends_on` all four — codex audit, estate recount, alias sunset, parent-plan

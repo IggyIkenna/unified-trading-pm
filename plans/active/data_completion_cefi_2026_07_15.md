@@ -18,6 +18,7 @@ related:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /plans/archive/2026_08/data_completion_cefi_progress_log_history_2026_08_03.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-15
 parent_epic: manifest_master

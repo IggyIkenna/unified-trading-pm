@@ -64,13 +64,13 @@ locked_since: 2026-05-07
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~75 open `- [ ]` todos
 > INLINE in its body (a frozen May-07/08 snapshot from when child plans/issues were "folded in"). The backlog regen
-> (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never
-> dispatched — the epic read as "0 plans". The inline blocks have been **reconciled, not deleted**: net-new unowned work
-> extracted to 4 child active plans (see § "Assigned active plans"); already-owned work pointed at its owning June plan;
-> cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence. See §
-> "Workstream routing (restructured 2026-06-20)" below for the full map. The frozen inline `## …` / `### …` sections
-> retain their content for archaeology but their headers carry a `— SUPERSEDED 2026-06-20` marker — do NOT pick work
-> from them directly; pick from the child plans / owner plans named in the routing table.
+> (`regen_backlog_from_plan.py`) only scans `plans/archive/2026_08/*.md`, never `plans/epics/`, so those inline todos
+> were never dispatched — the epic read as "0 plans". The inline blocks have been **reconciled, not deleted**: net-new
+> unowned work extracted to 4 child active plans (see § "Assigned active plans"); already-owned work pointed at its
+> owning June plan; cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅
+> without evidence. See § "Workstream routing (restructured 2026-06-20)" below for the full map. The frozen inline
+> `## …` / `### …` sections retain their content for archaeology but their headers carry a `— SUPERSEDED 2026-06-20`
+> marker — do NOT pick work from them directly; pick from the child plans / owner plans named in the routing table.
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
@@ -323,8 +323,8 @@ Base / BSC / Linea / Optimism / Polygon) at 60% (32/53). Ethereum 85%, Solana 99
 
 ## Workstream routing (restructured 2026-06-20)
 
-The DeFi work is dispatched through child active plans (regen scans `plans/active/`, not this epic). Every former inline
-todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
+The DeFi work is dispatched through child active plans (regen scans `plans/archive/2026_08/`, not this epic). Every
+former inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
 
 | Former inline block                                                                                                                                                                                                                 | Disposition                                                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -613,10 +613,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                                                                                                                                                      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                                                                                                                                                      ```
+                                                                                                                                                                                                                          gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                                                                                                                                                          ```
 
-                                                                                                                                                                                                                      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                                                                                                                                                          [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -1160,16 +1160,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                                                                                                                                                      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                                                                                                                                                      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                                                                                                                                                      VM ran current code without a refresh.
+                                                                                                                                                                                                                          `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                                                                                                                                                          (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                                                                                                                                                          VM ran current code without a refresh.
 
-                                                                                                                                                                                                                      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                                                                                                                                                      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                                                                                                                                                      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                                                                                                                                                          Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                                                                                                                                                          (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                                                                                                                                                          `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                                                                                                                                                      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                                                                                                                                                      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                                                                                                                                                          Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                                                                                                                                                          (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding

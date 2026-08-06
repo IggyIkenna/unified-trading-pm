@@ -80,6 +80,7 @@ related:
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-18
 last_updated: "2026-08-06"
@@ -355,9 +356,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   corrected with a count-drift note rather than a full item-by-item rewrite (all 11 originally-named items are still
   open and still accurately described; only the total was stale). `tradfi_phase_d_terminal_gate_2026_07_24.md`'s digest
   (2 open) was independently re-verified accurate, no correction needed. Evidence: live grep counts run 2026-07-31
-  against each child's current `plans/active/*.md`. No new stale entries found beyond these 4; not an exhaustive
-  re-verification of every one of the ~40 docs referenced in the Aggregated source docs section (out of this todo's
-  1h-class scope) — the 4 corrected here were the highest-risk (most recently active, most-cited) digests.
+  against each child's current `plans/archive/2026_08/*.md`. No new stale entries found beyond these 4; not an
+  exhaustive re-verification of every one of the ~40 docs referenced in the Aggregated source docs section (out of this
+  todo's 1h-class scope) — the 4 corrected here were the highest-risk (most recently active, most-cited) digests.
 - **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA-STALE, re-verified — citation
   still accurate, no change needed.** This is this doc's correct owning tranche (per the note below). Independently
   re-checked the sole open checkbox's duplicate claim against current state, not a rubber-stamp: the extracting doc

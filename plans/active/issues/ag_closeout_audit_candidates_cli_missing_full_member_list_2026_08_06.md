@@ -23,6 +23,7 @@ repos: [unified-trading-pm]
 scope: [engineer]
 tags: [plan-hygiene, ag-closeout-audit, tooling, cli, orphan-detection]
 related:
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   [/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md, /cursor-configs/skills/ag-closeout-audit/SKILL.md]
 created: "2026-08-06"
 author: slot-3 (ag_closeout_auditor, tradfi tranche, dispatch agt-7d91ed)

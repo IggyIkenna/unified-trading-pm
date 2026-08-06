@@ -40,7 +40,7 @@ related_codex: [/codex/05-infrastructure/per-tab-worktrees.md, /cursor-configs/C
 **TL;DR.** When a slot master rebases its slot branch onto `origin/live-defi-rollout` per shippable unit and finds
 conflicts, this protocol classifies conflict shape + auto-resolves trivial ones + escalates semantic conflicts to the
 operator with plan-context reasoning. PM repo is the always-touched surface, so most conflicts surface in
-`plans/active/` files — and most of those resolve via append-union without operator input.
+`plans/archive/2026_08/` files — and most of those resolve via append-union without operator input.
 
 ## Why this protocol exists
 
@@ -196,8 +196,8 @@ plan's stated direction. The operator confirms or redirects in one line.
 - [`per-tab-worktrees.md`](per-tab-worktrees.md) — the slot model this protocol runs inside.
 - `cursor-configs/CLAUDE.md` § "Commit + Push + Flip Plan Checkboxes" — the per-shippable-unit cadence that triggers
   this protocol.
-- `cursor-configs/CLAUDE.md` § "Findings triage" — when a conflict surfaces a real finding (not just a
-  reconciliation), the triage routing applies.
+- `cursor-configs/CLAUDE.md` § "Findings triage" — when a conflict surfaces a real finding (not just a reconciliation),
+  the triage routing applies.
 - The `## Open questions` section format used for Shape C/D escalations (the CLAUDE.md § "Daily Work-Split Process"
   pointer this doc used to carry is dead — that section no longer exists).
 

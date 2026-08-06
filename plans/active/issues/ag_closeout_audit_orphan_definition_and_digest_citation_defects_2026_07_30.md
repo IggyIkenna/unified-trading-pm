@@ -9,17 +9,18 @@ summary: >-
   `ag_closeout_auditor` per-tranche dispatch). Two independent defects make the skill's headline number ("how many docs
   are orphaned") non-reproducible, and they push in OPPOSITE directions, so they do not cancel. (1)
   `scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py::_closeout_paths()` globs
-  `plans/active/{prefix}_consolidated_closeout_*.md`, which MATCHES `<ag>_consolidated_closeout_aggregated_sources_*.md`
-  — the discoverability digest SKILL.md Phase 0.1 explicitly declares NON-covering ("treat as NON-covering: being listed
-  there is not dispatch"), and which the SAME function's second loop is careful to skip. So a doc mentioned ONLY in the
-  digest reads as `cited_somewhere` and is dropped from the candidate list — the audit UNDER-reports orphans. Measured
-  on cefi: 3 of 10 fresh orphan candidates were masked this way. Because every AG has such a digest, this affects all 9
-  tranches. (2) SKILL.md's "Also NOT /na-eligibility-audit" paragraph states "An `assigned_vm: NA`, `status: active`/
-  `open` doc is by definition NOT orphaned (it has an owner: itself)", but the shipped pre-filter only short-circuits
-  `self_dispatched = assigned_vm == "planning" and status in ("active","open")` — NA docs stay orphan candidates. On
-  cefi the two readings give 0 orphans vs 19 orphans from the identical corpus. Nothing in the skill, PLAN_FORMAT.md, or
-  the script's docstring resolves which is intended, and the sports precedent the skill generalizes from reported real
-  NA orphans, so the tooling reading is probably right — but that is an inference, not a ruling.
+  `plans/archive/2026_08/{prefix}_consolidated_closeout_*.md`, which MATCHES
+  `<ag>_consolidated_closeout_aggregated_sources_*.md` — the discoverability digest SKILL.md Phase 0.1 explicitly
+  declares NON-covering ("treat as NON-covering: being listed there is not dispatch"), and which the SAME function's
+  second loop is careful to skip. So a doc mentioned ONLY in the digest reads as `cited_somewhere` and is dropped from
+  the candidate list — the audit UNDER-reports orphans. Measured on cefi: 3 of 10 fresh orphan candidates were masked
+  this way. Because every AG has such a digest, this affects all 9 tranches. (2) SKILL.md's "Also NOT
+  /na-eligibility-audit" paragraph states "An `assigned_vm: NA`, `status: active`/ `open` doc is by definition NOT
+  orphaned (it has an owner: itself)", but the shipped pre-filter only short-circuits `self_dispatched = assigned_vm ==
+  "planning" and status in ("active","open")` — NA docs stay orphan candidates. On cefi the two readings give 0 orphans
+  vs 19 orphans from the identical corpus. Nothing in the skill, PLAN_FORMAT.md, or the script's docstring resolves
+  which is intended, and the sports precedent the skill generalizes from reported real NA orphans, so the tooling
+  reading is probably right — but that is an inference, not a ruling.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -74,11 +75,11 @@ context_scope:
 ```python
 def _closeout_paths(tranche: str) -> list[Path]:
     prefix = "cross_cutting" if tranche == "cross-cutting" else tranche
-    return sorted(PM.glob(f"plans/active/{prefix}_consolidated_closeout_*.md"))
+    return sorted(PM.glob(f"plans/archive/2026_08/{prefix}_consolidated_closeout_*.md"))
 
 def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
     paths = list(_closeout_paths(tranche)) if include_closeout else []
-    for p in PM.glob(f"plans/active/{prefix}_*.md"):
+    for p in PM.glob(f"plans/archive/2026_08/{prefix}_*.md"):
         name = p.name
         if "aggregated_sources" in name or "_history_" in name:
             continue        # <-- the digest IS excluded here ...

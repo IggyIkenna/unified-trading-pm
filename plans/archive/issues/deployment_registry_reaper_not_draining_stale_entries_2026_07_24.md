@@ -2,31 +2,32 @@
 doc_type: issue
 title:
   "Deployment registry drain P0 verified PARTIALLY: prod 503-timeout is FIXED, but the reaper isn't draining known-dead
-  `active/` entries and the inventory endpoint's cold path can still exceed 45s"
+  `archive/2026_08/` entries and the inventory endpoint's cold path can still exceed 45s"
 summary: >-
   [REVIEW] end-to-end verification of `deployment_registry_firestore_p0_unblock_2026_07_14.md`'s Phase-0 fix, against
   the DEPLOYED `uts-shared-deployment-api` Cloud Run service (revision `uts-shared-deployment-api-00268-d2l`, image
   `deployment-api:e476c73`, confirmed a descendant of the reaper-tick commit `8660e9e`). The original prod-outage bug
-  (census download of ~3.3k `active/` blobs timing out → empty Deployments tab) IS fixed for the realistic query shape:
-  `active/` object count dropped from 3,304 (2026-07-14 baseline) to 404→403 (measured 2026-07-24), and `GET
-  /api/deployments/inventory` (no `status` filter) returns HTTP 200 with 2,518 items (127 `running`) in well under 1s on
-  a warm cache. Two residual gaps found during verification, neither present in the original P0 scope: (1) the reaper is
-  NOT actually converging `active/` toward the live-VM count — a sample of 30 `active/` entries were ALL already
-  classified `status="stale"` by the inventory endpoint's OWN display logic (heartbeat 3-7 days old, VM long gone) yet
-  still sit in `active/` unreaped; Cloud Run logs show the reaper tick's `run_in_executor` call being interrupted by
-  `asyncio.CancelledError` during container shutdown repeatedly over the last 3 days, a plausible culprit for why reaps
-  aren't landing. (2) `_load_inventory`'s COLD path (no cache entry yet for a given `(cloud, region_scope)` key)
-  computes synchronously under a lock with no bound — one such cold request (no `status` filter) exceeded 55s before the
-  client gave up, while the identical request on a warm cache returned in <1s. This is the same "block past 45s" shape
-  as the original bug, just triggered by an empty per-instance in-memory cache (`_inventory_cache` is process-local;
-  Cloud Run's `minScale=1`/`maxScale=20` means a freshly scaled-up instance starts cold) rather than a huge `active/`
-  backlog. Separately (not a defect, just a plan-clarity nit): the plan's own verification instruction (`GET
-  .../inventory?status=all`) will ALWAYS return zero items by design — unlike the `region` param, `status` has no
-  `"all"` bypass in `_filter_items` (`deployments_inventory.py:1418`, exact-match: `if status and item.status != status:
-  return False`); the deployment-ui already codes around this deliberately (`Deployments.tsx:1412`,
-  `deploymentApi.ts:654` both special-case `status==="all"` to OMIT the query param client-side rather than send it
-  literally) — so this is expected/known frontend behavior, not a regression, but a reviewer following the plan's
-  literal instruction gets a false "empty" result.
+  (census download of ~3.3k `archive/2026_08/` blobs timing out → empty Deployments tab) IS fixed for the realistic
+  query shape: `archive/2026_08/` object count dropped from 3,304 (2026-07-14 baseline) to 404→403 (measured
+  2026-07-24), and `GET /api/deployments/inventory` (no `status` filter) returns HTTP 200 with 2,518 items (127
+  `running`) in well under 1s on a warm cache. Two residual gaps found during verification, neither present in the
+  original P0 scope: (1) the reaper is NOT actually converging `archive/2026_08/` toward the live-VM count — a sample of
+  30 `archive/2026_08/` entries were ALL already classified `status="stale"` by the inventory endpoint's OWN display
+  logic (heartbeat 3-7 days old, VM long gone) yet still sit in `archive/2026_08/` unreaped; Cloud Run logs show the
+  reaper tick's `run_in_executor` call being interrupted by `asyncio.CancelledError` during container shutdown
+  repeatedly over the last 3 days, a plausible culprit for why reaps aren't landing. (2) `_load_inventory`'s COLD path
+  (no cache entry yet for a given `(cloud, region_scope)` key) computes synchronously under a lock with no bound — one
+  such cold request (no `status` filter) exceeded 55s before the client gave up, while the identical request on a warm
+  cache returned in <1s. This is the same "block past 45s" shape as the original bug, just triggered by an empty
+  per-instance in-memory cache (`_inventory_cache` is process-local; Cloud Run's `minScale=1`/`maxScale=20` means a
+  freshly scaled-up instance starts cold) rather than a huge `archive/2026_08/` backlog. Separately (not a defect, just
+  a plan-clarity nit): the plan's own verification instruction (`GET .../inventory?status=all`) will ALWAYS return zero
+  items by design — unlike the `region` param, `status` has no `"all"` bypass in `_filter_items`
+  (`deployments_inventory.py:1418`, exact-match: `if status and item.status != status: return False`); the deployment-ui
+  already codes around this deliberately (`Deployments.tsx:1412`, `deploymentApi.ts:654` both special-case
+  `status==="all"` to OMIT the query param client-side rather than send it literally) — so this is expected/known
+  frontend behavior, not a regression, but a reviewer following the plan's literal instruction gets a false "empty"
+  result.
 status: open
 nature: issue
 asset_group: [meta]
@@ -62,13 +63,13 @@ resolved_by:
 
 **After (measured live, 2026-07-24, this session):**
 
-- `active/` object count: **404** (re-measured minutes later: **403**) — a ~87% reduction from the 3,304 baseline, but
-  NOT yet "≈ running-VM count" (measured 9 RUNNING GCE instances in `central-element-323112` + 2 unrelated persistent
-  AWS EC2 instances in `ap-northeast-1`, at this point framed as not part of this registry's tracked fleet — **note:**
-  the later 2026-07-24 slot-4 re-verification (Progress Log below / Todo 3) instead folds both into the comparator as
-  "~9 actually-running VMs (7 GCE + 2 AWS EC2)"; the two measurements are unreconciled — it's unclear whether AWS EC2 is
-  actually in scope for this registry's success criterion, and whether the GCE-only count genuinely dropped 9→7 between
-  measurements or was miscounted in one of the two passes).
+- `archive/2026_08/` object count: **404** (re-measured minutes later: **403**) — a ~87% reduction from the 3,304
+  baseline, but NOT yet "≈ running-VM count" (measured 9 RUNNING GCE instances in `central-element-323112` + 2 unrelated
+  persistent AWS EC2 instances in `ap-northeast-1`, at this point framed as not part of this registry's tracked fleet —
+  **note:** the later 2026-07-24 slot-4 re-verification (Progress Log below / Todo 3) instead folds both into the
+  comparator as "~9 actually-running VMs (7 GCE + 2 AWS EC2)"; the two measurements are unreconciled — it's unclear
+  whether AWS EC2 is actually in scope for this registry's success criterion, and whether the GCE-only count genuinely
+  dropped 9→7 between measurements or was miscounted in one of the two passes).
 - Deployed revision confirmed: `uts-shared-deployment-api-00268-d2l`, image `deployment-api:e476c73` (contains the
   reaper-tick commit `8660e9e` per the plan's own 2026-07-24 Progress Log entry).
 - `GET /api/deployments/inventory` (no `status` filter — the query shape a real user/UI actually sends) → **HTTP 200**,
@@ -81,7 +82,7 @@ resolved_by:
 - **The literal plan instruction** `GET .../inventory?status=all` → HTTP 200 in 4.3s but
   `{"items":[],"total":0,"vm_count":0,...}` — expected/by-design (see summary), not a regression.
 
-**Gap 1 — reaper not draining known-dead entries.** Sampled 30 random `active/` entries: **ALL 30** are
+**Gap 1 — reaper not draining known-dead entries.** Sampled 30 random `archive/2026_08/` entries: **ALL 30** are
 `status="running"` in the raw GCS blob but the inventory endpoint's own derived classification calls them
 `status="stale"` (`last_heartbeat_at` 3–7 days old, e.g. `canonical-migration-cefi-wp11-wpf07210835` last heartbeat
 2026-07-21, `af-backfill-20260718-124341` last heartbeat 2026-07-18). Per `DeploymentsRegistry._reap_reason()`
@@ -106,16 +107,16 @@ instances — so any freshly-scaled instance (this service runs `minScale=1`/`ma
 must pay this synchronous cost on its first request. Measured: one "no filter" request took **>55s** (client gave up);
 the identical request retried immediately after returned in 0.4s (consistent with the slow request having finished
 server-side and warmed the cache in the interim, or landing on a now-warm instance). This is the same "block past 45s"
-failure shape as the original P0 bug, just triggered by a cold in-process cache instead of a huge `active/` backlog —
-did not reproduce a second time in 3 attempts, so treating as a real but lower-confidence/lower-frequency finding, not a
-confirmed steady-state regression.
+failure shape as the original P0 bug, just triggered by a cold in-process cache instead of a huge `archive/2026_08/`
+backlog — did not reproduce a second time in 3 attempts, so treating as a real but lower-confidence/lower-frequency
+finding, not a confirmed steady-state regression.
 
 ## Why it matters
 
-- The plan's own Success Criteria states `active/` object count should be "≈ running-VM count" — 403-404 vs ~9-11 is not
-  that, and the underlying cause (reaper ticks apparently not completing) means the backlog will not self-heal; it may
-  keep growing until it re-triggers the original timeout bug once it's big enough to slow `_compute_inventory` past 45s
-  again on a cold instance (Gap 1 + Gap 2 compound).
+- The plan's own Success Criteria states `archive/2026_08/` object count should be "≈ running-VM count" — 403-404 vs
+  ~9-11 is not that, and the underlying cause (reaper ticks apparently not completing) means the backlog will not
+  self-heal; it may keep growing until it re-triggers the original timeout bug once it's big enough to slow
+  `_compute_inventory` past 45s again on a cold instance (Gap 1 + Gap 2 compound).
 - Downstream P1 todos in the SAME plan ("Enable dual-write on a SUBSET of the live fleet... VALIDATE Firestore mirrors
   GCS") depend on the registry being an accurate reflection of true fleet state — reaping is table stakes for that
   comparison to mean anything.
@@ -125,13 +126,13 @@ confirmed steady-state regression.
 ## Recommended decision
 
 Do NOT flip the plan's `[REVIEW] P0. Verify the drain end-to-end...` checkbox — the core prod-outage bug is fixed, but
-the plan's own success criteria ("active/ ≈ running-VM count") is not yet met and the root cause (reaper interrupted
-mid-tick) is unresolved. Recommend: (1) a BACKEND/INFRA todo to diagnose why the reaper tick keeps getting cancelled
-mid-flight (instance-recycling frequency vs an unrelated leader-election issue — note the total ABSENCE of even the
-one-time startup log lines is itself worth checking first, cheaply, before chasing the cancellation angle); (2) a
-BACKEND todo to bound/async-ify `_load_inventory`'s cold path the same way the stale-refresh path already is; (3) once
-both ship, re-run this exact verification (`active/` count + the correct non-`status=all` inventory call) before
-flipping the checkbox.
+the plan's own success criteria ("archive/2026_08/ ≈ running-VM count") is not yet met and the root cause (reaper
+interrupted mid-tick) is unresolved. Recommend: (1) a BACKEND/INFRA todo to diagnose why the reaper tick keeps getting
+cancelled mid-flight (instance-recycling frequency vs an unrelated leader-election issue — note the total ABSENCE of
+even the one-time startup log lines is itself worth checking first, cheaply, before chasing the cancellation angle); (2)
+a BACKEND todo to bound/async-ify `_load_inventory`'s cold path the same way the stale-refresh path already is; (3) once
+both ship, re-run this exact verification (`archive/2026_08/` count + the correct non-`status=all` inventory call)
+before flipping the checkbox.
 
 ## Progress Log
 
@@ -173,12 +174,12 @@ flipping the checkbox.
       historically (stdout logging was separately silent for an unrelated reason, root-caused by a concurrent
       `deployment-api@f27a8f1`), and the recurring `asyncio.CancelledError` at `background_sync.py:72` IS the live root
       cause: `_cancel_background_tasks()`'s 5s grace period is far shorter than a real reap tick's runtime (tens of
-      seconds to minutes at current ~400-entry `active/` backlog scale; `run_in_executor`'s underlying thread can't be
-      interrupted by asyncio cancellation), so essentially every worker recycle orphaned the tick with zero progress.
-      Fixed by bumping the grace period 5s→20s (within gunicorn's `graceful_timeout=30`) — **this fixed only the
-      `CancelledError` symptom (ticks no longer get killed mid-flight), NOT the underlying drain/convergence problem**:
-      the 2026-07-24 (slot-4) re-verification below found `active/` unchanged at 403–404 post-fix, so Gap 1 (reaper not
-      draining) remains open — see Todo 4. Also filed, separately,
+      seconds to minutes at current ~400-entry `archive/2026_08/` backlog scale; `run_in_executor`'s underlying thread
+      can't be interrupted by asyncio cancellation), so essentially every worker recycle orphaned the tick with zero
+      progress. Fixed by bumping the grace period 5s→20s (within gunicorn's `graceful_timeout=30`) — **this fixed only
+      the `CancelledError` symptom (ticks no longer get killed mid-flight), NOT the underlying drain/convergence
+      problem**: the 2026-07-24 (slot-4) re-verification below found `archive/2026_08/` unchanged at 403–404 post-fix,
+      so Gap 1 (reaper not draining) remains open — see Todo 4. Also filed, separately,
       `/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` (an independent, undiagnosed SIGABRT
       crash-loop ~35×/day likely compounding the same interruption problem — not root-caused in this session).
 - [x] [BACKEND] P1. Bound or async-ify `_load_inventory`'s cold-cache path
@@ -196,19 +197,20 @@ flipping the checkbox.
       running in the background and warms the cache for the next poll. `_refresh_inventory`/`_kick_background_refresh`
       now return the computed items/Future so the cold path can consume the same in-flight compute instead of a separate
       synchronous block. quality-gates.sh green; shipped via quickmerge --agent.
-- [x] [REVIEW] P1. Once both todos above ship, re-run this same end-to-end verification: `active/` object count
+- [x] [REVIEW] P1. Once both todos above ship, re-run this same end-to-end verification: `archive/2026_08/` object count
       before/after (must be ≈ live-VM count this time, not just "much smaller"), plus 3 consecutive
       `GET /api/deployments/inventory` (no `status` filter) calls each <45s including a genuinely cold one (e.g. right
       after a fresh deploy/revision rollout). Only then flip the plan's original `[REVIEW]` P0 checkbox. — **RE-VERIFIED
       2026-07-24 (slot-4, review): STILL NOT MET, plus a new P0 regression found.** Both fixes confirmed deployed
-      (content-diffed against `deployment-api:366154d`, revision `uts-shared-deployment-api-00270-2l9`). `active/`
-      count: still 403–404, unchanged from the pre-fix baseline, both ~1h45m after the P0 reaper fix went live and
-      ~10min after the P1 cold-cache fix went live — vs ~9 actually-running VMs. Do NOT flip the plan's original
-      `[REVIEW]` checkbox. Full detail + a NEW P0 finding (the P1 cold-cache fix removed the old global serialization on
-      cold census computations — 2 concurrent cache-key computations OOM-killed the whole container, 17,002MiB used vs
-      16,384MiB limit, `Container terminated on signal 9`, a MORE SEVERE failure mode than the bug it fixed) in
+      (content-diffed against `deployment-api:366154d`, revision `uts-shared-deployment-api-00270-2l9`).
+      `archive/2026_08/` count: still 403–404, unchanged from the pre-fix baseline, both ~1h45m after the P0 reaper fix
+      went live and ~10min after the P1 cold-cache fix went live — vs ~9 actually-running VMs. Do NOT flip the plan's
+      original `[REVIEW]` checkbox. Full detail + a NEW P0 finding (the P1 cold-cache fix removed the old global
+      serialization on cold census computations — 2 concurrent cache-key computations OOM-killed the whole container,
+      17,002MiB used vs 16,384MiB limit, `Container terminated on signal 9`, a MORE SEVERE failure mode than the bug it
+      fixed) in
       [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](/plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
-- [x] ✅ [BACKEND] P1. **Root-cause why `active/` is still not converging toward the live-VM count after the P0
+- [x] ✅ [BACKEND] P1. **Root-cause why `archive/2026_08/` is still not converging toward the live-VM count after the P0
       `CancelledError`/grace-period fix (Todo 1) and P1 cold-cache fix (Todo 2) both shipped and were re-verified live
       (Todo 3, slot-4: still 403–404, unchanged).** This is Gap 1 itself, distinct from the sibling OOM regression
       (`plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`, which tracks a DIFFERENT,
@@ -219,30 +221,31 @@ flipping the checkbox.
       still-undiagnosed blocker beyond the `CancelledError` symptom); if ticks ARE completing, re-sample the 30
       previously-`status="stale"` entries to see whether they were archived or the reap logic itself is silently
       no-op'ing on them. Done-when: the root cause of non-convergence is identified and either fixed + re-verified
-      (`active/` ≈ live-VM count) or a concrete blocker is documented. — **ROOT-CAUSED + FIXED 2026-07-25 (slot 2)**:
-      `unified-trading-library@4773a3fd`. `"[AUTO_SYNC] Reaper: archived"` confirmed STILL absent 3+ hours after the
-      P0/P1 fixes deployed (`gcloud logging read` against `uts-shared-deployment-api`, no matches over 3 days) — AND the
-      exact same `asyncio.wait_for(_background_task, timeout=20)` → `_run_deployment_reaper`'s `run_in_executor` failure
-      from Todo 1 is STILL firing live (traceback captured `2026-07-25T01:03:36Z`, well after the 5s→20s fix shipped).
-      Root cause: `DeploymentsRegistry.list_active()` (`unified_trading_library/deployment_registry.py`) downloads every
-      `active/*.json` blob **sequentially**, one `download_string` call at a time — the doc's own cited ~138s/~3k-entry
-      rate implies ~46ms/blob, so at the current ~400-entry backlog the tick itself takes ~18-20s, landing right at (or
-      over) the 20s grace period. The P0 fix bought headroom but the tick's own duration eats it right back — every
-      container recycle (deploy, scale-down, or the sibling SIGABRT crash-loop) still interrupts it before completion,
-      so `_archive_reaped_entry` never runs and the backlog cannot converge even though the reap LOGIC itself is correct
-      (confirmed via existing test `test_reap_stale_archives_stale_entries`, still passing). **Fix**: parallelized the
-      per-blob downloads with a bounded `ThreadPoolExecutor(max_workers=32)` (mirrors the existing idiom in
+      (`archive/2026_08/` ≈ live-VM count) or a concrete blocker is documented. — **ROOT-CAUSED + FIXED 2026-07-25
+      (slot 2)**: `unified-trading-library@4773a3fd`. `"[AUTO_SYNC] Reaper: archived"` confirmed STILL absent 3+ hours
+      after the P0/P1 fixes deployed (`gcloud logging read` against `uts-shared-deployment-api`, no matches over 3 days)
+      — AND the exact same `asyncio.wait_for(_background_task, timeout=20)` → `_run_deployment_reaper`'s
+      `run_in_executor` failure from Todo 1 is STILL firing live (traceback captured `2026-07-25T01:03:36Z`, well after
+      the 5s→20s fix shipped). Root cause: `DeploymentsRegistry.list_active()`
+      (`unified_trading_library/deployment_registry.py`) downloads every `archive/2026_08/*.json` blob **sequentially**,
+      one `download_string` call at a time — the doc's own cited ~138s/~3k-entry rate implies ~46ms/blob, so at the
+      current ~400-entry backlog the tick itself takes ~18-20s, landing right at (or over) the 20s grace period. The P0
+      fix bought headroom but the tick's own duration eats it right back — every container recycle (deploy, scale-down,
+      or the sibling SIGABRT crash-loop) still interrupts it before completion, so `_archive_reaped_entry` never runs
+      and the backlog cannot converge even though the reap LOGIC itself is correct (confirmed via existing test
+      `test_reap_stale_archives_stale_entries`, still passing). **Fix**: parallelized the per-blob downloads with a
+      bounded `ThreadPoolExecutor(max_workers=32)` (mirrors the existing idiom in
       `manifest_consolidator.py::_prune_stale_consolidated_shards`) — same ordering, same per-blob malformed-entry-skip
       behavior (still logs + skips, never raises), just concurrent I/O instead of one-at-a-time; should cut wall-clock
       roughly by the worker-count factor. All 42 pre-existing `test_deployment_registry.py` tests pass unmodified; full
       `quality-gates.sh` green (254s). **Not re-verified live this session** — needs an automatic LDR→main promote +
-      fresh Cloud Run deploy + several minutes of reap-tick cadence (900s interval) before `active/` count convergence
-      can be measured; a future dispatch should re-run the same verification as Todo 3 (`active/` count vs live-VM
-      count, plus checking for the now-expected `"Reaper: archived"` log lines) once the fix is confirmed live via
-      `git merge-base --is-ancestor 4773a3fd origin/main` + the deployed image tag. **UPDATE 2026-07-25T05:55Z (slot 10,
-      review) — RE-VERIFIED, fix IS deployed but `active/` STILL has NOT converged.** Correcting this todo's own
-      verification instruction: do NOT rely on `git merge-base --is-ancestor` alone — it fails FOREVER post-squash-merge
-      regardless of whether the content shipped (full writeup:
+      fresh Cloud Run deploy + several minutes of reap-tick cadence (900s interval) before `archive/2026_08/` count
+      convergence can be measured; a future dispatch should re-run the same verification as Todo 3 (`archive/2026_08/`
+      count vs live-VM count, plus checking for the now-expected `"Reaper: archived"` log lines) once the fix is
+      confirmed live via `git merge-base --is-ancestor 4773a3fd origin/main` + the deployed image tag. **UPDATE
+      2026-07-25T05:55Z (slot 10, review) — RE-VERIFIED, fix IS deployed but `archive/2026_08/` STILL has NOT
+      converged.** Correcting this todo's own verification instruction: do NOT rely on `git merge-base --is-ancestor`
+      alone — it fails FOREVER post-squash-merge regardless of whether the content shipped (full writeup:
       [issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md](/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md)).
       Content-diffed instead: `git show origin/main:unified_trading_library/deployment_registry.py` shows
       `ThreadPoolExecutor(max_workers=32)` present, byte-identical to LDR's copy — the fix's content genuinely reached
@@ -253,12 +256,12 @@ flipping the checkbox.
       (sidesteps that gap): since revision `uts-shared-deployment-api-00274-s9g` went live (`2026-07-25T02:51:26Z`,
       ~2.5h before this check), `gcloud logging read` shows **zero** `"Reaper: archived"` lines (still absent, as before
       the fix) AND **zero** `_run_deployment_reaper`/`CancelledError` tracebacks either (also absent — the OLD failure
-      symptom isn't recurring, but neither is the expected NEW success signal). `active/` object count measured **404**
-      right now vs **9** currently-running VMs (`GET .../inventory?status=running` → `vm_count=9`) — unchanged from the
-      pre-fix 403-404 baseline. **Not resolved** — either the built container doesn't actually carry the UTL fix (the
-      editable-path gap above), or the reap tick still isn't executing/completing for a different reason than diagnosed.
-      New todo added below rather than re-asserting the fix worked without evidence.
-- [x] ✅ [BACKEND] P0. **Determine why `active/` still hasn't moved (404, unchanged) despite
+      symptom isn't recurring, but neither is the expected NEW success signal). `archive/2026_08/` object count measured
+      **404** right now vs **9** currently-running VMs (`GET .../inventory?status=running` → `vm_count=9`) — unchanged
+      from the pre-fix 403-404 baseline. **Not resolved** — either the built container doesn't actually carry the UTL
+      fix (the editable-path gap above), or the reap tick still isn't executing/completing for a different reason than
+      diagnosed. New todo added below rather than re-asserting the fix worked without evidence.
+- [x] ✅ [BACKEND] P0. **Determine why `archive/2026_08/` still hasn't moved (404, unchanged) despite
       `unified-trading-library@4773a3fd`'s parallelization fix being live on `main` for ~2.5h with zero
       `"Reaper: archived"` lines AND zero `_run_deployment_reaper` tracebacks (neither the old failure nor the expected
       new success signal appears in Cloud Logging).** Check, in order: (1) confirm the DEPLOYED CONTAINER's build
@@ -267,9 +270,9 @@ flipping the checkbox.
       built image does; inspect the Cloud Build log / image layer for the actual bundled `deployment_registry.py`
       content if possible. (2) If the container IS correct, confirm the reaper tick is being invoked AT ALL post-deploy
       (add a cheap one-time INFO log at tick start if none exists — the total silence of BOTH the old error and the new
-      success line is itself suspicious). (3) Re-check `active/` vs live-VM count once resolved. (repo: deployment-api,
-      unified-trading-library) — **ROOT-CAUSED 2026-07-25 (slot 3) via DIRECT IMAGE INSPECTION, not source-repo
-      content-diff** (the same false-confidence gap slot 10 flagged but nobody had yet directly checked):
+      success line is itself suspicious). (3) Re-check `archive/2026_08/` vs live-VM count once resolved. (repo:
+      deployment-api, unified-trading-library) — **ROOT-CAUSED 2026-07-25 (slot 3) via DIRECT IMAGE INSPECTION, not
+      source-repo content-diff** (the same false-confidence gap slot 10 flagged but nobody had yet directly checked):
       `docker     pull`ed the LIVE revision's actual image (`uts-shared-deployment-api-00275-7zl`,
       `sha256:1282490246ad38c7b9398ae09f1982351d3aea0837935c8e8b1b00c3421f42a6`), extracted
       `unified_trading_library/deployment_registry.py` and both `gunicorn.conf.py` copies from inside it. Confirmed the
@@ -303,7 +306,7 @@ flipping the checkbox.
       cleanly respawned a replacement worker (which itself correctly re-elected a new leader).
       `bash scripts/quality-gates.sh` green (pytest + all steps, twice — once pre-commit dirty-tree, once post-commit
       against the exact shipped SHA). Shipped via `quickmerge --agent --files`, landed on `live-defi-rollout` at
-      `deployment-api@3fea307c679d8c974dc68594555d4760524a4935`. **NOT yet re-verified against PROD `active/`
+      `deployment-api@3fea307c679d8c974dc68594555d4760524a4935`. **NOT yet re-verified against PROD `archive/2026_08/`
       convergence** (needs a fresh Cloud Run deploy of this fix + several reap-tick intervals to observe — see new todo
       below) and the SEPARATE "why did a build from a commit with the UTL fix produce an image without it" question is
       also still open — both spun into a new todo rather than closing this one on an unverified assumption.
@@ -312,8 +315,8 @@ flipping the checkbox.
       find this bug (NOT source-repo content-diff — grep the actual pulled/extracted image for `post_worker_init` in
       `/app/gunicorn.conf.py`) that it's really live, then watch `gcloud logging read` for
       `"Background auto-sync task     started (leader worker)"` appearing exactly ONCE per instance (not per-worker) and
-      `"[AUTO_SYNC] Reaper: archived"` appearing at all for the first time ever; re-measure `active/` object count vs
-      live-VM count after ≥2 reap-tick intervals (900s each). (2) SEPARATELY, root-cause why Cloud Build
+      `"[AUTO_SYNC] Reaper: archived"` appearing at all for the first time ever; re-measure `archive/2026_08/` object
+      count vs live-VM count after ≥2 reap-tick intervals (900s each). (2) SEPARATELY, root-cause why Cloud Build
       `7b80517d-0457-44b7-9e59-b53076b9bbc9` (triggered from commit `2efbbcb`, which DOES contain
       `unified-trading-library@4773a3fd`'s `ThreadPoolExecutor` fix per content-diff) produced image
       `sha256:1282490246...` whose `unified_trading_library/deployment_registry.py` does NOT contain that fix — check
@@ -341,8 +344,8 @@ flipping the checkbox.
       recommended remediation (GCP infra action — recreate the trigger, out of backend_engineer craft scope) filed as
       its own cross-cutting doc since this blocks EVERY service's Docker build, not just deployment-api:
       [issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md](utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md).
-      Part (1) of this todo (live re-verification of `active/` convergence) stays open and is now ALSO gated on that
-      doc's Todo 1 (recreate the trigger) — re-verification cannot succeed until a fresh UTL base image actually
+      Part (1) of this todo (live re-verification of `archive/2026_08/` convergence) stays open and is now ALSO gated on
+      that doc's Todo 1 (recreate the trigger) — re-verification cannot succeed until a fresh UTL base image actually
       publishes with `4773a3fd` in it, deployment-api rebuilds against it, and a new revision deploys. — **RE-DISPATCHED
       2026-07-25 (slot 2, backend_engineer)**: re-checked the gate chain. Trigger recreation (Todo 1 of the sibling doc)
       is DONE (`unified-trading-library-prod` exists + correctly configured). But manually verifying it hit a NEW real
@@ -384,11 +387,11 @@ flipping the checkbox.
       the NEW (fix-containing) base digest → a new Cloud Run revision deploys → wait ≥2 reap-tick intervals (900s each)
       → re-run the ORIGINAL re-verification (direct image extraction for `post_worker_init` in `/app/gunicorn.conf.py` +
       `gcloud logging read` for `"Background auto-sync task started"` exactly once per instance +
-      `"[AUTO_SYNC] Reaper: archived"` appearing for the first time + `active/` count vs live-VM count). Next dispatch:
-      check `gh pr list --repo IggyIkenna/deployment-api --state all --limit 5` for a new promote PR past `#377` having
-      merged sha `108e2fd`'s tree, confirm via `git show origin/main:Dockerfile | grep BASE_IMAGE_DIGEST` reads
-      `sha256:a302c0cd...` (or newer), THEN proceed with the original re-verification steps exactly as scoped above.
-      **UPDATE 2026-07-25T14:47Z (slot 5): the fleet-wide blocker is FIXED + the promote landed.** Shipped
+      `"[AUTO_SYNC] Reaper: archived"` appearing for the first time + `archive/2026_08/` count vs live-VM count). Next
+      dispatch: check `gh pr list --repo IggyIkenna/deployment-api --state all --limit 5` for a new promote PR past
+      `#377` having merged sha `108e2fd`'s tree, confirm via `git show origin/main:Dockerfile | grep BASE_IMAGE_DIGEST`
+      reads `sha256:a302c0cd...` (or newer), THEN proceed with the original re-verification steps exactly as scoped
+      above. **UPDATE 2026-07-25T14:47Z (slot 5): the fleet-wide blocker is FIXED + the promote landed.** Shipped
       `unified-trading-pm@16a9f422f` (direct to `main`, closed carve-out for a `.github/**` change that must reach
       `main` to unblock the pipeline) restoring `ci-status-update.yml`'s `google-github-actions/auth@v3` step using
       `secrets.GCP_SA_KEY` instead of the broken ambient ADC — confirmed live (`ci-status-update.yml` run `30161507161`
@@ -402,17 +405,17 @@ flipping the checkbox.
       parallelization fix) — the correct root file, this time genuinely deployed. **Remaining, NOT yet done**: wait ≥2
       reap-tick intervals (900s each, i.e. until ~15:15Z) then re-run the exact original verification —
       `gcloud logging     read` for `"Background auto-sync task started (leader worker)"` exactly once per instance +
-      `"[AUTO_SYNC] Reaper: archived"` appearing for the first time ever, and `active/` object count vs live-VM count
-      (was 404 vs ~9 pre-fix). Only flip this todo (and the plan's original `[REVIEW]` checkbox) once that final
+      `"[AUTO_SYNC] Reaper: archived"` appearing for the first time ever, and `archive/2026_08/` object count vs live-VM
+      count (was 404 vs ~9 pre-fix). Only flip this todo (and the plan's original `[REVIEW]` checkbox) once that final
       observation confirms convergence — do not flip on the deploy alone, the fix landing does not by itself prove the
       reap-tick actually converges. **FINAL RE-VERIFICATION 2026-07-25T15:25Z (slot 5): NOT CONVERGED — do NOT flip.**
       Revision `uts-shared-deployment-api-00276-sjj` confirmed live since `2026-07-25T14:52:12Z` (~33 min uptime at
       check time, past 2 full 900s reap-tick intervals), `minScale=1` (no scale-to-zero churn — only 2 distinct
       `instanceId`s seen over the window, consistent with one warm instance + one scale event, not a crash loop),
       `WORKERS=2` (matches the config the local runtime test validated), `PYTHONUNBUFFERED=1` baked into the image
-      (`Dockerfile:151`) — every precondition for the fix to work is met. Yet: (1) `active/` object count still **406**
-      (statistically unchanged from the 403-404 pre-fix baseline — zero convergence); (2) **TOTAL SILENCE** on BOTH
-      `run.googleapis.com%2Fstdout` AND `%2Fstderr` for this revision — zero hits for
+      (`Dockerfile:151`) — every precondition for the fix to work is met. Yet: (1) `archive/2026_08/` object count still
+      **406** (statistically unchanged from the 403-404 pre-fix baseline — zero convergence); (2) **TOTAL SILENCE** on
+      BOTH `run.googleapis.com%2Fstdout` AND `%2Fstderr` for this revision — zero hits for
       `"Background auto-sync task started"`, `"Reaper: archived"`, `CancelledError`, OR any `severity>=WARNING` line.
       This is the SAME "total silence" symptom the ORIGINAL pre-fix diagnosis flagged as itself suspicious ("Never saw a
       single ... log line in 7 days ... nor even the one-time startup lines ... despite minScale=1" — see Gap 1 above) —
@@ -550,23 +553,23 @@ flipping the checkbox.
       entering `lifespan()`) and exactly **1×`REAPER_LEADER_ELECTED`** (`{"pid": 28}`) — the SINGLE elected leader,
       matching the design exactly. **This is definitive, positive proof the reap tick's
       `asyncio.create_task(_auto_sync_running_deployments())` call fires correctly in prod, on the CURRENT deployed
-      code.** Cleaned up the subscription + acked all messages (no residual infra). **However — re-checked `active/`
-      immediately after: still 406, unchanged.** Important self-aware caveat: THIS session forced FOUR consecutive
-      revision restarts in under an hour (`00277`→`00278`→`00279`→`00280`, each a legitimate diagnostic step but each
-      also a fresh container = a fresh `asyncio.create_task()` that tears down whatever the PREVIOUS instance's reap
-      loop was mid-way through) — this is plausibly RE-CREATING the exact "tick never gets to finish" symptom the
-      `CancelledError` fix already solved for CONTAINER-recycling, just via MY OWN forced redeploys instead of Cloud
-      Run's own recycling. **Next dispatch, done-when clearly stated: do NOT force any more revision restarts on this
-      service** — let `uts-shared-deployment-api-00280-p85` (live since `2026-07-25T16:48:34Z`) run completely
+      code.** Cleaned up the subscription + acked all messages (no residual infra). **However — re-checked
+      `archive/2026_08/` immediately after: still 406, unchanged.** Important self-aware caveat: THIS session forced
+      FOUR consecutive revision restarts in under an hour (`00277`→`00278`→`00279`→`00280`, each a legitimate diagnostic
+      step but each also a fresh container = a fresh `asyncio.create_task()` that tears down whatever the PREVIOUS
+      instance's reap loop was mid-way through) — this is plausibly RE-CREATING the exact "tick never gets to finish"
+      symptom the `CancelledError` fix already solved for CONTAINER-recycling, just via MY OWN forced redeploys instead
+      of Cloud Run's own recycling. **Next dispatch, done-when clearly stated: do NOT force any more revision restarts
+      on this service** — let `uts-shared-deployment-api-00280-p85` (live since `2026-07-25T16:48:34Z`) run completely
       undisturbed for ≥2 real reap-tick intervals (900s each, i.e. check no earlier than **2026-07-25T17:18:34Z**), THEN
-      re-measure `active/` object count vs live-VM count one final time. If it converges: the mystery is fully closed,
-      flip this todo + the plan's original `[REVIEW]` checkbox. If it STILL doesn't converge after an undisturbed
-      window: the leader-election/task-creation path is now proven innocent, so the remaining suspect narrows to the
-      reap tick's OWN logic/timing (`_run_deployment_reaper`, `background_sync.py`) rather than anything about startup —
-      the log_event pattern established here can extend to instrument that function directly. **RE-CHECKED
-      2026-07-25T17:18:34Z (slot 5, undisturbed window complete, zero redeploys since `00280-p85`): STILL 406,
-      unchanged.** So the confound theory (my own repeated forced restarts) is ALSO ruled out — 30 clean minutes with
-      the leader-elected reaper task confirmed running produced zero convergence. **Strong new lead, most likely
+      re-measure `archive/2026_08/` object count vs live-VM count one final time. If it converges: the mystery is fully
+      closed, flip this todo + the plan's original `[REVIEW]` checkbox. If it STILL doesn't converge after an
+      undisturbed window: the leader-election/task-creation path is now proven innocent, so the remaining suspect
+      narrows to the reap tick's OWN logic/timing (`_run_deployment_reaper`, `background_sync.py`) rather than anything
+      about startup — the log_event pattern established here can extend to instrument that function directly.
+      **RE-CHECKED 2026-07-25T17:18:34Z (slot 5, undisturbed window complete, zero redeploys since `00280-p85`): STILL
+      406, unchanged.** So the confound theory (my own repeated forced restarts) is ALSO ruled out — 30 clean minutes
+      with the leader-elected reaper task confirmed running produced zero convergence. **Strong new lead, most likely
       unifying root cause for BOTH this AND the stdout mystery: Cloud Run CPU throttling.** Read
       `_run_deployment_reaper`'s own gate (`background_sync.py:67`):
       `if (_time.time() % _REAPER_INTERVAL_SEC) >= current_interval: return` — a real 900s-cycle rate-limiter, NOT a bug
@@ -592,8 +595,8 @@ flipping the checkbox.
       reap logic synchronously on each invocation, guaranteeing real request-context CPU without paying for always-on
       allocation — worth proposing as a lower-cost alternative achieving the same goal); (2) if approved, add
       `--no-cpu-throttling` to `cloudbuild.yaml:426`'s deploy command, ship, deploy, and re-run the exact same
-      log_event + `active/`-count verification this session already built out. **UPDATE 2026-07-25T14:02Z (slot 5):
-      found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
+      log_event + `archive/2026_08/`-count verification this session already built out. **UPDATE 2026-07-25T14:02Z (slot
+      5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
       `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write
       is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live
       via direct REST `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z).
@@ -609,10 +612,10 @@ flipping the checkbox.
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
   `b9005961`, SUCCESS) and content-diff (`git show 366154d:<path> | grep`, not just ancestry-check — the LDR→main
   promote path squash-commits, so `git merge-base --is-ancestor` alone under-reports) that both shipped fixes AND the
-  sibling issue doc's faulthandler instrumentation are present in the deployed image. Result: `active/` object count
-  unchanged at 403–404 vs ~9 actually-running VMs (7 GCE + 2 AWS EC2), both long after the P0 fix and shortly after the
-  P1 fix went live — the plan's success criterion is NOT met. Additionally reproduced a NEW P0 regression: the P1
-  cold-cache fix's `_kick_background_refresh` mechanism dropped the old code's full serialization of cold census
+  sibling issue doc's faulthandler instrumentation are present in the deployed image. Result: `archive/2026_08/` object
+  count unchanged at 403–404 vs ~9 actually-running VMs (7 GCE + 2 AWS EC2), both long after the P0 fix and shortly
+  after the P1 fix went live — the plan's success criterion is NOT met. Additionally reproduced a NEW P0 regression: the
+  P1 cold-cache fix's `_kick_background_refresh` mechanism dropped the old code's full serialization of cold census
   computations (previously one global lock held for the whole compute; now a 2-worker pool lets different cache keys run
   concurrently), and 2 concurrent census computations (default-region stale-refresh + an `all_regions=true` cold poll)
   OOM-killed the container (17,002MiB vs 16,384MiB limit, `signal 9`) — plausibly the SAME mechanism behind the
@@ -628,8 +631,8 @@ flipping the checkbox.
   commits the `cpu=4`/`memory=16Gi`/`minScale=1` service to material always-on 4-vCPU billing). Explicit guardrails from
   the ruling: (1) Cloud Scheduler with **OIDC service-account auth**, NOT a public endpoint; (2) keep
   leader-election-style idempotency so overlapping/manual invocations are safe; (3) sane cadence (5-15 min); (4) do
-  **NOT** add `--no-cpu-throttling`; (5) verify convergence with evidence (`active/` count drop + deploy build id + a
-  post-deploy reap-tick observation); (6) ship via the normal `quickmerge --agent` + LDR→main promote flow — if
+  **NOT** add `--no-cpu-throttling`; (5) verify convergence with evidence (`archive/2026_08/` count drop + deploy build
+  id + a post-deploy reap-tick observation); (6) ship via the normal `quickmerge --agent` + LDR→main promote flow — if
   verification can't complete in one dispatch tick, **park durably rather than churn** (cites
   `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`).
 
@@ -668,14 +671,14 @@ flipping the checkbox.
 
 - **2026-07-25T18:50Z (slot 5) — ACTUAL ROOT CAUSE FOUND, FIXED, DEPLOYED, AND CONVERGENCE VERIFIED LIVE. Todo CLOSED.**
   Same session that shipped `unified-trading-library@2649ffc6` (`_read_true_exit_code` in `deployment_registry.py`): the
-  genuine root cause of the entire multi-day `active/` non-convergence was NOT the CPU-throttling/stdout mystery chased
-  above — it was a plain exception-type bug. `_read_true_exit_code`'s `except FileNotFoundError` was written against the
-  `InMemoryStorageClient` test fake (which DOES raise `FileNotFoundError` for a missing GCS key), but the REAL
-  `RealStorageClient.download_string` lets `google.api_core.exceptions.NotFound` propagate raw on a 404 — so every VM
-  whose `EXIT_STATUS` blob was never written or was cleaned up crashed the ENTIRE `reap_stale()` batch on this one line,
-  silently, well before the reap tick's own leader-election/CPU-throttling machinery (already proven live and healthy
-  above) ever got a chance to matter. Fixed by catching `(FileNotFoundError, KeyError, ValueError, OSError)` for the
-  fake-client contract, falling through to a second `except Exception` that string-matches
+  genuine root cause of the entire multi-day `archive/2026_08/` non-convergence was NOT the CPU-throttling/stdout
+  mystery chased above — it was a plain exception-type bug. `_read_true_exit_code`'s `except FileNotFoundError` was
+  written against the `InMemoryStorageClient` test fake (which DOES raise `FileNotFoundError` for a missing GCS key),
+  but the REAL `RealStorageClient.download_string` lets `google.api_core.exceptions.NotFound` propagate raw on a 404 —
+  so every VM whose `EXIT_STATUS` blob was never written or was cleaned up crashed the ENTIRE `reap_stale()` batch on
+  this one line, silently, well before the reap tick's own leader-election/CPU-throttling machinery (already proven live
+  and healthy above) ever got a chance to matter. Fixed by catching `(FileNotFoundError, KeyError, ValueError, OSError)`
+  for the fake-client contract, falling through to a second `except Exception` that string-matches
   `type(exc).__name__ in ("NotFound", "Forbidden")` (the established idiom already used in `manifest_consolidator.py`
   for this exact same real-vs-fake divergence) and re-raises anything else. **Also shipped, same session** (the
   Cloud-Scheduler reap-tick endpoint researched above, per the operator's `BLK-d5db60a5` Option-B ruling):
@@ -714,11 +717,11 @@ flipping the checkbox.
       `gs://deployment-scripts-central-element-323112/deployments/active/` object count — **400 (start of this session's
       chain) → 4** (measured after the fix's live background reaper had a chance to run undisturbed, no forced
       restarts). Cross-checked against `gcloud compute instances list --filter=status=RUNNING` on GCP alone: **5**
-      running VMs (AWS + Cloud Run deployments not included in that single-cloud count) — i.e. `active/` is now in the
-      same order of magnitude as genuinely-running infrastructure, not 40-100x inflated as it had been for the entire
-      multi-day investigation (403-406 vs ~9 before this fix). **This satisfies the plan's original success criterion**
-      (`active/` ≈ running-VM count) for the first time since the bug was originally discovered. The
-      CPU-throttling/stdout-silence investigation earlier in this doc was not wasted — it definitively proved the
+      running VMs (AWS + Cloud Run deployments not included in that single-cloud count) — i.e. `archive/2026_08/` is now
+      in the same order of magnitude as genuinely-running infrastructure, not 40-100x inflated as it had been for the
+      entire multi-day investigation (403-406 vs ~9 before this fix). **This satisfies the plan's original success
+      criterion** (`archive/2026_08/` ≈ running-VM count) for the first time since the bug was originally discovered.
+      The CPU-throttling/stdout-silence investigation earlier in this doc was not wasted — it definitively proved the
       leader-election and background-task-creation path was healthy, which correctly narrowed the remaining search space
       down to the reap tick's OWN logic, where the real bug actually was. No further action needed on this todo. The
       sibling plan's `[REVIEW] P0` checkbox
@@ -735,8 +738,8 @@ flipping the checkbox.
   `quality-gates.sh` green, ship via `quickmerge --agent`, promote LDR→main, deploy; (3)
   `gcloud scheduler jobs create http` with OIDC auth pointed at the deployed URL, cadence 5-15 min; (4) verify: cite the
   deploy build id + at least one successful scheduler-triggered invocation (Cloud Scheduler's own
-  `lastAttemptTime`/status, or a direct authenticated test call) + `active/` object count actually dropping from 406
-  toward the live-VM count (currently ~9). Only then flip this todo + the plan's original `[REVIEW]` checkbox.
+  `lastAttemptTime`/status, or a direct authenticated test call) + `archive/2026_08/` object count actually dropping
+  from 406 toward the live-VM count (currently ~9). Only then flip this todo + the plan's original `[REVIEW]` checkbox.
 
   **SHIPPED 2026-07-25T17:40Z (slot 5, same session): `deployment-api@2b70c03`** — `POST /api/internal/reap-tick`
   (`deployment_api/routes/_reap_scheduler.py`) + `REAP_SCHEDULER_INVOKER_SA` config field
@@ -765,18 +768,18 @@ flipping the checkbox.
   after the fix — it archived 5 real stale entries (`vm=canonical-migration-defi-relabel-...`,
   `vm=canonical-migration-defi-per-instrument-...`, etc., all `reason=vm_not_running`) and
   `gs://deployment-scripts-central-element-323112/deployments/active/` genuinely dropped **406 → 400** (measured via
-  `gcloud storage ls | wc -l` before/after). This is the first time in this entire multi-day issue that `active/` has
-  moved AT ALL. Shipped via `quickmerge --agent`, landed on LDR (`unified-trading-library@2aa25c8`) — **but
-  deployment-api consumes UTL via a local editable path (`pyproject.toml:67`, per this doc's own earlier finding), so
-  this fix needs the SAME base-image-digest propagation chain already exercised twice this session** (UTL promote to
-  `main` → fresh base image publishes → `digest-drift-sweep.yml` refreshes `deployment-api`'s pinned digest → rebuild →
-  redeploy) before the FIX reaches the actual serving container — triggered the promote, not yet re-verified end-to-end
-  as of this note. **Remaining before done-when is satisfiable**: (1) confirm the UTL fix's digest genuinely propagates
-  to a fresh deployment-api deploy (repeat the direct-image-extraction check this session already used twice); (2) SET
-  `REAP_SCHEDULER_INVOKER_SA` on the deployed Cloud Run service (currently empty — the endpoint fails closed with 503
-  until configured, by design) to the invoking SA's email —
-  `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (the service's own existing runtime identity) is
-  the natural, no-new-SA-needed choice; (3) create the actual Cloud Scheduler job
+  `gcloud storage ls | wc -l` before/after). This is the first time in this entire multi-day issue that
+  `archive/2026_08/` has moved AT ALL. Shipped via `quickmerge --agent`, landed on LDR
+  (`unified-trading-library@2aa25c8`) — **but deployment-api consumes UTL via a local editable path
+  (`pyproject.toml:67`, per this doc's own earlier finding), so this fix needs the SAME base-image-digest propagation
+  chain already exercised twice this session** (UTL promote to `main` → fresh base image publishes →
+  `digest-drift-sweep.yml` refreshes `deployment-api`'s pinned digest → rebuild → redeploy) before the FIX reaches the
+  actual serving container — triggered the promote, not yet re-verified end-to-end as of this note. **Remaining before
+  done-when is satisfiable**: (1) confirm the UTL fix's digest genuinely propagates to a fresh deployment-api deploy
+  (repeat the direct-image-extraction check this session already used twice); (2) SET `REAP_SCHEDULER_INVOKER_SA` on the
+  deployed Cloud Run service (currently empty — the endpoint fails closed with 503 until configured, by design) to the
+  invoking SA's email — `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (the service's own existing
+  runtime identity) is the natural, no-new-SA-needed choice; (3) create the actual Cloud Scheduler job
   (`gcloud scheduler jobs create http ... --oidc-service-account-email=<that SA> --uri=<deployed URL>/api/internal/reap-tick`);
   (4) THEN the final convergence re-verification — though given the fix is ALREADY proven live via the direct local
   repro, a manual `gcloud storage ls .../active/ | wc -l` re-check after the fresh deploy alone may be sufficient

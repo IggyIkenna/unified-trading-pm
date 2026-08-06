@@ -28,9 +28,9 @@ repos: [unified-trading-library, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [manifest, phantom-reconciler, bundle-atom, data-correctness, prediction, canonicalisation, cross-repo]
 related: [
-    plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md, # (was: plans/active/... — corrected
+    plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md, # (was: plans/archive/2026_08/... — corrected
     # 2026-07-14, doc-reconciliation finding 175: folded into M-1 + archived 2026-07-13, path no longer resolves)
-    plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md, # (was: plans/active/... —
+    plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md, # (was: plans/archive/2026_08/... —
     # same 2026-07-13 fold-in/archive, corrected alongside finding 175)
     /codex/02-data/availability-manifest-and-data-status.md,
   ]

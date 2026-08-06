@@ -10,8 +10,11 @@ repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-14'
-overview: Expand the UAC residual plan with full provider manifest schema (testnet, data_type, keys checklist), SSOT alignment, cursor rules, and API contracts docs. Verify superseded plans are archived. Single consolidated plan for all remaining UAC refactors.
+created: "2026-03-14"
+overview:
+  Expand the UAC residual plan with full provider manifest schema (testnet, data_type, keys checklist), SSOT alignment,
+  cursor rules, and API contracts docs. Verify superseded plans are archived. Single consolidated plan for all remaining
+  UAC refactors.
 todos: []
 isProject: false
 ---
@@ -21,7 +24,7 @@ isProject: false
 ## Verification (Already Done)
 
 - **Superseded plans archived:** `uac_nested_domain_deviations_9a5e89ee` and `uac_package_reorganization_c1c0734e` are
-  in `unified-trading-pm/plans/archive/` and no longer in `plans/active/`.
+  in `unified-trading-pm/plans/archive/` and no longer in `plans/archive/2026_08/`.
 - **Symlink:** `.cursor/plans` -> `../unified-trading-pm/plans/active` — archiving from PM active removes them from
   `.cursor/plans` as well.
 

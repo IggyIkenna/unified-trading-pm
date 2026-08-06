@@ -25,6 +25,7 @@ related:
   [
     /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
     /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-13"
 author: unknown

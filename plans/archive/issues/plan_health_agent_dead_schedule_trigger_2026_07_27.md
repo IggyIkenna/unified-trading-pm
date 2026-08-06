@@ -89,8 +89,8 @@ specific to this workflow.
   disabled, not auto-disabled for inactivity.
 - **Recently-added trigger**: `git log --follow -p` across the file's whole history shows the `schedule: - cron: "0 2
   - - *"`line present, unchanged, since the file's original commit (alongside an ORIGINAL`push: branches: [main], paths:
-      [plans/active/**]`trigger that was later replaced by the current`pull_request: branches: [main]` — the schedule
-      block itself was never touched). This has had ~140 real days to fire, not a handful.
+      [plans/archive/2026_08/**]`trigger that was later replaced by the current`pull_request: branches: [main]` — the
+      schedule block itself was never touched). This has had ~140 real days to fire, not a handful.
 
 Still not ruled in/out (need either a live observation at the NEXT 02:00 UTC fire, or GitHub support/status-page
 escalation — neither completed this session):

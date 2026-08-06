@@ -66,7 +66,7 @@ Consumers:
 
 Cross-reference:
 - codex SSOT: `<codex/XX-area/doc-name.md>` § "<section name>"
-- introduced by: `<plans/active/...md>` or `<plans/active/issues/...md>` <finding-id>
+- introduced by: `<plans/archive/2026_08/...md>` or `<plans/archive/issues/...md>` <finding-id>
 """
 ```
 

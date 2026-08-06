@@ -65,10 +65,10 @@ reassignment path is the only acceptable future upgrade — out of scope.
 
 ### Phase 0 — Pre-audit (no code change)
 
-- [ ] [SCRIPT] P0. Enumerate every `plans/active/*.md`: current `assigned_vm` coverage vs the registry-valid VM ids
-      (`orchestrator_vm_registry.yaml` — 13 ids incl. `harsh_pc`); list the ~20 active plans lacking own `assigned_vm`
-      and the value each _should_ get (its epic's VM, or `NA` if future). Output a table into this plan's Progress Log.
-      **Gate**: table present + the delegating-plan list confirmed against the registry.
+- [ ] [SCRIPT] P0. Enumerate every `plans/archive/2026_08/*.md`: current `assigned_vm` coverage vs the registry-valid VM
+      ids (`orchestrator_vm_registry.yaml` — 13 ids incl. `harsh_pc`); list the ~20 active plans lacking own
+      `assigned_vm` and the value each _should_ get (its epic's VM, or `NA` if future). Output a table into this plan's
+      Progress Log. **Gate**: table present + the delegating-plan list confirmed against the registry.
 
 ### Phase 1 — Strict matcher (agent-orchestrator) [depends: P0]
 

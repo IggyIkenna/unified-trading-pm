@@ -42,6 +42,7 @@ related:
   [
     /plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 author: unknown

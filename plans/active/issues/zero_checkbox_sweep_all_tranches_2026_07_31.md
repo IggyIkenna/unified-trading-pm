@@ -7,8 +7,8 @@ summary: >-
   Re-run of the corpus-wide "docs whose remaining work exists only as prose, never as a tracked `- [ ]` checkbox" sweep,
   with the population widened from the archived predecessor's structurally-narrow definition (only issue docs REFERENCED
   BY the 5 asset-group consolidated closeouts, which excluded meta/infrastructure/cross-cutting/ao/ci entirely) to the
-  WHOLE active corpus — every `plans/active/*.md` and `plans/active/issues/**/*.md`, all 9 tranches. Swept 641 active
-  docs on 2026-07-31; 11 carry zero real `- [ ]`/`- [x]` todo lines, of which 3 are structurally exempt (INDEX,
+  WHOLE active corpus — every `plans/archive/2026_08/*.md` and `plans/archive/issues/**/*.md`, all 9 tranches. Swept 641
+  active docs on 2026-07-31; 11 carry zero real `- [ ]`/`- [x]` todo lines, of which 3 are structurally exempt (INDEX,
   underscore-prefixed, the task template), 5 had real actionable prose converted into tracked todos, and 3 are genuinely
   informational/deliberate and are recorded as such — two of them DELIBERATELY checkbox-free to stop
   `regen_backlog_from_plan.py` deriving a duplicate AO dispatch, which is a trap any future re-run must not "fix". Names
@@ -64,12 +64,12 @@ context_scope:
 
 ## Standing owner + cadence (this is the part the predecessor lacked)
 
-| Field             | Value                                                                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Owner**         | `/plan-reconcile` (the `plan-reconciler.timer` scheduled job) — it already owns the corpus-wide contradiction / false-unchecked sweep, and this is the same class of defect. |
-| **Cadence**       | Monthly, folded into the first `/plan-reconcile` full-corpus run of each month (it already walks every active doc, so the marginal cost is one extra predicate).             |
-| **Verifier**      | `grep -LE '^[[:space:]]*- \[[ xX]\]' plans/active/*.md plans/active/issues/**/*.md` — the count of non-exempt hits must be 0, or every hit must be classified in this doc.   |
-| **Last executed** | 2026-08-02 (`/plan-reconcile` whole-corpus run — see § "Re-run 2026-08-02"). Prior: 2026-07-31 (authoring run).                                                              |
+| Field             | Value                                                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Owner**         | `/plan-reconcile` (the `plan-reconciler.timer` scheduled job) — it already owns the corpus-wide contradiction / false-unchecked sweep, and this is the same class of defect.         |
+| **Cadence**       | Monthly, folded into the first `/plan-reconcile` full-corpus run of each month (it already walks every active doc, so the marginal cost is one extra predicate).                     |
+| **Verifier**      | `grep -LE '^[[:space:]]*- \[[ xX]\]' plans/archive/2026_08/*.md plans/archive/issues/**/*.md` — the count of non-exempt hits must be 0, or every hit must be classified in this doc. |
+| **Last executed** | 2026-08-02 (`/plan-reconcile` whole-corpus run — see § "Re-run 2026-08-02"). Prior: 2026-07-31 (authoring run).                                                                      |
 
 **Why it kept going stale**: the class has twice been "owned" by a one-off dated sweep doc that then archived on
 completion, taking the ownership with it. A dated doc cannot own a recurring class. The owner above is a standing job,
@@ -81,8 +81,8 @@ and this doc is the register it writes to.
   asset-group consolidated closeouts → 110 filenames, 96 `status: open`. That excludes by construction every
   `meta`/`infrastructure`/`cross-cutting`/`ao`/`ci` doc, because those tranches are not referenced by the 5 AG
   closeouts. Its "zero further gaps found" conclusion was true **only inside that narrow population**.
-- **This sweep**: every file matching `plans/active/*.md` + `plans/active/issues/**/*.md` — **641 docs**, all 9
-  tranches, no reference-graph filter.
+- **This sweep**: every file matching `plans/archive/2026_08/*.md` + `plans/archive/issues/**/*.md` — **641 docs**, all
+  9 tranches, no reference-graph filter.
 - **Detection**: zero lines matching `^[[:space:]]*- \[[ xX]\]`. Deliberately anchored to real todo-list syntax — an
   unanchored `\[[ xX]\]` match is too loose (it hits `[x]` inside prose and code fences) and under-reports by 8.
 
@@ -130,11 +130,11 @@ and this doc is the register it writes to.
 
 ## Re-run 2026-08-02 — `/plan-reconcile` whole-corpus (unscoped) run
 
-Verifier re-run exactly as specified in the table above, over `plans/active/*.md` + `plans/active/issues/**/*.md`. **8
-hits** (down from 11 on 2026-07-31 — the 5 converted docs correctly no longer hit). Of the 8: **6 are the same 6 this
-doc already classified** (3 structurally exempt + 3 deliberate/informational — all re-confirmed unchanged, including the
-`sports_fixture_events_refetch_progress_2026_07_25.md` TRAP, which still correctly has no checkbox). **2 are NEW since
-2026-07-31**:
+Verifier re-run exactly as specified in the table above, over `plans/archive/2026_08/*.md` +
+`plans/archive/issues/**/*.md`. **8 hits** (down from 11 on 2026-07-31 — the 5 converted docs correctly no longer hit).
+Of the 8: **6 are the same 6 this doc already classified** (3 structurally exempt + 3 deliberate/informational — all
+re-confirmed unchanged, including the `sports_fixture_events_refetch_progress_2026_07_25.md` TRAP, which still correctly
+has no checkbox). **2 are NEW since 2026-07-31**:
 
 | New doc                                                                                               | Verdict                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -142,12 +142,12 @@ doc already classified** (3 structurally exempt + 3 deliberate/informational —
 | `plans/active/issues/cefi_content_migration_fleet_half_incomplete_progress_log_archive_2026_07_31.md` | **RECORDED, not changed** (4th member of the deliberate/informational class), as of this sweep's 2026-07-31 date. It is a pure verbatim relocation of a live parent doc's early Progress Log, extracted only to keep `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` under its 1000-line hard cap. It holds zero work by construction; a todo here would be fabricated. Its parent is live, so at the time of this sweep it was NOT archived either. **Update 2026-08-04 (na-eligibility-audit, cefi tranche): now archived** to `/plans/archive/issues/cefi_content_migration_fleet_half_incomplete_progress_log_archive_2026_07_31.md`, independent of its still-open parent — a companion appendix does not need its parent done first (see `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). |
 
 **Scope note for the next run** — `plans/epics/*.md` is in `/plan-reconcile`'s stated audit scope but is NOT in this
-register's population definition (which is `plans/active/*.md` + `plans/active/issues/**/*.md` only). Re-derived here
-for completeness: **7 of 28 epics carry zero checkboxes** (`batch_live_symmetry_master`, `dart_and_promote_master`,
-`deployment_and_user_management_master`, `global_ledger_pnl_attribution_master`, `orchestrator_master`,
-`strategy_master`, `trading_agent_master`). These are **NOT defects** — an epic hub is an index over child plans that
-carry the todos, and the other 21 epics only have checkboxes incidentally. Recorded so a future run does not re-discover
-them as a finding; the population definition is deliberately left unchanged.
+register's population definition (which is `plans/archive/2026_08/*.md` + `plans/archive/issues/**/*.md` only).
+Re-derived here for completeness: **7 of 28 epics carry zero checkboxes** (`batch_live_symmetry_master`,
+`dart_and_promote_master`, `deployment_and_user_management_master`, `global_ledger_pnl_attribution_master`,
+`orchestrator_master`, `strategy_master`, `trading_agent_master`). These are **NOT defects** — an epic hub is an index
+over child plans that carry the todos, and the other 21 epics only have checkboxes incidentally. Recorded so a future
+run does not re-discover them as a finding; the population definition is deliberately left unchanged.
 
 ## Todos
 

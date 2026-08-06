@@ -31,6 +31,7 @@ related:
     cefi_content_migration_fleet_half_incomplete_2026_07_26,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
 author: unknown

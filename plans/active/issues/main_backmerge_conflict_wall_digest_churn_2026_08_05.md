@@ -69,6 +69,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/15-runbooks/devops-ci-walls.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-05
 author: unknown

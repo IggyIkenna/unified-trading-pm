@@ -12,7 +12,7 @@ summary: >-
   resume FWD/BACKFILL VMs") whose own stated release conditions are both already checked in the same doc and which a
   measured `gcloud compute instances list` contradicts outright — but it sits in a `locked_by:` epic and is an explicit
   operator hard-stop, so no agent may touch it. Item 2 (RESOLVED, kept as a record) was the archival of 6 sports docs
-  carrying terminal `status` in `plans/active/`; the plan_health gate's own auto-remediation
+  carrying terminal `status` in `plans/archive/2026_08/`; the plan_health gate's own auto-remediation
   (`unified-trading-pm@57ed9271c`) archived all of them at 02:57Z while this shard was in flight, re-measured green.
   Item 3 (LIVE) is a 1216L issue doc the prek line-cap gate has frozen against ALL edits — including a correctness fix
   this run wrote and had to revert — because splitting a plan over its cap is operator-gated.
@@ -119,7 +119,7 @@ telling an agent not to launch a backfill VM.
   `/codex/05-infrastructure/vm-launcher-runbook.md` and the SPOT-default rule).
 - **Other**: operator types a custom answer (e.g. "re-arm the hold for a specific named reason").
 
-## 2. ✅ AUTO-RESOLVED MID-RUN — six sports docs with terminal `status` parked in `plans/active/` [NO DECISION NEEDED]
+## 2. ✅ AUTO-RESOLVED MID-RUN — six sports docs with terminal `status` parked in `plans/archive/2026_08/` [NO DECISION NEEDED]
 
 > **Resolved by another actor while this shard was in flight — kept here as a record, not as a question.** At entry
 > (02:15Z) `scripts/plan-hygiene/check_terminal_status_archived.py` reported **10 violations against a baseline of 0** —
@@ -154,8 +154,8 @@ rather than as a question.
 
 **Why this is parked and not auto-fixed**: splitting a plan over its line cap is explicitly operator-gated (Phase 4:
 "splitting a plan over its line-cap (a normal plan >1000, or an epic >2000)" is on the ruling-required list; the skill's
-Phase 5 repeats it — "a normal plan in `plans/active/` over 1000 (hard) is a split finding (operator-gated — splitting a
-plan is a planning decision)").
+Phase 5 repeats it — "a normal plan in `plans/archive/2026_08/` over 1000 (hard) is a split finding (operator-gated —
+splitting a plan is a planning decision)").
 
 **What makes this newly urgent rather than a standing nag**: the breach is now blocking an unrelated correctness fix.
 This run found a hunter-7 structural defect at `:541` — the `### 3.2` heading opens a `(` that never closes on its own
@@ -239,7 +239,7 @@ A 6th fix of the same class as #3 was written, verified, and then reverted unapp
       text in item 3's original write-up above) can be re-applied and committed right now without waiting for the split.
       The split remains the assigned durable fix regardless (zero lines of headroom at exactly-1000 is fragile — any
       future net-positive edit re-trips the HARD gate the moment it's staged), so this todo stays open, not moot.
-      Done-when: content split parent+child under `plans/active/issues/`, both files under 1000L, the hunter-7 patch
+      Done-when: content split parent+child under `plans/archive/issues/`, both files under 1000L, the hunter-7 patch
       applied in whichever file now owns §3.2, and every corpus referrer to the original doc's now-relocated sections
       repointed per the cross-reference convention. **RE-VERIFIED 2026-07-28 (this session) — premise overtaken since
       the status note above, so the split itself did not happen; the still-real piece (the hunter-7 fix) did.** The
@@ -247,10 +247,10 @@ A 6th fix of the same class as #3 was written, verified, and then reverted unapp
       `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` now lives at
       `/plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (moved by commit `fdbafb3be`,
       "archive 22 zero-todo docs"), carries `status: resolved`, and has zero open `- [ ]` checkboxes (confirmed by
-      grep). `check_line_caps.sh` scopes ONLY to `plans/active/*.md` + `plans/epics/*.md` by explicit design (its own
-      comment: archived "status: complete / nature: record docs are unbounded") — a doc under `plans/archive/` is
-      categorically exempt, so the 1016L-and-growing HARD-cap risk this item worried about no longer applies, split or
-      not. Splitting a frozen, resolved archive record to satisfy a cap it is exempt from would be scope creep. The
+      grep). `check_line_caps.sh` scopes ONLY to `plans/archive/2026_08/*.md` + `plans/epics/*.md` by explicit design
+      (its own comment: archived "status: complete / nature: record docs are unbounded") — a doc under `plans/archive/`
+      is categorically exempt, so the 1016L-and-growing HARD-cap risk this item worried about no longer applies, split
+      or not. Splitting a frozen, resolved archive record to satisfy a cap it is exempt from would be scope creep. The
       hunter-7 `### 3.2` heading defect (unclosed `(` turning its continuation into an orphan-`)` body paragraph) was
       still present on disk — applied directly to the archived file this session (unified-trading-pm, same commit as
       this flip). No referrer fix needed: this was a same-location heading-text correction, not a content move

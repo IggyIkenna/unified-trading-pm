@@ -32,6 +32,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/04-architecture/ci-alerting.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
 author: ikennaigboaka [main·planning]

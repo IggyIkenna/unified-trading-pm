@@ -25,6 +25,7 @@ related:
     /plans/archive/issues/features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md,
     /plans/archive/issues/quickmerge_agent_already_committed_fastpath_skips_trailer_2026_07_14.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-17
 author: unknown

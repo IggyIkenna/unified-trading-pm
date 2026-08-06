@@ -100,7 +100,7 @@ tranches have a real closeout family the glob would find today:
 
 `closeout_family_for()` (`:140-145`) builds its prefix as `f"{ag}_consolidated_"`. For `ag="cross-cutting"` that is
 `cross-cutting_consolidated_` (hyphen), which matches **0 files** — the doc is `cross_cutting_consolidated_closeout_…`
-(underscore). Verified by direct glob against `plans/active/`. The very next line in `main()` (`:182`) is
+(underscore). Verified by direct glob against `plans/archive/2026_08/`. The very next line in `main()` (`:182`) is
 `if not family or path in family: continue` — so the whole tranche would go on silently passing, with no error and no
 signal that the family lookup failed. This is exactly the snake_case-vs-hyphen naming exception that
 `cursor-configs/skills/ag-closeout-audit/SKILL.md` § Phase 0.1 already calls out for humans, never applied to the
@@ -108,8 +108,8 @@ script.
 
 ### 3. Measured consequence
 
-Run this session against `plans/active/` + `plans/active/issues/` (643 docs parsed, frontmatter-block-aware parse with
-`#`-comment stripping per SKILL.md Phase 0.3):
+Run this session against `plans/archive/2026_08/` + `plans/archive/issues/` (643 docs parsed, frontmatter-block-aware
+parse with `#`-comment stripping per SKILL.md Phase 0.3):
 
 - `check_ag_closeout_linkage.py` → **`✅ 0 orphan(s) (baseline 0)`**
 - Same corpus, cross-cutting tranche: **29 of 119** `asset_group: cross-cutting` docs (24%) have their basename appear

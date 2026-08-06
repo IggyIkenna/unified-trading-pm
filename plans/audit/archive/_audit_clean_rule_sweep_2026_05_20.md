@@ -1,5 +1,5 @@
 ---
-title: Clean-rule re-audit of plans/active/issues/ — 2026-05-20
+title: Clean-rule re-audit of plans/archive/issues/ — 2026-05-20
 created: 2026-05-20
 author: background agent (delegated by slot-1)
 locked_by: live-defi-rollout
@@ -8,11 +8,11 @@ codifies_rule_from:
   - CLAUDE.md § Citadel-Grade Planning Standards item (9)
 ---
 
-> **Purpose**: enumerate every dual-tracking violation in `plans/active/issues/` against the new Issue-Doc Lifecycle
+> **Purpose**: enumerate every dual-tracking violation in `plans/archive/issues/` against the new Issue-Doc Lifecycle
 > Discipline rule (issue docs surface UNACKED work only; ack → immediate archive; "stays until parent closes" lifecycles
 > are dual-tracking and review-blocking). Operator reviews this audit before any `git mv` runs.
 
-## Total files in plans/active/issues/ scanned: 32
+## Total files in plans/archive/issues/ scanned: 32
 
 ## Dual-tracking violations: 18
 
@@ -38,7 +38,8 @@ body; standalone work is explicitly disallowed by the banner ("Do NOT work stand
 
 #### Sub-bucket 2 — `🟡 COVERED BY` named active plan (5 files)
 
-Banner cites a named parent plan in `plans/active/`. Findings absorbed; the issue doc is residual dual-tracking.
+Banner cites a named parent plan in `plans/archive/2026_08/`. Findings absorbed; the issue doc is residual
+dual-tracking.
 
 | File                                                         | Parent plan                                                                                                        | Banner type   |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------- |
@@ -79,7 +80,7 @@ None observed in this sweep.
 
 None observed.
 
-## STILL-UNACKED (3 files) — KEEP IN active/issues/
+## STILL-UNACKED (3 files) — KEEP IN archive/issues/
 
 - **`bfg_history_scrub_sequence_2026_05_20.md`** — operator approved 2026-05-20 ("sure do it"), but execution has not
   landed. Body grep-matched the audit regex only because it _quotes_ a future banner template, not because the doc
@@ -89,7 +90,7 @@ None observed.
   in-flight VMs (T+10min verification armed; banner says "removed when manifest divergence A3 confirms zero
   MISSING_EXPECTED"). Trigger to archive: A3 confirms or VMs terminate STOPPED with manifest green. Note: this is the
   closest call in the audit — arguably an A3-acked-into-plan today; defaulted to STILL-UNACKED because the 12-VM
-  operational state has no other tracker in `plans/active/`.
+  operational state has no other tracker in `plans/archive/2026_08/`.
 - **`defi_upstream_46day_full_backfill_2026_05_16.md`** — parent of the launch-status tracker above; same rationale.
   Could be archived when its child closes.
 
@@ -133,12 +134,12 @@ These hit the banner regex but are NOT dual-tracking violations:
 **Mega-audit centroid (8 of 18 violations).** The `mega_audit_and_plan_beefup_progression_2026_05_20.md` triage sweep on
 the same day this audit ran absorbed 8 issue docs in one motion (Phase C0/C4/C6/C7/C9 + D/D3/D6). The 🟡 SUBSUMED BY
 MEGA AUDIT banner is internally consistent (every one cites a specific phase). This is the single largest cleanup
-opportunity — bulk-archiving these 8 files reduces active/issues/ by 25% and removes the orchestration ambiguity where
+opportunity — bulk-archiving these 8 files reduces archive/issues/ by 25% and removes the orchestration ambiguity where
 slots could pick up subsumed work standalone.
 
 **Phase-0 pre-audit artefacts (2 files) belong elsewhere.** `ml_repo_consolidation_preaudit` and
 `strategy_repo_consolidation_preaudit` are diagnostic artefacts feeding named consolidation plans — these should live
-under `plans/audit/` (mirroring the mega-audit C-audit location convention) rather than `plans/active/issues/`. The
+under `plans/audit/` (mirroring the mega-audit C-audit location convention) rather than `plans/archive/issues/`. The
 `ml_repo_consolidation_preaudit` banner itself flags this future convention. Operator may want a follow-up move
 (active/issues → plans/audit/) rather than archive.
 

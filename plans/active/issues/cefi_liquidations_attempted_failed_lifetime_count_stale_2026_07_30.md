@@ -36,6 +36,7 @@ related:
     /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 author: unknown

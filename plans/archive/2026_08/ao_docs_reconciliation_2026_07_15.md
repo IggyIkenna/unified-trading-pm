@@ -92,7 +92,7 @@ workers, dispatch by **role/skill** (`assigned_role`), NO per-epic VMs, NO `assi
 
 ## Completion census (hard data — todo checkboxes + status field)
 
-**Plans (`plans/active/`):**
+**Plans (`plans/archive/2026_08/`):**
 
 | plan                                                            | status     | done |  open | first-look                      |
 | --------------------------------------------------------------- | ---------- | ---: | ----: | ------------------------------- |
@@ -107,7 +107,7 @@ workers, dispatch by **role/skill** (`assigned_role`), NO per-epic VMs, NO `assi
 | uat_role_charter_2026_06_27                                     | active     |    1 |     3 | barely-started; epic says DEFER |
 | escalation_pipeline_mvp_2026_06_25                              | **paused** |    0 |     5 | paused per epic re-scope        |
 
-**Issue docs (`plans/active/issues/`):**
+**Issue docs (`plans/archive/issues/`):**
 
 | issue                                                        | status   | done | open | first-look                   |
 | ------------------------------------------------------------ | -------- | ---: | ---: | ---------------------------- |
@@ -503,7 +503,7 @@ post-pivot re-sweep.
       code) — agent-orchestrator@3abe56c" — both halves of the gate (explicit reopen AND re-verification date)
       satisfied. Checkbox lagged reality by ~6 days.
 - [x] ✅ [DOCS] P3. **DONE (found stale 2026-08-04, `/ag-closeout-audit ao`).** Gate met via
-      `unified-trading-pm@7a3cc1289` (2026-07-24): `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`'s
+      `unified-trading-pm@7a3cc1289` (2026-07-24): `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`'s
       Host-Behaviour-Matrix row now reads "Per-slot Path-B reference-clone on `live-defi-rollout`" (bare `tab/<op>/N`
       cell removed) and its interactive-session bullet explicitly bannered "RETIRED — corrected 2026-07-23." No
       unbannered `tab/<...>` instruction remains. Checkbox lagged reality by ~11 days.

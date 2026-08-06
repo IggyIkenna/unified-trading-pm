@@ -12,7 +12,7 @@ summary: >-
   `unified-trading-pm@7ae64f4c2` is expected here, not a lifecycle signal, per
   `cross_cutting_consolidated_closeout_2026_07_25.md` Track 13, which keeps this "as a pure cross-reference, not
   something to close" — it is also the cited home of the D1/D2 rulings `cursor-configs/CLAUDE.md`'s reconciliation
-  section leans on. Keep `status: active` in `plans/active/`.
+  section leans on. Keep `status: active` in `plans/archive/2026_08/`.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -32,6 +32,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-30

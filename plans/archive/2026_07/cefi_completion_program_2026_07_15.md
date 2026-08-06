@@ -880,7 +880,7 @@ it would burn money for nothing.
       `test_data_pipeline_monitors.py::test_sweep_preempted_vm_*`) — confirmed via a live sandbox run too (a
       SUCCESS-path sweep replaying real captured `LAUNCH_PARAMS.json` env into a stub launcher, and a FAILURE-path sweep
       with a guard-refusing stub launcher, both producing the exact designed alert/no-alert split + a real
-      `plans/active/issues/*.md` file on failure).
+      `plans/archive/issues/*.md` file on failure).
 
 ### Guard race closed (RUNNING-only count let 2 VMs run) + ramped to 128/32 — 2026-07-16T07:55Z
 

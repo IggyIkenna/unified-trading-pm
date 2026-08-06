@@ -9,11 +9,11 @@ summary: >-
   in its module + class docstrings (consolidator_scheduler_watcher.py:1,15,71) and in several cli.py log lines
   (cli.py:87,498,516,835). Cosmetic stale-identity only — zero functional impact (the live registry_id is correct) — but
   it causes identity confusion when correlating logs/alerts to the registry. Confirmed by review (agt-86659c) and main
-  (agt-26fe12) on 2026-07-31 to be tracked as a todo NOWHERE in plans/active/ (every corpus hit for DP-WATCHER-00[34] /
-  consolidator_scheduler_watcher is historical build/fix narrative, not an open fix-todo). NOTE the fix is NOT a blind
-  -003→-004 find-replace: cli.py:167 references DP-WATCHER-002 (a genuinely different sibling watcher,
-  DP_CRON_DID_NOT_FIRE) and some -003 mentions may be legitimate cross-references to sibling keys — the fix must update
-  only THIS watcher's stale self-identity, not sibling cross-references.
+  (agt-26fe12) on 2026-07-31 to be tracked as a todo NOWHERE in plans/archive/2026_08/ (every corpus hit for
+  DP-WATCHER-00[34] / consolidator_scheduler_watcher is historical build/fix narrative, not an open fix-todo). NOTE the
+  fix is NOT a blind -003→-004 find-replace: cli.py:167 references DP-WATCHER-002 (a genuinely different sibling
+  watcher, DP_CRON_DID_NOT_FIRE) and some -003 mentions may be legitimate cross-references to sibling keys — the fix
+  must update only THIS watcher's stale self-identity, not sibling cross-references.
 status: open
 nature: issue
 asset_group: [meta]
@@ -97,8 +97,8 @@ identity and not a legitimate cross-reference to a sibling key before changing i
   name this doc at all. Verdict: zero overlap → clear. This independently corroborates the doc's own filing-time check
   (review agt-86659c + main agt-26fe12, 2026-07-31). Applied: `execution_scope: local-only → orchestrator-agent`,
   `assigned_role: infra` filled in (was missing; validated against the live `agents/*.md` registry — `agents/infra.md`).
-  **No companion finalize plan authored** — this is a `doc_type: issue` under `plans/active/issues/`, and
-  `check_finalize_plan_coverage.py` globs only `plans/active/*.md` (verified by direct code read, lines 117/141), so
-  issue docs are structurally exempt from that gate.
+  **No companion finalize plan authored** — this is a `doc_type: issue` under `plans/archive/issues/`, and
+  `check_finalize_plan_coverage.py` globs only `plans/archive/2026_08/*.md` (verified by direct code read, lines
+  117/141), so issue docs are structurally exempt from that gate.
 - **context-scout 2026-08-03**: populated context_scope (2 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.

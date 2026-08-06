@@ -21,6 +21,7 @@ related:
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-28"
 last_updated: "2026-07-28"

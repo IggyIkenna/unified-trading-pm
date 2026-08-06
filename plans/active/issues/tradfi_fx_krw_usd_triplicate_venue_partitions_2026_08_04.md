@@ -37,6 +37,7 @@ related:
     /plans/active/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

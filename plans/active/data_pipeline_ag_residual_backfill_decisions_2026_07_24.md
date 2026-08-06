@@ -24,6 +24,7 @@ related:
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

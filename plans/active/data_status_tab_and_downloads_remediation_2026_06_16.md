@@ -441,9 +441,9 @@ the canon plan; track there, not as duplicate todos:
 **Not yet identified** — the inline `[DATA] P2` item "Audit sub-bucket shards (oracle-prices / perp-funding / lst-rates)
 for blank-chain manifest rows that produce phantom entries" is explicitly gated on this SAME plan's own
 `APPLY GATE (operator 2026-06-17)` section (dry-run-everything-before-`--apply`) and the TIER-2 v9 migration, both still
-tracked within this document (see the `### APPLY-GATE todos` section). Searched `plans/active/` + `plans/epics/` for a
-plan that has since taken ownership of this specific sub-bucket phantom-row audit — none found. This plan remains the
-owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migration land.
+tracked within this document (see the `### APPLY-GATE todos` section). Searched `plans/archive/2026_08/` +
+`plans/epics/` for a plan that has since taken ownership of this specific sub-bucket phantom-row audit — none found.
+This plan remains the owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migration land.
 
 ## Progress Log
 

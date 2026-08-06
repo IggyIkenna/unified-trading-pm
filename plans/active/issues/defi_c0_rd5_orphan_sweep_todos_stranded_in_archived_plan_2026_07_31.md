@@ -29,6 +29,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-31"
 author: unknown
@@ -51,7 +52,7 @@ resolved_by:
 source: >-
   na-eligibility-audit 2026-07-31 (tranche=defi, autonomous) — surfaced while fixing a stale checkbox citation on
   defi_dedicated_bucket_shared_migration_2026_07_13.md's P3 housekeeping todo; filed per the findings-triage HARD RULE
-  ("outside every plan → plans/active/issues/<slug>_<date>.md") rather than chased to full resolution, since resolving
+  ("outside every plan → plans/archive/issues/<slug>_<date>.md") rather than chased to full resolution, since resolving
   it requires a live-GCS orphan sweep this audit's scope doesn't cover.
 context_scope:
   [
@@ -117,7 +118,7 @@ checked, not assumed.
 - **na-eligibility-audit 2026-08-03 (reclassify pass)**: RECLASSIFY -> planning, the sole remaining todo is a bounded,
   worker-determinable live GCS check (grep 8 named legacy bucket-stems for a specific object-shape pattern, then
   close-as-moot-with-evidence or draft a scoped follow-up) — no design/judgment call left. Conflict-check: grepped
-  `plans/active/*.md` + `plans/active/issues/*.md` for "C0-RD5" — the only other hit
+  `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` for "C0-RD5" — the only other hit
   (`defi_satellite_ao_dispatch_batch2_2026_07_26.md`) is a corroborating citation on an already-closed, unrelated todo
   (deleting a specific script + auditing 8 campaign scripts for dead bucket templates), not a live claim on this doc's
   live-check work. CLEAR, no conflict.

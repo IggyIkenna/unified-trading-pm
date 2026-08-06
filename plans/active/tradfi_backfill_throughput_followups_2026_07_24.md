@@ -23,6 +23,7 @@ related:
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

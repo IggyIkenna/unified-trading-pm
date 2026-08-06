@@ -109,9 +109,10 @@ slots `tmux_session=None` (workers correctly reaped). Everything below is LATENT
 
 4. **HIGH — `agents/main.md:631-789` is ~160 lines of dead phase-DAG campaign content.** The source epic
    (`plans/epics/mtds_mdps_master.md`) frontmatter says its own Phase -2…14 table is "provenance only", but main.md
-   still instructs "read this top-down every poll cycle" and cites the WRONG directory (`plans/active/` — lines 646,704
-   — the file is in `plans/epics/`). Predates the single-VM pivot ("VM fleet" plural framing, fixed per-phase slot
-   ownership). SENSITIVE — main.md is the main orchestrator's brain; the ~160-line removal is operator-review-gated.
+   still instructs "read this top-down every poll cycle" and cites the WRONG directory (`plans/archive/2026_08/` — lines
+   646,704 — the file is in `plans/epics/`). Predates the single-VM pivot ("VM fleet" plural framing, fixed per-phase
+   slot ownership). SENSITIVE — main.md is the main orchestrator's brain; the ~160-line removal is
+   operator-review-gated.
 
 5. **MED-HIGH — `escalation_to: cicd` is wrong on two roles AND rendered live in the dashboard.**
    `agents/plan-health.md:29` + `agents/data_pipeline_failure.md:29` set `escalation_to: cicd`, contradicting both

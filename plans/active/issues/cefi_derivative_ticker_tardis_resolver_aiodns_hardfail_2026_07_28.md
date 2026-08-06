@@ -44,6 +44,7 @@ related:
     /plans/archive/issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md,
     /plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown

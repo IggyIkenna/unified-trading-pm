@@ -180,7 +180,7 @@ then.
 A fresh `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page fired for `asset_group=cefi data_type=futures_chain`
 (115,661/115,661 attempted_failed, 100% ratio) and dispatched a one-shot `data_pipeline_failure` escalation worker with
 **no issue doc pre-linked in its boot context** (context said "Filed issue: none — alert carries the details"). Without
-first grepping `plans/active/issues/` for existing futures_chain/DERIBIT coverage, the worker independently re-derived
+first grepping `plans/archive/issues/` for existing futures_chain/DERIBIT coverage, the worker independently re-derived
 the STALE 2026-07-03 premise from `reclass_cefi_futures_chain_no_tardis_source.py`'s own docstring (Tardis has no
 futures_chain channel for CeFi venues) and took two actions that this doc's own 2026-07-18 correction banner explicitly
 prohibits:
@@ -215,7 +215,7 @@ end:
 
 **No net change to the manifest or launcher config from this escalation** — this doc's blocker is UNCHANGED and still
 gated on Track-2 exactly as before. **Process gap this exposes**: a `data_pipeline_failure` escalation worker's boot
-context did not include a pre-dispatch check against `plans/active/issues/` for an already-open, already-corrected
+context did not include a pre-dispatch check against `plans/archive/issues/` for an already-open, already-corrected
 investigation on the exact `(asset_group, data_type)` tuple — this is the SAME gap already filed in
 `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (there scoped to redundant re-diagnosis; this incident
 additionally shows the gap can lead to a worker actively UN-doing an already-shipped correction, which is a stronger

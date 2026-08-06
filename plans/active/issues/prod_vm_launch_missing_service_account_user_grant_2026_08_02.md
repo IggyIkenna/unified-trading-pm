@@ -25,6 +25,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-02
 author: unknown
@@ -127,7 +128,7 @@ gcloud iam service-accounts add-iam-policy-binding uts-prd-sa@central-element-32
 ```
 
 Once granted, drop the `LC_RUNTIME_SA=<self>` workaround from any active runbooks/monitoring-loop instructions that
-adopted it as a stopgap (grep for `LC_RUNTIME_SA=` in `plans/active/issues/` once this is closed).
+adopted it as a stopgap (grep for `LC_RUNTIME_SA=` in `plans/archive/issues/` once this is closed).
 
 ## Status
 
@@ -170,7 +171,7 @@ workaround is written down for whoever hits it next before the grant lands.
       on `uts-prd-sa` grant into IaC (a new `google_service_account_iam_member` resource, same pattern as
       `honest_coverage_scheduler.tf`'s existing binding) so it survives a `tofu plan` drift-check instead of being an
       out-of-band imperative grant. Gate: `tofu plan` shows 0 changes for this binding after the resource is added.
-- [ ] [DOCS] P3. Grep `plans/active/issues/` for `LC_RUNTIME_SA=` and drop the workaround from any runbook/monitoring
+- [ ] [DOCS] P3. Grep `plans/archive/issues/` for `LC_RUNTIME_SA=` and drop the workaround from any runbook/monitoring
       instructions that adopted it as a stopgap, now that the underlying grant is durable.
 
 ## Progress Log

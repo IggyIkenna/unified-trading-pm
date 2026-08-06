@@ -156,7 +156,7 @@ reviewing the diff, per the operator's ruling that a scoped run is "the only thi
       `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (prose, not `related:`) and 1 to
       `plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` — fixed by adding the leading slash. (2)
       the 3 NEW existence dangling refs were themselves genuine, fixable stale paths (docs since archived, cited by
-      `related:`/`context_scope` under their old `plans/active/...` location):
+      `related:`/`context_scope` under their old `plans/archive/2026_08/...` location):
       `cefi_satellite_ao_dispatch_batch7_2026_08_03.md` →
       `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (repointed to `/plans/archive/issues/...`),
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` and `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`

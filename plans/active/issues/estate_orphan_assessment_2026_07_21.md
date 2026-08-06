@@ -22,6 +22,7 @@ related:
     /codex/02-data/orphan-object-detection.md,
     /codex/02-data/reconciliation-census-and-compute-tiers.md,
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-21
 author: unknown

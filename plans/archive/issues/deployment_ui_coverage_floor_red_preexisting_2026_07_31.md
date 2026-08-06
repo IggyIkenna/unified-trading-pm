@@ -33,7 +33,7 @@ depends_on: []
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (slot 11 (cicd escalation agt-1e392c,
 > repo-blocker RB-398669f0), 2026-07-31). Moved by the `/plan-reconcile` whole-corpus run of 2026-08-02, which found
-> this doc sitting in `plans/active/issues/` at a terminal status — `check_terminal_status_archived` was RED at 13
+> this doc sitting in `plans/archive/issues/` at a terminal status — `check_terminal_status_archived` was RED at 13
 > violations against a baseline of 1. No content was rewritten.
 
 ## What I found (original, slot 10)

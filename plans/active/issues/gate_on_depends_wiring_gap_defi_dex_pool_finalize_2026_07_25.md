@@ -128,8 +128,8 @@ unrelated one-off bugs.
 1. `backend_engineer`/`agent-orchestrator`: instrument or trace why `_wire_gate_on_depends_prereqs` did not attach
    `defi_dex_pool_symbol_fix_backfill_purge-00{1..5}` to `defi_dex_pool_symbol_fix_backfill_purge_finalize-001`'s
    `prereqs.completed_tasks` — check whether `gated_plans` (built from `_parse_frontmatter_gate_on_depends` scanning
-   `plans/active/*.md`) actually included the finalize plan's filename on the regen tick(s) since it was authored, and
-   whether the wiring pass re-runs on every regen or only once at first-ingestion (if the latter, a plan
+   `plans/archive/2026_08/*.md`) actually included the finalize plan's filename on the regen tick(s) since it was
+   authored, and whether the wiring pass re-runs on every regen or only once at first-ingestion (if the latter, a plan
    authored+ingested in the same/adjacent tick as its own gate declaration could race past the wiring pass before its
    upstream ids exist in `file_to_ids`).
 2. Once root-caused, add a regression test asserting a `gate_on_depends: true` plan's tasks carry the upstream's task
@@ -575,7 +575,7 @@ The indented prose line (`  gate_on_depends: true until all 5 of that plan's tod
 the scanner matched it FIRST, extracted
 `"true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the"` as the value,
 correctly found it wasn't the literal string `"true"`, and returned `False` without ever reaching the real field. A
-corpus-wide sweep of every `plans/active/*.md` confirmed this is not plan-specific: **69 plans** declare
+corpus-wide sweep of every `plans/archive/2026_08/*.md` confirmed this is not plan-specific: **69 plans** declare
 `gate_on_depends: true` for real, and before this fix essentially none of them were being correctly detected (every one
 narrates its own gate in prose by the exact same authoring convention this doc's "Recommended decision" section itself
 uses). This — not the in-process cache staleness 13a5dd8 fixed — is why the symptom reproduced identically across every

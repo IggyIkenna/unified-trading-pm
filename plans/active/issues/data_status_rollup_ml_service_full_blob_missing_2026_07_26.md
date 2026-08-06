@@ -19,6 +19,7 @@ related:
   [
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-26
 author: unknown

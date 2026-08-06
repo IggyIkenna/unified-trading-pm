@@ -26,6 +26,7 @@ related:
   [
     /plans/archive/issues/deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md,
     /codex/05-infrastructure/deployment-service-gcp-tofu-state.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-03"
 author: unknown

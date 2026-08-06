@@ -670,7 +670,7 @@ items unblocked).
 
 [`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
 — BIG case-5 finding from 6.A is now RESOLVED. Recommended decision (Option A) executed in full. Issue doc retained in
-`plans/active/issues/` as durable record; can be archived in next daily ledger sweep.
+`plans/archive/issues/` as durable record; can be archived in next daily ledger sweep.
 
 Tab 6 cycle complete. Going quiet.
 

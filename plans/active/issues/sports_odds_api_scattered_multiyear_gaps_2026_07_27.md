@@ -38,6 +38,7 @@ related:
     /plans/archive/issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md,
     /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-27
 author: unknown

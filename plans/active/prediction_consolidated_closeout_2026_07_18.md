@@ -69,6 +69,7 @@ related:
     /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-31 # was 2026-07-26 — /ag-closeout-audit prediction (scheduled) Finding-3 fix: added 6 previously-unindexed docs (2 kalshi issues, features_delta_one, prediction_trades_migration_concurrent_dispatch, 2 fresh 2026-07-31 adapter dead-code findings) to the Aggregated source docs index, and corrected the stale kalshi_live_capture_regression_and_drift entry (was "3 prose follow-ups", live-verified now 1 checkbox)
@@ -265,7 +266,7 @@ source: the same-day `/data-pipeline-reconciliation` four-surface pass against `
   `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_24.md`; only the post-Phase-B final gate
   remains). **Predating-run search (2026-08-04, `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 4)**:
   confirmed-absent — no `/data-pipeline-reconciliation prediction` report dated before 2026-07-20 exists anywhere in
-  `plans/audit/results/`, `plans/active/`, or `plans/archive/`; the 2026-07-20 file above is the earliest.
+  `plans/audit/results/`, `plans/archive/2026_08/`, or `plans/archive/`; the 2026-07-20 file above is the earliest.
 
 ## MVP universe (the Phase-D / Phase-E readiness target)
 
@@ -384,7 +385,7 @@ fixture-linked before MVP backfill.
     — **new 2026-07-31** (same audit). 1 open `[BACKEND] P2` — same shape (A) delete vs (B) keep-and-document,
     operator-gated.
   - [`plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`](/plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md)
-    (resolved, 1 residual — cross-link; note: archived location, not `plans/active/issues/`)
+    (resolved, 1 residual — cross-link; note: archived location, not `plans/archive/issues/`)
     - **[CODE] P2.** Durable fix: bound memory in the prediction CLOB universe scan (chunked pagination → incremental)
 - **Manifest / CQG / phantom**:
   - [`plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md`](/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md)

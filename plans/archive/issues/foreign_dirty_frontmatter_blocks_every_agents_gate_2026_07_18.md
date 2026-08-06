@@ -99,7 +99,7 @@ recommendation hinged on is now settled empirically:
 
 - The pre-commit `plan-hygiene` hook (`.pre-commit-config.yaml` → `run_hygiene_sweep.sh --precommit`) runs
   `check_frontmatter_schema.py --quiet` on every staged `plans/**` doc (its `--precommit` branch, line ~67), and
-  `docspec.doc_type_for_path()` resolves `plans/active/issues/*.md` to `issue` — so the offending doc was **in scope**.
+  `docspec.doc_type_for_path()` resolves `plans/archive/issues/*.md` to `issue` — so the offending doc was **in scope**.
 - Feeding the incident's exact four enums (`status: fixing`, `nature: bug`, `asset_group: infra`, `stage: infra`)
   through `docspec.validate_frontmatter('issue', …)` returns **4 violations** (each enum is rejected against its
   registry set). So the pre-commit gate **would have failed the commit**. The sweep covers these keys — it was
@@ -135,4 +135,4 @@ without it a fresh bad-frontmatter doc you just wrote would have silently skippe
 real git fixture (bare remote + clone) reproducing the exact incident shape: a doc already on origin (foreign, not in
 the changeset) plus a committed-unpushed / staged / untracked doc of "mine" — the scoped list correctly included only
 the three "mine" docs and excluded the foreign one. This very doc update is itself a live test of the new scoped path (a
-real `plans/active/issues/*.md` change flowing through the gate).
+real `plans/archive/issues/*.md` change flowing through the gate).

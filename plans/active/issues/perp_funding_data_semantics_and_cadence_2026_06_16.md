@@ -26,6 +26,7 @@ related:
   [
     /plans/active/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md,
     /plans/active/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-16
 author: unknown

@@ -22,6 +22,7 @@ related:
     issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/deployment-observability.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-06
 last_updated: 2026-08-02

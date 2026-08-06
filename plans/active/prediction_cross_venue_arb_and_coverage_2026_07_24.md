@@ -23,6 +23,7 @@ related:
     plans/active/prediction_capture_incident_remediation_2026_07_06,
     plans/active/issues/plan_line_cap_remediation_2026_07_23,
     /plans/archive/2026_07/prediction_cross_venue_arb_and_coverage_history_2026_07_24.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 parent_epic: predictions_master

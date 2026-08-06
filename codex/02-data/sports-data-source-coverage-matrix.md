@@ -351,7 +351,7 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
   re-verified live: `api_football` 95→96, `footystats` 46→48, `transfermarkt` 55→56, total registry 102→103
   (`odds_api`/`open_meteo`/`soccer_football_info`/`understat` unchanged at 33/33/33/5); propagated the corrected counts
   through §2.1/§2.2/§2.4's inline restatements too. Fixed the 5(now-7)-broken `related:` paths in `sports_master.md`
-  (files archived from `active/` to dated `archive/` subdirs without their referrer being updated).
+  (files archived from `archive/2026_08/` to dated `archive/` subdirs without their referrer being updated).
 
 - **2026-07-08** — §2.4 `PLAYER_VALUES` axis corrected from stale `per-league × periodic (weekly cadence)` to the real,
   currently-shipped `per-league × trigger-date` axis (deployment-api commit `6b7aa696`, landed 2026-06-11 — this doc had

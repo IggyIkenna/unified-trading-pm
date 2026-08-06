@@ -4,9 +4,9 @@ title: Deployment registry Firestore migration — Phase 0 — unblock prod (sch
 summary:
   Restore the prod Deployments tab NOW, before the multi-week Firestore migration. The inventory census times out and
   renders empty because ~3k stale registry entries must be downloaded within a 45s bound. Fix it two ways — schedule the
-  existing reaper (reap_stale) as an in-process tick in deployment-api's background-sync loop so active/ drains to ≈
-  live-VM count, and add a SIGTERM handler in the UTL heartbeat daemon so SPOT-preempted backfill VMs archive themselves
-  instead of becoming ghosts. GCS-only, partly throwaway once Firestore lands, but prod is broken today.
+  existing reaper (reap_stale) as an in-process tick in deployment-api's background-sync loop so archive/2026_08/ drains
+  to ≈ live-VM count, and add a SIGTERM handler in the UTL heartbeat daemon so SPOT-preempted backfill VMs archive
+  themselves instead of becoming ghosts. GCS-only, partly throwaway once Firestore lands, but prod is broken today.
 status: complete
 nature: process
 asset_group: [meta]
@@ -58,8 +58,9 @@ The deployment registry is one JSON blob per deployment at
 ([UTL `deployment_registry.py`](../../unified-trading-library/unified_trading_library/deployment_registry.py), class
 `DeploymentsRegistry` at line 296; `ACTIVE_PREFIX = "deployments/active/"` at line 145). The inventory census
 ([`deployment-api/deployment_api/routes/deployments_inventory.py`](../../deployment-api/deployment_api/routes/deployments_inventory.py))
-downloads+parses every `active/` blob within `_PROVIDER_CENSUS_TIMEOUT_SEC = 45.0`; on timeout it discards the whole
-census (live VMs included). **Measured 2026-07-14: 3,270 active entries for 44 live VMs → timeout → empty prod tab.**
+downloads+parses every `archive/2026_08/` blob within `_PROVIDER_CENSUS_TIMEOUT_SEC = 45.0`; on timeout it discards the
+whole census (live VMs included). **Measured 2026-07-14: 3,270 active entries for 44 live VMs → timeout → empty prod
+tab.**
 
 The reaper already exists and is correct — `DeploymentsRegistry.reap_stale(max_age_hours=6, running_vm_names, now)`
 ([`deployment_registry.py:429`](../../unified-trading-library/unified_trading_library/deployment_registry.py)) archives
@@ -90,22 +91,22 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       design deviation this required.
 - [x] ✅ [BACKEND] P0. Make the first drain non-blocking + bounded: run the reap in `run_in_executor` (do not block the
       event loop on a ~138s `list_active`), and cap archives per tick (e.g. 500) so the ~3k backlog drains over several
-      ticks; log `reaped=N remaining≈M` each tick. Steady-state (active/ ≈ live count) then reaps in <1s/tick. —
-      deployment-api@8660e9e (`_REAPER_MAX_PER_TICK=500`), unified-trading-library@b1cdeb77
+      ticks; log `reaped=N remaining≈M` each tick. Steady-state (archive/2026_08/ ≈ live count) then reaps in <1s/tick.
+      — deployment-api@8660e9e (`_REAPER_MAX_PER_TICK=500`), unified-trading-library@b1cdeb77
       (`DeploymentsRegistry.reap_stale(max_reap=...)`).
-- [x] ✅ [REVIEW] P0. Verify the drain end-to-end against the DEPLOYED in-region API: record `active/` object count
-      before and after (expect → ≈ running-VM count), and `GET /api/deployments/inventory?status=all` returning
+- [x] ✅ [REVIEW] P0. Verify the drain end-to-end against the DEPLOYED in-region API: record `archive/2026_08/` object
+      count before and after (expect → ≈ running-VM count), and `GET /api/deployments/inventory?status=all` returning
       non-empty live VMs within the 45s bound. Put the before/after numbers + a 200-with-items sample in the Progress
-      Log. — VERIFIED 2026-07-24 (slot 2, review): original 503-after-42.6s prod outage IS fixed (`active/` 3,304→403;
-      `GET /api/deployments/inventory` with no `status` filter → HTTP 200 in <1s, 2,518 items, 127 running). **NOT fully
-      met**: `active/` is not yet ≈ running-VM count, and the literal `?status=all` query always returns 0 items by
-      design (no bypass for that param, unlike `region`). Full detail + 2 new follow-up todos in
+      Log. — VERIFIED 2026-07-24 (slot 2, review): original 503-after-42.6s prod outage IS fixed (`archive/2026_08/`
+      3,304→403; `GET /api/deployments/inventory` with no `status` filter → HTTP 200 in <1s, 2,518 items, 127 running).
+      **NOT fully met**: `archive/2026_08/` is not yet ≈ running-VM count, and the literal `?status=all` query always
+      returns 0 items by design (no bypass for that param, unlike `region`). Full detail + 2 new follow-up todos in
       [issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md](issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md).
 - [x] ✅ [INFRA] P0. Add a SIGTERM handler to the UTL heartbeat daemon — unified-trading-library@04c72ef5
       ([`lifecycle/daemon.py`](../../unified-trading-library/unified_trading_library/lifecycle/daemon.py),
       `HeartbeatDaemon`) that, on SIGTERM, calls `store.complete(self.entry)` (status=failed + exit_code set) within the
       SPOT ~30s preemption grace, then stops the daemon. Idempotent — safe if `complete()` was already called. This
-      archives preempted backfill VMs at the source instead of leaving `active/` ghosts.
+      archives preempted backfill VMs at the source instead of leaving `archive/2026_08/` ghosts.
 - [x] ✅ [REVIEW] P0. Unit tests: (a) the reaper tick calls `reap_stale` with the running set and swallows a raised
       reaper error without breaking the loop; (b) a SIGTERM during a running daemon archives the entry (status=failed)
       rather than leaving it `running`. Run `bash scripts/quality-gates.sh` green in BOTH deployment-api and
@@ -123,13 +124,13 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       shipped and archived 2026-07-15, and its own Progress Log says "Handoff: P2 + P4 both flipped `status: active`" —
       confirming P1→P2→P3→P4 all progressed. This checklist item's checkbox just never caught up.
 
-- [x] ✅ [BACKEND] P1. **Root-cause + fix why the reaper isn't actually draining `active/` toward the live-VM count** —
-      per the 2026-07-24 [REVIEW] finding, a 30-entry random sample of already-self-classified-`stale` entries remained
-      unreaped; Cloud Run logs show the reaper tick's `run_in_executor` call repeatedly interrupted by `CancelledError`
-      during container shutdown. **Already root-caused, fixed, deployed, and convergence-verified live on 2026-07-25
-      (slot 5) — this checkbox simply never caught up** (same false-unchecked pattern as the sibling item above). Full
-      multi-day investigation chased several red herrings (gunicorn wrong-file leader-election bug, `CancelledError`
-      grace-period, CPU-throttling/stdout-silence) before landing the real bug:
+- [x] ✅ [BACKEND] P1. **Root-cause + fix why the reaper isn't actually draining `archive/2026_08/` toward the live-VM
+      count** — per the 2026-07-24 [REVIEW] finding, a 30-entry random sample of already-self-classified-`stale` entries
+      remained unreaped; Cloud Run logs show the reaper tick's `run_in_executor` call repeatedly interrupted by
+      `CancelledError` during container shutdown. **Already root-caused, fixed, deployed, and convergence-verified live
+      on 2026-07-25 (slot 5) — this checkbox simply never caught up** (same false-unchecked pattern as the sibling item
+      above). Full multi-day investigation chased several red herrings (gunicorn wrong-file leader-election bug,
+      `CancelledError` grace-period, CPU-throttling/stdout-silence) before landing the real bug:
       `DeploymentsRegistry._read_true_exit_code`'s `except FileNotFoundError` was written against the
       `InMemoryStorageClient` test fake, but the REAL storage client lets `google.api_core.exceptions.NotFound`
       propagate raw on a 404 — every VM whose `EXIT_STATUS` blob was missing crashed the ENTIRE `reap_stale()` batch on
@@ -137,12 +138,12 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       (unified-trading-library, LDR `2aa25c82`) + a Cloud Scheduler-triggered synchronous reap-tick endpoint added
       (`deployment-api`, `POST /api/internal/reap-tick`, OIDC-verified, `deployment_api/routes/_reap_scheduler.py`) per
       operator ruling on `BLK-d5db60a5` (Option B — sidesteps Cloud Run CPU-throttling starving the background asyncio
-      loop, at zero extra always-on cost vs `--no-cpu-throttling`). Live convergence measured 2026-07-25: `active/`
-      406→4 vs ~9 running VMs. **Re-verified fresh this session (2026-07-28, slot 8)**: the fix code + scheduler route
-      are present in the current tree; the Cloud Scheduler job `deployment-registry-reap-tick` (`asia-northeast1`,
-      `*/10 * * * *`) is `state: ENABLED` with a clean (empty) `status` on its most recent attempt
-      (`lastAttemptTime: 2026-07-28T14:20:00Z`); `active/` object count = **31** vs **33** currently-running GCE VMs —
-      same order of magnitude, holding the convergence 3 days later. Full root-cause writeup + evidence chain:
+      loop, at zero extra always-on cost vs `--no-cpu-throttling`). Live convergence measured 2026-07-25:
+      `archive/2026_08/` 406→4 vs ~9 running VMs. **Re-verified fresh this session (2026-07-28, slot 8)**: the fix
+      code + scheduler route are present in the current tree; the Cloud Scheduler job `deployment-registry-reap-tick`
+      (`asia-northeast1`, `*/10 * * * *`) is `state: ENABLED` with a clean (empty) `status` on its most recent attempt
+      (`lastAttemptTime: 2026-07-28T14:20:00Z`); `archive/2026_08/` object count = **31** vs **33** currently-running
+      GCE VMs — same order of magnitude, holding the convergence 3 days later. Full root-cause writeup + evidence chain:
       `/plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`.
 
 ## Folded-in scope 2026-07-17 (registry-fork discovery — the REAL dual-write blocker)
@@ -316,9 +317,10 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 
 ## Success criteria
 
-- prod Deployments tab (deployed API) returns the live fleet within 45s; `active/` object count ≈ running-VM count.
-- SPOT-preempted backfill VMs archive themselves on SIGTERM (verified by test), so `active/` no longer accumulates
-  ghosts between reaper ticks.
+- prod Deployments tab (deployed API) returns the live fleet within 45s; `archive/2026_08/` object count ≈ running-VM
+  count.
+- SPOT-preempted backfill VMs archive themselves on SIGTERM (verified by test), so `archive/2026_08/` no longer
+  accumulates ghosts between reaper ticks.
 - The `/deployments` inline Resources column shows real cpu/mem/disk% for at least one live VM — not mock data, not just
   the detail popover.
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
@@ -326,10 +328,11 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 ## Progress Log
 
 - **2026-07-28 (slot 8, backend_engineer) — [BACKEND] P1 "Root-cause + fix why the reaper isn't actually draining
-  `active/`" — CHECKBOX FLIP ONLY, no new code needed.** This todo was dispatched to me as an open root-cause task, but
-  the referenced issue doc (`/plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`)
-  shows the root cause was already found, fixed, deployed, and convergence-verified live on 2026-07-25T18:50Z (slot 5) —
-  a real exception-type bug (`_read_true_exit_code`'s `except FileNotFoundError` never catching the real client's
+  `archive/2026_08/`" — CHECKBOX FLIP ONLY, no new code needed.** This todo was dispatched to me as an open root-cause
+  task, but the referenced issue doc
+  (`/plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`) shows the root cause was
+  already found, fixed, deployed, and convergence-verified live on 2026-07-25T18:50Z (slot 5) — a real exception-type
+  bug (`_read_true_exit_code`'s `except FileNotFoundError` never catching the real client's
   `google.api_core.exceptions.NotFound`, silently crashing every `reap_stale()` batch on its first bad entry), NOT the
   `CancelledError`/CPU-throttling theories chased earlier in the same doc. The plan's own checkbox here just never
   caught up to that closure — same false-unchecked pattern already noted for the sibling `[INFRA] P0` item just above
@@ -576,17 +579,17 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 
 - **2026-07-24 (slot 2, review) — [REVIEW] P0 "verify the drain end-to-end" — PARTIAL PASS, findings filed.** Verified
   live against the deployed `uts-shared-deployment-api-00268-d2l` (image `deployment-api:e476c73`, confirmed a
-  descendant of `8660e9e`). **Good news — the core prod-outage bug is fixed**: `active/` object count 3,304 (2026-07-14
-  baseline) → **404, re-measured 403** today; `GET /api/deployments/inventory` (no `status` filter — the real query
-  shape a UI sends) → HTTP 200 in 0.4–1.0s warm, `total=2518`, `vm_count=2228`, 127 `running` items (sample:
+  descendant of `8660e9e`). **Good news — the core prod-outage bug is fixed**: `archive/2026_08/` object count 3,304
+  (2026-07-14 baseline) → **404, re-measured 403** today; `GET /api/deployments/inventory` (no `status` filter — the
+  real query shape a UI sends) → HTTP 200 in 0.4–1.0s warm, `total=2518`, `vm_count=2228`, 127 `running` items (sample:
   `mtds-dex-pools-backfill` running, heartbeat_age=22s). **Two residual gaps found, NOT part of the original P0 scope,
   filed as new todos + full detail in
   [issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md](issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md):**
-  (1) the reaper isn't actually draining `active/` toward the live-VM count — a 30-entry random sample were ALL already
-  self-classified `status="stale"` by the inventory endpoint (heartbeat 3-7 days old) yet remain unreaped; Cloud Run
-  logs show the reaper tick's `run_in_executor` call being repeatedly interrupted by `CancelledError` during container
-  shutdown, and neither the reaper's own "archived N" log line nor even the one-time background-task-started log line
-  appears anywhere in 7-30 days of logs — root cause not yet diagnosed. (2) `_load_inventory`'s COLD path
+  (1) the reaper isn't actually draining `archive/2026_08/` toward the live-VM count — a 30-entry random sample were ALL
+  already self-classified `status="stale"` by the inventory endpoint (heartbeat 3-7 days old) yet remain unreaped; Cloud
+  Run logs show the reaper tick's `run_in_executor` call being repeatedly interrupted by `CancelledError` during
+  container shutdown, and neither the reaper's own "archived N" log line nor even the one-time background-task-started
+  log line appears anywhere in 7-30 days of logs — root cause not yet diagnosed. (2) `_load_inventory`'s COLD path
   (`deployments_inventory.py:2040-2073`) computes synchronously under a lock with NO timeout; since the cache is
   in-process (not shared across Cloud Run's `minScale=1`/`maxScale=20` instances), a freshly-scaled instance pays this
   cost on its first request — one such cold "no filter" call measured **>55s** (didn't reproduce on 3 follow-up
@@ -595,8 +598,8 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
   the deployment-ui already deliberately omits the param instead of sending it literally (`Deployments.tsx:1412`,
   `deploymentApi.ts:654`), so a reviewer following the plan text verbatim gets a false-empty result. **Flipped the
   `[REVIEW]` checkbox above** — the verification itself was performed and reported honestly per its literal ask, but the
-  plan's own Success Criteria ("active/ object count ≈ running-VM count") is NOT yet met — recommend re-verifying once
-  the two new BACKEND todos in the issue doc ship (tracked as a new `[REVIEW]` P1 todo there).
+  plan's own Success Criteria ("archive/2026_08/ object count ≈ running-VM count") is NOT yet met — recommend
+  re-verifying once the two new BACKEND todos in the issue doc ship (tracked as a new `[REVIEW]` P1 todo there).
 
 - **2026-07-24 (slot 3, .tabs/3 worktree) — flipped back to AO.** Operator explicitly instructed reallocation after
   reviewing the remaining 9 todos: `assigned_vm: NA`→`planning`, `execution_scope: local-only`→`orchestrator-agent`
@@ -700,9 +703,9 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
     that deploy themselves rather than have it done in this session. **Todo 3 (deployed-API verify) and the back half of
     todo 6 (handoff to Phase 1) are therefore left UNCHECKED below, honestly** — activating Phase 1 before the prod fix
     is verified live would repeat the exact premature-activation mistake this plan's chain was redesigned to avoid (see
-    the `gate_on_depends`-leak correction on the master plan). Once the operator deploys and the before/after `active/`
-    count + inventory-endpoint check are recorded, todo 3 and the handoff half of todo 6 can close and Phase 1 can
-    activate.
+    the `gate_on_depends`-leak correction on the master plan). Once the operator deploys and the before/after
+    `archive/2026_08/` count + inventory-endpoint check are recorded, todo 3 and the handoff half of todo 6 can close
+    and Phase 1 can activate.
 
 - **2026-07-14 (slot 1, review)** — Attempted the deployed-API end-to-end verification for the `[REVIEW]` P0 todo above.
   **BLOCKED — the fix has not reached the deployed instance yet**, so the "after" half of the check cannot be done
@@ -758,8 +761,8 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
     `_archive_reaped_entry()` to bring it under the limit; behavior unchanged, confirmed by the existing 33 (+2 new)
     unit tests in `test_deployment_registry.py`.
   - Added `test_reap_stale_max_reap_caps_archives_per_call` (unified-trading-library) covering the new cap: archives
-    exactly `max_reap` per call, leaves the remainder in `active/`, and a follow-up call drains the rest — this is the
-    only new test added; it covers the `max_reap` code path only, NOT the full reaper-tick / SIGTERM coverage the
+    exactly `max_reap` per call, leaves the remainder in `archive/2026_08/`, and a follow-up call drains the rest — this
+    is the only new test added; it covers the `max_reap` code path only, NOT the full reaper-tick / SIGTERM coverage the
     [REVIEW] todo below still needs.
   - QG: both repos ran `bash scripts/quality-gates.sh --no-fix` full-green against their committed HEAD before shipping
     (deployment-api 139s/128s, unified-trading-library 174s). Shipped via `quickmerge --agent --files`, both landed on
@@ -768,7 +771,7 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
   - **Handoff for [REVIEW]/[INFRA] todos below**: the reaper tick + `reap_stale(max_reap=...)` are shipped and unit-
     tested at the `max_reap` level; NOT YET done: (a) the reaper-tick-level unit test asserting it swallows a raised
     reaper error without breaking the loop, (b) the SIGTERM daemon handler + its test, (c) the deployed-API before/
-    after `active/` count verification, (d) the Phase-1 draft→active handoff.
+    after `archive/2026_08/` count verification, (d) the Phase-1 draft→active handoff.
 
 ## Codex SSOTs
 

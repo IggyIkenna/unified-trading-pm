@@ -112,8 +112,8 @@ context_scope:
       corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
       commit. **DONE 2026-08-06 (slot-4)**: all 6 ritual steps complete — (1) deferred items re-verified by Todo 2 (none
       silently vanished); (2) archive banner added + `status: complete`; (3) codex-alignment: no new durable contracts;
-      (4) CLAUDE.md: nothing new; (5) all 34 path referrers updated from `plans/active/` → `plans/archive/2026_07/`; (6)
-      `locked_by` was empty, confirmed; `git mv` to
+      (4) CLAUDE.md: nothing new; (5) all 34 path referrers updated from `plans/archive/2026_08/` →
+      `plans/archive/2026_07/`; (6) `locked_by` was empty, confirmed; `git mv` to
       `plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`. Note: finalize doc itself not archived
       alongside (Todo 1 still open).
 
@@ -177,6 +177,6 @@ context_scope:
 - **2026-08-06 (slot-4, data_engineering) — Todo 4 [DOC] P1 archive DONE**: 6-step ritual complete for
   `defi_satellite_ao_dispatch_batch3_2026_07_26.md`. All 13 todos verified `[x]`, locked_by empty. Deferred items
   confirmed by Todo 2 (none silently vanished). Codex-alignment: no new durable contracts. 34 path referrers updated
-  from `plans/active/` → `plans/archive/2026_07/` across 20 files. INDEX.md batch3 entry removed. File moved via
-  `git mv` to `plans/archive/2026_07/`. Note: finalize plan NOT archived alongside — Todo 1 (source-doc reconciliation)
-  still open; finalize will archive once Todo 1 ships.
+  from `plans/archive/2026_08/` → `plans/archive/2026_07/` across 20 files. INDEX.md batch3 entry removed. File moved
+  via `git mv` to `plans/archive/2026_07/`. Note: finalize plan NOT archived alongside — Todo 1 (source-doc
+  reconciliation) still open; finalize will archive once Todo 1 ships.

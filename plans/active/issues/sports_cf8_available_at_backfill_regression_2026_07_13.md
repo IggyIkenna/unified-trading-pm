@@ -26,6 +26,7 @@ related:
     plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-13
 author: unknown

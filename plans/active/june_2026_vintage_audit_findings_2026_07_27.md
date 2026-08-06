@@ -110,17 +110,17 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       checked** — its own "already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md`" claim contradicts that
       doc's own Progress Log ("Todos 1+2 above... remain open") and `batch1`'s (status: active) identical todo is still
       genuinely unchecked with zero completion evidence. Reverted that checkbox to `[ ]`, added a Progress Log
-      correction. Doc stays open in `plans/active/issues/` — 1 genuine open item remains, already homed at `batch1`'s
+      correction. Doc stays open in `plans/archive/issues/` — 1 genuine open item remains, already homed at `batch1`'s
       own todo. **Flagging per findings-triage HARD RULE**: this is exactly the "checked-done-but-actually-not" trap,
       the inverse of the one this §2 item's own dispatch text described.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
-                                              completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
-                                              `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
-                                              todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
-                                              (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
-                                              that the 2026-07-28 completion superseded — it is no longer true"). Now at
-                                              `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+                                                  completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+                                                  `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+                                                  todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+                                                  (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+                                                  that the 2026-07-28 completion superseded — it is no longer true"). Now at
+                                                  `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
 
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
@@ -156,7 +156,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       real** (`alerting-service@ceed827` confirmed ancestor of `main`, `deployment-service@d2ddb23`), but the
       "currently-running revision is built from that image" claim is NOT independently confirmed (no live
       `gcloud run     services describe` check run this session). Flipped Gap 1 only; left Gaps 2-4 open with corrected
-      annotations. Doc stays open in `plans/active/issues/`. **Flagging per findings-triage HARD RULE.**
+      annotations. Doc stays open in `plans/archive/issues/`. **Flagging per findings-triage HARD RULE.**
 - [x] ✅ [PLAN] P2. `plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@1cfe7ad15. 5th checkbox flipped citing verified evidence: build `2ea305e9` (full
       id `2ea305e9-483c-4665-a78d-93d01ef8295d`) confirmed SUCCESS via `gcloud builds list`; alerting-service@e111843
@@ -175,12 +175,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       deployment-service@b5246a6/b04cfcc) confirmed present on both `origin/main` and `origin/live-defi-rollout` via
       `git merge-base --is-ancestor`. Absorption chain confirmed: both `mvp_backfill_cefi_tick_v10_2026_06_27.md` and
       `cefi_completion_program_2026_07_15.md` are themselves archived/complete.
-      **`cefi_hl_aster_batch_data_gaps_2026_06_22.md` checked** (lives at `plans/active/issues/`, not `plans/active/`) —
-      the "2-day live-health check in progress" note is NOT tracked there (that doc is batch-backfill-gap scope, a
-      different surface) and no `mtds-live-*` VM is currently running (`gcloud compute instances list` — zero matches).
-      Treated as a stale, time-bound check from the original 2026-06-21/22 session (superseded by the later full
-      CEX-live-provenance fix in §6 of the same doc) — noted as a known, accepted gap in the archive banner, not
-      re-opened. Now at `plans/archive/issues/`.
+      **`cefi_hl_aster_batch_data_gaps_2026_06_22.md` checked** (lives at `plans/archive/issues/`, not
+      `plans/archive/2026_08/`) — the "2-day live-health check in progress" note is NOT tracked there (that doc is
+      batch-backfill-gap scope, a different surface) and no `mtds-live-*` VM is currently running
+      (`gcloud compute instances list` — zero matches). Treated as a stale, time-bound check from the original
+      2026-06-21/22 session (superseded by the later full CEX-live-provenance fix in §6 of the same doc) — noted as a
+      known, accepted gap in the archive banner, not re-opened. Now at `plans/archive/issues/`.
 - [x] ✅ [PLAN] P2 (superseded). `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@1cfe7ad15. `workspace-constraints.toml` confirmed `aiohttp>=3.14.1,<4.0.0`. **Big
       finding**: the successor `execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md` was NOT just
@@ -744,12 +744,13 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 23. plan_reconciler INDEX.md — **KEEP + auto-generate**: extend `regenerate_active_plan_inventory.py` (or a sibling
     script) to render a domain-grouped index from each plan's own `summary:`/`asset_group:` frontmatter (every plan
     already carries `summary:`) — fixes the drift at the root while keeping the narrative-context value the pure
-    checkbox dashboard doesn't have. Add a CLAUDE.md doc-retrieval rule to read it before scanning `plans/active/` for a
-    domain. — **DONE 2026-07-28, REAL AUTOMATION BUILT (not just a todo)** — unified-trading-pm@cd5c0bde1: new
-    `scripts/plans/regenerate_active_plan_index.py` mirrors `regenerate_active_plan_inventory.py`'s pattern, reads every
-    `plans/active/*.md` plan's `asset_group:`/`summary:` frontmatter, regenerates a domain-grouped
-    `<!-- AUTO-INDEX-START/END -->` block in `plans/active/INDEX.md`, wired into `run_hygiene_sweep.sh`. Regenerated
-    live: 263 plans across all 10 declared domains, 0 uncategorized, confirmed idempotent. Both findings resolved;
+    checkbox dashboard doesn't have. Add a CLAUDE.md doc-retrieval rule to read it before scanning
+    `plans/archive/2026_08/` for a domain. — **DONE 2026-07-28, REAL AUTOMATION BUILT (not just a todo)** —
+    unified-trading-pm@cd5c0bde1: new `scripts/plans/regenerate_active_plan_index.py` mirrors
+    `regenerate_active_plan_inventory.py`'s pattern, reads every `plans/archive/2026_08/*.md` plan's
+    `asset_group:`/`summary:` frontmatter, regenerates a domain-grouped `<!-- AUTO-INDEX-START/END -->` block in
+    `plans/active/INDEX.md`, wired into `run_hygiene_sweep.sh`. Regenerated live: 263 plans across all 10 declared
+    domains, 0 uncategorized, confirmed idempotent. Both findings resolved;
     `plan_reconciler_doc_hygiene_findings_2026_06_17.md` archived to `plans/archive/issues/`.
     **`cursor-configs/CLAUDE.md` doc-retrieval note**: NOT added — checked, `cursor-configs/CLAUDE.md` measures 40,897
     bytes against the QG-enforced 40 KiB (40,960-byte) hard cap, only 63 bytes of headroom, not enough for even a short

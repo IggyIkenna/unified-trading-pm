@@ -130,7 +130,7 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
       regression tests (`tests/unit/test_kalshi_cf11_fetch_failure.py`,
       `tests/unit/test_polymarket_cf11_fetch_failure.py`) that predate + postdate this pass. - QG evidence: did NOT
       re-run `quality-gates.sh` locally (host was at load 56/16 cores, 934Mi free RAM, 13Gi swap used at verification
-      time — re-running risked the same OOM class as `plans/active/issues/` host-overload incidents already on record).
+      time — re-running risked the same OOM class as `plans/archive/issues/` host-overload incidents already on record).
       Used CI instead: `market-tick-data-service`'s `quality-gates-v2` on `live-defi-rollout` is GREEN as of runs
       `30370413969`/`30364200148`/`30359839136` (2026-07-28, all `completed       success`), which post-date the
       adapters' most recent commits (`b7272103` 2026-07-27, `84154e1a` 2026-07-28) — satisfies the Gate's "QG green"

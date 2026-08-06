@@ -35,6 +35,7 @@ related:
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

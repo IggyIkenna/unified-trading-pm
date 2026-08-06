@@ -57,6 +57,7 @@ context_scope:
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     scripts/deploy/trading-kill-switch.sh,
     scripts/cicd/reconcile_release_tags.py,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 resolved_by:
 depends_on: []

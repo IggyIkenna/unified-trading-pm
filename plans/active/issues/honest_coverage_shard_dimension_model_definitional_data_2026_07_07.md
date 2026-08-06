@@ -25,6 +25,7 @@ related:
     ../instruments_completion_tracker_2026_07_06.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-07
 author: unknown

@@ -27,6 +27,7 @@ related:
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-17"

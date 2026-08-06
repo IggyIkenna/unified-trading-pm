@@ -49,6 +49,7 @@ related:
     /plans/active/issues/main_backmerge_conflict_wall_digest_churn_2026_08_05.md,
     /plans/active/issues/qg_v2_digest_refresh_fastpath_gap_2026_08_05.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-05
 author: unknown

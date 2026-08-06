@@ -27,6 +27,7 @@ related:
     plans/active/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md,
     plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-05
 author: unknown

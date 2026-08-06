@@ -195,8 +195,8 @@ Open questions for the owner:
 ## Composes with
 
 - Parent validation: `/plans/archive/2026_07/test_fleet_image_builds_from_current_code_2026_06_17.md` (findings log).
-  (Was `plans/active/…` — repointed 2026-07-26, `/plan-reconcile` infra shard: the parent plan was archived; verified
-  `ls plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` → no such file, and
+  (Was `plans/archive/2026_08/…` — repointed 2026-07-26, `/plan-reconcile` infra shard: the parent plan was archived;
+  verified `ls plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` → no such file, and
   `find plans -name 'test_fleet_image_builds*'` → the single hit under `plans/archive/2026_07/`.)
 - Tier/import architecture (no service↔service imports): `/codex/04-architecture/tier-and-import-architecture.md`.
 - Canonical service cloudbuild template + STEP 5.22: `unified-trading-pm/scripts/...` / service `cloudbuild.yaml`.

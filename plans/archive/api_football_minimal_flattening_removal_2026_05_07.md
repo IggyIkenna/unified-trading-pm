@@ -169,7 +169,7 @@ rows survive until features-sports needs them. Decide post-Phase-3.
 
 **unified-trading-pm**:
 
-- This plan in `plans/ai/` until user-approved → `plans/active/`.
+- This plan in `plans/ai/` until user-approved → `plans/archive/2026_08/`.
 - Codex doc `/codex/02-data/sports-data-source-coverage-matrix.md` — note the per-data_type column-count expectation so
   future audits catch a regression.
 

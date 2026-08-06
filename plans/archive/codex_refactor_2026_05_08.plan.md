@@ -360,15 +360,15 @@ drift.
 
   **Acceptance**: workspace-wide grep `POST_PLAN_BANNER_2026_05_06` in codex/ returns zero hits — VERIFIED.
 
-### Phase B.2 — Plan filename convention sweep (.plan.md → .md in active/) — PARALLEL — P1 — SHIPPED 2026-05-08
+### Phase B.2 — Plan filename convention sweep (.plan.md → .md in archive/2026_08/) — PARALLEL — P1 — SHIPPED 2026-05-08
 
-- [x] [SCRIPT] P1. CLAUDE.md "Plan Filename Convention" says `plans/active/` uses `.md`, `plans/archive/` uses
-      `.plan.md`. Many codex docs reference `plans/active/<x>.plan.md` (legacy convention). **SHIPPED PM@d9d023df** —
-      124 files changed, 342 rewrites total (per-directory: 14-playbooks 131, 02-data 45, 05-infrastructure 41,
-      09-strategy 39, root 32, 06-coding-standards 20, 04-architecture 19, 10-audit 9, 08-workflows 4,
-      11-project-management 2). Renames performed: `plans/active/<slug>.plan.md` → `plans/active/<slug>.md` (or
-      `plans/epics/<slug>.md` / `plans/epics/<slug>.epic.md` / `plans/archive/<slug>.plan.md` /
-      `plans/ai/<slug>.plan.md` based on actual file location). Plus 4 stale-date refs
+- [x] [SCRIPT] P1. CLAUDE.md "Plan Filename Convention" says `plans/archive/2026_08/` uses `.md`, `plans/archive/` uses
+      `.plan.md`. Many codex docs reference `plans/archive/2026_08/<x>.plan.md` (legacy convention). **SHIPPED
+      PM@d9d023df** — 124 files changed, 342 rewrites total (per-directory: 14-playbooks 131, 02-data 45,
+      05-infrastructure 41, 09-strategy 39, root 32, 06-coding-standards 20, 04-architecture 19, 10-audit 9,
+      08-workflows 4, 11-project-management 2). Renames performed: `plans/archive/2026_08/<slug>.plan.md` →
+      `plans/archive/2026_08/<slug>.md` (or `plans/epics/<slug>.md` / `plans/epics/<slug>.epic.md` /
+      `plans/archive/<slug>.plan.md` / `plans/ai/<slug>.plan.md` based on actual file location). Plus 4 stale-date refs
       (`aws_migration_defi_first_2026_05_06` → `_2026_05_07`) + 5 wildcard/template refs updated to new convention.
 
   **Files updated** (sample from audit; full sweep done):
@@ -382,13 +382,14 @@ drift.
         updated.
 
   **Implementation**:
-  - [x] Workspace-wide grep `plans/active/.*\.plan\.md` → flagged every hit.
+  - [x] Workspace-wide grep `plans/archive/2026_08/.*\.plan\.md` → flagged every hit.
   - [x] For each: resolved target file (active → `.md`, epics → `.md`/`.epic.md`, archive → `.plan.md` w/ path prefix
         rewrite, ai → `.plan.md` w/ path prefix rewrite). Unresolved (stale-date) refs were rewritten to the renamed
         plan path.
   - [x] Single sweep commit (124 files in one logical commit).
 
-  **Acceptance**: workspace-wide grep `plans/active/.*\.plan\.md` in codex/ returns 0 hits (verified post-sweep).
+  **Acceptance**: workspace-wide grep `plans/archive/2026_08/.*\.plan\.md` in codex/ returns 0 hits (verified
+  post-sweep).
 
 ### Phase B.3 — Stale repo / provider reference sweep — PARALLEL — P1 — SHIPPED 2026-05-08
 
@@ -646,8 +647,8 @@ drift.
 
   **Acceptance**: only 3 sports docs in `02-data/` (verified `ls codex/02-data/sports-*.md` returns
   `sports-adapter-dependency-order.md`, `sports-data-source-coverage-matrix.md`, `sports-scheduling-and-sharding.md`);
-  workspace-wide grep `sports-data-migration\|sports-schema-paths` returns zero hits in `codex/` or `plans/active/`
-  (excluding this plan and the auto-generated scope-manifest).
+  workspace-wide grep `sports-data-migration\|sports-schema-paths` returns zero hits in `codex/` or
+  `plans/archive/2026_08/` (excluding this plan and the auto-generated scope-manifest).
 
 ### Phase D.3 — Multi-axis correction body-text reconciliation — SEQUENTIAL after A.1, A.2 — P0
 
@@ -659,21 +660,21 @@ drift.
       where the deepest partition is `league=BRASILEIRAO/`, with no `fixture=...` subdirectory anywhere.
 
       **No data migration needed.** Disk shape already matches banner. This phase
-                                                                                  is a doc-only sweep removing stale body text in 02-data.
+                                                                                      is a doc-only sweep removing stale body text in 02-data.
 
-                                                                                  **SHIPPED 2026-05-08** — body-text sweep landed (3 of 4 swept files; sports-scheduling-and-sharding.md was already
-                                                                                  cleaned up at HEAD by parallel agent earlier in the session). My intended commit was absorbed by parallel agent's
-                                                                                  commit `c2bc6cd5 docs(codex): Phase B.3 — workspace-wide stale repo/provider reference sweep` — same hunks,
-                                                                                  different commit message (foot-gun #3 incident: parallel agent's prek/prettier hook ran during my commit cycle and
-                                                                                  bundled my staged D.3 hunks into their B.3 commit). Verify via
-                                                                                  `git show c2bc6cd5 -- /codex/02-data/availability-manifest-and-data-status.md /codex/02-data/per-category-bucket-layouts.md /codex/02-data/prediction-schema-paths.md`.
-                                                                                  Acceptance grep on the 4 swept files returns zero true-positive stale shard-axis claims (remaining hits are
-                                                                                  corrective body text explicitly stating "row-level column INSIDE parquet, NOT a hive-partition shard axis").
-                                                                                  CLAUDE.md "Per-asset-group shard-key matrix" remains workspace SSOT. Spillover stale claims in
-                                                                                  `04-architecture/shard-level-failure-isolation.md` / `05-infrastructure/deployment-clusters-live-vs-batch.md` /
-                                                                                  `02-data/shard-granularity-cefi.md` / `02-data/partitioning.md` / `POST_PLAN_REALITY_2026_05_06.md` are out of D.3
-                                                                                  scope (those docs already carry the multi-axis-correction banner; cleanup deferred to adjacent codex_refactor
-                                                                                  phases or follow-up).
+                                                                                      **SHIPPED 2026-05-08** — body-text sweep landed (3 of 4 swept files; sports-scheduling-and-sharding.md was already
+                                                                                      cleaned up at HEAD by parallel agent earlier in the session). My intended commit was absorbed by parallel agent's
+                                                                                      commit `c2bc6cd5 docs(codex): Phase B.3 — workspace-wide stale repo/provider reference sweep` — same hunks,
+                                                                                      different commit message (foot-gun #3 incident: parallel agent's prek/prettier hook ran during my commit cycle and
+                                                                                      bundled my staged D.3 hunks into their B.3 commit). Verify via
+                                                                                      `git show c2bc6cd5 -- /codex/02-data/availability-manifest-and-data-status.md /codex/02-data/per-category-bucket-layouts.md /codex/02-data/prediction-schema-paths.md`.
+                                                                                      Acceptance grep on the 4 swept files returns zero true-positive stale shard-axis claims (remaining hits are
+                                                                                      corrective body text explicitly stating "row-level column INSIDE parquet, NOT a hive-partition shard axis").
+                                                                                      CLAUDE.md "Per-asset-group shard-key matrix" remains workspace SSOT. Spillover stale claims in
+                                                                                      `04-architecture/shard-level-failure-isolation.md` / `05-infrastructure/deployment-clusters-live-vs-batch.md` /
+                                                                                      `02-data/shard-granularity-cefi.md` / `02-data/partitioning.md` / `POST_PLAN_REALITY_2026_05_06.md` are out of D.3
+                                                                                      scope (those docs already carry the multi-axis-correction banner; cleanup deferred to adjacent codex_refactor
+                                                                                      phases or follow-up).
 
   **Files to sweep**:
   - [x] `02-data/sports-scheduling-and-sharding.md` § 1 — already cleaned up at HEAD before D.3 started (parallel agent
@@ -700,7 +701,7 @@ drift.
       stub) into `custody-providers.md` (193L, protocol SSOT) as per-provider §s. **DONE 2026-05-08 (PM@c4330d9d)** —
       custody-providers.md grew to 486L with §1 protocol + §2.1 Mock / §2.2 LocalKey / §2.3 Copper / §2.4 CEFFU
       (PLANNED) + §3 coverage matrix + §4 mode matrix. 7 cross-refs rewritten across codex/04-architecture/ +
-      codex/10-audit/ + plans/active/.
+      codex/10-audit/ + plans/archive/2026_08/.
 
   **Target shape** (`custody-providers.md`):
   - §1 Overview / pluggable interface
@@ -777,8 +778,8 @@ drift.
       batch-live-architecture.md created at 460L with all 10 sections (Principle / 4 seams / anti-drift guards / service
       audit matrix / matching engine + book matchers / strategy alpha vs execution alpha / sports-specific notes /
       anti-patterns fixed / instruments-live exception / references). 23 cross-refs rewritten across codex/02-data/ +
-      codex/04-architecture/ + codex/05-infrastructure/ + codex/10-audit/ + codex/14-playbooks/ + plans/active/ +
-      plans/epics/.
+      codex/04-architecture/ + codex/05-infrastructure/ + codex/10-audit/ + codex/14-playbooks/ +
+      plans/archive/2026_08/ + plans/epics/.
 
   **Target shape** (`04-architecture/batch-live-architecture.md`):
   - §1 Principle (from pipeline)
@@ -885,7 +886,8 @@ drift.
   - **Commit 1** (PM@14a3ab5f): merged TIER-ARCHITECTURE + PROTOCOL-INJECTION → `tier-and-import-architecture.md` (380
     lines; rename from TIER-ARCHITECTURE.md preserving 58% similarity history; PROTOCOL-INJECTION folded in as Part 2).
     Deleted both sources. 12 cross-doc rewrites (codex/00-SSOT-INDEX, codex/13-codex-governance, 06-coding-standards/×2,
-    04-architecture/×4, 05-infrastructure/unified-libraries/×2, 08-workflows/×1, plans/active/×1, root TOPOLOGY-DAG).
+    04-architecture/×4, 05-infrastructure/unified-libraries/×2, 08-workflows/×1, plans/archive/2026_08/×1, root
+    TOPOLOGY-DAG).
   - **Commit 2** (PM@eed59a97): renamed `service-family-scope.md` → `commercial-service-families.md` (179 lines, 88%
     similarity rename). Top-of-file note disambiguates from architecture-tier scoping. 7 cross-doc rewrites.
   - **Commit 3** (PM@11fe6a37): deleted RUNTIME_TOPOLOGY_DECISIONS, deployment-topology-diagrams, pipeline-service-
@@ -902,9 +904,9 @@ drift.
 
   **Blast radius shipped**: 35 cross-doc rewrites across codex/ (00-SSOT-INDEX, 02-data, 04-architecture,
   05-infrastructure/unified-libraries, 06-coding-standards, 08-workflows, 09-strategy/architecture-v2,
-  13-codex-governance, 14-customer-journeys/demo-ops) + plans/active/ (codex_refactor, deployment_ui_lifecycle_tabs,
-  gcs_migration_bundle_pipeline_mode, master_to_live_defi, live_pipeline_mtds_mdps_features) + plans/epics/
-  (instruments_live_master) + root TOPOLOGY-DAG.md.
+  13-codex-governance, 14-customer-journeys/demo-ops) + plans/archive/2026_08/ (codex_refactor,
+  deployment_ui_lifecycle_tabs, gcs_migration_bundle_pipeline_mode, master_to_live_defi,
+  live_pipeline_mtds_mdps_features) + plans/epics/ (instruments_live_master) + root TOPOLOGY-DAG.md.
 
   **Foot-gun #1 incident note**: commit 1 (PM@14a3ab5f) bundled 15 foreign files from a parallel agent's Phase E.2
   in-flight 14-playbooks → 14-customer-journeys + 16-strategy-playbooks rename. Content of MY changes is correct per the
@@ -970,7 +972,7 @@ drift.
       (table headers `Category` → `Asset-group`; legacy-vs-canonical hive-key clarifications added inline; legacy
       `category=` preservation note retained per workspace asset-group-vocabulary rule). Workspace-wide cross-doc
       rewrites: 21 active doc / plan files updated (15 codex docs across 02-data/, 04-architecture/,
-      06-coding-standards/ + the POST_PLAN_REALITY scoreboard; 6 plan files in plans/active/ and plans/epics/).
+      06-coding-standards/ + the POST_PLAN_REALITY scoreboard; 6 plan files in plans/archive/2026_08/ and plans/epics/).
       `plans/active/codex_refactor` historical Phase E.4 references retained as audit trail; `plans/archive/`,
       `plans/ai/`, `plans/handover/` and the auto-generated `_generated/scope-manifest.json` left untouched per scope;
       `codex/15-runbooks/` and the `codex/16-strategy-playbooks/` move are foreign in-flight reorgs not in scope of this
@@ -1208,7 +1210,7 @@ commit; the plan-flip rides as a final separate commit.
       firebase-local rule today would hit a 404. Both targets verified on disk under `14-customer-journeys/`. Shipped:
       PM@84b6a20a (`docs(claude): Phase H.1 — fix 14-playbooks/ stale refs in CLAUDE.md (lines 119 + 926)`).
 
-- [x] **H.2 [SCRIPT] P0** — Workspace-wide `14-playbooks/` link rewrite across `codex/`, `plans/active/`,
+- [x] **H.2 [SCRIPT] P0** — Workspace-wide `14-playbooks/` link rewrite across `codex/`, `plans/archive/2026_08/`,
       `plans/epics/`, `cursor-configs/`. Single Python regex pass with most-specific-first ordering: `alerting/` /
       `instruments-live/` / `smoke-testing-playbook.md` / `backfill-completion-playbook.md` → `15-runbooks/...`; `defi/`
       / `strategy/` / `ml/` / `infra-spec/` → `16-strategy-playbooks/...`; `cross-cutting/` →
@@ -1245,7 +1247,8 @@ commit; the plan-flip rides as a final separate commit.
 
 ### Phase H acceptance
 
-- ✅ `grep -rln '14-playbooks/' codex/ plans/active/ plans/epics/ cursor-configs/ 2>/dev/null | grep -v '\.zip$'`
+- ✅
+  `grep -rln '14-playbooks/' codex/ plans/archive/2026_08/ plans/epics/ cursor-configs/ 2>/dev/null | grep -v '\.zip$'`
   returns zero hits.
 - ✅ CLAUDE.md (workspace + per-repo via symlink) has zero stale `14-playbooks/` refs.
 - ✅ All 5 D.3 multi-axis residuals body-content aligned with their top-of-file banner SSOT.

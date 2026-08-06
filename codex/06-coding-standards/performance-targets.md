@@ -331,7 +331,7 @@ backfill running in parallel). This is the May-23 cutover-window binding constra
 - Re-runs Phase 5/6 synthetic benchmark matrix nightly.
 - Emits `stage_profile.parquet` to `gs://central-element-323112-benchmark-reports/`.
 - **Regression gate**: flag any stage where `wall_clock_seconds_p50` regresses >10% vs last known-good run.
-- Regression alert → open issue in `plans/active/issues/` + notify operator.
+- Regression alert → open issue in `plans/archive/issues/` + notify operator.
 
 **Gate enforcement**:
 

@@ -45,6 +45,7 @@ related:
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
     /plans/archive/issues/phantom_captures_cefi_2026_06_28.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-17
 author: unknown
@@ -447,7 +448,7 @@ pairs stay honest-unresolved (reported, never guessed).
       (`VENUE:TYPE:BASE-QUOTE[@MARKER].parquet`, comparing the `-`-stripped BASE-QUOTE to the wire ticker), replacing
       the hardcoded wire-only leaf-match at `_load_tardis_day`. **Chose FIX not DELETE**: the Delete-when
       (`master_to_live_defi_2026_05_23 Phase D complete — live dispersion archetype running ≥7 days`) is NOT satisfied
-      (that plan is still in `plans/active/`). Evidence: repo's own test file passes 12/12 incl. the new
+      (that plan is still in `plans/archive/2026_08/`). Evidence: repo's own test file passes 12/12 incl. the new
       `test_leaf_matches_asset_accepts_wire_and_canonical_stems` (wire + canonical + non-match cases); ruff green;
       `scripts/` excluded from basedpyright; full QG exit 0 (its lone failure is the pre-existing, unrelated
       `test_golden_pre_trade_check_phase0_risk_eval` risk-eval fixture — NOT this change). `trace_carry_staked_basis.py`
@@ -587,7 +588,7 @@ pairs stay honest-unresolved (reported, never guessed).
   rebuild + gate, Phase 0b write/reader-bridge ships, Phase C migration-script dry-runs, Phase A/B provenance + deploy
   characterization) EXTRACTED verbatim to
   `plans/archive/issues/cefi_residual_followups_after_honest_done_history_2026_07_25.md`** for
-  `plans/active/issues/*.md` 1000-line hard-cap compliance (was 1151 lines; pattern per
+  `plans/archive/issues/*.md` 1000-line hard-cap compliance (was 1151 lines; pattern per
   `plan_line_cap_remediation_2026_07_23.md` § FINAL RESOLUTION). The entry above (CUTOVER STAGED) is the most recent /
   current status and stays live here. **plan-reconcile contradiction check (2026-07-25)**: read the full
   Canonical-completeness program end-to-end looking for anything contradicting the "residual follow-ups" section's two

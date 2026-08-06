@@ -167,8 +167,8 @@ that verification is this todo's job.
   `_read_availability_index_slim` used before `unified-trading-library@65ae1e89`'s 2026-08-01 OOM fix) by calling
   `_read_consolidated_if_fresh` with the widened column list directly against the live bucket — it also succeeds cleanly
   (9,351,748 rows, ~7s, no memory issue at cefi's current scale) — ruling out the widening itself as the root cause of
-  THIS bug (it was a genuine, separate defect, but not this one). Grepped `plans/active/` + `plans/archive/issues/` for
-  anything already covering this code region and found
+  THIS bug (it was a genuine, separate defect, but not this one). Grepped `plans/archive/2026_08/` +
+  `plans/archive/issues/` for anything already covering this code region and found
   `read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md` (archived, RESOLVED via
   `unified-trading-library@0db19a72`, 2026-07-28) — filed the SAME day as this doc by a different session, hitting the
   identical code path (`_read_availability_index_slim`'s no-filters branch) via a different trigger (missing

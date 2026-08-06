@@ -68,7 +68,7 @@ context_scope:
       `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (Phase 1, all 3 todos only — Phases 2-5 stay
       open, `[OPERATOR]`-gated per that doc's own hard-ordering),
       `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (this doc is DELETED by batch7's todo 2,
-      not checkbox-flipped — confirm the `git rm` landed and the file is genuinely gone from `plans/active/issues/`, no
+      not checkbox-flipped — confirm the `git rm` landed and the file is genuinely gone from `plans/archive/issues/`, no
       reconciliation needed on a deleted file),
       `issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md` (the `[DIAG] P2` todo only — its
       `[DECISION] P2` `[OPERATOR]` todo stays open, unaffected). For each landed batch-7 todo, flip the corresponding

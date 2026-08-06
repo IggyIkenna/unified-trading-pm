@@ -103,9 +103,9 @@ drift_direction: advance-docs
 ## Phase 2 — Corpus-wide retag pass
 
 - [x] [SCRIPT] P2. Enumerated the full bare-`[cross-cutting]` population directly via `docspec.parse_frontmatter` (227
-      non-terminal-status docs across `plans/active/*.md` + `plans/active/issues/*.md` at run time — the corpus had
-      shrunk from the original 241 scoping estimate via other concurrent hygiene work). Cross-referenced against the
-      2026-07-25 `ao_consolidated_closeout`/`ci_consolidated_closeout`/`infra_consolidated_closeout`/
+      non-terminal-status docs across `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` at run time — the
+      corpus had shrunk from the original 241 scoping estimate via other concurrent hygiene work). Cross-referenced
+      against the 2026-07-25 `ao_consolidated_closeout`/`ci_consolidated_closeout`/`infra_consolidated_closeout`/
       `cross_cutting_consolidated_closeout` docs' own citation sets (`CITE_RE` basename extraction) — that sweep had
       ALREADY done real per-doc judgment for most of the corpus, so 180 of 227 resolved mechanically from existing
       ground truth (78 confirmed-stays + 92 confirmed-retags + 4 self-referential hub docs + 3 self-evident scaffolding

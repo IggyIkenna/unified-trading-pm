@@ -52,6 +52,7 @@ context_scope:
     /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
     /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
     deployment-api/deployment_api/routes/deployments_inventory/_registry_io.py,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 ---
 
@@ -74,18 +75,20 @@ heartbeat
 
 1. **The read pattern is O(N-entries), not O(live-VMs).** The inventory census
    ([`deployments_inventory.py`](../../deployment-api/deployment_api/routes/deployments_inventory.py)) downloads +
-   parses every `active/` blob (+ a 7-day `archive/` window) on each refresh (~14.7 ms/entry → ~48s for `active/` alone,
-   ~138s with archive), inside a hard **45s bound** (`_PROVIDER_CENSUS_TIMEOUT_SEC`); on timeout it discards the ENTIRE
-   census including the live VMs. **Measured 2026-07-14: 3,270 active entries (3,060 distinct VMs) for 44 real VMs →
-   census times out → prod Deployments tab renders empty for everyone** (reproduced against the deployed in-region API).
+   parses every `archive/2026_08/` blob (+ a 7-day `archive/` window) on each refresh (~14.7 ms/entry → ~48s for
+   `archive/2026_08/` alone, ~138s with archive), inside a hard **45s bound** (`_PROVIDER_CENSUS_TIMEOUT_SEC`); on
+   timeout it discards the ENTIRE census including the live VMs. **Measured 2026-07-14: 3,270 active entries (3,060
+   distinct VMs) for 44 real VMs → census times out → prod Deployments tab renders empty for everyone** (reproduced
+   against the deployed in-region API).
 
-2. **Ghost accumulation.** `active/<id>.json` is deleted only by `complete()` (graceful exit). Backfill/market-data VMs
-   default to SPOT (workspace HARD RULE) and are preempted/OOM-killed without calling `complete()` → orphaned at
-   `status=running` with a frozen heartbeat (3,240 of 3,270 have heartbeats ≥1 day stale). The `reap_stale` reaper
-   exists and is correct but is only reachable via a manual `POST /vm-deployments/reconcile` — nothing schedules it.
+2. **Ghost accumulation.** `archive/2026_08/<id>.json` is deleted only by `complete()` (graceful exit).
+   Backfill/market-data VMs default to SPOT (workspace HARD RULE) and are preempted/OOM-killed without calling
+   `complete()` → orphaned at `status=running` with a frozen heartbeat (3,240 of 3,270 have heartbeats ≥1 day stale).
+   The `reap_stale` reaper exists and is correct but is only reachable via a manual `POST /vm-deployments/reconcile` —
+   nothing schedules it.
 
-3. **Won't scale + no partial render.** Even a perfectly-reaped `active/` of 5,000 LIVE entries blows the 45s budget
-   (hygiene ≠ scalability). And because "which VMs exist" (fast, GCE) is welded to "registry enrichment" (slow, N
+3. **Won't scale + no partial render.** Even a perfectly-reaped `archive/2026_08/` of 5,000 LIVE entries blows the 45s
+   budget (hygiene ≠ scalability). And because "which VMs exist" (fast, GCE) is welded to "registry enrichment" (slow, N
    downloads) in one bounded call, a slow registry read nukes the whole VM list instead of degrading a column.
 
 ## Approved design (operator, 2026-07-14)
@@ -112,16 +115,16 @@ heartbeat
 
 > **[⚠️ REFRESHED 2026-07-21, plan-reconcile]** — this table + the `related:` links above were stuck at the 2026-07-14
 > initial-draft snapshot; the chain has actually progressed to P3. Corrected below (was: P1/P2/P4 all shown `draft`,
-> `related:` links pointing at `plans/active/...` with no `../archive/` prefix).
+> `related:` links pointing at `plans/archive/2026_08/...` with no `../archive/` prefix).
 
-| Phase  | Plan                                                                                                              | Role             | Model / effort     | Status                                                                                                                                                                                       | Gate                                        |
-| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md)               | infra            | Sonnet / high      | **active** — reallocated back to AO 2026-07-24 (9 todos then open, 1 `[REVIEW]` P2 todo still open as of 2026-07-25); success criteria (`active/` ≈ running-VM count) not yet fully verified | none — dispatched immediately               |
-| **P1** | [p1 — Firestore writer + dual-write](../archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md) | infra            | **Opus** / high    | **complete (archived)**                                                                                                                                                                      | activated by P0's last todo · `sequential`  |
-| **P2** | [p2 — reader migration + decouple](../archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md)     | backend-engineer | **Opus** / **max** | **complete (archived)**                                                                                                                                                                      | activated by P1 (∥ P4) · `sequential`       |
-| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)                         | backend-engineer | **Opus** / high    | **active** — self-halted on a real data-loss guard (prod Firestore `deployments` measured EMPTY 2026-07-17; GCS delete blocked pending an operator GO/NO-GO)                                 | activated by P2 · `sequential` (autonomous) |
-| **P4** | [p4 — DynamoDB (AWS-ready)](../archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md)           | infra            | Sonnet / high      | **complete (archived)**                                                                                                                                                                      | activated by P1 (∥ P2/P3)                   |
-| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)                             | review           | Sonnet / high      | **draft** — blocked on P3; scope now narrower than originally written (P4's DynamoDB half of the codex-sync mandate is already done via P4's own archival codex-sync)                        | activated by P3 or P4 (last to finish)      |
+| Phase  | Plan                                                                                                              | Role             | Model / effort     | Status                                                                                                                                                                                                | Gate                                        |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md)               | infra            | Sonnet / high      | **active** — reallocated back to AO 2026-07-24 (9 todos then open, 1 `[REVIEW]` P2 todo still open as of 2026-07-25); success criteria (`archive/2026_08/` ≈ running-VM count) not yet fully verified | none — dispatched immediately               |
+| **P1** | [p1 — Firestore writer + dual-write](../archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md) | infra            | **Opus** / high    | **complete (archived)**                                                                                                                                                                               | activated by P0's last todo · `sequential`  |
+| **P2** | [p2 — reader migration + decouple](../archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md)     | backend-engineer | **Opus** / **max** | **complete (archived)**                                                                                                                                                                               | activated by P1 (∥ P4) · `sequential`       |
+| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)                         | backend-engineer | **Opus** / high    | **active** — self-halted on a real data-loss guard (prod Firestore `deployments` measured EMPTY 2026-07-17; GCS delete blocked pending an operator GO/NO-GO)                                          | activated by P2 · `sequential` (autonomous) |
+| **P4** | [p4 — DynamoDB (AWS-ready)](../archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md)           | infra            | Sonnet / high      | **complete (archived)**                                                                                                                                                                               | activated by P1 (∥ P2/P3)                   |
+| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)                             | review           | Sonnet / high      | **draft** — blocked on P3; scope now narrower than originally written (P4's DynamoDB half of the codex-sync mandate is already done via P4's own archival codex-sync)                                 | activated by P3 or P4 (last to finish)      |
 
 ## Todos
 
@@ -170,7 +173,7 @@ heartbeat
 
 - prod Deployments tab renders the live fleet within the 45s bound at every scale from 10 to 5,000 VMs.
 - A registry-read failure degrades enrichment columns, never the row set (proven by fault injection).
-- Registry reads are one indexed query, not N downloads; GCS `active/` blobs are gone; a codex note records the
+- Registry reads are one indexed query, not N downloads; GCS `archive/2026_08/` blobs are gone; a codex note records the
   GCS→Firestore lineage.
 - The same `DeploymentRegistryStore` contract passes on Firestore and DynamoDB; cloud selection is automatic.
 

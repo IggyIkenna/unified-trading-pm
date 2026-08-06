@@ -8,9 +8,9 @@ summary: >-
   way cefi/defi/tradfi/prediction/sports/cross-cutting/ao/ci/infra each do (`ui` was previously invisible to
   `/ag-closeout-audit` and `/plan-reconcile`'s topic-scoped shards, only reachable via the
   `deployment_and_user_management_master` EPIC — which neither skill audits: epics live in `plans/epics/`, outside Phase
-  0's `plans/active/<ag>_consolidated_closeout_*.md` discovery pattern, and aren't part of the asset_group partition at
-  all). `ui` is added 2026-07-30 as a genuine 11th `asset_group` enum value (full parity with the 2026-07-27
-  `ao`/`ci`/`infrastructure` expansion, not a cheaper `infrastructure`-tag workaround) — see
+  0's `plans/archive/2026_08/<ag>_consolidated_closeout_*.md` discovery pattern, and aren't part of the asset_group
+  partition at all). `ui` is added 2026-07-30 as a genuine 11th `asset_group` enum value (full parity with the
+  2026-07-27 `ao`/`ci`/`infrastructure` expansion, not a cheaper `infrastructure`-tag workaround) — see
   `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5 and both skills' tranche lists. 17 active docs discovered
   + retagged this session as the initial member set (bounded discovery — a full corpus-wide retag audit, mirroring
   `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`, is still owed and tracked below).
@@ -30,6 +30,7 @@ related:
     /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-07-30"
 last_updated: "2026-07-30"
@@ -196,17 +197,17 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   `populate_epic_bodies_2026_05_21.py --apply`, `unified-trading-pm@63138c058`) but confirmed by reading
   `ag-closeout-audit`/`plan-reconcile`/`docs-reconcile`'s own SKILL.md files that none of the three would ever audit an
   epic doc as a tranche tracker: `ag-closeout-audit` hardcodes discovery to
-  `plans/active/<ag>_consolidated_closeout_*.md` and the asset_group enum (never `plans/epics/`); `plan-reconcile`'s
-  topic-scoped shards use the identical partition (only its unscoped `all` run touches epics, and only for generic
-  checkbox-sync, not completeness projection); `docs-reconcile` is out of scope for plan/epic lifecycle entirely.
-  Operator ruled full parity — add `ui` as a genuine 11th `asset_group` enum value (mirroring the 2026-07-27
+  `plans/archive/2026_08/<ag>_consolidated_closeout_*.md` and the asset_group enum (never `plans/epics/`);
+  `plan-reconcile`'s topic-scoped shards use the identical partition (only its unscoped `all` run touches epics, and
+  only for generic checkbox-sync, not completeness projection); `docs-reconcile` is out of scope for plan/epic lifecycle
+  entirely. Operator ruled full parity — add `ui` as a genuine 11th `asset_group` enum value (mirroring the 2026-07-27
   `ao`/`ci`/`infrastructure` expansion), not the cheaper `infrastructure`-tag route. Schema changes:
   `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5 (10→11 values); skill wiring:
   `ag-closeout-audit/SKILL.md` (9→10 tranches throughout, new `ui` classification-mechanism paragraph) and
   `plan-reconcile/SKILL.md` (9→10 tranches, corrected the sibling ao/ci/infrastructure description which had gone stale
   describing the pre-2026-07-27 workaround); helper scripts `generate_ag_closeout_audit_candidates.py` +
   `generate_na_doc_tranche_inventory.py`'s `NON_AG_TRANCHES` both extended. Seeded this tranche with 17 active docs (9
-  plans + 8 issues) discovered via a `repos:`-grep across `plans/active/{*.md,issues/*.md}` for
+  plans + 8 issues) discovered via a `repos:`-grep across `plans/archive/2026_08/{*.md,issues/*.md}` for
   `deployment-ui`/`deployment-api`, filtered by real content read (not just the grep hit) to exclude docs where those
   repos are incidental (e.g. broad data-pipeline docs merely touching deployment-api peripherally) — each retag cites
   its evidence inline on the frontmatter line. Two borderline docs (`monitoring_control_plane_master`,

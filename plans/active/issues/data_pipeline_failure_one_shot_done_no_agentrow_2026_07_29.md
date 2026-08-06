@@ -29,6 +29,7 @@ related:
   [
     /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
 author: unknown

@@ -22,6 +22,7 @@ related:
   [
     /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-27
 author: unknown

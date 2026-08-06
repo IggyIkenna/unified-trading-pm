@@ -101,8 +101,8 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
   turns out to change rendered UI behaviour rather than only generated constants, the workspace UI playwright gate
   (`[UI]` + `pw:L2 ✓` + a cited regression spec, `/codex/06-coding-standards/ui-testing-layers.md`) applies and this
   becomes a `ui_developer` hand-off — decide that from the actual diff, don't assume either way from this note.
-  **Finalize-plan coverage**: not required — `doc_type: issue` under `plans/active/issues/` is structurally exempt
-  (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only).
+  **Finalize-plan coverage**: not required — `doc_type: issue` under `plans/archive/issues/` is structurally exempt
+  (`check_finalize_plan_coverage.py` globs `plans/archive/2026_08/*.md` only).
 - **na-eligibility-audit 2026-07-30** (tranche=sports, autonomous): RECLASSIFY -> `assigned_vm: planning` (flipped in
   place, name unchanged, codex ao-dispatch-batch-naming §1(b)) — the sole todo is bounded, deterministic work with a
   self-contained done-when (re-run `sync-archetype-capability-to-ui.sh --write`, keep the UI's `quality-gates.sh` green,

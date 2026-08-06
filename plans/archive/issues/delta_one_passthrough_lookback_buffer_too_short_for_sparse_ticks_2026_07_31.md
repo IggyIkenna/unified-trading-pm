@@ -64,7 +64,7 @@ resolved_by: features-service@9e70fbac (fix) + slot-11 2026-07-31 production-sca
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (features-service@9e70fbac (fix) + slot-11
 > 2026-07-31 production-scale verification (both todos flipped)). Moved by the `/plan-reconcile` whole-corpus run of
-> 2026-08-02, which found this doc sitting in `plans/active/issues/` at a terminal status —
+> 2026-08-02, which found this doc sitting in `plans/archive/issues/` at a terminal status —
 > `check_terminal_status_archived` was RED at 13 violations against a baseline of 1. No content was rewritten.
 
 # What I found

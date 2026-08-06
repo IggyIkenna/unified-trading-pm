@@ -20,6 +20,7 @@ related:
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: strategy_master

@@ -57,10 +57,10 @@ drift_direction: advance-code
 
 > **Companion history doc, not the live plan.** This holds the verbatim historical Progress Log + audit-verdict sections
 > extracted from `/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` to bring that
-> coordinator back under the 1000-line `plans/active/` cap (the `umbrella: true` 2000L ceiling this doc previously
-> carried was retired 2026-07-24 — flat cap now applies fleet-wide). Nothing below was rewritten; it remains the
-> verbatim historical record, in original document order. 0 open todos of its own — every item quoted below was already
-> closed (`[x]`) at extraction time, and the parent coordinator's Gate-State Board / Sub-plan registry / Master
+> coordinator back under the 1000-line `plans/archive/2026_08/` cap (the `umbrella: true` 2000L ceiling this doc
+> previously carried was retired 2026-07-24 — flat cap now applies fleet-wide). Nothing below was rewritten; it remains
+> the verbatim historical record, in original document order. 0 open todos of its own — every item quoted below was
+> already closed (`[x]`) at extraction time, and the parent coordinator's Gate-State Board / Sub-plan registry / Master
 > coordination todos are unaffected (they were NOT extracted — they remain the live state in the parent).
 
 ### Coordinator progress — 2026-06-11 (autonomous finish-to-DONE run, slot-4)

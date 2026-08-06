@@ -66,6 +66,7 @@ related:
     ./sports_odds_stale_fixture_reinjection_2026_07_14.md,
     ./sports_odds_horizon_bucket_malformed_tick_field_2026_07_15.md,
     ../../epics/sports_master.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-16
 author: unknown
@@ -127,7 +128,7 @@ source:
 > 2026-07-23/07-24 passes): the count is still exactly **5**, same 5 items, content unchanged. `status:` stays `open`
 > until all 5 close — see "Open Todos" below.
 >
-> **This doc was also split 2026-07-25** (was 1,513 lines, over the `plans/active/issues/*.md` 1000-line hard cap —
+> **This doc was also split 2026-07-25** (was 1,513 lines, over the `plans/archive/issues/*.md` 1000-line hard cap —
 > `scripts/plan-hygiene/check_line_caps.sh`). The original read-only investigation narrative (SFI column inventory, the
 > 746,928 in-play rows anatomy, the T-0/HT horizon analysis, the features-consumption audit, the OR-5b(c) B-REFINED
 > verdict, cross-checks, loose ends) plus every shipped-fix Progress Log entry moved verbatim to

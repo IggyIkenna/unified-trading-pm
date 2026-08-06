@@ -41,7 +41,7 @@ depends_on: []
 ## What's failing
 
 ```
-Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — 2 violation(s).
+Scanned plans/archive/2026_08/ for assigned_vm: planning plans lacking a gated finalize plan — 2 violation(s).
 
 Plans missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true to a new/existing
 companion plan — see task_template.md §4):

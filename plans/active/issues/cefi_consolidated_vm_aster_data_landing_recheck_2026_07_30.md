@@ -22,6 +22,7 @@ related:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/archive/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 author: unknown

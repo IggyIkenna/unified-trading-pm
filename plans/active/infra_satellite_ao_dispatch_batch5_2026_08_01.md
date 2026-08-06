@@ -99,7 +99,7 @@ gated — cross-cutting's item (B) was still `- [ ]`. **This run re-verified it 
   for 4+ days and cross-cutting's own claim against it (item B) is now closed regardless of which file it ended up
   touching.
 - **File genuinely quiet — checked beyond the one collision partner**: corpus-wide `rg` for `DataStatusTab` across all
-  `plans/active/*.md` + `plans/active/issues/*.md` surfaces 3 other docs with open todos —
+  `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` surfaces 3 other docs with open todos —
   `data_status_tab_and_downloads_remediation_2026_06_16.md` (8 open items, but every one is already **CODE-SHIPPED** per
   its own text, e.g. `deployment-ui@80c547d`; the checkboxes are unticked only because a full-suite `pw:L2` gate hasn't
   exited 0 for an unrelated reason — a 🟡-banner Fleet-Git nav regression — not because the code is unshipped),
@@ -120,15 +120,16 @@ same shape `infra_satellite_ao_dispatch_batch4_2026_07_31.md` and the archived
 
 ## Conflict check performed before drafting
 
-- **`deployment-ui/src/components/DataStatusTab.tsx` / `DATA_PIPELINE_SERVICES`** — `rg` across ALL of `plans/active/`
-  (plans + issues, not just infra-tagged) for `DATA_PIPELINE_SERVICES` returns exactly 4 hits: this batch's own sources
-  (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`, `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`,
-  `infra_satellite_ao_dispatch_batch3_2026_07_30.md`, all infra's own prior tracking of this exact gate) and the
-  original source doc (`issues/issue_docs_remediation_sweep_2026_06_02.md`, still `- [ ]`). Zero competing claims.
+- **`deployment-ui/src/components/DataStatusTab.tsx` / `DATA_PIPELINE_SERVICES`** — `rg` across ALL of
+  `plans/archive/2026_08/` (plans + issues, not just infra-tagged) for `DATA_PIPELINE_SERVICES` returns exactly 4 hits:
+  this batch's own sources (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`,
+  `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, `infra_satellite_ao_dispatch_batch3_2026_07_30.md`, all
+  infra's own prior tracking of this exact gate) and the original source doc
+  (`issues/issue_docs_remediation_sweep_2026_06_02.md`, still `- [ ]`). Zero competing claims.
 - **`DataStatusTab.tsx` broadly** — see the file-quiet check above. No other active, unshipped claim.
 - **`SERVICE_TO_KIND` (`deployment-api/deployment_api/services/data_status_drilldown/_core.py`)** — read-only reference
-  for this todo (establishes the current real service names); `rg` for `SERVICE_TO_KIND` across `plans/active/` returns
-  no plan proposing to change that dict itself. No collision.
+  for this todo (establishes the current real service names); `rg` for `SERVICE_TO_KIND` across `plans/archive/2026_08/`
+  returns no plan proposing to change that dict itself. No collision.
 - **`check_delete_vm_launch_gating.sh` shape** — the todo is a frontend constant + UI fix with a `pw:L2` regression
   spec. No GCS delete, no `--apply`, no VM launch. No `[OPERATOR]` tag or delete-safety citation required.
 

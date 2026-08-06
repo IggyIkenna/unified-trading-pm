@@ -27,6 +27,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-22
 author: unknown

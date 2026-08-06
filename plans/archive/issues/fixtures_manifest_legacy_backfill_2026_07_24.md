@@ -352,12 +352,13 @@ underlying 55,233 collision-residual decision (delete vs. leave) is still unreso
   after the next `enum-universe-sports-*` run + >=2 consolidator cycles, and confirm the `FIXTURES` count has decayed
   toward the stable 55,233 residual (proving the 10th-call-site leak fix, `instruments-service@ca8bd7b3ab`, held) — a
   checkable fact, no judgment/design/operator call left. Conflict-check
-  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): grepped `plans/active/*.md` +
-  `plans/active/issues/*.md` for `census_manifest_data_type_2026_07_24` / `fixtures_manifest_legacy_backfill` — hits in
-  `sports_consolidated_closeout_2026_07_19.md` and `sports_satellite_ao_dispatch_batch5_2026_07_26.md` are historical
-  citations/pointers to this doc, not a competing claim on the census re-run itself (batch5's own text confirms it did a
-  reconciliation-only pass and deliberately deferred). CLEAR — no other active `assigned_vm: planning` doc claims this
-  exact re-verification. Not locked (`locked_by:` blank), no `depends_on` gate.
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): grepped
+  `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` for `census_manifest_data_type_2026_07_24` /
+  `fixtures_manifest_legacy_backfill` — hits in `sports_consolidated_closeout_2026_07_19.md` and
+  `sports_satellite_ao_dispatch_batch5_2026_07_26.md` are historical citations/pointers to this doc, not a competing
+  claim on the census re-run itself (batch5's own text confirms it did a reconciliation-only pass and deliberately
+  deferred). CLEAR — no other active `assigned_vm: planning` doc claims this exact re-verification. Not locked
+  (`locked_by:` blank), no `depends_on` gate.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries; dropped the previously-cited
   `deployment-api/scripts/census_manifest_data_type_2026_07_24.py` — deleted upstream 2026-08-03, its own Delete-when
   clause satisfied, replaced with the underlying `_axis_census.py` route it wrapped).

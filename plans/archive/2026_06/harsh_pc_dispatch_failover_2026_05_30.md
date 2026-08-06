@@ -191,15 +191,15 @@ Same as `autospawn_idle_vms_2026_05_30.md` § CI-safety contract — cross-link 
       `failover_allowed=True`** (backfill correct — all default to soft-pinned). **0 tasks have `failover_origin` set**
       — the FailoverLoop correctly identifies that despite harsh-pc being offline > 10 min, NO workspace plan currently
       sets `target_slot` to a harsh-pc-resident slot (workspace grep `^assigned_vm:\s*harsh-pc` returns 0 matches across
-      `plans/active/`, `plans/active/issues/`, and `plans/epics/`). The 6,940-task snapshot cached for harsh-pc in the
-      central fleet/summary is therefore overwhelmingly zombies from before the prune-stale flag existed — those clean
-      themselves up when harsh-pc's laptop returns, fetches `agent-orchestrator@c13375c`, and the regen tick fires with
-      `ORCHESTRATOR_REGEN_PRUNE_STALE=true`. Rollback path is exercised by 16 unit tests in `test_failover.py`
-      (host-online / under-threshold / offline-15min / hard-pinned-skip / dispatched-skip / unclaimed-rollback).
-      **FailoverLoop is operationally ARMED** — the moment a future plan emits a task with `target_slot` →
-      harsh-pc-resident slot AND harsh-pc stays offline > 10 min, it will fire. **Currently a structural no-op as
-      designed** (correct behavior for the current task universe; same status as AutoSpawnLoop's correct `queue_empty`
-      skip on vm-trading-core).
+      `plans/archive/2026_08/`, `plans/archive/issues/`, and `plans/epics/`). The 6,940-task snapshot cached for
+      harsh-pc in the central fleet/summary is therefore overwhelmingly zombies from before the prune-stale flag existed
+      — those clean themselves up when harsh-pc's laptop returns, fetches `agent-orchestrator@c13375c`, and the regen
+      tick fires with `ORCHESTRATOR_REGEN_PRUNE_STALE=true`. Rollback path is exercised by 16 unit tests in
+      `test_failover.py` (host-online / under-threshold / offline-15min / hard-pinned-skip / dispatched-skip /
+      unclaimed-rollback). **FailoverLoop is operationally ARMED** — the moment a future plan emits a task with
+      `target_slot` → harsh-pc-resident slot AND harsh-pc stays offline > 10 min, it will fire. **Currently a structural
+      no-op as designed** (correct behavior for the current task universe; same status as AutoSpawnLoop's correct
+      `queue_empty` skip on vm-trading-core).
 
 ### Phase 5 — Codify in CLAUDE.md (small docs PR, fast-path)
 

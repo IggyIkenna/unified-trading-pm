@@ -40,6 +40,7 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
 locked_by:
 resolved_by:
+  /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
 depends_on: []
 gate_on_depends: false
 supersedes:

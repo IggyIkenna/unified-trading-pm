@@ -171,7 +171,7 @@ Strategy backtests trained on lookahead-biased features confidently produce wron
 
 ## 7. Plan routing (post overlap-check 2026-05-06)
 
-After cross-checking against `plans/active/` it became clear that
+After cross-checking against `plans/archive/2026_08/` it became clear that
 `writegate_honest_coverage_endtoend_2026_05_06.plan.md` already owns the largest items in this audit
 (`LookaheadBiasError`, `available_at` write-time stamping, sports temporal rules, write-gate 4-pillar gate at
 `record_captured`, UAC `BUNDLED_DATA_TYPES`). My initial draft of `features_pipeline_correctness_and_coverage`

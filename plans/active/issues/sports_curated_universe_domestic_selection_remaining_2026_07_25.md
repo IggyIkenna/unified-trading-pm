@@ -23,6 +23,7 @@ related:
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-25
 author: unknown

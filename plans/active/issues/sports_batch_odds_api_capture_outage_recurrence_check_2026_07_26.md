@@ -49,6 +49,7 @@ related:
   [
     /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-26
 author: unknown

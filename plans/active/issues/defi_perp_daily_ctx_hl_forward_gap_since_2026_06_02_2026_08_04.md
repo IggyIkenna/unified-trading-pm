@@ -25,6 +25,7 @@ related:
   [
     /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown

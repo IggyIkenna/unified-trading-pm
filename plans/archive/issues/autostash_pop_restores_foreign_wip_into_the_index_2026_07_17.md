@@ -73,7 +73,7 @@ The sequence that produced it (all of it "correct" per the current rules):
 
 ```bash
 git pull --rebase --autostash origin live-defi-rollout   # reconcile — mandated by the drift recipe
-git add plans/active/issues/<my-one-doc>.md              # stage BY NAME — the rule
+git add plans/archive/issues/<my-one-doc>.md              # stage BY NAME — the rule
 git commit -F msg                                        # commits the INDEX → swept 2 foreign files
 ```
 

@@ -4,13 +4,13 @@ title: Plan line-cap remediation — triage of the 30 plans blocking the quality
 summary: >-
   The operator ruled that quality-gates.sh should hard-fail on plan line-count caps (500 soft-warn / 1000 hard-fail;
   umbrella trackers get a 2000-line hard cap instead of no cap). `check_line_caps.sh` currently flags 30 plans in
-  plans/active/ over the 1000L hard cap (several already over the 2000L umbrella ceiling too). This doc classifies each
-  of the 30 into one of four buckets -- (a) stale-not-moved, (b) genuinely-umbrella-just-unmarked, (c) needs a real
-  split, (d) unclear/operator call -- with a concrete proposed action per plan. TRIAGE ONLY: no plan was edited, moved,
-  split, or archived while producing this doc. Bucket (b) came back EMPTY: every flagged plan either has substantive
-  inline work (disqualifying it from a pure index/hub read) or is already over the 2000L ceiling where umbrella-flagging
-  alone cannot help. 14 of 30 are bucket (d) because locked_by=live-defi-rollout is set -- CLAUDE.md/PLAN_FORMAT.md
-  require an operator "[unlock-plan]" grant before any of those can be touched.
+  plans/archive/2026_08/ over the 1000L hard cap (several already over the 2000L umbrella ceiling too). This doc
+  classifies each of the 30 into one of four buckets -- (a) stale-not-moved, (b) genuinely-umbrella-just-unmarked, (c)
+  needs a real split, (d) unclear/operator call -- with a concrete proposed action per plan. TRIAGE ONLY: no plan was
+  edited, moved, split, or archived while producing this doc. Bucket (b) came back EMPTY: every flagged plan either has
+  substantive inline work (disqualifying it from a pure index/hub read) or is already over the 2000L ceiling where
+  umbrella-flagging alone cannot help. 14 of 30 are bucket (d) because locked_by=live-defi-rollout is set --
+  CLAUDE.md/PLAN_FORMAT.md require an operator "[unlock-plan]" grant before any of those can be touched.
 status: resolved
 nature: issue
 asset_group: [cross-cutting, meta]
@@ -30,10 +30,10 @@ created: "2026-07-23"
 priority: P1
 parent_epic: agent_operating_framework_master
 source: >-
-  Operator request 2026-07-23: quality-gates.sh line-cap hard-fail rollout is blocked because 30 plans in plans/active/
-  already exceed today's un-enforced caps. Triage requested via `bash scripts/plan-hygiene/check_line_caps.sh`,
-  classified against plans/active/task_template.md §4 and plans/PLAN_FORMAT.md's umbrella/locking rules before any split
-  is executed.
+  Operator request 2026-07-23: quality-gates.sh line-cap hard-fail rollout is blocked because 30 plans in
+  plans/archive/2026_08/ already exceed today's un-enforced caps. Triage requested via `bash
+  scripts/plan-hygiene/check_line_caps.sh`, classified against plans/active/task_template.md §4 and
+  plans/PLAN_FORMAT.md's umbrella/locking rules before any split is executed.
 execution_scope: local-only
 drift_direction: correct-codex
 depends_on: []
@@ -52,9 +52,9 @@ resolved_by: >-
 > **🟢 ARCHIVED 2026-07-25** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
 > archive-on-resolve rule (terminal_status_archival_backlog_sweep_2026_07_25.md).
 
-> **STOP — this is a proposal, not an execution log.** Nothing in plans/active/ or plans/archive/ was touched to produce
-> this doc. Per the operator's instructions, execution is gated on review of this table, especially the bucket (c)
-> splits and the bucket (d) operator asks below.
+> **STOP — this is a proposal, not an execution log.** Nothing in plans/archive/2026_08/ or plans/archive/ was touched
+> to produce this doc. Per the operator's instructions, execution is gated on review of this table, especially the
+> bucket (c) splits and the bucket (d) operator asks below.
 
 ## How this was produced
 
@@ -67,15 +67,15 @@ instead of real analysis — caught on review, both were re-run independently an
 results are reflected below.
 
 **Scope note**: the 30 plans below are exactly the HARD-flagged set. `tradfi_massive_dual_source_2026_05_28.md` is
-_also_ `status: superseded` sitting in `plans/active/` (a 3rd stale-not-moved case) but it's only 527 lines (SOFT tier,
-not HARD) — outside this triage's 30-plan scope, flagged here as a bonus finding for a future hygiene pass, not actioned
-in this doc.
+_also_ `status: superseded` sitting in `plans/archive/2026_08/` (a 3rd stale-not-moved case) but it's only 527 lines
+(SOFT tier, not HARD) — outside this triage's 30-plan scope, flagged here as a bonus finding for a future hygiene pass,
+not actioned in this doc.
 
 ## Bucket definitions (condensed — full text in the per-agent prompts)
 
-- **(a) STALE-NOT-MOVED**: `status` is superseded/resolved/complete/cancelled but still in `plans/active/`. Archival
-  mechanics only — `git mv` to `plans/archive/2026_07/<same-filename>` (archived plans keep their original name, per
-  actual archive contents).
+- **(a) STALE-NOT-MOVED**: `status` is superseded/resolved/complete/cancelled but still in `plans/archive/2026_08/`.
+  Archival mechanics only — `git mv` to `plans/archive/2026_07/<same-filename>` (archived plans keep their original
+  name, per actual archive contents).
 - **(b) GENUINELY-UMBRELLA, JUST UNMARKED**: legitimate hub/index doc, 1000-2000L, not yet `umbrella: true`. Fix =
   frontmatter flag only. **Cannot apply to anything over 2000L** (2026-07-23 ruling: the ceiling is real, not waivable).
 - **(c) NEEDS A REAL SPLIT**: bloated with completed/historical content or independent workstreams jammed together.
@@ -155,8 +155,9 @@ reasons:
 - **`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`** (3900L) — `locked_by` is empty, so this one can move
   with a plain `docs(plans):` commit, no unlock needed, as soon as the operator green-lights execution.
 
-**Proposed action for both** (pending go-ahead): `git mv plans/active/<file> plans/archive/2026_07/<same file name>` —
-zero content edits, since each file's own banner already documents the supersession.
+**Proposed action for both** (pending go-ahead):
+`git mv plans/archive/2026_08/<file> plans/archive/2026_07/<same file name>` — zero content edits, since each file's own
+banner already documents the supersession.
 
 ---
 
@@ -310,11 +311,11 @@ live concurrent session as of this update, not yet safely committable — see th
 Operator approved all 30 rows via interactive Q&A on 2026-07-24; execution ran across several workflow passes plus
 direct hand-verification. Shipped: `unified-trading-pm@67e47f9b` (21 plans) + `unified-trading-pm@5a47210fe` (3 more) +
 `unified-trading-pm@240a0564e` (closed `master_to_live_defi_2026_05_23.md` whole — 0 open todos, archived, resolved a
-stale plans/active/ duplicate; regenerated 23 epic bodies + inventory) + `unified-trading-pm@1a3a267d2` (wave 2: fully
-resolved `data_pipeline_check_mdps_features_2026_07_20.md` (1299→669L) and `sports_legacy_bucket_cutover_2026_07_16.md`
-(2802→128L, all 45 of its own todos were already done, moved wholesale to archive-bound history); partially trimmed
-`citadel_paper_batch_live_reconciliation_2026_06_19.md` (2660→1143L, still ~150L over),
-`data_pipeline_hardening_self_monitoring_2026_06_22.md` (2545→1856L, still ~850L over),
+stale plans/archive/2026_08/ duplicate; regenerated 23 epic bodies + inventory) + `unified-trading-pm@1a3a267d2` (wave
+2: fully resolved `data_pipeline_check_mdps_features_2026_07_20.md` (1299→669L) and
+`sports_legacy_bucket_cutover_2026_07_16.md` (2802→128L, all 45 of its own todos were already done, moved wholesale to
+archive-bound history); partially trimmed `citadel_paper_batch_live_reconciliation_2026_06_19.md` (2660→1143L, still
+~150L over), `data_pipeline_hardening_self_monitoring_2026_06_22.md` (2545→1856L, still ~850L over),
 `data_status_page_ux_and_canonicalisation_2026_07_16.md` (2133→1971L, still ~30L over) — each extraction independently
 conservation-checked (every removed todo line traced to its matching child/history file, cross-referenced against
 origin's total todo count) before committing).
@@ -328,17 +329,18 @@ self-report), verified, and shipped. The other 8 of its 13 assigned files never 
 disk in this same shared checkout — matching the exact fork this doc had prescribed: "fork ONLY the MTDS lending-restamp
 workstream, leave RESTAKING in place as shipped history"). Verified conservation (21 todos before = 21 after) and
 relocated the accompanying orphaned history extract (`distinct_values_noncanonical_audit_history_2026_07_24.md`, 0
-todos, was sitting in `plans/active/` unreferenced-from-nowhere-but-the-parent's-own-new-link) to its established
-`plans/archive/2026_07/` home, fixing the 2 references that pointed at the pre-move path. New child
+todos, was sitting in `plans/archive/2026_08/` unreferenced-from-nowhere-but-the-parent's-own-new-link) to its
+established `plans/archive/2026_07/` home, fixing the 2 references that pointed at the pre-move path. New child
 `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` (5 todos, `status: active`) is
-correctly in `plans/active/`. **Also found mid-flight in the same checkout**: an orphaned, complete history extract for
-`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` (515L, 0 todos) — relocated to `plans/archive/2026_07/`
-the same way (no referrers to fix, it had none yet); the parent itself is untouched, still 1238L, still HARD-flagged —
-see the table below. **Explicitly left alone**: `data_completion_to_100_all_ag_2026_06_21.md` was mid-transformation by
-a live concurrent session at the moment of this pass (working tree already deleted 492L/14 todos from the parent and
-pointed `related:` at a `data_completion_to_100_all_ag_2026_07_24.md` history file that did not yet exist on disk) —
-committing it then would have shipped a dangling reference and prematurely frozen a half-finished edit, so it was left
-uncommitted for that session to finish.
+correctly in `plans/archive/2026_08/`. **Also found mid-flight in the same checkout**: an orphaned, complete history
+extract for `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` (515L, 0 todos) — relocated to
+`plans/archive/2026_07/` the same way (no referrers to fix, it had none yet); the parent itself is untouched, still
+1238L, still HARD-flagged — see the table below. **Explicitly left alone**:
+`data_completion_to_100_all_ag_2026_06_21.md` was mid-transformation by a live concurrent session at the moment of this
+pass (working tree already deleted 492L/14 todos from the parent and pointed `related:` at a
+`data_completion_to_100_all_ag_2026_07_24.md` history file that did not yet exist on disk) — committing it then would
+have shipped a dangling reference and prematurely frozen a half-finished edit, so it was left uncommitted for that
+session to finish.
 
 ## Deferred work after 2026-07-24 (updated)
 
@@ -417,12 +419,12 @@ session:
   silent on this before).
 
 **Umbrella-exemption model removed entirely — TWO-TIER policy, no exceptions (2026-07-24, operator ruling, same
-session):** the "just-closed" gate above still had an escape hatch baked in — a plan in `plans/active/` marked
+session):** the "just-closed" gate above still had an escape hatch baked in — a plan in `plans/archive/2026_08/` marked
 `umbrella: true` (or `locked_by` + >100 todos) was exempt from the 1000L cap up to a 2000L ceiling, and
 `plans/epics/*.md` was never scanned by `check_line_caps.sh` at all. Operator ruled this should go: epics get a flat
 2000L hard cap (same number, but now a REAL epic in `plans/epics/`, not a frontmatter marker on a doc still sitting in
-`plans/active/`); everything else is a flat 500L soft / 1000L hard cap, full stop. `check_line_caps.sh` rewritten
-accordingly (path-substring epic detection, tested against both absolute and relative invocation — an earlier
+`plans/archive/2026_08/`); everything else is a flat 500L soft / 1000L hard cap, full stop. `check_line_caps.sh`
+rewritten accordingly (path-substring epic detection, tested against both absolute and relative invocation — an earlier
 `*/plans/epics/*` case-pattern version silently miscategorized a bare relative path as a non-epic plan, caught by
 testing both invocation shapes before shipping). This is a genuine POLICY TIGHTENING, not a regression: it mechanically
 exposed 9 files that were always real debt but never counted — baseline re-seeded 8 → 17 (see
@@ -462,7 +464,7 @@ Practical effect: **no agent can currently land even a one-line fix in this file
 `plans/epics/`. Its sibling `cefi_4surface_migration_execution_log_2026_07_24.md` (1635L) is in the identical state —
 the "mirror the post-split content into the child" instruction this parent file itself carries cannot currently be
 honored either, since the child is equally blocked. Worked around it this session by writing new findings to a
-standalone `plans/active/issues/` doc instead (`cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) rather
+standalone `plans/archive/issues/` doc instead (`cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) rather
 than fighting the gate — that is a workaround, not a fix. **Recommends prioritizing this specific pair (parent + child)
 in the next remediation pass**, since it is actively blocking in-flight work, not just carrying debt.
 

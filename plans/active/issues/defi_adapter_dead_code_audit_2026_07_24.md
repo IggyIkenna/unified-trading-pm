@@ -48,6 +48,7 @@ related:
     defi_consolidated_closeout_2026_07_18,
     defi_governance_params_refresh_2026_06_20,
     wsfeedconnector_phase35_gap_2026_07_06,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 author: unknown

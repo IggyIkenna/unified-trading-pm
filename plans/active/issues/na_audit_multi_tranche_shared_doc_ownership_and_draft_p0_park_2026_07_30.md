@@ -39,6 +39,7 @@ related:
     /plans/archive/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 author: unknown
@@ -193,7 +194,7 @@ genuinely-changed docs from Phase 1.
 _Added 2026-08-02 by the scheduled `/na-eligibility-audit cross-cutting` run (autonomous). Same mechanism family as
 Finding 3: both defeat Phase 0's incremental skip, this one structurally rather than by regex._
 
-`check_line_caps.sh` enforces a flat **1000L HARD cap** on `plans/active/*.md` (`>1000` fails), and in
+`check_line_caps.sh` enforces a flat **1000L HARD cap** on `plans/archive/2026_08/*.md` (`>1000` fails), and in
 scoped/`--precommit` mode ANY staged over-cap plan fails outright. Three of this tranche's docs are pinned at the
 ceiling **right now**:
 

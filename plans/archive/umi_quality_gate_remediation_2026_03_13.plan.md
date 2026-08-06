@@ -10,14 +10,14 @@ repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-13'
+created: "2026-03-13"
 ---
 
 # UMI Quality Gate Remediation Plan — No Exclusions, Proper Fixes
 
-**Status:** AI-generated draft — awaiting user review and promotion to `plans/active/` **Date:** 2026-03-13 **Scope:**
-unified-market-interface (UMI) **Context:** User requested removal of quality-gate exclusions and proper fixes for all
-violations. No shortcuts or fallbacks.
+**Status:** AI-generated draft — awaiting user review and promotion to `plans/archive/2026_08/` **Date:** 2026-03-13
+**Scope:** unified-market-interface (UMI) **Context:** User requested removal of quality-gate exclusions and proper
+fixes for all violations. No shortcuts or fallbacks.
 
 ---
 

@@ -50,7 +50,7 @@ locked_by:
 
 Completing `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s last todo — the standard 6-step archival
 ritual — I flipped the todo's `- [ ]` → `- [x]` AND `git mv`d both `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`
-and its finalize doc from `plans/active/` to `plans/archive/2026_07/` **in the same commit**
+and its finalize doc from `plans/archive/2026_08/` to `plans/archive/2026_07/` **in the same commit**
 (`unified-trading-pm@f8f9dc25b`), exactly matching CLAUDE.md's own archival-ritual wording: "this finalize doc itself
 gets archived alongside it in the same commit."
 
@@ -75,9 +75,9 @@ gets archived alongside it in the same commit."
 2. Falls to mode 2 (cross-repo PM log walk). `_pm_log_commits_touching_plan_ref` finds the commit (a
    `git log -- <old_path>` DOES surface a commit that deletes/renames the path), but `_diff_flips_checkbox` then runs
    the equivalent of `git show <sha> -- <old_path>` — and confirmed live
-   (`git show f8f9dc25b -- plans/active/ tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`), that diff is a
-   **pure file deletion** (`deleted file mode 100644`, every line as `-`). The added `[x]`-flipped line only exists in
-   the diff of the NEW path (`plans/archive/2026_07/...`), which the checker never looks at — git's default
+   (`git show f8f9dc25b -- plans/archive/2026_08/ tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`), that
+   diff is a **pure file deletion** (`deleted file mode 100644`, every line as `-`). The added `[x]`-flipped line only
+   exists in the diff of the NEW path (`plans/archive/2026_07/...`), which the checker never looks at — git's default
    rename-similarity detection didn't kick in here because the edit (banner add, status flip, checkbox flip, ~40% of the
    file changed) dropped the path pair below git's default 50% similarity threshold for an implicit rename pairing in
    this diff mode.

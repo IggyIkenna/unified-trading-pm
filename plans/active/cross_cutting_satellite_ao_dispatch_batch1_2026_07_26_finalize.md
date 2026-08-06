@@ -94,7 +94,7 @@ context_scope:
       `plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md` via the standard 6-step ritual. (3) **⚠️ CORRECTED
       2026-07-26 (`/ag-closeout-audit cross-cutting` re-invocation) — do NOT run the archival ritual on
       `gcs_data_access_audit_log_cost_2026_07_24.md`; DELETE the stale active duplicate instead.** Measured: that
-      filename exists in BOTH `plans/active/issues/` (364L, `status: open`, 1 open `[DEVOPS] P2`) AND
+      filename exists in BOTH `plans/archive/issues/` (364L, `status: open`, 1 open `[DEVOPS] P2`) AND
       `plans/archive/2026_07/` (368L, `status: resolved`,
       `resolved_by: operator (ikenna@odum-research.com, 2026-07-25)`, **0 open todos**) — the archived copy is the
       later, authoritative one, and the cross-cutting closeout's own Track 6 already records the operator completing the

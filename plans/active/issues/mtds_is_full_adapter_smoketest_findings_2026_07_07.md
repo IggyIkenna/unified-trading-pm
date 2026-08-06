@@ -40,6 +40,7 @@ related:
     /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     /plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
     ../prediction_capture_incident_remediation_2026_07_06.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-07
 author: unknown

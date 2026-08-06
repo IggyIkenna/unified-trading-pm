@@ -50,6 +50,7 @@ related:
     plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-06
 author: cefi_mtds_smoke_tester (agt-e76dc5, slot 6)

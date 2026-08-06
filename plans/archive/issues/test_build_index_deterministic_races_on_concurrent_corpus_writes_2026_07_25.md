@@ -4,7 +4,7 @@ title: test_build_index_is_deterministic races against concurrent doc-corpus wri
 summary: >-
   scripts/docs/test_gen_doc_index.py::test_build_index_is_deterministic asserts `build_index(pm_root) ==
   build_index(pm_root)` — two live filesystem walks of the SAME pm_root with no snapshot in between. On this workspace's
-  heavily concurrent shared working tree (many slots/agents committing to plans/active/issues/*.md at once), a doc's
+  heavily concurrent shared working tree (many slots/agents committing to plans/archive/issues/*.md at once), a doc's
   frontmatter can change between the two calls, producing a spurious diff and a false-negative QG failure. Observed
   directly 2026-07-25: the diff was exactly one issue doc's `status=resolved` -> `status=open` (a concurrent edit
   landing mid-test), not a real determinism bug in build_index()'s own logic.
@@ -86,7 +86,7 @@ not urgent.
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P3. **DONE 2026-07-28.** Rewrote `test_build_index_is_deterministic` to build from a frozen
-      `tmp_path` fixture (seeded with 2 representative docs) instead of two live walks of the shared `pm_root` — the
-      test no longer reads live `plans/active/**` at all. Verified: `pytest scripts/docs/test_gen_doc_index.py` → 3
-      passed. — `unified-trading-pm@91324d0b1`.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-28.** Rewrote `test_build_index_is_deterministic` to build from a frozen `tmp_path`
+      fixture (seeded with 2 representative docs) instead of two live walks of the shared `pm_root` — the test no longer
+      reads live `plans/archive/2026_08/**` at all. Verified: `pytest scripts/docs/test_gen_doc_index.py` → 3 passed. —
+      `unified-trading-pm@91324d0b1`.

@@ -43,7 +43,7 @@ depends_on: []
 > **✅ ARCHIVED 2026-07-30 (slot-21)** — all 3 todos independently re-verified DONE this turn (the batch1-doc citations
 > were re-checked against `origin/live-defi-rollout`, not taken on faith): `instruments-service@fe27be91`,
 > `market-tick-data-service@0413e5cd` (both `uv.lock` → setuptools 83.0.0), `e2e-testing@4c324e8` (stale ignore-vuln
-> removed) — all confirmed ancestors. No open work remains; moved from `plans/active/issues/` to
+> removed) — all confirmed ancestors. No open work remains; moved from `plans/archive/issues/` to
 > `plans/archive/issues/`.
 
 # Fleet-wide setuptools 82.0.1 vulnerability (PYSEC-2026-3447)

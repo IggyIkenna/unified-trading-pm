@@ -24,6 +24,7 @@ related:
     /plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
     /plans/archive/2026_08/ao_fleet_cache_tokens_and_task_count_2026_08_05.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-05"
 last_updated: 2026-08-06

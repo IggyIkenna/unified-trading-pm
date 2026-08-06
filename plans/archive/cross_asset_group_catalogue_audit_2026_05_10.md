@@ -175,10 +175,12 @@ Owner: ikenna (cross-cutting design); harsh implements + downstream consumer upd
       (instruments-service@`ca8a019` 2026-05-12)
       `from unified_api_contracts.canonical.domain.prediction import (PredictionMarketMapper,)` →
       `from           unified_api_contracts.prediction import (PredictionMarketMapper,)` (the facade
-      `unified_api_contracts/prediction.py` does `from unified_api_contracts.canonical.domain.prediction import
-      *`, and     `PredictionMarketMapper`is a non-underscore re-export → resolves clean; QG`check*uac_import_surface`then passes     for this consumer). **Note (out of 1A scope, file separately)**: the same file lines 28-36 also have deep    `canonical.domain.sports` imports (`build\*\*\_prediction_id`, `POLYMARKET_MARKET_TO_CANONICAL`, `\_slug`,
-      ...) — those are a \_separate* UAC-import-surface violation; route to `sports_master_2026_05_07.md` or a
-      `plans/active/issues/` doc, not here (sports facade re-export coverage needs checking first; don't break it as a
+      `unified_api_contracts/prediction.py` does `from unified_api_contracts.canonical.domain.prediction import     *`,
+      and `PredictionMarketMapper`is a non-underscore re-export → resolves clean; QG`check*uac_import_surface`then
+      passes for this consumer). **Note (out of 1A scope, file separately)**: the same file lines 28-36 also have deep
+      `canonical.domain.sports` imports (`build\*\*\_prediction_id`, `POLYMARKET_MARKET_TO_CANONICAL`, `\_slug`, ...) —
+      those are a \_separate* UAC-import-surface violation; route to `sports_master_2026_05_07.md` or a
+      `plans/archive/issues/` doc, not here (sports facade re-export coverage needs checking first; don't break it as a
       side-effect of the prediction fix). - [x] [DESIGN P0 — operator-directed] **1A.d — PR-3/PR-4.** (UAC@`89f63b7`
       2026-05-12 — operator directed Sonnet continuation to ship despite gotcha; grain-segregation comment added inline;
       downstream completion\*pct aggregators must not mix with instrument-day grain) 🟡 **GOTCHA found on deeper read

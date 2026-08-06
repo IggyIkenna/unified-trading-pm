@@ -1075,7 +1075,7 @@ Estimated days: Phase 0 (0.5d) + Phase 1 (0.5d parallel) + Phase 2 (0.5d) + Phas
 
 ## Success criteria
 
-- **Phase 0**: pre-audit manifest committed under `plans/active/issues/`; every cross-repo import + every duplicated
+- **Phase 0**: pre-audit manifest committed under `plans/archive/issues/`; every cross-repo import + every duplicated
   helper enumerated.
 - **Phase 1A**: UAC `FeatureFamily` enum + `FEATURE_GROUP_TO_FAMILY` registry merged; 3 unit tests pass; UAC QG clean.
 - **Phase 1B**: UTL `ManifestWriter` accepts `feature_family` kwarg; `MissingFeatureFamilyError` raised on features-CLI
@@ -1086,7 +1086,7 @@ Estimated days: Phase 0 (0.5d) + Phase 1 (0.5d parallel) + Phase 2 (0.5d) + Phas
   smoke + per-family pytest RUNS (failures fixed in Phase 4).
 - **Phase 4**: per-family pytest GREEN; consolidated pyproject + Dockerfile + Health-API working; QG Pass 1 clean.
 - **Phase 5**: 4 cross-family helpers lifted to UTL with per-family inline removals in same commit; UTL QG clean.
-- **Phase 6**: parity diff zero across all 8 families; report committed under `plans/active/issues/`.
+- **Phase 6**: parity diff zero across all 8 families; report committed under `plans/archive/issues/`.
 - **Phase 7**: 8 source repos archived on GitHub; `workspace-manifest.json` + `code-workspace` cleaned; PM QG clean.
 - **Phase 8A**: launchers consolidated; `VM_PREFIX_TO_BUCKET` updated; `vm-zombie-watchdog` relaunched.
 - **Phase 8B**: deployment-api + deployment-ui surface `feature_family` axis; per-repo QG clean.

@@ -163,17 +163,18 @@ live" checks, not just the aggregate-drift-count case already covered:
   directly). No code shipped — this doc is the tracked follow-up for the process/docs fix; the 2 concrete plan
   corrections already happened inline in their own docs.
 
-- **2026-07-25T06:00Z (slot 10, review)** — Todo 3 (sweep): searched `plans/active/` for the specific pattern
+- **2026-07-25T06:00Z (slot 10, review)** — Todo 3 (sweep): searched `plans/archive/2026_08/` for the specific pattern
   (`git merge-base --is-ancestor ... origin/main`, narrowed from a much noisier bare `is-ancestor` grep across 36 files,
   most unrelated — tarball/lineage ancestor checks against LDR, not this bug). Found and triaged every genuine hit:
   - **`deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`** (Gap-1 todo,
     `unified-trading-library@4773a3fd`) — a real, uncaught instance: the todo's own forward-looking verification
     instruction told a future dispatch to rely on the ancestor check. Re-verified NOW via content-diff instead (fix's
-    content confirmed on `main`) — but the behavioral check (`active/` count vs live-VM count, `"Reaper: archived"` log
-    presence) shows the fix has **NOT** actually resolved the convergence problem (`active/` still 404 vs 9 running VMs,
-    ~2.5h post-deploy, zero archived-lines AND zero tracebacks). Corrected the doc's verification guidance + filed a
-    fresh `[BACKEND]` P0 todo for the still-open non-convergence (possible cause: deployment-api vendors UTL via a local
-    editable path, not a pinned version, so UTL's own `main` having the fix doesn't prove the built container does).
+    content confirmed on `main`) — but the behavioral check (`archive/2026_08/` count vs live-VM count,
+    `"Reaper: archived"` log presence) shows the fix has **NOT** actually resolved the convergence problem
+    (`archive/2026_08/` still 404 vs 9 running VMs, ~2.5h post-deploy, zero archived-lines AND zero tracebacks).
+    Corrected the doc's verification guidance + filed a fresh `[BACKEND]` P0 todo for the still-open non-convergence
+    (possible cause: deployment-api vendors UTL via a local editable path, not a pinned version, so UTL's own `main`
+    having the fix doesn't prove the built container does).
   - **`data_completion_defi_2026_07_15.md:864`** — an ancestor check that returned exit 0 (true positive). Not an
     instance of this bug — the bug only produces false NEGATIVES; a positive ancestor result is always valid evidence.
     No action needed.

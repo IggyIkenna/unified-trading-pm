@@ -23,6 +23,7 @@ related:
     /codex/11-project-management/doc-frontmatter-schema.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/active/task_template.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 last_updated: 2026-07-30
@@ -166,9 +167,9 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
   (`agents/context_scout_auditor.md`, `cursor-configs/skills/context-scout/SKILL.md`,
   `scripts/plan-hygiene/generate_context_scope_inventory.py`), and this same predecessor plan's own narrative survived
   only in that earlier session's own conversation summary — reconciled here rather than silently dropped. Lesson for the
-  future: an uncommitted `plans/active/*.md` file has NO protection from `git checkout`-based conflict recovery (unlike
-  git-tracked content, which at least shows up in `git status`/stash) — write it, then commit it fast, don't let a plan
-  doc itself become the uncommitted artifact a later cleanup pass can't see.
+  future: an uncommitted `plans/archive/2026_08/*.md` file has NO protection from `git checkout`-based conflict recovery
+  (unlike git-tracked content, which at least shows up in `git status`/stash) — write it, then commit it fast, don't let
+  a plan doc itself become the uncommitted artifact a later cleanup pass can't see.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the two markdown role/skill files for the
   real Python source this doc shipped (`generate_context_scope_inventory.py`) + the agent-orchestrator file whose

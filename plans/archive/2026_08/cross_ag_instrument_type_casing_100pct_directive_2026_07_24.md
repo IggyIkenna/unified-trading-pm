@@ -57,11 +57,12 @@ source:
   them), DeFi alone gets the per-instrument_type treatment. Then directed this be written into all 5 AG consolidated
   plans; created as a standalone issue doc (this file) rather than duplicated inline in
   cefi_consolidated_closeout_2026_07_18.md / defi_consolidated_closeout_2026_07_18.md /
-  tradfi_manifest_content_recovery_completion_2026_07_24.md because those 3 files are already over the plans/active/*.md
-  1000-line hard cap (pre-existing, tracked debt — see plans/active/issues/plan_line_cap_remediation_2026_07_23.md;
-  hard_count=17 in scripts/plan-hygiene/line_caps_baseline.yaml as of today) and the RULE-11 blast-radius line-cap gate
-  blocks ANY staged touch to an over-cap file, not just growth — touching them to add even a few lines is blocked until
-  they are split, which is out of scope for this directive."
+  tradfi_manifest_content_recovery_completion_2026_07_24.md because those 3 files are already over the
+  plans/archive/2026_08/*.md 1000-line hard cap (pre-existing, tracked debt — see
+  plans/active/issues/plan_line_cap_remediation_2026_07_23.md; hard_count=17 in
+  scripts/plan-hygiene/line_caps_baseline.yaml as of today) and the RULE-11 blast-radius line-cap gate blocks ANY staged
+  touch to an over-cap file, not just growth — touching them to add even a few lines is blocked until they are split,
+  which is out of scope for this directive."
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
@@ -172,15 +173,16 @@ DeFi-only; the other four asset_groups' per-value target is uniformly UPPERCASE.
 ## Why this is a standalone issue doc, not inline in 3 of the plans
 
 `cefi_consolidated_closeout_2026_07_18.md` (1421L), `defi_consolidated_closeout_2026_07_18.md` (1489L), and
-`tradfi_manifest_content_recovery_completion_2026_07_24.md` (1633L) are all already over the `plans/active/*.md`
-1000-line hard cap — pre-existing, tracked debt (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`,
-`hard_count: 17` in `scripts/plan-hygiene/line_caps_baseline.yaml`). The `check_line_caps.sh` pre-commit gate is a
-RULE-11 blast-radius safety check: **a file THIS commit touches must not be over its tier's cap, full stop** — it blocks
-staging ANY change to an already-over-cap file, not just growth. Splitting these 3 files is real, separate work (the
-same pattern already applied to `tradfi_consolidated_closeout_2026_07_18.md`,
-`prediction_consolidated_closeout_2026_07_18.md`, and `defi_consolidated_closeout_2026_07_18.md`'s own Track-1
-extraction) and is out of scope for this directive — it belongs to the tracked remediation issue, not this one. This doc
-is the durable record; the 5 per-AG plans' execution-item pointers above are how to find the live work.
+`tradfi_manifest_content_recovery_completion_2026_07_24.md` (1633L) are all already over the
+`plans/archive/2026_08/*.md` 1000-line hard cap — pre-existing, tracked debt
+(`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, `hard_count: 17` in
+`scripts/plan-hygiene/line_caps_baseline.yaml`). The `check_line_caps.sh` pre-commit gate is a RULE-11 blast-radius
+safety check: **a file THIS commit touches must not be over its tier's cap, full stop** — it blocks staging ANY change
+to an already-over-cap file, not just growth. Splitting these 3 files is real, separate work (the same pattern already
+applied to `tradfi_consolidated_closeout_2026_07_18.md`, `prediction_consolidated_closeout_2026_07_18.md`, and
+`defi_consolidated_closeout_2026_07_18.md`'s own Track-1 extraction) and is out of scope for this directive — it belongs
+to the tracked remediation issue, not this one. This doc is the durable record; the 5 per-AG plans' execution-item
+pointers above are how to find the live work.
 
 ## Open todo
 

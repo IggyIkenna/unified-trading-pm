@@ -172,8 +172,8 @@ in the regenerated `ui-reference-data.json`.
   archival-process-integrity issue that, if anything, corroborates this doc's underlying audit is freshly re-verified
   (2026-08-02), not stale. `execution_scope` flipped to `orchestrator-agent`; `assigned_role: data_engineering` was
   already correctly set. No finalize twin required — `doc_type: issue` is structurally exempt from the
-  finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`, not
-  `plans/active/issues/*.md`).
+  finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs `plans/archive/2026_08/*.md`, not
+  `plans/archive/issues/*.md`).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
 - **data_engineering 2026-08-03** (slot-10): shipped the fix — `unified-api-contracts@89b196cf` removed the
   `VENUE_DATA_AVAILABILITY["POLYGON"]` entry (8 lines); verified live via a direct import assertion and a green

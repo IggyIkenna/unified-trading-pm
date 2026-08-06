@@ -15,7 +15,9 @@ author: slot-8
 source: [plans/active/agent_orchestrator_slack_notifications_2026_05_19.md]
 locked_by: live-defi-rollout
 priority: P2
-blocked_reason: Operator or slot-1 must re-trigger staging deploy (deploy-agent-orchestrator.sh --env=uat --cloud) to determine if exit(3) is transient or recurring
+blocked_reason:
+  Operator or slot-1 must re-trigger staging deploy (deploy-agent-orchestrator.sh --env=uat --cloud) to determine if
+  exit(3) is transient or recurring
 ---
 
 > **[ACKED-INTO-CODE]** Archived 2026-05-22. Root cause: `data/config/backlog.yaml` is gitignored (runtime artifact), so
@@ -68,4 +70,4 @@ bash deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh --env=uat
 ```
 
 Then check if the new revision starts cleanly (exit 0) or reproduces exit(3). If exit(3) recurs → file P0 bug in
-`plans/active/` with `parent_epic: orchestrator_master`. If resolved → archive this issue as ACKED-INTO-CODE.
+`plans/archive/2026_08/` with `parent_epic: orchestrator_master`. If resolved → archive this issue as ACKED-INTO-CODE.

@@ -360,19 +360,19 @@ and doesn't affect Deploy-Missing UI registry coverage).
       migrated launchers still run from operator workstation manually.
 
       **Downstream consumers waiting on this Phase 2 to ship (added 2026-05-10 cross-plan audit fix)** — these plans
-                  ship NEW launchers that need Deploy-Missing UI registration before operators can deploy via the UI button instead
-                  of running scripts manually. Until Phase 2 lands, all are acceptable manual-launch cases (not blockers); when
-                  Phase 2 executes, the executor MUST register these:
-                    - [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md) Phase 1 —
-                      ships `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh`. Sub-todo `1.Y
-                      DEFERRED-AFTER-CONSOLIDATION-PHASE2` already pinned in promote Phase 1 + cross-plan banner at top of promote
-                      plan.
-                    - **Quick scan recipe at Phase 2 execution time**: `grep -rln "deployment-service/scripts/vm/launch-.*-vm\.sh"
-                      plans/active/*.md plans/epics/*.md` — for every NEW (post-2026-05-10) launcher referenced, verify whether its
-                      owner plan needs Deploy-Missing UI surfacing; if yes, add to `_SERVICE_LAUNCHER_SCRIPTS` in this Phase 2.
+                      ship NEW launchers that need Deploy-Missing UI registration before operators can deploy via the UI button instead
+                      of running scripts manually. Until Phase 2 lands, all are acceptable manual-launch cases (not blockers); when
+                      Phase 2 executes, the executor MUST register these:
+                        - [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md) Phase 1 —
+                          ships `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh`. Sub-todo `1.Y
+                          DEFERRED-AFTER-CONSOLIDATION-PHASE2` already pinned in promote Phase 1 + cross-plan banner at top of promote
+                          plan.
+                        - **Quick scan recipe at Phase 2 execution time**: `grep -rln "deployment-service/scripts/vm/launch-.*-vm\.sh"
+                          plans/archive/2026_08/*.md plans/epics/*.md` — for every NEW (post-2026-05-10) launcher referenced, verify whether its
+                          owner plan needs Deploy-Missing UI surfacing; if yes, add to `_SERVICE_LAUNCHER_SCRIPTS` in this Phase 2.
 
-                  (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered; 3-test suite green; promote Phase 1.Y
-                  sub-todo resolved.)
+                      (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered; 3-test suite green; promote Phase 1.Y
+                      sub-todo resolved.)
 
 - [x] [deployment-api] P0. Unit-test coverage: assert every script registered in `_SERVICE_LAUNCHER_SCRIPTS` exists on
       disk under `deployment-service/scripts/vm/` (pre-flight catches typos before a panic-time deploy-missing click).

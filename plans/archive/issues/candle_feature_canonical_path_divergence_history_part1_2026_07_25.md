@@ -7,7 +7,7 @@ title: >-
 summary: >-
   Companion history doc (part 1 of 2) to /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md —
   the verbatim Progress Log narrative (2026-07-21 through 2026-07-22, up to the P6 drain) extracted for line-cap
-  compliance (plans/active/task_template.md §3 finding J, plans/active/issues/*.md 1000-line hard cap — the combined
+  compliance (plans/active/task_template.md §3 finding J, plans/archive/issues/*.md 1000-line hard cap — the combined
   narrative itself exceeded 1000 lines, hence the 2-part split). Covers: the coordinated writer+reader lockstep landing
   across unified-trading-library/market-data-processing-service/features-service/ unified-trading-api; the -test- gate
   proof (2 real regressions found+fixed); todo 6's comparator-staleness fixes; the P0 census (~10.9M candle objects,
@@ -63,7 +63,7 @@ resolved_by: >-
   todos)
 source: >-
   Extracted 2026-07-25 from plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md (1453 lines, over
-  the plans/active/issues/*.md 1000-line hard cap, scripts/plan-hygiene/check_line_caps.sh) per the established
+  the plans/archive/issues/*.md 1000-line hard cap, scripts/plan-hygiene/check_line_caps.sh) per the established
   extract-to-archive-bound-history-child pattern (plans/active/issues/plan_line_cap_remediation_2026_07_23.md's FINAL
   RESOLUTION section); split into 2 parts because the combined extracted narrative (1088 lines) itself exceeded the cap.
   Verbatim Progress Log content in original document order; only the todo-11/12/13/14/15 and todo-16/19 checkbox lines
@@ -79,7 +79,7 @@ source: >-
 
 > **Companion history doc, not the live plan (1 of 2).** This holds the first half of the verbatim Progress Log
 > narrative extracted from `/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md` to bring that
-> issue doc back under the 1000-line `plans/active/issues/` hard cap (`scripts/plan-hygiene/check_line_caps.sh`) — the
+> issue doc back under the 1000-line `plans/archive/issues/` hard cap (`scripts/plan-hygiene/check_line_caps.sh`) — the
 > combined narrative itself was too large for one companion doc, hence this 2-part split. Nothing below was rewritten;
 > it remains the verbatim historical record, in original document order, except the todo-11/12/13/14/15 and todo-16/19
 > checkbox lines, which were relocated to the parent's `## Todos` section (each removal is marked in place below with a

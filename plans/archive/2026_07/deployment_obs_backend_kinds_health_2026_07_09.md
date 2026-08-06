@@ -520,18 +520,18 @@ source: deployment_observability_expansion_2026_07_08.md
   flipped `[x]` by slot 12's `f5f6ff4` before this task was picked up — its `composite_health_status` classifier
   correctly implements control-plane-existence + stale-heartbeat per the "Hang detection" mandate, so no duplicate
   implementation was added. Two residual bugs verified + fixed instead: (1) `_load_gcp_vm_entries` still filtered
-  `active/` registry entries to those present in the GCE aggregated-list join (`if e.vm_name in running_vm_names`) — the
-  exact "hard-killed VM" entry `dead` exists to catch was silently dropped before `_composite_health_status` ever saw
-  it, making `dead` practically unreachable on the live path; removed the filter. (2) `build_inventory` derived
-  `control_plane_running` from mere key presence in the join rather than the raw status value — GCE keeps a
-  stopping/stopped/terminated instance visible in the aggregated-list for a while, so a present-but-not-`RUNNING` VM
-  false-negatived as confirmed-running; now checks `status == "RUNNING"`. 2 new tests pin both (an active entry absent
-  from a fresh GCE census survives `_load_gcp_vm_entries` unfiltered; a VM present in the join with a non-RUNNING status
-  still resolves `dead`). Also fixed one pre-existing, unrelated QG STEP 5.101 empty-string-fallback violation in
-  `fleet.py` that was blocking the full gate. Rebased through 5 concurrent same-file landings this session (dynamic
-  Cloud Run census, service-health sub-taxonomy, Tier-0 free-wins, kind-count/filter extension, composite health, AWS
-  Lambda census, drill-down endpoint) — 3 real conflicts hand-resolved (docstrings, signature unification), 2 clean
-  auto-merges. QG green (sentinel 25afc62, 86s).
+  `archive/2026_08/` registry entries to those present in the GCE aggregated-list join
+  (`if e.vm_name in running_vm_names`) — the exact "hard-killed VM" entry `dead` exists to catch was silently dropped
+  before `_composite_health_status` ever saw it, making `dead` practically unreachable on the live path; removed the
+  filter. (2) `build_inventory` derived `control_plane_running` from mere key presence in the join rather than the raw
+  status value — GCE keeps a stopping/stopped/terminated instance visible in the aggregated-list for a while, so a
+  present-but-not-`RUNNING` VM false-negatived as confirmed-running; now checks `status == "RUNNING"`. 2 new tests pin
+  both (an active entry absent from a fresh GCE census survives `_load_gcp_vm_entries` unfiltered; a VM present in the
+  join with a non-RUNNING status still resolves `dead`). Also fixed one pre-existing, unrelated QG STEP 5.101
+  empty-string-fallback violation in `fleet.py` that was blocking the full gate. Rebased through 5 concurrent same-file
+  landings this session (dynamic Cloud Run census, service-health sub-taxonomy, Tier-0 free-wins, kind-count/filter
+  extension, composite health, AWS Lambda census, drill-down endpoint) — 3 real conflicts hand-resolved (docstrings,
+  signature unification), 2 clean auto-merges. QG green (sentinel 25afc62, 86s).
 - 2026-07-09 — **`/deployments/{name}/detail` drill-down endpoint shipped** (slot 15): `deployment-api@7c4265a`
   (`deployment_api/routes/deployments_inventory.py`) — `DeploymentDetailResponse` (thin-list item + the D.1 metrics
   vector) served via a new `_vm_entry_by_name_cache` side-cache populated as a side effect of the SAME GCP census

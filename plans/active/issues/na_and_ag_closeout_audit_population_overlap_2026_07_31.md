@@ -41,6 +41,7 @@ related:
     /plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md,
     scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 author: unknown

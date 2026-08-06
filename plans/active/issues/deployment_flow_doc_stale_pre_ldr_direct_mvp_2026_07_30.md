@@ -34,6 +34,7 @@ estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.24
 locked_by:
 resolved_by:
+  /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
 depends_on: []
 context_scope:
   [

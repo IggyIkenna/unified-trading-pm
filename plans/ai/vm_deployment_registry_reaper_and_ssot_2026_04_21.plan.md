@@ -62,7 +62,7 @@ contains **30** JSON entries. **~23 orphans**. Inspecting them:
   `cc07649` made the daemon file mandatory, so the wrapper fell into the `DAEMON_PID=""` branch at
   `vm-exec-with-gcs-tee.sh:96` ("`heartbeat daemon missing → observability disabled`"), registered the entry via the
   fallback `deployment_heartbeat.py register` path, then had no daemon process to SIGTERM at workload exit →
-  `complete()` was never called → entry stays in `active/` forever.
+  `complete()` was never called → entry stays in `archive/2026_08/` forever.
 - Post-`cc07649` VMs archive correctly (daemon SIGTERM path invokes `HeartbeatDaemon.complete()` at
   `unified-trading-library/unified_trading_library/lifecycle/daemon.py:223..254`, which calls `store.complete(entry)` →
   `DeploymentsRegistry.complete()` moves ACTIVE → `archive/<YYYY-MM-DD>/`).
@@ -72,7 +72,7 @@ However, even post-fix, **hard-kill paths still orphan entries**:
 - `vm-exec-with-gcs-tee.sh:212` SIGKILLs the daemon if it doesn't exit within 30s → `complete()` skipped.
 - Watchdog at `vm-exec-with-gcs-tee.sh:137..186` can kill the VM's workload via `pkill -KILL` — the daemon's SIGTERM
   still runs, but a second-order failure (OOM / VM pre-emption / panic before the daemon's cleanup finishes) leaves the
-  entry in `active/`.
+  entry in `archive/2026_08/`.
 - `VM_SHUTDOWN_ON_COMPLETION=true` self-delete (beaa2e5) is a detached
   `nohup setsid bash -c "sleep 10 && gcloud compute instances delete ..."` — if the daemon's final upload takes > ~10s
   the VM can tear down mid-flight leaving a torn write. **No `complete()` confirmation gate** exists before the delete
@@ -226,8 +226,8 @@ Phase 5 (QG + acceptance)
 
 - `/api/vm-deployments?status=running` returns exactly the set of RUNNING GCE VMs (± the heartbeat-window race) — not 30
   when only 7 VMs are running.
-- Hard-kill paths (SIGKILL daemon / watchdog termination / VM pre-emption) leave the entry in `active/` but the next
-  reaper run archives it with a structured `reap_reason`.
+- Hard-kill paths (SIGKILL daemon / watchdog termination / VM pre-emption) leave the entry in `archive/2026_08/` but the
+  next reaper run archives it with a structured `reap_reason`.
 - Codex doc unambiguously states GCS paths + topic names; no reference to "registry.json" single-file or Firestore.
 - GHA daily reaper runs green for 3 consecutive days.
 - Basedpyright + ruff + bandit + plan-health all clean on every touched repo.

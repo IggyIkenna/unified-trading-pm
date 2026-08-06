@@ -33,6 +33,7 @@ related:
     ../../archive/issues/backlog_regen_id_reuse_stale_status_2026_07_15.md,
     ../../archive/issues/ao_dispatch_residuals_2026_07_15.md,
     ../../epics/orchestrator_master.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-17
 author: unknown

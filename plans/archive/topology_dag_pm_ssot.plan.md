@@ -38,7 +38,7 @@ todos:
         Canonical location: unified-trading-pm/TOPOLOGY-DAG.md\n  > Codex owns architectural narrative
         (TIER-ARCHITECTURE.md, PROTOCOL-INJECTION.md);\n  > PM owns the living DAG because it is co-located with
         workspace-manifest.json,\n  > the machine-readable SSOT.\nUpdate unified-trading-codex/00-SSOT-INDEX.md
-        TOPOLOGY-DAG row to PM path.\nUpdate all plans in plans/active/ that reference
+        TOPOLOGY-DAG row to PM path.\nUpdate all plans in plans/archive/2026_08/ that reference
         04-architecture/TOPOLOGY-DAG.md\nto reference unified-trading-pm/TOPOLOGY-DAG.md.\n",
       status: completed,
     }

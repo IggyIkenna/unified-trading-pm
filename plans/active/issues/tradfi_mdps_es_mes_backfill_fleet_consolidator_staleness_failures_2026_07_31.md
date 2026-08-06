@@ -30,6 +30,7 @@ related:
   [
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/archive/2026_08/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-31
 author: unknown

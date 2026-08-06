@@ -41,7 +41,7 @@ This will print a PASS/FAIL table. Then work through each failure category in or
 plan from GitHub:
 
 - Keep new frontmatter (head -N lines of current file)
-- Restore GitHub body: `git show origin/live-defi-rollout:plans/active/<file> | tail -n +<gh_fm_end+1>`
+- Restore GitHub body: `git show origin/live-defi-rollout:plans/archive/2026_08/<file> | tail -n +<gh_fm_end+1>`
 - Combine and write back. Verify `^- \[ \]` count matches GitHub.
 
 **2. Frontmatter violations** (`check_frontmatter.sh`) Many plans still have jammed frontmatter (`---title:` on one line
@@ -65,7 +65,7 @@ instead of `---` alone) and deprecated fields (`deadline`, `owner`, `asset_group
 each:
 
 - Confirm there are genuinely no deferred items hiding in prose (grep body for `DEFERRED`, `TODO`, `BLOCKED`)
-- If clean: `git mv plans/active/<file> plans/archive/2026_05/<file>`
+- If clean: `git mv plans/archive/2026_08/<file> plans/archive/2026_05/<file>`
 - If deferred items found in prose: convert to `- [ ]` todos before archiving or keep in active
 
 **5. Wire runbook into LEDGER morning boots** After sweep passes clean:

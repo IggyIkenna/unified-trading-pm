@@ -24,6 +24,7 @@ related:
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-03
 author: unknown

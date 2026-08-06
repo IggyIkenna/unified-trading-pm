@@ -5,7 +5,7 @@ title:
   runs strand RED findings as dirty untracked files
 summary:
   "`manifest_hygiene_daily.py` (and the shared `_dp_common.py` writers) emit an escalation issue doc under
-  `plans/active/issues/` plus candidate CSVs under `plans/audit/results/` — both of which the design intends to be
+  `plans/archive/issues/` plus candidate CSVs under `plans/audit/results/` — both of which the design intends to be
   COMMITTED (the issue doc so the orchestrator PlanRegenLoop ingests it; the CSVs are force-un-ignored in `.gitignore`).
   But the writers have ZERO git commit/push logic, so a LOCAL run just drops the files into the working tree and exits.
   On 2026-07-03 a local `--mode full` run left three such files (a cefi RED issue doc + a 1.4KB candidate CSV + an 18MB
@@ -108,7 +108,7 @@ uncommitted. Investigation split them into two unrelated groups:
 
 The design **intends these artifacts to be committed**, but nothing commits them:
 
-1. **Issue doc is ingestion-intended.** `_dp_common.file_escalation_issue()` writes to `plans/active/issues/` precisely
+1. **Issue doc is ingestion-intended.** `_dp_common.file_escalation_issue()` writes to `plans/archive/issues/` precisely
    so the orchestrator's **PlanRegenLoop → backlog → AutoSpawn** picks it up — the in-code comment
    ([\_dp_common.py](../../../../e2e-testing/scripts/audit/_dp_common.py), ~L114-117) says a filed issue "is only
    ingested … when it declares an explicit `assigned_vm`" and must therefore carry one. Ingestion requires the file to
@@ -151,7 +151,7 @@ GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod CLOUD_PROVIDER=gcp \
 # --smoke          → imports + arg-parse only, no GCS (mechanism check)
 ```
 
-A non-empty candidate list re-creates: the issue doc under `plans/active/issues/`, the per-AG candidate CSV under
+A non-empty candidate list re-creates: the issue doc under `plans/archive/issues/`, the per-AG candidate CSV under
 `plans/audit/results/`, and (in `--mode full`) the `divergence_<date>.csv` dump — landing in whichever
 `…/unified-trading-pm/…` the script's `parents[3]` resolves to. **This is the reproduction of the bug**: after the run,
 `git status` in the PM clone will show them dirty and untracked, with nothing having committed them.

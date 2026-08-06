@@ -19,6 +19,7 @@ related:
   [
     /plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md,
     /plans/active/june_2026_vintage_audit_findings_2026_07_27.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 last_updated: 2026-07-31
@@ -196,7 +197,7 @@ determinism needs.
 - [ ] [DATA] P2. Cross-check whether any of the 52 asset_group x data_type combinations still show ZERO messages ever
       delivered a full week after this plan's todos above land — this would point at a genuine producer-side gap
       (nothing ever calls `publish()` for that shard) distinct from the subscription-expiry bug this plan fixes. File
-      each such case as its own `plans/active/issues/<slug>_<date>.md` rather than leaving it unrecorded here — this is
+      each such case as its own `plans/archive/issues/<slug>_<date>.md` rather than leaving it unrecorded here — this is
       a `[DIAG]` finding-generator todo, not itself a fix.
 - [x] ✅ [DATA] P3. 48h after the `terraform apply` todo above lands, re-check
       `gcloud pubsub subscriptions list --filter="name:warm-sink"` still returns 52 (proves the never-expire policy

@@ -35,6 +35,7 @@ related:
     /plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md,
     /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-27
 author: unknown
@@ -171,7 +172,7 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       sign-off on the family↔asset_group mapping before a worker wires the actual per-family branches; the topology half
       above (per-shard/per-family process decomposition) is unblocked and can be wired now. Reference: Phase 15
       successor plan (`live_pipeline_mtds_mdps_features_2026_05_08.md`, if a successor plan exists — none found under
-      `plans/active/` as of this issue's filing; may need to be created).
+      `plans/archive/2026_08/` as of this issue's filing; may need to be created).
 - [x] ✅ [SCRIPT] P2. Once the shape is decided: add a `VM_TASK == "mdps-features-live"` (or generic "+"-split) branch
       to `setup-data-pipeline-vm.sh`'s exec-dispatch section that invokes MDPS and features-service with the CLI flags
       their actual parsers require, per the decided shape. **Investigated 2026-07-30 (operator-ruling closeout pass)**:

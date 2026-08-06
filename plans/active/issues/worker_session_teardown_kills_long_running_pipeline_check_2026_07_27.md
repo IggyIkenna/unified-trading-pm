@@ -26,6 +26,7 @@ related:
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 tags: [infra, worker-lifecycle, data-pipeline-check, flakiness]
 priority: P1

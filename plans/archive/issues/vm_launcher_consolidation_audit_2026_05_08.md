@@ -12,10 +12,24 @@ tags: []
 related: []
 created: 2026-05-08
 author: ikenna-tab1-main
-source: [cursor-configs/CLAUDE.md § "VM launcher script SSOT (codified 2026-05-07)", cursor-configs/CLAUDE.md § "VM Naming Convention", plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md (referenced in CLAUDE.md but pending execution), 'workspace-wide grep for `gcloud compute instances create` + `gcloud run deploy` + `aws ec2 run-instances` (2026-05-08 14:45 UTC, Tab 1 audit)']
+source:
+  [
+    cursor-configs/CLAUDE.md § "VM launcher script SSOT (codified 2026-05-07)",
+    cursor-configs/CLAUDE.md § "VM Naming Convention",
+    plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md (referenced in CLAUDE.md but pending
+    execution),
+    "workspace-wide grep for `gcloud compute instances create` + `gcloud run deploy` + `aws ec2 run-instances`
+    (2026-05-08 14:45 UTC, Tab 1 audit)",
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-execution: {owner: Tab 1 main 2026-05-08 (this session) — Phases 0-5 ALL DONE, cadence: one-shot — COMPLETE, verifier: deployment-service@5cea036 + e2e-testing@e3a9cf2 + 12 companion commits, last_executed: '2026-05-08'}
+execution:
+  {
+    owner: Tab 1 main 2026-05-08 (this session) — Phases 0-5 ALL DONE,
+    cadence: one-shot — COMPLETE,
+    verifier: deployment-service@5cea036 + e2e-testing@e3a9cf2 + 12 companion commits,
+    last_executed: "2026-05-08",
+  }
 ---
 
 # VM-launcher + Cloud Run consolidation audit
@@ -179,7 +193,7 @@ rename + path-update.
 ## Cross-references
 
 - Plan: `plans/ai/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md` (referenced in CLAUDE.md but not
-  yet executed; promote to `plans/active/` when this audit is folded in).
+  yet executed; promote to `plans/archive/2026_08/` when this audit is folded in).
 - Sister governance issue: `runbook_execution_governance_gaps_2026_05_08.md` (the silent-rot issue this surfaced from).
 - CLAUDE.md SSOTs: "VM launcher script SSOT (codified 2026-05-07)", "VM Naming Convention", "Singleton-locked
   launchers".

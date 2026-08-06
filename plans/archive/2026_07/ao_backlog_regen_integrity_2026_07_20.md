@@ -183,7 +183,7 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the gated mechanism needs no periodic
       sweep, but the UNAUDITABLE→auditable transition can surface old poison at any time, so the tool runs once per
       close-out session, not on a cron. **Resolved doc #4**: `status: resolved`, `resolved_by` filled (cites this plan's
-      todo 5 investigation), `last_updated` bumped, a `🟢 RESOLVED` banner added, moved `plans/active/issues/` →
+      todo 5 investigation), `last_updated` bumped, a `🟢 RESOLVED` banner added, moved `plans/archive/issues/` →
       `plans/archive/issues/` via `git mv`. **Gate met**: doc flipped `resolved`, `resolved_by` filled, archived, codex
       alignment checked and 2 stale sections fixed.
 
@@ -221,7 +221,7 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
   "known sharp edge" bullet); recorded the audit-cadence corollary as a new section in
   `agent-orchestrator-backlog-state-alignment.md`. Doc #4 resolved (`resolved_by` filled, banner added, moved to
   `plans/archive/issues/`). Since every todo here is now `[x]` with no deferred items, archiving this plan too
-  (`status: complete`, moved to `plans/archive/2026_07/`) rather than leaving it sitting in `active/` — the
+  (`status: complete`, moved to `plans/archive/2026_07/`) rather than leaving it sitting in `archive/2026_08/` — the
   codex-alignment step above already covers this plan's own archival ritual.
 - **2026-07-20 — Todo 3 (NULL brief_hash tail) landed** (`agent-orchestrator@aaa2db8`). Decision (c) accept permanently.
   Re-measured count is 38, not the plan's own cited 54 (bucket shrinks over time, as expected) — 0 in-flight, ruling's

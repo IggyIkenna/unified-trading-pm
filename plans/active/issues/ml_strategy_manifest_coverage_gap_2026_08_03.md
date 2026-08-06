@@ -26,6 +26,7 @@ related:
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
     /plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-03"
 author: unknown
@@ -178,7 +179,7 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
    `EXPECTED_*` member is a calendar/coverage-window primitive (holiday, pre-launch, TVL-floor, etc.), none of which
    describe a strategy engine's own hold-day decision.
 4. Adding a new `EmptyConfirmedReason` taxonomy member is the semantically correct fix, but per its own governance
-   ("Adding a new code = adding it here AND to `codex/02-data/honest-absence-downstream-handling.md` AND to the
+   ("Adding a new code = adding it here AND to `/codex/02-data/honest-absence-downstream-handling.md` AND to the
    per-service consumer-class audit table") it's a real closed-set design decision requiring a `unified-api-contracts`
    change — outside this todo's declared repos (`ml-service`, `strategy-service`, `unified-trading-pm`) and exactly the
    kind of judgment call `task_template.md`'s dispatch-scope-eligibility rule reserves for a human decision, not a
@@ -272,7 +273,7 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
   (`EMPTY_REASON_KEYS` tuple) and `deployment-ui@01cb9b6c` (`EMPTY_REASON_KEYS` + `EMPTY_REASON_META` + its pinned test
   snapshot — also backfilled 2 pre-existing gaps, `EXPECTED_ACQUISITION_PENDING`
   - `EXPECTED_SUBGRAPH_DEINDEXED`, found during the same audit but predating this change). Updated
-    `codex/02-data/honest-absence-downstream-handling.md`'s reason taxonomy + consumer-policy tables and
+    `/codex/02-data/honest-absence-downstream-handling.md`'s reason taxonomy + consumer-policy tables and
     `scripts/quality_gates/check_record_empty_reason_closed_set.py`'s `KNOWN_REASONS` (also backfilled the same 2
     pre-existing gaps there). Shipped `strategy-service@faddf680`: the backfill tool + sweep coverage fix (see prior
     entry), now runnable with `--reason STRATEGY_ENGINE_RETURNED_ZERO`. All 5 repos QG-green before shipping.

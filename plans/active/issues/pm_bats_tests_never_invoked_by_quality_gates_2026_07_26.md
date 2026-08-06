@@ -31,6 +31,7 @@ related:
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md,
     /codex/06-coding-standards/quality-gates.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-26"
 author: unknown

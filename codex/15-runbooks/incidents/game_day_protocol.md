@@ -122,8 +122,8 @@ Per audit-instructions Section O.10.d, every scenario MUST satisfy:
 
 ## Acceptance criterion
 
-All 3 scenarios × 7 asserts = **21/21 GREEN** OR documented failure with named remediation plan in `plans/active/`.
-Anything less = audit RED.
+All 3 scenarios × 7 asserts = **21/21 GREEN** OR documented failure with named remediation plan in
+`plans/archive/2026_08/`. Anything less = audit RED.
 
 ## Verification artifacts
 
@@ -141,7 +141,7 @@ Stored in `plans/audit/results/game_day_<yyyy_mm_dd>.md`.
 If any assert fails:
 
 1. STOP the cutover preparation.
-2. File a remediation plan at `plans/active/<failure>_remediation_<date>.md`.
+2. File a remediation plan at `plans/archive/2026_08/<failure>_remediation_<date>.md`.
 3. Dispatch the plan to the appropriate epic (observability_master / strategy_master / etc).
 4. Re-run the full 3-scenario protocol after remediation lands.
 

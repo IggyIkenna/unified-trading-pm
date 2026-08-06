@@ -33,6 +33,7 @@ related:
   [
     plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-06
 author: cefi_mtds_smoke_tester (agt-e76dc5, slot 6)

@@ -28,6 +28,7 @@ related:
     /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-28
 author: unknown
@@ -158,13 +159,13 @@ forces an operator/main manual DB patch outside the normal flow.
       closing here. Its precondition ("once either fix above ships") is now met (both fixes above are `[x]`), so it is
       unblocked but still not done.
 - [x] ✅ [BACKEND] P2. **Self-archival variant** (recurrence 2026-07-29, below): when a `/done`'s commit RENAMES/deletes
-      the `plan_ref` out of `plans/active/` (an in-same-commit archival closure) AND the moved content carries an
-      accepted disposition marker (`[x]` flip / SUPERSEDED / CANCELLED), Mode-2 must accept it. Today the checker reads
-      the old active path with rename-detection effectively off (`git show` of `plans/active/...` shows only a deletion
-      to `/dev/null`), so a legitimate supersede-and-archive closure 409s `cross_repo_pm_file_touched_no_checkbox_flip`.
-      Fix: in `_pm_log_commits_touching_plan_ref` / `_mode2_disposition`, follow the rename (`git log --follow` or
-      `--find-renames`) so the flip/marker on the destination path is seen; accept a
-      `rename plans/active/... ->     plans/archive/...` whose new blob carries the marker as
+      the `plan_ref` out of `plans/archive/2026_08/` (an in-same-commit archival closure) AND the moved content carries
+      an accepted disposition marker (`[x]` flip / SUPERSEDED / CANCELLED), Mode-2 must accept it. Today the checker
+      reads the old active path with rename-detection effectively off (`git show` of `plans/archive/2026_08/...` shows
+      only a deletion to `/dev/null`), so a legitimate supersede-and-archive closure 409s
+      `cross_repo_pm_file_touched_no_checkbox_flip`. Fix: in `_pm_log_commits_touching_plan_ref` / `_mode2_disposition`,
+      follow the rename (`git log --follow` or `--find-renames`) so the flip/marker on the destination path is seen;
+      accept a `rename plans/archive/2026_08/... ->     plans/archive/...` whose new blob carries the marker as
       `reason="plan_ref_self_archived_with_marker"`. This is the previously-seen
       `/plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md` failure mode,
       recurring. Repo: agent-orchestrator. — agent-orchestrator@3839380: the diff-rename following
@@ -207,7 +208,7 @@ forces an operator/main manual DB patch outside the normal flow.
   A) directed a supersede-and-ARCHIVE closure. Here the checkbox WAS legitimately flipped to
   `- [x] ✅ … SUPERSEDED/EXTRACTED`, but in the SAME `docs(plans):` commit (`unified-trading-pm@9da2e4270`) the doc was
   `git mv`'d to `plans/archive/issues/`. The M3 checker inspects the old active path with rename-detection off, so
-  `git show 9da2e4270 -- plans/active/issues/…` shows only a deletion to `/dev/null` — the `+- [x]` flip lives on the
+  `git show 9da2e4270 -- plans/archive/issues/…` shows only a deletion to `/dev/null` — the `+- [x]` flip lives on the
   archive path and is invisible. Distinct from the two cases above (there the flip was correctly forbidden; here it was
   correctly PERFORMED but hidden by the archival rename). This is the `…_blind_to_self_archived_plan_ref_2026_07_26`
   failure mode recurring — see the new [BACKEND] P2 self-archival recommendation below. Durable work fully shipped +
@@ -218,8 +219,8 @@ forces an operator/main manual DB patch outside the normal flow.
   (`plans/active/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) after flipping its Check-4 `[VERIFY]`
   todo to `- [x] ✅` AND `git mv`-archiving the doc to `plans/archive/issues/` in the SAME commit
   (`unified-trading-pm@450e32392`) — identical shape to the THIRD occurrence above (flip correctly performed, hidden by
-  the archival rename; `git show 450e32392 -- plans/active/issues/…` shows only a 298-line deletion to `/dev/null`, even
-  though plain `git log --since -- <old-path>` DOES find the commit). Durable work fully shipped + pushed (ahead=0
+  the archival rename; `git show 450e32392 -- plans/archive/issues/…` shows only a 298-line deletion to `/dev/null`,
+  even though plain `git log --since -- <old-path>` DOES find the commit). Durable work fully shipped + pushed (ahead=0
   across every repo in the slot); new escalation issue doc filed + pushed alongside
   (`plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`). Per the established
   precedent: task LEFT in-progress, NOT skipped/redispatched, checkbox flip NOT re-attempted. This is now the SECOND
@@ -239,7 +240,7 @@ forces an operator/main manual DB patch outside the normal flow.
   the 10→30 min window widening), not an open competing claim — this doc's todos build ON that work. CLEAR. Set
   `sequential: true` (all 4 todos change the same file), `assigned_role: backend_engineer`,
   `execution_scope: orchestrator-agent`. No finalize twin: `doc_type: issue` is structurally exempt
-  (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only).
+  (`check_finalize_plan_coverage.py` globs `plans/archive/2026_08/*.md` only).
 - **2026-07-30 (worker, slot 7)**: Shipped todo 1 (the `_diff_blocks_checkbox` 4th disposition) —
   `agent-orchestrator@22a14b1`. Added `_ADDED_BLOCKED_LINE_RE` (`BLOCKED-ON:<ref>` marker, still-unchecked `- [ ]` shape
   mirroring `_ADDED_DEFERRED_LINE_RE`), `_diff_blocks_checkbox` + `_blocks_at_path_or_rename` (mirroring the

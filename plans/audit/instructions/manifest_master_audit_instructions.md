@@ -91,8 +91,8 @@ Codex SSOTs: `/codex/02-data/availability-manifest-and-data-status.md`,
       UTL `record_captured` asserts presence internally
 
 - [ ] (g) **Single-walk discipline**: no plan or code change proposes a new whole-corpus GCS walk without
-      migration-window operator ack. Grep: `rg "walk.*gcs\|gcs.*walk" plans/active/ --include="*.md"` — review any hits
-      for compliance
+      migration-window operator ack. Grep: `rg "walk.*gcs\|gcs.*walk" plans/archive/2026_08/ --include="*.md"` — review
+      any hits for compliance
 
 - [ ] (h) **Manifest consolidator runtime**: Cloud Run + Cloud Scheduler running (10 jobs, `*/1 * * * *`). Check:
       `gcloud run jobs list --region asia-northeast1` — verify consolidator jobs present Verify: legacy GCE VM launcher

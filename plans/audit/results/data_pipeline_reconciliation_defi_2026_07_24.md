@@ -302,8 +302,8 @@ hits describing this specific divergence).
 
 Both findings are filed under this run's report rather than a fresh issue doc, given the operator-notification
 requirement below covers them; recommend the findings-triage "outside every plan" default
-(`plans/active/issues/ <slug>_2026_07_24.md`) if the operator wants them tracked as a standalone fix — see the issue doc
-filed alongside this report.
+(`plans/archive/issues/ <slug>_2026_07_24.md`) if the operator wants them tracked as a standalone fix — see the issue
+doc filed alongside this report.
 
 ## 10. Suppressed accepted-exceptions (mandatory suppression — counted, not re-listed)
 

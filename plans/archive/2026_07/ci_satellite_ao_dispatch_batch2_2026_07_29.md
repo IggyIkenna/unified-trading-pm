@@ -519,9 +519,9 @@ Three questions, quotes/locations/options/recommendation, not resolved autonomou
   set re-derived as `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (active, 14/30 todos done) + its gated finalize
   (draft). Found + worked around a real bug in `scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py`: its
   `ao`/`ci`/`infra` membership branch derives candidates from the tranche's consolidated-closeout doc's own citations
-  (`_closeout_paths()`, globs `plans/active/`), which silently returns zero once that doc is archived — stale relative
-  to the skill's own documented 2026-07-27 schema migration (asset_group `ci` is now the primary membership signal for
-  this tranche, not the old closeout-citation workaround). Filed
+  (`_closeout_paths()`, globs `plans/archive/2026_08/`), which silently returns zero once that doc is archived — stale
+  relative to the skill's own documented 2026-07-27 schema migration (asset_group `ci` is now the primary membership
+  signal for this tranche, not the old closeout-citation workaround). Filed
   `archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
   and worked around via a direct frontmatter sweep. Found 31 docs with `asset_group` containing `ci` (29 after excluding
   batch1+finalize); cross-referenced batch1's citations (basename AND truncated-prose-paraphrase matching, since batch1

@@ -11,15 +11,16 @@ summary: >-
   cause: for the `ao`/`ci`/`infra` tranches, `main()`'s membership test is `member = basename in
   non_ag_member_sets.get(t, set())`, and `non_ag_member_sets` is built via `_cited_basenames(_closeout_paths(nt))` —
   i.e. it scans the tranche's OWN `<tranche>_consolidated_closeout_*.md` for basename-shaped citations.
-  `_closeout_paths()` globs `plans/active/{prefix}_consolidated_closeout_*.md`. `ci_consolidated_closeout_2026_07_25.md`
-  was archived to `plans/archive/2026_07/` on 2026-07-28 (its own single todo done — it was a pure reachability digest).
-  Once archived, the glob returns an empty list, `_cited_basenames([])` returns an empty set, and EVERY candidate fails
-  `basename in non_ag_member_sets.get(t, set())` — silently zero, not an error. This is exactly the retired
-  2026-07-25→27 "citation-in-closeout-doc" workaround the skill's own SKILL.md now documents as superseded: as of
-  2026-07-27 (`unified-trading-pm@a97bc7bed`), `ao`/`ci`/`infrastructure` are real dedicated `asset_group` enum values
-  and membership should be tested directly (`t in asset_group`, same as the 5 real AGs) — this script's `else` branch
-  was never updated to match, and the 2026-07-28 closeout archival additionally broke even the OLD fallback mechanism it
-  still implements, compounding into total silent failure rather than a partial staleness.
+  `_closeout_paths()` globs `plans/archive/2026_08/{prefix}_consolidated_closeout_*.md`.
+  `ci_consolidated_closeout_2026_07_25.md` was archived to `plans/archive/2026_07/` on 2026-07-28 (its own single todo
+  done — it was a pure reachability digest). Once archived, the glob returns an empty list, `_cited_basenames([])`
+  returns an empty set, and EVERY candidate fails `basename in non_ag_member_sets.get(t, set())` — silently zero, not an
+  error. This is exactly the retired 2026-07-25→27 "citation-in-closeout-doc" workaround the skill's own SKILL.md now
+  documents as superseded: as of 2026-07-27 (`unified-trading-pm@a97bc7bed`), `ao`/`ci`/`infrastructure` are real
+  dedicated `asset_group` enum values and membership should be tested directly (`t in asset_group`, same as the 5 real
+  AGs) — this script's `else` branch was never updated to match, and the 2026-07-28 closeout archival additionally broke
+  even the OLD fallback mechanism it still implements, compounding into total silent failure rather than a partial
+  staleness.
 status: resolved
 nature: issue
 asset_group: [ci]
@@ -104,7 +105,7 @@ non_ag_member_sets = (
 )
 ```
 
-`_closeout_paths()` (lines 75-77) globs `plans/active/{prefix}_consolidated_closeout_*.md`. This is the RETIRED
+`_closeout_paths()` (lines 75-77) globs `plans/archive/2026_08/{prefix}_consolidated_closeout_*.md`. This is the RETIRED
 2026-07-25→27 workaround SKILL.md itself documents: "ao, ci, and infra are now real dedicated asset_group enum values
 (added 2026-07-27) ... The 2026-07-25→27 workaround this section used to describe (no dedicated value, ground-truth only
 via each tranche's Sources list) is RETIRED ... asset_group containing ao/ci/infrastructure is now the PRIMARY
@@ -113,14 +114,15 @@ updated to match — it still implements the retired mechanism.
 
 Independently, `ci_consolidated_closeout_2026_07_25.md` was archived to `plans/archive/2026_07/` on 2026-07-28 (its own
 single `- [ ]` todo, "verify the reachability digest is accurate," was done — a legitimate archival per the 6-step
-ritual). Because `_closeout_paths()` globs `plans/active/` only, the archival made `_closeout_paths("ci")` return an
-EMPTY list, `_cited_basenames([])` return an empty set, and every `basename in non_ag_member_sets.get("ci", set())` test
-fail — **not a partial staleness, total silent zero-candidate failure**, with no error, warning, or non-zero exit code.
-The same code path (same `NON_AG_TRANCHES` list, same `else` branch) applies identically to `ao` and `infra` — both of
-those tranches' own consolidated-closeout docs are still `status: active` in `plans/active/` as of this writing, so they
-are not currently affected, but either archiving in the future (a legitimate, expected event per the digest/dispatch
-split architecture — see `ci_consolidated_closeout_2026_07_25.md`'s own archival banner) would silently reproduce this
-exact failure for that tranche too.
+ritual). Because `_closeout_paths()` globs `plans/archive/2026_08/` only, the archival made `_closeout_paths("ci")`
+return an EMPTY list, `_cited_basenames([])` return an empty set, and every
+`basename in non_ag_member_sets.get("ci", set())` test fail — **not a partial staleness, total silent zero-candidate
+failure**, with no error, warning, or non-zero exit code. The same code path (same `NON_AG_TRANCHES` list, same `else`
+branch) applies identically to `ao` and `infra` — both of those tranches' own consolidated-closeout docs are still
+`status: active` in `plans/archive/2026_08/` as of this writing, so they are not currently affected, but either
+archiving in the future (a legitimate, expected event per the digest/dispatch split architecture — see
+`ci_consolidated_closeout_2026_07_25.md`'s own archival banner) would silently reproduce this exact failure for that
+tranche too.
 
 ## Impact
 

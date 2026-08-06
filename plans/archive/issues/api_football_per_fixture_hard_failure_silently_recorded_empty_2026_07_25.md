@@ -212,7 +212,7 @@ this issue doc describes. A broader "any api_football hard failure ever" sweep i
 historical store, and `attempted_at` reflects only the most recent write per cell, so an older masked failure that was
 later legitimately re-fetched would already read `captured` today and isn't a currently-outstanding defect to relabel.
 No other api_football hard-failure incident with a stated window is on record in the sports issue-doc corpus as of this
-audit (checked `plans/active/issues/` for `api_football`/`api-football` docs mentioning quota/`FORBIDDEN`/
+audit (checked `plans/archive/issues/` for `api_football`/`api-football` docs mentioning quota/`FORBIDDEN`/
 `INVALID_API_KEY`; the only other hit, `sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`,
 is a DIFFERENT bug — a `--sports-entity` scope-escape, not the swallow-to-`[]` bug — already tracked with its own todos,
 including its own P2 follow-up audit; not duplicated here).

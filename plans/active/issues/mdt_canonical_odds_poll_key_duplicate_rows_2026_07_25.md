@@ -25,6 +25,7 @@ related:
     /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     /plans/archive/issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-25
 author: unknown

@@ -24,6 +24,7 @@ related:
     /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/data_completion_cefi_2026_07_15.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-26
 author: unknown
@@ -109,9 +110,9 @@ dedicated relabel pass at this volume.
 `service_name=market-tick-data-service`, spread across 2019-2026 (not a single incident window — 38 in 2019 up to 3,178
 in 2024). Venue breakdown: BYBIT 1,772 / BINANCE-FUTURES 1,763 / OKX-SWAP 1,740 / UPBIT 1,352 / HYPERLIQUID 687 /
 DERIBIT 669 / BINANCE-SPOT 627 / COINBASE-SPOT 381 / OKX-SPOT 378 / OKX-FUTURES 374 / OKX 7. No existing open issue doc
-found tracking this specific population (grepped `plans/active/` for "blank data_type" and the exact row count — no
-hit). Root cause not investigated in this pass (out of scope for a diagnose-only todo) — plausibly a writer path that
-stamps `capture_status` before `data_type` resolution, or a schema/consolidation artifact for rows written before a
+found tracking this specific population (grepped `plans/archive/2026_08/` for "blank data_type" and the exact row count
+— no hit). Root cause not investigated in this pass (out of scope for a diagnose-only todo) — plausibly a writer path
+that stamps `capture_status` before `data_type` resolution, or a schema/consolidation artifact for rows written before a
 data_type column was populated consistently.
 
 ## Why it matters

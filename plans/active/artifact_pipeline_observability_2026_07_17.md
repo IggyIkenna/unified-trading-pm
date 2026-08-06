@@ -38,6 +38,7 @@ related:
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
     /plans/archive/artifact_pipeline_observability_history_2026_07_24.md,
     /plans/archive/artifact_pipeline_observability_history_2026_07_27.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-27"

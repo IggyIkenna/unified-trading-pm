@@ -116,7 +116,8 @@ untouched. No `raise` in per-row enrichment (best-effort). UTC datetimes; QG-gre
 
 ## Success criteria
 
-- Every reader in the inventory reads Firestore-first with a loud GCS fallback; none parse `active/` blobs directly.
+- Every reader in the inventory reads Firestore-first with a loud GCS fallback; none parse `archive/2026_08/` blobs
+  directly.
 - Census renders every live VM from the GCE list; a registry-read failure degrades enrichment columns, never the row set
   (proven by fault injection).
 - Query path stays under budget at 1k+ docs; other census KINDs (Cloud Run/AWS/scheduler) unaffected.

@@ -22,6 +22,7 @@ related:
   [
     /plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
     /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-14
 last_updated: 2026-07-14

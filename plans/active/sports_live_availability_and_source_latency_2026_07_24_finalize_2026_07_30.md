@@ -22,6 +22,7 @@ related:
     /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-30"
 last_updated: "2026-07-30"

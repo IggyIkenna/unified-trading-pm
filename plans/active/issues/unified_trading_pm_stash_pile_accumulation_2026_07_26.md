@@ -86,8 +86,8 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       root CLAUDE.md quotes the same "heavy-compute-on-shared-host" phrase today). - stash@{20}: a `/plan-vintage-audit`
       migration pass (RULE-11 rehoming, G-TRACE/lifecycle-rule orphan rehoming, an active→archive rename for
       `l0_doc_index_generator_2026_06_24.md`). Verified: the rename already landed
-      (`plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md` exists, `plans/active/...` does not), RULE-11 shows
-      **fully EXECUTED 2026-07-28** in the now-archived
+      (`plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md` exists, `plans/archive/2026_08/...` does not),
+      RULE-11 shows **fully EXECUTED 2026-07-28** in the now-archived
       `plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` (`status: resolved`) — i.e.
       real subsequent work went further than this stashed draft ever got. - stash@{22}: an af-backfill relaunch
       progress-log entry — verified present in the now-archived

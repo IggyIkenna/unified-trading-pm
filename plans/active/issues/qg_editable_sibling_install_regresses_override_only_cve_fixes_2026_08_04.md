@@ -21,6 +21,7 @@ related:
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
     plans/active/ci_local_qg_parity_2026_06_08.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
 author: slot-9
@@ -194,5 +195,5 @@ detection: only **2 repos** are actually affected — `unified-trading-pm` (`uni
   own hygiene fixer strips the RULES.md-required `author` field from issue-doc frontmatter).
 
 - **context-scout 2026-08-06**: re-scouted; `ci_local_qg_parity_2026_06_08.md` archived to `plans/archive/2026_06/`
-  since first scouted, so its context_scope entry now points at the correct archived path (was a dead `plans/active/...`
-  reference); otherwise re-verified context_scope (4 entries), unchanged.
+  since first scouted, so its context_scope entry now points at the correct archived path (was a dead
+  `plans/archive/2026_08/...` reference); otherwise re-verified context_scope (4 entries), unchanged.

@@ -54,6 +54,7 @@ related:
     ../epics/infrastructure_master.md,
     ../../cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     ../../cursor-configs/skills/data-pipeline-check-is/SKILL.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-27
@@ -852,8 +853,8 @@ EIA ask declined by operator). 7 families attempted total, 2 measured, 5 honestl
 ### 2026-07-29 (slot-6, data_engineering) — re-dispatched to the gated per-family-numbers todo (line ~906); all 3 gates re-verified still closed, DEFI:onchain framing corrected
 
 Re-picked up the gated todo above (`data_pipeline_check_mdps_features-056`). Re-checked all 3 upstream gates fresh: CEFI
-operator go-ahead still not granted (re-grepped `plans/active/`, no approval text); TRADFI:volatility's raw-tick
-backfill status unchanged. For DEFI:onchain, ran a 12-day `DependencyChecker("central-element-323112")` sweep
+operator go-ahead still not granted (re-grepped `plans/archive/2026_08/`, no approval text); TRADFI:volatility's
+raw-tick backfill status unchanged. For DEFI:onchain, ran a 12-day `DependencyChecker("central-element-323112")` sweep
 (2026-05-01 through 2026-07-28, direct calls via the repo's own `.venv` — no VM launch needed) resolving the open
 question left by `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`: the "MTDS never
 ingested" framing was stale for 4 of the 5 required deps (`vault_share_price`/`lst_rates`/`lending_indices`/

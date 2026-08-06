@@ -89,10 +89,10 @@ that turns those findings into tracked work and closes the plan properly.
       6 bugs from the 2026-03-23 DEFI E2E audit (Balancer 400, Aster lowercase-category, Hyperliquid 0-instruments,
       missing data-catalogue entries, a Pydantic warning, CFE-not-in-UAC). Per the findings-triage HARD RULE, each bug
       that is STILL real becomes a tracked `- [ ]` todo (in the source plan if in-scope, else
-      `plans/active/issues/<slug>_<date>.md`) — never prose, never a re-filed duplicate of an already-open issue doc
-      (grep `plans/active/issues/` first). **Done when**: each of the 6 is recorded as fixed-incidentally /
+      `plans/archive/issues/<slug>_<date>.md`) — never prose, never a re-filed duplicate of an already-open issue doc
+      (grep `plans/archive/issues/` first). **Done when**: each of the 6 is recorded as fixed-incidentally /
       still-real-and-now-tracked / no-longer-applicable, with the tracking location named. Repo: unified-trading-pm. —
-      **DONE 2026-08-01.** Triage table below; grepped `plans/active/issues/` for a duplicate on each bug's topic — 0
+      **DONE 2026-08-01.** Triage table below; grepped `plans/archive/issues/` for a duplicate on each bug's topic — 0
       hits on any of the 6. **Net: 0 of 6 are still-real; 0 new todos filed.**
 - [x] ✅ [PLANNING] P3. **Archive the source plan per the 6-step ritual.** Once both reviews above are done and the
       source plan has zero open todos and no `locked_by:`, run the standard archival ritual from
@@ -156,7 +156,7 @@ entry (`slot-6 2026-08-01`).
 | 6   | `CFE` venue not in UAC `INSTRUMENT_TYPES_BY_VENUE` (P3) | **fixed-incidentally**   | None needed — venue renamed to `CBOE` fleet-wide, fully registered in every UAC venue table; confirmed live (`--venues CBOE --dry-run` clean, zero "not in UAC" warnings). Evidence in source plan Progress Log.                                                                                                                                                                                                                                                |
 
 **Net: 0 of 6 still-real, 0 new todos filed** — consistent with the source plan's own "4 months have passed, some may
-already be fixed incidentally" framing. Grepped `plans/active/issues/` for each bug's topic (balancer, aster,
+already be fixed incidentally" framing. Grepped `plans/archive/issues/` for each bug's topic (balancer, aster,
 hyperliquid, catalogue, pydantic, cfe/cboe) before concluding — 0 duplicate open issue docs found for any of the 6.
 
 ## Codex SSOTs
@@ -181,7 +181,7 @@ hyperliquid, catalogue, pydantic, cfe/cboe) before concluding — 0 duplicate op
 - **slot 3 (review-role worker) 2026-08-01 — todo 2 DONE.** Triaged all 6 bugs from the source plan's `[VALIDATE]`
   re-verify against the findings-triage HARD RULE: 2 fixed-incidentally (Balancer 400, CFE→CBOE rename), 4
   no-longer-applicable (Aster/Hyperliquid reclassified out of DEFI, catalogue validation mechanism removed, Pydantic
-  warning path unreachable). 0 still-real, 0 new todos filed — grepped `plans/active/issues/` per bug topic first, 0
+  warning path unreachable). 0 still-real, 0 new todos filed — grepped `plans/archive/issues/` per bug topic first, 0
   duplicates found. Full table added above. Todo 3 (archival) is a separate backlog item.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **slot 16 (backend_engineer worker) 2026-08-02 — todo 3 DONE, archival ritual executed.** Gate re-confirmed: source

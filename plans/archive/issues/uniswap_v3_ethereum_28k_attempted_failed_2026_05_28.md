@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: 'MTDS DeFi manifest: 28,634 UNISWAP_V3-ETHEREUM swaps_ohlcv attempted_failed rows — all SCHEMA_VALIDATION_FAILED, fix already shipped (chain propagation + amount_usd column), needs retry pass not new code'
+title:
+  "MTDS DeFi manifest: 28,634 UNISWAP_V3-ETHEREUM swaps_ohlcv attempted_failed rows — all SCHEMA_VALIDATION_FAILED, fix
+  already shipped (chain propagation + amount_usd column), needs retry pass not new code"
 summary:
 status: ARCHIVED 2026-06-02 — acked + migrated (no new code; stale rows pending reprocess)
 nature: record
@@ -11,7 +13,12 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-28
-source: ['gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet', 'market-data-processing-service@7f1a5b5 (2026-05-23 22:49 BST — chain propagation fix)', 'market-data-processing-service@3799c8d (2026-05-24 16:45 BST — amount_usd column support)']
+source:
+  [
+    "gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet",
+    "market-data-processing-service@7f1a5b5 (2026-05-23 22:49 BST — chain propagation fix)",
+    "market-data-processing-service@3799c8d (2026-05-24 16:45 BST — amount_usd column support)",
+  ]
 locked_by: live-defi-rollout
 parent_epic: plans/epics/infrastructure_master.md
 priority: P2
@@ -135,5 +142,5 @@ fixed `swap_adapter` should write candles successfully.
   - EIGENLAYER: 1,311 · CURVE-ETHEREUM: 1,281 · MAKER: 1,113 · FRAX: 1,032
   - DRIFT-SOLANA: 200 + KAMINO/JITO/MARGINFI: ~75
   - Each may share the same chain-column root cause; verify on first retry.
-- B5 canonicalization plan: `plans/active/.../venue_axis_asset_group_vocabulary_2026_04_25.md`
-- Hard schema enforcement plan: `plans/active/.../hard_schema_enforcement_2026_05_08.md`
+- B5 canonicalization plan: `plans/archive/2026_08/.../venue_axis_asset_group_vocabulary_2026_04_25.md`
+- Hard schema enforcement plan: `plans/archive/2026_08/.../hard_schema_enforcement_2026_05_08.md`

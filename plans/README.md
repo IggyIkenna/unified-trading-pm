@@ -11,7 +11,7 @@ Project planning, task tracking, and execution plans for the Unified Trading Sys
 
 | Directory            | Contents                                                                                                 |
 | -------------------- | -------------------------------------------------------------------------------------------------------- |
-| `active/`            | Canonical plans folder (20 plans). `.cursor/plans` symlinks here. See [active/INDEX.md](active/INDEX.md) |
+| `archive/2026_08/`   | Canonical plans folder (20 plans). `.cursor/plans` symlinks here. See [active/INDEX.md](active/INDEX.md) |
 | `staged/`            | Plans queued for activation                                                                              |
 | `cicd/`              | CI/CD infrastructure plans, dependency matrix, and quality gates optimization                            |
 | `tasks/cursor/`      | Cursor IDE agent task definitions (sub-agent execution plans)                                            |

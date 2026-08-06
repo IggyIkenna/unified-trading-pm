@@ -23,6 +23,7 @@ related:
     /plans/active/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
     scripts/self-hosted-runners/github-glue-runner.slice,
     agent-orchestrator/scripts/install-resource-history-sampler.sh,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"

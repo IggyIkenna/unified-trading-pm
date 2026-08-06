@@ -163,7 +163,7 @@ landed substantive work before this handoff was written.
 - **Marketing site** — Plan A 6 phases shipped 2026-04-20; briefings + nav polish done.
 - **`/docs` + Spaces UX session** — file changes uncommitted from 2026-04-20; needs commit wave.
 
-### Pending plans not in sports scope (from PM `plans/active/`)
+### Pending plans not in sports scope (from PM `plans/archive/2026_08/`)
 
 - `dashboard_services_grid_collapse_2026_04_21`
 - `orphan_audit_policy_2026_04_21`
@@ -213,7 +213,7 @@ If context runs out during wave-3 completion:
 > `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.md`. API rate limits forced the original parallel dispatch
 > to fail. Start with B (Plan 13 execution) since A may already be landing; then C (Plan 11), D (Plan 12), E (Plans
 > 14/15/16 authorship), F (QG residuals). Monitor `/tmp/af-chain-progress.log` for Plan 2 chain status. Plans 11/12/13
-> plan files already exist in `plans/active/`."
+> plan files already exist in `plans/archive/2026_08/`."
 
 ## Success criteria (this plan — post-wave roadmap completion)
 

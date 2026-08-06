@@ -30,6 +30,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 tags: [data-pipeline, mdps, sports, honest-absence, manifest, dp-fetch-001]
 priority: P2

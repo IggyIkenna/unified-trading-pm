@@ -78,15 +78,16 @@ between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 
 This file is a **troubleshooting / coordination guide**. The actionable work lives elsewhere:
 
-| Output                                             | Lands in                                                    |
-| -------------------------------------------------- | ----------------------------------------------------------- |
-| Diagnostic scripts + reports                       | `plans/audit/results/` + script output to `/tmp/`           |
-| Service-contract audit results (the matrix output) | `plans/audit/<pair>_contract_audit_2026_05_20.md`           |
-| Beefed-up actionable plans                         | `plans/active/<slug>.md` (new + updates to existing)        |
-| Codified patterns (the template doc)               | `/codex/04-architecture/service-contract-audit-template.md` |
+| Output                                             | Lands in                                                      |
+| -------------------------------------------------- | ------------------------------------------------------------- |
+| Diagnostic scripts + reports                       | `plans/audit/results/` + script output to `/tmp/`             |
+| Service-contract audit results (the matrix output) | `plans/audit/<pair>_contract_audit_2026_05_20.md`             |
+| Beefed-up actionable plans                         | `plans/archive/2026_08/<slug>.md` (new + updates to existing) |
+| Codified patterns (the template doc)               | `/codex/04-architecture/service-contract-audit-template.md`   |
 
 This file closes when (a) all audits in `plans/audit/` are complete, AND (b) all 8 ordering-step plans in
-`plans/active/` are beefed up against the audit output. Mark `resolved: <date>` + `resolution:` block when closing.
+`plans/archive/2026_08/` are beefed up against the audit output. Mark `resolved: <date>` + `resolution:` block when
+closing.
 
 ## Terminology lock
 
@@ -211,8 +212,8 @@ audits) since C consumes these. Phase D plan beef-ups consume all of A1-A6.
 ### Phase C — Spawn sibling contract audits (post-B1, parallel)
 
 Each audit instantiates the B1 template against its specific upstream→downstream pair. Lands in
-`plans/audit/<slug>_2026_05_20.md` (NOT `plans/active/` — audits are diagnostic outputs, not actionable until phase D
-digests them).
+`plans/audit/<slug>_2026_05_20.md` (NOT `plans/archive/2026_08/` — audits are diagnostic outputs, not actionable until
+phase D digests them).
 
 | # | Pair | Audit file | Feeds ordering step | | --- | ----------------------------------- |
 
@@ -233,9 +234,9 @@ digests them).
 | cross-cutting                                                                                               |                                                                                                            | C11 | agent-orchestrator → all            | `orchestrator_service_contract_audit_2026_05_20.md` | 0 (orchestrator                             |
 | migration)                                                                                                  |
 
-- [x] ✅ **C0. Relocate** existing `is_mtds_contract_audit_2026_05_20.md` from `plans/active/` to `plans/audit/`.
-      Re-source remediation P0 todos into the beefed `mtds_adapters_preflight_*.md` actionable plan in Phase D. **DONE
-      2026-05-20 slot-2**: `git mv` to `plans/audit/` — PM@8e3755a9d.
+- [x] ✅ **C0. Relocate** existing `is_mtds_contract_audit_2026_05_20.md` from `plans/archive/2026_08/` to
+      `plans/audit/`. Re-source remediation P0 todos into the beefed `mtds_adapters_preflight_*.md` actionable plan in
+      Phase D. **DONE 2026-05-20 slot-2**: `git mv` to `plans/audit/` — PM@8e3755a9d.
 - [x] ✅ **C1–C11.** All 11 audits complete — 2026-05-20 slot-4 parallel fan-out. Audit docs in `plans/audit/`: C1
       IS→features @badcdfbf9 (7 P0: volatility hardcodes ["BTC","ETH"]; 3 families zero manifest emission; QG 5.70 not
       wired) C2 IS→strategy @66c8a2945 (4 P0: gcs_storage_service.py zero manifest emission; discover_instruments()
@@ -253,8 +254,8 @@ digests them).
 
 ### Phase D — Plan beef-up (post-C, the actionable output)
 
-For each of the 8 ordering steps, write/update the actionable plan in `plans/active/` to absorb the audit findings. Each
-plan cites the audits that feed it + lists the full remediation backlog drawn from those audits.
+For each of the 8 ordering steps, write/update the actionable plan in `plans/archive/2026_08/` to absorb the audit
+findings. Each plan cites the audits that feed it + lists the full remediation backlog drawn from those audits.
 
 - [x] ✅ **D0. Orchestrator migration plan** — beef from C11: port/CORS fixes + LEDGER deprecation — PM@8dce0e075
       (`d0_orchestrator_migration_2026_05_20.md`)
@@ -388,7 +389,8 @@ Mark `resolved` + `resolution:` block when:
 1. All A1/A2/A3 diagnostic outputs exist + ikenna-reviewed.
 2. B1 template doc landed.
 3. All C0–C11 audit docs landed in `plans/audit/` with GREEN/RED status.
-4. All D0–D8 actionable plans in `plans/active/` cite the audits feeding them and have absorbed the remediation backlog.
+4. All D0–D8 actionable plans in `plans/archive/2026_08/` cite the audits feeding them and have absorbed the remediation
+   backlog.
 5. Phase E execution has STARTED (step 0 plan in-flight).
 
 After close, this issue is replaced by progress on the D plans themselves; no further bookkeeping in this file.
@@ -399,9 +401,9 @@ After close, this issue is replaced by progress on the D plans themselves; no fu
   not spawn C audits before B1 lands.
 - **Diagnostic drift**: A2 gap calendars + A3 divergence report must be refreshed before any Phase D plan ships, since
   `expected_coverage()` evolves as ikenna fills in calendars. Stale A3 = stale D plans.
-- **Confusion between audit + plan**: keep `plans/audit/` and `plans/active/` strict. An audit DESCRIBES state; a plan
-  PRESCRIBES action. Audit remediation P0 todos get COPIED into the corresponding D plan, not run from the audit doc
-  directly.
+- **Confusion between audit + plan**: keep `plans/audit/` and `plans/archive/2026_08/` strict. An audit DESCRIBES state;
+  a plan PRESCRIBES action. Audit remediation P0 todos get COPIED into the corresponding D plan, not run from the audit
+  doc directly.
 - **CLAUDE.md inflation**: do not add `expected_coverage` or `DIVERGENT_EMPTY` rules to CLAUDE.md until they're shipped
   in code + enforced by QG. Premature codification = drift between doc and code.
 

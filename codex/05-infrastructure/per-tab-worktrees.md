@@ -693,8 +693,8 @@ A DIFFERENT failure mode from the conflict case above: a `git pull --rebase --au
 `git stash pop` cycle) can **silently resurrect stale pre-move copies of renamed files** with NO conflict markers and NO
 error — `git status` looks clean, the commit succeeds, and the diff even looks plausible. This happened during a large
 corpus-wide archival sweep: after several rebase cycles on a very active shared checkout, 54 files that had been
-`git mv`'d into `plans/archive/` reappeared at their OLD `plans/active/` paths, duplicated alongside their correct
-archive-side twins — with no rebase/stash output ever flagging it.
+`git mv`'d into `plans/archive/` reappeared at their OLD `plans/archive/2026_08/` paths, duplicated alongside their
+correct archive-side twins — with no rebase/stash output ever flagging it.
 
 **Why `git status` doesn't catch this**: a clean working tree matching the last commit is not proof the LAST COMMIT
 itself is correct — it only proves you haven't drifted from what you already committed. If the corruption happened
@@ -704,7 +704,7 @@ INSIDE a commit (a stash-pop reintroduced stale content that then got committed)
 
 ```bash
 # Don't trust git status alone. Spot-check that a doc you moved is genuinely NOT duplicated:
-git cat-file -e HEAD:plans/active/<old-name>.md && echo "STILL AT OLD PATH — corruption" || echo "clean"
+git cat-file -e HEAD:plans/archive/2026_08/<old-name>.md && echo "STILL AT OLD PATH — corruption" || echo "clean"
 
 # For a gate-backed invariant (e.g. an archival count), re-run the actual checker against HEAD content,
 # not just the working tree, and compare to the expected number:

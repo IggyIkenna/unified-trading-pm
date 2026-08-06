@@ -21,6 +21,7 @@ related:
   [
     /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
 author: slot-8
@@ -53,9 +54,9 @@ context_scope:
 ## What I found
 
 `scripts/quality_gates/check_plan_commit_sha_evidence.py` scans every `resolved_by:`/`<repo>@<sha>` citation in
-`plans/active/**/*.md` and fails if the count of citations that don't resolve to a real commit in the cited repo's local
-clone exceeds the recorded baseline (`scripts/quality_gates/plan_commit_sha_evidence_baseline.yaml`, currently 22). A
-full `bash scripts/quality-gates.sh` run on 2026-08-04 (slot-8) found 23:
+`plans/archive/2026_08/**/*.md` and fails if the count of citations that don't resolve to a real commit in the cited
+repo's local clone exceeds the recorded baseline (`scripts/quality_gates/plan_commit_sha_evidence_baseline.yaml`,
+currently 22). A full `bash scripts/quality-gates.sh` run on 2026-08-04 (slot-8) found 23:
 
 ```
 Unresolvable commit-SHA citations: 23 (baseline 22).
@@ -89,7 +90,7 @@ root-causing the baseline-authoring gap itself is out of scope for unblocking to
 
 - Blocks `bash scripts/quality-gates.sh` — and therefore quickmerge Pass-1 — for EVERY slot shipping ANY unrelated
   `unified-trading-pm` change, not just work that touches the offending doc. This is a corpus-wide ratchet gate, so one
-  bad citation anywhere in `plans/active/` blocks the whole fleet.
+  bad citation anywhere in `plans/archive/2026_08/` blocks the whole fleet.
 - If the SHA is genuinely fabricated (not just a rewritten/rebased commit), it's exactly the class of violation
   `check_plan_commit_sha_evidence.py` was built to catch per CLAUDE.md's "Runtime verification" hard rule
   (`plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`) — a `- [x]` claim citing proof

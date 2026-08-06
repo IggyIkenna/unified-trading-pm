@@ -12,7 +12,7 @@ summary: >-
   text) until I flipped it today, the source doc's corresponding item is still open/unreconciled, and the parent plan
   was never moved to `plans/archive/` at all (it's the exact doc the orchestrator dispatched my live task from). This is
   a confirmed false-progress incident, not a misreading on my part — evidenced via git log (no "flip item 4" commit ever
-  exists for the parent) and the parent's own frontmatter (`status: active`, currently in `plans/active/`).
+  exists for the parent) and the parent's own frontmatter (`status: active`, currently in `plans/archive/2026_08/`).
 status: open
 nature: issue
 asset_group: [meta]
@@ -185,10 +185,10 @@ No design call needed — every piece here is independently checkable, not a jud
       `sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md`,
       `tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`. For each: verified the referenced parent plan is
       genuinely archived (physically at its archive path, `status: complete`, 0 open `- [ ]` checkboxes, absent from
-      `plans/active/`) AND spot-checked one named source-doc reconciliation claim per doc against the source doc's real
-      on-disk state (exact cited SHA/checkbox/line). **Result: 8/8 PASS** — every parent-archival claim held up and
-      every spot-checked source-doc citation matched. Two docs (cefi batch1, sports batch4) showed the SAME kind of
-      mid-reconciliation discrepancy this incident's root-cause session hit, but in both cases it was caught and
+      `plans/archive/2026_08/`) AND spot-checked one named source-doc reconciliation claim per doc against the source
+      doc's real on-disk state (exact cited SHA/checkbox/line). **Result: 8/8 PASS** — every parent-archival claim held
+      up and every spot-checked source-doc citation matched. Two docs (cefi batch1, sports batch4) showed the SAME kind
+      of mid-reconciliation discrepancy this incident's root-cause session hit, but in both cases it was caught and
       honestly recorded (migrated to a tracked follow-up todo / left genuinely open) rather than papered over with a
       false "done" claim — the healthy version of the pattern this doc's incident lacked. **No new false-claim issue doc
       filed** — nothing in this sample warrants one. This is a bounded, non-exhaustive spot-check (8/40 finalize docs);
@@ -216,7 +216,7 @@ No design call needed — every piece here is independently checkable, not a jud
   are NOT standard `- [ ]` checkboxes and stay outside `regen_backlog_from_plan.py`'s ingestion per the doc's own
   convention — this flip does not newly dispatch them; the operator ruling `BLK-9fadbbb8` (2026-08-02) only decided
   ad-hoc-in-session-fix vs tracked-follow-up (chose tracked-follow-up), it did not forbid AO dispatch of the tracked
-  items. Conflict-check: grepped `plans/active/*.md` for claims on this exact work (reconciling
+  items. Conflict-check: grepped `plans/archive/2026_08/*.md` for claims on this exact work (reconciling
   `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`'s todo-4 item, or a sweep of archived
   `*_finalize_*.md` docs for the same false-claim pattern) — no other `assigned_vm: planning` doc claims either; CLEAR.
 - **2026-08-02 (operator ruling, `BLK-9fadbbb8`)**: escalated whether to fix the 2 archival-touching items in-session or

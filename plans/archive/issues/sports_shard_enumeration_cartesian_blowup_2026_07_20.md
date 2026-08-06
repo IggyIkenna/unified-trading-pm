@@ -606,8 +606,8 @@ Present these together; they are coupled.
 
 They disagree by ~10pp on sports today and move in opposite directions under every remediation option. **This is a
 cross-repo SSOT contradiction and a data-correctness finding independent of everything else in this plan.** Per the
-CLAUDE.md triage rule it needs `plans/active/issues/` + operator notification **now**, and it must be settled before any
-row is touched.
+CLAUDE.md triage rule it needs `plans/archive/issues/` + operator notification **now**, and it must be settled before
+any row is touched.
 
 **✅ DECIDED (2026-07-22, interactive session)**: adopt the **EXCLUDE-`empty_confirmed`** formula — the
 `instruments-service/scripts/measure_honest_coverage.py` logic, which already matches

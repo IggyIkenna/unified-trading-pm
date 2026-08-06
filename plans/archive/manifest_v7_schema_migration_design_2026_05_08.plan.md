@@ -28,8 +28,8 @@ locked_since: 2026-05-08
 
 > **🔴 SUPERSEDED 2026-05-10 by [`manifest_schema_final_gate_2026_05_09.md`](manifest_schema_final_gate_2026_05_09.md)**
 > — the no-fallback maximalist path supersedes this plan's 30-day grace strategy. See final-gate plan Phase 1.A for
-> ratified `ServiceEmissionStateEnum` + Phase 7 for migration sequencing. This file remains in `plans/active/` for
-> design archaeology only; **not actionable**. Per Audit B governance sweep 2026-05-10.
+> ratified `ServiceEmissionStateEnum` + Phase 7 for migration sequencing. This file remains in `plans/archive/2026_08/`
+> for design archaeology only; **not actionable**. Per Audit B governance sweep 2026-05-10.
 
 > **🟡 FOLDED INTO UMBRELLA — `manifest_evolution_master_2026_05_08`** (codified 2026-05-08)
 >

@@ -1096,7 +1096,7 @@ J3 · post-cutover for G1+F4+F5 · post-cutover for I2/I5.
 - Plan path: TBD
 - Spawned commit: TBD
 - Codex updates committed: TBD
-- Question doc closes (status: closed) when: spawned plan in `plans/active/`; cefi-batch-live + tradfi-batch-live +
-  prediction-batch-live + mode-axis-discipline codex docs committed; L2 + L3 + L7 QG steps green workspace-wide;
-  end-to-end symmetry test (N1) executed against `carry_staked_basis` with recon-green within tolerance; master plan
-  Groups F17/F18/F20/F21/F23 green for both May-23 archetypes.
+- Question doc closes (status: closed) when: spawned plan in `plans/archive/2026_08/`; cefi-batch-live +
+  tradfi-batch-live + prediction-batch-live + mode-axis-discipline codex docs committed; L2 + L3 + L7 QG steps green
+  workspace-wide; end-to-end symmetry test (N1) executed against `carry_staked_basis` with recon-green within tolerance;
+  master plan Groups F17/F18/F20/F21/F23 green for both May-23 archetypes.

@@ -170,8 +170,8 @@ gcloud compute instances list --filter="name~live" --project=central-element-323
   it) — no code changed, no VM launched.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
 - **2026-08-03 (interactive session, data_engineering)**: Ran the pre-task plan/issue conflict check (grepped
-  `plans/active/` for `odds-api`/`odds_api` — no supersession, doc still `status: open`), then worked the doc's 4-step
-  "what to check next" list. Steps 1 and 4's "confirm top-up landed" sub-step remain genuinely blocked on
+  `plans/archive/2026_08/` for `odds-api`/`odds_api` — no supersession, doc still `status: open`), then worked the doc's
+  4-step "what to check next" list. Steps 1 and 4's "confirm top-up landed" sub-step remain genuinely blocked on
   operator/live-credential access this sandboxed session does not have (`gcloud auth login` fails non-interactively here
   — no GCP creds available). Steps 2 and 3 are answered: grepped every real caller of
   `odds-api-key`/`odds_api_secret_name` across market-tick-data-service (`market_interface/config.py`,

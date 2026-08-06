@@ -29,6 +29,7 @@ related:
     /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-24
 author: unknown

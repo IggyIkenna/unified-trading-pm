@@ -33,6 +33,7 @@ related:
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-27
 author: unknown

@@ -132,11 +132,11 @@ the queue silently diverge.
 **`BlockedQueueReconciler`** (`agent-orchestrator@bec9373a99fb49793efbb874339dcaf81a3ae009`,
 `server/blocked_reconcile.py`):
 
-- `find_resolution_in_plans(blocked_id, pm_path)` — scans every `.md` under `plans/active/` (incl. `issues/`) for a line
-  mentioning the `blocked_id`; if a resolution marker (`answered`, `operator ruling`, `operator ruled`, `resolved` —
-  word-bounded so it never matches the literal field name `answered_at`) appears within `_CONTEXT_WINDOW_LINES` (12)
-  lines, returns `(answer_text, "file:line")`. Deliberately conservative: a bare mention of a BLK id with no marker
-  (e.g. "still `answered_at: null`") never matches.
+- `find_resolution_in_plans(blocked_id, pm_path)` — scans every `.md` under `plans/archive/2026_08/` (incl. `issues/`)
+  for a line mentioning the `blocked_id`; if a resolution marker (`answered`, `operator ruling`, `operator ruled`,
+  `resolved` — word-bounded so it never matches the literal field name `answered_at`) appears within
+  `_CONTEXT_WINDOW_LINES` (12) lines, returns `(answer_text, "file:line")`. Deliberately conservative: a bare mention of
+  a BLK id with no marker (e.g. "still `answered_at: null`") never matches.
 - `reconcile_once(pm_path=...)` — one pass over every currently-unanswered `BlockedRow`; for each match, calls the SAME
   state transition the manual `/answer` endpoint uses (`answer_blocked` + `enqueue_message` + slot unblock +
   `blocked_answered` activity log), `answered_by="reconciliation-sweep"`, citing the plan file:line in the answer text.

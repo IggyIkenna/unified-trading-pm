@@ -28,6 +28,7 @@ related:
     /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-12
 author: unknown

@@ -106,7 +106,7 @@ combination has a code path." Suggested rewording in § "Recommended instruction
 
 #### (b) IS→features contract audit findings — **DRIFT (stale reference)**
 
-`is_features_contract_audit_2026_05_20.md` does NOT exist at `plans/active/`. It's archived at
+`is_features_contract_audit_2026_05_20.md` does NOT exist at `plans/archive/2026_08/`. It's archived at
 `plans/audit/archive/is_features_contract_audit_2026_05_20.md`. Instructions reference it as if active.
 
 **Cannot verify** whether RED items were absorbed without re-reading the archive + cross-checking active plans. Treating
@@ -310,7 +310,7 @@ Find: rg ... Verify: 8 families covered (DeFi, CeFi, TradFi, Sports, Predictions
 
 **Current (b)**: "is_features_contract_audit_2026_05_20.md findings all addressed." **Proposed**:
 "is_features_contract_audit_2026_05_20.md (archived at `plans/audit/archive/`) — confirm findings closed at archive
-time + no follow-up in `plans/active/`."
+time + no follow-up in `plans/archive/2026_08/`."
 
 **Current (h)**: "if ml_repo_consolidation plan is complete, verify merged repo has no duplicate code paths."
 **Proposed**: "`ml_repo_consolidation_2026_05_19.md` archived at `plans/archive/2026_05/` (= complete). Verify merged

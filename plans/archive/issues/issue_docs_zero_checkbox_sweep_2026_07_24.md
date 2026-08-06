@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-title: Corpus-wide sweep of plans/active/issues/ for status:open docs with zero checkboxes (prose-only deferrals)
+title: Corpus-wide sweep of plans/archive/issues/ for status:open docs with zero checkboxes (prose-only deferrals)
 summary: >-
   `data_pipeline_e2e_milestones_gate_2026_07_24.md` §7 sampled 10 issue docs referenced by the 5 asset-group
   consolidated closeouts — 8/10 passed (had real bounded todos), 2/10 failed (prose-only "suggested next steps" with no
@@ -61,7 +61,7 @@ depends_on: []
       fold-vs-migrate" judgment call into a fact-gathering todo + a separate `[OPERATOR]`-tagged decision todo per
       task_template.md's bounded-outcome rule.
 - [x] 3. [DOCS] P2. ✅ **DONE 2026-07-30 (slot 7) — full corpus swept, zero genuine gaps found.** Extracted every
-      `plans/active/issues/*.md` reference (full-path links + bare-filename mentions, cross-matched against the real
+      `plans/archive/issues/*.md` reference (full-path links + bare-filename mentions, cross-matched against the real
       directory listing) from all 5 asset-group consolidated closeouts
       (`cefi`/`defi`/`tradfi_consolidated_closeout_2026_07_18.md`, `sports_consolidated_closeout_2026_07_19.md`,
       `prediction_consolidated_closeout_2026_07_18.md`) PLUS the one satellite discoverability doc that exists

@@ -58,8 +58,8 @@ source:
 - [x] [INFRA] P2. ✅ Re-verified corpus-wide referrer fixup via `check_reference_paths.py` (format 163/163, existence
       940/956 baseline — both within ratchet) and a full `run_hygiene_sweep.sh --ci` pass. One genuine duplicate-file
       bug was found and fixed mid-sweep (a rebase/stash-pop race resurrected 54 stale pre-archival copies back into
-      plans/active/ alongside their correct plans/archive/ twins — diffed every pair to confirm no unique content, then
-      removed the stale copies). — unified-trading-pm@74313994b, @0924a7d1c.
+      plans/archive/2026_08/ alongside their correct plans/archive/ twins — diffed every pair to confirm no unique
+      content, then removed the stale copies). — unified-trading-pm@74313994b, @0924a7d1c.
 - [x] [INFRA] P2. ✅ Ran `check_terminal_status_archived.py --update-baseline` — `violation_count` shrunk from 66 to
       **0**, a true zero-tolerance gate going forward (not just a ratchet tolerating debt). — unified-trading-pm@(this
       commit).
@@ -68,5 +68,5 @@ source:
       during the sweep). — verified unified-trading-pm@e0f1fb6a6.
 - [x] [INFRA] P2. ✅ Archived `terminal_status_archival_backlog_sweep_2026_07_25.md` itself (banner + `git mv` to
       `plans/archive/`, its 2 live referrers repointed — this finalize plan's own `related:` entry and the
-      active-plan-inventory-dashboard link). No longer in `plans/active/`; gate confirmed clean with it gone. —
+      active-plan-inventory-dashboard link). No longer in `plans/archive/2026_08/`; gate confirmed clean with it gone. —
       unified-trading-pm@74313994b, @0924a7d1c.

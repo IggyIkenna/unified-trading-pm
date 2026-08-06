@@ -39,6 +39,7 @@ related:
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
     /plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
 author: unknown
@@ -256,7 +257,7 @@ not just noting.
       Done when: a concurrent QG run past the cap is measurably refused/queued (not just logged) on this host, verified
       by deliberately launching cap+1 QG passes and observing the (cap+1)th block until a slot frees. — **CLOSED
       2026-08-01 (na-eligibility-audit ci), tracking-vehicle redirect, not built standalone**: grepped
-      `plans/active/*.md` for `flock`/`semaphore` and found
+      `plans/archive/2026_08/*.md` for `flock`/`semaphore` and found
       `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (status: active, assigned_vm: NA) already
       implements this exact mechanism more thoroughly — a flock-protected reservation-ledger admission governor (RAM
       two-clause gate + CPU gate + per-repo cgroup cap + FIFO fairness/aging), largely shipped, with only the

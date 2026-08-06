@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Agent Orchestrator — Backlog ↔ State DB Alignment Architecture
 summary:
-  Backlog↔state.db alignment — PlanRegenLoop regenerates backlog.yaml from plans/active/*.md `- [ ]` todos every 30 min
-  (dedup by brief + slug-NNN id); prune_stale deletes orphan yaml + queued-undispatched state.db zombie rows, never
-  done/dispatched rows.
+  Backlog↔state.db alignment — PlanRegenLoop regenerates backlog.yaml from plans/archive/2026_08/*.md `- [ ]` todos
+  every 30 min (dedup by brief + slug-NNN id); prune_stale deletes orphan yaml + queued-undispatched state.db zombie
+  rows, never done/dispatched rows.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -109,7 +109,7 @@ normal cadence). The prior 6 h / 21600 s cadence lagged newly-pushed plans by up
 2026-06-02: 30 min max).
 
 ```
-PM repo (plans/active/*.md)
+PM repo (plans/archive/2026_08/*.md)
     │
     ├─ sorted *.md files
     ├─ skip: INDEX.md, _*.md (underscore-prefixed)

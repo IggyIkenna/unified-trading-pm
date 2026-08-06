@@ -62,11 +62,11 @@ Re-running the end-to-end verification that `deployment_registry_reaper_not_drai
 third todo asked for, against the newly deployed revision (confirmed via `gcloud builds log` + content-diffed
 `git show 366154d:...` — both shipped fixes AND the sibling issue doc's faulthandler instrumentation are present):
 
-- **`active/` object count: still 403–404**, essentially UNCHANGED from the pre-fix baseline, both ~1h45m after the P0
-  reaper-grace-period fix went live (revision `-00269-t66`, deployed 21:34:14Z) and ~10 min after the P1 cold-cache fix
-  went live (revision `-00270-2l9`, deployed 23:25:24Z) — against ~9 actually-running VMs (7 GCE in
-  `central-element-323112` + 2 AWS EC2 in `ap-northeast-1`). The plan's success criterion ("`active/` ≈ running-VM
-  count") is NOT met.
+- **`archive/2026_08/` object count: still 403–404**, essentially UNCHANGED from the pre-fix baseline, both ~1h45m after
+  the P0 reaper-grace-period fix went live (revision `-00269-t66`, deployed 21:34:14Z) and ~10 min after the P1
+  cold-cache fix went live (revision `-00270-2l9`, deployed 23:25:24Z) — against ~9 actually-running VMs (7 GCE in
+  `central-element-323112` + 2 AWS EC2 in `ap-northeast-1`). The plan's success criterion ("`archive/2026_08/` ≈
+  running-VM count") is NOT met.
 - **3 consecutive `GET /api/deployments/inventory` (no `status` filter) calls**, the first genuinely cold (made 2 min
   after the fresh revision deployed): 45.72s / 45.35s / 0.58s. Technically within-or-at the 45s bound (no more
   indefinite hangs — the P1 fix's literal claim holds) — but the first TWO returned **`total=0` / `vm_count=0`** (an
@@ -150,7 +150,7 @@ lines appear, AND that both calls return real (non-empty) data, before closing t
       regression tests proving serialization at the pool level (unit-level reproduction; the live Cloud Run
       re-verification is the `[REVIEW]` todo below, now gated behind this one).
 - [x] ✅ [REVIEW] P1. Once the todo above ships, re-run the full
-      `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` verification again (active/ count
+      `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` verification again (archive/2026_08/ count
       before/after, 3 consecutive inventory calls incl. a cold one) — only then consider flipping that plan's `[REVIEW]`
       checkbox to a clean pass. — RE-VERIFIED 2026-07-25 (slot 7, review): the OOM defect THIS ISSUE DOC tracks is
       CONFIRMED FIXED against the live deployed revision. The sibling reaper-drain defect is NOT fixed (separate,
@@ -180,7 +180,7 @@ lines appear, AND that both calls return real (non-empty) data, before closing t
   background refresh completed successfully once serialized rather than being starved/killed. **Honest caveat**: this
   doc's own "Recommended decision" asks that "both calls return real (non-empty) data" — calls 1 and 2 themselves did
   NOT (both `total=0`); only the follow-up call 3 did. This is the SEPARATE, already- tracked reaper-drain defect
-  (`active/` object count still ~404 vs 7 actually-running GCE instances, unchanged from every prior session's
+  (`archive/2026_08/` object count still ~404 vs 7 actually-running GCE instances, unchanged from every prior session's
   measurement) bleeding into this specific re-verification's timing, not a sign the OOM fix failed — the two defects are
   orthogonal per this doc's own framing, and the positive evidence (no OOM, no 500, no restart, log-confirmed absence of
   the memory-limit/signal-9 signature, eventual real data) is unambiguous for the ONE defect this issue doc tracks.
@@ -192,10 +192,10 @@ lines appear, AND that both calls return real (non-empty) data, before closing t
 - **2026-07-24 (slot-4, review)**: Diagnosed live against `uts-shared-deployment-api-00270-2l9`
   (`deployment-api:366154d`) per the parent issue doc's 3rd `[REVIEW]` todo. Confirmed both prior fixes ARE deployed
   (content-diffed, not just ancestry-checked — the LDR→main promote path uses SQUASH commits, so
-  `git merge-base --is-ancestor` alone is unreliable here; verified via `git show <sha>:<path> | grep`). Found `active/`
-  unchanged (403–404) and reproduced a container OOM-kill via 2 concurrent cold/stale-refresh census computations. Filed
-  this doc + updated the parent issue doc's Progress Log. NOT fixed in this session (review-only pass; a fix needs a
-  BACKEND worker's design call between the 4 candidate approaches above).
+  `git merge-base --is-ancestor` alone is unreliable here; verified via `git show <sha>:<path> | grep`). Found
+  `archive/2026_08/` unchanged (403–404) and reproduced a container OOM-kill via 2 concurrent cold/stale-refresh census
+  computations. Filed this doc + updated the parent issue doc's Progress Log. NOT fixed in this session (review-only
+  pass; a fix needs a BACKEND worker's design call between the 4 candidate approaches above).
 - **2026-07-24 (slot-5, review)**: Auto-dispatched task `-002` (the `[REVIEW]` todo below) while `-001` (the `[BACKEND]`
   fix) was still `[ ]` and actively in-progress on slot 6 — this doc's prose ordering ("once the todo above ships") was
   never machine-enforced (`sequential: false`, no `depends_on`), so the dispatcher offered `-002` before its real

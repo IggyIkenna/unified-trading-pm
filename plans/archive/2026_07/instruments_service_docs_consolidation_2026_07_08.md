@@ -107,8 +107,8 @@ list as part of Phase 2's design checkpoint**, this table is a starting hypothes
 
 > **[plan-reconcile 2026-07-21]**: checkboxes below retroactively flipped to `[x]` with evidence — the redirect note's
 > hedge ("no checkbox flip made here") was itself the archive-eligibility violation (a `status: complete` plan sitting
-> in `plans/active/` with 6 open todos). Each bullet's actual completion was traced to real evidence (the audit doc, or
-> the shipped docs' own content) rather than a literal re-derivation.
+> in `plans/archive/2026_08/` with 6 open todos). Each bullet's actual completion was traced to real evidence (the audit
+> doc, or the shipped docs' own content) rather than a literal re-derivation.
 
 - [x] [DATA] P0. **Read all 18 existing docs in full** (was: 17 — see title correction) (not just the intros already
       skimmed) and extract every concrete claim: venue lists per AG, instrument_id format examples, MVP-universe scope

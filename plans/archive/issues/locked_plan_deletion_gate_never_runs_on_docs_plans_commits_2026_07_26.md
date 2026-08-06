@@ -68,11 +68,12 @@ from `quality-gates.sh`.
 ## Evidence (measured this pass, 2026-07-26)
 
 1. **The gate exists and looks right.** `scripts/quality-gates.sh:408` —
-   `DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/active/*.md')`, then `:415` requires
-   `[unlock-plan]` in the commit message when the deleted file's `HEAD:` frontmatter has a non-empty `locked_by`.
+   `DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/archive/2026_08/*.md')`, then `:415`
+   requires `[unlock-plan]` in the commit message when the deleted file's `HEAD:` frontmatter has a non-empty
+   `locked_by`.
 2. **The filter is NOT the problem** (ruling out the obvious `git mv`-shows-as-rename hypothesis):
-   `git diff --name-status 57ed9271c~1 57ed9271c -- 'plans/active/*.md'` classifies every archived doc as **`D`**, not
-   `R` — so `--diff-filter=D` would have matched. The gate simply never ran.
+   `git diff --name-status 57ed9271c~1 57ed9271c -- 'plans/archive/2026_08/*.md'` classifies every archived doc as
+   **`D`**, not `R` — so `--diff-filter=D` would have matched. The gate simply never ran.
 3. **The pre-commit chain does not carry the check.** The hook list that actually executed on a real `docs(plans):`
    commit this session: Prettier · gitleaks · trailing whitespace · end-of-file · yaml · toml · large files · merge
    conflicts · private key · mixed line ending · Conventional Commit · slot·host identity · branch drift · Plan hygiene
@@ -118,25 +119,25 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
       at `stages: [commit-msg]` for exactly this reason (see its entry in `.pre-commit-config.yaml`) — model the new
       check on THAT hook's stage, not on `run_hygiene_sweep.sh --precommit`. Add a `commit-msg`-stage check (new script
       or a new mode on an existing one) that: reads staged deletions via
-      `git diff --cached --diff-filter=D --name-only -- 'plans/active/**/*.md'` (recursive — the current
-      `quality-gates.sh` glob `'plans/active/*.md'` misses `issues/**` entirely, a second independent bug), reads
-      `locked_by` from `HEAD:$file`, and reads the message from the `commit-msg` hook's own argument (`$1`, the path
-      prek passes to a commit-msg hook — NOT `git log -1`, which reads the PREVIOUS already-made commit, a third bug).
-      `.pre-commit-config.yaml` is templated (`scripts/pre-commit-templates/` + `rollout-pre-commit-configs.sh`) — check
-      whether `plans/active/` is PM-specific enough that this hook only needs adding to PM's own copy (likely, since no
-      other repo has a `plans/` tree) before deciding whether a fleet-wide rollout is needed. Keep the
+      `git diff --cached --diff-filter=D --name-only -- 'plans/archive/2026_08/**/*.md'` (recursive — the current
+      `quality-gates.sh` glob `'plans/archive/2026_08/*.md'` misses `issues/**` entirely, a second independent bug),
+      reads `locked_by` from `HEAD:$file`, and reads the message from the `commit-msg` hook's own argument (`$1`, the
+      path prek passes to a commit-msg hook — NOT `git log -1`, which reads the PREVIOUS already-made commit, a third
+      bug). `.pre-commit-config.yaml` is templated (`scripts/pre-commit-templates/` + `rollout-pre-commit-configs.sh`) —
+      check whether `plans/archive/2026_08/` is PM-specific enough that this hook only needs adding to PM's own copy
+      (likely, since no other repo has a `plans/` tree) before deciding whether a fleet-wide rollout is needed. Keep the
       `quality-gates.sh` copy or delete it, but do not leave two divergent implementations. **Done when**: a test commit
       that deletes a fixture doc carrying `locked_by:` is BLOCKED without `[unlock-plan]` and PASSES with it,
       demonstrated with the real hook output pasted into this doc's Progress Log. — **DONE unified-trading-pm** (see
       Progress Log for shas + real hook output). **CORRECTION on the "second independent bug" claim above**: MEASURED
       (not assumed) against the real cited historical commit (`57ed9271c`) —
-      `git diff --diff-filter=D --name-only 57ed9271c~1 57ed9271c -- 'plans/active/*.md'` lists
+      `git diff --diff-filter=D --name-only 57ed9271c~1 57ed9271c -- 'plans/archive/2026_08/*.md'` lists
       `plans/active/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` IDENTICALLY to the unfiltered
-      deletion list. Git's default pathspec `*` crosses `/` (unlike a shell glob) — `'plans/active/*.md'` was ALREADY
-      correct and already matched `issues/**`. The `**` variant this todo suggested is actually WRONG: measured 433
-      matches vs 696 for the single-star form — `**` requires ≥1 subdirectory, silently EXCLUDING files directly in
-      `plans/active/`. Kept the proven-correct `plans/active/*.md` pattern; see the correction comment in
-      `scripts/hooks/check-locked-plan-deletion.sh`. Only genuine bugs #2 (routing — the actual root cause) and #3
+      deletion list. Git's default pathspec `*` crosses `/` (unlike a shell glob) — `'plans/archive/2026_08/*.md'` was
+      ALREADY correct and already matched `issues/**`. The `**` variant this todo suggested is actually WRONG: measured
+      433 matches vs 696 for the single-star form — `**` requires ≥1 subdirectory, silently EXCLUDING files directly in
+      `plans/archive/2026_08/`. Kept the proven-correct `plans/archive/2026_08/*.md` pattern; see the correction comment
+      in `scripts/hooks/check-locked-plan-deletion.sh`. Only genuine bugs #2 (routing — the actual root cause) and #3
       (`git log -1` reads the wrong commit) needed fixing.
 - [x] ✅ [SCRIPT] P2. **Fix the `git log -1` commit-message read** in `scripts/quality-gates.sh:410` regardless of which
       direction (a)/(b) is chosen, or delete the block if it moves. **Done when**: the check reads the message of the
@@ -147,12 +148,12 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
       `[unlock-plan]` from the message of the commit BEING CREATED (see Progress Log real hook output).
 - [x] ✅ [DOC] P2. **Retro-clean the one doc this already affected** — `plans/archive/issues/`
       `mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` still carries `locked_by: live-defi-rollout` while
-      archived; clear the lock (or restore the doc to `plans/active/` if the operator rules the archival was premature).
-      **Done when**: the archived doc has an empty `locked_by:` and a dated note recording which way it was ruled. —
-      **Already done**: `unified-trading-pm@2c61a8dc4` (2026-07-26, cross_cutting #10/#11 operator-decision resolution)
-      cleared `locked_by:`/`locked_since:` in the archived doc's frontmatter and added the dated "2026-07-26 —
-      `locked_by:` cleared" note recording the ruling (retro-clean, per option A — the archival itself was independently
-      re-verified correct). This todo was simply never checked off after that commit landed.
+      archived; clear the lock (or restore the doc to `plans/archive/2026_08/` if the operator rules the archival was
+      premature). **Done when**: the archived doc has an empty `locked_by:` and a dated note recording which way it was
+      ruled. — **Already done**: `unified-trading-pm@2c61a8dc4` (2026-07-26, cross_cutting #10/#11 operator-decision
+      resolution) cleared `locked_by:`/`locked_since:` in the archived doc's frontmatter and added the dated "2026-07-26
+      — `locked_by:` cleared" note recording the ruling (retro-clean, per option A — the archival itself was
+      independently re-verified correct). This todo was simply never checked off after that commit landed.
 
 ## Codex SSOTs (read before touching a todo)
 
@@ -163,8 +164,8 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
 - **2026-07-27** — P1+P2 shipped (slot-6). New `scripts/hooks/check-locked-plan-deletion.sh` (commit-msg stage, reads
-  `$1` per prek's commit-msg contract, `plans/active/*.md` pathspec) wired into `.pre-commit-config.yaml` (PM root + the
-  `docs.pre-commit-config.yaml` template, script self-guards as a no-op outside a `plans/` tree) with
+  `$1` per prek's commit-msg contract, `plans/archive/2026_08/*.md` pathspec) wired into `.pre-commit-config.yaml` (PM
+  root + the `docs.pre-commit-config.yaml` template, script self-guards as a no-op outside a `plans/` tree) with
   `stages: [commit-msg]`. Deleted the dead `scripts/quality-gates.sh:406-422` block (P2, resolved via deletion).
   End-to-end verified with a disposable fixture doc
   (`plans/active/issues/_test_fixture_locked_plan_deletion_gate_2026_07_27.md`, `locked_by: test-fixture-verification`),
@@ -189,9 +190,9 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
   [live-defi-rollout 18eba1ecb] test: delete locked fixture WITH unlock tag [unlock-plan]
   ```
 
-  Also disproved (not assumed) the todo's own "`plans/active/*.md` misses `issues/**`" claim by testing the exact
-  historical commit it cites — see the P1 checkbox note above. P3 (retro-clean the one already-affected archived doc)
-  left open — separate file, separate [DOC]-tagged todo, not this dispatch's scope.
+  Also disproved (not assumed) the todo's own "`plans/archive/2026_08/*.md` misses `issues/**`" claim by testing the
+  exact historical commit it cites — see the P1 checkbox note above. P3 (retro-clean the one already-affected archived
+  doc) left open — separate file, separate [DOC]-tagged todo, not this dispatch's scope.
 
 - **2026-07-26** — Filed by `/plan-reconcile cross-cutting` (autonomous). Surfaced while parking the `[unlock-plan]` ask
   for `mtds_uac_adapter_contract_baseline_regression_2026_07_09.md`: mid-run, a concurrent escalation-driven remediation

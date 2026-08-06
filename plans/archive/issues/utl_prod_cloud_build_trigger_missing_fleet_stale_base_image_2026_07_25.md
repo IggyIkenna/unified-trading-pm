@@ -6,7 +6,7 @@ title:
   build fleet-wide"
 summary: >-
   Root-caused while diagnosing deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md's open P0 todo ("why
-  hasn't active/ moved despite unified-trading-library@4773a3fd being live on main for 2.5h"). The deployed
+  hasn't archive/2026_08/ moved despite unified-trading-library@4773a3fd being live on main for 2.5h"). The deployed
   uts-shared-deployment-api container reports unified-trading-library package_version=0.55.0 via its own
   /api/cloud-builds/library-status/unified-trading-library endpoint — nowhere near current main. Traced upstream: UTL's
   quality-gates-v2.yml correctly fires a `qg-passed` repository_dispatch to unified-trading-pm on every main push
@@ -44,8 +44,8 @@ locked_by:
 locked_since:
 source:
   'Found 2026-07-25 (slot 6, backend_engineer) while working
-  deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md''s open P0 todo ("Determine why active/ still
-  hasn''t moved despite unified-trading-library@4773a3fd being live on main for ~2.5h"). Traced the deployed
+  deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md''s open P0 todo ("Determine why archive/2026_08/
+  still hasn''t moved despite unified-trading-library@4773a3fd being live on main for ~2.5h"). Traced the deployed
   container''s actual installed UTL version, then the full qg-passed → cloud-build-router → gcloud builds triggers run
   chain, live, via gcloud/gh CLI against production GCP + GitHub.'
 execution_scope: orchestrator-agent
@@ -165,9 +165,9 @@ base-image pipeline without confirming the correct source config/IAM/connection 
    `Slack — Build Trigger Not Configured` step (it's already wired but did not fire for this exact path; worth a
    follow-up BACKEND todo in `unified-trading-pm` to find why its condition didn't match this WARNING branch).
 4. Once the trigger is confirmed working and a fresh UTL base image has published, re-run
-   `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`'s Todo 4 verification (`active/` count vs
-   live-VM count) — that todo cannot be closed correctly until the deployed container actually carries `4773a3fd`, which
-   requires this fix first.
+   `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`'s Todo 4 verification (`archive/2026_08/` count
+   vs live-VM count) — that todo cannot be closed correctly until the deployed container actually carries `4773a3fd`,
+   which requires this fix first.
 
 ## Todos
 

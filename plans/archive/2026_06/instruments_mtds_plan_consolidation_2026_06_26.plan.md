@@ -75,9 +75,10 @@ source:
       the 4 survivors; `last_updated` → 2026-06-26; instruments assigned-plans section repointed; MTDS migration phases
       marked HISTORICAL.
 - [x] [PLAN] P2. **Inventory + codex alignment.** ✅ `regenerate_active_plan_inventory.py` re-run (111 plans, 0
-      orphans); 3 codex provenance pointers + `defi_master` epic links repointed from `active/` to the archived paths
-      (no codex doc cites an archived plan as SSOT — they were "see plan" pointers).
-- [x] [PLAN] P3. **Self-archive.** ✅ Archived to `plans/archive/2026_06/` — unified-trading-pm@HEAD. End-state map in Provenance log is the durable record.
+      orphans); 3 codex provenance pointers + `defi_master` epic links repointed from `archive/2026_08/` to the archived
+      paths (no codex doc cites an archived plan as SSOT — they were "see plan" pointers).
+- [x] [PLAN] P3. **Self-archive.** ✅ Archived to `plans/archive/2026_06/` — unified-trading-pm@HEAD. End-state map in
+      Provenance log is the durable record.
 
 ## Provenance log (5-step ritual — migrate → banner → codex-align → epic update → lock-clear)
 

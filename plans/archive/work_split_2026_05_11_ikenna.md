@@ -565,8 +565,8 @@ REPORT-BACK: per shippable unit, code commit + plan-flip commit, conditional pus
 Final: append a "DONE-2026-05-11" block at the bottom of writegate plan body listing every
 code + plan-flip commit sha. EOD-audit (per CLAUDE.md "Capture Discoveries As Plan
 Todos Immediately" § "End-of-cycle audit clause"): every deferral in your final summary
-MUST already be a `- [ ]` plan todo or a `**DEFERRED**` annotation in plans/active/. Run
-`grep -n "<distinctive phrase>" plans/active/*.md plans/active/issues/*.md` per deferral
+MUST already be a `- [ ]` plan todo or a `**DEFERRED**` annotation in plans/archive/2026_08/. Run
+`grep -n "<distinctive phrase>" plans/archive/2026_08/*.md plans/archive/issues/*.md` per deferral
 line — match → cite file:line in summary; no match → STOP, add the todo, push the flip,
 then resume. Then go quiet — don't pick up new work autonomously.
 ```

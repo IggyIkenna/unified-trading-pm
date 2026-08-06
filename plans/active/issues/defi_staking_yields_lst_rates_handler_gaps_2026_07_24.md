@@ -38,6 +38,7 @@ related:
     defi_consolidated_closeout_2026_07_18,
     defi_track01_per_instrument_and_canon_id_2026_07_24,
     canonical_path_oracle_blind_to_filename_stem_2026_07_20,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-24
 author: unknown

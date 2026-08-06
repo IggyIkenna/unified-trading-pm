@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [defi]
 stage: [meta]
-repos: [deployment-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    deployment-service,
+    features-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: [../epics/defi_master.md, ./defi_onchain_derivable_values_and_date_drift_2026_06_20.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: defi_master
 priority: P0
 execution_scope: orchestrator-agent
@@ -24,12 +32,12 @@ locked_since: 2026-06-20
 > **Provenance**: extracted 2026-06-20 from the inline `defi_master` epic body (§ "Governance parameters refresh",
 > migrated there from the archived `defi_protocol_governance_parameters_refresh_2026_05_08` issue) during the
 > asset-group-umbrella restructure. The umbrellas were carrying ~75 stale May-07/08 inline todos that the backlog regen
-> (`regen_backlog_from_plan.py`, which scans `plans/active/*.md` only — never `plans/epics/`) never dispatched. This is
-> genuinely net-new, unowned work: Aave/Compound/Morpho governance parameters (LTV, liquidation threshold, rate-curve
-> kinks, borrow caps) are frozen at discovery time today with no refresh path, so a governance change between discovery
-> and execution silently mis-prices a live position. Manifest/coverage/`source` work for DeFi is owned separately by
-> [`defi_manifest_canonicalisation_2026_06_01.md`](./defi_manifest_canonicalisation_2026_06_01.md) — do NOT duplicate it
-> here.
+> (`regen_backlog_from_plan.py`, which scans `plans/archive/2026_08/*.md` only — never `plans/epics/`) never dispatched.
+> This is genuinely net-new, unowned work: Aave/Compound/Morpho governance parameters (LTV, liquidation threshold,
+> rate-curve kinks, borrow caps) are frozen at discovery time today with no refresh path, so a governance change between
+> discovery and execution silently mis-prices a live position. Manifest/coverage/`source` work for DeFi is owned
+> separately by [`defi_manifest_canonicalisation_2026_06_01.md`](./defi_manifest_canonicalisation_2026_06_01.md) — do
+> NOT duplicate it here.
 
 ## Context
 

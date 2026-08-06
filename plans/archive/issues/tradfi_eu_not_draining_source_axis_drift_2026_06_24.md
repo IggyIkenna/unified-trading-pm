@@ -496,7 +496,7 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
     doc archives).
   - **Archival:** every todo in this doc is now `[x]`. `locked_by: live-defi-rollout` cleared (a stale branch-name
     artifact, not a genuine operator lock — same self-service-clear precedent as this doc's sibling closures this
-    session). Doc moved `plans/active/issues/` → `plans/archive/issues/` in a separate commit (never combined with the
+    session). Doc moved `plans/archive/issues/` → `plans/archive/issues/` in a separate commit (never combined with the
     checkbox-flip commit, per the M3 cross-repo-flip-verification gotcha). 8 active-plan referrers' paths fixed in the
     same follow-up commit: `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`,
     `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, `tradfi_consolidated_closeout_2026_07_18.md`,

@@ -9,7 +9,7 @@ summary: >-
   `regen_backlog_from_plan.py`'s `_parse_open_todos` matches `_NON_DISPATCHABLE_RE` only against the single physical
   line `_UNCHECKED_RE` matched (the checkbox's own line) — never against continuation/annotation paragraphs written
   underneath it, which is the common authoring pattern when a worker adds a `BLOCKED-*` note AFTER the original todo
-  text already exists. A corpus-wide grep across `plans/active/*.md` found ~50 unchecked checkboxes where a
+  text already exists. A corpus-wide grep across `plans/archive/2026_08/*.md` found ~50 unchecked checkboxes where a
   `BLOCKED-(CREDENTIALS|OPERATOR|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)` marker exists only in text below the
   checkbox, not on the checkbox's own line — every one of those is a live re-dispatch risk, not just the sports case
   that surfaced it.
@@ -79,9 +79,9 @@ fix re-reads the plan file correctly, but it re-runs the SAME `_parse_open_todos
 see a marker sitting in continuation text either. The 2026-07-08 fix and this bug are orthogonal; fixing one does not
 fix the other.
 
-**Blast radius**: a corpus grep confirms this is not a one-off. Across `plans/active/*.md`, ~50 unchecked checkboxes
-have a `BLOCKED-(CREDENTIALS|OPERATOR|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)` marker present only in
-continuation text below the checkbox, never on the checkbox's own line (method: for each unchecked checkbox, scan
+**Blast radius**: a corpus grep confirms this is not a one-off. Across `plans/archive/2026_08/*.md`, ~50 unchecked
+checkboxes have a `BLOCKED-(CREDENTIALS|OPERATOR|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)` marker present only
+in continuation text below the checkbox, never on the checkbox's own line (method: for each unchecked checkbox, scan
 forward until the next `- [` line, flag if the marker appears in that span but not on the checkbox line itself).
 Examples (not exhaustive — see the grep recipe below): `ao_satellite_ao_dispatch_batch1_2026_07_26.md:178`,
 `cefi_satellite_ao_dispatch_batch1_2026_07_25.md:214`, `defi_migration_audit_log_2026_07_24.md:271`,
@@ -129,10 +129,10 @@ read instead of hand-auditing every plan.
       `test_parse_skips_non_dispatchable_marker_in_continuation_text` added; full quality-gates.sh green (1758 passed, 1
       skipped).
 - [x] [DATA] P3. Once the P2 fix above ships, re-run the corpus grep (recipe in this doc's "What I found" section)
-      against live `plans/active/*.md` and spot-check a handful of the flagged todos to confirm the new parser now
-      correctly excludes them from the backlog; file any genuinely-still-open ones as a small per-AG cleanup rather than
-      editing 50 files in one sweep. (repo: unified-trading-pm) — ✅ DONE 2026-07-26. **Methodology correction**: the
-      corpus-grep recipe as literally written above ("scan forward until the next `- [` line") is LOOSER than the
+      against live `plans/archive/2026_08/*.md` and spot-check a handful of the flagged todos to confirm the new parser
+      now correctly excludes them from the backlog; file any genuinely-still-open ones as a small per-AG cleanup rather
+      than editing 50 files in one sweep. (repo: unified-trading-pm) — ✅ DONE 2026-07-26. **Methodology correction**:
+      the corpus-grep recipe as literally written above ("scan forward until the next `- [` line") is LOOSER than the
       shipped `_TODO_BLOCK_BOUNDARY_RE` (checkbox line **OR** markdown header), so re-running it verbatim over-counts —
       53 hits vs. the P2 fix's actual 30, because it scans past section headers into unrelated later prose (5/5
       spot-checked over-count hits traced to a `BLOCKED-*` string appearing in a totally different, later section, e.g.
@@ -145,24 +145,24 @@ read instead of hand-auditing every plan.
       1 fixed below), prediction 2, cefi 1, meta 1.
 
       Content spot-check (10/30, one per AG + extra tradfi/sports coverage): 9 are genuinely still-open, correctly
-                          gated on a real, CURRENT blocker (`BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE`) — no cleanup
-                          needed, working as intended. **1 genuine defect found and fixed**: `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`
-                          lines 144-155 (two `[AGENT] P2` VIX-wiring todos) quoted a **historical, since-RESOLVED** status verbatim —
-                          `(was: "... Status: **BLOCKED-OPERATOR-DECISION**.")` — inside prose explaining that the block was later lifted.
-                          The literal token match still fires on that quoted text even though the decision was made 2026-06-23 and the todo
-                          is real, unblocked, actionable work — a false-EXCLUSION side effect of the marker regex being purely textual
-                          (can't distinguish a live block from a quoted historical one). Reworded the quote to drop the literal
-                          `BLOCKED-<TOKEN>` shape while preserving the meaning (`unified-trading-pm` commit, this same batch); verified via
-                          direct `_parse_open_todos()` re-run that both VIX todos are now dispatchable. One more example of the SAME
-                          false-exclusion class was found (`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md:211`, a `[REVIEW] P1` todo
-                          that quotes several OTHER todos' historical `BLOCKED-*` states while describing its own — genuinely still-open,
-                          real remaining work: it re-scoped 2 of 3 target P0 items already but the dangling issue-doc reference + the
-                          `related:` leading-slash convention fix are still outstanding per its own "Done when") — left untouched since it's
-                          already tracked by its own todo in its own plan; not duplicating that tracking here.
+                              gated on a real, CURRENT blocker (`BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE`) — no cleanup
+                              needed, working as intended. **1 genuine defect found and fixed**: `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`
+                              lines 144-155 (two `[AGENT] P2` VIX-wiring todos) quoted a **historical, since-RESOLVED** status verbatim —
+                              `(was: "... Status: **BLOCKED-OPERATOR-DECISION**.")` — inside prose explaining that the block was later lifted.
+                              The literal token match still fires on that quoted text even though the decision was made 2026-06-23 and the todo
+                              is real, unblocked, actionable work — a false-EXCLUSION side effect of the marker regex being purely textual
+                              (can't distinguish a live block from a quoted historical one). Reworded the quote to drop the literal
+                              `BLOCKED-<TOKEN>` shape while preserving the meaning (`unified-trading-pm` commit, this same batch); verified via
+                              direct `_parse_open_todos()` re-run that both VIX todos are now dispatchable. One more example of the SAME
+                              false-exclusion class was found (`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md:211`, a `[REVIEW] P1` todo
+                              that quotes several OTHER todos' historical `BLOCKED-*` states while describing its own — genuinely still-open,
+                              real remaining work: it re-scoped 2 of 3 target P0 items already but the dangling issue-doc reference + the
+                              `related:` leading-slash convention fix are still outstanding per its own "Done when") — left untouched since it's
+                              already tracked by its own todo in its own plan; not duplicating that tracking here.
 
-                          **Conclusion**: no further per-AG cleanup doc needed — the 29 untouched flagged items are genuinely open and
-                          correctly excluded (working as designed); the 1 real defect found is fixed; the parser fix (`e856b56`) is
-                          confirmed correct across the full live corpus.
+                              **Conclusion**: no further per-AG cleanup doc needed — the 29 untouched flagged items are genuinely open and
+                              correctly excluded (working as designed); the 1 real defect found is fixed; the parser fix (`e856b56`) is
+                              confirmed correct across the full live corpus.
 
 ## Progress Log
 

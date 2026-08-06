@@ -26,6 +26,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-25
 last_updated: "2026-08-04"
@@ -236,9 +237,9 @@ not data-pipeline).
   digest.** This hub carries no `- [ ]` of its own (`grep -cE '^\s*-\s*\[[ xX]\]'` → `0`), its `depends_on:` is `[]` and
   its `related:` names only the 3 sibling tranche closeouts + the audit SKILL (so the dependency-graph discovery path
   finds no forked children either), and **no `infra_*_satellite_ao_dispatch_batch*` plan has ever existed** in
-  `plans/active/` or `plans/archive/` — against 41 such plans across the 5 AGs. So the audit's projection question
-  resolves to "everything is orphaned", because nothing in the covering set dispatches anything. All 34 tranche-primary
-  docs were read end-to-end (32 Sources + 2 members not yet listed here:
+  `plans/archive/2026_08/` or `plans/archive/` — against 41 such plans across the 5 AGs. So the audit's projection
+  question resolves to "everything is orphaned", because nothing in the covering set dispatches anything. All 34
+  tranche-primary docs were read end-to-end (32 Sources + 2 members not yet listed here:
   [issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md](/plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md),
   found unclaimed by ANY of the 4 non-AG tranche closeouts, and
   [issues/infra_plan_reconcile_parked_decisions_2026_07_26.md](/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md)):

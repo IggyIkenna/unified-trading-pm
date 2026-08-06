@@ -4,7 +4,7 @@ created: 2026-05-20
 author: background agent (delegated by slot-1 main)
 source:
   - operator directive 2026-05-20 "without clean issues outside this known audit we don't have a clean base"
-  - 56 issue docs in plans/active/issues/ with `resolved:` frontmatter field
+  - 56 issue docs in plans/archive/issues/ with `resolved:` frontmatter field
 locked_by: live-defi-rollout
 ---
 
@@ -198,7 +198,7 @@ docs(plans): archive 45 resolved issue docs per audit 2026-05-20
 Archives 33 ARCHIVE-CLEAN + 6 ARCHIVE-WITH-SPOT-CHECK + 6 META per
 plans/active/issues/resolved_issues_archive_audit_2026_05_20.md.
 
-11 RESOLUTION-SUSPECT entries retained in active/issues/ pending
+11 RESOLUTION-SUSPECT entries retained in archive/issues/ pending
 operator triage (see audit doc § RESOLUTION-SUSPECT).
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>

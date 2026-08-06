@@ -68,7 +68,7 @@ Building `scripts/plan-hygiene/check_prosewrap_padding.sh` (the fix for that tod
 threshold against the live corpus, which meant scanning it — that scan found the corruption is NOT limited to the 2
 commits the parent doc named:
 
-- **82 files** across `plans/active/`, `plans/epics/`, and `codex/` carry at least one instance.
+- **82 files** across `plans/archive/2026_08/`, `plans/epics/`, and `codex/` carry at least one instance.
 - **4472 total violating lines** (the gate's own count, now seeded as its ratchet baseline).
 - The worst single instance: **1290 leading spaces** on lines 222-231 of
   `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` — this is the SAME paragraph that produced the

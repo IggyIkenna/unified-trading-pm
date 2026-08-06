@@ -7,7 +7,7 @@ summary: >-
   Companion history doc to `cefi_residual_followups_after_honest_done_2026_07_17.md` — the verbatim Progress Log
   narrative (2026-07-17/07-18: blueprint workflow, Phase -1 catalogue rebuild + gate, Phase 0b write/reader-bridge
   ships, Phase C migration-script dry-runs, Phase A/B provenance + deploy characterization) extracted for line-cap
-  compliance (`scripts/plan-hygiene/check_line_caps.sh` 1000L hard cap on `plans/active/issues/*.md`; pattern per
+  compliance (`scripts/plan-hygiene/check_line_caps.sh` 1000L hard cap on `plans/archive/issues/*.md`; pattern per
   `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` § FINAL RESOLUTION). Zero open todos — pure narrative/
   evidence record. The parent doc keeps all 26 open+done todos, the four-surfaces table, operator decisions,
   architecture, every Phase (-1 through 2), the Codex SSOTs, and the single most-recent Progress Log entry (2026-07-18
@@ -78,7 +78,7 @@ resolved_by:
 > **Companion history doc, not the live plan.** This holds the verbatim historical Progress Log entries (everything
 > older than the single most-recent "CUTOVER STAGED" status entry) extracted from
 > `/plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` to bring that doc back under the
-> `plans/active/issues/` 1000-line hard cap. All open todos, the four-surfaces table, the operator decisions, the
+> `plans/archive/issues/` 1000-line hard cap. All open todos, the four-surfaces table, the operator decisions, the
 > architecture/blueprint context, every Phase section (-1 through 2), and the Codex SSOTs list stay in the parent — this
 > doc is pure narrative/evidence record, extracted byte-for-byte, nothing paraphrased or summarized. If you are looking
 > for open work, gate state, or the current cutover status, read the parent, not this doc.

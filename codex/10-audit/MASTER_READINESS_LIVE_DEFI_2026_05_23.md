@@ -161,7 +161,7 @@ of operations: **doc → plan → code**.
 1. The PR description lists the docs read at the start (the "doc-first" check).
 2. The commit touches **all** listed SSOTs in the relevant row, or the PR explicitly states why a given SSOT is
    unaffected.
-3. The corresponding sub-plan in `plans/active/` agrees with the doc — if disagree, update the plan first.
+3. The corresponding sub-plan in `plans/archive/2026_08/` agrees with the doc — if disagree, update the plan first.
 
 Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 
@@ -196,14 +196,14 @@ The 7-group readiness applies to:
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   (live-mode wiring) + Group F readiness items 17/18/19 of master plan
 - risk-and-exposure-service — work folded into
-  [`alerting_service_live_rules_2026_05_07`](../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md) Phase 9
-  circuit-breaker integration + Group F readiness items 17/19 of master plan
+  [`alerting_service_live_rules_2026_05_07`](../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
+  Phase 9 circuit-breaker integration + Group F readiness items 17/19 of master plan
 - pnl-attribution-service — work folded into
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 12 batch-live reconciler + Group F readiness item 21 of master plan
 - alerting-service ✓
-  [`alerting_service_live_rules_2026_05_07`](../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md) (P0, deadline
-  2026-05-23 — circuit breakers + paging + ServiceEmissionPolicy tier-up)
+  [`alerting_service_live_rules_2026_05_07`](../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md) (P0,
+  deadline 2026-05-23 — circuit breakers + paging + ServiceEmissionPolicy tier-up)
 - batch-live-reconciliation-service — work folded into
   [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 12 + Group F readiness item 21 of master plan; UTL `batch_live_reconciler` already shipped per UTL@908b1647

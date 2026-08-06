@@ -31,6 +31,7 @@ source: >-
   deciding or blocking.
 execution_scope: orchestrator-agent
 drift_direction: advance-code
+  /plans/active/cefi_consolidated_closeout_2026_07_18.md,
 depends_on: []
 context_scope:
   [
@@ -54,8 +55,8 @@ self-explanatory and harmless in the meantime) rather than left as confusing ful
 A:
 `git rm plans/active/sports_closeout_batch1_finalize_2026_07_24.md plans/active/data_completion_sports_history_2026_07_24.md`
 — removes both stub files; the real content already lives at `plans/archive/2026_07/`. [WORKER REC] B: Leave the stubs
-in place — they're self-documenting and harmless, just slightly noisy in `plans/active/`. Other: operator can type a
-custom answer
+in place — they're self-documenting and harmless, just slightly noisy in `plans/archive/2026_08/`. Other: operator can
+type a custom answer
 
 **Operator answer (2026-07-25)**: A — delete both.
 
@@ -313,8 +314,8 @@ P0/P1/P2/P3 breakdown doesn't match its stated "96" total — an arithmetic slip
 exact gating already having caught one real contradiction — worth linking so the next reader sees the gate isn't
 theoretical.
 
-A: **Split into a coordination-index parent (kept under `plans/active/`, trimmed to a Tracks-summary + links) + N child
-plans per Track/phase**, each independently under the 1000L cap, wired via `depends_on`/`gate_on_depends` per
+A: **Split into a coordination-index parent (kept under `plans/archive/2026_08/`, trimmed to a Tracks-summary + links) +
+N child plans per Track/phase**, each independently under the 1000L cap, wired via `depends_on`/`gate_on_depends` per
 `task_template.md` finding I's pattern (already the established workspace pattern for exactly this situation — see
 `check_line_caps.sh`'s own doc comment: "a genuinely large hub belongs in `plans/epics/`... or splits"). Apply the 3
 queued fixes to whichever child inherits the frontmatter/estimate fields and Track C respectively, in the same pass.
@@ -359,14 +360,14 @@ archival, and both are still being READ as live reference surfaces, so this is a
 I did NOT archive either: the skill's Phase-4 rule is explicit that a fully-done plan with **any** todo only
 soft-supported must be parked, never autonomous-archived — and 60 of 64 / most of 42 are soft.
 
-A: **Keep both `status: active` in `plans/active/`** and add a one-line "standing reference surface, not an archival
-candidate — 0 open todos is expected" note to each so future reconcile passes stop re-raising them. [WORKER REC] — both
-are actively read by tooling/skills and by CLAUDE.md's own pointers; archiving buys nothing and costs discoverability.
-B: **Archive both** via the 6-step ritual (accepting the `pm@<commit-pending>` placeholders as good enough), and repoint
-every referrer — including `/plan-reconcile`'s hunter 6 and CLAUDE.md's D1/D2 pointer — at `plans/archive/`. C: **Split
-the difference**: archive `data_pipeline_reconciliation_skill_2026_07_20.md` (its skill genuinely shipped), keep
-`data_pipeline_e2e_milestones_gate_2026_07_24.md` live as the standing 14-criteria gate. Other: operator can type a
-custom answer
+A: **Keep both `status: active` in `plans/archive/2026_08/`** and add a one-line "standing reference surface, not an
+archival candidate — 0 open todos is expected" note to each so future reconcile passes stop re-raising them. [WORKER
+REC] — both are actively read by tooling/skills and by CLAUDE.md's own pointers; archiving buys nothing and costs
+discoverability. B: **Archive both** via the 6-step ritual (accepting the `pm@<commit-pending>` placeholders as good
+enough), and repoint every referrer — including `/plan-reconcile`'s hunter 6 and CLAUDE.md's D1/D2 pointer — at
+`plans/archive/`. C: **Split the difference**: archive `data_pipeline_reconciliation_skill_2026_07_20.md` (its skill
+genuinely shipped), keep `data_pipeline_e2e_milestones_gate_2026_07_24.md` live as the standing 14-criteria gate. Other:
+operator can type a custom answer
 
 **Status**: resolved — option A. Added a "standing reference surface, not an archival candidate" note to both
 `data_pipeline_e2e_milestones_gate_2026_07_24.md` and `data_pipeline_reconciliation_skill_2026_07_20.md`; kept
@@ -402,7 +403,7 @@ for terminal docs — narrow the rule instead.** Amend CLAUDE.md (and the `/plan
 archiving a `status: resolved` doc with 0 open todos does NOT need `[unlock-plan]`, and delete the dead gate block
 rather than relocating it. Cheaper, and arguably matches revealed practice — but it weakens the signal for the
 non-terminal case too, so it wants your explicit sign-off, not mine. C: **Treat `@57ed9271c` as premature** — restore
-the doc to `plans/active/issues/` pending a real `[unlock-plan]`, then do A. Most conservative; costs a revert and
+the doc to `plans/archive/issues/` pending a real `[unlock-plan]`, then do A. Most conservative; costs a revert and
 re-fixes referrer paths corpus-wide. Other: operator can type a custom answer
 
 **Status**: resolved — option A. Confirmed via

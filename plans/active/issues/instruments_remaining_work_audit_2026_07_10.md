@@ -5,13 +5,13 @@ title:
   outside pure data backfills"
 summary:
   'Synthesis of a 4-shard parallel sweep (4 agents x ~20 real instruments-related plans/issues each, 83 candidate docs
-  total) that read every open instruments-touching plan and issue doc in plans/active/ and plans/active/issues/,
-  verified each against its own checkbox state and cited evidence, and classified genuinely-still-open non-backfill work
-  into 7 categories (CODE_PATH, GCS_BUCKET_MIGRATION, MANIFEST_COVERAGE, SSOT, DOCS_RECONCILIATION,
-  INSTRUMENT_ID_CANONICALIZATION, OTHER). Excludes items that are resolved-but-not-flipped (stale status:open despite
-  all todos checked) and excludes pure-backfill/download-only work. This is the reference doc for "what is left across
-  instruments work outside data backfills" as of 2026-07-10 — it does not itself track new work, it points at the real
-  source docs (each of which remains the SSOT for its own todos).'
+  total) that read every open instruments-touching plan and issue doc in plans/archive/2026_08/ and
+  plans/archive/issues/, verified each against its own checkbox state and cited evidence, and classified
+  genuinely-still-open non-backfill work into 7 categories (CODE_PATH, GCS_BUCKET_MIGRATION, MANIFEST_COVERAGE, SSOT,
+  DOCS_RECONCILIATION, INSTRUMENT_ID_CANONICALIZATION, OTHER). Excludes items that are resolved-but-not-flipped (stale
+  status:open despite all todos checked) and excludes pure-backfill/download-only work. This is the reference doc for
+  "what is left across instruments work outside data backfills" as of 2026-07-10 — it does not itself track new work, it
+  points at the real source docs (each of which remains the SSOT for its own todos).'
 status: open
 nature: notes
 asset_group: [cefi, defi, tradfi, sports, prediction, cross-cutting]
@@ -49,6 +49,7 @@ related:
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../layer1_remeasure_and_certify_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-10
 parent_epic: instruments_master
@@ -87,8 +88,8 @@ locked_since:
 > **How to read this doc.** Each entry below is a pointer, not a duplicate — the cited doc remains the SSOT for its own
 > todos/checkboxes. This doc's only job is categorization + priority ordering across the whole corpus so the operator
 > doesn't have to re-derive it from 83 scattered docs. Method: 4 parallel shard agents each read ~20 of 83 candidate
-> doc-index lines (source: `DOC_INDEX.generated.md` grep over `plans/active/**`), verified real still-open status
-> against each doc's own checkbox/Progress Log state (not frontmatter `status:`, which is frequently stale), and
+> doc-index lines (source: `DOC_INDEX.generated.md` grep over `plans/archive/2026_08/**`), verified real still-open
+> status against each doc's own checkbox/Progress Log state (not frontmatter `status:`, which is frequently stale), and
 > excluded anything resolved-but-not-flipped or pure-backfill. Within `INSTRUMENT_ID_CANONICALIZATION`, items already
 > exhaustively tracked inside the big `instrument_id_format_canonicalization_2026_07_08.md` effort are only noted as
 > existing (not re-listed in full) — that doc is the SSOT for its own sub-detail; this doc surfaces the genuinely
@@ -764,7 +765,7 @@ the source docs if this list is used for dispatch planning.
   code changed in this pass — all 3 findings are read-only live verification (GCS reads, direct service-layer calls,
   `gcloud logging`/`gcloud run` queries). `unified-trading-pm@c5828c496` + this commit.
 - 2026-07-10: Synthesized from a 4-shard parallel sweep of 83 real doc-index-derived candidate lines across
-  `plans/active/**`; 62 docs kept as genuinely open non-backfill work across 7 categories, 16 excluded as
+  `plans/archive/2026_08/**`; 62 docs kept as genuinely open non-backfill work across 7 categories, 16 excluded as
   resolved-but-not-flipped, 3 fragment lines flagged uncaptured. Read-only audit — no code or plan checkboxes changed.
 - 2026-07-10 (later): Added category definitions (§ Category definitions) and a full CODE_PATH conflict +
   target-architecture review (§1a) per operator request. Re-verified and flipped 15 of the 16 excluded docs for real

@@ -47,7 +47,7 @@ code_refs:
 > CORRECT direction — re-point/complete them; do **not** build a lower→UPPER migration. The phantom uppercase `ODDS`
 > manifest rows are tracked for physical purge in the same issue doc § 3.4, gated on this reversal (§ 4.3, now DECIDED)
 > and § 4.4 (Phase 6d, still open). SSOT for the reversal:
-> `plans/active/issues/ sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 4.3 + Part 4 + Progress Log
+> `plans/archive/issues/ sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 4.3 + Part 4 + Progress Log
 > (2026-07-22 entry).
 >
 > <details><summary>Superseded 2026-07-19 K0-DECISION(b) text (retained for history — do NOT act on this)</summary>

@@ -24,6 +24,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"

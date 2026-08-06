@@ -72,7 +72,7 @@ todos:
         the exact shape;\n  (g) every existing Redis dependency in the workspace — `grep -rn \"redis\\.\" across all
         repos — and\n      whether any are using Streams or just KV; Phase 2 needs to know whether to add `redis>=5.0`
         (Streams\n      require ≥5) to UTL's deps or whether it's already present.\n  Output committed under
-        `plans/active/issues/`. Subsequent phases reference the artifact.\n", status: done, note: "PM@12483f5b —
+        `plans/archive/issues/`. Subsequent phases reference the artifact.\n", status: done, note: "PM@12483f5b —
         408-line audit doc shipped 2026-05-08 by tab2-pre-audit sub-agent. Covers all 7 audit subsections (a-g) with
         file:line / commit-sha / count evidence + 10 cross-cutting Phase-3-13 sub-todos + per-consumer wire-in tables
         for Phases 8 + 10. Notable: MTDS RSS-pause WIRED 2026-05-08 (cli/main.py:103-128) — auto-memory
@@ -603,49 +603,49 @@ REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
   - [x] [AGENT] P0. Phase 10 — Instrument-cache-delta hot-reload pattern (workspace-wide). PARALLEL with Phase 9.
 
         10.1 — instruments-service publishes `INSTRUMENT_CACHE_REFRESH_TRIGGER` event after every successful
-                                                                                                                              catalog refresh (verify via grep + add if missing). Event schema per Phase 1. Coordinate with
-                                                                                                                              `instruments_master` — that plan owns the publish-side; this phase wires the
-                                                                                                                              consume-side.
+                                                                                                                                  catalog refresh (verify via grep + add if missing). Event schema per Phase 1. Coordinate with
+                                                                                                                                  `instruments_master` — that plan owns the publish-side; this phase wires the
+                                                                                                                                  consume-side.
 
-                                                                                                                        10.2 — NEW UTL helper `unified_trading_library/instrument_cache/cache_delta_reloader.py`:
-                                                                                                                              ```python
-                                                                                                                              class InstrumentCacheDeltaReloader:
-                                                                                                                                  """
-                                                                                                                                  Mirrors ApiKeyReloader pattern. On INSTRUMENT_CACHE_REFRESH_TRIGGER event, fetches the
-                                                                                                                                  latest catalog parquet from GCS, diffs against in-memory cache, applies callbacks for
-                                                                                                                                  added / removed / changed instruments.
-                                                                                                                                  """
-                                                                                                                                  def __init__(self, *, asset_group: AssetGroup,
-                                                                                                                                               on_added: Callable[[list[Instrument]], None],
-                                                                                                                                               on_removed: Callable[[list[Instrument]], None],
-                                                                                                                                               on_changed: Callable[[list[InstrumentChange]], None]): ...
-                                                                                                                                  def start(self) -> None: ...   # subscribes to stream + spawns background reader
-                                                                                                                                  def stop(self) -> None: ...
-                                                                                                                              ```
+                                                                                                                            10.2 — NEW UTL helper `unified_trading_library/instrument_cache/cache_delta_reloader.py`:
+                                                                                                                                  ```python
+                                                                                                                                  class InstrumentCacheDeltaReloader:
+                                                                                                                                      """
+                                                                                                                                      Mirrors ApiKeyReloader pattern. On INSTRUMENT_CACHE_REFRESH_TRIGGER event, fetches the
+                                                                                                                                      latest catalog parquet from GCS, diffs against in-memory cache, applies callbacks for
+                                                                                                                                      added / removed / changed instruments.
+                                                                                                                                      """
+                                                                                                                                      def __init__(self, *, asset_group: AssetGroup,
+                                                                                                                                                   on_added: Callable[[list[Instrument]], None],
+                                                                                                                                                   on_removed: Callable[[list[Instrument]], None],
+                                                                                                                                                   on_changed: Callable[[list[InstrumentChange]], None]): ...
+                                                                                                                                      def start(self) -> None: ...   # subscribes to stream + spawns background reader
+                                                                                                                                      def stop(self) -> None: ...
+                                                                                                                                  ```
 
-                                                                                                                        10.3 — Wire MTDS / MDPS / features-service to instantiate `InstrumentCacheDeltaReloader` at startup:
-                                                                                                                              - MTDS `on_added` → subscribe new instrument's WS feed; `on_removed` → unsubscribe + flush;
-                                                                                                                              - MDPS `on_added/removed/changed` → refresh the case-A vs case-D classifier registry;
-                                                                                                                              - features-service `on_added/removed/changed` → re-validate the UAC required_inputs DAG for
-                                                                                                                                affected feature_groups.
+                                                                                                                            10.3 — Wire MTDS / MDPS / features-service to instantiate `InstrumentCacheDeltaReloader` at startup:
+                                                                                                                                  - MTDS `on_added` → subscribe new instrument's WS feed; `on_removed` → unsubscribe + flush;
+                                                                                                                                  - MDPS `on_added/removed/changed` → refresh the case-A vs case-D classifier registry;
+                                                                                                                                  - features-service `on_added/removed/changed` → re-validate the UAC required_inputs DAG for
+                                                                                                                                    affected feature_groups.
 
-                                                                                                                        10.4 — Codify the workspace pattern in NEW codex doc
-                                                                                                                              `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`: any service consuming
-                                                                                                                              instruments-service catalog data uses InstrumentCacheDeltaReloader; "service is effectively a
-                                                                                                                              config" — same pattern as ApiKeyReloader / start_domain_config_reloaders, distinguish
-                                                                                                                              hot-reloadable (catalog, API keys, throttle config) from redeploy-required (UAC schema,
-                                                                                                                              calculator code, contract enums).
+                                                                                                                            10.4 — Codify the workspace pattern in NEW codex doc
+                                                                                                                                  `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`: any service consuming
+                                                                                                                                  instruments-service catalog data uses InstrumentCacheDeltaReloader; "service is effectively a
+                                                                                                                                  config" — same pattern as ApiKeyReloader / start_domain_config_reloaders, distinguish
+                                                                                                                                  hot-reloadable (catalog, API keys, throttle config) from redeploy-required (UAC schema,
+                                                                                                                                  calculator code, contract enums).
 
-                                                                                                                        Tests `unified-trading-library/tests/unit/test_instrument_cache_delta_reloader.py`:
-                                                                                                                        (1) on event with added instruments, on_added called with the diff list;
-                                                                                                                        (2) on event with removed instruments, on_removed called;
-                                                                                                                        (3) on event with changed instruments (e.g. delisted, expiry change), on_changed called;
-                                                                                                                        (4) zero-delta event (catalog refresh produced no changes) — no callbacks fire;
-                                                                                                                        (5) GCS fetch failure → reloader logs + retries + does NOT crash the service.
+                                                                                                                            Tests `unified-trading-library/tests/unit/test_instrument_cache_delta_reloader.py`:
+                                                                                                                            (1) on event with added instruments, on_added called with the diff list;
+                                                                                                                            (2) on event with removed instruments, on_removed called;
+                                                                                                                            (3) on event with changed instruments (e.g. delisted, expiry change), on_changed called;
+                                                                                                                            (4) zero-delta event (catalog refresh produced no changes) — no callbacks fire;
+                                                                                                                            (5) GCS fetch failure → reloader logs + retries + does NOT crash the service.
 
-                                                                                                                        QG: UTL + MTDS + MDPS + features-service quality-gates.sh clean.
+                                                                                                                            QG: UTL + MTDS + MDPS + features-service quality-gates.sh clean.
 
-                                                                                                                        **Coordination**: `instruments_master` owns the publish-side; banner mutually.
+                                                                                                                            **Coordination**: `instruments_master` owns the publish-side; banner mutually.
 
     status: done note: "UTL@54d658e8 ships InstrumentLifecycleCacheDeltaReloader mirroring the ApiKeyReloader pattern +
     CatalogDelta frozen dataclass; 7 unit tests cover bootstrap, raise-before-bootstrap, idempotent-unchanged refresh,
@@ -661,63 +661,63 @@ REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
         Health-API HTTP join DEFERRED on per-service URL registry.)
 
         **REAL WIRING shipped 2026-05-11 (Ikenna slot 4 RE-TASK)**:
-                                                                                                                        - deployment-api@`9b0e81d` (promoted from `7d95dc9` design-only stub): `GET /api/data-status/live`
-                                                                                                                          REAL wiring — reads v8 availability manifest per asset_group via
-                                                                                                                          `read_availability_index(bucket)`, filters `pipeline_mode=live_websocket`, builds one
-                                                                                                                          `LiveStatusRow` per shard with shard-key axes from manifest columns + capture_status
-                                                                                                                          4-state taxonomy + manifest-derived staleness (`attempted_at`-based; coarse proxy for
-                                                                                                                          last-event-age until Health-API HTTP join lands). Resilient-read pattern: per-asset_group
-                                                                                                                          failures logged + dropped; pre-v8 manifests handled gracefully. 10 unit tests cover:
-                                                                                                                          empty-when-no-live-shards, populated-when-live-shards-present, asset_group filter, 90s
-                                                                                                                          staleness derivation, pre-v8 graceful-empty, manifest-read OSError handled, 4-state
-                                                                                                                          taxonomy preserved, multi-asset_group aggregation, Pydantic shape + validator rejection.
-                                                                                                                        - deployment-ui@`f3204ce`: `<LiveDataStatusTab/>` scaffold component. Renders loading / empty
-                                                                                                                          (with planned-implementation copy) / populated / error retry states against the Phase 11.1
-                                                                                                                          endpoint. Already wired to the real endpoint via `fetch()` — populated rows render the
-                                                                                                                          moment live producers start writing shards. 5 vitest tests cover all 4 render branches +
-                                                                                                                          asset_group query-param propagation.
+                                                                                                                            - deployment-api@`9b0e81d` (promoted from `7d95dc9` design-only stub): `GET /api/data-status/live`
+                                                                                                                              REAL wiring — reads v8 availability manifest per asset_group via
+                                                                                                                              `read_availability_index(bucket)`, filters `pipeline_mode=live_websocket`, builds one
+                                                                                                                              `LiveStatusRow` per shard with shard-key axes from manifest columns + capture_status
+                                                                                                                              4-state taxonomy + manifest-derived staleness (`attempted_at`-based; coarse proxy for
+                                                                                                                              last-event-age until Health-API HTTP join lands). Resilient-read pattern: per-asset_group
+                                                                                                                              failures logged + dropped; pre-v8 manifests handled gracefully. 10 unit tests cover:
+                                                                                                                              empty-when-no-live-shards, populated-when-live-shards-present, asset_group filter, 90s
+                                                                                                                              staleness derivation, pre-v8 graceful-empty, manifest-read OSError handled, 4-state
+                                                                                                                              taxonomy preserved, multi-asset_group aggregation, Pydantic shape + validator rejection.
+                                                                                                                            - deployment-ui@`f3204ce`: `<LiveDataStatusTab/>` scaffold component. Renders loading / empty
+                                                                                                                              (with planned-implementation copy) / populated / error retry states against the Phase 11.1
+                                                                                                                              endpoint. Already wired to the real endpoint via `fetch()` — populated rows render the
+                                                                                                                              moment live producers start writing shards. 5 vitest tests cover all 4 render branches +
+                                                                                                                              asset_group query-param propagation.
 
-                                                                                                                        **DEFERRED** (downstream-owned):
-                                                                                                                        - Phase 11.2 launcher registration in `_SERVICE_LAUNCHER_SCRIPTS` — depends on Phase 13
-                                                                                                                          launchers shipping (Harsh slot 5 owns).
-                                                                                                                        - Phase 11.4 Deploy-Missing button wiring — depends on Phase 13 launchers.
-                                                                                                                        - Phase 11.3 widget reuse (`TypedReasonBadges` / `FailurePillarStack` / `LeafSchemaModal`)
-                                                                                                                          — lands once endpoint returns real rows + the live tab is registered in the deployment-ui
-                                                                                                                          tabs surface (owned by `deployment_ui_lifecycle_tabs_2026_05_08`).
-                                                                                                                        - **Health-API HTTP join** for precise `last_event_age_seconds` / `degraded_ratio_60s` /
-                                                                                                                          `cluster_pct_skipped_60s` from each consumer service's `make_health_router`
-                                                                                                                          `data_freshness` callback — depends on per-service URL registry in
-                                                                                                                          :class:`~deployment_api.deployment_api_config.DeploymentApiConfig`. Until then the
-                                                                                                                          endpoint serves the manifest-derived `staleness_seconds` (coarse proxy) +
-                                                                                                                          `degraded_ratio_60s` = `cluster_pct_skipped_60s` = 0.0. Documented inline at
-                                                                                                                          `deployment_api/routes/data_status.py` Phase 11.1 endpoint docstring.
+                                                                                                                            **DEFERRED** (downstream-owned):
+                                                                                                                            - Phase 11.2 launcher registration in `_SERVICE_LAUNCHER_SCRIPTS` — depends on Phase 13
+                                                                                                                              launchers shipping (Harsh slot 5 owns).
+                                                                                                                            - Phase 11.4 Deploy-Missing button wiring — depends on Phase 13 launchers.
+                                                                                                                            - Phase 11.3 widget reuse (`TypedReasonBadges` / `FailurePillarStack` / `LeafSchemaModal`)
+                                                                                                                              — lands once endpoint returns real rows + the live tab is registered in the deployment-ui
+                                                                                                                              tabs surface (owned by `deployment_ui_lifecycle_tabs_2026_05_08`).
+                                                                                                                            - **Health-API HTTP join** for precise `last_event_age_seconds` / `degraded_ratio_60s` /
+                                                                                                                              `cluster_pct_skipped_60s` from each consumer service's `make_health_router`
+                                                                                                                              `data_freshness` callback — depends on per-service URL registry in
+                                                                                                                              :class:`~deployment_api.deployment_api_config.DeploymentApiConfig`. Until then the
+                                                                                                                              endpoint serves the manifest-derived `staleness_seconds` (coarse proxy) +
+                                                                                                                              `degraded_ratio_60s` = `cluster_pct_skipped_60s` = 0.0. Documented inline at
+                                                                                                                              `deployment_api/routes/data_status.py` Phase 11.1 endpoint docstring.
 
-                                                                                                                        11.1 — `deployment-api`: NEW endpoint `GET /api/data-status/live` that pivots the manifest by
-                                                                                                                              `pipeline_mode=live_websocket` + joins per-shard health from the Health-API endpoints.
-                                                                                                                              Returns per-shard rows with: capture_status (4-state taxonomy from writegate),
-                                                                                                                              `staleness_seconds`, `degraded_ratio_60s`, `cluster_pct_skipped_60s`, `last_candle_emitted_at`.
+                                                                                                                            11.1 — `deployment-api`: NEW endpoint `GET /api/data-status/live` that pivots the manifest by
+                                                                                                                                  `pipeline_mode=live_websocket` + joins per-shard health from the Health-API endpoints.
+                                                                                                                                  Returns per-shard rows with: capture_status (4-state taxonomy from writegate),
+                                                                                                                                  `staleness_seconds`, `degraded_ratio_60s`, `cluster_pct_skipped_60s`, `last_candle_emitted_at`.
 
-                                                                                                                        11.2 — `deployment-api`: extend `_SERVICE_LAUNCHER_SCRIPTS` with the live-cluster launchers added
-                                                                                                                              in Phase 13: `launch-mtds-live-{asset_group}.sh`, `launch-mdps-features-live-{asset_group}.sh`,
-                                                                                                                              `launch-features-cross-cutting.sh`, `launch-replay-cascade.sh`.
+                                                                                                                            11.2 — `deployment-api`: extend `_SERVICE_LAUNCHER_SCRIPTS` with the live-cluster launchers added
+                                                                                                                                  in Phase 13: `launch-mtds-live-{asset_group}.sh`, `launch-mdps-features-live-{asset_group}.sh`,
+                                                                                                                                  `launch-features-cross-cutting.sh`, `launch-replay-cascade.sh`.
 
-                                                                                                                        11.3 — `deployment-ui`: NEW `LiveDataStatusTab` mirroring the existing `DataStatusTab` shape with
-                                                                                                                              per-shard staleness + degraded columns + a "live vs batch" pivot toggle. Reuses
-                                                                                                                              `TypedReasonBadges` + `FailurePillarStack` + `LeafSchemaModal` from writegate Phase 4.
+                                                                                                                            11.3 — `deployment-ui`: NEW `LiveDataStatusTab` mirroring the existing `DataStatusTab` shape with
+                                                                                                                                  per-shard staleness + degraded columns + a "live vs batch" pivot toggle. Reuses
+                                                                                                                                  `TypedReasonBadges` + `FailurePillarStack` + `LeafSchemaModal` from writegate Phase 4.
 
-                                                                                                                        11.4 — `deployment-ui`: Deploy-Missing button for live clusters renders a per-asset_group "Deploy
-                                                                                                                              live cluster" action that fires up MTDS + MDPS+features triplet via the registered launchers.
+                                                                                                                            11.4 — `deployment-ui`: Deploy-Missing button for live clusters renders a per-asset_group "Deploy
+                                                                                                                                  live cluster" action that fires up MTDS + MDPS+features triplet via the registered launchers.
 
-                                                                                                                        Tests:
-                                                                                                                        - `deployment-api/tests/unit/test_data_status_live.py`: endpoint returns expected shape under
-                                                                                                                          synthetic manifest + Health-API fixtures.
-                                                                                                                        - `deployment-ui/tests/unit/LiveDataStatusTab.test.tsx`: component renders the new columns + pivot
-                                                                                                                          toggle; Deploy-Missing button POSTs the right launcher payload.
+                                                                                                                            Tests:
+                                                                                                                            - `deployment-api/tests/unit/test_data_status_live.py`: endpoint returns expected shape under
+                                                                                                                              synthetic manifest + Health-API fixtures.
+                                                                                                                            - `deployment-ui/tests/unit/LiveDataStatusTab.test.tsx`: component renders the new columns + pivot
+                                                                                                                              toggle; Deploy-Missing button POSTs the right launcher payload.
 
-                                                                                                                        QG: deployment-api + deployment-ui quality-gates.sh clean.
+                                                                                                                            QG: deployment-api + deployment-ui quality-gates.sh clean.
 
-                                                                                                                        **Coordination**: `deployment_ui_lifecycle_tabs_2026_05_08` owns the existing tabs surface;
-                                                                                                                        banner mutually.
+                                                                                                                            **Coordination**: `deployment_ui_lifecycle_tabs_2026_05_08` owns the existing tabs surface;
+                                                                                                                            banner mutually.
 
     status: done note: "2026-05-11 ikenna-live-pipeline-tab — ALL 4 phase-11 sub-items FULLY SHIPPED. Phase 11.1
     endpoint REAL (deployment-api@9b0e81d manifest-read + b7d3a4c Health-API HTTP join). Phase 11.2
@@ -735,33 +735,33 @@ REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
         5/6/7 land + first 7 days of live data captured.
 
         Site: `batch-live-reconciliation-service` (status = ✗ in master plan service matrix; per master
-                                                                                                                        Group F item 21 P0 follow-up the service must be code-complete before May-23 cutover; coordinate
-                                                                                                                        with that plan / agent).
+                                                                                                                            Group F item 21 P0 follow-up the service must be code-complete before May-23 cutover; coordinate
+                                                                                                                            with that plan / agent).
 
-                                                                                                                        12.1 — Run `pnl-attribution-service --mode batch --start <T-7d> --end <T>` against the live-mode
-                                                                                                                              parquets at `pipeline_mode=live_websocket`. Run the same against the batch-mode parquets at
-                                                                                                                              `pipeline_mode=batch_*`. Diff per `(asset_group, shard, day, timeframe, feature_group)`.
+                                                                                                                            12.1 — Run `pnl-attribution-service --mode batch --start <T-7d> --end <T>` against the live-mode
+                                                                                                                                  parquets at `pipeline_mode=live_websocket`. Run the same against the batch-mode parquets at
+                                                                                                                                  `pipeline_mode=batch_*`. Diff per `(asset_group, shard, day, timeframe, feature_group)`.
 
-                                                                                                                        12.2 — Pass criteria for May-23 cutover:
-                                                                                                                              (a) Schema match on every parquet (column names + types identical between batch + live);
-                                                                                                                              (b) Row count within ±1% per shard (live may have a handful of zero-activity bars batch
-                                                                                                                                  doesn't have because batch source had different aggregation grain — tolerance covers
-                                                                                                                                  it);
-                                                                                                                              (c) For OHLCV: `np.allclose(rtol=1e-6)` between batch and live for every column; deviations
-                                                                                                                                  > tolerance flagged per-shard for diagnosis;
-                                                                                                                              (d) For features: same tolerance; `available_at` semantics identical (live's available_at is
-                                                                                                                                  what batch SHOULD have stamped — divergence = bug).
+                                                                                                                            12.2 — Pass criteria for May-23 cutover:
+                                                                                                                                  (a) Schema match on every parquet (column names + types identical between batch + live);
+                                                                                                                                  (b) Row count within ±1% per shard (live may have a handful of zero-activity bars batch
+                                                                                                                                      doesn't have because batch source had different aggregation grain — tolerance covers
+                                                                                                                                      it);
+                                                                                                                                  (c) For OHLCV: `np.allclose(rtol=1e-6)` between batch and live for every column; deviations
+                                                                                                                                      > tolerance flagged per-shard for diagnosis;
+                                                                                                                                  (d) For features: same tolerance; `available_at` semantics identical (live's available_at is
+                                                                                                                                      what batch SHOULD have stamped — divergence = bug).
 
-                                                                                                                        12.3 — On any pass-criterion failure, root-cause + fix. NOT a punt. Per CLAUDE.md "Live = batch"
-                                                                                                                              rule, divergence is a code bug, not an acceptable difference.
+                                                                                                                            12.3 — On any pass-criterion failure, root-cause + fix. NOT a punt. Per CLAUDE.md "Live = batch"
+                                                                                                                                  rule, divergence is a code bug, not an acceptable difference.
 
-                                                                                                                        12.4 — Final pass: 7 continuous days of live capture across all 5 asset_groups + matching batch
-                                                                                                                              backfill + reconciliation green. This satisfies master plan Group F item 21
-                                                                                                                              (Reconciliation suite) for the live-pipeline portion.
+                                                                                                                            12.4 — Final pass: 7 continuous days of live capture across all 5 asset_groups + matching batch
+                                                                                                                                  backfill + reconciliation green. This satisfies master plan Group F item 21
+                                                                                                                                  (Reconciliation suite) for the live-pipeline portion.
 
-                                                                                                                        QG: batch-live-reconciliation-service quality-gates.sh clean; reconciliation report ships as a runtime
-                                                                                                                        artefact via `manifest_schema_final_gate_2026_05_09` Phase 12.B (`batch_live_reconciler` UTL@908b1647 helper
-                                                                                                                        run + delta-< 5bps tolerance check); no separate issue doc required.
+                                                                                                                            QG: batch-live-reconciliation-service quality-gates.sh clean; reconciliation report ships as a runtime
+                                                                                                                            artefact via `manifest_schema_final_gate_2026_05_09` Phase 12.B (`batch_live_reconciler` UTL@908b1647 helper
+                                                                                                                            run + delta-< 5bps tolerance check); no separate issue doc required.
 
     status: helper-shipped note: "UTL@908b1647 — `unified_trading_library/batch_live_reconciler.py` ships
     `reconcile_shard(asset_group, venue, data_type, instrument_id, day, batch_rows, live_rows, row_comparator)`
@@ -780,34 +780,34 @@ REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
 
         Per workspace VM launcher SSOT rule + VM naming convention (CLAUDE.md):
 
-                                                                                                                        13.1 — NEW launchers under `deployment-service/scripts/vm/`:
-                                                                                                                              - `launch-mtds-live-{asset_group}.sh` (one per asset_group)
-                                                                                                                              - `launch-mdps-features-live-{asset_group}.sh` (combined MDPS+features-asset-scoped per ag)
-                                                                                                                              - `launch-features-cross-cutting.sh`
-                                                                                                                              - `launch-replay-cascade.sh` (parameterised by --start --end --asset-group --shard-key)
+                                                                                                                            13.1 — NEW launchers under `deployment-service/scripts/vm/`:
+                                                                                                                                  - `launch-mtds-live-{asset_group}.sh` (one per asset_group)
+                                                                                                                                  - `launch-mdps-features-live-{asset_group}.sh` (combined MDPS+features-asset-scoped per ag)
+                                                                                                                                  - `launch-features-cross-cutting.sh`
+                                                                                                                                  - `launch-replay-cascade.sh` (parameterised by --start --end --asset-group --shard-key)
 
-                                                                                                                        13.2 — Per CLAUDE.md "VM Naming Convention":
-                                                                                                                              - mtds-live: `mtds-live-{asset_group}-{venue}-{ts}` (or `mtds-live-{asset_group}-{ts}` if
-                                                                                                                                covering all venues for the asset_group on one VM)
-                                                                                                                              - mdps-features: `mdps-features-live-{asset_group}-{ts}`
-                                                                                                                              - features-cross-cutting: `features-xc-{ts}`
-                                                                                                                              - replay: `replay-{asset_group}-{shard_key_short_hash}-{ts}`
+                                                                                                                            13.2 — Per CLAUDE.md "VM Naming Convention":
+                                                                                                                                  - mtds-live: `mtds-live-{asset_group}-{venue}-{ts}` (or `mtds-live-{asset_group}-{ts}` if
+                                                                                                                                    covering all venues for the asset_group on one VM)
+                                                                                                                                  - mdps-features: `mdps-features-live-{asset_group}-{ts}`
+                                                                                                                                  - features-cross-cutting: `features-xc-{ts}`
+                                                                                                                                  - replay: `replay-{asset_group}-{shard_key_short_hash}-{ts}`
 
-                                                                                                                        13.3 — Update `VM_PREFIX_TO_BUCKET` in
-                                                                                                                              [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py)
-                                                                                                                              to register the new prefixes (`mtds-live-`, `mdps-features-live-`, `features-xc-`,
-                                                                                                                              `replay-`). Without this, VMs under these prefixes are invisible to the watchdog → can sit
-                                                                                                                              RUNNING forever burning money on a network partition (per workspace incident reference
-                                                                                                                              2026-05-05).
+                                                                                                                            13.3 — Update `VM_PREFIX_TO_BUCKET` in
+                                                                                                                                  [`deployment-service/scripts/vm/vm_zombie_watchdog.py`](../../../deployment-service/scripts/vm/vm_zombie_watchdog.py)
+                                                                                                                                  to register the new prefixes (`mtds-live-`, `mdps-features-live-`, `features-xc-`,
+                                                                                                                                  `replay-`). Without this, VMs under these prefixes are invisible to the watchdog → can sit
+                                                                                                                                  RUNNING forever burning money on a network partition (per workspace incident reference
+                                                                                                                                  2026-05-05).
 
-                                                                                                                        13.4 — Relaunch `vm-zombie-watchdog` per workspace rule (running watchdog only fetches Python at
-                                                                                                                              boot — dict change doesn't propagate live).
+                                                                                                                            13.4 — Relaunch `vm-zombie-watchdog` per workspace rule (running watchdog only fetches Python at
+                                                                                                                                  boot — dict change doesn't propagate live).
 
-                                                                                                                        13.5 — Singleton-lock pattern: features-cross-cutting MAY use the singleton-lock pattern
-                                                                                                                              (currently used by `launch-sfi-forward-poll.sh` / `launch-mtds-prediction-backfill-vm.sh`)
-                                                                                                                              to refuse a duplicate launch in the same zone. Decision per Phase 0 audit § (a).
+                                                                                                                            13.5 — Singleton-lock pattern: features-cross-cutting MAY use the singleton-lock pattern
+                                                                                                                                  (currently used by `launch-sfi-forward-poll.sh` / `launch-mtds-prediction-backfill-vm.sh`)
+                                                                                                                                  to refuse a duplicate launch in the same zone. Decision per Phase 0 audit § (a).
 
-                                                                                                                        QG: deployment-service quality-gates.sh clean.
+                                                                                                                            QG: deployment-service quality-gates.sh clean.
 
     status: helper-shipped note: "2026-05-11 ikenna-live-pipeline-tab — 4 launchers shipped code-ready in (b+) env-aware
     shape (`--asset-group <ag> --env <env>` propagated to VM metadata; resolver-aware bucket naming via
@@ -831,49 +831,49 @@ REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
         created at plan-draft time + updates 5 existing docs.
 
         **PARTIAL shipped 2026-05-11 (Ikenna slot 4)**: PM@<this commit> extended
-                                                                                                                        [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
-                                                                                                                        with a new "Phase 4 + 5 + 6 design contracts shipped 2026-05-11" section that:
-                                                                                                                        (a) catalogs the design-only stubs landed (UAC@e55651b + UTL@58bfbbeb + deployment-api@7d95dc9
-                                                                                                                            + deployment-ui@f3204ce);
-                                                                                                                        (b) codifies the multi-timeframe cascade rule (Phase 4.2);
-                                                                                                                        (c) codifies the 4-category live gap semantics table (Phase 4.3 — FRESH / ZERO_ACTIVITY_BAR /
-                                                                                                                            no-emit / STALE-emit / WS-dead-cascade);
-                                                                                                                        (d) codifies the cross-cutting fan-in propagation table (Phase 6.2 — degraded propagation +
-                                                                                                                            non-critical NaN-fill + conservative latest-watermark on clock-skew);
-                                                                                                                        (e) documents the per-family deployment matrix (Phase 5.3);
-                                                                                                                        (f) documents the Phase 11 deployment-UI live tab surface contract.
-                                                                                                                        **DEFERRED**: items 4-8 of the Phase 14 list (`replay-subsystem.md` enhancement /
-                                                                                                                        `instrument-lifecycle-cache-delta-hot-reload.md` per-service-callback table /
-                                                                                                                        `availability-manifest-and-data-status.md` + `batch-live-architecture.md` +
-                                                                                                                        `alerting-batch-live.md` + `runtime-tiers-and-deployment.md` updates) ship as Phase 5/6/7/13
-                                                                                                                        land — each codex doc gets enhanced at the matching phase boundary per the workspace
-                                                                                                                        "Post-Plan-Phase Codex Audit" HARD RULE.
+                                                                                                                            [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+                                                                                                                            with a new "Phase 4 + 5 + 6 design contracts shipped 2026-05-11" section that:
+                                                                                                                            (a) catalogs the design-only stubs landed (UAC@e55651b + UTL@58bfbbeb + deployment-api@7d95dc9
+                                                                                                                                + deployment-ui@f3204ce);
+                                                                                                                            (b) codifies the multi-timeframe cascade rule (Phase 4.2);
+                                                                                                                            (c) codifies the 4-category live gap semantics table (Phase 4.3 — FRESH / ZERO_ACTIVITY_BAR /
+                                                                                                                                no-emit / STALE-emit / WS-dead-cascade);
+                                                                                                                            (d) codifies the cross-cutting fan-in propagation table (Phase 6.2 — degraded propagation +
+                                                                                                                                non-critical NaN-fill + conservative latest-watermark on clock-skew);
+                                                                                                                            (e) documents the per-family deployment matrix (Phase 5.3);
+                                                                                                                            (f) documents the Phase 11 deployment-UI live tab surface contract.
+                                                                                                                            **DEFERRED**: items 4-8 of the Phase 14 list (`replay-subsystem.md` enhancement /
+                                                                                                                            `instrument-lifecycle-cache-delta-hot-reload.md` per-service-callback table /
+                                                                                                                            `availability-manifest-and-data-status.md` + `batch-live-architecture.md` +
+                                                                                                                            `alerting-batch-live.md` + `runtime-tiers-and-deployment.md` updates) ship as Phase 5/6/7/13
+                                                                                                                            land — each codex doc gets enhanced at the matching phase boundary per the workspace
+                                                                                                                            "Post-Plan-Phase Codex Audit" HARD RULE.
 
-                                                                                                                        Stubs already created at plan-draft time (2026-05-08); this phase enhances them with the
-                                                                                                                        as-shipped detail (per-asset-group venue rollout matrix, empirical latency benchmarks, alerting
-                                                                                                                        tier thresholds tuned during the smoke window, etc.):
-                                                                                                                        1. **ENHANCE** existing stub at `/codex/05-infrastructure/live-pipeline-architecture.md` —
-                                                                                                                           entry-point doc covering topology, sharding, cascade triggers, gap semantics, alerting tiers,
-                                                                                                                           replay subsystem. Add: per-asset-group venue rollout sequencing notes, empirical Redis Stream
-                                                                                                                           latency benchmarks captured during Phase 3-6, finalised alerting tier thresholds.
-                                                                                                                        2. **ENHANCE** existing stub at `/codex/05-infrastructure/replay-subsystem.md` — replay producer
-                                                                                                                           + consumer + handoff contract + watermark KV + multi-hour-outage backstop. Add: empirical
-                                                                                                                           replay-throughput benchmarks per asset_group, observed handoff edge cases.
-                                                                                                                        3. **ENHANCE** existing stub at `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`
-                                                                                                                           — workspace pattern doc. Add: per-service callback semantics tables filled in with the actual
-                                                                                                                           wired callbacks landed in Phase 10.
-                                                                                                                        4. **UPDATE** `/codex/02-data/availability-manifest-and-data-status.md` — extend the 4-state
-                                                                                                                           taxonomy section with live-pipeline-specific examples; add `pipeline_mode` column reference.
-                                                                                                                        5. **UPDATE** `/codex/04-architecture/batch-live-architecture.md` — add a section on UTC midnight
-                                                                                                                           alignment + service-start-order independence + the 4×15s→1m cascade rule.
-                                                                                                                        6. **UPDATE** `/codex/04-architecture/alerting-batch-live.md` — add the live-pipeline alert tier
-                                                                                                                           table + circuit-breaker action set.
-                                                                                                                        7. **UPDATE** `codex/00-SSOT-INDEX.md` — register the 3 new docs.
-                                                                                                                        8. **UPDATE** `/codex/05-infrastructure/runtime-tiers-and-deployment.md` — add live-pipeline VM
-                                                                                                                           topology section listing per-asset_group MTDS + MDPS+features triplets + the cross-cutting box
-                                                                                                                           + the replay box prefix.
+                                                                                                                            Stubs already created at plan-draft time (2026-05-08); this phase enhances them with the
+                                                                                                                            as-shipped detail (per-asset-group venue rollout matrix, empirical latency benchmarks, alerting
+                                                                                                                            tier thresholds tuned during the smoke window, etc.):
+                                                                                                                            1. **ENHANCE** existing stub at `/codex/05-infrastructure/live-pipeline-architecture.md` —
+                                                                                                                               entry-point doc covering topology, sharding, cascade triggers, gap semantics, alerting tiers,
+                                                                                                                               replay subsystem. Add: per-asset-group venue rollout sequencing notes, empirical Redis Stream
+                                                                                                                               latency benchmarks captured during Phase 3-6, finalised alerting tier thresholds.
+                                                                                                                            2. **ENHANCE** existing stub at `/codex/05-infrastructure/replay-subsystem.md` — replay producer
+                                                                                                                               + consumer + handoff contract + watermark KV + multi-hour-outage backstop. Add: empirical
+                                                                                                                               replay-throughput benchmarks per asset_group, observed handoff edge cases.
+                                                                                                                            3. **ENHANCE** existing stub at `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`
+                                                                                                                               — workspace pattern doc. Add: per-service callback semantics tables filled in with the actual
+                                                                                                                               wired callbacks landed in Phase 10.
+                                                                                                                            4. **UPDATE** `/codex/02-data/availability-manifest-and-data-status.md` — extend the 4-state
+                                                                                                                               taxonomy section with live-pipeline-specific examples; add `pipeline_mode` column reference.
+                                                                                                                            5. **UPDATE** `/codex/04-architecture/batch-live-architecture.md` — add a section on UTC midnight
+                                                                                                                               alignment + service-start-order independence + the 4×15s→1m cascade rule.
+                                                                                                                            6. **UPDATE** `/codex/04-architecture/alerting-batch-live.md` — add the live-pipeline alert tier
+                                                                                                                               table + circuit-breaker action set.
+                                                                                                                            7. **UPDATE** `codex/00-SSOT-INDEX.md` — register the 3 new docs.
+                                                                                                                            8. **UPDATE** `/codex/05-infrastructure/runtime-tiers-and-deployment.md` — add live-pipeline VM
+                                                                                                                               topology section listing per-asset_group MTDS + MDPS+features triplets + the cross-cutting box
+                                                                                                                               + the replay box prefix.
 
-                                                                                                                        QG: `unified-trading-pm` quality-gates.sh clean.
+                                                                                                                            QG: `unified-trading-pm` quality-gates.sh clean.
 
     status: done note: "2026-05-20 slot-7 — ALL 8 Phase 14 items now SHIPPED. Item 2: replay-subsystem.md enhanced
     (PM@a22aee69) — MTDS-side components (ReplayRunner / HistoricalWindowFetcher Protocol / InstrumentWindowData /
@@ -890,26 +890,26 @@ REPLAY_BACKSTOP_REACHED event | any | **CRITICAL** |
 
         15.1 — Workspace-wide QG sweep across all 12 affected repos (per `repo_gates`).
 
-                                                                                                                        15.2 — 7-day continuous live smoke across all 5 asset_groups starting 2026-05-15 (or earliest
-                                                                                                                              feasible date post-Phase-12 reconciliation gate green). Verify per CLAUDE.md "no
-                                                                                                                              fire-and-forget VM launches" rule:
-                                                                                                                              (a) STARTED + STOPPED bookends per VM;
-                                                                                                                              (b) hourly progress events (CANDLE_BOUNDARY_CROSSED count > 0 per shard per hour during
-                                                                                                                                  market hours);
-                                                                                                                              (c) Health-API endpoints reachable for every running VM;
-                                                                                                                              (d) alerting-service tier-1 alert rules tested with synthetic faults (kill an MTDS VM →
-                                                                                                                                  expect CRITICAL within 60s; degrade an MDPS shard → expect Warning within 60s).
+                                                                                                                            15.2 — 7-day continuous live smoke across all 5 asset_groups starting 2026-05-15 (or earliest
+                                                                                                                                  feasible date post-Phase-12 reconciliation gate green). Verify per CLAUDE.md "no
+                                                                                                                                  fire-and-forget VM launches" rule:
+                                                                                                                                  (a) STARTED + STOPPED bookends per VM;
+                                                                                                                                  (b) hourly progress events (CANDLE_BOUNDARY_CROSSED count > 0 per shard per hour during
+                                                                                                                                      market hours);
+                                                                                                                                  (c) Health-API endpoints reachable for every running VM;
+                                                                                                                                  (d) alerting-service tier-1 alert rules tested with synthetic faults (kill an MTDS VM →
+                                                                                                                                      expect CRITICAL within 60s; degrade an MDPS shard → expect Warning within 60s).
 
-                                                                                                                        15.3 — Final reconciliation gate (Phase 12 re-run on the 7-day window) — green.
+                                                                                                                            15.3 — Final reconciliation gate (Phase 12 re-run on the 7-day window) — green.
 
-                                                                                                                        15.4 — Plan unlocks (with operator approval per CLAUDE.md "Agent unlock protocol"). Move plan
-                                                                                                                              to archive with master plan Group F item 21 + 22 marked done.
+                                                                                                                            15.4 — Plan unlocks (with operator approval per CLAUDE.md "Agent unlock protocol"). Move plan
+                                                                                                                                  to archive with master plan Group F item 21 + 22 marked done.
 
-                                                                                                                        Success criteria: master plan Group F items 21 (Reconciliation suite) + 22 (Trading guardrails)
-                                                                                                                        flip to ✓ for all 5 asset_groups; live cluster runs ≥7 continuous days with no CRITICAL alerts;
-                                                                                                                        reconciliation diff zero.
+                                                                                                                            Success criteria: master plan Group F items 21 (Reconciliation suite) + 22 (Trading guardrails)
+                                                                                                                            flip to ✓ for all 5 asset_groups; live cluster runs ≥7 continuous days with no CRITICAL alerts;
+                                                                                                                            reconciliation diff zero.
 
-                                                                                                                        QG: every workspace repo green simultaneously.
+                                                                                                                            QG: every workspace repo green simultaneously.
 
     status: todo note: ""
 

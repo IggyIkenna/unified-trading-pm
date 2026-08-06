@@ -26,6 +26,7 @@ related:
   [
     /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-08-03
 author: unknown

@@ -15,6 +15,7 @@ related:
   [
     /plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
     /plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-18
 author: unknown

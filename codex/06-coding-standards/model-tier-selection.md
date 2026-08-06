@@ -189,7 +189,7 @@ absent from a slot row, the agent MUST use Sonnet 5 and flag the omission.
 
 ## Classifying existing plans
 
-When auditing `plans/active/` before drafting a work-split, classify each plan as one of:
+When auditing `plans/archive/2026_08/` before drafting a work-split, classify each plan as one of:
 
 **`sonnet-doable`** — the default for everything, REGARDLESS of size (Sonnet 5's 1M context handles large plans and
 multi-file context natively — this is the standard for AO planning-VM-eligible work, not a fallback):

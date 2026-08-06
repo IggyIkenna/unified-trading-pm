@@ -21,6 +21,7 @@ related:
     /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

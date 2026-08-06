@@ -24,6 +24,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 last_updated: 2026-07-28

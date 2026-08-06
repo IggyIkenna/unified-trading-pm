@@ -23,6 +23,7 @@ related:
   [
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-31"
 author: unknown

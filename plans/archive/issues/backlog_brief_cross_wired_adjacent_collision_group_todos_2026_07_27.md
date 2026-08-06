@@ -140,7 +140,7 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
       sibling-reset guard (`server/bootstrap.py`) — never touches `status`/`done_sha`, so it's safe to call while a task
       is still `dispatched` to a live worker. New request model `ReconcileBriefRequest` (`server/models/worker_api.py`).
       Tests: `agent-orchestrator/tests/test_backlog_reconcile_brief.py` (8 new, covering both matched-state branches,
-      the 400 unverified-claim refusal, both 404s, the `plans/active/issues/` stale-plan_ref fallback, activity-event
+      the 400 unverified-claim refusal, both 404s, the `plans/archive/issues/` stale-plan_ref fallback, activity-event
       logging, and dispatched-row safety); full `quality-gates.sh` green (1821 passed, basedpyright/ruff/dashboard
       clean). Repo: agent-orchestrator.
 - [x] ✅ [SCRIPT] P1. **DONE-AS-MOOT 2026-07-28 (slot-16, cicd) — no action was needed; the situation self-resolved

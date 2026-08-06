@@ -23,6 +23,7 @@ related:
     /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /codex/05-infrastructure/agent-orchestrator-api-host.md,
     /plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-05"
 last_updated: "2026-08-05"

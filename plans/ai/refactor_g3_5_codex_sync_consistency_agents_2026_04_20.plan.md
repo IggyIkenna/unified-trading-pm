@@ -81,7 +81,7 @@ Target: a `playbook-consistency-agent` (part of the `plan-health-agent` family) 
 ### Phase C — GHA workflow
 
 - [ ] [AGENT] P0. `.github/workflows/playbook-consistency-agent.yml` in unified-trading-pm — triggers on push to
-      `codex/14-playbooks/**` or `plans/active/**`. Runs agent; posts markdown report as PR comment.
+      `codex/14-playbooks/**` or `plans/archive/2026_08/**`. Runs agent; posts markdown report as PR comment.
 - [ ] [AGENT] P0. Critical-severity failures block PR; warnings informational.
 
 ### Phase D — Initial sweep
@@ -119,7 +119,7 @@ A (check spec) → B (agent + per-check impls) → C (GHA workflow)
 
 1. ≥7 consistency checks declared + implemented.
 2. Agent passes on its own landing commit (bootstrap check).
-3. GHA workflow runs on push to codex/14-playbooks/ or plans/active/.
+3. GHA workflow runs on push to codex/14-playbooks/ or plans/archive/2026_08/.
 4. Baseline report archived.
 5. PM QG green.
 

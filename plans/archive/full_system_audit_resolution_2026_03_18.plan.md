@@ -10,20 +10,64 @@ repos: [alerting-service, deployment-api, execution-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-21'
+created: "2026-03-21"
 overview: Resolve all findings from the 31-section production readiness audit (2026-03-18). 8 FAILs, 12 WARNs, 11 PASS.
 type: mixed
 epic: none
-completion_gates: {code: C4, deployment: none, business: none}
+completion_gates: { code: C4, deployment: none, business: none }
 repo_gates: []
 depends_on: []
 locked_by:
 locked_since:
-todos: ['P0-01: [SCRIPT] Switch RUN_INTEGRATION=true in all repos'' quality-gates.sh (§8/§10)', 'P0-02: [SCRIPT] Remove .[dev] extras from all 37 Dockerfiles — use uv pip install -e . (§7/§22)', 'P0-03: [SCRIPT] Remove .[dev] extras from all 25 cloudbuild.yaml/buildspec.aws.yaml (§15)', 'P0-04: [AGENT] Add AUTH_FAILURE event to 4 API services: config-api, trading-analytics-api, ml-training-api, batch-audit-api (§3)', 'P0-05: [AGENT] Create S2S_AUTH_SUCCESS and S2S_AUTH_FAILURE event types in UEI; wire in execution-service auth_s2s.py (§3)', 'P0-06: [SCRIPT] Register 16 unregistered active plans in SSOT-INDEX (§9)', 'P0-07: [SCRIPT] Fix 20 repos manifest version drift — sync workspace-manifest.json versions to pyproject.toml (§9)', 'P0-08: [SCRIPT] Add concurrency groups to all GHA workflows (§15)', 'P0-09: [AGENT] Migrate 37 Dockerfiles from uv pip install to uv sync --frozen with uv.lock (§22)', 'P0-10: [AGENT] Assess all 66 readiness YAML files — fill CR/DR/BR status from current repo
-    state (§19)', 'P1-01: [AGENT] Narrow or document 251 broad except Exception — annotate with # broad-except-ok or narrow to specific exceptions (§3/§8)', 'P1-02: [AGENT] Reduce 192 type:ignore to <10 — fix underlying type issues or document in BYPASS_AUDIT.md (§8)', 'P1-03: [AGENT] Remove 7 try/except ImportError fallbacks — fail loud (§8): UTL base_service.py, health.py, metrics.py; URDI ibkr.py; exec-service benchmarks/conftest.py; SIT check_security.py; codex test template', 'P1-04: [AGENT] Merge/remove 110 coverage-boost files — consolidate into primary test files (§10)', 'P1-05: [AGENT] Add VCR cassettes to 5 interface repos with zero: unified-sports-reference-interface, unified-defi-execution-interface, unified-ml-interface, unified-config-interface, unified-events-interface (§24)', 'P1-06: [AGENT] Add integration_dependencies field to workspace-manifest.json for all repos (§10)', 'P1-07: [SCRIPT] Create 6 missing readiness YAML files: config-api, unified-feature-orchestration-library,
-    unified-features-interface, unified-sports-reference-interface, unified-trading-ui-kit, user-management-ui (§19)', 'P1-08: [AGENT] Add semver_rules_ref to 2 repos: config-api, user-management-ui (§18)', 'P2-01: [AGENT] Add float-ok annotations to 15 UIC risk.py monetary float fields or convert to Decimal (§5)', 'P2-02: [AGENT] Implement 9 stubbed methods in execution-service/engine/live/persistence/postgresql.py or remove from import graph (§13)', 'P2-03: [AGENT] Reduce 752 noqa suppressions — fix underlying lint issues or use ruff config (§8)', 'P2-04: [AGENT] Fix 3 files over 900L: deployment_processor.py (1351L), generate_topology_svg.py (973L), cloud_builds.py (921L) (§2)', 'P2-05: [AGENT] Migrate execution-results-api config.py from bare BaseSettings to UnifiedCloudConfig (§30)', 'P2-06: [DONE] elysium-defi-system deleted from system — config migration no longer applicable (§30)', 'P2-07: [AGENT] Calibrate MIN_COVERAGE for 13 repos at default 70; fix 6 QG/pyproject mismatches (§11)',
-  'P2-08: [AGENT] Add pool: forks to unified-trading-ui-auth/vitest.config.ts (§16)', 'P2-09: [AGENT] Add health endpoints to ml-inference-service and ml-training-service (§6)', 'P2-10: [AGENT] Roll out AGENTS.md to all 71 repos (only PM has it currently) (§23)', 'P2-11: [AGENT] Roll out agent-audit.yml to 44 repos missing it (only 28/72 have it) (§23)', 'P2-12: [AGENT] Add 10 repos missing from topology service_flows: batch-audit-api, config-api, deployment-api, features-commodity-service, ml-inference-api, ml-training-api, trading-analytics-api, batch-live-reconciliation-service, trading-agent-service (§31)', 'P3-01: [AGENT] Create cefi, tradfi, defi portable backtest files in SIT (§28)', 'P3-02: [AGENT] Add dead-code detection (vulture) to QG base scripts (§14)', 'P3-03: [AGENT] Replace pip install uv with base image uv in 20+ cloudbuild files (§15)', 'P3-04: [AGENT] Stop exporting deprecated CloudTarget from UTL __init__.py (§14)', 'P3-05: [AGENT] Resolve 46+ USEI sports browser adapter
-    stubs or remove from import graph (§13)', 'P3-06: [AGENT] Resolve 30+ UMI adapter stubs (tradfi/defi/alt_data/onchain) or remove (§13)']
+todos:
+  [
+    "P0-01: [SCRIPT] Switch RUN_INTEGRATION=true in all repos' quality-gates.sh (§8/§10)",
+    "P0-02: [SCRIPT] Remove .[dev] extras from all 37 Dockerfiles — use uv pip install -e . (§7/§22)",
+    "P0-03: [SCRIPT] Remove .[dev] extras from all 25 cloudbuild.yaml/buildspec.aws.yaml (§15)",
+    "P0-04: [AGENT] Add AUTH_FAILURE event to 4 API services: config-api, trading-analytics-api, ml-training-api,
+    batch-audit-api (§3)",
+    "P0-05: [AGENT] Create S2S_AUTH_SUCCESS and S2S_AUTH_FAILURE event types in UEI; wire in execution-service
+    auth_s2s.py (§3)",
+    "P0-06: [SCRIPT] Register 16 unregistered active plans in SSOT-INDEX (§9)",
+    "P0-07: [SCRIPT] Fix 20 repos manifest version drift — sync workspace-manifest.json versions to pyproject.toml (§9)",
+    "P0-08: [SCRIPT] Add concurrency groups to all GHA workflows (§15)",
+    "P0-09: [AGENT] Migrate 37 Dockerfiles from uv pip install to uv sync --frozen with uv.lock (§22)",
+    "P0-10: [AGENT] Assess all 66 readiness YAML files — fill CR/DR/BR status from current repo state (§19)",
+    "P1-01: [AGENT] Narrow or document 251 broad except Exception — annotate with # broad-except-ok or narrow to
+    specific exceptions (§3/§8)",
+    "P1-02: [AGENT] Reduce 192 type:ignore to <10 — fix underlying type issues or document in BYPASS_AUDIT.md (§8)",
+    "P1-03: [AGENT] Remove 7 try/except ImportError fallbacks — fail loud (§8): UTL base_service.py, health.py,
+    metrics.py; URDI ibkr.py; exec-service benchmarks/conftest.py; SIT check_security.py; codex test template",
+    "P1-04: [AGENT] Merge/remove 110 coverage-boost files — consolidate into primary test files (§10)",
+    "P1-05: [AGENT] Add VCR cassettes to 5 interface repos with zero: unified-sports-reference-interface,
+    unified-defi-execution-interface, unified-ml-interface, unified-config-interface, unified-events-interface (§24)",
+    "P1-06: [AGENT] Add integration_dependencies field to workspace-manifest.json for all repos (§10)",
+    "P1-07: [SCRIPT] Create 6 missing readiness YAML files: config-api, unified-feature-orchestration-library,
+    unified-features-interface, unified-sports-reference-interface, unified-trading-ui-kit, user-management-ui (§19)",
+    "P1-08: [AGENT] Add semver_rules_ref to 2 repos: config-api, user-management-ui (§18)",
+    "P2-01: [AGENT] Add float-ok annotations to 15 UIC risk.py monetary float fields or convert to Decimal (§5)",
+    "P2-02: [AGENT] Implement 9 stubbed methods in execution-service/engine/live/persistence/postgresql.py or remove
+    from import graph (§13)",
+    "P2-03: [AGENT] Reduce 752 noqa suppressions — fix underlying lint issues or use ruff config (§8)",
+    "P2-04: [AGENT] Fix 3 files over 900L: deployment_processor.py (1351L), generate_topology_svg.py (973L),
+    cloud_builds.py (921L) (§2)",
+    "P2-05: [AGENT] Migrate execution-results-api config.py from bare BaseSettings to UnifiedCloudConfig (§30)",
+    "P2-06: [DONE] elysium-defi-system deleted from system — config migration no longer applicable (§30)",
+    "P2-07: [AGENT] Calibrate MIN_COVERAGE for 13 repos at default 70; fix 6 QG/pyproject mismatches (§11)",
+    "P2-08: [AGENT] Add pool: forks to unified-trading-ui-auth/vitest.config.ts (§16)",
+    "P2-09: [AGENT] Add health endpoints to ml-inference-service and ml-training-service (§6)",
+    "P2-10: [AGENT] Roll out AGENTS.md to all 71 repos (only PM has it currently) (§23)",
+    "P2-11: [AGENT] Roll out agent-audit.yml to 44 repos missing it (only 28/72 have it) (§23)",
+    "P2-12: [AGENT] Add 10 repos missing from topology service_flows: batch-audit-api, config-api, deployment-api,
+    features-commodity-service, ml-inference-api, ml-training-api, trading-analytics-api,
+    batch-live-reconciliation-service, trading-agent-service (§31)",
+    "P3-01: [AGENT] Create cefi, tradfi, defi portable backtest files in SIT (§28)",
+    "P3-02: [AGENT] Add dead-code detection (vulture) to QG base scripts (§14)",
+    "P3-03: [AGENT] Replace pip install uv with base image uv in 20+ cloudbuild files (§15)",
+    "P3-04: [AGENT] Stop exporting deprecated CloudTarget from UTL __init__.py (§14)",
+    "P3-05: [AGENT] Resolve 46+ USEI sports browser adapter stubs or remove from import graph (§13)",
+    "P3-06: [AGENT] Resolve 30+ UMI adapter stubs (tradfi/defi/alt_data/onchain) or remove (§13)",
+  ]
 isProject: false
 ---
 
@@ -255,7 +299,7 @@ if drift:
 
 ```bash
 # In PM quality-gates.sh:
-ACTIVE=$(ls plans/active/*.md 2>/dev/null | wc -l)
+ACTIVE=$(ls plans/archive/2026_08/*.md 2>/dev/null | wc -l)
 REGISTERED=$(rg '\.md\.md' unified-trading-codex/00-SSOT-INDEX.md 2>/dev/null | wc -l)
 if [ "$ACTIVE" -gt "$REGISTERED" ]; then
   echo "WARN: $ACTIVE active plans but only $REGISTERED registered in SSOT-INDEX"

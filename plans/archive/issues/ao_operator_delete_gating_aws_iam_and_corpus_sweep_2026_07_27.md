@@ -92,41 +92,41 @@ assigned_role: infra
       (account `427895769566`).
 
       **Exact runnable commands** (run with an AWS identity OTHER than `uts-orchestrator-epic-role` — your own
-                                                                  root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
-                                                                  exact problem this todo exists to fix):
+                                                                      root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
+                                                                      exact problem this todo exists to fix):
 
-                                                                  ```bash
-                                                                  ROLE=uts-orchestrator-epic-role
-                                                                  ACCOUNT=427895769566
+                                                                      ```bash
+                                                                      ROLE=uts-orchestrator-epic-role
+                                                                      ACCOUNT=427895769566
 
-                                                                  # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
-                                                                  #    not blanket AdministratorAccess)
-                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
-                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
-                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
+                                                                      # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
+                                                                      #    not blanket AdministratorAccess)
+                                                                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
+                                                                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
+                                                                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+                                                                      aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
 
-                                                                  # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
-                                                                  #    itself, so the next gap doesn't need another human round-trip.
-                                                                  aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
-                                                                    "Version": "2012-10-17",
-                                                                    "Statement": [{
-                                                                      "Effect": "Allow",
-                                                                      "Action": [
-                                                                        "iam:GetRolePolicy",
-                                                                        "iam:ListRolePolicies",
-                                                                        "iam:ListAttachedRolePolicies",
-                                                                        "iam:PutRolePolicy",
-                                                                        "iam:AttachRolePolicy",
-                                                                        "iam:DetachRolePolicy"
-                                                                      ],
-                                                                      "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
-                                                                    }]
-                                                                  }'
-                                                                  ```
+                                                                      # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
+                                                                      #    itself, so the next gap doesn't need another human round-trip.
+                                                                      aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
+                                                                        "Version": "2012-10-17",
+                                                                        "Statement": [{
+                                                                          "Effect": "Allow",
+                                                                          "Action": [
+                                                                            "iam:GetRolePolicy",
+                                                                            "iam:ListRolePolicies",
+                                                                            "iam:ListAttachedRolePolicies",
+                                                                            "iam:PutRolePolicy",
+                                                                            "iam:AttachRolePolicy",
+                                                                            "iam:DetachRolePolicy"
+                                                                          ],
+                                                                          "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
+                                                                        }]
+                                                                      }'
+                                                                      ```
 
-                                                                  After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
-                                                                  flip this todo with evidence — do not self-flip without a fresh verification run.
+                                                                      After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
+                                                                      flip this todo with evidence — do not self-flip without a fresh verification run.
 
 - [x] [DIAG] P1. ✅ **Verified 2026-07-27** — all 14 files done, commits confirmed on `origin/live-defi-rollout` via
       `git merge-base --is-ancestor` (`cc438a02c`, `1be59b97b`, `1e7f5389a`, `c6ef8cb1f`, `f5232f3e5`) + spot-checked
@@ -181,8 +181,8 @@ assigned_role: infra
   other) and the same commit-immediately git-safety discipline that fixed the earlier data-loss incident. **If this
   session compacts before all 3 report back**: check task notifications first; if none arrived, the work may still be
   running (each was a large, thorough per-file investigation, expect it to take a while) — do not re-dispatch duplicate
-  agents on the same 34 files without first confirming via `git log --oneline -20 -- plans/active/` whether commits
-  already landed.
+  agents on the same 34 files without first confirming via `git log --oneline -20 -- plans/archive/2026_08/` whether
+  commits already landed.
 
 - **2026-07-27 (continuation, operator back at desk)**: AWS grant confirmed live (todo above flipped, evidence above).
   GCP self-manage parity gap found and filed as a new todo above (genuinely blocked the same way as AWS was — not fixed

@@ -35,6 +35,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-04"
 author: unknown

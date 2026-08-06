@@ -29,6 +29,7 @@ related:
   [
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

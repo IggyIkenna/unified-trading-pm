@@ -1,0 +1,448 @@
+---
+doc_type: issue
+title:
+  "TradFi — live databento-mislabeled Yahoo-only venues + FX manifest instrument_id 0%-canonical (two live
+  data-correctness defects)"
+summary:
+  Found during the 2026-07-24 /data-pipeline-reconciliation tradfi raw-tick run. (1) Yahoo-exclusive venues ICE (DXY)
+  and KRX (single-stock equities) have REAL captured rows stamped pipeline_mode=batch_databento/source=databento
+  starting ~2026-07-18 and continuing through the latest sampled day (2026-07-23) — contradicting
+  tradfi-databento-sourcing-ssot.md and UAC's own get_dxy_daily_source()/venue_mapping.py routing code, which both say
+  Yahoo-only. FX ohlcv_24h has a structurally identical, much longer-running (2020-2026) companion pattern at larger
+  scale (802 of ~3,991 captured rows). (2) tradfi FX SPOT_PAIR manifest instrument_id is 0% canonically-formed across
+  its ENTIRE captured history (0/4,310 rows, 2020-2026) — the real GCS object + its content ARE correctly formed
+  (verified directly), only the manifest's copy of the shard-atom key is blank/malformed. Neither defect loses real
+  market data; both make it wrong or invisible to consumers that trust the manifest/provenance stamp.
+status: resolved # (was: open) 2026-08-06 RB-04f4f852 archival: all todos [x], no locked_by
+nature: issue
+asset_group: [tradfi]
+stage: [data]
+repos: [market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags:
+  [
+    tradfi,
+    data-correctness,
+    provenance,
+    source-priority,
+    databento,
+    yahoo,
+    manifest,
+    instrument-id,
+    shard-atom,
+    ssot-contradiction,
+    reconciliation,
+  ]
+related:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/canonical-cutover-register.md,
+    plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_24.md,
+    plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_21.md,
+    plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
+  ]
+created: 2026-07-24
+author: unknown
+priority: P0
+parent_epic: tradfi_master
+source: "/data-pipeline-reconciliation --asset-group tradfi (raw-tick layer, third campaign run), 2026-07-24/25"
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+assigned_vm: planning
+resolved_by:
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
+    /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md,
+  ]
+---
+
+> **🟢 ARCHIVED 2026-08-06** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Moved by the plan-hygiene gate remediation for repo-blocker RB-04f4f852 (escalation
+> agt-3dc7e9), 2026-08-06. No content was rewritten.
+
+# TradFi — live source-mislabeling + FX manifest instrument_id defects
+
+## Why this is a "big finding" (per workspace triage rule)
+
+`SUB_AGENT_MANDATORY_RULES.md` / `CLAUDE.md`: a data-correctness finding that also contradicts an SSOT + shipped code is
+escalated to the operator in-chat AND filed as an issue doc, not buried in an audit report. Both defects below meet that
+bar. Neither was fixed inline — this is a read-only reconciliation; fixing belongs to MTDS's own plan.
+
+---
+
+## Finding 1 — Yahoo-exclusive venues captured under `source=databento`, live and ongoing
+
+### Evidence
+
+| Venue                                  | Correct source (SSOT)                                              | Real captured rows w/ `source=databento` | Dates                   | First appeared                                                                    |
+| -------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------- | ----------------------- | --------------------------------------------------------------------------------- |
+| ICE (`ICE:INDEX:DXY-USD`, ohlcv_24h)   | `yahoo`                                                            | 4 (1/day)                                | 2026-07-20, 21, 22, 23  | first `batch_databento` ATTEMPT (empty) 2026-07-18; first REAL capture 2026-07-20 |
+| KRX (single-stock equities, ohlcv_24h) | `yahoo`                                                            | 12 (3/day: `000660`, `005380`, `005930`) | 2026-07-20, 21, 22, 23  | same pattern                                                                      |
+| FX (currency pairs, ohlcv_24h)         | `yahoo` (ohlcv_24h is documented as NOT a Databento schema at all) | 802 of ~3,991 captured FX ohlcv_24h rows | 2020-01-02 → 2026-07-23 | present since 2020 — a longer-running companion of the same defect class, not new |
+
+**Content-verified, not just manifest-inferred.** Fetched the actual GCS object:
+
+```
+raw_tick_data/by_date/day=2026-07-20/pipeline_mode=batch_databento/asset_group=tradfi/venue=ICE/
+  instrument_type=index/data_type=ohlcv_24h/ICE:INDEX:DXY-USD.parquet
+```
+
+Content: `open/high/low/close ≈ 100.98`, `volume=0.0`, `symbol=DXY`, `instrument_id=ICE:INDEX:DXY-USD` — a plausible,
+correctly-typed, correctly-named DXY row. The corresponding manifest row for the same shard atom:
+`pipeline_mode=batch_databento, source=databento, capture_status=captured`.
+
+Same for KRX `000660`/`005380`/`005930` on 2026-07-21/22/23 — plausible KRW-scale close/volume, correct
+`KRX:EQUITY:{code}-USD` id.
+
+### Why this contradicts the SSOT — grep-then-READ, cited precisely
+
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` § "KRX + ICE are YAHOO FINANCE, not Databento" (2026-06-27 operator
+  correction): _"neither KRX nor ICE is 'operator-blocked', 'Databento-sourced', 'needs an adapter', or 'off-allowlist'…
+  the data is freely available via Yahoo and the adapters exist."_ Also: _"Explicitly NOT subscribed (querying them
+  raises `DatabentoDatasetNotAllowedError`): all ICE feeds (`IFEU.IMPACT` Brent/Gasoil, `IFUS.IMPACT` ICE Dollar-Index +
+  softs)…"_
+- `unified-api-contracts/unified_api_contracts/registry/data_source_continuity.py:218-225` —
+  `get_dxy_daily_source(query_date)` has exactly two return paths: `"GAP_NO_SOURCE"` (pre-2019-01-02) or
+  `"YAHOO_FINANCE"`. There is no code path in this function that ever returns `"databento"`.
+- `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py:237` — `"ICE": "yahoo_finance"` is the **only**
+  entry for `ICE` in `venue_to_data_provider`.
+- `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1774-1777` — the BARCHART capability
+  block was removed 2026-07-15 with the comment _"BARCHART was removed from `VENUES_BY_ASSET_GROUP["tradfi"]` 2026-06-24
+  (VIX 15m now aggregates from VX futures via Databento XCBF.PITCH)"_ — the doc trail is explicit that Databento does
+  not serve ICE/KRX-style daily-index/equity data by design; the whole point of the 2026-06-18 subscription lockdown was
+  to enumerate exactly which venues/schemas Databento legitimately covers.
+
+### Hypothesis (unverified — for the investigating team, not asserted as root cause)
+
+The pattern (correct VALUE, wrong PROVENANCE STAMP, starting abruptly on a specific date, across multiple venues at
+once) closely resembles the **already-fixed** 2026-06-19 CBOE bug documented in the same SSOT doc: _"the OHLCV write
+path used to stamp `source`+`pipeline_mode` from `SOURCE_PRIORITY[(asset_group, data_type)][0]`… For
+`("tradfi","ohlcv_1m")` priority is `["massive","databento"]`, so EVERY 1m row stamped `batch_massive` — including CBOE
+VX futures, which only Databento carries."_ The fix added a per-venue `_VENUE_SOURCE_EXCLUSIONS` guard
+(`("CBOE","ohlcv_1m"): {massive}`). The 2026-06-24 "TradFi SOURCE_PRIORITY is DATABENTO-FIRST" change (same SSOT doc)
+may have introduced or reactivated a code path for `ohlcv_24h` / daily singles that does not yet carry an equivalent
+`_VENUE_SOURCE_EXCLUSIONS` entry for ICE/KRX/FX the way CBOE already has one for `ohlcv_1m`. **Not verified this run** —
+would require reading the live daily-forward-poll launcher/cron config and the write-stamp call site, which is out of
+scope for a read-only reconciliation.
+
+### Suggested next steps (not executed — belongs to MTDS's plan)
+
+1. Find whatever process wrote these rows (daily forward-poll cron most likely, given the tight 4-consecutive-day
+   pattern) and confirm whether it is passing `--source` explicitly or falling through to a priority-based default.
+2. Add/verify `_VENUE_SOURCE_EXCLUSIONS` entries for `("ICE", "ohlcv_24h")`, `("KRX", "ohlcv_24h")`, and — given the
+   SSOT states Databento serves no `ohlcv_24h`/`ohlcv_15m` schema at all — consider whether `ohlcv_24h` should be
+   excluded from Databento venue-wide rather than per-venue.
+3. Re-stamp the affected historical rows (4 ICE + 12 KRX this run, 802 FX, likely more once the true full-history FX
+   count is walked) once the writer is fixed — do not leave mislabeled provenance in place.
+4. Check whether this indicates an actual Databento API call is being made for these venues (a possible billing-guard
+   gap) or whether the value is genuinely fetched via Yahoo but mis-stamped downstream (a pure write-time labeling bug).
+   The evidence available to this reconciliation (real, plausible values; a doc trail saying Databento can't serve this)
+   leans toward the latter, but this was not independently confirmed against the Databento allowlist guard's runtime
+   behavior.
+
+---
+
+## Finding 2 — tradfi FX `SPOT_PAIR` manifest `instrument_id` is 0% canonically-formed, entire history
+
+### Evidence
+
+Of **4,310 captured FX rows** (every FX row in the manifest with `capture_status=captured`, spanning 2020-01-02 →
+2026-07-23), **0 (0.00%)** carry a well-formed `FX:SPOT_PAIR:XXX-USD` id in the **manifest** `instrument_id` column:
+
+| Manifest `instrument_id` shape                                                          | Count | Note                                                                  |
+| --------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------- |
+| blank                                                                                   | 2,812 | majority, all years                                                   |
+| literal string `"ticks"`                                                                | 983   | the BUNDLE FILENAME token (`ticks.parquet`) leaking into the id field |
+| bare pair, no venue/type prefix (`EUR-USD`, `AUD-USD`, `KRW-USD`, …)                    | 501   | ALL from 2026 — i.e. the CURRENT, latest write shape                  |
+| `FX:SPOT_PAIR:...` / `YAHOO_FINANCE:SPOT_PAIR:...` (correctly or near-correctly shaped) | 13    | 2025 only, a small minority                                           |
+
+**The real GCS object and its own content ARE correctly formed** — verified directly:
+
+```
+raw_tick_data/by_date/day=2026-07-23/pipeline_mode=batch_databento/asset_group=tradfi/venue=FX/
+  instrument_type=spot_pair/data_type=ohlcv_24h/FX:SPOT_PAIR:AUD-USD.parquet
+```
+
+content: `instrument_id="FX:SPOT_PAIR:AUD-USD"` — matches the filename byte-for-byte. This is a correct S1 (path) and S2
+(content) pair. The **manifest row for the exact same shard atom** (venue=FX, date=2026-07-23,
+pipeline_mode=batch_databento, instrument_type=spot_pair, data_type=ohlcv_24h) carries `instrument_id="AUD-USD"` — one
+of the 501 "bare pair" rows above, missing the `FX:SPOT_PAIR:` prefix that the real file has.
+
+**FX is a categorical outlier, not the tail of a shared distribution.** The same blank-id check on other tradfi
+single-instrument venues: NASDAQ EQUITY 0.81% blank, NYSE EQUITY 0.11% blank, NASDAQ/NYSE ETF 0.0% blank. Nowhere else
+in tradfi does the manifest lose the id at anything close to this rate.
+
+### Why this doesn't fit an existing taxonomy type cleanly
+
+`reconciliation-finding-taxonomy.md`'s 20 named types don't have a clean home for "the GCS path + parquet content
+(S1+S2) are correct, but the manifest's (S3) copy of the atom key is wrong/blank, for a flat-per-contract pattern where
+the manifest key is supposed to be non-null by design." `non_canonical_id` (§2.7) is about the PARQUET row's own
+`instrument_id` vs the rebuilt id — that's fine here, so it doesn't fire. This is reported under the taxonomy's own
+rule: _"A disagreement that fits no type is itself a finding — of a taxonomy gap — and gets escalated."_
+
+### Operational impact
+
+Any consumer that resolves an individual FX pair via the manifest's `instrument_id` column — a per-instrument
+data-status drilldown, a phantom-reconciler stem-vs-column check, an id-keyed join into features/strategy — sees garbage
+or nothing for FX, for the entire 6-year captured history, including the most recent capture. The market data itself is
+not lost; it is simply not discoverable through the manifest's own key.
+
+### Suggested next steps (not executed)
+
+1. Read the FX write path in MTDS (`_umi_yahoo.py` per the sourcing SSOT's routing comments) and find why the
+   manifest-writer call for FX never receives a populated `instrument_id`, unlike every other single-instrument tradfi
+   venue's write path.
+2. Once fixed going forward, backfill the manifest `instrument_id` column for the 4,310 affected historical rows — this
+   is a manifest-only repair (`record_captured`-style re-stamp via `merge_canonical_with_outstanding_shards`), NOT a GCS
+   content rewrite; the underlying parquet files do not need to change.
+3. Consider whether `reconciliation-finding-taxonomy.md` should gain a formal type name for this class ("manifest atom
+   key desync from the file's own true id, on a pattern where the key is supposed to be non-null") — the taxonomy
+   owner's call, not this issue doc's.
+
+---
+
+## What this issue doc is NOT
+
+- Not a delete suggestion. No delete is proposed for either finding.
+- Not a claim about billing exposure. Finding 1 may or may not reflect an actual Databento API call for an off-allowlist
+  venue; this was not independently confirmed.
+- Not a full-corpus certification. Both findings are evidenced by direct content fetches (small, targeted samples) plus
+  full-manifest-index aggregate counts (which ARE exhaustive over the manifest, unlike the GCS-side samples).
+
+## Full report this issue was extracted from
+
+`plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_24.md` §3d, §3e, §7.
+
+## Progress Log
+
+- **2026-07-30 (rulings-closeout pass, this session) — historical ICE/KRX/FX `ohlcv_24h` re-stamp EXECUTED + VERIFIED.**
+  Found the re-stamp script (`scripts/restamp_ice_krx_fx_ohlcv24h_databento_provenance_2026_07_30.py`, MTDS repo) + its
+  regression test already written earlier the same day but never run/shipped. Confirmed a fresh
+  `gcs_bucket_soft_delete_retention_seconds()` read = 604800s (≥ the §3a floor) on
+  `market-data-tick-tradfi-prd-central-element-323112` before proceeding — no operator sign-off needed per this doc's
+  own "Deferred work" table ruling. Ran regression tests (8 passed), `--dry-run` (1,141, matches the census exactly),
+  `--apply` (snapshot taken first, maintenance window paused/resumed cleanly, 1,141 rows re-stamped), then `--verify` (0
+  remaining, exit 0). Script + test deleted post-run per the script's own `Delete-when` lifecycle marker (fulfilled) and
+  the script-homes one-off convention — its job is done, nothing references it going forward. The FX `SPOT_PAIR`
+  `instrument_id` historical backfill todo below (the 6-step plan) is a SEPARATE, larger, not-yet-attempted item — NOT
+  touched this pass.
+- **2026-07-26 (slot-3) — Finding 1 ROOT-CAUSED + FIXED at the code level; historical re-stamp + Finding 2 still open.**
+  Traced the write path: `market-tick-data-service`'s manifest-finalize call (`_write_shard_counts_to_manifest` →
+  `_resolve_pipeline_mode_for_sentinel(..., source=state.source)`) reaches
+  `unified_trading_library.pipeline_mode_resolver.derive_pipeline_mode_for_row`'s EXPLICIT-source branch, which trusted
+  a caller-supplied `--source` unconditionally on the documented assumption that `assert_source_capable_for_venue` had
+  already fail-closed-validated it at fetch time. That assumption only holds for the `venue_data_types` actually
+  validated in ONE `venue_fetch.py` call — a shared run-level `--source databento` (legitimate for CME/CBOE
+  `ohlcv_1m`/`ohlcv_1s` in the same VM run, confirmed against
+  `deployment-service/scripts/vm/launch-tradfi-forward-poll.sh:132` `VM_SOURCE=databento`) reaching a manifest-finalize
+  call for a DIFFERENT (venue, data_type) pair — ICE/KRX/FX `ohlcv_24h`, which is Yahoo-only
+  (`SOURCE_PRIORITY[("tradfi","ohlcv_24h")] = ["yahoo"]`, databento not even a registered member) — fabricated a
+  `batch_databento` stamp for what was structurally-verified-plausible Yahoo-sourced data. This does NOT indicate an
+  actual off-allowlist Databento API call (no evidence of that either way; the manifest stamp itself was simply wrong) —
+  the "billing-guard gap" question in Finding 1's suggested next-steps stays genuinely unconfirmed. **Fix**:
+  `unified-trading-library@f237b75a` — `derive_pipeline_mode_for_row`'s explicit-source branch now re-validates via
+  `is_source_capable_for_venue(asset_group, data_type, venue, source)` before trusting the explicit source; an incapable
+  combination falls through to the venue-aware/SOURCE_PRIORITY resolution (Yahoo) instead of stamping a provenance lie.
+  Regression tests added (`test_explicit_source_incapable_for_venue_falls_ through_not_fabricated`,
+  `test_explicit_source_capable_for_venue_still_honored`); `quality-gates.sh` green. This closes the write path for ALL
+  current + future callers, not just this one occurrence — broader and safer than the originally-suggested narrow
+  `_VENUE_SOURCE_EXCLUSIONS` entries (which would have been redundant here since `databento` isn't registered for
+  `ohlcv_24h` at all; the actual gap was the explicit-source branch bypassing the capability check entirely). **NOT done
+  this pass** (genuinely remaining, tracked as fresh todos below): (a) re-stamp the confirmed-affected historical rows
+  (4 ICE + 12 KRX + 802 FX, likely more on a full walk) now that new captures write correctly; (b) Finding 2 (FX
+  `SPOT_PAIR` manifest `instrument_id` 0%-canonical) — a fully separate defect in a different write path, not
+  investigated this pass.
+
+### Deferred work after 2026-07-26 (slot-3)
+
+| Item                                                                                    | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Blocked on                                               |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Re-stamp historical ICE/KRX/FX `ohlcv_24h` rows (4+12+802, snapshot-first)              | ✅ **DONE 2026-07-30** — census DONE 2026-07-26 (slot 2); APPLY executed this session. Fresh `gcs_bucket_soft_delete_retention_seconds()` check confirmed 604800s (≥ the §3a floor) on `market-data-tick-tradfi-prd-central-element-323112` immediately before the run. `scripts/restamp_ice_krx_fx_ohlcv24h_databento_provenance_2026_07_30.py --apply`: snapshotted the consolidated index first (`gs://.../_index/snapshots/pre_ice_krx_fx_ohlcv24h_provenance_restamp_20260730T100057Z.parquet`), paused/resumed the `uts-prod-manifest-consolidator-market-data-tradfi-cron` maintenance window cleanly, re-stamped exactly 1,141 rows (matches the census). `--verify` confirms **0 remaining mis-stamped rows**, exit 0. Script + its regression test (8 passed) deleted post-run per its own `Delete-when` lifecycle marker (fulfilled) and the script-homes one-off convention. | none — closed                                            |
+| Finding 2 — FX `SPOT_PAIR` manifest `instrument_id` write-path fix + 4,310-row backfill | ✅ Write-path DONE 2026-07-26 (slot 2) — see below; historical backfill stays out of scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | nobody — backfill needs its own scoped design/apply plan |
+| Confirm/rule out an actual Databento billing-guard gap for the pre-fix window           | Not done — needs Databento request-log access, not just code reading                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | possibly operator (Databento account access)             |
+
+Recommended next: the historical re-stamp (bounded, mechanical, unblocks nothing else) before Finding 2 (a fresh
+investigation of similar depth to Finding 1's).
+
+### Full-history census (2026-07-26, slot 2)
+
+Read the live `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` as a single object
+(no GCS walk — same method the legacy-bucket census used), snapshot at 2026-07-26 ~18:33 UTC. Filtered
+`capture_status == "captured"`, `data_type == "ohlcv_24h"`, `venue` in `{ICE, KRX, FX}`, and (`pipeline_mode` containing
+`databento` OR `source == "databento"`) — the same databento-derived-mislabel signature Finding 1 documents. Total
+manifest rows scanned: 5,825,023.
+
+**Corpus-wide result: 1,141 mis-stamped rows (vs. the 818-row 2026-07-24 sample-window estimate — the real number is
+~40% higher, and FX's affected range starts in 2020, not just "present since 2020" as prose — it never fully stopped):**
+
+| Venue | Year | Count |
+| ----- | ---- | ----- |
+| ICE   | 2026 | 5     |
+| KRX   | 2026 | 12    |
+| FX    | 2020 | 134   |
+| FX    | 2022 | 2     |
+| FX    | 2023 | 114   |
+| FX    | 2024 | 297   |
+| FX    | 2025 | 401   |
+| FX    | 2026 | 176   |
+
+**Totals by venue**: ICE=5, KRX=12, FX=1,124. **Grand total: 1,141**. Snapshot path:
+`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (read 2026-07-26, do not
+reuse this count without a fresh re-read — the manifest keeps growing). The 2021 gap in FX's per-year breakdown (zero
+rows) is itself worth noting for whoever runs the apply — either a genuine gap in the mislabeling pattern that year, or
+FX simply had less overall `ohlcv_24h` capture volume in 2021; not investigated further here (out of this todo's
+read-only scope). This is the exact worklist the `[OPERATOR]` CAS re-stamp gate needs — the count itself is NOT applied
+here, per this todo's explicit scope boundary.
+
+### Finding 2 write-path fix — ALREADY SHIPPED before this todo was picked up (2026-07-26, slot 2)
+
+Dispatched a sub-agent to trace the exact call chain from `_umi_yahoo.py`'s `fetch_yahoo_fx` (which sets
+`rec["instrument_id"]` to the FULL canonical `FX:SPOT_PAIR:BASE-QUOTE` form) through to the manifest write, to find why
+the manifest ends up with a bare/blank id despite the row itself carrying the correct one. Finding: **the manifest
+instrument_id is NOT derived from the row's own already-canonical `instrument_id` field at all** — it is INDEPENDENTLY
+re-derived from the bare writer-key `symbol` (e.g. `"EUR-USD"`) inside `venue_fetch._record_venue_shard_counts` →
+`_canonicalize_manifest_instrument_id` → `_tradfi_manifest_canon.resolve_tradfi_manifest_shard`, a second
+canonicalization pass parallel to (not reusing) the one `fetch_yahoo_fx` already ran. **That second pass was itself
+already fixed** in an entirely unrelated, earlier effort: `market-tick-data-service@020b703e` (2026-07-25, the
+`/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` scope extension) added
+`"spot_pair"`/`"spot"` to `_TRADFI_MANIFEST_ITYPE_CANONICAL` (`_tradfi_manifest_canon.py:75-76`) — the SAME map
+NASDAQ/NYSE equity already used (confirming FX and equity share one code path, so the fix that already made
+equity/etf/index 0.11-0.81% blank also silently fixed FX's write path a day later, without anyone connecting the two). A
+regression test already exists and passes: `test_fx_spot_pair_now_resolves_canonical`
+(`tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py:606-612`) asserts
+`_canonicalize_manifest_instrument_id("FX", "spot_pair", "EUR-USD") == "FX:SPOT_PAIR:EUR-USD"`.
+
+**What was actually still broken**: only a stale code comment in `_umi_yahoo.py` (lines ~93-97) that asserted the OLD
+(pre-020b703e) behavior — "the tradfi manifest instrument_id is derived from the bare symbol ... which returns it
+unchanged for non-Tardis FX" — as if it were permanent, intentional design. That file was last touched 2026-07-19, a
+week before the actual fix landed elsewhere, so the comment never got updated. **Fixed**:
+`market-tick-data-service@b0fedf91` corrects the comment to describe the CURRENT (fixed) behavior, cites the 020b703e
+commit + the existing regression test, and explicitly calls out the historical-rows caveat so a future reader doesn't
+re-discover this the hard way. `quality-gates.sh` green (sentinel-verified).
+
+**Net disposition**: Finding 2's write-path fix needed ZERO new code — it was a documentation-currency fix on top of an
+already-shipped, already-tested correctness fix that predates this issue doc's Progress Log even noticing it. The
+genuinely remaining work is unchanged: the ~4,310 historical rows written before 2026-07-25 still carry
+blank/bare/bundle-leaked manifest ids and need a one-time manifest-only backfill (not a GCS content rewrite) — that
+stays its own scoped, `[OPERATOR]`-adjacent follow-up, not attempted here.
+
+### Operator re-confirmation (2026-07-29) — no further sign-off needed, execute the 6-step plan
+
+**Operator RE-CONFIRMED 2026-07-29 (interactive decision session): "execute the ruled backfill now per the 6-step plan"
+— no further sign-off needed.** This re-affirms the 2026-07-28 ruling below (todo `[DATA] P2`) is a live, current
+go-ahead, not stale: the ~4,310-row FX `SPOT_PAIR` manifest `instrument_id` historical backfill is operator-ruled AND
+operator-re-confirmed, with its 6-step execution plan already spelled out as that todo's own Done-when criteria — (1)
+fresh `gcs_bucket_soft_delete_retention_seconds()` check, (2) snapshot the manifest index, (3) build the manifest-only
+re-stamp script, (4) CAS-apply, (5) verify rows-in==rows-out/0 duplicate row_keys/100% `FX:SPOT_PAIR:` prefix, (6)
+resume the consolidator cron. The todo is already fully dispatchable in its current form — nothing further needs to be
+broken out of it.
+
+- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-03**: trimmed context_scope from 7 to 5 entries (dropped `reconciliation-finding-taxonomy.md`
+  and `four-surface-reconciliation-procedure.md` — methodology docs for the original finding, not needed for executing
+  the now operator-confirmed backfill).
+- **context-scout 2026-08-03** (second pass, refreshed methodology): re-verified, unchanged (5 entries) — remaining open
+  todo is the operator-confirmed FX `SPOT_PAIR` manifest-only backfill; `_umi_yahoo.py` and the delete-safety codex
+  already listed cover both its Yahoo-mislabel and soft-delete-retention pre-check steps.
+- **2026-08-03 (slot 8, data_engineering) — 6-step plan EXECUTED; FULL 100% coverage NOT achievable via this repair
+  alone, two new blocking defects discovered + tracked separately.** Live census had moved since the 2026-07-26
+  snapshot: bare-pair shape (was 501) is now 0 and well-formed (was 13) is now 562 — the ordinary daily forward-poll
+  cron naturally superseded every 2026-dated bare-pair row once the write-path fix (`020b703e`) landed, no agent action
+  needed. Genuinely remaining: 3,795 rows (blank 2,812 + literal `"ticks"` 983).
+  1. Fresh `gcs_bucket_soft_delete_retention_seconds()` check on `market-data-tick-tradfi-prd-central-element-323112`:
+     **604800s** — qualifies (≥7-day floor).
+  2. Snapshot:
+     `gs://market-data-tick-tradfi-prd-central-element-323112/_index/backups/availability_index.pre_fx_spot_pair_instrument_id_restamp_apply_20260803T230354Z.parquet`.
+  3. Built `market-tick-data-service/scripts/restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py` (+ 31-test
+     regression suite) — a **content-verified** repair, not a blind index rewrite: neither affected shape (blank /
+     literal `"ticks"`) carries the currency pair anywhere else in the manifest row, so the script reads the REAL GCS
+     object per affected (date, pipeline_mode) shard and extracts the pair from its own `symbol`/`instrument_key` column
+     (same content-verification principle as delete-safety Part 2, applied to a repair). Verified (before writing any
+     code) that the underlying collision risk in `PartitionedTickWriter`'s symbol-less `ticks.parquet` fallback (no
+     per-pair path segment — a same-day multi-pair write would physically collide) was **never actually triggered for
+     FX**: every affected row predates `2026-06-26`, the date `FX_SPOT_PAIRS` grew from 1 pair (KRW-USD) to 12 (G10
+     majors) — so there was never more than one pair fetched per day in the affected window. No real FX data was lost.
+  4. CAS-apply: paused `uts-prod-manifest-consolidator-market-data-tradfi-cron` via the shared
+     `_scheduler_pause_resume_2026_07_30.py` maintenance-window primitive (not raw `gcloud`), ran the apply, resumed the
+     cron in a `finally` block. **25 of 3,795 rows were safely re-stampable** — collision-checked against the FULL
+     `venue=FX` population (not just the affected subset, since a restamp could newly collide with an existing correct
+     twin). Old generation `1785798001134900` → new generation `1785798271092627`.
+  5. Verify: rows-in (6,600,311) == rows-out (6,600,311); a fresh post-apply dry-run shows exactly 0 SAFE remaining (the
+     25 landed) and 3,770 still escalated. **The mandated "100% `FX:SPOT_PAIR:` prefix on all FX captured rows" outcome
+     is NOT achievable via this instrument_id-only repair** — the residual 3,770 split into two genuinely separate,
+     previously-undiscovered defect classes that a content-verified id repair correctly refuses to guess through:
+     **1,812 rows have NO backing GCS object at all** (a phantom-capture defect, different batch/writer from the sibling
+     `tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md` finding) and **1,958 rows would collide
+     post-restamp with a redundant manifest row for the same shard-day** (up to 4 duplicate bookkeeping rows per date
+     across pipeline_mode × instrument_type-blank variants, 664 distinct dates affected). Filed as
+     `issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md` with full evidence + 3 follow-up todos
+     (root-cause the phantom rows; de-duplicate the redundant rows per a delete-safety-gated design; re-run this script
+     once both land). This todo's own mandate ("do not ship a partial fix") is satisfied in the sense that mattered:
+     every row this script COULD safely resolve, it did — the remainder needs different, already-tracked work, not a
+     guess.
+  6. Resume: done automatically inside the script's `finally` block (see step 4) — confirmed resumed in the run log.
+  - **Script kept in place, NOT deleted**, per its own `Delete-when` lifecycle marker (requires dry-run affected-count
+    == 0, not yet reached) — will be re-run once the two follow-up todos land.
+
+## Todos
+
+- [x] [OPERATOR] P3. **CLOSED 2026-07-28 — operator ruling, verbatim: "This is low priority -- we only need 24h OHLCV
+      for these. It is blocked by Databento's allowlist for our billing account and that will NOT change. Leave
+      deprioritized/blocked on the allowlist; do not re-ask, do not treat as urgent."** Confirming/ruling out an actual
+      Databento billing-guard gap for the pre-fix window (ICE/KRX/FX `ohlcv_24h` mislabel window) is permanently
+      deprioritized — do not chase Databento request-log access for this, do not re-raise. Downgraded from P0 to P3 and
+      closed as declined-not-urgent, not left pending.
+- [x] ✅ **CORRECTED 2026-08-04 — this checkbox was false progress; retagging to reflect what actually shipped, per
+      CLAUDE.md's "moment a tag resolves, retag in the same edit" rule.** The RULED/RE-CONFIRMED text below (verbatim,
+      preserved for provenance) was flipped `[x]` on 2026-07-28/29 but **no backfill script or commit for this
+      population ever landed** — `git log` across the workspace has zero commit touching a FX `SPOT_PAIR`
+      `instrument_id` historical re-stamp in that window, and the LIVE manifest on 2026-08-04 still showed the identical
+      blank population (2,787 rows, matching the 2,812 count cited below almost exactly — the 25-row gap is the
+      separately-already-fixed near-correct/bare-pair tail, not this backfill). Root cause of the false checkbox:
+      unknown (not investigated further — the fix is retagging + actually doing the work, not archaeology). **The real
+      execution happened via a DIFFERENT issue doc that independently rediscovered this same population**:
+      `/plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md` (filed 2026-08-04 while
+      re-litigating whether these rows were phantom-and-deletable; concluded RE-STAMP, not delete) — its todo 2 shipped
+      `market-tick-data-service@c86016f6` (`restamp_tradfi_fx_spot_pair_blank_instrument_id_2026_08_04.py`,
+      content-derived `instrument_id` + global dedup by `(date, instrument_id)`, CAS-applied with snapshot +
+      self-verify; see that doc's own Progress Log for the full evidence and exact counts). Do not re-run this todo's
+      original 6-step plan — it is superseded by that doc's completed execution. <details><summary>Original
+      2026-07-28/29 text (preserved, was incorrectly marked done)</summary>
+
+      RE-CONFIRMED 2026-07-29 (interactive decision session): "execute the ruled backfill now per the
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      6-step plan" — no further sign-off needed. RULED 2026-07-28 — scope + build + apply the ~4,310-row FX
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      `SPOT_PAIR` manifest `instrument_id` historical backfill (design-choice half of the original todo; no specific
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      operator answer for this part — applying the standing workspace theme instead: full backfills get done, not
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      indefinitely deferred as "needs its own plan," when not superseded by newer work, and a canonicalisation fix is
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      done properly, not as a cheap partial). Note: the OTHER historical re-stamp this doc tracks (the 1,141-row
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ICE/KRX/FX `ohlcv_24h` mis-stamp) was already separately re-tagged `[DATA]` 2026-07-28 in the "Deferred work"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      table above — this todo is only the FX `instrument_id` half, do not duplicate that one. The write-path fix for
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      this half already shipped (`market-tick-data-service@020b703e` + comment-currency fix `b0fedf91`) — only the
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      historical rows remain (blank 2,812 / literal `"ticks"` 983 / bare-pair-no-prefix 501 / near-correct 13, all
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      pre-2026-07-25). Full completion mandate — do not ship a partial fix or leave this "needs its own plan"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      indefinitely: (1) re-verify a FRESH `gcs_bucket_soft_delete_retention_seconds()` check on
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      `market-data-tick-tradfi-prd-central-element-323112` (≥604800s qualifies, no operator sign-off needed once fresh
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      per finding T / delete-safety §3a); (2) snapshot the manifest index first; (3) build a manifest-only re-stamp
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      script (NOT a GCS content rewrite — the parquet files already carry the correct id, this is a manifest
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      `instrument_id` column repair, mirroring the `record_captured`-style re-stamp pattern already used for the sibling
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ICE/KRX/FX fix and the MTDS lending restamp) that rewrites all 4 shapes above to the canonical
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      `FX:SPOT_PAIR:XXX-USD` form; (4) CAS-apply; (5) verify rows-in == rows-out, 0 duplicate row_keys, and a post-apply
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      `FX:SPOT_PAIR:` prefix on 100% of FX captured rows; (6) resume the consolidator cron. Cost is one-time
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      manifest-only compute, well under the pre-approved $100 threshold — not a blocker. (repo:
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      market-tick-data-service)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      </details>
+
+- **context-scout 2026-08-06**: re-scouted; every todo in this doc is now closed (the last false-progress checkbox was
+  corrected 2026-08-04). Trimmed context_scope from 5 to 4 entries — dropped the audit-report + generic parent-index
+  pointers, swapped in the two live sibling docs where this doc's own text says the real remaining/superseding work
+  actually lives (`tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md`,
+  `tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`).

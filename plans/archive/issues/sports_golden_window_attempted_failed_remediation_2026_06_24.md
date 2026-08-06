@@ -196,6 +196,6 @@ archived) `sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md` /
 `sports_p1_golden_window_mtds_odds_2026_06_27.md` plans. **Correction 2026-07-24**: the coordinator plan
 `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` is NOT `status: active` — it was folded into the sports
 closeout's Track X the same day (2026-07-23) and its frontmatter now reads `status: superseded` (verified directly; it's
-still physically at `plans/active/` pending its own archival housekeeping, but is no longer the live coordinator). No
-status flip on THIS doc — real open items remain (see above), so this stays `status: open` as a diagnosis-of-record with
-the two newly-confirmed-resolved items noted.
+still physically at `plans/archive/2026_08/` pending its own archival housekeeping, but is no longer the live
+coordinator). No status flip on THIS doc — real open items remain (see above), so this stays `status: open` as a
+diagnosis-of-record with the two newly-confirmed-resolved items noted.

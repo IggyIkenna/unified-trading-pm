@@ -37,7 +37,7 @@ source:
 resolved_by: worker slot-7, 2026-07-29 (Update 14, final todo)
 ---
 
-> **✅ ARCHIVED 2026-07-29 — all todos done, no `locked_by`.** Moved from `plans/active/issues/` to
+> **✅ ARCHIVED 2026-07-29 — all todos done, no `locked_by`.** Moved from `plans/archive/issues/` to
 > `plans/archive/2026_07/issues/` per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Every root
 > cause this doc tracked (2 OOM paths, sports SchemaContract gaps, partition-consistency, candle-write mixing,
 > per-asset-group timeframe scoping, KALSHI schema mapping, `af_fixture_id` pivot bug, `odds_horizon_bucket`
@@ -217,7 +217,7 @@ relationship to this OOM fix (the fix only touches a Cloud Run job's env vars; i
 was invisible for at least the last 3 known executions because the job always died from the OOM (during DEFI processing,
 upstream of sports in the asset-group loop) before ever reaching sports. **Not a bounded fix I can guess at** —
 registering ~20 venue × several instrument_type schema contracts requires real domain knowledge of what each
-combination's actual schema should be; grepped `plans/active/issues/` and found no existing tracked issue for it, so
+combination's actual schema should be; grepped `plans/archive/issues/` and found no existing tracked issue for it, so
 this is a genuine new finding. Filed as its own todo below rather than attempted inline.
 
 Given (a) the specific OOM mechanism is directly proven fixed (per-VM shard write confirmed active in logs, RSS flat

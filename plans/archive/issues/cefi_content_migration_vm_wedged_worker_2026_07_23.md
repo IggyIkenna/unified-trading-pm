@@ -106,8 +106,8 @@ have gone through the vm-exec EXIT trap and written an `EXIT_STATUS`).
 — a heartbeat timestamp landing seconds AFTER the recorded `delete` operation's own completion (`12:37:10Z`), i.e. one
 final flush during VM teardown, after which nothing further ever touched this record.
 `gsutil ls gs://deployment-scripts-central-element-323112/deployments/archive/ | grep f1afb75d` → no match. As of this
-investigation (2026-07-23), the record is **still sitting in `active/`**, 4 days after the VM it describes stopped
-existing.
+investigation (2026-07-23), the record is **still sitting in `archive/2026_08/`**, 4 days after the VM it describes
+stopped existing.
 
 **5. The script's own source
 (`market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`, read in full, 560
@@ -231,8 +231,8 @@ directions and I could not fully reconcile them in this read-only pass:
 2. **[deployment-service] Reconcile orphaned `deployments/active/*.json` records whose GCE instance no longer exists** —
    this VM's record is proof the vm-exec wrapper's own EXIT-trap archival path is skipped entirely by an external
    `gcloud instances delete` (vs. the script's own graceful self-delete), leaving a permanently stale "running" record.
-   A periodic reaper (or a check inside the existing `*/5` census sweep) that archives an `active/` record once its
-   instance is confirmed gone would close both the registry-hygiene gap and remove whatever is causing the tertiary
+   A periodic reaper (or a check inside the existing `*/5` census sweep) that archives an `archive/2026_08/` record once
+   its instance is confirmed gone would close both the registry-hygiene gap and remove whatever is causing the tertiary
    re-fire behavior above.
 3. **[alerting-service] Re-audit whether `DP_VM_GONE_NO_CAPTURE` truly qualifies for the "one-shot" 60s-TTL bucket**,
    given this concrete counter-example. If a VM's `GONE_NO_CAPTURE` classification can be re-derived on a later tick

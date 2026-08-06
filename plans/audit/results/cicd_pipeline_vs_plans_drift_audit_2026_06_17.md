@@ -41,8 +41,8 @@ source:
     scripts/quality-gates-base/base-service.sh,
     scripts/cicd/*.py,
     .github/workflows/*.yml,
-    "plans/active/*cicd*, *ldr*, *qg*, *quality*, *dependency*, *staging*, *ci_*",
-    "plans/active/issues/*ci*, *cicd*, *provenance*, *promotion*, *uv_lock*, *semver*",
+    "plans/archive/2026_08/*cicd*, *ldr*, *qg*, *quality*, *dependency*, *staging*, *ci_*",
+    "plans/archive/issues/*ci*, *cicd*, *provenance*, *promotion*, *uv_lock*, *semver*",
   ]
 ---
 
@@ -361,7 +361,7 @@ So triage knows what is solid (these were checked against live code/workflows an
 
 ---
 
-## Likely-archivable (resolved but still in active/) — D23
+## Likely-archivable (resolved but still in archive/2026_08/) — D23
 
 Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per the 5-step ritual:
 
@@ -386,8 +386,8 @@ Verify each gate before moving (`pw:L2 ✓` for the UI one), then archive per th
 5. **Sprawl + lifecycle cleanup (D22/D24/D25)** and the small code/hygiene fixes (D15/D16/D18–D21/D23).
 
 > **Note on capture.** These 25 findings live here as a triage register (audit-result checkboxes are NOT auto-dispatched
-> by the orchestrator's `plans/active/` regen). On acceptance, migrate each `- [ ]` into the named destination plan so
-> it becomes a tracked todo; this result file archives when all findings are `- [x]` in their parent plans (per
+> by the orchestrator's `plans/archive/2026_08/` regen). On acceptance, migrate each `- [ ]` into the named destination
+> plan so it becomes a tracked todo; this result file archives when all findings are `- [x]` in their parent plans (per
 > `plans/audit/README.md`).
 
 ---

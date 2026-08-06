@@ -72,12 +72,12 @@ drift_direction: advance-code
 > [`deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md), archived 2026-05-21,
 > `status: complete`, 0 open todos) — nothing live is being buried by this close-out. **Known follow-up required**: this
 > file also hosts the workspace-wide "Active plan inventory + Done-vs-Left dashboard" (§ below), auto-regenerated twice
-> daily by `scripts/plans/regenerate_active_plan_inventory.py` (`MASTER_FILE` hardcodes this file's old `plans/active/`
-> path) via `scripts/plan-hygiene/run_hygiene_sweep.sh`'s default regen step, itself run by a daily Cloud Scheduler job
-> (`hygiene_sweep_scheduler.tf`). That script will now error `MASTER_FILE not found` on every run until a human either
-> repoints it at a new host doc or retires the auto-inventory feature — this was NOT fixed as part of this archival
-> (needs an operator/owner decision, not a mechanical path swap) and needs same-day follow-up to avoid a standing broken
-> daily job.
+> daily by `scripts/plans/regenerate_active_plan_inventory.py` (`MASTER_FILE` hardcodes this file's old
+> `plans/archive/2026_08/` path) via `scripts/plan-hygiene/run_hygiene_sweep.sh`'s default regen step, itself run by a
+> daily Cloud Scheduler job (`hygiene_sweep_scheduler.tf`). That script will now error `MASTER_FILE not found` on every
+> run until a human either repoints it at a new host doc or retires the auto-inventory feature — this was NOT fixed as
+> part of this archival (needs an operator/owner decision, not a mechanical path swap) and needs same-day follow-up to
+> avoid a standing broken daily job.
 
 > **Frontmatter `last_updated` corrected 2026-07-12** (was: `2026-05-11` — findings id 215 + id 368, §A2 B-queue
 > ruling): the field was stale by ~2 months against the doc's own body (Group H "added 2026-05-20",
@@ -104,8 +104,9 @@ drift_direction: advance-code
 > **✅ LANDED — batch/live symmetry 2026-05-10 (codex SSOTs established)** (BE-AWARE)
 >
 > (corrected 2026-07-15, plan-reconcile: previously read "🟡 IN-FLIGHT REFACTOR ... is establishing" and linked the
-> now-archived `batch_live_symmetry_2026_05_10.md` as if still in `plans/active/`; the plan completed and was archived
-> to [`plans/archive/2026_05/batch_live_symmetry_2026_05_10.md`](../archive/2026_05/batch_live_symmetry_2026_05_10.md)
+> now-archived `batch_live_symmetry_2026_05_10.md` as if still in `plans/archive/2026_08/`; the plan completed and was
+> archived to
+> [`plans/archive/2026_05/batch_live_symmetry_2026_05_10.md`](../archive/2026_05/batch_live_symmetry_2026_05_10.md)
 > (`status: complete`).) It established codex SSOTs for mode-axis discipline (4-axis cartesian product + anti-patterns),
 > per-asset-group batch/live docs (cefi ✅ shipped), and QG STEPs L1-L7 enforcement. **Before touching**: mode enums
 > (`RuntimeMode` / `OperationalMode` / `BatchExecutionMode`), batch/live seam logic, `DataType` enum members, or
@@ -156,9 +157,9 @@ sub-plans; this master plan retains the cross-master readiness checklist + audit
 
 **Migration note (2026-05-08).** The 9 domain umbrella masters (`cefi_master`, `tradfi_master`, `sports_master`,
 `predictions_master`, `ml_and_features_master`, `strategy_and_dart_master`, `infrastructure_master`,
-`manifest_migration_master`, `instruments_live_master`) were moved from `plans/active/` to `plans/epics/` — references
-throughout the workspace updated in the same commit. `defi_master` stays in `plans/active/` per operator direction
-(mid-flight + parallel-agent sensitivity).
+`manifest_migration_master`, `instruments_live_master`) were moved from `plans/archive/2026_08/` to `plans/epics/` —
+references throughout the workspace updated in the same commit. `defi_master` stays in `plans/archive/2026_08/` per
+operator direction (mid-flight + parallel-agent sensitivity).
 
 ---
 
@@ -417,7 +418,7 @@ Rule of thumb: if it lives in `CLAUDE.md`, update there too.
 | **Manifest schema** (column, shard axis, validator, write-gate)                         | `/codex/02-data/availability-manifest-and-data-status.md` · `/codex/02-data/shard-granularity-cefi.md` · `/codex/02-data/sports-scheduling-and-sharding.md` · `/codex/02-data/prediction-schema-paths.md` · `/codex/02-data/per-asset-group-bucket-layouts.md` · `unified-trading-library/unified_trading_library/manifest_writer.py` (SSOT) · `CLAUDE.md` "Availability manifest" + "Shard-granularity SSOT" sections |
 | **Batch/live equivalence rule**                                                         | `/codex/04-architecture/batch-live-architecture.md` (single SSOT) · `backtest-groups.md` · `CLAUDE.md` "Batch = Live" + "Live = batch" sections                                                                                                                                                                                                                                                                        |
 | **Cloud-agnostic VM / build path**                                                      | `/codex/04-architecture/cloud-agnostic-migration.md` · `/codex/05-infrastructure/vm-tarball-deployment.md` · `/codex/05-infrastructure/cloud-agnostic-build-lineage.md` (new — work-stream F) · `deployment-service/scripts/vm/` launchers · `deployment-api/deployment_api/routes/_code_builds_aws.py` · `CLAUDE.md` "VM tarball deployment" + "VM Naming Convention" sections                                        |
-| **Strategy archetype config**                                                           | `/codex/09-strategy/strategy-summary.md` · `codex/09-strategy/architecture-v2/` · `/codex/09-strategy/operational/onboarding-checklist.md` · the archetype-specific sub-plan in `plans/active/` · `CLAUDE.md` if cross-cutting                                                                                                                                                                                         |
+| **Strategy archetype config**                                                           | `/codex/09-strategy/strategy-summary.md` · `codex/09-strategy/architecture-v2/` · `/codex/09-strategy/operational/onboarding-checklist.md` · the archetype-specific sub-plan in `plans/archive/2026_08/` · `CLAUDE.md` if cross-cutting                                                                                                                                                                                |
 | **Custody / treasury wiring** (Copper, CEFFU)                                           | `/codex/04-architecture/custody-providers.md` (single SSOT — Copper + CEFFU + LocalKey + Mock) · `wallet-hierarchy-and-capital-flow.md` · `unified-trading-library/unified_trading_library/config_interface/testnet_contracts.py` `PROTOCOL_SCHEMAS` (load-time validator for `config/testnet_contracts.yaml`; corrected from stale `unified-config-interface/testnet_contracts.py` per slot 8 audit EX-2)             |
 | **Live observability** (events, alerts, kill switches, auto-recovery)                   | `/codex/03-observability/lifecycle-events.md` · `coordination-events.md` · `/codex/04-architecture/alerting-batch-live.md` · `autonomous-recovery-matrix.md` · `/codex/05-infrastructure/live-deployment-monitoring.md` (new — work-stream B) · `unified-api-contracts/.../internal/events.py` (`LifecycleEventType`) · `CLAUDE.md` "no fire-and-forget VM launches" section                                           |
 | **P&L attribution / batch-vs-live reconciliation**                                      | `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` · `batch-live-reconciliation-service` plan (work-stream E) · pnl-attribution-service plan (work-stream E)                                                                                                                                                                                                                                        |
@@ -434,8 +435,8 @@ Rule of thumb: if it lives in `CLAUDE.md`, update there too.
 1. The agent's PR description must list the docs read at the start (the "doc-first" check).
 2. The commit must touch **all** the listed SSOTs in the relevant row, or explicitly state in the PR description why a
    given SSOT is unaffected.
-3. Cross-reference: the corresponding sub-plan in `plans/active/` must agree with the doc — if they disagree, update the
-   plan first.
+3. Cross-reference: the corresponding sub-plan in `plans/archive/2026_08/` must agree with the doc — if they disagree,
+   update the plan first.
 
 Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 
@@ -491,7 +492,7 @@ missing `locked_by`) — needs a one-shot backfill script.
 
 ### Self-tagged superseded plans (18) — archive with `[unlock-plan]`
 
-All have `superseded_by:` declared in frontmatter but still sit in `active/`:
+All have `superseded_by:` declared in frontmatter but still sit in `archive/2026_08/`:
 
 `client_config_and_defi_risk_2026_04_01` · `cross_domain_alpha_execution_intelligence_2026_04_11` ·
 `strategy_lifecycle_visibility_ui_2026_04_11` · `ui_walkthrough_and_e2e_alignment_2026_04_01` ·
@@ -511,10 +512,10 @@ v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
 - **`venue_availability_ssot_2026_03_25`** — 88% done; either archive or extract 3 polish items into a small follow-up.
 - **`hybrid_sampler_5s_resolution_2026_03_30`** — `orphan_candidate: true`, stalled since pivot to manifest+rescan. Move
   to ICEBOX.
-- **`mempool_feed_integration_2026_06_01`** — `status: paused`, future-dated. Remove from `active/`-as-current.
+- **`mempool_feed_integration_2026_06_01`** — `status: paused`, future-dated. Remove from `archive/2026_08/`-as-current.
 - **Dangling `superseded_by` references:** `polymarket_prediction_pipeline_2026_03_25` points at
-  `consolidated_sports_prediction_pipeline_2026_04_15` which isn't in `active/` (likely archived) — update to point at
-  `predictions_canonical_question_group_polymarket_migration_2026_05_06`. `defi_strategies_phase2_2026_03_29`
+  `consolidated_sports_prediction_pipeline_2026_04_15` which isn't in `archive/2026_08/` (likely archived) — update to
+  point at `predictions_canonical_question_group_polymarket_migration_2026_05_06`. `defi_strategies_phase2_2026_03_29`
   `depends_on:` `defi-instrument-pipeline-and-rewards` (itself superseded → transitively dangling).
 - **Removed-providers references** (Elysium / Bloxroute / Arkham / Infura) appear in technical scope of
   `consolidated_defi_data_pipeline_2026_04_15`, `mev_protection_and_execution_enhancements_2026_04_01`,
@@ -525,15 +526,15 @@ v6) · `defi_pipeline_extension_followups_2026_05_03` (`status: complete`) ·
 
 ### Frontmatter discipline (systemic)
 
-| Issue                                           | Count |
-| ----------------------------------------------- | ----: |
-| Plans with NO frontmatter at all                |     5 |
-| Plans missing `locked_by`                       |    31 |
-| Plans missing `name` field                      |    11 |
-| Plans missing `last_updated` (95%)              |   140 |
-| `superseded_by` set but plan still in `active/` |    18 |
-| Filename ↔ `name` field mismatch                |     1 |
-| YAML errors                                     |     2 |
+| Issue                                                    | Count |
+| -------------------------------------------------------- | ----: |
+| Plans with NO frontmatter at all                         |     5 |
+| Plans missing `locked_by`                                |    31 |
+| Plans missing `name` field                               |    11 |
+| Plans missing `last_updated` (95%)                       |   140 |
+| `superseded_by` set but plan still in `archive/2026_08/` |    18 |
+| Filename ↔ `name` field mismatch                         |     1 |
+| YAML errors                                              |     2 |
 
 **Action:** workspace-wide one-shot backfill script — populate `last_updated` from `git log` mtime, infer `asset_group`
 from filename + body, populate `locked_by: live-defi-rollout` for any that are mid-flight. **Work-stream G below.**
@@ -1776,7 +1777,7 @@ a Group F item; ownership routes to the named agent/tab.
 
 ### G · Plan hygiene sweep (Day 1 quick-win, surfaced by 2026-05-06 audit)
 
-Mechanical cleanups that shrink `active/` from ~148 to ~130 plans and unblock the master plan from referencing
+Mechanical cleanups that shrink `archive/2026_08/` from ~148 to ~130 plans and unblock the master plan from referencing
 self-superseded artefacts.
 
 **Archive Stage 1 — 17 self-tagged superseded plans (DONE 2026-05-06, commit forthcoming):**
@@ -1809,8 +1810,8 @@ self-superseded artefacts.
 
 - [x] ✅ [SCRIPT] `hybrid_sampler_5s_resolution_2026_03_30` → ICEBOX (`orphan_candidate: true`) — PM@0c34d59c in archive
       (audit-backfilled 2026-05-19)
-- [x] ✅ [SCRIPT] `mempool_feed_integration_2026_06_01` → remove from `active/` (paused, future-dated) — PM@0c34d59c in
-      archive (audit-backfilled 2026-05-19)
+- [x] ✅ [SCRIPT] `mempool_feed_integration_2026_06_01` → remove from `archive/2026_08/` (paused, future-dated) —
+      PM@0c34d59c in archive (audit-backfilled 2026-05-19)
 - [x] ✅ [SCRIPT] `signal_leasing_broadcast_architecture_2026_04_20` → archive on next `[unlock-plan]` pass (8 phases
       done) — PM@e396759b in archive (audit-backfilled 2026-05-19)
 
@@ -1818,8 +1819,8 @@ self-superseded artefacts.
 
 - [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Workspace-wide script to populate missing `last_updated` from `git log` mtime
       (re-derive count at script time; original 2026-05-06 audit said 140 plans, post-Stage-7 batch consolidation the
-      surface is now `~28 active/` + `~66 ai/` + `~437 archive/` (re-derived 2026-05-08 by audit-followups Tab 8) — most
-      missing `last_updated` rows are in `archive/` and `ai/`)
+      surface is now `~28 archive/2026_08/` + `~66 ai/` + `~437 archive/` (re-derived 2026-05-08 by audit-followups
+      Tab 8) — most missing `last_updated` rows are in `archive/` and `ai/`)
 - [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Same script populates `asset_group` inferred from filename + body (re-derive
       count at script time; original 2026-05-06 audit said 142 plans across active+ai+archive)
 - [x] ✅ DEFERRED-FUTURE-WORK [SCRIPT] Same script populates `locked_by: live-defi-rollout` for plans missing it
@@ -2157,7 +2158,7 @@ Agent 5):
       tier-1 services
 - [x] ✅ DEFERRED-FUTURE-WORK Update cadence: Tier-1 readiness rollup refreshed by EOD daily; critical-path DAG checked
       at start of each week
-- No duplication: sub-plans in `plans/active/` remain authoritative; this plan only references and orchestrates
+- No duplication: sub-plans in `plans/archive/2026_08/` remain authoritative; this plan only references and orchestrates
 
 ---
 

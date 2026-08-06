@@ -40,6 +40,7 @@ related:
     /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
     /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-29"

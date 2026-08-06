@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Issue-Doc Lifecycle Discipline
 summary:
-  The closed 5-state machine for `plans/active/issues/` docs (UNACKED → ACKED-INTO-PLAN/-CODE/-OUT-OF-SCOPE/-AS-INVALID)
-  — archive triggers, anti-patterns (no "stays until parent closes"), and the grep-based audit recipe for dual-tracking
-  violations; referenced from CLAUDE.md Citadel standard item 9.
+  The closed 5-state machine for `plans/archive/issues/` docs (UNACKED →
+  ACKED-INTO-PLAN/-CODE/-OUT-OF-SCOPE/-AS-INVALID) — archive triggers, anti-patterns (no "stays until parent closes"),
+  and the grep-based audit recipe for dual-tracking violations; referenced from CLAUDE.md Citadel standard item 9.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -33,23 +33,23 @@ code_refs: [scripts/plan-hygiene/check_terminal_status_archived.py]
 
 # Issue-Doc Lifecycle Discipline
 
-> **SSOT** for when issue docs in `plans/active/issues/` archive. Referenced from CLAUDE.md § "Citadel-Grade Planning
+> **SSOT** for when issue docs in `plans/archive/issues/` archive. Referenced from CLAUDE.md § "Citadel-Grade Planning
 > Standards" item 9.
 
 ## The rule
 
 **Issue docs exist to surface UNACKED work. Once acked — into a plan, into shipped code, or out-of-scope with a named
-successor — they archive immediately. Banner-marked-in-`active/issues/` is a transitional convenience that should be
+successor — they archive immediately. Banner-marked-in-`archive/issues/` is a transitional convenience that should be
 temporary, NOT a permanent state.**
 
-`plans/active/issues/` should contain only items the workspace has not yet decided what to do about. Everything else
+`plans/archive/issues/` should contain only items the workspace has not yet decided what to do about. Everything else
 lives elsewhere.
 
 ## State machine (closed set)
 
 | State                | Definition                                                                          | Location                                             |
 | -------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `UNACKED`            | Surfaced, no operator/agent has decided how to address it yet                       | `plans/active/issues/`                               |
+| `UNACKED`            | Surfaced, no operator/agent has decided how to address it yet                       | `plans/archive/issues/`                              |
 | `ACKED-INTO-PLAN`    | A named active plan absorbs the work (issue's findings are now in the plan's todos) | **`plans/archive/issues/`** (banner cites plan)      |
 | `ACKED-INTO-CODE`    | The fix is shipped (commit SHA citable)                                             | **`plans/archive/issues/`** (banner cites SHA)       |
 | `ACKED-OUT-OF-SCOPE` | Decision: not worth doing now; explicit successor named with date                   | **`plans/archive/issues/`** (banner cites successor) |
@@ -57,18 +57,19 @@ lives elsewhere.
 
 There are NO other states. Specifically:
 
-- **NO** "ACKED-but-still-in-`active/issues/`-with-banner" state.
+- **NO** "ACKED-but-still-in-`archive/issues/`-with-banner" state.
 - **NO** "covered by plan, stays until parent closes" state.
 
-If a banner says "stays in `active/issues/` until parent closes", the banner is wrong. The clean answer is: archive now;
-the parent plan tracks the work; the banner becomes a one-line breadcrumb in the parent plan if needed for discovery.
+If a banner says "stays in `archive/issues/` until parent closes", the banner is wrong. The clean answer is: archive
+now; the parent plan tracks the work; the banner becomes a one-line breadcrumb in the parent plan if needed for
+discovery.
 
 ## When to archive (specific triggers)
 
 Archive an issue doc the moment ANY of these become true:
 
-1. **A named successor plan exists in `plans/active/`** that absorbs the issue's findings. The issue is acked-into-plan;
-   archive immediately.
+1. **A named successor plan exists in `plans/archive/2026_08/`** that absorbs the issue's findings. The issue is
+   acked-into-plan; archive immediately.
 2. **A commit SHA fixes the issue.** Add `resolved: <date>` frontmatter + resolution-citing-SHA banner; archive
    immediately.
 3. **The work is subsumed by a meta-audit / cross-cutting plan** (mega-audit Phase A/B/C/D, codex SSOT, etc.).
@@ -80,11 +81,11 @@ Archive an issue doc the moment ANY of these become true:
 
 ## Anti-patterns (review-blocking)
 
-- ❌ **Banner-marked + still in `active/issues/`** — dual-tracking. The banner says "see the parent"; the issue file
+- ❌ **Banner-marked + still in `archive/issues/`** — dual-tracking. The banner says "see the parent"; the issue file
   itself is now redundant. Archive.
-- ❌ **Pre-audit / diagnostic artefacts in `active/issues/`** — these are audit outputs, not unacked issues. They belong
-  in `plans/audit/` (for forward-looking audits that downstream plans reference) or `plans/archive/issues/` (for closed
-  one-shot triage).
+- ❌ **Pre-audit / diagnostic artefacts in `archive/issues/`** — these are audit outputs, not unacked issues. They
+  belong in `plans/audit/` (for forward-looking audits that downstream plans reference) or `plans/archive/issues/` (for
+  closed one-shot triage).
 - ❌ **Meta-audit / triage docs surviving past their action**: once acted on, archive. They served their one-shot
   purpose.
 - ❌ **"Archived alongside parent" lifecycle policies** in issue frontmatter — these explicitly create dual-tracking.
@@ -110,7 +111,7 @@ Then archive. The `git log` history preserves the issue forever; the parent plan
 - **Capture Discoveries As Plan Todos** (CLAUDE.md): the discovery still files as an issue todo at the moment it
   surfaces. This rule just says: once the todo lives in a plan, the issue archives.
 - **Foundation-Completion-Gate Discipline** ([[foundation-completion-gate-discipline]]):
-  banner-marked-in-`active/issues/` for layer-N work that's covered by a layer-N plan is still dual-tracking. Archive
+  banner-marked-in-`archive/issues/` for layer-N work that's covered by a layer-N plan is still dual-tracking. Archive
   once acked into the plan.
 - **Plans Run To Actual Completion** (CLAUDE.md): "shipped" for the issue's purposes is "the plan that absorbed it now
   owns the work". The issue doesn't wait for plan-shipped to archive.
@@ -119,7 +120,7 @@ Then archive. The `git log` history preserves the issue forever; the parent plan
 
 ## Reference incident
 
-2026-05-20 cleanup pass: `plans/active/issues/` contained 14+ banner-marked items (9 mega-audit subsumed + 5
+2026-05-20 cleanup pass: `plans/archive/issues/` contained 14+ banner-marked items (9 mega-audit subsumed + 5
 existing-plan covered) carrying explicit "stays until parent closes" lifecycle. Operator flagged the dual-tracking; this
 SSOT codifies the cleaner pattern. Pattern observed across `ml_repo_consolidation_preaudit_2026_05_19.md`,
 `strategy_repo_consolidation_preaudit_2026_05_19.md`, and the 14 banner-marked items.
@@ -135,10 +136,10 @@ dual-tracking anti-pattern accumulated undetected for months. The corrected reci
 ```bash
 # Files with COVERED BY / SUBSUMED BY banners (and similar acks)
 grep -lE "(🟡|🟢) (COVERED BY|SUBSUMED BY MEGA AUDIT|RESOLVED|RE-RESOLVED|LAUNCHED)" \
-  plans/active/issues/*.md
+  plans/archive/issues/*.md
 
-# Files with a terminal status still in active/issues/ (the real check)
-for f in plans/active/issues/*.md; do
+# Files with a terminal status still in archive/issues/ (the real check)
+for f in plans/archive/issues/*.md; do
   st=$(grep -m1 "^status:" "$f" | sed 's/^status: *//')
   case "$st" in
     resolved|false-positive|superseded) echo "DUAL-TRACK: $f" ;;

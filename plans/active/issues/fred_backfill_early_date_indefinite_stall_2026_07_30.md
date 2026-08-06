@@ -31,6 +31,7 @@ related:
     /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 author: unknown

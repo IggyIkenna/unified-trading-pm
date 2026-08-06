@@ -136,11 +136,11 @@ Cycle 2 cutover-completion state.
 
 **Theme**: `manifest_schema_final_gate_2026_05_09.md` Phase 13 + master plan G23.
 
-| Time    | Phase                                           | Critical-path action                                                                                                                                                                 |
-| ------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| AM      | **13.A — Operator triggers live wallet enable** | `carry_staked_basis` + `leveraged_funding_arb` arming on real wallet. ≥7 continuous days monitor START. Hard-stop list item: operator-only action; no agent runs this.               |
-| PM      | **13.B — Banner removal + status flip**         | Banner removal across all `plans/active/*.md` Phase-0 bannered plans. Status flip on manifest_schema_final_gate plan from `active` → `complete` once 7-day continuous run validates. |
-| All day | **Monitor**                                     | Slot 1 (both sides) full-attention monitoring. Event streams, P&L, alerts, kill-switch readiness. No new feature work; bug fixes only.                                               |
+| Time    | Phase                                           | Critical-path action                                                                                                                                                                          |
+| ------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AM      | **13.A — Operator triggers live wallet enable** | `carry_staked_basis` + `leveraged_funding_arb` arming on real wallet. ≥7 continuous days monitor START. Hard-stop list item: operator-only action; no agent runs this.                        |
+| PM      | **13.B — Banner removal + status flip**         | Banner removal across all `plans/archive/2026_08/*.md` Phase-0 bannered plans. Status flip on manifest_schema_final_gate plan from `active` → `complete` once 7-day continuous run validates. |
+| All day | **Monitor**                                     | Slot 1 (both sides) full-attention monitoring. Event streams, P&L, alerts, kill-switch readiness. No new feature work; bug fixes only.                                                        |
 
 **Per-slot allocation** (Day-1 of live; Cycle 4 day):
 

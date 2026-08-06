@@ -20,6 +20,7 @@ related:
   [
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-18

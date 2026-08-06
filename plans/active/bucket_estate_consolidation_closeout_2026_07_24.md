@@ -32,6 +32,7 @@ related:
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: infrastructure_master

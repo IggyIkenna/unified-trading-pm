@@ -56,9 +56,9 @@ context_scope:
 > **🟢 ARCHIVED 2026-07-30.** All 4 todos done: source-doc reconciliation (todo 1), the too-large-doc batch2 re-check
 > (todo 2), the operator-ruling re-check (todo 3), and this archival (todo 4) — parent moved to
 > `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`, corpus referrers updated (23 files with a
-> literal `plans/active/...` path to the parent + 4 files pointing at this finalize doc's own path). No new durable
-> contract from this batch — codex-alignment check: nothing to update (every todo executed an already-decided spec, per
-> the parent's own banner).
+> literal `plans/archive/2026_08/...` path to the parent + 4 files pointing at this finalize doc's own path). No new
+> durable contract from this batch — codex-alignment check: nothing to update (every todo executed an already-decided
+> spec, per the parent's own banner).
 >
 > **Machine-gated on `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue any todo below until all 54 tasks in that plan are `done`. `sequential: true` because todo 2

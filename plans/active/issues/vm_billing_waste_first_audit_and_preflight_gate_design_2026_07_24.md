@@ -23,6 +23,7 @@ related:
     /codex/04-architecture/shard-level-failure-isolation.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 author: unknown

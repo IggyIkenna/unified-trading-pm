@@ -24,6 +24,7 @@ related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
     ../../../cursor-configs/skills/data-pipeline-check-features/SKILL.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

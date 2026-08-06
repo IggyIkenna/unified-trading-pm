@@ -25,6 +25,7 @@ related:
     /plans/active/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
     /plans/active/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-04"
 last_updated: "2026-08-04"

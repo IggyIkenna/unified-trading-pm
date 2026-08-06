@@ -53,6 +53,7 @@ tags:
     data-correctness,
   ]
 related:
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   [/plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md, /plans/active/data_completion_tradfi_2026_07_15.md]
 created: "2026-07-27"
 author: unknown

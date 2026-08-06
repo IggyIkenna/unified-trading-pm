@@ -34,6 +34,7 @@ related:
     /plans/archive/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md,
     /codex/07-security/self-hosted-runner-security-posture.md,
     /codex/07-security/gha-wif-migration.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-25
 author: unknown

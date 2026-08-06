@@ -159,7 +159,7 @@ specifically.
 ## Why this is filed as a BIG finding, not folded into an existing doc
 
 Per `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` and `CLAUDE.md`'s findings-triage rule: a data-correctness finding
-outside every currently-open plan's stated scope goes to `plans/active/issues/<slug>_<date>.md`, and a **big finding**
+outside every currently-open plan's stated scope goes to `plans/archive/issues/<slug>_<date>.md`, and a **big finding**
 (data-correctness, live production) additionally requires operator notification in-chat. This is a live capture OUTAGE,
 categorically different from the canonicalisation/migration-shape work the currently-open cefi docs
 (`cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`,

@@ -24,6 +24,7 @@ related:
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
     /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
     /plans/active/task_template.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-24
 author: unknown

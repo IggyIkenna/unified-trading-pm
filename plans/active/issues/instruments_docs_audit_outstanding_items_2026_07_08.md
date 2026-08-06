@@ -55,6 +55,7 @@ related:
     plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md,
     plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     plans/active/prediction_canonical_identity_migration_2026_07_08.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-08
 author: unknown

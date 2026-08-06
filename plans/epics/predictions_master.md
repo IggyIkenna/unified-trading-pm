@@ -5,7 +5,7 @@ summary: >-
   L0 asset-group umbrella epic for the prediction-markets pipeline (Kalshi/Polymarket): coordinates the child active
   plans covering manifest canonicalisation, available_at lookahead-bias stamping, ML walk-forward + arb, and the A3
   mega-audit MISSING_EXPECTED remediation (3,442 cells) — restructured 2026-06-20 so inline todos route to dispatchable
-  child plans in plans/active/.
+  child plans in plans/archive/2026_08/.
 status: active
 nature: process
 asset_group: [prediction]
@@ -50,11 +50,11 @@ locked_since: 2026-05-07
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~30+ open `- [ ]` todos
 > INLINE in its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
-> (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never
-> dispatched — the epic read as "0 plans / 0%". The inline blocks have been **reconciled, not deleted**: net-new unowned
-> work extracted to child active plans (see § "Assigned active plans"); already-owned work pointed at its owning June
-> plan; cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence.
-> See § "Workstream routing (restructured 2026-06-20)" below for the full map.
+> (`regen_backlog_from_plan.py`) only scans `plans/archive/2026_08/*.md`, never `plans/epics/`, so those inline todos
+> were never dispatched — the epic read as "0 plans / 0%". The inline blocks have been **reconciled, not deleted**:
+> net-new unowned work extracted to child active plans (see § "Assigned active plans"); already-owned work pointed at
+> its owning June plan; cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅
+> without evidence. See § "Workstream routing (restructured 2026-06-20)" below for the full map.
 
 > **Cross-link 2026-05-20**: Emits StrategyPnlStreamEvent per UAC contract (see
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
@@ -427,8 +427,8 @@ Operator picked option (δ) per `wave2_polymarket_record_captured_from_counts_20
 
 ## Workstream routing (restructured 2026-06-20)
 
-The predictions work is dispatched through child active plans (regen scans `plans/active/`, not this epic). Every former
-inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
+The predictions work is dispatched through child active plans (regen scans `plans/archive/2026_08/`, not this epic).
+Every former inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
 
 | Former inline block                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Disposition                                                                                                                                                                  | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

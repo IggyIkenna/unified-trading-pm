@@ -98,7 +98,7 @@ verify-from-scratch cycle.
       byte-identical to the prior regen. (4) Grepped the parent: zero remaining `- [ ]` items, `locked_by:` empty →
       archival candidate confirmed. Ran the 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): fixed every corpus referrer pointing at
-      the parent's `plans/active/` path (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+      the parent's `plans/archive/2026_08/` path (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
       `v2_engine_venue_buildout_2026_06_15.md` ×5, `plans/epics/strategy_master.md` ×2,
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`'s stale bare-slug prose claim); no new codex contract
       needed (the memory-bounding + one-off-backfill-VM-launcher patterns the parent used were both pre-existing
@@ -113,12 +113,12 @@ verify-from-scratch cycle.
 
 - **2026-07-30** — Created by `/na-eligibility-audit` (tranche=cefi, autonomous) as the paired finalize twin for the
   parent's `NA → planning` reclassification, per `plans/active/task_template.md`'s finalize-plan-coverage rule
-  (`check_finalize_plan_coverage.py` globs `plans/active/*.md`, so a `doc_type: plan` reclassification needs the twin;
-  issue docs are structurally exempt). No parent content duplicated here — this twin only verifies.
+  (`check_finalize_plan_coverage.py` globs `plans/archive/2026_08/*.md`, so a `doc_type: plan` reclassification needs
+  the twin; issue docs are structurally exempt). No parent content duplicated here — this twin only verifies.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **2026-08-03 (slot-13, `backend_engineer`)**: Closed the todo. Independently re-measured the DVOL manifest
   (consolidated availability index, not the per-VM shard) — 1955 distinct dates × {BTC, ETH}, 2021-03-24→2026-07-30,
   100% captured, confirming the parent's claim rather than trusting it. Confirmed 0/2 engines registered (no re-backtest
   owed) and the matrix regen (`14dbb6d1`) correctly reflects that. Fixed all corpus referrers to the parent's
-  `plans/active/` path (5 files). Archived both this twin and the parent into `plans/archive/2026_08/` in the same
-  commit as the standard 6-step ritual's final step.
+  `plans/archive/2026_08/` path (5 files). Archived both this twin and the parent into `plans/archive/2026_08/` in the
+  same commit as the standard 6-step ritual's final step.

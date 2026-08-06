@@ -12,7 +12,7 @@ summary: >-
   content, flagged below for whichever tranche owns them, not drafted here), 3 archivable_now (2 pure archival-hygiene
   housekeeping already flagged by a prior na-eligibility-audit pass, no AO content; 1 — a candle- manifest
   reconciliation doc — is content-complete and already correctly archived elsewhere in the corpus, but a stray duplicate
-  copy was accidentally resurrected into `plans/active/issues/` by an unrelated commit and needs deleting), 6
+  copy was accidentally resurrected into `plans/archive/issues/` by an unrelated commit and needs deleting), 6
   orphaned_never_touched (4 correctly non-AO-eligible — design/operator-gated per 2-3 independent prior audit passes
   each, unchanged; 2 carry real AO-eligible bounded work, one of them a materially-new-evidence re-derivation of a todo
   two prior audit passes explicitly declined, now revisited because the specific external gate that justified declining
@@ -134,7 +134,7 @@ context_scope:
       `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (content already fully resolved; this is a pure
       corpus-hygiene fix, not a reopening). **Done when**:
       `git rm plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` is committed and pushed
-      via quickmerge; a corpus-wide grep for the basename shows zero remaining references to the `plans/active/issues/`
+      via quickmerge; a corpus-wide grep for the basename shows zero remaining references to the `plans/archive/issues/`
       path (only `plans/archive/issues/` remains); `regenerate_active_plan_inventory.py` /
       `check_terminal_status_archived` report the active-tree path no longer present. Repo: unified-trading-pm.
 
@@ -176,7 +176,7 @@ context_scope:
 - **Stray-duplicate resurrection pattern is not isolated to cefi.** The same bad commit (`8f01b82a4`) that resurrected
   `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (fixed in todo 2 above) also resurrected a
   DEFI-tranche doc, `plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`, into
-  `plans/active/issues/` as a stray duplicate of an already-archived doc. Verified: of the other 9 docs deleted in the
+  `plans/archive/issues/` as a stray duplicate of an already-archived doc. Verified: of the other 9 docs deleted in the
   same 2026-08-02 archive-move batch (`ff619d49f`), only these 2 are currently stray-resurrected — an isolated
   2-document incident from one commit, not a systemic corpus problem. Flagging for the defi tranche's own audit to apply
   the identical `git rm` fix; not drafted here (out of cefi scope).

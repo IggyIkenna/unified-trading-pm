@@ -16,6 +16,7 @@ related:
     ../data_completion_to_100_all_ag_2026_06_21.md,
     /plans/epics/infrastructure_master.md,
     /plans/archive/issues/deadman_monitor_log_event_crash_2026_06_23.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-06-23"
 author: unknown

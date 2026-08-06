@@ -267,12 +267,12 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       tests/smoke/epics-tab.spec.ts. **Epics tab v2 — live PM epics + plan drilldown**: deployment-api
       `GET /api/epics/plans` (`_epics_plans.py`, declared BEFORE `/{epic_id}`) reads PM `main` via the GitHub contents
       API (300 s TTL, semaphore-bounded): `plans/epics/*.md` frontmatter → epic cards (name/title/tier/priority/
-      assigned_vm/status, tier→priority sorted); `plans/active/*.md` frontmatter `parent_epic:` + `- [x]`/`- [ ]` +
-      open-P0/P1 counts → per-epic drilldown (completion %, estimate_class, GitHub link); orphans (no parent_epic) →
-      review-blocking strip; 5 unit tests (parsers + mock route ordering). deployment-ui `EpicsPlansContent` replaces
-      the stale `EpicReadinessView` (which read the ARCHIVED `unified-trading-codex` asset-class yamls — DELETED the
-      dead view + `useEpics` hook, no parallel paths) in the Epics landing tab: epic cards → expand → plan rows → GitHub
-      links; LIVE/MOCK badge. mock-api fixture mirrors the deployment-api mock.
+      assigned_vm/status, tier→priority sorted); `plans/archive/2026_08/*.md` frontmatter `parent_epic:` +
+      `- [x]`/`- [ ]` + open-P0/P1 counts → per-epic drilldown (completion %, estimate_class, GitHub link); orphans (no
+      parent_epic) → review-blocking strip; 5 unit tests (parsers + mock route ordering). deployment-ui
+      `EpicsPlansContent` replaces the stale `EpicReadinessView` (which read the ARCHIVED `unified-trading-codex`
+      asset-class yamls — DELETED the dead view + `useEpics` hook, no parallel paths) in the Epics landing tab: epic
+      cards → expand → plan rows → GitHub links; LIVE/MOCK badge. mock-api fixture mirrors the deployment-api mock.
 
 - [x] ✅ [CODE] P1. DONE 2026-06-11 — deployment-api@6385d5b + PM (this commit). **Epics orphan-strip accuracy**
       (operator-reported: 25 "review-blocking orphans" while every real plan HAD a parent). Four stacked causes, all

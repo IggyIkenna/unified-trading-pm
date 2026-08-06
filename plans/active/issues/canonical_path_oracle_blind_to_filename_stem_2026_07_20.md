@@ -39,6 +39,7 @@ related:
     tradfi_canonical_path_migration_design_2026_07_19,
     _cefi_canonical_blueprint_2026_07_17,
     data_pipeline_hardening_self_monitoring_2026_06_22,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-20
 author: unknown

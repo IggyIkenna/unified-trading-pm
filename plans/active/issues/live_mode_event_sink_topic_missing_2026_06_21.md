@@ -23,6 +23,7 @@ related:
     plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
     plans/active/issues/fleet_data_acquisition_health_2026_06_21.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-21
 author: unknown

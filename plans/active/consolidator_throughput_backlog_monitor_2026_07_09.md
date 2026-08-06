@@ -24,6 +24,7 @@ related:
   [
     /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
     /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-07-09"
 last_updated: "2026-07-10"

@@ -52,6 +52,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
     /codex/04-architecture/ci-alerting.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: 2026-07-27
 author: unknown

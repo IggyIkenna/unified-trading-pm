@@ -9,7 +9,17 @@ stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/manifest_v7_schema_migration_design_2026_05_08.md, plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md, plans/active/manifest_cross_asset_rescan_design_2026_05_08.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/features_repo_consolidation_2026_05_08.md, plans/epics/manifest_migration_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
+related:
+  [
+    plans/active/manifest_v7_schema_migration_design_2026_05_08.md,
+    plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    plans/active/manifest_cross_asset_rescan_design_2026_05_08.md,
+    plans/active/writegate_honest_coverage_endtoend_2026_05_06.md,
+    plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    plans/active/features_repo_consolidation_2026_05_08.md,
+    plans/epics/manifest_migration_master_2026_05_07.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+  ]
 created: 2026-05-08
 type: question-doc
 spawned_plan: plans/active/manifest_schema_final_gate_2026_05_09.md
@@ -330,7 +340,7 @@ at `plans/active/manifest_schema_final_gate_2026_05_09.md` that codifies:
 3. Workspace-wide Phase 4 consumer sweep across UAC / UTL / MTDS / MDPS / features-\* / instruments-service /
    deployment-api / e2e-testing — parallel-agent fan-out, P0 by May 12.
 4. Two-stage MTDS bounce-sweep (drain May 12, full launch May 16) with E3 7-item launcher checklist.
-5. Banner every `plans/active/*.md` whose work touches MTDS / MDPS / features / manifest with
+5. Banner every `plans/archive/2026_08/*.md` whose work touches MTDS / MDPS / features / manifest with
    `🟡 IN-FLIGHT REFACTOR — manifest v8 FINAL by 2026-05-23; bundled Phase 3 walk May 13-15; MTDS bounce-sweep May 16-20; no schema additions until post-cutover`
    per CLAUDE.md "Cross-Plan Coordination Banners" rule.
 6. Cross-plan coordination with `features_repo_consolidation_2026_05_08` — features consolidation MUST land by May 16.

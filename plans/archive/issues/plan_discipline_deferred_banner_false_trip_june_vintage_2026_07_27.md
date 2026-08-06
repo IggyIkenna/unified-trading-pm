@@ -61,7 +61,7 @@ resolved_by: >-
 non-zero, "Regression: 1 > baseline 0"). Ran `check_plan_discipline.py` directly:
 
 ```
-Scanned plans/active/ (271 plans) + issues + archive — 1 violation(s).
+Scanned plans/archive/2026_08/ (271 plans) + issues + archive — 1 violation(s).
 Per-rule: {'A-deferred-no-banner': 1}
   - [A-deferred-no-banner] unified-trading-pm/plans/active/june_2026_vintage_audit_findings_2026_07_27.md:
     contains DEFERRED but no '## Deferred work — migrated to:' banner

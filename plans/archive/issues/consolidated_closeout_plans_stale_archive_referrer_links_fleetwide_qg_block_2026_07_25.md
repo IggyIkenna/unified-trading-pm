@@ -43,12 +43,12 @@ resolved_by: slot-3
 ## What I found
 
 `python3 unified-trading-pm/scripts/run_validators.py --scope all` failed with 14 `BROKEN:` link reports, all of the
-shape `active/<consolidated_closeout_plan>.md -> /plans/active/issues/<doc>.md` where `<doc>.md` had actually been moved
-to `/plans/archive/issues/<doc>.md` (or `/plans/archive/<doc>.md` for 2 non-issue docs). Every one of the 14 targets was
-confirmed to exist, unchanged, at its `plans/archive/...` location — this was a referrer-path staleness bug, not a
-deleted/missing doc.
+shape `archive/2026_08/<consolidated_closeout_plan>.md -> /plans/active/issues/<doc>.md` where `<doc>.md` had actually
+been moved to `/plans/archive/issues/<doc>.md` (or `/plans/archive/<doc>.md` for 2 non-issue docs). Every one of the 14
+targets was confirmed to exist, unchanged, at its `plans/archive/...` location — this was a referrer-path staleness bug,
+not a deleted/missing doc.
 
-Affected files (all in `plans/active/`):
+Affected files (all in `plans/archive/2026_08/`):
 
 - `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` — 3 stale links
 - `tradfi_consolidated_closeout_2026_07_18.md` — 2 stale links (3 occurrences incl. a frontmatter `related` list entry)
@@ -73,8 +73,9 @@ pattern, treat it as a recurrence of this same gap, not a new bug class.
 ## Recommended fix
 
 Applied directly (small, mechanical, safe — confirmed via `find` that every target existed under `plans/archive/` before
-editing): updated all 14 links' display text + href from `plans/active/...` to `plans/archive/...`, matching each doc's
-actual current location. Re-ran `run_validators.py --scope all` → `OK: No broken links in plans/active/*.md`.
+editing): updated all 14 links' display text + href from `plans/archive/2026_08/...` to `plans/archive/...`, matching
+each doc's actual current location. Re-ran `run_validators.py --scope all` →
+`OK: No broken links in plans/archive/2026_08/*.md`.
 
 ## Todos
 

@@ -74,7 +74,7 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
 
 - [ ] (b) **IS→features contract**: `is_features_contract_audit_2026_05_20.md` (archived at
       `plans/audit/archive/is_features_contract_audit_2026_05_20.md`) — confirm findings closed at archive time + no
-      follow-up RED items active in `plans/active/`
+      follow-up RED items active in `plans/archive/2026_08/`
 
 - [ ] (c) **ml-service inference end-to-end test**: inference path has a test that exercises the full pipeline (features
       → model → signal) with mock data. Find: `rg "inference|predict" ml-service/tests/ --include="*.py" -l` (or merged

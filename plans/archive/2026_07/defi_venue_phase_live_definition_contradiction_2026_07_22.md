@@ -515,7 +515,7 @@ doesn't re-diagnose from scratch. Recommend this become its own dedicated multi-
   documents this exact class of gap (phase=="live" + in `MTDS_DEFI_VENUES` but no `PROTOCOL_CAPABILITIES` entry) for
   other venues (EULER_V2/VENUS/BENQI/RADIANT-ETH/MARGINFI/SOLEND) — added a new row for these 6 venues so the codex SSOT
   reflects the newly-created (post-flip) instance of the same registry inconsistency (see that doc's own edit). Fixed
-  all 11 active-corpus referrers still citing this doc's pre-archive `plans/active/issues/` path (grepped the whole
+  all 11 active-corpus referrers still citing this doc's pre-archive `plans/archive/issues/` path (grepped the whole
   corpus first — archived-doc referrers were deliberately left untouched, matching this corpus's existing practice of
   not rewriting other already-archived docs' historical citations). `git mv` to
   `plans/archive/2026_07/defi_venue_phase_live_definition_contradiction_2026_07_22.md`.

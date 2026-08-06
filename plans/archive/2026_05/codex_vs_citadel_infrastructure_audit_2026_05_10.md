@@ -25,8 +25,8 @@ locked_since: 2026-05-10
 
 ## Deferred work — migrated to:
 
-- POST_CUTOVER findings: each filed as an active sub-plan (search plans/active/ for successors). No open items remain in
-  this plan.
+- POST_CUTOVER findings: each filed as an active sub-plan (search plans/archive/2026_08/ for successors). No open items
+  remain in this plan.
 
 # Codex vs Citadel-Grade Infrastructure Audit
 

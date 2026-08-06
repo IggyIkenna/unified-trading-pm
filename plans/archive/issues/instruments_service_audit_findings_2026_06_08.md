@@ -1,6 +1,7 @@
 ---
 doc_type: issue
-title: instruments-service audit findings (download→manifest) — CF-11 swallows, removed-provider still wired, silent excepts
+title:
+  instruments-service audit findings (download→manifest) — CF-11 swallows, removed-provider still wired, silent excepts
 summary:
 status: resolved
 nature: record
@@ -45,7 +46,7 @@ noted.
 > version-alignment false-block that delayed it is FIXED (`unified-trading-pm@a428a3515` — `version-alignment-gate.sh`
 > now compares like-for-like). The deeper semver-agent `[skip ci]` promotion-block root cause (which kept staging
 > re-locking) is written up for review in [[semver_version_bump_skip_ci_promotion_block_2026_06_09]]
-> (`plans/active/issues/`).
+> (`plans/archive/issues/`).
 
 ### 🔴 P0 — fetch error swallowed into not-failed (CF-11) — kalshi (the one REACHABLE case)
 

@@ -145,7 +145,8 @@ depends_on: []
 - **todo placement — frontmatter YAML vs. body markdown checkboxes** — `plans/PLAN_FORMAT.md:625-637`: “## Structural
   Order (MANDATORY) ... 1. **Frontmatter** (name, overview, type, status, completion_gates, depends_on, todos with
   checkboxes) ... \*\*Rule:” vs `plans/PLAN_FORMAT.md:78-118,229-241`: “### Active plan / wrapper plan (in
-  `plans/active/`) [frontmatter schema has NO `todos:` field] ... Cursor Plan Mode renders Markdown checkboxes. Every”
+  `plans/archive/2026_08/`) [frontmatter schema has NO `todos:` field] ... Cursor Plan Mode renders Markdown checkboxes.
+  Every”
   - why: The same SSOT doc has a section labelled 'MANDATORY' instructing that todos live inside the frontmatter YAML
     block (matching the pre-2026-05-21 legacy `todos:` list schema shown later at lines 183-225), while the current
     'Active plan / wrapper plan' frontmatter schema has no `todos:` field at all and the 'Cursor-Friend
@@ -612,7 +613,7 @@ depends_on: []
   (single-VM architecture, 2026-06-27)...epic VMs deprecated per CLAUDE.md; there is no `vm-sports` to start”
   - why: orchestrator_master.md is status:active (not archived) and its core 'Owns' description plus its own frontmatter
     `assigned_vm: vm-orchestrator` (line 32) still present a live 9-epic-VM multi-VM fleet with per-VM backends as the
-    current architecture. The 2026-06-27 sports plan (also active, and corroborated by `active/\_a
+    current architecture. The 2026-06-27 sports plan (also active, and corroborated by `archive/2026_08/\_a
 
 - planned fix: Extend orchestrator_master's partial-supersede notice: the 9-epic-VM fleet description in 'Owns' is
   superseded by the single-VM role-based architecture (2026-06-27, CLAUDE.md + AO plans); notice points to

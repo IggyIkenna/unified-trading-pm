@@ -44,6 +44,7 @@ context_scope:
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
     /codex/06-coding-standards/model-tier-selection.md,
     agent-orchestrator/server/accounts.py,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 ---
 

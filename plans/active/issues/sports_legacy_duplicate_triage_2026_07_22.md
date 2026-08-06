@@ -59,6 +59,7 @@ related:
     /codex/02-data/sports-gcs-path-ssot.md,
     /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     ../migration_verification_orphan_safety_2026_06_10.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-22
 author: unknown
@@ -422,10 +423,10 @@ objects). Re-checked the parent tracker and for any follow-up execution of its 5
   checkmark is for _completing the triage itself_ (this doc), not for executing any of its 5 recommendations. Its own
   summary explicitly says "none of which is a fresh delete decision" — consistent with this doc's own "no action
   executed" framing.
-- Grepped `plans/active/` and `plans/active/issues/` for `sports_reference_v2`, `migration_orphan_sweep_sports`,
-  `is_covered_sports`, and `legacy_dup_triage_sports` — no doc other than this one and its direct ancestors references
-  the operator ruling on the 1,492 v2 pre-floor rows, the 58-row v2 post-floor migrate-forward, the two reader repoints,
-  or the classifier rescan. All 5 `[ ]` todos in § 7 remain unexecuted.
+- Grepped `plans/archive/2026_08/` and `plans/archive/issues/` for `sports_reference_v2`,
+  `migration_orphan_sweep_sports`, `is_covered_sports`, and `legacy_dup_triage_sports` — no doc other than this one and
+  its direct ancestors references the operator ruling on the 1,492 v2 pre-floor rows, the 58-row v2 post-floor
+  migrate-forward, the two reader repoints, or the classifier rescan. All 5 `[ ]` todos in § 7 remain unexecuted.
 - No GCS or manifest state check was re-run (this doc's own artifacts are durable audit parquets under `_index/audit/`
   in `instruments-store-sports-prd`; re-deriving the 34,385-row population would require the same non-trivial
   multi-script pass the original triage ran, out of scope for a re-triage confirmation pass).

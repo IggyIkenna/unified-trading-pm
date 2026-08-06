@@ -59,7 +59,7 @@ parent is now a lean pointer + current-state doc; the raw finding text lives in 
 
 ## History parts index (line-cap split, 2026-07-25)
 
-> **Why this exists**: this doc was 3927 lines — massively over the `plans/active/issues/*.md` 1000L hard cap
+> **Why this exists**: this doc was 3927 lines — massively over the `plans/archive/issues/*.md` 1000L hard cap
 > (`scripts/plan-hygiene/check_line_caps.sh`). The audit itself is closed (Section A 84/84 ruled, Section B 176/176
 > applied — see §A2 + Progress Log); only Section C (4 structural-gap observations) and one Progress-Log todo are still
 > genuinely open. Per `plans/archive/issues/plan_line_cap_remediation_2026_07_23.md`'s FINAL RESOLUTION pattern, the
@@ -150,7 +150,7 @@ tracked in the Progress Log.
 
 ## Progress Log (append-only)
 
-- 2026-07-25 (LINE-CAP REMEDIATION — split, not archival): this doc was 3927 lines, over the `plans/active/issues/*.md`
+- 2026-07-25 (LINE-CAP REMEDIATION — split, not archival): this doc was 3927 lines, over the `plans/archive/issues/*.md`
   1000L hard cap (`scripts/plan-hygiene/check_line_caps.sh`). Read in full first to judge split-vs-archive per
   `plan_line_cap_remediation_2026_07_23.md`'s precedent: Section A (84/84 ruled, §A2) and Section B (176/176 applied,
   Progress Log above) are fully closed, but this doc is NOT a pure closed record — Section C's 4 structural-gap

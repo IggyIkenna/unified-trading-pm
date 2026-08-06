@@ -47,6 +47,7 @@ related:
     /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
     /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-19"
 last_updated: "2026-07-25"

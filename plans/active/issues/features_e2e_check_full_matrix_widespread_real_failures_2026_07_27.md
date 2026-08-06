@@ -46,6 +46,7 @@ related:
     /codex/02-data/external-data-always-available-rule.md,
     /plans/active/issues/cross_instrument_delta_one_listing_recurring_hang_2026_08_03.md,
     /plans/active/issues/multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

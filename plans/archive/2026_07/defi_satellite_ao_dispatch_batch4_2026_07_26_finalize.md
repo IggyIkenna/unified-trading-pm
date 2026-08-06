@@ -76,7 +76,7 @@ drift_direction: advance-code
       `status: resolved` and `resolved_by: features-service@b0845d83, strategy-service@59dd0638` populated — the 6-step
       archival ritual batch4's own todo 2 had explicitly left incomplete ("NOT done: the file was NOT moved... this pass
       was scoped to verify-and-flip only") was completed in the SAME `PM@fdbafb3be` batch commit as the D2 flip above
-      (`git log --follow --name-status` shows an `R083` rename `plans/active/issues/... → plans/archive/issues/...` in
+      (`git log --follow --name-status` shows an `R083` rename `plans/archive/issues/... → plans/archive/issues/...` in
       that commit), with a small referrer-path follow-up in `PM@090ce516b` ("archive onchain manifest backfill issue
       doc"). **Done**: both source docs' states confirmed by reading, one-line note each above.
 - [x] ✅ [REVIEW] P3. **DONE 2026-07-31.** Re-checked all three of batch4's dropped-by-conflict-check items against

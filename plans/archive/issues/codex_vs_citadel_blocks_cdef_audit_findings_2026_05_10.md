@@ -304,7 +304,7 @@ Per the operator directive ("do it all till we don't need the question doc anymo
 closes when:
 
 1. ✅ All 6 audit blocks (A/B/C/D/E/F) have findings + recommendations + named active plans where applicable.
-2. ✅ Recommendations are migrated to issue docs in `plans/active/issues/`:
+2. ✅ Recommendations are migrated to issue docs in `plans/archive/issues/`:
    - `codex_vs_citadel_block_b_audit_findings_2026_05_10.md` — A2 + B1-B5
    - `codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md` (this doc) — C1-C5 + D1-D6 + E1-E7 + F1-F7
 3. ✅ Spawned audit plan `plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md` consumes the issue docs in

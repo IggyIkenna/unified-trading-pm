@@ -36,6 +36,7 @@ related:
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
     /plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"

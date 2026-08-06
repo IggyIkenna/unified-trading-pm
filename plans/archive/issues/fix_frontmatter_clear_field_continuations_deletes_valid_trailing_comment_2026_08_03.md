@@ -98,12 +98,12 @@ the explanation is now gone and nothing marks the field as "don't touch."
 ## Why this matters
 
 This hygiene step runs as part of `quickmerge.sh`'s pre-gate on every `--agent --files`-scoped ship that happens to
-touch ANY plan under `plans/active/` (not just files the agent intentionally edited — it scans the whole corpus, per the
-earlier `prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` precedent this exact function was built
-to fix one instance of). An agent that stages `--files` without diffing every incidentally-touched file first ships this
-silently — exactly the failure mode `commit-push-flip-rule`'s pre-commit `git status && git diff --cached --stat` step
-exists to catch, except this corruption happens to a file the agent never staged in the first place, so a diff scoped to
-intentionally-changed files won't surface it either.
+touch ANY plan under `plans/archive/2026_08/` (not just files the agent intentionally edited — it scans the whole
+corpus, per the earlier `prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` precedent this exact
+function was built to fix one instance of). An agent that stages `--files` without diffing every incidentally-touched
+file first ships this silently — exactly the failure mode `commit-push-flip-rule`'s pre-commit
+`git status && git diff --cached --stat` step exists to catch, except this corruption happens to a file the agent never
+staged in the first place, so a diff scoped to intentionally-changed files won't surface it either.
 
 ## Todos
 
@@ -114,12 +114,12 @@ intentionally-changed files won't surface it either.
       the existing garbage-strip to continuation lines that carry neither a leading quote nor a leading `#`. Add a
       regression test using the exact `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` shape as
       a fixture. Repo: unified-trading-pm. — unified-trading-pm@458ba0180
-- [x] ✅ [DATA] P2. Audit `plans/active/**/*.md` for any OTHER `execution_scope`/`last_updated` field carrying this same
-      "value + multi-line trailing comment" shape that may have already been silently corrupted by a prior fixer run
-      before this bug was caught — grep for `execution_scope:$` (bare, no inline value) followed by an indented
-      non-quote-non-comment line, and cross-check each hit's git blame for a fixer commit that removed an adjacent
-      operator-ruling comment. Repo: unified-trading-pm — SHA recorded here does not resolve in any local clone (likely
-      a transcription typo, same class as flagged in `docs_reconcile_autonomous_sweep_2026_07_30.md`); flagged
+- [x] ✅ [DATA] P2. Audit `plans/archive/2026_08/**/*.md` for any OTHER `execution_scope`/`last_updated` field carrying
+      this same "value + multi-line trailing comment" shape that may have already been silently corrupted by a prior
+      fixer run before this bug was caught — grep for `execution_scope:$` (bare, no inline value) followed by an
+      indented non-quote-non-comment line, and cross-check each hit's git blame for a fixer commit that removed an
+      adjacent operator-ruling comment. Repo: unified-trading-pm — SHA recorded here does not resolve in any local clone
+      (likely a transcription typo, same class as flagged in `docs_reconcile_autonomous_sweep_2026_07_30.md`); flagged
       2026-08-03 by `check_plan_commit_sha_evidence.py`, not re-derived further.
 
 ## Progress Log
@@ -143,8 +143,8 @@ intentionally-changed files won't surface it either.
 - **2026-08-03 (slot 15, data_engineering)**: shipped todo 2 — the corpus audit — and found + fixed a SECOND,
   independent regression the todo-1 fix left open.
   - **Corpus audit result**: scanned every `execution_scope`/`last_updated` continuation-bearing field in
-    `plans/active/**/*.md` (683 files) two ways — (a) a frontmatter-aware line-parser classifying every currently-live
-    continuation block against the three-way guard (quoted / value+comment / plain-unguarded), and (b)
+    `plans/archive/2026_08/**/*.md` (683 files) two ways — (a) a frontmatter-aware line-parser classifying every
+    currently-live continuation block against the three-way guard (quoted / value+comment / plain-unguarded), and (b)
     `git log -G'^execution_scope:$'` / `-G'^last_updated:$'` pickaxe over the vulnerable window (`e37b7ab47`, when the
     buggy quote-only guard was introduced, `2026-07-30`, .. `458ba0180`, the todo-1 fix, `2026-08-03`) to catch
     corruption that had already flattened a continuation back to a single line (invisible to method (a) once corrupted).

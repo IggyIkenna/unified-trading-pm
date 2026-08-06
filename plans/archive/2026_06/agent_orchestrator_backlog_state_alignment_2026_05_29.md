@@ -210,17 +210,17 @@ doesn't melt the fleet).
       all small VMs (6783 → 349 ≈ 94.9%). ✅
 
       **POST-FULL-ROLLOUT operator SSM snapshot (2026-05-30T04:25Z, direct state.db query):**
-                                                                                                                  Operator (slot-1-laptop) completed Phase 3 rollout: 6 VMs via the autonomous `run_fleet_enable_prune.sh` (it
-                                                                                                                  bailed after `vm-sports` on the 7th VM due to SSM get-command-invocation timeout in the wait loop), then 5
-                                                                                                                  remaining VMs fired in parallel via direct AWS SSM SendCommand. All 11 VMs verified: drop-in
-                                                                                                                  `/etc/systemd/system/orchestrator.service.d/prune-stale.conf` present + `ORCHESTRATOR_REGEN_PRUNE_STALE=true`
-                                                                                                                  in `/proc/<orchestrator-pid>/environ`. Post-rollout state.db `queued` counts (direct sqlite COUNT, not heartbeat):
-                                                                                                                  vm-orchestrator=334, vm-defi=357, vm-cefi=353, vm-tradfi=353, vm-sports=336, vm-cross-cutting=353,
-                                                                                                                  vm-operator-ops=338, vm-prediction=35, **vm-ml=135 (was 6591 — 97.95% reduction)**,
-                                                                                                                  **vm-trading-core=0 (was 6154 — 100% reduction)**, api-host=0.
-                                                                                                                  The L4 `assigned_vm` filter (agent-orchestrator@c13375c) is now operationally verified — vm-ml + vm-trading-core
-                                                                                                                  no longer hold the bloated 6k+ task universe; each VM ingests only plans with matching `assigned_vm` (or no
-                                                                                                                  filter). **Phase 3 + Phase 4 fully closed at the data layer.** ✅
+                                                                                                                      Operator (slot-1-laptop) completed Phase 3 rollout: 6 VMs via the autonomous `run_fleet_enable_prune.sh` (it
+                                                                                                                      bailed after `vm-sports` on the 7th VM due to SSM get-command-invocation timeout in the wait loop), then 5
+                                                                                                                      remaining VMs fired in parallel via direct AWS SSM SendCommand. All 11 VMs verified: drop-in
+                                                                                                                      `/etc/systemd/system/orchestrator.service.d/prune-stale.conf` present + `ORCHESTRATOR_REGEN_PRUNE_STALE=true`
+                                                                                                                      in `/proc/<orchestrator-pid>/environ`. Post-rollout state.db `queued` counts (direct sqlite COUNT, not heartbeat):
+                                                                                                                      vm-orchestrator=334, vm-defi=357, vm-cefi=353, vm-tradfi=353, vm-sports=336, vm-cross-cutting=353,
+                                                                                                                      vm-operator-ops=338, vm-prediction=35, **vm-ml=135 (was 6591 — 97.95% reduction)**,
+                                                                                                                      **vm-trading-core=0 (was 6154 — 100% reduction)**, api-host=0.
+                                                                                                                      The L4 `assigned_vm` filter (agent-orchestrator@c13375c) is now operationally verified — vm-ml + vm-trading-core
+                                                                                                                      no longer hold the bloated 6k+ task universe; each VM ingests only plans with matching `assigned_vm` (or no
+                                                                                                                      filter). **Phase 3 + Phase 4 fully closed at the data layer.** ✅
 
 ### Phase 4 — L4 investigate vm-ml + vm-trading-core 21× yaml bloat (research-then-fix)
 
@@ -234,8 +234,8 @@ imported 24×.
       "which plans does this VM own"? Is there an `assigned_vm` filter? If so why does it produce 21× for these two VMs?
       Compare regen output on vm-cefi vs vm-ml side-by-side. Affinity: agent-orchestrator-familiar slot. Collision
       group: `ao_regen_scope_code`. Estimate: 0.3 AI-day. **DONE 2026-05-30** — FINDINGS: (1) NO per-VM scope filter
-      exists in regen. `regen_backlog_from_plan.py` scans ALL `plans/active/*.md` indiscriminately; `assigned_vm`
-      frontmatter field is NEVER read. All VMs get all tasks. (2) Dedup is text-exact on brief (raw
+      exists in regen. `regen_backlog_from_plan.py` scans ALL `plans/archive/2026_08/*.md` indiscriminately;
+      `assigned_vm` frontmatter field is NEVER read. All VMs get all tasks. (2) Dedup is text-exact on brief (raw
       `- [ ] description text`). Any edit to an unchecked line produces a new task ID — old ID becomes orphan. (3)
       21×/24× bloat root cause = brief-mutation accumulation: plan lines were extensively edited (adding operator-acked
       notes, credential blocks, etc.) generating new task IDs on each regen tick WITHOUT prune_stale. Current unchecked

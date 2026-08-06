@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: UAC canonical/domain/__init__.py:266 imports get_expected_bookmakers from wrong module — blocks all instruments-service tests
+title:
+  UAC canonical/domain/__init__.py:266 imports get_expected_bookmakers from wrong module — blocks all
+  instruments-service tests
 summary:
 status: RESOLVED
 nature: record
@@ -27,7 +29,7 @@ Fixed by Harsh slot 2 — `unified-api-contracts@b73949d` corrected the import p
 Verified via Slot 2 DONE-ping in `harsh_orchestrator/pings/slot_2.md` + PM coordination ledger
 `pm_coordination_ledger_2026_05_13.md` § "Active Issues" table.
 
-Moved from `plans/active/issues/` → `plans/archive/issues/` on 2026-05-13.
+Moved from `plans/archive/issues/` → `plans/archive/issues/` on 2026-05-13.
 
 ---
 

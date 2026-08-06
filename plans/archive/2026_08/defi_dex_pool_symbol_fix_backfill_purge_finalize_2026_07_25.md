@@ -105,8 +105,8 @@ context_scope:
       tracked in their own separate issue docs with their own todos, not lost). Grepped the corpus for every referrer of
       `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25` (18 files) and
       `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25` (9 files, 15 unique total across both slugs)
-      spanning `plans/active/`, `plans/active/issues/`, `plans/archive/`, and `plans/archive/issues/` — repointed every
-      path-formatted/prose `.md` citation to
+      spanning `plans/archive/2026_08/`, `plans/archive/issues/`, `plans/archive/`, and `plans/archive/issues/` —
+      repointed every path-formatted/prose `.md` citation to
       `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (or the `_finalize` twin);
       bare-slug machine fields (`depends_on`/`related`/`source` without `.md`, and task-id references like
       `defi_dex_pool_symbol_fix_backfill_purge-001`) intentionally left untouched per the cross-reference-path

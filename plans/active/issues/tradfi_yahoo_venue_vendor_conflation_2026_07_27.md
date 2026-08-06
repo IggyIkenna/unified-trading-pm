@@ -28,6 +28,7 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/venue-availability.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

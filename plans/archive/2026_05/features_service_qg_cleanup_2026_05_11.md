@@ -138,7 +138,7 @@ org-naming tidy):
 >   `deployment-api/.../data_status_drilldown.py`/`data_query_service.py`/`services.py`/`backfill_launch.py`, …) — the
 >   bucket-name-SSOT migration set baseline 0 but the callsite migration isn't complete (slot-4 / slot-8 carry-forward,
 >   `bucket_name_ssot_canonicalisation_2026_05_10.md`).
-> - `[6/6] PRODUCTION READINESS VALIDATORS` FAIL on `workspace-manifest.json` / `plans/active/*.md`
+> - `[6/6] PRODUCTION READINESS VALIDATORS` FAIL on `workspace-manifest.json` / `plans/archive/2026_08/*.md`
 >   (`run_validators.py --scope all`).
 >
 > So the **features-consolidation work itself is DONE**; flipping these checkboxes waits on those 3 tab-wide drifts

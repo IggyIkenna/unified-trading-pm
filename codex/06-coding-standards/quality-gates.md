@@ -811,7 +811,7 @@ in business-logic code — use specific exception types there.
 
 ### Adding a new library carveout
 
-1. Identify whether it fits an existing category above. If not, file an issue doc in `plans/active/issues/`.
+1. Identify whether it fits an existing category above. If not, file an issue doc in `plans/archive/issues/`.
 2. Add the variable to the repo's `scripts/quality-gates.sh` stub above the `source base-library.sh` line.
 3. Include an inline comment explaining WHY the carveout is legitimate for that specific file/pattern.
 4. Update `QUALITY_GATE_BYPASS_AUDIT.md` § 2.x with the same justification.

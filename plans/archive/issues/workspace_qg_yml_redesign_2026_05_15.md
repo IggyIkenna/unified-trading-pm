@@ -330,7 +330,7 @@ expected/desired behavior of the new trigger surface):
 1. **STEP 5.79 dockerfile-base-pin** — alerting-service Dockerfile uses `:latest` instead of `@sha256:digest`. Fix per
    Phase 5 of `deployment_and_qg_strategy_implementation_2026_05_13.md`. Harsh-side may already be queueing this for the
    21-repo Phase 5 rollout.
-2. **Production readiness validators** — workspace-manifest.json or plans/active/\*.md validation issue from
+2. **Production readiness validators** — workspace-manifest.json or plans/archive/2026_08/\*.md validation issue from
    `unified-trading-pm/scripts/run_validators.py --scope all`. Likely a stale dep declaration or removed-symbol
    reference.
 

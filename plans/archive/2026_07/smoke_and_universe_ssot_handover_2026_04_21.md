@@ -6,7 +6,7 @@
 
 ## Context (read this first)
 
-Two plans landed 2026-04-21 under `plans/active/`:
+Two plans landed 2026-04-21 under `plans/archive/2026_08/`:
 
 1. **`smoke_dep_chain_tactical_fixes_2026_04_20.plan.md`** — Phase A tactical (SIT manifest filter, path-layout SSOT
    reconcile, launcher extensions for SPORTS+PREDICTION, stale default date, VM auto-shutdown, SIGKILL investigation,

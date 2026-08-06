@@ -130,7 +130,8 @@ definitions 24. `unified-trading-system-ui/lib/auth/personas.ts` — 8 demo pers
 - Touching UAC code — Stage 3B writes a YAML schema sketch that the actual UAC PR will implement. The UAC PR is a
   separate follow-up.
 - Implementing the HTML slide deck via reveal.js — v1 uses markdown + mermaid + Playwright screenshots only.
-- Any `plans/active/` archival — Stage 3E supersedes `roadmap/next-waves.md`, but archival is manual post-completion.
+- Any `plans/archive/2026_08/` archival — Stage 3E supersedes `roadmap/next-waves.md`, but archival is manual
+  post-completion.
 
 ## Phase breakdown
 
@@ -264,17 +265,18 @@ test).
   - Blockers (what must happen first)
   - Sequence group (G1 now / G2 next / G3 later)
   - Owner (UI / UAC / user-management-api / strategy-service / ops)
-  - Proposed follow-up plan name (so each refactor item becomes its own `plans/active/*.plan.md`) Expected items:
-    restriction-profile service/engine (G1), LOCKED-VISIBLE UI service-tile mode (G1), prospect-reg + prospect-dart
-    personas (G1), broken-href probable-5 cleanup (G1), **phase-unification refactor — no forked backtest / paper / live
-    UIs; terminal + catalogue + observe are phase-toggled over the same component tree (rule 03 sub-claims b–e)** (G1),
-    **instruction-schema validation service — external-facing contract from Stage 3B instruction-schema-contract.md;
-    validates inbound client instructions against schema + venue/instrument compatibility + licensing; rejects
-    non-compliant shapes with actionable errors; feeds pricing-engine with integration-depth signal (rule 10)** (G1),
-    fund_id+client_id JWT claims (G2), per-client API key issuance (G2), 4-catalogue parity refactor: Data (G2), ML
-    (G2), Execution-Algo (G2) w/ TCA page, staging Firebase provisioning (G2 — already tracked in five_space_ia #12),
-    demo-provisioning automation (G2), account-intelligence-record CRM (G3), pricing-engine service (G3),
-    pricing-numbers population from finance (G3 — non-codex), briefings-content CMS migration (G3).
+  - Proposed follow-up plan name (so each refactor item becomes its own `plans/archive/2026_08/*.plan.md`) Expected
+    items: restriction-profile service/engine (G1), LOCKED-VISIBLE UI service-tile mode (G1), prospect-reg +
+    prospect-dart personas (G1), broken-href probable-5 cleanup (G1), **phase-unification refactor — no forked backtest
+    / paper / live UIs; terminal + catalogue + observe are phase-toggled over the same component tree (rule 03
+    sub-claims b–e)** (G1), **instruction-schema validation service — external-facing contract from Stage 3B
+    instruction-schema-contract.md; validates inbound client instructions against schema + venue/instrument
+    compatibility + licensing; rejects non-compliant shapes with actionable errors; feeds pricing-engine with
+    integration-depth signal (rule 10)** (G1), fund_id+client_id JWT claims (G2), per-client API key issuance (G2),
+    4-catalogue parity refactor: Data (G2), ML (G2), Execution-Algo (G2) w/ TCA page, staging Firebase provisioning (G2
+    — already tracked in five_space_ia #12), demo-provisioning automation (G2), account-intelligence-record CRM (G3),
+    pricing-engine service (G3), pricing-numbers population from finance (G3 — non-codex), briefings-content CMS
+    migration (G3).
 - [ ] [AGENT] P0. Mark `/codex/14-customer-journeys/roadmap/next-waves.md` with a superseded-by header pointing to
       `stage-3e-refactor-plan.md`. Do NOT delete.
 - [ ] [AGENT] P0. Cross-link every refactor item in 3E to the experience playbook(s) it unblocks (e.g. "prospect-reg
@@ -352,7 +354,8 @@ dimensions are locked. 3E blocks on 3A + 3B + 3C.
 Stage 3 doesn't have a sibling "Stage 4". Its outputs feed:
 
 - Ops + finance (pricing numbers flow into Stage 2's pricing doc from Odum finance post-Stage-2)
-- Engineering (each Stage 3E refactor item spawns its own `plans/active/*.plan.md` follow-up with its own agent prompt)
+- Engineering (each Stage 3E refactor item spawns its own `plans/archive/2026_08/*.plan.md` follow-up with its own agent
+  prompt)
 - Sales + leadership (Stage 3D presentation is the end-product-post-refactor view; use for internal alignment + investor
   briefings)
 

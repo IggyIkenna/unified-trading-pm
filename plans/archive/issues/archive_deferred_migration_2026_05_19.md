@@ -14,7 +14,9 @@ created: 2026-05-19
 priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-sweep_progress: In progress — 24 archived plans identified; sweep ongoing; archive this doc when all high-priority DEFERRED items have named successor plans
+sweep_progress:
+  In progress — 24 archived plans identified; sweep ongoing; archive this doc when all high-priority DEFERRED items have
+  named successor plans
 ---
 
 ## [ACKED-INTO-PLAN] RESOLVED 2026-05-22 — full 24/24 sweep complete; 10 orphaned DEFERRED items migrated to epics (sports_master, plan_hygiene_master, defi_master, mtds_mdps_master, manifest_master). Archive this doc.
@@ -112,7 +114,7 @@ DEFERRED items (no successor plan pointer).
 ### `plans/archive/risk_simulations_limits_alerting_2026_05_10.md`
 
 - L269: ``global.py`) to avoid Python keyword collision per spawn instructions. **DEFERRED**: closed-set `RiskRuleId``
-- L341: ``RiskRuleConsequence` → `RiskGateDecision`; 32 synthetic-fire tests green Phase 8.A/8.B) **DEFERRED**: legacy`
+- L341: ``RiskRuleConsequence`→`RiskGateDecision`; 32 synthetic-fire tests green Phase 8.A/8.B) **DEFERRED**: legacy`
 - L354:
   `new tests in `tests/unit/test_risk_preflight_gate.py`; full unit suite green. **DEFERRED**: TEST_ONLY currently`
 - ...3 more items
@@ -147,7 +149,7 @@ DEFERRED items (no successor plan pointer).
 
 ### `plans/archive/work_split_2026_05_07_ikenna_5tab_layout.md`
 
-- L514: ``**DEFERRED**` / `**NICE-TO-HAVE**` body prefix + provenance citation). Same logical unit as discovery.`
+- L514: ``**DEFERRED**`/`**NICE-TO-HAVE**` body prefix + provenance citation). Same logical unit as discovery.`
 
 ### `plans/archive/work_split_2026_05_08_harsh.md`
 
@@ -161,7 +163,7 @@ DEFERRED items (no successor plan pointer).
 
 ### `plans/archive/work_split_2026_05_11_ikenna.md`
 
-- L552: `MUST already be a `- [ ]`plan todo or a`**DEFERRED**` annotation in plans/active/. Run`
+- L552: `MUST already be a `- [ ]`plan todo or a`**DEFERRED**` annotation in plans/archive/2026_08/. Run`
 
 ## Why it matters
 
@@ -398,7 +400,7 @@ Detailed read completed. Findings:
 
 - dex_swaps write path to GCS + manifest entries for METEORA/PHOENIX/JUPITER/LIFINITY: DEFERRED to MTDS Solana venue
   coverage expansion plan. The referenced successor is `solana_defi_coverage_gaps_2026_05_13.md` at
-  `plans/active/issues/` but **that file does NOT EXIST**.
+  `plans/archive/issues/` but **that file does NOT EXIST**.
 
 **Assessment**: Missing successor plan. The MTDS Solana perp DEX source wiring is a genuine open item. Added P2 stub
 todo to `plans/epics/mtds_mdps_master.md`.

@@ -21,6 +21,7 @@ related:
     ../epics/strategy_master.md,
     cross_venue_funding_reversion_research_2026_07_24,
     carry_strategy_ensemble_productionization_2026_07_24,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-16
 parent_epic: strategy_master

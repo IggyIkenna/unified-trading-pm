@@ -41,6 +41,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: instruments_master
@@ -568,8 +569,8 @@ Two genuine hits in this plan:
 2. (line ~1724) "**DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the
    gas/sfi 'VM RUNNING but work-process silent' class." **Not yet identified** — no separate successor plan exists; this
    is tracked as this same plan's own open `- [ ]` [SCRIPT] P2 todo (line ~1724), Target repo: deployment-service. It
-   remains this plan's responsibility until shipped; grepping `plans/active/` and `plans/epics/` found no other plan
-   that has picked up the "silent-worker watchdog" item.
+   remains this plan's responsibility until shipped; grepping `plans/archive/2026_08/` and `plans/epics/` found no other
+   plan that has picked up the "silent-worker watchdog" item.
 
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
   frontmatter, body byte-identical): KEEP-NA, valid — open set spans credential-gated venue onboarding, a cross-plan

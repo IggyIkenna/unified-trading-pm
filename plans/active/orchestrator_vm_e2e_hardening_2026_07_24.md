@@ -16,6 +16,7 @@ related:
   [
     plans/active/monitoring_control_plane_master_2026_06_10.md,
     plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: observability_master

@@ -27,6 +27,7 @@ related:
     /plans/archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-08

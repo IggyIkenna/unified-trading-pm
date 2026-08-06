@@ -139,23 +139,23 @@ to matter most.
       -- this determines whether the SKILL.md spec tightening actually changed sub-agent behavior or the miss found here
       is representative of an ongoing gap. — measured, not a theoretical claim. Reused `scripts/docs/docspec.py`'s
       frontmatter parser (same pattern `generate_context_scope_inventory.py` uses) in a one-off scratchpad script to
-      find every `plans/active/*.md` + `plans/active/issues/*.md` doc whose most recent `context-scout YYYY-MM-DD`
-      Progress Log marker is >= 2026-08-01, then checked whether each doc's `context_scope` carries >=1 entry that isn't
-      a `/plans/` or `/codex/` reference (a real source path). **Population: 447 docs** (far larger than the requested
-      20-30 -- the whole corpus got touched by that day's backfill batches, not a small slice), of which 67 are
-      legitimate zero-source carve-outs per SKILL.md's own bar (dispatch-batch coordinators / `*_finalize` gates).
-      **Rate excluding legitimate carve-outs: 236/380 = 62.1%** (raw across all 447: 63.5%) -- **up from the 2026-07-30
-      baseline of 51%**, a genuine ~11-point improvement, not flat. Also drew a 25-doc seeded-random sample from the
-      same non-carveout population (matching the task's requested sample size/methodology): 21/25 = 84.0% -- higher than
-      the full-population rate, illustrating real sampling variance at n=25 (this is why the full 380-doc denominator is
-      the more reliable number, not the small sample). Did not further prune the "zero-source, non-carveout" list for
-      other legitimate-but-unflagged coordinator shapes (e.g. `*_consolidated_closeout` docs, which read similarly to
-      dispatch-batch coordinators but weren't in the exclusion regex) -- so 62.1% is a conservative floor, the true rate
-      is likely somewhat higher. **Verdict: the SKILL.md spec tightening measurably changed sub-agent behavior** (51% ->
-      62-64%); the miss found in item 1 above was a real individual-doc failure, not evidence the tightening had zero
-      effect corpus-wide. Script: `scratchpad/spotcheck_source_path_rate.py` (session-scoped, not committed -- one-off
-      analysis, not a standing tool; the P3 item below (item 3, the deterministic post-hoc lint) is the tracked
-      follow-up if a repeatable version is wanted).
+      find every `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` doc whose most recent
+      `context-scout YYYY-MM-DD` Progress Log marker is >= 2026-08-01, then checked whether each doc's `context_scope`
+      carries >=1 entry that isn't a `/plans/` or `/codex/` reference (a real source path). **Population: 447 docs**
+      (far larger than the requested 20-30 -- the whole corpus got touched by that day's backfill batches, not a small
+      slice), of which 67 are legitimate zero-source carve-outs per SKILL.md's own bar (dispatch-batch coordinators /
+      `*_finalize` gates). **Rate excluding legitimate carve-outs: 236/380 = 62.1%** (raw across all 447: 63.5%) -- **up
+      from the 2026-07-30 baseline of 51%**, a genuine ~11-point improvement, not flat. Also drew a 25-doc seeded-random
+      sample from the same non-carveout population (matching the task's requested sample size/methodology): 21/25 =
+      84.0% -- higher than the full-population rate, illustrating real sampling variance at n=25 (this is why the full
+      380-doc denominator is the more reliable number, not the small sample). Did not further prune the "zero-source,
+      non-carveout" list for other legitimate-but-unflagged coordinator shapes (e.g. `*_consolidated_closeout` docs,
+      which read similarly to dispatch-batch coordinators but weren't in the exclusion regex) -- so 62.1% is a
+      conservative floor, the true rate is likely somewhat higher. **Verdict: the SKILL.md spec tightening measurably
+      changed sub-agent behavior** (51% -> 62-64%); the miss found in item 1 above was a real individual-doc failure,
+      not evidence the tightening had zero effect corpus-wide. Script: `scratchpad/spotcheck_source_path_rate.py`
+      (session-scoped, not committed -- one-off analysis, not a standing tool; the P3 item below (item 3, the
+      deterministic post-hoc lint) is the tracked follow-up if a repeatable version is wanted).
 - [x] ✅ [SCRIPT] P3. Add a cheap deterministic post-hoc lint to Phase 3's report (not a blocker, a surfaced warning):
       for each doc scouted with zero source-path entries, check whether the doc body contains any token matching a known
       filename/module pattern (e.g. `\w+_service\b`, `\.py\b`, a `repos:` frontmatter repo name followed by a path-like

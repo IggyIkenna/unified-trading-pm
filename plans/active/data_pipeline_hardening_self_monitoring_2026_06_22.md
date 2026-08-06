@@ -29,6 +29,7 @@ related:
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
     /plans/archive/2026_07/data_pipeline_hardening_self_monitoring_history_2026_07_24.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-22
 parent_epic: observability_master
@@ -182,7 +183,7 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [x] ✅ P1. **Escalation hop** DONE deployment-service@5866f12 (`data_pipeline_monitors/escalation.py::route_finding`:
       `auto_recover`/`file_issue`[writes PM issue-doc + pings inbox; defers via event details when no PM clone on
       disk]/`page_operator`; DP\_\* always emitted). **Escalation hop** mirroring `ci_failure_watcher.py`: `file_issue`
-      tier auto-files `plans/active/issues/<slug>_<date>.md` + pings the orchestrator inbox when a deterministic
+      tier auto-files `plans/archive/issues/<slug>_<date>.md` + pings the orchestrator inbox when a deterministic
       candidate list is non-empty; `auto_recover` runs the in-band fix; `page_operator` routes CRITICAL with no recover
       scope. — **deployment-service / unified-trading-pm**
 - [x] ✅ [DISCOVERY] P2. **RECONCILED + DONE 2026-06-22**: the Wave-3 sub-agent's `quality-gates-v2.yml` edit was NOT
@@ -485,11 +486,11 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - [x] ✅ P2. Define the handoff — DONE e2e-testing@c045426 (`scripts/audit/_dp_common.py` `file_escalation_issue()` +
       `write_candidate_csv()`, shared by the hygiene + re-probe audits): deterministic scripts write candidate lists to
       `plans/audit/results/<slug>_<date>.csv`; when non-empty, `file_escalation_issue` auto-files
-      `plans/active/issues/<slug>_<date>.md` (the standard `title`/`created`/`author`/`source`/`locked_by` frontmatter +
-      `## What I found` / `## Why it matters` / `## Recommended decision` body, idempotent per (slug, UTC-day)) for a
-      planning-VM slot. Both the hygiene RED and the re-probe disagreement paths call it. Test asserts the doc is
-      written with the candidate CSV linked. — **unified-trading-pm (issue/CSV are data output to the PM clone) +
-      planning-VM**
+      `plans/archive/issues/<slug>_<date>.md` (the standard `title`/`created`/`author`/`source`/`locked_by`
+      frontmatter + `## What I found` / `## Why it matters` / `## Recommended decision` body, idempotent per (slug,
+      UTC-day)) for a planning-VM slot. Both the hygiene RED and the re-probe disagreement paths call it. Test asserts
+      the doc is written with the candidate CSV linked. — **unified-trading-pm (issue/CSV are data output to the PM
+      clone) + planning-VM**
 
 ## Codex SSOT updates (mandatory before archival)
 

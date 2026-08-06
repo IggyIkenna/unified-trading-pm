@@ -25,6 +25,7 @@ related:
   [
     instrument_id_format_canonicalization_2026_07_08,
     defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-03
 author: unknown

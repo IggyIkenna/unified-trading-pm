@@ -259,8 +259,8 @@ locked_by:
       coverage denominator (computed directly off this index) no longer counts them by construction. No further action
       needed; not re-running `--apply` (would be a no-op against an already-empty target). **Update 2026-07-26T02:xxZ**:
       the source A2 issue doc's own mirror checkbox is now also flipped —
-      `sports_features_layer_findings_sweep_2026_07_18.md` was 1,846 lines (over the `plans/active/` 1,000L hard cap,
-      which blocked staging ANY edit to it regardless of diff size); resolved by a verbatim, byte-for-byte,
+      `sports_features_layer_findings_sweep_2026_07_18.md` was 1,846 lines (over the `plans/archive/2026_08/` 1,000L
+      hard cap, which blocked staging ANY edit to it regardless of diff size); resolved by a verbatim, byte-for-byte,
       zero-content-loss 3-way split by section boundary (precedent:
       `sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`) into the original filename (596L, § A-F, A2's
       checkbox now `[x]` here) + `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md` (600L, § G-N) +

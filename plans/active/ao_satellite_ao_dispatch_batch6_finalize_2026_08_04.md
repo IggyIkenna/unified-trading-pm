@@ -20,6 +20,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
     /plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-04"
 last_updated: "2026-08-04"

@@ -32,6 +32,7 @@ related:
   [
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
     /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-29
 author: unknown

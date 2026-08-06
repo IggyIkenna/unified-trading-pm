@@ -357,9 +357,9 @@ unchanged:
       canonical caps `<24.0.0` (workspace-constraints.toml:80) → coordinated widen unit like the lxml one; + twisted
       25.5.0 (fix 26.4.0 = major, via binance-futures-connector), mako 1.3.12 + ujson 5.12.1 in-range bumps. Repos:
       unified-trading-pm + execution-service (+lockers). **REHOME CHECK 2026-07-27**: no
-      `infra_*_satellite_ao_dispatch_batch2*` plan exists yet (`ls plans/active/ | grep -i 'infra.*batch2'` → empty) —
-      staying open here per the fallback instruction rather than pointing at a plan that doesn't exist. Rehome into
-      batch2's own drafting pass once it exists.
+      `infra_*_satellite_ao_dispatch_batch2*` plan exists yet (`ls plans/archive/2026_08/ | grep -i 'infra.*batch2'` →
+      empty) — staying open here per the fallback instruction rather than pointing at a plan that doesn't exist. Rehome
+      into batch2's own drafting pass once it exists.
 - [ ] [CODE] P2. **domain-client base-gate check is STALE + self-contradictory (confirmed 2026-06-12)** — it demands
       `unified_domain_client` which exists NOWHERE in the workspace (clients live in `unified_trading_library.domain`),
       has no opt-out, and CONTRADICTS the deep-import check for the same symbol (top-level import fires one check,

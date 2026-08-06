@@ -29,6 +29,7 @@ related:
     /codex/12-agent-workflow/commit-push-flip-rule.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 author: unknown

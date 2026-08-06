@@ -46,6 +46,7 @@ context_scope:
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
     /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
     unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 ---
 
@@ -93,15 +94,15 @@ QG-green per repo.
 ## Todos
 
 - [x] ✅ [REVIEW] P1. Verify (agent, no human) that every reader in the Phase-2 inventory reads Firestore-first — grep
-      the migrated-reader checklist and assert none still parse the GCS `active/` blobs, and that dual-write has been
-      mirroring correctly for the agreed soak. If ANY reader is unmigrated, HALT (do not proceed to the GCS-write drop)
-      and record the offender in the Progress Log. — **VERIFY RAN → HALT.** The dual-write soak precondition is UNMET:
-      the prod `deployments` Firestore collection is EMPTY (0 docs, measured 2026-07-14) because the flag defaults off
-      and dual-write has never been enabled on the live fleet (that needs the deployment-api deploy + flag-on, which the
-      operator deprioritized). Dropping the GCS-write / deleting GCS blobs now would DESTROY the only populated registry
-      while Firestore is empty — a data-loss catastrophe. Correctly HALTING here per this todo's own rule. The remaining
-      P3 todos (drop-GCS-write, snapshot+delete) are the irreversible cutover and stay unchecked/BLOCKED until the
-      deploy + soak + parity-validation happen. See Progress Log.
+      the migrated-reader checklist and assert none still parse the GCS `archive/2026_08/` blobs, and that dual-write
+      has been mirroring correctly for the agreed soak. If ANY reader is unmigrated, HALT (do not proceed to the
+      GCS-write drop) and record the offender in the Progress Log. — **VERIFY RAN → HALT.** The dual-write soak
+      precondition is UNMET: the prod `deployments` Firestore collection is EMPTY (0 docs, measured 2026-07-14) because
+      the flag defaults off and dual-write has never been enabled on the live fleet (that needs the deployment-api
+      deploy + flag-on, which the operator deprioritized). Dropping the GCS-write / deleting GCS blobs now would DESTROY
+      the only populated registry while Firestore is empty — a data-loss catastrophe. Correctly HALTING here per this
+      todo's own rule. The remaining P3 todos (drop-GCS-write, snapshot+delete) are the irreversible cutover and stay
+      unchecked/BLOCKED until the deploy + soak + parity-validation happen. See Progress Log.
 - [ ] [BACKEND] P1. Drop the GCS-write half — remove the dual-write branch so `register`/`heartbeat`/`complete` write
       Firestore ONLY; delete the `deployment_registry_firestore_dualwrite` flag. Firestore is the sole SSOT. Confirm the
       Phase-0 reaper now operates on the Firestore store.

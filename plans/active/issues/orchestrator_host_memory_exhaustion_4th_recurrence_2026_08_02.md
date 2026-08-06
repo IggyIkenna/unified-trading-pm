@@ -310,7 +310,7 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
     re-cited as fresh evidence).
   - **`[OPERATOR] P1` (mechanical-enforcement) still unruled** — ~24-30h+ since first flagged (2026-08-02), past
     esc17/esc18 with no operator answer in `blocked_queue` or this Progress Log. Fresh grep of
-    `plans/active/issues/*.md`: no duplicate/superseding doc (only pre-existing related-but-distinct ones).
+    `plans/archive/issues/*.md`: no duplicate/superseding doc (only pre-existing related-but-distinct ones).
   - **Net**: active P1, 3rd calendar day, plateaued not trending toward resolution. Main is surfacing the
     elapsed-time-since-escalation gap to the operator for a ruling on the mechanical-enforcement approach.
 

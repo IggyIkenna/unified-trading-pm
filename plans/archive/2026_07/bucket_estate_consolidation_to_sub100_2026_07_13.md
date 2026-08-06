@@ -550,7 +550,7 @@ KAMINO/SOLEND/MARGINFI Solana-lending (bare pre-canonicalisation shape, `instrum
   terminal `status=failed` were ALREADY correctly captured in the raw GCS `EXIT_STATUS` blob (BUG-4, a pre-existing
   2026-05-05 fix) — NOT silently masked as success. The real, newly-found gap is one level deeper: this VM's daemon got
   SIGKILLed before it could call its own `complete()`/registry-archive step (likely mid a slow final-log-upload for its
-  790K-line run.log), so the deployment registry entry sat orphaned in `active/` for ~20h until
+  790K-line run.log), so the deployment registry entry sat orphaned in `archive/2026_08/` for ~20h until
   `unified_trading_library.deployment_registry.DeploymentsRegistry.reap_stale()` (deployment-api's 15-min leader-elected
   background reaper) finally archived it — correctly as `status=failed`, but with the GENERIC `exit_code=125` reap
   sentinel, discarding the TRUE `rc=137` that was sitting the whole time in

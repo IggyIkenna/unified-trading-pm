@@ -23,6 +23,7 @@ related:
   [
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-03"
 author: unknown

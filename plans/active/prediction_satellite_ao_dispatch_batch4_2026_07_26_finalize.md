@@ -20,6 +20,7 @@ related:
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-26"
 last_updated: "2026-07-30"

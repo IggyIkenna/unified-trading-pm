@@ -16,12 +16,18 @@ owner: ikenna
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-overview: 'Workspace-organization sweep covering two related cleanups: (1) extension rename `.plan.md` → `.md` for native markdown-preview support across IDEs (Cursor, VS Code) without losing git history — **scoped to `plans/active/` and `plans/epics/` only** (archive + ai + other dirs left untouched per operator direction 2026-05-08); (2) per-domain epic consolidation where a master plan + a May-23 epic live in the same domain (tradfi_master + sp_prediction_may_23_2026 etc.). Both are doc-only changes; both compose with the 9-master move to plans/epics/ shipped 2026-05-08.'
+overview:
+  "Workspace-organization sweep covering two related cleanups: (1) extension rename `.plan.md` → `.md` for native
+  markdown-preview support across IDEs (Cursor, VS Code) without losing git history — **scoped to
+  `plans/archive/2026_08/` and `plans/epics/` only** (archive + ai + other dirs left untouched per operator direction
+  2026-05-08); (2) per-domain epic consolidation where a master plan + a May-23 epic live in the same domain
+  (tradfi_master + sp_prediction_may_23_2026 etc.). Both are doc-only changes; both compose with the 9-master move to
+  plans/epics/ shipped 2026-05-08."
 type: mixed
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: []
 isProject: false
 ---
@@ -44,24 +50,24 @@ isProject: false
 
 ### A1. Rename mechanics + git history preservation
 
-> **Scope: `plans/active/` + `plans/epics/` only.** `plans/archive/` + `plans/ai/` + any other plan-housing dirs stay on
-> `.plan.md` (archived plans are frozen historical state; renaming risks breaking historical references in commit
-> messages, codex archaeology, and external links).
+> **Scope: `plans/archive/2026_08/` + `plans/epics/` only.** `plans/archive/` + `plans/ai/` + any other plan-housing
+> dirs stay on `.plan.md` (archived plans are frozen historical state; renaming risks breaking historical references in
+> commit messages, codex archaeology, and external links).
 
 todos:
 
-- [ ] [SCRIPT] P0. **Single-commit rename via `git mv` for every `*.plan.md` file in `plans/active/` and
+- [ ] [SCRIPT] P0. **Single-commit rename via `git mv` for every `*.plan.md` file in `plans/archive/2026_08/` and
       `plans/epics/`.** Use a script that walks each of the two directories, runs `git mv X.plan.md X.md` per file. All
-      renames committed in ONE commit so `git log --follow plans/active/<new>.md` traces cleanly through the boundary.
-      **Critical:** the rename itself must NOT modify file content — content modifications belong in subsequent commits,
-      otherwise git's similarity heuristic might fall below 100% threshold for some files.
+      renames committed in ONE commit so `git log --follow plans/archive/2026_08/<new>.md` traces cleanly through the
+      boundary. **Critical:** the rename itself must NOT modify file content — content modifications belong in
+      subsequent commits, otherwise git's similarity heuristic might fall below 100% threshold for some files.
 
 - [ ] [SCRIPT] P0. **Verify every renamed file's history traces back to the .plan.md original**. Smoke check: pick 3
-      random renamed files in `plans/active/`, run `git log --follow <new-name>` and assert at least 5 commits show.
-      Pick 3 from `plans/epics/` (these were just moved 2026-05-08; history short but should still trace through both
-      the move + the rename).
+      random renamed files in `plans/archive/2026_08/`, run `git log --follow <new-name>` and assert at least 5 commits
+      show. Pick 3 from `plans/epics/` (these were just moved 2026-05-08; history short but should still trace through
+      both the move + the rename).
 
-- [ ] [SCRIPT] P0. **Sanity check — no `.plan.md` files left in `plans/active/` or `plans/epics/`**.
+- [ ] [SCRIPT] P0. **Sanity check — no `.plan.md` files left in `plans/archive/2026_08/` or `plans/epics/`**.
       `find plans/active plans/epics -name "*.plan.md"` returns zero hits post-rename. `plans/archive/` + `plans/ai/`
       retain their `.plan.md` files unchanged.
 
@@ -70,7 +76,7 @@ todos:
 todos:
 
 - [ ] [SCRIPT] P0. **Markdown link rewrite across all plans + codex + governance docs**. Pattern: rewrite ONLY
-      references to renamed files (those that lived in `plans/active/` or `plans/epics/`). References to
+      references to renamed files (those that lived in `plans/archive/2026_08/` or `plans/epics/`). References to
       `plans/archive/X.plan.md` or `plans/ai/X.plan.md` stay unchanged. Build the renamed-file allowlist first (output
       of `git mv` from A1), then sed-rewrite each `[...](path/X.plan.md)` → `[...](path/X.md)` only when X is in the
       allowlist. Workspace scope: `unified-trading-pm/plans/**/*.md` + `unified-trading-pm/codex/**/*.md` + per-repo
@@ -181,8 +187,9 @@ todos:
 todos:
 
 - [ ] [SCRIPT] P1. **Update `plans/PLAN_FORMAT.md`**. Add: filename convention (`<slug>.md` not `<slug>.plan.md`);
-      3-layer plan model (May-23 epic at `plans/epics/` + granular master at `plans/epics/` or `plans/active/` +
-      sub-plan at `plans/active/`). Reference the 9-master move + this rename as the codifying commits.
+      3-layer plan model (May-23 epic at `plans/epics/` + granular master at `plans/epics/` or
+      `plans/archive/2026_08/` + sub-plan at `plans/archive/2026_08/`). Reference the 9-master move + this rename as the
+      codifying commits.
 
 - [ ] [SCRIPT] P1. **Update `cursor-configs/CLAUDE.md` "Plan Locking" + "Plan Format" sections**. Reference the new
       filename convention + 3-layer model. Symlinks propagate.

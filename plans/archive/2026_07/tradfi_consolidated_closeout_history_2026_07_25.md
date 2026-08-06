@@ -56,9 +56,9 @@ depends_on:
 source: >-
   Plan-hygiene discipline (task_template.md §3 finding J — extract fully-closed sections as you go rather than wait for
   a remediation pass), applied during a 2026-07-25 line-cap-driven split of `tradfi_consolidated_closeout_2026_07_18.md`
-  (927 lines, over the 500L soft-warn line for a plans/active/ doc and drifting back toward the 1000L hard cap since the
-  2026-07-24 3-way split). This companion carries the 2 fully-closed Phase C mega-verdicts + the full condensed Progress
-  Log; the STILL-OPEN Phase A2 + Phase C residue moved instead to
+  (927 lines, over the 500L soft-warn line for a plans/archive/2026_08/ doc and drifting back toward the 1000L hard cap
+  since the 2026-07-24 3-way split). This companion carries the 2 fully-closed Phase C mega-verdicts + the full
+  condensed Progress Log; the STILL-OPEN Phase A2 + Phase C residue moved instead to
   `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (a live, active child) — see that doc for the current open
   work, not here.
 assigned_role: data_engineering

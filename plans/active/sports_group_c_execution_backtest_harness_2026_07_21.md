@@ -18,6 +18,7 @@ related:
   [
     plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
     /codex/04-architecture/backtest-groups.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"

@@ -6,7 +6,7 @@ title:
   migration phased plan, features-launcher replay, rate-limiting divisor bug, capture-throughput waste)
 summary:
   "Verbatim, byte-for-byte extraction (2026-07-26, plan line-cap remediation — the original 1,843-line doc exceeded the
-  `plans/active/` 1,000L hard cap) of the middle third of
+  `plans/archive/2026_08/` 1,000L hard cap) of the middle third of
   `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md`, PART 1 of 3. Continues directly from Part 1
   (§ A-F) and precedes Part 3 (§ O-AA). Carries § G (the 2026-07-18 round-FIXTURES backfill operational log — two failed
   launches, watchdog-metric root-cause, fix shipped, deployment blocked then unblocked), § H (api-football SINGLETON
@@ -48,7 +48,7 @@ created: 2026-07-18
 author: unknown
 source:
   - Split 2026-07-26 from `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` for line-cap
-    remediation (1,843L, over the `plans/active/` 1,000L hard cap enforced by `check_line_caps.sh`) — precedent
+    remediation (1,843L, over the `plans/archive/2026_08/` 1,000L hard cap enforced by `check_line_caps.sh`) — precedent
     `sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`. The findings below were originally captured
     2026-07-18 during the sports investigation sweep documented in Part 1's frontmatter.
 assigned_vm: NA

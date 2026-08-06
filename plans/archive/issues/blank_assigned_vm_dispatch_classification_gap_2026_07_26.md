@@ -5,8 +5,8 @@ summary: >-
   Auditing the mass-flip of AO-dispatch batch plans (2026-07-26) surfaced a THIRD population beyond "flipped" and
   "correctly `NA`/LOCAL": 58 active docs carry a genuinely blank `assigned_vm:` frontmatter field (not `planning`, not
   `NA` — literally unset), 34 of which still have open todos (198 total). `regen_backlog_from_plan.py` walks BOTH
-  `plans/active/*.md` AND `plans/active/issues/*.md` (verified by reading the source, not assumed), so these ARE
-  structurally eligible to be picked up the moment `assigned_vm` is set to `planning` — they are sitting outside the
+  `plans/archive/2026_08/*.md` AND `plans/archive/issues/*.md` (verified by reading the source, not assumed), so these
+  ARE structurally eligible to be picked up the moment `assigned_vm` is set to `planning` — they are sitting outside the
   dispatch pipeline not because they were deliberately scoped LOCAL, but because nobody ever filled in the field. 57 of
   the 58 are `doc_type: issue`; the one `doc_type: plan` is `sports_consolidated_closeout_2026_07_19.md` (37 open
   todos), which almost certainly SHOULD be `NA` to match the established consolidated-closeout hub pattern (ci/ao/infra
@@ -80,7 +80,7 @@ playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md,
 plan_reconciler_doc_hygiene_findings_2026_06_17.md,
 execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
 e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md, defi_code_codex_drift_2026_05_27.md,
-aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md (all `plans/active/issues/`).
+aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md (all `plans/archive/issues/`).
 
 **Skew note**: most of these predate 2026-07 (several from 2026-06-01 through 2026-06-24), i.e. they likely predate the
 `assigned_vm` field becoming a strictly-enforced required field for issue docs — a plausible root cause for WHY the

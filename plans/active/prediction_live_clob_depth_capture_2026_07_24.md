@@ -21,6 +21,7 @@ related:
     plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06,
     plans/active/prediction_capture_incident_remediation_2026_07_06,
     plans/active/issues/plan_line_cap_remediation_2026_07_23,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 parent_epic: predictions_master

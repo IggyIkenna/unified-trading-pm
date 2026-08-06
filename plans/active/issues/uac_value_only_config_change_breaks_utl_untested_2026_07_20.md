@@ -24,6 +24,7 @@ related:
   [
     /plans/archive/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
     /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-20
 author: unknown

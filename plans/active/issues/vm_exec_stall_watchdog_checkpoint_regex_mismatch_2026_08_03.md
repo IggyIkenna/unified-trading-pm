@@ -34,6 +34,7 @@ related:
   [
     /plans/archive/2026_08/reap_zombies_wrong_log_path_kills_healthy_vms_2026_08_03.md,
     /plans/archive/2026_08/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-03"
 author: unknown
@@ -590,7 +591,7 @@ wall-clock time and needs a prompt relaunch WITH this session's launcher fix onc
   `quality-gates.sh` run (accidentally run before committing) failed ONLY on the wall-clock meta-gate (336s > 300s)
   under measured host contention (load avg 34-39 from concurrent slots' QG/pytest runs) — every real content gate
   passed. Corrected the ordering (commit first, per `worker.md`), re-ran with the sanctioned `IGNORE_TIMEOUT=true`
-  contention escape (`codex/06-coding-standards/quality-gates.md`), green in 276s, sentinel matched the committed HEAD
+  contention escape (`/codex/06-coding-standards/quality-gates.md`), green in 276s, sentinel matched the committed HEAD
   exactly. `deployment-service@d172008`, quickmerge landed on `live-defi-rollout`, SHA verified ancestor of origin.
   Considered (not implemented, out of the operator's named 3-bug scope): a more precise
   `canonical-migration-sports-instruments-` VM-prefix-registry bucket entry (mirroring the existing

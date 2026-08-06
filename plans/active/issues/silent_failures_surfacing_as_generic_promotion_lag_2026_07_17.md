@@ -24,6 +24,7 @@ related:
     /plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
     /codex/04-architecture/ci-alerting.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-17
 author: unknown

@@ -62,15 +62,15 @@ drift_direction: advance-code
 
 ## Aggregated source docs (referenced, not duplicated — every other active sports + sports-touching plan/issue)
 
-> Completeness check: `grep -l '^asset_group:.*sports' plans/active/*.md plans/active/issues/*.md` (run 2026-07-24),
-> cross-referenced against this doc's own `related:` list and `ls plans/active/ | grep -i sports`. **5 fold-in plans are
-> intentionally OMITTED** — `sports_manifest_canonicalisation_2026_06_01.md`,
+> Completeness check: `grep -l '^asset_group:.*sports' plans/archive/2026_08/*.md plans/archive/issues/*.md` (run
+> 2026-07-24), cross-referenced against this doc's own `related:` list and `ls plans/archive/2026_08/ | grep -i sports`.
+> **5 fold-in plans are intentionally OMITTED** — `sports_manifest_canonicalisation_2026_06_01.md`,
 > `sports_p2_history_apifootball_2015_to_present_2026_06_27.md`, `sports_p2_features_history_to_ml_ready_2026_06_27.md`
 > (all 3 archived to `plans/archive/2026_07/`), plus `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` and
-> `sports_odds_exchange_fixed_fork_2026_07_18.md` (still in `plans/active/` but `status: superseded`) — all 5 carry
-> `superseded_by: sports_consolidated_closeout_2026_07_19.md`; their live content is already absorbed into Track C/S2
-> above, so re-listing them here would be pure duplication. Only unchecked `- [ ]` top-level todos are counted below;
-> `status: resolved` issue docs with residual unchecked boxes are listed as-is (resolved ≠ the file has zero open
+> `sports_odds_exchange_fixed_fork_2026_07_18.md` (still in `plans/archive/2026_08/` but `status: superseded`) — all 5
+> carry `superseded_by: sports_consolidated_closeout_2026_07_19.md`; their live content is already absorbed into Track
+> C/S2 above, so re-listing them here would be pure duplication. Only unchecked `- [ ]` top-level todos are counted
+> below; `status: resolved` issue docs with residual unchecked boxes are listed as-is (resolved ≠ the file has zero open
 > checkboxes — flagged per-doc).
 
 - **Entry-point / progress-log companions (ARCHIVED 2026-07-24)**:

@@ -22,6 +22,7 @@ related:
   [
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-10
 author: unknown

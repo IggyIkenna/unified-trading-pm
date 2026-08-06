@@ -82,9 +82,9 @@ gate's actual resolve-vs-match behavior and (2) an operator decision on the cita
       `quality-gates.sh` invocation does NOT pass that flag, so a bogus short-hash citation silently passed by design
       (the "unresolvable" case originally covered both "no gcloud/auth here" and "gcloud ran, NOT_FOUND" with the same
       soft-skip). Operator direct answer: turn on `--require-verification` — but a corpus sweep first (84 `cloudbuild=`
-      citations across `plans/` + `codex/`) found only 1 currently-in-scope (top-level `plans/active/*.md`, per the
-      checker's own default non-recursive scan) affected string, and it was an ellipsis-truncated informal reference to
-      an already-cited build, not a genuine bogus citation — fixed
+      citations across `plans/` + `codex/`) found only 1 currently-in-scope (top-level `plans/archive/2026_08/*.md`, per
+      the checker's own default non-recursive scan) affected string, and it was an ellipsis-truncated informal reference
+      to an already-cited build, not a genuine bogus citation — fixed
       (`consolidator_throughput_backlog_monitor_2026_07_09.md`). Running the checker for real against the live corpus
       surfaced a sharper problem: 8 properly UUID-shaped citations no longer resolve — not bogus, just aged out of Cloud
       Build's retention window — so blindly turning on `--require-verification` would newly fail the standard QG on

@@ -93,13 +93,13 @@ these until batch7 is fully done.**
       residual DEFERRED items → banner → codex-alignment check → update CLAUDE.md/codex on any new contract → update
       every referrer's path corpus-wide → clear lock). Repo: unified-trading-pm. Done when: batch7 is in
       `plans/archive/2026_08/` with a superseded_by/archived banner and zero remaining referrers to its old
-      `plans/active/` path. — **DONE 2026-08-02 (slot-13)**, 6-step ritual: (1) both Deferred items already fully
-      resolved by todo 2 above (cd bug shipped elsewhere, QG-harness resolved-no-action) — nothing residual to migrate
-      into a new todo. (2) archived-banner added to both this doc and batch7 itself, `status: complete` set on both. (3)
-      codex-alignment check: this finalize's own work is pure doc-reconciliation + a code-evidence scoping read, no new
-      code/behavior/contract shipped — no codex doc needs updating. (4) same conclusion — no new contract for
-      CLAUDE.md/codex to record. (5) updated every prose pointer-citation corpus-wide to the `plans/archive/2026_08/`
-      path: `defi_consolidated_closeout_2026_07_18.md`,
+      `plans/archive/2026_08/` path. — **DONE 2026-08-02 (slot-13)**, 6-step ritual: (1) both Deferred items already
+      fully resolved by todo 2 above (cd bug shipped elsewhere, QG-harness resolved-no-action) — nothing residual to
+      migrate into a new todo. (2) archived-banner added to both this doc and batch7 itself, `status: complete` set on
+      both. (3) codex-alignment check: this finalize's own work is pure doc-reconciliation + a code-evidence scoping
+      read, no new code/behavior/contract shipped — no codex doc needs updating. (4) same conclusion — no new contract
+      for CLAUDE.md/codex to record. (5) updated every prose pointer-citation corpus-wide to the
+      `plans/archive/2026_08/` path: `defi_consolidated_closeout_2026_07_18.md`,
       `issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`,
       `issues/defi_adapter_dead_code_audit_2026_07_24.md`,
       `issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`, `defi_migration_audit_log_2026_07_24.md`

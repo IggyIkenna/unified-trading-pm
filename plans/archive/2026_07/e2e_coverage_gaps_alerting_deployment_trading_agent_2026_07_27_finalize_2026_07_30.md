@@ -79,8 +79,8 @@ source: >-
   (step 1). Verified all 3 harnesses per the todo above; all pass with real per-service suite runs. Archived both this
   plan and its parent per the 6-step ritual: added archived banners + `status: complete`; codex-alignment check found no
   contract update needed; fixed the 3 archived source docs (`e2e_testing_020/022/023_..._2026_03_22.md`) that
-  forward-referenced the parent doc's now-stale `plans/active/...` path to the new `plans/archive/2026_07/...` path;
-  `plans/active/INDEX.md` is auto-generated (never hand-edited) — regenerated it via
+  forward-referenced the parent doc's now-stale `plans/archive/2026_08/...` path to the new `plans/archive/2026_07/...`
+  path; `plans/active/INDEX.md` is auto-generated (never hand-edited) — regenerated it via
   `scripts/plans/regenerate_active_plan_index.py` to drop both entries;
   `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` is also auto-regenerated (twice-daily Cloud
   Scheduler), left untouched; `plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` is a dated

@@ -94,11 +94,11 @@ Machine-held (`gate_on_depends: true`) until every todo in
       for the full step-by-step.
 - [x] ✅ [DATA] P2. Run the same 6-step archival ritual on `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` itself
       (now fully done) and on this finalize plan. Done-when: both are archived, `run_hygiene_sweep.sh` is clean, and no
-      active-corpus doc references either by its old `plans/active/` path. — **2026-08-01 (slot-15, data_engineering
-      craft) — DONE.** Confirmed both docs are genuinely done first: the build plan's 6 todos are all `[x]` with no
-      `locked_by`, and the finalize plan's own todo 1 already independently re-verified all 7 cited commit SHAs. Ran the
-      6-step ritual: (1) no untracked deferrals found — every follow-up mid-build already has its own tracked issue doc
-      (`defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`,
+      active-corpus doc references either by its old `plans/archive/2026_08/` path. — **2026-08-01 (slot-15,
+      data_engineering craft) — DONE.** Confirmed both docs are genuinely done first: the build plan's 6 todos are all
+      `[x]` with no `locked_by`, and the finalize plan's own todo 1 already independently re-verified all 7 cited commit
+      SHAs. Ran the 6-step ritual: (1) no untracked deferrals found — every follow-up mid-build already has its own
+      tracked issue doc (`defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`,
       `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md`); (2) added `🟢 ARCHIVED` banners +
       `status: complete` to both docs; (3)-(4) codex-alignment check: no new codex update needed — the one genuinely new
       pattern this build surfaced (`DefiManifestRecorder` missing `per_vm_shards=True`) is already the subject of its

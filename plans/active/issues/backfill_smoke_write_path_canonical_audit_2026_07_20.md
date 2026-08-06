@@ -39,6 +39,7 @@ related:
     /codex/02-data/non-canonical-path-inventory.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-20
 author: unknown

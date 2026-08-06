@@ -172,7 +172,7 @@ or review comment containing one of these is automatically review-blocking:
 | Banned phrase                           | Why it is banned                                                                                                                                                                          |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `"skip for the deadline"`               | Deadlines do not override data correctness. Strategy + paper-trade fits on the holes; a deadline built on missing data is not a real deadline.                                            |
-| `"post-cutover"`                        | Without a named successor plan in `plans/active/` + operator ack, "post-cutover" is indistinguishable from "never". Permitted only when the successor plan is cited inline.               |
+| `"post-cutover"`                        | Without a named successor plan in `plans/archive/2026_08/` + operator ack, "post-cutover" is indistinguishable from "never". Permitted only when the successor plan is cited inline.      |
 | `"most cells captured, rest later"`     | "Most" masks the specific gap. The 2026-05-20 audit showed 96.34% MISSING_EXPECTED — "most" was meaningless. Every uncaptured cell must be status-tagged (`BLOCKED-*` or backfilled).     |
 | `"the constant says v8 so good enough"` | Read the ACTUAL `schema_version` distribution in the data, not the code constant. Incident: `MANIFEST_SCHEMA_VERSION = 8` was set in code while 0% of 7.4M prod rows were at v8.          |
 | `"do A5/A6 later"`                      | Sub-audit items (A1–A6) are coupled. Skipping A5 (batch/live adapter parity) or A6 (dependency-fail propagation) leaves the audit incompletely green. All sub-audits must close together. |
@@ -239,9 +239,9 @@ for fleet rollout.
 The `_agent_pings.md` ping-ledger channel and its every-4h orphan-ping audit cron
 (`scripts/agents/audit_ping_orphans.sh` + GCP `uts-prod-orphan-ping-audit` job/scheduler/terraform) were decommissioned
 2026-07-04 — nobody read the ledgers after the 2026-06-27 single-VM AO migration. Do not write pings; route
-agent↔agent/operator comms through the agent-orchestrator HTTP server, and track work as plan todos (`plans/active/…`) —
-the underlying "every notification must reference a plan item" intent lives on in the plan-todo discipline, not in a
-ledger cron.
+agent↔agent/operator comms through the agent-orchestrator HTTP server, and track work as plan todos
+(`plans/archive/2026_08/…`) — the underlying "every notification must reference a plan item" intent lives on in the
+plan-todo discipline, not in a ledger cron.
 
 ## Composition with other rules
 

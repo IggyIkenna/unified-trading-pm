@@ -28,6 +28,7 @@ related:
     /codex/02-data/canonical-schema-groups.md,
     /codex/04-architecture/oms-protocol-and-state-machine.md,
     /codex/04-architecture/strategy-execution-protocol.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 author: unknown

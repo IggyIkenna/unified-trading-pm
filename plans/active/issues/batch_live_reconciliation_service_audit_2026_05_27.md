@@ -25,6 +25,7 @@ related:
     /codex/04-architecture/reconciliation-age-tracking.md,
     /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
     /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-05-27
 author: unknown

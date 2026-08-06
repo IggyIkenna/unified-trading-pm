@@ -41,8 +41,8 @@ code_refs:
 
 > **Purpose.** The authoritative post-Stage-3 refactor backlog. Every gap surfaced in
 > [`stage-3a-current-infra-audit.md`](stage-3a-current-infra-audit.md) has a refactor item here. Every item names enough
-> context that a future author (human or agent) can spawn a follow-up `plans/active/*.md` against it without re-doing
-> the Stage 3 analysis.
+> context that a future author (human or agent) can spawn a follow-up `plans/archive/2026_08/*.md` against it without
+> re-doing the Stage 3 analysis.
 >
 > **Parent plan:**
 > [`plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md`](../../../plans/ai/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md)
@@ -84,7 +84,7 @@ Each item below has:
 | **Blockers**                | Hard prereqs (must ship before this can)                                                |
 | **Group**                   | G1 / G2 / G3                                                                            |
 | **Owner**                   | Primary team / service                                                                  |
-| **Proposed follow-up plan** | Filename the future `plans/active/<name>.md` will take                                  |
+| **Proposed follow-up plan** | Filename the future `plans/archive/2026_08/<name>.md` will take                         |
 | **Unlocks playbooks**       | Experience playbooks this item enables (per [`../experience/`](../experience/) targets) |
 
 ---
@@ -742,7 +742,7 @@ G3 — later (polish + automation)
 
 ---
 
-## 6. Cross-links to existing `plans/active/*.md`
+## 6. Cross-links to existing `plans/archive/2026_08/*.md`
 
 Some G1/G2 items fold existing active plans. Those plans either become sub-phases of new umbrella plans (per "Proposed
 follow-up plan" column) or are retired once their scope is absorbed.
@@ -775,8 +775,8 @@ follow-up plan" column) or are retired once their scope is absorbed.
 
 ## 8. Reporting + success criteria
 
-Per-G progression is tracked in `plans/active/<proposed-follow-up-plan-name>.md` Phase sections. Stage 3E itself is
-complete when:
+Per-G progression is tracked in `plans/archive/2026_08/<proposed-follow-up-plan-name>.md` Phase sections. Stage 3E
+itself is complete when:
 
 - All 14 G1 items have a tracked follow-up plan spawned or explicitly deferred with reason.
 - All 11 G2 items have a tracked follow-up plan spawned or explicitly deferred with reason.

@@ -38,6 +38,7 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 locked_by:
 resolved_by:
+  /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
 depends_on: []
 source:
   - "observed twice during the 25-unit staging-shutdown rollout 2026-07-23 (unified-trading-library,

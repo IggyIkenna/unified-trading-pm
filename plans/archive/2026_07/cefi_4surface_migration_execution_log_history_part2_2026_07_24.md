@@ -142,7 +142,7 @@ source: >-
 - Shared resolver fix: `market-tick-data-service@a744b245` (EXTENDED-STARKNET 0%→100%; SSOT contradictions 23→1).
 - Pin-aware tarball retention: `deployment-service@dfd7608` (+ UTL `52ee405`) — verified, refuted twice before landing.
 - 4-surface verifier: `market-tick-data-service@bc20cc93`.
-- Issue docs (in `plans/active/issues/`): `fail_hard_canonical_enforcement_design_2026_07_20.md`,
+- Issue docs (in `plans/archive/issues/`): `fail_hard_canonical_enforcement_design_2026_07_20.md`,
   `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`,
   `batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`, `tarball_rotation_breaks_vm_recovery_2026_07_20.md`.
 

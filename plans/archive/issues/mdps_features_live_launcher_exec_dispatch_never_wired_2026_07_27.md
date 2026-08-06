@@ -1,0 +1,274 @@
+---
+doc_type: issue
+title:
+  launch-mdps-features-live.sh's compound VM_SERVICE has no exec-dispatch branch in setup-data-pipeline-vm.sh — falls
+  through to a literal `python -m market_data_processing_service+features_service`, and even a correct per-service
+  branch can't invoke either service today because neither's CLI supports the launcher's premise
+summary: >-
+  With the dependency-install bug
+  (/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md) fixed, a live-VM
+  verification (`mdps-features-live-cefi-20260727-004133`) got past `uv pip install` cleanly for the first time,
+  exposing the NEXT bug in the same launcher: `setup-data-pipeline-vm.sh` has no exec-dispatch branch for
+  `VM_TASK=mdps-features-live` (or any compound "+"-joined `VM_SERVICE` at run time — only the tarball-resolution
+  section was fixed to split on "+"), so it falls through to the generic default `python -m $VM_SERVICE $CLI_ARGS`,
+  literally invoking `python -m market_data_processing_service+features_service` — not a valid Python module path.
+  Worse: even a correctly-split two-process branch cannot work today without further design, because **neither service's
+  actual CLI supports what the launcher's design assumes**: MDPS's live path (`process --mode live --operation
+  streaming-aggregation`) requires an explicit single `--shard-spec ASSET_GROUP:VENUE:DATA_TYPE`, not a
+  whole-asset-group run, and features-service's top-level CLI dispatches to exactly ONE of 9 `--feature-family`
+  sub-packages per invocation — there is no "run all live for this asset_group" mode for either service. The launcher's
+  own docstring already flags this as unfinished ("operational launch awaits Harsh slot 5 per-service consumer wiring +
+  Phase 12 reconciliation gate green"; archived `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase 15 =
+  "DEFERRED-POST-CUTOVER... successor plan"), so this is a confirmed, evidenced instance of a known-and-labeled gap, not
+  a regression — but it means "get genuine live-VM confirmation" cannot be fully satisfied for this launcher until real
+  design work on shard/family iteration lands.
+status: resolved # (was: open) 2026-08-06 RB-04f4f852 archival: all todos [x], no locked_by
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, market-data-processing-service, features-service]
+scope: [engineer, admin]
+tags:
+  [mdps, features-service, vm-launcher, exec-dispatch, live-launch, cli-contract-mismatch, design-gap, silent-failure]
+related:
+  [
+    /plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md,
+    /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
+  ]
+created: 2026-07-27
+author: unknown
+last_updated: 2026-07-30
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: design
+estimate_baseline_ai_days: 0.6
+estimate_calibrated_ai_days: 0.36
+assigned_role: infra
+drift_direction: advance-code
+locked_by:
+locked_since:
+context_scope:
+  [
+    /plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md,
+    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    features-service/features_service/common/live_runner.py,
+    market-data-processing-service/market_data_processing_service/cli/parser.py,
+  ]
+supersedes:
+superseded_by:
+depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]
+gate_on_depends: true
+sequential: true
+source: interactive session, live-VM verification of the sibling dependency-conflict fix, 2026-07-27
+resolved_by:
+---
+
+> **🟢 ARCHIVED 2026-08-06** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Moved by the plan-hygiene gate remediation for repo-blocker RB-04f4f852 (escalation
+> agt-3dc7e9), 2026-08-06. No content was rewritten.
+
+# launch-mdps-features-live.sh exec-dispatch was never actually wired up
+
+> **Machine-gated on `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`** (`depends_on` +
+> `gate_on_depends: true`) — the exec-dispatch wiring todo below (and the P3 todos that follow it) waited on that doc's
+> UAC enumerator extension. **RESOLVED 2026-08-03**: the extension shipped (`unified-api-contracts@724b6633` +
+> `market-data-processing-service@4a5985b`), the gated doc's 5 todos are all done, and it has been archived — the gate
+> is satisfied and this issue's remaining `[SCRIPT]` todos below are unblocked. Ruled 2026-07-30, BLK-fd70b57c: see the
+> second `[SCRIPT]` todo below for the full reasoning.
+
+## Evidence
+
+Launched `mdps-features-live-cefi-20260727-004133` to verify the dependency-install fix in
+`/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md`. Bootstrap now
+succeeds cleanly (no more `position-balance-monitor-service` unsatisfiable conflict — that fix is confirmed correct).
+`run.log` then showed:
+
+```
+[vm-exec] starting: bash -c ( ... ) & ...; /home/ikennaigboaka/venv/bin/python -m market_data_processing_service+features_service --operation live_aggregate_and_compute --mode live --asset-group CEFI
+/home/ikennaigboaka/venv/bin/python: No module named market_data_processing_service+features_service
+[vm-exec] command exited rc=1
+```
+
+VM deleted after confirming the failure (no reason to keep an e2-standard-8 billing on a known-broken exec path).
+
+## Root cause — two independent gaps, not one
+
+**Gap 1 — no exec-dispatch branch for this VM_TASK/compound VM_SERVICE.** `setup-data-pipeline-vm.sh`'s tarball
+resolution section (fixed 2026-07-26) splits `VM_SERVICE` on "+" to resolve the right tarballs, but the RUN-command
+construction later in the same script has no equivalent branch — `VM_TASK=mdps-features-live` matches none of the
+existing special cases (`strategy-paper`/`synthetic-benchmark`/etc.), so it falls through to the generic default (~line
+2042): `_launch_with_tee "$VENV/bin/python -m $VM_SERVICE $CLI_ARGS" ...` — passing the raw, unsplit
+`"market_data_processing_service+features_service"` straight to `python -m`, which is never a valid module path for any
+compound value.
+
+**Gap 2 — even a correctly-split two-process branch can't work without further design**, because the launcher's premise
+(one co-located live consumer per (MDPS, features-service) pair, scoped to a whole `asset_group`) doesn't match either
+service's actual CLI surface as it exists today:
+
+- MDPS's live path is `process --mode live --operation streaming-aggregation --shard-spec ASSET_GROUP:VENUE:DATA_TYPE`
+  (`market-data-processing-service/market_data_processing_service/cli/parser.py` lines ~276-322) — `--shard-spec` is
+  required and scopes to exactly ONE venue+data_type, not a whole asset_group. `VM_OPERATION=live_aggregate_and_compute`
+  (set by the launcher) also doesn't match any of MDPS's actual `--operation` choices
+  (`timer-candles`/`streaming-aggregation`/`build-continuous`) — the intended value is almost certainly
+  `streaming-aggregation`, but the launcher was never updated to pass it, or `--shard-spec`, at all.
+- features-service's top-level CLI (`features-service/features_service/cli/main.py`) dispatches to exactly ONE of 9
+  `--feature-family` sub-packages per invocation (calendar/commodity/cross_instrument/delta_one/multi_timeframe/
+  onchain/performance_features/sports/volatility) — there is no "run every applicable family live for this asset_group"
+  mode. Which families apply to a given `asset_group` (e.g. does `cefi` need all 9, or a subset?) is a real
+  product/domain decision, not something inferable from the code alone.
+
+## Why this wasn't caught earlier
+
+This is a **known, already-labeled gap**, not a silent regression: `launch-mdps-features-live.sh`'s own docstring says
+"ships code-ready as part of Phase 13; operational launch awaits Harsh slot 5 per-service consumer wiring + Phase 12
+reconciliation gate green" — and the archived plan that shipped it
+(`plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`, `status: complete`) explicitly deferred Phase
+15 ("Workspace-wide QG sweep + 7-day live smoke... **DEFERRED-POST-CUTOVER**... Phase 15 → successor plan"). The
+launcher was shipped "code-ready" against a design that assumed a monolithic per-asset-group live consumer; neither
+MDPS's nor features-service's CLI ever grew that shape, and because Gap 1 (the dependency-conflict bug this session's
+sibling issue fixed) made every prior launch attempt die at `uv pip install` — long before reaching the `python -m` line
+— Gap 2 was structurally unreachable and unobserved until today's fix let a VM get far enough to hit it.
+
+## Why this is NOT a same-session mechanical fix
+
+Per workspace planning discipline, a todo is only mechanically dispatchable when its outcome is determinable by the
+worker alone. "Which feature families run live for which asset_group, and does MDPS's live streaming-aggregation model
+even support a whole-asset-group co-located consumer or does it need N per-shard sibling processes" is a real
+design/product decision, not a lookup — inventing an answer under this issue risks a plausible-looking but wrong fix
+(e.g. silently guessing "all 9 families, one asset_group-wide `--shard-spec` per venue actually present" without knowing
+whether that matches the intended architecture or the co-location assumption behind "MDPS→features handoff stays
+in-process / sub-ms" still holds once features-service is genuinely family-sharded).
+
+## Todos
+
+- [x] ✅ [OPERATOR] P2. **FULLY RULED 2026-07-29 (interactive decision session) — the family↔asset_group mapping
+      supplied directly by the operator.** Shipped as `FEATURE_FAMILY_ASSET_GROUPS` in
+      `features-service/features_service/common/live_runner.py` (`features-service@ebd43939`, 2 regression tests):
+      `onchain={defi}`, `sports={sports}`, `calendar`+`cross_instrument`={cefi,defi,tradfi,sports,prediction} (global),
+      `delta_one`/`multi_timeframe`/`volatility`/`performance_features`={cefi,tradfi}, `commodity`={tradfi}. Also added
+      `performance_features` to `ASSET_SCOPED_FAMILIES` (it was missing entirely — an unwired scaffold with no
+      `config.py` until now covered by the mapping). Both halves of this todo (topology + family mapping) are now
+      resolved — the `[SCRIPT]` todos below are unblocked. **PARTIALLY RULED 2026-07-28** (operator general theme
+      applied to the part it remainder is a genuine business-fact gap — see below). **Process topology: RULED — option
+      (a)**: MDPS runs one process per live shard (`ASSET_GROUP:VENUE:DATA_TYPE`) discovered from the instruments
+      universe, with features-service running one process per applicable `--feature-family`, both subscribing to the
+      same asset_group's `candle_computed` stream. Reasoning: this is the theme's "relaxed/broader" default — the most
+      granular, fully-decomposed shape (per-shard MDPS + per-family features-service) rather than a monolithic
+      co-located consumer, consistent with "opt for full completions, no shortcuts" and the standing preference for
+      broader coverage over a narrower, cheaper architecture; it's also the only shape offered in this issue with no
+      viable named alternative, so there's nothing to adjudicate between. **Still genuinely OPEN (not resolved by the
+      theme — flagging why, per this task's own instructions)**: which of the 9 `--feature-family` sub-packages apply to
+      which `asset_group` is a real product/strategy decision, not a lookup — a quick code check
+      (`features_service/*/config.py`) only proves 2 of 9 unambiguously by construction (`onchain` hardcodes
+      `asset_group="defi"` regardless of caller input; `calendar` has NO asset_group axis at all — it's a shared/global
+      family, not per-domain), and confirms `sports` is sports-only by naming — but the remaining 6 (`delta_one`,
+      `cross_instrument`, `multi_timeframe`, `volatility`, `commodity`, `performance_features`) are all generically
+      `asset_group`-parameterized in code with no authoritative mapping of WHICH domains they're meant to run live for
+      (e.g. does `commodity` apply to `cefi`/`defi` at all; does `cross_instrument` run for `sports`). None of the
+      general theme's bullets (backfill/migration completion, adaptor-finish-or-remove, cost, pause/unpause, manifest
+      version, auto-recovery, live-probing breadth, credential direction) speaks to "which trading-strategy feature
+      families are meant to run for which asset class" — that's a strategy-design fact, not inferable from code or
+      covered by the theme, so this half is left genuinely open per this task's own instructions. Needs operator
+      sign-off on the family↔asset_group mapping before a worker wires the actual per-family branches; the topology half
+      above (per-shard/per-family process decomposition) is unblocked and can be wired now. Reference: Phase 15
+      successor plan (`live_pipeline_mtds_mdps_features_2026_05_08.md`, if a successor plan exists — none found under
+      `plans/archive/2026_08/` as of this issue's filing; may need to be created).
+- [x] ✅ [SCRIPT] P2. Once the shape is decided: add a `VM_TASK == "mdps-features-live"` (or generic "+"-split) branch
+      to `setup-data-pipeline-vm.sh`'s exec-dispatch section that invokes MDPS and features-service with the CLI flags
+      their actual parsers require, per the decided shape. **Investigated 2026-07-30 (operator-ruling closeout pass)**:
+      the 2026-07-29 ruling fixed the family↔asset_group mapping and the topology SHAPE, but did not specify the
+      **shard-discovery mechanism** this branch needs — no `discover_live_shards`-style function exists anywhere in the
+      workspace (`rg` verified), so left open rather than guessed. **RULED 2026-07-30 (BLK-fd70b57c, main-authority
+      answer — final)**: extend UAC's `mdps_mvp_universe(asset_group)`
+      (`unified_api_contracts.canonical.crosscutting._mvp_scope_mdps`) to a `(venue, data_type)` axis and make it the
+      SSOT shard enumerator this branch calls at boot — a hand-maintained bash array (rejected: violates the "shard atom
+      identical across writer/manifest/status/gate/UI" DATA hard rule) and repurposing
+      `live_stream_watcher.build_prediction_live_shards()` (rejected: wrong contract, boot-time ordering hazard) are
+      both ruled out on standards grounds, not preference. **RESOLVED VIA SPLIT, not via shipped code** — this todo's
+      own ask (decide the shard-discovery mechanism, or determine why it can't be decided yet) is genuinely done as of
+      this ruling; the exec-dispatch branch itself has NOT been written. Forked the UAC extension out to
+      `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` (its own determinable, scoped contract
+      edit), gated this doc on it (`depends_on` + `gate_on_depends: true`, see frontmatter + banner above), and
+      re-opened the actual code-writing work below as its own gated todo so it isn't lost — unified-trading-pm, this
+      commit.
+- [x] ✅ [SCRIPT] P2. `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` has landed (shipped +
+      archived 2026-08-03 — this doc's gate is satisfied, dispatchable now): add the `VM_TASK == "mdps-features-live"`
+      (or generic "+"-split) branch to `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing
+      tarball-resolution split + the multi-worker sharding pattern at ~line 2031 for backgrounding N python processes
+      under one `_launch_with_tee` wrapper) that invokes MDPS and features-service with the CLI flags their actual
+      parsers require, per the ruled topology (per-shard MDPS + per-family features-service, per-family↔asset_group
+      mapping in `features-service@ebd43939`), using the extended UAC `mdps_mvp_universe()` to discover its
+      `(venue, data_type)` shard set at boot. **Shipped 2026-08-03 (slot-6)** — `deployment-service@e7d17f2`: a new
+      `VM_TASK == "mdps-features-live"` branch discovers MDPS's `(venue,     data_type)` shards at boot via
+      `mdps_mvp_universe(asset_group)` (projected from the 3-tuple, deduped across `instrument_type`, since MDPS's
+      `--shard-spec` grain is `ASSET_GROUP:VENUE:DATA_TYPE`) and the applicable `--feature-family` set via
+      `FEATURE_FAMILY_ASSET_GROUPS`, then generates a self-contained fan-out supervisor script (mirrors the existing
+      cefi-backfill fan-out pattern) that backgrounds one
+      `market-data-processing process --mode live --operation streaming-aggregation --shard-spec ...` per MDPS shard and
+      one `features_service --feature-family <name> --operation compute --mode live ...` per applicable family (CLI-flag
+      construction mirrors `launch-features-vm.sh`: calendar omits `--asset-group`; delta_one/volatility/ onchain add
+      `--feature-group ALL`; delta_one/volatility add `--timeframe 1m` for tradfi), waits every worker, and ORs their
+      real exit codes — all under one `_launch_with_tee` wrapper. `performance_features` is deliberately excluded: its
+      `run(argv)` CLI shim (`features_service/performance_features/__init__.py`) always calls `run_batch()` regardless
+      of `--mode` (an architecture-only scaffold with no live wiring yet, per its own docstring) — spawning it would
+      exit immediately and read as a crashed worker to the fan-out supervisor. Verified: `bash -n` clean, `shellcheck`
+      clean (no new warnings), dry-parsed the generated MDPS shard-spec and several features-service family CLI
+      invocations directly against each service's real argparse (no crash), `deployment-service` quality-gates.sh green.
+      Real live-VM confirmation (an actual `mdps-features-live` launch) is still pending — out of scope for this todo,
+      which was specifically about the exec-dispatch wiring; the two `[SCRIPT]` P3 todos below (VM_OPERATION metadata
+      fix, vm-exec-with-gcs-tee.sh failure-signaling gap) remain open and unblocked by this change.
+- [x] ✅ [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value
+      — it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
+      `build-continuous`); once the dispatch branch above ships, set the metadata this launcher passes to match whatever
+      the branch actually consumes. — deployment-service@3cfe056 (already shipped as part of the exec-dispatch P2 todo
+      at e7d17f2; the P2 branch wired `--operation streaming-aggregation` for MDPS, and this launcher's `VM_OPERATION`
+      metadata was corrected to `streaming-aggregation` in that same push — checkbox missed the flip)
+- [x] ✅ [SCRIPT] P3. Related, smaller gap noticed in passing: `vm-exec-with-gcs-tee.sh`'s post-launch task-failure path
+      (a wrapped command exiting non-zero AFTER bootstrap succeeded, as happened here —
+      `[vm-exec] command exited     rc=1`) does not appear to self-delete or otherwise loudly signal on a
+      `VM_SHUTDOWN_ON_COMPLETION=false` live launcher, mirroring (but distinct from) the bootstrap-phase gap fixed in
+      `/plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md` Update 4 — not
+      investigated further here since it's a different code path (the tee wrapper, not `_self_delete_on_setup_failure`);
+      worth auditing once Gap 1/2 above are resolved and a real live launch exists to observe its failure-signaling
+      behavior against. **Audited 2026-08-04 (slot-16): NO GAP — the daemon emits `DEPLOYMENT_FAILED` (severity=ERROR)
+      via Pub/Sub when the wrapped command exits non-zero, regardless of `VM_SHUTDOWN_ON_COMPLETION`. Full trace: shell
+      `wait` → `$RC` → `EXIT_STATUS_FILE` → SIGTERM daemon → `HeartbeatDaemon._signal_handler` → `complete()` →
+      `_archive_terminal_state()` reads exit status → `status="failed"` → `DEPLOYMENT_FAILED` Pub/Sub event
+      (severity=ERROR) → `run_ledger` flat publish → final GCS upload + durable snapshot. Self-delete correctly skipped
+      for live launchers (persistent services, not batch). Two narrow edge cases noted (daemon SIGKILLed after 30s hang
+      or daemon silent startup crash — GCS EXIT_STATUS still lands but Pub/Sub event lost; both separately observable
+      via missing heartbeats). No code change needed.**
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the gating [OPERATOR] design call was FULLY RULED
+  2026-07-29 (process topology option (a) + the family↔asset_group mapping, shipped `features-service@ebd43939`); all 3
+  remaining [SCRIPT] todos are now unblocked bounded implementation.
+- **2026-07-30 (slot-6, BLK-fd70b57c)**: 2026-07-30's own investigation note (above) correctly flagged the
+  shard-discovery mechanism as still undecided. Escalated; operator ruled extend UAC `mdps_mvp_universe()` (option A),
+  executed as a SPLIT — forked `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` as a
+  prerequisite and gated this doc on it (`depends_on` + `gate_on_depends: true`). The exec-dispatch wiring todo and its
+  two P3 followers stay open, now correctly machine-gated rather than falsely dispatchable.
+- **2026-08-03 (slot-5)**: The gating prerequisite shipped + archived
+  (`/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` — all 5 todos done, UAC `data_type` axis
+  extension in `unified-api-contracts@724b6633` + the cross-repo caller fix in
+  `market-data-processing-service@4a5985b`). Gate satisfied; repointed this doc's banner/context_scope/body path
+  citations at the archive location (`depends_on`/`gate_on_depends: true` left untouched — bare slug, still correctly
+  resolves against `plans/archive/` per `check_depends_on_graph.py`). The exec-dispatch wiring todo below is now
+  genuinely dispatchable.
+- **2026-08-03 (slot-6)**: Shipped the exec-dispatch wiring todo — `deployment-service@e7d17f2` (see the flipped
+  checkbox above for the full implementation summary). Real live-VM confirmation is still pending (out of this todo's
+  scope); the two P3 followers (VM_OPERATION metadata + vm-exec-with-gcs-tee.sh failure-signaling) stay open.
+- **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **2026-08-04 (slot-16, this task)**: Audited the last unchecked P3 todo (vm-exec-with-gcs-tee.sh post-launch
+  task-failure path). Full end-to-end trace confirms the daemon emits `DEPLOYMENT_FAILED` (severity=ERROR) via Pub/Sub
+  when the wrapped command exits non-zero, regardless of `VM_SHUTDOWN_ON_COMPLETION`. Self-delete correctly gated to
+  `VM_SHUTDOWN_ON_COMPLETION=true` only. Two narrow edge cases documented in the todo flip (daemon SIGKILL after 30s
+  hang, daemon silent startup crash) — GCS EXIT_STATUS still lands in both cases, Pub/Sub event lost but separately
+  observable via missing heartbeats. No code change needed — the suspected gap does not exist. All 5 todos in this issue
+  doc are now done; plan is eligible for archival.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

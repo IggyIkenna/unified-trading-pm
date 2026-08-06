@@ -37,7 +37,9 @@ execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.36
-resolved_by: "doc-correction shipped 2026-08-01 (context_scope_consumption_enforcement_2026_07_30.md); Finding 2 items require no action"
+resolved_by:
+  "doc-correction shipped 2026-08-01 (context_scope_consumption_enforcement_2026_07_30.md); Finding 2 items require no
+  action"
 locked_by:
 locked_since:
 supersedes:
@@ -54,16 +56,18 @@ drift_direction: advance-code
 
 # ag-closeout-audit ao tranche 2026-07-31 — parked findings
 
-> **🟢 RESOLVED 2026-08-02** — Finding 1's doc-correction shipped 2026-08-01 (`context_scope_consumption_enforcement_2026_07_30.md`); Finding 2's items are "no action needed unless the operator lifts the ruling," reconciliation ledger confirms 3/3 findings written and balanced.
+> **🟢 RESOLVED 2026-08-02** — Finding 1's doc-correction shipped 2026-08-01
+> (`context_scope_consumption_enforcement_2026_07_30.md`); Finding 2's items are "no action needed unless the operator
+> lifts the ruling," reconciliation ledger confirms 3/3 findings written and balanced.
 
 ## Finding 1 — data-correctness / SSOT-adjacent contradiction (the operator-notify-worthy one)
 
 `/plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today (2026-07-30)" section
 (lines 46-51) asserts, as established fact:
 
-> "Every `plans/active/*.md` + `plans/active/issues/*.md` doc carries a `context_scope` frontmatter field... The field
-> is now REQUIRED (`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a missing
-> one — so the corpus stays covered going forward, and the `context-scout` skill keeps it fresh as docs are
+> "Every `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` doc carries a `context_scope` frontmatter field...
+> The field is now REQUIRED (`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a
+> missing one — so the corpus stays covered going forward, and the `context-scout` skill keeps it fresh as docs are
 > authored/edited."
 
 **Both claims are measurably false as of this run (2026-07-31):**

@@ -38,6 +38,7 @@ related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-07
 author: unknown

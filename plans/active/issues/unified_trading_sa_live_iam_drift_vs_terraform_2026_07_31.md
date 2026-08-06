@@ -38,6 +38,7 @@ related:
     /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-31"
 author: unknown

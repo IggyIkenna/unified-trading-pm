@@ -30,6 +30,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-02
 author: unknown
@@ -93,8 +94,8 @@ exception does not reach it. The consequences compound rather than sit still:
   annotate the source checkbox to cite that extraction. A future run reads the same unannotated open checkbox and has
   nothing in the doc telling it the work is already dispatched — the precise failure the KEEP-NA-STALE citation
   mechanism exists to prevent.
-- **It is not one doc.** Any `plans/active/*.md` over 1000L with ≥1 open todo has the same property. This is the third
-  recorded instance of the over-cap-blocks-edit class after the two in
+- **It is not one doc.** Any `plans/archive/2026_08/*.md` over 1000L with ≥1 open todo has the same property. This is
+  the third recorded instance of the over-cap-blocks-edit class after the two in
   [`/plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md`](/plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md)
   (both of which were the zero-open-todo flavour and are now closed by the 2026-07-30 ruling + archival) — this is the
   first LIVE-plan instance, which that issue explicitly did not cover.
@@ -105,11 +106,11 @@ This is a policy call about a hard gate, not something a worker can settle alone
 than acted on:
 
 - **A [WORKER REC]: narrow the existing exception to cover an audit-marker-only edit.** Allow a commit whose diff to an
-  over-cap `plans/active/*.md` is confined to appending a dated audit Progress Log line (and/or a `last_updated` bump) —
-  the machine-checkable shape is "no `- [ ]`/`- [x]` line added, removed, or changed, and no net new section." This
-  keeps the cap's real purpose (stop a LIVE plan growing into an unreadable hub) fully intact, since a marker cannot
-  grow a plan's actual content, while restoring incremental mode. Smallest change, directly addresses the measured
-  failure, and matches the 2026-07-30 ruling's own reasoning.
+  over-cap `plans/archive/2026_08/*.md` is confined to appending a dated audit Progress Log line (and/or a
+  `last_updated` bump) — the machine-checkable shape is "no `- [ ]`/`- [x]` line added, removed, or changed, and no net
+  new section." This keeps the cap's real purpose (stop a LIVE plan growing into an unreadable hub) fully intact, since
+  a marker cannot grow a plan's actual content, while restoring incremental mode. Smallest change, directly addresses
+  the measured failure, and matches the 2026-07-30 ruling's own reasoning.
 - **B: split `lst_rate_honest_coverage_2026_07_21.md` specifically** into a trimmed index/coordination doc under cap
   plus per-phase child docs wired via `depends_on`/`gate_on_depends` (the pattern the operator already ratified for
   `sports_consolidated_closeout_2026_07_19.md`). Fixes this one doc properly but is genuinely open-ended judgment about
@@ -132,9 +133,9 @@ than acted on:
       split. Then, either way, land the deferred `/plans/active/lst_rate_honest_coverage_2026_07_21.md` Phase-3
       annotation citing `defi_satellite_ao_dispatch_batch8_2026_08_02.md`, plus that doc's 2026-08-02 KEEP-NA verdict
       marker (both drafted and reverted this run — full text in the Progress Log below). (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. Report how wide the class is: list every `plans/active/*.md` over 1000L with ≥1 open todo (the docs
-      that are currently un-verdictable), so the fix's real blast radius is a measured number rather than this doc's
-      single example. (repo: unified-trading-pm)
+- [ ] [SCRIPT] P3. Report how wide the class is: list every `plans/archive/2026_08/*.md` over 1000L with ≥1 open todo
+      (the docs that are currently un-verdictable), so the fix's real blast radius is a measured number rather than this
+      doc's single example. (repo: unified-trading-pm)
 
 ## Progress Log
 

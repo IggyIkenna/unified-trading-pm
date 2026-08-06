@@ -32,6 +32,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md,
     /plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-20
 author: unknown

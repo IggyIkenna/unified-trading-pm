@@ -28,6 +28,7 @@ related:
   - /codex/05-infrastructure/deployment-observability.md
   - /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md
 created: "2026-08-05"
+  /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
 author: ikennaigboaka [slot-16·planning]
 source: [watchdog_kill_events_deployment_observability-008 review E2E, slot-16]
 assigned_vm: planning

@@ -16,6 +16,7 @@ related:
     ../epics/cefi_master.md,
     ../archive/2026_07/master_to_live_defi_2026_05_23.md,
     ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-06-12"
 parent_epic: cefi_master
@@ -186,8 +187,8 @@ live-capital gate itself is withheld). Not retagged, not unlocked.
 **Not yet identified** — the "Volume as a first-class feature for the cs/ext ML models" `[RESEARCH] P2` item
 (Model-improvement backlog, provenance: research session 2026-06-24) is `**DEFERRED**` — "model improvement for after
 the window/universe work lands" — but no plan currently tracks that window/universe work as a distinct, named item;
-grepped `plans/active/` and `plans/epics/` for "window/universe sweep"/"cs/ext window" with no hit outside this plan.
-This plan's own "Model-improvement backlog" section remains the owner until a successor is authored.
+grepped `plans/archive/2026_08/` and `plans/epics/` for "window/universe sweep"/"cs/ext window" with no hit outside this
+plan. This plan's own "Model-improvement backlog" section remains the owner until a successor is authored.
 
 ## Progress Log
 

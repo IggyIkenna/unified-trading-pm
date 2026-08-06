@@ -36,6 +36,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/pipeline-mode-partition.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: instruments_master

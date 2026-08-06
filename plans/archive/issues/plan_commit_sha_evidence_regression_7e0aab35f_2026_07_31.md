@@ -47,7 +47,7 @@ locked_since:
 > **🟢 ARCHIVED 2026-08-02** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (slot-14). Moved by the `/plan-reconcile`
-> whole-corpus run of 2026-08-02, which found this doc sitting in `plans/active/issues/` at a terminal status —
+> whole-corpus run of 2026-08-02, which found this doc sitting in `plans/archive/issues/` at a terminal status —
 > `check_terminal_status_archived` was RED at 13 violations against a baseline of 1. No content was rewritten.
 
 # plan-commit-sha-evidence ratchet regression — fabricated SHA 7e0aab35f

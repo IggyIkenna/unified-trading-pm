@@ -22,6 +22,7 @@ related:
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/issues/sports_fixture_events_phantom_manifest_rows_2026_07_25.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-25
 author: unknown

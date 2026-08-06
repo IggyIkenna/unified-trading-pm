@@ -29,6 +29,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/sports-2020-06-data-floor.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-02
 author: unknown
@@ -205,7 +206,7 @@ dispatch target — but the SAME epic's decision D2 at `:130` drops epic→VM de
 | `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` | 2          | `[SCRIPT]` P2, `[CI]` P1    |
 
 `/codex/11-project-management/issue-doc-lifecycle.md` is unambiguous that the answer is ACKED-INTO-PLAN — migrate the
-todos into a named active plan, then archive ("If a banner says 'stays in `active/issues/` until parent closes', the
+todos into a named active plan, then archive ("If a banner says 'stays in `archive/issues/` until parent closes', the
 banner is wrong"). What it does NOT determine is WHICH plan absorbs them, and that is an ownership call. The
 fold-by-default carve-out does not apply (these are `[BACKEND]`/`[DATA]`/`[SCRIPT]`/`[CI]`, not `[REVIEW]`/`[DOC]`).
 

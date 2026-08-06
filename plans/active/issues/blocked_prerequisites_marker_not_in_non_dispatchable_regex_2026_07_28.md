@@ -12,8 +12,8 @@ summary: >-
   actual cause is different: `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` only recognizes
   `BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)` — `PREREQUISITES` is not
   in that alternation, so a `BLOCKED-PREREQUISITES` todo re-derives as dispatchable on every regen tick regardless of
-  line placement. A corpus grep (`grep -rl "BLOCKED-PREREQ" plans/active/`) found 15 files using this token (one is a
-  generated `.json`, so 14 markdown docs), several with multiple occurrences.
+  line placement. A corpus grep (`grep -rl "BLOCKED-PREREQ" plans/archive/2026_08/`) found 15 files using this token
+  (one is a generated `.json`, so 14 markdown docs), several with multiple occurrences.
 status: open
 nature: notes
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
@@ -84,7 +84,8 @@ _NON_DISPATCHABLE_RE = re.compile(
 `PREREQUISITES` is not one of the alternatives. A `BLOCKED-PREREQUISITES` checkbox — no matter where the text sits —
 never matches this regex, so `_parse_open_todos` keeps re-deriving it as an open, dispatchable todo on every regen tick.
 
-**Blast radius**: `grep -rl "BLOCKED-PREREQ" plans/active/` finds 15 files (14 markdown + 1 generated `.json` mirror):
+**Blast radius**: `grep -rl "BLOCKED-PREREQ" plans/archive/2026_08/` finds 15 files (14 markdown + 1 generated `.json`
+mirror):
 
 - `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md` (8 unchecked checkboxes carry the string)
 - `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (4)
@@ -156,10 +157,10 @@ same-corpus dependencies). Instead:
       already done/superseded), classify as external-block-mislabeled vs. same-corpus-dependency per the nuance above,
       and apply the matching fix (retag OR convert to `sequential`/`depends_on`). Cite a per-file disposition table in
       this doc's Progress Log. (repo: unified-trading-pm)
-- [ ] [VERIFY] P3. After the audit above lands, re-run `grep -rl "BLOCKED-PREREQ" plans/active/` and confirm every
-      remaining hit is either (a) inside an already-`[x]` checked item, (b) prose/Progress-Log narrative (not a live
-      open checkbox), or (c) legitimately still using the string alongside a NOW-also-present recognized token — i.e.
-      zero open checkboxes rely on `BLOCKED-PREREQUISITES` alone to suppress dispatch.
+- [ ] [VERIFY] P3. After the audit above lands, re-run `grep -rl "BLOCKED-PREREQ" plans/archive/2026_08/` and confirm
+      every remaining hit is either (a) inside an already-`[x]` checked item, (b) prose/Progress-Log narrative (not a
+      live open checkbox), or (c) legitimately still using the string alongside a NOW-also-present recognized token —
+      i.e. zero open checkboxes rely on `BLOCKED-PREREQUISITES` alone to suppress dispatch.
 
 ## Progress Log
 

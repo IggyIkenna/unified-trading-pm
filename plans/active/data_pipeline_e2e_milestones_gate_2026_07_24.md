@@ -16,7 +16,7 @@ summary: >-
   `autonomous_session_operator_decisions_2026_07_25.md` entry #10, 2026-07-26, option A) — 0 open todos is expected here
   even when fully "done": this doc's own todos read `✅ DONE — target: <file>`, meaning distributed, not shipped, and it
   is the cited reference surface for `/plan-reconcile`'s hunter 6 ("for each AG closeout, confirm every todo tagged for
-  it has actually landed there"), an ongoing duty. Keep `status: active` in `plans/active/`.
+  it has actually landed there"), an ongoing duty. Keep `status: active` in `plans/archive/2026_08/`.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -57,6 +57,7 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/task_template.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"
@@ -139,9 +140,9 @@ audit's ground-truth table is stale relative to today's state.
 
 - [x] [DATA] P1. ✅ **DONE 2026-07-24** — target:
       `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md` (corrected path — it lives directly
-      under `plans/active/`, not `plans/active/issues/`). Added a dispatchable todo to re-run the census and refresh the
-      stale ground-truth table (the live measurement itself needs a real script run, not performed in this distribution
-      pass). `pm@<commit-pending>`.
+      under `plans/archive/2026_08/`, not `plans/archive/issues/`). Added a dispatchable todo to re-run the census and
+      refresh the stale ground-truth table (the live measurement itself needs a real script run, not performed in this
+      distribution pass). `pm@<commit-pending>`.
 - [x] [REVIEW] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Replaced
       the stale "re-add the dimensions enumeration view" todo with a real "run it, verify 0 non-canonical" checkpoint
       (Phase C). `pm@<commit-pending>`.
@@ -165,7 +166,7 @@ audit's ground-truth table is stale relative to today's state.
       `/plans/archive/2026_08/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (§ "Open todo", DONE >
       2026-07-24) for the authoritative framing and the correction banners already added to >
       `reconciliation-finding-taxonomy.md`, `canonical-cutover-register.md`, and `cross-asset-canonical-target-ssot.md`.
-- [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: new issue doc under `plans/active/issues/`. Created
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: new issue doc under `plans/archive/issues/`. Created
       `catalogue_census_equivalents_inventory_2026_07_24.md` with the bounded inventory todo (the investigation itself
       is future dispatch work). `pm@<commit-pending>`.
 
@@ -277,7 +278,7 @@ section at all, only a "Suggested next steps (not started)" list with an undecid
 fold-vs-migrate") presented as a step.
 
 - [x] [DOCS] P2. ✅ **DONE 2026-07-24 (both known instances fixed; full corpus sweep tracked as a todo)** — target:
-      corpus-wide sweep, `plans/active/issues/`. Created
+      corpus-wide sweep, `plans/archive/issues/`. Created
       `plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` tracking this; the remaining full-corpus sweep
       (beyond the original 10-doc sample) is its own dispatchable todo there. `pm@<commit-pending>`.
 - [x] [DOCS] P2. ✅ **DONE 2026-07-24** — target: 3 named zero-checkbox issue docs. Both known instances converted:

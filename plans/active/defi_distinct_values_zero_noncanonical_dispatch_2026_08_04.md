@@ -42,6 +42,7 @@ related:
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 last_updated: "2026-08-06"

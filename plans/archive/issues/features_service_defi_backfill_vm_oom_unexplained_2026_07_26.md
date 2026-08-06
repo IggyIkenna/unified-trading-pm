@@ -52,8 +52,8 @@ resolved_by: slot-14 (2026-07-30) — features-onchain-defi-20260730-202653, exi
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (slot-14 (2026-07-30) —
 > features-onchain-defi-20260730-202653, exit_code=0). Moved by the `/plan-reconcile` whole-corpus run of 2026-08-02,
-> which found this doc sitting in `plans/active/issues/` at a terminal status — `check_terminal_status_archived` was RED
-> at 13 violations against a baseline of 1. No content was rewritten.
+> which found this doc sitting in `plans/archive/issues/` at a terminal status — `check_terminal_status_archived` was
+> RED at 13 violations against a baseline of 1. No content was rewritten.
 
 # What I found
 

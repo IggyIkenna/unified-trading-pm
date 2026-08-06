@@ -193,11 +193,11 @@ depends_on: []
 
 - finding ids: 131
 - **Coordinator's own orphan-sweep discipline vs an unregistered open issue under the same epic** —
-  `active/master_data_canonicalisation_migration_catalogue_2026_06_07.md:2122-2127`: “Swept `plans/active/*.md` +
-  `plans/active/issues/*.md` for manifest/migration/catalogue/pipeline_mode/backfill/ coverage/schema themes. \*\*All
-  register” vs `active/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md:14,5-6`: “parent_epic:
-  manifest_master ... status: open ... created: 2026-06-24 (manifest-writer OOM affecting DeFi/cefi/tradfi/sports
-  backfills)”
+  `active/master_data_canonicalisation_migration_catalogue_2026_06_07.md:2122-2127`: “Swept
+  `plans/archive/2026_08/*.md` + `plans/archive/issues/*.md` for manifest/migration/catalogue/pipeline_mode/backfill/
+  coverage/schema themes. \*\*All register” vs
+  `active/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md:14,5-6`: “parent_epic: manifest_master ...
+  status: open ... created: 2026-06-24 (manifest-writer OOM affecting DeFi/cefi/tradfi/sports backfills)”
   - why: The coordinator's own hard rule states any active data-layer plan/issue lacking a registry row is
     'review-blocking', and it promises to re-sweep at every gate promotion. The open issue
     manifest_index_read_oom_canonical_cache_2026_06_24.md (parent_epic: manifest_master, status: open, a cross-cutting
@@ -572,8 +572,8 @@ depends_on: []
   ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]” vs
   `epics/global_ledger_pnl_attribution_master.md:85`: “**status**: ✅ ARCHIVED 2026-05-23 — 36/38 BACKED + 2/38 PARTIAL.
   Operator [ack] pending on Phase 3/5/6”
-  - why: execution_master's frontmatter (related + related_plans) still cites this plan under plans/active/ (path
-    confirmed non-existent on disk), while global_ledger_pnl_attribution_master correctly shows it archived to
+  - why: execution_master's frontmatter (related + related_plans) still cites this plan under plans/archive/2026_08/
+    (path confirmed non-existent on disk), while global_ledger_pnl_attribution_master correctly shows it archived to
     plans/archive/2026_05/ on 2026-05-23 — a dangling stale reference in execution_master that hasn't been updat
 
 #### [P2] epics/global_ledger_pnl_attribution_master.md (intra-doc)

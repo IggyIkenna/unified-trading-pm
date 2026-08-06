@@ -42,6 +42,7 @@ related:
     plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_24.md,
     plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_21.md,
     plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-24
 author: unknown

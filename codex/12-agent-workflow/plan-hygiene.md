@@ -80,7 +80,8 @@ introduced.
 
 ### Mode 1: Malformed todo format
 
-`check_todo_format.sh` scans every `- [ ]` line in `plans/active/*.md` and `plans/active/issues/*.md` for two failures:
+`check_todo_format.sh` scans every `- [ ]` line in `plans/archive/2026_08/*.md` and `plans/archive/issues/*.md` for two
+failures:
 
 - **NO_PRIORITY** (❌ HARD): no `P[0-3]` tag anywhere → regen defaults priority to `None` → dispatcher de-prioritizes.
 - **NON_CANONICAL** (⚠️ SOFT): has P-tag but bracket order is wrong (e.g. `[TAG][P0]`, `[P0][TAG]`, `[P0]` alone).
@@ -99,10 +100,10 @@ banned in tags).
 ### Mode 3: Unpushed plan files
 
 `scripts/dev/slot-git-status-report.sh` reports an `unpushed_plans: [list]` field whenever a plan file
-(`plans/active/*.md` or `plans/active/issues/*.md`) is dirty or untracked in the slot's PM worktree. The orchestrator's
-`WorkerLivenessKicker._maybe_alert_unpushed_plans()` fires a Slack alert immediately on first detection (no staleness
-threshold — any dirty plan is operator-actionable). Alert format: `🔴 Slot N has unpushed plan(s): X.md, Y.md`.
-Throttled to once per 30 min per slot to avoid spam.
+(`plans/archive/2026_08/*.md` or `plans/archive/issues/*.md`) is dirty or untracked in the slot's PM worktree. The
+orchestrator's `WorkerLivenessKicker._maybe_alert_unpushed_plans()` fires a Slack alert immediately on first detection
+(no staleness threshold — any dirty plan is operator-actionable). Alert format:
+`🔴 Slot N has unpushed plan(s): X.md, Y.md`. Throttled to once per 30 min per slot to avoid spam.
 
 ### Mode 4: Stale blockers
 
@@ -126,24 +127,24 @@ The full sweep (`run_hygiene_sweep.sh`) classifies every check as HARD or SOFT:
 
 ### HARD — sweep exits 1, operator must fix before picking up new work
 
-| Check                     | Script                     | Trigger                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Todo regression vs origin | `check_todo_regression.sh` | Any open `- [ ]` in origin was flipped/removed locally without a push                                                                                                                                                                                                                                                                                                                                                                                  |
-| Frontmatter validity      | `check_frontmatter.sh`     | Missing required frontmatter keys (`parent_epic`, `assigned_vm`, `estimate_*`)                                                                                                                                                                                                                                                                                                                                                                         |
-| Todo format — NO_PRIORITY | `check_todo_format.sh`     | `- [ ]` line has no `P[0-3]` anywhere; regen assigns `priority=None`                                                                                                                                                                                                                                                                                                                                                                                   |
-| Runbook governance fields | `check_runbook_fields.py`  | Runbook missing `owner` / `cadence` / `verifier` / `last_executed`                                                                                                                                                                                                                                                                                                                                                                                     |
-| Line caps (ratchet)       | `check_line_caps.sh`       | A plan exceeds 1000L or an epic (`plans/epics/*.md`) exceeds 2000L, ABOVE `line_caps_baseline.yaml`'s tolerated pre-existing count — i.e. a NEW violation landed. Moved here from SOFT 2026-07-24 (was advisory-only, silently doing nothing, until the ratchet-baseline shape let it become a real gate without instantly failing on existing debt); the old `umbrella: true`/`locked_by`+todos exemption for `plans/active/` is gone — no exceptions |
+| Check                     | Script                     | Trigger                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Todo regression vs origin | `check_todo_regression.sh` | Any open `- [ ]` in origin was flipped/removed locally without a push                                                                                                                                                                                                                                                                                                                                                                                           |
+| Frontmatter validity      | `check_frontmatter.sh`     | Missing required frontmatter keys (`parent_epic`, `assigned_vm`, `estimate_*`)                                                                                                                                                                                                                                                                                                                                                                                  |
+| Todo format — NO_PRIORITY | `check_todo_format.sh`     | `- [ ]` line has no `P[0-3]` anywhere; regen assigns `priority=None`                                                                                                                                                                                                                                                                                                                                                                                            |
+| Runbook governance fields | `check_runbook_fields.py`  | Runbook missing `owner` / `cadence` / `verifier` / `last_executed`                                                                                                                                                                                                                                                                                                                                                                                              |
+| Line caps (ratchet)       | `check_line_caps.sh`       | A plan exceeds 1000L or an epic (`plans/epics/*.md`) exceeds 2000L, ABOVE `line_caps_baseline.yaml`'s tolerated pre-existing count — i.e. a NEW violation landed. Moved here from SOFT 2026-07-24 (was advisory-only, silently doing nothing, until the ratchet-baseline shape let it become a real gate without instantly failing on existing debt); the old `umbrella: true`/`locked_by`+todos exemption for `plans/archive/2026_08/` is gone — no exceptions |
 
 ### SOFT — sweep warns, sweep exits 0, advisory only
 
-| Check                       | Script                           | Trigger                                                                                               |
-| --------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Todo format — NON_CANONICAL | `check_todo_format.sh`           | Has P-priority but wrong bracket format (e.g. `[TAG][P0]`)                                            |
-| Parent-epic alignment       | `check_parent_epic_alignment.py` | `parent_epic:` value doesn't match a known epic keyword                                               |
-| Line caps — soft warn only  | `check_line_caps.sh`             | A plan exceeds 500L but not 1000L (below the ratchet threshold above — a soft warning, not a failure) |
-| Estimate sanity             | `check_estimate_sanity.sh`       | `estimate_calibrated_ai_days` drifts >20% from class-multiplied baseline                              |
-| Superseded plans in active/ | `check_superseded_in_active.sh`  | Active plan has a `SUPERSEDED` banner (should be archived)                                            |
-| Codex path refs resolve     | `check_codex_refs.sh`            | Codex link in a plan points to a non-existent file                                                    |
+| Check                                | Script                           | Trigger                                                                                               |
+| ------------------------------------ | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Todo format — NON_CANONICAL          | `check_todo_format.sh`           | Has P-priority but wrong bracket format (e.g. `[TAG][P0]`)                                            |
+| Parent-epic alignment                | `check_parent_epic_alignment.py` | `parent_epic:` value doesn't match a known epic keyword                                               |
+| Line caps — soft warn only           | `check_line_caps.sh`             | A plan exceeds 500L but not 1000L (below the ratchet threshold above — a soft warning, not a failure) |
+| Estimate sanity                      | `check_estimate_sanity.sh`       | `estimate_calibrated_ai_days` drifts >20% from class-multiplied baseline                              |
+| Superseded plans in archive/2026_08/ | `check_superseded_in_active.sh`  | Active plan has a `SUPERSEDED` banner (should be archived)                                            |
+| Codex path refs resolve              | `check_codex_refs.sh`            | Codex link in a plan points to a non-existent file                                                    |
 
 ### Stale-blocker reaper (separate cron, separate severity)
 

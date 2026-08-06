@@ -42,6 +42,7 @@ related:
     /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /codex/02-data/honest-coverage-model.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-08
 author: unknown

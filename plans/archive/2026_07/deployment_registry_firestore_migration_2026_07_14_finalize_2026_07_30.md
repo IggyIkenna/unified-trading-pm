@@ -83,7 +83,7 @@ source: >-
       archiving the parent now would preempt and contradict P5's own documented intent — leaving it `active` is correct,
       not a shortfall. This finalize plan's own todo is done regardless of the parent's archival timing (same pattern as
       the archived `deployment_registry_firestore_p0_unblock_2026_07_14_finalize_2026_07_27.md` precedent); leaving this
-      finalize plan itself in `active/` rather than archiving it standalone, since the observed corpus pattern
+      finalize plan itself in `archive/2026_08/` rather than archiving it standalone, since the observed corpus pattern
       (`git log` on that precedent) is finalize-plans archiving ALONGSIDE their parent, not independently ahead of it —
       a future dispatch (P5's own final todo, or a hygiene sweep) sweeps both together once the phase-chain genuinely
       completes.

@@ -27,6 +27,7 @@ related:
     ../layer1_remeasure_and_certify_2026_07_06.md,
     ./verify_p1_prereq_dag_2026_06_29.md,
     ../tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-06
 author: unknown

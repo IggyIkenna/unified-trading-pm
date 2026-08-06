@@ -44,7 +44,7 @@ depends_on: []
 > census, `total_delete=0`), sole `[DATA] P0` todo flipped `[x]`, 0 open todos, unlocked. Was false-unchecked for
 > several days despite being provably done — see the
 > `ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md` finding 2 diagnosis (originally
-> filed in `plans/active/issues/`, itself archived the same day once its own todos shipped). Moved to
+> filed in `plans/archive/issues/`, itself archived the same day once its own todos shipped). Moved to
 > `plans/archive/issues/`.
 
 # §Z fabricated `derived_features` is corpus-wide, and the re-run cannot self-heal it

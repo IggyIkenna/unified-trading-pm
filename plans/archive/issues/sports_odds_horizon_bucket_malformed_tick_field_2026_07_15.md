@@ -162,7 +162,7 @@ underlying code having changed.
 ## Correlation with the sibling sports/trades VENUE_FETCH_FAILED investigation
 
 Per the dispatch brief, another concurrent session was investigating `sports/trades` `VENUE_FETCH_FAILED` (112277/522276
-attempted_failed) from the SAME `attempted_at≈2026-07-13T23:56Z` batch window. Checked `plans/active/issues/` for that
+attempted_failed) from the SAME `attempted_at≈2026-07-13T23:56Z` batch window. Checked `plans/archive/issues/` for that
 investigation's output at the time of this writing — **no issue doc has been filed for it yet** (that investigation
 appears still in flight), so a direct cross-reference to its findings isn't possible yet. Based on this investigation's
 own evidence, however, these are **NOT the same root cause**:

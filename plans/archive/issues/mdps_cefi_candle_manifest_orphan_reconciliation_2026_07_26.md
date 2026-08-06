@@ -47,8 +47,9 @@ depends_on: []
 > **🟢 ARCHIVED 2026-08-02** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (slot-5-review-2026-07-31). Moved by the
-> `/plan-reconcile` whole-corpus run of 2026-08-02, which found this doc sitting in `plans/active/issues/` at a terminal
-> status — `check_terminal_status_archived` was RED at 13 violations against a baseline of 1. No content was rewritten.
+> `/plan-reconcile` whole-corpus run of 2026-08-02, which found this doc sitting in `plans/archive/issues/` at a
+> terminal status — `check_terminal_status_archived` was RED at 13 violations against a baseline of 1. No content was
+> rewritten.
 
 > **🟢 RESOLVED 2026-07-31 (slot-5, `review`).** This doc's own todo is superseded, not executed as written — the
 > corpus-wide `backfill_candle_manifest.py` campaign in
@@ -102,23 +103,23 @@ BITGET-FUTURES/BITFINEX-FUTURES/KRAKEN-FUTURES `day=2026-05-03`; the full extent
       3-venue/1-day known slice), superseding the narrower scope entirely.
 
       **Live-verified 2026-07-31** (read-only spot-check, `read_availability_index` with a single-day
-                          `filters=[("date",">=","2026-05-03"),("date","<=","2026-05-03")]` row-group-pushdown read — not a corpus walk):
-                          all three flagged venues now carry real `captured` MDPS manifest rows for `day=2026-05-03`:
-                          - `BITGET-FUTURES`: 29 rows (`trades`/`derivative_ticker`/`book_snapshot_5`/`liquidations` × all 7 timeframes),
-                            `written_at` spanning `2026-07-26T23:10:28Z` (the archived `mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`
-                            doc's own live-trace `--force`-reprocess test of this exact shard) through `2026-07-27T16:23:49Z` (the
-                            corpus-wide backfill campaign's cefi VM, `backfill-candle-manifest-cefi-20260727-151741`).
-                          - `BITFINEX-FUTURES`: 14 rows (`derivative_ticker`/`liquidations` × all 7 timeframes), `written_at` uniformly
-                            `2026-07-27T16:23:49.93-.95Z` — entirely from the corpus-wide backfill VM (no rows predate it for this venue).
-                          - `KRAKEN-FUTURES`: 7 rows (`derivative_ticker` × all 7 timeframes), `written_at` uniformly
-                            `2026-07-27T16:23:49.97-.98Z` — same corpus-wide backfill VM.
+                              `filters=[("date",">=","2026-05-03"),("date","<=","2026-05-03")]` row-group-pushdown read — not a corpus walk):
+                              all three flagged venues now carry real `captured` MDPS manifest rows for `day=2026-05-03`:
+                              - `BITGET-FUTURES`: 29 rows (`trades`/`derivative_ticker`/`book_snapshot_5`/`liquidations` × all 7 timeframes),
+                                `written_at` spanning `2026-07-26T23:10:28Z` (the archived `mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`
+                                doc's own live-trace `--force`-reprocess test of this exact shard) through `2026-07-27T16:23:49Z` (the
+                                corpus-wide backfill campaign's cefi VM, `backfill-candle-manifest-cefi-20260727-151741`).
+                              - `BITFINEX-FUTURES`: 14 rows (`derivative_ticker`/`liquidations` × all 7 timeframes), `written_at` uniformly
+                                `2026-07-27T16:23:49.93-.95Z` — entirely from the corpus-wide backfill VM (no rows predate it for this venue).
+                              - `KRAKEN-FUTURES`: 7 rows (`derivative_ticker` × all 7 timeframes), `written_at` uniformly
+                                `2026-07-27T16:23:49.97-.98Z` — same corpus-wide backfill VM.
 
-                          This doc's own "done when" bar (previously-orphaned shards show real manifest rows; the reconciliation run is
-                          evidenced) is satisfied by the corpus-wide backfill's evidence trail instead of a dedicated run of this todo's
-                          recipe. The MTDS raw-tick-row-unchanged safety check this todo called for is satisfied by construction —
-                          `backfill_candle_manifest.py` only ever calls `record_captured` for `processed_candles/` shard keys it footer-read
-                          from the sweep report, never touching or rebuilding any other prefix's rows (unlike the original unsafe
-                          `rebuild_manifest_from_canonical_paths` call this doc's own corrected banner already ruled out).
+                              This doc's own "done when" bar (previously-orphaned shards show real manifest rows; the reconciliation run is
+                              evidenced) is satisfied by the corpus-wide backfill's evidence trail instead of a dedicated run of this todo's
+                              recipe. The MTDS raw-tick-row-unchanged safety check this todo called for is satisfied by construction —
+                              `backfill_candle_manifest.py` only ever calls `record_captured` for `processed_candles/` shard keys it footer-read
+                              from the sweep report, never touching or rebuilding any other prefix's rows (unlike the original unsafe
+                              `rebuild_manifest_from_canonical_paths` call this doc's own corrected banner already ruled out).
 
 ## Progress Log
 

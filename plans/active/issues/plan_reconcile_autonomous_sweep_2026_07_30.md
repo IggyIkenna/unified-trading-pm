@@ -25,6 +25,7 @@ related:
     /plans/active/issues/reference_path_convention_2026_07_23.md,
     /plans/archive/issues/qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md,
     /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
 author: unknown

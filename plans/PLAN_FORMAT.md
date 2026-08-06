@@ -75,7 +75,7 @@ conditions. See `/codex/12-agent-workflow/plan-completion-and-archival-disciplin
 **SSOT reference**:
 [`/codex/11-project-management/doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md)
 
-### Active plan / wrapper plan (in `plans/active/`)
+### Active plan / wrapper plan (in `plans/archive/2026_08/`)
 
 ```yaml
 ---
@@ -201,7 +201,7 @@ locked_by: live-defi-rollout
 locked_since: YYYY-MM-DD
 asset_group: cefi | defi | tradfi | sports | prediction | cross-cutting | ao | ci | infrastructure | ui | meta
 related_plans:
-  - plans/active/<sub-plan>.md # list grows as audits spawn new active plans
+  - plans/archive/2026_08/<sub-plan>.md # list grows as audits spawn new active plans
 ---
 ```
 
@@ -473,7 +473,7 @@ When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
 
 Per CLAUDE.md HARD RULE "Plans Run To Actual Completion, Not Smoke-Test Green":
 
-Every Tab in a daily work-split plan + every plan in `plans/active/` whose scope involves real infrastructure (cloud
+Every Tab in a daily work-split plan + every plan in `plans/archive/2026_08/` whose scope involves real infrastructure (cloud
 provisioning, data movement, VM operations, migrations, backfills, reconcilers) MUST list per-phase **full-run**
 completion criteria, not just code/test deliverables. Format:
 
@@ -490,7 +490,7 @@ completion criteria, not just code/test deliverables. Format:
 ```
 
 **Reviewer rejection**: a Done definition with only code/test deliverables but no Full-execution subsection IS REJECTED.
-A "Handoff exception" that doesn't name a real plan in `plans/active/` or `plans/epics/` IS REJECTED.
+A "Handoff exception" that doesn't name a real plan in `plans/archive/2026_08/` or `plans/epics/` IS REJECTED.
 
 **Hard-stops** (the only legitimate operator-pauses): wallet private keys + custody endpoint approvals, live-trading
 kill-switch arming, force-push to main, version 1.0.0 graduation, destructive ops beyond local working tree. Everything
@@ -594,14 +594,14 @@ until the appropriate layer passes and a regression guard exists. The two docume
 | Directory                | Extension                       | Why                                                                                            |
 | ------------------------ | ------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `plans/epics/`           | `<slug>.md` (NO date suffix)    | Epics are everlasting — no deadline-coupled naming                                              |
-| `plans/active/`          | `<slug>_YYYY_MM_DD.md`          | Active plans + wrapper plans are dated work units                                              |
-| `plans/active/issues/`   | `<slug>_YYYY_MM_DD.md`          | Issue docs / audit pool — surfaces UNACKED scope                                                |
+| `plans/archive/2026_08/`          | `<slug>_YYYY_MM_DD.md`          | Active plans + wrapper plans are dated work units                                              |
+| `plans/archive/issues/`   | `<slug>_YYYY_MM_DD.md`          | Issue docs / audit pool — surfaces UNACKED scope                                                |
 | `plans/audit/results/`   | `<slug>_YYYY_MM_DD.md`          | Timestamped output of an audit-pool row                                                         |
 | `plans/archive/`         | `<slug>.plan.md`                | Frozen historical state — DO NOT rename (breaks archaeology in commit messages + external refs) |
-| `plans/ai/`              | `<slug>.plan.md`                | Staging dir; promotion to `active/` renames to `<slug>_YYYY_MM_DD.md`                          |
+| `plans/ai/`              | `<slug>.plan.md`                | Staging dir; promotion to `archive/2026_08/` renames to `<slug>_YYYY_MM_DD.md`                          |
 
 **Rule.** Epics use plain `.md` with NO date suffix (everlasting). Active plans + wrapper plans use
-`<slug>_YYYY_MM_DD.md` (dated). Reviewers reject `.plan.md` filenames in `plans/active/` or `plans/epics/`.
+`<slug>_YYYY_MM_DD.md` (dated). Reviewers reject `.plan.md` filenames in `plans/archive/2026_08/` or `plans/epics/`.
 
 **Deprecated**: `.epic.md` double-extension form was the 2026-05-08 May-23 deadline-specific naming; superseded by
 everlasting epic model 2026-05-21. Existing `.epic.md` files rename to plain `.md` during the consolidation sweep. The
@@ -620,12 +620,12 @@ master_to_live_defi_2026_05_23.md   ← cutover master (dated, one-shot; archive
         │       │
         │       └─ each references ↓
         │
-        ├── plans/active/<slug>_YYYY_MM_DD.md ← ACTIVE PLANS — dated work units; carry parent_epic:
+        ├── plans/archive/2026_08/<slug>_YYYY_MM_DD.md ← ACTIVE PLANS — dated work units; carry parent_epic:
         │       │                              Spawned when audits surface gaps
         │       │
         │       └─ each references ↓ (codex/, code, scripts/)
         │
-        ├── plans/active/issues/<slug>_YYYY_MM_DD.md  ← AUDIT POOL — UNACKED scope; Ikenna/Harsh pick rows
+        ├── plans/archive/issues/<slug>_YYYY_MM_DD.md  ← AUDIT POOL — UNACKED scope; Ikenna/Harsh pick rows
         │       │
         │       └─ row picked → audit conducted → ↓
         │
@@ -649,7 +649,7 @@ Full epic-flow SSOT: [`plans/epics/README.md`](epics/README.md). VM topology spe
 
 ---
 
-## ai/ vs active/ Directory Rules
+## ai/ vs archive/2026_08/ Directory Rules
 
 ### `plans/ai/` — AI-generated, unreviewed
 
@@ -657,18 +657,18 @@ Full epic-flow SSOT: [`plans/epics/README.md`](epics/README.md). VM topology spe
 - Files here use `.plan.md` (legacy convention; promotion renames to `.md`)
 - **Cannot** be referenced as `blocked_by` in active plans
 - **Cannot** influence archive status of active plans
-- Must be explicitly promoted to `plans/active/` by the user
+- Must be explicitly promoted to `plans/archive/2026_08/` by the user
 
-### Promotion workflow (ai/ → active/)
+### Promotion workflow (ai/ → archive/2026_08/)
 
 1. User reviews the plan in `plans/ai/`
 2. Check `plans/active/INDEX.md` for slug conflicts and competing `repo_gates`
 3. Resolve conflicts (merge, supersede, or split the plan)
-4. `git mv plans/ai/<slug>.plan.md plans/active/<slug>.md` — rename to `.md` on promotion (preserves history via similarity heuristic)
+4. `git mv plans/ai/<slug>.plan.md plans/archive/2026_08/<slug>.md` — rename to `.md` on promotion (preserves history via similarity heuristic)
 5. Add to `INDEX.md` under the correct epic section
 6. Commit: `chore: promote <slug> from ai/ to active plans`
 
-### `plans/active/` — User-approved
+### `plans/archive/2026_08/` — User-approved
 
 - Only user-approved plans live here
 - Every file must use the `.md` suffix (post-2026-05-08 sweep)

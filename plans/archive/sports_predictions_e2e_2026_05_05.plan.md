@@ -77,12 +77,13 @@ MTDS/MDPS/FSS/strategy live-mode activation chain — bundled into
 ## Context
 
 User reports sports raw-data coverage is at ~100% (or close enough for meaningful league-fixture predictions). The 26+
-sports plans in `plans/active/` were cleaned up on 2026-05-05 — 13 superseded plans archived, leaving the focused active
-set: backfill execution (apifootball_enrichment, non_apifootball_provider_backfill_launchers, sfi_chunk_parallel), data
-integrity (sports_phantom_recon, sports_manifest_shard_migration, canonical_team_mapping_propagation), feature-pipeline
-preparation (features_sports_pipeline_deployment, features_sports_upstream_coverage_gaps,
-features_sports_honest_coverage), and operational deployment (sports_roadmap_master_execution Phase 6,
-sports_scheduler_cron_activation, utl_base_image_rebuild_and_workflow_unblock).
+sports plans in `plans/archive/2026_08/` were cleaned up on 2026-05-05 — 13 superseded plans archived, leaving the
+focused active set: backfill execution (apifootball_enrichment, non_apifootball_provider_backfill_launchers,
+sfi_chunk_parallel), data integrity (sports_phantom_recon, sports_manifest_shard_migration,
+canonical_team_mapping_propagation), feature-pipeline preparation (features_sports_pipeline_deployment,
+features_sports_upstream_coverage_gaps, features_sports_honest_coverage), and operational deployment
+(sports_roadmap_master_execution Phase 6, sports_scheduler_cron_activation,
+utl_base_image_rebuild_and_workflow_unblock).
 
 What was missing: a single plan that drives sports predictions from raw data → features → ML → strategy → execution →
 UI. This plan is that driver. It folds sports_e2e_validation_2026_03_27 Phases 2/3/5 (which were the closest thing to an

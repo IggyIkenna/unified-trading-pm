@@ -23,6 +23,7 @@ related:
     /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/archive/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
     /plans/archive/issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-25
 author: unknown

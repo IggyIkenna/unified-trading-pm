@@ -263,7 +263,7 @@ Phase 3 wires compliance reporting through the full observability stack:
 > `StrategyComplianceReporter`) is shipped in execution-service and strategy-service. The downstream ARM integration,
 > EMIR reporting, 7-year retention enforcement, and FCA SUP 17 submission path are NOT yet built. **Planned delta:**
 > These are post-cutover items with no active plan — they become schedulable once May-23 live DeFi is stable.
-> **Target:** File a wrapper plan in `plans/active/` before first live trade touches UK-regulated instruments.
+> **Target:** File a wrapper plan in `plans/archive/2026_08/` before first live trade touches UK-regulated instruments.
 
 - **ARM integration**: Wire `TRADE_REPORTED_MIFID` and `TRANSACTION_REPORTED_FCA` events to an actual Approved Reporting
   Mechanism via a dedicated compliance-reporting-service.

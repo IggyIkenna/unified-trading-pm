@@ -37,6 +37,7 @@ related:
     /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-04"
 author: unknown

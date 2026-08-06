@@ -43,6 +43,7 @@ related:
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
     /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-17"

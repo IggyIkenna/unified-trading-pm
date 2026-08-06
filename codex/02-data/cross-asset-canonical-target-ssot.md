@@ -552,7 +552,7 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
 ## 12. Where the work lives
 
 Migration close-outs (code + backfilled + forward data):
-`plans/active/{cefi,tradfi,defi,prediction}_consolidated_closeout_2026_07_18.md`. Detailed axis SSOTs:
+`plans/archive/2026_08/{cefi,tradfi,defi,prediction}_consolidated_closeout_2026_07_18.md`. Detailed axis SSOTs:
 `canonical-instrument-ids.md` (builder grammar) · `defi-canonical-naming-ssot.md` (defi vocab) ·
 `availability-manifest-and-data-status.md` (shard atom + manifest) · `shard-granularity-cefi.md` (cefi bundles) ·
 `honest-coverage-model.md` (denominator) · `pipeline-mode-partition.md` (source-aware partition).

@@ -35,6 +35,7 @@ related:
     plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27
 author: unknown

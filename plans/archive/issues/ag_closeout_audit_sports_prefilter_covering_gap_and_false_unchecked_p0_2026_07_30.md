@@ -70,7 +70,7 @@ superseded_by:
 ## Finding 1 — the Phase-0 pre-filter under-counts the covering set (tooling defect)
 
 `scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py::_covering_paths()` builds a tranche's covering-doc set
-as: the `*_consolidated_closeout_*` glob, plus every `plans/active/<prefix>_*.md` whose filename matches
+as: the `*_consolidated_closeout_*` glob, plus every `plans/archive/2026_08/<prefix>_*.md` whose filename matches
 `re.search(r"(dispatch_batch|satellite|_finalize)", name)`.
 
 That regex is filename-pattern-only — it is exactly the Phase 0.2 **path (a)** the skill describes. The skill then adds
@@ -173,8 +173,8 @@ good as the frontmatter `status` it reads"), so this run recorded it rather than
 
 `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Also NOT `/na-eligibility-audit`" states: _"An `assigned_vm: NA`,
 `status: active`/`open` doc is by definition NOT orphaned (it has an owner: itself)"_. Read literally that makes the
-orphan question vacuous — every doc in `plans/active/` is `active`/`open` by construction, since the discovery step
-already excludes `resolved`/`archived`/`superseded`. It also contradicts the shipped pre-filter, which treats only
+orphan question vacuous — every doc in `plans/archive/2026_08/` is `active`/`open` by construction, since the discovery
+step already excludes `resolved`/`archived`/`superseded`. It also contradicts the shipped pre-filter, which treats only
 `assigned_vm: planning` + `active`/`open` as self-dispatched (`self_dispatched` in
 `generate_ag_closeout_audit_candidates.py`) and correctly leaves `NA` docs in the orphan population.
 

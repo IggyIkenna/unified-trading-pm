@@ -96,7 +96,7 @@ drift_direction: advance-code
       never archived, or already archived by an earlier/later independent session); 1
       (`plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`) was already archived;
       only `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` was genuinely `status: resolved` with 0 open
-      todos (re-verified: all 6 checkboxes `[x]`) while still sitting under `plans/active/issues/` — archived it to
+      todos (re-verified: all 6 checkboxes `[x]`) while still sitting under `plans/archive/issues/` — archived it to
       `plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md` with a `🟢 ARCHIVED` banner, fixed
       its 8 corpus-wide path referrers (`unified-trading-pm@5fb83f4ea`), and ran a codex-alignment check per the
       ritual's step 3 — `/codex/02-data/instruments-foundation-and-catalogue-completeness.md` was stale on 2 shipped
@@ -107,8 +107,8 @@ drift_direction: advance-code
       100%-checkbox-count sweep (all 4 checkboxes were done, but a genuine "35 leagues need an operator
       league-registration decision" gap existed only as prose, never a checkbox — the exact § 2 "todos not prose" trap —
       so `status: open` correctly never flipped, but the doc sat un-bannered in `plans/archive/issues/` anyway,
-      invisible to `regen_backlog_from_plan.py` which only reads `plans/active/*.md`). Added the missing
-      `- [ ] [OPERATOR] P3` todo, restored the doc to `plans/active/issues/`, and fixed its 8 corpus referrers too (2
+      invisible to `regen_backlog_from_plan.py` which only reads `plans/archive/2026_08/*.md`). Added the missing
+      `- [ ] [OPERATOR] P3` todo, restored the doc to `plans/archive/issues/`, and fixed its 8 corpus referrers too (2
       more `related:` frontmatter entries + 2 more prose citations were stale pointing at the doc's pre-restoration
       archive path, found and fixed in the same pass: `sports_consolidated_closeout_2026_07_19.md`'s "spun off" note,
       and a THIRD, separate stale reference in the same file to an unrelated already-archived doc,
@@ -120,8 +120,8 @@ drift_direction: advance-code
       corpus drift from other slots' concurrent work, not a regression this todo introduced. Logged the live numbers in
       `issues/reference_path_convention_2026_07_23.md`'s Progress Log rather than silently claiming a clean sweep; not
       fixed here (corpus-wide, unrelated docs, well outside this todo's scope). No source doc this plan drives to a
-      terminal status remains under `plans/active/` (the one true positive is archived); every corpus referrer this todo
-      is responsible for resolves to its correct current path. Source:
+      terminal status remains under `plans/archive/2026_08/` (the one true positive is archived); every corpus referrer
+      this todo is responsible for resolves to its correct current path. Source:
       `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-8, `review` craft).** Resolved the conflict-gated Deferred section from
       batch3's own doc — see Progress Log for full per-item disposition + citations. Summary: of the 6 docs / 7

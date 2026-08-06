@@ -21,6 +21,7 @@ related:
     /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-27"
 last_updated: "2026-07-30"

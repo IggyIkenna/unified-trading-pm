@@ -26,6 +26,7 @@ related:
   [
     plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
     plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 author: unknown

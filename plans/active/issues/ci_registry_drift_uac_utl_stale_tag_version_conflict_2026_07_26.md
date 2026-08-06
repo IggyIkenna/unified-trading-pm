@@ -26,6 +26,7 @@ related:
     /plans/archive/issues/defi_wizard_batch2_018_residual_findings_2026_07_26.md,
     /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-26
 author: unknown

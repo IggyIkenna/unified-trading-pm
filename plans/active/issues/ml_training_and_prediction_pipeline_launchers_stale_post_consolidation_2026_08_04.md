@@ -29,6 +29,7 @@ related:
   [
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-04
 author: unknown

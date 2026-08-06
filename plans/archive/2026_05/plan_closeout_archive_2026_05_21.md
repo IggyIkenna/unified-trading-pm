@@ -98,7 +98,7 @@ all other slots done). Pure docs/markdown work — no code.
 2. Verify that ops referred to in the plan ran in production (grep git log / inline SHAs).
 3. Migrate any DEFERRED todos to their named successor plan with `**MIGRATED FROM:**` banner.
 4. Add `## Deferred work — migrated to:` section at top of archived plan.
-5. Rename file from `plans/active/<slug>.md` → `plans/archive/<slug>.plan.md`.
+5. Rename file from `plans/archive/2026_08/<slug>.md` → `plans/archive/<slug>.plan.md`.
 6. Update parent epic to remove the active-plan reference and note archived status.
 7. Commit per shippable unit; push; flip this wrapper checkbox.
 
@@ -116,7 +116,7 @@ Deferred items to migrate:
       `plans/archive/wave3x_residual_ssots_2026_05_08.plan.md`. Add `## Deferred work — migrated to:` section listing
       Track D → `wave3x_track_d_implementation_2026_05_19.md` and Track E →
       `available_at_lookahead_bias_completion_2026_05_08.md` Phase B. Add `status: archived` to frontmatter. Remove from
-      `plans/active/`. — PM@221435a9d
+      `plans/archive/2026_08/`. — PM@221435a9d
 - [x] [DOCS] P0. Update `plans/epics/sports_master.md`: mark `wave3x_residual_ssots_2026_05_08` as
       `✅ ARCHIVED 2026-05-21` in any active-plan reference table or todo list. — PM@221435a9d
 - [x] [FLIP] P0. Commit `docs(plans): archive wave3x_residual_ssots — 100% complete per slot-2 2026-05-20`. Push. —
@@ -138,7 +138,7 @@ Deferred items to check before archiving:
       `## Deferred work — migrated to:` section: Phase 6.x validation →
       `writegate_honest_coverage_endtoend_2026_05_06.md`; cefi re-fetch →
       `issues/cefi_attempted_failed_refetch_2026_05_12.md` (if exists, else note inline). Add `status: archived`. Remove
-      from `plans/active/`. — PM@d6d3d51e1
+      from `plans/archive/2026_08/`. — PM@d6d3d51e1
 - [x] [DOCS] P0. Update `plans/epics/manifest_master.md`: mark `expected_unattempted_propagation_chain_2026_05_12` as
       `✅ ARCHIVED 2026-05-21 — runtime propagation code complete; validation pending prod run`. — PM@d6d3d51e1
 - [x] [FLIP] P0. Commit + push. — PM@d6d3d51e1
@@ -155,7 +155,7 @@ Deferred items:
 - [x] ✅ [DOCS] P0. Archive `features_repo_consolidation_2026_05_08.md` →
       `plans/archive/features_repo_consolidation_2026_05_08.plan.md`. Add banner + `## Deferred work — migrated to:`
       section: Phase 6 parity → `features_service_qg_cleanup_2026_05_11.md`. Add `status: archived`. Remove from
-      `plans/active/`. — PM@93c95a76c
+      `plans/archive/2026_08/`. — PM@93c95a76c
 - [x] ✅ [DOCS] P0. Update parent epic (find by grep): mark plan as `✅ ARCHIVED 2026-05-21`. — PM@93c95a76c
 - [x] ✅ [FLIP] P0. Commit + push. — PM@93c95a76c
 

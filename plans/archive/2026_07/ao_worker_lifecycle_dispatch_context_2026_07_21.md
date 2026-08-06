@@ -206,6 +206,6 @@ Operator-owned timing: "after updating docs, fixing this, and everything discuss
 P3 item. That section exists precisely for calendar-time- or operator-gated residuals left by archived AO child plans,
 and the item carries its source citation back to this plan so the evidence trail survives.
 
-_(was: **Not yet identified** — grepping `plans/active/` and `plans/epics/` for "role lifecycle" / "one_shot" /
+_(was: **Not yet identified** — grepping `plans/archive/2026_08/` and `plans/epics/` for "role lifecycle" / "one_shot" /
 "persistent" reclassification found no owner, so this plan remained the record of the deferral until a successor was
 authored. The archival supplied that successor rather than creating a new plan for one P3 item.)_

@@ -22,6 +22,7 @@ related:
   [
     /plans/archive/issues/sports_track_k_is_pipeline_check_progress_2026_08_02.md,
     /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-02
 author: unknown

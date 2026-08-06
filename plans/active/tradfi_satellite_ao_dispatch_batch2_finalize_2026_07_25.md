@@ -23,6 +23,7 @@ related:
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-30"

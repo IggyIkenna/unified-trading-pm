@@ -59,7 +59,7 @@ depends_on: []
 ## What I found
 
 Ran `.venv/bin/python scripts/manifest/check-dependency-alignment.py --json` from a clean `unified-trading-pm` tree
-(HEAD `b4d92443b`, my 2 changed files were `plans/active/issues/*.md` + `scripts/dev/audit-fleet-reflog-resets.sh` —
+(HEAD `b4d92443b`, my 2 changed files were `plans/archive/issues/*.md` + `scripts/dev/audit-fleet-reflog-resets.sh` —
 neither touches any manifest/pyproject file, so this is pre-existing, not caused by my commits). Result:
 `"aligned": false"`, 9 issues, all `external_version_mismatch`:
 

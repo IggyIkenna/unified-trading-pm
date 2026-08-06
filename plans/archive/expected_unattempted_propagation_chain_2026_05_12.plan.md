@@ -339,7 +339,7 @@ Reconciler scripts should read instruments-service manifest once and pass into c
       data; caching the last-known squad is correct. `EXPECTED_OUTSIDE_TRANSFER_WINDOW` exists in UAC for future use
       (e.g. TRANSFERS entity, or if the cadence changes). No code change needed. **No per-league transfer window
       tracking in IS manifest** — the window logic lives in `get_leagues_needing_refresh()` which gates API calls but
-      not manifest rows. Filed as **DESIGN NOTE** (not bug): `plans/active/issues/` if operator wants deeper audit.
+      not manifest rows. Filed as **DESIGN NOTE** (not bug): `plans/archive/issues/` if operator wants deeper audit.
 - [x] [QG] P1. `cd unified-trading-library && bash scripts/quality-gates.sh`.
       `cd instruments-service && bash scripts/quality-gates.sh`. Push. UTL: 4 new tests pass
       (test_sports_fixture_classifier.py); 109 pre-existing manifest_writer failures (foreign). instruments-service: 6/6

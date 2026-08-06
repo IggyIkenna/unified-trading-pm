@@ -26,6 +26,7 @@ repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [ci-cd, self-hosted-runners, capacity-planning, io-contention, vm-infra, phase-7]
 related:
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   [/codex/05-infrastructure/vm-launcher-runbook.md, /plans/active/github_actions_operator_gated_followups_2026_07_17.md]
 created: 2026-07-28
 author: unknown

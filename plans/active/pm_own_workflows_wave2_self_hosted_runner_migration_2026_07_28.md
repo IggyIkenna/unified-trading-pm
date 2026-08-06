@@ -38,6 +38,7 @@ estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: infra
 drift_direction: advance-code
+  /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
 depends_on: []
 source: "slot-11 (tabs/11), gha_fleet_wide_missed_ubuntu_latest_workflows_wave2-009 task"
 locked_by:

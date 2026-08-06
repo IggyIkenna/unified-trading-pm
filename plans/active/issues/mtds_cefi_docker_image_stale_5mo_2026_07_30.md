@@ -32,6 +32,7 @@ related:
   [
     /plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 author: unknown

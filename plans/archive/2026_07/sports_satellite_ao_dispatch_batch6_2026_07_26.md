@@ -278,8 +278,8 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       items, archive **the plan**. Nothing archives the SOURCE docs the batch drove to terminal status. Concretely,
       `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md` todo 1 says _"Only flip a doc's `status` to
       `resolved` if it genuinely reaches 0 open todos"_ — flipping a doc to `resolved` while it sits in
-      `plans/active/issues/` is exactly what `check_terminal_status_archived.py` HARD-fails on. So the finalize plan, as
-      written, creates the hygiene violation, and today the `plan_health` gate's own remediation
+      `plans/archive/issues/` is exactly what `check_terminal_status_archived.py` HARD-fails on. So the finalize plan,
+      as written, creates the hygiene violation, and today the `plan_health` gate's own remediation
       (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) archived all 11 rather than any plan owning
       it. Added a new todo — placed immediately AFTER each plan's own reconciliation todo (todo 1), not appended at the
       end, since the archival must follow directly on the heels of the status flip to close the actual violation window;
@@ -290,14 +290,14 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       one parent doc rather than many small source docs, so its new todo is tailored to note the expected-no-op case
       explicitly). Each new todo reads, in substance: archive every source doc the reconciliation todo drives to
       `status: resolved`/`complete` (re-verifying 0 open todos + a genuine resolution banner first), in the same commit
-      as the flip, so `check_terminal_status_archived.py` never sees a terminal doc in `plans/active/`. Repo:
+      as the flip, so `check_terminal_status_archived.py` never sees a terminal doc in `plans/archive/2026_08/`. Repo:
       unified-trading-pm. Verified: `bash scripts/plan-hygiene/check_line_caps.sh` clean on all 5 (104-125L, well under
       the 500L soft cap); `check_reference_paths.py` shows no new hit for any of the 5 filenames (baseline unchanged,
       162/941). `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` does NOT report 0 hard failures corpus-wide — it
       shows 3 pre-existing hard failures, confirmed via a stash-and-rerun on a clean LDR HEAD to be byte-identical with
       and without this change: (1) 2 already-`resolved` DeFi issue docs
       (`defi_maker_vault_share_price_29day_gap_2026_07_26.md`, `defi_mev_events_pagination_gap_2026_07_28.md`) sitting
-      unarchived in `plans/active/issues/` — the exact same systemic gap this todo fixes for sports, corroborating the
+      unarchived in `plans/archive/issues/` — the exact same systemic gap this todo fixes for sports, corroborating the
       Deferred section's already-parked "generalise workspace-wide" recommendation below, not a new finding; (2) 1
       unrelated AG-closeout-linkage orphan (`solana_address_primitives_duplicated_across_mtds_handlers_2026_07_28.md`,
       `asset_group=[defi]`, created today by other concurrent fleet work); (3) `assigned_vm:NA` corpus size grew 3 docs
@@ -456,7 +456,7 @@ otherwise-independent P3 todos over one soft file-overlap risk).
   interim fix with an explicit "only if Track F's re-run has not started by <date>" gate. No candidate todo drafted.
 
 - **Reconcile-in-place vs archive-as-history for the two features-sweep parts.** Todos 1 and 2 above assume the parts
-  stay in `plans/active/issues/` and get reconciled in place. The alternative — archive §§ G-AA wholesale as historical
+  stay in `plans/archive/issues/` and get reconciled in place. The alternative — archive §§ G-AA wholesale as historical
   record and re-file only the ~4 genuinely-live items as fresh issue docs — is the treatment two sibling docs already
   got (`/plans/archive/2026_07/sports_consolidated_closeout_track_d_history_2026_07_23.md`,
   `sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`, the very precedent the split itself cites). Both

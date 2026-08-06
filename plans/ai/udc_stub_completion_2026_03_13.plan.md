@@ -1,8 +1,8 @@
 # UDC Stub Completion Plan — Implement 5 NotImplementedError Stubs
 
-**Status:** AI-generated — awaiting user review and promotion to `plans/active/` **Date:** 2026-03-13 **Scope:**
-unified-domain-client **Context:** §13 audit found 5 NotImplementedError stubs. This plan implements them via UCI
-(unified-cloud-interface).
+**Status:** AI-generated — awaiting user review and promotion to `plans/archive/2026_08/` **Date:** 2026-03-13
+**Scope:** unified-domain-client **Context:** §13 audit found 5 NotImplementedError stubs. This plan implements them via
+UCI (unified-cloud-interface).
 
 ---
 

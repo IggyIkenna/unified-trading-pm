@@ -327,7 +327,7 @@ correctly), others stop one level short (broken).
 #### B.2 — Drill-down hierarchy must match codex shard-key matrix per asset_group
 
 Plan in `plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md` (5 phases — promoted from `plans/ai/` to
-`plans/active/` on 2026-05-07 per PM commit `d968b5d3`). Owner-side todos:
+`plans/archive/2026_08/` on 2026-05-07 per PM commit `d968b5d3`). Owner-side todos:
 
 - [ ] [AGENT] P0. **Phase 1 audit** — walk the deployment-ui data-status panel for each (service, asset_group) and
       compare the rendered drill-down hierarchy against the codex shard-key matrix in CLAUDE.md

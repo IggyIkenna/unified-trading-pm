@@ -18,6 +18,7 @@ related:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-24"
 parent_epic: mtds_mdps_master

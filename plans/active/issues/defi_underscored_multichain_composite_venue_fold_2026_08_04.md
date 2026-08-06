@@ -35,6 +35,7 @@ related:
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /plans/archive/issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-04
 author: ikennaigboaka [main·planning]

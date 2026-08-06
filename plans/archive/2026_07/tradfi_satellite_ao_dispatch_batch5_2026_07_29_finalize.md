@@ -109,7 +109,7 @@ context_scope:
       95 twins were folded/migrated/deleted by another pass; the loader silently drops malformed rows; or two report
       generations are being conflated. **Done when**: either the delta is explained with cited evidence and the stale
       995 figure is corrected everywhere it appears in the signoff doc, or — if it cannot be resolved in this pass — it
-      is filed as its own `plans/active/issues/` doc (a delete's candidate list mutating unexplained is a real
+      is filed as its own `plans/archive/issues/` doc (a delete's candidate list mutating unexplained is a real
       data-correctness finding, not bookkeeping) and NOT closed as accepted. Then, for the 2 conflict-gated items
       (`/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain sequencing; the
       legacy-twin-bucket actual delete), the 4 too-large-or-risky items, and the operator-gated list: re-read the

@@ -44,11 +44,11 @@ locked_since: 2026-05-07
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~28 open `- [ ]` todos
 > INLINE in its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
-> (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never
-> dispatched — the epic read as "0 plans". The inline blocks have been **reconciled, not deleted**: net-new unowned work
-> extracted to child active plans (see § "Assigned active plans"); already-owned work pointed at its owning June plan;
-> cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without evidence. See §
-> "Workstream routing" below for the full map.
+> (`regen_backlog_from_plan.py`) only scans `plans/archive/2026_08/*.md`, never `plans/epics/`, so those inline todos
+> were never dispatched — the epic read as "0 plans". The inline blocks have been **reconciled, not deleted**: net-new
+> unowned work extracted to child active plans (see § "Assigned active plans"); already-owned work pointed at its owning
+> June plan; cutover success-criteria routed to the master. No work was dropped and nothing was flipped ✅ without
+> evidence. See § "Workstream routing" below for the full map.
 
 > **StrategyPnlStreamEvent**: archetypes in this plan emit StrategyPnlStreamEvent per UAC contract (see
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
@@ -351,8 +351,8 @@ ETA 05-08 / 05-09 plausible for leading VMs; trailing ones (e.g. bitfinex-future
 
 ## Workstream routing (restructured 2026-06-20)
 
-The CeFi work is dispatched through child active plans (regen scans `plans/active/`, not this epic). Every former inline
-todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
+The CeFi work is dispatched through child active plans (regen scans `plans/archive/2026_08/`, not this epic). Every
+former inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
 
 | Former inline block                                                                                                                                                                    | Disposition                                                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                 |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

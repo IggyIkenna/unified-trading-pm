@@ -273,7 +273,7 @@ breakdown of these recent rows at all). Given the concurrent, actively-tracked
 `BTC-FS-25SEP26_27FEB26` routinely defeat the standard FUTURE/OPTION symbol regexes), a combo-shaped symbol reaching
 this expiry-parsing fallback and failing is a **plausible but NOT confirmed** explanation -- this investigation did not
 trace which exact symbols triggered these 4,655 rows (out of scope for a read-only manifest-level pass; would need the
-run.log or a live symbol-level replay). No existing open issue doc found in this workspace (`plans/active/issues/`,
+run.log or a live symbol-level replay). No existing open issue doc found in this workspace (`plans/archive/issues/`,
 `codex/`) tracks this specific DERIBIT/COINBASE-FUTURES/BITFINEX-FUTURES/OKX-FUTURES recurrence -- flagged as a
 genuinely new, smaller finding, not a duplicate of anything read.
 

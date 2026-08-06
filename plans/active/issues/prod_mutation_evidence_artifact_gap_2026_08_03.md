@@ -24,6 +24,7 @@ related:
     /plans/PLAN_FORMAT.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-03
 author: unknown

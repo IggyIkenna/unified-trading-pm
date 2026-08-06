@@ -179,7 +179,7 @@ found," not "no possible drift."
 - [x] ✅ [INFRA] P3. **Filed + resolved this issue doc directly** (per
       `codex/11-project-management/issue-doc-     lifecycle.md`: "the fix is shipped... archive immediately" — since the
       fix landed in the same continuous session, filed straight into `plans/archive/issues/` rather than transiting
-      `plans/active/issues/` at all, avoiding a self-inflicted dual-tracking window). (repo: unified-trading-pm) —
+      `plans/archive/issues/` at all, avoiding a self-inflicted dual-tracking window). (repo: unified-trading-pm) —
       interactive session, 2026-07-25.
 
 ## Progress Log

@@ -133,7 +133,7 @@ significant data-correctness findings correctly escalated rather than silently c
 undercount contradiction; a real instrument_key collision on DEX pool venues).
 
 **2026-07-29/30, root-cause fix**: investigated why done docs keep sitting unarchived despite the standing CLAUDE.md
-rule — found `check_archive_candidates.sh` was informational-only, missed `plans/active/issues/` entirely, AND used
+rule — found `check_archive_candidates.sh` was informational-only, missed `plans/archive/issues/` entirely, AND used
 non-portable `grep -P`. Fixed all three; now a real hard gate (see above).
 
 **2026-07-30, Wave 2**: post-wave-1 recount: 320 docs still had 1-2 open todos (corpus replenished by concurrent

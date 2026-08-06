@@ -21,6 +21,7 @@ related:
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/archive/2026_08/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-27"
 last_updated: "2026-07-30"
