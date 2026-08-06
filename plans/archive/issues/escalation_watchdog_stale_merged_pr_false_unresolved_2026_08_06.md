@@ -60,6 +60,9 @@ context_scope:
   ]
 ---
 
+> **🗄️ ARCHIVED 2026-08-06** (`/ag-closeout-audit ao`, autonomous) — filed and fixed same-session (both `## Todos`
+> `[x]`, `status: resolved` already set); archived per the 6-step ritual — `plan-completion-and-archival-discipline.md`.
+
 # Escalation watchdog: a merged promote PR never resolved its own ldr_qg_failure wall
 
 ## What I found
@@ -136,3 +139,5 @@ head-branch poll at all; falls through correctly when still OPEN).
   the strict-quickmerge pre-push hook (this is genuine app code, not a docs/scripts/.github carve-out) — re-shipped via
   `quickmerge.sh --agent --files`, which detected the already-committed tree and amended the `Quickmerge:` trailer onto
   the existing commit rather than duplicating it.
+- **`/ag-closeout-audit ao` 2026-08-06 (autonomous)**: found already `status: resolved` with both todos `[x]` but never
+  archived. Archived per the 6-step ritual.

@@ -9,7 +9,7 @@ summary:
   the dry-run Progress Log entry below. The one remaining open question is whether the DAILY CRON path (opus/effort-max
   dispatch mode, tranche-sharded, lifecycle-complete registration) fires and completes correctly on its own,
   unsupervised.
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -34,6 +34,9 @@ assigned_vm: planning
 assigned_role: infra
 sequential: true # both todos touch the same timer/install-script + the same first-fire verification surface
 resolved_by:
+  "/ag-closeout-audit ao, 2026-08-06 (autonomous) — all 4 todos independently re-verified [x] (timer install,
+  interactive dry-run, first-fire dispatch-wiring proof, timeout re-tune all shipped + confirmed 2026-07-27..08-04);
+  context-scout's 2026-08-06 marker already flagged this doc as all-checked-needs-archival-review, unactioned until now."
 locked_by:
 context_scope:
   [
@@ -46,6 +49,11 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-06** (`/ag-closeout-audit ao`, autonomous) — all 4 todos were already `[x]` (last landed
+> 2026-08-04); `status` was never flipped off `open` at completion time — the 2026-08-06 context-scout marker had
+> already flagged this for archival review. Archived now per the 6-step ritual —
+> `plan-completion-and-archival-discipline.md`.
 
 # na-eligibility-auditor: installed + unit-tested + procedure proven interactively
 
@@ -152,3 +160,5 @@ which is why it's tracked here instead of folded into the code commits above.
     without code changes. This P3 is satisfied: the timer-wiring contract is operational.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged. Note: all todos in this
   doc now appear checked — flagging for archival review, out of scope for this pass.
+- **`/ag-closeout-audit ao` 2026-08-06 (autonomous)**: picked up context-scout's flag above. All 4 todos independently
+  re-verified `[x]`, `locked_by:` empty. Archived per the 6-step ritual; `status` flipped `resolved`.

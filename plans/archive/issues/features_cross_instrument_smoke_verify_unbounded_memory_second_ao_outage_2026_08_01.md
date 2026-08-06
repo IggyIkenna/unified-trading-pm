@@ -18,7 +18,7 @@ summary: >-
   pegged 106% sustained) for roughly another 3-4 minutes before response times returned to normal (sub-20ms) — a
   processing backlog draining, not a second wedge. Total outage window (last confirmed DB-lock error to first fast
   response): ~07:00Z-07:40Z, at least 40 minutes.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -61,6 +61,9 @@ source: >-
   Discovered live on the orchestrator VM (ip-172-31-5-118) via an interactive Claude Code session with direct host
   access, in response to a second same-day operator report ("AO is down again").
 resolved_by:
+  "/ag-closeout-audit ao, 2026-08-06 (autonomous) — all 3 todos independently re-verified [x] (root-cause fix,
+  timeout-hardening fix, and the 4-family verification leg all shipped + confirmed 2026-08-01..08-05); status was never
+  flipped off `open` at last-todo-completion time, archiving now per the 6-step ritual."
 locked_by:
 locked_since:
 context_scope:
@@ -71,6 +74,10 @@ context_scope:
     /plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-06** (`/ag-closeout-audit ao`, autonomous) — all 3 `## Todos` items were already `[x]` (last
+> landed 2026-08-05); `status` was never flipped off `open` at completion time. Archived now per the 6-step ritual —
+> `plan-completion-and-archival-discipline.md`.
 
 # features_service.cross_instrument smoke-verify run — unbounded memory, `timeout` ignored, second AO outage today
 
@@ -246,3 +253,6 @@ context_scope:
   not PROD — the `PROTOCOL_DATA_SINK_BUCKET*` routing is effective. Timeout hardening (`start_new_session=True` +
   `os.killpg`) confirmed present in all 4 files. No code changes shipped (verification-only task).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **`/ag-closeout-audit ao` 2026-08-06 (autonomous)**: found via the corpus-wide candidate scan — all 3 `## Todos`
+  independently re-verified `[x]` (no re-investigation needed, evidence already on record above), `locked_by:` empty.
+  Archived per the 6-step ritual; `status` flipped `resolved`.
