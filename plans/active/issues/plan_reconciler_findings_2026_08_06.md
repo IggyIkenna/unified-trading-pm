@@ -86,7 +86,11 @@ Slot 2, branch `plan_reconciler/agt-4fdce1`. This doc is the run journal — app
       `unified-trading-pm@511ba5da0`), `BLK-136e69bf` (sports LA_LIGA_2 — re-verified live, 846/846 target cells now
       captured under the aliased `SEGUNDA_DIVISION` key, filed the alias-removal question as a new judgment-call todo,
       `unified-trading-pm@95c107a98`), `BLK-0e7e0794` (upbit — reopened the falsely-checked todo, tagged
-      `BLOCKED-CREDENTIALS`, dropped the placeholder citation, `unified-trading-pm@c06649920`). `/done` next.
+      `BLOCKED-CREDENTIALS`, dropped the placeholder citation, `unified-trading-pm@c06649920`). **`/done` attempted,
+      blocked by a known/tracked AO server bug, NOT a problem with this run's own work** — see the dedicated row in
+      `## Deferred work after 2026-08-06` below and the corroboration filed in
+      `/plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`
+      (`unified-trading-pm@d5d4fffdb`). This dispatch's actual work is 100% complete and durable regardless.
 
 ## Run context
 
@@ -259,22 +263,23 @@ plan_reconciler judgment, documented per-doc above); no candidate was found to b
 
 ## Deferred work after 2026-08-06
 
-| Item                                                              | State / why deferred                                                                     | Blocked on                                                              |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **STEP 8 resume** (apply answers to 3 blocked questions, `/done`) | Cannot be done yet — waiting on operator dashboard response; 0 answers as of session-end | Operator-owned                                                          |
-| Fix ≥8-instance finalize-twin `status:active`/`draft` banner bug  | Not done — mechanical grep-and-fix, bounded, ready to pick up                            | Nobody — real work                                                      |
-| `infra_satellite_ao_dispatch_batch3` assigned_vm live-parse check | Not done — needs a live backlog-regen check, not a doc read                              | Nobody — real work                                                      |
-| `sports_satellite_ao_dispatch_batch5` re-asks an answered ruling  | Not done — doc correction, bounded                                                       | Nobody — real work                                                      |
-| `gate_on_depends` reliability (predictions batch6/7)              | Not done — needs a live AO-mechanism investigation                                       | Nobody — real work, but investigate before assuming either doc is right |
-| `defi_master.md` Hyperliquid+Aster stale claim                    | Not done — epic narrative edit, outside auto-fix scope                                   | Nobody — real work (low risk, low urgency)                              |
-| `mdps_features_live_launcher_exec_dispatch` correction banner     | Not done — small, bounded edit                                                           | Nobody — real work                                                      |
-| `/ag-closeout-audit` re-run (linkage regression)                  | Not done — this run only measured + routed, didn't run the skill                         | Nobody — a skill invocation                                             |
-| `/na-eligibility-audit` re-run (NA-corpus regression)             | Not done — same, routed not run                                                          | Nobody — a skill invocation                                             |
-| 46 P1-P3 contradictions not individually fixed                    | Not done — detected + categorized, not all individually resolved (volume)                | Nobody — triage backlog, see Contradictions table                       |
+| Item                                                              | State / why deferred                                                                                                                                                  | Blocked on                                                                                                                                      |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~STEP 8 resume (apply answers to 3 blocked questions)~~          | **Done 2026-08-06** — all 3 applied, see todo above                                                                                                                   | —                                                                                                                                               |
+| Clean `/done {one_shot_complete:true}` for this dispatch          | Cannot be done — 400 "no active agent owns its session", a known AO server bug (8th corroboration filed this run, `claim-interactive` workaround tried and ruled out) | AO server fix — needs orchestrator-DB access this worker slot doesn't have; see `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md` |
+| Fix ≥8-instance finalize-twin `status:active`/`draft` banner bug  | Not done — mechanical grep-and-fix, bounded, ready to pick up                                                                                                         | Nobody — real work                                                                                                                              |
+| `infra_satellite_ao_dispatch_batch3` assigned_vm live-parse check | Not done — needs a live backlog-regen check, not a doc read                                                                                                           | Nobody — real work                                                                                                                              |
+| `sports_satellite_ao_dispatch_batch5` re-asks an answered ruling  | Not done — doc correction, bounded                                                                                                                                    | Nobody — real work                                                                                                                              |
+| `gate_on_depends` reliability (predictions batch6/7)              | Not done — needs a live AO-mechanism investigation                                                                                                                    | Nobody — real work, but investigate before assuming either doc is right                                                                         |
+| `defi_master.md` Hyperliquid+Aster stale claim                    | Not done — epic narrative edit, outside auto-fix scope                                                                                                                | Nobody — real work (low risk, low urgency)                                                                                                      |
+| `mdps_features_live_launcher_exec_dispatch` correction banner     | Not done — small, bounded edit                                                                                                                                        | Nobody — real work                                                                                                                              |
+| `/ag-closeout-audit` re-run (linkage regression)                  | Not done — this run only measured + routed, didn't run the skill                                                                                                      | Nobody — a skill invocation                                                                                                                     |
+| `/na-eligibility-audit` re-run (NA-corpus regression)             | Not done — same, routed not run                                                                                                                                       | Nobody — a skill invocation                                                                                                                     |
+| 46 P1-P3 contradictions not individually fixed                    | Not done — detected + categorized, not all individually resolved (volume)                                                                                             | Nobody — triage backlog, see Contradictions table                                                                                               |
 
-**Recommended next item**: STEP 8 resume is queue-position-1 the moment an answer arrives (it's this exact dispatch's
-own unfinished obligation). Absent that, the finalize-twin banner-bug sweep is the highest-leverage next pick — one
-bounded mechanical pass closes ≥8 P1s at once, same shape as this run's epic-roster regen.
+**Recommended next item**: the finalize-twin banner-bug sweep is the highest-leverage next pick — one bounded mechanical
+pass closes ≥8 P1s at once, same shape as this run's epic-roster regen. (STEP 8 resume, formerly queue-position-1, is
+now done — see above.)
 
 ## Lessons (this run)
 
@@ -325,3 +330,11 @@ bounded mechanical pass closes ≥8 P1s at once, same shape as this run's epic-r
   lining: the crash location itself proved the message was NOT a real answer (a genuine match exits earlier, cleanly) —
   but the bug still cost visibility into what the broadcast said and one relaunch cycle. Fix: hardcode path constants
   INSIDE a background script rather than relying on inherited environment, especially under `set -u`.
+- **The pre-task issue-conflict grep paid off on my OWN session's exit path, not just on the corpus being reconciled.**
+  Hitting the `/done` 400, the first instinct was to write a brand-new issue doc — a
+  `grep -l "one_shot_complete\|no active agent owns its session" plans/active/issues/` first (before writing anything)
+  surfaced `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`, already 7 corroborations deep across 6
+  different roles over 8 days. Filing a fresh doc would have fragmented an already well-evidenced, actively-tracked
+  finding into two half-informed ones. The rule ("grep `plans/active/`+`issues/` before ANY task") applies just as much
+  to a reconciler's own operational blockers as to the plans it's reconciling — worth remembering next time a tool/API
+  call fails unexpectedly mid-run, before assuming it's novel.
