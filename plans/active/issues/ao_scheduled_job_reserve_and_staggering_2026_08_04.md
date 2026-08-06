@@ -197,11 +197,9 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Re-verify `github.slice`'s weight survives an actual VM restart (not just confirm the file is
-      present) — `systemctl daemon-reload` was run this session but the unit's `static` load state has not been proven
-      across a full reboot cycle. `cat /sys/fs/cgroup/github.slice/io.weight` should read "default 20" after any future
-      orchestrator VM restart; if it ever reads "default 100" again, the file didn't survive and needs re-installing
-      (`sudo cp scripts/github.slice /etc/systemd/system/github.slice && sudo systemctl daemon-reload`).
+- [x] ✅ [SCRIPT] P2. Re-verify `github.slice`'s weight survives an actual VM restart — VERIFIED 2026-08-06:
+      `io.weight=default 20`, `cpu.weight=20`, systemd `LoadState=loaded`/`ActiveState=active`/`UnitFileState=static`,
+      survived both VM restarts from 2026-08-04 (T09:45:16Z item-1 redeploy + T11:08:18Z item-3 redeploy).
 - [ ] [SCRIPT] P2. Check final outcome of the 3 redispatched tranches fired after the github.slice fix: `agt-d4a899`
       (na_eligibility[sports], slot 8), `agt-8b3403` (na_eligibility[infra], slot 9), `agt-7322c2` (ag_closeout[sports],
       slot 4) — all registered ~2026-08-04T13:50Z, all still active as of this doc's writing. Query
