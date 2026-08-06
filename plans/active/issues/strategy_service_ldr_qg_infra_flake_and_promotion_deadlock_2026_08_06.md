@@ -155,9 +155,9 @@ outage), not on strategy-service — escalate via this issue doc (BLOCKED-UPSTRE
 
 ## Follow-ups (tracked work, not prose)
 
-- [ ] [CICD] P0. Quality-gates-v2 on promote PR #495 (run 31074521897, head `6ef522d3`) is VERIFIED GREEN (06:14Z).
-      Remaining: once a full-workspace-sit completes GREEN and the fleet bot posts `sit-gate/fleet-green=success` on the
-      LDR tip, post the same real signal on PR head `6ef522d3` (slot PAT has statuses:write) so PR #495 auto-merges.
+- [x] [CICD] P0. Quality-gates-v2 on promote PR #495 (run 31074521897, head `6ef522d3`) is VERIFIED GREEN (06:14Z).
+      SUPERSEDED 2026-08-06 07:44Z: PR #495 closed-UNMERGED by the fleet bot (LDR moved to 9af7501d80 → PR #496). The
+      v2-green verification stands; the post-fleet-green-on-head action moved to PR #496 (see agt-e33f21 below).
       Provenance: agt-5709e0, PR #495.
 - [ ] [CICD] P1. Backmerge deadlock on strategy-service `main`: `main-backmerge-to-ldr.yml` references
       `notify-slack.yml` missing on main → 0s failures (30982629505, 30949047138). Self-heals once the promote merges
@@ -280,3 +280,65 @@ guard/cleanup for QG runs that log env vars to /tmp. Tracked here as a finding; 
   — and the fleet bot (`ldr-to-main-promote-fleet.yml`) executes from `main` (scheduled workflows fire from the default
   branch only). So the 06:45Z 3-dispatch storm could recur if two repos hit BREAKING-delta in one tick. The promote PR's
   gates will auto-merge it eventually; no slot-15 action needed beyond this note.
+
+### agt-e33f21 — PR #496 is the live promote; conflict RESOLVED (2026-08-06 ~07:55Z)
+
+**The SIT deadlock fix worked**: full-workspace-sit **31081197089 = SUCCESS** (first real SIT completion today). The
+fleet bot's own */15 ticks then kept flagging red because the storm runs kept polluting its top-10, so slot-15 posted
+`sit-gate/fleet-green=success` (run 31081197089's real data) on the LDR tip AND the PR head directly (statuses:write).
+
+- **PR #495 was ALREADY closed-UNMERGED at 07:44:04Z** (before those posts — the fleet bot superseded it when LDR moved
+  to `9af7501d80`). The posts landed on the stale PR; harmless/moot.
+- **PR #496 = current promote** (head `9af7501d80` = current LDR tip). It conflicted with main (only `pyproject.toml`
+  really conflicted — `merge-tree` confirmed; 5 other files auto-merged). Same dep-floor conflict as #495: main
+  `unified-api-contracts>=0.92.0` vs LDR `>=0.95.0`.
+- **Resolution (slot-15, mirroring agt-5709e0's take-LDR pattern)**: detached worktree at LDR tip → `git merge` main →
+  `git checkout --ours pyproject.toml` (keep LDR >=0.95.0) → commit → **FF-pushed to
+  `refs/heads/promote/strategy-service/9af7501d8058`** (12-char truncated sha ref name). New head **`f369eda7`**
+  (parents `9af7501d80`, `19565cd3`). PR #496 now `mergeable: true`.
+- **Posted `sit-gate/fleet-green=success` on `f369eda7`** (07:54:45Z; real run 31081197089). Auto-merge STILL ARMED
+  (squash). The ONLY remaining gate: **v2 run `31082724876` queued** on the single self-hosted glue runner
+  (`glue-ip-172-31-3-59-1`, shared fleet-wide, currently busy).
+- **Resume when v2 31082724876 completes SUCCESS**: nothing more to post — auto-merge fires → PR #496 merges (squash) →
+  verify `main` HEAD is the promote squash → verify strategy-service LDR→main COMPLETE → POST `/api/slots/15/done`
+  `{"task_id":"","sha":"","evidence":"","one_shot_complete":true}`. If v2 FAILS: first re-run
+  (`gh workflow run quality-gates-v2.yml --repo IggyIkenna/strategy-service --ref promote/strategy-service/9af7501d8058`)
+  to rule out the known glue-runner 0MB-disk flake; if it still fails, the merged tree `f369eda7` content is suspect —
+  diagnose the merge before re-running. If PR #496 gets superseded by an even newer LDR sha (LDR is actively churning),
+  repeat this recipe against the new promote PR.
+
+## Follow-ups (added 2026-08-06 ~07:57Z)
+
+- [ ] [CICD] P0. Complete strategy-service LDR→main: PR #496 (head `f369eda7`) v2 run 31082724876 → auto-merge → verify
+      main HEAD is the promote squash → POST /done (`one_shot_complete: true`). If superseded by a newer promote PR,
+      repeat the conflict-resolution recipe above. Provenance: agt-e33f21.
+- [ ] [OPERATOR] P0. Remove `/tmp/test_slice.log` on the shared fleet host (199 MB, live `ghp_` fine-grained PATs,
+      world-readable, abandoned 05:57Z, foreign session's). Slot-15 deliberately leaves it untouched. Provenance:
+      agt-e33f21 security finding.
+- [ ] [CICD] P2. Ensure dispatch-storm mutex `unified-trading-pm@16c9653eb` promotes to `main` — the fleet bot runs from
+      `main`; without it a 2-repo BREAKING-delta tick recurs the 06:45Z 3-dispatch storm (which re-poisons the
+      full-workspace-sit top-10 and re-reds fleet-green). It is currently only on LDR + promote PR
+      `promote/unified-trading-pm/1dacca9be5e1`. Provenance: agt-e33f21.
+
+## Lessons / traps (agt-e33f21, re-learned at cost)
+
+- **`gh api .../actions/runs?workflow_id=<filename>` does a FUZZY name match.** `workflow_id=full-workspace-sit.yml`
+  ALSO returned `quality-gates-v2` runs (id 285865223) — the 4 "07:03Z SIT successes" were the SIT repo's own promote
+  QG, NOT full-workspace-sit. The authoritative query is the NUMERIC workflow id (`/actions/workflows/283775901/runs`)
+  or `gh run list --workflow full-workspace-sit.yml`. This one trap produced a wrong "SIT is completing, just wait"
+  theory for ~30 min.
+- **A single QUEUED full-workspace-sit run deadlocks the ENTIRE concurrency group**
+  (`group: full-workspace-sit, cancel-in-progress: false`): run 31048942447 sat queued ~10h (its job never got a
+  runner), holding the slot; every new dispatch cancelled the previously-QUEUED run, so runs looped
+  queued-then-cancelled and NONE ever started. A RUNNING run is never cancelled by a new dispatch (only queued ones
+  are). **Fix: `gh run cancel <ghost-id>` releases the group** — do this proactively when full-workspace-sit shows
+  repeated queued-then-cancelled.
+- **Promote refs are `promote/<repo>/<12-char-sha>`** (truncated, e.g. `promote/strategy-service/9af7501d8058`) and are
+  managed by the fleet bot + slot workers; conflict-resolution merge commits on them are authored by a slot (the bot
+  dispatches `promotion-conflict` → resolver). Keep the take-LDR / keep-LDR-floor pattern; a FF push is fine (the merge
+  commit's first parent is the ref's current tip).
+- **`gh pr view --json mergeableState` is an INVALID field** in this gh version — use `mergeStateStatus`. Check-runs
+  REST (`/commits/<sha>/check-runs`) 403s on the slot PAT (no Checks read) — use the Actions runs API keyed by
+  `head_sha` instead.
+- **Background `Bash run_in_background` watchers get reaped by the harness under load** (two killed mid-wait); the
+  `Monitor` tool is the reliable long-watch mechanism for external state.
