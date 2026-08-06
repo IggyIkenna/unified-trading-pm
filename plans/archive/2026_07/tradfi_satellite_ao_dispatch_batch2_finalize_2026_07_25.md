@@ -9,7 +9,7 @@ summary: >-
   items + the 1 operator-gated item once the operator has ruled on the queued FX-sequencing / mvp_mode decisions, and
   recommend whether `tradfi_manifest_content_recovery_completion_2026_07_24.md` (excluded from both batch1 and batch2)
   is ready for its own dedicated triage/design pass yet.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -18,14 +18,14 @@ scope: [engineer]
 tags: [tradfi, ao-dispatch, close-out, batch-2, satellite-docs, archival]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-30"
+last_updated: "2026-08-06"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -47,13 +47,17 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-06.** Both todos done: (1) all 11 batch2 source docs reconciled + verified by slot-10 review
+> (2026-08-06), (2) batch2 archived via the standard 6-step ritual (slot-16, 2026-08-06). Companion batch2 plan moved to
+> `plans/archive/2026_07/` alongside this doc in the same commit.
 
 # TradFi satellite AO batch 2 — finalize
 
@@ -84,60 +88,60 @@ context_scope:
       verified evidence, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
 
       **Evidence (slot-10 review, 2026-08-06)** — Verified ALL 11 source docs' batch2-corresponding
-              checkboxes/sections are flipped, each cited shipped commit confirmed present on
-              `origin/live-defi-rollout` via `git cat-file -e <sha>^{commit}` (no fabricated cites): (1)
-              `data_completion_tradfi_2026_07_15.md` — 2 checkboxes [x] (line-54 drift-verify + E6 CF-7 relabel), stays `active`
-              (15 genuine open); (2) `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — all 7 combined-todo items [x]
-              (incl. Deferred-work row #2 for `uac@599acf93` + G1-refinements contradiction fix), stays `active` (5 genuine
-              open); (3) `tradfi_backfill_throughput_followups_2026_07_24.md` — 3 checkboxes [x] (`deployment-service@872ac2f`,
-              `@545ff76`, CME per-root re-measure) + the 182,407-cell P2 candidate [x], stays `active` (1 genuine open INFRA
-              leg); (4) `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` — no checkboxes by construction, `status:
-              resolved` + archived 2026-07-31 (all 3 remediation items done); (5)
-              `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` — [AUDIT] P2 [x] (`batch2-005`) +
-              Progress Log entry, `status: resolved`; (6) `issues/tradfi_backfill_oom_remediation_2026_06_24.md` — memray [TRADFI]
-              P2 [x] (`market-tick-data-service@live-defi-rollout`, diagnostic), **stays `status: open`** — it carries 1
-              genuinely open todo (`* [ ] [DATA] P3. MDPS's own candle-writer`, line 412, asterisk-form caught in the
-              prose-form check); (7) `archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` — codex
-              `manifest-consolidator-ssot.md` § "Pause-first applies to ANY canonical read-modify-write" (lines 671-695) present,
-              doc `status: resolved` + archived 2026-07-30; (8)
-              `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` — [INVESTIGATE] P1 [x] + follow-up issue
-              `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`, `status: resolved`; (9)
-              `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` — all todos [x]
-              (`instruments-service@31cf3952`+`@5104befc`, `unified-trading-library@080a84a0`, `deployment-service@841f464`),
-              `status: resolved`; (10)
-              `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` — batch2 orphan-cleanup
-              recorded in Progress Log (2026-07-28, slot 7) + "Resolution" section citing `market-tick-data-service@c24db4cf`,
-              **stays `status: open`** (1 genuine open `[DESIGN] P2. aggregate ohlcv_15m/24h` decision); (11)
-              `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md` — [TEST] P3 [x]
-              (`deployment-service@077a063`), `status: complete`. **No source-doc checkbox was left unflipped; no doc reaching
-              0 open todos was left un-resolved.**
-              own Deferred section**, now that time has passed and the operator may have ruled on the queued decisions in
-              `autonomous_session_operator_decisions_2026_07_25.md`. For each of the 5 docs listed there
-              (`data_completion_tradfi_2026_07_15.md`, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
-              `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
-              `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`,
-              `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`, plus
-              `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (**RULED 2026-07-29: wire via forward-poll opt-in
-              flag, see the issue doc — this one of the 6 is now pre-resolved, the other 5 still need the live re-check
-              below**): re-read the specific conflicting todo in `tradfi_consolidated_closeout_2026_07_18.md` to check if it has
-              since shipped (resolving the conflict by making the item redundant/already-covered) or if an operator ruling
-              clarified which side should execute — if either, extract the item as a new tracked todo in a follow-up batch3. If
-              still genuinely unresolved, leave it explicitly deferred. Also separately re-review
-              `tradfi_manifest_content_recovery_completion_2026_07_24.md` (still flagged too-large/risky, excluded from both
-              batch1 and batch2) and recommend whether it warrants its own dedicated batch3 triage pass yet, or whether its
-              in-flight migration state still makes that premature. **Done when**: each of the 8 conflict-gated items + the 1
-              operator-gated item has either (a) a new tracked todo/plan created because a conflict cleared or a ruling landed,
-              or (b) an explicit re-verified confirmation the conflict/decision is still open; and a fresh recommendation is
-              recorded for the large/risky doc.
+                  checkboxes/sections are flipped, each cited shipped commit confirmed present on
+                  `origin/live-defi-rollout` via `git cat-file -e <sha>^{commit}` (no fabricated cites): (1)
+                  `data_completion_tradfi_2026_07_15.md` — 2 checkboxes [x] (line-54 drift-verify + E6 CF-7 relabel), stays `active`
+                  (15 genuine open); (2) `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — all 7 combined-todo items [x]
+                  (incl. Deferred-work row #2 for `uac@599acf93` + G1-refinements contradiction fix), stays `active` (5 genuine
+                  open); (3) `tradfi_backfill_throughput_followups_2026_07_24.md` — 3 checkboxes [x] (`deployment-service@872ac2f`,
+                  `@545ff76`, CME per-root re-measure) + the 182,407-cell P2 candidate [x], stays `active` (1 genuine open INFRA
+                  leg); (4) `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` — no checkboxes by construction, `status:
+                  resolved` + archived 2026-07-31 (all 3 remediation items done); (5)
+                  `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` — [AUDIT] P2 [x] (`batch2-005`) +
+                  Progress Log entry, `status: resolved`; (6) `issues/tradfi_backfill_oom_remediation_2026_06_24.md` — memray [TRADFI]
+                  P2 [x] (`market-tick-data-service@live-defi-rollout`, diagnostic), **stays `status: open`** — it carries 1
+                  genuinely open todo (`* [ ] [DATA] P3. MDPS's own candle-writer`, line 412, asterisk-form caught in the
+                  prose-form check); (7) `archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` — codex
+                  `manifest-consolidator-ssot.md` § "Pause-first applies to ANY canonical read-modify-write" (lines 671-695) present,
+                  doc `status: resolved` + archived 2026-07-30; (8)
+                  `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` — [INVESTIGATE] P1 [x] + follow-up issue
+                  `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`, `status: resolved`; (9)
+                  `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` — all todos [x]
+                  (`instruments-service@31cf3952`+`@5104befc`, `unified-trading-library@080a84a0`, `deployment-service@841f464`),
+                  `status: resolved`; (10)
+                  `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` — batch2 orphan-cleanup
+                  recorded in Progress Log (2026-07-28, slot 7) + "Resolution" section citing `market-tick-data-service@c24db4cf`,
+                  **stays `status: open`** (1 genuine open `[DESIGN] P2. aggregate ohlcv_15m/24h` decision); (11)
+                  `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md` — [TEST] P3 [x]
+                  (`deployment-service@077a063`), `status: complete`. **No source-doc checkbox was left unflipped; no doc reaching
+                  0 open todos was left un-resolved.**
+                  own Deferred section**, now that time has passed and the operator may have ruled on the queued decisions in
+                  `autonomous_session_operator_decisions_2026_07_25.md`. For each of the 5 docs listed there
+                  (`data_completion_tradfi_2026_07_15.md`, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
+                  `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
+                  `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`,
+                  `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`, plus
+                  `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (**RULED 2026-07-29: wire via forward-poll opt-in
+                  flag, see the issue doc — this one of the 6 is now pre-resolved, the other 5 still need the live re-check
+                  below**): re-read the specific conflicting todo in `tradfi_consolidated_closeout_2026_07_18.md` to check if it has
+                  since shipped (resolving the conflict by making the item redundant/already-covered) or if an operator ruling
+                  clarified which side should execute — if either, extract the item as a new tracked todo in a follow-up batch3. If
+                  still genuinely unresolved, leave it explicitly deferred. Also separately re-review
+                  `tradfi_manifest_content_recovery_completion_2026_07_24.md` (still flagged too-large/risky, excluded from both
+                  batch1 and batch2) and recommend whether it warrants its own dedicated batch3 triage pass yet, or whether its
+                  in-flight migration state still makes that premature. **Done when**: each of the 8 conflict-gated items + the 1
+                  operator-gated item has either (a) a new tracked todo/plan created because a conflict cleared or a ruling landed,
+                  or (b) an explicit re-verified confirmation the conflict/decision is still open; and a fresh recommendation is
+                  recorded for the large/risky doc.
 
-- [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
-      should have already resolved all resolvable ones — verify none remain unaccounted-for) → add the archive banner →
-      run the codex-alignment check → grep the corpus for every referrer of
-      `tradfi_satellite_ao_dispatch_batch2_2026_07_25` and fix each path to point at the archived location → clear
-      `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
-      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
-      commit.
+- [x] ✅ [DOC] P1. **DONE 2026-08-06 (slot-16, data_engineering) — Archived
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`** via the standard 6-step ritual (per CLAUDE.md's
+      plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above should have
+      already resolved all resolvable ones — verify none remain unaccounted-for) → add the archive banner → run the
+      codex-alignment check → grep the corpus for every referrer of `tradfi_satellite_ao_dispatch_batch2_2026_07_25` and
+      fix each path to point at the archived location → clear `locked_by` (already empty here, confirm). **Done when**:
+      the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize
+      doc itself gets archived alongside it in the same commit.
 
 ## Progress Log
 
