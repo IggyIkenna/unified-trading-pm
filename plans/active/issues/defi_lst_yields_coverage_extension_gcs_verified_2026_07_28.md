@@ -227,8 +227,17 @@ structural limitation.
   2023-11-01..2024-06-30 / 2024-07-01..2025-02-28 / 2025-03-01..2025-10-31 / 2025-11-01..2026-08-05. Operator
   shared-host OOM directive acknowledged 2026-08-06: this backfill runs on VMs, NOT locally on the fleet host (no
   process I launched was OOM-killed; the resume's death was SIGTERM, not OOM). Progress metric = lst_yields
-  day-partition count (target ~1,815 across 2021-08-17..2026-08-05; 835 baseline). Monitor:
-  `/tmp/lst_yields_backfill_monitor.txt`.
+  day-partition count (target ~1,815 across 2021-08-17..2026-08-05; 835 baseline). **Resume-if-this-session-dies**:
+  coverage =
+  `gcloud storage ls "gs://features-defi-prd-central-element-323112/onchain/by_date/*/feature_group=lst_yields/" | grep -oE 'day=[0-9]{4}-[0-9]{2}-[0-9]{2}' | sort -u | wc -l`
+  (expect 1,815 when complete; was 841 at ~19:14Z 2026-08-06, +6 already); per-VM processing logs at
+  `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`; shards are idempotent — re-launch any shard
+  safely (skip-if-fresh skips done days). **Lessons (2026-08-06, slot-14)**: (1) `DRY_RUN=true` on
+  `launch-features-vm.sh` skips ONLY the tarball-freshness check, NOT VM creation — `--launch-mode dry` = in-VM
+  `--dry-run` (no GCS writes) on a REAL VM; (2) the onchain batch daily-loop is serial per-day (~22s/day measured),
+  `--max-workers` does not parallelize across days — parallelize by launching disjoint date-range shards; (3) a
+  harness-backgrounded process on the shared host is SIGTERM'd when the owning session ends (root cause of the slot-13
+  resume death) — long backfills must run on VMs; (4) VM run.logs upload to `vm-logs/<vm>/run.log` ~every 60s.
 
 ## Follow-ups
 
