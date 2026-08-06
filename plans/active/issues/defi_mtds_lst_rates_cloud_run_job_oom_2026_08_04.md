@@ -168,15 +168,18 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
       `defi_collect_cron["lst-rates"]` scheduler description (in-place, 0 add / 1 change / 0 destroy) — because the
       natural full plan carries 26 add / 17 change / 2 destroy of UNRELATED pending drift. Terraform state now fully in
       sync for the lst-rates entry (no pending resource change).
-- [ ] [DIAG] P1. Root-cause the actual memory driver in `market-tick-data-service`'s `collect-lst-rates` path (11 EVM +
-      4 Solana venues in one process) — candidates to check first: (a) whether
-      `_gas_fee_helpers.bounded_freshness_warmup`'s manifest read is bounded the same way
-      `read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md` fixed, (b) the DeFi instrument catalogue's
-      actual decoded size in `_catalogue_filter.py::_load_catalogue` (currently reads ALL columns via
-      `pd.read_parquet(io.BytesIO(raw))` with no `columns=` projection — a cheap, safe narrowing if the catalogue is
-      wide), (c) whether 11 EVM adapters' concurrent RPC response buffering is the actual peak, independent of anything
-      DeFi-catalogue-related. A local memory-profiled dry-run against the `-test-` buckets (not prod) would settle this
-      without another live Cloud Run failure.
+- [x] ✅ [DIAG] P1. Root-cause the actual memory driver in `market-tick-data-service`'s `collect-lst-rates` path —
+      **market-tick-data-service@N/A (code-analysis-only, no code changes)**. See Progress Log below for full findings.
+      Summary: the dominant consumer is the full download of the compressed consolidated availability index
+      (`_index/availability_index.parquet`) during `ManifestFreshnessCache.bulk_load()`, which downloads the ENTIRE
+      compressed blob (~500 MB–1 GB+ for the 33M-row DeFi index) even though the pyarrow row-group pushdown bounds the
+      DECODED size to ~5 MB for a single-day filter. Candidates (a), (b), and (c) are all ruled out as the primary
+      driver — the job was already near the 2GiB edge before 08-02 (intermittent OOMs since May). The
+      `emit_expected_unattempted_for_remaining` addition (commit `95d24521`) added ~11 extra per-VM shard
+      read-merge-write cycles, which pushed an already-near-limit job consistently over the edge. Memory bump to 4GiB
+      (already done) is the correct mitigation; a longer-term fix would avoid downloading the full compressed index for
+      a single-date freshness check (e.g., using a per-date partition read or caching the slim-decoded result across
+      runs).
 - [ ] [DIAG] P2. Once (a) is confirmed either way, check whether SOME venues in this job still got written on
       08-02/08-03/08-04 before the crash (per-venue processing order in `lst_rates_handler.py` vs. which venues show
       recent `written_at` in the manifest) — determines whether this is a total daily-data-loss event or a partial one.
@@ -215,3 +218,49 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
   Deliberately did NOT run a blanket apply: the full plan carries 26 add / 17 change / 2 destroy of unrelated pending
   drift, and a naive `-target` on the scheduler alone would have CREATED the `liquidation-events` + `risk-params` Cloud
   Run jobs (never applied, from deployment-service@b370df8). That residual drift is now a tracked P2 todo above.
+
+- **DIAG dispatch 2026-08-06 (slot 6, adopting infra craft)**: Todo 2 DONE. Root-cause analysis via code-path tracing of
+  `lst_rates_handler.py` → `_gas_fee_helpers.bounded_freshness_warmup` → `ManifestFreshnessCache.bulk_load()` →
+  `read_availability_index()` → `_read_availability_index_slim()` → `_read_consolidated_if_fresh()`. All three
+  plan-identified candidates are ruled out as the PRIMARY driver; the actual picture is cumulative:
+
+  **Candidates ruled out:**
+  - **(a) `bounded_freshness_warmup` / manifest read**: NOT the driver. `ManifestFreshnessCache` uses
+    `date_range=(single_day)` which pushes down via `filters=` to pyarrow row-group level. Docstring confirms ~14.86 GiB
+    → ~5 MB for a single-day filter on the 27.4M-row DeFi index. The slim-read OOM fix defers `_SLIM_MERGE_BASE_COLS`
+    widening until after confirming a self-shard exists (`_read_index.py:966-978`).
+  - **(b) `_load_catalogue` `pd.read_parquet`**: NOT the driver. Catalogue is ~1 MB (`_catalogue_filter.py:18`). ~5-10
+    MB as DataFrame. `columns=` projection would be cheap hygiene but immaterial.
+  - **(c) Concurrent RPC response buffering**: NOT the driver. EVM calls are synchronous/serial (plain `for` loop,
+    `lst_rates_handler.py:558`). Each `eth_call` returns 32 bytes. 26 total calls = <1 KB.
+
+  **Actual memory driver — cumulative baseline at the 2GiB edge:**
+
+  1. **Compressed availability index download (dominant, ~500 MB–1 GB+)**: `_read_consolidated_if_fresh()` downloads the
+     FULL compressed blob from GCS (`blob.download_as_bytes()`, `_read_index.py:1095`). Docstring: "raw compressed bytes
+     are still fully downloaded either way; `filters` only bounds the DECODED size." For the 33M-row DeFi index,
+     estimated at 500 MB–1 GB+ compressed. Held in memory alongside the decoded DataFrame.
+
+  2. **Python process baseline (~200-400 MB)**: web3.py, pandas, aiohttp, UAC registries, AlchemyBaseClient pool.
+
+  3. **Per-VM shard read-merge-write churn**: Each `record_*()` with `batch_size=1` flushes immediately, downloading the
+     existing shard, merging, and re-uploading. `emit_expected_unattempted_for_remaining` (commit `95d24521`) added ~11
+     extra writes for un-attempted UAC-declared `lst_rates` venues.
+
+  4. **Catalogue + membership sets (~10-20 MB)**: Cached catalog DataFrame + `_captured`/`_skip_worthy` sets.
+
+  **Why consistent from 2026-08-02**: Job had intermittent memory-limit failures since May. Already near the 2GiB edge.
+  `emit_expected_unattempted_for_remaining` added ~11 extra per-VM shard write cycles — small individually, but pushed
+  an already-near-limit job consistently over. TTL catalogue cache fix (`d4408134`) didn't help because catalogue was
+  never the driver. 4GiB bump (todo 1) is the correct mitigation — 2026-08-05 ad-hoc run completed in 2m53s.
+
+  **Longer-term recommendations (non-blocking):**
+  - Avoid full compressed index download for single-date freshness: use per-date partition read or cross-run cache.
+  - Add `columns=` projection to `_load_catalogue` (`_catalogue_filter.py:85`) — cheap hygiene.
+  - Consider avoiding `_SLIM_MERGE_BASE_COLS` widening on `filters=` path when no self-shard exists (the deferred-
+    widening fix covers the non-`filters` path but the `filters=` path at line 894-895 always includes merge-base cols).
+
+  **Evidence**: Code-path review across 7 files in market-tick-data-service + unified-trading-library; verified
+  `filters=` pushdown through `_read_parquet_columns_safe` (line 131); verified slim-read widening deferral (line
+  966-978); verified `per_vm_shards=True` avoids legacy CAS path (`_defi_manifest.py:148-150`). No live dry-run (no GCP
+  credentials; code analysis sufficient for root-cause determination).
