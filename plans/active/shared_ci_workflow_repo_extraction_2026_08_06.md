@@ -270,27 +270,27 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       git@github.com:IggyIkenna/unified-trading-ci.git
 
       # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
-                                                                                                                  #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
-                                                                                                                  cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+                                                                                                                          #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+                                                                                                                          cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
 
-                                                                                                                  # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
-                                                                                                                  cd unified-trading-pm
-                                                                                                                  bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
-                                                                                                                  bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
-                                                                                                                  bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
-                                                                                                                  # ...etc for however many slots Harsh has
+                                                                                                                          # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+                                                                                                                          cd unified-trading-pm
+                                                                                                                          bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+                                                                                                                          bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+                                                                                                                          bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+                                                                                                                          # ...etc for however many slots Harsh has
 
-                                                                                                                  # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
-                                                                                                                  for n in 1 2 3; do   # substitute his real slot numbers
-                                                                                                                    d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
-                                                                                                                    echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
-                                                                                                                  done
-                                                                                                                  # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
-                                                                                                                  # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
-                                                                                                                  #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
-                                                                                                                  #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
-                                                                                                                  ```
-                                                                                                                  Evidence: paste the sanity-check output back into this plan's Progress Log once run.
+                                                                                                                          # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+                                                                                                                          for n in 1 2 3; do   # substitute his real slot numbers
+                                                                                                                            d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+                                                                                                                            echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+                                                                                                                          done
+                                                                                                                          # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+                                                                                                                          # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+                                                                                                                          #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+                                                                                                                          #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+                                                                                                                          ```
+                                                                                                                          Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 
 - [x] 7d. ✅ [INFRA] P0. **AO central orchestrator VM (`i-0c9b283b31d6b5ca7`, `agent-orchestrator-vm-1`, 13.113.200.22)
       — actually provisioned this session**, not just documented: this laptop has standing SSH access (`~/.ssh/config`
@@ -416,19 +416,45 @@ here only for todo-count sanity, not for skipping per-repo verification.
 
 ### Phase 5 — Migrate PM itself last (it currently hosts the source of truth)
 
-- [ ] 16. [INFRA] P1. **Re-point PM's own `quality-gates-v2.yml`** from the local
-      `uses: ./.github/workflows/     python-quality-gates-v2.yml` self-call to the same remote-ref pattern every other
-      repo now uses (`uses:     IggyIkenna/unified-trading-ci/.github/workflows/python-quality-gates-v2.yml@main`) —
-      removes the chicken-and-egg special case documented in that file's own header. Verify PM has no OTHER
-      internal-only consumer of its local `notify-slack.yml` copy before deleting it in the next todo (grep PM's own
-      `.github/workflows/*.yml` for `uses: ./.github/workflows/notify-slack.yml` beyond the one being removed).
-      Evidence: real green PM `quality-gates-v2` run URL.
-- [ ] 17. [INFRA] P1. **Delete PM's own now-redundant copies** of the 5 extracted files (`python-quality-gates-v2.yml`,
-      `notify-slack.yml` — only if todo 16's grep confirmed no other internal consumer — `image-build-validate.yml`,
-      `.github/actions/setup-python-tools/`, `.github/actions/setup-agent-tools/`) once `unified-trading-ci` is
-      confirmed the sole live source for all 25 repos (Phase 4 fully green). Evidence: PM's `git status` clean post
-      -delete + a subsequent PM `quality-gates-v2` run still green (proves nothing silently depended on the deleted
-      local copies).
+- [x] 16. ✅ [INFRA] P1. **Re-pointed PM's own `quality-gates-v2.yml`** from the local
+      `uses: ./.github/workflows/python-quality-gates-v2.yml` self-call to the same remote-ref pattern every other repo
+      now uses (`uses: IggyIkenna/unified-trading-ci/.github/workflows/python-quality-gates-v2.yml@main`) — removes the
+      chicken-and-egg special case (now genuinely obsolete: PM is just another caller, not the host). Grepped PM's own
+      `.github/workflows/*.yml` for `uses: ./.github/workflows/notify-slack.yml`: 45 internal consumers
+      (branch-health.yml, ci-health.yml, etc.) — `notify-slack.yml` stays, NOT deleted in todo 17. Along the way found +
+      fixed a genuine content divergence: PM's `python-quality-gates-v2.yml` had a newer, real production fix (gate the
+      GH-Actions-cache restore/save to GitHub-hosted-only — self-hosted runners' persistent `~/.cache/uv` already
+      survives between jobs, measured 450-894s wasted per job on the unconditional version) that `unified-trading-ci`'s
+      extracted copy was still missing — ported it before it could be silently lost, shipped as
+      `unified-trading-ci@4dcd37d` (also fixed this laptop slot's `unified-trading-ci` checkout, which had drifted onto
+      tracking `live-defi-rollout` instead of `main` from the initial clone — corrected the upstream and reconciled the
+      two branches). Evidence: `unified-trading-pm@ab53f71b33`, `unified-trading-ci@4dcd37d`. CI-verified functionally
+      correct (content-sentinel + tests legs both PASS on every dispatched run, no "workflow not found" resolution
+      error) — see todo 17's note for why the "checks" leg itself reads red for unrelated reasons.
+- [x] 17. ✅ [INFRA] P1. **Deleted PM's own now-redundant copies** of `python-quality-gates-v2.yml`,
+      `image-build-validate.yml`, `.github/actions/setup-python-tools/`, `.github/actions/setup-agent-tools/` (kept
+      `notify-slack.yml`, see todo 16) once `unified-trading-ci` was confirmed the sole live source for all 25 repos
+      (Phase 4 fully green). Found a SECOND, non-`uses:`-reference internal consumer the earlier fleet-wide grep sweep
+      had missed: `scripts/quality_gates/check_qg_slice_completeness.py` read `python-quality-gates-v2.yml`'s raw file
+      content directly (`CI_WORKFLOW.read_text()`, not a GHA `uses:` reference) to enforce local↔CI slice-partition
+      parity — since this check runs from EVERY repo's `quality-gates.sh` (its `PM_ROOT` resolves via the script's own
+      `__file__` location, always inside PM, regardless of which repo invoked it), deleting the file without fixing this
+      would have broken local QG for the entire fleet, not just PM. Fixed by having it read the sibling
+      `unified-trading-ci` checkout first, falling back to a live `raw.githubusercontent.com` fetch for environments
+      without the sibling cloned (e.g. a bare GHA runner). Evidence: `unified-trading-pm@b62a209dc0`. **A real,
+      unrelated, PRE-EXISTING blocker was found while verifying, NOT caused by this todo**: PM's own CI
+      `quality-gates-v2` "checks" leg fails on a corpus-wide plan-hygiene ratchet regression
+      (`check_na_corpus_ratchet.py`: `assigned_vm:NA` backlog grew from baseline 384 docs/1347 open todos to 389/1366,
+      plus 3 other hygiene ratchets — AG-closeout linkage, terminal-status-archived, archive-candidates) — proven
+      pre-existing and unrelated by re-checking todo 16's OWN verification run (31106573878, dispatched BEFORE this
+      deletion was ever made): it hit the exact same "checks" leg failure. This is live, ongoing corpus drift from
+      concurrent multi-slot plan/issue activity on `live-defi-rollout` (observed directly via repeated `git pull`s
+      pulling in other slots' new/archived docs throughout this session) — nothing this migration touched. Content
+      sentinel and the `tests` leg both PASS on every run; within the failing `checks` leg, the actual code under test
+      (the deletion + the `check_qg_slice_completeness.py` fix) is independently verified via a clean standalone local
+      run (`python3 scripts/quality_gates/check_qg_slice_completeness.py` → ✅). NOT fixed here (out of scope, large,
+      the sanctioned remedy is `/na-eligibility-audit`) — flagged to the operator directly in-session as a real,
+      currently-active, PM-CI-blocking condition worth a proactive corpus-hygiene pass.
 - [x] 18. ✅ [INFRA] P2. **Update the template sources** (`scripts/workflow-templates/quality-gates-v2.yml.tmpl` line
       ~64, `scripts/workflow-templates/image-build-gate.yml`) — done EARLY (out of original Phase-5-deferred order), not
       as a nice-to-have but as an emergency ROOT-CAUSE FIX mid-Wave-3 (see Progress Log "revert incident"): a scheduled
