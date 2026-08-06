@@ -23,7 +23,7 @@ related:
   [
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
     issues/instrument_id_format_canonicalization_2026_07_08.md,
-    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-08

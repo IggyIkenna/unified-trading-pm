@@ -513,7 +513,7 @@ context_scope:
 - **Newly discovered (completeness check, 2026-07-24)** — cefi-tagged docs (`asset_group: [..., cefi, ...]`) not
   previously named in this section; several are already discussed in Track 1-7 above with full detail, but are listed
   here too so this section alone stays a complete open-todo index:
-  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
+  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md)
     (status: active, 9 open — 3 P1 shown, 6 P2/P3 capped)
     - **[DATA] P1.** Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string to
       `build_canonical_instrument_id`.

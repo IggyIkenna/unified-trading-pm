@@ -38,14 +38,14 @@ related:
   ]
 created: 2026-07-25
 author: unknown
-last_updated: 2026-07-25
+last_updated: 2026-08-06
 priority: P3
 parent_epic: orchestrator_master
 source:
   "main orchestrator (agt-52bb99) read-only per-task diagnosis + git ancestry checks during poll loop, 2026-07-25
   ~13:10-13:20Z"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
@@ -105,8 +105,9 @@ condition fires.
 > dispatches would have re-read the same dispatcher code twice. **Folded into one gated item below**; neither half was
 > dropped — both done-whens are preserved verbatim.
 
-- [ ] [BACKEND] P3. **GATED: do not start until `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `/skip-current-task`
-      `reason_code` audit is done and its per-`reason_code` table exists.** Then, in one change: **(1) [was todo 2 — do
+- [ ] [BACKEND] P3. **READY TO DISPATCH — the prerequisite audit (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      `/skip-current-task` `reason_code` audit) landed 2026-08-01, found zero uncovered `reason_code` gaps; full table
+      in `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`.** In one change: **(1) [was todo 2 — do
       this first, it decides (2)]** Confirm why a `priority_override` (priority 999) park does not survive backlog
       re-derivation while a named `auto_unpark__` prereq does — document the difference so workers pick the durable
       mechanism for external gates (cross-ref RULES.md sec4 and the batch2-011 park). If `priority_override` parks are
@@ -192,3 +193,9 @@ is about routing external-gate tasks through it instead of through the churn pat
   by ao_satellite_ao_dispatch_batch6's open [BACKEND] P3 todo (same two-part durable-park mechanism, same done-when,
   source explicitly cited); batch6_finalize owns the checkbox flip. Parked as BLOCKED-OPERATOR-DECISION — dispatch
   through batch6, not a parallel flip.
+- **2026-08-06 (operator session)**: **RECLASSIFIED `assigned_vm: NA` → `planning`.** Operator decided to dispatch this
+  doc directly rather than route through `ao_satellite_ao_dispatch_batch6_2026_08_04.md` (which stayed `status: draft`,
+  untouched) — no plan wrapper needed for a single bounded, already-scoped todo. Also cleaned the stale "GATED: do not
+  start" prefix in the todo text itself (the gate cleared 2026-08-01; the prefix would have read as a live instruction
+  to a fresh worker). If `ao_satellite_ao_dispatch_batch6_2026_08_04.md` is later activated, its own todo 3 (same
+  source, same mechanism) should be dropped or marked superseded-by-this-doc to avoid double dispatch.

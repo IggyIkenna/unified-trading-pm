@@ -530,7 +530,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4)
   - [`plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md`](/plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md)
     (done) — 0 open todos (closed/archived/record-only)
-  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
+  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md)
     (9 open — capped)
     - **[DATA] P1.** Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string
     - **[DATA] P1.** Resolve the non-canonical TYPE-token question before retrofitting todo 1
