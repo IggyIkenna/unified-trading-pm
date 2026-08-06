@@ -344,3 +344,4 @@ mock parity — the drift is historical, not systemic.
   archival pass rather than bundled into this commit per the never-combine-flip-with-git-mv rule.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — still the right minimal set; note the
   doc is now archival-eligible per the entry above (all todos closed).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

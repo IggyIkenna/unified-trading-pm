@@ -26,6 +26,14 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    deployment-api/deployment_api/services/data_query_service.py,
+    deployment-api/tests/unit/test_data_query_service_helpers.py,
+    deployment-api/tests/unit/test_route_data_status_distinct_values.py,
+    /plans/archive/2026_08/sports_instrument_type_market_token_ssot_gap_2026_07_28.md,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+  ]
 ---
 
 # deployment-api quickmerge blocked by 2 pre-existing unrelated test failures
@@ -75,3 +83,4 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
   visibility follow-through (operator asked why the new VM isn't visible anywhere; found + fixed the real classification
   gap, but landing it is blocked by this separate, pre-existing issue). Change is tested and correct
   (`test_build_aws_inventory_classifies_ci_escalation_runner_as_live` passes) but not yet shipped.
+- **context-scout 2026-08-05**: populated context_scope (5 entries).

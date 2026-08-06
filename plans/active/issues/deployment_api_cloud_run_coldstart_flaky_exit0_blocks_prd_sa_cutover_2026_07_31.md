@@ -238,3 +238,4 @@ this service relative to its documented, measured requirement.
   done. Also left the stale `prd-sa-precutover` tag on the now-dead `00417-7fh` untouched (0% traffic, not mine to clean
   up, may still be evidence someone else wants). No code shipped against this doc's own scope — evidence + operational
   note only. (repo: deployment-service, deployment-api)
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

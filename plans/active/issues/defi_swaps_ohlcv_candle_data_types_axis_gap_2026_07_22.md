@@ -416,3 +416,7 @@ Evidence: `instruments-service@942e0808`, `unified-api-contracts@28c7102d` (2 co
 
 Historical — see "Verdict" above for the original 2026-07-22 stop-and-document session. Path A was executed 2026-08-02
 (slot-6, see Progress Log above) once the gating VERIFY (2026-07-28) resolved with a decisive measured verdict.
+
+## Progress Log (continued)
+
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged. All todos now done.

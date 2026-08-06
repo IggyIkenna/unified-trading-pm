@@ -133,3 +133,4 @@ RECLASSIFY" trigger has not fired.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) —
   `ci_satellite_ao_dispatch_batch4_2026_07_31.md` confirmed still `status: draft` and still carrying this todo verbatim,
   so the set stands.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.

@@ -826,3 +826,4 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   shipped — pure verification, cites the companion doc as the actual blocker to watch.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

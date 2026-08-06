@@ -204,3 +204,4 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
   not implement B (repo-owner-ratifiable per operator) and did not relaunch (no fix landed yet).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged) — verified all four still resolve and
   remain the right minimal set.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.

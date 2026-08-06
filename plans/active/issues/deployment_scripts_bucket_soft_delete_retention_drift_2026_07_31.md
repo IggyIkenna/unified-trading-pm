@@ -126,3 +126,4 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   depends on. Independently corroborated by the 2026-08-01 `/ag-closeout-audit infra` run, which classified it
   `orphaned_never_touched` but correctly non-batchable on the same grounds.
 - **context-scout 2026-08-03**: populated context_scope (3 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
