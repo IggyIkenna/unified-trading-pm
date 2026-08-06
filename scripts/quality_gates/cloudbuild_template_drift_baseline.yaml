@@ -18,8 +18,14 @@
 note:
   "Seeded 2026-07-28 (ci_satellite_ao_dispatch_batch1 [INFRA] P2). Ratcheted DOWN 2026-08-06 by
   ci_satellite_ao_dispatch_batch5 todo 1 (cloudbuild empty-tag-guard rollout: template forward-ports + guard
-  hand-applied to every consumer). Residual counts = category-(b) intentional per-repo divergence (see inline comment
-  above). WHY per repo: operability-probe (repo-specific in-image IMPORT target) on
+  hand-applied to every consumer). Second 2026-08-06 ratchet: api-template quality-gates forward-ported to the
+  service-template canonical form (_RUN_INIMAGE_QG skip guard + :$$VERSION replacing :$SHORT_SHA) — the guard rollout
+  had left the api-template on the OLD form, so an empty-SHORT_SHA manual submit died invalid-reference-format/exit 125
+  at the quality-gates docker run (proof build b7bcfccc). client-reporting-api + deployment-api quality-gates aligned to
+  the render → client-reporting 3 (unchanged), deployment-api 16→15. api-template + client-reporting-api gained
+  substitutionOption: ALLOW_LOOSE (gcloud 569 auto-injects _BRANCH for source submits; strict configs reject it;
+  fleet-wide ALLOW_LOOSE rollout = follow-up operator decision). Residual counts = category-(b) intentional per-repo
+  divergence (see inline comment above). WHY per repo: operability-probe (repo-specific in-image IMPORT target) on
   alerting/batch-live/execution/features/instruments/ml/strategy/trading-agent/ deployment-api; gar_token
   BuildKit-secret build variant on alerting/greeks/ instruments/strategy/client-reporting-api; deployment-api
   vendor-deps/deploy/ redeploy-monitor-jobs steps; features redeploy-features-jobs; execution stage-siblings;
@@ -34,7 +40,7 @@ repos:
   client-reporting-api:
     count: 3
   deployment-api:
-    count: 16
+    count: 15
   deployment-ui:
     count: 0
   e2e-testing:

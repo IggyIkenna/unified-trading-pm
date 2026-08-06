@@ -19,6 +19,7 @@ substitutions:
   # triggers set BRANCH_NAME automatically; manual `gcloud builds submit` runs
   # pass --substitutions=_BRANCH=<name>. Only deployment-api consumes it.
   _BRANCH: "live-defi-rollout"
+  _RUN_INIMAGE_QG: "false"
 
 steps:
   # ── Fetch deployment-ui (SPA bundle source) — deployment-api ONLY ──────────
@@ -198,13 +199,24 @@ steps:
       - "-c"
       - |
         set -e
+        # _RUN_INIMAGE_QG default false (declared in substitutions): QG is already
+        # enforced at quickmerge + the quality-gates-v2 promotion gate, and the
+        # in-image harness (unified-trading-pm/base-service.sh) is absent from the
+        # image, so re-running it here is redundant+impossible (exit 127). Deploy
+        # triggers set _RUN_INIMAGE_QG=true to keep the gate on feature/LDR builds.
+        if [ "${_RUN_INIMAGE_QG}" != "true" ]; then
+          echo "quality-gates: skipped (_RUN_INIMAGE_QG=${_RUN_INIMAGE_QG}) — QG already enforced at quickmerge + promotion v2"
+          exit 0
+        fi
+        VERSION=$(cat /workspace/VERSION 2>/dev/null || echo "$SHORT_SHA")
+        echo "Running quality gates inside ${_SERVICE_NAME} image..."
         docker run --rm \
           --entrypoint "" \
           -e CLOUD_BUILD=true \
           -e CLOUD_MOCK_MODE=true \
           -e GCP_PROJECT_ID=$PROJECT_ID \
-          asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA \
-          /bin/bash -c "bash scripts/quality-gates.sh --no-fix --quick"
+          asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:$$VERSION \
+          /bin/bash -c "scripts/quality-gates.sh --no-fix --quick"
     waitFor: ["build"]
 
   # ── Immutable sha-tag guard (first push wins) ──────────────────────────────
@@ -291,5 +303,14 @@ availableSecrets:
 options:
   logging: CLOUD_LOGGING_ONLY
   machineType: "E2_HIGHCPU_8"
+  # ALLOW_LOOSE: a manual `gcloud builds submit` (storageSource) auto-injects the
+  # `_BRANCH` substitution from the git branch, and configs reference `_BRANCH` only
+  # via the shell-default form ${_BRANCH:-...} which Cloud Build's scanner does not
+  # count as a template reference — without ALLOW_LOOSE the submit is rejected with
+  # "key _BRANCH ... not matched in the template" (measured 2026-08-06 on gcloud 569,
+  # proof build b7bcfccc). ALLOW_LOOSE also lets SHORT_SHA stay empty so the
+  # SAFE_SHA guard's VERSION fallback is reachable. Rolled out to client-reporting-api
+  # with this guard rollout; fleet-wide rollout is a follow-up (operator decision).
+  substitutionOption: ALLOW_LOOSE
 
 timeout: "600s"
