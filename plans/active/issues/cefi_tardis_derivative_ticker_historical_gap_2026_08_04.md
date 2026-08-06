@@ -167,6 +167,15 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 - **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
   entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
   recompute (task `defi_cefi_venue_chain_axis_contamination-011`).
+- **slot-14 2026-08-06 ~08:08Z (data_engineering, heartbeat checkpoint #7)**: VM `cefi-fwd-20260806-065837` RUNNING
+  (healthy, cpu=286%, rss=5.4GB, log growing). PM repo synced to `dfd40db6b` (ahead=0 after ff-pull). DERIBIT actively
+  being processed: `futures_chain` complete (47266 rows, 82 dated futures written to GCS), `options_chain` single bulk
+  request started 08:02:08Z and still in flight at 08:04:51Z (Deribit May 2026 options dataset is large).
+  `derivative_ticker` for DERIBIT PERPETUALs (BTC-PERPETUAL, ETH-PERPETUAL etc.) will start after `options_chain`
+  completes. OKX-SWAP not yet reached. DERIBIT derivative_ticker = 0 GCS objects (pending). BINANCE-FUTURES (508 symbols
+  ✓) and BYBIT (444 objects ✓) derivative_ticker confirmed written. Code path is proved correct for these venues → same
+  catalogue-primary path will fire for DERIBIT PERPETUALs. Cannot flip RE-OPENED [DATA] P1 todo without GCS evidence for
+  DERIBIT. Will flip once DERIBIT derivative_ticker appears.
 - **slot-14 2026-08-06 ~08:00Z (data_engineering, heartbeat checkpoint #6)**: VM `cefi-fwd-20260806-065837` RUNNING. PM
   repo synced to `dfd40db6b` (ahead=0). BYBIT derivative_ticker fully confirmed: **444 perpetual objects** for
   day=2026-05-23 written ~07:44-07:47Z (ZK, ZKC, ZKP, ZRO, ZORA, ZRX, ZBT, ZEN, ZEREBRO, ZEC seen as last batch —
