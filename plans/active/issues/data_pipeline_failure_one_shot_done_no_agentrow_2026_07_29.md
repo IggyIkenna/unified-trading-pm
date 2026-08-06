@@ -318,3 +318,14 @@ still in flight.
     cause. Ending session without a clean `/done` per this doc's now 8-deep established precedent; all of this session's
     actual reconciliation work is independently git-verified complete and durable regardless (3 commits,
     `plan_reconciler_findings_2026_08_06.md` STEP 8 marked resolved, PR #2327 open).
+
+    **Addendum, same session, ~13:45 UTC**: the AO server process itself restarted (`ss -ltnp` showed a new uvicorn PID
+    on :8765, `ps` STIME matching the exact minute a `/claim` call briefly connection-refused then recovered ~15s
+    later). The `claim-interactive` claim written earlier in this session survived the restart intact (confirmed via a
+    post-restart `GET /claim` returning the same `agent_id`/`spawned_at`), so the claim store is restart-durable — but a
+    `/done` retry immediately after the restart came back **still the identical 400**. Two data points from one event:
+    (1) whatever store backs `find_active_agent_for_session`'s `AgentRow` lookup is either a different persistence layer
+    than the claim store, or this particular row was already gone before the restart and the restart is
+    unrelated/coincidental — cannot distinguish which without DB access; (2) a restart happening mid-session at all is
+    itself worth whoever root-causes this being aware of, as a possible contributing event class alongside the
+    singleton-dedup hypothesis above (not claimed as causal — just observed close in time).
