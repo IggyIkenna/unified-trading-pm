@@ -322,6 +322,19 @@ remaining items besides the over-cap-gated one above).
 
 ## Progress Log
 
+- 2026-08-06 (slot 5, task `defi_satellite_ao_dispatch_batch9-004` = todo 4, `[BACKEND] P2`): Implemented the three
+  paper-run CLI flags (`--archetypes` / `--venue-allowlist` / `--currency-allowlist`) in `service_entry.py`
+  `_add_strategy_extra_args`, threaded into `PaperUniverseConfig.{archetypes,venue_allowlist,base_currency_allowlist}`
+  via the new `build_paper_universe_config` (`paper_run_handler.py`), + tests in
+  `tests/unit/cli/handlers/test_paper_run_cli_flags.py` (flag-set curtailment proven == hand-built
+  `_curtailment_reason_for_spec` semantics; flag-unset → `None` → byte-identical). Committed `strategy-service@8ee9894e`
+  (local, awaiting QG-green → quickmerge → flip → /done). First full `quality-gates.sh --no-fix` Pass-1 was RED on 2 of
+  the new tests — fixed (venue allowlist needed `BINANCE-SPOT` for the known 1-survivor outcome; empty-allow-list branch
+  needs `ARCHETYPE:,` not `ARCHETYPE:`), amended, re-run in flight. **Foreign-WIP lesson**: a stale preserved commit
+  `7a8898e5` (cloudbuild empty-tag guard) sat on this slot's HEAD (preserved on
+  `origin/wip-preserve/orchestrator-slot-5-7a8898e5`); its content was subsequently shipped properly by batch5 as
+  `86256091`, so it was reset away (`git reset --soft` + `git restore --staged/worktree cloudbuild.yaml`) — nothing
+  lost, nothing of mine touched it.
 - 2026-08-06 (scheduled `ag_closeout_auditor`, tranche=defi, autonomous, slot 3): Drafted alongside its finalize twin
   after a 106-agent Phase-1 classification Workflow + 21-agent Phase-3 conflict-check Workflow (both against the full
   12-active + 8-archived covering-doc set). `status: draft` per this skill's autonomous-mode safety rail — awaiting
