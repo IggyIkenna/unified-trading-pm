@@ -751,11 +751,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
   - **ODDS** (footystats, 29 leagues): needed=1 — essentially DONE, no launch.
   - **XG/XG_SHOTS** (understat, 5 leagues): needed=0 — DONE.
   - **SFI_LEAGUES** (34 leagues): needed=20,068 of 22,132 expected (~91% missing!), range 2020-06-06..2026-08-02 — the
-    ONE genuine large gap. Launched `sfi-backfill-20260806-140802` via
+    ONE genuine large gap. Launched `sfi-backfill-20260806-140815` via
     `launch-sfi-backfill-vm.sh --entity SFI_LEAGUES 2020-06-06 2026-08-02` (single-stream — the launcher's own guard
     REFUSES `--chunks` for SFI: the RapidAPI key's 4 req/s limit is per-account, so N parallel chunks would 429-storm
     each other, confirmed via the launcher's own error message). No singleton-lock conflict with the AF campaign
-    (different launcher family/API key).
+    (different launcher family/API key). RUNNING confirmed. Launch logged a tarball-staleness WARNING
+    (instruments-service manifest vs repo commit) that raced against this same tick's own census-script quickmerge — the
+    only new commit was docs/tooling (the census script itself), zero core `instruments_service` package changes, so
+    this is benign; not re-launched.
   - **odds_api** (MTDS, not instruments-service — different bucket, not covered by the census script above): its own
     launcher `launch-mtds-sports-odds-backfill-vm.sh` defaults to a HARDCODED `END_DATE=2026-03-28`, ~4 months stale vs
     today — launched a trailing-gap catchup `mtds-backfill-odds-catchup-20260806`
