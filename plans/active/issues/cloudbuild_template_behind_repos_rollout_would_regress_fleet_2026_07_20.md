@@ -273,6 +273,33 @@ silently regresses the fleet again.
     `VERSION` fallback instead of `invalid reference format` — run on the real infra, build id cited in the plan flip
     when complete.
 
+- **2026-08-06 (batch5 todo 1 worker, slot 15) — STEP-2 GUARD COMPLETED; slot-4/5's claims did NOT match LDR at
+  pickup.** Fresh-pull + live re-measure at pickup showed the slot-5 "shipped" claim was FALSE on
+  `origin/live-defi-rollout`: **only 9/17 consumers carried `SAFE_SHA`**, and the drift checker was **RED**
+  (deployment-api 27>16, deployment-ui 10>0, ibkr 2>0, market-tick-data 11>8, unified-trading-system-ui 11>0). Slot-5's
+  per-repo guard writes + its 4 over- baseline reconciliations never landed (the 8 repos' git logs showed no guard
+  commit). This session completed the missing half:
+  - **Guard hand-applied to the 8 remaining image-building consumers**: strategy-service, ml-service,
+    trading-agent-service, market-tick-data-service (bash-form `SAFE_SHA`→`VERSION` fallback inserted after the
+    `VERSION=` line + `-t ...:$SHORT_SHA` re-pointed to `:$$SAFE_SHA`); deployment-api (list-form build converted to
+    bash VERSION-fallback guard, preserving PROJECT_ID + SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0 args + its waitFor);
+    deployment-ui + unified-trading-system-ui (list-form build converted to bash VERSION-less guard matching the UI
+    template; UI's quality-gates aligned to pnpm — the repo carries only `pnpm-lock.yaml`); ibkr-gateway-infra
+    (VERSION-less guard on `build-terraform-image` + fetch-tags aligned to the infra template render).
+  - **Over-baseline drift reconciled so the checker is GREEN (exit 0) against real LDR state**: MTDS quality-gates
+    aligned to the service template's `_RUN_INIMAGE_QG` guard (`_RUN_INIMAGE_QG: "false"` declared in substitutions),
+    auth-precheck aligned (gar_token persistence), extract-version aligned (comment-only `$SHORT_SHA`→`short-sha`,
+    validator-risk + render equivalence); ibkr fetch-tags comment lines removed to match the render; unified-trading-
+    system-ui quality-gates → pnpm. All 17 consumers + the 5 templates pass `check_cloudbuild_substitutions.py` (23
+    files clean) and parse as valid YAML. MTDS's residual markers are the genuine category-(b) `image-import-smoke`
+    - `stage-workspace-deps` dep-skew gates (not forward-portable — MTDS-specific hardcoded dep list).
+  - **SHIPPING IN PROGRESS**: 8 commits made on `live-defi-rollout` (ahead=1 each, NOT yet quickmerge-pushed):
+    strategy-service@86256091, ml-service@220e3ac, trading-agent-service@2a940a2, market-tick-data-service@841cf94f,
+    deployment-api@9c5e615, deployment-ui@ed0fe02, unified-trading-system-ui@2e0f44d2, ibkr-gateway-infra@9dfd827. Each
+    needs its own `quality-gates.sh` (Pass 1) + `quickmerge --agent --files cloudbuild.yaml` (Pass 2). Then the plan
+    checkbox in `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 is flipped with the SHAs + the end-to-end proof
+    build id. **A fresh session resumes HERE.**
+
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — closest-to-eligible candidate in this
