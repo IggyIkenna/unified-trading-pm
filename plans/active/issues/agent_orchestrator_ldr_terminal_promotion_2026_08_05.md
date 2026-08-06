@@ -163,3 +163,4 @@ Confirmed by direct code/config reading before changing anything (not assumed):
   edits — no changes needed to the fleet promoter script itself, since its exact-match filter already naturally excludes
   anything that isn't literally `"ldr_main"`.
 - **context-scout 2026-08-05**: populated context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

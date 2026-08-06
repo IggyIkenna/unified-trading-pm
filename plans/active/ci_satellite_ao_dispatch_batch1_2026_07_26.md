@@ -988,3 +988,4 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-03**: trimmed context_scope to 5 entries -- dispatch-batch coordinator doc, correctly
   code-free; dropped 4 narrower codex pointers not central to the surviving open item.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

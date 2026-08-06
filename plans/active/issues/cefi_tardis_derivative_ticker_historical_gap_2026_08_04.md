@@ -34,6 +34,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     deployment-service/scripts/vm/launch-cefi-forward-poll.sh,
     unified-api-contracts/unified_api_contracts/registry/perp_funding_cadence.py,
   ]
@@ -163,3 +164,6 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
     okex-options timeouts (harmless, different data_type). Per-VM manifest: 68,313 entries. VM shutting down (sleep 75 +
     auto-delete). ✅ Checkbox flipped. — slot-6 verification complete.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
+  entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
+  recompute (task `defi_cefi_venue_chain_axis_contamination-011`).

@@ -157,3 +157,4 @@ form and were NOT fixed as part of that todo:
 - **context-scout 2026-08-05**: re-scouted; deployment-service's `run-all-quality-gates.sh` was deleted (2026-08-04
   finding-2 fix), swapped the context_scope entry to the canonical `scripts/repo-management/run-all-quality-gates.sh`,
   now 5 entries.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

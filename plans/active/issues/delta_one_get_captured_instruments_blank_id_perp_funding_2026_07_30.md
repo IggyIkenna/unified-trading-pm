@@ -205,3 +205,4 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged) — verified all four still resolve and
   remain the right minimal set.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

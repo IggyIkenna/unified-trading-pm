@@ -536,3 +536,4 @@ mode-threading residual and `[DESIGN] P3` completion-signal items remain genuine
   task with no concrete done-when and ambiguous ownership; all other items already done/resolved with evidence. Doc
   stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

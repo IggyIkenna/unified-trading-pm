@@ -407,3 +407,4 @@ default from an external reference.
       dashboard's Task Usage Windows panel is now populated with real data end to end.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

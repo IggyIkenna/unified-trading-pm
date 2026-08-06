@@ -84,3 +84,4 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
   gap, but landing it is blocked by this separate, pre-existing issue). Change is tested and correct
   (`test_build_aws_inventory_classifies_ci_escalation_runner_as_live` passes) but not yet shipped.
 - **context-scout 2026-08-05**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

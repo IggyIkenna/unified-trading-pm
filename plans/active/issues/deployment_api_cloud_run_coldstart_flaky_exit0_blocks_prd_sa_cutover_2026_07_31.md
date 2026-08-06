@@ -239,3 +239,4 @@ this service relative to its documented, measured requirement.
   up, may still be evidence someone else wants). No code shipped against this doc's own scope — evidence + operational
   note only. (repo: deployment-service, deployment-api)
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

@@ -170,3 +170,4 @@ group doesn't consume that data_type.
   VM features-delta-one-defi-20260805-105902 (DEFI funding_oi, 1-day, SPOT) which confirmed correct parameter threading
   (--feature-group funding_oi → --dry-run passed to features CLI). Monitor watching VM for runtime throughput evidence.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

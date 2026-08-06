@@ -127,3 +127,4 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   `orphaned_never_touched` but correctly non-batchable on the same grounds.
 - **context-scout 2026-08-03**: populated context_scope (3 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

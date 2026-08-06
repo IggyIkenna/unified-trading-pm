@@ -371,3 +371,4 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       republishes, `_filter_pyth_rows_to_is` will silently drop BTC/ETH/INF for every date where a PYTH-SOLANA blob
       exists.** IS redeployment is an [OPERATOR] action (Cloud Run deploy or Workflow trigger). Plan `[DATA] P2` stays
       UNFLIPPED — BTC/ETH/INF capture has not resumed post-fix.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

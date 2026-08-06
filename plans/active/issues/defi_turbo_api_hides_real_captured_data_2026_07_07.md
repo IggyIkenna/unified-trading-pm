@@ -378,3 +378,4 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   the sole remaining todo (durable UAC registry declaration for HYPERLIQUID/ASTER) is still gated on the open CEFI/DEFI
   dual-counting axis decision in a still-open sibling doc. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
