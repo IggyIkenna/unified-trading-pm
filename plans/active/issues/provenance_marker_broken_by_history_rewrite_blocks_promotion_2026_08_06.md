@@ -146,12 +146,21 @@ Two reasons, mirroring the UTL-34-bypass precedent
 
 ## Options (operator decision)
 
-- [ ] [OPERATOR] P1. **Root-cause code fix (recommended)**: harden `promote_provenance_range.py`'s `commit_reachable()`
+- [x] [OPERATOR] P1. **Root-cause code fix (recommended)**: harden `promote_provenance_range.py`'s `commit_reachable()`
       to verify the marker is a true ancestor of `ldr_ref` (e.g. `git merge-base --is-ancestor <marker> <ldr_ref>`), not
       just that the object exists — a marker that fails ancestry should fall through to the safe `base_ref..ldr_ref`
       fallback (exactly the fallback logic that already exists and already produces the correct, reviewable 19-commit
       list for instruments-service). This fixes the current 3 stuck repos AND prevents recurrence on any future history
-      rewrite.
+      rewrite. **DONE 2026-08-06** — operator-approved 2026-08-06 to proceed (root-cause fix, not tactical unblock).
+      Shipped `unified-trading-pm@7b5390649` (carve-out direct push to `main`, backmerged to LDR automatically at
+      `5983e96a3`). Added `marker_is_ancestor()` (`git merge-base --is-ancestor`) + `marker_usability()` composing it
+      with the existing object-existence check; `resolve_range()`'s `marker_reachable` param renamed `marker_usable`. 7
+      new regression tests in `tests/unit/test_promote_provenance_range.py` reproducing the exact
+      reachable-but-not-ancestor scenario. Live-verified in production (see Progress Log) — the range computation is now
+      CORRECT for all 4 originally-flagged repos; 3 remain blocked by genuine unrelated foreign quickmerge-bypass
+      commits now correctly exposed by the fixed range (a separate, distinct issue per this doc's own precedent, not
+      re-opened here), and alerting-service turned out to be blocked by an unrelated SIT-gate timing condition, not this
+      bug (see Progress Log for the distinction).
 - [ ] [OPERATOR] P1. **Tactical unblock in parallel**: for each of the 3 stuck repos, get exactly one clean promote PR
       merged (admin-merge after a real diff review, or resolve the underlying 19/N-commit provenance list first via
       owning-agent re-ship / operator-authorized `reprovenance_bypass.sh` sweep per repo) — the repo then self-heals
@@ -180,3 +189,66 @@ Two reasons, mirroring the UTL-34-bypass precedent
   wider than the original 3, at least one more repo affected) and raises the practical urgency: this isn't just a
   hygiene/cleanliness issue, it is actively preventing a live incident fix from reaching production. Not fixed
   autonomously, same reasoning as above.
+- **2026-08-06, root-cause fix shipped + live-verified** — Operator approved proceeding with the root-cause code fix
+  (not the tactical unblock). Read `promote_provenance_range.py` in full; `commit_reachable()` did
+  `git cat-file -e <sha>^{commit}` only (object existence). Added `marker_is_ancestor(marker, ldr_ref, cwd)`
+  (`git merge-base --is-ancestor`) and `marker_usability()` composing both checks (reachable AND ancestor,
+  short-circuiting the ancestry check when unreachable); `resolve_range()`'s `marker_reachable` bool param renamed
+  `marker_usable` for accuracy. 7 new tests added (`test_marker_is_ancestor_true/false`,
+  `test_marker_usability_reachable_and_ancestor_is_usable`,
+  `test_marker_usability_reachable_but_not_ancestor_is_unusable` — the exact regression, asserting a reachable
+  non-ancestor marker composes to `resolve_range(..., marker_usable=False)` and selects the fallback range,
+  `test_marker_usability_unreachable_never_checks_ancestry`, `test_marker_usability_fetches_then_rechecks_both`); 4
+  renamed for the new terminology. Full `quality-gates.sh --no-fix` green in the primary LDR worktree (1732 tests
+  passed, lint/type-check/codex-compliance clean; the only failure was an unrelated pre-existing
+  `plan-commit-sha-evidence` ratchet regression in 3 OTHER already-committed plan docs from concurrent agents, confirmed
+  via direct script run + git blame — not caused by, or touching, this change). **Shipped via the PM `scripts/**`
+  direct-to-main carve-out** (`codex/08-workflows/ci-cd-flow.md` carve-out #3): confirmed
+  `ldr-to-main-promote-fleet.yml`'s cron checks out PM at its DEFAULT branch (`main`, verified via
+  `gh repo view --json defaultBranchRef`), so a normal LDR-first ship would not have taken effect for the cron without
+  first surviving the very promotion pipeline being fixed (circular). Built the commit in a scratch worktree at
+  `origin/main` tip (main and LDR were 684 commits apart — not a fast-forward target from LDR), committed
+  `unified-trading-pm@7b5390649f9ddf8f6c55408b208e7e946ca13976`, pushed directly to `main` (GitHub logged an explicit
+  branch-protection bypass, expected for this carve-out). The `uts-backmerge-bot` automatically merged it back into LDR
+  within minutes (`5983e96a3`, "Merge remote-tracking branch 'origin/main' into `_backmerge`") — no manual LDR push was
+  needed. **Live production verification** (direct reproduction + a real fleet-cron run, `gh run 31110844195`, manually
+  triggered post-ship, `2026-08-06T14:27Z`):
+  - **instruments-service**:
+    `mode=fallback marker=0247912d… reachable=True ancestor=False → origin/main..origin/live-defi-rollout` — the exact
+    bug reproduction, now correctly falling back (was the corrupted 3,701-commit marker range pre-fix).
+    `check_strict_quickmerge.py --range origin/main..origin/live-defi-rollout --block` over the corrected range found
+    exactly the same 19 real foreign bypass commits already identified in this doc's original diagnosis (`37c4dd20`,
+    `830e33ae`, `b95574f5`, `7b812d2e`, etc.) — RANGE COMPUTATION CONFIRMED CORRECT. PR #1088 did NOT merge in this run
+    (blocked by those 19 genuine unrelated violations, exactly as this doc's own P1 "tactical unblock" option
+    anticipated as a distinct follow-up — NOT attempted here, out of scope per the established bulk-bless precedent).
+  - **unified-trading-library**: same pattern, live-verified in the fleet run —
+    `mode=fallback marker=08e1191f… reachable=True ancestor=False → origin/main..origin/live-defi-rollout`; blocked by
+    `⛔ provenance: unified-trading-library has non-quickmerge CODE on LDR` (genuine unrelated violations in the
+    now-correct range, not investigated further — out of scope). PR #760 did not merge in this run.
+  - **market-data-processing-service**: same pattern —
+    `mode=fallback marker=6c18a1e5… reachable=True ancestor=False → origin/main..origin/live-defi-rollout`; blocked by
+    the same `⛔ provenance` non-quickmerge-code message. PR #598 did not merge in this run.
+  - **alerting-service — IMPORTANT CORRECTION to this doc's earlier inference**: direct reproduction shows its marker
+    (`8626c70d…`, PR #334, merged 2026-08-04T21:47:27Z — BEFORE the rewrite, same as the other 3) resolves
+    `reachable=True ancestor=True` — i.e. this marker was NEVER broken by the ancestry bug; alerting-service's history
+    was not disconnected the way instruments-service/UTL/MDPS were. In the live fleet run it never even reached the
+    provenance check — it was blocked earlier, at the SIT gate:
+    `SIT GATE BLOCK alerting-service: true-delta not SIT-validated on this tree (LDR tree='a8f26e07c27d…') — fail-CLOSED. Dispatching SIT-on-LDR; a later tick promotes once SIT validates this exact tree.`
+    This is a distinct, unrelated, self-resolving timing condition (LDR moved forward since the last SIT validation of
+    alerting-service's tree) — NOT the bug this doc describes. The original 10-closed-PR pattern (#335-343) for
+    alerting-service was therefore likely driven by this same SIT-gate/bot-churn dynamic all along, not the
+    marker-ancestry bug — the earlier "4th affected repo" inference (pattern-matched from the closed-PR-loop symptom,
+    not live-verified the way instruments-service was) does not hold up under direct verification. Regardless, this
+    means the fix does not need to do anything further for alerting-service — it was never broken by this bug in the
+    first place.
+  - **Regression-safety confirmed on the healthy path**: the same live fleet run promoted 2 other repos
+    (`client-reporting-api`, `batch-live-reconciliation-service`) via
+    `mode=marker … ancestor=True → ✅ provenance: promote-range is quickmerge-clean … ✅ auto-merge armed` — confirms
+    the fix does not break the fast, common case where the marker legitimately IS an ancestor.
+  - Net: **the root-cause range-computation bug is fixed and live-verified in production, in both directions**
+    (correctly falls back on a broken marker, correctly uses the marker range on a healthy one). It does not, by itself,
+    merge any of the 4 originally-flagged repos — 3 were never expected to (this doc's own text: fixing the range
+    computation exposes, but does not resolve, the genuine unrelated foreign-bypass backlog each now correctly shows),
+    and the 4th (alerting-service) turns out not to have been broken by this bug at all. A SIT-on-LDR run was dispatched
+    for alerting-service's current tree during this verification; whether it clears on a subsequent cron tick is being
+    tracked separately, not as part of this bug's resolution.
