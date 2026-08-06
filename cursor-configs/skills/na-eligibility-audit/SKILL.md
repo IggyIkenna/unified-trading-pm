@@ -199,6 +199,13 @@ candidates held back there over exactly this check).
 - **KEEP-NA valid/stale-items**: write the dated Progress Log verdict marker (Phase 0's incremental-skip anchor) even
   when nothing else changes — an audited-and-confirmed doc needs that marker or every future run re-reads it from
   scratch.
+- **Long one-line markers get auto-wrapped by the autostage formatter on commit (2026-08-06)**: a multi-sentence marker
+  line comes back from the pre-commit hook prettier pass re-wrapped across several lines, leaving the worktree ahead of
+  the staged index — the commit attempt aborts with a staged-vs-worktree mismatch (`MM` status). Fix: `git add` the
+  reformatted files and re-commit; no content is lost. Also: the PM pre-commit branch-drift hook refuses to commit while
+  behind origin — under concurrent sharded waves (9 sibling workers pushing marker commits) expect mid-run `git fetch` +
+  overlap check + `git pull --ff-only`, and if a sibling also edited one of your files, restore that ONE file from
+  origin first and re-apply your marker (never `git stash` — shared LIFO, banned for sharded workers).
 
 ## Phase 4 — apply + commit
 
