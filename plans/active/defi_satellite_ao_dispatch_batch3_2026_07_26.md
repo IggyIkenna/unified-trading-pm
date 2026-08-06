@@ -116,19 +116,19 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **Progress Log extracted 2026-08-03 (slot-12, line-cap remediation)** — this todo accumulated a long
-                                                                                                              chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
-                                                                                                              pushed the live plan over the 1000-line hard cap. Moved verbatim to
-                                                                                                              `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
-                                                                                                              the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
-                                                                                                              chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
-                                                                                                              2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
-                                                                                                              6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
-                                                                                                              timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
-                                                                                                              `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
+                                                                                                                  chronological chain of dated VM-launch/bug-chase entries (2026-07-26 through the 2026-08-03 FLIP below) that
+                                                                                                                  pushed the live plan over the 1000-line hard cap. Moved verbatim to
+                                                                                                                  `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch3_d1_progress_log_history_2026_08_03.md` — read it for
+                                                                                                                  the full per-session VM-launch evidence chain (OOM root-cause, symbol-filter bug, timestamp-resolution bug
+                                                                                                                  chain, NaN-warmup fix, etc.). Condensed summary: onchain leg (`perp_funding_rates`) completed 2026-07-31 after
+                                                                                                                  2 real bugs fixed (`features-service@faedd957`, `1309480a`); delta_one `returns` leg completed 2026-08-02 after
+                                                                                                                  6 real bugs fixed across the session chain (candle pass-through, symbol-filter, lookback-buffer, NaN-warmup,
+                                                                                                                  timestamp-resolution ×3); delta_one `funding_oi` leg was blocked on HYPERLIQUID structurally lacking
+                                                                                                                  `open_interest` until a 2026-08-03 fix (`features-service@6b2282c5`) closed it.
 
-                                                                                                              **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
-                                                                                                              `returns`/onchain reconfirmed). Evidence:
-                                                                                                              `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
+                                                                                                                  **2026-08-03 (slot-8) — FLIPPED, all 3 legs confirmed live** (454/455 `funding_oi` shards `captured`;
+                                                                                                                  `returns`/onchain reconfirmed). Evidence:
+                                                                                                                  `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -687,3 +687,26 @@ part of this plan was migrated elsewhere.
   `instrument_availability/by_date/` blobs, not a live IS API — IS code fixes take effect only after IS republishes. The
   VM's Pyth collector is empirically writing BTC/ETH/INF rows, confirming the fix works end-to-end regardless of IS
   republish state.
+  - **2026-08-06 01:20Z (slot-12, post-compaction, `defi_satellite_ao_dispatch_batch3-015`)** — **Per-VM manifest
+    confirms IS blob publishing gap.** VM has processed 2026-07-15..2026-07-28 (14 of 23 dates, should reach 2026-08-06
+    by ~01:40Z). **JTO/RAY/WIF/JUP/USDC confirmed captured across all dates** — MTDS@cd017a1c works. IS@6fbaae90 landed
+    on LDR 2026-08-03 but IS service hasn't republished: `instruments-service-daily-trigger` (Cloud Scheduler → Workflow
+    `instruments-service-daily`, 08:30 UTC daily) still publishes 9-feed pre-fix blobs. BTC/ETH/INF captured only for
+    2026-07-15..2026-07-18 (no IS blob, filter no-op); dropped 2026-07-19+ (IS blob non-empty, only 9 feeds). **IS
+    redeployment is the unblocking action.**
+  - **2026-08-06 01:29Z (slot-12, FINAL, `defi_satellite_ao_dispatch_batch3-015`)** — **VM completed `exit_code=0`**
+    (`pyth-lst-backfill-20260806-010524`, deployment `d696682c`, 23 dates, 219 PYTH SOLANA rows, all `captured`).
+    **Final per-VM manifest** (2026-07-15..2026-08-06):
+    - **BTC/ETH/INF**: captured 2026-07-15..2026-07-18 (4 dates, no IS blob, filter no-op) ✗ dropped
+      2026-07-19..2026-08-06 (19 dates, IS blob non-empty with pre-fix 9-feed set). **Total: 4 of 23 dates have
+      BTC/ETH/INF.**
+    - **JTO/RAY/WIF/JUP/USDC**: captured on ALL 23 dates ✓ — MTDS@cd017a1c fix confirmed working end-to-end.
+    - **IS@6fbaae90**: code on LDR, NOT deployed. `instruments-service-daily-trigger` (Cloud Scheduler → Workflow, 08:30
+      UTC) publishes blobs from deployed image — still pre-fix. **Until IS republishes, BTC/ETH/INF will be silently
+      dropped by `_filter_pyth_rows_to_is` for EVERY date where a PYTH-SOLANA blob exists (2026-07-19+).**
+    - **Verdict**: `[DATA] P2` checkbox stays UNFLIPPED. BTC/ETH/INF capture has NOT resumed post-fix — the IS code fix
+      landed on LDR but the service that publishes the `instrument_availability` catalogue MTDS reads from hasn't been
+      redeployed. MTDS fix works (JTO/RAY/WIF/JUP/USDC captured). IS fix code is correct (BTC/ETH/INF in
+      `PYTH_PRICE_FEEDS`). The one remaining blocker is IS service redeployment + republish. Once IS republishes,
+      re-running this same verification VM for 2026-07-19..present should show BTC/ETH/INF captured across all dates.
+      **Next step**: notify operator — IS redeployment is [OPERATOR] action (Cloud Run deploy or workflow trigger).
