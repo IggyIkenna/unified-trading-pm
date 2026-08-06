@@ -194,6 +194,18 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   **OKX-SWAP does NOT have RC3** — its catalogue entries cover 2026-05-23. The only remaining gap is DERIBIT. P2 todo
   corrected to DERIBIT-only backfill. VM still RUNNING at day=2026-05-24. MTDS@b2cc2742 ahead=0. PM@dad09ec1c + this
   update.
+- **slot-14 2026-08-06 ~10:44Z (data_engineering, checkpoint #11)**: VM `cefi-fwd-20260806-065837` still RUNNING
+  (pre-RC3 tarball sha=467a3cd1). day=2026-05-23 complete (20 ok/2 failed), day=2026-05-24 now complete at 10:35:49Z (21
+  ok/3 failed: `DERIBIT` empty-error — expected, pre-RC3 code; `KRAKEN-SPOT` non-canonical-path bug + `ASTER`
+  UpstreamTimestampBiasError, both unrelated pre-existing issues outside this doc's venue scope). Pace ~1h43m/day → ETA
+  for remaining ~73 days (2026-05-25→2026-08-05) is multi-day, not multi-hour — re-armed `ScheduleWakeup` per-tick
+  rather than trying to babysit synchronously. AO heartbeat sent + acked (`/api/slots/14/heartbeat`, resumed same task,
+  status=working). Confirmed against slot-9's broader RE-OPENED todo (6 venues: BINANCE-FUTURES/BYBIT/OKX-SWAP/
+  KRAKEN-FUTURES/BITGET-FUTURES/DERIBIT) — this VM's full 74-day run covers all 6, but DERIBIT will fail EVERY day until
+  the separate DERIBIT-only targeted backfill (todo 3, tarball@b2cc2742, already built) runs after this VM terminates.
+  Both repos clean ahead=0 (PM `f5d9c3611`, MTDS `143de313`). **Resume**: keep polling VM status + run.log
+  `Processed date=` markers; once TERMINATED, verify Tardis fleet clear, launch DERIBIT-only backfill with existing
+  tarball@b2cc2742 (no rebuild), verify GCS, flip RE-OPENED todo + P2 todo with evidence, POST /done.
 - **slot-14 2026-08-06 ~09:15Z (data_engineering, checkpoint #10 — day=2026-05-23 complete; pre-compact state)**: VM
   `cefi-fwd-20260806-065837` RUNNING; day=2026-05-23 complete at 08:52Z:
   `Processed date=2026-05-23: 20 venues ok, 2 failed, 0 skipped, 1890641532 total records`. 2 failed = DERIBIT (RC3
