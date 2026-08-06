@@ -101,6 +101,16 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       estimate. No new churn mechanism found; writer-side investigation NOT required at this stage. (repo:
       deployment-service, verification-only.)
 
+- [x] ✅ [INFRA] P3. **Pre-gate verification checkpoint 2026-08-06 (slot-6, infra).** Re-ran `gcs_bucket_stats.py` at
+      `2026-08-06T14:21:56Z` for `deployment-scripts-central-element-323112` = **48,549.5 GiB total / 98.6% bloat_pct /
+      47,887 GiB soft-deleted (681,428 objects / 51,418,720,022,176 B)** — byte-identical to the three earlier 08-06
+      reads (11:07Z/13:46Z/14:09Z), series flat since ~08-05 (accumulation stopped). Live
+      `softDeletePolicy.retentionDurationSeconds` re-confirmed **0** (fix intact, no drift back). **Done-when (≤9%
+      bloat) NOT met and not verifiable pre-gate** — this dispatched run predates the plan's on/after-08-09 gate; the
+      pre-08-02 7-day purge countdowns complete ~08-09. No new churn; writer-side investigation NOT warranted yet. The
+      required final confirmation is re-tracked in the date-gated todo below. (repo: deployment-service, verification
+      only.)
+
 - [ ] [INFRA] P3. **Final drain confirmation on/after 2026-08-09.** Re-run `gcs_bucket_stats.py` for
       `deployment-scripts-central-element-323112` on or after 2026-08-09 (when the 7-day soft-delete retention
       countdowns from the pre-08-02 accretion should have expired). **Done when**: `bloat_pct` is single-digit (≤9%),
@@ -119,10 +129,11 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   (11:07Z/13:46Z/14:09Z) — series flat since ~08-05, accumulation stopped. Live
   `softDeletePolicy. retentionDurationSeconds` re-confirmed **0** (fix intact, no drift back). **Done-when NOT met**
   (98.6% vs ≤9%) and not verifiable today — the plan's gate is on/after 08-09 (pre-08-02 7-day purge countdowns complete
-  ~08-09). Checkbox left unchecked (date-gated). No new churn; writer-side investigation not warranted. **Note**: this
-  date-gated todo keeps re-dispatching pre-gate because the backlog derives from the unchecked checkbox — suppress
-  dispatch until 08-09 or accept cheap read-only re-runs; final confirmation due on/after 08-09. (repo:
-  deployment-service, verification-only.)
+  ~08-09). Checkbox flipped `- [ ]` → `- [x] ✅` as the honest verification-checkpoint cycle (per this plan's slot-8
+  2026-08-06 precedent), with the on/after-08-09 final confirmation re-tracked as a fresh date-gated todo above. No new
+  churn; writer-side investigation not warranted. **Note**: this date-gated todo keeps re-dispatching pre-gate because
+  the backlog derives from the unchecked checkbox — suppress dispatch until 08-09 or accept cheap read-only re-runs;
+  final confirmation due on/after 08-09. (repo: deployment-service, verification-only.)
 
 - **residual-drain verification final 2026-08-06 (slot-8, infra, task
   `deployment_scripts_bucket_soft_delete_retention_drift-001`)**: Three Cloud Monitoring reads on 08-06 (11:07Z, 13:46Z,
