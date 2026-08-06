@@ -312,7 +312,7 @@ specific to any one task.
   (`workflow_dispatch`-triggered) was green on every run immediately before (07:00Z, 08:05Z) and after this window; the
   PR itself had already **self-merged at 08:46:13Z — 2 minutes before this failing run even started (08:48:35Z)** — the
   exact "orphaned noise against an already-resolved wall" pattern
-  `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` documents extensively for a sibling
+  `/plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` documents extensively for a sibling
   failure signature (pytest-timeout rather than disk-full, same underlying self-hosted-runner contention class). Current
   host state (this session runs on the same shared VM per its worktree path): `df -h /` `678G 516G 162G 77%` — not in
   crisis, but used-bytes climbed from the 2026-07-30 entry's `489G/678G (73%)` reading to `516G/678G (77%)` in about a

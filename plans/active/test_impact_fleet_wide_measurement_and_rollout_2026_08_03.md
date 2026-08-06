@@ -48,7 +48,7 @@ context_scope:
   [
     /plans/archive/issues/test_impact_selective_execution_design_2026_08_03.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
-    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
+    /plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     scripts/quality_gates/test_impact_selector.py,
     scripts/quality_gates/import_graph_walker.py,
     market-data-processing-service/scripts/quality-gates.sh,
@@ -255,7 +255,7 @@ to be per repo — not measured here, out of this todo's scope.
       mid an already-tracked resource-contention crisis
       (`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, status open) that makes
       almost every recent "failure" run an infra-level SIGINT/OSError kill or a known contention-induced pytest-timeout
-      (`/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` + `..._continued_2026_08_02.md`,
+      (`/plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` + `..._continued_2026_08_02.md`,
       both open, both already naming the exact test this backtest also hit) — NOT a genuine content-level test failure
       attributable to a specific diff.** Usable backtest sample size: `execution-service` 0/1, `instruments-service`
       0/5, `market-data-processing-service` 0/11 (100% unattributable infra kills in all three, even at a 40-run
@@ -388,10 +388,10 @@ to be per repo — not measured here, out of this todo's scope.
     `/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (status open) — ~20+ repos'
     self-hosted QG runners colocated on ONE oversubscribed 16-vCPU/64GB EC2 instance, causing exactly this class of
     hung/SIGINT-killed run and contention-induced timeouts;
-    `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` + `..._continued_2026_08_02.md` (both
-    open) already name `test_cross_timeframe_sanity.py` by name as a known recurring casualty. Neither issue needed a
-    new doc — this backtest is corroborating evidence of their ongoing impact, not a new discovery, so no duplicate
-    filed.
+    `/plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` + `..._continued_2026_08_02.md`
+    (both open) already name `test_cross_timeframe_sanity.py` by name as a known recurring casualty. Neither issue
+    needed a new doc — this backtest is corroborating evidence of their ongoing impact, not a new discovery, so no
+    duplicate filed.
   - **Bottom line for the operator's acceleration ask**: the backtest mechanism works exactly as designed (real gh CLI
     data, real selector replay, real cross-referencing to rule out a false-positive) — but the fleet's CURRENT CI health
     is the limiting factor, not the selector. 0 usable samples across 3 repos and 1 explained-away false-positive in the

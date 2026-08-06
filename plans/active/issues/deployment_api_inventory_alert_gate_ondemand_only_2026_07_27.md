@@ -7,7 +7,7 @@ title: >-
   schedule
 summary: >-
   Surfaced during this session's false-positive-risk investigation for
-  /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md todo 1 (adding "hung" to
+  /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md todo 1 (adding "hung" to
   `_ALERT_HEALTH_STATES`). `_alert_on_health_transition()` fires only inside `_compute_inventory()`
   (`deployment_api/routes/deployments_inventory.py`), which itself only runs as a side effect of a caller reaching
   `_load_inventory()` — a stale-while-revalidate cache with `_INVENTORY_TTL_SEC=45.0`. Confirmed by direct read: no
@@ -48,7 +48,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/04-architecture/ci-alerting.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
@@ -61,7 +61,7 @@ estimate_class: infra
 assigned_role: infrastructure
 source: >-
   Found during this session's false-positive-risk investigation for
-  /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md todo 1 (adding "hung" to
+  /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md todo 1 (adding "hung" to
   `_ALERT_HEALTH_STATES`), 2026-07-27 — an interactive `/autonomous` session shipping that todo's fix. All code-path
   claims in this doc were verified this session by direct file read: `_load_inventory`/`_compute_inventory`/
   `_INVENTORY_TTL_SEC` in `deployment_api/routes/deployments_inventory.py`; a corpus grep of
@@ -76,7 +76,7 @@ depends_on: []
 locked_by:
 context_scope:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /codex/05-infrastructure/deployment-observability.md,
     deployment-api/deployment_api/routes/deployments_inventory/_aggregation.py,
     deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,

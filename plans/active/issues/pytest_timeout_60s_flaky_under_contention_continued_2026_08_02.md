@@ -4,7 +4,7 @@ title:
   "pytest-timeout-under-contention bug class continues (original doc at 1000-line hard cap) — unified-trading-api's 5th
   occurrence in one day, this time fixed with a repo-local mitigation rather than left as noise"
 summary: >-
-  Continuation of `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` (996/1000 lines, its
+  Continuation of `/plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` (996/1000 lines, its
   own last entry already flagged "next occurrence MUST split/archive, not append"). `cicd` escalation `agt-bde7b9`
   (`WALL_TYPE=ldr_qg_failure`, `REPO=unified-trading-api`, slot 4) hit unified-trading-api's 5th same-day recurrence of
   this doc's flake class — 4 prior consecutive `quality-gates-v2` failures on 2026-08-02 (13:32Z/18:41Z/21:12Z/22:36Z
@@ -38,7 +38,7 @@ scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related:
   [
-    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
+    /plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-08-02
@@ -62,7 +62,7 @@ resolved_by:
 source: "cicd-role escalation agt-bde7b9 (WALL_TYPE=ldr_qg_failure, REPO=unified-trading-api, slot 4)"
 context_scope:
   [
-    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
+    /plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /codex/06-coding-standards/quality-gates.md,
     unified-trading-api/scripts/quality-gates.sh,
@@ -71,7 +71,7 @@ context_scope:
 
 # pytest-timeout-under-contention: unified-trading-api's 5th occurrence, fixed with a repo-local mitigation
 
-Parent doc `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` is at its 1000-line hard cap
+Parent doc `/plans/archive/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md` is at its 1000-line hard cap
 (996 lines) with its final entry explicitly noting "next occurrence MUST split/archive, not append" — this doc is that
 split, not a duplicate.
 

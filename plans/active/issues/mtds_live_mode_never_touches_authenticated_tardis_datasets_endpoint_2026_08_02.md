@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [tardis, concurrency-guard, mtds, live-leg, false-premise, ssot-contradiction]
 related:
   [
-    /plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md,
+    /plans/archive/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]

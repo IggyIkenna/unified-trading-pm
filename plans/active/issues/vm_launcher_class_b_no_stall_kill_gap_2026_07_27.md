@@ -6,7 +6,7 @@ title: >-
   protective layer at any level
 summary: >-
   Discovered as a byproduct of the Gap-3 naming-heuristic fix in
-  /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md (todo 2/5). That doc's Gap 2 was
+  /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md (todo 2/5). That doc's Gap 2 was
   re-verified this session and found narrower than originally stated: canonical-migration-family launchers DO route
   through `setup-data-pipeline-vm.sh`'s shared `_launch_with_tee()` → `vm-exec-with-gcs-tee.sh`, giving them the generic
   30-min byte-growth stall-kill by default (Class A). But a SECOND, separate launcher family —
@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [vm-monitoring, hung-vm, stall-detection, launcher-common, class-b-launcher, deployment-observability]
 related:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
@@ -42,7 +42,7 @@ estimate_class: infra
 assigned_role: infrastructure
 source: >-
   Surfaced during the Gap-3 launcher audit (todo 5) for
-  /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md, 2026-07-27 — an interactive
+  /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md, 2026-07-27 — an interactive
   `/autonomous` session implementing todo 2's `_is_backfill_vm()` naming fix. All code-path claims in this doc were
   independently re-verified this session by direct file read (not trusted from any prior summary): `grep -n
   "STALL\|kill\|timeout" deployment-service/scripts/vm/lib/launcher_common.sh` and `grep -l "lc_log_upload_trap_block"
@@ -57,7 +57,7 @@ locked_since:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,
     deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
