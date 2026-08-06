@@ -22,7 +22,7 @@ related:
   [
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
-    /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
+    /plans/archive/2026_08/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
   ]
 created: 2026-08-03
 author: unknown
@@ -46,7 +46,7 @@ context_scope:
     scripts/manifest/check-dependency-alignment.py,
     scripts/manifest/generate_canonical_dependency_manifest.py,
     scripts/propagation/propagate-canonical-versions.py,
-    /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
+    /plans/archive/2026_08/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
   ]
 ---
 

@@ -19,7 +19,7 @@ tags: [quality-gates, uv, dependency-management, cve, pip-audit, ci-local-parity
 related:
   [
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
-    /plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
+    /plans/archive/2026_08/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md,
     plans/active/ci_local_qg_parity_2026_06_08.md,
   ]
 created: 2026-08-04

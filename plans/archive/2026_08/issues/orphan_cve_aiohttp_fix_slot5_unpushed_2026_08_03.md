@@ -18,7 +18,10 @@ summary: >-
   PR #729 already MERGED at 21:17:40Z, ~19min BEFORE this fix committed locally at 21:36:06Z — so lint-codex/pip-audit
   is either advisory-only in the LDR→main gate set or something else let it through; that stale claim does not diminish
   the fix (3 real CVEs still unpatched on origin).
-status: open
+status:
+  complete # archived 2026-08-06 -- sole todo confirmed complete: commit 59af706c (aiohttp>=3.14.3, closes
+  # CVE-2026-59881/69243/69244) verified an ancestor of origin/live-defi-rollout via git merge-base --is-ancestor;
+  # archived by na-eligibility-audit cross-cutting (dispatch agt-6925b7)
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -91,3 +94,10 @@ Hence this durable issue so a worker picks it up cleanly.
   security fix sitting unshipped — flagged P1 for the next available worker cycle over routine cleanup, per review's
   recommendation. Main did NOT push it (main never pushes code; deps go via quickmerge dep gates).
 - **context-scout 2026-08-06**: populated context_scope (3 entries).
+- **na-eligibility-audit 2026-08-06**: ARCHIVE — the rescue landed: commit 59af706c ("fix(deps): bump aiohttp to
+  > =3.14.3 to close 3 new CVEs", author ikennaigboaka [slot-5·planning], 2026-08-03T21:36:06Z, `Quickmerge: agent`
+  > trailer, dispatch agt-d19dee) matches the orphan d42fe0191bbe on author/message/timestamp (different hash consistent
+  > with a cherry-pick/re-derivation, per this doc's own fallback step (b)) and
+  > `git merge-base --is-ancestor 59af706c origin/live-defi-rollout` returns true.
+  > `origin/live-defi-rollout:pyproject.toml` line 99 carries `aiohttp>=3.14.3,<4.0.0` with an inline comment citing all
+  > 3 CVEs. Done-when met — archived.
