@@ -10,7 +10,7 @@ summary: >-
   re-verify) to see whether they've since cleared, and archives the parent via the standard 6-step ritual once fully
   closed. Authored 2026-07-31 to close the finalize-plan-coverage gate the parent plan's own creation triggered
   (task_template.md §4 — every assigned_vm:planning plan needs a companion gated finalize plan).
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -39,7 +39,7 @@ sequential: true
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize
 source: >-
   Filed to close the finalize-plan-coverage QG regression (scripts/quality_gates/check_finalize_plan_coverage.py)
   flagged against live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md, which shipped assigned_vm:
@@ -53,6 +53,22 @@ context_scope:
 ---
 
 # live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31 — finalize
+
+> **🔴 SUPERSEDED 2026-08-06 — do not action this plan.** Superseded by
+> `/plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md`.
+>
+> Both plans were created 2026-07-31 targeting the SAME parent
+> (`depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]`, `gate_on_depends: true`,
+> `status: active`), so once the parent's last todos cleared, both would have become dispatchable on the same tick and
+> raced the identical 6-step archival — a file move plus corpus-wide referrer fixup, run twice concurrently on one
+> target. Each plan's own creation-justification ("no companion gated finalize plan exists") was falsified by the
+> other's existence. Surfaced by the daily plan-reconcile as BLK-5eeacb63 and ruled by the operator 2026-08-06.
+>
+> The survivor keeps the cleaner filename (no redundant date suffix). This plan's `[REVIEW]` evidence-verification todo
+> — which the survivor did NOT have — was PORTED into it before this banner went up, so superseding drops no work. Root
+> cause (the finalize-plan remediation path has no idempotency guard, so a second finalize plan can be created for a
+> parent that is already gated) is tracked in
+> `/plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md` and is not a blocker here.
 
 ## Todos
 

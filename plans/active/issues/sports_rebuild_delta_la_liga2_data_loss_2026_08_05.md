@@ -143,12 +143,21 @@ b4bac708, so it may now be stale and in need of removal.
       instruments-service@80077c74 (repo: instruments-service, script: reemit_la_liga2_odds_manifest_rows.py; dry-run
       confirmed 846 cells, 2020-06-10→2026-05-18; apply wrote 846 manifest rows to per-VM shard with canonical
       league_id=SEGUNDA_DIVISION)
-- [x] ✅ [VERIFY] P2. Re-run manifest-vs-GCS cross-reference for ODDS — **846 LA_LIGA_2 cells still GCS-only** (todo #2
-      not yet executed). Manifest downloaded 2026-08-05 ~07:30 UTC, 113MB, 9,246,416 rows. ODDS: 372,910 rows, 30
-      leagues with captured>0, 383 distinct leagues total. LA_LIGA_2: 0 manifest rows (confirmed). BRASILEIRAO: 962
-      captured + 1,885 empty in manifest (the reported +1 GCS-only edge case was not independently verified — full GCS
-      walk was too heavy for in-session). Re-verify after per-VM shard consolidation into canonical index. — slot-2
-      @2026-08-05 ~07:30Z
+- [ ] [VERIFY] P2. **REOPENED 2026-08-06** (BLK-136e69bf, operator-answered): this was marked `[x]`, but its own text
+      below states the stated goal — 0 GCS-only cells — was NOT reached, and calls for a re-verification that no later
+      entry confirms happened. A checked box whose body says the work is incomplete is false progress
+      (`/codex/02-data/data-pipeline-correctness-hard-rule.md`); 846 cells of real GCS data missing from the
+      availability manifest is data loss, not an acceptable small population, so "leave as-is / accept the risk" was
+      explicitly rejected. **Done-when**: (a) confirm the manifest consolidator has actually run since 2026-08-05
+      ~07:30Z, folding the per-VM shards into the canonical index — if it has NOT, that is the real blocker and a re-run
+      only reproduces 846; (b) re-run the manifest-vs-GCS cross-reference for LA_LIGA_2 ODDS; (c) close this citing the
+      MEASURED remaining count as evidence, or leave it open with that real count. Also resolve the +1 BRASILEIRAO
+      GCS-only cell, which the text below flags as never independently verified. Prior finding retained verbatim: Re-run
+      manifest-vs-GCS cross-reference for ODDS — **846 LA_LIGA_2 cells still GCS-only** (todo #2 not yet executed).
+      Manifest downloaded 2026-08-05 ~07:30 UTC, 113MB, 9,246,416 rows. ODDS: 372,910 rows, 30 leagues with captured>0,
+      383 distinct leagues total. LA_LIGA_2: 0 manifest rows (confirmed). BRASILEIRAO: 962 captured + 1,885 empty in
+      manifest (the reported +1 GCS-only edge case was not independently verified — full GCS walk was too heavy for
+      in-session). Re-verify after per-VM shard consolidation into canonical index. — slot-2 @2026-08-05 ~07:30Z
 
 ## Progress Log
 
