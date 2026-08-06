@@ -701,6 +701,8 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   files, then flip the Sanctum-reconciliation todo above with the shipped shas. Do not re-do the on-chain verification —
   it's captured here with full evidence.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: corrected a marker-skip left by an earlier cohort-5 batch (2026-08-06 01:34 UTC edit
+  trimmed context_scope 5→3 entries with no marker added); re-verified the current 3 entries resolve on disk, unchanged.
 
 ## RESUME POINT (pre-compact 2026-07-23) — a fresh session starts HERE
 
