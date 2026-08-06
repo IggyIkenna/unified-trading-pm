@@ -222,3 +222,17 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   consolidated-closeout coordinator; its 5 open `[REVIEW]` todos are explicitly self-declared verification-only / "not
   itself AO-eligible" (same convention as the sibling `infra_consolidated_closeout` doc), matching the bounded-outcome
   bar this skill applies. No reclassification warranted.
+- **ag_closeout_auditor 2026-08-06 (ui tranche, dispatch agt-8d6508)**: first-ever `/ag-closeout-audit ui` run — the
+  `/ag-closeout-audit` half of the P2 todo above (`/plan-reconcile ui` has NOT run yet, so that todo stays unchecked).
+  Phase 1 (12-agent Workflow) classified all 12 tranche-primary docs: 1 `archivable_now`
+  (`issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` — fully done, but stuck at a stale
+  `status: open` + a `locked_by` timestamp that predates its own `created` date by 2 months; flagged, not fixed here), 2
+  `archivable_after_planned_work` (`deployment_registry_firestore_migration_2026_07_14.md`, self-covered by its own
+  named P3/P5 phase docs; `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md`, self-dispatched), 9
+  `orphaned_never_touched`, 0 partial-coverage, 0 mistags (Orthogonality HARD CHECK clean — all 12 candidates cleanly
+  single-tagged `[ui]`). Drafted `ui_satellite_ao_dispatch_batch1_2026_08_06.md` (status: draft, 3 conflict-cleared
+  todos) + gated `_finalize`, `unified-trading-pm@a9a85a1cc` — pending operator approval to dispatch. Also found: the
+  Track 3/Track 4 close-out criteria above are now partly stale (both still describe already-resolved sub-items — alerts
+  N+1, mock/live parity — as open; a future edit should trim them) and the P2 corpus-wide-retag-audit todo above remains
+  genuinely untouched (`monitoring_control_plane_master`, `ui_build_warm_cache` still un-triaged). Full reasoning per
+  doc: see the batch plan's own Deferred/Findings sections.
