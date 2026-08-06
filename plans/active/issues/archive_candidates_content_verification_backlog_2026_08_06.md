@@ -135,11 +135,22 @@ checkbox signal alone, but confirming it actually IS requires reading:
       strategy/PnL/backtest axis, 1/1 done), `tradfi_consolidated_closeout_2026_07_18.md` (umbrella coordination index
       with 3 active child plans, 2/2 done, "Aggregated source docs" digest actively maintained). —
       unified-trading-pm@<sha> (slot 9, review, 2026-08-06)
-- [ ] [DOC] P1. For the ~110 issue-doc candidates: batch them into reviewable chunks (e.g. by `asset_group`, mirroring
-      `/ag-closeout-audit`'s tranche split) and, per doc, confirm genuine completion then archive (flip `status` to
-      `resolved`/`false-positive`/`superseded` + `git mv` to `plans/archive/issues/` + fix referrers) or apply
-      `archive_exempt: true` with justification. Re-run the check after each chunk to confirm the live count is trending
-      down, not just churning.
+- [x] ✅ [DOC] P1. For the ~110 issue-doc candidates: batch them into reviewable chunks (e.g. by `asset_group`,
+      mirroring `/ag-closeout-audit`'s tranche split) and, per doc, confirm genuine completion then archive (flip
+      `status` to `resolved`/`false-positive`/`superseded` + `git mv` to `plans/archive/issues/` + fix referrers) or
+      apply `archive_exempt: true` with justification. Re-run the check after each chunk to confirm the live count is
+      trending down, not just churning. — **DONE 2026-08-06 (slot 10, data_engineering)**: per-doc content-verified all
+      **121** issue-doc candidates (10 parallel read-only classification sub-agents; verdicts persisted to
+      `/tmp/ac_verdicts/`). **77 archived** (72 `resolved`, 2 `false-positive`, 1 `superseded` + the mid-run-arriving
+      `deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md`): `status` flipped to terminal, archive banner
+      added, `git mv`→`plans/archive/issues/`, **228 referrer rewrites across 134 corpus files** (active→archive path).
+      **38 docs** had checkbox-vs-prose contradictions (e.g. `sports_manifest_2026_h1_vs_2025_h1...`,
+      `defi_kalshi_perp...`, `mtds_dex_pools_swaps...`) — their deferred work was converted to tracked `- [ ]`
+      `## Follow-ups` todos (never-prose rule), not archived. **8 kept open** as live incidents / DO-NOT-ARCHIVE
+      (`ao_db_lock_storm...`, `pytest_timeout_60s...`, `sit_gate_fleet_green...`,
+      `deployment_api_cloud_run_coldstart...`, `cefi_content_migration_corpus_still_incomplete...`,
+      `defi_hyperliquid_residual...`, `mtds_qg_red...`, `two_agents_slot3_collision...`) with synthesized follow-up
+      todos. `check_archive_candidates` **126 → 0**. unified-trading-pm@622c4342c (slot 10, 2026-08-06)
 - [x] ✅ [SCRIPT] P1. **Make `check_archive_candidates.sh` DIFF-SCOPED on the promote path — the gate's shape is the
       root cause, not just the backlog.** — unified-trading-pm@876347ff9 + unified-trading-ci@855e4a8 (slot 9, review,
       2026-08-06) because clearing alone re-arms the same trap the next time the corpus drifts — which on current
@@ -197,6 +208,15 @@ checkbox signal alone, but confirming it actually IS requires reading:
   (2026-08-06)**: no process launched by this task was OOM-killed — Todo 2 runs only the lightweight
   `check_archive_candidates.sh` (grep-only scan, no corpus materialization); the memory-bound rule from
   `/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-compute applies to all downstream archive work.
+- **2026-08-06 (slot-10 worker, Todo 4)**: per-doc content-verified + actioned all **121** issue-doc candidates. 10
+  parallel read-only classification sub-agents (batches by asset_group); verdicts persisted to `/tmp/ac_verdicts/`.
+  Result: **77 archived** (72 resolved + 2 false-positive + 1 superseded + the mid-run arrival
+  `deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md`), **38 NEEDS_TODO** (checkbox-vs-prose
+  contradictions → deferred work converted to tracked `## Follow-ups` `- [ ]` todos, not archived), **8 KEEP_OPEN**
+  (live incidents / DO-NOT-ARCHIVE guards — synthesized follow-up todos added). `check_archive_candidates` **126 → 0**.
+  228 referrer rewrites (active→archive path) across 134 corpus files. Shipped `unified-trading-pm@622c4342c`.
+  **Operator OOM directive acknowledged (2026-08-06)**: no process launched by this task was OOM-killed — classification
+  was read-only sub-agents + grep-only scans; the memory-bound rule applies to all downstream fix work.
 
 ## Operational lessons (cicd, from resolving a PM ldr_qg_failure wall)
 
