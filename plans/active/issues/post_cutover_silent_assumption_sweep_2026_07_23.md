@@ -587,7 +587,24 @@ codex, or a future staging re-entry gets a dead pipeline.
       dispatches, and the 24 repos' `semver-agent.yml` `schema-changed` dispatch. For each: either add the missing
       listener in the target repo, or stop claiming success when the dispatch has no subscriber. Use
       `check_dispatch_listeners.py --show` to enumerate the current live set before starting, and re-baseline
-      (`--baseline-write`) as each is fixed so the ratchet only ever shrinks.
+      (`--baseline-write`) as each is fixed so the ratchet only ever shrinks. -
+      **`service-deployed → deployment-service` SLICE: DONE 2026-08-06** (operator-approved same-day fix, not just
+      documented). Added `deployment-service/.github/workflows/service-deployed-listener.yml`
+      (`on: repository_dispatch: types: [service-deployed]`) + `scripts/cicd/handle_service_deployed_dispatch.py` + an
+      explicit-allowlist `deployment_service/auto_deploy_allowlist.py` (default-deny — operator ruling 2026-08-06,
+      pre-live-cutover: only genuinely-live, pinned-tag, long-lived Cloud Run **Services** not already covered by their
+      own dedicated `-main-deploy` trigger are eligible; today that's exactly `alerting-service` →
+      `dp-alerting-subscriber`). Reuses deployment-api's existing `POST /api/deployments/{service}/deploy`
+      (`deploy_build()`) via a new backward-compatible `cloud_run_service_name` override (added because
+      alerting-service's image name and its live Cloud Run service name diverge — a real gap this work surfaced).
+      `cascade-qg-ordering.yml`, `sit-gate.yml` (`game-day-sit`/`synthetic-smokes`), and the 24-repo `semver-agent.yml`
+      `schema-changed` slice are **explicitly OUT of scope for this fix and remain open** — different event types/target
+      repos/owners, not touched. Shipped `deployment-service@5599bda8`, `deployment-api@7110d2d`. Re-baselined
+      `check_dispatch_listeners_baseline.yaml` 63→38 (the drop is larger than one event_type because ~11 services'
+      `cloudbuild.yaml`+`buildspec.aws.yaml` all dispatched the same `service-deployed → deployment-service` pair, now
+      resolved as one listener). Full verification (real Cloud Run revision timestamp change on
+      `dp-alerting-subscriber`) + a separate flagged finding (`DISABLE_AUTH=true` currently live on prod
+      `uts-shared-deployment-api`) are in the Progress Log below.
 - [ ] [INFRA] P2. Disable or fix the F4 vacuous crons (`sit-debounce-trigger`, `freeze-deferred-build-replay`,
       `fix-approval-timeout`, `supersede-stale-dep-update-prs`); diagnose `digest-drift-sweep`'s non-convergence (it
       costs real money via `ubuntu-latest` fan-out); ~~make `workspace-quickmerge-validation` fail when it logs a
