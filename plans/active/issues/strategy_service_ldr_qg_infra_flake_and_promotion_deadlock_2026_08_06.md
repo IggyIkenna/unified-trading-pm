@@ -203,3 +203,51 @@ writeup: `plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promo
 This should let a full-workspace-sit run actually survive to completion on the fleet bot's next tick — worth re-checking
 `sit-gate/fleet-green` before assuming this doc's own remaining todos (re-post signal on PR #495 head, backmerge
 deadlock) are still blocked on a red SIT signal specifically.
+
+## Escalation agt-e33f21 (PR #491, failing run 30982624850) — compaction resume 2026-08-06 ~07:22Z
+
+Same wall family as agt-5709e0, same outcome. **No code fix on live-defi-rollout is needed** — the v2 gate is green.
+
+- **PR #491 (run 30982624850, head `5c855b01`, failed 08-05 06:48Z)**: infra flake — self-hosted glue runner hit **0 MB
+  free disk** (tests-slice log: "You are running out of disk space… Free space left: 0 MB"; cache-save "No space left on
+  device"); the `checks` slice job's log blob is **missing entirely** (BlobNotFound = runner died mid-run). The SAME
+  content passed v2 on `main` (run 30982630045, success) 5s later. PR #491 already **MERGED** 08-05 06:48:20Z.
+- **Local reproduce (slot-15, strategy-service@4733a7e7)**: `✅ ALL QUALITY GATES PASSED (127s)` — 5727 passed, 248
+  skipped; basedpyright + ruff clean for strategy-service. The peripheral-dir QG (e2e-testing/scripts/defi) shows
+  `log_warn`-only basedpyright/ruff failures — NON-FATAL, and that sibling isn't present in CI's workspace anyway.
+- **Current promote PR #495** (head `6ef522d3` = LDR content 4733a7e7 + the conflict-resolution merge): **v2 run
+  31074521897 = SUCCESS** (06:14Z). Branch protection ruleset `require-quality-gates` (13787628) requires BOTH
+  `Quality Gates (strategy-service) / quality-gates-v2` (GREEN) AND `sit-gate/fleet-green` (RED — the only remaining
+  blocker). Classic protection also requires v2. `Plan Alignment Agent` failing on the head is advisory (npm EACCES
+  global-install runner issue; not in either gate set).
+- **`sit-gate/fleet-green` root cause (upstream, fleet-wide)**: NO full-workspace-sit run completed non-cancelled in
+  recent history — runner pool backed up (post-08-05 host-OOM), the fleet bot's */15 auto-retrigger kept cancelling
+  queued runs. The **dispatch-storm mutex fix `unified-trading-pm@16c9653eb` is SHIPPED and live** — the 07:15Z fleet
+  tick correctly debounced ("RED but 1 run already queued/in_progress — not piling on").
+
+### Live state at 07:22Z + resume steps
+
+- full-workspace-sit **31080248027** = `pending` (created 07:15:46Z, **no runner assigned yet**). Preceding runs all
+  cancelled. `sit-gate/fleet-green` on LDR tip 4733a7e7 = **failure** ("no informative (non-cancelled) completed
+  full-workspace-sit run in last 10 — fail-closed", posted 07:15:56Z). PR #495 = `mergeable: true`,
+  `mergeable_state: blocked`.
+- **Resume (slot-15 was mid-wait when compacted; a background Monitor `bixgngekq` + heartbeat `2267125` were armed):**
+  1. Watch `sit-gate/fleet-green` on LDR tip `4733a7e7` (authoritative; the fleet bot posts it every */15 tick) — the
+     signal to act on is **state=success**.
+  2. The moment it reads success, **POST the identical status on PR head `6ef522d3`** (the fleet bot stamps ONLY the LDR
+     tip; head ≠ tip because of the conflict-resolution merge, so the required check never appears on the PR head
+     otherwise). Exact replication of the fleet bot's POST
+     (`unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh` ~L549):
+     `gh api -X POST repos/IggyIkenna/strategy-service/statuses/6ef522d3b39619be9a65b759acc576ff5daff5c0 --field state=success --field context=sit-gate/fleet-green --field description=<same desc as LDR tip> [--field target_url=<same url>]`.
+     Slot PAT has `statuses:write` (verified in agt-5709e0).
+  3. Confirm PR #495 auto-merges (drain bot has auto-merge armed). If `mergeable_state` flips to `clean`, merge fires.
+  4. If SIT stays cancelled/no green **>1h** (i.e. no success by ~08:15Z with a green completion), the promotion is
+     **BLOCKED-UPSTREAM-OUTAGE** (fleet SIT runner/concurrency), not strategy-service — complete the one-shot with that
+     note; the P1 backmerge todo below is then also still open.
+
+### Security finding (operator-owned, 2026-08-06 07:22Z)
+
+`/tmp/test_slice.log` on the shared fleet host — **199 MB, abandoned since 05:57Z, contains live `ghp_` fine-grained
+PATs**, world-readable in shared /tmp. NOT created by slot-15 (foreign session's QG test output). NOT deleted by slot-15
+(foreign file — do not touch). Recommend operator/main-agent remove it (`rm /tmp/test_slice.log`) and add a
+guard/cleanup for QG runs that log env vars to /tmp. Tracked here as a finding; slot-15 leaves it untouched.
