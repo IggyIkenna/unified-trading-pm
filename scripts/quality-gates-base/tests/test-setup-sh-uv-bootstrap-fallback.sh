@@ -47,8 +47,8 @@ BLOCK=$(awk '
 # of the pip fallback — so a future edit that removes/reorders the fix fails here even
 # if the fixtures below don't.
 case "$BLOCK" in
-  *"grep -q '0\\.10\\.8'"*"command -v curl"*"astral.sh/uv/0.10.8/install.sh"*"UV_UNMANAGED_INSTALL"*"hash -r"*"pip install \"uv==0.10.8\""*)
-    pass "structural: extracted block carries the pinned-version check + astral installer + pip-last-resort, in order" ;;
+  *"grep -q '0\\.10\\.8'"*"command -v curl"*"astral.sh/uv/0.10.8/install.sh"*"UV_UNMANAGED_INSTALL"*"hash -r"*"pip install uv==0.10.8"*"--quiet"*)
+    pass "structural: extracted block carries the pinned-version check + astral installer + pip-last-resort (--quiet, no quotes), in order" ;;
   *)
     fail "structural: extracted block missing an expected contract element"; echo "--- block ---"; echo "$BLOCK" ;;
 esac
