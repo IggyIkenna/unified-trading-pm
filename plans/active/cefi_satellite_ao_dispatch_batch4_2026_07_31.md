@@ -14,7 +14,7 @@ summary: >-
   and against each other (zero file collisions); 7 cleared into todos below, 3 parked in Deferred with their blocking
   class named (one genuine cross-tranche conflict, one operator-gated step, one too-large/risky-for-a-batch-todo bundle
   needing delete-safety verification this run could not complete).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -38,7 +38,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-08-02"
+last_updated: "2026-08-06"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -64,10 +64,10 @@ drift_direction: advance-code
 
 # CeFi satellite AO batch 4 — iterative-drain extraction
 
-> **Status: draft — NOT dispatched.** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit skill's
-> autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was a scheduled
-> autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review. Flip this
-> frontmatter's `status` to `active` only after that review.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Per CLAUDE.md's plan-destination HARD RULE and the
+> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This
+> run was a scheduled autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review.
+> Flip this frontmatter's `status` to `active` only after that review.
 
 > **Cross-todo file-collision check: PASS.** The 7 todos touch, respectively: (1) a market-tick-data-service audit
 > script + `market-data-processing-service` verification scope; (2) a `gcloud storage ls` check (read-only) + checkbox

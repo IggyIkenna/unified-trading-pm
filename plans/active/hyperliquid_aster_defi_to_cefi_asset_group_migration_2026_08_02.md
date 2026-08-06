@@ -6,7 +6,7 @@ summary:
   CEFI today), but a frozen historical corpus written before that cutover still sits under asset_group=defi in
   GCS/manifest. Migrate it to asset_group=cefi so data agrees with the code-level classification, mirroring the
   solana_defi_legacy_migration_2026_05_27 gate pattern.
-status: draft
+status: active
 nature: process
 asset_group: [cefi, defi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-08-02
 parent_epic: mtds_mdps_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
@@ -44,7 +44,7 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/pipeline-mode-partition.md,
   ]
-last_updated: 2026-08-02
+last_updated: 2026-08-06
 locked_by:
 locked_since:
 supersedes:
@@ -53,11 +53,13 @@ superseded_by:
 
 # Migrate frozen HYPERLIQUID + ASTER legacy `asset_group=defi` corpus → `asset_group=cefi`
 
-> **🟡 STATUS: draft — NOT dispatched.** Per CLAUDE.md "Plan destination — ASK BEFORE CREATING (HARD RULE)", a new plan
-> defaults to a human plan (`assigned_vm: NA`) unless the operator explicitly asks for AO dispatch. This plan scopes
-> D15's remaining work (`plans/active/issues/defi_code_codex_drift_2026_05_27.md`); flip `status: active` +
-> `assigned_vm: planning` once the operator confirms AO dispatch is wanted (this is heavy-GCS-I/O + VM-launch work —
-> `execution_scope`/delete-safety still apply either way).
+> **✅ STATUS: active — operator-approved 2026-08-06, ALL phases including Phase 4's delete.** The operator explicitly
+> ruled all 5 phases (including the legacy-corpus delete) are AO-dispatchable, gated on safe-delete principles rather
+> than requiring manual human execution — see Phase 4's todo below for the concrete mechanism this ruling attaches (a
+> fresh same-run soft-delete-retention verification, per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+> §3a), not a blank-check delete. Phases 1-3 remain heavy-GCS-I/O + VM-launch work
+> (`execution_scope: orchestrator-agent` already reflects that); Phase 2's VM launch is AO-dispatchable by default per
+> CLAUDE.md's VM-launch rule.
 
 ## Background
 
@@ -113,10 +115,12 @@ cites row-count estimates from its 2026-07-27 pass (HYPERLIQUID/HYPERLIQUID: 3.7
 
 ### Phase 2 — Execute the migration (P1, VM — heavy I/O, not local-machine)
 
-- [ ] [OPERATOR] [INFRA] P1. Launch a dedicated VM (or reuse an existing backfill-class launcher pattern) to run the
-      Phase-1 script `--apply` against the full window. No live cron to pause first (corpus confirmed frozen above).
-      Verify STARTED <60s + ≥1 progress/hr + a terminal STOPPED/completion signal (no fire-and-forget). Cite the VM
-      name + zone + run.log path here on completion.
+- [ ] [INFRA] P1. Launch a dedicated VM (or reuse an existing backfill-class launcher pattern) to run the Phase-1 script
+      `--apply` against the full window. No live cron to pause first (corpus confirmed frozen above). Verify STARTED
+      <60s + ≥1 progress/hr + a terminal STOPPED/completion signal (no fire-and-forget). Cite the VM name + zone +
+      run.log path here on completion. (`[OPERATOR]` tag removed 2026-08-06 — VM launches are AO-dispatchable by default
+      per CLAUDE.md, and the operator's blanket 2026-08-06 ruling covers this plan's dispatch as a whole; this is a
+      copy, not a delete, so no delete-safety gate applies here regardless.)
 - [ ] [DATA] P1. Post-migration parity re-verification: sample-inspect migrated rows in the CEFI-bucket target (correct
       `instrument_id`, correct partition path, row/byte counts match Phase 1's audit).
 
@@ -127,13 +131,21 @@ cites row-count estimates from its 2026-07-27 pass (HYPERLIQUID/HYPERLIQUID: 3.7
       `asset_group=defi` manifest rows for these two venues are flagged for pruning in Phase 4 (do not prune before
       Phase 4's GCS delete — manifest and object state must move together, per the delete-safety protocol).
 
-### Phase 4 — Delete legacy `asset_group=defi` originals (P0, OPERATOR-GATED)
+### Phase 4 — Delete legacy `asset_group=defi` originals (P0, AO-dispatchable per operator ruling, reversibility-gated)
 
-- [ ] [OPERATOR] [DATA] P0. After Phase 2/3 verified GREEN, delete the migrated `asset_group=defi` HYPERLIQUID/ASTER
-      objects (via `gcs_delete_object`, never subprocess `gcloud`/`gsutil`) + prune the corresponding manifest rows.
-      Cite `Evidence:` per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — this is a real prod-bucket
-      delete on canonical data, human-gated per CLAUDE.md's delete-safety rule (no reversibility shortcut applies here —
-      this isn't a soft-delete-retention-window case, it's an intentional permanent removal of the duplicate).
+- [ ] [DATA] P0. **Operator-ruled 2026-08-06: AO-dispatchable, NOT human-execute-only, gated on the
+      reversibility-verified path.** After Phase 2/3 verified GREEN (parity-confirmed migration + manifest reconcile),
+      delete the migrated `asset_group=defi` HYPERLIQUID/ASTER objects (via `gcs_delete_object`, never subprocess
+      `gcloud`/`gsutil`) + prune the corresponding manifest rows. **Required gate before executing** (per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a's reversibility-verified carve-out): the worker
+      must run a FRESH, same-run `gcs_bucket_soft_delete_retention_seconds()` check against the target bucket and
+      confirm it returns ≥604800s (7-day soft-delete retention) BEFORE deleting — this gives a real, checkable undo
+      window, which is what makes this safe to dispatch without a human at the keyboard. If the bucket does NOT carry
+      that retention window, STOP and re-file this todo as `[OPERATOR]`-gated (the operator's ruling assumed the
+      reversibility carve-out applies; it does not override delete-safety if the bucket-level check fails). Cite
+      `Evidence:` (both the retention-seconds check's result and the delete confirmation) on completion — this is still
+      a real prod-bucket delete on canonical data and needs the same evidentiary rigor as a human-executed one, just not
+      a human's hands on the keyboard.
 
 ### Phase 5 — Close-out (P2)
 

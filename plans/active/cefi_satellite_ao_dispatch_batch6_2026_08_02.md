@@ -28,7 +28,7 @@ summary: >-
   AO-eligible-looking items are deliberately NOT drafted (crypto_alpha_research's 3 bug fixes, no_active_paper_run's
   DIAG item) because a prior audit pass already considered and explicitly declined extracting them for reasons unrelated
   to boundedness (coupling risk; low standalone value) and no new evidence has emerged to revisit that call.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -54,7 +54,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-02"
+last_updated: "2026-08-06"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -90,10 +90,10 @@ context_scope:
 
 # CeFi satellite AO batch 6 — iterative-drain extraction
 
-> **Status: draft — NOT dispatched.** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit skill's
-> autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was a scheduled
-> autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review. Flip this
-> frontmatter's `status` to `active` only after that review.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Per CLAUDE.md's plan-destination HARD RULE and the
+> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This
+> run was a scheduled autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review.
+> Flip this frontmatter's `status` to `active` only after that review.
 
 > **Cross-todo file-collision check: PASS.** The 6 todos touch, respectively: (1) `strategy-service`'s
 > `scripts/run_2yr_config_grid_backtest.py` (extend `SUPPORTED_ARCHETYPES` + per-archetype dimension tables); (2) a

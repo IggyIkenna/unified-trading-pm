@@ -21,7 +21,7 @@ summary: >-
   filtered on `assigned_vm: planning` regardless of `status`), no separate finalize plan is authored; the archival step
   is folded into this one todo's own "Done when", mirroring the archived `ci_satellite_ao_dispatch_batch3_2026_07_30.md`
   precedent.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -41,7 +41,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -76,9 +76,9 @@ source: >-
 
 # Infra satellite AO batch 4
 
-> **⚠️ STATUS: `draft`** — NOT dispatched, NOT ingested. Flipping this to `status: active` is the operator's call per
-> CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule.
-> Nothing here has been shipped.
+> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Flipped from `draft` per CLAUDE.md § "Plan
+> destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule. Nothing here has been
+> shipped.
 
 ## Why this is a single-todo plan with no finalize twin
 

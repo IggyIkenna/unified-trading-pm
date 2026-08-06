@@ -15,7 +15,7 @@ summary: >-
   — see Deferred). Every todo was grepped against all 6 prior cross-cutting covering docs (consolidated closeout +
   batch1/1b/2 + their finalizes) with zero citations found in any — a clean, unclaimed orphan population, not a
   re-litigation of prior batches' ground.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -31,7 +31,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,11 +53,10 @@ source: >-
 
 # Cross-cutting satellite AO batch 3
 
-> **Status: draft** — this batch is `assigned_vm: NA` / `status: draft` pending explicit operator review + approval to
-> dispatch (flip to `assigned_vm: planning` + `status: active`), per CLAUDE.md's "Plan destination — ASK BEFORE
-> CREATING" HARD RULE and this skill's own Autonomous-mode Phase 3 contract (a skill-drafted plan is never
-> auto-shipped). Every todo below is independently conflict-cleared and file-disjoint from every other todo here and
-> from every open todo in batch1/1b/2 — safe to dispatch as-is once approved.
+> **Status: active** — operator-approved 2026-08-06, dispatching. Todos 4, 5, and 7 were found already done-elsewhere
+> before dispatch (see their checkboxes); todo 6 was revised to target its actual current violating lines (the
+> originally-cited lines were already clean, but new violations appeared in the same file since). The remaining todos
+> are unaffected and dispatch as originally drafted.
 
 ## Todos
 
@@ -78,36 +77,53 @@ source: >-
       `status:     resolved`). **ALREADY DONE** — Progress Log (2026-08-03, slot 11): 4 of 8 entries declare non-empty
       `depends_on`, all CONFIRMED-HARMLESS; the compounding "6 groups fully unwired" finding was separately wired +
       shipped (`features-service@1ce877a4` + `@a5bd1fea`). No action needed here.
-- [ ] [OPS] P3. **Verify the manifest-consolidator cadence-reduction billing savings materialized.** Source:
+- [x] ✅ [OPS] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Source doc's sole todo
+      is already `[x]`, with an explicit Progress Log entry: "VERIFIED 2026-08-04 ...
+      ~~$106.12/day savings
+      materialised ... Zero CONSOLIDATOR_DOWN events ... §6(b) satisfied — this issue doc is now fully resolved." No
+      action needed. Original text preserved below for record. **Verify the manifest-consolidator cadence-reduction
+      billing savings materialized.** Source:
       `issues/manifest_consolidator_cadence_cost_audit_2026_07_20.md` § 5/§6 "Resolution criteria (b)". The
       cadence-reduction fix shipped `deployment-service@7b832cb0` on 2026-07-30; today (2026-08-01) the first fully-
       settled post-ship day (2026-07-31) should already be queryable. Re-run the doc's own §5 BigQuery billing-export
-      recipe for `purpose=manifest-consolidator` against 2026-07-31, confirm the ~$109/day (~$3,270/mo) addressable
-      savings materialized, and grep `#data-pipeline-alerts` history + the
+      recipe for `purpose=manifest-consolidator` against 2026-07-31, confirm the ~$109/day
+      (~~$3,270/mo) addressable savings materialized, and grep `#data-pipeline-alerts` history + the
       `uts-prod-consolidator-liveness-watchdog-{fast,slow}` Cloud Run execution logs for the 24h+ post-ship window for
       any `CONSOLIDATOR_DOWN`/ `ManifestConsolidatorStaleError` events attributable to the change. **Done when**: the
       billing comparison and the zero-regression check are both recorded with cited evidence, and the doc's checkbox is
       flipped (or, if the numbers don't match, the discrepancy is recorded and a fresh todo filed rather than silently
       closed).
-- [ ] [BACKEND] P3. **Reproduce + root-cause the prettier proseWrap inline-code-span mangling bug.** Source:
-      `issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md`. Build a minimal `.md` fixture with a
-      long backtick inline-code span near `printWidth=120` to reproduce the mangling (confirmed live in 2 real docs this
-      session, see the paired todo below). Determine root cause (a `.prettierrc` config issue vs. a prettier-version
-      bug) and apply either (A) a `.prettierrc` fix or (B) a plan-hygiene/prek lint check that catches multi-space runs
-      inside backtick spans + over-padded continuation lines. Confirm the fix against the exact `fd1b02c2c`-style
-      pattern the source doc documents. **Done when**: the fixture reproduces the bug pre-fix and no longer reproduces
-      it post-fix, the root cause is recorded, and the source doc's todo 1 checkbox is flipped.
-- [ ] [BACKEND] P3. **Hand-fix the live prettier-mangled span in
-      `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`.** Source:
-      `issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md` todo 2. Confirmed still live as of
-      2026-08-01 at lines 403/412/422 (`printWidth=120        PERMANENT errors`, `batch_understat        filter`,
-      `entity_wanted("XG")` padding). Re-run prettier (if the paired todo above has already landed a fix) or hand-fix
-      the multi-space-run mangling directly. **Verify content-only via `git diff -w` before committing** — this must be
-      a zero-semantic-change whitespace fix, nothing else in that doc's content may change. **Done when**: `git diff -w`
-      on the fix commit shows no non-whitespace delta, and the source doc's todo 2 checkbox is flipped.
-- [ ] [DOC] P3. **Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in the live-strategy-config
-      hot-reload SSOT.** Source: `issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` follow-up 2. Both
-      reloaders are already shipped in `strategy-service/strategy_service/config_reloaders.py` but undocumented in
+- [x] ✅ [BACKEND] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Source doc archived
+      to `plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md` (`status: resolved`,
+      archived 2026-08-03) — both its todos are done, including this exact root-cause-and-ship-a- gate work;
+      `scripts/plan-hygiene/check_prosewrap_padding.sh` confirmed present and running. No action needed. Original text
+      preserved below for record. **Reproduce + root-cause the prettier proseWrap inline-code-span mangling bug.**
+      Source: `issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md`. Build a minimal `.md` fixture
+      with a long backtick inline-code span near `printWidth=120` to reproduce the mangling (confirmed live in 2 real
+      docs this session, see the paired todo below). Determine root cause (a `.prettierrc` config issue vs. a
+      prettier-version bug) and apply either (A) a `.prettierrc` fix or (B) a plan-hygiene/prek lint check that catches
+      multi-space runs inside backtick spans + over-padded continuation lines. Confirm the fix against the exact
+      `fd1b02c2c`-style pattern the source doc documents. **Done when**: the fixture reproduces the bug pre-fix and no
+      longer reproduces it post-fix, the root cause is recorded, and the source doc's todo 1 checkbox is flipped.
+- [ ] [BACKEND] P3. **REVISED 2026-08-06 (governance-sweep activation-readiness check) — original target lines already
+      clean, but the file has NEW violations since.** The 3 originally-cited lines (403/412/422) are confirmed clean via
+      live grep — that specific instance is already fixed. However running the live gate
+      (`scripts/plan-hygiene/check_prosewrap_padding.sh     plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`)
+      shows the file still has 20 violating lines TODAY, at different lines (459-477, 582) — introduced by later content
+      added to that doc after this todo was drafted. The corpus-wide tracking doc
+      (`issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`) already explicitly rules this a "known narrow
+      overlap... not a blocking conflict... whichever lands first makes the other a no-op" — so this todo is not a
+      duplicate-dispatch risk, just needs its target re-derived. **Re-run the gate fresh, hand-fix the CURRENT violating
+      lines** (not 403/412/422), verify content-only via `git diff -w` before committing. **Done when**:
+      `check_prosewrap_padding.sh` on this file returns clean, `git diff -w` on the fix commit shows no non-whitespace
+      delta, and the source doc's todo 2 checkbox is flipped citing the actual lines fixed.
+- [x] ✅ [DOC] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Source doc's follow-up 2
+      is already `[x]`, closed the same day this batch was drafted (2026-08-01, na-eligibility-audit), noting
+      `/codex/04-architecture/live-strategy-config-hot-reload.md` lines 62-63 already document both reloaders — verified
+      live, both present in the SSOT's table. No action needed. Original text preserved below for record. **Document
+      `VersionGovernanceReloader` + `StrategyDirectiveReloader` in the live-strategy-config hot-reload SSOT.** Source:
+      `issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` follow-up 2. Both reloaders are already shipped
+      in `strategy-service/strategy_service/config_reloaders.py` but undocumented in
       `/codex/04-architecture/live-strategy-config-hot-reload.md`. Read the shipped code and add documentation of both
       reloaders' actual behavior to the SSOT. Independent of that doc's unresolved A/B/C safety-guard decision (follow-
       up 1, operator-gated — do not touch that question here). **Done when**: the SSOT documents both reloaders with the

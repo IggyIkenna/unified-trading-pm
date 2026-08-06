@@ -17,7 +17,7 @@ summary: >-
   re-measurement sweep was similarly combined into ONE todo to avoid 4 concurrent writers on the same source doc. 9
   conflict-cleared bounded todos below; the rest deferred by taxonomy (operator-gated / role-mismatch / too-large /
   live-incident / time-gated-not-yet / needs-re-scoping) or already covered.
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -38,7 +38,7 @@ related:
     /codex/08-workflows/deployment-flow.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -62,10 +62,9 @@ source: >-
 
 # CI satellite AO batch 4
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize sibling, which needs no
-> separate flip — `gate_on_depends: true` holds it correctly either way) to `status: active` is the operator's call per
-> CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule.
-> Drafted while the operator was away; nothing here has been shipped.
+> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Todos 7 and 8 were found already shipped via
+> `ci_satellite_ao_dispatch_batch1_2026_07_26.md` before dispatch (see their checkboxes); the other 7 todos are
+> unaffected and dispatch as originally drafted.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (11/30 todos still open) and
 > `ci_satellite_ao_dispatch_batch2_2026_07_29.md` (4/14 still open) both remain active — this is NOT a replacement for
@@ -205,10 +204,16 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md` ([VERIFY] P1) — never cited by any
     covering doc.
 
-- [ ] [CI] P1. **Root-cause and fix `market-tick-data-service`'s promote PRs never getting auto-merge armed** —
-      confirmed reproducing across 12+ consecutive worker re-checks through 2026-07-31 (PRs #788→#793, each superseded
-      before merging despite `mergeable: MERGEABLE` and every required check green; `autoMergeRequest: null` every
-      time). `.github/workflows/ldr-to-main-promote-fleet.yml`'s PR-creation path (~line 1030-1038) DOES attempt
+- [x] ✅ [CI] P1. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated prevention todos from resolved incidents (2026-08-02)"
+      section, commit `unified-trading-pm@4bf65b67c` ("tally auto-merge ARM_FAILED separately from PROMOTED in
+      ldr-to-main-promote-fleet", 2026-08-02) — the root cause was the concurrent GitHub Actions billing-wall incident,
+      not a code defect, plus an adjacent ARM_FAILED-tally bug fixed in the same commit. Verified live on the current
+      branch. No action needed. Original text preserved below for record. **Root-cause and fix
+      `market-tick-data-service`'s promote PRs never getting auto-merge armed** — confirmed reproducing across 12+
+      consecutive worker re-checks through 2026-07-31 (PRs #788→#793, each superseded before merging despite
+      `mergeable: MERGEABLE` and every required check green; `autoMergeRequest: null` every time).
+      `.github/workflows/ldr-to-main-promote-fleet.yml`'s PR-creation path (~line 1030-1038) DOES attempt
       `gh pr merge --auto --squash --delete-branch` loudly (echoes `⛔ WARN: auto-merge ARM FAILED` on failure, not
       silently swallowed) — start by reading the actual run logs for MTDS's recent promote-fleet dispatches to find
       whether that WARN line printed (a real arm failure — check the underlying `gh` error, likely a branch-protection
@@ -227,15 +232,19 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     throttle-banner check) — this is a separate, fully-diagnosed, unrelated bug found while investigating the
     now-self-resolved startup_failure incident.
 
-- [ ] [SCRIPT] P2. **Add a standing monitor for 3+ consecutive `startup_failure` runs on `ldr-to-main-promote.yml` /
-      `ldr-to-main-promote-fleet.yml`.** The 2026-07-30 incident (both workflows failing every tick for ~10h) ran
-      silently until noticed as a side-effect of an unrelated task — a dedicated alert would have caught it in under an
-      hour. Extend `scripts/cicd/promotion_lag_monitor.py` (or add a new lightweight check) to fire through the
-      `notify-slack.yml` carrier with a state-transition `dedup_key` per `/codex/04-architecture/ci-alerting.md` (fire
-      on change / RESOLVED / re-remind, never every tick) — do NOT edit `ldr-to-main-promote-fleet.yml` itself for this
-      (keep it a separate detector, avoiding any collision with todo 7's edits to that file). **Done when**: a synthetic
-      3-consecutive-`startup_failure` case fires exactly one alert, and a healthy/intermittent-failure pattern fires
-      none.
+- [x] ✅ [SCRIPT] P2. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`, commit `unified-trading-pm@ccb1d7b10` ("monitor + page on 3+
+      consecutive startup_failure runs on the LDR->main promote workflows", 2026-08-02). Verified live on the current
+      branch (`scripts/cicd/promote_fleet_startup_failure_monitor.py` present, wired into `notify-slack.yml`). No action
+      needed. Original text preserved below for record. **Add a standing monitor for 3+ consecutive `startup_failure`
+      runs on `ldr-to-main-promote.yml` / `ldr-to-main-promote-fleet.yml`.** The 2026-07-30 incident (both workflows
+      failing every tick for ~10h) ran silently until noticed as a side-effect of an unrelated task — a dedicated alert
+      would have caught it in under an hour. Extend `scripts/cicd/promotion_lag_monitor.py` (or add a new lightweight
+      check) to fire through the `notify-slack.yml` carrier with a state-transition `dedup_key` per
+      `/codex/04-architecture/ci-alerting.md` (fire on change / RESOLVED / re-remind, never every tick) — do NOT edit
+      `ldr-to-main-promote-fleet.yml` itself for this (keep it a separate detector, avoiding any collision with todo 7's
+      edits to that file). **Done when**: a synthetic 3-consecutive-`startup_failure` case fires exactly one alert, and
+      a healthy/intermittent-failure pattern fires none.
   - Source: `issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` ([SCRIPT] P2) — never cited
     by any covering doc.
 

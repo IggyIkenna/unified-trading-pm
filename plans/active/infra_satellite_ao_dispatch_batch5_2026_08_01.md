@@ -19,7 +19,7 @@ summary: >-
   Single-todo plan per `task_template.md` §4's carve-out (`check_finalize_plan_coverage.py`'s `_todo_count(...) <= 1`
   threshold) — no separate finalize plan; archival is folded into the one todo's own "Done when", mirroring
   `infra_satellite_ao_dispatch_batch4_2026_07_31.md`.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -41,7 +41,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -70,9 +70,9 @@ source: >-
 
 # Infra satellite AO batch 5
 
-> **⚠️ STATUS: `draft`** — NOT dispatched, NOT ingested. Flipping this to `status: active` is the operator's call per
-> CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule.
-> Nothing here has been shipped.
+> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Flipped from `draft` per CLAUDE.md § "Plan
+> destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule. Nothing here has been
+> shipped.
 
 ## Why this batch exists — a conflict-gated item that cleared, not a fresh orphan
 

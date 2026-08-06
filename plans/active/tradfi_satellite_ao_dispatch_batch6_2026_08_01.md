@@ -26,7 +26,7 @@ summary: >-
   is flagged but NOT drafted here — that doc's `parent_epic` is `instruments_master` and its `asset_group` is genuinely
   5-way ([cefi, defi, tradfi, sports, prediction]), so per the primary-owner rule a shared doc's write belongs to
   whichever tranche actually owns it, not to tradfi reaching in.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -44,7 +44,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-06"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -77,9 +77,12 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 6 — fresh audit extraction
 
-> **Status: draft — NOT approved, NOT dispatched.** Per the ag-closeout-audit skill's autonomous-mode contract, a
-> freshly-drafted batch always ships `status: draft` regardless of how clean the conflict-check came back; flipping to
-> `active` to actually dispatch it is an operator decision, never autonomous.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Todo 2 (ES_OPT launch) will re-check the shared
+> Databento singleton lock at execution time and safely wait/retry if a legitimate concurrent backfill (e.g. the
+> in-flight NYSE/NASDAQ OHLCV fleet) holds it — the operator explicitly approved dispatching as-is rather than deferring
+> todo 2. Per the ag-closeout-audit skill's autonomous-mode contract, a freshly-drafted batch always ships
+> `status: draft` regardless of how clean the conflict-check came back; flipping to `active` to actually dispatch it is
+> an operator decision, never autonomous.
 >
 > All 4 todos below are same-priority-independent and were checked for file collisions (see the matrix near the bottom)
 > — all 4 touch distinct repos/scripts, no overlap.

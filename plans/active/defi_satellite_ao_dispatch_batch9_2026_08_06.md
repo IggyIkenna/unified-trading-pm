@@ -18,7 +18,7 @@ summary: >-
   MDPS candle-backfill fleet), this batch extracts 17 distinct todos. The remaining 33 non-eligible orphaned docs are
   Deferred below, tagged by taxonomy category (20 operator_gated, 8 genuinely_human_only, 3 too_large_or_risky, 2
   time_gated) — none are re-triageable without an operator ruling or elapsed time.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -77,15 +77,15 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 9 — 2026-08-06
 
-**status: draft — awaiting operator approval to flip to `active` before dispatch.** Drafted autonomously by the
-scheduled `ag_closeout_auditor` running `/ag-closeout-audit defi`, per
+**status: active — operator-approved 2026-08-06, dispatching.** Drafted autonomously by the scheduled
+`ag_closeout_auditor` running `/ag-closeout-audit defi`, per
 [`cursor-configs/skills/ag-closeout-audit/SKILL.md`](/cursor-configs/skills/ag-closeout-audit/SKILL.md)'s Phase 3 —
 every todo below cleared the shared conflict-check
 ([`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`](/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md)
 § 3) against the live defi consolidated-closeout + every batch/finalize plan (active and archived) before being drafted
-here. Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE and this skill's own Autonomous-mode contract,
-this batch stays `draft` until the operator explicitly approves the flip to `active` (the finalize plan below needs no
-separate flip — `gate_on_depends` holds its tasks regardless of this batch's status).
+here. Operator reviewed and activated 2026-08-06, per an AO-governance-sweep activation-readiness re-check (16 agents
+over all pending draft batches) that independently spot-verified every todo below against live repo/corpus state; todo
+3's safety justification was added at the same time (see below) per the operator's explicit ruling.
 
 ## Todos
 
@@ -113,7 +113,10 @@ separate flip — `gate_on_depends` holds its tasks regardless of this batch's s
       credential-refresh investigation, replacing the `gsutil -q cp` marker-write with `gcloud storage cp` if no clean
       stdin equivalent exists — then relaunch `launch-canonical-migration-vm.sh defi-gas-fees-legacy-purge` (pausing/
       resuming the consolidator cron and fresh-re-verifying 0 remaining objects per the source doc's own checklist) to
-      complete the purge. Repos: market-tick-data-service, deployment-service. Source:
+      complete the purge. **Safe-idempotent justification (operator-confirmed 2026-08-06, per CLAUDE.md's VM-launch/
+      manifest-write gating rule): the underlying GCS objects are already 100% deleted — this todo only fixes a VM-boot
+      hang and purges already-orphaned manifest rows (no live data, no new deletes). No `[OPERATOR]` gate needed.**
+      Repos: market-tick-data-service, deployment-service. Source:
       `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` (row 1) +
       `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (same underlying hang — merged
       into one todo, cite both on close). Done when: a fresh `_index/availability_index.parquet` read confirms 0 of the

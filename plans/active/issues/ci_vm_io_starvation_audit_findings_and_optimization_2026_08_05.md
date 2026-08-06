@@ -529,10 +529,21 @@ traffic to count until the migration is finished. What is certain is that their 
       per day and `market-tick-data-service` 49 runs / 256 jobs. Together that is ~54% of all fleet job-minutes. Cutting
       redundant triggers beats any instance-size choice, and no downsizing fixes it.
 
-- [ ] [OPERATOR] P0. **Harden or remove self-hosted runners on PUBLIC repos.** `unified-trading-pm` is public with 8
-      self-hosted runners; recheck `deployment-api`. Decide: (a) require approval for ALL outside-contributor fork PRs +
-      restrict `allowed_actions`, (b) move PM's CI to GitHub-hosted (free on public), or (c) make PM private.
-      Operator-gated — repo visibility and org actions policy are not agent-changeable.
+- [ ] [OPERATOR] P0. **RULED 2026-08-06, option (a): require approval for all outside-contributor fork PRs + restrict
+      `allowed_actions`.** Keep `unified-trading-pm` public and self-hosted; close the fork-PR code-execution hole
+      instead of moving CI or making the repo private. **Two sub-parts, different mechanisms:** (1) `allowed_actions` —
+      checked live 2026-08-06, currently `"all"` (any marketplace/third-party action can run); tightening to `selected`
+      (an explicit allow-list) is agent-executable via
+      `gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions` — **not yet done**, needs the actual
+      allow-list enumerated from the workflows currently in use before applying (an incomplete list would break CI). (2)
+      **"Require approval for all outside collaborators" on fork-PR workflow runs** — checked live 2026-08-06: this
+      setting has **no documented public REST endpoint** (`actions/permissions`, `actions/permissions/workflow`, and
+      `actions/required-workflows` were all checked; none expose it). It lives only under the repo's web UI: **Settings
+      → Actions → General → "Fork pull request workflows from outside collaborators" → select "Require approval for all
+      outside collaborators."** This is the higher-priority half (it's the actual code-execution gate; the
+      `allowed_actions` restriction is defense-in-depth) — **flagging for the operator to click through directly**
+      rather than risk a wrong/undocumented API call against a live security boundary. `deployment-api`'s visibility
+      recheck (mentioned in the original finding) also still needs doing.
 
 - [ ] [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every ~15
       min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4.

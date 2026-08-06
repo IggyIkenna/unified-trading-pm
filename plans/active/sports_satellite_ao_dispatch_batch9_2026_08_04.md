@@ -16,7 +16,7 @@ summary: >-
   directly during Phase 0 (shipped `unified-trading-pm@5051ba2ed`, outside this batch). A second corpus-hygiene fix
   (adding missing `prediction`/`defi` tags to `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, whose
   residual open work is genuinely those tranches' scope, not sports') shipped alongside this batch's own commit.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -58,7 +58,7 @@ related:
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -89,12 +89,16 @@ context_scope:
 
 # Sports satellite AO batch 9 — `/ag-closeout-audit` orphan extraction (2026-08-04)
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 30 todos below are same-priority-independent and touch distinct files/repos (verified
-> individually per todo during Phase 3's conflict-check; the one internally-sequential exception,
+> **Status: active** — operator-approved 2026-08-06, dispatching. This draft sat unreviewed for 2 days with zero
+> Progress Log entries; a governance-sweep activation-readiness check spot-checked 3 code-citing todos and found 2
+> already shipped (now struck below, citing the landing commits) — the odds-coverage-filter todo and the
+> SPOT-provisioning-flag todo. **The remaining 28 todos were NOT individually re-verified in that pass** (only
+> spot-checked, per the check's own scope) — if a dispatched worker finds one already done, strike it with a citation
+> the same way rather than treating this banner as a guarantee every other todo is still current. All 30 todos are
+> same-priority-independent and touch distinct files/repos (verified individually per todo during Phase 3's
+> conflict-check; the one internally-sequential exception,
 > `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`'s 3 combined todos, is called out inline) so
-> they are safe to dispatch concurrently once activated.
+> they are safe to dispatch concurrently.
 
 ## Methodology
 
@@ -288,20 +292,20 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: a fresh manifest query result
       for `venue=FOOTBALL attempted_failed` is recorded in the doc's Progress Log, either confirming 0 rows or
       documenting the specific root cause of any remaining failures.
-- [ ] [INFRA] P3. Add a `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
-      `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`'s `gcloud compute instances create` call (currently
-      hardcoded on-demand at launch-sports-is-gap-fill.sh:125-136), matching the pattern other backfill launchers
-      already use. Source: `sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md`. Done when: the
-      launcher accepts `--provisioning-model` (defaulting to `SPOT`) and `--on-demand` opt-out, a test/dry-run launch
-      confirms the flag is threaded into the `gcloud compute instances create` invocation, and the change is committed
-      to deployment-service.
-- [ ] [CODE] P2. Add a league odds-coverage filter to deployment-service's
-      `deployment_service/sports_trigger_evaluation.py::evaluate_pre_match_triggers` (lines 46-96) so it does not fire a
-      `market-tick-data-service` odds-fetch trigger event for fixtures whose league has no odds_api coverage (gate on
-      `data_sources.get("odds_api")` truthy, or membership in UAC's `LEAGUE_CLASSIFICATION_DATA`). Source:
-      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`. Done when: a new/updated unit test on
-      `evaluate_pre_match_triggers` confirms a no-odds-coverage fixture does NOT produce a `market-tick-data-service`
-      trigger event, and `quality-gates.sh` is green.
+- [x] ✅ [INFRA] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped:
+      `deployment-service@dfbb8c39` ("fix(vm): add SPOT provisioning to launch-sports-is-gap-fill.sh") + `d683f80b`
+      ("feat(vm): add --on-demand CLI flag..."), both 2026-08-05. Verified live — `launch-sports-is-gap-fill.sh` has
+      SPOT-default `PROVISIONING_FLAGS` logic (line 122-124) and the `--on-demand` opt-out (line 48). Source doc's own
+      checkbox already `[x]` citing `d683f80`. No action needed. Original text preserved below for record. **Add a
+      `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
+      `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`'s `gcloud compute instances create` call.**
+- [x] ✅ [CODE] P2. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped:
+      `deployment-service@1c4457` ("feat(sports): filter market-tick-data-service from pre-match triggers for non-odds
+      leagues") + follow-ups `dce296a9`/`f78531e7`, 2026-08-05. Verified live — `_league_has_odds_coverage()` present
+      (line 25) and wired into `evaluate_pre_match_triggers` (line 126), plus a full regression suite
+      (`tests/unit/test_sports_trigger_odds_coverage_filter.py`, 8 unit tests). Source doc's own checkbox already `[x]`
+      citing `f78531e`. No action needed. Original text preserved below for record. **Add a league odds-coverage filter
+      to deployment-service's `evaluate_pre_match_triggers`.**
 - [ ] [DIAG] P2. Run a scoped blast-radius check on `uts-prod-market-tick-data-service-fast-t1-recon` to determine
       whether PREDICTION and/or DEFI dispatches through the same shared Cloud Run Job carry the same OOM risk class as
       the confirmed SPORTS-specific unscoped-multi-league-fetch bug, using the same method as

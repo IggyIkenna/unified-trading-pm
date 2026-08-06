@@ -17,7 +17,7 @@ summary: >-
   plan (which explicitly defers the question here rather than claiming it). `status: draft` — a skill-drafted AO batch
   is never auto-shipped; flipping to `active` to dispatch is an operator decision (CLAUDE.md "Plan destination — ASK
   BEFORE CREATING").
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -33,7 +33,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -67,10 +67,10 @@ context_scope:
 
 # Prediction satellite AO batch 7 — trades/book_snapshot_5 `available_at` consumer check
 
-> **Status: draft — NOT dispatched.** This batch was drafted autonomously by the `/ag-closeout-audit prediction`
-> scheduled run (2026-08-04). Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE and the
-> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped: flipping
-> `status: draft` → `active` to actually dispatch this todo is an operator decision.
+> **Status: active — operator-approved 2026-08-06, dispatching.** This batch was drafted autonomously by the
+> `/ag-closeout-audit prediction` scheduled run (2026-08-04). Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING"
+> HARD RULE and the ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped:
+> flipping `status: draft` → `active` to actually dispatch this todo is an operator decision.
 
 ## Why this batch exists
 

@@ -14,7 +14,7 @@ summary: >-
   batch 5, and the F3 dispatch-success-reporting gap the 2026-08-01 `/na-eligibility-audit ci` re-flagged as "the one
   genuinely-uncovered bounded gap, still not yet extracted into any active batch". Two halves of F3 and batch4's D4-1
   are rationed into `## Deferred` on genuine same-file contention, not dropped.
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -46,7 +46,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-02"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -73,10 +73,8 @@ source: >-
 
 # CI satellite AO batch 5
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** The operator authorised DRAFTING this batch; flipping it to
-> `status: active` is still a separate, deliberate call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the
-> `/ag-closeout-audit` skill's autonomous-mode rule. Its finalize sibling needs no separate flip
-> (`gate_on_depends: true` holds it correctly either way). Nothing here has been shipped.
+> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Todo 5 was found already shipped
+> (`deployment-ui@7086565`) before dispatch — see its checkbox. The other 5 todos are unaffected.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (12/32 todos still open) and
 > `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (9/9 still open, still `draft`) both remain active — this is NOT a
@@ -215,20 +213,25 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     cleared **D4-19** gate as the todo above; batch4-finalize's own todo 3 pre-authorises exactly this triage ("note it
     is ready for a future batch's fresh triage of its 3 remaining bounded items").
 
-- [ ] [UI] P3. **Sync `deployment-ui/scripts/setup.sh` with the PM template's `[UI.5] PRE-WARM BUILD CACHE` step.** The
-      step was added to `unified-trading-pm/scripts/setup.sh` on 2026-07-29 and shipped to `unified-trading-system-ui`
-      (`unified-trading-system-ui@42439593`); `deployment-ui`'s copy could not ship at the time because its vitest
-      coverage gate was broadly red — that blocker was root-caused as an environment artefact and RESOLVED 2026-07-30
-      (`deployment-ui@3c7e2a8`, a `pnpm-workspace.yaml` missing `packages:`), so the gate is unblocked. The remaining
-      work is exactly what the source todo names: sync the template's pre-warm step into
-      `deployment-ui/scripts/setup.sh`, commit, ship. Re-diff the two files before copying — do not blind-`cp` a PM
-      script over a UI repo's copy if the UI copy has diverged for its own reasons. **Playwright-gate note**: this is a
-      shell script, not rendered UI, so `pw:L2` may legitimately not apply — if the `[UI]`-capable slot determines it is
-      out of `pw:L2` scope, **record that determination explicitly in the source doc**; do not skip the gate silently
-      (`/codex/06-coding-standards/ui-testing-layers.md`). **Done when**: `deployment-ui/scripts/setup.sh` carries the
-      pre-warm step, a cold clone of `deployment-ui` is observed running one real `pnpm run build` at setup time and a
-      warm clone is observed skipping it, `deployment-ui`'s own gate is green, and the source todo is flipped with the
-      commit cited.
+- [x] ✅ [UI] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped:
+      `deployment-ui@7086565` ("Sync setup.sh pre-warm build cache step from unified-trading-pm template", 2026-08-03,
+      `Quickmerge: agent`, confirmed a clean ancestor of current `live-defi-rollout` HEAD). Verified live
+      `diff deployment-ui/scripts/setup.sh unified-trading-pm/scripts/setup.sh` returns empty — byte-identical. The
+      source doc (`ui_build_warm_cache_2026_06_17.md`) already has this checked `[x]` at line 67. No action needed.
+      Original text preserved below for record. **Sync `deployment-ui/scripts/setup.sh` with the PM template's
+      `[UI.5] PRE-WARM BUILD CACHE` step.** The step was added to `unified-trading-pm/scripts/setup.sh` on 2026-07-29
+      and shipped to `unified-trading-system-ui` (`unified-trading-system-ui@42439593`); `deployment-ui`'s copy could
+      not ship at the time because its vitest coverage gate was broadly red — that blocker was root-caused as an
+      environment artefact and RESOLVED 2026-07-30 (`deployment-ui@3c7e2a8`, a `pnpm-workspace.yaml` missing
+      `packages:`), so the gate is unblocked. The remaining work is exactly what the source todo names: sync the
+      template's pre-warm step into `deployment-ui/scripts/setup.sh`, commit, ship. Re-diff the two files before copying
+      — do not blind-`cp` a PM script over a UI repo's copy if the UI copy has diverged for its own reasons.
+      **Playwright-gate note**: this is a shell script, not rendered UI, so `pw:L2` may legitimately not apply — if the
+      `[UI]`-capable slot determines it is out of `pw:L2` scope, **record that determination explicitly in the source
+      doc**; do not skip the gate silently (`/codex/06-coding-standards/ui-testing-layers.md`). **Done when**:
+      `deployment-ui/scripts/setup.sh` carries the pre-warm step, a cold clone of `deployment-ui` is observed running
+      one real `pnpm run build` at setup time and a warm clone is observed skipping it, `deployment-ui`'s own gate is
+      green, and the source todo is flipped with the commit cited.
   - Source: `ui_build_warm_cache_2026_06_17.md` (`[CODE] P2`). Batch4 `## Already covered` held this "for a
     `[UI]`-capable slot's judgment rather than assumed safe here — flagging for batch 5".
 

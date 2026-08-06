@@ -49,10 +49,10 @@ related:
   ]
 created: 2026-08-02
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -150,12 +150,18 @@ slow:
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Decide + assign an owner for one of A/B/C above — this is a judgment call spanning the R3
-      migration's own risk profile, not something determinable by a worker alone. (repo: unified-trading-pm)
-- [ ] [DATA] P1. Once decided: either (a) relaunch/restart R3 per option A, or (b) resume `collect-dex-pools` (and the
-      other 3 gated crons as applicable) per option B, then re-run
-      `lifecycle-catalogue-regen-defi --mode     incremental` and confirm `CATALOGUE_SHRINK_BLOCKED` clears /
-      catalog.parquet mtime advances. (repo: instruments-service, deployment-service)
+- [x] ✅ [OPERATOR] P0. **RULED 2026-08-06, option A: relaunch/restart R3** (resume from the 2022 checkpoint if the SPOT
+      VM's chunked state is recoverable, else restart 2022-2026 + `rebuild_defi_manifest` from scratch). Matches main's
+      own 2026-08-02 interim guidance (endorsed the `[WORKER REC]`, explicitly rejected C, said do NOT do B yet) — this
+      ruling ratifies that direction after 6+ escalation dispatches over ~49h with no operator answer landing. Execution
+      (relaunch, diagnose why the prior VM died, re-run the catalogue regen) is AO-dispatchable by default per
+      CLAUDE.md's VM-launch rule — flipped to `assigned_vm: planning` below so it can be picked up on the next AO cycle
+      rather than waiting for another interactive session. (repo: unified-trading-pm)
+- [ ] [DATA] P1. Execute the ruling above: relaunch/restart R3 (`canonical-migration-defi-per-instrument`), then re-run
+      `lifecycle-catalogue-regen-defi --mode incremental` and confirm `CATALOGUE_SHRINK_BLOCKED` clears /
+      catalog.parquet mtime advances. No fire-and-forget — verify STARTED <60s + ≥1 progress/hr + a terminal
+      STOPPED/completion signal, cite the VM name + zone + run.log path on completion. (repo: instruments-service,
+      deployment-service)
 - [ ] [DATA] P2. Investigate WHY `canonical-migration-defi-per-instrument-20260719-053435` disappeared with zero
       operation history (preemption without a recovery relaunch? manual delete? crashed with no durable exit marker?) —
       this read-only escalation did not dig into that, and the same silent-death mode could recur on whatever VM

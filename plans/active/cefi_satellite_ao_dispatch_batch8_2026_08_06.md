@@ -23,7 +23,7 @@ summary: >-
   in todo 2's own text to prevent future confusion, not a real conflict). 3 todos below, zero genuine conflicts found,
   zero items parked BLOCKED-OPERATOR-DECISION this run (all operator-gated residuals were already correctly parked by
   prior audit rounds and are re-confirmed, not re-parked, in the tranche's parked-findings doc).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -78,13 +78,9 @@ context_scope:
 
 # CeFi satellite AO batch 8 — iterative-drain extraction
 
-> **Status: draft — NOT dispatched.** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit skill's
-> autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was a scheduled
-> autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review. Flip this
-> frontmatter's `status` to `active` only after that review. **Note for the reviewer**: batch4 (2026-07-31), batch6
-> (2026-08-02) and batch7 (2026-08-03) are ALL still sitting `status: draft` with zero of their combined 16 todos
-> executed — a real, growing operator-review backlog independent of this batch's own content. See this tranche's
-> parked-findings doc for the full state.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Todo 3 was found already done-elsewhere before
+> dispatch (docstring already correct — see its checkbox); todo 1's SHA citation was corrected for the 2026-08-05
+> instruments-service history rewrite. batch4/6/7 were reviewed in the same pass and are now also `status: active`.
 
 > **Cross-todo file-collision check: PASS.** The 3 todos touch, respectively: (1)
 > `plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md` — a self-file checkbox/banner edit only, no code;
@@ -102,11 +98,17 @@ context_scope:
       all 3 already independently confirmed true against live corpus/code state, just never flipped.** (1) G1.2's "wire
       thin-day→attempted_failed at capture time" sub-item is marked `[~]` partial but its shipped half is confirmed on
       current LDR HEAD (`instruments-service@5ebd7f6c`, "G1.2 thin-day partial-capture routing —
-      `_detect_thin_day_venues` in `_finalize_completeness`") — re-verify the commit is still an ancestor of HEAD, then
-      flip the checkbox citing it (only if the doc's own second sub-item, the 06-26 re-capture, is also confirmed moot
-      after 40+ days of subsequent production capture — check the manifest before flipping the top-level G1 item, not
-      just G1.2). (2) GATE G4's banner reads "OPEN, pending D2" — D2 (`cefi_layer1_denominator_gaps`, archived) is
-      `status: resolved`, and both of its named residual threads
+      `_detect_thin_day_venues` in `_finalize_completeness`"). **Verification note added 2026-08-06**: this exact SHA is
+      NOT a `git merge-base --is-ancestor` hit against current LDR HEAD — instruments-service underwent a documented
+      history rewrite around 2026-08-05 (see
+      `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`); the SHA
+      survives only in `wip-preserve/*stale-pre-history-rewrite*` branches. **Verify by CONTENT instead**: confirm
+      `_detect_thin_day_venues` is present and wired in `process_completeness.py` on current HEAD (it is, as of
+      2026-08-06) — do not rely on literal commit-ancestry, which will produce a false negative post-rewrite. Then flip
+      the checkbox citing the content-verification instead of the (now-unreachable) SHA — only if the doc's own second
+      sub-item, the 06-26 re-capture, is also confirmed moot after 40+ days of subsequent production capture — check the
+      manifest before flipping the top-level G1 item, not just G1.2). (2) GATE G4's banner reads "OPEN, pending D2" — D2
+      (`cefi_layer1_denominator_gaps`, archived) is `status: resolved`, and both of its named residual threads
       (`instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`, `tardis_concurrent_ip_lockout_2026_07_12.md`) are
       also `status: resolved` — re-verify all three resolutions directly, then flip the G4 banner to reflect the cleared
       gate. (3) The `MANIFEST_ALLOW_STALE_FALLBACK=true` revert todo — re-verify directly against the live
@@ -149,21 +151,20 @@ context_scope:
       parquet, 24 non-null `mark_price_mean`/`funding_rate_mean` observations); source doc's checkbox/prose is updated
       citing this commit. Repo: market-data-processing-service.
 
-- [ ] [SCRIPT] P2. **Reconcile `okx_futures_ws.py`'s stale "no marker" docstring against the already-shipped Option-A
-      code.** `market-tick-data-service/market_tick_data_service/live/connectors/okx_futures_ws.py`'s module docstring
+- [x] ✅ [SCRIPT] P2. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check) — docstring was already
+      correct.** Live-checked `okx_futures_ws.py`'s current module docstring: it already describes the shipped
+      `@LIN`/`@INV` marker convention in full ("This module previously claimed the opposite... that was ONLY ever true
+      of the narrow 2026-07-09 ruling..."), landed as part of `market-tick-data-service@8a6bbc97` itself (the same
+      commit this todo cites as the code fix) and re-confirmed present in the LDR→main squash-promote `b5a1aa73`
+      (2026-07-31). The todo's premise ("still claims no marker") was already false when this batch was drafted
+      2026-08-06 — the source doc's own `[SCRIPT] P1` item inherited a stale claim without checking current file
+      content. No action needed; flip the source doc's sub-item (a) citing `8a6bbc97` if not already reflected there.
+      Original text preserved below for record. **Reconcile `okx_futures_ws.py`'s stale "no marker" docstring against
+      the already-shipped Option-A code.**
+      `market-tick-data-service/market_tick_data_service/live/connectors/     okx_futures_ws.py`'s module docstring
       still claims OKX-FUTURES `instId` carries no settlement-currency marker, but Option A (the `@LIN`/`@INV` marker
-      convention) already shipped to production (`market-tick-data-service@8a6bbc97`) — the docstring is now factually
-      wrong regardless of how the doc's own pending `[OPERATOR] P1` convention-ratification question (A vs. B vs. C)
-      eventually resolves, since it only needs to describe what's actually live today. **Do NOT touch**: the
-      `[OPERATOR] P1` ratification decision itself, the contingent Option-B-revert half of the source doc's
-      `[SCRIPT] P1` item (blocked on that decision), or the `[SCRIPT] P2` parity-test / `[RESEARCH] P2`
-      live-contract-verification items (already drafted, `status: draft`, inside
-      `cefi_satellite_ao_dispatch_batch6_2026_08_02.md` — do not duplicate). Source:
-      `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` (the `[SCRIPT] P1` docstring-only sub-part, i.e.
-      sub-item (a) — not sub-item (b)'s contingent revert). **Done when**: the module docstring in `okx_futures_ws.py`
-      accurately describes the live `@LIN`/`@INV` marker convention actually shipped in
-      `market-tick-data-service@8a6bbc97`, and the source doc's `[SCRIPT] P1` item notes this sub-part as done citing
-      the new commit (leaving the item open overall pending the contingent revert half). Repo: market-tick-data-service.
+      convention) already shipped to production (`market-tick-data-service@8a6bbc97`). Source:
+      `okx_futures_instid_marker_convention_mismatch_2026_07_30.md`.
 
 ## Cross-tranche notes (informational — out of cefi scope, not drafted here)
 

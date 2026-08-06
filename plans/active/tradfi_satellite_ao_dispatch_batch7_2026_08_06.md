@@ -20,7 +20,7 @@ summary: >-
   **Important standing-state note this batch surfaces**: `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` has sat
   `status: draft`, unreviewed, for 5 days. This batch does not depend on batch6 landing first (drafts are inert and
   independently reviewable), but the operator should know both are queued.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -73,9 +73,9 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 7 — fresh audit extraction
 
-> **Status: draft — NOT approved, NOT dispatched.** Per the ag-closeout-audit skill's autonomous-mode contract, a
-> freshly-drafted batch always ships `status: draft` regardless of how clean the conflict-check came back; flipping to
-> `active` to actually dispatch it is an operator decision, never autonomous.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Per the ag-closeout-audit skill's autonomous-mode
+> contract, a freshly-drafted batch always ships `status: draft` regardless of how clean the conflict-check came back;
+> flipping to `active` to actually dispatch it is an operator decision, never autonomous.
 >
 > All 4 todos below are same-priority-independent and were checked for file collisions (see the matrix near the bottom)
 > — all 4 touch distinct repos/files, no overlap.
