@@ -146,6 +146,29 @@ trains the operator to skim it, which is exactly how a genuinely urgent one gets
 
 ## Progress Log
 
+### 2026-08-06 — shipped + deployed + verified live; one adjacent pre-existing bug found and fixed
+
+Deployed to the orchestrator VM (pull + `systemctl restart orchestrator`, permitted without operator scheduling per the
+2026-07-28 maintenance-window ruling) and verified end-to-end, not just unit-tested:
+
+- `POST /api/blocked/reconcile` returns the new summary keys (`retired`, `stale_reminded`), proving the shipped code is
+  the code running.
+- The staleness re-remind fired on **23 real questions** in its first periodic sweep, standing 140h / 145h / 158h / 159h
+  / **170h** — i.e. the queue's problem was never that questions were moot, it was that week-old ones were invisible.
+  Retirement fired on 0, as measured in todo 5.
+
+**Adjacent pre-existing bug found + fixed (agent-orchestrator@b2f1432).** One of the 24 re-reminds raised inside
+`slack._post`: `BLK-op-cefi_derivative_ticker_tardis_resolver_aiodns_hardfail-005` carries a 4,654-char question, and
+Slack rejects the ENTIRE post when any section exceeds 3,000 chars — so that row never paged at all, including its
+ORIGINAL blocked page long before this work. `recommendation` was already bounded at 400 chars; `reason` (the question)
+was not. Added `_clip()` and applied it to the `*Question:*` section of BOTH `notify_slot_blocked` and
+`notify_operator_gated_blocked`. Verified live: at 15:02:52Z (old code) the notify still ERRORed; at 15:03:37Z
+(post-restart) the same row logged "standing unanswered for 70h — re-reminded". Test:
+`tests/test_blocked_reconcile.py::test_slack_question_section_is_clipped_to_slack_limit`.
+
+Note for whoever reads the channel: the first activation posted ~23 re-reminds in one burst. That is a one-off — the
+cooldown means each question re-reminds at most once per `blocked_question_reremind_cooldown_hours` (12h) thereafter.
+
 ### 2026-08-06 — filed (interactive session, slot 2 host `hk`)
 
 Filed on an explicit operator ruling while unblocking slot 2. Slot 2 was holding four questions; `BLK-4781b9af` was
