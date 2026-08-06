@@ -127,6 +127,16 @@ retries hit `spawn_retry_cap` before a kick verified-submitted.
 - [ ] [BACKEND] P3. Add per-slot **context-plateau detection** — a slot repeatedly re-hitting the same `context_pct`
       wedge (≥2 `frozen_at_high_context` at the same pct within a window) is proactively force-compacted/flagged rather
       than left to freeze.
+- [x] ✅ [BACKEND] P2. **A distinct, now-confirmed contributing cause** (2026-08-06, slot 14 live incident — see
+      Progress Log): `classify_pane`'s `_SPINNER_RE` didn't recognize the CLI's own "N shell(s)/monitor(s) still
+      running" spinner subtitle (rendered with NO "esc to interrupt" hint) as an active-turn marker, so a worker
+      legitimately waiting on a backgrounded Monitor/shell per this workspace's own async-wait-discipline rules — with a
+      self-drafted follow-up note queued in its input box — read as `frozen` instead of `working`, cycling
+      `frozen_at_high_context` and `spawn_retry_cap_reached` for a worker that was never actually stuck. This is
+      NARROWER than item 1's original `/compact`-specific hypothesis (it covers any self-typed note during a
+      Monitor/shell wait, not just `/compact` confirmations) and does not close item 1 — a wedge with no Monitor/shell
+      active is still unexplained. Fixed: widened `_SPINNER_RE` to recognize the pattern, 2 regression tests added. —
+      `agent-orchestrator/server/worker_liveness/__init__.py`.
 
 ## Triage / charter note
 
@@ -170,3 +180,18 @@ recurrence-prone and episode 1 needed manual intervention.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-06 (interactive session, live incident investigation)**: Investigated a fresh live occurrence — slot 14
+  (`cefi_tardis_derivative_ticker_historical_gap-002`) showed `worker_alive: false` / `phase: pre_boot` after a
+  heartbeat-silence respawn, following a burst of `frozen_at_high_context` + two `spawn_retry_cap_reached` events. Read
+  the full `/api/activity?slot=14` history (SSM, read-only) and the exact `spawn_retry_cap_reached.details.pane_tail`
+  payloads — NOT the originally-hypothesized `/compact`-typed-unsubmitted wedge (every `forced_compact`/
+  `forced_precompact` event in the window shows `submitted: true`, and a real compaction to 15% landed cleanly). The
+  actual captured pane tail: `✻ Brewed for 34s · 1 shell still running` / `❯ check the watchdog log again in 20 minutes`
+  — a worker correctly following the async-wait-discipline pattern (backgrounded VM-backfill watch via Monitor), with
+  its own queued follow-up note sitting unsubmitted, no `esc to interrupt` hint anywhere in the tail. Root-caused to
+  `classify_pane`'s spinner regex not recognizing this CLI status text as an active-turn marker. Fixed +
+  regression-tested (see new todo above); did not touch the pane (main stays charter-barred from tmux send-keys / kill /
+  respawn per this doc's own triage note). Slot 14 self-recovered via the existing watchdog before the fix even shipped
+  (confirmed live pane capture: clean, working, checkpoint committed) — bounded blast radius, consistent with this doc's
+  episode-2 pattern.
