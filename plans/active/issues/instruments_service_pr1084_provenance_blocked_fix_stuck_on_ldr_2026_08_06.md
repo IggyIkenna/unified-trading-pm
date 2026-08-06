@@ -35,6 +35,7 @@ related:
   [
     /plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
     /plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
+    /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-06
@@ -97,25 +98,48 @@ DP-CATALOG-001 could still recur — but the risk is narrower than "main has no 
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide the correct remediation path per the provenance-gate bot's own instruction — either re-ship
-      `497c4f5e`'s diff via `quickmerge --agent --files '<paths>'` (proper provenance trailer, opens a clean new
-      promotion PR), or revert it on `live-defi-rollout` if `8ae53f7a` already supersedes it. Requires reading both
-      diffs together to determine overlap/supersession — not done in this session (bounded live-diagnosis check, not a
-      full re-investigation). **Annotation, corrected 2026-08-06 (/plan-reconcile ao) — does NOT change this decision,
-      only its context**: `8ae53f7a` is already live on `main` (has been since 2026-06-27); `497c4f5e` is the only one
-      of the two actually stuck. The "revert if 8ae53f7a already supersedes it" branch is now lower-urgency than the
-      original "main has neither fix" framing implied (main already has some capture-time protection), but the
-      diff-overlap read this todo calls for still has not been done — do not treat this annotation as resolving it.
-- [ ] [OPS] P1. Once re-shipped/reconciled, verify the resulting promotion PR passes the provenance gate cleanly and
-      merges to main, then confirm the deployed `:latest` image digest actually changed (per the same verification gap
-      noted in the original issue doc — a manual re-trigger of `lifecycle-catalogue-regen-sports` proved the running
-      image was stale even after LDR had the fix).
-- [ ] [DATA] P3. Reconcile whether `8ae53f7a` (capture-time rejection) is the same follow-up work as this issue's
-      sibling doc's P3 todo ("trace the upstream encoding defect... most likely an MTDS api_football lineups adapter") —
-      if so, cross-link and close whichever todo is now redundant. **Annotation, corrected 2026-08-06 (/plan-reconcile
-      ao)**: `8ae53f7a` is confirmed already on `main` (2026-06-27, 5+ weeks before this doc was filed) — this todo's
-      reconciliation is about which OPEN tracking doc should own the follow-up, not about whether the commit itself
-      still needs to ship (it already has).
+- [x] [DATA] P1. ✅ RECONCILED (2026-08-06, follow-up session) — read both diffs in full. `8ae53f7a` (2026-06-27,
+      already on `main`) adds `reject_junk_instruments()` to `instruments_service/engine/orchestrator/venue_core.py`,
+      wired into `_filter_and_enrich_records()` in `process_fetch.py` — a CAPTURE-TIME guard on trading-instrument
+      records (checks `base_asset`/`raw_symbol`/ `instrument_key` for non-ASCII or known test-bases) for the
+      CEFI/DEFI/TradFi venue-capture pipeline. `497c4f5e` (2026-08-06) instead wraps `build_team_id`/`build_player_id`
+      calls in `scripts/build_instrument_catalogue.py`'s `build_sports_fixture_team_player_catalogue()` in try/except —
+      a CATALOGUE-BUILD-TIME safety net reading sports fixture/team/player display names already sitting in
+      `sports_reference/by_date/` parquets (via `_iter_sports_ftp_snapshots`), a completely different data domain
+      (sports reference data, not `InstrumentRecord`s) that never passes through `reject_junk_instruments()` at all
+      (confirmed: `reject_junk_instruments` has exactly one call site, `process_fetch.py:358`, nowhere near the sports
+      FTP snapshot/catalogue code path). **Verdict: NOT redundant, NOT superseded** — different bugs, different
+      pipelines, both legitimate and independently necessary. `497c4f5e` does NOT get reverted.
+- [x] [DATA] P1. ✅ `497c4f5e` needs NO re-ship — it already carries a proper `Quickmerge: agent` trailer
+      (`git show 497c4f5e` confirms it) and `check_strict_quickmerge.py` correctly classifies it as
+      `passed through     quickmerge` (not a violation). PR #1084's closure was NOT caused by `497c4f5e`'s own
+      provenance — see the BLOCKED-OPERATOR todo below for the real cause.
+- [ ] [BLOCKED-OPERATOR] P1. **Cannot verify the promotion PR merges to main or the deployed image freshness** — the
+      actual blocker is a much larger, newly-discovered, cross-repo issue: the LDR→main provenance-marker computation is
+      corrupted for instruments-service (and 2 other repos) by the 2026-08-05T11:24:53Z security-driven git history
+      rewrite, producing a false-positive-flooded ~3,701-commit provenance range instead of the real ~19-commit one.
+      Full finding + evidence + remedy options:
+      `/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`. Not fixable
+      within this session's scope (foreign bulk-bless / gate-code-change both need an operator call per the
+      `utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md` precedent). Once that doc's remedy lands and
+      instruments-service gets one clean promote through, re-verify: (a) the promotion PR merges to main carrying
+      `497c4f5e`, (b) the deployed `:latest` Cloud Run image digest actually changes, (c) a manual
+      `gcloud run jobs execute lifecycle-catalogue-regen-sports --wait` re-trigger proves a clean run from the new
+      image.
+- [x] [DATA] P3. ✅ Reconciled — `8ae53f7a` is NOT the same follow-up as this issue's sibling doc's P3 todo ("trace the
+      upstream encoding defect... most likely an MTDS api_football lineups adapter"). `8ae53f7a` only guards the
+      CEFI/DEFI/TradFi venue-capture path (`base_asset`/`raw_symbol`/`instrument_key` on `InstrumentRecord`s) — it has
+      no bearing on sports fixture/team/player display-name capture at all, and does not touch the api_football lineups
+      adapter. The sibling doc's P3 (tracing the actual upstream mojibake-encoding source for sports names) remains
+      fully open and un-addressed by either commit reconciled here — `497c4f5e` only stops it from crashing the
+      catalogue rollup, it does not fix the root-cause encoding defect. No redundant todo to close.
+
+## Catalogue freshness re-verified (2026-08-06, follow-up session)
+
+`gsutil stat gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet` still shows
+`Update time: Thu, 06 Aug 2026 08:37:26 GMT` (unchanged) — as of 13:15 UTC that is ~4.6h old, still well within the 24h
+DP-CATALOG-001 budget. Not an active incident; the `lifecycle-catalogue-regen-sports` cron's next 01:00 UTC run is the
+real forward-looking risk window, unchanged from the original assessment.
 
 ## Progress Log
 
@@ -126,3 +150,20 @@ DP-CATALOG-001 could still recur — but the risk is narrower than "main has no 
   determining whether `8ae53f7a` supersedes `497c4f5e` needs a real diff read, and re-shipping someone else's fix via
   quickmerge on their behalf carries enough risk that it belongs to a dedicated follow-up rather than a rushed
   side-action.
+- **/plan-reconcile ao, 2026-08-06**: Corrected the ancestry facts — `8ae53f7a` is on `main` (since 2026-06-27), only
+  `497c4f5e` is stuck. Diff-overlap read still not done at that point.
+- **follow-up session, 2026-08-06**: Reconciled both commits by reading full diffs (see todos above) — different
+  pipelines (trading-instrument capture-time guard vs. sports catalogue-build-time safety net), not redundant,
+  `497c4f5e` still needed and already correctly quickmerge-provenanced (no re-ship needed). Re-checked catalogue
+  freshness: still healthy (unchanged 08:37 UTC snapshot, ~4.6h old at 13:15 UTC check). Investigating why PR #1084 was
+  actually blocked (since `497c4f5e` itself is clean) surfaced a much bigger, unrelated, cross-repo finding: the
+  promote-provenance-marker mechanism is corrupted post-history-rewrite for 3 repos (instruments-service,
+  unified-trading-library, market-data-processing-service), producing a false-positive-flooded provenance range that
+  structurally blocks ANY promote PR for these repos right now, independent of what content it carries. Filed as a
+  dedicated new issue doc
+  (`/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`) rather than
+  attempting an autonomous fix — both remedy paths (bulk-bless the real 19 foreign bypasses, or patch the marker's
+  ancestry check) are judgment calls with fleet-wide blast radius that the established precedent
+  (`utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md`) says belong to an operator decision, not an
+  autonomous sub-task fix. This issue's promotion-verification todo is therefore BLOCKED-OPERATOR pending that doc's
+  resolution, not something this session could close out.
