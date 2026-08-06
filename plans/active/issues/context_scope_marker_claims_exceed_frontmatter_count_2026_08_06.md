@@ -277,18 +277,47 @@ for a human glance instead of being dropped.
   /blocked (BLK-…) with the owner remediation. Watch armed: poll the checker until exit 0 (→ "FINALIZE COVERAGE GREEN"),
   then re-run QG → quickmerge → /done.
 
+- **2026-08-06 (data_engineering, slot 6, task context_scope_marker_claims_exceed_frontmatter_count-002) — BLOCK #2
+  RESOLVED, ship in flight**: operator answered `BLK-fae14e09` with "proceed now" (my option set included "authorize
+  slot 6 to archive the foreign done plan myself"). Archival attempted (`git mv` + `status: complete` flip) — the pull
+  immediately exposed that the AO-tracker session had ALREADY half-archived the same plan: a `status: resolved` twin
+  ADDED to `plans/archive/2026_08/` (with `resolved_by` + ARCHIVED banner) but the `status: active` original LEFT in
+  `plans/active/` — a COPY, not a MOVE, which is why the fleet gate stayed red. Autostash-pop conflict resolved by
+  taking their canonical version (my duplicate edit discarded; conflict markers cleared via
+  `git restore --source=HEAD`). Committed the missing half: `dda85c8cc` deletes the stale active twin (proven necessary:
+  checker exit 1 on clean HEAD, exit 0 with the deletion — the FPC checker scans the WORKTREE disk, not the branch).
+  Finalize-plan-coverage now GREEN for the whole fleet. Full QG re-run (`b7ow1x4r3`) in flight; on green → quickmerge
+  Pass 2 → verify SHA → POST /done. SHAs current as of this bullet: 8 commits ahead (`92bd7b601` sweep, `2af352ecf`
+  marker fixes, `15a26a4ab` flip, `85b8ebfc9`/`9e6af71c3` block records, `c14332842` deferred table, `d7b002ba6` block
+  #2 record, `dda85c8cc` archival completion).
+
 ## Deferred work after 2026-08-06
 
-| Item                                                                               | State / why deferred                                                                                                                                                                                              | Blocked on                                                                                            |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Push 6 ship commits (sweep script + 3 marker fixes + flips + records) + POST /done | Cannot be done yet — quickmerge re-gate RED on `finalize-plan-coverage` (pre-existing FOREIGN violation: `canonical_id_builder_retrofit_checklist_2026_07_08.md`, 0-open/14-closed, owner slot-7 must archive it) | Owner archival (or operator nudge); watcher polls the checker until green ("FINALIZE COVERAGE GREEN") |
-| `data_completion_defi_2026_07_15.md` marker 5v3 (1000L line cap)                   | Operator-owned — human line-cap trim                                                                                                                                                                              | [OPERATOR] P1 todo (above)                                                                            |
-| Todo 3 — COUNT_MISMATCH detection gap in Phase-0 inventory                         | Not done — owned by the issue's other assignee                                                                                                                                                                    | —                                                                                                     |
-| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob` doc `+depends_on: []`    | Knowingly ignored — `fix_frontmatter.py` autofix artifact (quality-gates.sh:651) on a foreign doc; never staged by name                                                                                           | —                                                                                                     |
+| Item                                                                                                     | State / why deferred                                                                                                                                                           | Blocked on                                                                                                                                                              |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Push 8 ship commits (sweep script + 3 marker fixes + flips + records + archival completion) + POST /done | IN FLIGHT — block #2 resolved (operator "proceed now"; AO-tracker half-archival completed via `dda85c8cc`); finalize-plan-coverage GREEN; full QG re-run (`b7ow1x4r3`) running | QG green → quickmerge Pass 2 `--agent --files '<6 paths>'` → verify SHA → POST `/api/slots/6/done` → flip harness task #4 → close BLK bookends → delete cron `ab0c84cd` |
+| `data_completion_defi_2026_07_15.md` marker 5v3 (1000L line cap)                                         | Operator-owned — human line-cap trim                                                                                                                                           | [OPERATOR] P1 todo (above)                                                                                                                                              |
+| Todo 3 — COUNT_MISMATCH detection gap in Phase-0 inventory                                               | Not done — owned by the issue's other assignee                                                                                                                                 | —                                                                                                                                                                       |
+| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob` doc `+depends_on: []`                          | Knowingly ignored — `fix_frontmatter.py` autofix artifact (quality-gates.sh:651) on a foreign doc; never staged by name                                                        | —                                                                                                                                                                       |
 
 **Lessons (pre-compact Step 6)**: `bash scripts/quality-gates.sh 2>&1 | tail -40` MASKS the exit code (tail's wins) — a
 failed QG can report exit 0. Run to a file and check the real `$?` (e.g.
 `bash scripts/quality-gates.sh > /tmp/qg.log 2>&1; tail -5 /tmp/qg.log`), or the harness output file.
+
+- **Archival must be a MOVE, not a COPY** — the AO-tracker session added a `status: resolved` twin to
+  `plans/archive/2026_08/` while leaving the `status: active` original in `plans/active/`; the dual-tracking left the
+  `finalize-plan-coverage` gate red fleet-wide (its checker scans the WORKTREE, exit 1 on the branch's clean tree). The
+  completing fix was deleting the stale active twin.
+- **Autostash-pop conflict signature**: `git pull --rebase --autostash` on a file upstream also modified can leave
+  conflict-block markers (seven-`<` sequence; described, not quoted, because the prek conflict-marker hook greps the
+  literal sequence and a doc quoting it trips the hook) in the WORKTREE file WITHOUT `git status` reporting unmerged (U)
+  entries — always grep the affected file for those blocks after an autostash pop, and resolve by taking the upstream
+  version when it is canonical (their content is already on origin — nothing is lost).
+- **Gate verdicts follow the WORKTREE, not the branch**: `check_finalize_plan_coverage.py` (and the QG generally) scans
+  disk state; a worktree deletion can flip a gate before the commit exists. Verify against a clean `git archive`
+  extraction when a gate verdict seems inconsistent with the branch content.
+- **Consecutive-kill → switch mechanism**: two identical harness kills of Bash `run_in_background` until-loop watchers
+  (post-compaction) → stop blind-re-arming; use Monitor (persistent) + a self-checking cron instead.
 
 **Recommended next item** (IN FLIGHT — quickmerge re-gate blocked on foreign `finalize-plan-coverage`; watcher
 `bidxjckrg2` polls the checker): on "FINALIZE COVERAGE GREEN", re-run PM QG (real exit code) → quickmerge Pass 2
