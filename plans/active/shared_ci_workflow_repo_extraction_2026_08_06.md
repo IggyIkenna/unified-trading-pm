@@ -270,27 +270,27 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       git@github.com:IggyIkenna/unified-trading-ci.git
 
       # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
-                                                                                                      #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
-                                                                                                      cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+                                                                                                                  #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+                                                                                                                  cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
 
-                                                                                                      # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
-                                                                                                      cd unified-trading-pm
-                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
-                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
-                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
-                                                                                                      # ...etc for however many slots Harsh has
+                                                                                                                  # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+                                                                                                                  cd unified-trading-pm
+                                                                                                                  bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+                                                                                                                  bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+                                                                                                                  bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+                                                                                                                  # ...etc for however many slots Harsh has
 
-                                                                                                      # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
-                                                                                                      for n in 1 2 3; do   # substitute his real slot numbers
-                                                                                                        d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
-                                                                                                        echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
-                                                                                                      done
-                                                                                                      # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
-                                                                                                      # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
-                                                                                                      #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
-                                                                                                      #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
-                                                                                                      ```
-                                                                                                      Evidence: paste the sanity-check output back into this plan's Progress Log once run.
+                                                                                                                  # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+                                                                                                                  for n in 1 2 3; do   # substitute his real slot numbers
+                                                                                                                    d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+                                                                                                                    echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+                                                                                                                  done
+                                                                                                                  # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+                                                                                                                  # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+                                                                                                                  #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+                                                                                                                  #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+                                                                                                                  ```
+                                                                                                                  Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 
 - [x] 7d. ✅ [INFRA] P0. **AO central orchestrator VM (`i-0c9b283b31d6b5ca7`, `agent-orchestrator-vm-1`, 13.113.200.22)
       — actually provisioned this session**, not just documented: this laptop has standing SSH access (`~/.ssh/config`
@@ -446,32 +446,26 @@ here only for todo-count sanity, not for skipping per-repo verification.
       pre-commit hook, so no commit-time gate (gitleaks, conventional-commit, trailing-whitespace) runs there the way it
       does on every other fleet repo. Low risk given the repo's tiny, YAML-only surface, but worth closing for
       consistency.
-- [ ] 21. [BUG] P2. **`instruments-service` fails `quality-gates.sh` deterministically** on
+- [x] 21. ✅ [BUG] P2. **`instruments-service` + `system-integration-tests` — RESOLVED, was host-load flakiness, not a
+      real bug.**
       `tests/unit/scripts/test_build_instrument_catalogue.py::test_ftp_rollup_skips_junk_name_row_instead_of_crashing_whole_run`
-      (2 identical consecutive failures under this migration's re-ship attempts, confirmed NOT flaky) — completely
-      unrelated to this migration's 2-line workflow-file change, but since `quality-gates.sh` is a monolithic
-      commit-blocking gate, it blocks landing THIS repo's already-correct-locally (via todo 18's rollout)
-      `image-build-gate.yml`/`quality-gates-v2.yml` fix too. `system-integration-tests` is blocked transitively (it
-      path-depends on `instruments-service`, and quickmerge's pre-flight audit correctly refuses to proceed while a
-      dependency has uncommitted changes). Both repos' local workflow-file content IS already correct (rollout already
-      applied it locally) — only the commit is blocked. Fix the underlying test failure (out of scope for this migration
-      plan), then re-run:
-      `cd instruments-service && bash scripts/quickmerge.sh "ci: rollout     image-build-gate.yml + quality-gates-v2.yml from PM template (unified-trading-ci re-point)" --agent --files     '.github/workflows/quality-gates-v2.yml .github/workflows/image-build-gate.yml'`,
-      then the same for `system-integration-tests`.
-- [ ] 22. [BUG] P3. **`unified-trading-system-ui`'s `image-build-gate.yml` fix could not be shipped this session** —
-      `bash scripts/quality-gates-base/base-ui.sh`'s buildspec validator (`validate-buildspec.py`) fails with
-      `ImportError: jsonschema module not available` specifically when invoked via a backgrounded/long-running
-      `quickmerge.sh` run on this laptop slot (Ikenna), even though the interactive shell always resolves `python3` +
-      `jsonschema` + `timeout` correctly, and even after explicitly prepending `/opt/homebrew/bin` to `PATH` before the
-      invocation (ruling out the earlier-suspected stale-Homebrew-PATH theory from this same session's `deployment-ui`
-      incident). Failed identically across 4 attempts (2 backgrounded, 1 nominally-foreground-but-tool-auto-backgrounded
-      past 300s, 1 with explicit PATH fix). Root cause NOT pinned — needs investigation into how the harness's
-      `run_in_background` subprocess spawn differs from a synchronous Bash tool call's environment on this specific
-      host. The local `.github/workflows/image-build-gate.yml` content IS already correct (rollout applied it) — only
-      the commit is blocked. Re-attempt:
-      `cd unified-trading-system-ui && bash scripts/quickmerge.sh "ci: rollout     image-build-gate.yml from PM template (unified-trading-ci re-point)" --agent --files     '.github/workflows/image-build-gate.yml'`
-      (may simply need a session restart, or manual investigation of the `run_timeout`/`command -v timeout` resolution
-      inside that specific subprocess).
+      failed twice identically during the severe host-contention episode (load average ~190 on this 10-core/8-user
+      shared host, see revert-incident Progress Log entry). Ran the test in isolation once the incident's own concurrent
+      QG load subsided — PASSED cleanly on the first try. Load had dropped to ~22 by the time of re-verification; re-ran
+      the full quickmerge and it passed outright, no code change needed. Evidence: `instruments-service@451e624e`
+      (CI-verified: `quality-gates-v2` PASSED, run against `promote/instruments-service/451e624ed903`),
+      `system-integration-tests@2f9192e` (unblocked transitively once `instruments-service` landed; CI-verified
+      `quality-gates-v2` PASSED).
+- [x] 22. ✅ [BUG] P3. **`unified-trading-system-ui` — RESOLVED, real root cause found: its local `.venv` was
+      essentially empty.** The earlier `jsonschema module not available` failure was NOT a PATH/backgrounding quirk as
+      first suspected — `quickmerge.sh` activates this repo's own `.venv` (`source .venv/bin/activate`), and that venv
+      (a bare `uv`-created Python 3.13.9 environment with no `pip` and no `pyproject.toml` `[project]`/dependencies
+      section governing it) had neither `jsonschema` nor `pyyaml` installed, shadowing the system framework Python that
+      had them. Fixed durably via `uv pip install jsonschema --python .venv/bin/python3` then (once that surfaced a
+      second missing module on the next gate step, `cloudbuild.yaml`'s YAML parse)
+      `uv pip install pyyaml --python     .venv/bin/python3` — both installs are permanent since nothing re-syncs this
+      ungoverned venv against a dependency file that could silently drop them again. Evidence:
+      `unified-trading-system-ui@f4f71d0f`.
 
 ## Codex SSOTs
 
