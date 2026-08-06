@@ -101,14 +101,25 @@ drift_direction: advance-code
       `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`. **Done when**: all 3 venues checked,
       dependent-doc checkboxes flipped or a new bug filed, with the exact `gcloud` output cited as evidence.
 
-- [ ] [BACKEND] P2. **Widen `DeploymentsRegistry.get()`'s except clause + investigate the false `vm_not_running` reap.**
-      In `unified-trading-library`, degrade-to-None on real `google.api_core` `NotFound`/`Forbidden`/404 (mirroring the
-      already-shipped `_read_true_exit_code` idiom), with a regression test. Separately, investigate why
+- [x] ✅ [BACKEND] P2. **Widen `DeploymentsRegistry.get()`'s except clause + investigate the false `vm_not_running`
+      reap.** In `unified-trading-library`, degrade-to-None on real `google.api_core` `NotFound`/`Forbidden`/404
+      (mirroring the already-shipped `_read_true_exit_code` idiom), with a regression test. Separately, investigate why
       `deployment-service`'s `reap_stale()` sweep excluded a genuinely-RUNNING VM from `running_vm_names` at
       2026-07-31T05:46:53Z (Finding 3) — fix + test, or confirm unreproducible one-off with cited evidence. Source:
       `issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md`. **Done when**:
       both fixes ship with regression tests and QG green, or the reap finding is confirmed unreproducible with cited
-      evidence and the source doc's checkboxes are flipped accordingly.
+      evidence and the source doc's checkboxes are flipped accordingly. — **SHIPPED**:
+      `unified-trading-library@89eabac2` (widen `get()` to real-GCS `NotFound`/`Forbidden`/404 via `exc_name`
+      string-match idiom + regression test `test_get_falls_through_to_archive_on_real_gcs_not_found` with a
+      `google.api_core.exceptions.NotFound`-raising storage fake) + `deployment-service@4ee514e` (root cause:
+      `_list_running_vms()` collapsed a GCE list-API failure/timeout into `[]` → `reap_stale(running_vm_names={})` read
+      as "no VMs running" → every stale-heartbeat active entry reaped `vm_not_running`; fix returns `None` on
+      census-unavailable → caller passes `running_vm_names=None` → heartbeat-age-only fallback; regression tests
+      `test_list_running_vms_returns_none_on_timeout` +
+      `test_main_exit_code_mode_census_unavailable_no_false_vm_not_running_reap`). Both QG green (UTL Pass-1 verified
+      `89eabac2`; deployment-service Pass-1 GREEN 220s, sentinel `4ee514e`), both verified on
+      `origin/live-defi-rollout`. Source-doc items 1-2 flipped. Sibling finding (deployment-api's two `reap_stale()`
+      callers share the empty-set bug) filed `issues/deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md`.
 
 - [ ] [BACKEND] P2. **Widen `unified-trading-library`'s `_GCS_RETRY` predicate for connection-level transient errors.**
       In `providers/gcp.py:66-75`, also retry `ConnectionError`/`SSLError`/`ProtocolError` (currently only retries a

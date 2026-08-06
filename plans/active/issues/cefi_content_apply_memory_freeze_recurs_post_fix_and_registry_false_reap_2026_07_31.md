@@ -137,7 +137,7 @@ depend on.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Widen `DeploymentsRegistry.get()`'s except clause
+- [x] ✅ [BACKEND] P2. Widen `DeploymentsRegistry.get()`'s except clause
       (`unified-trading-library/unified_trading_library/deployment_registry.py:447-450`) to also degrade-to-None on a
       real `NotFound`/`Forbidden`/404, mirroring `_read_true_exit_code`'s already-shipped idiom exactly
       (`except     Exception as exc: exc_name = type(exc).__name__; if exc_name in ("NotFound", "Forbidden") or "404" in     str(exc): pass (fall through to archive scan); else: raise`).
@@ -146,13 +146,31 @@ depend on.
       of crashing. **Done when**: the test reproduces this exact crash pre-fix, passes post-fix, QG green. This is a
       small, bounded, single-method fix mirroring an already-proven pattern in the same file — filed `NA`/local per the
       default plan-destination posture since no operator confirmation was available at file-time; flip to
-      `assigned_vm: planning` if a human agrees it's properly scoped. Repo: unified-trading-library.
-- [ ] [BACKEND] P2. Investigate Finding 3 (the false `vm_not_running` reap of a genuinely-`RUNNING` VM at
+      `assigned_vm: planning` if a human agrees it's properly scoped. Repo: unified-trading-library. — **SHIPPED**
+      `unified-trading-library@89eabac2` (2026-08-06, slot 4 / `cefi_satellite_ao_dispatch_batch4-003`): `get()` now
+      catches `NotFound`/`Forbidden`/404 via `exc_name` string-match and falls through to the archive scan; regression
+      test `test_get_falls_through_to_archive_on_real_gcs_not_found` uses a
+      `google.api_core.exceptions.NotFound`-raising `_GcsNotFoundStorageClient(InMemoryStorageClient)` fake and asserts
+      `.get("arch-gcs-404")` resolves + `.get("does-not-exist") is None`. QG Pass-1 GREEN, SHA verified on
+      `origin/live-defi-rollout`.
+- [x] ✅ [BACKEND] P2. Investigate Finding 3 (the false `vm_not_running` reap of a genuinely-`RUNNING` VM at
       `2026-07-31T05:46:53Z`) — find and read whatever code path supplies `running_vm_names` to the periodic
       `reap_stale()` sweep call (likely in `deployment-service`, possibly `gcp_instance_lister.py` or the sweep's own
       caller) and determine why it excluded a live instance at that tick. **Done when**: either the mechanism is
       identified and fixed (with a regression test), or it's confirmed to be an unreproducible one-off (e.g. a transient
-      GCE list-API inconsistency) with evidence either way. Repo: deployment-service.
+      GCE list-API inconsistency) with evidence either way. Repo: deployment-service. — **SHIPPED**
+      `deployment-service@4ee514e` (2026-08-06, slot 4 / `cefi_satellite_ao_dispatch_batch4-003`): root cause
+      CONFIRMED + reproducible-by-code-reading, not a one-off. `deployment_service/data_pipeline_monitors/cli.py`
+      `_list_running_vms()` collapsed a GCE list-API failure/FuturesTimeout into `[]`; the exit-code sweep passed
+      `reap_stale(running_vm_names={})` (empty non-None set); `DeploymentsRegistry._reap_reason` treats a non-None empty
+      set as "no VMs running" → every stale-heartbeat active entry classified `vm_not_running` even for a live instance.
+      Fix: `_list_running_vms() -> list[tuple[str, str]] | None` returns `None` on any census failure; caller passes
+      `running_vm_names=None` → heartbeat-age-only fallback (no `vm_not_running` reaping). Regression tests:
+      `test_list_running_vms_returns_none_on_timeout` +
+      `test_main_exit_code_mode_census_unavailable_no_false_vm_not_running_reap`. QG Pass-1 GREEN (220s, sentinel
+      `4ee514e`), SHA verified on `origin/live-defi-rollout`. Sibling: deployment-api's
+      `sync_service.reap_stale_deployments` + `routes.vm_deployments.reconcile_vm_deployments` share the same empty-set
+      bug — filed `deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md` (P2, `assigned_vm:     planning`).
 - [ ] [SCRIPT] P3. Corroborating evidence only — no new action needed beyond what
       `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s existing P2 todo ("Investigate shard 16's fast-OOM
       anomaly... single anomalously large/malformed file") already covers. When that investigation resumes, this VM's
