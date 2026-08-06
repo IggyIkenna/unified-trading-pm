@@ -152,13 +152,13 @@ underlying code fact it points to IS real, just the doc pointer is fictional).
 
 ## Doc-drift — plan↔codex, filed + alerted, NEVER auto-edited
 
-1. **`codex/04-architecture/agent-orchestrator-worker-liveness.md:378`** (Anti-patterns section) states unconditionally
+1. **`/codex/04-architecture/agent-orchestrator-worker-liveness.md:378`** (Anti-patterns section) states unconditionally
    "Do NOT kill a worker whose status is `blocked`", zero exception anywhere in the file. Now contradicted by shipped +
    operator-ruled code: `agent-orchestrator@9777c0284cd8232efded10d60055cd6ebfc15833` ("differentiated timeout for
    blocked slots"), verified reachable on `origin/live-defi-rollout`, whose own commit message quotes and overrides this
    exact codex line, per the ruling in
    `plans/active/issues/ao_blocked_slot_no_timeout_or_redispatch_policy_2026_08_06.md`. **Alerted**: `BLK-d1a3f721`.
-2. **`codex/08-workflows/ci-cd-flow.md`** documents only `ldr_main`/`staging` as valid `promotion_model` values and
+2. **`/codex/08-workflows/ci-cd-flow.md`** documents only `ldr_main`/`staging` as valid `promotion_model` values and
    states "every fleet repo is `promotion_model: ldr_main` today (verified via `workspace-manifest.json` — 24 `ldr_main`
    repos)" — now stale: `agent-orchestrator` shipped a new `promotion_model: ldr_terminal` value
    (`agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`), live-verified in the current `workspace-manifest.json`
@@ -204,7 +204,7 @@ assigned_vm/status mismatch. Filed as a config-hygiene question, not a safety al
 - `BLK-d1a3f721` — codex worker-liveness.md SSOT drift — this doc, "Doc-drift" item 1.
 - `BLK-57a03009` — assigned_vm config-hygiene question (batch2/3_finalize vs NA parents) — this doc,
   "AO-dispatch-readiness" section above.
-- `codex/08-workflows/ci-cd-flow.md` `ldr_terminal` staleness — this doc, "Doc-drift" item 2 (not separately alerted,
+- `/codex/08-workflows/ci-cd-flow.md` `ldr_terminal` staleness — this doc, "Doc-drift" item 2 (not separately alerted,
   same class as item 1 — apply together once item 1 is ruled).
 - Every GRACE-blocked contradiction/finding above is durably recorded in this doc (which itself is
   `locked_by: plan_reconciler-agt-903867` until this run completes, then stays in `plans/active/issues/` as the
@@ -256,11 +256,30 @@ assigned_vm/status mismatch. Filed as a config-hygiene question, not a safety al
   1 live-code grep pair (`autospawn.py`, `context_lifecycle.py`), 2 `GET /api/backlog` live-state checks (both confirmed
   the defense-in-depth gate holds), 1 codex-doc full-file grep (confirmed no exception carve-out exists), 1 archived-doc
   cross-reference verification (confirmed same-incident duplicate risk).
+- **Green-gate self-check (Phase 5)**: re-ran `check_reference_paths.py` before/after — this run's edits introduced 3
+  transient FORMAT violations (bare `codex/...` refs in an early draft of this doc's own body text), caught by the same
+  re-run and fixed in place; the final violation set is byte-identical to the pre-run baseline (0 net regression).
+  `check_ag_closeout_linkage` moved 75→76: the +1 is this doc itself (a new meta run-record, expected to read as
+  "orphaned" from a closeout-family's perspective, same as any other reconciler/audit findings doc) — the other flagged
+  file in this run's diff (`ao_done_gate_no_carveout...`) was independently confirmed already-orphaned pre-edit (my only
+  change there was a frontmatter comment, unrelated to closeout-family linkage). The 4 pre-existing corpus-wide hard
+  failures (reference-path baseline slack, `ag_closeout_linkage`, `terminal_status_archived`, `archive_candidates`) are
+  whole-corpus ratchet debt unrelated to this tranche's edits — out of this sharded run's scope to clear.
 
 ## Plans not reached
 
 None — full 80-doc `ao`-tranche corpus was read; every confirmed candidate was either applied, filed, or explicitly
 alerted.
+
+## Meta-finding: `agents/plan_reconciler.md`'s own STEP 6 instruction is stale
+
+STEP 6 directs appending a pointer line to `ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`.
+Both files carry an explicit decommission notice: retired 2026-07-04 (operator directive), "AO agents are explicitly
+forbidden from polling this file" — comms now go through the agent-orchestrator HTTP server. Skipped that step this run
+(the 3 `POST /api/slots/5/blocked` alerts above are the current-correct channel per the retirement notice itself) rather
+than write to a dead ledger nothing reads. Filing this as a todo for whoever next touches `agents/plan_reconciler.md`:
+STEP 6(b)'s ping-ledger line should be dropped or repointed at the dashboard/HTTP alerting path it's actually superseded
+by.
 
 ## Phase 5.9 no-miss ledger
 
