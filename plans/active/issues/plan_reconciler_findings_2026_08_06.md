@@ -106,6 +106,10 @@ transcripts, not worth individual issue docs.
   flagged, not auto-fixed, since it's narrative content outside the auto-populated section. **Needs an operator-visible
   fix**, filed below.
 
+- `unified-trading-pm/agents/plan_reconciler.md` STEP 7/8's `curl` snippets use `/api/plan_health/dispatch` +
+  `/api/plan_health/result` (underscore) — the live server only serves `/api/plan-health/dispatch` +
+  `/api/plan-health/result` (hyphen); underscore 404s. Worked around this run by checking `/openapi.json`. Same class of
+  drift as the ping-ledger note below — role file lagging a live rename.
 - `unified-trading-pm/agents/plan_reconciler.md` STEP 6b instructs appending a line to
   `ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md` — both retired 2026-07-04 ("Do NOT append
   pings here... AO agents are explicitly forbidden from polling this file"). Skipped this run (the retirement notice is
