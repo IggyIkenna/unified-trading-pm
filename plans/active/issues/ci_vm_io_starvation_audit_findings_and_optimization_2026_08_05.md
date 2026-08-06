@@ -338,11 +338,13 @@ flipped.
       operation — same procedure done safely on the old VM during the July 28 incident. Evidence:
       `aws ec2 describe-volumes` confirms the new IOPS/throughput values.
 
-- [ ] [INFRA] P1. **Add host-level concurrency cap on the CI VM.** Without a fleet-wide limit, promotion events trigger
-      25 concurrent QG runs which will still stress the disk even at 16,000 IOPS. Options: (A) lower `GLUE_COUNT` per
-      pool to 1 with a global systemd task limit, (B) add a systemd-level `TasksMax` on the parent slice to cap total
-      concurrent Runner.Worker processes. GitHub queues jobs when no runner is available — no data loss. Target: 4–8
-      concurrent QG runs max.
+- [ ] [INFRA] P1. **Add host-level concurrency cap on the CI VM — Option B investigated 2026-08-06 with real
+      measurements and REJECTED as unsafe; still open.** Full investigation + real `TasksCurrent` baseline (274-326
+      idle, ~46 tasks/active run measured via a real dispatch) + why plain `TasksMax` risks hard fork failures inside
+      legitimate concurrent jobs rather than graceful queuing, why IO-bandwidth throttling is the better fit but needs a
+      `system.slice`-wide `io` controller delegation this session wasn't willing to make live, and the recommended safer
+      mechanism (an `ACTIONS_RUNNER_HOOK_JOB_STARTED` wrapper around the already-proven `qg-host-governor.sh` token
+      mode) — see `/plans/active/ci_vm_exposure_remediation_2026_08_06.md` todo 3 for full detail. Not duplicated here.
 
 - [ ] [INFRA] P1. **Flip PM's remaining workflow copies to self-hosted.** `semver-agent.yml`, `publish-package.yml`,
       `major-bump-issue-handler.yml`, `request-major-bump.yml`, `main-backmerge-to-ldr.yml` in PM's `.github/workflows/`
@@ -358,8 +360,12 @@ flipped.
 - [ ] [INFRA] P2. **Migrate `ui-quality-gates-v2` for `deployment-ui` and `unified-trading-system-ui` to self-hosted.**
       These run full UI build/test suites on `ubuntu-latest` — billing GitHub for every PR/push.
 
-- [ ] [INFRA] P2. **Add swap to the CI VM.** Currently 0 MB swap — no safety valve if memory pressure spikes with the
-      caps removed. A modest swap (8–16 GB) provides a buffer while alerts fire.
+- [x] ✅ [INFRA] P2. **Add swap to the CI VM — done 2026-08-06.** 16GB `/swapfile` (`fallocate`+`mkswap`+`swapon`,
+      persisted via `/etc/fstab`), live-verified (`swapon --show` / `free -h`). Full detail + evidence:
+      `/plans/active/ci_vm_exposure_remediation_2026_08_06.md` todo 1. Also shipped in the same session, not previously
+      tracked as a todo here: durable resource-history-sampler + S3-mirrored backup parity with the AO box (same plan,
+      todo 2) — a real latent bug (`PrivateTmp=yes` missing under `ProtectSystem=strict`) found and fixed in the
+      checked-in `agent-orchestrator` SSOT along the way, not just live-patched.
 
 - [ ] [DOC] P2. **Update stale codex docs.** `central-vm-relaunch-glue-runner-reinstall.md` needs full rewrite (runners
       no longer on planning VM). `self-hosted-runner-security-posture.md` needs summary/body updated (runners now on
@@ -373,6 +379,11 @@ flipped.
 
 ## Progress Log
 
+- **2026-08-06 (interactive session, human-driven)** — Closed the swap gap + shipped resource-history-sampler parity
+  with the AO box (both live-verified, real bug found+fixed in the shared SSOT along the way). Investigated the
+  concurrency-cap todo with real measurements (real `TasksCurrent` baseline + a live dispatch's measured task cost) and
+  rejected plain `TasksMax` as unsafe once sized against those numbers — left open with a concrete safer next step
+  identified rather than shipped half-verified. Full detail: `/plans/active/ci_vm_exposure_remediation_2026_08_06.md`.
 - **2026-08-05 (interactive audit)** — Verified migration completion (25/25 pools on dedicated VM, zero on planning VM).
   Diagnosed I/O starvation: volume at default 6,000 IOPS, shared-VM resource caps still active, no concurrency cap.
   Removed resource caps live. Bumped volume to 16,000 IOPS. Documented proposed worktree + shared-venv architecture.
