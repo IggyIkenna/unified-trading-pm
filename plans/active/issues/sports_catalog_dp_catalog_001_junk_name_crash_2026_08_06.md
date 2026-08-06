@@ -1,0 +1,161 @@
+---
+doc_type: issue
+title: >-
+  CRITICAL DP_CATALOG_NOT_RUNNING (DP-CATALOG-001) — sports instrument catalogue stale, traced to an uncaught
+  JunkSymbolError (mojibake player/team name) crashing the entire FTP rollup; fixed with per-row shard isolation
+summary: >-
+  data_pipeline_failure escalation agt-941c20 responded to a CRITICAL page: gs://instruments-store-sports-prd-central-
+  element-323112/prod/catalog.parquet age 1776min (29.6h) > 24h budget. Root cause traced via live Cloud Run Job logs
+  (not a guess): the 2026-08-06 01:00 UTC lifecycle-catalogue-regen-sports execution ran the full FTP (fixture/team/
+  player) window rebuild over 99,488 by_date parquets, then crashed with an UNCAUGHT
+  unified_api_contracts.canonical.domain.sports.canonical_ids.JunkSymbolError: "control character in name: 'JeleÅ\x84'"
+  raised out of build_player_id → _slug → _reject_junk_symbols. "JeleÅ\x84" is a classic UTF-8-bytes- decoded-as-Latin-1
+  mojibake of the Polish surname "Jeleń" — a genuine upstream capture/encoding defect somewhere in the sports
+  player-name pipeline, NOT this catalogue script's bug, but the catalogue script had zero shard-level isolation around
+  the per-row id-build call: ONE corrupted name anywhere in the 99k-blob window crashed the ENTIRE rollup (exit 1), so
+  the job never reached the monotonic-guard/promote-write step at all — a structurally different failure mode from the
+  two PRE-EXISTING sports catalogue incidents this codebase already fixed (2026-07-15 FTP frozen- tail shrink-block;
+  2026-08-02 defi's separate R3-migration-gated pause). Fixed by wrapping the per-row build_team_id/build_player_id
+  calls in build_sports_fixture_team_player_catalogue with try/except ValueError (JunkSymbolError subclasses ValueError)
+  — skip + count the corrupted row, log once, continue rolling up the other ~99,487 files — the same
+  shard-level-failure-isolation discipline this codebase already applies to other per-blob loops in this same file (see
+  _iter_sports_ftp_snapshots' own "skip vanished/malformed blob" warnings).
+status: open
+nature: issue
+asset_group: [sports]
+stage: [data]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags:
+  [
+    catalog,
+    catalogue,
+    dp-catalog-001,
+    dp-alerts,
+    sports,
+    junk-symbol,
+    mojibake,
+    encoding,
+    shard-isolation,
+    data-pipeline,
+    critical-page,
+  ]
+related:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md,
+    /plans/active/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
+  ]
+created: 2026-08-06
+last_updated: "2026-08-06"
+parent_epic: instruments_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.3
+assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
+source:
+  "data_pipeline_failure one-shot escalation agt-941c20, slot-4, 2026-08-06, responding to a CRITICAL DP-CATALOG-001
+  page"
+resolved_by: ["instruments-service@497c4f5e"]
+locked_by:
+locked_since:
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md,
+    instruments-service/scripts/build_instrument_catalogue.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/sports/canonical_ids.py,
+  ]
+---
+
+# DP-CATALOG-001: sports catalogue stale — traced to an uncaught JunkSymbolError crashing the whole FTP rollup
+
+## Evidence trail (all verified live, this session — `gcloud`/`gsutil` as `unified-trading-sa`)
+
+1. **Alert**: `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet` age 1776min (29.6h) > 24h
+   budget at dispatch time. `gsutil stat` confirmed the frozen snapshot: `Update time: Wed, 05 Aug 2026 01:09:18 GMT`.
+2. **The cron IS firing** —
+   `gcloud run jobs executions list --job=lifecycle-catalogue-regen-sports --region=asia-northeast1`: fired daily at
+   01:00 UTC every day 2026-07-28 through 2026-08-05 (all `succeededCount=1`), then the 2026-08-06 execution
+   (`lifecycle-catalogue-regen-sports-rhcp4`) ran 23 minutes and exited 1 (`NonZeroExitCode`, `retriedCount: 1` — one
+   internal retry, same crash both times).
+3. **Failure mode: uncaught `JunkSymbolError`, not the previously-fixed shrink-block/OOM classes.**
+   `gcloud logging read` on the failed execution shows the full traceback:
+   `build_instrument_catalogue.py:5054 run_rollup → _merge_sports_ftp_with_frozen_tail → line 4317 → build_sports_fixture_team_player_catalogue → line 3328 → build_player_id → canonical_ids.py:164 → _slug → line 76 → _reject_junk_symbols → JunkSymbolError: control character in name: 'JeleÅ\x84'`,
+   then `Container called exit(1)`. Both the primary attempt (01:12:03Z) and the retry (01:23:13Z) hit the
+   byte-identical error on the byte-identical name — not a flake.
+4. **The name is a genuine mojibake, not a real junk value.** `'JeleÅ\x84'` is the classic signature of UTF-8 bytes
+   (`Jeleń` → `4A 65 6C 65 C5 84`) decoded as Latin-1/cp1252 somewhere upstream: `0xC5` → `Å`, `0x84` → an unassigned C1
+   control character (hence "control character in name"). `_reject_junk_symbols`'s own docstring correctly distinguishes
+   this from a legitimate accented name ("México", "São Paulo" are NOT rejected) — the guard is doing its job; the bug
+   is that ONE row hitting this guard took down the whole rollup instead of just that row.
+5. **No shard-level isolation around the per-row id-build call.** `build_sports_fixture_team_player_catalogue` (the
+   function this exact traceback names) iterates ~99,488 by_date parquet-derived rows across 3 grains
+   (fixtures/teams/players) and called `build_team_id`/`build_player_id` directly inside the loop with no `try/except` —
+   a single corrupted name anywhere in the whole trailing 400-day window is fatal to the entire job, contradicting this
+   codebase's own shard-level-failure-isolation convention (the same function's sibling walk,
+   `_iter_sports_ftp_snapshots`, already logs-and-skips a malformed/vanished blob rather than raising).
+
+## Fix shipped (instruments-service@497c4f5e, quickmerge, quality gates green 84s)
+
+Wrapped the two `_slug`-reachable id-build call sites in `build_sports_fixture_team_player_catalogue` in
+`try/except ValueError` (`JunkSymbolError` is a `ValueError` subclass, so this also covers a corrupted home/away team
+name reached via `build_team_id`, not just the player-name path the live traceback hit): a caught row increments a
+`junk_name_skips` counter and `continue`s; after the loop, a single `logger.warning` reports the skip count (visible in
+Cloud Logging, non-fatal, doesn't spam per-row). Added a regression test
+(`test_ftp_rollup_skips_junk_name_row_instead_of_crashing_whole_run`) reproducing the exact live incident string
+(`'JeleÅ\x84'`) plus a junk home-team-name fixture in the same blob, proving both are skipped while the clean
+fixture/player rows in the SAME blob still roll up. Full `instruments-service` `quality-gates.sh --no-fix` green (94s
+local, 84s on quickmerge's own Pass-1 re-run).
+
+**Not a mask**: `_reject_junk_symbols` still rejects the corrupted name exactly as designed (the row does NOT enter the
+catalogue with a mangled slug) — this fix only stops one bad row from vetoing the other 99,487.
+
+## Not fixed here — the upstream encoding defect (follow-up)
+
+The catalogue-rollup crash is fixed, but the ROOT CAUSE of the mojibake itself — some sports player-name capture path
+somewhere upstream (MTDS `sports_reference` adapters, most likely api_football lineups given the traceback's
+`fixture_lineups` entity) is producing UTF-8-as-Latin-1 double-encoded names — is NOT diagnosed or fixed in this
+escalation. Grepped MTDS for `player_name`/`fixture_lineups` writers and found no direct hit in this repo (the raw
+`player_name` field the catalogue script reads is written by whatever MTDS sports adapter/orchestrator populates
+`sports_reference/by_date/.../entity=fixture_lineups/`); tracing the EXACT write site would need either a targeted grep
+sweep of the MTDS sports orchestrator/adapters for a wrong-charset decode (`.decode("latin-1")` /
+`.encode("latin-1").decode("utf-8")` anti-pattern) or pulling the actual corrupted by_date blob(s) containing this row —
+out of scope for a bounded one-shot escalation responding to a live page. The new `junk_name_skips` warning log line
+(STEP above) now makes future occurrences of this class visible in Cloud Logging without crashing anything, which is the
+observability hook whoever picks up the follow-up needs.
+
+## Todos
+
+- [x] [DATA] P1. Fix the uncaught-exception crash so a single corrupted display name cannot fail the whole sports
+      catalogue rollup — instruments-service@497c4f5e (try/except ValueError, regression test, QG green, quickmerged).
+- [ ] [OPS] P2. Verify the next `lifecycle-catalogue-regen-sports` run (manually triggered same-session, or the next
+      scheduled `0 1 * * *` UTC run) promotes cleanly and `prod/catalog.parquet` mtime advances past the frozen
+      2026-08-05T01:09:18Z snapshot, confirming DP-CATALOG-001 clears. (repo: instruments-service, verification only)
+- [ ] [DATA] P3. Trace and fix the actual upstream encoding defect producing UTF-8-as-Latin-1 mojibake sports
+      player/team names (this incident's `'JeleÅ\x84'` for `'Jeleń'`) — most likely in an MTDS api_football lineups
+      adapter or orchestrator write path. Not chased down this session (would need either a corpus grep of MTDS sports
+      capture code for a wrong-charset decode, or pulling the specific corrupted by_date blob to identify the source
+      league/day). The new `junk_name_skips` warning log (instruments-service@497c4f5e) is the observability hook for
+      tracking recurrence until this is fixed at the source. (repo: market-tick-data-service, likely)
+
+## Progress Log
+
+- **slot-4 (data_pipeline_failure escalation agt-941c20) 2026-08-06**: Filed while responding to a CRITICAL
+  `DP_CATALOG_NOT_RUNNING` page for sports. Root-caused via live `gcloud run jobs executions list` +
+  `gcloud logging read` (full traceback, not a guess) to an uncaught `JunkSymbolError` from a mojibake player name
+  crashing the entire ~99k-blob FTP rollup — a new, distinct failure mode from the two previously-fixed sports catalogue
+  incidents (2026-07-15 shrink-block, unrelated to this repo's defi R3-migration incident). Fixed with per-row shard
+  isolation (try/except + skip + count + log) in `build_sports_fixture_team_player_catalogue`, added a regression test
+  reproducing the exact live incident string, ran full `quality-gates.sh --no-fix` green, shipped via quickmerge
+  (`instruments-service@497c4f5e`, verified ancestor of `origin/live-defi-rollout`). Manually triggered a fresh
+  `lifecycle-catalogue-regen-sports` execution to confirm the fix live (see next entry / in progress). Did NOT chase
+  down the upstream encoding-defect root cause (filed as a P3 follow-up todo) — out of scope for a bounded one-shot page
+  response; the crash-isolation fix is itself a full root-cause fix for the ALERT (DP-CATALOG-001), not a mask, since
+  the corrupted name is still correctly rejected from the catalogue, just no longer fatal to the whole job.
