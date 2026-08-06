@@ -350,14 +350,17 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       `factory.py:149`'s stale `# TradFi (9 venues)` comment to the actual registered count of 7. Repo:
       market-tick-data-service@7db75b1a.
 
-- [ ] [DOCS] P2. **DEFAULT-RULED 2026-08-06: document as intentionally unused**, matching the `databento_equity.py`
+- [x] ✅ [DOCS] P2. **DEFAULT-RULED 2026-08-06: document as intentionally unused**, matching the `databento_equity.py`
       scaffold-status precedent already used for other findings in this same audit. `[DOCS]` tag (was `[OPERATOR]`) —
       consistency with the audit's own established treatment beats introducing a new disposition for one finding.
       **DECISION — 2 unused MTDS converter classes** (Finding M-3): `databento_cme_converter.py`'s
       `DatabentoCmeConverter` and `databento_opra_converter.py`'s `DatabentoOpraConverter` produce an orphaned
       `CanonicalOptionQuote` type used only in tests. Decide: wire into the live `databento_enrichment.py` path, delete,
       or document as intentionally unused. Correct the stale credit at `docs/tradfi-venue-coverage-matrix.md:26`
-      regardless of direction. Repo: market-tick-data-service.
+      regardless of direction. Repo: market-tick-data-service. — market-tick-data-service@30c95098: added STATUS notes
+      to both module docstrings (matching baker_hughes/etc. M-2 precedent, cross-referencing Finding M-3 + operator
+      ruling); corrected stale credits in the CME/CBOE options_chain rows of docs/tradfi-venue-coverage-matrix.md. QG
+      green, verified on origin.
 
 - [x] [BACKEND] P3. ✅ **3 unlogged silent-fallback catch blocks in instruments-service** (Finding I-1):
       `reference_data/adapters/tradfi/databento/adapter.py::_parse_tick_and_lot` (lines 715-729),
