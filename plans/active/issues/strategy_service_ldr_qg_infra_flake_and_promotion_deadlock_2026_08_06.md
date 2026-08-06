@@ -320,6 +320,11 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       31090281798 SUCCESS, fleet-shared signal — bot stamps it only on the LDR tip); **v2 PR run 31092068911 QUEUED —
       MUST COMPLETE, do NOT cancel**. On success → #498 auto-merge (SQUASH) → verify main HEAD is the promote squash →
       POST /done (`one_shot_complete: true`). If LDR advances again, repeat on the new PR. Provenance: agt-e33f21.
+- [ ] [OPERATOR] P2. Delete the orphaned remote branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my
+      #497 resolution merge — the bot deleted the ref for superseded PR #497 at 10:01:05Z before my push, so the push
+      recreated it as a stray). Not an LDR tip, so it should be inert to the bot's promote-ref scan, but it should be
+      removed to keep `promote/*` clean. Guardrail: `git branch -D` / `git push --delete` are blocked for autonomous
+      workers (orchestrator guardrail) — operator or bot action. Provenance: agt-e33f21.
 - [x] [OPERATOR] P0. Remove `/tmp/test_slice.log` on the shared fleet host (199 MB, live `ghp_` fine-grained PATs,
       world-readable, abandoned 05:57Z, foreign session's). **RESOLVED: file gone as of 09:25Z (operator/cleanup removed
       it).** Provenance: agt-e33f21 security finding.
@@ -421,6 +426,15 @@ trunk — expect promote-PR churn while other slots/fleet push to it.
   c744644b). Also queued on the same ref: Plan Alignment Agent 31092068084 + image-build-gate 31092069338 (different
   workflows, not the gate). The single glue runner also has a foreign queued v2 dispatch on LDR (31091292141) — do NOT
   cancel it. **Wait for 31092068911 to COMPLETE (do-not-cancel lesson); terminal ETA ~11:00-11:30Z.**
+
+## agt-e33f21 follow-up — LDR moved a 3RD time: aiohttp CVE floor (2026-08-06 ~10:15Z)
+
+- **LDR tip is now `308bdfd3`** = "fix(deps): bump aiohttp floor to >=3.14.3 to match canonical
+  (CVE-2026-59881/-69243/-69244)" — a SECURITY floor bump pushed by another slot/fleet AFTER PR #498's head was
+  resolved. **PR #498's tree does NOT include the aiohttp fix.** If the bot's next poll supersedes #498 (pattern: it
+  closed #496/#497 ~18 min after each LDR advance), resolve the NEW promote PR for `308bdfd3` take-LDR and promote the
+  CVE-fixed tree. If #498 merges first, main gets 4393c2a4's content and the aiohttp fix follows on the next promote —
+  incremental fleet flow, acceptable. The v2 PR run 31092068911 only matters if the bot does NOT supersede #498.
 
 ## Lessons / traps (agt-e33f21, re-learned at cost)
 
