@@ -87,9 +87,10 @@ drop anyway) and the 497c4f5e fix's real goal (don't crash the whole rollup) is 
 
 ## Todos
 
-- [ ] [TEST] P1. Update `instruments-service` `test_ftp_rollup_skips_junk_name_row_instead_of_crashing_whole_run` so its
-      assertions match UAC b3db68b5's C1-strip behavior (Option A) — C1 chars strip (row survives as sanitized id),
-      while U+FFFD/C0 still raise and are skipped. (repo: instruments-service)
-- [ ] [DATA] P2. After the test is reconciled, re-run instruments-service `quality-gates.sh` and confirm green, so the
-      aiohttp floor propagation (`aiohttp_canonical_floor_stale_vs_mtds_cve_fix_2026_08_03.md` todos 2-3) can land.
-      (repo: instruments-service)
+- [x] ✅ [TEST] P1. Update `instruments-service` `test_ftp_rollup_skips_junk_name_row_instead_of_crashing_whole_run` so
+      its assertions match UAC b3db68b5's C1-strip behavior (Option A) — C1 chars strip (row survives as sanitized id),
+      while U+FFFD/C0 still raise and are skipped. — instruments-service@a147b12a (fixture switched to U+FFFD junk
+      marker; docstring documents the C1-strip behavior)
+- [x] ✅ [DATA] P2. After the test is reconciled, re-run instruments-service `quality-gates.sh` and confirm green, so
+      the aiohttp floor propagation (`aiohttp_canonical_floor_stale_vs_mtds_cve_fix_2026_08_03.md` todos 2-3) can land.
+      — instruments-service@a147b12a QG green (exit 0); aiohttp bump d07b24b8 + test fix both verified on origin

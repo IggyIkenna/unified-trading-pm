@@ -79,13 +79,19 @@ being permanently red for market-tick-data-service. Low urgency, low risk, strai
 - [x] ✅ [SCRIPT] P2. Bump `workspace-constraints.toml`'s aiohttp entry to `aiohttp>=3.14.3,<4.0.0` (comment already
       exists documenting the CVE lineage — just needs the version number and a note on why 3.14.3 not 3.14.1). —
       unified-trading-pm@89c194c67
-- [ ] [SCRIPT] P2. Regenerate `canonical-dependency-manifest.json` via
-      `scripts/manifest/generate_canonical_dependency_manifest.py` (reads only from workspace-constraints.toml, safe).
-- [ ] [SCRIPT] P2. Run `scripts/workspace/propagate-canonical-versions.py` (or the equivalent per-repo pyproject.toml
+- [x] ✅ [SCRIPT] P2. Regenerate `canonical-dependency-manifest.json` via
+      `scripts/manifest/generate_canonical_dependency_manifest.py` (reads only from workspace-constraints.toml, safe). —
+      unified-trading-pm@e15d40ed7
+- [x] ✅ [SCRIPT] P2. Run `scripts/workspace/propagate-canonical-versions.py` (or the equivalent per-repo pyproject.toml
       bump) across the 16 affected repos listed above — read that script's own docs/dry-run mode first, this is a
-      multi-repo change and should go through each repo's own quickmerge, not a single mega-commit.
-- [ ] [SCRIPT] P3. Re-run `check-dependency-alignment.py --json` fleet-wide after the propagation lands; confirm 0
-      issues.
+      multi-repo change and should go through each repo's own quickmerge, not a single mega-commit. — shipped per-repo
+      via quickmerge: alerting-service@7865ecd, batch-live-reconciliation-service@56df5cd, client-reporting-api@d4a06b1,
+      deployment-api@7bcb262, deployment-service@f8cf3d4, execution-service@2ff643b4, features-service@261e09b,
+      fund-administration-service@6f10930, instruments-service@d07b24b8, market-data-processing-service@3868cf5,
+      ml-service@d631123, strategy-service@308bdfd3, trading-agent-service@82df60a, unified-trading-api@5503ffb (spec
+      normalized to canonical `aiohttp>=3.14.3,<4.0.0` string form for strict-compare alignment)
+- [x] ✅ [SCRIPT] P3. Re-run `check-dependency-alignment.py --json` fleet-wide after the propagation lands; confirm 0
+      issues. — aligned: True, count: 0 (all 17 repos at canonical floor)
 
 ## Sequencing note
 
@@ -98,6 +104,17 @@ currently-unpatched CVEs (2026-59881/69243/69244) — that rescue is P1 and shou
 unified-trading-library resolves off this doc's 16-repo mismatch list, leaving 15.
 
 ## Progress Log
+
+- **slot-4 2026-08-06 (aiohttp floor propagation, task -002)**: executed the full atomic unit (todos 2-4) because -002
+  cannot ship standalone (PM quickmerge STAGE 1.5 requires `aligned: true`; the plan's own history documents the naive
+  regen was reverted for exactly this reason). Regenerated manifest (`e15d40ed7`), propagated the floor to all 14
+  affected repos via per-repo quickmerge, and verified `check-dependency-alignment.py --json` → aligned: True count: 0.
+  **Two findings fixed inline**: (1) the propagation script wrote the spec as `aiohttp<4.0.0,>=3.14.3` (reordered
+  operands), which `extract_pkg_name` mis-parses into a version-bearing key → silently vacuously-green alignment; all 14
+  pyprojects normalized to the canonical string form. (2) instruments-service's QG was red at origin tip (pre-existing
+  cross-repo conflict: junk-name test `497c4f5e` expects JunkSymbolError for C1 `\x84`, but UAC `b3db68b5` strips C1) →
+  reconciled the test to the U+FFFD junk marker (still raises/skips), documented at
+  `plans/active/issues/instruments_junk_name_test_vs_uac_c1_strip_conflict_2026_08_06.md`.
 
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: **RECLASSIFY — flipped to `assigned_vm: planning`.** All 4 todos
   [SCRIPT]-tagged, bounded, mechanical aiohttp floor propagation (bump workspace-constraints.toml to >=3.14.3, regen
