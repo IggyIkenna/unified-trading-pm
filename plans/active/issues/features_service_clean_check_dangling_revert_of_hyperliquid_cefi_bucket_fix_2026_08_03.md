@@ -185,3 +185,4 @@ problem with the fix that was never written down — which would be a genuine da
   repo) — filed the concrete fix as a new `[BACKEND]` P3 todo above rather than implementing it inline (a real
   agent-orchestrator server-code change, outside this doc-only task's scope).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -315,3 +315,4 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries — added the two 2026-08-03 CODE-fix source paths,
   `provider_league_ids.py` and `enumerate_expected_universe.py`, since the remaining `[DIAG] P3` follow-up re-verifies
   that exact fix in production; dropped the now-superseded `sports_satellite_ao_dispatch_batch4` archived dispatch doc).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -57,6 +57,14 @@ locked_since:
 source:
   "slot-5, data_engineering, surfaced while executing features_e2e_smoke_matrix_writes_to_prod_bucket-003 (P2
   re-verification of the smoke-matrix -test- bucket routing fix), 2026-08-05"
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
+    e2e-testing/scripts/multi_timeframe/smoke_matrix.py,
+    features-service/features_service/onchain/app/core/dependency_checker.py,
+  ]
 ---
 
 # Smoke-matrix P2 re-run: contract confirmed; 7/8 families blocked by pre-existing upstream/harness issues
@@ -235,3 +243,4 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
   pipeline_mode=batch_hyperliquid/`) + per-VM manifest shard advancing (159 entries / 7 new). No cell overlap with the concurrent ASTER-only `mdps-backfill-cefi-20260802-140125`. **Bonus finding (fixed inline + verified): the MDPS event-sink `GcsEventSink`403s on`central-element-323112-events`for`uts-prd-sa`— its project-level`storage.objectAdmin`is conditional-scoped to Group A/B`-prd-`buckets only, so event JSONL writes to the shared events bucket were silently dropped (47,638 occurrences on the ASTER VM's log too — pre-existing fleet-wide, not from this launch). Granted bucket-scoped`roles/storage.objectCreator`to`uts-prd-sa`
   (least-privilege) + verified live: event objects for this VM grew 8→161 and 403s ceased at 22:29Z.
   OOM-acknowledgement: no process launched by this slot was OOM-killed; all heavy compute is on the VM (nothing local).
+- **context-scout 2026-08-06**: populated context_scope (5 entries).

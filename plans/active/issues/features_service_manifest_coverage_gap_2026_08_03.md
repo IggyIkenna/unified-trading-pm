@@ -249,3 +249,4 @@ not something an AO worker should guess at.
   `row_count=1` per non-parquet object per the live writer's own convention. No new todo needed here — commodity is now
   fully covered (built, wired, validated, backfilled) alongside the other 7 wired families.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -259,3 +259,4 @@ input gap didn't change.
     instrument scanner found a data_type name, not a real instrument) — not blocking this shard's proof but worth
     tracking as a low-priority issue. No new code shipped — the fixes from 2026-07-27 are sufficient; the blocking
     condition is purely upstream data availability.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

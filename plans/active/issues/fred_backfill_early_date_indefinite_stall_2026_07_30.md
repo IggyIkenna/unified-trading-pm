@@ -466,3 +466,5 @@ composition rather than trusting either attribution.
   commit boundary, a load-flake still blocks me — the ONLY correct response is a fair re-gate (field ≤4), NOT
   commit-despite-red. Diagnosis signature: a crash-replaced worker (not an assertion traceback) on a test file you never
   touched + the test passing in an earlier gate = environmental; but you still need the green run to ship.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
