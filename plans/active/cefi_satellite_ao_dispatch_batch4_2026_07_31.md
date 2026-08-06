@@ -121,13 +121,15 @@ drift_direction: advance-code
       `origin/live-defi-rollout`. Source-doc items 1-2 flipped. Sibling finding (deployment-api's two `reap_stale()`
       callers share the empty-set bug) filed `issues/deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md`.
 
-- [ ] [BACKEND] P2. **Widen `unified-trading-library`'s `_GCS_RETRY` predicate for connection-level transient errors.**
-      In `providers/gcp.py:66-75`, also retry `ConnectionError`/`SSLError`/`ProtocolError` (currently only retries a
-      narrower set), and add `timeout=600` to `list_blobs()` (`gcp.py:315-329`). Include a regression test. This closes
-      the still-open half of a shard-13 content-migration investigation whose other half (the checkpoint-resume actuator
-      bug) already shipped `deployment-service@b34e85a`. Source:
-      `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`. **Done when**: both
-      changes ship, QG is green, and the regression test covers the widened retry predicate.
+- [x] ✅ [BACKEND] P2. **Widen `unified-trading-library`'s `_GCS_RETRY` predicate for connection-level transient errors
+      — DONE unified-trading-library@f135d4fd8.** `_GCS_RETRY` now uses the GCS SDK's `DEFAULT_RETRY` predicate
+      (429/503/5xx + ConnectionError/SSLError/ProtocolError/timeouts) via `DEFAULT_RETRY.with_deadline(600.0)` — the
+      prior 429/503-only predicate dropped exactly the connection errors behind shard 13's SSL-EOF/connection-reset
+      death; `GCSStorageClient.list_blobs()` gained `timeout=600` for defense-in-depth. Regression tests assert
+      ConnectionResetError / urllib3 SSLError / ProtocolError are retried and a non-retryable ValueError propagates
+      immediately. QG green (sentinel `f135d4fd8`), 35/35 cloud_interface unit tests pass. Source doc
+      `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md` checkbox flipped
+      citing this run.
 
 - [ ] [DATA] P2. **Legacy-bucket 3-part reconciliation bundle.** (a) Update
       `issues/legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 to reflect that cefi's legacy bucket is

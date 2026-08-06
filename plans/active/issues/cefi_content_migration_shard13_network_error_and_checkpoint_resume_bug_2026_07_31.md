@@ -131,15 +131,16 @@ real progress, until this fix.
 > this doc; its done-when includes flipping this checkbox citing that run. Leave `assigned_vm: NA` here — revisit
 > RECLASSIFY only if batch4 stalls without ever activating.
 
-- [ ] [BACKEND] P2. Widen `_GCS_RETRY`
-      (`unified-trading-library/unified_trading_library/cloud_interface/providers/     gcp.py:66-75`) to also retry
-      connection-level transient errors — simplest: adopt `google.cloud.storage.retry.DEFAULT_RETRY` directly, or union
-      it with the existing 429/503 predicate if the 429/503-specific `deadline=600.0` needs preserving. Add
-      `timeout=600` to `list_blobs()` (gcp.py:315-329) for defense-in-depth. **Done when**: both changes ship + QG
-      green; a quick regression test asserting `ConnectionError`/`SSLError` are retried (not just 429/503) would lock
-      this in. Repo: unified-trading-library. This looks like a small, bounded, AO-eligible change (a checkable code fix
-      with a stated done-when) — filed as `NA`/local per the default plan-destination posture since no operator
-      confirmation was available at file-time; flip to `assigned_vm: planning` if a human agrees it's properly scoped.
+- [x] ✅ [BACKEND] P2. Widen `_GCS_RETRY`
+      (`unified-trading-library/unified_trading_library/cloud_interface/providers/gcp.py:66-75`) to also retry
+      connection-level transient errors — **DONE `unified-trading-library@f135d4fd8` via
+      `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 4.** Adopted `google.cloud.storage.retry.DEFAULT_RETRY`
+      (predicate covers 429/503/5xx + ConnectionError/SSLError/ProtocolError/timeouts) with the existing 600s deadline
+      (`DEFAULT_RETRY.with_deadline(600.0)`), and added `timeout=600` to `list_blobs()` for defense-in-depth. Regression
+      tests assert ConnectionResetError / urllib3 SSLError / ProtocolError are retried and a non-retryable ValueError
+      propagates immediately. QG green (sentinel `f135d4fd8`), 35/35 cloud_interface unit tests pass. **Done when**:
+      both changes ship + QG green; the regression test asserting `ConnectionError`/`SSLError` are retried (not just
+      429/503) locks this in. Repo: unified-trading-library.
 
 ## Progress Log
 
@@ -167,3 +168,10 @@ real progress, until this fix.
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — the citation banner above the sole
   open item is already correct and current: extracted verbatim into `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`
   todo 4, which remains `status: draft`. Revisit only if batch4 stalls without ever activating.
+- **2026-08-06 (batch4 AO dispatch, slot 9)**: todo 4 shipped `unified-trading-library@f135d4fd8` — `_GCS_RETRY` widened
+  to the SDK's `DEFAULT_RETRY` (429/503/5xx + ConnectionError/SSLError/ProtocolError/timeouts) with the 600s deadline
+  preserved (`DEFAULT_RETRY.with_deadline(600.0)`), `GCSStorageClient.list_blobs()` gained `timeout=600`, and regression
+  tests assert the widened predicate retries ConnectionResetError / urllib3 SSLError / ProtocolError while a
+  non-retryable ValueError still propagates immediately. QG green (sentinel `f135d4fd8`), 35/35 cloud_interface unit
+  tests pass. This checkbox flipped; root-cause finding (1) CLOSED (finding (2) already shipped at
+  `deployment-service@b34e85a`).
