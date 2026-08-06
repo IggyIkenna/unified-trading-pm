@@ -424,15 +424,16 @@ verified complete**.
       runtime consumer of `PIPELINE_DEPENDENCIES` in execution today, so additive + safe. —
       unified-trading-library@`87f36546` + system-integration-tests@`8cbeb83` (xfail dropped → 7/7 pass) + codex@(this
       commit). ruff+basedpyright clean; 33 dependency_checker tests pass. Source: e2e-pipeline-manifest-wiring (G-EXEC).
-- [ ] [CODE] [UI] P2. deployment-ui: fix GAP **G-UI** — `DataStatusTab.tsx` `DATA_PIPELINE_SERVICES` hardcodes stale
-      `features-cefi/defi/tradfi/prediction-service` names + omits strategy-service, diverging from the backend
-      `SERVICE_TO_KIND` consolidated families (`features-delta-one/volatility/onchain/sports-service`). Make the list
-      UAC/discovery-driven (or align to the backend kinds) + surface strategy-service in the pipeline view. Playwright
-      gate applies (`pw:L2 ✓` + regression spec). Source: e2e-pipeline-manifest-wiring (G-UI). **Sequencing ruled
-      2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #35): cross-cutting batch1 also
-      claims this same file for a 3-value UI split and is already `status: active` — let batch1 land first, pick this up
-      in an infra batch once quiet (batch1's own finalize plan already re-checks this exact conflict before shipping).
-      Do NOT dispatch this todo concurrently with batch1.
+- [x] ✅ [CODE] [UI] P2. deployment-ui: fix GAP **G-UI** — `DataStatusTab.tsx` `DATA_PIPELINE_SERVICES` hardcodes stale
+      — fixed deployment-ui@fecd67c `features-cefi/defi/tradfi/prediction-service` names + omits strategy-service,
+      diverging from the backend `SERVICE_TO_KIND` consolidated families
+      (`features-delta-one/volatility/onchain/sports-service`). Make the list UAC/discovery-driven (or align to the
+      backend kinds) + surface strategy-service in the pipeline view. Playwright gate applies (`pw:L2 ✓` + regression
+      spec). Source: e2e-pipeline-manifest-wiring (G-UI). **Sequencing ruled 2026-07-26** (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #35): cross-cutting batch1 also claims this same file
+      for a 3-value UI split and is already `status: active` — let batch1 land first, pick this up in an infra batch
+      once quiet (batch1's own finalize plan already re-checks this exact conflict before shipping). Do NOT dispatch
+      this todo concurrently with batch1.
 - [x] ✅ [CODE] P3. deployment-api + deployment-ui: GAP **G-TRACE** — add a cross-service E2E trace **CLOSED 2026-08-06
       (na-eligibility-audit)**: shipped in `infra_satellite_ao_dispatch_batch1_2026_07_26.md:722` (DONE 2026-08-04,
       deployment-api@4c394e9 + deployment-ui@10d2a60); doc's own line 436 already says REHOMED 2026-07-27 into batch1 —

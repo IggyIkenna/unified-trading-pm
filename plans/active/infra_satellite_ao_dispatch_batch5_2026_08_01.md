@@ -134,8 +134,8 @@ same shape `infra_satellite_ao_dispatch_batch4_2026_07_31.md` and the archived
 
 ## Todos
 
-- [ ] [UI] P2. **Fix deployment-ui GAP G-UI: `DATA_PIPELINE_SERVICES` stale names + missing `strategy-service`**
-      (`deployment-ui/src/components/DataStatusTab.tsx:152-161`, currently a hardcoded `Set` of
+- [x] ✅ [UI] P2. **Fix deployment-ui GAP G-UI: `DATA_PIPELINE_SERVICES` stale names + missing `strategy-service`** —
+      deployment-ui@fecd67c (`deployment-ui/src/components/DataStatusTab.tsx:152-161`, currently a hardcoded `Set` of
       `["instruments-service", "market-tick-data-service", "market-data-processing-service",     "features-cefi-service", "features-defi-service", "features-tradfi-service", "features-sports-service",     "features-prediction-service"]`).
       **Re-verify the live set with
       `grep -n -A12 'const DATA_PIPELINE_SERVICES'     deployment-ui/src/components/DataStatusTab.tsx` before starting**
