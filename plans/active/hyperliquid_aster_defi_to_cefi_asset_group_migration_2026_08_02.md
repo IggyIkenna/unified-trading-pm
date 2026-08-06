@@ -193,6 +193,19 @@ cites row-count estimates from its 2026-07-27 pass (HYPERLIQUID/HYPERLIQUID: 3.7
 
 ## Progress Log
 
+- 2026-08-06 (slot 6, task `hyperliquid_aster_defi_to_cefi_asset_group_migration-004` re-dispatch): task -004 (Phase 2,
+  INFRA VM launch) was re-dispatched after the plan was already fully complete (slot-3 `-007` close-out; all checkboxes
+  flipped, plan ready for archival). Per the dispatch, launched a dedicated VM to re-run the Phase-1 migration script
+  `--apply` against the full window as a verification pass:
+  `canonical-migration-defi-hl-aster-ag-relabel-20260806-161708` (zone `asia-northeast1-c`, e2-standard-8, SPOT;
+  launched 2026-08-06T16:17:16Z; run.log
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-hl-aster-ag-relabel-20260806-161708/run.log`;
+  STARTED <60s, DEPLOYMENT_STARTED→DEPLOYMENT_COMPLETED, exit 0). Result: `Plan: 0 objects to copy` — the defi source
+  was already migrated (7,599 copied defi→cefi, parity-verified) and Phase-4-deleted (7,599 removed), so the re-run was
+  a clean no-op; VM self-deleted via `VM_SHUTDOWN_ON_COMPLETION=true`. Independent bounded re-check this entry: cefi
+  twins present (HYPERLIQUID `perp_daily_ctx` day=2026-05-10, `perp_funding` day=2026-06-09; ASTER `perp_funding`
+  day=2026-06-04) and defi paths empty — consistent with the slot-3 verified end state. No checkboxes changed by this
+  entry (all already flipped); plan remains complete, ready for archival.
 - 2026-08-06 (slot 3, task `hyperliquid_aster_defi_to_cefi_asset_group_migration-007`): Phase 4 delete + full plan
   close-out. (1) Confirmed migration fully executed (all 7,599 objects parity-verified via (size, crc32c) — zero
   mismatches, zero missing cefi twins). (2) Phase 4 soft-delete gate:
