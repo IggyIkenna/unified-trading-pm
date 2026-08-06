@@ -89,6 +89,19 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, P2 launch-readiness
+  re-verify)**: all launch gates CLEARED except VM termination. (1) Ran the EXACT `lc_verify_tarball_freshness` the real
+  launch executes — all 4 repos pass (mtds-code@`94e625c7`, unified-api-contracts-code@`c5a9dd79`,
+  unified-trading-library-code@`dbe0ade0`; deployment-service was STALE and auto-republished to @`1b035c52` — the
+  launcher would have done the same on real launch, so no abort risk). (2) Pinned RC3
+  `mtds-code@b2cc274219acf0b25750a25a4ec4570a3e44d642.{tar.gz,manifest.json}` CONFIRMED still in GCS
+  (setup-data-pipeline-vm.sh downloads it at VM boot via MTDS_TARBALL_SHA). (3) Launch command dry-run validated
+  (`--dry-run --force` — venue→VM_VENUE, sha→MTDS_TARBALL_SHA, force-download→VM_FORCE, dates 2026-05-23→08-05 all flow
+  to metadata; no VM created). Remaining gate: Tardis cap — fleet re-counted =1, forward-poll `cefi-fwd-20260806-065837`
+  still RUNNING at day=2026-05-25, run.log actively writing (11:36Z mtime, 38MiB), day watermark advancing 05-23→24→25
+  (healthy, ~1h50m/day → multi-day ETA). Operator ruled NO `--force` override (AskUserQuestion 2026-08-06, answered
+  "Wait for termination"). Watchdog armed (20-min cadence, PID 3889296) re-invokes on termination → then run the
+  recorded launch command verbatim.
 - **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, P2 todo)**: RC3
   tarball **VERIFIED already in GCS** —
   `gs://deployment-scripts-central-element-323112/code/mtds-code@b2cc274219acf0b25750a25a4ec4570a3e44d642.{tar.gz,manifest.json}`
