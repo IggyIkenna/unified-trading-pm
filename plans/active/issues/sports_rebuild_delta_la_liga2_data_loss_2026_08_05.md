@@ -141,3 +141,43 @@ b4bac708, so it may now be stale and in need of removal.
       captured + 1,885 empty in manifest (the reported +1 GCS-only edge case was not independently verified — full GCS
       walk was too heavy for in-session). Re-verify after per-VM shard consolidation into canonical index. — slot-2
       @2026-08-05 ~07:30Z
+
+      > **RE-VERIFIED 2026-08-06 ~13:20Z (plan_reconciler agt-4fdce1, operator ruling BLK-136e69bf).** Confirmed the
+              > manifest consolidator (`uts-prod-manifest-consolidator-instruments-sports`, Cloud Run Job) has run
+              > continuously every ~1 minute since 2026-08-05 (per `gcloud run jobs executions list`, all `succeeded=1`) —
+              > the per-VM shard consolidation blocker cited above has long since cleared. Downloaded the current canonical
+              > manifest (164MB, 10,032,719 rows) and re-ran the cross-reference via DuckDB, this time checking BOTH
+              > `league_id='LA_LIGA_2'` and `league_id='SEGUNDA_DIVISION'` for `data_type='ODDS'` (the exact uppercase value
+              > this corpus's writer emits — confirmed via `SELECT DISTINCT data_type`; a first attempt using lowercase
+              > `'odds'` silently matched 0 rows, the exact vocabulary trap this workspace's reconciliation rules warn
+              > about). **Result: `LA_LIGA_2` still shows 0 ODDS rows (the `_LEAGUE_ALIASES` mapping is still live at write
+              > time, as the original todo-2 evidence already flagged), but `SEGUNDA_DIVISION` now shows 1,164 captured ODDS
+              > rows, of which exactly 846 fall within the target date range 2020-06-10..2026-05-18 — a precise match to the
+              > 846-cell gap.** The data loss IS resolved: all 846 target cells are captured in the canonical index today,
+              > just filed under the aliased `SEGUNDA_DIVISION` key rather than `LA_LIGA_2`. This is a real, different residual
+              > (mislabeling, not absence) — filed as todo #4 below, not silently closed. **BRASILEIRAO** captured count is
+              > unchanged at 962 (identical to the 2026-08-05 baseline) — the +1 GCS-only cell claim was NOT independently
+              > verified this pass either: a targeted `gcloud storage ls` scoped to just the `league=BRASILEIRAO` path
+              > (wildcarding only the `day=`/`fetched_at_hour=` segments, not a full corpus walk) still timed out after 90s,
+              > confirming the original "too heavy for in-session" finding rather than refuting it. Carried forward, still
+              > genuinely unverified — see todo #5.
+
+- [ ] [DECISION] P2. **Resolve the `LA_LIGA_2` → `SEGUNDA_DIVISION` alias now that LA_LIGA_2 is a registered league
+      again.** `_LEAGUE_ALIASES` in `unified_api_contracts/canonical/domain/sports/provider_league_ids.py` still maps
+      `LA_LIGA_2 → SEGUNDA_DIVISION`; `canonicalize_league_id()` applies it before any registry check, so every write
+      (past and future) for this league lands under `SEGUNDA_DIVISION`, not `LA_LIGA_2` — the 846 target cells are
+      captured (todo #3), but permanently mislabeled as long as the alias stays live, and any future LA_LIGA_2 fetch
+      will keep silently merging into SEGUNDA_DIVISION's count too. Decide: (a) remove the alias entry now that
+      LA_LIGA_2 has its own `LeagueDefinition` (`unified-api-contracts@b4bac708`) and re-stamp the 846+ rows'
+      `league_id` from SEGUNDA_DIVISION back to LA_LIGA_2 via a targeted manifest re-stamp (mirrors the pattern already
+      used for the FX/ICE/KRX and MTDS lending restamps elsewhere in this corpus), or (b) if the two are considered the
+      same real-world league going forward, keep the alias and correct this doc's framing instead (no data-loss
+      occurred, only a naming decision). This is a genuine judgment call, not mechanical — needs an operator/domain
+      decision, not a plan_reconciler auto-fix.
+- [ ] [DATA] P3. **Independently verify the +1 BRASILEIRAO GCS-only cell claim.** Still unverified as of 2026-08-06 —
+      two separate attempts (2026-08-05 full-GCS-walk, 2026-08-06 league-scoped wildcard listing) both found the check
+      too heavy to run in-session. A future pass should either (a) dispatch this as a bounded, single-league,
+      single-shard listing on a dedicated VM rather than the shared planning host, or (b) narrow the date range first
+      (the manifest's BRASILEIRAO captured span is 2018-04-14..2026-07-31 — an 8-year range; probing a recent 1-2-year
+      slice first would be far cheaper and might be sufficient to confirm or refute the 1-cell claim without a full
+      historical walk).
