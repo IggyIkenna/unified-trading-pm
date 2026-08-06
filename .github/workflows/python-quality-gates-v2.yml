@@ -374,18 +374,28 @@ jobs:
         # pm-2): a genuinely cold `~/.cache/uv` (empty cache dir + fresh venv target) took
         # 2m07s for this repo's ~200-400 packages; the SAME sync with a warm cache dir (fresh
         # venv, cache populated from a prior run) took 9s — a ~118s/run win where it applies.
-        # It does NOT apply everywhere: repos on `self_hosted_runner_labels` run on a
-        # persistent host whose default `~/.cache/uv` already survives between jobs
-        # incidentally (actions/checkout's `clean: true` only wipes the repo checkout dir, not
-        # $HOME) — self-hosted-qg-repos.txt covers 22 of 24 Python repos today, so this step's
-        # real payoff is concentrated on whichever repos are still GitHub-hosted (ubuntu-latest)
-        # at any given time — e.g. unified-trading-library, reverted off self-hosted 2026-07-28
-        # pending host-contention headroom (see self-hosted-qg-repos.txt's own note). Left
-        # UNCONDITIONAL (runs for self-hosted legs too) rather than gated on
-        # `self_hosted_runner_labels == ''`: GH-side cache restore/save costs only a few
-        # seconds and gives a fallback if a self-hosted host is ever rebuilt/rotated, so the
-        # small always-on cost is worth not having to keep this step in sync with that list.
-        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
+        # It does NOT apply on self-hosted: those repos run on a PERSISTENT host whose
+        # `~/.cache/uv` already survives between jobs (actions/checkout's `clean: true` only
+        # wipes the repo checkout dir, not $HOME), so restoring it is pure duplication.
+        #
+        # GATED ON GITHUB-HOSTED ONLY (2026-08-06). This step was previously UNCONDITIONAL on
+        # the stated assumption that "GH-side cache restore/save costs only a few seconds".
+        # That assumption predates the self-hosted migration and was never re-measured. Real
+        # production numbers (2026-08-05/06, ci_vm_io_starvation_audit_..._2026_08_05.md Part 3a):
+        #   features-service   restore 450s   (vs 271s of actual gate work)
+        #   market-tick-data   restore 335s
+        #   execution-service  SAVE   894s -> then FAILED, saving nothing
+        # The save fails because `~/.cache/uv` is ONE SHARED 43 GB directory used by every repo
+        # concurrently, while actions/cache treats it as private: a concurrent job mutates it
+        # mid-tar and tar exits 1 ("file changed as we read it" on .cache/uv/archive-v0 — the
+        # same shared-cache race the `uv sync` retry loop below documents). A failed save means
+        # the next run misses and re-tars 43 GB for ~15 min, forever. Repo cache usage had
+        # reached 8.5 of GitHub's 10 GB cap (one 5.6 GB entry), so evictions were compounding it.
+        # On a rebuilt/rotated host `uv sync` repopulates from PyPI in 2m07s (measured above) —
+        # a one-time cost per host, versus 450-894s on every job.
+        if:
+          inputs.self_hosted_runner_labels == '' && steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT !=
+          'true'
         uses: actions/cache@v4
         with:
           path: ~/.cache/uv
