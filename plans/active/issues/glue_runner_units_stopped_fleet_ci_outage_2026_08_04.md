@@ -197,6 +197,33 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       `ldr-to-main-promote-fleet.yml`'s two prior manual dispatches had each sat queued then been auto-cancelled after
       12-15min with no runner ever attaching — the run dispatched immediately after this fix stayed
       `pending`/progressing past that same window instead of being cancelled.
+- [ ] [OPERATOR] P1. **4th recurrence, 2026-08-06 (cicd slot-4, agt-80cfec, `main_ci_red` for unified-api-contracts) —
+      worse than every prior occurrence: the ENTIRE glue/writer pool on the planning VM (`ip-172-31-5-118`) is down, not
+      just 2-4 units.** `systemctl list-units 'github-glue-runner@*' --all` shows the base unified-trading-pm pool
+      (`glue-1..5`, `writer-1..3`) all `inactive (dead)`/`disabled`; `github-glue-runner-<repo>@*` shows **0 loaded
+      units for every per-repo pool** (unified-api-contracts included) — not "stopped", never even registered/loaded on
+      this box. `setup-glue-runners.sh status` independently confirms: 0 systemd units, only token/slot-refresh timers
+      ticking. `glue-runner-crash-loop-watchdog` reports "0/0 crash-looping" every 5min (expected per the P2 todo above
+      — it only catches an ACTIVE unit crash-looping, not a fleet with nothing loaded at all, so it never paged). Same
+      access wall as every prior entry: `sudo` blocked by `no-new-privileges` in this slot's sandbox, no SSM identity
+      available to this role. **Did not attempt the infra fix** (operator-gated, same as always) — instead found +
+      shipped a real, narrower, independently-useful fix for the SPECIFIC symptom this escalation was dispatched for:
+      main's copy of unified-api-contracts' `.github/workflows/quality-gates-v2.yml` was stale, still requiring
+      `self_hosted_runner_labels: ["self-hosted","glue"]`, even though
+      `unified-trading-pm/scripts/workflow-templates/     self-hosted-qg-repos.txt` removed unified-api-contracts on
+      2026-08-05 (public repo, GitHub-hosted is unmetered) and `live-defi-rollout`'s copy already carries the correct
+      `ubuntu-latest` default — main just never got that specific promotion. Re-rolled main's copy directly (commit
+      `5acc9859`, `.github/**`-only carve-out) — confirmed GREEN afterward (run `31069093947`, all legs on
+      `ubuntu-latest`, no dependency on the dead pool at all). This is a **workaround for one repo's one symptom, not a
+      fix for the underlying outage** — every other repo still on `self-hosted-qg-repos.txt` (`agent-orchestrator`,
+      `unified-trading-pm`, `strategy-service`, `e2e-testing`, `features-service`, `market-tick-data-service`,
+      `execution-service`, `ml-service`) is still fully blocked and has no equivalent "drop to ubuntu-latest" escape
+      hatch available (private repos, billing-gated). Needs the same operator/host-root action as every prior entry: SSH
+      or SSM onto the planning VM and either `systemctl start` the existing units or re-run
+      `setup-glue-runners.sh install` per `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` if this was
+      a central-VM relaunch (that runbook's own scenario — a fresh box losing runner registration entirely — matches the
+      "0 loaded units" signature here far better than a mere `systemctl stop`, worth checking VM uptime/instance-id
+      against relaunch history first).
 
 ## Progress Log
 
@@ -264,3 +291,20 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
 - **context-scout 2026-08-06**: populated context_scope (4 entries). Note: the P2 todo's "Repo: agent-orchestrator
   (deployment/monitoring)" pointer is STALE — the actual glue-runner-crash-loop-watchdog lives in THIS repo
   (`scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh`), not agent-orchestrator; no such path exists there.
+- **2026-08-06 (cicd slot-4, agt-80cfec, `main_ci_red` escalation for unified-api-contracts)** — Dispatched to fix
+  `quality-gates-v2` RED on unified-api-contracts' main. Diagnosis: main's most recent push-triggered run had a `tests`
+  leg that sat 38min mid-run then got force-cancelled (`##[error]The operation was canceled.`) — not a code failure (the
+  `checks` leg had already passed clean). Re-triggering via `workflow_dispatch` reproduced worse: both `tests` and
+  `checks` legs sat `queued` with `runner_name: ""` for 20+ minutes, never claimed by anything. Traced to this doc's
+  exact outage class, but at full-fleet scale this time (see the new `[OPERATOR] P1` todo above for the systemctl/
+  setup-glue-runners.sh evidence — 0 loaded runner units anywhere, not just 2-4 stopped ones). Could not self-serve the
+  infra fix (same `no-new-privileges`/no-SSM wall as every prior entry in this doc). Shipped a scoped, independently-
+  correct workaround instead: main's `.github/workflows/quality-gates-v2.yml` was stale (still pinned to
+  `self_hosted_runner_labels: ["self-hosted","glue"]` from before unified-api-contracts was removed from
+  `self-hosted-qg-repos.txt` on 2026-08-05), so re-rolled it to match `live-defi-rollout`'s already-correct
+  `ubuntu-latest` copy (commit `5acc9859`, direct push to main under the `.github/**`-unblock-the-pipeline carve-out).
+  Confirmed GREEN: run `31069093947` completed successfully entirely on GitHub-hosted runners. Cancelled the
+  now-permanently-stuck `workflow_dispatch` run `31067911291` first so it didn't linger queued forever. This closes MY
+  wall (`quality-gates-v2` on unified-api-contracts main) but does **not** touch the underlying pool outage — added a
+  fresh `[OPERATOR] P1` todo above since this doc's `status: open` correctly reflects that the root cause is back again,
+  now at a larger blast radius than any prior entry.
