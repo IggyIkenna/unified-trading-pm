@@ -221,12 +221,29 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       rebuild would silently lose it.
 - [ ] [DATA] P3. Investigate the 2026-08-02 ~11:34 UTC 58-way simultaneous `timeout` cluster (see "Corrected an earlier
       claim" above) if it recurs — not investigated this session, out of window.
-- [ ] [SCRIPT] P2. Root-cause the 2026-08-04 14:01:32-14:02:35 mass session-death: 5+ tmux sessions lost in two waves
-      (slots 4/8 then 1/5/9), archiving 3 one_shot/scheduled agents simultaneously (`agt-d4a899`, `agt-8b3403`,
-      `agt-de0d1e` [cicd], plus `agt-99f380` [review]) ~21min after the github.slice fix was applied. journald for 08-04
-      is gone (storage reset 08-06 00:45) so the exact trigger (orchestrator.service restart? cgroup/host event?) is
-      unverified — check systemd restart history, the ao-self-pull/deploy path, and the ~32-min gap before AutoSpawn
-      respawned (14:33). (repo: agent-orchestrator)
+- [x] ✅ [SCRIPT] P2. Root-cause the 2026-08-04 14:01:32-14:02:35 "mass session-death" — NOT a discrete incident: host
+      never rebooted (`last -x reboot`: up since 07-29, no 08-04 boot); `tmux_session_lost` fires 500-750×/day on every
+      day (589 on 08-04, 752 on 08-03, 463 on 08-02, 309 on 08-05, all 16 slots) so the 5 events are routine churn, not
+      a host/service teardown. Orchestrator restarted 14:00:05 via ao-self-pull (ao-self-pull.log
+      `running process     predates HEAD — restarting stale process`; syslog stop 14:00:05.97 → shutdown snapshot
+      14:00:11-18 → startup 14:00:23-26); KillMode=process preserved the tmux server (systemd "left-over process 3191830
+      (tmux: server) ... Ignoring" at 14:00:18 — SAME PID as the 13:45 restart, so no cgroup/server teardown). The 5
+      dead sessions were one-shot/scheduled/review agents dispatched 13:46-13:52 (na_eligibility slots 8/9, cicd slots
+      4/5, review slot 1), alive at the last pre-restart pruner tick (~13:59) and gone by the first post-restart tick
+      (14:01:32/14:02:35); no kill_session / watchdog-reclaim / respawn in the gap — the killer is not captured in any
+      surviving log (journald reset 08-06 00:45). Pattern = the KNOWN collision class
+      `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01` (resolved 08-02 via
+      agent-orchestrator@0c82906, which excluded ONLY review slots from transient picks — the 08-04 deaths hit the
+      escalation/auditor slots 4/5/8/9 that fix does NOT cover, plus review slot 1 it should have protected). REAL
+      issue: the 3 post-fix audit tranches (agt-d4a899 13:51→14:01:31, agt-8b3403 13:52→14:01:31, agt-7322c2 13:50→
+      14:27:08) ALL died reaped-stale with empty last_msg / no /done — item 2's "3-of-3" was a false positive — but NOT
+      one clustered incident (two restart-coincident at 14:01:31, one decoupled at 14:27:08, slot 7 survived the wave).
+      The 14:33 respawn gap = next backlog dispatch to slot 8, not a recovery failure (plan_health dispatches are
+      one-shot; AutoSpawn respawns tasks, not idle sessions). Evidence: state.db activity_log (`tmux_session_lost`,
+      `plan_health_dispatch_initiated`, `spawned tmux session`) + agents rows + /var/log/syslog (systemd stop/start +
+      left-over-process lines) + /var/log/ao-self-pull.log + /var/log/wtmp. No code change warranted — the premise was
+      incorrect; the real gaps (incomplete collision fix, observability) are tracked as follow-up todos below. (repo:
+      agent-orchestrator)
 - [ ] [SCRIPT] P2. Investigate the 2026-08-05 full-day `no_capacity` for ALL scheduled auditors: every
       na_eligibility/ag_closeout/plan_reconciler/docs_reconciler run hit no_capacity (0 dispatched all day), plus the
       01:45 na_eligibility batch TIMED OUT at 04:00 (~2h15m) — scheduled audits effectively did not run on 08-05.
@@ -236,8 +253,31 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (04:31 `agt-b334ff` ~37min, 06:31 `agt-121905` ~35min — no `tmux_session_lost` event in the archival window, so
       the sessionless-silent path) while siblings in the same batches completed. Determine mid-run death vs post-work
       /done failure. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P3. Extend the 08-01 session-collision fix (agent-orchestrator@0c82906 excluded ONLY review slots from
+      `plan_health._pick_free_slot` / `escalation._pick_free_slot`) to the escalation/auditor slots: the 08-04 deaths of
+      freshly-dispatched cicd (slots 4/5) + na_eligibility (slots 8/9) agents' sessions around the 14:00 ao-self-pull
+      restart show the same collision class hits non-review slots, and review slot 1 still died despite the fix —
+      determine the exact killer (no surviving log captured it) before extending. (repo: agent-orchestrator)
+- [ ] [DATA] P3. Observability gap surfaced by the root-cause: the exact process that kills per-slot tmux sessions
+      around orchestrator restarts is invisible — no `kill_session` call, watchdog reclaim, or systemd signal is logged,
+      only the pruner's later `has_session()` detection (which fired 589× on 08-04). Instrument the session-teardown
+      paths so a future recurrence is attributable from journalctl/syslog alone. (repo: agent-orchestrator)
 
 ## Progress Log
+
+- **worker slot-8 2026-08-06 (root-cause todo 6, agt-062e64)**: root-caused the 14:01:32-14:02:35 "mass session-death".
+  VERDICT: not a discrete host/service teardown — host never rebooted (wtmp), and `tmux_session_lost` is routine churn
+  (589/day 08-04, 463-752/day adjacent, all 16 slots). The deaths were 5 one-shot/scheduled/review agent sessions
+  (na_eligibility slots 8/9, cicd slots 4/5, review slot 1) dispatched 13:46-13:52, alive at ~13:59, gone by the first
+  pruner tick after the 14:00:05 ao-self-pull orchestrator restart. KillMode=process preserved the tmux server (same PID
+  3191830 across the 13:45 and 14:00 restarts, systemd left-over messages) — the sessions were individually killed by an
+  unlogged mechanism matching the RESOLVED-08-02 collision class
+  `persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch` (whose fix 0c82906 only excluded review
+  slots). REAL problem: the 3 post-fix audit tranches (agt-d4a899, agt-8b3403, agt-7322c2) all ended reaped-stale with
+  no /done — item 2's "3-of-3" was a false positive — but they did NOT die as one cluster (two at 14:01:31
+  restart-coincident, one at 14:27:08 decoupled; slot 7 survived the wave). The 14:33 respawn was the next backlog
+  dispatch, not a recovery failure. No code change warranted; follow-up todos added for the incomplete collision fix
+  (escalation/auditor slots unprotected) + the observability gap (killer invisible in all surviving logs).
 
 - **worker slot-8 2026-08-06**: checked the 3 redispatched tranches — all `reaped-stale` (NOT `lifecycle-complete`). The
   two na_eligibility tranches (`agt-d4a899`/`agt-8b3403`) died in a mass simultaneous session-loss at 14:01:32-14:02:35
