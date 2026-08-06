@@ -707,3 +707,17 @@ are genuinely in scope for the operator's "no exceptions" directive.
   touched anything — unstaged via `git restore --staged`, left untouched on disk, not mine.** Grand total 64,074
   (core 4) + 83,006 (FIXTURE_STATS+LINEUPS) — both entirely from the pre-pause progress; PLAYER_STATS (998) and INJURIES
   (62,709) unchanged, still queued.
+- **2026-08-06T23:46Z — Quota-reset probe: still exhausted, but pinned down the likely reset boundary.** Launched a
+  fresh `af-backfill-20260807-003828` scoped `--entity PLAYER_STATS 2020-06-06 2026-08-07` as a cheap probe (the
+  launcher took several minutes — it auto-republished a stale `instruments-service` code tarball first, picking up the
+  SFI_LEAGUES fix). Its log confirmed the SAME `'You have reached the request limit for the day'` error, still
+  `recovery=fail_fast`. **Key finding: the log's own timestamps are UTC and read `2026-08-06T23:45-23:46Z`** — i.e. the
+  quota was still exhausted only ~15 minutes before UTC midnight, strongly suggesting API-Football resets on a
+  UTC-midnight daily cycle (typical for the api-sports.io family, now empirically supported rather than assumed).
+  Deleted this second probe VM immediately once the still-exhausted result was confirmed (same billing-waste reasoning
+  as the FIXTURE_STATS VM earlier — no point burning compute against a wall that won't move for another ~15+ min).
+  Re-census confirms all numbers flat vs the last tick (as expected, nothing changed): PLAYER_STATS 998, INJURIES
+  62,709, STANDINGS 271, TEAMS 96, FIXTURE_STATS 24,462, FIXTURE_LINEUPS 58,523. Grand total unchanged at 64,074
+  (core 4) + 82,985 (FIXTURE_STATS+LINEUPS). **Decision: wait well past the inferred UTC-midnight reset before the next
+  probe** — re-arming for ~45 min out rather than retrying immediately, to avoid a third wasted probe VM right at the
+  boundary.
