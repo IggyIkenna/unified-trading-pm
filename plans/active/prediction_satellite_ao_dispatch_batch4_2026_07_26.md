@@ -704,3 +704,30 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   re-scavenging the checkpoint (already durably merged at the GCS path above). Released via
   `/skip-current-task {"reason_code": "GATED"}`. **For the next resumer**: same as the prior entries — check
   `-001`/`-006` status fresh before assuming the block persists.
+- **2026-08-06 (slot 4, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)** — resumed the
+  4b-i migration. **Blocker CLEARED**: cron `uts-prod-manifest-consolidator-market-data-prediction-cron` is now
+  `ENABLED` (since 2026-08-03T17:51Z; live-verified healthy, last cycle 00:14Z today); sibling
+  `mtds_available_at_cross_asset_backfill-006`/`-005`/`-008` all `done`. **BUT a material environment change**: the
+  sibling plan's `rebuild_prediction_manifest.py` rebuild REPLACED the prediction `_index` — it no longer carries ANY
+  `data_type=prediction_trades` rows (current data_types: `trades` 1.39M, `book_snapshot_5` 1.17M,
+  `prediction_canonical_question_group` 89.5k, `market_lifecycle` 2.3k). The migration script's `_dates_from_manifest()`
+  therefore returns 0 dates → the shipped script can no longer drive itself. **Adapted** via a scratchpad driver
+  (throwaway, NOT committed) that reuses the shipped `process_day()` unchanged (all its safety: Part 1/2 content-verify,
+  additive-only enrichment, readback verify, delete gated on all_cells_enriched + fresh soft-delete retention) but feeds
+  the 348-date legacy set explicitly (from the 4b-ii enumeration `_ops/shape4_corpus_enumeration_2026_08_04.jsonl`).
+  **Ground-truth scan (python list_blobs, NOT gsutil ls — gsutil is non-recursive and undercounts the nested
+  `chain=POLYGON/.../prediction_trades/` tree)**: of the 348 legacy dates, **75 are legacy-absent**
+  (2025-03-14..2025-04-18 + 2025-06-06..2025-06-12 + 2025-06-14..2025-07-09 + 2025-07-11..2025-07-16; all in-checkpoint
+  = already enriched, legacy already deleted undocumented) and **273 still carry legacy `prediction_trades` objects**
+  (224 enriched-per-checkpoint + 49 not-in-checkpoint [2026-02-25..2026-04-14], whose canonical twins are ALREADY
+  enriched — sampled `title`/`slug`/`eventSlug` present). **The delete pass has effectively never run** (checkpoint
+  records 0 deletes) — the remaining work is the delete pass over the 273 legacy-present days. Soft-delete retention
+  re-verified FRESH this run: `604800`s (7 days) — reversibility-qualified, no `[OPERATOR]` gate needed. **Launched**
+  `run_4bi_delete.py --apply --delete-legacy` over the 273 days (00:40Z, harness-tracked `run_in_background` + a
+  self-heartbeating `4bi_watchdog.sh` posting /progress every 5 min — the documented
+  orphan_reap/WorkerLivenessWatchdog-avoidance pattern from this doc's own history), memory capped via
+  `run-bounded-analysis.sh --mem-cap 12G`. **Note for future resumers**: the durable merged checkpoint at
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`
+  is still valid for the 299 enriched days, but the migration now runs via the driver + a fresh run-report
+  (`prediction_trades_migration_report_run.jsonl`) since the script's manifest date-source is gone. See next entry for
+  the outcome.
