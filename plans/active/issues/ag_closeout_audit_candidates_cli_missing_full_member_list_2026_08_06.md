@@ -28,8 +28,8 @@ created: "2026-08-06"
 author: slot-3 (ag_closeout_auditor, tradfi tranche, dispatch agt-7d91ed)
 last_updated: "2026-08-06"
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 0.1
@@ -96,3 +96,12 @@ that already parses this CLI's output today would break. A future `ag_closeout_a
       `--tranche <any> --json` includes a `candidates` array matching what `main()` already computes in memory, the
       existing `covering_paths`/`total_members`/`never_cited`/`cited_somewhere_count` keys are unchanged, and
       `quality-gates.sh` is green.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-06**: RECLASSIFY, conflict-cleared — bounded/deterministic (purely-additive JSON key,
+  fully-specified done-when); flipped `assigned_vm: NA -> planning`,
+  `execution_scope: local-only -> orchestrator-agent`. Conflict-check clear: no active `assigned_vm: planning` doc in
+  `parent_epic: plan_hygiene_master`, no sibling candidate drafted this run, and
+  `cross_cutting_consolidated_closeout_2026_07_25.md` carries no competing claim. `assigned_role: data_engineering`
+  (already correctly set at filing) left unchanged.

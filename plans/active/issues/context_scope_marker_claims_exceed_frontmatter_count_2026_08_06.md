@@ -41,8 +41,8 @@ created: 2026-08-06
 author: context_scout_auditor (dispatch agt-23f116, slot 4)
 last_updated: 2026-08-06
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1.0
@@ -163,3 +163,11 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
   run's Phase 2 apply (see `related:` for the exact restored entries); `data_completion_defi_2026_07_15.md` left open
   pending a human line-cap trim, since no safe edit path existed within this run's mandate (context_scope + marker only,
   never body content).
+- **na-eligibility-audit 2026-08-06**: RECLASSIFY, conflict-cleared — all 3 todos bounded/deterministic (each with an
+  explicit done-when, todo 3 pre-specifying both acceptable resolutions); flipped `assigned_vm: NA -> planning`,
+  `execution_scope: local-only -> orchestrator-agent`. Conflict-check clear: the 3 active `assigned_vm: planning` docs
+  in `parent_epic: plan_hygiene_master` use `context_scope` normally (not an instance of this bug) or fix a disjoint
+  code path (`na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`'s CHECKBOX_RE bug —
+  confirmed `generate_context_scope_inventory.py` has no checkbox-counting logic at all); no sibling candidate or
+  cross_cutting_consolidated_closeout overlap either. `assigned_role: data_engineering` (already correctly set at
+  filing) left unchanged.
