@@ -61,8 +61,9 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
   ]
@@ -190,3 +191,6 @@ itself). 5 `exclude_cross_cutting` flagged above with one-line reasoning (durabl
   still open). Ran 2 parallel Phase-1 `Workflow` dispatches (12 + 7 agents, 0 errors) covering all 19 candidates.
   Extracted 3 conflict-clear AO-eligible items into `cefi_satellite_ao_dispatch_batch8_2026_08_06.md` + finalize twin
   (both `status: draft`). **Ledger**: 2 new parked findings, 2 entries written above — balanced.
+- **context-scout 2026-08-06**: populated/refreshed context_scope (5 entries) — added the sibling
+  `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` issue this same run filed (New finding 2 above),
+  previously only in `related:`.

@@ -38,18 +38,12 @@ locked_by:
 locked_since:
 context_scope:
   [
-    agent-orchestrator/server/accounts.py,
     agent-orchestrator/server/autospawn.py,
-    agent-orchestrator/server/deepseek_usage.py,
-    agent-orchestrator/server/deepseek_usage_poller.py,
-    agent-orchestrator/server/routes/backlog.py,
-    agent-orchestrator/server/models/accounts.py,
-    agent-orchestrator/server/models/backlog.py,
-    agent-orchestrator/server/state_store/slots.py,
     agent-orchestrator/dashboard/src/TaskUsageWindows.tsx,
-    agent-orchestrator/dashboard/src/layout.tsx,
-    agent-orchestrator/scripts/orchestrator/repair_unpriced_deepseek_spend.py,
+    agent-orchestrator/server/routes/backlog.py,
+    agent-orchestrator/server/deepseek_usage.py,
     /codex/06-coding-standards/model-tier-selection.md,
+    /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 supersedes:
 superseded_by:
@@ -308,6 +302,12 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   `sudo -u ubuntu` wrapper (needs root, not the ubuntu user) — retried as root directly, confirmed `HEAD=fff23c5` +
   `systemctl is-active`→`active`. Repair script `--apply` run immediately after; result being verified now — see the
   next Progress Log entry (or this plan's Deferred table if not yet closed out) for the actual post-apply row counts.
+- **context-scout 2026-08-06**: trimmed context_scope from 12 to 6 entries (was over the 2-6 MVI budget) — dropped
+  `server/accounts.py`/`deepseek_usage_poller.py`/`models/accounts.py`/`models/backlog.py`/`state_store/slots.py`/
+  `dashboard/src/layout.tsx` (already-shipped-work surfaces, one-hop-reachable from kept files) and
+  `scripts/orchestrator/repair_unpriced_deepseek_spend.py` (**confirmed deleted from disk** per todo 16 — was a stale
+  dead reference); added `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` (already self-cited
+  twice in this doc's own Codex SSOTs/related but missing from context_scope).
 
 ## Deferred work after 2026-08-05
 

@@ -77,21 +77,12 @@ drift_direction: advance-code
 depends_on:
 context_scope:
   [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
     unified-trading-pm/.github/workflows/python-quality-gates-v2.yml,
-    unified-trading-pm/.github/workflows/quality-gates-v2.yml,
-    unified-trading-pm/.github/workflows/notify-slack.yml,
-    unified-trading-pm/.github/workflows/image-build-validate.yml,
-    unified-trading-pm/.github/actions/setup-python-tools/action.yml,
-    unified-trading-pm/.github/actions/setup-agent-tools/action.yml,
-    unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh,
-    unified-trading-pm/scripts/workflow-templates/quality-gates-v2.yml.tmpl,
-    unified-trading-pm/scripts/workflow-templates/image-build-gate.yml,
     unified-trading-pm/workspace-manifest.json,
     unified-trading-pm/scripts/dev/setup-tab-worktrees.sh,
-    unified-trading-pm/cursor-configs/unified-trading-system-repos.code-workspace,
-    unified-trading-pm/cursor-configs/workspace-complete.code-workspace,
-    unified-trading-pm/cursor-configs/workspace-infrastructure.code-workspace,
-    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
   ]
 source:
   [
@@ -337,3 +328,8 @@ here only for todo-count sanity, not for skipping per-repo verification.
   visibility-agnostic, the branch-pin inconsistency, the `image-build-gate.yml` propagation gap, and the measured-churn
   migration order) done via direct file reads before writing a single todo — see "Confirmed technical facts" above for
   the evidence trail. No phase executed yet beyond authoring; Phase 1 is the next step.
+- **context-scout 2026-08-06**: first scout pass (prior 15-entry list was author-seeded at plan creation, never had a
+  dated marker) — trimmed to 6 entries (2 codex SSOTs already named in the doc's own "Codex SSOTs" section, the
+  incident-predecessor plan, the single largest reusable-workflow artifact, and Phase 2's two edit targets). The 9 cut
+  entries (4 more extraction-scope workflow/action files, 2 templates, 3 cursor-configs JSONs) are each already fully
+  named with path + role directly in this doc's own prose — kept reachable via body text, not context_scope, per MVI.

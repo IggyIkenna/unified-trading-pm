@@ -151,3 +151,7 @@ pre-compact ritual's "chat-only findings must not survive only in chat" rule, si
 deliverable. Not yet triaged into genuinely-new-vs-pre-existing (Todo 1) — flagging for whichever tranche
 worker/operator picks this up next; cross-cutting (36/87) and ao (14/87) carry the largest shares and may want to own
 the triage given their concentration.
+
+- **context-scout 2026-08-06**: re-verified context_scope, no change needed (4 entries) — the script under
+  investigation, the exact baseline data file the fix-todos update, the producing skill, and the directly-referenced
+  prior sibling bug in the same script remain the minimal correct set.

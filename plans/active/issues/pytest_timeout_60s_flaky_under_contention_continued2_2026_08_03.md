@@ -76,7 +76,9 @@ source:
   agt-c6ccfb (WALL_TYPE=main_ci_red, REPO=features-service, slot 7) — merged, concurrent splits of the same parent doc"
 context_scope:
   [
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
@@ -387,6 +389,8 @@ repeated here.
   (`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`), which this doc's own body explicitly instructs readers to
   consult ("Read the parent (and its own parent, ...) for the full bug-class history; not repeated here") but which the
   prior context_scope omitted.
+- **context-scout 2026-08-06**: restored the grandparent doc + added `continued3` (this doc's own successor since 08-04)
+  -- both silently missing despite the 08-03 marker above. 5 entries.
 
 - **2026-08-03 ~16:46-17:05Z (`cicd` escalation `agt-7bcb7c`, slot 12, `deployment-service`, `wall_type=main_ci_red`,
   `pr_number=0`) — yet another same-day re-dispatch of this repo's identical wall (now the 4th deployment-service entry

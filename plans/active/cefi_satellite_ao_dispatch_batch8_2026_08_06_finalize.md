@@ -47,6 +47,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -106,3 +107,9 @@ context_scope:
 
 - `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual this plan's todo 3
   executes.
+
+## Progress Log
+
+- **context-scout 2026-08-06**: populated/refreshed context_scope (4 entries) — added the batch7 finalize sibling
+  (immediate precedent in the finalize-pattern chain); `_finalize` gate doc, no source-code paths per the skip-source
+  carve-out.
