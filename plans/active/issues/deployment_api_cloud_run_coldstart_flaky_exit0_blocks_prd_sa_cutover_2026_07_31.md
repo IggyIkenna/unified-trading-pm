@@ -240,14 +240,47 @@ this service relative to its documented, measured requirement.
   note only. (repo: deployment-service, deployment-api)
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **2026-08-06 (slot-8, infra, dispatched `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover-003`)**
+  — Resolved the P1 follow-up with live evidence, no code-guessing. Live state (project central-element-323112): traffic
+  100% on latestReady `00451-r8k`; **zero** `Uncaught signal: 6` / `Container called exit(0)` /
+  `STARTUP TCP probe failed` since `00428-tbl@2026-08-04T09:27Z` (3+ days), and 200 fresh-cold-start probe successes : 0
+  failures across 2026-08-05..06 — the SIGABRT and cold-start `exit(0)` both stopped after the 08-04 forced cutover, and
+  automatic deploys now reach traffic (the manual `update-traffic` workaround is no longer needed). The STILL-LIVE
+  incident is the OOM/SIGKILL family: 19 `Container terminated on signal 9` in 2 days at 0.3-3.8% over the 16384 MiB
+  ceiling. The `130c3a2` memory-profile instrumentation (live since 08-04) finally delivered the attribution the whole
+  investigation had been waiting for: `repo_ci.get_overview` peaks 0.36-2.9 GiB/call (e.g. 2913756/2764952/1069556 kib
+  deltas on `00430-dcr`) and `health_overview.get_health_overview` ~2.6 GiB (2696420 kib on `00441-5mv`); the
+  08-06T16:49:08Z `repo_ci` profile (366884 kib) landed 21s before that revision OOM-killed. Neither handler had a
+  cross-request guard. Shipped `deployment-api@59fc391`: shared `utils/cockpit_build_guard.py`
+  (asyncio.Semaphore(1)/worker + `_COCKPIT_MAX_INFLIGHT=3` inflight shed → 503 + Retry-After, mirroring
+  `_deploy_turbo`'s drilldown guard and `ec1f635`'s catalogue-lifecycle pattern) wired into `repo_ci.get_overview` +
+  `health_overview.get_health_overview`. 4 new guard unit tests + 1 route-level 503 shed test; `quality-gates.sh` PASSED
+  (97s, sentinel `59fc391`); verified on origin via `merge-base --is-ancestor`. Honest scoping: the guard bounds
+  concurrent multi-GiB builds (the measured OOM trigger) but does NOT shrink the single-call peak — the per-call
+  footprint reduction is tracked as a fresh `[BACKEND] P2` follow-up in
+  `deployment_api_sigabrt_crash_loop_2026_07_24.md`. (repo: deployment-api, deployment-service)
 
 ## Follow-ups
 
-- [ ] [INFRA] P1. Resolve the deployment-api Cloud Run SIGABRT root cause + cold-start exit(0)
-      still-reproduces-on-automatic-deploys (manual update-traffic workaround only) — root-cause investigation is the
-      right owner; must not be archived while unresolved.
+- [x] ✅ [INFRA] P1. **DONE 2026-08-06 (slot-8, infra)** — SIGABRT + cold-start `exit(0)` no longer reproduce
+      (live-verified: zero `Uncaught signal: 6` / `Container called exit(0)` / `STARTUP TCP probe failed` since
+      `00428-tbl@2026-08-04T09:27Z`; 200 fresh cold-start probe successes : 0 failures across 2026-08-05..06, traffic
+      100% on latestReady `00451-r8k` — automatic deploys now reach traffic). The still-live failure is the OOM/SIGKILL
+      family (19 `Container terminated on signal 9` kills in 2 days at 0.3-3.8% over the 16384 MiB ceiling), now
+      definitively attributed via the live `130c3a2` memory-profile instrumentation to `repo_ci.get_overview` (0.36-2.9
+      GiB/call) + `health_overview.get_health_overview` (~2.6 GiB) — neither cross-request-guarded. Shipped
+      `deployment-api@59fc391`: shared `utils/cockpit_build_guard.py` (asyncio.Semaphore(1)/worker + inflight shed →
+      503 + Retry-After, mirroring `_deploy_turbo`'s drilldown guard) wired into both handlers. QG green (97s, sentinel
+      `59fc391`), verified on origin. Per-call multi-GiB footprint reduction is tracked in the SIGABRT doc as a fresh
+      follow-up (the guard bounds stacking but does not shrink the single-call peak). (repo: deployment-api)
 
 > **2026-08-06 archive-candidate audit**: Live unresolved incident: the SIGABRT root cause 'remains unresolved' and the
 > cold-start exit(0) bug 'still reproduces on automatic deploys' (only a manual update-traffic workaround exists; P3 was
 > a forced/operator cutover, not a clean resolution) — the doc itself warns its root-cause investigation remains the
 > right owner and must not be archived. [KEEP_OPEN todo synthesized from justification by archive sweep]
+>
+> **2026-08-06 RESOLUTION (slot-8, infra)**: the KEEP_OPEN todo above was flipped to done the same day with live
+> evidence — see the Follow-ups checkbox above (SIGABRT/cold-start quiet since 08-04; the still-live OOM/SIGKILL family
+> attributed via the `130c3a2` memory-profile lines and mitigated with the shared cockpit-build guard,
+> `deployment-api@59fc391`). The surviving per-call memory-footprint work lives in
+> `deployment_api_sigabrt_crash_loop_2026_07_24.md`.
