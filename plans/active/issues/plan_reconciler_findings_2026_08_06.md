@@ -32,6 +32,53 @@ last_updated: 2026-08-06
 
 Slot 2, branch `plan_reconciler/agt-4fdce1`. This doc is the run journal — appended to as the pass progresses.
 
+## Todos
+
+- [ ] [DOCS] P1. **Fix the recurring finalize-twin `status: active` (frontmatter) vs `` `status: draft` `` (body banner)
+      bug** — confirmed in ≥8 docs this run (`bucket_iam_write_protection_per_tier_..._finalize_2026_07_27.md`,
+      `data_completion_cefi_2026_07_15_finalize_2026_07_27.md`,
+      `defi_pipeline_e2e_and_coverage_validation_..._finalize_2026_07_27.md`,
+      `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`,
+      `tradfi_manifest_content_recovery_completion_..._finalize_2026_07_27.md`,
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`,
+      `codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md`,
+      `data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md` — likely more, not exhaustively grepped).
+      Mechanical: `grep -rn 'STATUS.*draft.*NOT dispatched' plans/active/*.md`, cross-check each hit's own frontmatter
+      `status:`, fix whichever side is wrong (usually the stale body banner once the doc is genuinely dispatched).
+- [ ] [DATA] P1. **Live-verify `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` actually parses as
+      `planning`** (batch7 found it parses blank due to an unusual multi-line YAML comment form) — check against the
+      real backlog regen output, not just the doc text.
+- [ ] [DOCS] P0. **Correct `sports_satellite_ao_dispatch_batch5_2026_07_26.md` + its finalize twin** — both assert "no
+      operator ruling found on live sports-odds ingestion," but
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md` todo 1 shows an explicit RULED-YES
+      (2026-07-28) + a shipped connector. Stop re-asking an answered question; re-scope batch5's todo 1 off the real
+      current blocker (the launcher exec-dispatch wiring, per that same live-mode-readiness doc).
+- [ ] [VERIFY] P1. **Determine whether `gate_on_depends` is actually reliable now** —
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md` found it did NOT hold (dispatched at 3/14 done);
+      `prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` (days later) assumes it does and skips the
+      `status: draft` safety net on that assumption. If the underlying bug isn't fixed, batch7-finalize's own todos are
+      exposed to premature dispatch.
+- [ ] [DOCS] P2. **`defi_master.md` epic hub**: "2 DeFi perp DEXs live: Hyperliquid + Aster" is stale (both reclassified
+      pure-CEFI 2026-06-21, re-verified live 2026-08-02 per
+      `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`) — needs an edit to the epic's narrative
+      Scope section (outside this run's auto-fix scope, which only touched the derived roster section).
+- [ ] [DOCS] P2. **Add a correction banner to
+      `plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`** pointing at
+      `mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md` — its "all done" claim rests on
+      a static dry-parse check; the successor doc's live GCE pilots found the exec-dispatch 100% broken in production.
+- [ ] [DOCS] P3. **Fix `unified-trading-pm/agents/plan_reconciler.md`'s own drift**: STEP 6b's ping-ledger-append target
+      files are retired (2026-07-04, "do NOT append pings here"); STEP 7/8's `curl` snippets use `/api/plan_health/...`
+      (underscore), the live server only serves `/api/plan-health/...` (hyphen).
+- [ ] [SKILL] P2. **Run `/ag-closeout-audit`** across the tranches that grew this run's linkage-orphan count (69→83
+      baseline; cross-cutting, ao, infrastructure, cefi most likely per prior baseline notes).
+- [ ] [SKILL] P2. **Run `/na-eligibility-audit`** — `assigned_vm:NA` corpus grew past baseline (359→376 docs, 1295→1317
+      todos) this run; not hand-triaged (out of plan_reconciler's scope by design).
+- [ ] [ADMIN] P1. **Resume STEP 8 of this dispatch (agt-4fdce1)**: check `GET /api/slots/2/messages` for answers to
+      `BLK-136e69bf` (sports_rebuild_delta_la_liga2 data-correctness), `BLK-0e7e0794` (upbit 72-day data gap),
+      `BLK-5eeacb63` (duplicate finalize-plan race) — apply per plan_reconciler.md STEP 8, then POST `/done`. Session
+      was interrupted for a context-compaction checkpoint before any answer arrived (0 messages as of 2026-08-06 ~00:56
+      UTC); this was NOT abandoned, it's a resume point.
+
 ## Run context
 
 - Now: 2026-08-06 00:09 UTC. Grace cutoff (12h): 2026-08-05 12:09 UTC.
@@ -195,3 +242,57 @@ plan_reconciler judgment, documented per-doc above); no candidate was found to b
 - 3 of 5 P0s (batch3 `assigned_vm` blank-parse bug, sports live-mode-ruling re-ask, predictions gate_on_depends
   reliability) need either a live mechanism check or a doc correction beyond this run's remaining budget — routed via
   Filed above, not blocked-alerted (judged non-data-correctness, lower urgency than the 3 that were alerted).
+
+## Deferred work after 2026-08-06
+
+| Item                                                              | State / why deferred                                                                     | Blocked on                                                              |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **STEP 8 resume** (apply answers to 3 blocked questions, `/done`) | Cannot be done yet — waiting on operator dashboard response; 0 answers as of session-end | Operator-owned                                                          |
+| Fix ≥8-instance finalize-twin `status:active`/`draft` banner bug  | Not done — mechanical grep-and-fix, bounded, ready to pick up                            | Nobody — real work                                                      |
+| `infra_satellite_ao_dispatch_batch3` assigned_vm live-parse check | Not done — needs a live backlog-regen check, not a doc read                              | Nobody — real work                                                      |
+| `sports_satellite_ao_dispatch_batch5` re-asks an answered ruling  | Not done — doc correction, bounded                                                       | Nobody — real work                                                      |
+| `gate_on_depends` reliability (predictions batch6/7)              | Not done — needs a live AO-mechanism investigation                                       | Nobody — real work, but investigate before assuming either doc is right |
+| `defi_master.md` Hyperliquid+Aster stale claim                    | Not done — epic narrative edit, outside auto-fix scope                                   | Nobody — real work (low risk, low urgency)                              |
+| `mdps_features_live_launcher_exec_dispatch` correction banner     | Not done — small, bounded edit                                                           | Nobody — real work                                                      |
+| `/ag-closeout-audit` re-run (linkage regression)                  | Not done — this run only measured + routed, didn't run the skill                         | Nobody — a skill invocation                                             |
+| `/na-eligibility-audit` re-run (NA-corpus regression)             | Not done — same, routed not run                                                          | Nobody — a skill invocation                                             |
+| 46 P1-P3 contradictions not individually fixed                    | Not done — detected + categorized, not all individually resolved (volume)                | Nobody — triage backlog, see Contradictions table                       |
+
+**Recommended next item**: STEP 8 resume is queue-position-1 the moment an answer arrives (it's this exact dispatch's
+own unfinished obligation). Absent that, the finalize-twin banner-bug sweep is the highest-leverage next pick — one
+bounded mechanical pass closes ≥8 P1s at once, same shape as this run's epic-roster regen.
+
+## Lessons (this run)
+
+- **`git status --short | grep '^R'` to parse a rename mapping is fragile** — a file with BOTH a content edit and a
+  rename shows as `RM` (not `R `), which a `sed 's/^R  //'` pattern silently fails to strip, corrupting that one mapping
+  (contaminated it with a literal `RM ` prefix that never matched anything, so that file's referrer-fix silently
+  no-opped). Caught by a follow-up corpus-wide re-scan, not by the original loop. Next time: parse `git status --short`
+  per-file via `git diff --name-status -M` instead (gives clean `R100<TAB>old<TAB>new` triples, no combined-status
+  ambiguity).
+- **A single large commit (66 files) reliably triggered a prettier-autostage hook race**
+  (`fatal: Unable to create index.lock`, seen 3x) that a run of 3 smaller commits (~22 files each) did not. No proof of
+  the exact mechanism (parallel per-file prettier invocations racing for the lock is the leading theory), but the
+  empirical fix (split into ~20-file batches) was reliable. Worth remembering for any future large-batch commit in this
+  repo.
+- **Prettier's own proseWrap reflow is non-idempotent on `<details>`-wrapped paragraphs** (already a tracked, ratcheted
+  corpus issue — `prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md`) — running `npx prettier --write` on
+  a file containing this pattern can silently re-indent unrelated paragraphs elsewhere in the same file. Isolate real
+  content edits from this noise before committing: `git checkout --` then re-apply just the `sed` substitution without a
+  follow-up explicit prettier call (the commit hook's own auto-prettier still runs, but doesn't reintroduce the same
+  churn on an already-settled file).
+- **The archival step's blast radius is bigger than `validate_plan_links.py` catches.** That validator only checks
+  clickable markdown-link syntax; `check_reference_paths.py`'s existence check also catches bare full-path mentions in
+  `related:` frontmatter and prose (e.g. `` `/plans/active/issues/foo.md` `` inside backticks with no `[text](...)`
+  wrapper). Archiving N docs needs BOTH checks run before considering referrer-fixing done — the first pass this run
+  used only the former and shipped a real regression (103→163 dangling refs) that a second pass caught and mostly fixed
+  (→117, residual is grace-protected files).
+- **An issue doc's own "What I found" / routed-action bullets can name work for a FUTURE reconciler run** (the
+  `instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md` case: 2 bullets explicitly said "Requires
+  plan_reconciler's designated archival authority — do not dispatch to a general worker"). These are worth actively
+  grepping for (`grep -rn PLAN_RECONCILER plans/active/issues/`) at the START of a run, not discovered incidentally the
+  way this one was (via an archive-candidate hunter's read).
+- **My own boot instructions (`plan_reconciler.md`) had 2 small drifts from live reality** (retired ping-ledger paths,
+  `plan_health`→`plan-health` endpoint rename) — a role file is exactly as subject to staleness as any other doc in this
+  corpus; don't trust it blindly on operational specifics, verify against the live server/corpus when a step fails
+  unexpectedly.
