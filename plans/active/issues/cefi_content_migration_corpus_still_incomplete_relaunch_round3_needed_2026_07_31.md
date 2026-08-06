@@ -425,6 +425,15 @@ needs an explicit next relaunch round, and none is currently dispatched.
   (`canonical-migration-cefi-content-<N>-round4-20260806-225835`). Corpus 'done when' (10× terminal
   `SCRIPT 1 CONTENT MIGRATION SUMMARY` banners) not yet reachable — multi-hour runs; T+10min PROGRESS check follows,
   corpus-level re-verify remains the parent doc's separate pass.
+- 2026-08-06T23:10Z (worker, slot 9, `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-002`):
+  **T+10min PROGRESS verification PASSED** (t10_check.sh at 23:09:50Z, ~11 min post-creation 22:58:44Z). All 10 VMs
+  RUNNING; every shard's run.log shows a live `Progress: N/M files` line + a `PIPELINE_HEARTBEAT`, zero
+  `ERROR|Traceback|Killed|OOM`. Snapshot: 13=4400/125364, 16=2200/161318, 17=4000/155003, 18=3000/69880,
+  19=4400/149011, 21=4000/126492 (incl. `patched: 14` — real instrument_id rewrites), 23=4200/199580, 40=3400/55777,
+  41=4200/71684, 42=4000/73163; rates 6.7–16.5 files/sec. `already_canonical_skipped` dominant on the re-run windows
+  (idempotent-skip working); shard 21 confirms real patching in flight. VM-launch hard requirements met: STARTED <60s +
+  T+10min progress verified. Relaunch healthy; corpus-level 'done when' (10× terminal `SCRIPT 1 CONTENT MIGRATION
+  SUMMARY`) is a multi-hour wait tracked by the parent doc's re-verify pass.
 
 ## Follow-ups
 
