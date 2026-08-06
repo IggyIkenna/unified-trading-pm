@@ -408,7 +408,7 @@ broken out of it.
       separately-already-fixed near-correct/bare-pair tail, not this backfill). Root cause of the false checkbox:
       unknown (not investigated further — the fix is retagging + actually doing the work, not archaeology). **The real
       execution happened via a DIFFERENT issue doc that independently rediscovered this same population**:
-      `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md` (filed 2026-08-04 while
+      `/plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md` (filed 2026-08-04 while
       re-litigating whether these rows were phantom-and-deletable; concluded RE-STAMP, not delete) — its todo 2 shipped
       `market-tick-data-service@c86016f6` (`restamp_tradfi_fx_spot_pair_blank_instrument_id_2026_08_04.py`,
       content-derived `instrument_id` + global dedup by `(date, instrument_id)`, CAS-applied with snapshot +
@@ -417,24 +417,24 @@ broken out of it.
       2026-07-28/29 text (preserved, was incorrectly marked done)</summary>
 
       RE-CONFIRMED 2026-07-29 (interactive decision session): "execute the ruled backfill now per the
-                                          6-step plan" — no further sign-off needed. RULED 2026-07-28 — scope + build + apply the ~4,310-row FX
-                                          `SPOT_PAIR` manifest `instrument_id` historical backfill (design-choice half of the original todo; no specific
-                                          operator answer for this part — applying the standing workspace theme instead: full backfills get done, not
-                                          indefinitely deferred as "needs its own plan," when not superseded by newer work, and a canonicalisation fix is
-                                          done properly, not as a cheap partial). Note: the OTHER historical re-stamp this doc tracks (the 1,141-row
-                                          ICE/KRX/FX `ohlcv_24h` mis-stamp) was already separately re-tagged `[DATA]` 2026-07-28 in the "Deferred work"
-                                          table above — this todo is only the FX `instrument_id` half, do not duplicate that one. The write-path fix for
-                                          this half already shipped (`market-tick-data-service@020b703e` + comment-currency fix `b0fedf91`) — only the
-                                          historical rows remain (blank 2,812 / literal `"ticks"` 983 / bare-pair-no-prefix 501 / near-correct 13, all
-                                          pre-2026-07-25). Full completion mandate — do not ship a partial fix or leave this "needs its own plan"
-                                          indefinitely: (1) re-verify a FRESH `gcs_bucket_soft_delete_retention_seconds()` check on
-                                          `market-data-tick-tradfi-prd-central-element-323112` (≥604800s qualifies, no operator sign-off needed once fresh
-                                          per finding T / delete-safety §3a); (2) snapshot the manifest index first; (3) build a manifest-only re-stamp
-                                          script (NOT a GCS content rewrite — the parquet files already carry the correct id, this is a manifest
-                                          `instrument_id` column repair, mirroring the `record_captured`-style re-stamp pattern already used for the sibling
-                                          ICE/KRX/FX fix and the MTDS lending restamp) that rewrites all 4 shapes above to the canonical
-                                          `FX:SPOT_PAIR:XXX-USD` form; (4) CAS-apply; (5) verify rows-in == rows-out, 0 duplicate row_keys, and a post-apply
-                                          `FX:SPOT_PAIR:` prefix on 100% of FX captured rows; (6) resume the consolidator cron. Cost is one-time
-                                          manifest-only compute, well under the pre-approved $100 threshold — not a blocker. (repo:
-                                          market-tick-data-service)
-                                          </details>
+                                                          6-step plan" — no further sign-off needed. RULED 2026-07-28 — scope + build + apply the ~4,310-row FX
+                                                          `SPOT_PAIR` manifest `instrument_id` historical backfill (design-choice half of the original todo; no specific
+                                                          operator answer for this part — applying the standing workspace theme instead: full backfills get done, not
+                                                          indefinitely deferred as "needs its own plan," when not superseded by newer work, and a canonicalisation fix is
+                                                          done properly, not as a cheap partial). Note: the OTHER historical re-stamp this doc tracks (the 1,141-row
+                                                          ICE/KRX/FX `ohlcv_24h` mis-stamp) was already separately re-tagged `[DATA]` 2026-07-28 in the "Deferred work"
+                                                          table above — this todo is only the FX `instrument_id` half, do not duplicate that one. The write-path fix for
+                                                          this half already shipped (`market-tick-data-service@020b703e` + comment-currency fix `b0fedf91`) — only the
+                                                          historical rows remain (blank 2,812 / literal `"ticks"` 983 / bare-pair-no-prefix 501 / near-correct 13, all
+                                                          pre-2026-07-25). Full completion mandate — do not ship a partial fix or leave this "needs its own plan"
+                                                          indefinitely: (1) re-verify a FRESH `gcs_bucket_soft_delete_retention_seconds()` check on
+                                                          `market-data-tick-tradfi-prd-central-element-323112` (≥604800s qualifies, no operator sign-off needed once fresh
+                                                          per finding T / delete-safety §3a); (2) snapshot the manifest index first; (3) build a manifest-only re-stamp
+                                                          script (NOT a GCS content rewrite — the parquet files already carry the correct id, this is a manifest
+                                                          `instrument_id` column repair, mirroring the `record_captured`-style re-stamp pattern already used for the sibling
+                                                          ICE/KRX/FX fix and the MTDS lending restamp) that rewrites all 4 shapes above to the canonical
+                                                          `FX:SPOT_PAIR:XXX-USD` form; (4) CAS-apply; (5) verify rows-in == rows-out, 0 duplicate row_keys, and a post-apply
+                                                          `FX:SPOT_PAIR:` prefix on 100% of FX captured rows; (6) resume the consolidator cron. Cost is one-time
+                                                          manifest-only compute, well under the pre-approved $100 threshold — not a blocker. (repo:
+                                                          market-tick-data-service)
+                                                          </details>

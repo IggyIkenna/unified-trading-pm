@@ -31,7 +31,7 @@ tags: [cicd, quickmerge, quality-gates, tooling, prettier, argument-parsing]
 related:
   [
     /plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md,
-    /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
+    /plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
   ]
 created: 2026-07-30
 source:

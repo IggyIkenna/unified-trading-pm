@@ -28,7 +28,7 @@ tags:
   [tradfi, fx, data-correctness, manifest, phantom-rows, contradiction, delete-safety, instrument-id, capture-status]
 related:
   [
-    /plans/active/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
     /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -56,7 +56,7 @@ source:
   phantom rows'), 2026-08-04, slot 13."
 context_scope:
   [
-    /plans/active/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
+    /plans/archive/issues/tradfi_fx_manifest_phantom_and_duplicate_rows_2026_08_03.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/scripts/quarantine_tradfi_fx_phantom_manifest_rows_2026_08_04.py,
     market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py,

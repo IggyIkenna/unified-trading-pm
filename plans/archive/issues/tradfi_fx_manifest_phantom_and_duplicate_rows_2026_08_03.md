@@ -27,9 +27,9 @@ tags:
   [tradfi, fx, data-correctness, manifest, phantom-rows, duplicate-rows, instrument-id, capture-status, reconciliation]
 related:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
-    /plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md,
+    /plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -54,7 +54,7 @@ superseded_by:
 source: "Found while executing tradfi_fx_provenance_and_manifest_id_defects-002, 2026-08-03, slot 8."
 context_scope:
   [
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     market-tick-data-service/scripts/restamp_tradfi_fx_spot_pair_instrument_id_2026_08_03.py,
   ]
@@ -251,14 +251,14 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
       an irreversible manifest mutation); found every one of the 1,967 candidate dates resolves to a REAL backing GCS
       object once a second, previously-unprobed prefix (`pipeline_mode=batch_databento`) is also checked — content is
       genuine Yahoo-sourced KRW-USD data, not a placeholder. **No delete was executed.** Full evidence + the corrected
-      re-stamp todo: `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`. This finding FOLDS
-      Defect 1 into Defect 2 below — see that doc's own re-stamp todo, which now supersedes both this todo and the dedup
-      todo immediately below. market-tick-data-service@e1b75315 (diagnostic script + tests, verified on origin). (repo:
-      market-tick-data-service)
+      re-stamp todo: `/plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`. This finding
+      FOLDS Defect 1 into Defect 2 below — see that doc's own re-stamp todo, which now supersedes both this todo and the
+      dedup todo immediately below. market-tick-data-service@e1b75315 (diagnostic script + tests, verified on origin).
+      (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. **DONE 2026-08-04 (slot-12 applied, slot-10 verified) via the superseding doc.** Design + execute a
       de-duplication pass for the 1,958 FX rows spanning 664 dates with redundant per-shard-day manifest bookkeeping —
       **SUPERSEDED 2026-08-04 by the wider re-stamp todo in
-      `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`**, which folded Defect 1's former
+      `/plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`**, which folded Defect 1's former
       1,812 rows into this same population and designed the re-stamp + dedup together against the FULL ~2,787-row
       population. That todo is now DONE: `market-tick-data-service@c86016f6` re-stamped every resolvable row and
       globally deduped `(date, instrument_id)` (keeping the latest `written_at` row), applied + CAS-verified — manifest
@@ -298,11 +298,11 @@ disjoint-defect-classes reasoning the parent doc already applied to Defect 1 vs 
   (no delete is ever safe to trust blind) and found the "1,812 confirmed phantom, zero backing" premise CONTRADICTED —
   every one of the 1,967 candidate dates has a real backing GCS object once a second, previously-unprobed
   `pipeline_mode=batch_databento` prefix is also checked; content is genuine Yahoo-sourced KRW-USD data. No delete
-  executed. Filed `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md` with full evidence + a
-  corrected re-stamp (not delete) todo that now supersedes both todo 3 and todo 4 above.
+  executed. Filed `/plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md` with full evidence +
+  a corrected re-stamp (not delete) todo that now supersedes both todo 3 and todo 4 above.
   market-tick-data-service@e1b75315 (diagnostic script + tests, verified on origin).
 - **2026-08-04 (slot-10, data_engineering, dispatched via `tradfi_fx_manifest_phantom_and_duplicate_rows-002`)**: closed
   out this doc — the superseding doc's unified re-stamp+dedup landed and was independently verified (0 remaining
   blank-`instrument_id` FX candidates, down from 2,787; manifest row count 6,601,216 → 6,600,032 matching the predicted
   −1,184 dedup exactly). Flipped both remaining todos + `status: resolved`. Full detail + evidence in
-  `/plans/active/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`'s own Progress Log.
+  `/plans/archive/issues/tradfi_fx_phantom_row_premise_contradicted_2026_08_04.md`'s own Progress Log.

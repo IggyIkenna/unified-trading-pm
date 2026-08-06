@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [plan-hygiene, frontmatter, fix_frontmatter, quickmerge, data-integrity, regression]
 related:
   [
-    /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
+    /plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
     /plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md,
   ]
 created: 2026-08-03
@@ -55,7 +55,7 @@ locked_since:
 context_scope:
   [
     scripts/plan-hygiene/fix_frontmatter.py,
-    /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
+    /plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
   ]
 ---
 

@@ -266,7 +266,7 @@ defect; it is purely a function of host capacity at any given moment.
   was doing a LATE `git commit --amend` that re-triggered `check-branch-drift`'s pre-commit hook AFTER the full QG
   re-run, well past my own pre-rebase — pre-stamping the trailer eliminated that specific hurdle), but the residual
   final-`git push` non-fast-forward race persists under this session's sustained churn. Filed as its own issue:
-  `/plans/active/issues/quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`.
+  `/plans/archive/issues/quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md`.
 - 2026-07-27 (slot-7, `infra`): **Further corroboration, 2 consecutive kills, same session**, shipping the
   `features-multi-timeframe-service` date-bug fix (`features-service@0eaafe5c`, committed, unpushed pending a valid
   sentinel). Both `quality-gates.sh --no-fix` re-runs (needed to refresh `.qg_last_passed_sha` to the new HEAD after

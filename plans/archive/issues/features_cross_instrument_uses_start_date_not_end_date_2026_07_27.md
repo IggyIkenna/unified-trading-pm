@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [features-service, cli, date-handling, cross_instrument, adjacent-finding]
 related:
   [
-    /plans/active/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
+    /plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md,
     /codex/06-coding-standards/cli-convention.md,
   ]
 created: 2026-07-27

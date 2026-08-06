@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [sports, delete-safety, canonical-copy, data-migration]
 related:
   [
-    /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
+    /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,

@@ -16,7 +16,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, frontmatter, docspec, issue-docs, fixer-bug]
-related: [/plans/active/issues/qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md]
+related: [/plans/archive/issues/qg_editable_sibling_install_regresses_override_only_cve_fixes_2026_08_04.md]
 created: 2026-08-04
 author: slot-12
 parent_epic: infrastructure_master
