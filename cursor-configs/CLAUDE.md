@@ -409,7 +409,7 @@ refs in docs) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui`
 `user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single
 deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM (id `planning`, EIP
 13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27).
-Human-planning VM (`i-0dd9812a96cdda5dc`, interactive only) for operator work. Workspace configs canonical in
+**`planning` is the ONLY VM** (human-planning TERMINATED 2026-08-03). Workspace configs canonical in
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
 Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
 `cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →

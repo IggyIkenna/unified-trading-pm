@@ -40,7 +40,8 @@ author: ikenna-claude-subagent
 > (EC2 `13.113.200.22`, id `planning`) that runs the backend, serves the dashboard SPA over HTTPS, and hosts all N slot
 > workers as in-process tmux sessions. There are no epic VMs (that fleet was retired 2026-06-27; topology SSOT:
 > [`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)).
-> The separate `human-planning` VM is interactive-only and never runs backlog work.
+> The separate interactive-only `human-planning` VM (`i-0dd9812a96cdda5dc`) was TERMINATED 2026-08-03 — the `planning`
+> VM above is now the only VM; do not reference `human-planning` as a live host.
 >
 > **Cloud-agnostic posture**: the VM runs on AWS EC2 ap-northeast-1. The bootstrap, secrets, and launcher pipeline
 > support a `CLOUD_PROVIDER=gcp` toggle to re-spin on GCE if cost / availability ever forces it; no GCP VMs run at

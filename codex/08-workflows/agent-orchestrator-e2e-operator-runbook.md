@@ -47,7 +47,8 @@ execution:
 
 > **Deployment state**: prod runs on the single central orchestrator VM (`ap-northeast-1`, EIP `13.113.200.22`, id
 > `planning`) with its own systemd unit. The Firebase-hosted dashboard talks to that one central API. The separate
-> `human-planning` VM is interactive-only and never runs backlog work.
+> interactive-only `human-planning` VM (`i-0dd9812a96cdda5dc`) was TERMINATED 2026-08-03 — the central `planning` VM
+> above is now the only VM; do not reference `human-planning` as a live host.
 
 | Environment                           | URL (SPA dashboard / API)                                          | Owner  | Notes                                                                                                                                                    |
 | ------------------------------------- | ------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
