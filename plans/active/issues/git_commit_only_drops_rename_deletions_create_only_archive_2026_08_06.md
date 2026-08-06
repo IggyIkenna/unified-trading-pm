@@ -138,11 +138,15 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Create-only archival-commit guard** — a check that, for any commit adding a
+- [x] ✅ [SCRIPT] P1. **Create-only archival-commit guard** — a check that, for any commit adding a
       `plans/archive/issues/*.md` file whose `plans/active/issues/*.md` twin exists in the commit's parent AND still
       exists in the commit's tree, hard-fails with a pointer to the two-path `--only` fix. Wire into
       `scripts/plan-hygiene/run_hygiene_sweep.sh` as a new check. Verify: fails on the 5 known live duplicates (all
-      currently present), passes on a proper rename, passes on a clean corpus. (repo: unified-trading-pm)
+      currently present), passes on a proper rename, passes on a clean corpus. (repo: unified-trading-pm) —
+      unified-trading-pm@20e9d748c (`check_create_only_archive_commits.py` + wired into `run_hygiene_sweep.sh` as a hard
+      check). Verified: fails on the 5 known duplicate pairs at HEAD; `--commit` mode flags the create-only signature on
+      `7accf8ecf`; scratch-repo reproduction confirms proper rename (`R100`) + clean corpus pass and the two-path
+      `--only` fix clears it.
 - [ ] [SCRIPT] P2. **Reconcile the 5 live diverged duplicate pairs** — for each of
       `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`,
       `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30`,
@@ -165,6 +169,16 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
 
 ## Progress Log
 
+- 2026-08-06 (slot-15, review): P1 shipped — `scripts/plan-hygiene/check_create_only_archive_commits.py` (new) + wired
+  into `run_hygiene_sweep.sh` as a hard check (unified-trading-pm@20e9d748c). Behavior verified: HEAD scan hard-fails on
+  the 5 live duplicate pairs; `--commit <sha>` mode flags the exact create-only signature on `7accf8ecf` (147
+  archive-issue adds with surviving active twins); scratch-repo reproduction confirms proper rename (`R100`) and clean
+  corpus pass, create-only fails, and the two-path `--only` fix clears it. Incidental: while running PM Pass-1 QG, hit a
+  pre-existing `plan-commit-sha-evidence` ratchet red (4 > baseline 2) caused by 3 fabricated/unresolvable
+  `<repo>@<sha>` citations on done todos in OTHER plans; corrected them as small+clear findings (small+clear triage
+  bucket) to the real SHAs found via repo history — `deployment-service@1c4457`→`1c1e445`,
+  `unified-trading-ci@4dcd37d`→`f20c59f`, `instruments-service@aaa0866c`→dropped (pair-mate `eca688ac6` resolves).
+  OOM-directive acknowledgement: none of slot-15's processes were OOM-killed today; no heavy RAM/IO ran locally.
 - 2026-08-06 (slot-6, review): filed after determining the mechanism for the prek_patch_cache doc's open [REVIEW] P1.
   Patched `IggyIkenna/prek@v0.4.12` confirmed in effect on this host (sha256 byte-match + harness `clean=5 corrupt=0`).
   Create-only reproduced in 4 controlled scenarios (above) — `git commit --only <new-path>` after `git mv` drops the
