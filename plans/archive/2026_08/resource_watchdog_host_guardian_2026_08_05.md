@@ -7,9 +7,14 @@ summary:
   exec(eval(stdin)) processes at 26+27 GB RSS each, cgroup hit MemoryMax=54G, orchestrator crash-looped 3 times in 3
   minutes). The QG host governor already handles QG concurrency and self-abort — this watchdog fills the gap for non-QG
   runaway processes spawned by agents.
-status: active
+status:
+  complete # archived 2026-08-06 -- 10/10 todos done, deploy verified (live production kill of two ~40GB
+  # runaway processes, slot 15); archived by na-eligibility-audit cross-cutting (dispatch agt-6925b7)
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [infrastructure] # retagged from [cross-cutting] 2026-08-06 (na-eligibility-audit, per
+  # ag_closeout_audit_cross_cutting_parked_2026_08_06.md finding 4 -- host/VM daemon content, never touches
+  # IS/MTDS/features-service/manifest/UAC/UTL)
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
@@ -52,6 +57,17 @@ context_scope:
 ---
 
 # Resource Watchdog — Host Guardian
+
+> **ARCHIVED 2026-08-06** — All 10 todos (Phases 1-4) shipped and verified; the doc's own "Deferred work after
+> 2026-08-05" section self-declared it archival-ready pending deploy verification, which the newest Progress Log entry
+> below independently confirms (a live production kill of two ~40GB runaway processes, slot 15,
+> `read_availability_index` bare-call incident). The one substantive follow-up (surfacing kill events through
+> deployment-api/deployment-ui) was forked into its own plan, already archived complete:
+> `/plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md`. A further-downstream residual
+> (`/plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md`) is a child of that forked plan, not of
+> this one — evaluated separately on its own merits. Archived by na-eligibility-audit cross-cutting (dispatch
+> agt-6925b7), corroborating an independent same-day `/ag-closeout-audit` cross-cutting finding
+> (`/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md` finding 4).
 
 ## Context
 
@@ -293,6 +309,10 @@ Completed Phases 1–3. Watchdog is live on planning VM, killed its first violat
 stable at 13-23 GB. Orchestrator kill-relay endpoint deployed and tested. Bootstrap + ao-self-pull integration shipped.
 
 - **context-scout 2026-08-06**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-06**: ARCHIVE — 10/10 todos `[x]`, doc self-declares archival-ready, deploy verified
+  live (production kill event above). Retagged `asset_group: [cross-cutting] -> [infrastructure]` and ran the standard
+  6-step archival ritual (see body banner). Corroborates independent same-day `/ag-closeout-audit` cross-cutting finding
+  4 in `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`, whose own todo #231 this action resolves.
 
 ---
 

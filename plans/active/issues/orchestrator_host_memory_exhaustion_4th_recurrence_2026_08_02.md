@@ -15,7 +15,7 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, fleet-health, memory-exhaustion, shared-host, recurring-incident]
-related: [/plans/active/resource_watchdog_host_guardian_2026_08_05.md]
+related: [/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md]
 created: 2026-08-02
 author: unknown
 parent_epic: orchestrator_master
@@ -37,7 +37,7 @@ context_scope:
     /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md,
     scripts/dev/run-bounded-analysis.sh,
     features-service/features_service/cross_instrument,
-    /plans/active/resource_watchdog_host_guardian_2026_08_05.md,
+    /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md,
   ]
 ---
 
@@ -323,8 +323,8 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   RSS-killer is closer to option 1 than option 2/3 (still one shared ~54GiB ceiling, not per-slot reservations or
   admission control), so it may reduce recurrence frequency without fully closing the question; that's still the
   operator's call. Cross-linked both docs' `related:` so they're no longer siloed.
-- **context-scout 2026-08-06**: re-scouted; added `/plans/active/resource_watchdog_host_guardian_2026_08_05.md` (the
-  2026-08-05 systemd RSS-killer, a live instance of this doc's recommended option 1, cross-linked but not yet in
+- **context-scout 2026-08-06**: re-scouted; added `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`
+  (the 2026-08-05 systemd RSS-killer, a live instance of this doc's recommended option 1, cross-linked but not yet in
   context_scope), now 6 entries.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only

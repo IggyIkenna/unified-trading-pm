@@ -13,11 +13,11 @@ summary: >-
   warranted (matches the 2026-08-02 run's outcome). Of the 6, **2 were fixed DIRECTLY this run** (both resolve to
   dropping the `cross-cutting` tag while an already-present sibling tag remains — safe per precedent, no write into a
   different tranche's namespace): `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` ([defi, cross-cutting]
-  -> [defi]) and `qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md` (archived 2026-08-06, [cross-cutting, ci] -> [ci]). The
-  remaining **4 are parked here** (each needs a tag ADDED that isn't currently present, i.e. real ownership by a
-  DIFFERENT tranche — per the 2026-07-30 concurrent-sharded-worker rule, that write belongs to the owning tranche's own
-  audit, not this run): `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (real owner `ui`,
-  with a `sports` sub-component on todo 2; all 3 todos genuinely open and AO-eligible once retagged),
+  -> [defi]) and `qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md` (archived 2026-08-06, [cross-cutting,
+  ci] -> [ci]). The remaining **4 are parked here** (each needs a tag ADDED that isn't currently present, i.e. real
+  ownership by a DIFFERENT tranche — per the 2026-07-30 concurrent-sharded-worker rule, that write belongs to the owning
+  tranche's own audit, not this run): `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (real
+  owner `ui`, with a `sports` sub-component on todo 2; all 3 todos genuinely open and AO-eligible once retagged),
   `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (real owner `infrastructure`; a dedicated
   na-eligibility-audit already ruled KEEP-NA — operator-direction-gated, not AO-eligible as-is),
   `unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md` (real owner `ui`; **bonus finding** — live
@@ -157,7 +157,7 @@ is strong git-content-level evidence, not a runtime-verified close.
 operator) should VERIFY (`vitest run block-list-parity.test.ts`) and ARCHIVE citing the `3c2efb2c` evidence, not
 schedule a fresh fix-dispatch.
 
-### 4. `plans/active/resource_watchdog_host_guardian_2026_08_05.md` — likely real owner `infrastructure`; bonus finding: archival-ready, not orphaned
+### 4. `plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md` — likely real owner `infrastructure`; bonus finding: archival-ready, not orphaned
 
 **Doc state**: `status: active`, `asset_group: [cross-cutting]`, `parent_epic: infrastructure_master`. All 4 phases'
 checkboxes `[x]`.
@@ -201,7 +201,8 @@ owner is a genuinely different third tranche, not cross-cutting relinquishing it
 ## Fixed directly this run (not parked — see summary for full detail)
 
 - `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`: `[defi, cross-cutting]` → `[defi]`.
-- `plans/archive/2026_08/issues/qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md`: `[cross-cutting, ci]` → `[ci]` (archived 2026-08-06).
+- `plans/archive/2026_08/issues/qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md`: `[cross-cutting, ci]` →
+  `[ci]` (archived 2026-08-06).
 - `plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`: `[defi, cross-cutting]` →
   `[cross-cutting]` (kept — genuinely cross-AG, verified via a 20-launcher grep of `vm-exec-with-gcs-tee.sh` callers).
 - `plans/active/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`:
@@ -228,10 +229,15 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
       Done when: the tag is corrected AND the doc is verified (`vitest run block-list-parity.test.ts` green on current
       `main`) + archived citing `unified-trading-system-ui@3c2efb2c` as the incidental-fix evidence — not re-dispatched
       as a fresh fix.
-- [ ] [DOCS] P3. Retag `plans/active/resource_watchdog_host_guardian_2026_08_05.md`'s `asset_group` `[cross-cutting]` →
-      `[infrastructure]` (finding 4) — owning-tranche fix, leave to the `infra` tranche's own audit. Done when: the tag
-      is corrected AND the doc runs through the standard 6-step archival ritual (all todos already `[x]`, doc
-      self-declares archival-ready, `locked_by` empty).
+- [x] [DOCS] P3. ✅ Retag `resource_watchdog_host_guardian_2026_08_05.md`'s `asset_group` `[cross-cutting]` →
+      `[infrastructure]` (finding 4) AND run the standard 6-step archival ritual —
+      unified-trading-pm@na-eligibility-audit 2026-08-06. Re-evaluated the "leave to the infra tranche" deferral: since
+      the doc's `asset_group` was `[cross-cutting]` ONLY (single-tranche membership, confirmed via
+      `generate_na_doc_tranche_inventory.py`), no `infra`-tranche na-eligibility-audit run would ever have surfaced it —
+      deferring indefinitely would have meant it was never picked up. Executed directly instead (self-contained
+      evidence, no genuine judgment call blocking it): retagged, banner added, moved to
+      `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`, all 6 corpus referrers fixed. See that
+      doc's own Progress Log for the full ritual trail.
 - [ ] [DOCS] P3. Retag `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
       `asset_group` `[defi, cross-cutting]` → `[ci]` or `[infrastructure]` (finding 5, owning tranche TBD by content) —
       leave to whichever of those two tranches' own audit claims it first. Done when: the tag is corrected to a single
@@ -261,3 +267,12 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
   `status: draft`, still awaiting operator approval to dispatch — not flipped by this run per the "ASK BEFORE
   CREATING"/never-auto-flip HARD RULE). **Ledger**: 5 new parked findings this run (4 from Phase 1 + 1 from the
   Orthogonality check), 5 entries written above (1-5) — balanced.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — fresh doc (filed today), same parked-findings-register class as
+  its 2026-08-02 sibling; all 5 todos are cross-tranche retag+fold-in actions the OWNING tranche must execute per the
+  skill's primary-owner rule, not this doc's write.
+- **na-eligibility-audit 2026-08-06 (follow-up)**: correction to the entry immediately above — finding 4's target
+  (`resource_watchdog_host_guardian_2026_08_05.md`) was independently verdicted ARCHIVE by this same run's own Phase 1
+  classification of the cross-cutting candidate set (it carries `asset_group: [cross-cutting]` only, so it — unlike
+  findings 1/2/3's targets — genuinely IS this tranche's to act on, not a cross-tranche write). Executed: retagged +
+  archived, todo #231 flipped `[x]`. Findings 1/2/3 remain correctly deferred (their targets are independently KEEP-NA
+  per this run's own classification of them, so no analogous escalation applies).

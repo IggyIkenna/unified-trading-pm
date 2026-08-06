@@ -15,7 +15,7 @@ tags: [watchdog, observability, close-out, finalize]
 related:
   [
     /plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md,
-    /plans/active/resource_watchdog_host_guardian_2026_08_05.md,
+    /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md,
   ]
 created: "2026-08-05"
 last_updated: "2026-08-05"

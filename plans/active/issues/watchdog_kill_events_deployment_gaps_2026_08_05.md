@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [watchdog, deployment-api, deployment-ui, resource-monitoring, observability, systemd, dual-write, e2e-verify]
 related:
   - /plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md
-  - /plans/active/resource_watchdog_host_guardian_2026_08_05.md
+  - /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md
   - /codex/05-infrastructure/deployment-observability.md
   - /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md
 created: "2026-08-05"
@@ -44,7 +44,7 @@ context_scope:
     scripts/infra/resource-watchdog/resource-watchdog.service,
     scripts/infra/resource-watchdog/resource-watchdog.sh,
     deployment-ui/src/pages/VmResourceComparison.tsx,
-    /plans/active/resource_watchdog_host_guardian_2026_08_05.md,
+    /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md,
     /codex/05-infrastructure/deployment-observability.md,
   ]
 ---

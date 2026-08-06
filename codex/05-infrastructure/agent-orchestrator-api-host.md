@@ -136,8 +136,8 @@ Service unit: `scripts/orch-watchdog.service`. Install: `bash scripts/install-wa
 
 Cross-process resource guardian deployed 2026-08-05 after two back-to-back OOM incidents where agent-spawned
 `exec(eval(sys.stdin.readline()))` Python processes ballooned to 26 GB + 27.7 GB RSS, consuming the entire orchestrator
-cgroup (`MemoryMax=56G` — see § "Resource limits" above) and causing a 3× crash-loop. SSOT:
-`/plans/active/resource_watchdog_host_guardian_2026_08_05.md`.
+cgroup (`MemoryMax=56G` — see § "Resource limits" above) and causing a 3× crash-loop. Implementation history:
+`/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md` (archived 2026-08-06, all todos shipped).
 
 A systemd service (`resource-watchdog.service`, `After=orchestrator.service`) polls every 10 seconds and kills
 non-allowlisted processes exceeding per-resource thresholds:
