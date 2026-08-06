@@ -252,3 +252,21 @@ context_scope:
     (`_UNCHECKED_RE = r"^\s*-\s+\[ \]\s+(.+)$"`; `[VERIFY]` ≠ `[ ]`, does not match). Verdict:
     `prediction_consolidated_closeout_2026_07_18.md` passes adversarial AO-dispatch-readiness review clean.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: KEEP-NA, valid — all 5 open todos reconfirmed.
+  Items 1/2 (post-migration IS/MTDS formal green) + item 5 (MVP backfill gate): `depends_on` + `gate_on_depends: true`
+  prerequisite (`prediction_phase_ab_residuals_2026_07_24`) freshly verified still open (still `status: active`, its own
+  `[DATA] P0` enumeration-driven migration todo still `[ ]` unchecked as of today). Items 3/4 (the `-is`/`-mtds`
+  3x-cadence top-ups): **independently re-verified against two disagreeing sub-agent passes this run** — one flagged
+  RECLASSIFY (citing no active doc covering the mid-migration leg, true but incomplete), the other flagged KEEP-NA
+  citing `prediction_consolidated_native_ao_extract_2026_07_25_finalize.md`'s 2026-08-04 slot-15 note ("Phase B has NOT
+  landed... 3rd/final post-Phase-B pass still genuinely blocked") — **that citation is a misattribution**: the slot-15
+  note is about `prediction_phase_ab_residuals_2026_07_24.md`'s OWN, DIFFERENT `/data-pipeline-reconciliation` cadence
+  todo (explicitly documented elsewhere in the same finalize doc as "no overlap — a NARROWER, DIFFERENT check" vs. this
+  doc's `data-pipeline-check-is`/`-mtds` items). Direct live read of `prediction_phase_ab_residuals_2026_07_24.md`
+  confirms the underlying FACT is still correct by coincidence: its `[DATA] P0` Phase-B `--apply` migration has
+  genuinely not started (still `[ ]`, dry-run only). Since items 3/4's remaining scope is specifically a "Phase-B
+  **mid-migration** spot-check" (pre-Phase-B leg already done + cited 2026-08-04), and there is no migration currently
+  in flight to spot-check, dispatching now would not serve the checkpoint's purpose — stays NA pending Phase-B `--apply`
+  actually starting, not because of a duplicate claim (none found, confirmed via `plans/`-wide grep for "3x
+  cadence"/"cadence top-up") and not a design/judgment gate, just a genuinely-not-yet-timely bounded task. Re-check once
+  `prediction_phase_ab_residuals_2026_07_24.md`'s P0 migration todo shows `--apply` in progress.

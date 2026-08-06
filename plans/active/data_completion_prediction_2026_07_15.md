@@ -327,20 +327,19 @@ range never overlaps a still-in-flight per-market-only day).
   legacy count (bucket now gone); current `pred-prd` total is 5.42M objects across all data_types, of which only the
   `trades`/`prediction_trades` subset is this migration's physical-rollup scope.
 
-- [ ] [CODE] P1. **FLAG-3 (deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets, `-prd`
-      initial.** The `instruments-store` / `features-store` / `ml-store` / `execution-store` (+ `ml-configs-store`,
-      `deployment_api_config.py:547`) buckets get **env-tiered** (split env-wise: prd/stg/dev), with `-prd` as the
-      initial migration tier. So the `# CORRECT-LOCAL` markers are NO LONGER correct — route every ref through
-      `resolve_bucket_name(kind=…, env=…)` so reads resolve to the env-tiered canonical name (`-prd` now; the no-env
-      bucket becomes legacy → deleted post-cutover). Work: (1) **bucket-SSOT owner** registers the env-tiered `*-store`
-      bucket names (prd/stg/dev) in `deployment-service/configs/cloud-providers.yaml` (coordinate via
-      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`); (2) **deployment-api** replaces the hardcoded
-      f-strings at `commentary/pipeline_uat.py:167/181/195/211` + `deployment_api_config.py:547` with
-      `resolve_bucket_name(...)` and removes the `# CORRECT-LOCAL` markers; (3) the prd-store data migrates to the
-      `-prd` bucket as part of the initial migration. Coordinate with the active deployment-api agent. Repo:
-      **deployment-api** (+ deployment-service cloud-providers.yaml). Home: this plan FLAG-3 + `bucket_name_ssot…`. (No
-      longer operator-blocked.) **(MIGRATED FROM: `downstream_services_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [CODE] P1. **CLOSED — na-eligibility-audit 2026-08-06 (prediction tranche). RESOLVED/NO-ACTION, same finding
+      already ruled in the sibling cefi doc.** FLAG-3 (deployment-api) — DECIDED (operator 2026-06-02): env-tier the
+      `*-store` buckets, `-prd` initial. **Superseding ruling**: `data_completion_cefi_2026_07_15.md:180-193`
+      ("deployment-api FLAG-3 — RESOLVED/NO-ACTION (main ruling 2026-07-28)") — the exact same call sites
+      (`commentary/pipeline_uat.py:167/181/195/211` + `deployment_api_config.py:547`), same
+      `downstream_services_manifest_canonicalisation_2026_06_01.md` MIGRATED-FROM provenance. Main's later ruling
+      (2026-07-28) found this is NOT a mechanical f-string→`resolve_bucket_name` swap: those reads are non-AG
+      **pipeline-health summary** buckets (`# CORRECT-LOCAL`, a deliberate QG STEP-5.69 allowlist), not the AG-scoped
+      market-data stores `resolve_bucket_name(asset_group=…)` resolves — swapping them would point health reads at
+      wrong/nonexistent buckets. Ruling: keep `# CORRECT-LOCAL` AS-IS, no code change; `deployment_api_config.py` store
+      buckets already use typed `effective_*` config (FLAG-3-compliant). This prediction-doc copy of the finding
+      predates that ruling and never got its checkbox flipped to cite it — closing now, no work dropped (the ruling
+      already covers this call site set in full).
 
 - [ ] [DATA] P0. Per-AG (cefi/tradfi/prediction): Phase-0 layout audit → re-tarball+pin SHAs → **G1 full-corpus
       dry-run** (`launch-canonical-migration-vm.sh <ag> <start> <end> dry`; confirm `TOTAL planned` ≈ full-corpus object
@@ -364,13 +363,19 @@ range never overlaps a still-in-flight per-market-only day).
       Closing the duplicate only; the surviving copy above still carries the full work item, so nothing becomes
       untracked by this close.
 
-- [ ] [CODE] P2. **FLAG 2 (DEFI scope → slot-2 / bucket_name_ssot): `_BUCKET_CATEGORY_OVERRIDES`**
-      (data_status_service.py:2902) hardcodes 6 DeFi sub-buckets
-      (`gas-fees`/`oracle-prices`/`perp-funding`/`lending-indices`/`lst-rates`/`liquidations`) bypassing
-      `resolve_bucket_name` + absent from yaml → post-delete silent-empty (swallowed except). **DEFI=slot-2 — tracked in
-      `defi_manifest_canonicalisation_2026_06_01.md` §H** (five-slot asset-group split, operator 2026-06-03) +
-      `bucket_name_ssot…` L6. Not in another AG slice's scope. **(MIGRATED FROM:
-      `downstream_services_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [CODE] P2. **CLOSED — na-eligibility-audit 2026-08-06 (prediction tranche). Stale premise; never this plan's
+      scope, and already resolved elsewhere.** FLAG 2 (DEFI scope → slot-2 / bucket_name_ssot):
+      `_BUCKET_CATEGORY_OVERRIDES` (data_status_service.py:2902) hardcoded 6 DeFi sub-buckets bypassing
+      `resolve_bucket_name`. Item's own text already said "Not in another AG slice's scope" and redirected to
+      `defi_manifest_canonicalisation_2026_06_01.md` §H — that redirect target is now ARCHIVED (superseded_by
+      `data_completion_to_100_all_ag_2026_06_21`). The live copy of this finding,
+      `data_completion_defi_2026_07_15.md:363-368`, is already `[x]` CLOSED: **"na-eligibility-audit 2026-08-01: CLOSED
+      — stale premise, root cause found + fixed elsewhere"** — `deployment-api`'s DeFi sub-bucket-fold machinery
+      (`_BUCKET_CATEGORY_OVERRIDES`/`_MTDS_DEFI_SUB_DIMENSIONS` in `services/data_status/defi.py`) is now empty, every
+      DeFi sub-bucket ever created has been consolidated into the single shared bucket, shipped
+      `deployment-api@f919c87`. Independently reconfirmed active/dispatched at
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md:427` (`assigned_vm: planning`). Closing this stale copy; nothing
+      left untracked.
 
 - [ ] [CODE] P2. **GAP-4 (all consumers): ASSERT v9 schema columns on manifest read.** `read_availability_index`
       backfills missing v9 cols as NULL on a v8 manifest → consumers silently read NULL
@@ -423,3 +428,9 @@ range never overlaps a still-in-flight per-market-only day).
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) --
   `rebuild_prediction_manifest.py` (cited twice in-body, the manifest-rebuild script this plan's todos operate on)
   remains the correct source target alongside the M-1 coordinator + the 3 pipeline/bucket/manifest codex SSOTs.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: KEEP-NA, valid for 19/21 open items (P0
+  cross-repo CQG-bundle object-layer migration + downstream C-walks — genuinely design/VM/delete-gated, consistent with
+  the 2026-07-30 audit and 4-5 independent ag-closeout-audit "0 AO-eligible" passes, not re-litigated). 2 items closed
+  as KEEP-NA-STALE (FLAG-3 deployment-api, FLAG-2 DeFi `_BUCKET_CATEGORY_OVERRIDES`) — both stale copies of findings
+  already resolved/closed in sibling AG docs (`data_completion_cefi_2026_07_15.md`, `data_completion_defi_2026_07_15.md`
+  respectively) that never had their checkbox flipped here. 21 open todos -> 19, no tracked work dropped.

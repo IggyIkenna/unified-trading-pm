@@ -223,3 +223,7 @@ as preemptive. The existing `[UAC] P2` politics/geo canonicalization todo in bat
 ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a follow-up in the batch6 plan.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: KEEP-NA, valid — 4 open todos, all chained/
+  blocked on the still-open cross-plan `sports_master:Group E` gate (`plans/epics/sports_master.md` line 629, verified
+  unchecked live, plus its own upstream FSS-run/feature-matrix-verification prerequisites also still unchecked). No
+  reclassify/archive/duplicate candidates. Agrees with the 2026-07-30 audit's verdict.

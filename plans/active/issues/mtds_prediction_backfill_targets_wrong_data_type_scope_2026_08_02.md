@@ -192,3 +192,7 @@ whoever wants to close the loop.
   `active` (outside this audit's own mandate to perform). Doc stays NA (not because the work isn't AO-eligible — it is —
   but because a parallel, already-conflict-checked vehicle already owns it).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: re-verified the 2026-08-04 finding — sole open
+  P3 todo is still KEEP-NA-STALE-DUPLICATE, confirmed still verbatim-present in
+  `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` (`status: draft`, `assigned_vm: planning`, Source-cited). Doc
+  stays NA, no change from the 08-04 verdict.

@@ -763,3 +763,8 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   side-effect) — non-substantive to this doc's own classification. Still the live index for its 4 Phase A-E children
   (all still open); not archived. Doc stays NA.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: KEEP-NA, valid — 0 native open checkboxes
+  (coordination hub by design, `archive_exempt: true`, 4 Phase A-E children still open under it), agrees with the
+  07-30/07-31/08-04 markers. The 6-bullet prose-only "Deferred work after 2026-07-18" section (confirmed-trap checked —
+  no `- [ ]` markup, so it doesn't surface in the grep count) is genuine operator/shared-file-gated work, correctly
+  KEEP-NA, not stale. Doc stays NA, not archive-eligible.

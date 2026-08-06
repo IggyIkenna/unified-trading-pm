@@ -250,7 +250,14 @@ context_scope:
         06-22) so its `instrument_availability` parquet carries populated `clob_token_ids`, THEN re-run the book
         backfill for that date. Repo: instruments-service (re-enumerate) + deployment-service (re-launch). NICE-TO-HAVE
         — live book_snapshot_5 already captures end-to-end. Provenance: autonomous catalogue/backfill session
-        2026-06-23.
+        2026-06-23. **na-eligibility-audit 2026-08-06: KEEP-NA-STALE-DUPLICATE, citation added — already claimed (not
+        yet dispatched) in
+        [`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`](/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)'s
+        "Deferred — gated on a sibling todo landing" section: "Re-enumerate the IS POLYMARKET universe for a recent past
+        date → re-run the `book_snapshot_5` batch backfill → verify `row_count>0`" (`Source:` this exact item,
+        verbatim). That section deliberately holds the item NOT-dispatched-speculatively, sequenced after batch4's own
+        todo #1 lands (else it re-enumerates against the old write path). Reclassifying this doc's `assigned_vm` would
+        create a second, competing dispatch surface — stays NA, batch4 is the correct owner.
 - [x] ✅ [SCRIPT] P1. **Prediction BATCH recent-window (05-23→06-22) zero-capture — TWO-LAYER root cause, BOTH FIXED
       (2026-06-23 batch-column-close session)**: (1) **Pre-flight layer (already fixed pre-session, mtds@84504e6 on
       LDR)** — the 28,448 Polymarket-trades manifest rows for 05-23→06-22 are `empty_confirmed[SOURCE_RETURNED_ZERO]`
@@ -408,8 +415,16 @@ crypto set).
       test updated to use 8-day-old stale blob. Root cause (no daily IS cron for Kalshi) remains upstream; the 7-day
       fallback is the durable fix.
 
-- [ ] [DATA] P2. **Verify END-TO-END depth-history retention — the RAW live book store is rolling-latest-window per
-      instrument, NOT a multi-hour archive (discovered 2026-06-24).** Confirmed empirically: under
+- [x] ✅ [DATA] P2. **CLOSED — na-eligibility-audit 2026-08-06 (prediction tranche). Verify END-TO-END depth-history
+      retention — the RAW live book store is rolling-latest-window per instrument, NOT a multi-hour archive (discovered
+      2026-06-24).** This checkbox's own stated flip-rule ("stays `[ ]`... it flips when batch4's todo records its
+      verdict here") is now satisfied: the 2026-08-04 (slot-5) entry below records **VERDICT: FAIL** with full
+      root-cause detail, and the 2026-08-04 (slot-7) entry records a completing re-verification ("no new surprise was
+      found"). Follow-up remediation forked into two successor issue docs:
+      `plans/active/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` and
+      `plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`. The
+      "verify" ask is complete and evidenced in-doc; checked off citing both 2026-08-04 entries + the two successor docs
+      — it was left open only as a tracking anchor past its own done-when. Confirmed empirically: under
       `market-data-tick-pred-prd-.../raw_tick_data/by_date/day=2026-06-23/pipeline_mode=live_{kalshi,polymarket_clob}/…/data_type=book_snapshot_5/`
       the canonical partitioning + full 5-level depth (`best_bid/ask_price/size` + `bids`/`asks` arrays) are CORRECT and
       LIVE (both venues writing within seconds; 4,360 KALSHI + 468 POLYMARKET instruments, ~130 MiB). BUT each
@@ -837,6 +852,14 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added batch4 (owns the extracted depth-retention
   item) + 2 source paths (websocket_runner.py's overwrite behavior, the prediction adapters dir).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: MIXED — the depth-history-retention checkbox
+  (line 411) is KEEP-NA-STALE-CLOSE, checked off (its own stated done-when was satisfied in-doc by the 2026-08-04
+  slot-5/slot-7 entries above). The nested `DEFERRED-CROSS-DEP` book_snapshot_5 row-proof sub-bullet (2-space-indented,
+  missed by a strict top-level `^- \[ \]` grep) is KEEP-NA-STALE-DUPLICATE, citation added — confirmed already claimed
+  (not yet dispatched) in `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s "Deferred — gated on a sibling todo
+  landing" section; reclassifying here would create a competing dispatch surface, so it stays NA. Conflict-check
+  correction: an earlier classifier pass this run flagged this item RECLASSIFY without finding the existing batch4 claim
+  — verified directly and downgraded before any `assigned_vm` flip.
 
 ## Deferred work — migrated to:
 
