@@ -190,6 +190,18 @@ arg); ship per CLAUDE.md's git-discipline section (`quickmerge.sh --agent --file
 doc-only fast path quickmerge already applies internally — do not bypass quickmerge itself. Batch related fixes into
 coherent commits. NEVER write agent memory; NEVER create `*_SUMMARY.md` — the final report is chat text.
 
+**Ship each coherent batch as you finish it — never hold every fix to the end of the run (HARD, added 2026-08-06).**
+This mirrors `agents/plan_reconciler.md`'s existing "COMMIT INCREMENTALLY … PUSH each checkpoint" contract, which this
+skill lacked. The reason is measured, not stylistic: scheduled workers in this family die mid-run often (32 of 65
+retained runs across the 7 scheduled jobs ended `reaped-stale` — killed without ever reaching `/done`), and when a run
+dies the ONLY thing that survives is what it already pushed. A batch sitting uncommitted in the worktree when the
+session is reaped is lost work that has to be re-derived from scratch on the next run. Push each batch; do not
+accumulate.
+
+Note what this does and does not buy you: checkpointing protects work already DONE, it does not protect a run that dies
+before finishing its first batch (plan_reconciler's 2026-08-03/08-04 deaths were 1m48s and 5m14s in — nothing to
+checkpoint yet). Sharding is the fix for that class; this is the fix for losing hours of completed work.
+
 ## Phase 5 — report
 
 Finish with text: counts by severity/class, applied-fix list (commit shas), operator-decision list, refuted-candidate
