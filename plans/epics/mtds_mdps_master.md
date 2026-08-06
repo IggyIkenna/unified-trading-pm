@@ -76,6 +76,7 @@ related_plans:
   - ../active/data_completion_to_100_all_ag_2026_06_21.md
   - ../active/data_source_provenance_enforcement_2026_07_24.md
   - ../active/legacy_bucket_dual_write_decommission_2026_07_24.md
+  - ../active/mtds_file_size_refactor_2026_06_08.md
   - ../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
 last_updated:
   2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
@@ -724,7 +725,7 @@ layer**, not a re-statement of the work.
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
+_5 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -758,7 +759,10 @@ _(no plans currently assigned at this priority)_
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`mtds_file_size_refactor_2026_06_08`](../active/mtds_file_size_refactor_2026_06_08.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: refactor) **title**: MTDS/MDPS tech-debt & coverage — file-size
+splits + polars seam + coverage/QG residuals (survivor M-2)
 
 ## Archived plans
 

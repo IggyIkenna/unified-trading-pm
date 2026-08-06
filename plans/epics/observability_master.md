@@ -43,17 +43,14 @@ related_plans:
   - ../active/consolidator_throughput_backlog_monitor_2026_07_09.md
   - ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
   - ../active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md
-  - ../active/data_pipeline_alert_substrate_residual_2026_07_24.md
   - ../active/data_pipeline_alerts_batch_remediation_2026_07_15.md
-  - ../archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md
   - ../active/data_pipeline_hardening_self_monitoring_2026_06_22.md
   - ../active/data_pipeline_self_healing_completion_residual_2026_07_24.md
   - ../active/deployment_registry_firestore_migration_2026_07_14.md
-  - ../active/deployment_registry_firestore_p0_unblock_2026_07_14.md
   - ../active/deployment_registry_firestore_p3_cutover_2026_07_14.md
-  - ../active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
   - ../active/monitoring_control_plane_master_2026_06_10.md
   - ../active/orchestrator_vm_e2e_hardening_2026_07_24.md
+  - ../active/watchdog_kill_events_deployment_observability_2026_08_05_finalize.md
 last_updated: 2026-06-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -94,37 +91,30 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_15 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
+_12 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
-
-### [`data_pipeline_alerts_batch_remediation_2026_07_15`](../active/data_pipeline_alerts_batch_remediation_2026_07_15.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-pipeline alerts batch remediation —
-drive #data-pipeline-alerts to a clean/accurate state
-
-### [`deployment_registry_firestore_migration_2026_07_14`](../active/deployment_registry_firestore_migration_2026_07_14.md)
-
-**status**: active · **estimate**: 13 cal AI-days (class: infra) **title**: Deployment registry — migrate from
-GCS-object-per-VM to Firestore (queryable, scalable, AWS-ready) — OVERVIEW
-
-### [`deployment_registry_firestore_p0_unblock_2026_07_14`](../active/deployment_registry_firestore_p0_unblock_2026_07_14.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Deployment registry Firestore migration —
-Phase 0 — unblock prod (schedule reaper + graceful complete)
-
-## P1 — important; post-current-gate
 
 ### [`data_feed_sla_registry_and_active_self_healing_2026_06_19`](../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
 
 **status**: active · **estimate**: 3.0 cal AI-days (class: design) **title**: Data-feed SLA registry (single SSOT) +
 active feed self-healing
 
-### [`deployment_registry_firestore_p3_cutover_2026_07_14`](../active/deployment_registry_firestore_p3_cutover_2026_07_14.md)
+### [`data_pipeline_alerts_batch_remediation_2026_07_15`](../active/data_pipeline_alerts_batch_remediation_2026_07_15.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Deployment registry Firestore migration —
-Phase 3 — cutover to Firestore-only + decommission the GCS registry
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-pipeline alerts batch remediation —
+drive #data-pipeline-alerts to a clean/accurate state
+
+### [`data_pipeline_hardening_self_monitoring_2026_06_22`](../active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+
+**status**: active · **estimate**: 18 cal AI-days (class: infra) **title**: Data-Pipeline Hardening + Self-Monitoring
+(anti silent-misclassification)
+
+### [`deployment_registry_firestore_migration_2026_07_14`](../active/deployment_registry_firestore_migration_2026_07_14.md)
+
+**status**: active · **estimate**: 13 cal AI-days (class: infra) **title**: Deployment registry — migrate from
+GCS-object-per-VM to Firestore (queryable, scalable, AWS-ready) — OVERVIEW
 
 ### [`monitoring_control_plane_master_2026_06_10`](../active/monitoring_control_plane_master_2026_06_10.md)
 
@@ -135,6 +125,18 @@ dashboard (deployment-ui) + fleet git-health (orchestrator)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: design) **title**: Orchestrator e2e control-plane
 validation + VM-from-scratch hardening
+
+## P1 — important; post-current-gate
+
+### [`data_pipeline_ag_residual_backfill_decisions_2026_07_24`](../active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-Pipeline AG Residual Backfill
+Decisions — TradFi + DeFi (forked from the hardening/self-monitoring plan)
+
+### [`deployment_registry_firestore_p3_cutover_2026_07_14`](../active/deployment_registry_firestore_p3_cutover_2026_07_14.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Deployment registry Firestore migration —
+Phase 3 — cutover to Firestore-only + decommission the GCS registry
 
 ## P2 — useful; opportunistic
 
@@ -148,30 +150,15 @@ artifact → deploy lineage across both clouds
 **status**: active · **estimate**: 1.8 cal AI-days (class: design) **title**: Consolidators tab — per-AG backlog +
 consolidation throughput monitor
 
-### [`data_pipeline_ag_residual_backfill_decisions_2026_07_24`](../active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-Pipeline AG Residual Backfill
-Decisions — TradFi + DeFi (forked from the hardening/self-monitoring plan)
-
-### [`data_pipeline_alert_substrate_residual_2026_07_24`](../active/data_pipeline_alert_substrate_residual_2026_07_24.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Data-Pipeline Alert Substrate — Residual
-Hardening (forked from the hardening/self-monitoring plan)
-
-### [`data_pipeline_hardening_self_monitoring_2026_06_22`](../active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
-
-**status**: active · **estimate**: 18 cal AI-days (class: infra) **title**: Data-Pipeline Hardening + Self-Monitoring
-(anti silent-misclassification)
-
 ### [`data_pipeline_self_healing_completion_residual_2026_07_24`](../active/data_pipeline_self_healing_completion_residual_2026_07_24.md)
 
 **status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data-Pipeline Self-Healing Completion —
 Residual Actuator Wiring (forked from the hardening/self-monitoring plan)
 
-### [`deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17`](../active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md)
+### [`watchdog_kill_events_deployment_observability_2026_08_05_finalize`](../active/watchdog_kill_events_deployment_observability_2026_08_05_finalize.md)
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: deployment-ui — one URL scheme — plain
-routes, retire `?tab=`
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Finalize — watchdog kill-events
+deployment-observability surfacing
 
 ## P3 — backlog; revisit quarterly
 

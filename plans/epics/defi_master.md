@@ -51,12 +51,20 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/defi_consolidated_closeout_2026_07_18.md
-  - /plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md
-  - /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
+  - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md
+  - ../active/defi_satellite_ao_dispatch_batch2_2026_07_26.md
+  - ../active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md
+  - ../active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - ../active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md
+  - ../active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md
+  - ../active/defi_satellite_ao_dispatch_batch6_2026_07_30.md
+  - ../active/defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md
+  - ../active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md
   - ../active/defi_strategy_pnl_axis_index_2026_07_24.md
-  - ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md
-  - ../active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md
+  - ../active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
+  - ../active/defi_track5_coverage_mvp_backfill_2026_07_24.md
+  - ../active/mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27.md
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -613,10 +621,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                                                                                                                                                      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                                                                                                                                                      ```
+                                                                                                                                                                                                                          gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                                                                                                                                                          ```
 
-                                                                                                                                                                                                                      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                                                                                                                                                          [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -1160,16 +1168,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                                                                                                                                                      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                                                                                                                                                      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                                                                                                                                                      VM ran current code without a refresh.
+                                                                                                                                                                                                                          `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                                                                                                                                                          (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                                                                                                                                                          VM ran current code without a refresh.
 
-                                                                                                                                                                                                                      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                                                                                                                                                      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                                                                                                                                                      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                                                                                                                                                          Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                                                                                                                                                          (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                                                                                                                                                          `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                                                                                                                                                      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                                                                                                                                                      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                                                                                                                                                          Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                                                                                                                                                          (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1694,43 +1702,50 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+_15 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
 Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`defi_lending_writer_retire_prerequisite_2026_07_20`](/plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md)
+### [`defi_consolidated_closeout_2026_07_18`](../active/defi_consolidated_closeout_2026_07_18.md)
 
-**status**: ✅ ARCHIVED 2026-07-28 (was: active) · **estimate**: 2.0 cal AI-days (class: refactor) · **title**: DeFi
-lending writer fix — HARD PREREQUISITE for the D2 flat-LENDING retire — all 18 todos done; the physical
-LENDING→A_TOKEN/DEBT_TOKEN retire (8/10/11/14) is WON'T-DO (session-3 operator decision), superseded by a read-side
-resolver.
-
-### [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
-
-**status**: ✅ ARCHIVED 2026-07-27 (was: active) · **estimate**: 3.6 cal AI-days (class: design) · **title**: DeFi
-hardcoded on-chain-derivable values + UAC date-drift elimination (derive-SSOT + CI citation gate) — all 14/14 todos done
-(`unified-api-contracts@4a29261e`, `instruments-service@8b02b647`); no longer a P0 must-complete item.
+**status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
 ### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
 
 **status**: active · **estimate**: 4 cal AI-days (class: infra)
 
-### [`mvp_backfill_defi_onchain_v10_2026_06_27`](../active/mvp_backfill_defi_onchain_v10_2026_06_27.md)
+### [`defi_track01_per_instrument_and_canon_id_2026_07_24`](../active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: MVP backfill — DeFi all on-chain data_types
-(SPOT-only, per-protocol genesis, reconcile-then-fill)
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: DeFi Track 0-1 — per-instrument
+re-architecture + instrument-ID canonicalization (the gating id migration)
 
-### [`mvp_backfill_defi_onchain_v10_operational_log_2026_07_24`](../active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)
+### [`defi_track5_coverage_mvp_backfill_2026_07_24`](../active/defi_track5_coverage_mvp_backfill_2026_07_24.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: MVP backfill — DeFi all on-chain data_types
-— operational log (extracted from mvp_backfill_defi_onchain_v10)
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: DeFi Track 5 — COVERAGE backfill → MVP-100%
+(forked from defi_consolidated_closeout_2026_07_18.md)
 
 ## P1 — important; post-current-gate
 
-### [`defi_consolidated_closeout_2026_07_18`](../active/defi_consolidated_closeout_2026_07_18.md)
+### [`defi_satellite_ao_dispatch_batch3_2026_07_26_finalize`](../active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md)
 
-**status**: active · **estimate**: 9.6 cal AI-days (class: infra)
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: DeFi satellite AO batch 3 — finalize
+(reconcile source docs + resolve deferrals + archive)
+
+### [`defi_satellite_ao_dispatch_batch5_2026_07_27_finalize`](../active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md)
+
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: DeFi satellite AO batch 5 — finalize
+(reconcile source docs + resolve deferrals + archive)
+
+### [`defi_satellite_ao_dispatch_batch6_2026_07_30`](../active/defi_satellite_ao_dispatch_batch6_2026_07_30.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: DeFi satellite AO batch 6 — residual-orphan
+triage after batch5 (scheduled ag_closeout_auditor)
+
+### [`defi_satellite_ao_dispatch_batch6_2026_07_30_finalize`](../active/defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: infra) **title**: DeFi satellite AO batch 6 — finalize
+(reconcile source docs + resolve deferrals + archive)
 
 ### [`defi_strategy_pnl_axis_index_2026_07_24`](../active/defi_strategy_pnl_axis_index_2026_07_24.md)
 
@@ -1739,11 +1754,35 @@ entry point for the strategy-service track
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+
+### [`defi_satellite_ao_dispatch_batch2_2026_07_26`](../active/defi_satellite_ao_dispatch_batch2_2026_07_26.md)
+
+**status**: active · **estimate**: 2.2 cal AI-days (class: infra) **title**: DeFi satellite AO batch 2 — fresh
+Phase-1/Phase-3 triage of the defi closeout-orphan corpus
+
+### [`defi_satellite_ao_dispatch_batch2_2026_07_26_finalize`](../active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md)
+
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: DeFi satellite AO batch 2 — finalize
+(reconcile source docs + resolve deferrals + archive)
+
+### [`defi_satellite_ao_dispatch_batch3_2026_07_26`](../active/defi_satellite_ao_dispatch_batch3_2026_07_26.md)
+
+**status**: active · **estimate**: 1.9 cal AI-days (class: infra) **title**: DeFi satellite AO batch 3 — residual-orphan
+triage after batch2
+
+### [`mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27`](../active/mvp_backfill_defi_onchain_v10_2026_06_27_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`defi_satellite_ao_dispatch_batch8_2026_08_02_finalize`](../active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: DeFi satellite AO batch 8 — finalize
+(reconcile source doc + archive)
 
 ## Cross-references
 

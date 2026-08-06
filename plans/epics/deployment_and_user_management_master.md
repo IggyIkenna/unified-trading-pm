@@ -29,6 +29,8 @@ related_plans:
   - ../active/github_actions_operator_gated_followups_2026_07_17.md
   - ../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md
   - ../active/sports_prediction_mvp_writetime_precompute_2026_07_24.md
+  - ../active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md
+  - ../active/ui_consolidated_closeout_2026_07_30.md
 last_updated: 2026-07-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -95,7 +97,7 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_9 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -121,6 +123,15 @@ true-catalogue (expected-universe) source
 
 **status**: active · **estimate**: 5.4 cal AI-days (class: design) **title**: Data-status page — honest-coverage fix
 (shipped) + UX & canonicalisation follow-ups (P1–P8)
+
+### [`test_impact_fleet_wide_measurement_and_rollout_2026_08_03`](../active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: research) **title**: Test-impact / selective execution —
+fleet-wide eligibility measurement, then staged rollout
+
+### [`ui_consolidated_closeout_2026_07_30`](../active/ui_consolidated_closeout_2026_07_30.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic
 

@@ -26,10 +26,11 @@ parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
-  - ../active/active_plan_inventory_dashboard_2026_07_24.md
+  - ../active/ag_closeout_audit_rollout_2026_07_25.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
-  - ../active/docs_retrieval_layer_reconcile_2026_07_23.md
-  - ../archive/2026_07/l0_doc_index_generator_2026_06_24.md
+  - ../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
+  - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
+  - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
   - ../active/task_template.md
 last_updated: 2026-07-23
 locked_by: live-defi-rollout
@@ -378,7 +379,7 @@ Everything else (W3–W8) depends on this shape.
 
 ## Assigned active plans
 
-_5 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
+_6 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -387,27 +388,31 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### [`docs_retrieval_layer_reconcile_2026_07_23`](../active/docs_retrieval_layer_reconcile_2026_07_23.md)
+### [`ag_closeout_audit_rollout_2026_07_25`](../active/ag_closeout_audit_rollout_2026_07_25.md)
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Docs retrieval-layer reconcile — AGENTS.md
-doctrine gap + schema/generator parity QG + /docs-reconcile skill
+**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: AG closeout-audit rollout —
+cefi/defi/tradfi/prediction (sports treatment, generalized)
 
-### [`l0_doc_index_generator_2026_06_24`](../archive/2026_07/l0_doc_index_generator_2026_06_24.md) — ARCHIVED 2026-07-27
+### [`data_pipeline_e2e_milestones_gate_2026_07_24`](../active/data_pipeline_e2e_milestones_gate_2026_07_24.md)
 
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: L0 doc-index generator (grep-native map) +
-FF-cron auto-regen
+**status**: active · **estimate**: 9.6 cal AI-days (class: research) **title**: Data-pipeline E2E milestones gate — 14
+cross-AG correctness criteria for the 5 asset-group consolidated closeouts
 
 ## P2 — useful; opportunistic
-
-### [`active_plan_inventory_dashboard_2026_07_24`](../active/active_plan_inventory_dashboard_2026_07_24.md)
-
-**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Active plan inventory + Done-vs-Left
-dashboard
 
 ### [`asset_class_to_asset_group_rename_2026_07_21`](../active/asset_class_to_asset_group_rename_2026_07_21.md)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: AssetClass → AssetGroup rename — domain
 enum only, cross-repo coordinated landing
+
+### [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Complete context_scout plumbing + close a
+frontmatter-schema drift + add a plan-brainstorm skill
+
+### [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md)
+
+**status**: active · **estimate**: 14.4 cal AI-days (class: research) **title**: >-
 
 ### [`task_template`](../active/task_template.md)
 

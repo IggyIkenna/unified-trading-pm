@@ -146,7 +146,7 @@ via `playwright.config.ts` `workers: 1`, gate now 424/0 green, archived) ·
 (8 pre-existing smoke failures — Daily Costs page, mobile nav hamburger, nav-menu-dedup; **retagged here from
 `infrastructure` 2026-07-30 — was previously cited in `infra_consolidated_closeout_2026_07_25.md` Track 4, now this
 tranche's home instead**) ·
-[issues/deployment_api_live_mock_parity_2026_07_17.md](/plans/active/issues/deployment_api_live_mock_parity_2026_07_17.md)
+[issues/deployment_api_live_mock_parity_2026_07_17.md](/plans/archive/issues/deployment_api_live_mock_parity_2026_07_17.md)
 (mock mode has drifted from live on 12 of 111 endpoints, incl. an empty coverage-summary — directly relevant to this
 session's own local-dev live-vs-mock confusion) ·
 [issues/deployment_api_sigabrt_crash_loop_2026_07_24.md](/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md)

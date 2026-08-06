@@ -217,11 +217,10 @@ Regenerated 2026-07-12 from `epics/*.md` frontmatter per operator ruling (plan-r
 `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`. Tier count also corrected 5→6 in the heading: the table has always
 spanned `L0`–`L5` (six distinct tiers); the pre-existing "5 tiers" phrasing undercounted.
 
-**Caveat (added 2026-07-25, plan-reconcile)**: this "Assigned VM" column is NOT kept in sync with per-epic
-`assigned_vm` frontmatter corrections made after 2026-07-12 (e.g. `escalation_and_disaster_recovery_master` and
-`trading_agent_master` both had `assigned_vm` corrected to `planning` on 2026-07-21) — consistent with the
-epic-owns-VM model already being SUPERSEDED/archival-only per the top banner. Treat this table's VM column as a
-2026-07-12 snapshot, not a live registry.
+**Caveat (added 2026-07-25, plan-reconcile)**: this "Assigned VM" column is NOT kept in sync with per-epic `assigned_vm`
+frontmatter corrections made after 2026-07-12 (e.g. `escalation_and_disaster_recovery_master` and `trading_agent_master`
+both had `assigned_vm` corrected to `planning` on 2026-07-21) — consistent with the epic-owns-VM model already being
+SUPERSEDED/archival-only per the top banner. Treat this table's VM column as a 2026-07-12 snapshot, not a live registry.
 
 - [ ] [SCRIPT] P2. Script this regeneration (scripts/plan-hygiene or scripts/docs) so the registry can't drift again —
       wire into the hygiene sweep.

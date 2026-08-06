@@ -44,7 +44,6 @@ related_plans:
   - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
   - ../active/l2_book_microstructure_capture_2026_07_13.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
-  - ../archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md
 last_updated: 2026-06-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -108,7 +107,7 @@ archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_
 
 ## Assigned active plans
 
-_9 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
+_8 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -122,20 +121,6 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 1.0 cal AI-days (class: brand-new) **title**: Capability wizard — client-lite
 successor + CI-runner openapi regen follow-up
 
-### [`crypto_alpha_research_2026_07_24`](../active/crypto_alpha_research_2026_07_24.md)
-
-**status**: active · **estimate**: 18 cal AI-days (class: research) **title**: Crypto Alpha Research — Book
-Construction, Signal Research & Paper-Trading POC
-
-### [`vol_dvol_backtestable_engines_2026_07_13`](../archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md)
-
-**status**: ✅ ARCHIVED 2026-08-03 to `plans/archive/2026_08/` — all 5 todos done; both VOL_CARRY and VOL_ARB_RV_IV
-backtests came back non-passing (BLOCKED-INSUFFICIENT-EDGE), stay `not_available`; matrix regen confirmed 0/2 flipped
-**estimate**: 5.0 cal AI-days (class: brand-new) **title**: DVOL-Backtestable VOL Engines — VOL_CARRY + VOL_ARB_RV_IV
-register-or-honest-absent
-
-## P2 — useful; opportunistic
-
 ### [`carry_staked_basis_funding_scan_experiment_2026_06_16`](../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md)
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis funding-carry scan —
@@ -145,6 +130,13 @@ exploratory analysis harness + journal
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis — ensemble
 orchestrator engine + strategy-service productionization
+
+### [`crypto_alpha_research_2026_07_24`](../active/crypto_alpha_research_2026_07_24.md)
+
+**status**: active · **estimate**: 18 cal AI-days (class: research) **title**: Crypto Alpha Research — Book
+Construction, Signal Research & Paper-Trading POC
+
+## P2 — useful; opportunistic
 
 ### [`cross_venue_funding_reversion_research_2026_07_24`](../active/cross_venue_funding_reversion_research_2026_07_24.md)
 

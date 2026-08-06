@@ -24,6 +24,8 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/codex_vs_repo_docs_ssot_audit_2026_06_01.md
+  - ../active/codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md
+  - ../active/june_2026_vintage_audit_findings_2026_07_27.md
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -205,7 +207,7 @@ single-walk discipline) consistently aligned. Residual items:
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: plan_hygiene_master` in their frontmatter. Workers pick up in priority order (P0
+_3 active plans declare `parent_epic: plan_hygiene_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -219,9 +221,16 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 3.2 cal AI-days (class: refactor) **title**: Codex-vs-repo-docs SSOT audit +
 consolidation (all active repos)
 
+### [`june_2026_vintage_audit_findings_2026_07_27`](../active/june_2026_vintage_audit_findings_2026_07_27.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: refactor) **title**: June-2026 vintage audit findings — bugs,
+archives, migrations, rehomes, operator-gate queue
+
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### [`codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27`](../active/codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
 ## P3 — backlog; revisit quarterly
 
