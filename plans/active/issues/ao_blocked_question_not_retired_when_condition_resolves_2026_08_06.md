@@ -130,19 +130,30 @@ trains the operator to skim it, which is exactly how a genuinely urgent one gets
       NEITHER shipped trigger, because its task never went terminal and no doc was archived. That is precisely todo 3's
       external-condition re-check, which is therefore the load-bearing remaining work here, not a nice-to-have.
 
-- [ ] [OPERATOR] P2. **Decide whether the orchestrator may make outbound GitHub reads, then build the external-condition
-      predicate.** The other half of todo 3, and the ONLY thing that would have caught the case this issue was filed
-      for: BLK-4781b9af asked "admin-merge PR #861?"; the PR was closed as superseded and `quality-gates-v2` went green
-      on main ~11h later, yet its task never went terminal and no doc was archived — so neither shipped retirement
-      trigger sees it. The 2026-08-06 prod sweep confirmed that empirically (`checked=26, retired=0`). A predicate
-      (`gh pr view <n> --json state`, or the required-check status) would auto-retire it with evidence. **Operator
-      decision needed BEFORE building**: the reconciler makes zero outbound network calls today, and adding them inside
-      its sweep tick brings rate limits, timeouts and a token into a loop that currently cannot fail externally.
-      Options: (a) grant a read-only `GH_TOKEN` and call GitHub from the sweep behind a timeout + circuit breaker; (b)
-      have the EXISTING ci-failure-watcher (already credentialled for GitHub) publish PR/check state that the reconciler
-      reads locally — no new egress from the sweep; (c) stop at the age re-remind above and let a human close stale
-      questions. **(b) recommended** — it reuses an already-credentialled GitHub consumer and keeps the reconciler
-      network-free.
+- [x] ✅ [INFRA] P2. **External-condition predicate — SHIPPED (agent-orchestrator@bf5b735).** This is the trigger for
+      the case that motivated the whole issue: BLK-4781b9af asked "admin-merge PR #861?", the PR was closed as
+      superseded and main went green ~11h later, while its task stayed open and no doc moved — so neither local trigger
+      can see it. `classify_external_pr_condition()` shells `gh pr view` and retires when the PR is MERGED/CLOSED.
+      **Correction to this doc's earlier framing**: it previously gated this on an operator ruling about "whether the
+      orchestrator may make outbound network calls". That premise was WRONG and the operator challenged it — the
+      orchestrator process already shells to `gh` from four modules (`gh_rate_monitor`, `ci_status`, `ci_reconcile`,
+      `escalation`) and already monitors its own GitHub rate-limit pools, so this is one more call on an existing,
+      already-credentialled egress path, not a new capability. No ruling was needed. Conservative by construction,
+      because a false retirement closes a real operator question (cf.
+      `blocked_reconcile_marker_false_positive_2026_08_03`): EXACTLY one distinct `PR #<n>` in the text (several =
+      ambiguous → skip, without even looking up), a repo name from the actual workspace must appear so we never guess
+      which repo a bare `#861` belongs to, only MERGED/CLOSED retire (OPEN = decision still live), and ANY lookup
+      failure leaves the question alone. Knob `tuning.blocked_retire_on_pr_terminal` (default True) can disable it.
+      **Verified live on the orchestrator itself**, not just unit-tested:
+      `fetch_pr_state('unified-api-contracts','861')` → `CLOSED`, and the predicate returned
+      `('pr_terminal', 'IggyIkenna/unified-api-contracts PR #861 is CLOSED — the merge decision this question asked     for has already been taken')`
+      — i.e. exactly the verdict that would have released slot 2 fifteen hours early. The post-deploy sweep retired 0 of
+      the 25 currently-pending questions, which is correct: they are all `[OPERATOR]` policy questions with no PR
+      reference, so the conservative matching declines them. 5 tests:
+      `tests/test_blocked_reconcile.py::test_pr_predicate_retires_on_a_closed_pr`,
+      `…::test_pr_predicate_leaves_an_open_pr_alone`, `…::test_pr_predicate_skips_ambiguous_multi_pr_questions` (asserts
+      no lookup even happens), `…::test_pr_predicate_requires_a_named_repo`,
+      `…::test_pr_predicate_never_retires_on_a_failed_lookup`.
 
 ## Progress Log
 
