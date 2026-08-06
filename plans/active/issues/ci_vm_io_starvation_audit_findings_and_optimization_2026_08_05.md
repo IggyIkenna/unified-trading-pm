@@ -227,6 +227,61 @@ The venv cost that IS real is **metadata**: ~35,500 inode/dentry creations per v
 
 ---
 
+## Part 3a — The actual dominant cost: `actions/cache` on `~/.cache/uv` (FIXED 2026-08-06)
+
+The clone/checkout is **not** the expensive step — a suspicion worth killing early. Real step timings, self-hosted:
+
+| Step                              | features-service | execution-service | MTDS     | unified-trading-pm |
+| --------------------------------- | ---------------- | ----------------- | -------- | ------------------ |
+| `Checkout`                        | 1s               | 1s                | 2s       | 6–9s               |
+| **`Cache uv package cache`**      | **450s**         | 22s               | **335s** | 13–22s             |
+| `Clone …pm and dependencies`      | 11s              | 8s                | 10s      | 2–3s               |
+| `Install dependencies` (uv sync)  | 5s               | 2s                | 2s       | 3–5s               |
+| `Run quality gates`               | 271s             | 107s              | 167s     | 48–69s             |
+| **`Post Cache uv package cache`** | 0s               | **894s**          | 0s       | 0s                 |
+
+`Checkout` is 1–2s because `_work` persists and `.git` survives between jobs (`features-service/.git` = 3.7 MB under
+`fetch-depth: 2`) — `actions/checkout` does an incremental fetch, not a clone.
+
+**Why the cache step was so expensive.** `actions/cache` never checks whether files are already on disk. On every run it
+downloads the archive and extracts it over `~/.cache/uv` regardless — features-service logged `Cache hit` 0.6s in, then
+spent 450s transferring and extracting. **The save cannot succeed by construction**: `~/.cache/uv` is ONE shared 43 GB
+directory used by every repo concurrently, while `actions/cache` treats it as private. execution-service's teardown:
+
+```
+23:32:42  /usr/bin/tar --posix -cf cache.tzst … --use-compress-program zstdmt
+23:47:22  tar: …/home/ubuntu/.cache/uv/archive-v0: file changed as we read it
+23:47:36  ##[warning]Failed to save: "/usr/bin/tar" failed with exit code 1
+```
+
+894 s tarring 43 GB, then failing and saving nothing — the same shared-cache race the `uv sync` retry loop documents. A
+failed save means the next run misses and re-tars forever. execution-service cache usage had reached **8.5 of GitHub's
+10 GB cap** (one 5.6 GB entry), so evictions were compounding it.
+
+**Why it existed:** the step was deliberately left unconditional on the stated assumption that "GH-side cache
+restore/save costs only a few seconds". That was true on `ubuntu-latest` with a small cache; it was never re-measured
+after the self-hosted migration.
+
+**Likely the original incident.** Tarring 43 GB sustains ~50 MB/s read per job; two or three concurrently is 100–150
+MB/s — matching the 124.x MB/s pin that held for 9 h against the old 125 MB/s ceiling (Finding 2). Strong inference, not
+proof.
+
+**FIXED** — `unified-trading-pm@9b39f6a05`: the step is now gated on `inputs.self_hosted_runner_labels == ''`, so it
+runs only for GitHub-hosted repos where it genuinely pays (2m07s cold vs 9s warm). **Verified live**, PM run
+`31081212407` (post-push), both slices:
+
+```
+skipped   Cache uv package cache          ← was 13–22s on PM
+success   Install dependencies      3-4s  ← uv sync still fast = local cache intact
+(Post Cache uv package cache — absent: no main step ⇒ no injected post phase)
+```
+
+The `Install dependencies` line is the safety proof: `uv` resolved everything from the local cache with no GitHub
+restore. The tools cache is **deliberately untouched** — its four install steps are gated on
+`steps.tools-cache.outputs.cache-hit`, so gating it would make them all run every time.
+
+---
+
 ## Part 4 — Shared repos + pre-built venvs + worktrees (⚠️ RESCOPED)
 
 ### What was wrong
@@ -389,6 +444,38 @@ exposure, and shrinks the VM's workload to the 7 private repos** — a far large
 Private repos remaining on self-hosted: `agent-orchestrator`, `e2e-testing`, `execution-service`, `features-service`,
 `market-tick-data-service`, `ml-service`, `strategy-service` — ~1,388 of 3,809 cpu-s (**36%** of fleet load).
 
+### Actions-minute economics (measured 2026-08-06)
+
+**Public repos have NO minute limit — GitHub Actions is free and unlimited on standard hosted runners.** Caveats:
+GitHub's _larger_ runners are billed even on public repos (stay on standard `ubuntu-latest`), and the 10 GB per-repo
+cache cap still applies. Private (personal account): 2,000 min/mo included, then ~$0.008/min Linux 2-core.
+
+Measured job-minutes, 24 h window ending 2026-08-06T07:00Z, via `scripts/cicd/measure-ci-job-minutes.sh` (GitHub's
+billing REST API returns 403 for a PAT on a User account, so this measures from run/job timestamps instead — **volume,
+not cost**):
+
+| repo (all private)         | runs | jobs      | **min/24h** |
+| -------------------------- | ---- | --------- | ----------- |
+| `market-tick-data-service` | 49   | 256       | **1,649**   |
+| `agent-orchestrator`       | 97   | 361       | **1,519**   |
+| `features-service`         | 18   | 148       | 988         |
+| `ml-service`               | 33   | 196       | 698         |
+| `execution-service`        | 48   | 94        | 561         |
+| `strategy-service`         | 13   | 74        | 301         |
+| `e2e-testing`              | 25   | 124       | 159         |
+| **total**                  |      | **1,253** | **5,875**   |
+
+~5,875 min/day → ~~176,000 min/mo → **~~$1,410/mo if GitHub-hosted**, i.e. MORE than the VM costs. **For the private
+set, the self-hosted VM is genuinely the cheaper option** — it is earning its keep, and its sizing is set by these 7
+repos alone.
+
+> ⚠️ **These numbers are PRE-cache-fix and heavily inflated by it.** MTDS ran 256 jobs at ~335s cache restore each —
+> ~1,430 of its 1,649 minutes. Across 1,253 jobs, roughly a third to two-thirds of the 5,875 min was `actions/cache`
+> doing nothing useful (Part 3a). **Do not size anything on this number — re-measure after 2026-08-06.**
+
+The 18 public repos' volume is **not yet measurable**: 16 of them have zero runners and cannot dispatch, so there is no
+traffic to count until the migration is finished. What is certain is that their cost is $0 at any volume.
+
 ---
 
 ## Part 7 — Other verified findings
@@ -426,6 +513,21 @@ Private repos remaining on self-hosted: `agent-orchestrator`, `e2e-testing`, `ex
       via SSM (`swapon --show`). Detail: `/plans/active/ci_vm_exposure_remediation_2026_08_06.md` todo 1. Same session
       also shipped the durable resource-history-sampler + S3-mirrored backup parity with the AO box (todo 2), fixing a
       real latent `PrivateTmp=yes` bug in the checked-in `agent-orchestrator` SSOT.
+
+- [x] ✅ [INFRA] P0. **Gate the uv cache restore/save off self-hosted runners.** Shipped 2026-08-06,
+      `unified-trading-pm@9b39f6a05`. Was costing 335–894s/job for zero benefit (packages already local); the save could
+      never succeed (shared 43 GB dir, `tar` exit 1). Evidence: PM run `31081212407` post-push shows
+      `skipped Cache uv package cache` on both slices with `Install dependencies` still 3–4s (local cache intact) and
+      the post phase absent. Full analysis: Part 3a.
+
+- [ ] [INFRA] P0. **Re-measure fleet job-minutes 24 h after the cache fix.** Run
+      `bash scripts/cicd/measure-ci-job-minutes.sh` and record the delta against the 5,875 min/24h pre-fix baseline in
+      Part 6. Every sizing decision below is gated on this number — the pre-fix figure is inflated by the very step that
+      was just removed, so sizing on it would be sizing on a bug.
+
+- [ ] [INFRA] P1. **Investigate CI run VOLUME on the two heaviest repos.** `agent-orchestrator` fires 97 runs / 361 jobs
+      per day and `market-tick-data-service` 49 runs / 256 jobs. Together that is ~54% of all fleet job-minutes. Cutting
+      redundant triggers beats any instance-size choice, and no downsizing fixes it.
 
 - [ ] [OPERATOR] P0. **Harden or remove self-hosted runners on PUBLIC repos.** `unified-trading-pm` is public with 8
       self-hosted runners; recheck `deployment-api`. Decide: (a) require approval for ALL outside-contributor fork PRs +
@@ -488,8 +590,40 @@ Private repos remaining on self-hosted: `agent-orchestrator`, `e2e-testing`, `ex
 
 ---
 
+## Deferred work after 2026-08-06
+
+| Item                                              | State                  | Blocked on                                                      |
+| ------------------------------------------------- | ---------------------- | --------------------------------------------------------------- |
+| Re-measure job-minutes post-cache-fix             | **Cannot be done yet** | ~24 h of elapsed traffic. Gates every sizing decision.          |
+| Re-baseline `qg_resource_baseline.json`           | **Not done**           | Nobody — real work, and the governor over-admits until it lands |
+| Complete public-repo → `ubuntu-latest` migration  | **Not done**           | Nobody (but see the operator row — same decision surface)       |
+| Harden/remove self-hosted runners on public repos | **Operator-owned**     | Repo visibility + org actions policy; not agent-changeable      |
+| Downsize CI VM / planning VM                      | **Operator-owned**     | Gated on the re-measure above landing first                     |
+| Could any of the 7 private repos go public?       | **Operator-owned**     | Business call on repo contents; would zero their CI cost        |
+| Fix the 6 plan-hygiene ratchets                   | **Not done**           | Nobody — PM's LDR→main promotion stays blocked until fixed      |
+| Sibling-clone I/O (bare repos + worktree)         | **Not done**           | Low priority — 8–11s/job, dwarfed by what was just removed      |
+
+**Recommended NEXT item: fix the 6 plan-hygiene ratchets.** It is the only P0 that is neither operator-gated nor waiting
+on elapsed time, and PM's promotion pipeline re-fails every ~15 min until it is done. The re-measure runs itself in the
+background of that work.
+
+---
+
 ## Progress Log
 
+- **2026-08-06 (cache-cost session, cont.)** — Traced the "clone is expensive" hypothesis and **falsified it**:
+  `Checkout` is 1–2s (persistent `_work`, `.git` survives, `fetch-depth: 2`). The real cost was `actions/cache` on
+  `~/.cache/uv` — 335–894s/job, with a save that could never succeed against a shared 43 GB dir. Gated it off
+  self-hosted (`9b39f6a05`) and verified live. Measured fleet job-minutes (5,875/24h across the 7 private repos) and
+  established the Actions-minute economics: public = free/unlimited, and the VM is genuinely cheaper than GitHub for the
+  private set (~$1,410/mo equivalent). Promoted `scripts/cicd/measure-ci-job-minutes.sh` out of the scratchpad.
+  **Corrections to my own earlier claims in this session, recorded so they don't survive as folklore:** (a) I asserted
+  "RAM must not be halved / target 32 GB" from the 29.7 GB observed peak — the operator correctly pointed out that peak
+  is a consequence of UNGATED concurrency, not a requirement; queue the runs and the ceiling becomes the largest single
+  job (~6 GB), so 16 GB is plausible and the 32 GB recommendation was over-cautious. (b) I projected "features-service
+  756s → 290s" — that is arithmetic from step timings, NOT an observation; only PM has been measured post-fix. (c) The
+  `cpu_s`-per-wave figure (3,809) still rests on the 3–7 week stale baseline and should not be trusted until the
+  re-baseline lands.
 - **2026-08-06 (independent verification + cost re-frame)** — Re-verified every 08-05 claim against live AWS API,
   CloudWatch, SSM, cgroup v2, and the GitHub API. Results: 3 confirmed, 5 corrected, 6 falsified (Part 0). Key
   reversals: root cause is **throughput** (9 h pinned at 124.x MB/s vs a 125 MB/s ceiling), not IOPS; the 16,000 IOPS
