@@ -276,10 +276,11 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       installer (updated 2026-07-30) generates 5950/6000 — a git pull alone does not regenerate an installed unit (the
       exact gap this doc's item 3 warns about). Under an API stall (as on 08-05) the old 40-min curl ceiling
       force-terminates a legitimately-pending dispatch and reports a false `timeout`. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P3. Bump the docs-reconcile + context-scout dispatch ceilings — both repo installers AND live units still
-      run `--max-time 2400` / `TimeoutStartSec=2450` (the 08-04 item-3 bump covered only the auditors; these two were
-      never raised). Bump to plan-reconciler's 5950/6000 and re-install the two units; same false-`timeout` class under
-      a stall. (repo: agent-orchestrator)
+- [x] ✅ [SCRIPT] P3. Bump the docs-reconcile + context-scout dispatch ceilings — both repo installers AND live units
+      still run `--max-time 2400` / `TimeoutStartSec=2450` (the 08-04 item-3 bump covered only the auditors; these two
+      were never raised). Bump to plan-reconciler's 5950/6000 and re-install the two units; same false-`timeout` class
+      under a stall. (repo: agent-orchestrator) — agent-orchestrator@4eda2be (installers bumped: --max-time 2400→5950,
+      TimeoutStartSec 2450→6000 in both; live VM re-install needs operator sudo)
 - [ ] [DATA] P3. Alert gap surfaced by the 08-05 outage: a FULL-DAY `no_capacity` for every scheduled auditor (account
       pool exhausted) is NOT self-resolving and does NOT page — `SCHEDULED_JOB_FAILURE_STATUSES` deliberately excludes
       `no_capacity` as "routine". Add a detector for "zero scheduled dispatches in a 24h window / N consecutive
