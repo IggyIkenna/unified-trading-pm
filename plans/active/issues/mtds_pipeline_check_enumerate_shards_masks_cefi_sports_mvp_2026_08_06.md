@@ -140,6 +140,16 @@ audit doesn't re-discover it as if new; not requesting action on it here.
   leaves the same masking risk for the NEXT asset_group that acquires an unsupported enumeration-time `is_mvp()`
   dependency.
 
+## Tracked follow-up (added 2026-08-06 by plan-reconcile — zero-checkbox sweep; this doc previously had no todos)
+
+- [ ] [SCRIPT] P1. Implement remediation (b) — per-asset-group fallback in `pipeline_e2e_check.py`'s enumeration: track
+      which asset groups contributed zero shards from the primary path and fallback-enumerate ONLY those via
+      `smoke_matrix.enumerate_cells(asset_group_filter=<that group>)` instead of gating on the combined list's aggregate
+      truthiness (closes the cefi/sports invisible-in-combined-sweep masking at the mechanism level; option (a)
+      hand-listed `_CEFI_MVP_SHARDS`/SPORTS-equivalent alone leaves the same masking risk for the next asset_group).
+      Done-when: a single unfiltered `pipeline_e2e_check.py` invocation enumerates non-empty shards for CEFI and SPORTS
+      on the shared host.
+
 ## Workaround used this run (cefi_mtds_smoke_tester, day=2026-08-05)
 
 Invoked `pipeline_e2e_check.py` once per `--asset-group` explicitly (CEFI, DEFI, TRADFI, SPORTS, PREDICTION) rather than

@@ -171,15 +171,17 @@ rather than re-launching (and re-spending) the same VMs a third time. For DEFI s
 protocol-appropriate cell (`--venue UNISWAP_V2-ETHEREUM --data-types dex_pool_swaps`) to at least get one real DEFI cell
 proven this run.
 
-## Suggested follow-up (not attempted this run — needs VM-level access this sandboxed session doesn't have)
+## Suggested follow-up (converted to tracked todos 2026-08-06 by plan-reconcile — zero-checkbox sweep; not attempted in the originating run — needs VM-level access the sandboxed session didn't have)
 
-- Reproduce with `strace -f`/`py-spy dump` attached to the process, or run under `setsid` in a fully detached session
-  (rules out a controlling-terminal/session-group signal propagation) to capture the actual signal number instead of
-  inferring "silent death = SIGKILL-shaped."
-- Check whether this host has a systemd `user@.service`/`loginctl` `KillUserProcesses`/idle-session-reaper policy that
-  might tear down a user's whole cgroup slice after some minutes of... (needs root — I don't have it here). the calling
-  shell/session going quiet, independent of nohup/disown (both only protect against SIGHUP, not a cgroup-wide signal
-  sweep) — this session's own background watchdog (a plain `while` loop) survived the same window unaffected, which
-  argues against a whole-session teardown and toward a NAME/PATTERN-targeted kill instead, but is not conclusive.
-- If a cross-slot `pkill` is confirmed as the mechanism: get `install-pkill-guard-shell-env.sh` running host-wide (every
-  slot's shell init, not opt-in per-session) so the guard actually protects against the failure mode it was built for.
+- [ ] [DIAG] P2. Reproduce with `strace -f`/`py-spy dump` attached to the process, or run under `setsid` in a fully
+      detached session (rules out a controlling-terminal/session-group signal propagation) to capture the actual signal
+      number instead of inferring "silent death = SIGKILL-shaped."
+- [ ] [DIAG] P3. Check whether this host has a systemd `user@.service`/`loginctl`
+      `KillUserProcesses`/idle-session-reaper policy that might tear down a user's whole cgroup slice after the calling
+      shell/session going quiet, independent of nohup/disown (both only protect against SIGHUP, not a cgroup-wide signal
+      sweep) — this session's own background watchdog (a plain `while` loop) survived the same window unaffected, which
+      argues against a whole-session teardown and toward a NAME/PATTERN-targeted kill instead, but is not conclusive.
+      (needs root — not available in the originating sandbox)
+- [ ] [SCRIPT] P2. If a cross-slot `pkill` is confirmed as the mechanism: get `install-pkill-guard-shell-env.sh` running
+      host-wide (every slot's shell init, not opt-in per-session) so the guard actually protects against the failure
+      mode it was built for.
