@@ -56,9 +56,9 @@ of load or a single additional offline runner triggers a complete stall.
 
 ## Recommended decision
 
-- [ ] [INFRA] P1. Add a runner-health monitor for the `glue` pool: alert when fewer than N runners are online (repo:
+- [x] ✅ [INFRA] P1. Add a runner-health monitor for the `glue` pool: alert when fewer than N runners are online (repo:
       unified-trading-pm). Minimum viable: a scheduled workflow that counts online glue runners and posts to Slack when
-      the count drops below a threshold (suggest 3).
+      the count drops below a threshold (suggest 3). — unified-trading-pm@64c3fd63a + evidence
 - [ ] [INFRA] P2. Investigate why glue-3 and glue-5 are offline — restart or replace (repo: unified-trading-pm).
 - [ ] [INFRA] P2. Hardening: add a `workflow_dispatch` trigger to `ldr-to-main-promote-fleet.yml` so an operator can
       manually kick off a promotion tick when the schedule is stuck (already exists — documented here for awareness).
