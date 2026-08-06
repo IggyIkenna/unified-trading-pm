@@ -19,7 +19,7 @@ summary: >-
   `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`-class regression. This is a one-time process gap (an intended
   edit that didn't happen), not a recurrence of a code defect — the fix is simply to perform the edit; the code path is
   sound.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Same AO backlog/park
@@ -51,6 +51,9 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "All 3 todos done. Root cause CONFIRMED (not a code regression -- journalctl + static read of _reconcile_task_fields()
+  showed the backlog.yaml edit was simply never performed, a one-time process gap). Park re-applied and confirmed
+  holding 2026-08-05 (priority:999, status:queued, dispatched_to:null)."
 source: >-
   Observed 2026-07-31T22:55Z (slot 15) on dispatch of live_event_log_warm_sink_recovery_and_cold_compaction-011: live
   read of agent-orchestrator/data/config/backlog.yaml shows priority=20/priority_override=false/prereqs=[] despite
@@ -66,6 +69,10 @@ context_scope:
     agent-orchestrator/server/auto_park.py,
   ]
 ---
+
+> **🔴 ARCHIVED 2026-08-06 — RESOLVED** (all todos `[x]`, unlocked). Root cause confirmed as a one-time process gap (the
+> backlog.yaml edit was never performed, not a code regression); the park was re-applied and confirmed holding
+> 2026-08-05. Archived by /plan-reconcile ao.
 
 # P1.2's hand-applied backlog park did not persist
 

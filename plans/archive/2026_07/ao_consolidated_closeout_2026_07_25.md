@@ -113,7 +113,7 @@ todos of its own**. The plans that actually work these docs' open items:
   [boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31](/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md),
   [orphaned_wip_slot12_slot8_recovery_2026_08_04](/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md),
   [backlog_regen_reverted_p1_2_park_2026_08_01](/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md),
-  [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/active/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
+  [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
   [fleet_git_health_ip_185_known_human_planning_vm_2026_08_03](/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md),
   [na_and_ag_closeout_audit_population_overlap_2026_07_31](/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md),
   [na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30](/plans/active/issues/na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30.md).
