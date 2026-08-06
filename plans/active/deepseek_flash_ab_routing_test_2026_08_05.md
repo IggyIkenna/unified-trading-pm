@@ -375,6 +375,24 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       orchestrator's own process, running as `ubuntu`): it will NOT touch these history-rewrite backups. No code change
       from this catch — it disproved a real-looking but ultimately spurious risk; recorded here so a future
       re-investigation doesn't have to re-derive the same "wrong user" trap.
+- [x] 23. ✅ [BACKEND] [UI] P2. **Task Token Usage role-group filter — planning / scheduled / cicd / conflict_resolver /
+      data_pipeline_failure**, operator ask following todo 20's wallet-reconciliation work: "see how much those types of
+      roles cost", filterable alongside the existing model filter without a huge flat row list. Root-caused before
+      building: `_done_one_off` (every cicd/conflict_resolver/data_pipeline_failure escalation and every scheduled
+      auditor's completion path) never wrote a `TaskUsageRow` at all — that work was structurally invisible to this
+      panel, not merely unlabeled. New `TaskUsageRow.dispatch_role` column (raw role/agent_kind, collapsed to a bucket
+      only in the query layer per operator ruling — keeps conflict_resolver/ data_pipeline_failure individually
+      filterable rather than folded into "cicd"); `_done_one_off` now computes + records usage (bracketed by
+      `AgentRow.registered_at`); `task_role_group()` built against `ESCALATION_FAMILY_ROLES`/`PLAN_HEALTH_FAMILY_ROLES`,
+      NOT the raw `lifecycle` string (which would misclassify backend_engineer/infra/quant_dev/ui_developer as "cicd" —
+      they share `lifecycle: one_shot`); `data_engineering` groups as "planning" per operator ruling (matches its real
+      backlog dispatch mechanism, not its role file's `scheduled` label). New `role_group` query param on
+      `GET /api/backlog/usage/windows` + second filter row in `TaskUsageWindows.tsx`. New backend pytest + Playwright
+      spec (`task-usage-role-group-filter.spec.ts`). Fixed a real pre-existing Playwright locator bug found along the
+      way (`.panel, {hasText}` ambiguity vs the Accounts panel's own cross-reference hint text); filed a separate,
+      deeper pre-existing e2e-fixture issue as a follow-up rather than fixing it here (see Progress Log). QG green (2499
+      backend / 225 frontend). Landed `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for
+      full detail and live numbers.
 
 ## Codex SSOTs
 
@@ -587,6 +605,43 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   future re-check doesn't re-derive the same wrong-user trap. Separately re-verified todo 21's `is_review_slot` fix
   (`agent-orchestrator@e936d05`): also now confirmed live (VM HEAD advanced to `a2a254d` since the earlier check, which
   includes it). Both todos flipped to done; nothing left open on either.
+- **2026-08-06 — Task Token Usage role-group filter shipped (todo 23)**: operator ask, following the wallet-
+  reconciliation work: "cicd and scheduled tasks and planning tasks as 3 groups... would be good to see the details but
+  rather than a huge number of rows... a filter and totals view with the same detail as the Task Token Usage
+  screenshot... secondary filter on top of the buttons... model are on left side." Investigated first rather than
+  building blind: `TaskUsageRow` had no role/dispatch-origin field at all, AND `_done_one_off` (the completion path for
+  cicd/conflict_resolver/data_pipeline_failure escalations and every scheduled auditor) never wrote a `TaskUsageRow` in
+  the first place — that work was structurally invisible to Task Token Usage, not merely unlabeled. Operator resolved
+  the open taxonomy questions: `data_engineering` groups as "planning" (matches its real dispatch mechanism, a normal
+  `[DATA]`-tag backlog task, not `plan_health.py`'s cron loop, despite its own role-file `lifecycle: scheduled` label);
+  `conflict_resolver`/`data_pipeline_failure` get their OWN buckets rather than folding into "cicd" (raw kind stored on
+  the row, bucket computed only in the query layer, so a future re- slice needs no new migration). Shipped: new
+  `TaskUsageRow.dispatch_role` column; `_done_one_off` now computes + records usage for one-off completions (bracketed
+  by `AgentRow.registered_at`, since a one-off has no `assigned_at` concept); `task_role_group()` collapse function
+  (deliberately NOT keyed off `lifecycle` — `backend_engineer`/ `infra`/`quant_dev`/`ui_developer` share
+  `lifecycle: one_shot` with `cicd` despite being normal craft-role backlog work, which would silently misclassify
+  them); `role_group` query param on `GET /api/backlog/usage/windows`, composing AND-wise with the existing
+  provider/model filter; second filter-button row in `TaskUsageWindows.tsx`. Along the way: separately confirmed live
+  that `data_pipeline_failure` escalation is healthy and actively firing (163 rows over 7 days, none stuck) — flagged an
+  unrelated, separate repo-collision-guard starvation pattern on `cicd`-routed walls in
+  `deployment-api`/`unified-trading-pm` (70+ retry attempts, approaching the 48h abandon ceiling) as a follow-up, not
+  chased further here. Also fixed a real, pre-existing Playwright locator bug found along the way:
+  `.panel, {hasText: "Task Token Usage"}` strict-mode-violates on 2 matches, since the Accounts panel's own
+  cross-reference hint text ("See Task Token Usage for...") contains that substring — this was silently broken in
+  `deepseek-per-turn-metrics.spec.ts` before today, unrelated to this session's changes (confirmed via `git stash`);
+  fixed by scoping to `.panel-head .title` instead. Filed a separate issue doc for a DEEPER pre- existing bug found in
+  the same investigation — the e2e backend's `DeepSeekUsagePoller` actually ticks at startup, contradicting
+  `deepseek-per-turn-metrics.spec.ts`'s "no live poller tick" design assumption and silently overwriting its hand-seeded
+  Accounts-panel fixture values
+  (`/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`) — out of scope to fix
+  here, one test in that file remains red pending that follow-up. New backend pytest (`task_role_group` bucket edge
+  cases, `_done_one_off` usage recording, `role_group` filter composition) + new Playwright spec
+  (`task-usage-role-group-filter.spec.ts`, 5 tests). QG green (2499 backend / 225 frontend). Landed
+  `agent-orchestrator@de73f93`, deployed live (confirmed `HEAD=de73f93` + `systemctl is-active`=active) — this deploy
+  also carries todo 21's `is_review_slot` fix (`e936d05`), confirmed an ancestor of `de73f93`, so that earlier-deferred
+  VM deploy is now done too. Live-verified: all 1,409 existing completed tasks correctly bucket as "planning"
+  (pre-migration `dispatch_role=NULL` defaults there); scheduled/cicd/conflict_resolver/ data_pipeline_failure all
+  correctly read zero (no one-off has completed since deploy yet — expected, not a bug).
 
 ## Deferred work after 2026-08-05
 
@@ -600,6 +655,7 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 | Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
 | Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                              | Nothing — pick up directly                                        |
 | Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                         | Nothing — pick up directly                                        |
+| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`'s own todos (confirm blast radius, decide + implement the fix direction)       | **Not done** — separate issue doc; leaves one pre-existing, unrelated test red in `deepseek-per-turn-metrics.spec.ts`                                                                   | Nothing — pick up directly, independent of this plan              |
 | `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
 
 **Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
