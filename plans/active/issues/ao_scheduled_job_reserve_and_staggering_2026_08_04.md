@@ -349,6 +349,33 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       capturing the running SHA at reap time (the observability todo above is the enabler) and watching whether
       `kind=cicd` reaped-stale continues at the pre-fix rate (baseline: 72 reaped-stale/7d, 71 of them `role=custom`).
       (repo: agent-orchestrator)
+- [ ] [DOC] P2. Give the scheduled-task dispatch mechanism a CODEX home — it currently has none. Grep-confirmed
+      2026-08-06: no `codex/` doc describes the scheduled-job dispatch status model at all, so the whole contract lives
+      only in THIS issue doc, which archives. That inverts the SSOT rule (durable fact -> codex; a plan/issue merely
+      references it). Write it as a codex SSOT — suggested filename `agent-orchestrator-scheduled-jobs.md` under
+      `codex/04-architecture/` (deliberately NOT written as a leading-slash `/codex/…` reference: the file does not
+      exist yet, and `check_reference_paths.py`'s existence ratchet counts a forward-reference to it as DANGLING), or a
+      section in `/codex/04-architecture/agent-orchestrator-overview.md` if a standalone page is judged too thin.
+      Covering: (a) the 5 systemd timers + which `plan_health` mode each POSTs, and that a `git pull` does NOT
+      regenerate an installed unit — re-running `install-*-timer.sh` is a REQUIRED separate deploy step (this exact gap
+      cost two todos on this doc); (b) the status model
+      `dispatched | queued | no_capacity | quarantined | timeout | error`, which ones page
+      (`SCHEDULED_JOB_FAILURE_STATUSES`), and that `no_capacity` is now LEGACY — reachable only by an ad-hoc caller
+      omitting `job_name`; (c) the capacity QUEUE (agent-orchestrator@5087f30): `ScheduledJobQueueRow`, dedup PK
+      `<job>:<tranche>:<day>`, drained by the AutoSpawn tick AFTER escalations (CI walls outrank daily audits),
+      `_SCHEDULED_DRAIN_PER_TICK=2`, 24h abandon so a multi-day outage cannot release a herd of stale audits; (d) the
+      503-classification allowlist (`BENIGN_503_RE`) and WHY it is an allowlist not a denylist — the one-phrase
+      `"branch-state quarantine"` grep silently filed 42 hard spawn refusals as benign over 08-04..06. Then add the
+      one-line pointer in CLAUDE.md's conditional domain index (mind the 40,960 B hard cap — it currently sits ~13 B
+      under, so condense elsewhere rather than raise it). (repo: unified-trading-pm)
+- [ ] [DOC] P3. `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (~L619-622) describes
+      `check_spawn_heartbeat_timeouts` — defers to the poller, retries on the same account bounded by
+      `spawn_retry_count` — but is silent on the working-pane guard and, critically, on its ORDERING against the
+      retry-cap branch. That ordering is the whole behaviour: the guard sat AFTER the cap branch (which `continue`s), so
+      a capped slot never consulted it and 8 of 45 cap pages over 07-30..08-06 fired against a pane reading `working`.
+      Hoisted in agent-orchestrator@9d26598. Document the invariant — pane diagnosis happens BEFORE any verdict, and a
+      working pane both skips the retry and re-arms `_spawn_cap_alerted` — so a future refactor does not silently
+      reintroduce the ordering bug. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P3. `no_capacity` is now a legacy status for scheduled callers only reachable by an ad-hoc caller that
       omits `job_name` (agent-orchestrator@5087f30). Once the queue has a few days of live evidence, decide whether to
       (a) drop it from `ScheduledJobStatus` entirely and make `job_name` required on the dispatch route, or (b) keep it
