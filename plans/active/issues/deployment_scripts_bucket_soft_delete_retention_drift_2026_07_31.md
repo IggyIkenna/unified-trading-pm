@@ -116,6 +116,24 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
 
 ## Progress Log (na-eligibility-audit incremental marker)
 
+- **residual-drain verification 2026-08-06 (slot-4, infra, task
+  `deployment_scripts_bucket_soft_delete_retention_drift-001`)**: fresh `gcs_bucket_stats.py` run at `2026-08-06T11:07Z`
+  — `deployment-scripts-central-element-323112` = **48,542.0 GiB total / 98.7% bloat_pct / 47,887 GiB soft-deleted
+  (681,428 objects)**. The residual has **NOT drained yet** (was 9,722.6 GiB / 94.7% / 9,208.7 GiB on 2026-08-02) —
+  done-when (single-digit bloat on/after 08-09) is NOT met, and today predates the plan's own verification date gate.
+  Investigation + evidence: (a) **fix CONFIRMED intact** — Cloud audit log (`storage.buckets.update`) shows the
+  soft-delete→0 correction only at `2026-08-02T23:10:51Z` by `unified-trading-sa@…`, with **no policy change since**;
+  live `retentionDurationSeconds=0`; and `gcloud storage ls --soft-deleted` refuses with "Soft delete policy is required
+  to list soft-deleted versions" = no active policy. (b) **Accumulation has STOPPED** — the soft-deleted count+bytes
+  series is FLAT at ~681,428 obj / ~51.4 TiB since `~2026-08-05T05:15Z` (≥30h, 6h-granularity Monitoring query). (c) The
+  TRUE pre-fix residual is **~46.8–51.4 TiB, NOT the 9.2 TiB** the 08-02 audit read — that reading was a Cloud
+  Monitoring lag artifact; the metric caught up 08-02→08-05 to the peak accumulated before the 08-02T23:10 fix, which
+  stopped new accretion. (d) 7-day GCS retention countdowns → purge of the 07-29-cohort began ~08-05 and the
+  08-02-cohort completes ~08-09, matching the plan's "drain by ~2026-08-09". **Verdict**: no new churn mechanism found —
+  the residual is the expected pre-fix bleed-off, draining on schedule; the date-gated final re-verification (this todo)
+  must re-run on/after 2026-08-09, and only if bloat has NOT dropped by then does the writer-side investigation
+  (re-upload cadence / `LogUploader`) become necessary. (repo: deployment-service, verification-only.)
+
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: **RECLASSIFY — flipped to `assigned_vm: planning`.** The
   drift-direction judgment call was RESOLVED by operator ruling 2026-08-02 (option (a) applied live,
   `retentionDurationSeconds` verified 0, `unified-trading-pm`/plan_reconcile_parked_operator_decisions item 24); the
