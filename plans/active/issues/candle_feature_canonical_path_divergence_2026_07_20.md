@@ -203,7 +203,12 @@ segment** (only PREDICTION shards by instrument_type). The current objects ALREA
 "Option A = fulfill the declared template" was WRONG — adding `instrument_type=` CONTRADICTS the codex + is a NEW
 canonical definition, not a divergence fix. ALSO verified: the candle-path migration is a GENUINE GAP (NOT duplicative)
 — every running `canonical-migration-*` VM is `raw_tick_data/`-scoped (column patching), no plan/VM/todo migrates candle
-PATHS; and the aggregated key `deriv_ohlcv` appears NOWHERE in codex/plans.
+PATHS; and the aggregated key `deriv_ohlcv` appeared NOWHERE in codex/plans **as of this ruling (2026-07-21 09:48Z) —
+since amended the same day (this plan's todo-1 amendment, unified-trading-pm@9161c8d7b / @6bd8b4e5b): codex now names
+`deriv_ohlcv_*` ONLY as the explicitly DROPPED aggregate (`per-asset-group-bucket-layouts.md` "NOT the aggregated
+`deriv_ohlcv_*`", `mdps-candle-canonical-reconciliation.md` "survives ONLY as the schema-contract lookup key… NOT as the
+stored manifest axis") — the supported point stands: the aggregated key is NOT canonical on the path. (Marked as
+pre-amendment history 2026-08-06 by plan-reconcile.)**
 
 **Operator RE-DECISION 2026-07-21 (with the corrected info):**
 
@@ -308,9 +313,9 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
       RULING" above): ADD `instrument_type=` (amend codex + full migration) + KEEP SOURCE `data_type` on the path, align
       the manifest to match. LOCKED shape documented; codex `per-asset-group-bucket-layouts.md:166` amended
       (`mdps@752eaff`).
-- [x] 2. [DATA] P1. **[already covered by plans/active/candle_canonical_path_migration_execution_2026_07_24.md, see that
-      doc for execution]** Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge or
-      repair. These cannot be attributed to a shard. **P0 census counted them exactly 2026-07-22**: cefi
+- [x] 2. [DATA] P1. **[already covered by /plans/active/candle_canonical_path_migration_execution_2026_07_24.md, see
+      that doc for execution]** Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge
+      or repair. These cannot be attributed to a shard. **P0 census counted them exactly 2026-07-22**: cefi
       `EMPTY_STEM_WITH_UNDERLYING`=2,576 + `EMPTY_STEM_WITHOUT_UNDERLYING`=2,198; tradfi
       `EMPTY_STEM_WITH_UNDERLYING`=428,792 (!) + `EMPTY_STEM_WITHOUT_UNDERLYING`=6,780; defi/prediction had none of this
       class. Repair itself is still **pending P7 `--apply`** (content-repair gated).
@@ -369,7 +374,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 `rg 'non_canonical|content_check' <report>` yields the worklist.
 
 > **⚠️ CORRECTION 2026-07-27 (slot-12) — this todo's own measurement methodology is the SAME "wrong vocabulary" mistake
-> already root-caused for cefi in `plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`.** That
+> already root-caused for cefi in `/plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`.** That
 > doc found the cefi "0 rows, ever" verdict was produced by querying the aggregated `ohlcv_*` family instead of MDPS's
 > actual `data_type=<SOURCE data_type>` + real `timeframe` axis (a deliberate, operator-ruled design). This todo's
 > 2026-07-23 cross-AG table below (`cefi 6`, `defi 0`, `tradfi 73`, `prediction 168`) was almost certainly measured the
@@ -387,27 +392,27 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 > for the actual numbers instead of re-deriving them here.
 
 - [x] ✅ 7. [DATA] P0. **ROOT-CAUSED + CODE FIX SHIPPED 2026-07-27 (slot-10); FULLY CLOSED 2026-07-27 (slot-8, todo 7 of
-      the disconnect plan)** — owned + closed on `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md`
-      per that doc's `source:` note (this plan does not own MDPS writer work). Full write-up + evidence lives there
-      (Todo 1 Findings + Todo 2 Progress Log entry); linking here per the "flip with evidence, don't duplicate the
-      writeup" convention. **Update**: the disconnect plan has since progressed past the fix alone — the historical
-      corpus backfill (its todo 5: 86,252 manifest cells recorded across all 4 asset_groups) and the 3-surface
-      object/manifest/parquet spot check (its todo 6: live-write + backfill samples, no disagreement found) are BOTH
-      DONE as of 2026-07-27, so the disconnect this todo tracks is closed end-to-end, not just root-caused. **Verdict**:
-      structural root cause is the `ohlcv_1m` emission-policy gate's self-referential upstream-completeness check
-      (`_build_ohlcv_1m_upstream_window` keyed at the SAME shard tuple as the row being written), permanently
-      STRICT_FAIL-locking every `trades`-sourced `ohlcv_1m:current`/`ohlcv_1h:current`/`book_snapshot_5` shard's
-      first-ever write — confirmed by direct code read (`canonical_writer_stamping.py`), not inferred. Fixed + shipped
-      `market-data-processing-service@caa995c` + a swallowed-exception classify-don't-swallow fix
-      (`record_failed_for_shard` now fires on manifest-write failure). **Scope note re: the 2026-07-27 (slot-12)
-      correction directly above** — this fix targets the TRADES-sourced gated path (primarily CEFI, plus
-      tradfi/prediction if their candle source_data_type is `trades`); it does NOT touch DEFI's `dex_pool_swaps` candle
-      path, which `_resolve_policy_output_data_type` never gates in the first place (returns `None` for `dex_pool_swaps`
-      → the whole `_publish_emission_check` gate is skipped → `record_captured` was never blocked by this bug for DEFI)
-      — consistent with slot-12's direct finding of 7,913 real DEFI manifest rows already existing. Historical-corpus
-      backfill (pre-existing objects written before this fix) and full live-prod verification are tracked separately
-      (disconnect-doc todos 3-6), not re-duplicated here. **MEASURED + CHARACTERIZED 2026-07-20** (original finding,
-      kept for provenance) — direct pyarrow read of the consolidated
+      the disconnect plan)** — owned + closed on
+      `/plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` per that doc's `source:` note (this plan
+      does not own MDPS writer work). Full write-up + evidence lives there (Todo 1 Findings + Todo 2 Progress Log
+      entry); linking here per the "flip with evidence, don't duplicate the writeup" convention. **Update**: the
+      disconnect plan has since progressed past the fix alone — the historical corpus backfill (its todo 5: 86,252
+      manifest cells recorded across all 4 asset_groups) and the 3-surface object/manifest/parquet spot check (its todo
+      6: live-write + backfill samples, no disagreement found) are BOTH DONE as of 2026-07-27, so the disconnect this
+      todo tracks is closed end-to-end, not just root-caused. **Verdict**: structural root cause is the `ohlcv_1m`
+      emission-policy gate's self-referential upstream-completeness check (`_build_ohlcv_1m_upstream_window` keyed at
+      the SAME shard tuple as the row being written), permanently STRICT_FAIL-locking every `trades`-sourced
+      `ohlcv_1m:current`/`ohlcv_1h:current`/`book_snapshot_5` shard's first-ever write — confirmed by direct code read
+      (`canonical_writer_stamping.py`), not inferred. Fixed + shipped `market-data-processing-service@caa995c` + a
+      swallowed-exception classify-don't-swallow fix (`record_failed_for_shard` now fires on manifest-write failure).
+      **Scope note re: the 2026-07-27 (slot-12) correction directly above** — this fix targets the TRADES-sourced gated
+      path (primarily CEFI, plus tradfi/prediction if their candle source_data_type is `trades`); it does NOT touch
+      DEFI's `dex_pool_swaps` candle path, which `_resolve_policy_output_data_type` never gates in the first place
+      (returns `None` for `dex_pool_swaps` → the whole `_publish_emission_check` gate is skipped → `record_captured` was
+      never blocked by this bug for DEFI) — consistent with slot-12's direct finding of 7,913 real DEFI manifest rows
+      already existing. Historical-corpus backfill (pre-existing objects written before this fix) and full live-prod
+      verification are tracked separately (disconnect-doc todos 3-6), not re-duplicated here. **MEASURED + CHARACTERIZED
+      2026-07-20** (original finding, kept for provenance) — direct pyarrow read of the consolidated
       `market-data-tick-cefi-prd-…/_index/availability_index.parquet`, 166 MB / **10,363,628 rows**): by `service_name`
       → `market-tick-data-service` 6.78M, `instruments-service` 3.47M, `None` 114,749,
       **`market-data-processing-service` = 6**. The 6 candle rows are all `date=2026-04-14`, all written
@@ -439,7 +444,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 - [x] 8. ✅ [DATA] P1. **Fix the bundled-name rule** (going-forward writer): `candle_leaf_filename` now decides the leaf
       by "is this write bundled by `underlying=`?" (→ `ticks.parquet`) rather than the data_type-in-set check. Shipped
       `mdps@752eaff`. **Repair/purge of EXISTING empty-stem objects is still pending P5/P7** (backward migration).
-- [ ] 9. [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
+- [ ] [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
       `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
       split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
       `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
@@ -482,7 +487,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       checkpoint)" entry). **`deployment-service@0ed7cf5`** companion fix: `launch-canonical-migration-vm.sh` now pins
       `VM_NAME` + persists launch params on relaunch (the review's own 4th finding — without it the checkpoint could
       never be found after a real SPOT preemption of the actual launcher family).
-- [ ] 13. [DATA] P3. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
+- [ ] [DATA] P3. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
       migration safety) can be inflated by cross-asset-group path coincidences — cosmetic, fix before trusting the
       corpus-wide "quantify the split" number (todo 9) precisely.
 - [x] 14. ✅ [DATA] P3. **Resolved as a side effect of todo 18** — non-colon CeFi "bare wire" leaf stems now DO route
@@ -494,15 +499,15 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) — not a functional bug (the function
       is value-agnostic), but could mislead a future maintainer into "fixing" the correct SOURCE-keyed callers. Update
       the docstring example to match the 2026-07-21 correction. **DONE (ao-dispatch batch2 2026-08-03)** — closed via
-      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:131: `unified-trading-library@5793d28b`, docstring
-      updated to SOURCE data_type with `derivative_ticker` example, same fix applied to adjacent `_candle_prefix()`
-      docstring, `quality-gates.sh` green, SHA verified on origin.
+      `/plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:131: `unified-trading-library@5793d28b`,
+      docstring updated to SOURCE data_type with `derivative_ticker` example, same fix applied to adjacent
+      `_candle_prefix()` docstring, `quality-gates.sh` green, SHA verified on origin.
 - [x] ✅ 16. [SCRIPT] P3. Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg MEASURED classification shows
       `off_template=29` (timeframe mismatch against the raw `"24h"` token) while the canonical leg still passes it —
       confirm whether the object path already writes `timeframe=1d` (making §3A's "RAW token" docstring stale the same
       way the data_type one was) or whether this is a genuine separate defect. Non-blocking; found during the todo-6
       real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`. **DONE (ao-dispatch batch2
-      2026-08-03)** — closed via `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:135: **STALE
+      2026-08-03)** — closed via `/plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:135: **STALE
       DOCSTRING** (same pattern as todo 15). Root cause: `canonical_writer.py:255` calls
       `_normalise_timeframe(timeframe)` before building the GCS path, so all DERIBIT:trades:24h objects write with
       `timeframe=1d`. No data defect — `_measured_violations` compares normalized "1d" against raw "24h" token causing
