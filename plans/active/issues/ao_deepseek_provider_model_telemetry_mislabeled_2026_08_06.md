@@ -1,0 +1,118 @@
+---
+doc_type: issue
+title: >-
+  AO boot telemetry self-reports `model: "sonnet"` for DeepSeek-provider accounts — the fleet dashboard and state.db
+  cannot tell which sessions actually ran on DeepSeek vs Claude
+summary: >-
+  Confirmed live (2026-08-06) via a read-only `state.db` query over SSM: `slots` and `activity_log.slot_boot` rows for
+  workers booted under `account_id in {deepseek-v4-pro, deepseek-v4-flash}` (both registered `provider: "deepseek"` in
+  `data/config/accounts.json`) still show `model: "sonnet"` — the same value a genuine Anthropic-account boot reports. A
+  known, dated bug (`ao_deepseek_model_flag_misalignment_2026_08_05`, see `accounts.py::model_flag_for_provider`)
+  already found that AO was passing a meaningless `--model` CLI flag to non-Anthropic spawns and fixed that — but that
+  fix only suppresses the flag on spawn, it does not correct what the worker's own `/boot` call reports as `model` in
+  telemetry, and the mislabeling persists a day later on real, currently-running sessions. Concretely: the
+  `sports_fast_t1_recon_oom_live_capture_outage-003` task (slot 12, "backfill LAUNCHED + CONFIRMED WRITING; gate
+  cleared" — see the sibling issue doc, whose "gate cleared" claim was independently found to be premature) and the
+  currently-in-flight `context_scope_marker_claims_exceed_frontmatter_count-002` task (slot 6) both booted under
+  `account_id: deepseek-v4-flash` while their `slot_boot` events say `model: sonnet`. Neither the FleetView dashboard
+  nor a plain `state.db` query lets an operator or a reviewing agent tell, at a glance, which completed work was
+  actually produced by a Claude session vs a much cheaper/weaker DeepSeek Flash session — undermining any policy
+  (explicit or implicit) that scales scrutiny by model tier.
+status: open
+nature: issue
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer]
+tags: [agent-orchestrator, telemetry, model-tier, deepseek, observability, false-progress-adjacent]
+related:
+  [
+    /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
+    /plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md,
+  ]
+created: 2026-08-06
+author: interactive-session (tab 1)
+priority: P2
+parent_epic: orchestrator_master
+assigned_vm: NA
+execution_scope: local-only
+assigned_role: infra
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by:
+source:
+  [
+    "discovered 2026-08-06 during an interactive audit of two other issues' worker-attribution history — read-only
+    state.db query via query-ao-state-db-readonly.sh against slots + activity_log + accounts.json",
+  ]
+context_scope:
+  [
+    agent-orchestrator/server/accounts.py,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/data/config/accounts.json,
+    /codex/06-coding-standards/model-tier-selection.md,
+  ]
+---
+
+# AO boot telemetry mislabels DeepSeek-provider sessions as `model: "sonnet"`
+
+## What I found
+
+Querying the live orchestrator's `state.db` (read-only, via `query-ao-state-db-readonly.sh`) for `activity_log`
+`slot_boot` events on slots 6 and 12 around 2026-08-06:
+
+```
+{"operator": "planning", "model": "sonnet", ..., "account_id": "deepseek-v4-flash"}   # slot 12, 00:19:51
+{"operator": "planning", "model": "sonnet", ..., "account_id": "deepseek-v4-pro"}     # slot 12, 00:59:12
+{"operator": "planning", "model": "sonnet", ..., "account_id": "deepseek-v4-pro"}     # slot 6, 03:00:45
+{"operator": "planning", "model": "sonnet", ..., "account_id": "deepseek-v4-flash"}   # slot 6, 09:38:46
+```
+
+`data/config/accounts.json` confirms both `deepseek-v4-pro` and `deepseek-v4-flash` are real, registered accounts with
+`"provider": "deepseek"` (vs. `sub-a-ikenna`/`sub-e-odum2default`, real Anthropic subscription seats with no `provider`
+field, defaulting to `"anthropic"` per `accounts.py::provider_for_account_id`). So these are not a naming coincidence —
+the sessions genuinely ran against DeepSeek's API — yet every one of them reports `model: "sonnet"` in the same
+telemetry field a real Sonnet session uses.
+
+`accounts.py::model_flag_for_provider` (with the `ao_deepseek_model_flag_misalignment_2026_08_05` fix cited inline)
+already documents the adjacent, earlier-discovered half of this: "only the ONE fresh-spawn['s `--model`] flag ... was
+actually running deepseek-v4-pro the whole time" — i.e. AO used to pass an Anthropic model flag to a DeepSeek spawn,
+which the DeepSeek backend silently ignored. The fix suppresses that flag for non-`anthropic` providers. But
+`slots_worker.py`'s `/boot` handler (`routes/slots_worker.py:294-341`) just persists whatever `req.model` the worker's
+own boot call self-reports, with no cross-check against `provider_for_account_id(req.account_id)` — so the worker-side
+boot script apparently still labels itself "sonnet" regardless of which account/provider it's actually running under,
+and nothing on the server side catches the mismatch.
+
+## Why it matters
+
+- The FleetView dashboard (and anyone reading `state.db` directly, including a reviewing agent) has no reliable signal
+  for "was this task's output produced by Claude Sonnet or DeepSeek Flash/Pro" — the one field that should answer that
+  (`model`) is wrong for every DeepSeek-provider session sampled.
+- This surfaced while auditing two OTHER issues in this workspace (`sports_fast_t1_recon_oom_live_capture_outage`'s
+  prematurely-cleared backfill-coverage gate, and `context_scope_marker_claims_exceed_frontmatter_count`'s soft-false
+  restoration claim) — both pieces of work in question ran under `deepseek-v4-flash`, not Sonnet. Whether DeepSeek
+  Flash's involvement is causally related to those quality gaps is NOT established here (that would need a controlled
+  comparison, out of scope for this issue) — but the fleet currently has no way to even ask that question, because the
+  telemetry that would let someone correlate "which model produced this" is wrong at the source.
+
+## Todos
+
+- [ ] [SCRIPT] P2. In `routes/slots_worker.py`'s `/boot` handler, cross-check `req.model` against
+      `provider_for_account_id(req.account_id)` (`accounts.py`) — for a non-`anthropic` provider, either (a) overwrite
+      the stored `model` with the account's real `variant` (e.g. `deepseek-v4-flash` → `model: "deepseek-flash"`), or
+      (b) reject a self-reported `model` that doesn't match the account's provider with a 4xx, forcing the boot script
+      to report accurately. Pick whichever keeps `slot_boot` telemetry queryable without a join back to `accounts.json`
+      — a human/agent reading `activity_log` alone should be able to tell the real model. Done when: a unit test boots a
+      `deepseek-v4-flash` account and asserts the persisted `SlotRow.model` / `slot_boot.details_json.model` is NOT
+      `"sonnet"`.
+- [ ] [DOC] P3. Once fixed, backfill-correct the FleetView dashboard's badge rendering (and any other consumer of
+      `SlotRow.model`, e.g. `context_history_report.py`'s `--group-by model`) to show the real value — check whether any
+      of them special-case the string `"sonnet"` in a way that would break once this field starts reporting DeepSeek
+      variants.
+- [ ] [SCRIPT] P3. Audit whether the SAME self-report-without-cross-check pattern exists for `effort`/`thinking` (both
+      self-reported per `req.effort`/`req.thinking` in the same `/boot` call) — those flags may be equally meaningless
+      for a non-Anthropic provider; scope only if todo 1 confirms the pattern generalizes.
