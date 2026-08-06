@@ -122,29 +122,32 @@ context_scope:
       checkbox/banner is flipped `[x]`/updated with that evidence, and the doc's other 2 open items remain untouched.
       Repo: unified-trading-pm (doc-only edit).
 
-- [ ] [BACKEND] P1. **Fix the confirmed HYPERLIQUID `derivative_ticker` OOM defect — predicate-pushed parquet read in
-      `_read_tick_data`.** `market-data-processing-service/market_data_processing_service/app/core/live_workers.py`'s
-      `_read_tick_data` (~line 489) calls `pl.read_parquet(io.BytesIO(raw_bytes), low_memory=True)` to load
-      HYPERLIQUID's raw multi-`data_type` `ticks.parquet` blob IN FULL (book_snapshot_5 + trades + derivative_ticker for
-      a whole underlying/quote/margin), then filters to the target `data_type` only AFTER full materialization
-      (~line 295) — `book_snapshot_5` (L5 book at 10/sec) dominates and drives RSS to 18.5GB+ even for a single
-      `derivative_ticker` instrument on one day (reproduced on a quiet host 2026-08-05: RSS climbed 1,121MiB→18,492MiB
-      in ~33s, then OOM-killed — see source doc's Progress Log for the full repro). Replace the
-      full-materialize-then-filter read with a predicate-pushed / row-group-filtered read scoped to the target
-      `data_type` column — Polars `scan_parquet(...).filter(pl.col("data_type")==data_type)` is the simplest viable
-      option (native predicate pushdown, no new dependency); a pyarrow `ParquetFile.read_row_groups()` filtered by
-      row-group stats is the named alternative if Polars' pushdown doesn't apply cleanly to this blob shape. **Scope
-      note — this is NOT the same question `data_pipeline_check_mdps_features_2026_07_20.md`'s todo 12 already assessed
-      and declined** ("faster-libs/Rust where it pays... Python service-kernel work (`_read_tick_data`'s
-      full-blob-to-RAM read...) is backend_engineer-craft scope... Already assessed... as LOW priority (polars core
-      groupby is already fast; Rust would shave only ~6% of wall-clock) — no infra action follows"): that assessment was
-      about a ~6% wall-clock speedup from a Rust rewrite (declined, not worth it); THIS todo is about eliminating a
-      confirmed 18.5GB OOM-crash via a Polars-native predicate-pushdown read (a correctness/reliability fix, no language
-      change, no infra-vs-backend_engineer boundary question) — different problem, different fix, not a duplicate or a
-      reversal of that prior verdict. Source: `mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md` (the
-      "Implement the fix" prose item — never promoted to its own checkbox in the source doc; this todo IS that
-      promotion). **Done when**: `_read_tick_data` no longer materializes the full raw blob before filtering; re-run the
-      doc's own repro command
+- [x] ✅ [BACKEND] P1. **Fix the confirmed HYPERLIQUID `derivative_ticker` OOM defect — predicate-pushed parquet read in
+      `_read_tick_data`.** market-data-processing-service@4f2b99e — `_read_tick_data` now accepts
+      `filter_data_type`/`filter_related_types`; uses `pl.scan_parquet + filter + collect` for predicate-pushed reads,
+      loading only derivative_ticker row groups (skipping book_snapshot_5/trades entirely). QG green, 2346 tests passed.
+      `market-data-processing-service/market_data_processing_service/app/core/live_workers.py`'s `_read_tick_data`
+      (~line 489) calls `pl.read_parquet(io.BytesIO(raw_bytes), low_memory=True)` to load HYPERLIQUID's raw
+      multi-`data_type` `ticks.parquet` blob IN FULL (book_snapshot_5 + trades + derivative_ticker for a whole
+      underlying/quote/margin), then filters to the target `data_type` only AFTER full materialization (~line 295) —
+      `book_snapshot_5` (L5 book at 10/sec) dominates and drives RSS to 18.5GB+ even for a single `derivative_ticker`
+      instrument on one day (reproduced on a quiet host 2026-08-05: RSS climbed 1,121MiB→18,492MiB in ~33s, then
+      OOM-killed — see source doc's Progress Log for the full repro). Replace the full-materialize-then-filter read with
+      a predicate-pushed / row-group-filtered read scoped to the target `data_type` column — Polars
+      `scan_parquet(...).filter(pl.col("data_type")==data_type)` is the simplest viable option (native predicate
+      pushdown, no new dependency); a pyarrow `ParquetFile.read_row_groups()` filtered by row-group stats is the named
+      alternative if Polars' pushdown doesn't apply cleanly to this blob shape. **Scope note — this is NOT the same
+      question `data_pipeline_check_mdps_features_2026_07_20.md`'s todo 12 already assessed and declined**
+      ("faster-libs/Rust where it pays... Python service-kernel work (`_read_tick_data`'s full-blob-to-RAM read...) is
+      backend_engineer-craft scope... Already assessed... as LOW priority (polars core groupby is already fast; Rust
+      would shave only ~6% of wall-clock) — no infra action follows"): that assessment was about a ~6% wall-clock
+      speedup from a Rust rewrite (declined, not worth it); THIS todo is about eliminating a confirmed 18.5GB OOM-crash
+      via a Polars-native predicate-pushdown read (a correctness/reliability fix, no language change, no
+      infra-vs-backend_engineer boundary question) — different problem, different fix, not a duplicate or a reversal of
+      that prior verdict. Source: `mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md` (the "Implement the
+      fix" prose item — never promoted to its own checkbox in the source doc; this todo IS that promotion). **Done
+      when**: `_read_tick_data` no longer materializes the full raw blob before filtering; re-run the doc's own repro
+      command
       (`market-data-processing-service process --operation process --mode batch --start-date 2026-07-19     --end-date 2026-07-19 --force`
       scoped to `HYPERLIQUID:PERPETUAL:ADA-USD@LIN`) on a quiet host and confirm RSS no longer balloons into
       double-digit GB; confirm output parquet content is unchanged against the doc's known-good baseline (1440-row 1m

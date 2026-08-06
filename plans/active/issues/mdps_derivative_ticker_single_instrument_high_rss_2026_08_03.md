@@ -165,3 +165,8 @@ genuine defect — hence P3, not P1 like todo 1.
 - **context-scout 2026-08-06**: re-scouted; the 2026-08-05 root-cause analysis pinpointed the actual defect to
   `live_workers.py`'s `_read_tick_data` (not `derivative_adapter.py`, the prior list's pick) plus a secondary
   contributor in `orchestration_scanner.py` — swapped `derivative_adapter.py` out for those two, now 4 entries.
+- **slot-4 fix 2026-08-06**: Implemented predicate-pushed read — `_read_tick_data` now accepts
+  `filter_data_type`/`filter_related_types`; caller pre-computes the filter before GCS download and passes it; reader
+  uses `pl.scan_parquet + filter + collect` to load only matching row groups, skipping book_snapshot_5/trades entirely.
+  Shipped as `market-data-processing-service@4f2b99e` (plan batch8 todo 2 —
+  `cefi_satellite_ao_dispatch_batch8_2026_08_06.md`). QG green, 2346 tests passed.
