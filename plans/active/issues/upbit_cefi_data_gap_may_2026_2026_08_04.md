@@ -109,16 +109,22 @@ Neither explains the May-25+ gap.
       Launcher config correctly includes UPBIT (`VENUES`, years 2022-2026, heavy group). **Verdict: code-level filter
       blocks all new VMs from scheduling UPBIT; the transition was a SPOT preemption of the last pre-filter VM.** —
       deployment-service@`3b635b9`, market-tick-data-service@N/A
-- [x] ✅ [DATA] P1. **Restore UPBIT backfill — operator-gated on Tardis full-access API key.** Tardis HAS the data
-      (confirmed via API by both slot-6 and slot-15), so restoration is the correct path (not descope). The fix is to
-      create the `tardis-api-key-full` secret in GCP Secret Manager (`central-element-323112`) with a Tardis full-access
-      API key. Once the secret exists, `_get_tardis_access_mode()` auto-detects `full_access` mode, and UPBIT (along
-      with BINANCE-SPOT, COINBASE-SPOT) is included in the next backfill VM launch — no code change needed.
-      **Alternative**: set the env/config override `TARDIS_ACCESS_MODE=full_access` to bypass the secret check. **Launch
-      scope** (slot-15):
+- [ ] [DATA] P1. **BLOCKED-CREDENTIALS — Restore UPBIT backfill, operator-gated on a Tardis full-access API key.**
+      **Corrected 2026-08-06 (plan_reconciler agt-4fdce1, operator ruling BLK-0e7e0794): this was previously checked
+      `[x]` with the evidence citation left as the literal unfilled placeholder `unified-trading-pm@<pending-commit>` —
+      the body below is an `[OPERATOR]` action PLAN, not a completion record. No secret has been created and no relaunch
+      has happened; UPBIT still shows 0 captured objects as of this correction (73+ days). Reopened.** Tardis HAS the
+      data (confirmed via API by both slot-6 and slot-15, todo #1), so restoration is the correct path — NOT a descope
+      (`/codex/02-data/external-data-always-available-rule.md`: exhausting the free path is a credential ask, not a
+      descope). The fix is to create the `tardis-api-key-full` secret in GCP Secret Manager (`central-element-323112`)
+      with a Tardis full-access API key. Once the secret exists, `_get_tardis_access_mode()` auto-detects `full_access`
+      mode, and UPBIT (along with BINANCE-SPOT, COINBASE-SPOT) is included in the next backfill VM launch — no code
+      change needed. **Alternative**: set the env/config override `TARDIS_ACCESS_MODE=full_access` to bypass the secret
+      check. **Launch scope** (slot-15):
       `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash     launch-cefi-sharded-backfill.sh`.
-      **[OPERATOR] action**: obtain Tardis full-access API key and create the secret (or set override). After operator
-      action, relaunch and verify ≥3 recent days of objects in GCS. — unified-trading-pm@<pending-commit>
+      **\[OPERATOR\] action (logged with the operator 2026-08-06)**: create the `tardis-api-key-full` secret (or set the
+      override). Once done, relaunch and verify ≥3 recent days of real GCS objects before closing this todo with a real
+      commit sha.
 
 ## Progress Log
 
@@ -175,3 +181,12 @@ and complementary: slot-15 identified the transition trigger (SPOT preemption), 
 `tardis-api-key-full` secret** (or set `TARDIS_ACCESS_MODE=full_access` override), then relaunch:
 `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh`.
 **[OPERATOR] action**: obtain Tardis full-access API key and create the secret.
+
+### 2026-08-06 — plan_reconciler agt-4fdce1 (operator ruling BLK-0e7e0794)
+
+Todo 2 was found checked `[x]` with an unfilled placeholder citation (`unified-trading-pm@<pending-commit>`) — no secret
+exists, no relaunch happened, UPBIT still 0 objects/day. Reopened as `- [ ]`, tagged `BLOCKED-CREDENTIALS`, placeholder
+citation dropped. The operator has been asked directly to create the `tardis-api-key-full` GSM secret in
+`central-element-323112` (or set the `TARDIS_ACCESS_MODE=full_access` override) — no code change is needed once either
+exists. Do not descope UPBIT: Tardis confirmed still carrying the data (todo #1), so per
+`/codex/02-data/external-data-always-available-rule.md` this is a credential ask, not a descope candidate.
