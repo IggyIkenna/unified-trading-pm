@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, finalize, plan-coverage, qg-red, mvi]
 related:
   [
-    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     /plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md,
   ]
 created: "2026-08-06"
@@ -59,7 +59,7 @@ depends_on: []
 ```
 Plans missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true to a
 new/existing companion plan — see task_template.md §4):
-  - unified-trading-pm/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md
+  - unified-trading-pm/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md
 ❌ Regression: 1 > baseline 0.
 ```
 
