@@ -163,6 +163,17 @@ read only once grep shows most of the doc is actually relevant):
   only thing Phase 0 checks. The marker's job is to record "this doc was checked on this date", independent of whether
   the check changed anything. Write it every time this doc is in scope this run, full stop — the only real exception is
   the line-cap near-cap guard immediately above.
+- **Restoration accuracy (HARD RULE, added 2026-08-06 —
+  `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`)**: when this write is a REMEDIATION recovering
+  entries a prior marker claimed but the live frontmatter was missing (not routine Phase 1 re-scouting), diff the
+  restored list against the SPECIFIC items the prior marker/investigation named as dropped — never against just "is the
+  new marker count self-consistent with the new list." A marker that matches its own list is necessary but NOT
+  sufficient: it can still silently understate a restoration if some originally-dropped items were never actually put
+  back. If any named item can't be restored (superseded, deleted, genuinely no longer relevant), say so explicitly in
+  the Progress Log — `"restored N of M; dropped <item> because <reason>"` — never a bare `"restored to correct count"`
+  claim that reads as complete when it isn't. Confirmed real gap: a same-day remediation pass restored 1 of 3
+  originally-dropped citations on one doc and reported it "restored" with no note on the other 2 — exactly the class of
+  silent-completeness-claim this skill exists to prevent, recurring inside its own fix.
 - Stage by name, mandatory pre-commit `git status && git diff --cached --stat` (no path arg), commit prefix
   `docs(plans):`, ship per CLAUDE.md's git-discipline section (`quickmerge.sh --agent --files`). Batch by cohort (e.g.
   one commit per ~50 docs), not one mega-commit and not one commit per doc.
