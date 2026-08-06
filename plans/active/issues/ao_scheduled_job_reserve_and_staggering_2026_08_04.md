@@ -244,11 +244,40 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       left-over-process lines) + /var/log/ao-self-pull.log + /var/log/wtmp. No code change warranted — the premise was
       incorrect; the real gaps (incomplete collision fix, observability) are tracked as follow-up todos below. (repo:
       agent-orchestrator)
-- [ ] [SCRIPT] P2. Investigate the 2026-08-05 full-day `no_capacity` for ALL scheduled auditors: every
+- [x] ✅ [SCRIPT] P2. Investigate the 2026-08-05 full-day `no_capacity` for ALL scheduled auditors: every
       na_eligibility/ag_closeout/plan_reconciler/docs_reconciler run hit no_capacity (0 dispatched all day), plus the
       01:45 na_eligibility batch TIMED OUT at 04:00 (~2h15m) — scheduled audits effectively did not run on 08-05.
       Confirm whether the fleet was genuinely saturated or a reserve/dispatch bug (item 2's reserve 2->4 + batch 3->4
-      was live by then). (repo: agent-orchestrator)
+      was live by then). — **VERDICT 2026-08-06: a DISPATCH bug + external Claude-credit outage, NOT fleet saturation**
+      (agent-orchestrator@ef44eb9, the fix, shipped the next morning — see below). 225/240 (94%) of the day's
+      no_capacity = `no headroom setup-token account available`: plan_health's account pick was Claude-only
+      (`pick_headroom_account(provider='anthropic')`), blind to the 2 healthy DeepSeek accounts, and an 08-05 live
+      Claude-credit/usage outage left all 6 Anthropic accounts exhausted (sub-c/sub-d disabled since 07-31; sub-b 99%
+      weekly rate-limited→08-09; sub-f 99%; sub-a disabled 00:05→22:49; only the 22:53 context_scout + 23:16
+      docs_reconciler landed on Claude after sub-a re-enabled 22:49). Only 14/240 = `no free configured slot` — item 2's
+      reserve 2→4 + batch 3→4 were LIVE and functioned, NOT the bottleneck. Fleet was NOT saturated: DeepSeek spawned
+      630× that day (4 deepseek-v4-pro review agents 10:49-19:21) while 0 scheduled audits dispatched. Fixed by
+      agent-orchestrator@ef44eb9 (2026-08-06 04:58 UTC, "close 3 DeepSeek routing gaps") — plan_health dispatch,
+      worker_liveness failover, and account-rotation now route through the DeepSeek-aware `select_account_for_spawn()`;
+      live + verified (08-06 audits dispatch on Claude AND DeepSeek: 12+12 of the custom-role agents on
+      deepseek-v4-pro/flash). The 04:00 `timeout` cluster (all dispatch_agent_id=null — no workers spawned, pure
+      server-stall artifacts) = SQLite `database is locked` contention 01:45→04:00 (34-57 err/hr in hrs 00-03) stalling
+      the API; pending dispatch curls exceeded curl --max-time → HTTP 000 → `timeout`. Follow-up todos below: stale
+      plan-reconciler unit, unreinstalled reconciler ceilings, no_capacity-never-alerts gap. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Re-install the plan-reconciler timer unit on the orchestrator VM from the repo installer
+      (`sudo bash scripts/install-plan-reconciler-timer.sh`): the LIVE `/usr/local/bin/plan-reconciler-dispatch.sh` +
+      `/etc/systemd/system/plan-reconciler.service` still run `--max-time 2400` / `TimeoutStartSec=2450` while the repo
+      installer (updated 2026-07-30) generates 5950/6000 — a git pull alone does not regenerate an installed unit (the
+      exact gap this doc's item 3 warns about). Under an API stall (as on 08-05) the old 40-min curl ceiling
+      force-terminates a legitimately-pending dispatch and reports a false `timeout`. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P3. Bump the docs-reconcile + context-scout dispatch ceilings — both repo installers AND live units still
+      run `--max-time 2400` / `TimeoutStartSec=2450` (the 08-04 item-3 bump covered only the auditors; these two were
+      never raised). Bump to plan-reconciler's 5950/6000 and re-install the two units; same false-`timeout` class under
+      a stall. (repo: agent-orchestrator)
+- [ ] [DATA] P3. Alert gap surfaced by the 08-05 outage: a FULL-DAY `no_capacity` for every scheduled auditor (account
+      pool exhausted) is NOT self-resolving and does NOT page — `SCHEDULED_JOB_FAILURE_STATUSES` deliberately excludes
+      `no_capacity` as "routine". Add a detector for "zero scheduled dispatches in a 24h window / N consecutive
+      no_capacity across jobs" → page. (repo: agent-orchestrator)
 - [ ] [DATA] P3. Track residual `reaped-stale` after the fix: on 08-06, 3/20 auditor runs still ended reaped-stale
       (04:31 `agt-b334ff` ~37min, 06:31 `agt-121905` ~35min — no `tmux_session_lost` event in the archival window, so
       the sessionless-silent path) while siblings in the same batches completed. Determine mid-run death vs post-work
@@ -264,6 +293,23 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       paths so a future recurrence is attributable from journalctl/syslog alone. (repo: agent-orchestrator)
 
 ## Progress Log
+
+- **worker slot-8 2026-08-06 (todo 7 — 08-05 full-day no_capacity, this task)**: INVESTIGATED + CONFIRMED. VERDICT:
+  **dispatch bug + external Claude-credit outage, NOT fleet saturation** — 225/240 (94%) of 08-05 no_capacity =
+  `no headroom setup-token account available` from plan_health's Claude-only
+  `pick_headroom_account(provider='anthropic')` (DeepSeek never a candidate); the 08-05 live outage left all 6 Anthropic
+  accounts exhausted (sub-c/sub-d disabled 07-31, sub-a disabled 00:05→22:49, sub-b/sub-f 99% weekly). Only 14/240 =
+  `no free configured slot` — reserve 4 + batch 4 (item 2) were live and functioned. Fleet NOT saturated: DeepSeek
+  spawned 630× on 08-05 (4 deepseek-v4-pro review agents) while 0 scheduled audits dispatched. Fixed by
+  agent-orchestrator@ef44eb9 (2026-08-06 04:58 UTC, DeepSeek-aware `select_account_for_spawn()` for plan_health +
+  worker_liveness + account-rotation); live + verified (08-06 audits dispatch on Claude AND DeepSeek). The 04:00
+  na_eligibility/reconciler `timeout` cluster = SQLite `database is locked` stall 01:45→04:00 (34-57 err/hr hrs 00-03,
+  the known class `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25` /
+  `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26`) — dispatch curls exceeded curl --max-time → HTTP 000 →
+  `timeout`, all dispatch_agent_id=null (server-stall artifacts, no workers spawned). Also surfaced: plan-reconciler
+  unit STALE on the VM (live 2400/2450 vs repo 5950/6000, never re-installed) and docs/context-scout installers never
+  bumped past 2400/2450; both → follow-up todos. sudo unavailable in this worker session → unit re-install left as
+  tracked todos, not done inline.
 
 - **worker slot-8 2026-08-06 (root-cause todo 6, agt-062e64)**: root-caused the 14:01:32-14:02:35 "mass session-death".
   VERDICT: not a discrete host/service teardown — host never rebooted (wtmp), and `tmux_session_lost` is routine churn
