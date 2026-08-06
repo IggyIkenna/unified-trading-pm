@@ -144,3 +144,6 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
   a worker today. Correctly NA.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended design questions, conditional runbook, prior verdicts
+stand

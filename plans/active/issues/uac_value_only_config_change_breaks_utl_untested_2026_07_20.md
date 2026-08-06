@@ -291,3 +291,6 @@ second clause ("and decide whether a red SIT should escalate to a background wor
 should stay NA regardless of which option is picked.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator sign-off required, SUPERSEDED/DO-NOT items, adversarial
+verification

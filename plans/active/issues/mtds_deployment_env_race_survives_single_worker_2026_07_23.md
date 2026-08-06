@@ -177,3 +177,5 @@ serial execution. Surface-bounded, substance-unbounded — stays KEEP-NA. No REC
 
 - **context-scout 2026-08-03**: re-verified context_scope, still accurate (4 entries) — no changes.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — non-deterministic race, substance-unbounded, prior verdicts stand

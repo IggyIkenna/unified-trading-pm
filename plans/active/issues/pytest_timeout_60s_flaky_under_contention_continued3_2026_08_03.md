@@ -501,3 +501,5 @@ cap, not ones a marker would push over); flagged for a future pass rather than r
   `[OPERATOR]`-gated capacity question already tracked) — noted for whoever next re-derives the residual-contention
   baseline.
 - **context-scout 2026-08-06**: populated context_scope (6 entries) — none previously recorded via a marker.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — OPERATOR dedup decision, incident log chain, prior verdict stands

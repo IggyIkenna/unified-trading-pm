@@ -13,7 +13,7 @@ summary: >-
   warranted (matches the 2026-08-02 run's outcome). Of the 6, **2 were fixed DIRECTLY this run** (both resolve to
   dropping the `cross-cutting` tag while an already-present sibling tag remains — safe per precedent, no write into a
   different tranche's namespace): `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` ([defi, cross-cutting]
-  -> [defi]) and `qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md` ([cross-cutting, ci] -> [ci]). The
+  -> [defi]) and `qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md` (archived 2026-08-06, [cross-cutting, ci] -> [ci]). The
   remaining **4 are parked here** (each needs a tag ADDED that isn't currently present, i.e. real ownership by a
   DIFFERENT tranche — per the 2026-07-30 concurrent-sharded-worker rule, that write belongs to the owning tranche's own
   audit, not this run): `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (real owner `ui`,
@@ -201,7 +201,7 @@ owner is a genuinely different third tranche, not cross-cutting relinquishing it
 ## Fixed directly this run (not parked — see summary for full detail)
 
 - `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`: `[defi, cross-cutting]` → `[defi]`.
-- `plans/active/issues/qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md`: `[cross-cutting, ci]` → `[ci]`.
+- `plans/archive/2026_08/issues/qg_v2_fleetwide_workflow_file_issue_regression_2026_08_05.md`: `[cross-cutting, ci]` → `[ci]` (archived 2026-08-06).
 - `plans/active/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md`: `[defi, cross-cutting]` →
   `[cross-cutting]` (kept — genuinely cross-AG, verified via a 20-launcher grep of `vm-exec-with-gcs-tee.sh` callers).
 - `plans/active/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`:

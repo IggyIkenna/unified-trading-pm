@@ -756,3 +756,5 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
   question) under the standing 2026-07-14 operator ruling; none duplicated into any active `assigned_vm: planning`
   sibling. No RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — LOCAL/operator-driven banner, human-tracked design questions

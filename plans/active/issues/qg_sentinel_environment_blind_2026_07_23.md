@@ -258,3 +258,6 @@ was already closed 2026-07-31). No RECLASSIFY, no ARCHIVE.
   remain the minimal-correct set (SSOT + 1 related issue doc + 2 source scripts) — no changes.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator sequencing ruling, cross-doc MTDS blockers, prior
+verdicts stand

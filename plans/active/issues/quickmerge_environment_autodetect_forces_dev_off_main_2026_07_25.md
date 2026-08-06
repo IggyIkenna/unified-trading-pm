@@ -213,3 +213,6 @@ activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned 
   related issue docs + quickmerge.sh + the 2 opposite-default config files at the bug's core) — no changes.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — steps 2+4 extracted to
+ci_satellite_ao_dispatch_batch4_2026_07_31.md todo 2 (draft)

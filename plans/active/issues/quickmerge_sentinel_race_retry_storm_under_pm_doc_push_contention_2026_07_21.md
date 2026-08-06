@@ -148,3 +148,6 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
 - **context-scout 2026-08-03** (re-scout pass, updated methodology): re-verified all 4 entries resolve on disk (SSOT +
   related issue + archived sibling fix doc + quickmerge.sh) — no changes.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — in-doc dispatch prohibition, operator sign-off required on shared
+ship infra

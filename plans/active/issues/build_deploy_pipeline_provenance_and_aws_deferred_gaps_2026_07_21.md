@@ -172,3 +172,5 @@ the same top-of-doc operator ruling and file-ownership coordination gates; cross
 RECLASSIFY, no ARCHIVE.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator ruling Page-first, AWS-lane gated on credits

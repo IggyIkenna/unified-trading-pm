@@ -149,3 +149,5 @@ precondition named by the parent plan.
 Residual 1 is blocked on an operator-provisioned `.venv-workspace`-capable CI runner, and the parent plan's own operator
 mandate forbids building new CI infrastructure to work around it. Residual 2 is an unscoped design call whose own stated
 first step is authoring the build sub-plan — a human decision, not a bounded worker outcome.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator-gated: CI-runner provisioning + deferred design call

@@ -135,3 +135,6 @@ RECLASSIFY" trigger has not fired.
   so the set stands.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — doc rewrite todo extracted verbatim to
+ci_satellite_ao_dispatch_batch4_2026_07_31.md (still draft)

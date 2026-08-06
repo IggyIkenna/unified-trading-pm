@@ -154,3 +154,5 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
 
 - None owns CI-VM-specific host config; this plan's fixes live in `agent-orchestrator/scripts/resource-history-*` and
   this VM's own on-disk state (swapfile, `.env.local`) — no codex doc claims authority over per-VM state.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator-driven human plan, concurrency cap investigation ongoing

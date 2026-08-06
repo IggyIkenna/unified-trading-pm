@@ -170,3 +170,5 @@ citation-based role/gate blocker on the narrowed remaining scope is unaffected b
   (pnpm migration) directly edits both.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — UI-gated tooling investigation, locked_by: live-defi-rollout

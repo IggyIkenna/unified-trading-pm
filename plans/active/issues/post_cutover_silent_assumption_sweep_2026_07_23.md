@@ -644,3 +644,6 @@ active batch — flagged again as the standing carve-out candidate. Doc stays NA
   `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`, the active plan repeatedly cited throughout the
   Resolution checklist as the doc actually tracking completion of most of this doc's shipped/remaining sub-items.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — SUPERSEDED banners on 6 items, time-gated kill-switch, extraction
+candidates exist

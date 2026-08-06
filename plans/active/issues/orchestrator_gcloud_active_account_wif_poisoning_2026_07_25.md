@@ -247,3 +247,5 @@ a duplicate-dispatch case (both are NA) so it doesn't change either doc's verdic
   `/plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (same shared
   `~/.config/gcloud` mutable-state hazard, flagged for cross-link by the 2026-08-04 na-eligibility-audit entry but not
   yet in context_scope), now 6 entries.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — OPERATOR-DECISION auth design, 4 candidate directions unadopted

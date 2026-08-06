@@ -148,3 +148,6 @@ framework is exactly the live-dispatch-critical-path class that stays NA even bu
   `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (the current active doc that re-examines this issue as
   D4-10 and carries the still-unanswered operator escalation).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — live-dispatch-critical-path class, operator authority question
+unanswered
