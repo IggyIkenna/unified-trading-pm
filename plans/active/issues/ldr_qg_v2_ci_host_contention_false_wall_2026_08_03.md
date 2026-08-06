@@ -203,3 +203,5 @@ and just burn more contended compute.
   promotion attempts from even being opened, independent of whether any specific promotion PR's checks would pass. If
   the CI-glue-runner/governor integration gap (open question #1) is the root fix, this is now a second data point that
   it is actively costing real promotion cadence, not just visibility.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

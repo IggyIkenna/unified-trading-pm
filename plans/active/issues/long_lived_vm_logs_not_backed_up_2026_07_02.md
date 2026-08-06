@@ -103,3 +103,4 @@ EXEMPT reasons accordingly.
   ruling in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

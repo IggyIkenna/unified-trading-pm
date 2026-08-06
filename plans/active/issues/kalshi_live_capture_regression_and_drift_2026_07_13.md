@@ -276,3 +276,5 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   citation now so a future run/dispatcher doesn't treat it as independent unclaimed work. Left unchecked — the
   underlying verification genuinely hasn't happened (`BLOCKED-OPERATOR-DECISION` on the live-vs-demo-host question,
   unresolved as of today). Not reclassified — this is a citation fix, not a scope change. Doc stays NA.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

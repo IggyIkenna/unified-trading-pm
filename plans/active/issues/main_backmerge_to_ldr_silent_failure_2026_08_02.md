@@ -248,3 +248,4 @@ concrete git/CI defect, not a design question) — so it is dispatched here rath
   `bash -n` on the extracted step script (no syntax errors). Filed a new P3 follow-up todo above for the fleet-wide
   template rollout (out of this todo's stated PM-only scope) rather than doing a 20+-repo rollout inline here.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

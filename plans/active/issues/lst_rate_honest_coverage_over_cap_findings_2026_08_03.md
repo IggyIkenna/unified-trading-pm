@@ -126,3 +126,5 @@ for the compact pointer back to this doc.
   SCRIPT-tagged todos with one explicitly `[OPERATOR]`-tagged genuine judgment call (whether/how to relaunch a stalled
   backfill VM pending an open OOM root-cause investigation); since not essentially all open work qualifies as bounded,
   the whole doc stays NA per the mixing rule. Doc stays `assigned_vm: NA`.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

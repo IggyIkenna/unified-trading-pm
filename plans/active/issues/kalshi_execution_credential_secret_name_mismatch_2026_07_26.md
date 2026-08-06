@@ -168,3 +168,5 @@ Two directions, both viable, not adjudicated by this doc:
   correctly `BLOCKED-OPERATOR-DECISION` and duplicate-tracked at `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
   todo 5 (still open there, unresolved live/demo-host question) — flipping this doc would dispatch a duplicate against
   real credential/exchange material. Doc stays NA.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

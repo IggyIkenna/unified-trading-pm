@@ -173,3 +173,5 @@ confirmed via `gcloud storage ls`. Full features-service test suite (17,964 test
   `yield_bearing_rates` data_type if the rate data is needed. Added follow-up removal todo; also flagged sibling
   `PENDLE-SY-weETH` (same shape). Full trace: IS `YIELD_BEARING` → MTDS hardcoded `lst_rates` → UAC lookup miss →
   features-service silent drop.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

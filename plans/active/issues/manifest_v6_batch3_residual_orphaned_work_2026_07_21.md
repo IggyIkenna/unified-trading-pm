@@ -221,3 +221,4 @@ overhead.
   `sequential: true` to this doc's frontmatter so `-001` must land before `-002` dispatches. Releasing `-002` back to
   the queue via `/skip-current-task`; `-001` is genuinely data_engineering-craft work (manifest/data-status API) and
   should dispatch next.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

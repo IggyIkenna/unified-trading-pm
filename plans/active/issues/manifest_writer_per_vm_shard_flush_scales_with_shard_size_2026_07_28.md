@@ -132,3 +132,4 @@ its own review):
   needing its own review) still holds.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — reviewed against current doc content, list still
   accurate (unchanged).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

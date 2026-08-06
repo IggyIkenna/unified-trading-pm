@@ -235,3 +235,5 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
     sweep to PRESERVE (not just attempt-push) every diverged dead-slot orphan, and (b) realign the local branch so the
     drift_violation clears once preserved. Recovery of slot-4's `78a3d05fc` is the more urgent of the two (unpreserved);
     slot-10's is safe on its wip-preserve ref.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

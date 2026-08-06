@@ -45,6 +45,14 @@ source: ["review sweep msg #3671 (2026-08-04), ebc2075b9 slot-8 fix_frontmatter 
 drift_direction: advance-process
 estimate_class: refactor
 depends_on: []
+context_scope:
+  [
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    agents/worker.md,
+    scripts/docs/docspec.py,
+    scripts/plan-hygiene/fix_frontmatter.py,
+    tests/unit/test_fix_frontmatter_issue_author_field.py,
+  ]
 ---
 
 # `author` on issue docs: worker.md §4.5 HARD RULE vs. schema/docspec SSOT — reconcile + fix a mis-cited source
@@ -127,4 +135,12 @@ depends_on: []
   docs. Filed a P3 backfill todo for the existing corpus. All three sources now agree: worker.md §4.5 mandates `author`
   on new issue docs, docspec.py validates it when present (elective, no gate break on absent), schema doc documents the
   contract. QG green.
-- **2026-08-04 (slot-8)** — Todo 3 done. Backfilled `author` on 435 issue docs from git-log author. Post-backfill: 441/444 (99.3%) carry `author`, exceeding the 90% threshold. 3 intentionally skipped: 1 has no YAML frontmatter (`_cefi_canonical_blueprint_2026_07_17.md`), 2 at 1000-line hard cap (`instruments_remaining_work_audit_2026_07_10.md`, `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`). All three SSOT sources now agree and the corpus is consistent. QG green, shipped via quickmerge. — unified-trading-pm@a6e5eae25
+- **2026-08-04 (slot-8)** — Todo 3 done. Backfilled `author` on 435 issue docs from git-log author. Post-backfill:
+  441/444 (99.3%) carry `author`, exceeding the 90% threshold. 3 intentionally skipped: 1 has no YAML frontmatter
+  (`_cefi_canonical_blueprint_2026_07_17.md`), 2 at 1000-line hard cap
+  (`instruments_remaining_work_audit_2026_07_10.md`,
+  `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`). All three SSOT sources now agree
+  and the corpus is consistent. QG green, shipped via quickmerge. — unified-trading-pm@a6e5eae25
+- **context-scout 2026-08-06**: populated context_scope (5 entries). Note: this doc's own text (title/summary/todo 1)
+  cites the fixed file as `scripts/docs/fix_frontmatter.py`, but the real file (confirmed via the slot-9 Progress Log
+  entry and on-disk check) is `scripts/plan-hygiene/fix_frontmatter.py` — used the correct path in context_scope.
