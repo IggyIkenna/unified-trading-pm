@@ -387,52 +387,82 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
      that session because slot-1 (@5087f30, capacity queue) and slot-6 (@5941552, picker claim-skip) were both live in
      exactly these files — deliberately deferred rather than three-way raced. -->
 
-- [ ] [SCRIPT] P1. Shard `install-plan-reconciler-timer.sh` per topic tranche, mirroring
+- [x] ✅ [SCRIPT] P1. Shard `install-plan-reconciler-timer.sh` per topic tranche, mirroring
       `install-ag-closeout-auditor-timer.sh` (per-tranche idempotency guard, batched fan-out with its own
       `MAX_CONCURRENT_TRANCHES` cap, one `{"mode": "reconcile", "tranche": "<t>"}` POST each). The role-doc half is
       already live (`agents/plan_reconciler.md` accepts `$TRANCHE`, unified-trading-pm@d11d0a765) and is
       backward-compatible — no tranche passed still runs `all` — so this can land independently. Motivating measurement
       (every retained run, read from the live agents table 2026-08-06): 7 of 8 ended `reaped-stale`, several dead within
-      2-5 min of spawn; the one completion ran 13.5h (00:01:32→13:29:00) holding a slot all day. (repo:
-      agent-orchestrator)
+      2-5 min of spawn; the one completion ran 13.5h (00:01:32→13:29:00) holding a slot all day. —
+      agent-orchestrator@5f15d0a (the shard + Saturday exception landed together in one commit; this todo stayed
+      unflipped while its sibling was ticked). `ui` is in that installer's own `ALL_TRANCHES` from the same commit.
+      Hardened 2026-08-06 in agent-orchestrator@4a77bfe: the Saturday day-check was `date +%u`, which pinned the
+      boundary to the host TZ in an `OnCalendar=...UTC` timer where every other date call is `date -u` (Etc/UTC today,
+      not a guarantee) — now `date -u +%u`. (repo: agent-orchestrator)
 - [x] ✅ [SCRIPT] P1. Saturday exception in the same installer: on Saturday fire ONE unsharded `{"mode": "reconcile"}`
       `all` run and hold the per-tranche shards back that day (operator ruling — Saturday is the low fleet-activity
       window, and not running shards the same day keeps the whole-corpus sweep from racing 10 siblings over the same
       docs). Sun-Fri stays sharded. Contract is documented in `cursor-configs/skills/plan-reconcile/SKILL.md` § "The
       scheduled cadence that resolves that trade-off" — the installer must match it or the two drift. —
       agent-orchestrator@5f15d0a (repo: agent-orchestrator)
-- [ ] [SCRIPT] P1. Add `ui` to `ALL_TRANCHES` in `install-ag-closeout-auditor-timer.sh:115` and
+- [x] ✅ [SCRIPT] P1. Add `ui` to `ALL_TRANCHES` in `install-ag-closeout-auditor-timer.sh:115` and
       `install-na-eligibility-auditor-timer.sh:108` (both still hardcode the 9-tranche list) and re-install both units.
       `ui` has been a real `asset_group` enum value since 2026-07-30 but has NEVER been dispatched: live records show
       9/9 tranches every day 08-02..08-06, `ui` never among them — so UI orphan coverage and UI `assigned_vm:NA`
       validity have gone unaudited since the tranche was created. The skills + role docs are already on 10
-      (unified-trading-pm@d11d0a765); the dispatchers are the last stale copy. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Fix every scheduled dispatch script's today-already-ran guard to key on the linked agent's
+      (unified-trading-pm@d11d0a765); the dispatchers are the last stale copy. — agent-orchestrator@4a77bfe (both arrays
+      now carry `ui`; the stale "all 9 tranches" echo strings went with them). **The unit re-install on the VM is NOT
+      done** — a `git pull` does not regenerate an installed systemd unit, so `ui` does not actually dispatch until
+      someone runs the two installers on the orchestrator VM. Tracked by the existing re-install todo above. (repo:
+      agent-orchestrator)
+- [x] ✅ [SCRIPT] P2. Fix every scheduled dispatch script's today-already-ran guard to key on the linked agent's
       `agent_exit_reason == "lifecycle-complete"` (plus still-in-flight `queued`/live-`dispatched` rows), not bare
       `status == "dispatched"`. `/api/scheduled-jobs/recent` already joins `agent_status`/`agent_exit_reason` in, so the
       data needs no new endpoint. Today a run that dies 2 minutes in still marks the day done and blocks every retry: on
       08-03 plan_reconciler died 1m48s in and on 08-04 5m14s in, and in both cases the corpus got zero reconciliation
       while the Scheduled Jobs panel showed a clean green `dispatched`. Must compose with the capacity queue
-      (agent-orchestrator@5087f30) — a `queued` row means work is still pending and must NOT trigger a re-dispatch.
-      (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Persist the one-shot `/done` evidence string — `_done_one_off()` (`server/routes/slots_worker.py`)
+      (agent-orchestrator@5087f30) — a `queued` row means work is still pending and must NOT trigger a re-dispatch. —
+      agent-orchestrator@4a77bfe. The predicate was EXTRACTED rather than edited seven times: it now lives once in
+      `scripts/scheduled_job_already_ran.py`, which each installer copies to /usr/local/bin at install time. Seven
+      hand-maintained copies of one rule is the exact shape that produced the stale-`ui` bug above. Fails CLOSED on an
+      unreachable API and treats unknown agent state as alive (a duplicate audit costs more than a missed retry). 14 new
+      tests: every blocking state, every failure state that must now release a retry, tranche/no-tranche/date scoping,
+      both fail-closed paths. (repo: agent-orchestrator)
+- [x] ✅ [SCRIPT] P2. Persist the one-shot `/done` evidence string — `_done_one_off()` (`server/routes/slots_worker.py`)
       archives the AgentRow and logs `{agent_id, kind, lifecycle}`, dropping `req.evidence` entirely (re-verified still
       true at agent-orchestrator@5941552). Five of the seven scheduled jobs carry their whole report headline in that
       field by role-doc contract — `plan_reconciler`, `docs_reconciler`, `ag_closeout_auditor`,
       `na_eligibility_auditor`, `context_scout_auditor` — and it is written into a field nothing reads. Store it on the
       AgentRow (or in the activity `details`) and surface it in the dashboard's Scheduled Jobs panel, which today can
-      only show the dispatch attempt. (repo: agent-orchestrator)
-- [ ] [DATA] P2. No durable transcript exists for any scheduled run: `/api/agents/{id}/log` is a live
-      `tmux capture-pane`, Claude runs on the alt-screen where tmux keeps NO scrollback, and there is no `pipe-pane`. A
-      run reaped mid-flight leaves nothing recoverable beyond what it had already committed — and 32 of 65 retained
-      auditor runs (49%) ended `reaped-stale`. Decide between `pipe-pane` to a gitignored per-run log and indexing the
-      Claude session JSONL that already exists on the VM outside the repo, then wire it. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P3. Give `plan_reconciler` + `docs_reconciler` a mid-run checkpoint. Their siblings
-      (`na_eligibility_auditor`, `context_scout_auditor`) commit a dated per-doc marker as they go, so a killed run
-      resumes where it stopped; these two batch every write into their Phase 4/5 apply, so a kill before that loses the
-      entire run. `plan_reconciler` has the worst record in the fleet (7 of 8 reaped-stale) precisely because it holds
-      everything to the end of a very long pass. Sharding (todo above) shortens the window but does not close it. (repo:
-      agent-orchestrator)
+      only show the dispatch attempt. — agent-orchestrator@4a77bfe: `AgentRow.done_evidence` via the declarative
+      `_AGENTS_MIGRATION_COLUMNS` registry (the hand-rolled migration I wrote first was rejected by
+      `test_migration_completeness.py`, which is exactly what that test is for), surfaced through the AgentRow join
+      `ScheduledJobRunView` already does, rendered as a "Reported" column. No backfill is possible — historical evidence
+      was never stored anywhere. 2 new tests incl. empty-string staying NULL so the panel shows "—" rather than a blank
+      that reads as an empty finding. QG green: 2584 python, tsc clean, 225 vitest. (repo: agent-orchestrator)
+- [x] ✅ [DATA] P2. ~~No durable transcript exists for any scheduled run~~ — **THE PREMISE WAS WRONG; NO CHANGE
+      NEEDED.** Verified 2026-08-06: `/api/agents/{id}/log` (`server/routes/agents.py`) already PREFERS Claude's durable
+      JSONL transcript via `server/transcript_log.py` and only falls back to `capture-pane` when no transcript exists —
+      the endpoint's own docstring says so, and root-caused it back in 2026-06-27 for exactly the
+      alt-screen/no-scrollback reason this todo restated as if unsolved. The transcript file outlives the tmux session,
+      so a reaped run IS recoverable. Confirmed against live data, not just code: **all 32 `reaped-stale` family agents
+      carry a `claude_session_id`**, which is the only input `resolve_transcript_path()` needs. The panel's own "Log"
+      button routes through this same endpoint, so a dead run's full conversation is already one click away. The
+      residual — 3 `lifecycle-complete` runs with no `claude_session_id` — is closed by the evidence-persistence todo
+      below, which stores the report itself on the AgentRow. Building `pipe-pane` on top of this would have been
+      redundant capture machinery over an alt-screen byte stream. Filed on a misread of the endpoint docstring;
+      withdrawn on verification.
+- [x] ✅ [SCRIPT] P3. Give `plan_reconciler` + `docs_reconciler` a mid-run checkpoint — **HALF ALREADY EXISTED; the
+      other half is shipped** (unified-trading-pm@<docs-reconcile-sha>). `plan_reconciler.md` has carried an explicit
+      contract since its Phase-5 design (line ~170: "COMMIT INCREMENTALLY to your review branch as you finish each check
+      — NOT one all-or-nothing commit at the end … PUSH each checkpoint, so a mid-run death leaves your finished work
+      safe", plus STEP 5's "CHECKPOINT after EACH sub-check and at least every ~10 min") — this todo's claim that it
+      "holds everything to the end of a very long pass" was wrong. `/docs-reconcile`'s Phase 4 genuinely lacked it (only
+      "batch related fixes into coherent commits", which permits holding everything to run end), so the same contract is
+      now written there. Correction to this todo's reasoning: plan_reconciler's 7-of-8 `reaped-stale` record is NOT a
+      checkpointing failure — those runs died 1m48s and 5m14s in, before any check finished, so there was nothing to
+      checkpoint. Sharding is that class's fix; checkpointing protects completed work, which is a different failure.
+      (repo: unified-trading-pm)
 
 ## Progress Log
 
