@@ -73,6 +73,13 @@ Slot 2, branch `plan_reconciler/agt-4fdce1`. This doc is the run journal — app
       baseline; cross-cutting, ao, infrastructure, cefi most likely per prior baseline notes).
 - [ ] [SKILL] P2. **Run `/na-eligibility-audit`** — `assigned_vm:NA` corpus grew past baseline (359→376 docs, 1295→1317
       todos) this run; not hand-triaged (out of plan_reconciler's scope by design).
+- [ ] [SCRIPT] P2. **Fix `scripts/quality_gates/check_finalize_plan_coverage.py`'s root cause** (operator ruling,
+      BLK-5eeacb63, 2026-08-06): its "no companion gated finalize plan exists" precondition doesn't detect an EXISTING
+      finalize plan under a slightly different exact-match name, so it generated a SECOND duplicate finalize plan for
+      `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`, which already had `..._finalize.md` — the
+      two then raced on the same `depends_on`+`gate_on_depends: true` target (de-raced this run by superseding the
+      duplicate, see Flips verified). Make the existence check resilient to a `_2026_MM_DD` date-suffix variant of the
+      expected filename, not just the exact string.
 - [ ] [ADMIN] P1. **Resume STEP 8 of this dispatch (agt-4fdce1)**: check `GET /api/slots/2/messages` for answers to
       `BLK-136e69bf` (sports_rebuild_delta_la_liga2 data-correctness), `BLK-0e7e0794` (upbit 72-day data gap),
       `BLK-5eeacb63` (duplicate finalize-plan race) — apply per plan_reconciler.md STEP 8, then POST `/done`. Session
@@ -107,6 +114,11 @@ Slot 2, branch `plan_reconciler/agt-4fdce1`. This doc is the run journal — app
   "IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation" banners the todo itself named (infra/strategy/features_and_ml
   /execution/orchestrator epics); the todo's own record already proved the refactor shipped+archived. P0, self-evident
   from the record — no adversarial pair needed.
+- **STEP-8 answers applied (operator, 2026-08-06 ~13:12 UTC, after ~12.5h wait)**: BLK-5eeacb63 — kept
+  `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md`, ported its duplicate twin's `[REVIEW]`
+  todo in first, then superseded + archived the duplicate (`..._finalize_2026_07_31.md` → `plans/archive/2026_08/`);
+  root-cause filed as a new Todo above. See BLK-136e69bf and BLK-0e7e0794 entries below for the other two answers as
+  they're applied.
 
 ## Contradictions
 

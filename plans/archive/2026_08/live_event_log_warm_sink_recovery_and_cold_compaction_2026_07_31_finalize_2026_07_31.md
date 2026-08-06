@@ -10,7 +10,7 @@ summary: >-
   re-verify) to see whether they've since cleared, and archives the parent via the standard 6-step ritual once fully
   closed. Authored 2026-07-31 to close the finalize-plan-coverage gate the parent plan's own creation triggered
   (task_template.md §4 — every assigned_vm:planning plan needs a companion gated finalize plan).
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-06"
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,7 +39,7 @@ sequential: true
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize
 source: >-
   Filed to close the finalize-plan-coverage QG regression (scripts/quality_gates/check_finalize_plan_coverage.py)
   flagged against live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md, which shipped assigned_vm:
@@ -53,6 +53,12 @@ context_scope:
 ---
 
 # live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31 — finalize
+
+> **🔴 SUPERSEDED 2026-08-06** — duplicate gated finalize plan for the same parent as
+> `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md` (both `depends_on`+
+> `gate_on_depends: true` on the same doc, a real dispatch race). Operator ruling (BLK-5eeacb63): the survivor keeps the
+> cleaner filename; this doc's `[REVIEW]` evidence-verification todo below was ported there verbatim before this banner
+> was added — do NOT dispatch anything from this doc, do NOT re-port the todo again.
 
 ## Todos
 
@@ -81,3 +87,10 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified, unchanged (3 entries) -- genuinely code-free finalize/review gate, existing
   list already minimal + resolves.
+- **plan_reconciler agt-4fdce1 2026-08-06** (operator ruling, BLK-5eeacb63): confirmed racing against
+  `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md` on the identical parent
+  (`depends_on`+`gate_on_depends: true` both set, both `status: active` pre-fix). Superseded per operator ruling — this
+  doc's `[REVIEW]` todo (the only content this doc had that the survivor lacked) was ported to the survivor FIRST, then
+  this doc flipped `status: superseded` + `superseded_by:` set, now archiving. Root-cause filed separately:
+  `check_finalize_plan_coverage.py`'s "no companion gated finalize plan exists" precondition doesn't detect an EXISTING
+  finalize plan under a different exact match, generating this duplicate.
