@@ -93,13 +93,13 @@ that already parses this CLI's output today would break. A future `ag_closeout_a
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Add `"candidates": candidates` to the `--json` output dict in
+- [x] ✅ [SCRIPT] P3. Add `"candidates": candidates` to the `--json` output dict in
       `scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py`'s `main()` (purely additive field). Confirm no
       existing caller depends on the current shape staying exactly as-is (grep the corpus for
       `generate_ag_closeout_audit_candidates.py --json` invocations first). Repo: unified-trading-pm. **Done when**:
       `--tranche <any> --json` includes a `candidates` array matching what `main()` already computes in memory, the
       existing `covering_paths`/`total_members`/`never_cited`/`cited_somewhere_count` keys are unchanged, and
-      `quality-gates.sh` is green.
+      `quality-gates.sh` is green. — unified-trading-pm@05ba63832
 
 ## Progress Log
 
