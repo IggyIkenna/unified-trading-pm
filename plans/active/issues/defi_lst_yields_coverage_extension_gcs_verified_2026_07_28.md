@@ -213,6 +213,22 @@ structural limitation.
   and the naming-ssot codex (less load-bearing than the sibling writegate-fix issue, which carries the LIVE backfill
   status the sole remaining [DATA] P1 todo needs to check before re-running).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-06 (slot-14, data_engineering)** — confirm-to-completion task. **FINDING: the 2026-08-05 resume is DEAD, not
+  in-flight.** `/tmp/lst_yields_resume_20260805.log` shows the slot-13 resume
+  (`--start-date 2023-11-01 --end-date 2026-08-05`) received **SIGTERM at 05:29:15 on 2026-08-05 — ~1.5 min after
+  launch**, having written only `day=2023-11-01` (already covered); no process running, no resume VM on either cloud.
+  Live GCS listing (`onchain/by_date/*/feature_group=lst_yields/`) = **835 day-partitions, byte-identical to the
+  pre-resume state** — coverage gap through 2026-08-05 is **980 days** (2023-11-06..2026-08-05 minus the already-present
+  fragments: 2024-01-01..03, 2026-04-03..19, 2026-07-20..25). slot-13's "[x] resume launched" flip was false-progress
+  (the audit note below was right). **Relaunched (2026-08-06, slot-14)** the idempotent backfill on **4 parallel SPOT
+  shard VMs** via the sanctioned `launch-features-vm.sh` (onchain/DEFI, `FEATURE_GROUP=lst_yields`,
+  `SKIP_DEPENDENCY_CHECK=1`, safe-idempotent justification: per-day additive writes + skip-if-fresh, no delete/schema
+  change — no `[OPERATOR]`-gate needed): `features-onchain-defi-lstyields-{s1..s4}-20260806` covering
+  2023-11-01..2024-06-30 / 2024-07-01..2025-02-28 / 2025-03-01..2025-10-31 / 2025-11-01..2026-08-05. Operator
+  shared-host OOM directive acknowledged 2026-08-06: this backfill runs on VMs, NOT locally on the fleet host (no
+  process I launched was OOM-killed; the resume's death was SIGTERM, not OOM). Progress metric = lst_yields
+  day-partition count (target ~1,815 across 2021-08-17..2026-08-05; 835 baseline). Monitor:
+  `/tmp/lst_yields_backfill_monitor.txt`.
 
 ## Follow-ups
 
