@@ -115,7 +115,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Run the shipped ramp-to-429 rate-limit calibration harness
+- [x] ✅ [SCRIPT] P1. Run the shipped ramp-to-429 rate-limit calibration harness
       (`instruments-service/scripts/calibrate_source_rate_limit.py`) from a throwaway ephemeral VM IP for understat /
       transfermarkt / open_meteo / soccer_football_info / polymarket_clob / polymarket_gamma_api (never a prod IP), then
       transcribe each measured `safe_rate_rpm` + `recovery_seconds` into `launch_budget_registry.py`
@@ -123,7 +123,8 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `calibrated=True`, and drop the `# TODO: empirically calibrate` markers. Source:
       `data_completion_sports_2026_07_24.md`. Done when: the probe has run to completion for all 6 sources,
       `launch_budget_registry.py` carries measured safe_rate_rpm/recovery_seconds with `calibrated=True` for each, and
-      the measured table is recorded in the plan's Progress Log.
+      the measured table is recorded in the plan's Progress Log. — deployment-service@0eb9c36 + instruments-service
+      secret-fix quickmerged (rapidapi-key → soccer-football-info-api-key). See Progress Log below.
 - [ ] [DATA] P2. Re-launch the instruments-service Transfermarkt PLAYER_VALUES backfill scoped to the golden window
       (2025-09-01..2025-11-30) with skip-fresh enabled so only the 256 `attempted_failed` cells (as of the 2026-06-24
       measurement) are re-attempted, then re-measure coverage. Source: `data_completion_sports_2026_07_24.md`. Done
@@ -686,6 +687,33 @@ re-triage. Too-large-or-risky entries need their own dedicated plan.
 - **sports_track_h_denominator_prereqs_2026_07_28.md** — batch_footystats copy+swap — data complete/verified, code ship
   blocked (RB-166e706f): Read the live doc's todo 2 (lines 118-132) and the full 2026-07-28 (slot-14) Progress Log entry
   (lines 143-201) describing a real, detailed 16,970-object PROD copy+swap:…
+
+## Progress Log
+
+### 2026-08-06 — P1 ramp-to-429 calibration (slot 7)
+
+Two-pass probe via ephemeral VM (never prod IP 13.113.200.22):
+
+- **Pass 1** VM `uts-rate-calibration-probe-20260806-195143`: probed open_meteo, polymarket_clob, polymarket_gamma_api.
+  Crashed at soccer_football_info due to wrong GCP secret name (`rapidapi-key` → corrected to
+  `soccer-football-info-api-key`; fix quickmerged to instruments-service).
+- **Pass 2** VM `uts-rate-calibration-probe2-20260806-195923`: probed soccer_football_info, transfermarkt, understat
+  with the corrected script.
+
+| source               | break_rpm     | last_ok_rpm | safe_rpm     | recovery_s   | probe_vm                                    | probed_at_utc        |
+| -------------------- | ------------- | ----------- | ------------ | ------------ | ------------------------------------------- | -------------------- |
+| open_meteo           | 600           | 540         | 480          | 1.24         | uts-rate-calibration-probe-20260806-195143  | 2026-08-06T19:54:30Z |
+| polymarket_clob      | null (>=3600) | 3600        | 2880 (floor) | null         | uts-rate-calibration-probe-20260806-195143  | 2026-08-06T19:55:43Z |
+| polymarket_gamma_api | 2040          | 1980        | 1632         | 1.01         | uts-rate-calibration-probe-20260806-195143  | 2026-08-06T19:56:18Z |
+| soccer_football_info | 240           | 180         | 192          | null (>120s) | uts-rate-calibration-probe2-20260806-195923 | 2026-08-06T20:04:19Z |
+| transfermarkt        | null (>=3600) | 3600        | 2880 (floor) | null         | uts-rate-calibration-probe2-20260806-195923 | 2026-08-06T20:05:38Z |
+| understat            | null (>=3600) | 3600        | 2880 (floor) | null         | uts-rate-calibration-probe2-20260806-195923 | 2026-08-06T20:07:31Z |
+
+Notes: `null (>=3600)` = probe hit max_rpm=3600 with no reject; safe floor = 0.8x 3600 = 2880. `soccer_football_info`
+recovery > 120s (probe limit); `polymarket_clob` recovery null (no break observed). GCS artifacts:
+`gs://deployment-scripts-central-element-323112/vm-logs/uts-rate-calibration-probe*/`.
+
+Both probe VMs self-deleted. Registry updated: deployment-service@0eb9c36.
 
 ## Codex SSOTs
 
