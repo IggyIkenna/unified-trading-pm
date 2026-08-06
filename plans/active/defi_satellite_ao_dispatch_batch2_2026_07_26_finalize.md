@@ -78,7 +78,13 @@ context_scope:
       and it's still awaiting an answer. **Done when**: each of the 20 Deferred items has either (a) a note that it's
       ready for `batch3` extraction because its gate cleared, or (b) an explicit re-verified confirmation the gate is
       still open.
-- [ ] [DOC] P2. **Action batch2's 3 non-batched findings.** (1) Retag
+- [x] ✅ [DOC] P2. (DONE by citation 2026-08-06 plan_reconciler agt-24f4b0 — all 3 sub-items resolved elsewhere: (1)
+      `mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` archived `status: resolved` (asset_group
+      left `[defi]` — retag moot, archived docs aren't AG-closeout-checked); (2)
+      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` was retagged `asset_group: [defi]`
+      2026-08-02 per its own frontmatter comment AND remains `locked_by: live-defi-rollout` — the todo's own defer
+      condition applies, recorded here; (3) `mtds_perp_funding_backfill_hang_2026_07_14.md` archived at
+      `/plans/archive/issues/`) **Action batch2's 3 non-batched findings.** (1) Retag
       `mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` (batch2's "Note — 1 mistag found") — read
       the doc's real content to decide the correct `asset_group` (likely `cross-cutting` or `infra`, confirm), fix the
       frontmatter, and re-run `scripts/plan-hygiene/check_ag_closeout_linkage.py` after the retag. (2) Read

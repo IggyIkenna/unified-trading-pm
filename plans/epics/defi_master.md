@@ -15,11 +15,11 @@ scope: [engineer, admin]
 tags: [defi, backfill, manifest, mtds, pipeline-mode, execution, data-correctness, live-trading]
 related:
   [
-    ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md,
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
-    ../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md,
-    ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
+    /plans/archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md,
+    /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
     /plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md,
     /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
@@ -45,19 +45,19 @@ created: 2026-05-07
 name: defi_master
 tier: L0
 priority: P0
-assigned_vm: vm-defi
+assigned_vm: NA
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  - ../active/defi_consolidated_closeout_2026_07_18.md
+  - /plans/active/defi_consolidated_closeout_2026_07_18.md
   - /plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md
   - /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md
-  - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
-  - ../active/defi_strategy_pnl_axis_index_2026_07_24.md
-  - ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md
-  - ../active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md
-last_updated: 2026-06-20
+  - /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
+  - /plans/active/defi_strategy_pnl_axis_index_2026_07_24.md
+  - /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md
+  - /plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md
+last_updated: 2026-08-06
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -328,12 +328,12 @@ todo block below maps to one of these homes — nothing dropped, nothing flipped
 
 | Former inline block                                                                                                                                                                                                                 | Disposition                                                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Governance parameters refresh (Aave/Compound/Morpho event listener → time-versioned `governance_params` parquet → APR-calc + sizing migration + new UAC `GOVERNANCE_PARAMS_CHANGED`)                                                | **EXTRACTED (net-new)**                                                                                                         | [`defi_governance_params_refresh_2026_06_20`](../active/defi_governance_params_refresh_2026_06_20.md)                                                                                                                                                                                                                                            |
+| Governance parameters refresh (Aave/Compound/Morpho event listener → time-versioned `governance_params` parquet → APR-calc + sizing migration + new UAC `GOVERNANCE_PARAMS_CHANGED`)                                                | **EXTRACTED (net-new)**                                                                                                         | [`defi_governance_params_refresh_2026_06_20`](/plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md)                                                                                                                                                                                                                               |
 | Hardcoded on-chain-derivable values audit (Cat-A derive-SSOT + CI citation gate; Cat-B fallback removal, blocked on governance Phase 2) + Fork-1 prep residuals (Pyth-Hermes coverage SSOT, local-fallback drift sweep)             | **EXTRACTED (net-new)**                                                                                                         | [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)                                                                                                                                                                                                   |
 | DEX-swaps subgraph schema-mismatch rewrite (PancakeSwap/SushiSwap/Aerodrome/Camelot) + Compound V3 Messari rewrite (Bug 2) + Hyperliquid OHLCV stub + Extended-Starknet unblocking + CLOB asset_group classification                | **EXTRACTED (net-new)**                                                                                                         | [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md)                                                                                                                                                                                                                       |
-| DeFi full-batch E2E validation + per-handler coverage + Phase-D historical carry tracer (2022→today × 7 archetypes) + Lighter/Pacifica backfill final-state verify + SolidlyCL golden-swap validation (P2)                          | **EXTRACTED (net-new)**                                                                                                         | [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)                                                                                                                                                                                                                      |
-| `mtds-s4-10` rescan-all-manifests + LIGHTER `perp_funding` (A5) + DeFi per-chain/per-venue launch dates + DEX per-chain launch-date + on-chain features + DeFi single-walk / G1 backfill / coverage rollup                          | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manifest_canonicalisation_2026_06_01.md) (DeFi manifest/coverage master; the manifest-migration rescan rides `infrastructure_master` / `master_data_canonicalisation_migration_catalogue_2026_06_07`)                                                                               |
-| `source=` provenance / row-level source column for DeFi                                                                                                                                                                             | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`data_source_provenance_all_asset_groups_2026_06_01`](../active/data_source_provenance_all_asset_groups_2026_06_01.md) (DeFi is an explicit 🔴 RED stamping gap there)                                                                                                                                                                          |
+| DeFi full-batch E2E validation + per-handler coverage + Phase-D historical carry tracer (2022→today × 7 archetypes) + Lighter/Pacifica backfill final-state verify + SolidlyCL golden-swap validation (P2)                          | **EXTRACTED (net-new)**                                                                                                         | [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)                                                                                                                                                                                                                  |
+| `mtds-s4-10` rescan-all-manifests + LIGHTER `perp_funding` (A5) + DeFi per-chain/per-venue launch dates + DEX per-chain launch-date + on-chain features + DeFi single-walk / G1 backfill / coverage rollup                          | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`defi_manifest_canonicalisation_2026_06_01`](/plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md) (DeFi manifest/coverage master; the manifest-migration rescan rides `infrastructure_master` / `master_data_canonicalisation_migration_catalogue_2026_06_07`)                                                                  |
+| `source=` provenance / row-level source column for DeFi                                                                                                                                                                             | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`data_source_provenance_all_asset_groups_2026_06_01`](/plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md) (DeFi is an explicit 🔴 RED stamping gap there)                                                                                                                                                             |
 | Per-adapter `available_at` stamping for DeFi adapters + DeFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`                                                                                                                         | **OWNED ELSEWHERE — do not duplicate**                                                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) Phase 1/4 (archived plan; the in-flight stamping refactor banner above coordinates it)                                                                                                                            |
 | Solana LST MTDS coverage gap (jitoSOL/mSOL ~monthly granularity) + Pyth-Hermes jitoSOL pre-2023-10 scope                                                                                                                            | **OWNED ELSEWHERE — named successors**                                                                                          | archived `plans/archive/issues/lst_apr_sourcing_method_validated_2026_05_14.md` + `plans/archive/solana_restaking_rewards_coverage_2026_05_13.md`; the manifest-coverage side rides `defi_manifest_canonicalisation_2026_06_01` (the Pyth-Hermes scope decision is also tracked in `defi_onchain_derivable_values_and_date_drift_2026_06_20` P1) |
 | The 12 "End-state at May 23" bare cutover success-criteria checkboxes (live-trading / venue subsets / custody / alerting / kill-switches / batch-vs-live recon / AWS↔GCP parity / gas-lending-staking discipline / scenario matrix) | **ROUTED TO MASTER**                                                                                                            | [`master_to_live_defi_2026_05_23`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) (Groups F/G cutover gates — these are cutover criteria, not implementation units; tracked there, not re-extracted)                                                                                                                                  |
@@ -354,7 +354,7 @@ routing table above — do NOT pick work from them directly.
 
 > **ROUTED**: `mtds-s4-10` rescan-all-manifests → `defi_manifest_canonicalisation_2026_06_01` (+ `infrastructure_master`
 > / `master_data_canonicalisation_migration_catalogue_2026_06_07`); `defi-e2e-validate` + `defi-coverage-validate` →
-> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md).
+> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md).
 > The two oracle P0s are ✅ shipped (evidence inline). Do NOT dispatch from here.
 
 - [x] [AGENT] P0. mtds-s3-5-pyth-oracle: Add Pyth oracle prices for Solana via Hermes (HTTPS pull, batch) + PythNet
@@ -380,7 +380,7 @@ routing table above — do NOT pick work from them directly.
 ### DeFi e2e pipeline gates (`defi_e2e_pipeline`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
 > **ROUTED**: open E2E/coverage/Phase-D items →
-> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md);
+> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md);
 > the ✅ rows below are shipped (evidence inline). Do NOT dispatch from here.
 
 - [x] [AGENT] P0. strategy-service `quality-gates.sh` passes. [AUDIT 2026-05-07: FRESH — actionable]
@@ -432,7 +432,7 @@ routing table above — do NOT pick work from them directly.
 #### Carry tracer verification gates (folded-in 2026-05-07 from `defi_data_to_strategy_4phase_handoff` Phase A + D) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
 > **ROUTED**: the open Phase-D historical-tracer P0 →
-> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md);
+> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md);
 > the Solana LST gap (P2) → archived named successors + `defi_manifest_canonicalisation_2026_06_01`. Do NOT dispatch
 > from here.
 
@@ -510,7 +510,7 @@ calculator, two consumers; the per-archetype filter logic is in the catalog spec
 ### Lighter / Extended / Pacifica historical replay (`dex_historical_replay_*`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
 > **ROUTED**: the open Lighter/Pacifica backfill final-state VERIFY →
-> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md);
+> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md);
 > Extended unblocking →
 > [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md).
 > Do NOT dispatch from here.
@@ -548,7 +548,7 @@ calculator, two consumers; the per-archetype filter logic is in the catalog spec
 > **ROUTED**: the EXTENDED-STARKNET historical-OHLCV residual →
 > [`defi_mtds_subgraph_and_adapter_fixes_2026_06_20`](../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md);
 > the Lighter/Pacifica final-state VERIFY →
-> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md).
+> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md).
 > Remaining ✅/SUPERSEDED rows are shipped. Do NOT dispatch from here.
 
 Captures the open work items from
@@ -563,7 +563,9 @@ Date ranges + venue specs:
   unrecoverable (REST capped, no cursor; on-chain replay infeasible per `block_height` being sequencer-internal).
   Forward-poll only path for live tape.
 - **PACIFICA-SOLANA** (Solana program-settled, Hyperliquid clone) — ~50+ perps, top-5 captured. Mainnet 2025-06-onwards.
-  50x leverage, USDC cross-margin (today). OHLCV via `/kline`.
+  **(DECOMMISSIONED 2026-07-18, operator ruling "decommission pacifica for now" — capture fully removed, locked by
+  `DECOMMISSIONED_VENUE_BASES`; see `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`; history-only —
+  annotation plan_reconciler agt-24f4b0 2026-08-06)** 50x leverage, USDC cross-margin (today). OHLCV via `/kline`.
 - **EXTENDED-STARKNET** (Starknet-native, batched-proof settlement) — ~10 BTC/ETH/SOL majors. Historical OHLCV path
   unconfirmed (404 on `/candles`); see Item C below for research. Settlement events SHOULD be on-chain readable via
   Starknet `getEvents`.
@@ -613,10 +615,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                                                                                                                                                      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                                                                                                                                                      ```
+                                                                                                                                                                                                                          gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                                                                                                                                                          ```
 
-                                                                                                                                                                                                                      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                                                                                                                                                          [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -876,7 +878,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 ### AMM matcher coverage (migrated from archived `defi_simulation_realism_2026_05_10`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
 > **EXTRACTED**: the matcher is ✅ shipped (execution-service@e8ecd0d38); the open golden-swap validation (P2) →
-> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md).
+> [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md).
 > Do NOT dispatch from here.
 
 - [x] ✅ [AGENT] P1. **`SolidlyCLForkPool` matcher for Velodrome/Aerodrome Slipstream V3-tick CL pools** —
@@ -904,7 +906,7 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 > cutover ships on `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK); June-1 flips per-wallet to `COPPER_MPC` / CEFFU per POD scope
 > (Fireblocks OUT OF SCOPE — operator ruling 2026-07-12 reaffirming the POD codification; was: "COPPER_MPC /
 > FIREBLOCKS_MPC on client-provided creds"; see
-> [`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
+> [`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
 > §A2 finding 376). Operator-action checklist:
 > [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md). Per-wallet
 > schema:
@@ -987,9 +989,9 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
 > Priority #3 (PROTOCOL_LAUNCH_DATES tightening) →
 > [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md) +
 > launch-date population in
-> [`defi_manifest_canonicalisation_2026_06_01`](../active/defi_manifest_canonicalisation_2026_06_01.md); Priority #4
-> (ASTER genesis/funding audit) → operator decision tracked in `defi_manifest_canonicalisation_2026_06_01` (ASTER launch
-> date) + the adapter-fix plan. Do NOT dispatch from here.
+> [`defi_manifest_canonicalisation_2026_06_01`](/plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md);
+> Priority #4 (ASTER genesis/funding audit) → operator decision tracked in `defi_manifest_canonicalisation_2026_06_01`
+> (ASTER launch date) + the adapter-fix plan. Do NOT dispatch from here.
 
 Source issue archived. Audit identified 13.6k actionable (non-legit) missing rows across 7 buckets. Priorities #1+#5
 fold into the lending-indices section above; priorities #2-#4 below remain pending. Coordinate with
@@ -1160,16 +1162,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                                                                                                                                                      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                                                                                                                                                      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                                                                                                                                                      VM ran current code without a refresh.
+                                                                                                                                                                                                                          `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                                                                                                                                                          (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                                                                                                                                                          VM ran current code without a refresh.
 
-                                                                                                                                                                                                                      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                                                                                                                                                      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                                                                                                                                                      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                                                                                                                                                          Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                                                                                                                                                          (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                                                                                                                                                          `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                                                                                                                                                      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                                                                                                                                                      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                                                                                                                                                          Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                                                                                                                                                          (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1341,9 +1343,9 @@ auto-row-reclassification.
 ### Governance parameters refresh (migrated from `defi_protocol_governance_parameters_refresh_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing (restructured 2026-06-20)")
 
 > **EXTRACTED**: all open Phases 1-5 + the new UAC `GOVERNANCE_PARAMS_CHANGED` event →
-> [`defi_governance_params_refresh_2026_06_20`](../active/defi_governance_params_refresh_2026_06_20.md). This plan GATES
-> the Cat-B fallback removal in `defi_onchain_derivable_values_and_date_drift_2026_06_20` Phase 3. Do NOT dispatch from
-> here.
+> [`defi_governance_params_refresh_2026_06_20`](/plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md).
+> This plan GATES the Cat-B fallback removal in `defi_onchain_derivable_values_and_date_drift_2026_06_20` Phase 3. Do
+> NOT dispatch from here.
 
 Source issue archived. Aave/Compound/Morpho parameters (LTV, liquidation threshold, rate-curve kinks, borrow caps)
 frozen at discovery time today; no refresh path. Live trading risk: governance change between discovery + execution
@@ -1694,8 +1696,9 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
-Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_15 active plans + 15 active issue docs declare `parent_epic: defi_master` in their frontmatter (count refreshed
+2026-08-06 plan_reconciler agt-24f4b0). Workers pick up in priority order (P0 first). Auto-populated by
+`scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -1712,27 +1715,27 @@ resolver.
 hardcoded on-chain-derivable values + UAC date-drift elimination (derive-SSOT + CI citation gate) — all 14/14 todos done
 (`unified-api-contracts@4a29261e`, `instruments-service@8b02b647`); no longer a P0 must-complete item.
 
-### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
+### [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
 
 **status**: active · **estimate**: 4 cal AI-days (class: infra)
 
-### [`mvp_backfill_defi_onchain_v10_2026_06_27`](../active/mvp_backfill_defi_onchain_v10_2026_06_27.md)
+### [`mvp_backfill_defi_onchain_v10_2026_06_27`](/plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: MVP backfill — DeFi all on-chain data_types
 (SPOT-only, per-protocol genesis, reconcile-then-fill)
 
-### [`mvp_backfill_defi_onchain_v10_operational_log_2026_07_24`](../active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)
+### [`mvp_backfill_defi_onchain_v10_operational_log_2026_07_24`](/plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: MVP backfill — DeFi all on-chain data_types
 — operational log (extracted from mvp_backfill_defi_onchain_v10)
 
 ## P1 — important; post-current-gate
 
-### [`defi_consolidated_closeout_2026_07_18`](../active/defi_consolidated_closeout_2026_07_18.md)
+### [`defi_consolidated_closeout_2026_07_18`](/plans/active/defi_consolidated_closeout_2026_07_18.md)
 
 **status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
-### [`defi_strategy_pnl_axis_index_2026_07_24`](../active/defi_strategy_pnl_axis_index_2026_07_24.md)
+### [`defi_strategy_pnl_axis_index_2026_07_24`](/plans/active/defi_strategy_pnl_axis_index_2026_07_24.md)
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: DeFi strategy/PnL/backtest axis index —
 entry point for the strategy-service track

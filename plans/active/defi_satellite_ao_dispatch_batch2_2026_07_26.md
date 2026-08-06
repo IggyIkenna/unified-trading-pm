@@ -114,8 +114,9 @@ context_scope:
       governing plan); left in place pending clarification. The 10th
       (`backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`) has its own unrelated, unconfirmed condition. Full
       per-script reasoning in `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s Progress Log. Finish the two
-      housekeeping-cluster sub-items NOT already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which
-      only covers the OPERATIONS dict fix and the paper_run_handler stale comments): (1) delete
+      housekeeping-cluster sub-items NOT already covered by
+      `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md` (which only covers the OPERATIONS dict
+      fix and the paper_run_handler stale comments): (1) delete
       `market-tick-data-service/scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — its own documented
       `Delete-when: dex-pools-prd/lst-rates-prd/perp-funding-prd are deleted` condition is now satisfied (all 3 buckets
       confirmed deleted per the source doc's Progress Log); (2) audit the ~8
@@ -303,7 +304,11 @@ context_scope:
   `plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`) in Source's new
   2026-07-26 dated section.
 
-- [ ] [DATA] P2. Once `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s P1 [BACKEND]
+- [ ] [DATA] P2. **Re-run manifest rebuilds for every affected KALSHI_PERP/POLYMARKET_PERP historical day/symbol**
+      (annotation 2026-08-06 plan_reconciler agt-24f4b0: presumes option (b) of the kalshi issue's open (a)/(b)/(c)
+      operator decision — the Done-when "status flips to resolved" is operator-gated until that is ruled; see
+      `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`). Once
+      `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s P1 [BACKEND]
       `_perp_funding_kalshi_polymarket.py` cefi-routing fix (sourced from
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s 2026-07-24 root-cause resolution) has landed AND its P1
       [DATA] corpus-wide KALSHI_PERP scope audit has produced its per-day/per-symbol GCS-present/manifest-absent count,

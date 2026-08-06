@@ -88,6 +88,11 @@ context_scope:
 > above have landed (writer + denominator + historical migration) and this track's backfill has actually started writing
 > canonical rows, not merely been unblocked to start.
 >
+> **Annotation 2026-08-06 (plan_reconciler agt-24f4b0)**: the prior v10-architecture backfill DID complete —
+> `mvp_backfill_defi_onchain_v10_2026_06_27.md` archived with **GATE MET 2026-07-28 (slot-10)**, re-measured 0 residual,
+> 11,440 rows captured, finalize "No residual work remains". Whether that satisfies this flip condition (the note
+> requires per-instrument shard-key progress) is unresolved — routed to the operator.
+>
 > Until then the park is intentional, not stale: Track 5 is explicitly gated on Track 2 (STORE) + Track 3 (DENOM) in the
 > parent plan, and R3 (the historical migration this backfill depends on) is still `RUNNING, partial` as of this
 > writing. No park exists without a named LIVE flipper — this note + this plan ARE that flipper; if this plan is ever
@@ -141,12 +146,18 @@ context_scope:
       question `BLK-d355f03a`). Both skills' SKILL.md § 0 forbid synthesizing `--day` without operator input — 3 worker
       slots independently hit this. Returns to active dispatch once the operator names the baseline/mid/final day(s).
 
+- [ ] [OPERATOR] P2. **Operator: name the baseline/mid/final `--day` values (BLK-d355f03a)** to un-park the
+      data-pipeline-check 3×3 — return path re-tracked here 2026-08-06 (plan_reconciler agt-24f4b0) because the
+      Conflict-gated item's BLOCKED marker lives in the archived batch5 finalize (archived-invisible to the AO).
+
 ## MVP universe — proven-wired vs. merely-declared (gate-audit §14, 2026-07-24: no such section existed; this track is the closest source)
 
-**Status: unresolved, mostly an open question.** Per the unpark note above, defi's MVP backfill has not yet written
-canonical rows against the per-instrument shard key (R3 is `RUNNING, partial`) — so **no DeFi MVP cell can yet be called
-PROVEN wired backfill=paper=live**; every cell in scope today is only DECLARED in-scope via the catalogue/registries +
-the parent plan's Track 7 culled-venue ruling.
+**Status: unresolved, mostly an open question.** (2026-08-06 plan_reconciler agt-24f4b0 annotation: "not yet written
+canonical rows" refers to the per-instrument shard-key backfill — the prior v10-architecture backfill completed
+2026-07-28 with GATE MET, 0 residual, 11,440 captured; see archived v10 doc + the unpark-note annotation above.) Per the
+unpark note above, defi's MVP backfill has not yet written canonical rows against the per-instrument shard key (R3 is
+`RUNNING, partial`) — so **no DeFi MVP cell can yet be called PROVEN wired backfill=paper=live**; every cell in scope
+today is only DECLARED in-scope via the catalogue/registries + the parent plan's Track 7 culled-venue ruling.
 
 - [ ] [DATA] P2. **Determine the real DeFi MVP universe once this track's backfill produces its first canonical rows** —
       enumerate which (venue, instrument_type, data_type) cells are PROVEN wired backfill=paper=live vs. still only

@@ -113,16 +113,18 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
      **hyperliquid** (`cefi/hyperliquid.py:124`) and **aster** (`cefi/aster.py:166`) adapters — only Binance/OKX/Bybit
      (Tardis) list equity-perps, so the tardis adapter is the required edit; HL/aster need it only if they list
      equity-perps (they don't today — leave or guard).
-  2. **Stamp the right type**: the Tardis type-resolution returns `InstrumentType.PERPETUAL` for these linear perps.
-     Override to `InstrumentType.EQUITY_PERP` when the base ∈
-     `LINKED_EQUITY_PERP_BASES`/`STANDALONE_EQUITY_PERP_SYMBOLS` (UAC `crypto_equity_link.tracks_equity()` / the
-     base-universe). Mirror the existing OPTION special-case in `_passes_asset_filter` / the type path. Tokenized-equity
-     venues (Bybit `AAPLX`) → `InstrumentType.TOKENIZED_EQUITY`. 2a. \*\*UPDATED 2026-07-10 (operator, aligning with the
-     canonical-instrument-id decision) — `instrument_id`/ `instrument_key` construction for EQUITY_PERP/TOKENIZED_EQUITY
-     MUST route through the shared canonical builder
-     (`unified_api_contracts.internal.reference.canonical_id_builder.build_instrument_id`, or the venue's own
-     `_build_canonical_perpetual_key`-family helper in `tardis/parsing.py` if one already exists for the venue), the
-     SAME mechanism `instrument_id_format_canonicalization_2026_07_08.md`'s effort wired in for regular
+  2. **Stamp the right type** — **STALE (annotated 2026-08-06 plan_reconciler agt-24f4b0): SUPERSEDED by the 2026-07-16
+     operator banner above — `instrument_type` reverts to the BROAD `PERPETUAL`/`SPOT_PAIR`; the `EQUITY_PERP`/
+     `TOKENIZED_EQUITY` override in this step MUST NOT be applied (identity rides the `is_equity_perp`/`tracks_equity`
+     catalogue tags)** — the Tardis type-resolution returns `InstrumentType.PERPETUAL` for these linear perps. Override
+     to `InstrumentType.EQUITY_PERP` when the base ∈ `LINKED_EQUITY_PERP_BASES`/`STANDALONE_EQUITY_PERP_SYMBOLS` (UAC
+     `crypto_equity_link.tracks_equity()` / the base-universe). Mirror the existing OPTION special-case in
+     `_passes_asset_filter` / the type path. Tokenized-equity venues (Bybit `AAPLX`) →
+     `InstrumentType.TOKENIZED_EQUITY`. 2a. **UPDATED 2026-07-10 (operator, aligning with the canonical-instrument-id
+     decision) — `instrument_id`/ `instrument_key` construction for EQUITY_PERP/TOKENIZED_EQUITY MUST route through the
+     shared canonical builder (`unified_api_contracts.internal.reference.canonical_id_builder.build_instrument_id`, or
+     the venue's own `_build_canonical_perpetual_key`-family helper in `tardis/parsing.py` if one already exists for the
+     venue), the SAME mechanism `instrument_id_format_canonicalization_2026_07_08.md`'s effort wired in for regular
      `PERPETUAL`/`FUTURE`/`OPTION` this session — NOT a new ad hoc f-string. This plan section predates that decision
      (filed 2026-06-20, canonical-builder decision made 2026-07-08) and, implemented as originally written, would add a
      fresh instance of exactly the ad hoc-construction pattern that decision is retiring elsewhere (cf.
@@ -200,10 +202,14 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       KRX bases to `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`). Their Binance perps are already cefi-MVP → both legs MVP → the
       tradfi-perp superset closes at 103/103. Repo: unified-api-contracts. — unified-api-contracts@844c5ee6b
       (tradfi_ticker_universe.py + tradfi_instrument_universe.py: 005930/000660/005380 .KS entries).
-- [ ] [SCRIPT] P1. **Backfill the 3 KRX stocks via guardrailed Yahoo (operator ladder).** Per stock: 1d since 2019-01-01
-      (full) + 1h 730d + 15m 89d(range=60d) + 1m 28d(7d-chunked). FX→yahoo wave-launcher is the precedent for a
-      yahoo-source backfill. Verify rows captured + manifest reflects them (KRX shard). Repo: deployment-service
-      (launcher) + market-tick-data-service.
+- [x] ✅ [SCRIPT] P1. **(SUPERSEDED by citation 2026-08-06 plan_reconciler agt-24f4b0 — KRX equity-twin sourcing was
+      operator-decided 2026-06-28 as Option C (`EXPECTED_SOURCE_NOT_AVAILABLE` honest-empty; tradfi
+      manifest-completeness gate 378→0) per this plan's own Deferred section + archived
+      `krx_equity_twin_no_source_2026_06_28.md`; the Yahoo-backfill premise contradicts that ruling, so the KRX rows are
+      honest-empty by decision, not backfillable)** Backfill the 3 KRX stocks via guardrailed Yahoo (operator ladder).
+      Per stock: 1d since 2019-01-01 (full) + 1h 730d + 15m 89d(range=60d) + 1m 28d(7d-chunked). FX→yahoo wave-launcher
+      is the precedent for a yahoo-source backfill. Verify rows captured + manifest reflects them (KRX shard). Repo:
+      deployment-service (launcher) + market-tick-data-service.
 - [x] ✅ [SCRIPT] P1. **CENTRALISED data-driven venue/source/adapter/MVP parity gate (the general guard).** ONE
       parametrised gate (UAC contract test + a `check_*` wired into `base-*.sh` where cross-repo) that ITERATES the
       canonical registries: every venue in the universe/MVP → assert present in IS-registry + MTDS-routing + manifest
@@ -222,10 +228,15 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       `LEVEL_MAX_LOOKBACK_DAYS` / `earliest_allowed_start` / `assert_lookback_allowed`
       (databento_subscription_allowlist) + the manifest enumerator's floor-clip to the EXACT measured values. QG test:
       one day past the boundary rejected, one day inside allowed. Repo: unified-api-contracts.
-- [ ] [REFACTOR] P2. **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the
-      VIX cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via databento
-      XCBF.PITCH). Per delete-deprecated-code: (1) `rg -i barchart` workspace-wide (~30 files: SOURCE*PRIORITY tradfi
-      ohlcv_15m list, `SOURCE_MODE_CAPABILITY["barchart"]`, `EMISSION_LATENCY_MS_BY_SOURCE["barchart"]`,
+- [x] ✅ [REFACTOR] P2. **(DONE 2026-08-06 plan_reconciler agt-24f4b0 — retirement shipped 2026-06-24 per SSOTs:
+      `/codex/02-data/pipeline-mode-partition.md:156` "Barchart RETIRED 2026-06-24 ... No shim";
+      `/codex/02-data/availability-manifest-and-data-status.md:599-601` "`barchart` (retired) appear ONLY on legacy
+      rows"; code confirms `UAC BATCH_BARCHART removed` (`pipeline_mode_resolver.py:69`) and "No live Barchart adapter
+      is needed — Barchart was a manual CSV download service" (`tradfi/__init__.py:22-23`); residual `rg` hits are
+      legacy-row comments only)** DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24). Barchart's only role
+      was the VIX cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via
+      databento XCBF.PITCH). Per delete-deprecated-code: (1) `rg -i barchart` workspace-wide (~30 files: SOURCE*PRIORITY
+      tradfi ohlcv_15m list, `SOURCE_MODE_CAPABILITY["barchart"]`, `EMISSION_LATENCY_MS_BY_SOURCE["barchart"]`,
       data_source_continuity BARCHART_VIX*\* constants + SourceWindow, `_umi_yahoo`/tradfi adapters, IS enumerator,
       multiple UAC tests, CLAUDE.md "VIX 15m: Barchart preload" note, docs); (2) VERIFY no live MVP cell is
       source=barchart + the VIX path uses VX-futures-databento (repoint any straggler FIRST); (3) DELETE the
@@ -601,7 +612,9 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
       MTDS wave-launcher reads the manifest `expected_unattempted` gaps + captures. **Run + verify**: catalogue has new
       MVP tickers; manifest shows them `expected_unattempted`; a sample equity captures non-NaN OHLCV. Repo:
       deployment-service (launchers) + instruments-service (catalogue/enumerator CLIs). **IN PROGRESS** (this session) —
-      see Progress Log.
+      see Progress Log. (B1 leg DONE 2026-06-23 per Progress Log: `instr-backfill-tradfi-20260623` exit_code=0 — 352
+      equity/ETF symbols fetched, new equity InstrumentRecords established; B3/B4 status per Progress Log — annotation
+      plan_reconciler agt-24f4b0 2026-08-06)
 - [ ] [DATA] P2. **BLOCKED-DATA** — HYUNDAI / SAMSUNG / SK Hynix (3 Binance tradfi-perps with NO US-listed twin, KRX
       primary): source a Korea-equity reference + tick vendor so the cash-equity twin exists for basis (databento
       DBEQ.BASIC is US-only). Until sourced these perps have a dispersion-only (cross-crypto-venue) leg, no cash hedge.

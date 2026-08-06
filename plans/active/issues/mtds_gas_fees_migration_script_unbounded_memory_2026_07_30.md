@@ -34,6 +34,7 @@ related:
     /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
     /plans/archive/2026_08/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    defi_consolidated_closeout_2026_07_18,
   ]
 created: "2026-07-30"
 author: unknown

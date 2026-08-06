@@ -568,11 +568,13 @@ longer has its own download button.
   filtered at read time — design-only for now, actual resharding + manifest migration explicitly gated on full mockup
   sign-off. (3) Real bug found and verified against production data: bare `BYBIT`/`OKX` wrongly declare `SPOT_PAIR` in
   `INSTRUMENT_TYPES_BY_VENUE` when all real spot data lives under `BYBIT-SPOT`/`OKX-SPOT` — inflates the cefi Layer-1
-  denominator with unfulfillable phantom tuples. (4) Real gap found and verified: `BINANCE-DELIVERY` is live-captured
-  (2,126 rows, ongoing) but has no `VENUE_DATA_TYPE_CAPABILITIES` declaration in UAC. (5) Decision: drilldown needs a
-  day-level sub-view per `instrument_type` leaf, download is strictly per-day (never multi-day) — fixed live in the
-  mockup. 5 new/updated todos above. No production code touched — all findings verified read-only against real GCS
-  manifests; only the mockup artifact and this doc were edited.
+  denominator with unfulfillable phantom tuples. (4) Real gap found and verified — **CORRECTED 2026-08-06
+  (plan_reconciler agt-24f4b0): this round-1 claim was later refuted in Finding 4 (CORRECTED) below — BINANCE-DELIVERY
+  has ZERO MTDS tick-data rows ever; the genuine gap is the missing capability declaration** — `BINANCE-DELIVERY` is
+  live-captured (2,126 rows, ongoing) but has no `VENUE_DATA_TYPE_CAPABILITIES` declaration in UAC. (5) Decision:
+  drilldown needs a day-level sub-view per `instrument_type` leaf, download is strictly per-day (never multi-day) —
+  fixed live in the mockup. 5 new/updated todos above. No production code touched — all findings verified read-only
+  against real GCS manifests; only the mockup artifact and this doc were edited.
 - **2026-07-07 (UI fix shipped)** — Shipped the DataStatusTab.tsx chains-vs-venues fix via quickmerge,
   `deployment-ui@8a3781b`, landed on `live-defi-rollout`. Re-verified clean (tsc, eslint, vitest 21/21) immediately
   before shipping since it had sat uncommitted since earlier in the session.
