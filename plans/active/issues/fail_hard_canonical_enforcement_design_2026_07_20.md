@@ -181,3 +181,4 @@ of a venue-day outage.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict;
   `nature: design`, remaining open work is closing 3 adversarially-confirmed architecture gaps before write-enforce, a
   judgment/design call not bounded worker-determinable work.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

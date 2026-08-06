@@ -245,3 +245,4 @@ context_scope:
   P0/P2 fixes. **Core fix confirmed working**: multi_timeframe CEFI CLI wrote to `features-cefi-test-*` (TEST bucket),
   not PROD — the `PROTOCOL_DATA_SINK_BUCKET*` routing is effective. Timeout hardening (`start_new_session=True` +
   `os.killpg`) confirmed present in all 4 files. No code changes shipped (verification-only task).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

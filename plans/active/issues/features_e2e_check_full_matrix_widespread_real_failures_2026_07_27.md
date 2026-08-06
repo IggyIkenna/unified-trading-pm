@@ -597,3 +597,5 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   outcome does not change this verdict or block this todo's closure; the local driver's own audit report
   (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_05.{md,json}`) will self-update when it completes —
   those are regenerable machine artifacts, not durable findings, so they are intentionally not committed mid-flight.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -45,7 +45,14 @@ parent_epic: infrastructure_master
 drift_direction: advance-code
 resolved_by:
 context_scope:
-  - /codex/05-infrastructure/bucket-isolation-model.md
+  [
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md,
+    features-service/features_service/onchain/cli/handlers/batch_handler.py,
+    features-service/features_service/volatility/cli/handlers/batch_handler.py,
+    features-service/features_service/cross_instrument/engine/cefi_wire_bridge.py,
+    unified-trading-library/unified_trading_library/startup_validation.py,
+  ]
 depends_on: []
 locked_by:
 locked_since:
@@ -154,3 +161,5 @@ sweep). Fixed both onchain sites (`batch_handler._count_is_defi_instruments` + `
       benchmark for a clean full-throughput number (tracks -056). — features-service@21119021 +
       unified-trading-library@b078d5ba; benchmark re-run for a clean number remains tracked by
       `data_pipeline_check_mdps_features-056`.
+
+- **context-scout 2026-08-06**: populated context_scope (6 entries).

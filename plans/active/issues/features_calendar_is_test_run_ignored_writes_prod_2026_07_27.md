@@ -231,3 +231,4 @@ ALL, not even for the success path.
 
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all five still directly cited by the doc's own
   body; no change needed.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

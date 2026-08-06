@@ -36,6 +36,9 @@ context_scope:
   - /codex/05-infrastructure/bucket-isolation-model.md
   - /codex/05-infrastructure/gcs-object-operations.md
   - /codex/02-data/availability-manifest-and-data-status.md
+  - /plans/active/issues/features_is_instruments_store_ambient_env_stg_2026_08_05.md
+  - features-service/features_service/common/__init__.py
+  - features-service/features_service/volatility/core/dependency_checker.py
 depends_on: []
 locked_by:
 locked_since:
@@ -251,6 +254,8 @@ compute since the -056 plan began) are DONE; the clean number is honestly NOT ye
 ambient-env sweep, tracked). No heavy local compute (all manifest reads memory-bounded via `run-bounded-analysis.sh`;
 OOM directive acknowledged). Evidence: `features-e2e-defi-20260805-225415-060995` run.log (gate pass + 6034
 instruments + 6/13 groups); `features-service@58702715`/`@8bb34a52`; tarball manifest @8bb34a52.
+
+- **context-scout 2026-08-06**: populated context_scope (6 entries).
 
 ## Todos
 

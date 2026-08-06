@@ -365,3 +365,4 @@ regression) is worse.**
   across all three tracked conditions ((cefi, derivative_ticker) 12th+, (cefi, book_snapshot_5) 20th+, (cefi, trades)
   2nd), this backlog family has now consumed 34+ full orchestrator-agent dispatches — still awaiting the operator/design
   decision on Option A/B/C. Full writeup in `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s own Progress Log.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

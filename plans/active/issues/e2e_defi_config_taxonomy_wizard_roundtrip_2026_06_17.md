@@ -261,3 +261,4 @@ sizing — the operator's core question — is **not a parameter anywhere**; it 
   `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:110`), and D4 remain genuine open work.
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
   body/frontmatter; no change needed.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

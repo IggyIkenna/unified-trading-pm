@@ -265,3 +265,4 @@ green.
   3 regenerable `tests/schema_artifacts/*.json` trailing-newline regens (deliberately excluded). The 2 upstream ratchet
   reds are RESOLVED upstream — the fe68844c RB is clear; the blocker issue doc
   `mtds_qg_red_combined_coverage_shortfall_2026_08_05.md` can be closed out by the RB owner.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
