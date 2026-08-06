@@ -177,10 +177,19 @@ slow:
       Catalogue regen re-run `lifecycle-catalogue-regen-defi-db5xx` completed=True; catalog.parquet mtime advanced to
       2026-08-06T18:01:35Z (generation 1786039295850433) — `CATALOGUE_SHRINK_BLOCKED` clear (guard also independently
       green since 2026-08-03 via the shipped R2c monotonicity relaxation).
-- [ ] [DATA] P2. Investigate WHY `canonical-migration-defi-per-instrument-20260719-053435` disappeared with zero
-      operation history (preemption without a recovery relaunch? manual delete? crashed with no durable exit marker?) —
-      this read-only escalation did not dig into that, and the same silent-death mode could recur on whatever VM
-      eventually restarts R3. (repo: deployment-service)
+- [x] ✅ [DATA] P2. **Investigated 2026-08-06 (slot-7 data_pipeline_failure escalation agt-ef3dd8) — the SAME
+      silent-death mode DID recur, twice, on the `-175529` relaunch's own siblings, and is now root-caused.** Both
+      `canonical-migration-defi-per-instrument-{165240,175529}` (2026-08-06) vanished the identical way the July 19 VM
+      did: `gcloud compute operations list --filter="targetLink~<name>"` shows only `insert`+`delete`, never
+      `compute.instances.preempted` — this is an OOM self-destruct (`--instance-termination-action=DELETE` on the SPOT
+      launcher default), not a preemption. Deployment-registry archive entries (`exit_code=125`,
+      `extras.reap_reason=vm_not_running`, `mem_pct=99.3` still climbing at the last heartbeat) plus the run.log confirm
+      it: the per-year `discover_bundled()` listing cost climbs monotonically each chunk (68s→123s→186s for years
+      2022→2024) even though every year fast-skips `cells=0` (nothing left to migrate), and crosses the e2-standard-8
+      OOM threshold on the 2025 chunk before the loop ever reaches the chained `rebuild_defi_manifest`. Full evidence +
+      the launcher-level workaround in `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` R3's
+      `-175529` entry; the code-level fix (skip re-listing already-checkpointed years) is tracked as a new P2 todo
+      there, not duplicated here. (repo: deployment-service, market-tick-data-service)
 
 ## Progress Log
 
@@ -332,3 +341,18 @@ slow:
   mtime advances + `CATALOGUE_SHRINK_BLOCKED` clear. Note for P2: the previous VM's silent-death root cause remains
   un-investigated; the relaunched VM's terminal state is tracked by the fleet monitor + PROGRESS checkpoint contract +
   `VM_SHUTDOWN_ON_COMPLETION`.
+- **slot-7 (data_pipeline_failure escalation agt-ef3dd8) 2026-08-06, DP-VM-003 dispatch**: `-175529`'s "terminal state"
+  turned out to be OOM death at 18:30:37Z, ~32min after slot-6's snapshot above — and it's the SECOND identical failure
+  today, not the first (`-165240` died the same way at 17:30). Root-caused both via the deployment registry archive +
+  run.log (see the P2 todo above + the fuller writeup on
+  `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` R3): the per-year discovery listing cost climbs
+  each chunk and OOMs on 2025 even though the migration itself is a no-op (already-migrated corpus). Per
+  `RB-INFRA-RELAUNCH`'s own "re-fails the SAME way twice → STOP, fix root cause" clause, did **not** launch a third
+  `defi-per-instrument` attempt (2/day-per-prefix bound also independently hit). Instead launched
+  `canonical-migration-defi-rebuild-20260806-223130` via the separate `defi-rebuild` launcher category —
+  `rebuild_defi_manifest` alone, `--chunk-days 90`, no year-loop discovery — which is the literal remaining piece of the
+  already-operator-ruled option-A scope, just invoked directly instead of behind the now-pointless migrate loop.
+  Verified STARTED (RUNNING). Confirms the CRITICAL page this chain was driving toward is independently resolved since
+  2026-08-03 (per slot-6's note above) — this rebuild is real remaining work (Track-8 gate) but not a live page anymore,
+  so did not re-open a fresh `/blocked`/page for it. Pinging `dp-fleet-monitor` (authoring slot) with the outcome and
+  completing this one-shot escalation.

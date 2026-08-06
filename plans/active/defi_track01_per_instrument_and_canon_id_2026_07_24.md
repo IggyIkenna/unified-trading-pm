@@ -208,6 +208,44 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
   prior `defi-pi-range`/rebuild waves). The VM runs the chained `rebuild_defi_manifest` (2020-2026) after the year loop
   — the remaining gate piece for Track-8 collector resume. Run.log:
   `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-per-instrument-20260806-175529/run.log`.
+  **`-175529` OOM'd 2026-08-06T18:30:37Z (DP-VM-003, slot-7 data_pipeline_failure escalation agt-ef3dd8) — CONFIRMED
+  REPEAT of the EARLIER `-165240` failure (started 16:56, died 17:30, same exit_code=125), not a one-off.** Registry
+  entries for both (`deployments/archive/2026-08-06/{9039a28e-...,ac206578-...}.json`) show byte-identical failure
+  shape: years 2022/2023/2024 fast-skip `cells=0` cleanly, then the year-2025 chunk's discovery listing hangs — per-year
+  `discovered 0 bundled batch file(s) in scope (list=Xs)` time climbs monotonically each chunk (68s→123s→186s for
+  `-175529`; 68s→123s→186s for `-165240` too), `mem_pct` climbs to 99.3% (`mem_slope=+9.12`, still rising) at the last
+  heartbeat before both VMs vanish (`gcloud compute operations list` shows only insert+delete, NO
+  `compute.instances.preempted` — this is an OOM self-destruct via `--instance-termination-action=DELETE`, not a SPOT
+  preemption). **Root cause: the per-year loop is now pure waste.** Every chunk already fast-skips (corpus confirmed
+  migrated, see the `-175529` entry above) yet still pays a FULL `raw_tick_data/by_date/day=*` listing for the whole
+  year to confirm that — and since the migration itself exploded file-count (few bundled batches → many per-instrument
+  leaves), that listing cost has grown large enough by 2025 to OOM an e2-standard-8 before the loop ever reaches the
+  chained `rebuild_defi_manifest` step (the actual remaining piece). Runbook `RB-INFRA-RELAUNCH`'s ≤2/day-per-prefix
+  bound is now hit for `canonical-migration-defi-per-instrument` (2 identical failures today) — per its own "re-fails
+  the SAME way twice → STOP relaunching, fix root cause" clause, did NOT launch a third `defi-per-instrument` attempt
+  (would OOM the same way at 2025 again). **Instead launched `canonical-migration-defi-rebuild-20260806-223130`**
+  (asia-northeast1-c, e2-standard-8, SPOT) via the separate, already-registered `defi-rebuild` launcher category —
+  `rebuild_defi_manifest` ALONE, `--chunk-days 90` (own PROGRESS-checkpointed resume, no year-loop discovery at all) —
+  this is the exact remaining piece of the already-operator-approved option-A scope ("...`rebuild_defi_manifest` from
+  scratch"), just invoked directly instead of behind the now-provably-pointless migrate loop. Verified STARTED (RUNNING
+  at launch + 45s). Run.log:
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-rebuild-20260806-223130/run.log`.
+  **Note**: the CRITICAL `DP-CATALOG-001` page this R3 relaunch chain was driving toward is independently ALREADY
+  RESOLVED since 2026-08-03 (R2c monotonicity relaxation) — this rebuild is real remaining work (Track-8 collector
+  resume gate) but no longer fire-drill urgent. Follow-up needed: `migrate_defi_batch_to_per_instrument.py`'s
+  `discover_bundled()` should stop re-listing years that already have a `[[VM_PROGRESS]] last_completed_date=` monotonic
+  checkpoint recorded, so a future `defi-per-instrument` re-run (e.g. for a NEW year added to the corpus) doesn't pay
+  this same growing-listing-to-OOM cost on already-done years — not fixed here (would need a code change + QG cycle, out
+  of scope for a one-shot infra-relaunch escalation; tracked as a new todo below).
+- [ ] [DATA] P2. **NEW 2026-08-06 (DP-VM-003, slot-7 data_pipeline_failure escalation agt-ef3dd8).** Skip
+      `migrate_defi_batch_to_per_instrument.py`'s per-year `discover_bundled()` full listing for years that already have
+      a recorded `[[VM_PROGRESS]] last_completed_date=` monotonic checkpoint (or an equivalent already-migrated marker)
+      instead of re-walking the whole `raw_tick_data/by_date/day=*` tree for that year every single relaunch. Two
+      consecutive `canonical-migration-defi-per-instrument` VMs (`-165240`, `-175529`) OOM'd 2026-08-06 on this exact
+      waste — per-year listing time climbed 68s→123s→186s (2022→2024) then crossed the OOM threshold on 2025, even
+      though every year fast-skips `cells=0` (corpus already migrated). Without this fix, any future
+      `defi-per-instrument` re-run (new year added, or re-verifying scope) pays the same growing, eventually-fatal
+      listing cost. (repo: market-tick-data-service)
 
 ### R5 — Full-corpus canon reconciliation (operator-caught 2026-07-19; R3-as-scoped is NOT the whole job) · P0
 
@@ -787,17 +825,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                                                                                                                                                                                                                                                                      ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                                                                                                                                                                                                                                                                      `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                                                                                                                                                                                                                                                                      manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                                                                                                                                                                                                                                                                      rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                                                                                                                                                                                                                                                                      the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                                                                                                                                                                                                                                                                      docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                                                                                                                                                                                                                                                                      the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                                                                                                                                                                                                                                                                      supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                                                                                                                                                                                                                                                                      `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                                                                                                                                                                                                                                                                      (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                                                                                                                                                                                                                                                                      unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                                                                                                                                                                                                                                                                          ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                                                                                                                                                                                                                                                                          `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                                                                                                                                                                                                                                                                          manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                                                                                                                                                                                                                                                                          rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                                                                                                                                                                                                                                                                          the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                                                                                                                                                                                                                                                                          docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                                                                                                                                                                                                                                                                          the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                                                                                                                                                                                                                                                                          supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                                                                                                                                                                                                                                                                          `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                                                                                                                                                                                                                                                                          (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                                                                                                                                                                                                                                                                          unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
