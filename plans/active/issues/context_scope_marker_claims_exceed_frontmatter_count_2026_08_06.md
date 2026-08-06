@@ -235,3 +235,17 @@ for a human glance instead of being dropped.
   no-claim docs hand-verified consistent in prose. Re-run after fixes: 1 mismatch remaining (the known-open). Operator
   2026-08-06 OOM directive acknowledged — no OOM/unbounded-run incidents from this session; the sweep ran under
   `scripts/dev/run-bounded-analysis.sh`.
+
+- **2026-08-06 (data_engineering, slot 6, task context_scope_marker_claims_exceed_frontmatter_count-002) — SHIP BLOCKED,
+  upstream in-flight**: the 3 sweep commits (73e79a0b0 + 2 docs commits, rebased) are ready, but full PM QG Pass 1 came
+  back RED on the post-gate `workflow-template-parity` — 4 NEW drifted copies of `image-build-gate.yml` in
+  `agent-orchestrator` / `features-service` / `instruments-service` / `market-tick-data-service` (detector
+  `detect_template_drift.py --workflows`, verified byte-diffs). Root cause: NOT this session's commits (zero workflow
+  files touched; `git diff origin/live-defi-rollout..HEAD -- .github/` empty) — it is the tracked in-flight extraction
+  `plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md`: template re-pointed at `unified-trading-ci`
+  (PM@a2feeb4de, 2026-08-06), per-repo migration is that plan's todo 14 (Wave 4, final 5) — unchecked, actively worked.
+  Condition is STABLE (not flapping): PM QG is red fleet-wide on this post-gate until Wave 4 lands. NOT fixing myself:
+  hand-editing the 4 copies is banned, and completing another session's tracked in-flight rollout would collide with it
+  (todo 18 will re-edit the template too). Watch armed (`bidxjckrg`): polls all 4 repos' origin LDR for copies
+  byte-matching the SSOT template (90s interval, 90-min cap). Resume when it fires: re-run PM QG → quickmerge Pass 2
+  (`--agent --files` for the 5 changed paths) → verify SHA on origin → POST /done.
