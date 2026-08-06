@@ -47,6 +47,19 @@ context_scope:
   Write-eligible surface: **25 docs**.
 - Normative refs + codex stay in scope per SKILL.md (corpus-wide policy, not tranche-owned).
 
+## Todos
+
+- [ ] [DOC] P3. Fix `unified-trading-pm/agents/plan_reconciler.md` STEP 6(b): it directs appending a line to
+      `ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`, both retired 2026-07-04 (AO agents
+      explicitly forbidden from polling them — see "Meta-finding" below). Drop the line or repoint it at the
+      dashboard/HTTP alerting path (`POST /api/slots/<N>/blocked`) it's actually superseded by. Done when: the role file
+      no longer cites the dead ledgers.
+- [ ] [DOC] P2. Fix `unified-trading-pm/agents/plan_reconciler.md` STEP 7: the `curl` example posts to
+      `/api/plan_health/result` (underscore) — confirmed live 404. The real route is `/api/plan-health/result` (hyphen),
+      matching STEP 0's own `/api/plan-health/dispatch` citation 7 sections earlier. Every literal-as-written run
+      silently fails to file its result until this is fixed. Done when: the underscore is corrected to a hyphen in the
+      role file's own `curl` example.
+
 ## Flips verified
 
 None. Two `- [ ]` todos have HARD-verified shipped evidence (see Missed-flip-confirmed-but-grace-blocked below) but both
@@ -280,6 +293,15 @@ forbidden from polling this file" — comms now go through the agent-orchestrato
 than write to a dead ledger nothing reads. Filing this as a todo for whoever next touches `agents/plan_reconciler.md`:
 STEP 6(b)'s ping-ledger line should be dropped or repointed at the dashboard/HTTP alerting path it's actually superseded
 by.
+
+## Meta-finding: `agents/plan_reconciler.md` STEP 7's result-POST path is wrong (underscore vs hyphen)
+
+STEP 7 instructs `POST $SERVER_URL/api/plan_health/result` (underscore). The live server 404s on that exact path —
+confirmed via `curl` this run. The real route is `/api/plan-health/result` (hyphen), matching the dispatch endpoint
+`/api/plan-health/dispatch` the same role file cites 2 sections earlier. Every literal-as-written run of this role would
+silently fail to file its result (a 404 is easy to miss in a fire-and-forget curl at the very end of a long run) until
+this doc is fixed. Filing this as a second todo for whoever next touches `agents/plan_reconciler.md`: fix the underscore
+to a hyphen in STEP 7's `curl` example.
 
 ## Phase 5.9 no-miss ledger
 
