@@ -142,12 +142,13 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       that trimmed/reformatted context_scope without touching the marker? **Done when**: a root-cause hypothesis is
       stated with the specific commit SHA(s) cited as evidence, or a documented "inconclusive, evidence trail does not
       survive in history" verdict. — unified-trading-pm@see-progress-log-2026-08-06
-- [ ] [SCRIPT] P2. **Corpus-wide sweep for the same shape beyond today's 13-doc sample**: for every doc among the full
-      ~644 in-scope population (not just today's STALE set), parse its most recent context-scout Progress Log marker's
-      claimed entry count (regex on `\((\d+) entries?\)`) and compare against the live `context_scope` list length;
-      report every doc where they disagree, regardless of whether Phase 0 currently calls it STALE or UP_TO_DATE. **Done
-      when**: a report of every mismatched doc in the full corpus exists (this may surface instances beyond the 4 found
-      here, since a doc can carry this bug while still reading UP_TO_DATE).
+- [x] ✅ [SCRIPT] P2. **Corpus-wide sweep for the same shape beyond today's 13-doc sample**: for every doc among the
+      full ~644 in-scope population (not just today's STALE set), parse its most recent context-scout Progress Log
+      marker's claimed entry count (regex on `\((\d+) entries?\)`) and compare against the live `context_scope` list
+      length; report every doc where they disagree, regardless of whether Phase 0 currently calls it STALE or
+      UP_TO_DATE. **Done when**: a report of every mismatched doc in the full corpus exists (this may surface instances
+      beyond the 4 found here, since a doc can carry this bug while still reading UP_TO_DATE). —
+      unified-trading-pm@73e79a0b0
 - [ ] [DOC] P2. **Close the detection gap** (gated on todo 1's root-cause finding): decide whether
       `scripts/plan-hygiene/generate_context_scope_inventory.py`'s Phase 0 STALE/UP_TO_DATE verdict logic should be
       extended to also flag a marker-count-vs-actual-count mismatch as its own verdict (e.g. `COUNT_MISMATCH`), so this
@@ -155,6 +156,37 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       notice it. **Done when**: either the script gains this check (with a test fixture reproducing one of the 4
       confirmed instances), or a documented decision that it's not worth adding (e.g. if todo 1 finds this was a
       one-time batch bug already fully remediated, not an ongoing risk).
+- [ ] [OPERATOR] P1. **Human line-cap trim of `data_completion_defi_2026_07_15.md`** (sits at the 1000L hard cap — the
+      one remaining mismatched doc from the sweep), then restore the 2 dropped context_scope entries
+      (`data_completion_to_100_all_ag_2026_06_21.md` + `migrate_defi_full_v9_canonical.py`) and align the 2026-08-01
+      marker's claimed count (repo: unified-trading-pm).
+
+## Corpus-wide sweep results (2026-08-06)
+
+Executed with the new standing tool `scripts/plan-hygiene/generate_context_scope_marker_sweep.py` (task -002, slot 6),
+which loads `generate_context_scope_inventory.py` for identical corpus/marker/verdict definitions and applies this
+issue's `\((\d+) entries?\)` spec. Population: 723 in-scope docs; 659 carry a `context-scout YYYY-MM-DD` marker; 606 of
+those have a parenthetical count claim on the latest marker; 53 do not (prose-form or no count — hand-glanced, see
+below).
+
+| Doc                                                                 | Latest marker | Claims | Live | Shape / disposition                                                                                                                                                                                                               |
+| ------------------------------------------------------------------- | ------------- | ------ | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data_completion_defi_2026_07_15.md`                                | 2026-08-01    | 5      | 3    | entry-drop w/o marker update — KNOWN-OPEN, at 1000L cap; human trim tracked as new [OPERATOR] todo                                                                                                                                |
+| `data_status_page_ux_and_canonicalisation_2026_07_16.md`            | 2026-08-05    | 5      | 6    | write-time miscount ("unchanged (5 entries)" vs 08-03's 6) — FIXED (marker text → 6)                                                                                                                                              |
+| `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` | 2026-08-05    | 5      | 6    | write-time miscount at populate — FIXED (marker text → 6)                                                                                                                                                                         |
+| `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`                 | 2026-08-03    | 6      | 8    | write-time miscount — batch 7/7 commit `14e2a0e1a` appended "re-verified (6 entries)" onto the already-8-entry list; PROSE-form claim (regex-invisible), caught via the no-claim bucket's manual glance — FIXED (marker text → 8) |
+
+All 3 fixes are marker-text count corrections only — the live lists were authoritative (each set by a deliberate prior
+pass, every entry resolving); zero frontmatter/body changes, zero line delta.
+
+**Sub-shape note for todo 3**: the original 4 instances were entry-DROP without marker update; all 3 new instances are
+markers WRITTEN with a wrong count (write-time miscount by a batch pass). Both shapes leave claim != live list, so a
+COUNT_MISMATCH Phase-0 verdict catches both regardless of origin/direction.
+
+**No-claim bucket (53 docs)**: latest markers lacking a parenthetical count. Hand-glanced one-by-one: every prose count
+claim ("trimmed from 7 to 6", "now 4 entries", "(6 entries, corrected prior stale count)") matches the live list —
+except the `tradfi_satellite_ao_dispatch_batch2` row above, which is exactly why the bucket stays in the tool's output
+for a human glance instead of being dropped.
 
 ## Progress Log
 
@@ -191,3 +223,15 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
   confirms the pattern is **systemic** (any context-scout pass that removes or replaces entries in an existing
   `context_scope` list omits the marker update step), not a single bad commit. Todo 3 (detection-gap fix) is unblocked
   by this finding: the root cause is ongoing, not a one-time event already fully remediated.
+
+- **2026-08-06 (data_engineering, slot 6, task context_scope_marker_claims_exceed_frontmatter_count-002)**: corpus-wide
+  sweep shipped (`scripts/plan-hygiene/generate_context_scope_marker_sweep.py`, unified-trading-pm@73e79a0b0). 723
+  in-scope docs → 4 mismatches total: 3 NEW, all write-time marker miscounts
+  (`data_status_page_ux_and_canonicalisation_2026_07_16.md` 5v6,
+  `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` 5v6,
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` 6v8 — the last prose-form, regex-invisible, caught via the
+  no-claim bucket's manual glance) + the known-open `data_completion_defi_2026_07_15.md` (5v3, 1000L cap). The 3 new
+  ones fixed inline as marker-text count corrections (a2773c484); the open one is now a tracked [OPERATOR] todo. The 53
+  no-claim docs hand-verified consistent in prose. Re-run after fixes: 1 mismatch remaining (the known-open). Operator
+  2026-08-06 OOM directive acknowledged — no OOM/unbounded-run incidents from this session; the sweep ran under
+  `scripts/dev/run-bounded-analysis.sh`.
