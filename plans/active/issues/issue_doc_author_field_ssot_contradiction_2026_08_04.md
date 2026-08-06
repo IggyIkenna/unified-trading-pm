@@ -14,7 +14,7 @@ summary: >-
   worker.md §4.5 ("FINDINGS CLOSURE", HARD RULE codified 2026-06-10: issue frontmatter MUST include
   title/created/author/source[]) — trivial string correction in the 2 mutable places (comment + docstring; the commit
   message is immutable). (2) The genuine SSOT contradiction: worker.md §4.5 mandates `author` on issue docs, but BOTH
-  `codex/11-project-management/doc-frontmatter-schema.md` (issue required-fields table, ~line 101:
+  `/codex/11-project-management/doc-frontmatter-schema.md` (issue required-fields table, ~line 101:
   parent_epic/priority/source only) AND `scripts/docs/docspec.py` PER_TYPE["issue"] (7 fields, verified directly) omit
   `author` entirely — not required, not optional. Confirmed NOT an active QG breakage (validate_frontmatter() only
   iterates known specs and never flags unrecognized extra keys, so author-bearing issue docs do not fail docspec) — it
@@ -59,7 +59,7 @@ depends_on: []
   (grep confirmed zero hits). The actual rule is **worker.md §4.5** ("FINDINGS CLOSURE", HARD RULE codified 2026-06-10:
   issue-doc frontmatter MUST include `title`/`created`/`author`/`source[]`).
 - **(2) SSOT contradiction (the substantive finding).** worker.md §4.5 requires `author` on issue docs, but:
-  - `codex/11-project-management/doc-frontmatter-schema.md` — the issue required-fields table (~line 101) lists only
+  - `/codex/11-project-management/doc-frontmatter-schema.md` — the issue required-fields table (~line 101) lists only
     `parent_epic`/`priority`/`source`; `author` appears nowhere (not required, not optional).
   - `scripts/docs/docspec.py` — `PER_TYPE["issue"]` carries 7 fields (verified directly); `author` is absent. So the
     schema SSOT and worker.md's HARD RULE disagree on whether issue docs need `author`. **Not an active QG failure**
@@ -79,7 +79,7 @@ depends_on: []
       mandates: (i) add `author` to `scripts/docs/docspec.py` `PER_TYPE["issue"]` (required, matching worker.md §4.5 —
       or elective/Req.O if a same-file precedent for other doc types shows author is conventionally elective, worker's
       judgement on the exact tier), and (ii) add the corresponding `author` row to the issue required/optional-fields
-      table in `codex/11-project-management/doc-frontmatter-schema.md` (~line 101). Run `bash scripts/quality-gates.sh`
+      table in `/codex/11-project-management/doc-frontmatter-schema.md` (~line 101). Run `bash scripts/quality-gates.sh`
       for the PM repo and confirm existing issue docs (which do NOT all currently carry `author`) do not newly fail — if
       making it _required_ would red the tree against the existing corpus, land it as elective/Req.O and note the
       backfill as a P3 follow-up todo rather than reflex-breaking the gate. **Only pick option (b) — narrowing worker.md
@@ -121,10 +121,15 @@ depends_on: []
   remains open, untouched.
 - **2026-08-04 (slot-11)** — Todo 2 done. Reconciled the SSOT: added `author` (Elective, `Req.E`) to
   `scripts/docs/docspec.py` `PER_TYPE["issue"]` and the corresponding `author` (elective) entry to the issue row in
-  `codex/11-project-management/doc-frontmatter-schema.md` §3 table + a note explaining the tier choice. Option (a)
+  `/codex/11-project-management/doc-frontmatter-schema.md` §3 table + a note explaining the tier choice. Option (a)
   confirmed — no evidence of deliberate exclusion found (grep of codex/ + plans/ for exclusion rationale returned zero
   hits). Elective (not Required): only 6 of 444 existing issue docs carry `author`; Required would have red-lit 438
   docs. Filed a P3 backfill todo for the existing corpus. All three sources now agree: worker.md §4.5 mandates `author`
   on new issue docs, docspec.py validates it when present (elective, no gate break on absent), schema doc documents the
   contract. QG green.
-- **2026-08-04 (slot-8)** — Todo 3 done. Backfilled `author` on 435 issue docs from git-log author. Post-backfill: 441/444 (99.3%) carry `author`, exceeding the 90% threshold. 3 intentionally skipped: 1 has no YAML frontmatter (`_cefi_canonical_blueprint_2026_07_17.md`), 2 at 1000-line hard cap (`instruments_remaining_work_audit_2026_07_10.md`, `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`). All three SSOT sources now agree and the corpus is consistent. QG green, shipped via quickmerge. — unified-trading-pm@a6e5eae25
+- **2026-08-04 (slot-8)** — Todo 3 done. Backfilled `author` on 435 issue docs from git-log author. Post-backfill:
+  441/444 (99.3%) carry `author`, exceeding the 90% threshold. 3 intentionally skipped: 1 has no YAML frontmatter
+  (`_cefi_canonical_blueprint_2026_07_17.md`), 2 at 1000-line hard cap
+  (`instruments_remaining_work_audit_2026_07_10.md`,
+  `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`). All three SSOT sources now agree
+  and the corpus is consistent. QG green, shipped via quickmerge. — unified-trading-pm@a6e5eae25
