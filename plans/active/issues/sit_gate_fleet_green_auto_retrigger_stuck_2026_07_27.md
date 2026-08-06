@@ -182,6 +182,32 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
         conflict + the take-LDR resolver's safety check correctly refused because main had unique non-merge content from
         Option-B squashes that hadn't been backmerged yet — not unsatisfiable, working as designed).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-06 investigation (slot 12, P0 task `sit_gate_fleet_green_auto_retrigger_stuck-004`)**:
+  - **08-05 root cause confirmed**: system-integration-tests@69b93bc (wider poll budget 90s→320s) was on LDR but never
+    promoted to `main` because system-integration-tests LDR→main promotion was stuck at 215 commits behind with 0 open
+    promote PR. Root cause was twofold: QG wall-clock 400s > 300s `MAX_DURATION` cap + plan-commit-SHA-evidence ratchet
+    at 28 > baseline 26. Both fixed (system-integration-tests@3f6f6ed raised cap to 600s; unified-trading-pm@b0a6a8563
+    re-baselined). QG is now GREEN on LDR (run 31128741477, 22:04 UTC) — the 69b93bc fix should reach `main` on the next
+    successful promoter tick.
+  - **08-06 dispatch-flood root cause confirmed**: `process_repo` runs each repo in parallel background subshells.
+    Before the fix, every subshell independently hitting a BREAKING-delta block could dispatch `full-workspace-sit`.
+    With 21+ repos and 3 promoter ticks in 6 min, this produced 3+ dispatches in ~10s. Each cancelled the previously
+    queued run via GitHub's `concurrency.group` + `cancel-in-progress: false` semantics, creating a permanent treadmill
+    of queues and cancels. **Fix**: `_claim_sit_dispatch` mutex (`mkdir` atomicity) in unified-trading-pm@16c9653eb
+    (2026-08-06 07:59 UTC) — only one dispatch per tick wins. The `SIT_INFLIGHT` check was NOT the root cause of
+    ineffectiveness; the gap was that it ran ONCE at tick-start against a snapshot, while the parallel subshells raced
+    past it mid-tick.
+  - **08-06 afternoon SIT failures (runs 31112587576–31118400832, 14:47–16:02 UTC)**: Third distinct failure mode —
+    GitHub Actions platform outage (`Service Unavailable` for action downloads). Transient, outside project control.
+  - **deployment-service PR #716**: Resolved — merged at ~09:43 UTC after the IN_PROGRESS SIT run (31081197089)
+    completed `success` at 07:50 UTC. `sit-gate/fleet-green` now reads SUCCESS on the merged PR.
+  - **NEW FINDING — Fleet promoter `ldr-to-main-promote-fleet` stalled 3+ hours** (19:00–22:30 UTC, 13 consecutive
+    cancelled runs). Root cause: only 1 of 4 `glue`-labeled self-hosted runners online and not busy (glue-3,5 offline;
+    glue-2 busy). GitHub's concurrency group queued each run, but before a runner picked one up the next `*/5` schedule
+    event cancelled the queued predecessor. Stuck until a runner became available; the 22:30 run finally reached
+    `in_progress` at ~22:35. **This is a SEPARATE issue from the SIT auto-retrigger** — it blocks ALL LDR→main
+    promotions (including the SIT fix reaching `main`), not just SIT-gated ones. Should be filed as its own issue doc
+    with a runner-health monitor.
 - **2026-08-06 recurrence (dispatch-flood variant)**: `full-workspace-sit` runs CANCELLED 20+ times between 06:00-07:30
   UTC (runs 31075871744 through 31081197089), blocking `deployment-service` PR #716 (and likely all other repos' promote
   PRs) on `sit-gate/fleet-green=failure`. New symptom vs prior occurrences: this was a **dispatch flood**, not a
@@ -200,9 +226,11 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
 
 ## Follow-ups
 
-- [ ] [CI] P0. Investigate the recurring sit-gate fleet-green auto-retrigger failures (08-05: fix never reached main;
-      08-06 dispatch-flood variant, 20+ cancelled runs, deployment-service PR #716 blocked) — escalation agt-f85daa
-      diagnosis pending, gate still failing fleet-wide.
+- [x] ✅ [CI] P0. Investigate the recurring sit-gate fleet-green auto-retrigger failures (08-05: fix never reached main;
+      08-06 dispatch-flood variant, 20+ cancelled runs, deployment-service PR #716 blocked) — investigation complete,
+      root causes identified + fixes shipped (see Progress Log 2026-08-06). Escalation agt-f85daa resolved by mutex fix
+      unified-trading-pm@16c9653eb. Remaining: fleet-promoter runner-health issue filed separately as
+      `plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md`. — unified-trading-pm@3358005f2
 
 > **2026-08-06 archive-candidate audit**: Live unresolved incident: 08-05 recurrence shows the documented fix
 > system-integration-tests@69b93bc 'had NEVER reached main' ('fix authored + on LDR', not live), and 08-06 recurrence
