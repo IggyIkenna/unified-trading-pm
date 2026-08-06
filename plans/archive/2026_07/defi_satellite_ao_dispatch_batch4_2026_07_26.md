@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [defi, ao-dispatch, close-out, batch-4, satellite-docs, doc-hygiene]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -61,10 +61,11 @@ drift_direction: advance-code
 > this (and its gated finalize sibling) to `active` is the operator's explicit call.
 
 > **Concurrency note — read before dispatching.** This plan is the residue of a same-day double-run. The scheduled
-> auditor's `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md` is the primary batch and should be reviewed
-> first; this one exists only because two of its author's findings were genuinely uncovered by it. Both todos below are
-> `unified-trading-pm` doc operations on DIFFERENT files, so they are safe to run concurrently with each other and with
-> every batch3 todo (batch3 touches no `plans/active/issues/defi_code_codex_drift_*` or `…/aave_rate_impact_*` file).
+> auditor's `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md` is the primary batch and should be
+> reviewed first; this one exists only because two of its author's findings were genuinely uncovered by it. Both todos
+> below are `unified-trading-pm` doc operations on DIFFERENT files, so they are safe to run concurrently with each other
+> and with every batch3 todo (batch3 touches no `plans/active/issues/defi_code_codex_drift_*` or `…/aave_rate_impact_*`
+> file).
 
 ## Todos
 
@@ -145,10 +146,10 @@ covering, **21 defi-primary docs remain orphaned** and every one of their remain
 taxonomy: 13 operator-gated, 3 time-gated, 1 too-large-or-risky, 3 human-only, 1 conflict-gated (whose only batchable
 half is this plan's first todo). The per-doc breakdown with evidence lives in
 `/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md` and
-`/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s own Deferred sections — this plan references them
-rather than duplicating a third copy. **defi has reached the skill's documented stop condition**: report the residual to
-the operator as "needs direct human action, not another batch" rather than spinning a batch5 that cannot extract
-anything new.
+`/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s own Deferred sections — this plan references
+them rather than duplicating a third copy. **defi has reached the skill's documented stop condition**: report the
+residual to the operator as "needs direct human action, not another batch" rather than spinning a batch5 that cannot
+extract anything new.
 
 Two additions this run makes to those lists, not present in either:
 

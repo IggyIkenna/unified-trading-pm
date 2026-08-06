@@ -50,7 +50,7 @@ context_scope:
     scripts/openapi/generate_strategy_prospectus.py,
     unified-api-contracts/openapi/prospectus,
     /codex/06-coding-standards/script-homes.md,
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
 execution_scope: local-only
 model_tier: sonnet-doable

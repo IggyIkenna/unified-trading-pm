@@ -36,7 +36,7 @@ repos: [features-service, unified-api-contracts]
 scope: [engineer]
 tags: [defi, features-service, delta-one, lookback-validator, instrument-discovery, data-correctness]
 related:
-  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md
   - /plans/archive/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
 created: "2026-07-30"
 source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
@@ -52,7 +52,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/archive/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md,
     features-service/features_service/delta_one/app/core/dependency_checker.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
@@ -68,7 +68,7 @@ resolved_by:
 > the D1-resume verification, closed as a duplicate of
 > `/plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s own todo 2 — same underlying
 > verification run (`features-delta-one-defi-20260803-055145`, 454/455 manifest shards `captured`). D1's checkbox
-> flipped in `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`. See the Progress Log below.
+> flipped in `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`. See the Progress Log below.
 
 # What I found
 

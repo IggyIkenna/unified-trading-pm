@@ -2,10 +2,10 @@
 doc_type: issue
 title: DeFi satellite AO batch3 — D1 features backfill todo, Progress Log history (2026-07-26 through 2026-08-03 FLIP)
 summary:
-  Line-cap remediation extraction from plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md's todo 1 (D1 DeFi
-  features backfill) inline Progress Log — every dated update entry from the todo's first 2026-07-26 BLOCKED marker
-  through the 2026-08-03 FLIPPED entry, moved verbatim so the live plan stays under the 1000-line hard cap. The todo
-  itself is already checked off (`[x] ✅`) in the live plan with a condensed summary; read this only if a deeper
+  Line-cap remediation extraction from plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md's todo 1
+  (D1 DeFi features backfill) inline Progress Log — every dated update entry from the todo's first 2026-07-26 BLOCKED
+  marker through the 2026-08-03 FLIPPED entry, moved verbatim so the live plan stays under the 1000-line hard cap. The
+  todo itself is already checked off (`[x] ✅`) in the live plan with a condensed summary; read this only if a deeper
   citation on a specific historical VM-launch/bug-chase entry is needed.
 status: archived
 nature: notes
@@ -14,7 +14,7 @@ stage: [data]
 repos: [unified-trading-pm, features-service, market-tick-data-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [defi, ao-dispatch, batch-3, features-backfill, history, line-cap-remediation]
-related: [/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md]
+related: [/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md]
 created: 2026-08-03
 parent_epic: defi_master
 assigned_vm: NA
@@ -27,7 +27,8 @@ superseded_by:
 locked_by:
 locked_since:
 depends_on: []
-source: [plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md, line-cap remediation 2026-08-03, slot-12]
+source:
+  [plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md, line-cap remediation 2026-08-03, slot-12]
 assigned_role: data_engineering
 drift_direction: none
 ---
@@ -35,11 +36,11 @@ drift_direction: none
 # DeFi satellite AO batch3 — D1 features backfill todo, Progress Log history
 
 > Extracted verbatim 2026-08-03 (line-cap remediation, live plan was at 1016/1000 lines after an unrelated checkbox
-> flip) from `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s todo 1 ("D1 DeFi features backfill").
-> This covers every dated update entry from the todo's first 2026-07-26 (slot-8) BLOCKED marker through the 2026-08-03
-> (slot-8) FLIPPED entry that finally closed it. The live plan's todo 1 keeps the original brief + done-when + a
-> condensed summary pointing here; this doc is the full chronological record for anyone who needs a specific historical
-> VM-launch, bug-chase, or root-cause citation.
+> flip) from `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s todo 1 ("D1 DeFi features
+> backfill"). This covers every dated update entry from the todo's first 2026-07-26 (slot-8) BLOCKED marker through the
+> 2026-08-03 (slot-8) FLIPPED entry that finally closed it. The live plan's todo 1 keeps the original brief +
+> done-when + a condensed summary pointing here; this doc is the full chronological record for anyone who needs a
+> specific historical VM-launch, bug-chase, or root-cause citation.
 
 ## Progress Log (verbatim, chronological)
 

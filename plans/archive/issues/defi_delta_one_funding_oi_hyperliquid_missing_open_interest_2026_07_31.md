@@ -28,7 +28,7 @@ tags: [defi, features-service, delta-one, funding-oi, open-interest, data-availa
 related:
   - /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
   - /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
-  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
 source: [D1 todo delta_one leg verification-window dry-run, features-delta-one-defi-20260730-234947]
 parent_epic: defi_master
@@ -49,7 +49,7 @@ resolved_by:
 context_scope:
   [
     /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md,
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     features-service/features_service/delta_one/app/calculators/funding_oi.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
   ]

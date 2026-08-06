@@ -29,7 +29,7 @@ repos: [features-service]
 scope: [engineer]
 tags: [defi, features-service, delta-one, data-loader, efficiency, instrument-discovery]
 related:
-  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md
   - /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
 created: "2026-07-30"
 author: unknown
@@ -46,7 +46,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md,
     features-service/features_service/delta_one/app/core/data_loader.py,
   ]

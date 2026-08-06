@@ -22,7 +22,10 @@ repos: [market-tick-data-service, unified-api-contracts, instruments-service]
 scope: [engineer]
 tags: [defi, oracle-prices, pyth, manifest, expected-unattempted, honest-absence, regression]
 related:
-  [/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md, /plans/active/data_completion_defi_2026_07_15.md]
+  [
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/active/data_completion_defi_2026_07_15.md,
+  ]
 created: 2026-08-03
 author: unknown
 parent_epic: defi_master
@@ -43,7 +46,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_constants.py,
     instruments-service/instruments_service/reference_data/adapters/defi/pyth.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
 ---
 
@@ -277,7 +280,7 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   code fix lands. **Open follow-up (flagged to review/operator)**: this doc is `execution_scope: local-only` (NA) so its
   `[BACKEND]`/`[DATA]` todos are not auto-dispatched — the code fix needs a dispatchable (`assigned_vm: planning`) home;
   did not author a new dispatchable plan unilaterally (plan-destination is operator's call) nor hand-edit the C6 backlog
-  task brief (derived from `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`; backlog is not
+  task brief (derived from `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`; backlog is not
   hand-editable). Main cannot push code, so shipping the fix itself requires a worker dispatch.
 - **2026-08-03 (slot-8, backend_engineer craft, dispatched via `defi_satellite_ao_dispatch_batch3-013`)**: wrote both
   decision-independent halves of the code fix. The extend-ids half of `[BACKEND] P2` (JTO/RAY/WIF/JUP/USDC) SHIPPED —

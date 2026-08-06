@@ -43,7 +43,7 @@ related:
   - /plans/archive/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md
   - /plans/active/issues/features_delta_one_sequential_per_day_gcs_scan_2026_07_27.md
   - /plans/active/issues/delta_one_get_captured_instruments_blank_id_perp_funding_2026_07_30.md
-  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-31"
 source: [features-delta-one-defi-20260731-025149 verification run, 0/51 completed despite 51/51 range-load success]
 parent_epic: defi_master
@@ -218,5 +218,6 @@ investigation chain.
   shard-quality-gate on `btc_trailing_return_6m/12m`'s EXPECTED warmup NaN (up to 252-bar/~12-month lookback,
   `nan_policy: warmup_only` in the registry), unrelated to this issue's buffer-sizing fix. Fixed separately
   (`features-service@12a64eb9`, added an `EXPECTED_SPARSE_COLUMNS["returns"]` exemption) — full detail + relaunch status
-  in `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo (this issue's P2 todo IS that D1 todo's
-  resume — logging here so a reader of this doc's chain sees the fix landed and isn't re-blocked by a stale read).
+  in `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo (this issue's P2 todo IS that D1
+  todo's resume — logging here so a reader of this doc's chain sees the fix landed and isn't re-blocked by a stale
+  read).

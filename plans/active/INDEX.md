@@ -190,9 +190,6 @@ by hand._
   — Gated closeout for defi_satellite_ao_dispatch_batch2_2026_07_26.md — machine-held via depends_on + gate_on_depends:
   true until all 23 of that plan's todos are done. Mirrors batch1-finalize's pattern (reconcile each distinct source
   doc's…
-- [`defi_satellite_ao_dispatch_batch3_2026_07_26`](./defi_satellite_ao_dispatch_batch3_2026_07_26.md) — Third
-  AO-dispatch batch for defi, produced by the `/ag-closeout-audit` skill's Phase-1 (per-doc classify) + Phase-3
-  (conflict-check + draft) triage over all 59 defi AG-primary docs, run AFTER batch2 landed (2026-07-26). With batch1,…
 - [`defi_satellite_ao_dispatch_batch3_2026_07_26_finalize`](./defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md)
   — Gated closeout for defi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
   true until all 12 of that plan's todos are done. Mirrors batch1/batch2-finalize's pattern (reconcile each distinct

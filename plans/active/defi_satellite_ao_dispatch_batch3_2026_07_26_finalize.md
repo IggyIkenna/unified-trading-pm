@@ -18,13 +18,13 @@ scope: [engineer]
 tags: [defi, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-30"
+last_updated: "2026-08-06"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -47,7 +47,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -103,14 +103,19 @@ context_scope:
       `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` as `/plans/archive/issues/...`. (2) Retag NOT done —
       batch2 finalize's `[DOC] P2` todo still `- [ ]` (`defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md`);
       handed off — batch2 finalize owns it, no duplicate todo authored here.
-- [ ] [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have resolved or re-confirmed all of them — verify none silently vanish) → add the archive banner → run the
       codex-alignment check (no new durable contract from this batch, confirm still true) → grep the corpus for every
       referrer of `defi_satellite_ao_dispatch_batch3_2026_07_26` and fix each path to point at the archived location →
       clear `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
       corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
-      commit.
+      commit. **DONE 2026-08-06 (slot-4)**: all 6 ritual steps complete — (1) deferred items re-verified by Todo 2 (none
+      silently vanished); (2) archive banner added + `status: complete`; (3) codex-alignment: no new durable contracts;
+      (4) CLAUDE.md: nothing new; (5) all 34 path referrers updated from `plans/active/` → `plans/archive/2026_07/`; (6)
+      `locked_by` was empty, confirmed; `git mv` to
+      `plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`. Note: finalize doc itself not archived
+      alongside (Todo 1 still open).
 
 ## Progress Log
 
@@ -169,3 +174,9 @@ context_scope:
     prospectus reconciliation design decision still needed (batch6: operator-gated).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- unchanged, already minimal.
+- **2026-08-06 (slot-4, data_engineering) — Todo 4 [DOC] P1 archive DONE**: 6-step ritual complete for
+  `defi_satellite_ao_dispatch_batch3_2026_07_26.md`. All 13 todos verified `[x]`, locked_by empty. Deferred items
+  confirmed by Todo 2 (none silently vanished). Codex-alignment: no new durable contracts. 34 path referrers updated
+  from `plans/active/` → `plans/archive/2026_07/` across 20 files. INDEX.md batch3 entry removed. File moved via
+  `git mv` to `plans/archive/2026_07/`. Note: finalize plan NOT archived alongside — Todo 1 (source-doc reconciliation)
+  still open; finalize will archive once Todo 1 ships.

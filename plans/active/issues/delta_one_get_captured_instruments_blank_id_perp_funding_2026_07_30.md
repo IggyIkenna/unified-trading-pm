@@ -31,7 +31,7 @@ repos: [features-service, unified-trading-library]
 scope: [engineer]
 tags: [defi, features-service, delta-one, instrument-discovery, blank-instrument-id, data-correctness]
 related:
-  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md
   - /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
   - /plans/active/issues/delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md
 created: "2026-07-30"
@@ -51,7 +51,7 @@ context_scope:
   [
     /plans/archive/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md,
     /plans/active/issues/delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md,
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     unified-trading-library/unified_trading_library/feature_service_base/manifest_discovery.py,
   ]
 locked_by:

@@ -101,14 +101,15 @@ context_scope:
 
 - 2026-07-31 (slot-9, data_engineering): second confirming occurrence, different task —
   `defi_satellite_ao_dispatch_batch3-015` (the `funding_oi`/`returns` D1 DeFi features todo in
-  `plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`). The plan's own text records main ruled (~2026-07-31
-  12:58Z, in response to slot-16's `/blocked`) to PARK this todo via the backlog.yaml recipe (priority: 999 + a false
-  prerequisite gated on both linked issue docs) — yet my dispatch at 15:11:08Z (`task_dispatched` activity,
-  `dispatch_reason: "tier=1 priority=20 plan_order=0"`) shows the task still at its plan-derived `priority: 20`,
-  not 999. This is the 11th+ consecutive dispatch of this exact todo today (slots 2,3,4,5,6,8,10,11,14,16, now 9) since
-  the ruling — same root cause this doc already describes (a main "park it" disposition records intent only, nothing
-  mechanically applies it). No new action taken beyond this evidence note; skipped the task per the established
-  precedent (don't re-ask the already-answered question, don't force the compute step past its real infra blocker).
+  `plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`). The plan's own text records main ruled
+  (~2026-07-31 12:58Z, in response to slot-16's `/blocked`) to PARK this todo via the backlog.yaml recipe (priority:
+  999 + a false prerequisite gated on both linked issue docs) — yet my dispatch at 15:11:08Z (`task_dispatched`
+  activity, `dispatch_reason: "tier=1 priority=20 plan_order=0"`) shows the task still at its plan-derived
+  `priority: 20`, not 999. This is the 11th+ consecutive dispatch of this exact todo today (slots
+  2,3,4,5,6,8,10,11,14,16, now 9) since the ruling — same root cause this doc already describes (a main "park it"
+  disposition records intent only, nothing mechanically applies it). No new action taken beyond this evidence note;
+  skipped the task per the established precedent (don't re-ask the already-answered question, don't force the compute
+  step past its real infra blocker).
 
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-08-01; only change since = a referrer repoint to
   /plans/archive/2026_08/; `locked_by: live-defi-rollout` unchanged, single todo is still a 2-way (a)/(b) backend design
