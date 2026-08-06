@@ -197,8 +197,36 @@ sizing/scoping pass across 5 protocols before it is worker-determinable; batch9 
 
 - **28 `archivable_now` docs** (functionally done, every genuinely-remaining item already closed, but not yet moved
   through the 6-step archival ritual) surfaced by this run's Phase 1 — a plan-completion-and-archival-discipline sweep
-  is warranted, not an AO-dispatch batch. Full list carried in this run's `/done` evidence, not duplicated here to
-  respect the line cap.
+  is warranted, not an AO-dispatch batch. This run's `/done` call itself failed (restart-correlated AgentRow loss, see
+  `issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`'s 2026-08-06/slot-9 recurrence
+  entry), so the full list is recorded here instead of relying on `/done` evidence:
+  `plans/active/defi_strategy_pnl_axis_index_2026_07_24.md`,
+  `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`,
+  `issues/defi_batch8_finalize_gate_bypass_missing_upstream_task_2026_08_02.md`,
+  `issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`,
+  `issues/defi_c0_rd5_orphan_sweep_todos_stranded_in_archived_plan_2026_07_31.md`,
+  `issues/defi_code_codex_drift_2026_05_27.md`, `issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`,
+  `issues/defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03.md`,
+  `issues/defi_gmx_expected_skeleton_rows_still_enumerated_2026_08_04.md`,
+  `issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`,
+  `issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`,
+  `issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md`,
+  `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`,
+  `issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md`,
+  `issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`,
+  `issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`,
+  `issues/delta_one_get_captured_instruments_blank_id_perp_funding_2026_07_30.md`,
+  `issues/dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md`,
+  `issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`,
+  `issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md`,
+  `issues/features_is_instruments_store_ambient_env_stg_2026_08_05.md`,
+  `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md`,
+  `issues/lst_yields_writegate_permanently_blocked_2026_07_28.md`,
+  `issues/ml_strategy_manifest_coverage_gap_2026_08_03.md`,
+  `issues/read_availability_index_bare_defi_callers_2026_07_27.md`,
+  `issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md`,
+  `issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`,
+  `issues/ui_coverage_ts_regen_content_drift_after_venue_category_v2_rename_2026_07_28.md`.
 - **3 possible frontmatter mistags** found during Phase 1 sanity-checks, outside defi's sole ownership (would need the
   peer/owning tranche's confirmation before retagging, per the concurrent-sharded-worker safety rule):
   `cefi_ml_directional_continuous_live_2026_06_20.md` (real content reads CeFi-only; `defi` tag likely droppable — same
