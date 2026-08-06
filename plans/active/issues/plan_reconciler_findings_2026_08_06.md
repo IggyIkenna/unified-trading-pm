@@ -106,6 +106,69 @@ These were verified directly by the orchestrator with commands run this turn (gu
 
 (none yet)
 
+## Hunter results — B (governance legacy, 6 docs) — 2026-08-06
+
+All verified quotes by hunter B (line-precise); orchestrator re-verify pending/confirming — items marked **W** are in
+writable docs, **G** in grace (file-only).
+
+1. **W** `repo_scripts_governance_audit_2026_06_18.md:26-27` — P2 frontmatter: `assigned_vm: NA` +
+   `execution_scope: orchestrator-agent` (invalid pairing per task_template; sibling doc
+   codex_violations_ratchet_to_five:20 corrected 2026-07-14 to `local-only`). → fix: execution_scope → local-only.
+2. **W** `repo_scripts_governance_audit_2026_06_18.md:394-396` vs :346-349 — P2 same-doc contradiction: 08-02 Progress
+   Log marker repeats pre-measurement "11+ repos unstamped" while the doc's own 2026-08-02 measurement says 2 files in 2
+   repos. → fix: correct the marker text (measurement is authoritative, same doc).
+3. **W** `repo_scripts_governance_audit_2026_06_18.md:88,93` — P3 structural: `\*\*` literal-escaped bold spans
+   (mismatched openers/closers in Decision 6). → fix: unescape to `**`.
+4. **W** `codex_violations_ratchet_to_five_2026_06_10.md:16` — P2 frontmatter: `related:` names
+   `plans/active/ci_local_qg_parity_2026_06_08.md` + `cicd_contract_hardening_2026_06_01.md` — both archived (verified:
+   only under plans/archive/2026_06/). → fix: repoint both to archive paths.
+5. **W** `codex_violations_ratchet_to_five_2026_06_10.md:570` — P3: success criterion says "the four > 4,000-line files"
+   then lists FIVE monoliths (registry/orchestrator/data_status/seed/server, sizes at :56-58). → fix: "four"→ "five" (or
+   reword to enumerate).
+6. **W** `codex_violations_ratchet_to_five_2026_06_10.md:619-621` vs :630-631,:647 — P3: standing verdict "batch2 does
+   not exist as of this pass" vs own 07-30/08-02 entries saying it exists (verified: existed 2026-07-27, archived to
+   plans/archive/2026_08/, covered none of the 3 items — "stay open here" outcome correct, text stale). Also stray space
+   in filename "batch2_ 2026_07_27" at :631. → fix: refresh standing verdict + typo.
+7. **W** `codex_violations_ratchet_to_five_2026_06_10.md:638-639` — P3: 08-02 marker "7 at entry… now 6" vs current grep
+   = 5 open todos. → fix: correct the count or annotate the 7th close.
+8. **W** `codex_violations_ratchet_to_five_2026_06_10.md:25` — P3: `last_updated: 2026-06-27` vs body dated 08-03. →
+   fix: bump last_updated.
+9. **G** `codex_vs_repo_docs_ssot_audit_2026_06_01.md:60-73` vs :192-211 — **P2 contradiction**: standing GATE-1 banner
+   mandates full execution of Phases 3/4; both phases CANCELLED 2026-07-29 (main, BLK-3b8233e0) as redundant with
+   per-repo satellite tasks; banner never amended (the banner itself warns stale claims would be the exact contradiction
+   this gate exists to catch). → GRACE → file + operator review (banner edit is a judgment call, or mechanical amendment
+   after grace).
+10. **G** `codex_vs_repo_docs_ssot_audit_2026_06_01.md:31` — P3: last_updated 2026-07-28 vs body dated 08-06. → file.
+11. **G** `codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md:26` — P3: last_updated "2026-07-30" vs own
+    banner "fixed 2026-08-06". → file. (Positive: its "3 open todos in parent" claim VERIFIES exactly.)
+12. **G** `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:141-144` vs :151-153 — **P2 same-doc contradiction**:
+    standing Phase-1 text asserts "~314 of ~451 NA docs never got individual attention" (444−356); the doc's own DONE
+    todo (2026-07-27) says "~314 was an arithmetic error: 444−356=88". Standing text never corrected. → file (grace).
+13. **G** `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:82-84` vs :437-438 — P3: "just apply" instruction for
+    v2_engine stale DECOMMISSIONED checkbox vs Progress Log "deliberately left open, do not fix" — doc-internal tension,
+    explicitly not-a-bug per its own note. → file as note (no action).
+14. **G** `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:77-79` — P3: 451−444=7 non-live but "~2 explained". →
+    file (self-flagged moving numbers).
+15. **G** `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:312-322` — P2 missed-flip candidate: `[DOC] P2`
+    "lst_rate_honest_coverage line 381 A2 staking leg verified DONE (strategy-service@e93902d8, cited
+    defi_satellite_ao_dispatch_batch3_2026_07_26.md:191)" — flip blocked by 1000L line cap (doc is 1017L). NOTE: the
+    flip TARGET is a defi-tranche doc (out of shard) → route to operator/defi shard; grace anyway.
+16. **G** `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:35` — P3: last_updated "2026-07-26" vs 08-06 entry. →
+    file.
+17. **W** `stash_pile_workspace_cleanup_2026_06_03.md:31` — P2 frontmatter: `source:` cites
+    plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md; file is at plans/archive/issues/. → fix:
+    repoint to archive path.
+18. **W** `stash_pile_workspace_cleanup_2026_06_03.md:175` — P3: Phase-4 purge todo's confirmation window target
+    2026-06-10 long elapsed, never executed or re-dated. → fix: re-date/annotate (operator judgment on the purge).
+19. **W** `stash_pile_workspace_cleanup_2026_06_03.md:74` — P3: unannotated prose "10 epic VMs + orchestrator VM" vs
+    finding-73 note (per-epic-VM topology retired). → fix: annotate this line too (reader-verifiable).
+20. **W** `stash_pile_workspace_cleanup_2026_06_03.md:23` — P3: last_updated 2026-06-27 vs 08-02/08-03 entries. → fix:
+    bump.
+
+STEP-4 verification state: items 1,4,8,10,11,16,17,20 are mechanical frontmatter/date facts — re-verifiable by grep
+(quotes provided); items 2,5,6,7,9,12,15 need the quote-pair re-location + authority judgment — refuter/confirmer pass
+in STEP 4. Items 18,19 need care (stash_pile purge = destructive-ish, operator-flavored; annotate only).
+
 ## Coverage (hunters / batches / docs)
 
 - 10 hunters launched 2026-08-06 ~22:05 UTC (model=sonnet): A infra-satellite family (10 docs), B governance legacy (6),
