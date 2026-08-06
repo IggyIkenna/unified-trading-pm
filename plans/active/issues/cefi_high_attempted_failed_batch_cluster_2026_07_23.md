@@ -635,3 +635,39 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   outcome given the irrecoverable normalization. No GCS write, no manifest modification, no code shipped; PM plan-doc
   edit only.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-06 (data_pipeline_failure escalation worker, agt-062e64, slot 8) — repeat dispatch for
+  `(cefi, book_snapshot_5)`.** DP-FETCH-009 CRITICAL page: 309,735 attempted_failed of 1,172,699 attempted, ratio 26.4%
+  (down from this doc's 2026-07-23 baseline of 378,817/1,100,809 = 34.4% and from the 08-03 re-fire's 300,674/1,123,966
+  = 26.8% — ratio flat-to-falling, consistent with the already-documented recovery, not a regression). The alert body
+  again carried the `attempted_failed_staleness.py` verdict — "STATIC BACKLOG — only 373 attempted_failed row(s) in the
+  last 1d (below the 500-row materiality floor); a decaying trickle on already-tracked backlog, not a fresh regression."
+  **This session went one step beyond the 08-01/08-03/08-04 precedent (which skipped a fresh read) and ran a bounded,
+  column-projected manifest read to independently verify rather than trust the alert label.** Method:
+  `gcloud storage cp` of `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (174
+  MB, 9.89M rows) to local scratch + pyarrow predicate-pushdown reads (columns + row-group filters only — no corpus
+  walk, no VM). Results VERIFY the static-backlog classification on live data: (1) **total reproduces the alert
+  exactly** — 309,735 `book_snapshot_5` `attempted_failed` rows; (2) **recent activity is a small decaying trickle** —
+  daily counts 07-29: 304, 07-30: 75, 07-31: 35, 08-01: 1, 08-02: 29, 08-03: 121, **08-04: 9,142 (a single-day spike)**,
+  08-05: 170, 08-06: 373 (alert's rolling-1d 373 vs my date-bucketed 543 — the difference is just window width, both
+  below the 500 floor); (3) **the 08-04 spike (7,302 of 9,806 last-3d rows) is a 404 wave on PERPETUAL instruments at
+  BYBIT/BINANCE-FUTURES/DERIBIT** (`UNCLASSIFIED:404 GET https`, error_reason contains "404"), fetching dates spanning
+  2026-05-01→08-05, 285 distinct instrument_ids — a backfill re-attempting historical book_snapshot_5 shards and getting
+  404s. **This is the SAME known 404-tail class this doc already documents** (futures_chain's
+  `UNCLASSIFIED:404 GET https` 7,918-row tail on BYBIT+BINANCE-FUTURES, §"New, smaller finding" + 07-29 Progress Log
+  entry; all-time `UNCLASSIFIED:404 GET https` for book_snapshot_5 = 9,827, of which ~7,302 landed 08-03..08-06) — NOT a
+  new mechanism; (4) **dominant all-time classes unchanged and already-tracked**: Tardis HTTP 403 family (112,597 +
+  64,184 + 2,933 code=274 ≈ 179.7k = 58% — the concurrent-IP-lock P0), `VENUE_FETCH_FAILED` 93,169 (30%, normalized
+  leaked-text bucket, closed-as-unattributable 08-05 P3), `FUTURE row requires 'expiry_date'` 4,644 (DERIBIT-combo,
+  fixed 07-22 `2ddc6d4a`, historical rows only), 404 9,827 (3.2%); (5) **all root-cause fix commits still live on
+  `market-tick-data-service`** (verified `git merge-base --is-ancestor <sha> origin/live-defi-rollout` = true):
+  `2ddc6d4a` (combo guard-widen), `6a067cf1`/`6c6fab03` (aiodns resolver hard-fail), `31934527` (403-code-274 tagging),
+  `55ec86ac` (BITGET expiry). **Conclusion: no fresh regression, no new code fix required** — the residual is the same
+  historical DERIBIT-combo/Tardis-403/aiodns/404 backlog this doc already covers, gated on
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s Track-2 resume (still machine-gated on Track-1). The 404
+  wave's root cause (historical PERPETUAL shards 404ing on re-attempt) is worth keeping visible under this doc's
+  existing un-attributed-backlog umbrella but needs no separate code fix. Cross-linked from
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` — this is the FIFTH distinct
+  `(cefi, book_snapshot_5)`-cell repeat-dispatch case (after 2026-07-30, 07-31 ×2, 08-03) and the seventh confirmed
+  exact-duplicate-escalation-id case overall, further corroborating that doc's still-open Option A/B/C (escalation
+  fast-path has no open-issue-doc dedup). Session cost: 2 heartbeat + 3 file reads + 1 manifest read (bounded)
+  - 1 git-ancestor batch check + this Progress Log append; no GCS write, no code shipped.
