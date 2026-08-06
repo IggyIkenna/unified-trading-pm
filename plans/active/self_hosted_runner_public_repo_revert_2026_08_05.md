@@ -471,3 +471,4 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
   itself into a small dedicated public repo (`unified-trading-ci`), so PM can go private again in the future (e.g. if
   today's accidental flip reflects a real sensitivity concern) without breaking CI fleet-wide — that plan is the durable
   architecture fix; this plan's todo 24 is the same billing-driven revert already applied to the other 17.
+- **context-scout 2026-08-06**: populated context_scope (6 entries).

@@ -574,3 +574,4 @@ materialized.
   BLOCKED-OPERATOR pending sign-off and is entangled in the still-open hard-stop-#2 carve-out contradiction
   (`cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`), 'define the curated ~300-league reference set'
   is a design call, and the curated backfill is a deliberate ~6M-API-call budget burn
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

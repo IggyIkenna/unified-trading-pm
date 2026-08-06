@@ -945,3 +945,5 @@ cross-cutting checker bugs but is not yet fully green, blocked on the chain-bund
 native-todo AO-eligibility extract (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) have
 since drafted AO-dispatchable candidates off this plan's satellite docs and native todos — all `status: draft`, pending
 operator activation.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

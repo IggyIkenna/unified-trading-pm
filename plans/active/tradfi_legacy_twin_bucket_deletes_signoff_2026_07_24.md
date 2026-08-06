@@ -39,6 +39,7 @@ context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/scripts/cleanup_legacy_twins.py,
+    /plans/active/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
   ]
@@ -242,3 +243,6 @@ restated here.
   `tradfi_consolidated_closeout_2026_07_18.md` in the same pass, leaving the parent with 0 open todos — it was archived
   to `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`.
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.
+- **context-scout 2026-08-06**: re-scouted; fixed a wrong repo-relative path (script lives in instruments-service, not
+  unified-trading-pm) and added the new `tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md`
+  issue doc the body now cites; now 5 entries.

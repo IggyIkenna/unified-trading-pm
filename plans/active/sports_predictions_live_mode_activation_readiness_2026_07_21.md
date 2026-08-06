@@ -326,3 +326,4 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped generic architecture docs + the epic for
   the actual remaining blocker doc (MDPS/features live-launcher exec-dispatch) + its target script + the sibling
   live-availability plan, since 2 of the 3 remaining open todos trace back to those.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

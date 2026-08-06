@@ -67,3 +67,6 @@ Machine-held (`depends_on` + `gate_on_depends: true`) until every todo in
       `unified-trading-pm@a5b5ff1fb` in this line did not resolve to any real commit — a second fabricated-evidence SHA
       introduced by the same 7ea0dca64 commit that fixed P1/P2's fabricated citations, caught 2026-08-06 by direct git
       verification, not by the review agent)
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged. No Progress Log section
+  exists in this doc; appended as the final line per the skill's no-Progress-Log fallback.

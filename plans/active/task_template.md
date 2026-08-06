@@ -541,3 +541,4 @@ start.**
 - **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — this IS the plan-authoring template/guide itself (own banner
   above: "This template is a LOCAL doc (not ingested)"), 0 tracked `- [ ]` todos. Structurally never AO-dispatchable and
   never archivable while it remains the live authoring SSOT every plan/agent cites.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

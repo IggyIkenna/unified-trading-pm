@@ -120,3 +120,4 @@ engineering with an explicit stated "Done when", which is the `/na-eligibility-a
   to the new archive path (`/plans/archive/2026_08/`); (6) no lock to clear. Parent archived at
   unified-trading-pm@dcdd20f9b. This finalize twin's own todo flipped `[x]` (separate commit per the
   never-combine-checkbox-flip-with-git-mv rule).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
