@@ -18,7 +18,11 @@ stage: [data]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer]
 tags: [retry, error-classification, venue-error-map, adapters, qg-lint, fail-fast, mtds, convention]
-related: [issues/mtds_perp_funding_backfill_hang_2026_07_14.md, issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md]
+related:
+  [
+    /plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
+    /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+  ]
 created: 2026-07-14
 last_updated: 2026-07-14
 parent_epic: infrastructure_master
