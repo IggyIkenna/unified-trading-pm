@@ -97,26 +97,18 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P1. **HYPERLIQUID/ASTER `asset_group=defi→cefi` migration — Phase 1 (audit + parity-check + script
-      authoring, combined).** This source doc's own Phase 1 is 3 hard-ordered todos in ONE worker's remit (script
-      authoring in step (c) needs step (a)'s object-count findings and step (b)'s canonical-path confirmation as inputs,
-      so this is bundled as one todo per the shared conflict-check protocol's no-fan-out-racing-steps rule, not 3
-      concurrent todos). **(a)** Run the full day-by-day, data_type-by-data_type object-count audit for the frozen
-      HYPERLIQUID + ASTER `asset_group=defi` corpus in `gs://market-data-tick-defi-prd-central-element-323112` (targeted
-      per-day parallel prefix listing, reusing the pattern from
-      `market-tick-data-service/scripts/audit_aster_cefi_in_defi_bucket_scope_2026_07_13.py` — NOT a whole-bucket scan).
-      **(b)** Confirm the canonical CEFI-bucket target path shape for HYPERLIQUID/ASTER via
-      `resolve_bucket_name(asset_group='cefi')` and run a `(size, crc32c)` parity check — never existence-only — for any
-      pre-existing canonical twin of this frozen corpus. **(c)** Write
-      `market-tick-data-service/scripts/migrate_hyperliquid_aster_defi_asset_group_2026_08_0X.py` (dry-run default,
-      `--apply` to mutate, idempotent parity-checked skip, reuse `migration_common.py` helpers). **Never deletes the
-      `asset_group=defi` source** — deletion is Phase 4 of the source doc, separately `[OPERATOR]`-gated and explicitly
-      NOT part of this todo (no reversibility shortcut applies to that permanent delete per the source doc's own text).
-      Source: `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (Phase 1, all 3 todos). **Done
-      when**: the audit output parquet exists with exact first/last day-with-data per venue + full data_type list; the
-      canonical target path + twin-parity verdict is recorded; the migration script exists, is committed, and a
-      `--dry-run` run against a sample day/venue produces a correct copy plan with zero source mutations/deletes; and
-      the source doc's Phase 1 todos 1-3 are flipped `[x]` citing this run. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P1. **DONE-ELSEWHERE 2026-08-06 (slot 4 completed Phase 1 inline before this todo could be
+      dispatched).** HYPERLIQUID/ASTER `asset_group=defi→cefi` migration Phase 1 (audit + parity-check + script
+      authoring, combined) was fully completed by slot 4 (`market-tick-data-service@24f11df7`, task
+      `hyperliquid_aster_defi_to_cefi_asset_group_migration-004`). Source doc Phase 1 todos 1-3 are all checked off: (a)
+      scope audit `audit_hyperliquid_aster_defi_asset_group_scope_2026_08_06.py` →
+      `_index/audit/hyperliquid_aster_defi_asset_group_scope_2026_08_06.parquet` (7,599 objects: HYPERLIQUID 6,683
+      `perp_daily_ctx` 2026-05-10→06-01 + `perp_funding` 06-04→06-09, ASTER 916 `perp_funding` 06-04/06-05 only); (b)
+      canonical CEFI-bucket target confirmed = pure relabel (zero canonical-twin candidates — neither `perp_daily_ctx`
+      nor `perp_funding` exists in the cefi bucket for these venues); (c) migration script
+      `migrate_hyperliquid_aster_defi_asset_group_2026_08_06.py` written, committed, dry-run-confirmed (7,599 planned
+      copies, never deletes the defi source). Verified present in slot 10 clone at `24f11df7`. No action needed from
+      this dispatch. Original text preserved above for record.
 
 - [x] ✅ [SCRIPT] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** The stray file this
       todo targets no longer exists — confirmed via `ls` (absent) and `git log` on the path, whose last commit is
