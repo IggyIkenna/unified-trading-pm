@@ -296,3 +296,10 @@ bounded mechanical pass closes ≥8 P1s at once, same shape as this run's epic-r
   `plan_health`→`plan-health` endpoint rename) — a role file is exactly as subject to staleness as any other doc in this
   corpus; don't trust it blindly on operational specifics, verify against the live server/corpus when a step fails
   unexpectedly.
+- **`GET /api/slots/{slot}/messages` is a shared inbox, not a per-`blocked_id` answer channel** — during STEP 8's
+  wait-loop, a non-empty response turned out to be an unrelated operator broadcast (a repo-health notice about a
+  completely different task) with no connection to any of the 3 blocked questions raised this run. A "messages non-empty
+  ⇒ treat as answered" heuristic is a false-positive trap; check message CONTENT against the specific
+  question/blocked_id before applying anything. No `GET`-by-`blocked_id` status endpoint exists
+  (`/api/blocked/{id}/answer` is POST-only, for submitting); `/api/blocked/stats` gives only a global unanswered count,
+  not per-ID lookup — content-matching the inbox is the only available mechanism today.
