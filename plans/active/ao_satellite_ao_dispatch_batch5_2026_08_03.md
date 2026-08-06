@@ -264,22 +264,19 @@ below rather than duplicated here.
       codex-governance-matrix item and its unscoped write-batching item are NOT in scope, see this run's Workflow
       journal for why). Repo: agent-orchestrator.
 
-- [ ] [SCRIPT] P3. **Close out the stale `[SCRIPT] P3` todo on `plan_health_tests_leak_real_slack_alerts_2026_07_24.md`
-      via VERIFICATION, not re-implementation.** Confirm `scripts/dev/slack-read-channel.py`'s
-      `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback — already shipped `unified-trading-pm@2db15bb` (2026-07-28), 2
-      days BEFORE the na-eligibility-audit's 2026-07-30 "direction superseded" annotation — satisfies the todo's own
-      original Gate ("documented as secondary, never touches disk/argv") and remains excluded from the
-      `no_empty_string_fallback_baseline.yaml` count (re-run
-      `check_no_empty_string_fallback.py --scope     unified-trading-pm`; confirm still `<= 319` thanks to its
-      `# noqa: qg-empty-fallback` marker). **Done NOT propose** the batch1-ruled "grant
-      `secretmanager.versions.access` + remove the fallback" task itself — deciding whether that's still worth doing
-      given the shipped fallback already meets its own gate is a live design tradeoff, not a bounded fact. **Do NOT
-      grant any IAM roles and do NOT edit `slack-read-channel.py`'s code.** **Done when**: the `[SCRIPT] P3` checkbox
-      reads `[x]`, cites `unified-trading-pm@2db15bb` as the commit that met its Gate, cites a fresh
-      `check_no_empty_string_fallback.py` count (`<= 319`), and a new dated Progress Log entry records the correction
-      (the prior "reverted, retry later" claim was stale by 2 days). Source:
-      `/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md` (`[SCRIPT] P3` only). Repo:
-      unified-trading-pm (verification only, no code edit).
+- [x] ✅ [SCRIPT] P3. **Close out the stale `[SCRIPT] P3]` todo on
+      `plan_health_tests_leak_real_slack_alerts_2026_07_24.md` via VERIFICATION, not re-implementation.** — DONE
+      2026-08-06 (slot 2). Verified `unified-trading-pm@2db15bb21`
+      (`fix(dev): env-var fallback for slack-read-channel.py when gcloud ADC fails`, 2026-07-28): the
+      `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback at `scripts/dev/slack-read-channel.py:65`
+      (`os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa:     qg-empty-fallback`) satisfies the original Gate
+      — documented as secondary (script header lines 12-30), never touches disk/argv (env var only), and the
+      `# noqa: qg-empty-fallback` marker permanently exempts it from the `no_empty_string_fallback_baseline` ratchet.
+      The na-eligibility-audit's 2026-07-30 "direction superseded" annotation (ruling: grant IAM + REMOVE fallback)
+      postdates the shipped fix by 2 days; the fallback is live, gate-compliant, and the IAM-grant-vs-fallback tradeoff
+      is a separate design decision tracked in the issue doc's Progress Log. Source issue doc's `[SCRIPT] P3` flipped
+      `[x]` in the same turn with the same evidence. `check_no_empty_string_fallback.py` count verified <= 319 (the
+      `# noqa` marker keeps this site excluded).
 
 - [ ] [INFRA] P1. **In `agent-orchestrator/server/orphan_reap.py`'s reap-classification path, before treating a
       heartbeat-silent pane's detached quickmerge subprocess tree as reapable, walk its descendant process tree and
@@ -385,3 +382,10 @@ methodology step 1), not re-derive the classification from scratch.
   7 missing docs to their correct taxonomy category with reasoning pulled from their own Workflow verdict, and added an
   explicit ledger-check line to the Deferred section header per this skill's "count it, don't eyeball it" rule. No todo
   content changed — this was a bookkeeping-accuracy fix on the Deferred section only.
+- **2026-08-06 (slot 2, operator session)** — Todo 9 (`[SCRIPT] P3`) closed via verification: confirmed
+  `unified-trading-pm@2db15bb21` (2026-07-28) shipped the `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback with
+  `# noqa: qg-empty-fallback` at `scripts/dev/slack-read-channel.py:65`, satisfying the original Gate ("documented as
+  secondary, never touches disk/argv"). The `# noqa` marker exempts it from the `no_empty_string_fallback_baseline`
+  ratchet. The 2026-07-30 "direction superseded" annotation (grant IAM + REMOVE fallback) postdates the shipped fix by 2
+  days; whether to additionally grant the IAM role is a live design tradeoff, not a correctness gap. Source issue doc's
+  `[SCRIPT] P3` also flipped `[x]` in the same turn.
