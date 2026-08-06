@@ -338,6 +338,15 @@ this slot — assumed another dispatch of the same batch or a sibling task. Keep
 concurrent backfills; no `--force`), but the horizon is now indeterminate — re-check the fleet before assuming a clear
 ETA.
 
+**EXPANSION + OPERATOR RE-CONFIRMATION (2026-08-06T~18:10Z).** By 18:10Z the fleet grew to **28 RUNNING and still
+climbing** — an orchestrated multi-year NYSE/NASDAQ + CME backfill campaign launching successive waves (2023 d01–d05 →
+2024 d01–d03+, 2025 likely next): 2×2020, 11×2023, 11×2024, 1×2025, 3×2026. The Databento singleton is now held
+CONTINUOUSLY; a genuine count==0 window may not occur for days. **Operator asked directly with these facts (2026-08-06,
+3rd confirmation, explicit): KEEP WAITING (status quo).** This overrides the "draining to 0" premise of the earlier
+confirmations — the wait is now open-ended by explicit operator choice. **Do NOT `--force`; do NOT delete campaign
+VMs.** A fresh session should re-check the fleet and, if still >0, continue waiting per this decision. If the task is
+later re-scoped or the campaign ends, launch ES_OPT per the phase-1 command below.
+
 **Watcher hardening (learned):** a `gcloud ... | wc -l` watcher false-fires `count==0` on a transient gcloud error
 (empty stdout). Use an error-aware loop: only fire CLEAR when the gcloud call rc==0 AND the result is empty; on rc!=0
 hold the wait. Current armed watcher (this session) is error-aware; a fresh session should re-arm the same shape.
