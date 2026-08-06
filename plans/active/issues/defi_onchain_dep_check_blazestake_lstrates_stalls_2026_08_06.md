@@ -115,6 +115,12 @@ BLAZESTAKE still blocking — Option A still needed).
       through 2026-07-31).
 - [ ] [DATA] P2. **Investigate lending_indices capture stall (post-2026-07-31)** — diagnose why DEFI MTDS isn't writing
       lending_indices rows for 2026-08-01+; may require a separate issue in MTDS.
+- [ ] [OPERATOR] P3. **Decide DP-FETCH-009 paging policy for permanent retirement-marker cells** — the 1404 BLAZESTAKE
+      markers permanently keep `(defi, lst_rates)` over the `attempted_failed` abs threshold, so the alert re-pages as
+      STATIC BACKLOG each re-nag cooldown forever. Suppression / paging-cadence policy for stale cells is explicitly
+      left open to the operator/alerting owner (`attempted_failed_staleness.py` docstring); options: (a) accept visible
+      pressure on the known backlog, (b) have the detector exclude `superseded_by_*`-reason rows from the high count,
+      (c) reclassify markers out of `attempted_failed`. Disposition evidence: slot-6 escalation agt-d87c1c, 2026-08-06.
 
 ## Progress Log
 
@@ -140,3 +146,12 @@ BLAZESTAKE still blocking — Option A still needed).
     over the DP-FETCH-009 abs threshold, so the alert re-pages as STATIC BACKLOG each re-nag cooldown. Suppression /
     paging-cadence policy for stale cells is explicitly left open to the operator/alerting owner per
     `attempted_failed_staleness.py` module docstring — not decided here.
+
+  - **Verification traps (re-learn these, don't re-derive)**: (1) read the availability index via
+    `pyarrow.fs.GcsFileSystem` + `dataset.scanner(columns=..., filter=...)` row-group pushdown — a full `to_table()` on
+    the 2.6 GB defi `_index` OOMs/times out on the shared host; only ever read filtered columns. (2)
+    `GCP_PROJECT_ID=central-element-323112` must be exported for `resolve_bucket_name`. (3) The `error_reason` column is
+    the discriminator: `superseded_by_*` = deliberate retirement marker (NOT a fetch failure) — never diagnose a
+    DP-FETCH-009 cell as a regression without checking it first. (4) A cell's `max_attempted_at` near the daily 01:00
+    UTC cron window is NOT new activity when the row carries a retirement reason — the retire script stamps reason
+    without touching `attempted_at`.
