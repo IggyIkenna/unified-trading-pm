@@ -31,7 +31,7 @@ summary: >-
   docstring) — worth fixing precisely BECAUSE it is a safety mechanism: false positives that "cry wolf" on routine, safe
   operations train agents to route around the hook entirely rather than trust it, which weakens the real protection it
   exists to provide.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -53,9 +53,12 @@ source:
 assigned_vm: planning
 execution_scope: ao-eligible
 drift_direction: none
-last_updated: 2026-07-31
+last_updated: 2026-08-06
 locked_by:
 resolved_by:
+  "Both todos shipped and QG-verified: agent-orchestrator@7b1a251 (recursive-rm flag-token anchor fix, 48-test suite
+  green) + agent-orchestrator@c23eac2 (sibling git-clean/chmod/chown/truncate patterns audited + tightened, 6 new
+  negative tests, 2339-test suite green)."
 depends_on: []
 context_scope:
   [
@@ -64,6 +67,11 @@ context_scope:
     agent-orchestrator/scripts/install-worker-guardrails.sh,
   ]
 ---
+
+> **🔴 ARCHIVED 2026-08-06 — RESOLVED** (all todos `[x]`, unlocked). Both fixes shipped and QG-verified
+> (agent-orchestrator@7b1a251, agent-orchestrator@c23eac2) — the recursive-rm regex is now anchored to real flag tokens,
+> and the sibling git-clean/chmod/chown/truncate patterns were audited and tightened the same way. Archived by
+> /plan-reconcile ao.
 
 # `block_destructive_commands.py`'s rm-detector matches inside hyphenated words, not just real flags
 

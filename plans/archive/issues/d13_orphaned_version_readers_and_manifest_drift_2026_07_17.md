@@ -202,7 +202,7 @@ an already-established fix pattern elsewhere in the fleet). The other two are NO
 urgency; followup todos filed in `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` rather than fixed inline
 to keep this unit bounded. Also found (unrelated to D13, hit as a side effect while deleting the dead script): a
 false-positive in the `block_destructive_commands.py` PreToolUse guardrail's recursive-rm regex — tracked separately at
-`/plans/active/issues/destructive_rm_guardrail_regex_false_positive_on_hyphenated_filenames_2026_07_31.md`.
+`/plans/archive/issues/destructive_rm_guardrail_regex_false_positive_on_hyphenated_filenames_2026_07_31.md`.
 
 Census now closed — the table above plus the original sample table cover every repo's `scripts/` tree for a
 `tomllib`-based reader of `[project].version` (broader sweep also checked `grep`/`sed`-based static-line readers in
