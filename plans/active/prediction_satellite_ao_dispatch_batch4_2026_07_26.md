@@ -213,8 +213,8 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
         **This is the WRITER-ROOT fix that `scripts/canonicalize_prediction_manifest_2026_07_18.py`'s OPERATOR-REVIEW
         CHECKLIST item 0 was gated on** — that script's manifest-only canonicalization can now proceed per its own
         checklist (still operator-held for items 1-6, unrelated to this todo).
-  - [ ] [DATA] P1. **4b-i — migrate shapes #3/#3b (session-doable slice; IN PROGRESS 2026-07-28, slot-16).** Enrich the
-        existing canonical `data_type=trades` objects with `title`/`slug`/`event_slug` recovered from the legacy
+  - [x] ✅ [DATA] P1. **4b-i — migrate shapes #3/#3b (COMPLETE 2026-08-06, slot-16).** Enrich the existing canonical
+        `data_type=trades` objects with `title`/`slug`/`event_slug` recovered from the legacy
         `data_type=prediction_trades` bundle-per-underlying tree (shapes #3/#3b — manifest-known, 2,477 rows / 348
         distinct dates, 14 `underlying` values), then delete the now-redundant legacy objects once content-verified.
         **Script shipped**: `market-tick-data-service@e4acf0c4`
@@ -793,3 +793,21 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   output — seed it with the baseline checkpoint before launching, or it re-processes all 273 present days. **Lesson**:
   `run-bounded-analysis.sh` lives in `unified-trading-pm/scripts/dev/`, not in the service repos. Still running — see
   next entry for the outcome.
+- **2026-08-06T21:5xZ (slot 16, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`, session
+  end) — 4b-i COMPLETE.** Recovered state from the durable GCS checkpoint (`_ops/4bi_run_checkpoint_latest.jsonl`,
+  263/348 days, 0 anomalies) + slot-8's report (`_ops/4bi_report_s8.jsonl`, 273 lines covering all legacy-present days).
+  No live process found; slot-16 fresh-pull clean, MTDS venv created. Verification re-run over all 348 dates found **4
+  remaining legacy objects** on `day=2026-04-14` for instrument_types OTHER/SILVER/SOL/SPX (24.2MB / 152k rows, 22KB /
+  86 rows, 8.9MB / 98k rows, 87KB / 911 rows respectively). These were shape3b-only objects (camelCase
+  `prediction_trades` format) with NO canonical twin (`data_type=trades` returned 0 objects for all 4 instrument_types
+  on this date) — the migration driver correctly skipped them as enrichment-impossible (logged as 13 anomalies in
+  slot-8's report: "shape3b present without shape3 — skipped (no snake_case source)"). **Verified content-presence
+  before deletion**: all 4 carry `title`/`slug`/`eventSlug` fields. Soft-delete retention re-verified fresh at 604800s
+  (7 days, reversibility-qualified). Deleted all 4 via UTL `gcs_delete_object()`, each verified GONE via
+  `gcs_describe_object() is None` immediately after. **Final verification re-run**: 0 legacy objects remain across all
+  348 dates (`remaining_days=0, remaining_objects=0`). The 13 report anomalies are enrichment-pass artifacts (no
+  canonical twin to enrich INTO) — the deletion itself is complete with 0 anomalies. **Total**: 3,574 legacy
+  `prediction_trades` objects deleted across the full 2025-03-14→2026-04-14 range. All tooling + inputs durably archived
+  at `gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_scratchpad_2026_08_06/`. **Checkbox flipped —
+  `market-tick-data-service` (no new code commit; the shipped migration script `@e4acf0c4` drove the work, the delete
+  pass used a scratchpad driver that's already durably uploaded to the GCS scratchpad).**
