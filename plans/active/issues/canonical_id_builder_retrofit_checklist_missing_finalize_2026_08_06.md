@@ -9,7 +9,7 @@ summary: >-
   orchestrator-agent` AO plan with no gated finalize companion (no `<slug>_finalize_*.md` with `depends_on: [<slug>]` +
   `gate_on_depends: true`). The red is PRE-EXISTING (verified on a clean tree with an unrelated diff stashed) and blocks
   the PM repo's green-tree shipping gate for all slots.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,7 +34,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  Resolved 2026-08-06 via archival, not by authoring a new finalize: the source plan's stale active twin
+  (plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md) was removed in unified-trading-pm@6c5927a06 (the
+  resolved copy already lives in plans/archive/2026_08/), and a gated finalize companion already exists at
+  plans/archive/2026_07/canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27.md (depends_on:
+  [canonical_id_builder_retrofit_checklist_2026_07_08] + gate_on_depends: true). finalize-plan-coverage QG re-runs clean
+  at 0 violations / 0 draft-gate.
 source: >-
   Surfaced 2026-08-06 while shipping the COUNT_MISMATCH detection fix
   (context_scope_marker_claims_exceed_frontmatter_count-003): the full `quality-gates.sh` run exits 1 on
@@ -76,15 +82,32 @@ is a real AO plan whose completion needs a closeout gate before archival.
 
 ## Recommended decision
 
-- [ ] [DOC] P2. **Author the missing gated finalize plan for `canonical_id_builder_retrofit_checklist_2026_07_08`**:
-      create `plans/active/canonical_id_builder_retrofit_checklist_2026_07_08_finalize_*.md` with
-      `depends_on: [canonical_id_builder_retrofit_checklist_2026_07_08]` + `gate_on_depends: true`, sized as the
-      checklist's closeout (verify every retrofit todo flipped + coverage green), then re-run
-      `scripts/quality_gates/check_finalize_plan_coverage.py` until 0 violations. If the plan's `nature: notes` is
-      instead judged to exempt it from the finalize rule, flip the check's `finalize_plan_coverage_baseline.yaml`
-      (governance decision) — do not do both. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P2. **Resolved — no new finalize plan authored; the QG red was closed by archival.** The source plan
+      `canonical_id_builder_retrofit_checklist_2026_07_08` is no longer in `plans/active/` (stale active twin removed
+      `unified-trading-pm@6c5927a06`; resolved copy already at `plans/archive/2026_08/`), and a gated finalize companion
+      ALREADY EXISTS at
+      `plans/archive/2026_07/canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27.md`
+      (`depends_on: [canonical_id_builder_retrofit_checklist_2026_07_08]` + `gate_on_depends: true`, status complete) —
+      its 2026-08-05 reconcile (slot-3, review) verified all 14 cited commits reachable on origin/live-defi-rollout. So
+      the recommended "author a new active finalize" action is moot: authoring one now would gate on an archived plan
+      and duplicate the existing companion. `scripts/quality_gates/check_finalize_plan_coverage.py` re-run: 0
+      violations, at baseline. (repo: unified-trading-pm)
 
 ## Progress Log
 
 - **2026-08-06 (worker slot-4, context_scope_marker_claims_exceed_frontmatter_count-003)**: filed while blocked from
   shipping the COUNT_MISMATCH fix by this pre-existing red; clean-tree evidence above.
+- **2026-08-06 (worker slot-9, canonical_id_builder_retrofit_checklist_missing_finalize-001)**: RESOLVED via archival —
+  no new finalize plan authored. Verified the check-red is already gone: (1)
+  `scripts/quality_gates/check_finalize_plan_coverage.py` runs clean at 0 violations / 0 draft-gate (exit 0, at
+  baseline); (2) the source plan is absent from `plans/active/` — `unified-trading-pm@6c5927a06` removed its stale
+  active twin (297-line delete), the resolved copy already sits at
+  `plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md` (status resolved, all 14 todos `[x]`
+  with real commit evidence); (3) the gated finalize companion ALREADY EXISTS at
+  `plans/archive/2026_07/canonical_id_builder_retrofit_checklist_2026_07_08_finalize_2026_07_27.md`
+  (`depends_on: [canonical_id_builder_retrofit_checklist_2026_07_08]` + `gate_on_depends: true`, status complete) — its
+  2026-08-05 reconcile (slot-3, review) verified every cited landing commit reachable on origin/live-defi-rollout.
+  Authoring a NEW active finalize now would gate on an archived plan and duplicate the existing companion, so the
+  issue's recommended action is superseded by the archival that already happened. **Operator OOM directive (2026-08-06)
+  acknowledged**: no heavy local compute launched this session — this was a pure docs task (read-only greps + plan-doc
+  edit), no full-corpus walks or in-memory materialization on the shared host.
