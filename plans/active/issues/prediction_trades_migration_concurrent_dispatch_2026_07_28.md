@@ -32,8 +32,8 @@ created: "2026-07-28"
 author: unknown
 last_updated: "2026-08-02"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 1
@@ -131,7 +131,7 @@ One or both of:
       second slot while the first is still live (a heartbeat check against the owning slot, mirroring the existing
       `completed_tasks`/`prerequisites` gating mechanism). **Done-when**: a second dispatch of an in-flight todo id is
       demonstrably skipped. (repo: `agent-orchestrator`)
-- [ ] [BACKEND] P2. **Define the heartbeat-staleness threshold that marks an in-flight attempt ABANDONED, so a second
+- [ ] [OPERATOR] P2. **Define the heartbeat-staleness threshold that marks an in-flight attempt ABANDONED, so a second
       slot knows it is safe to resume.** Todo 2 deadlocks without this: slot 7's session ended with no closing Progress
       Log entry, so under a naive "is it still live?" gate its claim reads in-flight FOREVER and permanently blocks
       re-dispatch of a task nobody is working — trading this doc's duplicate-dispatch waste for a silent stall. Decide
@@ -199,3 +199,20 @@ solution.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-06 (`/plan-reconcile ao`, operator ruling, interactive)**: **SPLIT the dispatch scope — todos 1+2 go to the
+  fleet, todo 3 stays with the operator.** `assigned_vm: NA` → `planning` and `execution_scope: local-only` →
+  `orchestrator-agent`, so todos 1 (task-id-keyed checkpoint location) and 2 (dispatcher-side in-flight check) are
+  dispatchable: both are bounded engineering with stated done-whens. Todo 3 was retagged `[BACKEND]` → `[OPERATOR]`,
+  which is what actually keeps it out of the queue — `_NON_DISPATCHABLE_RE` excludes `[OPERATOR]`-tagged todos, so the
+  doc can be `assigned_vm: planning` while that one item remains operator-held. Do NOT "tidy" that tag back to
+  `[BACKEND]`: it is load-bearing, not a mislabel.
+
+  **Why todo 3 is genuinely the operator's**: it is a threshold choice with a live trade-off in both directions — too
+  short and a still-working slot gets its task re-dispatched underneath it (the exact duplicate-dispatch waste this doc
+  was filed about); too long and a dead worker's task stalls silently, which todo 3's own text notes would trade this
+  doc's problem for a worse one. The candidate precedents it names (`TuningDefaults.watchdog_heartbeat_timeout` = 900s,
+  `one_shot_stale_grace_minutes` = 15.0) do not settle it, and picking between reusing a knob and adding one is a
+  fleet-behaviour call. **Sequencing caveat for the implementing agent**: todo 2 is implementable but not _complete_
+  without todo 3's number — build the in-flight check with the threshold as an injected parameter, do not hardcode a
+  guess, and do not block on the ruling to start.

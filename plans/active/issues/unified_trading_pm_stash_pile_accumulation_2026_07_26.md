@@ -109,13 +109,41 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       `for i in $(seq 1 25); do git stash drop stash@{0}; done` (or `git stash clear`) directly in this checkout
       (`.tabs/4/unified-trading-pm`) outside the agent's tool-gated shell, per this doc's findings above.
 
-- [ ] [OPERATOR] P3. **Run the mechanical stash drop** in `.tabs/4/unified-trading-pm` (the `[DATA] P2` audit above
-      already did the actual judgment-call review — this is pure mechanics, not a decision):
-      `for i in $(seq 1 25); do     git stash drop stash@{0}; done` (or `git stash clear`), then confirm
-      `git stash list` is empty. Blocked from the agent side only by the guardrail hook, not by any remaining
-      uncertainty about the content. This checkout's stash pile is a DIFFERENT clone from the original slot-3 checkout
-      this doc was filed against (that one has its own, never-separately-audited pile — out of scope here, would need
-      its own pass if still relevant).
+> **🔴 STOP — DO NOT RUN THE TWO DROP LOOPS BELOW AS WRITTEN (operator ruling 2026-08-06, `/plan-reconcile ao`).** Both
+> todos assert "the judgment-call review is done, only the mechanical drop remains". **That premise is STALE and the
+> drops are unrecoverable.** Three findings from this pass:
+>
+> 1. **The content review was 2026-07-26 — 11 days before this ruling.** Every stash entry created since is UNREVIEWED,
+>    and the loops are blind (`for i in $(seq 1 N); do … stash@{0}; done`), so they would discard those too. The counts
+>    baked into the commands (45/10/33/25) are themselves 11-day-old measurements.
+> 2. **The pile demonstrably contains recoverable live work, not only abandoned WIP.** During the 2026-08-06 session,
+>    two edits of this operator's were swept out of the working tree by a _concurrent_ agent's
+>    `git pull --rebase --autostash` and were recovered from `stash@{0}`. A blind drop is exactly how that work would
+>    have been lost instead. Measured the same day in this checkout: `stash@{0}` and `stash@{1}` are both `autostash`
+>    entries created that day.
+> 3. **Coverage gap — the ROOT clone is in neither todo.** The two todos name `.tabs/1` … `.tabs/4`, but
+>    `/active/unified-trading-system-repos/unified-trading-pm` (the root clone, a fifth checkout) held **44 stashes**
+>    when measured 2026-08-06 and is tracked nowhere.
+>
+> **Required before any drop**: re-run the content audit across all FIVE checkouts (`.tabs/1-4` + root) against a FRESH
+> `git stash list`, then drop only entries the fresh audit clears. Re-measure the counts at that time — do not reuse the
+> numbers below.
+
+- [ ] [OPERATOR] P2. **Re-audit all five checkouts before dropping anything** (supersedes the "review is done" premise
+      of the two P3s below; see the banner above). Cover `.tabs/1`, `.tabs/2`, `.tabs/3`, `.tabs/4` **and the root
+      `unified-trading-pm` clone** — the root was never in scope and held 44 stashes on 2026-08-06. For each entry
+      establish whether its content is (a) already on `origin/live-defi-rollout` (safe to drop — verify with
+      `git stash show -p stash@{N}` against the branch, not by date alone), (b) genuinely abandoned WIP, or (c) live
+      work a concurrent session's autostash swept away. Raised to P2 from the P3s' level because the pile is now known
+      to have contained recoverable work. **Done when**: a fresh per-checkout `git stash list` is recorded with a
+      per-entry verdict, and the two todos below are rewritten against those verdicts with re-measured counts.
+- [ ] [OPERATOR] P3. **[BLOCKED on the re-audit above — do not run as written]** Run the mechanical stash drop in
+      `.tabs/4/unified-trading-pm` (the `[DATA] P2` audit above already did the actual judgment-call review — this is
+      pure mechanics, not a decision): `for i in $(seq 1 25); do     git stash drop stash@{0}; done` (or
+      `git stash clear`), then confirm `git stash list` is empty. Blocked from the agent side only by the guardrail
+      hook, not by any remaining uncertainty about the content. This checkout's stash pile is a DIFFERENT clone from the
+      original slot-3 checkout this doc was filed against (that one has its own, never-separately-audited pile — out of
+      scope here, would need its own pass if still relevant).
 
 - [x] ✅ [DATA] P2. **AUDIT DONE 2026-07-30 — extended to every populated slot on this laptop** (`.tabs/1`, `.tabs/2`,
       `.tabs/3`; `.tabs/4` covered by the todo above; `.tabs/5`-`.tabs/11` have 0 stashes). Same read-only methodology,
@@ -143,8 +171,9 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       precise later mechanism achieving the same intent. - **No entry in any of the 88 (slots 1-4 combined) represents
       content genuinely missing from the corpus today.**
 
-- [ ] [OPERATOR] P3. **Run the mechanical stash drop for slots 1, 2, 3** (same blocked-for-agents situation as the
-      `.tabs/4` todo above — the judgment-call review is done, only the mechanical drop remains):
+- [ ] [OPERATOR] P3. **[BLOCKED on the re-audit — do not run as written]** Run the mechanical stash drop for slots 1, 2,
+      3 (same blocked-for-agents situation as the `.tabs/4` todo above — the judgment-call review is done, only the
+      mechanical drop remains):
       `     cd .tabs/1/unified-trading-pm && for i in $(seq 1 45); do git stash drop stash@{0}; done     cd .tabs/2/unified-trading-pm && for i in $(seq 1 10); do git stash drop stash@{0}; done     cd .tabs/3/unified-trading-pm && for i in $(seq 1 33); do git stash drop stash@{0}; done     `
       Confirm each with `git stash list` (should print nothing). Note: `slot 3`'s checkout is the SAME repo as, but a
       DIFFERENT clone from, the original slot-3 checkout this doc was originally filed against in 2026-07-26 (which had

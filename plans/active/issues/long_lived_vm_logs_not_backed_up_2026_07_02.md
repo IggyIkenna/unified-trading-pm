@@ -26,7 +26,7 @@ source:
     "deployment-service/scripts/vm launcher audit",
     "coverage-guard EXEMPT whitelist inspection tests/unit/test_vm_launcher_scripts.py:661",
   ]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -40,6 +40,7 @@ context_scope:
     deployment-service/scripts/vm/launch-planning-vm.sh,
   ]
 execution_scope: orchestrator-agent
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-02
@@ -107,3 +108,22 @@ EXEMPT reasons accordingly.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-06 (`/plan-reconcile ao`, operator ruling, interactive)**: **RECLASSIFIED `assigned_vm: NA` → `planning`**
+  (+ `assigned_role: infra` added, which was absent). This doc sat in the "12 operator-gated docs" bucket of
+  `/plans/active/issues/ao_orphan_audit_followup_triage_2026_07_30.md`, whose todo describes all 12 as "a genuine
+  design/judgment fork with no evidence-based tiebreaker". That description does not fit this doc: its three open todos
+  are bounded implementation work naming concrete files (`launcher_common.sh`, `aws_ec2_launch_lib.sh`,
+  `test_vm_launcher_scripts.py`), each with a stated done-when and no undecided design call — which meets the
+  dispatch-eligibility bar in `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope
+  eligibility". Corroborating internal evidence: the frontmatter already read `execution_scope: orchestrator-agent`
+  while `assigned_vm` said `NA` — a self-contradiction consistent with the doc having inherited the operator-gated label
+  from the _sweep that discovered it_ rather than from its own content.
+
+  **⚠️ This SUPERSEDES the `na-eligibility-audit 2026-08-06` verdict immediately above**, which recorded "KEEP-NA, valid
+  — … Operator-gated, design-judgment, or standing-corpus-ruling work remains open." That verdict is a prior-verdict
+  re-verification ("content unchanged since last marker"), i.e. it inherited the original NA classification rather than
+  re-deriving it from the todos — which is exactly how a mis-tag survives repeated audits. An explicit operator ruling
+  outranks an automated audit verdict. **A future `/na-eligibility-audit` pass must NOT flip this back to NA on the
+  strength of the older marker**; if it disagrees, it needs a fresh operator ruling, not a re-application of the
+  superseded one.
