@@ -194,6 +194,15 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   **OKX-SWAP does NOT have RC3** — its catalogue entries cover 2026-05-23. The only remaining gap is DERIBIT. P2 todo
   corrected to DERIBIT-only backfill. VM still RUNNING at day=2026-05-24. MTDS@b2cc2742 ahead=0. PM@dad09ec1c + this
   update.
+- **slot-14 2026-08-06 ~09:15Z (data_engineering, checkpoint #10 — day=2026-05-23 complete; pre-compact state)**: VM
+  `cefi-fwd-20260806-065837` RUNNING; day=2026-05-23 complete at 08:52Z:
+  `Processed date=2026-05-23: 20 venues ok, 2 failed, 0 skipped, 1890641532 total records`. 2 failed = DERIBIT (RC3
+  confirmed, 0 derivative_ticker) + BINANCE-DELIVERY (0 mvp instruments, by design). VM now processing day=2026-05-24.
+  72 days remaining (2026-05-24→ 2026-08-05); ETA ~2-3 days at current pace. All code work durable: MTDS@b2cc2742
+  ahead=0, PM@67071e4eb ahead=0. Tarball for RC3 fix already at sha=b2cc2742 in GCS (no rebuild needed after current VM
+  terminates). **Next action (next session)**: wait for VM termination → verify fleet clear → launch DERIBIT-only
+  backfill (2026-05-23→2026-08-05) with existing tarball@b2cc2742 → verify GCS objects → flip P1 RE-OPENED todo → POST
+  /done.
 - **slot-14 2026-08-06 ~08:08Z (data_engineering, heartbeat checkpoint #7)**: VM `cefi-fwd-20260806-065837` RUNNING
   (healthy, cpu=286%, rss=5.4GB, log growing). PM repo synced to `dfd40db6b` (ahead=0 after ff-pull). DERIBIT actively
   being processed: `futures_chain` complete (47266 rows, 82 dated futures written to GCS), `options_chain` single bulk
