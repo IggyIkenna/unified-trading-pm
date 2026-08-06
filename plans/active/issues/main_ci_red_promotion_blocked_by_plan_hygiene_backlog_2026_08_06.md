@@ -117,3 +117,19 @@ requested rather than autonomously starting it.
   cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29; the server-side fix (agent-orchestrator@81f54a8:
   heuristic reapers stamp `reaped-stale` instead of `lifecycle-complete`) was already shipped but does not repair
   already-broken rows. Rechecked slot 2 repos clean (ahead=0 on live-defi-rollout).
+- **2026-08-06 (lessons, added pre-compact):** measurement traps to carry forward —
+  - **"LDR is green" is a classification premise, not a measured green.** `main_ci_red` fires when main is failing and
+    LDR is NOT in the failing set; but ci_reconcile's `_drop_stale_failures` treats a failing run that predates LDR's
+    last commit as stale. So "main-only" here really meant "LDR advanced past the last failing run", NOT "its current
+    state passes". LDR's plan-hygiene gate was actually RED on LDR content the whole time — that is what blocks the
+    promote PR. Boot remedies assume real green-vs-red; verify by reading the actual promote-PR run, never the
+    classification alone.
+  - **A blocked promote PR is "blocked", not "wedged".** `ldr-to-main-promote.yml` keeps opening fresh per-SHA PRs and
+    each fails the same required check — that is correct bot behavior. Re-firing v2 reproduces the same corpus-state
+    failures; unblocking = fixing the corpus on LDR, not re-running CI.
+  - **Re-rolling main's stale workflow does not fix corpus-state checks.** main's local
+    `./.github/workflows/python-quality-gates-v2.yml` vs LDR's shared-CI-repo ref (`IggyIkenna/unified-trading-ci/...`)
+    is a workflow-shape difference; the plan-hygiene step runs `run_hygiene_sweep.sh` against the repo's plan corpus
+    either way. Remedy (B) only matters if the failure is workflow-content, not corpus-state.
+  - **`GET /api/agents?session=` is unreliable for one-off lookups** (returned unrelated agents this session) — query by
+    the agent id directly (`GET /api/agents/<id>`), which is what confirmed agt-80c470 is absent (all-null).
