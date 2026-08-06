@@ -31,7 +31,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PM_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 WORKSPACE_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$(cd "${PM_DIR}/.." && pwd)}"
 TABS_DIR="${WORKSPACE_ROOT}/.tabs"
-HOOK_SRC="${PM_DIR}/scripts/dev/hooks/pre-push-strict-quickmerge.sh"
+HOOK_SRC="${PM_DIR}/scripts/hooks/pre-push"
 LDR="live-defi-rollout"
 
 CANON_NAME="${SLOT_CANON_NAME:-$(git config --global slotIdentity.name 2>/dev/null || true)}"

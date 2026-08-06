@@ -811,10 +811,10 @@ early-exits "nothing to commit" on a clean tree — silently piles commits on LD
 Everything else is HARD-blocked. **Enforcement — the machine guard is LIVE**: quickmerge stamps a
 `Quickmerge: agent|human` lineage trailer on every commit it ships; `scripts/cicd/check_strict_quickmerge.py` flags a
 CODE-source commit (`*.py`/`*.ts` outside scripts/tests/.github) reaching the integration branch without that trailer
-that is not a carve-out. It runs as a `pre-push` hook (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`, installed in
-all Path-B clones + wired into `setup-tab-worktrees.sh`); **BLOCKS by default** (operator policy 2026-06-26 — every code
-push goes via quickmerge, no direct-push bypass), bypassable only with `git push --no-verify`; the promote-PR
-`quality-gates-v2` is the server backstop (LDR has no remote CI).
+that is not a carve-out. It runs as a `pre-push` hook (`scripts/hooks/pre-push`, installed in all Path-B clones + wired
+into `setup-tab-worktrees.sh`); **BLOCKS by default** (operator policy 2026-06-26 — every code push goes via quickmerge,
+no direct-push bypass), bypassable only with `git push --no-verify`; the promote-PR `quality-gates-v2` is the server
+backstop (LDR has no remote CI).
 
 ## Local ↔ CI QG parity matrix (the confidence model; codified 2026-06-08)
 

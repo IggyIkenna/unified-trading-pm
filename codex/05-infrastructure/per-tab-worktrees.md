@@ -904,8 +904,8 @@ load-bearing:
   that's how a gate-red issue doc reached LDR despite the check existing. prek REFUSES on a set `core.hooksPath`; 10
   clones carried a stale absolute post-`/active`-migration path there (disabling ALL hooks) — clear with
   `git config --unset-all --local core.hooksPath` only when the target dir is provably gone.
-- **`pre-push` = the strict-quickmerge guard** (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`, copied — **prek must
-  NEVER manage pre-push**). 24 main-ws clones lacked it too (the slot setup script never covers main-ws).
+- **`pre-push` = the strict-quickmerge guard** (`scripts/hooks/pre-push`, installed — **prek must NEVER manage
+  pre-push**). 24 main-ws clones lacked it too (the slot setup script never covers main-ws).
 
 **Provisioning is now three-layered**: `setup-tab-worktrees.sh` installs BOTH at clone time for every repo
 (`install_strict_quickmerge_hook` + `install_prek_precommit_hook`); the 5-min `slot-cron-ff-pull.sh` self-heal loop

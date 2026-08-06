@@ -1998,7 +1998,7 @@ while true; do
     # Nothing staged and (--files paths | whole tree) clean — changes were already committed
     # in a previous quickmerge run (or by a worker that commits before calling quickmerge, per
     # the documented --agent flow). That pre-existing commit never passed through the trailer
-    # stamp above, so check_strict_quickmerge.py/pre-push-strict-quickmerge.sh will reject the
+    # stamp above, so check_strict_quickmerge.py/scripts/hooks/pre-push will reject the
     # push unless HEAD already carries a Quickmerge: trailer — amend it on now if missing.
     if git log -1 --format=%B | grep -q '^Quickmerge:'; then
       echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
