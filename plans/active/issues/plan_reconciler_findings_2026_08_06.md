@@ -189,6 +189,105 @@ All verdicts: **real** (no parser artifacts).
 5. **E** — clean in-shard (3 corpus violations all non-infra). Awareness: `plans/active/issues/stash_audit_reports/*` (2
    docs, `status: resolved`, `nature: record`) sit outside the checker's glob — not corpus, not violations.
 
+## Hunter results — C (ci-adjacent infra, 6 docs) — 2026-08-06
+
+5 of 6 docs GRACE (all but `self_hosted_runner_public_repo_revert` = 14.1h, writable). Out-of-shard note:
+`artifact_pipeline_observability` is ui-tranche (retagged 2026-07-30) — its findings (s3 EMPTY-vs-populated :189 vs
+:360; 4GiB vs 16GiB budget :459 vs :214; two Progress Log headings :737/:943; mangled bug numbering :260-267;
+last_updated :43; "active plan not codex" mislabel :101; issue ref at wrong location :894-896; default-view banner
+:411-418 vs :432-434; `_...*` markers :283; missed-flip Phase-5 issue-doc todo :652 vs DONE :939) are REPORTED for the
+ui shard, not actioned here.
+
+1. **G** `shared_ci_workflow_repo_extraction_2026_08_06.md:151-152` — **P1**: "image-build-gate.yml hand-maintained,
+   referenced nowhere in rollout-workflow-templates.sh" vs `self_hosted_runner...:183-186` (hardcoded fleet-wide) + own
+   todo 18 (:459-461) + revert-incident log (:615-618). Todo 3's premise is FALSE. → file (grace).
+2. **W** `self_hosted_runner_public_repo_revert_2026_08_05.md:263-265` — **P1**: open todo 24 instructs editing PM's own
+   copy of `python-quality-gates-v2.yml` — DELETED by shared_ci Phase 5 (`shared_ci...:434-436`). Worker executing as
+   written looks for a deleted file. Real remaining target = caller-stub `with:` + allowlist. → live in-flight work;
+   STEP-4 verify then decide (annotate vs file).
+3. **G** `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md:118-119` — **P2**: "8 files BYTE-IDENTICAL
+   across every repo" vs own todo-1 findings "Distribution is NOT uniform" (:275-280, PM lacks 4 of 9). Summary :98 same
+   overclaim. → file (grace).
+4. **G** `shared_ci_workflow_repo_extraction_2026_08_06.md:407-415` — **P2 missed-flip candidate**: todo 15
+   (agent-audit.yml @main re-point sweep) evidence = completed grep; substance executed by done todo 23 + Phase 5
+   (:498-501,:518-519 zero remaining `uses:.*unified-trading-pm/.github/`). Only @main-vs-@ldr nuance may remain. →
+   GRACE → file for post-grace flip verification.
+5. **G** `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md:116-117` — **P2**: `[x]` todo 1 body "PAUSED HERE...
+   not proceeding until operator confirms" vs executed todos 3+ with dated evidence + no logged resume (:386-390 hold,
+   :123 VM launched). Status-vs-body disagreement. → file (grace).
+6. **G** `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md:372,401` — **P2 structural**: two `## Progress Log`
+   headings, entries out of chronological order (also artifact_pipeline :737/:943 same class). → file (grace).
+7. **G** `ci_pipeline_speed_and_cost_redesign_2026_08_05.md:294-295` — **P2 flip-CANDIDATE only**: todo cites shipped
+   SHAs (b656cb87b/23f1ad262/91ebc6584) but self-declares speedup NOT confirmed + "Do NOT roll out" — **NOT a flip**
+   (completion criterion unmet). → file (grace).
+8. **G** `ci_pipeline_speed_and_cost_redesign_2026_08_05.md:49` — P3 last_updated vs :331 08-06 entry. → file.
+9. **G** `fleet_workflow_template_dedup...:5-6` — P3 summary "2 files" vs doc2's real 5-file surface (:125-126). → file.
+10. **G** `shared_ci_workflow_repo_extraction_2026_08_06.md:423-424` — P3 45 vs 44 notify-slack consumers (vs
+    fleet_workflow:140). → file.
+11. **W** `self_hosted_runner_public_repo_revert_2026_08_05.md:97-99` — P3 body "Only 8 PRIVATE" vs own Correction
+    banner :8-11 (PM flipped public 2026-08-06, now 18/7) — banner-corrected in-doc, body stale. → STEP-4 verify; align
+    body or rely on banner.
+12. **W** `self_hosted_runner_public_repo_revert_2026_08_05.md:135-137` — P3 "~96%+" cost attribution vs
+    ci_pipeline:118-119 (PM = 41.0% July, "large majority" — 96% not derivable). → STEP-4 verify; fix attribution.
+13. **G** `fleet_workflow_template_dedup...:242-250` — **P2**: todo 7 (delete 9 template sources) vs self_hosted_runner
+    todo 24 (re-run rollout to regenerate exactly those for PM) — mechanism conflict, whichever ships first invalidates
+    the other; ordering needs explicit decision. → file + route (operator).
+14. **G** `shared_ci_workflow_repo_extraction_2026_08_06.md:546-548` — P3 digest: na-eligibility entry "7c/7d
+    [OPERATOR]" stale — 7d done (:295-305). → file.
+
+## Hunter results — I (AO-dispatch-readiness, 10 plans / 26 todos) — 2026-08-06
+
+ALL findings in GRACE docs → file-only. Part B (delete/VM-launch gating): 0 infra-corpus flags (the 2 flagged docs are
+sports/cefi, out of shard).
+
+1. **G** `infra_satellite_ao_dispatch_batch6_2026_08_02.md:126` — P3: todo line-1 cites `base-service.sh:322`
+   (line-number ref, goes stale) — cite by symbol (`UV_LINK_MODE=`). Todo otherwise line-1 complete + Done-when +
+   bounded. → file (post-grace one-word fix).
+2. **G** `infra_satellite_ao_dispatch_batch7_2026_08_04.md:148` — P3: `live_event_log/main.tf:9` line-number ref in
+   read-only investigate todo — cite the inheritance comment by content. → file (post-grace one-word fix).
+3. **G** `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md:325` — **P2 delete-tagging/ops-gate**: downsize todo
+   claims "pre-authorized... do now, no separate scheduling needed" vs the plan's OWN recorded hold (Progress Log
+   :223-224 "wait for explicit confirmation"; body :82 "Runners migrate off i-0c9b283b31d6b5ca7 BEFORE it is
+   downsized"). No `[OPERATOR]` tag; hold is prose-only + machine-unenforced. → file + ROUTE (operator) — live
+   dispatch-risk class.
+4. **G** `ci_pipeline_speed_and_cost_redesign_2026_08_05.md:260` — P2: warm-git-object-cache todo has NO Done-when
+   ("Open mystery, NOT resolved", open-ended investigation; KEEP-NA). → file (informational).
+5. **G** `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md:242` — P3 ordering: hard intra-plan chain
+   (todo 7 gated on 3-6; todo 8 after 3-7; todo 4 after 3) rests on prose only — `sequential:` unset, no "not
+   machine-enforced" guard note; accidental NA→planning flip would dispatch 3-8 concurrently. → file (add guard note or
+   sequential: true).
+6. Clean reports (no findings): infra_satellite batch1 (:207) / batch3 (:154) / batch7 todos 1-2; self_hosted_runner
+   todos 20/24; shared_ci todos 3/15/20/7c/7f; infra_consolidated_closeout's 3 `[REVIEW]` roll-ups (correctly
+   non-dispatchable).
+
+## Hunter results — G (missed-flip + zero-checkbox sweep, 69 docs / 186 open todos) — 2026-08-06
+
+Zero-checkbox: **1 doc** — `issues/client_reporting_api_promote_wedge_backmerge_dead_2026_08_06.md` (0 open / 0 checked,
+prose-only, status: open, P1, created today from escalation agt-57645a; promotion wedge UNRESOLVED) → needs
+convert-to-todos or stay-as-is (orchestrator call; doc is GRACE). All 47 issues `status: open` — no resolved-unclosed in
+shard. FLIP candidates (all but #4 need STEP-4 verify):
+
+1. **P0** `codex_violations_ratchet_to_five_2026_06_10.md:373` — todo "Reconcile UAC defi_position.py STALE threshold"
+   carries "**MIGRATED 2026-07-27**" + target todo DONE: `infra_satellite_ao_dispatch_batch1:436`
+   `- [x] ✅ [CODE] P3 ... unified-api-contracts@194f3f7f ... test_defi_position.py pinning 1.15` (batch1:441). **W**
+   doc. Flip candidate — verify sha 194f3f7f reachable.
+2. **P0** `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md:312` — `[DOC] P2` lst_rate A2 flip VERIFIED DONE
+   (`strategy-service@e93902d8`, cited defi_satellite_ao_dispatch_batch3:191) but mechanically BLOCKED by 1000L line cap
+   (target doc 1017L; the scoped-mode exception requires zero-deletion diffs). **G** → route: cap-waiver / long-form
+   flip (operator) — ALSO the flip target is a defi doc (out of shard).
+3. **P1** `shared_ci_workflow_repo_extraction_2026_08_06.md:407` — todo 15 done-when subsumed by done todo 23's sweep
+   (:498-530, zero remaining refs, dependents listed). **G** → file for post-grace flip verification.
+4. **P1** `stash_pile_workspace_cleanup_2026_06_03.md:126` — smoke-test todo **DONE 2026-08-04
+   `unified-trading-pm@1fa747856`** per `infra_satellite_ao_dispatch_batch1:661-675` (ran audit-stash-pile.sh, 76
+   stashes, 1 true-positive hand-verified — only 1 redundant call existed so ≥3 done-when variance explained; report
+   `stash_audit_reports/stash-audit-ip-172-31-5-118-20260804.md`; no stash dropped). **W** doc — but cross-doc evidence;
+   verify sha 1fa747856 + batch1 evidence line, then flip (the todo is the ORIGIN doc for the batch1 todo — flipping =
+   noting MIGRATED-DONE). Careful: task says "no `--apply`" was run — the todo's own done-when (≥3 hand-verified) not
+   fully met; report + leave open OR flip with DEFERRED annotation. → STEP-4 decide.
+5. Out-of-shard echo: `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` (0 open / 3 checked) and
+   `pm_scripts_typecheck_debt_2026_06_11.md` (0 open / 6 checked) flagged as archive-candidate shapes — the former is
+   ui-tranche (ui shard owns), the latter is the LOCKED archive candidate already listed above.
+
 ## Coverage (hunters / batches / docs)
 
 - 10 hunters launched 2026-08-06 ~22:05 UTC (model=sonnet): A infra-satellite family (10 docs), B governance legacy (6),
