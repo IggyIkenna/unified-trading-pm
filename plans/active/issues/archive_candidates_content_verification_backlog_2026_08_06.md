@@ -121,8 +121,10 @@ checkbox signal alone, but confirming it actually IS requires reading:
       minutes earlier and may be mid-ritual; archiving under a concurrent session is exactly how the active/archive
       duplicate-path divergence found the same day (`a62bdd8ea`) happens. **Done when**:
       `python3 scripts/plan-hygiene/check_terminal_status_archived.py` reports 0 violations again.
-- [ ] [DOC] P1. Re-run `bash scripts/plan-hygiene/check_archive_candidates.sh` for the current live candidate list (it
-      drifts with ongoing AO churn — do not reuse this doc's snapshot list without refreshing it first).
+- [x] ✅ [DOC] P1. Re-run `bash scripts/plan-hygiene/check_archive_candidates.sh` for the current live candidate list
+      (it drifts with ongoing AO churn — do not reuse this doc's snapshot list without refreshing it first) — DONE
+      2026-08-06 (slot-10): fresh run against LDR HEAD `6c3c14cb8` reports **121 live candidates** (116 issue docs + 5
+      active plans); snapshot + deltas recorded in the Progress Log below.
 - [ ] [DOC] P1. For each of the 6 active-plan candidates: read the full doc, confirm genuine completion (not just
       checkbox count), then EITHER archive it via the standard 6-step ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — `git mv` to `plans/archive/<YYYY_MM>/`,
@@ -173,6 +175,23 @@ checkbox signal alone, but confirming it actually IS requires reading:
   NA-corpus ratchets stay tracked here and in `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` for
   `plan_reconciler`'s daily pass / `/na-eligibility-audit`; out of scope for this bounded CI-fix per the same carve-out.
   This doc's own Todos 2-5 remain open.
+- **2026-08-06 (slot-10 worker, Todo 2)**: re-ran `bash scripts/plan-hygiene/check_archive_candidates.sh` against
+  `live-defi-rollout` HEAD `6c3c14cb8` (after full slot fresh-pull). Current live count = **121 candidates** (baseline
+  0), composed of **5 active plans** + **116 issue docs** (`plans/active/issues/*.md`, `status: open`, 0 open todos).
+  Active plans: `data_status_page_ux_and_canonicalisation_2026_07_16.md` (done=3),
+  `defi_strategy_pnl_axis_index_2026_07_24.md` (done=1), `mtds_retry_safe_default_audit_2026_07_14.md` (done=5),
+  `tradfi_consolidated_closeout_2026_07_18.md` (done=2),
+  `watchdog_kill_events_deployment_observability_2026_08_05_finalize.md` (done=3). **Delta vs this doc's snapshot**: the
+  2 active-plan candidates `ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md` and
+  `canonical_id_builder_retrofit_checklist_2026_07_08.md` have left the candidate set (no longer 0-open-todo/unlocked);
+  `watchdog_kill_events_deployment_observability_2026_08_05_finalize.md` arrived. Note:
+  `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` is still a candidate by the checkbox signal but carries an
+  explicit DO-NOT-ARCHIVE guard in its own prose — confirming this doc's central finding that per-doc content
+  verification (Todos 3-4) is mandatory. Full candidate list is regenerable via the same command; treat 121 as a
+  snapshot, not a fixed target (drifts with ~15+ concurrent AO slots). **Operator OOM directive acknowledged
+  (2026-08-06)**: no process launched by this task was OOM-killed — Todo 2 runs only the lightweight
+  `check_archive_candidates.sh` (grep-only scan, no corpus materialization); the memory-bound rule from
+  `/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-compute applies to all downstream archive work.
 
 ## Operational lessons (cicd, from resolving a PM ldr_qg_failure wall)
 
