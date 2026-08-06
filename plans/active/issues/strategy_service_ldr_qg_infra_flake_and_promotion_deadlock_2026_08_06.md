@@ -159,12 +159,15 @@ outage), not on strategy-service — escalate via this issue doc (BLOCKED-UPSTRE
       SUPERSEDED 2026-08-06 07:44Z: PR #495 closed-UNMERGED by the fleet bot (LDR moved to 9af7501d80 → PR #496). The
       v2-green verification stands; the post-fleet-green-on-head action moved to PR #496 (see agt-e33f21 below).
       Provenance: agt-5709e0, PR #495.
-- [ ] [CICD] P1. Backmerge deadlock on strategy-service `main`: `main-backmerge-to-ldr.yml` references
-      `notify-slack.yml` missing on main → 0s failures (30982629505, 30949047138). Self-heals once the promote merges
-      (main then carries notify-slack.yml). If the promote stays stuck >1h on sit-gate, either roll `notify-slack.yml`
-      to main via a promote, or harden the backmerge template to fail-open when the referenced reusable workflow is
-      absent on the base branch. SSOT: /codex/08-workflows/ci-cd-flow.md, rollout via
-      `scripts/workflow-templates/rollout-workflow-templates.sh`.
+- [x] [CICD] P1. Backmerge deadlock on strategy-service `main`: `main-backmerge-to-ldr.yml` references
+      `notify-slack.yml` missing on main → 0s failures (30982629505, 30949047138). **RESOLVED 2026-08-06 11:52Z**:
+      self-healed exactly as predicted — PR #499 merged (see the P0 todo above), `main` now carries `notify-slack.yml`
+      (`git cat-file -e origin/main:.github/workflows/notify-slack.yml` = present), and the next `main-backmerge-to-ldr`
+      run (30181099039630 → actual id `31099039630`, triggered by the promote-squash push at 11:52:34Z) completed
+      **SUCCESS** (was 0s-failing at 30982629505/30949047138 before the fix). Verified via
+      `gh run list --workflow main-backmerge-to-ldr.yml`. This was ALSO independently confirmed fleet-wide the same day
+      for a SECOND repo (alerting-service) and generalized — see "Fleet-wide audit" section below. Provenance:
+      fleet-wide-audit sub-agent, 2026-08-06 ~16:00Z.
 
 ## Lessons / traps (re-learned at cost)
 
@@ -540,6 +543,110 @@ trunk — expect promote-PR churn while other slots/fleet push to it.
   from the LDR tip, back it with the same SIT run id — verified SUCCESS first). This is the real signal, not a forgery.
 - **`git branch -D` is BLOCKED by the orchestrator guardrail** for autonomous workers — use `git worktree remove` (safe)
   for the worktree; leave the orphaned promote branch for the operator/bot to reconcile rather than force-deleting it.
+
+## Fleet-wide audit (2026-08-06 ~15:30-17:00Z) — generalized beyond strategy-service
+
+A separate sub-agent (dispatched to fix `alerting-service` PR #345 specifically, which was blocked by the exact same
+`notify-slack.yml`-missing-on-main mechanism as this doc's now-resolved P1) audited **all ~25 live repos** under the
+workspace for the same class of bug: a workflow file present on `main` whose `uses: ./.github/workflows/<file>.yml`
+local reusable-workflow reference does not resolve because `<file>.yml` doesn't exist on `main` — the same 0s "workflow
+file issue" validation failure documented above, generalized fleet-wide.
+
+**Method** (mechanical, scriptable — not a re-implemented rule): for every repo,
+`git ls-tree -r origin/main -- .github/workflows/` to list what's on main, then grep every workflow file present on main
+for `uses: ./.github/workflows/...` and check the target against that list.
+
+**Result — 10 of 25 repos affected**, all via `main-backmerge-to-ldr.yml`'s `notify-failure` job referencing
+`notify-slack.yml` (execution-service's `semver-agent.yml` also references it): `agent-orchestrator`,
+`alerting-service`, `batch-live-reconciliation-service`, `client-reporting-api`, `e2e-testing`, `execution-service`,
+`features-service`, `instruments-service`, `market-data-processing-service`, `unified-trading-library`. The other 15
+repos (`deployment-api`, `deployment-service`, `deployment-ui`, `fund-administration-service`, `greeks-service`,
+`ibkr-gateway-infra`, `market-tick-data-service`, `ml-service`, `strategy-service`, `system-integration-tests`,
+`trading-agent-service`, `unified-api-contracts`, `unified-trading-api`, `unified-trading-ci`, `unified-trading-pm`,
+`unified-trading-system-ui`) already had the file on `main` — clean.
+
+**Sub-finding — 3 of the 10 (`e2e-testing`, `execution-service`, `market-data-processing-service`) also lack
+`notify-slack.yml` on `live-defi-rollout` itself** (a partial gap in today's shared-CI-repo-extraction rollout, not just
+a main-vs-LDR promotion lag). Content is byte-identical everywhere it exists (sha256
+`e0d2d48afc27199e554350ace5bb076f651d063103cf19685eb3756d38191324`, verified against the canonical
+`unified-trading-pm/scripts/workflow-templates/notify-slack.yml`) — a flat, non-templated copy, so there is no per-repo
+substitution risk.
+
+**Fix mechanism — adapted from the raw-direct-push carve-out to a PR-based path, empirically required**: a raw
+`git push origin <sha>:refs/heads/main` of just the missing file was attempted first (matching this doc's "Closed
+carve-out direct pushes ... any `.github/**` change that must reach main" language literally) and was **rejected
+fleet-wide** by branch protection — `GH013: ... 2 of 2 required status checks are expected` — reproduced on 8 separate
+repos, confirmed still blocking on a fresh re-test partway through (`instruments-service`, second independent attempt).
+No bypass actor is configured for this identity; the ruleset enforces on any push, including from the repo owner's own
+SSH key. **The working mechanism is therefore a PR through the same required-check gate this doc already established for
+strategy-service** (`quality-gates-v2` + `sit-gate/fleet-green`), not a raw push:
+
+- **7 repos already had an in-flight `promote/<repo>/<sha>` PR** (fleet bot actively cycling, same
+  `chore(promote): LDR → main (Option-B direct)` pattern as this doc's PR #495-#499 chain) — `alerting-service` (PR
+  #345), `batch-live-reconciliation-service` (#313), `client-reporting-api` (#650), `features-service` (#952) needed a
+  **single-file, mechanical take-LDR conflict resolution** (Dockerfile `BASE_IMAGE_DIGEST` pin or `pyproject.toml`
+  dep-floor bump, same category as this doc's `unified-api-contracts`/`aiohttp` floor conflicts — timestamp-verified
+  LDR-side was newer in every case before resolving), which also carries `notify-slack.yml` automatically since it's
+  already part of LDR's tree; `instruments-service` (#1092) and `unified-trading-library` (#761) had **no conflict at
+  all** (already `mergeable: MERGEABLE`) and needed no touch — LDR's tree already includes the file, so merging as-is
+  delivers it.
+- **3 repos (`e2e-testing` #529, `execution-service` #555, `market-data-processing-service` #600)** were also
+  conflict-free but LDR itself lacks the file (see sub-finding above), so `notify-slack.yml` was added as a scoped extra
+  commit directly on their existing conflict-free promote branch (no code touched).
+- **`agent-orchestrator`'s promote PR #813 has a large, genuine, unrelated multi-file code conflict**
+  (`dashboard/src/layout.tsx`, `dashboard/src/types.ts`, `server/config.py`, `server/context_lifecycle.py`,
+  `server/main_agent_keeper.py`, `server/models/agents.py`, `server/routes/agents.py`, `tests/*`) between `main` and LDR
+  — real parallel-development divergence, not a mechanical version-pin bump. Per this task's explicit boundary (fix the
+  missing-file class only, do not blind-resolve real code conflicts across 7+ files), that PR was **not touched**.
+  Instead, `notify-slack.yml` was landed via a **separate, minimal PR (#814)** branched directly off `main` containing
+  only that one file — same scoped-fix pattern, without touching the real conflict, which remains open as its own
+  (pre-existing, unrelated) problem.
+
+**Distinct 4th-layer findings surfaced (documented, NOT fixed — out of this task's scope per its own boundary)**:
+
+1. **`agent-orchestrator` main's OWN `quality-gates-v2.yml` and `image-build-gate.yml` still reference the now-deleted
+   `unified-trading-pm` copy of the reusable CI workflows**
+   (`uses: IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` /
+   `image-build-validate.yml`, both confirmed absent from `unified-trading-pm@live-defi-rollout` — moved to
+   `unified-trading-ci` by today's shared-CI-repo extraction, per the alerting-service worktree's own auto-merged commit
+   message: "was still referencing PM's now-deleted python-quality-gates-v2.yml, a dangling reference left by today's
+   shared-CI-repo extraction"). This means PR #814 (the scoped notify-slack.yml-only fix) **cannot pass its own
+   `quality-gates-v2` required check** — the v2 run itself 0s-fails with the identical "workflow file issue" signature,
+   because PR #814's branch is based on `main`, which still carries the stale reference (every OTHER repo's LDR already
+   points at `unified-trading-ci`; `agent-orchestrator`'s `main` is the only one of the 10 that hasn't received that
+   repoint at all — not even via a promote). This is the same general bug CLASS (dangling reusable-workflow reference
+   from the same rollout event) but a DIFFERENT specific file and requires editing `quality-gates-v2.yml`'s content, not
+   adding a missing file — genuinely a step beyond this task's mandate, and `agent-orchestrator`'s real promotion is
+   blocked by the unrelated code conflict above regardless. Net effect: `agent-orchestrator` needs separate, dedicated
+   remediation (both the code conflict AND this CI-path staleness) before it can promote at all; PR #814 is left open
+   (correct, harmless, ready) but will not merge until that lands.
+2. **`instruments-service` PR #1092's `quality-gates-v2` run completed and genuinely FAILED** (QG slice checks failure,
+   not a 0s workflow-file issue — the run executed) — pre-existing and unrelated to this fix (the promote branch's
+   content wasn't touched by this task at all, since no conflict existed to resolve). Matches the coordinator's
+   independent note that `instruments-service` and `unified-trading-library` are also on a separate, already-tracked
+   provenance-marker/foreign-quickmerge-bypass-commit list — not chased further here.
+3. **`sit-gate/fleet-green` briefly read a genuine (non-cancelled, non-infra-queue-deadlock) FAILURE** at 2026-08-06
+   ~15:37-15:53Z (full-workspace-sit run `31112587576`/`31116696092`) — root cause was a GitHub-side
+   `Failed to resolve action download info: Service Unavailable` transient during the `Set up job` step (retried
+   internally 3x, still failed) — a genuine GH Actions infra blip, not a content/invariant break. A fresh dispatch
+   (`31118400832`, since no run was in flight — respects the fleet bot's mutex/"not piling on" invariant from the
+   Follow-up section above) was still in progress as of this writing; all 10 repos' promote PRs are `BLOCKED` on
+   `quality-gates-v2` and/or `sit-gate/fleet-green` pending its outcome. If this recurs, it's the SAME class of
+   transient GH infra flake already documented in the Lessons section above (glue-runner cache-save slowness,
+   `Service Unavailable`), not a new mechanism.
+
+**Recurrence risk (flagged per this task's boundary — not fixed)**: this is the SECOND time today a shared-CI-repo
+extraction/rollout event has landed new/moved workflow files on `live-defi-rollout` without every affected repo's `main`
+(or even every repo's own `live-defi-rollout`, per finding 1 above and the 3-repo sub-finding) being caught up in the
+same pass, each time reproducing this exact chicken-and-egg (the file's absence breaks the one mechanism —
+`main-backmerge-to-ldr` — that would normally deliver it). The rollout script
+(`unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh`) only writes local files into whichever
+branch happens to be checked out per-repo at run time — it does not verify parity across `main` and every repo's
+`live-defi-rollout`, and does not push. A rollout that touches per-repo `.github/workflows/*.yml` should verify (or the
+fleet bot's health check should assert) that every repo's `main` carries the same locally-referenced files its own
+`main-backmerge-to-ldr.yml` needs before the rollout is considered complete — out of scope to build here, flagged for
+the operator/rollout-process owner per this task's explicit boundary (fix current instances, don't fix the rollout
+process itself in this pass).
 
 ## Progress Log
 
