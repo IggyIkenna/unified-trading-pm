@@ -167,3 +167,19 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 - **context-scout 2026-08-06**: re-scouted; added `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (now 4
   entries) -- 2026-08-06 Progress Log entries confirm this doc's raw-capture gap directly blocks that doc's corpus
   recompute (task `defi_cefi_venue_chain_axis_contamination-011`).
+- **slot-14 2026-08-06 ~06:45Z (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-002`)**: Two root
+  causes identified and fixed: **(RC1 — IAM)** `uts-prd-sa` lacked `storage.objects.list` on
+  `instruments-store-cefi-prd-central-element-323112` (`roles/storage.legacyBucketReader` only); `gcsfs.find()` got 403
+  → caught by `except Exception: return False` → venues skipped. Fixed (prior session): granted
+  `roles/storage.objectViewer`. **(RC2 — code)** `_resolve_dated_future_symbols` and
+  `_resolve_symbols_from_by_date_snapshot` used hardcoded flat IS paths
+  (`instrument_availability/by_date/day={D}/venue={V}/instruments.parquet`) which 404 on historical dates where only
+  hive paths exist (after 2026-07-09 IS migration). Fixed: replaced with
+  `resolve_instruments_blob(client, bucket, date, venue)` (the layout-tolerant resolver in
+  `instrument_availability_paths.py`). Code shipped: `market-tick-data-service@467a3cd1`
+  (`fix(mtds): use layout-tolerant resolve_instruments_blob...`), QG green, quickmerge to LDR. CI queued (run
+  31078053624). Tarball rebuilt immediately with sha=467a3cd1 (SKIP_PREFLIGHT=true; upload verified to GCS deployment
+  bucket). Backfill VM launched: `cefi-fwd-20260806-064507` (e2-standard-8, asia-northeast1-c, NOT preemptible per
+  cefi-fwd launcher default); date range 2026-05-23→2026-08-05; Tardis guard confirmed 0 running + 1 planned ≤ cap 1.
+  Monitoring for BINANCE-FUTURES/BYBIT/DERIBIT shards being captured (not skipped). Will flip todo when VM completes +
+  GCS objects verified for those venues.
