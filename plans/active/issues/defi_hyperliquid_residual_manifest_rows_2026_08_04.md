@@ -369,18 +369,26 @@ gap**, not a delete-safety question:
   (`deployment-service/terraform/gcp/defi_collection_scheduler.tf` `"lst-rates"`, `0 1 * * *`) was NEVER removed. **OOM
   FIXED + applied**: 2Gi→4Gi IaC bump `deployment-service@51f9fbe`, live update verified 2026-08-05 (manual execution
   `-b5f4t` completed 2m53s, all 15 LST venues incl. SolBlaze written), targeted prod `tofu apply` synced the lst-rates
-  scheduler description 2026-08-06 (slot 11). **Canonical-name fix shipped**: `market-tick-data-service@2c451c33` — the
-  bSOL write path now emits `protocol="SOLBLAZE-SOLANA"` (freshness-check `venue="SOLBLAZE-SOLANA"`), so the live
-  producer writes the canonical venue going forward. **Historical corpus consolidated by the parallel dispatch**
+  scheduler description 2026-08-06 (slot 11). **Canonical-name fix shipped on LDR**: `market-tick-data-service@2c451c33`
+  — the bSOL write path now emits `protocol="SOLBLAZE-SOLANA"` (freshness-check `venue="SOLBLAZE-SOLANA"`). **⚠️ DEPLOY
+  LAG (2026-08-06): the fix is NOT yet in the live Cloud Run image.** `market-tick-data-service:latest` is built from
+  `main` (`image-build-gate.yml` / `quality-gates-v2.yml`'s dispatch-cloud-build fire on `main`), and `main` is **1,091
+  commits behind LDR** (stalled LDR→main promote backlog — the same fleet-wide CI-capacity blocker noted for
+  KAMINO_LENDING in `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`). The LIVE job therefore still runs
+  pre-fix code and writes `venue=BLAZESTAKE` on every successful daily run (execution `-zzptg`, 2026-08-06 01:00 →
+  01:02, Completed True at 4Gi); its fresh SolBlaze rows land under the legacy name and get retired/relabeled only by
+  the next one-off migration. **Historical corpus consolidated by the parallel dispatch**
   (`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`): the 1,406-object / 1,318-day legacy
   `venue=BLAZESTAKE` corpus relabeled + retired to canonical (`relabel_retire_blazestake_venue_2026_08_06.py --apply`,
   prod 2026-08-06). **Live-state verification (bounded filter-pushdown index read, 2026-08-06)**: `SOLBLAZE-SOLANA`
-  captured=1,319 (2022-12-14→2026-08-05, `written_at` up to 2026-08-06T01:58 UTC — the fixed producer is actively
-  writing), `BLAZESTAKE` captured=0 (`attempted_failed`=1,404). **Decision escalated to operator via /blocked
-  (BLK-db79e592)**: recommend **Option A** (formalize the legacy `collect-lst-rates` job as the owner — already wired +
-  proven) over Option B (canonical `SolblazeAdapter` would change the data product from `lst_rates` exchange-rate to
-  `oracle_prices` USD price and is single-source DeFiLlama). **Residual**: 3-day data gap 2026-08-01..08-03 (the OOM
-  window) → bounded backfill candidate, scoped as a follow-up.
+  captured=1,319 (2022-12-14→2026-08-05; `written_at` up to 2026-08-06T01:58 UTC is the migration's re-registration, NOT
+  a fresh canonical write from the producer), `BLAZESTAKE` captured=0 (`attempted_failed`=1,404 — reflects the
+  migration's retirement, not post-fix producer behaviour). **Closing the residual therefore depends on the LDR→main
+  promote clearing (so `2c451c33` reaches the deployed image), not on shipping more code.** **Decision escalated to
+  operator via /blocked (BLK-db79e592)**: recommend **Option A** (formalize the legacy `collect-lst-rates` job as the
+  owner — already wired + proven) over Option B (canonical `SolblazeAdapter` would change the data product from
+  `lst_rates` exchange-rate to `oracle_prices` USD price and is single-source DeFiLlama). **Residual**: 3-day data gap
+  2026-08-01..08-03 (the OOM window) → bounded backfill candidate, scoped as a follow-up.
 
 ## Follow-ups
 
