@@ -350,6 +350,7 @@ honest-absence, no silent fallback):
 - **`prediction_perps_kalshi_polymarket_parked_2026_07_24.md`** — its one open item (the Polymarket-perp enumerator) is
   **BLOCKED-UPSTREAM**: the doc confirms no public Polymarket perps API exists yet. Non-batchable until the upstream
   venue ships one — track, do not re-surface every batch cycle.
+- **`[DATA] P3. 49 canonical-only POLYMARKET trades days (2025-04-19..2025-06-05 + 2025-06-13) lack `title`/`slug`/`event_slug`with no legacy source** — these days are OUTSIDE the 348-date legacy bundle (never had`prediction_trades`objects, so 4b-i's enrich-from-legacy path cannot cover them). Sampled 2026-08-06 (4 days: 2025-04-19/05-15/06-05/06-13): canonical`data_type=trades`objects carry 46-141 shards/day, all`enrichment_fields_present=False`. Whether these fields are recoverable from the IS POLYMARKET reference universe / `prediction_canonical_question_group`/`market_lifecycle`(the latter covers these dates per the manifest census) is an open investigation — a follow-up for a future prediction batch, NOT in 4b-i scope (4b-i done-when is the 348 legacy dates). Evidence: manifest`trades`dates in legacy range = 397, of which 49 are not-in-checkpoint AND legacy-absent = this exact set; scratchpad`legacy_presence.json`+`audit_remaining_days.py`at`gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_scratchpad_2026_08_06/`.
 
 ## Deferred — already triaged + deferred by batch3 (2026-07-26), NOT re-drafted here
 
