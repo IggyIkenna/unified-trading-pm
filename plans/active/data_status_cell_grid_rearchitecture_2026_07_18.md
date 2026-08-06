@@ -132,3 +132,6 @@ real fix is to never load the whole manifest per request.
 - **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries) -- dropped honest-coverage-
   model.md (tangential to the OOM/memory fix), added `live_build_guard.py`, the current stopgap mitigation this plan
   replaces.
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; the first
+  real todo is an explicit DESIGN GATE (pick bound vs stream vs precompute) and every later todo depends on that unmade
+  choice.

@@ -532,3 +532,6 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the archived cost-provenance plan for the
   deployment-ui Cockpit page (the Consolidators tab's real frontend home), pairing it with the existing deployment-api
   backend source path.
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; LOCAL plan
+  with both REVIEW gates explicitly deferred by a dated operator decision (2026-07-10, local-dev-only until all cockpit
+  plans complete).

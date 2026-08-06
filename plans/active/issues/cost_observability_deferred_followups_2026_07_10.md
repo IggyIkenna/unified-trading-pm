@@ -107,3 +107,6 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (5 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; 2 items
+  explicitly operator-gated (awaiting operator/Ikenna), 4 unscheduled P3 items in a deliberately-parked backlog, not a
+  defaulted bucket.

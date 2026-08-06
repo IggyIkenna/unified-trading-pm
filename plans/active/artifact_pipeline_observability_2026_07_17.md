@@ -948,3 +948,6 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the real backend service module + frontend
   page as source targets (all 5 tabs already shipped there), dropped 2 codex refs tied to now-closed phases.
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; remaining
+  12 items are operator-paused (CPU-throttling test), explicitly-optional stretch items (Phase 6 P3s), or follow-on
+  cleanup tied to the same operator-reviewed design track.

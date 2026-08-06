@@ -210,6 +210,9 @@ QG-green per repo.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `gcs_blob_ops.py` (the `gcs_delete_object`
   wrapper this doc's own "Gotchas" section names as the mandatory delete path).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; explicit
+  dated operator HALT (2026-07-14) gated on a 4-item GO/NO-GO checklist not yet fully met; irreversible cutover steps
+  stay blocked until the dual-write deploy precondition is satisfied and the full checklist clears.
 
 ## Codex SSOTs
 
