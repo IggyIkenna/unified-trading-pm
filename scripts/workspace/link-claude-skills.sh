@@ -141,11 +141,16 @@ else
     fi
 fi
 
-# ── (4.5) Heal settings.local.json — strip duplicate hooks already covered by settings.json ──
-# The SSOT settings.json (linked above) already registers UserPromptSubmit and PreCompact
-# hooks. A stale settings.local.json that ALSO registers them causes the hook to fire TWICE
-# on every prompt — once from the canonical script, once from a potentially-stale local copy.
-# This step strips those duplicates so only the SSOT registration runs.
+# ── (4.5) Heal settings.local.json — strip hooks that must not run locally ──
+# UserPromptSubmit: the SSOT settings.json (linked above) already registers it. A stale
+# settings.local.json that ALSO registers it causes the hook to fire TWICE on every prompt —
+# once from the canonical script, once from a potentially-stale local copy.
+# PreCompact: the SSOT deliberately registers NOTHING here as of 2026-08-06 (operator ruling —
+# client-side auto-compact is the last-resort safety net against a context-saturated session
+# and must stay ENABLED; see /plans/active/issues/ao_worker_context_saturation_unrecoverable_
+# 2026_08_06.md). Any PreCompact hook surviving in a local file is a stale copy of the retired
+# `precompact-block-auto.sh` auto-compact kill, so stripping it here is what actually re-enables
+# auto-compact on a machine that still carries the old registration.
 _local_settings="${WORKSPACE_ROOT}/.claude/settings.local.json"
 if [ -f "$_local_settings" ] && command -v jq >/dev/null 2>&1; then
     _cleaned="$(jq '
@@ -158,13 +163,13 @@ if [ -f "$_local_settings" ] && command -v jq >/dev/null 2>&1; then
       else . end
     ' "$_local_settings" 2>/dev/null)" || true
     if [ -n "$_cleaned" ] && ! echo "$_cleaned" | jq --slurpfile orig "$_local_settings" '. == $orig[0]' 2>/dev/null | grep -q true; then
-        echo "$_cleaned" > "$_local_settings" && echo "[link-claude-skills] stripped duplicate hooks from ${_local_settings} (UserPromptSubmit + PreCompact already in SSOT settings.json)"
+        echo "$_cleaned" > "$_local_settings" && echo "[link-claude-skills] stripped hooks from ${_local_settings} (UserPromptSubmit is in SSOT settings.json; PreCompact must stay unregistered so client-side auto-compact runs)"
     fi
 fi
 
 # ── (4) `<root>/.claude/hooks` → PM SSOT (ONE dir link, mirrors the skills pattern) ──
-# Promotes local-only Claude Code hook scripts (e.g. context-threshold-nudge.sh,
-# precompact-block-auto.sh) to a git-tracked, symlinked home so an edit propagates to every
+# Promotes local-only Claude Code hook scripts (e.g. context-threshold-nudge.sh)
+# to a git-tracked, symlinked home so an edit propagates to every
 # root instead of living only on whichever machine authored it. Added 2026-07-23 — see
 # /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md. Placed before
 # the skills block (same reason as the settings.json block above): the skills block has early

@@ -1,9 +1,10 @@
 ---
 doc_type: issue
 title:
-  "An AO worker can reach 100% context and become PERMANENTLY unrecoverable: client-side auto-compact is disabled
-  fleet-wide by a PreCompact hook, the backend force-compact is a one-shot latch that never re-arms after a FAILED
-  compaction, and heartbeat-silence recovery then resumes the same over-limit transcript forever"
+  "An AO worker can reach 100% context and become PERMANENTLY unrecoverable: the backend force-compact is a one-shot
+  latch that never re-arms after a FAILED compaction, and heartbeat-silence recovery then resumes the same over-limit
+  transcript forever (the third leg — client-side auto-compact disabled fleet-wide by a PreCompact hook — is FIXED as of
+  2026-08-06)"
 summary: >-
   Live on prod slot 3 (2026-08-06, deepseek-v4-flash account, 160 lifetime compactions): the session grew to ~971k
   message tokens, which with the 131,072-token completion reservation exceeds the model's 1,048,576 hard limit, so EVERY
@@ -12,13 +13,14 @@ summary: >-
   went stale ~1h), while the watchdog respawned it at 12:41:15Z with `claude --resume <same-session>` (`last_msg`
   literally reads "↻ resumed after heartbeat-silence (context intact)") — reloading the same oversized transcript and
   re-wedging instantly. Three independent defects compose into "unrecoverable", and each one alone would have been
-  survivable. (1) The client-side auto-compact safety net — the thing that should have fired around ~92% long before the
-  hard limit — is UNCONDITIONALLY DISABLED fleet-wide by
+  survivable. (1) **[FIXED 2026-08-06 — operator ruling, see todo 1]** The client-side auto-compact safety net — the
+  thing that should have fired around ~92% long before the hard limit — was UNCONDITIONALLY DISABLED fleet-wide by
   `unified-trading-pm/cursor-configs/hooks/precompact-block-auto.sh`, a `PreCompact` hook with `matcher: "auto"` that
-  `exit 2`s on every `compaction_reason == "auto"`; `context_lifecycle.py`'s own module docstring still asserts
-  "Client-side auto-compact stays underneath as the final safety net", which is FALSE in the shipped config. (2) The
-  backend replacement (`_tick_worker`, force at `context_worker_force_compact_pct`=60) is gated on `state.forced_at is
-  not None`, a latch re-armed only by an OBSERVED compaction i.e. a `context_used_pct` DROP — so a compaction that is
+  `exit 2`'d on every `compaction_reason == "auto"`. That hook is now deleted and its registration removed, so
+  `context_lifecycle.py`'s docstring claim "Client-side auto-compact stays underneath as the final safety net" is true
+  again; legs (2) and (3) below remain OPEN, so a wedge is still reachable if the net is ever bypassed. (2) The backend
+  replacement (`_tick_worker`, force at `context_worker_force_compact_pct`=60) is gated on `state.forced_at is not
+  None`, a latch re-armed only by an OBSERVED compaction i.e. a `context_used_pct` DROP — so a compaction that is
   submitted-but-fails (exactly this case: the `forced_compact` activity event at 12:46:30Z records `pct: 100, submitted:
   true`, and the compact then 400'd) latches the slot out of every future force attempt. The 2026-08-06
   `..._ao_context_pct_stuck_post_compact` fix hardened the DELIVERY half (only advance the timestamp when
@@ -89,15 +91,19 @@ formula would be `high`. The displayed band is a stale snapshot, not current sta
 
 ## Todos
 
-- [ ] [INFRA] P1. **Rule on `precompact-block-auto.sh` — the fleet-wide auto-compact kill.** The hook
-      (`unified-trading-pm/cursor-configs/hooks/precompact-block-auto.sh`, wired as a `PreCompact` hook with
-      `matcher: "auto"` in `cursor-configs/settings.json`) unconditionally `exit 2`s every automatic compaction, so the
-      CLI's own last-resort safety net never runs for ANY worker. Decide + implement one of: (a) keep the block but make
-      it conditional — allow auto-compact above a hard ceiling (e.g. ≥85%) where losing an uncheckpointed turn is
-      strictly better than wedging the session; (b) drop the block now that the backend force path exists; (c) keep it
-      as-is and accept that the backend path is the ONLY net, in which case todos 2-4 become mandatory, not optional.
-      Whatever is chosen, fix `server/context_lifecycle.py`'s module docstring, which currently claims "Client-side
-      auto-compact stays underneath as the final safety net" — that statement is false today.
+- [x] ✅ [INFRA] P1. **Rule on `precompact-block-auto.sh` — the fleet-wide auto-compact kill.** RULED by the operator
+      2026-08-06: option (b) — **auto-compact must be re-enabled; the block is gone.** Rationale (operator): the
+      `/pre-compact` skill exists to make agents write context-only findings into their plan/issue docs, so a subsequent
+      compact loses nothing durable — and if `/pre-compact`+`/compact` are for any reason not delivered, auto-compact is
+      what prevents this thrashing class and caps the token spend. Shipped: `PreCompact` registration removed from
+      `cursor-configs/settings.json` (hooks key now `PreToolUse` + `UserPromptSubmit` only) and
+      `cursor-configs/hooks/precompact-block-auto.sh` DELETED (no shim). Durable rule recorded in
+      `/codex/05-infrastructure/claude-code-settings-symlink.md` § "`PreCompact` stays UNREGISTERED". Stale local
+      re-registrations are swept by `scripts/workspace/link-claude-skills.sh` step (4.5), whose `del(.["PreCompact"])`
+      now serves that purpose explicitly. `server/context_lifecycle.py`'s docstring claim ("Client-side auto-compact
+      stays underneath as the final safety net") needed no edit — it is TRUE again as of this change. —
+      unified-trading-pm@<pending-commit>, verified: `settings.json` parses and its `hooks` keys are exactly
+      `['PreToolUse', 'UserPromptSubmit']`.
 
 - [ ] [INFRA] P1. **Re-arm the worker force-compact latch on a FAILED compaction, not only on an observed drop.**
       `_tick_worker` (`server/context_lifecycle.py`) early-returns while `state.forced_at is not None`, and the caller

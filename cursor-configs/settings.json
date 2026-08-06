@@ -98,17 +98,6 @@
           }
         ]
       }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $CLAUDE_PROJECT_DIR/unified-trading-pm/cursor-configs/hooks/precompact-block-auto.sh"
-          }
-        ]
-      }
     ]
   },
   "env": {
