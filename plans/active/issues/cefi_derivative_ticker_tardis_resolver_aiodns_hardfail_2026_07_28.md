@@ -347,13 +347,21 @@ and the residual-KeyError defense-in-depth path.
 - [x] ✅ [DOCS] P3. **DONE 2026-07-29 (data_pipeline_failure escalation, agt-0df274) — `unified-trading-pm` (this
       commit).** Appended the missing `DP-FETCH-009` row to `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
       and `.md` so the SSOT matches what both prior escalations already shipped/referenced.
-- [ ] [INFRA] P1. **RULED 2026-08-06 (operator): approved, AO-dispatchable.** `[INFRA]` tag (was `[OPERATOR]`) — the
-      diagnosis is not in question (root-caused, fix already shipped and correct); the gate was self-service SSH/delete
-      access, not judgment. The additive-then-subtractive design (new VM up + verified healthy BEFORE the old one is
-      deleted, shard-isolated writes so no corruption risk from briefly running both) is itself the safety mechanism —
-      dispatch to a worker/session with `unified-trading-sa`-class access. **New finding (agt-829d55, 2026-08-03,
-      slot-9): the numerator IS genuinely moving again — NOT the static backlog every prior dispatch found — and traces
-      to a specific, currently-RUNNING live VM stuck on pre-fix code, not a new code bug.** A fresh, bounded,
+- [x] ✅ [INFRA] P1. **DONE 2026-08-06 (slot-9, backend_engineer, task
+      cefi_derivative_ticker_tardis_resolver_aiodns_hardfail-006) — VM cycle already executed by another session before
+      this dispatch arrived; verified complete.** New VM `mtds-live-cefi-consolidated-20260806-163414` (RUNNING, 17 MVP
+      shards healthy per `ps aux`, `=== VM SETUP COMPLETE ===` at 2026-08-06T16:36:48Z); tarball SHA `55d88025` uploaded
+      2026-08-06T16:31:19Z; `git merge-base --is-ancestor 6a067cf1 55d88025` = true AND
+      `git merge-base --is-ancestor 6c6fab03 55d88025` = true (both fix commits confirmed ancestors of the deployed
+      tarball). Old VM `mtds-live-cefi-consolidated-20260802-142543` DELETED (absent from
+      `gcloud compute instances list`). No code change needed (all fixes already shipped). **RULED 2026-08-06
+      (operator): approved, AO-dispatchable.** `[INFRA]` tag (was `[OPERATOR]`) — the diagnosis is not in question
+      (root-caused, fix already shipped and correct); the gate was self-service SSH/delete access, not judgment. The
+      additive-then-subtractive design (new VM up + verified healthy BEFORE the old one is deleted, shard-isolated
+      writes so no corruption risk from briefly running both) is itself the safety mechanism — dispatch to a
+      worker/session with `unified-trading-sa`-class access. **New finding (agt-829d55, 2026-08-03, slot-9): the
+      numerator IS genuinely moving again — NOT the static backlog every prior dispatch found — and traces to a
+      specific, currently-RUNNING live VM stuck on pre-fix code, not a new code bug.** A fresh, bounded,
       column-projected `read_availability_index` read (`data_type=derivative_ticker`, `capture_status=attempted_failed`)
       found 158,815 total rows (vs the 158,475-static reading every dispatch since agt-40f31f on 2026-07-30 confirmed) —
       the FIRST numerator movement in 4 days. Filtering to `written_at` within the last 24h found 1,821 fresh rows,
@@ -592,3 +600,14 @@ and the residual-KeyError defense-in-depth path.
   `[OPERATOR]` P1 above) running pre-fix code. **No code change needed** (current code handles 404 correctly; historical
   rows will be retried by the next natural cefi backfill sweep, same disposition as the other P3 retry todos).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-06 (backend_engineer, slot-9, task cefi_derivative_ticker_tardis_resolver_aiodns_hardfail-006) — VM cycle
+  confirmed COMPLETE (done by another session before this dispatch arrived); [INFRA] P1 checkbox flipped.** Arrived to
+  find the VM cycle already executed: `gcloud compute instances list` shows
+  `mtds-live-cefi-consolidated-20260806-163414` RUNNING in `asia-northeast1-c` (created 2026-08-06T16:34:xx), 17 MVP
+  shards healthy per serial console `ps aux` output, `=== VM SETUP COMPLETE ===` at 16:36:48Z. Old VM
+  `mtds-live-cefi-consolidated-20260802-142543` absent from `gcloud compute instances list` (DELETED). Tarball
+  freshness: `gs://deployment-scripts-central-element-323112/code/mtds-code@55d88025.tar.gz` uploaded at
+  2026-08-06T16:31:19Z (immediately pre-launch). Verified both fix commits are ancestors of the deployed tarball SHA
+  `55d88025`: `git merge-base --is-ancestor 6a067cf1 55d88025` = true; `git merge-base --is-ancestor 6c6fab03 55d88025`
+  = true. No code change this session (all fixes already shipped in prior sessions). Plan checkbox flipped; all todos
+  now `[x]`.
