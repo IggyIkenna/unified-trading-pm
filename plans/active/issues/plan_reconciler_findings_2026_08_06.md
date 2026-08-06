@@ -335,3 +335,41 @@ instruments-service@1284606a, market-tick-data-service@8a6bbc97 via `git merge-b
 - **seed_frontmatter.py refuses foreign-dirty files** — hand-edit instead.
 - **Plan reviewer notes**: aggregated_sources digest drift vs sources is chronic (its own :793 todo tracks it; every
   digest entry needs re-verification against the source doc before citation).
+
+### B4 (batch 4) — 10 docs read in full (batch7_finalize / cefi_track2 / data_completion_finalize / instruments_batch1 / autonomous_decisions / mtds_backfill_memory_hang / prediction_capture / deribit_dated_option / aster_recheck / mdps_features_deadcode)
+
+**Pending candidates:**
+
+- C1 [P0] — data_completion_cefi_finalize:12 `status: active`+planning vs :58 body "draft — NOT dispatched" — 3rd
+  finalize with the same pattern (with B2-C1, B3-C1). Fix per 2026-07-30 ruling: align BODY banner (stale side), NOT
+  frontmatter. VERIFY ruling text from batch4_finalize:57 first.
+- C2 [P1] — cefi_track2:69 "2.89M-cell gap is ~1-2 days of work at June rates" vs doc's own measured :198/:234 "3.25
+  days/hr → ETA ≈730h ≈30 days". WRITABLE. FIX: annotate/correct stale claim (closeout:222-223 same claim — GRACE →
+  report).
+- C6 [P2] — batch7_finalize:70-72 claims `mdps_cefi_candle_manifest_orphan_reconciliation` "DELETED by batch7's todo 2
+  (git rm)" — VERIFIED ARCHIVED (plans/archive/issues/..., status: resolved), not deleted. WRITABLE. FIX: correct the
+  DELETED premise → archived-resolved.
+- C7 [P2] — autonomous_session_operator_decisions:445-448 entry-12 Status is a copy-paste of entry 11's lock-mandatory
+  resolution. WRITABLE. FIX: correct entry-12 status to its own fold-into-prediction_phase_ab_residuals resolution (READ
+  entries first).
+- C11 [P3] — last_updated: mdps_features_deadcode_consolidation:30 (07-20 vs 08-03 flips) — WRITABLE → bump.
+  closeout:51 + aggregated_sources:41 GRACE → report.
+- Structural — prediction_capture:38-43 `related:` bare `plans/...` paths without leading slash (check_reference_paths
+  format class). WRITABLE. FIX: add leading slashes.
+- C3 [P2] — closeout:586-593 Progress Log claims cefi_threaded_resolver + mdps_candle_manifest "now assigned_vm:
+  planning, live in AO backlog" — BOTH ARCHIVED (resolved/complete) → GRACE → report.
+- C4 [P2] — infrastructure_master:595-597 roster "status: active" vs archived-complete mtds_retry_safe_default_audit —
+  infra epic → report.
+- C5 [P2] — closeout:115-116 + :66-72 misc-audit routing + depends_on name archived-complete child → GRACE → report.
+- C8 [P3] — aster_recheck zero-objects claim vs live_aster rows tension (self-flagged, todo 1 open) → report.
+- C9 [P3] — aggregated_sources ≥10 label↔link active/archive mismatches → GRACE → report.
+- C10 [P3] — cefi_track2:248-254 context_scope count 6 vs 5 non-resolving arithmetic → cosmetic, report.
+- ARCHIVE CANDIDATE #3 — instruments_satellite_ao_dispatch_batch1 (5/5 [x], planning, sha-evidenced) — **NOT
+  archive-ready: pending archival vehicle =
+  issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md (grace; names batch1 finalize a
+  false-completion claim)** → report, do not archive.
+- Missed-flips: NONE mechanical. Closeout Track 1 + Track 2 gates + aster todo 1 = correct withholds.
+- AO — batch7_finalize READY (C6 wrinkle determinable); cefi_track2 parked-by-design (999+prereq);
+  data_completion_finalize DISPATCH HAZARD until C1 fixed; instruments_batch1 moot.
+- Hedge-pointers — deribit_dated_option:103/:110 root cause untraced (open), closeout:224 operator-acceptance inference
+  question, bybit honest-absence question, mtds_backfill:371 adaptive chunk-size consideration.
