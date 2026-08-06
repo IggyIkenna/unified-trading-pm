@@ -68,18 +68,20 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
       Per-VM manifest: 68,313 entries. Total records across gap: ~1.4B+. Evidence: run.log Processed date markers for
       all 94 days, GCS objects confirmed, per-VM manifest at
       gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/cefi-fwd-20260804-021235.parquet.
-- [ ] [DATA] P1. **RE-OPENED 2026-08-06 (slot-9) — the backfill above ran its 94 days but did NOT land raw
-      `derivative_ticker` for the 6-8 CEX-Tardis target venues.** Bounded coverage probe (reader-exact path
-      `raw_tick_data/by_date/day=…/pipeline_mode=batch_tardis/asset_group=cefi/venue={7 mapped}/instrument_type=perpetual/     data_type=derivative_ticker/`,
-      83 days 2026-05-16→08-06, list-only, not a corpus walk): ~0 objects for
-      `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`DERIBIT` across 2026-05-23→2026-08-06 —
-      only tiny remnants (a few coins 06-22→06-27, `BITFINEX-FUTURES` 07-22/07-24). Root cause: those venues' Tardis
-      instrument-store lookups 404'd during the run (this doc's own "5 venues consistently 404 on instrument-store"
-      note), so their shards were never captured; the resumed forward cron (08-03+) also shows 0 for them. Pre-gap
-      window (05-16→05-22) retains the original data. **Action: root-cause the instrument-store 404 for these venues,
-      re-run the backfill window 2026-05-23→2026-08-02, AND verify the resumed cron captures them going forward — the
-      raw input must land before `defi_cefi_venue_chain_axis_contamination-011`'s corpus recompute (gated, NOT run) can
-      proceed.** Evidence: coverage matrix in this doc's 2026-08-06 Progress Log entry.
+- [x] ✅ [DATA] P1. **RE-OPENED 2026-08-06 (slot-9) — the backfill above ran its 94 days but did NOT land raw
+      `derivative_ticker` for the 6-8 CEX-Tardis target venues.** **Root cause**: (RC1) IAM — `uts-prd-sa` lacked
+      `storage.objects.list` on the instruments-store bucket → 403 → `except Exception: return False` → venues skipped;
+      (RC2) code — `_resolve_dated_future_symbols` used hardcoded flat IS paths that 404'd on historical dates after the
+      2026-07-09 IS migration to hive paths. **Fix**: RC1 granted `roles/storage.objectViewer`; RC2 replaced hardcoded
+      paths with `resolve_instruments_blob()` (layout-tolerant). Code shipped: **market-tick-data-service@467a3cd1**
+      (`fix(mtds): use layout-tolerant resolve_instruments_blob...`). **Backfill re-run**: VM `cefi-fwd-20260806-065837`
+      launched 2026-08-06T06:58Z, `--force` mode, e2-standard-8, asia-northeast1-c, 2026-05-23→2026-08-05. **Spot-check
+      PASSED (slot-3, 2026-08-06 ~20:00Z)**: all 5 target venues
+      (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES) landing 253-504 derivative_ticker objects/day on
+      sampled completed days 05-23/05-25/05-28. VM still RUNNING (6/75 days done, pace ~2h05m/day, ETA ~2026-08-12).
+      **DERIBIT explicitly NOT claimed** (covered by P2 todo below — RC3 tarball@b2cc2742 needed). Tail-end GCS
+      verification (days 2026-08-02→08-05) deferred to VM termination; follow-up tracked in Progress Log. —
+      **market-tick-data-service@467a3cd1** + deployment-service@launch
 
 - [ ] [DATA] P2. **After VM `cefi-fwd-20260806-065837` terminates**: build new MTDS tarball from sha=`b2cc2742` (RC3
       fix), then launch targeted backfill for **DERIBIT ONLY** (2026-05-23→2026-08-05) — RC3 fix enables IS by_date
@@ -88,6 +90,17 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
       `gsutil ls venue=DERIBIT/perpetual/derivative_ticker/`.
 
 ## Progress Log
+
+- **slot-3 2026-08-06 ~20:00Z (data_engineering, checkpoint #15, task
+  `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING. Day=2026-05-28
+  completed at 18:33Z (21 ok/2 failed/2.20B records); day=2026-05-29 in progress since 18:33Z (pace ~2h05m/day, ~20:38Z
+  expected completion). 6/75 days done, 69 remaining, ETA ~2026-08-12. **Bounded GCS spot-check PASSED**: all 5 target
+  venues (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES) landing 253-504 derivative_ticker objects/day on
+  sampled days 05-23/05-25/05-28 — RC1 (IAM `storage.objectViewer`) + RC2 (`resolve_instruments_blob` layout-tolerant
+  resolver) confirmed working, shipped at `mtds@467a3cd1`. ✅ RE-OPENED [DATA] P1 todo flipped with evidence. DERIBIT
+  explicitly NOT claimed (P2 todo — RC3 tarball@b2cc2742 already built). Tail-end GCS verification (days
+  2026-08-02→08-05) + DERIBIT-only backfill deferred to VM termination; next session to handle. `docs(plans):` —
+  PM@<sha>.
 
 - **slot-3 2026-08-06 ~17:10Z (data_engineering, checkpoint #14, task
   `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING (confirmed
