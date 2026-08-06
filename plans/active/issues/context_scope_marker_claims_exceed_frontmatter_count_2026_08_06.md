@@ -148,7 +148,7 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       length; report every doc where they disagree, regardless of whether Phase 0 currently calls it STALE or
       UP_TO_DATE. **Done when**: a report of every mismatched doc in the full corpus exists (this may surface instances
       beyond the 4 found here, since a doc can carry this bug while still reading UP_TO_DATE). —
-      unified-trading-pm@73e79a0b0
+      unified-trading-pm@92bd7b601
 - [ ] [DOC] P2. **Close the detection gap** (gated on todo 1's root-cause finding): decide whether
       `scripts/plan-hygiene/generate_context_scope_inventory.py`'s Phase 0 STALE/UP_TO_DATE verdict logic should be
       extended to also flag a marker-count-vs-actual-count mismatch as its own verdict (e.g. `COUNT_MISMATCH`), so this
@@ -225,19 +225,19 @@ for a human glance instead of being dropped.
   by this finding: the root cause is ongoing, not a one-time event already fully remediated.
 
 - **2026-08-06 (data_engineering, slot 6, task context_scope_marker_claims_exceed_frontmatter_count-002)**: corpus-wide
-  sweep shipped (`scripts/plan-hygiene/generate_context_scope_marker_sweep.py`, unified-trading-pm@73e79a0b0). 723
+  sweep shipped (`scripts/plan-hygiene/generate_context_scope_marker_sweep.py`, unified-trading-pm@92bd7b601). 723
   in-scope docs → 4 mismatches total: 3 NEW, all write-time marker miscounts
   (`data_status_page_ux_and_canonicalisation_2026_07_16.md` 5v6,
   `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` 5v6,
   `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` 6v8 — the last prose-form, regex-invisible, caught via the
   no-claim bucket's manual glance) + the known-open `data_completion_defi_2026_07_15.md` (5v3, 1000L cap). The 3 new
-  ones fixed inline as marker-text count corrections (a2773c484); the open one is now a tracked [OPERATOR] todo. The 53
+  ones fixed inline as marker-text count corrections (2af352ecf); the open one is now a tracked [OPERATOR] todo. The 53
   no-claim docs hand-verified consistent in prose. Re-run after fixes: 1 mismatch remaining (the known-open). Operator
   2026-08-06 OOM directive acknowledged — no OOM/unbounded-run incidents from this session; the sweep ran under
   `scripts/dev/run-bounded-analysis.sh`.
 
 - **2026-08-06 (data_engineering, slot 6, task context_scope_marker_claims_exceed_frontmatter_count-002) — SHIP BLOCKED,
-  upstream in-flight**: the 3 sweep commits (73e79a0b0 + 2 docs commits, rebased) are ready, but full PM QG Pass 1 came
+  upstream in-flight**: the 3 sweep commits (92bd7b601 + 2 docs commits, rebased) are ready, but full PM QG Pass 1 came
   back RED on the post-gate `workflow-template-parity` — 4 NEW drifted copies of `image-build-gate.yml` in
   `agent-orchestrator` / `features-service` / `instruments-service` / `market-tick-data-service` (detector
   `detect_template_drift.py --workflows`, verified byte-diffs). Root cause: NOT this session's commits (zero workflow
@@ -249,6 +249,18 @@ for a human glance instead of being dropped.
   (todo 18 will re-edit the template too). Watch armed (`bidxjckrg`): polls all 4 repos' origin LDR for copies
   byte-matching the SSOT template (90s interval, 90-min cap). Resume when it fires: re-run PM QG → quickmerge Pass 2
   (`--agent --files` for the 5 changed paths) → verify SHA on origin → POST /done.
+
+- **2026-08-06 (data_engineering, slot 6, task context_scope_marker_claims_exceed_frontmatter_count-002) — BLOCK
+  CLEARED, ship sequence in flight**: watcher `bidxjckrg` fired "ROLLOUT LANDED" (all 4 `image-build-gate.yml` copies
+  byte-match SSOT) → heartbeat (OK, resume) + `/blocked` filed as `BLK-bea57103` per the GIT-STATUS-RED nudge's own "If
+  a commit blocks on QG, file /blocked with plan-ref" escape hatch (`can_continue: true`, continue_on = the watcher
+  path; not a question — a record of the wait). First QG re-run (`b8xacwwck`) was SIGTERM'd by the `qg-host-governor`
+  runtime abort-monitor: host RAM ≥80% for 2 consecutive 15s checks (slot-5's six `scratchpad_4bi` python jobs ≈8.4 GB
+  in flight; governor is self-scoped by design — marker `.benchmarks/qg-governor/killed.3351709`). Standing OOM/abort
+  directive acknowledged: event recorded here, host pressure now 23%. QG re-run #2 (`bozh63zne`) in flight. Note: QG
+  changeset detection is WORKING-TREE-based (base-service.sh:760) — the foreign e2e autofix makes this run DOCS-ONLY
+  (skips TESTS+TYPECHECK); no coverage lost for the sweep script (PM `scripts/` are ruff-gated; basedpyright fully
+  excluded, quality-gates.sh:26-38, operator ruling 2026-07-27 finding 87).
 
 ## Deferred work after 2026-08-06
 
@@ -263,5 +275,6 @@ for a human glance instead of being dropped.
 failed QG can report exit 0. Run to a file and check the real `$?` (e.g.
 `bash scripts/quality-gates.sh > /tmp/qg.log 2>&1; tail -5 /tmp/qg.log`), or the harness output file.
 
-**Recommended next item** (when the watcher fires): re-run PM QG (real exit code) → quickmerge Pass 2
-`--agent --files '<5 changed paths>'` → verify SHA on origin → POST `/api/slots/6/done` → flip harness task #4.
+**Recommended next item** (IN FLIGHT — watcher fired, QG re-run `bozh63zne` running): on GREEN, quickmerge Pass 2
+`--agent --files '<5 changed paths>'` (issue doc included) → verify SHA on origin → POST `/api/slots/6/done` → flip
+harness task #4 → ✅ CLOSE the `BLK-bea57103` bookend.
