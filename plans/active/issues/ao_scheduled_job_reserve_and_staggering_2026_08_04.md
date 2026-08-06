@@ -395,12 +395,12 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (every retained run, read from the live agents table 2026-08-06): 7 of 8 ended `reaped-stale`, several dead within
       2-5 min of spawn; the one completion ran 13.5h (00:01:32→13:29:00) holding a slot all day. (repo:
       agent-orchestrator)
-- [ ] [SCRIPT] P1. Saturday exception in the same installer: on Saturday fire ONE unsharded `{"mode": "reconcile"}`
+- [x] ✅ [SCRIPT] P1. Saturday exception in the same installer: on Saturday fire ONE unsharded `{"mode": "reconcile"}`
       `all` run and hold the per-tranche shards back that day (operator ruling — Saturday is the low fleet-activity
       window, and not running shards the same day keeps the whole-corpus sweep from racing 10 siblings over the same
       docs). Sun-Fri stays sharded. Contract is documented in `cursor-configs/skills/plan-reconcile/SKILL.md` § "The
-      scheduled cadence that resolves that trade-off" — the installer must match it or the two drift. (repo:
-      agent-orchestrator)
+      scheduled cadence that resolves that trade-off" — the installer must match it or the two drift. —
+      agent-orchestrator@5f15d0a (repo: agent-orchestrator)
 - [ ] [SCRIPT] P1. Add `ui` to `ALL_TRANCHES` in `install-ag-closeout-auditor-timer.sh:115` and
       `install-na-eligibility-auditor-timer.sh:108` (both still hardcode the 9-tranche list) and re-install both units.
       `ui` has been a real `asset_group` enum value since 2026-07-30 but has NEVER been dispatched: live records show
