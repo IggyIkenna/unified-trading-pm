@@ -147,3 +147,21 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended design questions, conditional runbook, prior verdicts
 stand
+
+- **2026-08-06 (na-eligibility-auditor, tradfi tranche — this doc's P3 runbook fired as designed)**: a docs-only
+  `docs(plans):` flip on unified-trading-pm tripped `workflow-template-parity` with **6 NEW drifted copies** in sibling
+  repos — `batch-live-reconciliation-service`, `deployment-ui`, `e2e-testing`, `execution-service`, `greeks-service`,
+  `strategy-service`, all `image-build-gate.yml`. Applied this doc's own P3 first-step:
+  `git log --format='%h %cs %s' -2 -- .github/workflows/image-build-gate.yml` in each affected repo → every last-touch
+  is a 2026-08-06
+  `chore(ci): point at unified-trading-ci instead of unified-trading-pm for reusable QG + image-build workflows` — the
+  **active multi-actor migration class, not stale SSOT drift** (per this doc's taxonomy, "a fix will not hold; escalate
+  rather than blind-retrying" — and a re-rollout or baseline re-write would fight the migration owner mid-flight). The
+  2026-07-27 phase-7 note's "wide fan-out to remaining repos is a separate deliberately-deferred future item, tracked by
+  the ratchet baseline" now has a concrete instance: the unified-trading-ci re-point is landing repo-by-repo via direct
+  commits today, and each repo's copy will read as NEW drift until the rollout owner re-baselines
+  (`detect_template_drift.py --baseline-write` after rollout completion per its own header). Workaround used this
+  recurrence: pure `docs(plans):`/plan-flip commits are the CLAUDE.md carve-out #2 (direct push, no quickmerge) — the
+  pre-push `check-strict-quickmerge` hook accepts `plans/**`-only commits, so the docs flip shipped directly without
+  touching any workflow copy. Next recurrence with docs-only content: same carve-out. With CODE content: must wait for
+  the rollout owner to re-baseline or coordinate per this doc.
