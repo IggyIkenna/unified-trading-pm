@@ -157,7 +157,12 @@ read only once grep shows most of the doc is actually relevant):
   marker on that second doc, nothing else.
 - Append a dated Progress Log marker: `**context-scout YYYY-MM-DD**: populated/refreshed context_scope (<n> entries)` —
   this is Phase 0's incremental-skip anchor for every future run. Never skip writing this, even when the computed list
-  is short.
+  is short. **"The list is unchanged" is NOT an exception (confirmed real bug, 2026-08-06)**: a first hunter-fleet pass
+  judged "no content change since the last scout" as a reason to skip the marker on 11/105 docs in one cohort — every
+  one of those 11 came back STALE again on the very next Phase 0 run, since the marker (not the list content) is the
+  only thing Phase 0 checks. The marker's job is to record "this doc was checked on this date", independent of whether
+  the check changed anything. Write it every time this doc is in scope this run, full stop — the only real exception is
+  the line-cap near-cap guard immediately above.
 - Stage by name, mandatory pre-commit `git status && git diff --cached --stat` (no path arg), commit prefix
   `docs(plans):`, ship per CLAUDE.md's git-discipline section (`quickmerge.sh --agent --files`). Batch by cohort (e.g.
   one commit per ~50 docs), not one mega-commit and not one commit per doc.
