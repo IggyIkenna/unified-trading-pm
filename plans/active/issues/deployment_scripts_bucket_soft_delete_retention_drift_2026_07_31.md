@@ -134,6 +134,18 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
   must re-run on/after 2026-08-09, and only if bloat has NOT dropped by then does the writer-side investigation
   (re-upload cadence / `LogUploader`) become necessary. (repo: deployment-service, verification-only.)
 
+- **residual-drain verification re-run 2026-08-06 (slot-8, infra, task
+  `deployment_scripts_bucket_soft_delete_retention_drift-001`)**: fresh `gcs_bucket_stats.py` run at
+  `2026-08-06T13:46:25Z` — `deployment-scripts-central-element-323112` = **48,548.2 GiB total / 98.6% bloat_pct / 47,887
+  GiB soft-deleted (681,428 objects)**. Soft-deleted count is BYTE-IDENTICAL to slot-4's 11:07Z read (681,428 objects /
+  51,418,720,022,176 B) — accumulation remains stopped (no new churn), consistent with the flat series since ~08-05.
+  Live `retentionDurationSeconds` re-confirmed **0** (fix intact, no drift back). Residual still ~47.9 TiB because the
+  pre-fix 7-day purge countdowns complete ~08-09 (08-02 cohort) per the plan's drain schedule. **Done-when NOT met** —
+  the plan requires a fresh `gcs_bucket_stats.py` run **on/after 2026-08-09** showing single-digit bloat; today predates
+  the gate and bloat reads 98.6%. **Verdict unchanged**: on-schedule pre-fix bleed-off, no writer-side investigation
+  (`LogUploader`/re-upload cadence) warranted yet; re-verify on/after 08-09. Checkbox left unchecked (date-gated).
+  (repo: deployment-service, verification-only.)
+
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: **RECLASSIFY — flipped to `assigned_vm: planning`.** The
   drift-direction judgment call was RESOLVED by operator ruling 2026-08-02 (option (a) applied live,
   `retentionDurationSeconds` verified 0, `unified-trading-pm`/plan_reconcile_parked_operator_decisions item 24); the
