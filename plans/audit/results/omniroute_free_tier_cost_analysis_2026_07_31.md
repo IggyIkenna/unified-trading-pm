@@ -44,7 +44,7 @@ prompted by our own 7-Claude-Max-account fleet (~$200+/mo each, continuous heavy
    to OmniRoute for free?
 
 This is downstream of
-`/active/unified-trading-system-repos/unified-trading-pm/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md`
+`/active/unified-trading-system-repos/unified-trading-pm/plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md`
 (a separate, narrower LOCAL design doc scoping a pilot on `deployment-api`'s read-only pipeline-UAT commentary caller —
 not the worker fleet). This doc is the cost/mechanics research underpinning any future decision on that pilot or on
 touching the worker fleet at all; it does not modify that plan.
@@ -177,6 +177,6 @@ provider (DeepSeek) we already trust and have integrated cleanly.
 
 ## Related
 
-- `/active/unified-trading-system-repos/unified-trading-pm/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md`
+- `/active/unified-trading-system-repos/unified-trading-pm/plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md`
 - `agent-orchestrator/server/accounts.py` (`AccountProvider` — the existing DeepSeek-routing seam)
 - `deployment-api/deployment_api/commentary/pipeline_uat.py` (the one proposed pilot surface)

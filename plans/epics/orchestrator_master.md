@@ -49,7 +49,7 @@ related_plans:
   - ../active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md
   - ../active/deepseek_claude_blended_provider_routing_2026_07_28.md
   - ../active/deepseek_flash_ab_routing_test_2026_08_05.md
-  - ../active/omniroute_llm_gateway_pilot_design_2026_07_30.md
+  - ../archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md
   - ../active/omniroute_multi_provider_routing_evaluation_2026_08_03.md
   - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31.md
 last_updated: 2026-07-16
@@ -394,7 +394,7 @@ baseline (PM repo) — single-host vs planning-vm
 
 ## P3 — backlog; revisit quarterly
 
-### [`omniroute_llm_gateway_pilot_design_2026_07_30`](../active/omniroute_llm_gateway_pilot_design_2026_07_30.md)
+### [`omniroute_llm_gateway_pilot_design_2026_07_30`](../archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md)
 
 **status**: active · **estimate**: 0.6 cal AI-days (class: research) **title**: OmniRoute multi-provider LLM-gateway
 pilot — deployment-api pipeline-UAT commentary (human execution)

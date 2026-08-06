@@ -207,8 +207,8 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   self-assessed in its own 2026-07-30 Progress Log as real feature-sized, cross-repo work (a new agent-orchestrator
   cgroup-stat reader AND a new deployment-ui dashboard tile needing its own `pw:L2` regression spec), not a bounded fix
   — "correctly skipped." A candidate for `/plan-brainstorm` to scope into its own plan, not a batch-3 todo.
-- `/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md` — 7 open todos individually read AO-dispatch grade
-  (exact file/field/line-diff given for the `[INFRA]`/`[BACKEND]` items), but the doc's own text records a
+- `/plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md` — 7 open todos individually read AO-dispatch
+  grade (exact file/field/line-diff given for the `[INFRA]`/`[BACKEND]` items), but the doc's own text records a
   session-fresh, explicit operator ruling: stays `assigned_vm: NA`/`execution_scope: local-only` "by explicit operator
   choice... the operator wants this executed by a human, not auto-dispatched." Drafting a batch todo here would directly
   override that ruling. Its `[OPERATOR]` (stand up third-party infra) and `[REVIEW]` (run a real 2-week trial) items are

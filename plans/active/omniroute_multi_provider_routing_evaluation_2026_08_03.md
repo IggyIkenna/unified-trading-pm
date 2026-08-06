@@ -18,7 +18,7 @@ tags: [omniroute, cost-optimization, llm-routing, claude-accounts, evaluation]
 related:
   - plans/audit/results/omniroute_free_tier_cost_analysis_2026_07_31.md
   - plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md
-  - plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md
+  - plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md
 created: 2026-08-03
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -39,7 +39,7 @@ source:
 context_scope:
   [
     agent-orchestrator/scripts/orchestrator/omniroute-eval/README.md,
-    /plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md,
+    /plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md,
     /plans/audit/results/omniroute_free_tier_cost_analysis_2026_07_31.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
     /codex/06-coding-standards/model-tier-selection.md,

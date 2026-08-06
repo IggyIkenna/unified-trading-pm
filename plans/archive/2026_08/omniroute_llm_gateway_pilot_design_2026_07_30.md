@@ -13,7 +13,7 @@ summary: >-
   BOUNDED-relay design (OmniRoute configured to a curated model set, never full-auto) rather than a blanket ban, with 3
   research prerequisites (real OmniRoute account access, the real allowlist mechanism, the curated model list) before
   any code.
-status: active
+status: superseded
 nature: design
 asset_group: [ao, cross-cutting]
 stage: [meta]
@@ -27,7 +27,7 @@ related:
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 created: 2026-07-30
-last_updated: 2026-08-02
+last_updated: 2026-08-06
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -39,7 +39,7 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on:
 supersedes:
-superseded_by:
+superseded_by: omniroute_multi_provider_routing_evaluation_2026_08_03
 source:
   "operator ask 2026-07-30, interactive session slot 1 — https://omniroute.online/ as a possible cost-routing layer for
   the worker fleet; rulings on both objections same session"
@@ -56,6 +56,21 @@ context_scope:
 ---
 
 # OmniRoute multi-provider LLM-gateway pilot — deployment-api pipeline-UAT commentary
+
+> **🔴 ARCHIVED 2026-08-06 — SUPERSEDED BY THE OMNIROUTE NO-GO RULING.** The operator ruled OmniRoute **no-go for now**
+> on 2026-08-06 (interactive session), recorded in
+> `/plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision". Every one of this
+> plan's 6 remaining open todos presupposed ADOPTING OmniRoute (stand up the gateway, sign up for `omniroute.online`,
+> run a ~2-week pilot, confirm the routing-constraint mechanism, pick the curated model allowlist, wire a real
+> `accounts.json` entry) — each was checked individually at archival and none survives the ruling, so the plan is moot
+> rather than merely paused. **Nothing was migrated out**: there is no residual work to track.
+>
+> **The ruling is reversible** ("no-go for now", not "never"). If OmniRoute is revisited, start from the evaluation
+> plan's findings matrix plus a real provider-invoice reconciliation — which that plan records as never having been done
+> — and treat this doc's gateway design as still-valid research, not as a live plan.
+>
+> **The 5 provider API keys were deliberately NOT revoked** (operator override, same ruling): the no-go is on OmniRoute
+> as a routing layer, not on the underlying model providers.
 
 ## Why this doc exists, and why it stays LOCAL despite the build-grade detail below
 

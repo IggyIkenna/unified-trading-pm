@@ -57,7 +57,7 @@ related:
     /plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
-    /plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md,
+    /plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md,
     /plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_03.md,
   ]
