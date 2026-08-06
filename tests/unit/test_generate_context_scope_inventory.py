@@ -198,3 +198,173 @@ def test_end_to_end_stale_last_updated_no_longer_masks_a_real_later_edit(tmp_pat
     records = _run_json()
     assert len(records) == 1
     assert records[0]["verdict"] == "STALE"
+
+
+# ---------------------------------------------------------------------------
+# _marker_claimed_entries — the COUNT_MISMATCH signal
+# ---------------------------------------------------------------------------
+
+
+def test_marker_claimed_entries_parens_form():
+    body = "- **context-scout 2026-08-03**: refreshed context_scope (4 entries, still accurate)."
+    assert MOD._marker_claimed_entries(body) == 4
+
+
+def test_marker_claimed_entries_bare_form_last_match():
+    """Non-parens marker ('...doc. 5 entries.') and the 'trimmed from 7 to 5 entries' shape both
+    resolve to the post-trim count via the bare fallback's LAST-match rule."""
+    body = "- **context-scout 2026-08-06**: restored the dropped SSOT + added a follow-up doc. 5\n  entries."
+    assert MOD._marker_claimed_entries(body) == 5
+    body2 = "- **context-scout 2026-08-03**: re-scouted; trimmed context_scope (7 -> 5 entries)."
+    assert MOD._marker_claimed_entries(body2) == 5
+
+
+def test_marker_claimed_entries_none_when_no_marker():
+    assert MOD._marker_claimed_entries("no markers here") is None
+
+
+def test_marker_claimed_entries_none_when_latest_marker_has_no_count():
+    """An OLDER marker with a count does not count once a NEWER marker with no count claim exists."""
+    body = (
+        "- **context-scout 2026-08-03**: populated context_scope (4 entries).\n"
+        "- **context-scout 2026-08-06**: re-scouted; no change."
+    )
+    assert MOD._marker_claimed_entries(body) is None
+
+
+def test_marker_claimed_entries_uses_latest_marker_only():
+    body = (
+        "- **context-scout 2026-08-01**: populated context_scope (2 entries).\n"
+        "- **context-scout 2026-08-03**: refreshed context_scope (5 entries)."
+    )
+    assert MOD._marker_claimed_entries(body) == 5
+
+
+def test_marker_claimed_entries_ignores_body_prose_past_the_marker():
+    """Regression guard (confirmed false positive 2026-08-06 on lst_rate_honest_coverage: the bare
+    fallback matched '406 entries' in body text far past the marker). The search must be bounded to
+    the marker's own bullet -- next marker / first blank line / 600-char cap."""
+    body = (
+        "- **context-scout 2026-08-06**: re-verified the current 3 entries resolve on disk, unchanged.\n"
+        "\n"
+        "## RESUME POINT\n"
+        "The corpus has 406 entries across all fixtures and 12 more in the annex; none of this "
+        "body prose should be read as the marker's claimed count."
+    )
+    assert MOD._marker_claimed_entries(body) == 3
+
+
+def test_marker_claimed_entries_stops_at_next_marker():
+    body = (
+        "- **context-scout 2026-08-03**: populated context_scope (4 entries).\n"
+        "- **context-scout 2026-08-05**: re-scouted; populated context_scope (6 entries)."
+    )
+    assert MOD._marker_claimed_entries(body) == 6
+
+
+# ---------------------------------------------------------------------------
+# End-to-end: COUNT_MISMATCH verdict
+# ---------------------------------------------------------------------------
+
+
+FRONTMATTER_CM_TMPL = """---
+doc_type: issue
+title: "{title}"
+summary: test fixture
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer]
+tags: []
+related: []
+created: "2026-08-01"
+parent_epic: agent_operating_framework_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.1
+estimate_calibrated_ai_days: 0.1
+assigned_role: infra
+drift_direction: none
+depends_on: []
+resolved_by:
+locked_by:
+last_updated: "{last_updated}"
+context_scope: {scope_list}
+---
+
+# {title}
+
+Fixture body.
+{marker_line}
+"""
+
+
+def _write_cm_fixture(tmp_path, monkeypatch, name, scope_list, marker_line, last_updated="2026-08-01"):
+    plans_dir = tmp_path / "plans" / "active" / "issues"
+    plans_dir.mkdir(parents=True)
+    doc = plans_dir / f"{name}.md"
+    doc.write_text(
+        FRONTMATTER_CM_TMPL.format(
+            title=name,
+            last_updated=last_updated,
+            scope_list=scope_list,
+            marker_line=marker_line,
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    # Marker (08-05) newer than the git edit date (08-03): would read UP_TO_DATE without the
+    # count check, exactly the insidious shape where a content regression hides under a fresh marker.
+    monkeypatch.setattr(MOD, "_git_last_commit_date_cheap", lambda path: "2026-08-03")
+    monkeypatch.setattr(MOD, "_git_last_commit_date_accurate", lambda path: "2026-08-03")
+
+
+def test_end_to_end_count_mismatch_flags_doc(tmp_path, monkeypatch):
+    """The confirmed bug shape (perp_funding instance): a marker claiming 4 entries next to a live
+    list of 3. The doc would otherwise read UP_TO_DATE; the count mismatch is the only signal."""
+    _write_cm_fixture(
+        tmp_path,
+        monkeypatch,
+        "fixture_count_mismatch_2026_08_06",
+        "[/codex/02-data/a.md, /codex/02-data/b.md, /codex/02-data/c.md]",
+        "- **context-scout 2026-08-05**: refreshed context_scope (4 entries, still accurate).",
+    )
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "COUNT_MISMATCH"
+    assert records[0]["context_scope_count"] == 3
+    assert records[0]["marker_claimed_entries"] == 4
+
+
+def test_end_to_end_matching_count_is_up_to_date(tmp_path, monkeypatch):
+    """Control: a marker that claims exactly the live count stays UP_TO_DATE -- no false positive."""
+    _write_cm_fixture(
+        tmp_path,
+        monkeypatch,
+        "fixture_matching_count_2026_08_06",
+        "[/codex/02-data/a.md, /codex/02-data/b.md, /codex/02-data/c.md]",
+        "- **context-scout 2026-08-05**: refreshed context_scope (3 entries, still accurate).",
+    )
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "UP_TO_DATE"
+
+
+def test_end_to_end_marker_without_count_not_flagged(tmp_path, monkeypatch):
+    """A fresh marker that states no count cannot be checked -- it must stay UP_TO_DATE, not be
+    (wrongly) inferred as a mismatch."""
+    _write_cm_fixture(
+        tmp_path,
+        monkeypatch,
+        "fixture_no_count_marker_2026_08_06",
+        "[/codex/02-data/a.md, /codex/02-data/b.md, /codex/02-data/c.md]",
+        "- **context-scout 2026-08-05**: re-scouted; no change needed.",
+    )
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "UP_TO_DATE"
+    assert records[0]["marker_claimed_entries"] is None

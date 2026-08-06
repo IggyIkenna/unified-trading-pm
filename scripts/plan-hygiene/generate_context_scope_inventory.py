@@ -16,7 +16,16 @@ cancelled/resolved/false-positive doc is dead weight, never scouted):
                      `last_updated`, when present, and the file's real git last-commit date --
                      never `last_updated` alone, which nothing auto-bumps on edit and so silently
                      goes stale; see `_last_touched`'s docstring)
-  - UP_TO_DATE     — marker date >= last-touched date; skip (incremental mode)
+  - COUNT_MISMATCH — the most recent marker claims N entries (`(N entries)` in its text) but the
+                     live `context_scope` list has a different length. Catches the confirmed
+                     regression shape where a later context-scout batch dropped/replaced entries
+                     without updating the marker: because `context_scope` is a reference-only
+                     field, the drop commit is walked back as non-content and the doc would
+                     otherwise read UP_TO_DATE with its content loss invisible
+                     (issue context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md).
+                     Takes precedence over both STALE and UP_TO_DATE; routes to re-scout.
+  - UP_TO_DATE     — marker date >= last-touched date AND the marker's claimed entry count (when
+                     it states one) matches the live list length; skip (incremental mode)
 
 # Epic: agent_operating_framework_master
 # Lifecycle: permanent
@@ -44,6 +53,12 @@ IN_SCOPE_STATUS = {
     "issue": {"open", "blocked"},
 }
 MARKER_RE = re.compile(r"context-scout\s+(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
+# Claimed entry count inside a marker's prose. Canonical form is the parens one the skill writes:
+# "populated/refreshed context_scope (4 entries, ...)". A fallback bare form ("... doc. 5 entries.")
+# catches the handful of 2026-08-06 scout markers written without parens -- without it those docs
+# would be invisible to the count-mismatch check if their context_scope later regresses.
+MARKER_ENTRY_COUNT_RE = re.compile(r"\((\d+)\s+entries?\)")
+MARKER_ENTRY_COUNT_BARE_RE = re.compile(r"(\d+)\s+entries?")
 
 
 def _load_docspec():
@@ -241,6 +256,44 @@ def _latest_marker(body: str) -> str | None:
     return max(dates) if dates else None
 
 
+def _marker_claimed_entries(body: str) -> int | None:
+    """Entry count the doc's MOST RECENT context-scout marker claims, or None.
+
+    Only the most recent marker counts: an older marker's "(N entries)" is superseded once a
+    newer marker is written (a newer marker with no count claim means no comparison is possible,
+    and that is fine -- the bug shape is a stale count surviving next to a FRESH marker). The
+    marker's bullet may wrap across lines, so the count is searched within the marker's OWN bullet
+    only -- bounded by the next marker, the first blank line (a Progress Log bullet boundary), and
+    a 600-char cap. Without that bound, a bare "N entries" in unrelated body prose far past the
+    marker swamps the real count (confirmed false positive: lst_rate_honest_coverage matched
+    "406 entries" in later body text).
+    """
+    matches = list(MARKER_RE.finditer(body))
+    if not matches:
+        return None
+    latest = max(matches, key=lambda m: m.group(1))
+    segment_end = len(body)
+    for m in matches:
+        if m.start() > latest.start():
+            segment_end = min(segment_end, m.start())
+    blank = body.find("\n\n", latest.start())
+    if blank != -1:
+        segment_end = min(segment_end, blank)
+    segment = body[latest.start() : min(segment_end, latest.start() + 600)]
+    count = MARKER_ENTRY_COUNT_RE.search(segment)
+    if count is not None:
+        return int(count.group(1))
+    # Bare-form fallback (non-parens markers). A context-scout marker is by definition about
+    # context_scope, so the LAST "N entries" phrase in its bullet is the claimed list length. Also
+    # catches the "trimmed from 7 to 5 entries" shape (only the post-trim "5" is adjacent to
+    # "entries") and non-parens markers that wrap "... doc. 5 / entries." across a line break
+    # (`\s+` matches the newline).
+    bare = list(MARKER_ENTRY_COUNT_BARE_RE.finditer(segment))
+    if bare:
+        return int(bare[-1].group(1))
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="emit JSON instead of a summary table")
@@ -269,6 +322,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if not context_scope:
             verdict = "NEVER_SCOUTED"
+            claimed_entries: int | None = None
         else:
             marker = _latest_marker(body)
             last_touched = _last_touched(fm, path, marker)
@@ -276,6 +330,9 @@ def main(argv: list[str] | None = None) -> int:
                 verdict = "UP_TO_DATE"
             else:
                 verdict = "STALE"
+            claimed_entries = _marker_claimed_entries(body)
+            if claimed_entries is not None and claimed_entries != len(context_scope):
+                verdict = "COUNT_MISMATCH"
 
         records.append(
             {
@@ -284,6 +341,7 @@ def main(argv: list[str] | None = None) -> int:
                 "status": status,
                 "parent_epic": fm.get("parent_epic"),
                 "context_scope_count": len(context_scope),
+                "marker_claimed_entries": claimed_entries,
                 "verdict": verdict,
             }
         )
@@ -296,7 +354,7 @@ def main(argv: list[str] | None = None) -> int:
     for r in records:
         by_verdict[r["verdict"]] = by_verdict.get(r["verdict"], 0) + 1
     print(f"Total in-scope plan/issue docs: {len(records)}")
-    for verdict in ("NEVER_SCOUTED", "STALE", "UP_TO_DATE"):
+    for verdict in ("NEVER_SCOUTED", "STALE", "COUNT_MISMATCH", "UP_TO_DATE"):
         print(f"  {verdict:14s} {by_verdict.get(verdict, 0)}")
     return 0
 

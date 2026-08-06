@@ -55,7 +55,14 @@ doc, the script verdicts:
 - **NEVER_SCOUTED** — no `context_scope` field, or present but empty.
 - **STALE** — has `context_scope`, but no dated `context-scout YYYY-MM-DD` Progress Log marker at or after the doc's
   last-touched date (frontmatter `last_updated`, falling back to the file's git last-commit date).
-- **UP_TO_DATE** — marker date already covers the doc's last-touched date. Skip.
+- **COUNT_MISMATCH** — has `context_scope` + a marker, but the most recent marker's claimed entry count (`(N entries)`
+  or a bare `N entries`) disagrees with the live list length. Confirmed regression class
+  (`plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`): a later scout batch
+  dropped/replaced entries without updating the marker, and because `context_scope` is a reference-only field the drop
+  commit gets walked back and the doc reads `UP_TO_DATE` anyway — the count mismatch is the only signal. Treat exactly
+  like `STALE`: the doc needs re-scouting.
+- **UP_TO_DATE** — marker date already covers the doc's last-touched date AND (when the marker states a count) the
+  claimed count matches the live list length. Skip.
 
 Report the split up front (total in-scope docs, never-scouted, stale, up-to-date-skipped). **The first-ever run will
 show hundreds of NEVER_SCOUTED docs — expect it to look like a real backfill (many sub-agent batches), not a quick daily
@@ -65,16 +72,16 @@ report that plainly rather than silently paying the full cost every day.
 
 ## Phase 1 — per-doc scouting (the real work)
 
-**Backfill mode** (a large NEVER_SCOUTED+STALE population — dozens to hundreds of docs, e.g. the first corpus-wide run
-or a fix that re-flags a large slice): batch the in-scope docs into groups of ~10-15 and fan out read-only sub-agents
-via a `Workflow` `pipeline()` (max 10 concurrent per this workspace's sub-agent cap; paste
+**Backfill mode** (a large NEVER_SCOUTED+STALE+COUNT_MISMATCH population — dozens to hundreds of docs, e.g. the first
+corpus-wide run or a fix that re-flags a large slice): batch the in-scope docs into groups of ~10-15 and fan out
+read-only sub-agents via a `Workflow` `pipeline()` (max 10 concurrent per this workspace's sub-agent cap; paste
 `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the top of every spawn; set `model=` explicitly — sonnet is enough for
 this, no architecture/trading judgment involved).
 
 **Daily-incremental mode** (the expected steady state once the corpus is caught up — a small residual, roughly under ~15
-docs, from that hour's/day's edits): a `Workflow`'s fan-out ceremony is overkill for a handful of docs — dispatch 2-4
-direct `Agent` tool calls instead (same sub-agent-rules pasting + explicit `model=`), splitting the small doc list
-evenly across them. Reserve `Workflow` for genuine backfills.
+docs, from that hour's/day's edits plus any `COUNT_MISMATCH` docs Phase 0 surfaced): a `Workflow`'s fan-out ceremony is
+overkill for a handful of docs — dispatch 2-4 direct `Agent` tool calls instead (same sub-agent-rules pasting + explicit
+`model=`), splitting the small doc list evenly across them. Reserve `Workflow` for genuine backfills.
 
 Each hunter, per doc (per `/codex/12-agent-workflow/context-economy.md`'s scoped-read discipline — grep the doc for
 `related:`/`depends_on:`/`Codex SSOTs:`/named filenames first; for a doc over ~300 lines, read only the sections that
@@ -173,16 +180,17 @@ read only once grep shows most of the doc is actually relevant):
 
 ## Phase 3 — report
 
-Finish with text: total docs scouted this run (never-scouted vs stale), total skipped (up-to-date), entries written (avg
-per doc), any doc where Phase 1 found ZERO confirmable entries (report these — a doc with genuinely no reading-list is
-fine, but worth surfacing so a human can sanity-check it isn't a scouting failure), every unconfirmed "unstated SSOT"
-suggestion surfaced in Phase 1 step 3, every stale-candidate-pointer finding surfaced in Phase 1 step 4 (which
-candidate(s) named in the doc's own prose/todos turned out wrong, and what the confirmed owner actually is, so
-`/plan-reconcile` can correct the prose itself), and every step-4a fingerprint-match pair found (both doc paths + the
-matched literal) — these are the strongest signal of genuinely duplicated investigation effort in the corpus and are
-worth a human glance even though this skill already links them. Like
-`docs_reconciler`/`ag_closeout_auditor`/`na_eligibility_auditor`, this is chat-text only — there is no separate
-structured-findings endpoint. NEVER write agent memory; NEVER create a `*_SUMMARY.md` file.
+Finish with text: total docs scouted this run (never-scouted vs stale vs count-mismatch), total skipped (up-to-date),
+entries written (avg per doc), every `COUNT_MISMATCH` doc the run fixed (name the doc, the stale claimed count, and the
+corrected live count — this is the record the next Phase 0 run needs to confirm the fix landed), any doc where Phase 1
+found ZERO confirmable entries (report these — a doc with genuinely no reading-list is fine, but worth surfacing so a
+human can sanity-check it isn't a scouting failure), every unconfirmed "unstated SSOT" suggestion surfaced in Phase 1
+step 3, every stale-candidate-pointer finding surfaced in Phase 1 step 4 (which candidate(s) named in the doc's own
+prose/todos turned out wrong, and what the confirmed owner actually is, so `/plan-reconcile` can correct the prose
+itself), and every step-4a fingerprint-match pair found (both doc paths + the matched literal) — these are the strongest
+signal of genuinely duplicated investigation effort in the corpus and are worth a human glance even though this skill
+already links them. Like `docs_reconciler`/`ag_closeout_auditor`/`na_eligibility_auditor`, this is chat-text only —
+there is no separate structured-findings endpoint. NEVER write agent memory; NEVER create a `*_SUMMARY.md` file.
 
 **Post-hoc source-hunting lint (advisory, not a blocker)**: run
 `python3 scripts/plan-hygiene/generate_context_scope_source_lint.py` and fold its output into the report. This is a
