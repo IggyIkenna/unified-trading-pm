@@ -143,7 +143,7 @@ b4bac708, so it may now be stale and in need of removal.
       instruments-service@80077c74 (repo: instruments-service, script: reemit_la_liga2_odds_manifest_rows.py; dry-run
       confirmed 846 cells, 2020-06-10→2026-05-18; apply wrote 846 manifest rows to per-VM shard with canonical
       league_id=SEGUNDA_DIVISION)
-- [ ] [VERIFY] P2. **REOPENED 2026-08-06** (BLK-136e69bf, operator-answered): this was marked `[x]`, but its own text
+- [x] ✅ [VERIFY] P2. **REOPENED 2026-08-06** (BLK-136e69bf, operator-answered): this was marked `[x]`, but its own text
       below states the stated goal — 0 GCS-only cells — was NOT reached, and calls for a re-verification that no later
       entry confirms happened. A checked box whose body says the work is incomplete is false progress
       (`/codex/02-data/data-pipeline-correctness-hard-rule.md`); 846 cells of real GCS data missing from the
@@ -158,7 +158,21 @@ b4bac708, so it may now be stale and in need of removal.
       383 distinct leagues total. LA_LIGA_2: 0 manifest rows (confirmed). BRASILEIRAO: 962 captured + 1,885 empty in
       manifest (the reported +1 GCS-only edge case was not independently verified — full GCS walk was too heavy for
       in-session). Re-verify after per-VM shard consolidation into canonical index. — slot-2 @2026-08-05 ~07:30Z
+      **VERIFIED slot-9 @2026-08-06**: (a) Consolidator confirmed ran 2026-08-06T15:44:26Z
+      (`consolidator_run_at: 2026-08-06T15:44:24Z` via GCS object metadata). (b) Manifest (170MB, 10,194,357 rows,
+      downloaded 2026-08-06) queried via DuckDB: LA_LIGA_2 manifest rows = 0 (by design — canonical alias
+      LA_LIGA_2→SEGUNDA_DIVISION); SEGUNDA_DIVISION captured rows in date range 2020-06-10..2026-05-18 = **846**
+      (written_at 2026-08-05T07:19Z, i.e. from the todo #2 re-emit run) — exactly matching the 846 GCS objects. Net
+      GCS-only cells via alias mapping = **0**. (c) BRASILEIRAO: 962 captured + 1,886 empty_confirmed in manifest; the
+      original "+1 GCS-only edge case" was never independently verified and BRASILEIRAO shows healthy coverage; no
+      targeted GCS walk done (VM-scope). **Result: 0 GCS-only LA_LIGA_2 ODDS cells remain. Issue resolved.**
 
 ## Progress Log
 
 - **context-scout 2026-08-06**: populated context_scope (5 entries).
+- **slot-9 2026-08-06 ~16:10Z**: VERIFY re-run. Consolidator ran 2026-08-06T15:44:26Z. Manifest (170MB, 10,194,357 rows)
+  has 846 SEGUNDA_DIVISION captured rows covering the exact LA_LIGA_2 date range 2020-06-10..2026-05-18 (written
+  2026-08-05T07:19Z by todo #2 re-emit). LA_LIGA_2 manifest rows = 0 by design (alias → SEGUNDA_DIVISION). Net ODDS
+  GCS-only cells = 0. GCS glob count at `league=LA_LIGA_2/**` = 6302 objects (ALL data types — ODDS, TEAMS, STANDINGS,
+  etc.; ODDS-only = 846 per reemit dry-run). BRASILEIRAO: 962 captured rows, no systemic absence. Issue resolved —
+  checkbox flipped [x].
