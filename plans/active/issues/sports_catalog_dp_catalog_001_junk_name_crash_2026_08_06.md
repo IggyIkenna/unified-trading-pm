@@ -135,9 +135,19 @@ observability hook whoever picks up the follow-up needs.
 
 - [x] [DATA] P1. Fix the uncaught-exception crash so a single corrupted display name cannot fail the whole sports
       catalogue rollup — instruments-service@497c4f5e (try/except ValueError, regression test, QG green, quickmerged).
-- [ ] [OPS] P2. Verify the next `lifecycle-catalogue-regen-sports` run (manually triggered same-session, or the next
-      scheduled `0 1 * * *` UTC run) promotes cleanly and `prod/catalog.parquet` mtime advances past the frozen
-      2026-08-05T01:09:18Z snapshot, confirming DP-CATALOG-001 clears. (repo: instruments-service, verification only)
+- [ ] [OPS] P2. Verify a `lifecycle-catalogue-regen-sports` run promotes cleanly and `prod/catalog.parquet` mtime
+      advances past the frozen 2026-08-05T01:09:18Z snapshot, confirming DP-CATALOG-001 clears. **NOT possible yet this
+      session** — the deployed Cloud Run Job image (`…/instruments-service:latest`, digest confirmed unchanged, built
+      2026-08-05T11:24:03 from a DIFFERENT commit `04ce8cd`) has not picked up `497c4f5e`: a manual
+      `gcloud run jobs execute --wait` re-run at 07:42 UTC hit the byte-identical pre-fix traceback (same line numbers,
+      no `try/except` in the stack), proving the running container is still the OLD image. The fix reaches the image
+      only once it lands on `main` — LDR→main promotion PR **instruments-service#1084**
+      (`promote/instruments-service/497c4f5e824d`) is open and progressing normally (`sit-gate/fleet-green` PASS,
+      `quality-gates-v2` PASS, `semver-agent/label-check` PASS; the `validate / GCP Cloud Build` image-build-gate check
+      was still QUEUED as of 08:06 UTC) — once that check passes the PR auto-merges (`*/15` fleet cadence), Cloud Build
+      rebuilds `:latest`, and the next `lifecycle-catalogue-regen-sports` execution (scheduled `0 1 * * *` UTC, or a
+      fresh manual trigger) will run the fixed code. Re-check PR #1084's merge status + re-trigger the job once merged.
+      (repo: instruments-service, verification only — blocked on the standard promotion pipeline, not a new problem)
 - [ ] [DATA] P3. Trace and fix the actual upstream encoding defect producing UTF-8-as-Latin-1 mojibake sports
       player/team names (this incident's `'JeleÅ\x84'` for `'Jeleń'`) — most likely in an MTDS api_football lineups
       adapter or orchestrator write path. Not chased down this session (would need either a corpus grep of MTDS sports
@@ -155,7 +165,16 @@ observability hook whoever picks up the follow-up needs.
   isolation (try/except + skip + count + log) in `build_sports_fixture_team_player_catalogue`, added a regression test
   reproducing the exact live incident string, ran full `quality-gates.sh --no-fix` green, shipped via quickmerge
   (`instruments-service@497c4f5e`, verified ancestor of `origin/live-defi-rollout`). Manually triggered a fresh
-  `lifecycle-catalogue-regen-sports` execution to confirm the fix live (see next entry / in progress). Did NOT chase
-  down the upstream encoding-defect root cause (filed as a P3 follow-up todo) — out of scope for a bounded one-shot page
-  response; the crash-isolation fix is itself a full root-cause fix for the ALERT (DP-CATALOG-001), not a mask, since
-  the corrupted name is still correctly rejected from the catalogue, just no longer fatal to the whole job.
+  `lifecycle-catalogue-regen-sports` execution to confirm the fix live — it FAILED again with the byte-identical pre-fix
+  traceback, which on inspection proves the deployed `:latest` Cloud Run image is still the OLD build
+  (`gcloud artifacts docker images list` shows `:latest` last updated 2026-08-05T11:24:03 from commit `04ce8cd`, not
+  today's `497c4f5e`) — the fix is correct and shipped to `live-defi-rollout` but has not reached the running container
+  yet. Confirmed this is the normal pipeline, not a stall: LDR→main promotion PR `instruments-service#1084` is open and
+  green on every gate checked so far (`sit-gate/fleet-green`, `quality-gates-v2`, `semver-agent/label-check`), with only
+  the `GCP Cloud Build` image-build-gate check still queued — once it merges (auto-merge fleet cadence) and Cloud Build
+  rebuilds `:latest`, the next job execution will pick up the fix. Left the P2 verification todo open with this exact
+  status rather than falsely closing it. Did NOT chase down the upstream encoding-defect root cause (filed as a P3
+  follow-up todo) — out of scope for a bounded one-shot page response; the crash-isolation fix is itself a full
+  root-cause fix for the ALERT (DP-CATALOG-001), not a mask, since the corrupted name is still correctly rejected from
+  the catalogue, just no longer fatal to the whole job. Pinging `dp-fleet-monitor` (authoring slot) with this outcome
+  and completing this one-shot escalation.
