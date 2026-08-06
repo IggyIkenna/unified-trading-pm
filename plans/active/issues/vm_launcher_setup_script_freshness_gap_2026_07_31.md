@@ -202,3 +202,4 @@ sweep here.
     needing historical generations) rather than flipping versioning bucket-wide here. Left as informational context for
     the `[OPERATOR]` todo below, not a new decision to make — that todo's scope is the 139-launcher remediation shape,
     not this bucket's versioning policy specifically.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

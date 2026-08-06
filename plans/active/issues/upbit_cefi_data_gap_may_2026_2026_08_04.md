@@ -31,6 +31,13 @@ priority: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    deployment-service/deployment_service/calculators/shard_distribution.py,
+    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
+    /codex/02-data/mvp-scope-canonical.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # UPBIT CeFi data gap — zero captured objects since 2026-05-25
@@ -175,3 +182,5 @@ and complementary: slot-15 identified the transition trigger (SPOT preemption), 
 `tardis-api-key-full` secret** (or set `TARDIS_ACCESS_MODE=full_access` override), then relaunch:
 `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh`.
 **[OPERATOR] action**: obtain Tardis full-access API key and create the secret.
+
+- **context-scout 2026-08-06**: populated context_scope (4 entries).

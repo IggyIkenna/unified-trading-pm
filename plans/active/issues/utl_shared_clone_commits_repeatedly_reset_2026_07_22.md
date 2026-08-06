@@ -233,3 +233,4 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — swapped the generic epic pointer for
   `scripts/quickmerge.sh` (the root-caused file — `cascade_dep_branch()` is the actual mechanism, per this doc's own
   todos 1/7/8).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

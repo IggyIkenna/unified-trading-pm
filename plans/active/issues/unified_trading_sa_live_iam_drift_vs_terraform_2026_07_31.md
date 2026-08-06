@@ -271,3 +271,4 @@ confirm no further self-grants happened in the interim.
   untouched — did not run `tofu apply` on the full plan, only relied on `plan`'s own state-write for the clean-diff
   imports (verified empirically: `tofu plan` alone persisted the 28 imports to the real GCS state object, no `apply`
   needed since none of them had any drift beyond the import itself).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

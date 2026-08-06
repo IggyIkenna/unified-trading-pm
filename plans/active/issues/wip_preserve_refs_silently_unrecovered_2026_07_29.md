@@ -159,3 +159,4 @@ closing the "then what" gap:
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- swapped in the two named
   `worktree_clean_check` source modules + `quickmerge.sh` (the remaining open todos' actual targets), dropped a
   now-redundant epic pointer.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

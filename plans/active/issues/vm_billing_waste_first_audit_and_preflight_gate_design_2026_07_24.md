@@ -448,3 +448,4 @@ context_scope:
   cross-references stay correct and these checkboxes correctly stay unflipped. The 7th (the known-dead-shard pre-flight
   gate's marker mechanism) is operator-gated per batch1's own BLOCKED-OPERATOR-DECISION section on the
   manifest-schema-vs-side-table choice and its schema blast radius. Zero `assigned_vm`/backlog impact.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -26,6 +26,12 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 locked_since:
+context_scope:
+  [
+    /codex/09-strategy/architecture-v2/block-list.md,
+    unified-trading-system-ui/lib/architecture-v2/block-list.ts,
+    unified-trading-system-ui/__tests__/scripts/block-list-parity.test.ts,
+  ]
 ---
 
 # unified-trading-system-ui block-list-parity test failing
@@ -63,3 +69,4 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
 - **2026-08-04**: Filed while verifying batch-4 CI-runner migration
   (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) — the migration itself is unaffected (this repo's
   quality-gates-v2 job runs on GitHub-hosted infra, not the self-hosted glue fleet).
+- **context-scout 2026-08-06**: populated context_scope (3 entries).

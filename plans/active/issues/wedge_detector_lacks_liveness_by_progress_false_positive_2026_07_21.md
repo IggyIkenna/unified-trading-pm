@@ -175,3 +175,4 @@ progress-signal half.
   (bundled together, since the sign-off explicitly gates the code change). Not reclassified — same tranche-standing-NA
   convention as `fleet_git_health_ip_185...`'s marker today; the doc's own self-declared safety rationale (a careless
   suppression predicate could blind genuine wedge detection) independently supports the same verdict.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

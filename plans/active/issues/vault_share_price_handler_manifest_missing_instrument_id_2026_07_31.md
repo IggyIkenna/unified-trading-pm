@@ -119,3 +119,4 @@ for this exact multi-instrument-per-group shape.
   confirmation step (waiting for a natural fresh capture / next cron cycle to show a non-null `instrument_id` manifest
   row) — that observation is still outstanding since it only affects rows written going forward; leaving `status: open`
   until someone confirms a live post-fix manifest row.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

@@ -194,3 +194,4 @@ them as a finding; the population definition is deliberately left unchanged.
   the naming half landed `unified-trading-pm@d872efb3a`, hours after the 2026-08-02 note below was written). Doc stays
   open and NA: it is a deliberately-permanent standing register (own todo 2 / P3: "NOT archive-on-complete — archiving
   is what orphaned this class twice already"), owned by the `/plan-reconcile` scheduled job, not AO dispatch.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

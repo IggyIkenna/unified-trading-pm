@@ -39,6 +39,14 @@ resolved_by:
 depends_on: []
 locked_by:
 locked_since:
+context_scope:
+  [
+    scripts/infra/resource-watchdog/resource-watchdog.service,
+    scripts/infra/resource-watchdog/resource-watchdog.sh,
+    deployment-ui/src/pages/VmResourceComparison.tsx,
+    /plans/active/resource_watchdog_host_guardian_2026_08_05.md,
+    /codex/05-infrastructure/deployment-observability.md,
+  ]
 ---
 
 # Watchdog→deployment-api kill-event E2E verified; deployment gaps remain
@@ -141,3 +149,5 @@ session).
   first dry-run attempt with a decimal `RW_RSS_LIMIT_NORMAL_GB=3.6` which left `RSS_LIMIT_NORMAL_KB` unset) — both are
   `killed=false` violation records from the E2E; they are in the BQ streaming buffer so DML delete is not yet possible;
   they can be cleared later if desired.
+
+- **context-scout 2026-08-06**: populated context_scope (5 entries).
