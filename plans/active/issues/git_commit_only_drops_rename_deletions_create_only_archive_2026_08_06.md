@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [git, commit-only, partial-commit, rename, archival, create-only, docs-plans, tooling]
 related:
   [
-    /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
+    /plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md,
     /plans/archive/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -156,11 +156,12 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
       to) to require, after any `git mv` archival: route the commit through `scripts/dev/safe-doc-push.sh` (plain
       full-staged-set commit) or, if a bare `git commit --only` is used, list BOTH old and new paths; and a post-commit
       `git status --porcelain` check confirming no staged deletions were left uncommitted. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. **Archive the resolved parent doc**
-      `plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` — 6-step ritual:
-      `status: resolved`, ARCHIVED banner, `git mv` to `plans/archive/issues/`, referrer sweep (7 plans refs across 6
-      files + 7 scripts refs across 8 files; the create-only shape from this doc must be preserved in the moved body).
-      (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-06 (slot-6) — the parent doc archived.** The resolved parent doc
+      `prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` was moved to `plans/archive/issues/` via
+      `git mv` (`status: resolved`, ARCHIVED banner added) and every path referrer updated corpus-wide
+      (`/plans/active/issues/prek_patch_cache...` → `/plans/archive/issues/...` across 14 files: 6 plans + 8 scripts;
+      keyword/historical bare-filename mentions intentionally left as-is). Shipped in the archival commit
+      (unified-trading-pm, 2026-08-06). (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -169,3 +170,6 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
   Create-only reproduced in 4 controlled scenarios (above) — `git commit --only <new-path>` after `git mv` drops the
   delete side, prek-independent, single-process; concurrency ruled out. 5 live diverged duplicate pairs found in the
   corpus. Evidence in the parent doc's Progress Log + this doc.
+- 2026-08-06 (slot-6, review): the parent `prek_patch_cache...` doc was archived (all todos done, mechanism named) via
+  `git mv` to `plans/archive/issues/` + `status: resolved` + ARCHIVED banner + corpus-wide referrer sweep (14 files).
+  This doc's `related:` updated to the archive path; the archival P3 todo flipped.

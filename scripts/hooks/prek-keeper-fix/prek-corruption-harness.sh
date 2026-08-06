@@ -5,7 +5,7 @@
 #              a version >= that release (then this becomes the proof we can stop patching)
 #
 # Reproduction + verification oracle for the prek stash/restore corruption.
-# SSOT: /plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
+# SSOT: /plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
 #
 # WHY THIS EXISTS
 # ---------------

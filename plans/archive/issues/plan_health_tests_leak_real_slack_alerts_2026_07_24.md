@@ -250,8 +250,8 @@ whole suite (1609 passed).
   (`unified-trading-pm@dcf897c30`) created this file at `plans/archive/issues/` but never removed the sibling copy left
   behind at `plans/archive/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md` — a `create`-only, not a real
   `git mv` (plausibly the same concurrent-index-mutation class as
-  `/plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`, not confirmed which). A
-  later, unrelated commit (`unified-trading-pm@ee72c276d`, 18:26 same day, `/plan-reconcile ao`) then edited the stale
+  `/plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`, not confirmed which).
+  A later, unrelated commit (`unified-trading-pm@ee72c276d`, 18:26 same day, `/plan-reconcile ao`) then edited the stale
   ACTIVE-path duplicate — unaware it had already been archived — fixing this doc's heading ("Open todos" → "Todos (all
   closed)") and the na-eligibility marker directly above. Both fixes were real and are merged into this single surviving
   copy in this edit; the stale duplicate at the active path has been deleted.

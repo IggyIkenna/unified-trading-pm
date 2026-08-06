@@ -3,7 +3,7 @@
 Fix + verification oracle for the recurring corruption where a `quickmerge`/`git commit` run silently mangles or deletes
 content in files the commit never intended to change.
 
-**Issue SSOT:** `/plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`
+**Issue SSOT:** `/plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`
 
 ## What actually causes it
 

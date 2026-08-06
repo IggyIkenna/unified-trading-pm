@@ -328,7 +328,7 @@ def _clear_field_continuations(fm_lines: list[str], field: str) -> list[str]:
     string rather than converging (confirmed via live repro on
     plans/active/defi_consolidated_closeout_2026_07_18.md — a multi-date runaway value with
     embedded changelog prose folded into `last_updated:`; see
-    plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md).
+    plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md).
     Call this unconditionally (not just when the field looks empty) so a field whose own
     line already holds a real value still gets its stale continuation cleaned.
 

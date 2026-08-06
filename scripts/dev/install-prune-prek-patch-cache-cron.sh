@@ -23,7 +23,7 @@
 #   - Log file: ${XDG_RUNTIME_DIR:-/tmp}/prune-prek-patch-cache.$(id -u).log (per-uid,
 #     mirrors prune-uv-cache/cleanup-stale-qg-tmp's convention)
 #
-# plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
+# plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
 # Codex SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Cron-based FF puller"
 # (same self-pull / idempotent-install convention)
 

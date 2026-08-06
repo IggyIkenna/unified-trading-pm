@@ -2100,7 +2100,7 @@ EOF
       echo "  - $_qm_path" >&2
       git restore --worktree -- "$_qm_path" 2>&2 || echo "    ❌ restore failed for $_qm_path — inspect manually before proceeding" >&2
     done
-    echo "[$REPO_NAME]     See plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
+    echo "[$REPO_NAME]     See plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
   fi
 fi
 
