@@ -243,7 +243,35 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       (`i-0c9b283b31d6b5ca7`, `HEAD=fadc74b`, `systemctl is-active`→`active`); post-deploy verification query:
       `REMAINING_CROSS_ATTRIBUTED_ROWS=0`, `processed_transcripts` PK now `(account_id, file_path)`, pro's ledger now
       shows ONLY `model=deepseek-v4-pro` rows ($59.95) + `<synthetic>` ($0), flash's ledger now shows ONLY
-      `model=deepseek-v4-flash` rows ($1.23) — no more cross-contamination either direction.
+      `model=deepseek-v4-flash` rows
+      ($1.23) — no more cross-contamination either direction. **Independently validated
+      against real DeepSeek billing (2026-08-06, operator-provided ground truth)**: operator confirmed an exact $105
+      top-up; live balance check (`GET /user/balance`) at reconciliation time showed
+      $31.54 remaining →
+      real total spend = $73.46, minus operator's own
+      ~$5 estimate for non-AO manual chat usage = **~$68.46 expected AO-attributable spend**. Accounts panel total at
+      the same moment: **$66.41 (diff −$2.05, well inside the operator's stated
+      $10 tolerance — a real match)**. Task Token Usage total at the same moment: **$43.35 (diff −$25.11, confirmed real
+      gap, not tolerance noise)** — see todo 19.
+- [ ] 19. [BACKEND] [DOC] P2. **Task Token Usage structurally cannot see review-agent spend — document it, decide
+      whether to fix it.** Root-caused the
+      $25 gap from todo 18's ground-truth check: 4 of pro's slots (`#1/#8/#10/#12`)
+      are persistent REVIEW agents (`slot_role='review'`), not backlog workers — they never get dispatched a task and
+      never call `/done`, so `task_usage` (written ONLY at `/done`) never records a single dollar of their real,
+      ongoing DeepSeek spend. Confirmed via turn counts: pro logged 27,213 real turns (Accounts panel/message ledger)
+      but only 19,589 map to a completed task (task_usage) — a 7,624-turn gap concentrated in exactly those 4 slots.
+      This is NOT a timing lag (unlike genuinely in-progress worker tasks, which DO eventually post to Task Token
+      Usage once they complete) — review-agent spend is PERMANENTLY invisible to that view by construction. Matters
+      directly for this plan: if review agents run disproportionately on ONE variant (today: only pro has any), any
+      future "total fleet DeepSeek cost" figure computed FROM Task Token Usage will systematically favor whichever
+      variant carries the review-agent overhead, even though that cost is real and belongs to the fleet. Two
+      sub-parts, not yet started: (a) doc — note prominently (in-UI hint + this plan) that Task Token Usage answers
+      "$/completed-task"
+      only, never "total fleet spend" (use the Accounts panel or a real balance check for that); (b) decide (operator
+      call, not a unilateral agent decision) whether review-agent activity should get its OWN lightweight per-turn
+      ledger entry (not a fake "task") so its real cost becomes independently visible/attributable, or whether this is
+      accepted as out-of-scope forever. Flash's own smaller residual gap (~$2.35, no review-role slots) is NOT yet
+      explained by this mechanism — separate, smaller, still-open sub-question.
 
 ## Codex SSOTs
 
@@ -345,14 +373,29 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   (model-match filter + per-account composite-PK fingerprint scoping) plus a one-time self-healing purge migration,
   shipped `agent-orchestrator@fadc74b`, deployed live, verified: `REMAINING_CROSS_ATTRIBUTED_ROWS=0`; pro's ledger now
   shows ONLY `deepseek-v4-pro` messages ($59.95)
-  - `<synthetic>` ($0); flash's ledger now shows ONLY `deepseek-v4-flash` messages ($1.23). **Remaining, EXPECTED gap**:
-    Accounts-panel sum (~$61.18) still exceeds Task Token Usage's sum (~$43.35) — this is the ALREADY-explained
-    real-time-activity-including-in-progress-work vs. completed-tasks-only distinction between the two panels (see the
-    `usage-panel-hint` captions shipped alongside todo 14), not a bug; a task mid-flight contributes to the Accounts
-    panel immediately but to Task Token Usage only once it completes. Side effect during shipping: full QG caught a
-    stale `.venv` in this checkout (msgpack/pip/pyasn1/setuptools all several patch versions behind an ALREADY-fixed
-    `uv.lock` — `uv sync` resolved it; not a new vulnerability, `cve_affected_pinned_deps_remediation_2026_06_18.md`
-    already tracks the fleet-wide effort this was part of).
+  - `<synthetic>` ($0); flash's ledger now shows ONLY `deepseek-v4-flash` messages ($1.23). **Remaining gap noted but
+    misdiagnosed in this same entry, corrected below**: Accounts-panel sum still exceeded Task Token Usage's sum;
+    claimed at the time this was the "in-progress work" distinction — that claim was WRONG, see the next entry. Side
+    effect during shipping: full QG caught a stale `.venv` in this checkout (msgpack/pip/pyasn1/setuptools all several
+    patch versions behind an ALREADY-fixed `uv.lock` — `uv sync` resolved it; not a new vulnerability,
+    `cve_affected_pinned_deps_remediation_2026_06_18.md` already tracks the fleet-wide effort this was part of).
+- **2026-08-06 — correction + real ground-truth validation (todo 19 filed)**: operator pushed back on the "in-progress
+  work" explanation above — correctly. Measured it directly: total spend across every CURRENTLY-working DeepSeek slot
+  was $0.47, nowhere near the ~$23 gap. That explanation was wrong and is retracted. Real cause: 4 of pro's slots
+  (`#1/#8/#10/#12`) are persistent REVIEW agents, not backlog workers — they never call `/done`, so `task_usage` never
+  sees their real, ongoing spend (not delayed — permanently absent by construction). Confirmed via turn counts: pro
+  logged 27,213 real turns, only 19,589 map to a completed task, a 7,624-turn gap concentrated in exactly those 4 slots.
+  Operator then supplied REAL ground truth: exact $105 top-up, ~$5 estimated non-AO manual chat usage. Live balance
+  check at reconciliation time: $31.54 remaining → real total spend $73.46 →
+  ~$68.46 expected
+  AO-attributable. Accounts panel (post-fix): $66.41, diff
+  −$2.05 — **a genuine match, independently validating the
+  cross-attribution fix against real DeepSeek billing, not just internal consistency.** Task Token Usage: $43.35,
+  diff
+  −$25.11 — confirmed real, explained by the review-agent finding, not tolerance noise. Filed todo 19 (doc + operator
+  decision on whether review-agent spend should get its own visible ledger entry); flash's own smaller residual gap
+  (~$2.35,
+  no review-role slots) remains unexplained, separate open question.
 
 ## Deferred work after 2026-08-05
 
@@ -364,7 +407,9 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 | Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                                                      | Todo 8                                                            |
 | Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                                                      | Operator                                                          |
 | Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
-| Todo 17 — Fleet table's misleading "sonnet" tier label + unverified thinking-flag meaning for DeepSeek slots                                           | **Not done** — real work, separate UI surface (Fleet table, not the usage panels todo 14 touched)                                                                                       | Nothing — pick up directly                                        |
+| Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                              | Nothing — pick up directly                                        |
+| Todo 19 — document Task Token Usage's blind spot on review-agent spend + operator decision on fixing it                                                | **Partially not-done** — the doc half is real work, pick up directly; the "should review-agent spend get its own ledger entry" half is **Operator-owned**                               | Doc half: nothing. Decision half: Operator                        |
+| Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                         | Nothing — pick up directly                                        |
 | `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
 
 **Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
