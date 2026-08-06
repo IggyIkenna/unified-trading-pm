@@ -501,3 +501,25 @@ deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finaliz
 - **D6 CONFIRMED** — autonomous_decisions:445-448 entry-12 → replace with fold-into-prediction_phase_ab_residuals § A3
   resolution (prediction_phase_ab_residuals:279 "2026-07-26 fold-in … entry #12, option A" + archived shell status:
   complete + `unified-trading-pm@2c61a8dc4`).
+
+### Cluster C (live-state claims) — CONFIRMER DONE 6/6 CONFIRMED (refuter still pending)
+
+- **C1 CONFIRMED** — deribit_binance_finalize:77-78 → replace with 5-relaunch chain: 4 SPOT died (3 preemptions +
+  WORKER_STALLED kill), 5th 2026-08-06 ON_DEMAND `cefi-queue-heavy-binancefutu-x17-20260806-163512` RUNNING;
+  post-backfill gates unmet. (track2_backfill_vm_preempted_no_recovery issue :184-191/:555-560/:594-602.)
+- **C2 CONFIRMED** — cefi_track2:69 → append "(June-rate extrapolation did NOT hold live: measured 2026-07-28 ≈3.25
+  days/hr → ~30-day ETA — see Progress Log 2026-07-28 entries)".
+- **C3 CONFIRMED** — shard24:139-140 → qualify: runbook amended 2026-08-02 root-cause-diagnosed carve-out resets ≤2/day
+  bound (rb_infra_relaunch.md:70-74); shard 24's own fix 09a2374 would satisfy once deployed. Doc's 08-03/04/06 entries
+  never absorbed it.
+- **C4 CONFIRMED** — cefi_legacy_bucket:137-139 → mechanism clause wrong: whole-bucket destroy IS restorable (§3a,
+  delete-safety-protocol.md:266-268, extended 2026-07-28 same day doc filed); bucket deleted 2026-07-14 → 7-day default
+  window long elapsed → "likely gone" OUTCOME stands, mechanism corrected.
+- **C5 CONFIRMED + correction** — cryptovenue Barchart: the "IN PROGRESS (this session)" phrase is at :603, NOT :225.
+  :225 is the stale-unflipped `- [ ] [REFACTOR] P2. DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).` →
+  FLIP [x] citing uac@844c5ee6b (verified ancestor; commit literally "Barchart removal") + codex retirement; residual =
+  dead comments/config (smoke_matrix.py:143, provider_api_versions.yaml:55-59, docstrings) → new scoped todo; do NOT
+  delete TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES quarantine.
+- **C6 CONFIRMED** — cryptovenue:605-609 BLOCKED-DATA → retag reflecting: KRX twins shipped (005380/005930/000660 .KS,
+  UAC tradfi_ticker_universe.py:402-404 + KrxEquityDef + venue_mapping.py:249 "KRX": "yahoo_finance", uac@844c5ee6b);
+  residual = low-latency/intraday basis feed only.
