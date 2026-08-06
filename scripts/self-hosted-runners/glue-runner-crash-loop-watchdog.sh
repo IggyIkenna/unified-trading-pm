@@ -94,12 +94,28 @@ resolve_gh_token() {
     --secret="$secret" --project="$project"
 }
 
-# <unit-name> is crash-looping if systemd is actively retrying it past the threshold.
+# <unit-name> is crash-looping if systemd is actively retrying it past the threshold AND its most
+# recent exit was NOT clean. FOUND LIVE 2026-08-06 (i-042a6332509482556, glue-2/glue-3/glue-5 all
+# false-paged the same tick): SubState=auto-restart + high NRestarts alone is NOT sufficient for a
+# `@glue-N` instance -- per github-glue-runner@.service's own comment ("glue-*: one job per
+# process, restart to re-register"), Restart=always fires on EVERY exit, including a clean
+# `Runner listener exit with 0 return code, stop the service, no retry needed` after a
+# successfully completed job. NRestarts is a lifetime counter that NEVER resets, so a healthy
+# glue-N unit crosses RESTART_THRESHOLD within its first few jobs and then sits >= threshold
+# FOREVER -- any poll landing in the ~5s window between a clean exit and the next job's start
+# (RestartSec=5) pages a false CRITICAL "runner process is DOWN" alert on a unit that is, and
+# always was, healthy. `Result` (systemd's verdict on the LAST completed run: "success" for exit
+# 0, "exit-code"/"signal"/etc. for an actual failure) is the one property that distinguishes "just
+# finished a job cleanly, about to restart" from "genuinely failing to start/run" -- gating on
+# Result != success closes the false-positive without weakening real detection: the original
+# 2026-07-28 GCP_PROJECT-missing incident this watchdog was built for exited non-zero every time
+# (Result=exit-code), so it still trips this check.
 is_crash_looping() {
-  local unit="$1" substate restarts
+  local unit="$1" substate restarts result
   substate="$(systemctl show "$unit" -p SubState --value 2>/dev/null || echo "")"
   restarts="$(systemctl show "$unit" -p NRestarts --value 2>/dev/null || echo "0")"
-  [ "$substate" = "auto-restart" ] && [ "${restarts:-0}" -ge "$RESTART_THRESHOLD" ]
+  result="$(systemctl show "$unit" -p Result --value 2>/dev/null || echo "")"
+  [ "$substate" = "auto-restart" ] && [ "${restarts:-0}" -ge "$RESTART_THRESHOLD" ] && [ "$result" != "success" ]
 }
 
 # Seconds since <unit-name>'s current invocation started. Empty/unparseable timestamp -> 0
