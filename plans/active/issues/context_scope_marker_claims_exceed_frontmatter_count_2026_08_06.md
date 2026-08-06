@@ -149,13 +149,13 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       UP_TO_DATE. **Done when**: a report of every mismatched doc in the full corpus exists (this may surface instances
       beyond the 4 found here, since a doc can carry this bug while still reading UP_TO_DATE). —
       unified-trading-pm@92bd7b601
-- [ ] [DOC] P2. **Close the detection gap** (gated on todo 1's root-cause finding): decide whether
+- [x] ✅ [DOC] P2. **Close the detection gap** (gated on todo 1's root-cause finding): decide whether
       `scripts/plan-hygiene/generate_context_scope_inventory.py`'s Phase 0 STALE/UP_TO_DATE verdict logic should be
       extended to also flag a marker-count-vs-actual-count mismatch as its own verdict (e.g. `COUNT_MISMATCH`), so this
       class self-heals via the normal daily incremental pass instead of requiring an ad-hoc audit like this one to
       notice it. **Done when**: either the script gains this check (with a test fixture reproducing one of the 4
       confirmed instances), or a documented decision that it's not worth adding (e.g. if todo 1 finds this was a
-      one-time batch bug already fully remediated, not an ongoing risk).
+      one-time batch bug already fully remediated, not an ongoing risk). — unified-trading-pm@a4fbf7f61
 - [ ] [OPERATOR] P1. **Human line-cap trim of `data_completion_defi_2026_07_15.md`** (sits at the 1000L hard cap — the
       one remaining mismatched doc from the sweep), then restore the 2 dropped context_scope entries
       (`data_completion_to_100_all_ag_2026_06_21.md` + `migrate_defi_full_v9_canonical.py`) and align the 2026-08-01
@@ -323,3 +323,18 @@ failed QG can report exit 0. Run to a file and check the real `$?` (e.g.
 `bidxjckrg2` polls the checker): on "FINALIZE COVERAGE GREEN", re-run PM QG (real exit code) → quickmerge Pass 2
 `--agent --files '<6 changed paths>'` (issue doc included) → verify SHA on origin → POST `/api/slots/6/done` → flip
 harness task #4 → ✅ CLOSE the `BLK-bea57103` and the new BLK bookends.
+
+- **2026-08-06 (data_engineering, slot 11, task context_scope_marker_claims_exceed_frontmatter_count-003)**:
+  COUNT_MISMATCH verdict added to `generate_context_scope_inventory.py` (unified-trading-pm@a4fbf7f61). Decision: ADD
+  the check — root-cause finding from task -001 confirmed the class is systemic (4 distinct entry-drop commits on 2
+  separate dates, none one-time), so a COUNT_MISMATCH doc would permanently hide behind UP_TO_DATE without it.
+  Implementation: new `_latest_marker_info()` (date + position), `_marker_claimed_count()` (extracts parenthetical count
+  from the Progress Log bullet window), `COUNT_RE = re.compile(r"\((\d+)\s+entr(?:y|ies)\)")` (handles both "entry" and
+  "entries"). `_latest_marker()` refactored as a thin wrapper to preserve the sweep tool's existing API. Verdict fires
+  when marker is date-fresh AND claimed count != actual list length — covers both entry-drop (claimed > actual) and
+  write-time miscount (claimed < actual) shapes. Test coverage: 4 unit helpers
+  (test_latest_marker_info_returns_date_and_position, test_latest_marker_info_none_when_absent,
+  test_latest_marker_info_breaks_ties_by_taking_last_occurrence, test_marker_claimed_count_extracts_plural_entries,
+  test_marker_claimed_count_returns_none_when_no_parenthetical) + 4 end-to-end fixture cases (COUNT_MISMATCH entry-drop,
+  COUNT_MISMATCH write-time miscount, UP_TO_DATE no-count-claim, UP_TO_DATE matching count). 1720 passed / 0 failed on
+  PM QG.
