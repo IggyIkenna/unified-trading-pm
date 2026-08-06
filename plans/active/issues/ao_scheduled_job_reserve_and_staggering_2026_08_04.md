@@ -381,6 +381,26 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (a) drop it from `ScheduledJobStatus` entirely and make `job_name` required on the dispatch route, or (b) keep it
       as the deliberate opt-out for operator one-offs that want fail-fast. Do not leave both paths undocumented. (repo:
       agent-orchestrator)
+- [ ] [OPERATOR] P1. **RE-INSTALL ALL SEVEN timer units on the orchestrator VM — nothing from the 2026-08-06 slot-3
+      batch is live until this runs.** `sudo bash scripts/install-<each>-timer.sh` for all 7. The earlier re-install
+      todo above IS done, but it ran at 15:04 UTC — BEFORE agent-orchestrator@5f15d0a (16:21, shard + Saturday) and
+      @4a77bfe (17:00, shared guard + `ui` + UTC day-check). A `git pull` does not regenerate an installed systemd unit
+      or the script in /usr/local/bin, so right now the repo is correct and the live fleet still runs the OLD dispatch
+      scripts. Concretely still-not-live: the `ui` tranche does not dispatch (verified 2026-08-06 17:15 via
+      `scripts/orchestrator/check-scheduled-job-health.sh runs` — 9/9 tranches, no `ui`); a run that dies mid-flight
+      still blocks its own same-day retry; plan-reconciler still runs unsharded. Each installer now also copies
+      `scripts/scheduled_job_already_ran.py` to /usr/local/bin, so a PARTIAL re-install is fine (the file is identical
+      from whichever installer writes it last) but a ZERO re-install leaves every fix inert. `[OPERATOR]` because it
+      needs sudo on the VM. (repo: agent-orchestrator)
+- [ ] [DATA] P2. Verify agent-orchestrator@4a77bfe actually went green. As of 2026-08-06 17:09 its LDR
+      `Deploy Dashboard (Firebase Hosting)` run (31121770442) had been **queued 8+ minutes with no runner**, and the
+      three preceding LDR runs of that same workflow all ended `cancelled` at 10-23min — consistent with
+      concurrency-group supersession on a busy branch, but nobody has confirmed that workflow ever COMPLETES on LDR.
+      Separately confirm `quality-gates-v2` green on the LDR→main promote PR carrying this sha (that is the actual
+      required check; LDR never runs server QG). Local gate was green pre-commit — 2584 python, `tsc --noEmit` clean,
+      225 vitest — so this is CI-surface verification, not a suspected code defect. NOTE: the slot-3 dev token could not
+      read `statusCheckRollup` (`Resource not accessible by personal access token`), so the promote PR's checks could
+      not be inspected from this checkout. (repo: agent-orchestrator)
 
 <!-- Operator rulings 2026-08-06 (slot-3 session): shard plan-reconciler, ui as the 10th tranche, Saturday `all` run,
      guard on lifecycle-complete. PM half SHIPPED unified-trading-pm@d11d0a765; the AO half below was NOT started in
@@ -464,7 +484,61 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       checkpoint. Sharding is that class's fix; checkpointing protects completed work, which is a different failure.
       (repo: unified-trading-pm)
 
+## Deferred work after 2026-08-06 (slot-3 interactive session)
+
+| Item                                                       | State / why deferred                                                                                                                                                              | Blocked on                                          |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Re-install all 7 timer units on the VM                     | **Operator-owned.** Needs sudo on the orchestrator VM. Until it runs, every AO change from this session is inert — the repo is correct, the live fleet still runs old scripts.    | Operator (sudo)                                     |
+| Verify `4a77bfe` CI + promote-PR `quality-gates-v2`        | **Cannot be done yet.** The LDR run was still queued with no runner; the promote PR is opened by the standing `*/15` fleet workflow. Local gate was green, so this is CI-surface. | Elapsed time + a runner; token lacks PR-check scope |
+| `-015` / `-016` (working-pane guard, `no_capacity` legacy) | **Not done.** Pre-existing todos, untouched this session; both need a few days of live evidence first.                                                                            | Nobody — needs elapsed time then a read             |
+
+**Recommended NEXT item: the re-install.** Everything else in this batch is already correct in the repo and verified by
+tests; the re-install is the single step standing between that and any of it actually running. Verifying CI second — it
+gates promotion to `main`, not the fix's correctness.
+
 ## Progress Log
+
+- **slot-3 interactive 2026-08-06 (operator rulings: shard plan-reconciler, `ui` as the 10th tranche, Saturday `all`
+  run, guard on `lifecycle-complete`)**: SHIPPED — agent-orchestrator@4a77bfe + @5f15d0a (AO worker),
+  unified-trading-pm@d11d0a765, @17ac8e80a, @c6238bd1e, @44c6fa805. Lessons worth more than the state:
+
+  **TWO OF MY OWN FINDINGS WERE WRONG, both the same way — I reported an absence without probing for the thing I said
+  was missing.** (a) "No durable transcript exists for any scheduled run" — FALSE. `/api/agents/{id}/log` already
+  PREFERS Claude's durable JSONL via `server/transcript_log.py` and only falls back to `capture-pane`; the docstring
+  says so two lines below the sentence I misread. All 32 `reaped-stale` family agents carry a `claude_session_id`, so
+  their transcripts ARE resolvable. Had this not been checked, someone would have built redundant `pipe-pane` capture
+  over an alt-screen byte stream. (b) "plan_reconciler holds everything to the end of a long pass" — FALSE. Its role doc
+  has mandated `COMMIT INCREMENTALLY … PUSH each checkpoint` since its Phase-5 design. The checks that disproved both
+  took ~2 minutes each and were run only AFTER filing. **Verify an absence before filing it.**
+
+  **`reaped-stale` is not one failure mode, and conflating them mis-routes the fix.** plan_reconciler's deaths were at
+  1m48s and 5m14s — before any check completed, so nothing existed to checkpoint. Checkpointing protects work already
+  DONE; sharding is what protects a run that dies early. A "49% of runs die" statistic hides which of the two you have.
+
+  **`status="dispatched"` is a spawn receipt, not a completion.** The whole guard bug. Anything reasoning about "did the
+  scheduled job run" MUST read `agent_exit_reason`; `lifecycle-complete` is the only value that means done.
+
+  **Filing a todo in an `assigned_vm: planning` doc DISPATCHES it.** An AO worker picked up and shipped the sharding
+  todo (@5f15d0a) ~20 min after it was committed. Useful, but it means "write it down for later" and "start it now" are
+  the same action in this corpus — and two agents nearly built the same thing. The backlog self-cleared once the
+  checkboxes flipped (verified: the completed task ids dropped out of `/api/backlog`), so no manual regen was needed.
+
+  **MEASUREMENT TRAPS (now encoded in `scripts/orchestrator/check-scheduled-job-health.sh`, which exists because several
+  open todos here are "re-run this and compare"):** SSM truncates `StandardOutputContent` at ~24000 chars — a raw row
+  dump fails mid-JSON and looks like corrupt data, so aggregate ON the VM. `/api/scheduled-jobs/recent` has a
+  server-side `limit=500`, so `within_hours=168` silently returns only the newest 500 rows and per-day counts from one
+  wide call are wrong for older days — sweep narrow windows and dedupe by `run_id`. Also: `rg -r` is `--replace`, not
+  recursive; `rg -rn 'migrate'` silently rewrote its own output and produced a confusing non-result.
+
+  **REJECTED APPROACHES.** (1) `pipe-pane` per-run logs — redundant, see above. (2) A hand-rolled
+  `_migrate_agents_done_evidence_column()` — the repo has a declarative `_AGENTS_MIGRATION_COLUMNS` registry and
+  `test_migration_completeness.py` rejects any AgentRow column not in it. That test caught the mistake; use the
+  registry. (3) Editing the already-ran guard in all 7 installers — extracted to one file instead, since 7 copies of one
+  rule is precisely what let the `ui` tranche go unnoticed for a week.
+
+  **INVARIANT.** The repo being correct does NOT make a timer correct: an installed systemd unit and its /usr/local/bin
+  script are regenerated ONLY by re-running the installer. Every "fixed the timer" claim needs a re-install before it is
+  true.
 
 - **worker slot-16 2026-08-06 (todo 8 — plan-reconciler timer re-install, this task)**: ATTEMPTED + BLOCKED-ON-OPERATOR
   (`BLK-f602483b`). Verified the repo installer is already correct+shipped on LDR (`--max-time 5950` /
