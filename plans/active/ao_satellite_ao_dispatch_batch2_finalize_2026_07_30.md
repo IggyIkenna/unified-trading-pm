@@ -72,10 +72,9 @@ context_scope:
       reporter-staleness read, the JWT-secret token-survives-restart + healthz check, the 4 orphan-commit dispositions,
       the wip-preserve ref disposition). **Done when**: all 8 verified, and any claim whose evidence does not hold up is
       re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
-- [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox — 8 source
-      docs, full list on the lines below** — batch 2 was an extraction, so the 8 source-doc items it covers are the ones
-      that go stale, not the batch's. Flip the specific todo in each of:
-      `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos),
+- [ ] [REVIEW] P0. **Reconcile each todo's evidence into its TRUE source doc (8 docs, listed below)** — batch 2 was an
+      extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the specific
+      todo in each of: `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos),
       `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md` (both `[WORKER] P1` checkboxes, with
       per-item MOOT-SUPERSEDED-or-recovered dispositions),
       `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (both todos),

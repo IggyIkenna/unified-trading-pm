@@ -105,9 +105,9 @@ condition fires.
 > dispatches would have re-read the same dispatcher code twice. **Folded into one gated item below**; neither half was
 > dropped — both done-whens are preserved verbatim.
 
-- [ ] [BACKEND] P3. **READY TO DISPATCH.** Implement the durable-park mechanism for an external-promote-gated task in
-      `agent-orchestrator`'s dispatcher (`server/auto_park.py`), reusing the existing `auto_unpark__<task-id>` prereq —
-      not a `priority_override` park, which does not survive backlog re-derivation. Gate cleared 2026-08-01 — the
+- [ ] [BACKEND] P3. **READY.** Durably park via `auto_unpark__<task-id>` (not `priority_override`) in `auto_park.py`.
+      Context: in `agent-orchestrator`'s dispatcher (`server/auto_park.py`), a `priority_override` park does not survive
+      backlog re-derivation, but a named `auto_unpark__<task-id>` prereq does. Gate cleared 2026-08-01 — the
       prerequisite audit (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s `/skip-current-task` `reason_code` audit)
       found zero uncovered `reason_code` gaps; full table in
       `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`. In one change: **(1) [was todo 2 — do this
