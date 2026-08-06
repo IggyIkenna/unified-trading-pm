@@ -152,18 +152,31 @@ still in flight.
       widen/guard `_done_one_off`'s active-agent lookup), and add a regression test mirroring
       `test_direct_boot_lazy_agentrow_then_one_shot_complete_succeeds` but for the `escalation.py` dispatch path rather
       than the `plan_health` boot path.
-- [ ] [DATA] P2. **NEW 2026-08-06, a distinct sub-mechanism for the SINGLETON-kind roles specifically** (see Progress
-      Log entry below for full detail): query the live `AgentRow` table for every `agent_kind='plan_reconciler'` record
-      whose `dispatch window` overlaps 2026-08-06 00:01 UTC–13:39 UTC (slot 2, `agent_id=agt-4fdce1`) — confirm (a)
-      whether `agt-4fdce1`'s own row was archived with `exit_reason="reaped-stale"` (`server/state_store/agents.py`
-      `_sessionless_singleton_duplicates`/`reap_orphan_agents`), (b) whether a same-kind sibling record existed with
-      `tmux_session` live at the same time (the dedup precondition — `_sessionless_singleton_duplicates` only archives a
-      record whose OWN `_owns_live()` check reads False while a sibling's reads True), and (c) if slot 2's tmux session
-      was in fact continuously live the whole time (it was — this worker never stopped), whether `is_session_live()`
-      logged a transient miss at the reap timestamp (the function's own docstring names this exact false-positive risk:
-      "a transient `has_session()` miss under host load" — and
-      `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` independently documents repeated
-      high-load episodes, load avg 30-60+ on a 16-core box, around this same period).
+- [x] [DATA] P2. ~~NEW 2026-08-06, a distinct sub-mechanism for the SINGLETON-kind roles specifically~~ — **part (a)
+      ANSWERED 2026-08-06T13:59Z, via `GET /api/agents?kind=plan_reconciler&include_finished=true` (no DB access needed
+      — see Progress Log "Second addendum"): `agt-4fdce1` reads `exit_reason:"lifecycle-complete"`, NOT
+      `"reaped-stale"`. The singleton-dedup hypothesis is DISCONFIRMED for this specific occurrence.** Parts (b)/(c)
+      remain open but now scoped only to the OTHER 7 historical `plan_reconciler` rows the same query returned
+      (`agt-151fd0`, `agt-15740b`, `agt-2d7924`, `agt-385318`, `agt-4f3920`, `agt-5b60d5`, `agt-e1c73d` — all read
+      `exit_reason:"reaped-stale"`, `tmux_session:null`), which remain a real, still-unexplained singleton-dedup pattern
+      worth root-causing on its own — just proven NOT to be what produced `agt-4fdce1`'s `/done` 400s.
+- [ ] [DOCS] P3. **NEW 2026-08-06**: this doc has 8+ entries independently asserting "no DB/dashboard access from this
+      worker slot" before giving up on root-causing their own AgentRow's fate. That refrain is WRONG:
+      `GET /api/agents?kind=<role>&include_finished=true` (or with `status=archived`) is a plain, anonymous-local REST
+      endpoint that returns exactly `status`/`exit_reason`/`finished_at`/`tmux_session` for every historical row of a
+      given kind — no DB/JWT needed, same auth path every `/heartbeat` call already uses. Add a short callout near the
+      top of this doc (and/or to `SUB_AGENT_MANDATORY_RULES.md`) telling future corroborators to check this FIRST.
+- [ ] [CODE] P3. **NEW 2026-08-06**: investigate whether `_done_one_off`'s post-commit tail
+      (`server/routes/slots_worker.py:1620-1636`, `_compute_done_task_usage`/`_record_done_task_usage`, which run AFTER
+      `ss.archive_agent`/`ss.clear_slot_assignment` have already committed but BEFORE the function's own
+      `return DoneResponse(...)`) can error/time out in a way that makes an ALREADY-SUCCESSFUL archive look like a
+      failed call to the caller — the caller would see a 500/timeout instead of 200, retry, and the retry would then
+      correctly-but-misleadingly 400 with "no active agent owns its session" against the now-already-archived row.
+      Concrete trigger candidate: a session with a very large cached-token footprint (`agt-4fdce1` itself shows
+      `session_cache_read_input_tokens: 309312516`) making the usage computation slow/fragile. If confirmed, wrap the
+      post-commit tail in try/except so a usage-recording failure can't mask a real completion as a failure. **Not
+      confirmed** — no server logs available from a worker slot; this is a hypothesis, see Progress Log "Second
+      addendum" for the full reasoning chain.
 - [ ] [CODE] P3. If (c) above confirms a transient `is_session_live()` false-negative caused the archive: add a
       debounce/retry (e.g. require 2 consecutive False reads N seconds apart) to `_owns_live()`/`is_session_live()`
       before treating a SINGLETON-kind sibling as dead — the current single-sample check has no tolerance for a
@@ -329,3 +342,45 @@ still in flight.
     unrelated/coincidental — cannot distinguish which without DB access; (2) a restart happening mid-session at all is
     itself worth whoever root-causes this being aware of, as a possible contributing event class alongside the
     singleton-dedup hypothesis above (not claimed as causal — just observed close in time).
+
+  **Second addendum, same session, post-`/pre-compact`+`/compact`, re-armed via a previously-set hourly `ScheduleWakeup`
+  (2026-08-06T13:59:43Z)**: re-checked `GET /api/slots/2/messages` (empty — the 3 blocked questions stay resolved,
+  matching the main entry above) and retried `/done {task_id:"",sha:"",evidence:"", one_shot_complete:true}` — same 400,
+  verbatim, yet another same-signature repro. This time went one step further than every entry in this doc so far:
+  **`GET /api/agents?kind=<role>&include_finished=true` is a plain REST endpoint, reachable anonymous-local exactly like
+  every `/heartbeat`/`/done` call already in this doc, that answers precisely what every "not established (needs live DB
+  access this worker slot does not have)" caveat above was waiting on.** No DB/dashboard JWT needed — every future
+  corroborator should hit this FIRST.
+  - **Decisive, disconfirming result for `agt-4fdce1` specifically**: its row (matched via `claude_session_id` against
+    this exact session's own transcript file) reads `status:"archived"`, `tmux_session:"orch-slot-2"`,
+    `exit_reason:"lifecycle-complete"`, `finished_at:"2026-08-06T13:29:00.996866Z"` — **not** `"reaped-stale"`. This
+    overturns the "New, more precise hypothesis" paragraph directly above **for this occurrence only** — the same
+    query's other 7 historical `plan_reconciler` rows (`agt-151fd0`, `agt-15740b`, `agt-2d7924`, `agt-385318`,
+    `agt-4f3920`, `agt-5b60d5`, `agt-e1c73d`; 2026-07-31 through 2026-08-04) ALL read `exit_reason:"reaped-stale"`, so
+    the singleton-dedup mechanism is real and still the right lead for THOSE — just not what hit `agt-4fdce1`.
+  - **`exit_reason:"lifecycle-complete"` has exactly one writer for a `lifecycle:"scheduled"` agent**:
+    `server/routes/slots_worker.py:1595`, inside `_done_one_off` itself
+    (`ss.archive_agent(session, agent_id, exit_reason="lifecycle-complete")`) — the only other call site (line 2097)
+    requires `agent_row.lifecycle == "one_shot"`, but this API response confirms `plan_reconciler` is
+    `lifecycle:"scheduled"`, ruling that branch out. **This means a `/done {one_shot_complete:true}` call for
+    `agt-4fdce1` DID succeed server-side**, at 13:29:00 UTC — consistent with "shortly after the ~13:12 UTC operator
+    answer + the few minutes of STEP-8 commit/push work" the main entry above already describes. Every 400 observed
+    after that instant (main entry: "twice... once before the wait, once after"; this addendum: 2 more) is the CORRECT
+    response for a retry against an already-completed one-off — not a fresh instance of the bug.
+  - **New, concrete hypothesis for HOW a successful call could still read as a failure to its caller**: in
+    `_done_one_off`, `ss.archive_agent`/`ss.clear_slot_assignment` commit and return inside `with session_scope()`
+    (lines 1567–1612); `_compute_done_task_usage`/`_record_done_task_usage` (lines 1620–1636) then run **after** that
+    commit, before the function's own `return DoneResponse(...)` (line 1637). If either post-commit call is slow,
+    errors, or times out the HTTP round-trip, the archive has ALREADY landed but the caller never sees a clean 200 — a
+    retry then correctly 400s against the now-gone row, and the retry's failure is what gets recorded, masking the
+    original success. This session's own `agt-4fdce1` row shows `session_cache_read_input_tokens: 309312516` (309M) — a
+    large-enough session that a usage-computation step over its full transcript window is a plausible slow/fragile
+    point. **Not confirmed** (no server logs from this worker slot) — filed as a sharper, testable hypothesis, not a
+    claimed root cause.
+  - **Cannot fully reconcile against the main entry's own call count** ("twice... both 400") with a successful landing
+    at 13:29:00 UTC — this addendum has no access to the raw tool-call log of the pre-compaction portion of this session
+    (summarized out of context by the time this was written), so it cannot say which specific call succeeded or whether
+    an unlogged 3rd call is the true explanation. Flagging the gap rather than silently smoothing it over.
+  - **Practical upshot**: `agt-4fdce1` is ALREADY marked complete in the orchestrator's own bookkeeping — nothing
+    further to do, no more `/done` retries useful for this dispatch. Stopping the hourly `ScheduleWakeup` this addendum
+    was triggered by (see `ScheduleWakeup{stop:true}` this same turn).
