@@ -218,3 +218,17 @@ REST API) — the local reproduction was the only way to get a definitive answer
   defect, cross-referenced to the pre-existing capacity-crisis docs instead of duplicated. Did not independently verify
   Finding 3 (deployment-api dashboard panels) beyond the timeline correlation — left as a note for whoever owns those
   specific panels.
+- **conflict_resolver agt-3a6bff 2026-08-06 (execution-service#551)**: same class recurring — LDR→main promote PR
+  conflicting on `pyproject.toml` (`unified-api-contracts` floor: main 0.92.0 via post-rewrite squash 2e75758f vs LDR
+  0.96.0 re-pin de9f3cb0). `main-backmerge-to-ldr` failed twice 08-05 (runs 30999620887/30972837295 — conflict-routed
+  per the workflow's CONFLICT→human-PR contract), so main's content never re-entered LDR. Resolved via reconcile merge
+  `execution-service@50d4d539` on `promote/execution-service/de9f3cb01c96` (kept 0.96.0, LDR SSOT; merged tree
+  content-identical to the LDR tip — main's squash was a pure replay of LDR commits, so nothing dropped); local QG green
+  (152s); PR flipped CONFLICTING→MERGEABLE, v2-gated auto-merge re-armed; system self-heals post-merge (next backmerge
+  run is clean once main carries 0.96.0). Operational lessons for future resolver runs (each cost retry cycles):
+  - prek commit-msg rejects `merge:`-prefix subjects AND git-generated "Merge remote-tracking branch ..." subjects — use
+    a conventional-commit subject (`chore(reconcile): ...`) for reconcile merges.
+  - a content-neutral reconcile merge (merged tree == head tree) needs `git commit --allow-empty` — git refuses empty
+    merge commits outright, so plan for it.
+  - `gh compare` `.files` count is 3-dot (merge-base-based) and over-counts when both sides changed the same file — use
+    the local 2-dot `git diff --stat <base> <head>` for the true PR payload (10→6 files here).
