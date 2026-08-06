@@ -89,6 +89,15 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, P2 wait-phase note)**:
+  **Watchdogs do NOT survive session teardown** — bg task `b95w87dq6` was killed by a Claude Code process exit ("no
+  completion record from the previous session"); re-armed as `bn7y95d1z` (10-min cadence; exits on VM termination /
+  `day=2026-08-05` near-end / 8h re-arm). **Each fresh session MUST re-arm the wait watchdog** — a prior session's
+  background task is not a reliable wake. Safety net observed: the operator's recurring "proceed now" re-invocations
+  keep a blocked task alive even with a dead watchdog. Re-confirmed DERIBIT `derivative_ticker` = 0 objects on
+  forward-poll completed days 2026-05-23/24/25 → old-code forward-poll does NOT cover DERIBIT, so the RC3 backfill is
+  non-redundant. Forward-poll still RUNNING at day=2026-05-25 (ETA ~2026-08-11/12), fleet=1 (Tardis cap), operator
+  ruling NO `--force` override. P2 checkbox remains unchecked (gated on launch).
 - **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, P2 launch-readiness
   re-verify)**: all launch gates CLEARED except VM termination. (1) Ran the EXACT `lc_verify_tarball_freshness` the real
   launch executes — all 4 repos pass (mtds-code@`94e625c7`, unified-api-contracts-code@`c5a9dd79`,
