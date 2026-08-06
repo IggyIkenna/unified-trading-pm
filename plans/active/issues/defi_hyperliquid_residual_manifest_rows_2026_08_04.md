@@ -389,11 +389,22 @@ gap**, not a delete-safety question:
   owner — already wired + proven) over Option B (canonical `SolblazeAdapter` would change the data product from
   `lst_rates` exchange-rate to `oracle_prices` USD price and is single-source DeFiLlama). **Residual**: 3-day data gap
   2026-08-01..08-03 (the OOM window) → bounded backfill candidate, scoped as a follow-up.
+- **worker slot 10, 2026-08-06 (operator decision received)**: **Option A CONFIRMED** — operator directive "proceed now"
+  via interactive session. The legacy `collect-lst-rates` Cloud Run job is now the **formal, declared canonical owner**
+  of SOLBLAZE-SOLANA `lst_rates` production. Rationale: already wired + proven (2.5 years production data, 4-tier
+  fallback), OOM fixed (2Gi→4Gi `deployment-service@51f9fbe`), canonical-name fix on LDR
+  (`market-tick-data-service@2c451c33`). The only remaining deployment gap is the LDR→main promote (1,091 commits behind
+  — infra, not code) so `2c451c33` reaches the live Cloud Run image; until then, daily runs still write
+  `venue=BLAZESTAKE` which the migration script handles. **P1 residual RESOLVED** — the venue now has a declared,
+  operating producer. P2 backfill (2026-08-01..08-03 OOM window) remains as follow-up.
 
 ## Follow-ups
 
-- [ ] [DATA] P1. Resolve the BLAZESTAKE/SOLBLAZE-SOLANA zero-live-producer residual: operator/design decision (Options
-      A/B/C) on adapter ownership, then wire the producer (1 remaining live-data-gap venue of 4).
+- [x] ✅ [DATA] P1. Resolve the BLAZESTAKE/SOLBLAZE-SOLANA zero-live-producer residual: operator/design decision
+      (Options A/B/C) on adapter ownership, then wire the producer — **DONE 2026-08-06 (slot 10). Option A confirmed:
+      legacy `collect-lst-rates` Cloud Run job formalized as canonical SOLBLAZE-SOLANA owner; code shipped
+      `market-tick-data-service@2c451c33` (canonical venue name) + `deployment-service@51f9fbe` (OOM fix). Producer
+      operating at 4Gi; LDR→main promote lag tracked as infra, not code.**
 - [ ] [DATA] P2. Backfill the 2026-08-01..08-03 `lst_rates` gap for `SOLBLAZE-SOLANA` (the OOM window — those dates are
       absent from the canonical captured set). Mechanism per the chosen ownership option: Option A → re-run the legacy
       `collect-lst-rates` path for those dates (after `2c451c33` deploys); Option B → adapter-based backfill. Repo:
