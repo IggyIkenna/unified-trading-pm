@@ -178,11 +178,18 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
       via bounded GCS per-prefix listing (16-thread parallel, `instruments-store-pred-prd-central-element-323112`);
       latest day=2026-07-22 across all groups (the `a9be6ce9` writer-fix cutover), 0 still-live writes, 0 exceptions. No
       escalation needed. — unified-trading-pm@b53a0a1e6 (investigation only, no code change). Does not depend on todo 1.
-- [ ] 3. [DATA] P1. Locate the sports writer codepath that emits `day=/league=/venue=/instruments.parquet` (distinct
+- [x] ✅ 3. [DATA] P1. Locate the sports writer codepath that emits `day=/league=/venue=/instruments.parquet` (distinct
       from `_write_venue`/`_instrument_availability_sink_for` — likely in `sports.py`, `footystats.py`, or a per-league
       team/fixture/standings catalog writer in `process_enrichment.py`) and fix it to the ruled canonical shape from
       todo 1, following the SAME sink-PREFIX-not-partition-dict pattern as `_instrument_availability_sink_for`
-      (alphabetical-sort trap). Depends on todo 1.
+      (alphabetical-sort trap). — **ALREADY DONE 2026-08-03 by sibling doc**
+      (`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` todo 2): codepath
+      located in `_write_sports_fixture_venue` (`process_write.py:247`, NOT in
+      `sports.py`/`footystats.py`/`process_enrichment.py` as originally speculated). Fixed to use
+      `_instrument_availability_sink_for(bucket, ...)` with `league=` trailing after `venue=` (original
+      `instruments-service@ba87cc32`, current LDR equivalent `4e25aae1`). Migration tool extended with
+      `_SPORTS_LEAGUE_FLAT_RE` to recognize + migrate the legacy shape. Writer fix surviving on LDR confirmed 2026-08-06
+      via code inspection (slot 8). Depends on todo 1.
 - [ ] 4. [DATA] P1. Historical migration: copy the ~172,592 (at investigation time, growing) sports `league=` objects to
       the ruled full-hive target — mirrors this doc's own `migrate_instrument_availability_hive_2026_08_03.py` pattern
       (copy-if-missing + metadata-verify, VM-scoped, never deletes the source). Depends on todo 1 + todo 3 (writer fixed
