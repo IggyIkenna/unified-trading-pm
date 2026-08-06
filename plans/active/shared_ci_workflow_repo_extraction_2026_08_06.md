@@ -226,19 +226,93 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       git repo (`.tabs/3/` itself has no `.git` — confirmed) — it's a per-slot local artifact, so this fix only applies
       to THIS slot; every other slot/machine needs the same one-line addition (folded into todo 7's runbook, since both
       are per-machine local-file work).
-- [ ] 7. [OPERATOR] P0. **Per-machine clone runbook — genuinely manual, no single AO/interactive worker can do this for
-      another machine.** **This slot (`.tabs/3` on Ikenna's laptop) is DONE**: `unified-trading-ci` cloned at
-      `.tabs/3/unified-trading-ci`, root `.code-workspace` updated (todo 6). Still needed, once todo 4's manifest change
-      is pulled by each machine: **(a) every OTHER `.tabs/N` slot on Ikenna's laptop**; **(b) every slot on Harsh's
-      laptop** (operator to relay — different physical machine, cannot be actioned from this session); **(c) the AO
-      planning VM** (`i-0dd9812a96cdda5dc` human-planning VM AND the central orchestrator VM `i-0c9b283b31d6b5ca7` / EIP
-      `13.113.200.22` — both run per-slot worktrees off the same manifest per
-      `/codex/05-infrastructure/per-tab-worktrees.md`; needs SSM access to run the clone/re-provision command remotely,
-      or confirm `slot-cron-ff-pull.sh` picks up NEW manifest entries rather than only fast-forwarding existing ones
-      before assuming it's automatic). Each: `git clone git@github.com:IggyIkenna/unified-trading-ci.git` + add the
-      entry to that slot's root `.code-workspace` per todo 6's finding. Tagged `[OPERATOR]` because it's cross-machine
-      coordination no single dispatched worker can complete alone. Evidence: `git -C unified-trading-ci     status`
-      succeeding on each machine/slot, listed explicitly per machine as it's done.
+- [x] 7a. ✅ [INFRA] P0. **Root cause of the provisioning gap found + fixed — `unified-trading-ci` needs a
+      `live-defi-rollout` branch, not just `main`.** `setup-tab-worktrees.sh --add-slot <N>` (the canonical per-slot
+      provisioning script, confirmed via `codex/05-infrastructure/per-tab-worktrees.md` line 88 as "also used on every
+      VM worker host") derives each repo's slot-working branch from `workspace-manifest.json`'s
+      `repositories.<repo>.integration_branch`, falling back to the GLOBAL default `live-defi-rollout` when unset — and
+      EVERY existing fleet repo (PM included) relies on that fallback; there is no precedent for a repo using a
+      different slot-working branch, and quickmerge's own `STAGE 0.4`/push-target logic hardcodes `live-defi-rollout` as
+      the shared trunk. Overriding `integration_branch` to `main` for this one repo would have been a genuine, untested
+      architectural deviation — rejected in favor of giving it a real `live-defi-rollout` branch, matching every other
+      repo. Fixed: created `live-defi-rollout` off `main` (identical content, `unified-trading-ci@f20c59f`), pushed,
+      branch-protected the same as `main` (no force-push/delete). `main` stays what every fleet caller's `uses:@main`
+      pins against (design decision 3, unchanged) — `live-defi-rollout` is purely the slot/quickmerge working branch.
+      **Deliberately NOT wired into the full `promotion_model: ldr_main` automated-promotion pipeline** (would need
+      branch-protection-ruleset + `sit-gate` participation + `main-backmerge-to-ldr.yml`/ `staging-lock-check.yml`
+      template rollout — real additional infra, not needed for a low-churn CI-YAML-only repo right now);
+      `main`/`live-defi-rollout` are currently identical and will be kept in sync manually by whoever next edits this
+      repo. Flagged as a follow-up, not silently skipped — if this repo starts changing frequently, wire up the standard
+      `ldr_main` model the same way every other repo has it.
+- [x] 7b. ✅ [INFRA] P0. **Every slot on Ikenna's laptop provisioned** (all 11: `.tabs/1` through `.tabs/11`) via
+      `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --add-slot <N>` run once per slot from the top-level
+      (non-tabbed) `unified-trading-pm` clone — confirmed idempotent + additive-only (re-running it against an
+      already-provisioned slot only backfills the ONE missing repo; every other repo in that slot logs
+      `OK <repo> (Path-B clone exists)` and is untouched). Slots 2, 4–11 got a clean `--reference` Path-B clone in one
+      pass. Slots 1 and 3 needed manual follow-up (both had a PRE-EXISTING partial/incorrect state from before the
+      `live-defi-rollout` branch existed — slot 1's first `--add-slot` attempt partially cloned before hitting the
+      branch-checkout error, leaving it on `main` with no pre-push hook; slot 3 was MY OWN Phase-1 manual `git clone`,
+      also on `main`, also missing the hook + proper slot identity): both re-checked-out onto `live-defi-rollout` and
+      had `scripts/hooks/pre-push` (the strict-quickmerge guard every OTHER Path-B clone gets automatically at
+      clone-time) copied in by hand. **A top-level sibling clone of `unified-trading-ci` already existed** at
+      `${WORKSPACE_ROOT}/unified-trading-ci` (git identity `Rollout Agent`, already on `live-defi-rollout`) before any
+      of this — some other already-running automation on this machine had independently cloned it once it appeared in
+      the manifest; this session did not create it, just relied on it as the Path-B reference base
+      (`ensure_repo_worktree` requires this sibling to exist before it will provision ANY slot's `--reference` clone — a
+      genuine prerequisite, not something this session's slot loop needed to create itself). Evidence:
+      `git -C     .tabs/<N>/unified-trading-ci config user.name` shows the correct `ikennaigboaka [slot-<N>·laptop]`
+      identity and `branch --show-current` shows `live-defi-rollout` for all 11 slots.
+- [ ] 7c. [OPERATOR] P0. **Harsh's laptop — genuinely manual, cannot be actioned from this session (different physical
+      machine).** Exact commands (mirrors what this session just did on Ikenna's laptop, confirmed against the
+      documented Harsh onboarding transcript in `codex/05-infrastructure/per-tab-worktrees.md`): ```bash # 1. Clone the
+      new sibling repo at Harsh's workspace root (same level as his other repo clones, NOT inside .tabs/N) cd
+      /Users/harsh/Code/unified-trading-system-repos # or wherever his workspace root actually is git clone
+      git@github.com:IggyIkenna/unified-trading-ci.git
+
+      # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
+              #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+              cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+
+              # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+              cd unified-trading-pm
+              bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+              bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+              bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+              # ...etc for however many slots Harsh has
+
+              # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+              for n in 1 2 3; do   # substitute his real slot numbers
+                d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+                echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+              done
+              # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+              # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+              #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+              #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+              ```
+              Evidence: paste the sanity-check output back into this plan's Progress Log once run.
+
+- [ ] 7d. [OPERATOR] P0. **AO planning VM + central orchestrator VM — same mechanism, needs VM access this session
+      doesn't have.** Confirmed via `codex/05-infrastructure/per-tab-worktrees.md`: `setup-tab-worktrees.sh` is "also
+      used on every VM worker host" — NOT a separate provisioning path — and AO's own worker-spawn mechanism
+      (`agent-orchestrator/server/tmux_spawn.py`) only opens tmux shells INSIDE already-provisioned slots, it doesn't
+      provision repos itself. So the fix is identical to todo 7c's Harsh runbook, run via SSH/SSM against each VM
+      (`i-0dd9812a96cdda5dc` human-planning VM, `i-0c9b283b31d6b5ca7` central orchestrator VM): clone the
+      `unified-trading-ci` sibling at that VM's workspace root, then `--add-slot <N>` for each of that VM's existing
+      slot numbers. Once done, every AO worker spawned into those slots automatically has `unified-trading-ci` available
+      — no separate AO-specific fix needed. `slot-cron-ff-pull.sh` needs NO changes either way — confirmed by reading it
+      directly: it discovers repos by globbing actual directories already present in a slot
+      (`for d in "${slot_dir}"/*/`), not by reading the manifest, so it silently skips any repo not yet cloned and will
+      start FF-pulling `unified-trading-ci` automatically the moment the one-time clone above lands, with zero
+      cron-script changes. Evidence: same sanity-check pattern as 7c, run via SSM, pasted into the Progress Log.
+- [x] 7e. ✅ [INFRA] P1. **Clarifying what did NOT move, since this could easily be misread**: only the 5 files named in
+      "Confirmed technical facts" moved to `unified-trading-ci`. `unified-trading-pm/scripts/quality-gates-base/`,
+      `codex/`, and every other PM script/doc stay exactly where they are — the reusable workflow's own
+      `clone_repo unified-trading-pm` step (confirmed PAT-authenticated, visibility-agnostic — see "Confirmed technical
+      facts") still clones PM itself for that content on every CI run, unchanged. No other repo's tests, scripts, or
+      `pyproject.toml` dependencies reference PM differently because of this migration — the ONLY thing any of the 25
+      repos needed edited is their own `.github/workflows/*.yml` `uses:` lines (Phases 3-5), which is already fully
+      tracked per-repo above.
 
 ### Phase 3 — Canary: `ml-service`
 
@@ -375,3 +449,12 @@ here only for todo-count sanity, not for skipping per-repo verification.
   forced its `python3` child into x86_64 mode, breaking `jsonschema`'s native deps for EVERY UI repo's
   `buildspec.aws.yaml` check) — fixed via `brew install coreutils`, a genuine machine fix worth relaying if this slot is
   shared with another operator. Next: Wave 2 (6 repos).
+- **2026-08-06 (interactive session, operator asked: do all slots/AO need the repo, do PM-referencing scripts need
+  updating, document + action it with Harsh instructions).** Answered by actually testing the standard provisioning
+  script rather than assuming — found + fixed a real gap (todo 7a: `unified-trading-ci` needed a `live-defi-rollout`
+  branch, not just `main`, for `setup-tab-worktrees.sh` to work at all), then provisioned all 11 of Ikenna's local slots
+  for real (todo 7b), split the remaining machines into concrete per-machine todos with copy-pasteable commands (7c
+  Harsh, 7d AO VMs), and explicitly confirmed what did NOT move (7e — PM's `scripts/`/`codex/` stay exactly where they
+  are; only the 5 CI-workflow files migrated). `slot-cron-ff-pull.sh` needed zero changes — confirmed by reading it
+  directly, it discovers repos by scanning actual directories, not the manifest. Todos 7c/7d genuinely can't be closed
+  from this session (different machines); everything else in the per-machine track is done.
