@@ -78,17 +78,17 @@ as resolved (see Progress Log). Numbers below are the LATEST re-census, post con
 Log 2026-08-05T16:04Z entry — treat these as more current than the 08-04 figures but the consolidator is still not fully
 healthy, so even these may understate true progress).
 
-| Entity           | Scope                        | Status (2026-08-05)                                                                                                                                                                                 |
-| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                                                |
-| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                              |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 389,063 already resolved, **27,291 needed** (continued strong progress, -820) — ACTIVE via `af-backfill-20260806-022033`                                                 |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                                      |
-| **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,373 already resolved, **only 998 needed** — nearly done                                                                                                                         |
-| **INJURIES**     | **all-383**                  | 108,663 expected, 45,954 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                                      |
-| **STANDINGS**    | **all-383**                  | 108,663 expected, 104,215 already resolved, **4,448 needed** (was 64,439 on 08-04, **-59,991**) — **ACTIVE** via a separately-discovered dedicated VM, chunk 71/76, see below                       |
-| **TEAMS**        | **all-383**                  | 108,663 expected, 107,667 already resolved, **996 needed** (was 64,723 on 08-04, **-63,727**) — **ACTIVE**, near-converged (99.1%), via `instr-backfill-sports-teams-20260805-055622` (chunk 71/76) |
-| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                                         |
+| Entity           | Scope                        | Status (2026-08-05)                                                                                                                                                                                                                         |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                                                                                        |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                                                                      |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 414,893 already resolved, **24,483 needed** (-2,808) — **PAUSED**: VM deleted after hitting the API-Football daily quota wall (billing-waste), resumable from `PROGRESS.json` checkpoint `2023-11-19`, see below |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                                                                              |
+| **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,373 already resolved, **only 998 needed** — nearly done                                                                                                                                                                 |
+| **INJURIES**     | **all-383**                  | 108,663 expected, 45,954 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                                                                              |
+| **STANDINGS**    | **all-383**                  | 108,663 expected, 108,392 already resolved, **271 needed (99.75%)** — chunk-loop VM finished 76/76 (`exit_code=0`); residual is the API-Football daily-quota tail, PAUSED pending quota reset, see below                                    |
+| **TEAMS**        | **all-383**                  | 108,663 expected, 108,567 already resolved, **96 needed (99.9%)** — chunk-loop VM finished 76/76 (`exit_code=0`); residual is the API-Football daily-quota tail, PAUSED pending quota reset, see below                                      |
+| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                                                                                 |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
@@ -97,12 +97,12 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T19:31Z: 69,151 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~64% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
-**+ 85,814 across FIXTURE_STATS+FIXTURE_LINEUPS** (27,291 + 58,523). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
-confirmed active concurrently (2 lanes, see Progress Log correction). LEAGUES excluded per the resolved verdict below.
-**PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since it could converge quickly
-once dispatched.
+**Grand total needed, 2026-08-06T21:55Z: 64,074 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~67% drop — TEAMS/STANDINGS both essentially converged, see Progress Log) **+ 83,006 across
+FIXTURE_STATS+FIXTURE_LINEUPS** (24,483 + 58,523). **All active VM lanes PAUSED as of this tick** — the API-Football
+daily request quota was exhausted campaign-wide; resuming once it resets (see Progress Log). LEAGUES excluded per the
+resolved verdict below. **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since
+it could converge quickly once dispatched.
 
 ## ✅ RESOLVED 2026-08-03 — LEAGUES verdict: retired entity, 0 real work, do not launch
 
@@ -679,3 +679,31 @@ are genuinely in scope for the operator's "no exceptions" directive.
   essentially converged (99.1% resolved, on par with PLAYER_STATS' 998). STANDINGS 5,983→4,448 (-1,535) — chunk-loop VM
   at chunk 71/76 (~5 chunks left). FIXTURE_STATS 28,111→27,291 (-820). Grand total 69,151 (core 4) + 85,814
   (FIXTURE_STATS+LINEUPS).
+- **2026-08-06T21:55Z — Both dedicated VMs finished; API-Football daily quota exhausted campaign-wide; FIXTURE_STATS VM
+  deleted as confirmed billing-waste.** TEAMS/STANDINGS chunk-loop VM (`instr-backfill-sports-teams-20260805-055622`)
+  completed its full 76/76-chunk sweep (`exit_code=0`, clean self-delete) — TEAMS 996→96 (99.9% resolved), STANDINGS
+  4,448→271 (99.75% resolved). odds_api bigmem VM (`mtds-backfill-odds-catchup-bigmem-20260806`) also completed its full
+  assigned range 2026-03-28→2026-08-06 (`exit_code=0`, clean self-delete) — genuinely DONE, no crash, ever since the
+  code fix + bigmem mitigation. **However, the chunk-loop's very last chunk (date=2026-08-05) hit API-Football's daily
+  request-limit wall**
+  (`API-Football returned errors: {'requests': 'You have reached the request limit for the day...'}`,
+  `recovery=fail_fast` — correctly NOT silently marked empty, so no data-integrity risk, just real residual gaps) — this
+  explains TEAMS/STANDINGS' small non-zero residuals. Checked `af-backfill-20260806-022033` (FIXTURE_STATS) and
+  confirmed the SAME quota wall was hit shortly after (~22:29Z) — this is an account-wide daily quota exhaustion, not
+  isolated to one VM/key. FIXTURE_STATS' VM was actively re-attempting a 100%-doomed API call roughly twice per second
+  with zero chance of success until the quota resets — a confirmed billing-waste runaway per the workspace's
+  VM-billing-waste hard rule — so it was **deleted** (not just stopped) to halt the waste; its `PROGRESS.json`
+  checkpoint (`last_completed_date=2023-11-19, monotonic=true`) confirms clean resumability, so relaunching later
+  resumes forward from there, not from scratch. **Correction to an earlier plan note**: I had planned to run
+  `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` once odds_api completed to "materialise
+  empty_confirmed rows" — on inspection this launcher is FIXTURES-entity-specific (canonical `af_league_id` →
+  `league_id` remapping for the Phase-5 undercount fix), unrelated to odds_api's own manifest, which the backfill's own
+  `ManifestWriter` already updates live as it processes each date. No action needed there; odds_api is genuinely done
+  as-is. **Decision: did NOT launch PLAYER_STATS/FIXTURE_LINEUPS/INJURIES this tick** — doing so now would immediately
+  hit the same exhausted quota. All AF-entity work is PAUSED pending quota reset (likely UTC-midnight reset per typical
+  api-sports.io behavior, unconfirmed for this specific plan tier — will re-check log freshness at the next tick rather
+  than assume an exact time). **Also this tick: a NEW unrelated file
+  (`ao_fleet_health_investigation_followups_2026_08_06.md`) turned up already git-added on this shared checkout before I
+  touched anything — unstaged via `git restore --staged`, left untouched on disk, not mine.** Grand total 64,074
+  (core 4) + 83,006 (FIXTURE_STATS+LINEUPS) — both entirely from the pre-pause progress; PLAYER_STATS (998) and INJURIES
+  (62,709) unchanged, still queued.
