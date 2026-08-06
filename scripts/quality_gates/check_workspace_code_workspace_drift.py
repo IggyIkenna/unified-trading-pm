@@ -42,9 +42,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import cast
+
+_TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
 
 ACTIVE_STATUSES = frozenset({"active", "scaffolded"})
 # Folder paths that denote the workspace root rather than a repo.
@@ -61,9 +64,12 @@ def _repo_name_from_path(path: str) -> str | None:
 
 
 def _load_jsonc(file_path: Path) -> dict[str, object]:
-    """Load a JSON-with-line-comments file (VS Code `.code-workspace` allows `//`)."""
+    """Load a JSON-with-line-comments file (VS Code `.code-workspace` allows `//` and
+    trailing commas — the latter also matches what `prettier-autostage.sh` produces for
+    this file, so tolerating them here avoids fighting every subsequent format pass)."""
     raw = file_path.read_text(encoding="utf-8")
-    stripped = "\n".join(line for line in raw.splitlines() if not line.lstrip().startswith("//"))
+    no_comments = "\n".join(line for line in raw.splitlines() if not line.lstrip().startswith("//"))
+    stripped = _TRAILING_COMMA_RE.sub(r"\1", no_comments)
     return cast("dict[str, object]", json.loads(stripped))
 
 
