@@ -100,3 +100,28 @@ resolved_by:
   → defi tranche items, report only.
 - S2 [P3] — epics retain inline open todos in SUPERSEDED sections (cefi_master 28) — observation.
 - AO1/AO2 — both AO docs compliant (AO2 caveat: text-only gate on archived docs → note).
+
+### T (topic hunter — cefi data-completion/coverage/venue claims, corpus-wide)
+
+**Pending candidates (to verify in STEP 4):**
+
+- T-C7 [P3→P2] — deribit_binance_finalize:76-79 (WRITABLE): "backfill VM ... preempted 2026-07-28T10:51 UTC and never
+  recovered" — FALSE since 2026-07-30 (relaunch chain: track2_backfill_vm_preempted issue :184/:210/:555, 6th ON_DEMAND
+  running 2026-08-06). Doc last_updated 07-31 postdates 2nd relaunch → live-stale claim. FIX: align sentence with
+  relaunch chain.
+- T-C1 [P1] — closeout:309-310 Track 6 ASTER attempted_failed "unresolved (NOTIFY-OPERATOR)" vs
+  aggregated_sources:588-590 "resolved/archived 2026-07-26 (count self-recovered to 150)". Both GRACE → report/route, no
+  edit.
+- T-C2 [P1] — archive/2026_07/cefi_migration_cutover...:128,134 "ALL COMPLETE / every shard EXIT_STATUS=0" vs fleet
+  truth 10/44 shards incomplete (relaunch_round3:416). Archived doc — out of scope to edit; report.
+- T-C3 [P2] — aggregated_sources:562-574 E4/E7/E8 listed as open P0 w/ "~1.2M orphan" vs e4_e8_orphan_sweep:158-161
+  measured 287,074 DELETED 2026-08-03. GRACE → report.
+- T-C4 [P2] — closeout:263-264 "no relaunch has occurred since" vs 5 documented relaunches (track2 issue). GRACE →
+  report.
+- T-C5 [P3] — aggregated_sources:251-255 "relaunch 21 dead shards" vs own :783-785 + round4 issue (10 shards). GRACE →
+  report.
+- T-C6 [P3] — aggregated_sources:784-785 "[OPERATOR] P1 relaunch ruling" vs RULED 2026-08-06 (option b), open item is
+  [DATA]. GRACE → report.
+- T-S1..S5 — suspected stale: tradfi_master:225 (62% backfill claim), infrastructure_master:65 (in-flight VM list),
+  closeout:51 last_updated, archived cutover ALL-COMPLETE, aggregated_sources E4/E7/E8 → all grace/other-tranche/archive
+  → report only.
