@@ -89,6 +89,16 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-3 2026-08-06 ~17:10Z (data_engineering, checkpoint #14, task
+  `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING (confirmed
+  `gcloud instances describe status=RUNNING`). run.log confirms: day=2026-05-27 complete at 16:25Z (21 ok/3 failed —
+  same known trio DERIBIT/KRAKEN-SPOT/ASTER); day=2026-05-28 in progress at 16:48Z. 68 days remaining
+  (2026-05-28→2026-08-05), pace ~1h43-2h05/day → ETA ~2026-08-11/12 unchanged. Watchdog re-armed (bg task `b6ru1w1az`,
+  20-min checks, 8h cap). NOTE: PROGRESS.json shows stale `last_completed_date: 2026-08-05` (pre-initialized at VM
+  launch 07:02Z — not authoritative; use run.log "Processed date=" markers). **Resume**: once VM TERMINATED, do bounded
+  GCS spot-check for 5 target venues (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES) across
+  2026-05-23→2026-08-05, flip RE-OPENED [DATA] P1 todo (DERIBIT explicitly NOT claimed), `docs(plans):` commit + push,
+  POST /done task_id=cefi_tardis_derivative_ticker_historical_gap-002.
 - **slot-14 2026-08-06 ~16:25Z (data_engineering, checkpoint #13, task
   `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING. day=2026-05-27 now
   complete (21 ok/3 failed: same known trio — `DERIBIT` empty-error, `KRAKEN-SPOT` non-canonical-path bug, `ASTER`
