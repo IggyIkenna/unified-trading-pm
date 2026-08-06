@@ -21,7 +21,7 @@ summary: >-
   is a documentation-completeness / SSOT-contradiction gap per CLAUDE.md's definition, low-urgency (no data loss, no
   broken gate). Filed by main agt-1756f6 on review's routing request; review pinged no worker slot (all shipped fixes
   functionally correct).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -40,6 +40,9 @@ priority: P3
 assigned_vm: planning
 execution_scope: orchestrator-agent
 resolved_by:
+  "All 3 todos shipped and QG-verified: unified-trading-pm@9eddba7f7 (mis-cited source fixed), @54ced60b1 (docspec.py +
+  doc-frontmatter-schema.md reconciled — author now Req.E on issue docs), @a6e5eae25 (435 issue docs backfilled, 441/444
+  = 99.3% now carry author). All three SSOT sources agree."
 locked_by:
 source: ["review sweep msg #3671 (2026-08-04), ebc2075b9 slot-8 fix_frontmatter follow-up"]
 drift_direction: advance-process
@@ -54,6 +57,11 @@ context_scope:
     tests/unit/test_fix_frontmatter_issue_author_field.py,
   ]
 ---
+
+> **🔴 ARCHIVED 2026-08-06 — RESOLVED** (all todos `[x]`, unlocked). Mis-cited source fixed
+> (unified-trading-pm@9eddba7f7); SSOT reconciled — `author` is now elective on issue docs in both docspec.py and
+> doc-frontmatter-schema.md (@54ced60b1); 435 existing issue docs backfilled, 99.3% coverage (@a6e5eae25). Archived by
+> /plan-reconcile ao.
 
 # `author` on issue docs: worker.md §4.5 HARD RULE vs. schema/docspec SSOT — reconcile + fix a mis-cited source
 
