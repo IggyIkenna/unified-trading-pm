@@ -65,17 +65,44 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
 
 ## Todos
 
-- [ ] [DATA] P1. Investigate `_venue_to_category("OKX")` returning `None` — determine whether OKX should map to CEFI
+- [x] [DATA] P1. Investigate `_venue_to_category("OKX")` returning `None` — determine whether OKX should map to CEFI
       (add it to the mapping) or the test's expectation is wrong, then fix whichever is actually broken. Gate:
-      `test_venue_to_category_cefi_match` passes for the right reason.
-- [ ] [DATA] P1. Investigate `SPORTS_MARKET_TOKEN_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` growing from 30 to 34 —
+      `test_venue_to_category_cefi_match` passes for the right reason. — **Already fixed, no new work needed.**
+      Confirmed via `unified-api-contracts`'s `VENUES_BY_ASSET_GROUP["cefi"]` (market_data_categories.py:361-370): bare
+      `"OKX"` was **deliberately removed** (operator decision 2026-08-04, `unified-api-contracts@d67a226f`) — never MVP,
+      2,475+ permanently-failing capture attempts; `OKX-SPOT`/`OKX-SWAP`/`OKX-FUTURES` are the real, actively-captured
+      venues that cover every MVP OKX product and are each still present in the registry. So `_venue_to_category("OKX")`
+      returning `None` is CORRECT current behavior, not a bug — the registry is right, the test's expectation was stale.
+      The test itself was already corrected same-day in `deployment-api@59f5cbe8` (2026-08-04,
+      `ikennaigboaka [slot-2·planning]`) to assert `OKX-SPOT -> "CEFI"` and `OKX -> None`; that commit is already on
+      `live-defi-rollout` HEAD. Independently re-verified live: `.venv` import shows `'OKX' in VENUE_TO_ASSET_GROUP` is
+      `False`, `VENUE_TO_ASSET_GROUP.get('OKX-SPOT')` is `'cefi'`. Evidence:
+      `deployment-api@59f5cbe8bc831e3d02ab037019b1a7ff06fda31e` (already-landed fix, verified not new).
+- [x] [DATA] P1. Investigate `SPORTS_MARKET_TOKEN_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` growing from 30 to 34 —
       confirm whether this is intentional registry growth since the 2026-07-30 ruling (update the test's hardcoded
       count) or an unintended regression (fix the registry). Gate: the test passes for the right reason, and the
-      2026-07-30 ruling doc is updated if the accepted count genuinely changed.
+      2026-07-30 ruling doc is updated if the accepted count genuinely changed. — **Already fixed, no new work needed;
+      registry has since grown further to 39 (not just 34), also already accounted for.** The growth is intentional,
+      dated, and documented in the registry's own comments: the original 30 (2026-07-28/07-30 ruling,
+      `sports_instrument_type_market_token_ssot_gap_2026_07_28.md`) grew +4 via `unified-api-contracts@161b0c0c`
+      (2026-08-04 sports census) and +5 via `unified-api-contracts@cb545bef` (2026-08-04, folds the
+      previously-separately-tracked lowercase `odds`/`exchange_odds`/`fixed_odds` + bare `ASIAN_HANDICAP`/`OVER_UNDER`
+      residue into the accepted-exception set itself) = 39 total. The test's hardcoded count was already updated to
+      match in the SAME `deployment-api@59f5cbe8` commit as the OKX fix above. Independently re-verified live: `.venv`
+      import shows `len(SPORTS_MARKET_TOKEN_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES)     == 39`, matching the test's
+      assertion exactly. The `sports_instrument_type_market_token_ssot_gap_2026_07_28.md` ruling doc is already ARCHIVED
+      (2026-08-03) and its own historical narrative (documenting the 30→34 step, with its own commit evidence) remains
+      accurate for its scope — the further 34→39 growth happened via later, separately-dated, already-cited commits
+      after that doc's archival, so no edit to the archived doc is needed (it is a frozen historical record of the 30→34
+      decision, not a living tracker of the registry's current size). Evidence:
+      `deployment-api@59f5cbe8bc831e3d02ab037019b1a7ff06fda31e` (already-landed fix, verified not new).
 - [ ] [INFRA] P2. Once both above are fixed, re-attempt shipping
       `deployment_api/routes/deployments_inventory/__init__.py` + its test (the CI-escalation-runner VM classification
       fix, currently sitting locally uncommitted in this session's `.tabs/2/deployment-api` checkout) via quickmerge.
-      Gate: `unified-trading-pm@<sha>`-style evidence citing the actual landed commit.
+      Gate: `unified-trading-pm@<sha>`-style evidence citing the actual landed commit. — **NOT done, left open.** This
+      session's checkout is `.tabs/4/deployment-api`, not the `.tabs/2/deployment-api` checkout referenced above — that
+      other session's local uncommitted WIP is not accessible from here. Whoever owns (or next inherits) that checkout
+      still needs to re-attempt the ship now that the block is confirmed cleared (see Progress Log below).
 
 ## Progress Log
 
@@ -85,3 +112,19 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
   (`test_build_aws_inventory_classifies_ci_escalation_runner_as_live` passes) but not yet shipped.
 - **context-scout 2026-08-05**: populated context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-06** (`.tabs/4/deployment-api` session): Investigated both P1 todos for real. Finding: **both were already
+  fixed same-day** by `deployment-api@59f5cbe8bc831e3d02ab037019b1a7ff06fda31e` (2026-08-04,
+  `ikennaigboaka [slot-2·planning]`, commit message explicitly cites this issue doc + "both P1 todos") — that fix is
+  already an ancestor of current `live-defi-rollout` HEAD (`37d6f14`). The commit landed the code fix but this issue doc
+  was never flipped (the Commit+Push+Flip "Half 2" was missed in that session). No new code changes were needed or made
+  in `deployment-api` or `unified-api-contracts` this session — both repos pulled clean/up-to-date (`git status` clean,
+  `git pull --ff-only` no-op). Verified fleet-wide-unblock directly: ran the exact re-gate command quickmerge uses
+  (`bash scripts/quality-gates.sh --no-fix`) on a clean tree from scratch (deleted stale sentinels first) —
+  **`5222 passed, 17 skipped, 0 failed` — "ALL QUALITY GATES PASSED"**, sentinel written at HEAD
+  `37d6f143bf78c432e6c6b49313849057dfe873cf`. Also independently re-verified both assertions via direct `.venv` import
+  (not just pytest): `VENUE_TO_ASSET_GROUP` has no `'OKX'` key (`OKX-SPOT`→`cefi` still present), and
+  `len(SPORTS_MARKET_TOKEN_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES) == 39`. **deployment-api quickmerge is confirmed
+  unblocked fleet-wide again** — no quickmerge invocation was performed since there was no code delta to ship in this
+  repo. Todo 3 (re-ship the VM-classification fix) left open — that fix lives in a different session's
+  `.tabs/2/deployment-api` local checkout, not reachable from this `.tabs/4` checkout. **Status stays `open`** (not all
+  3 todos done) — flip to `resolved` once todo 3's owner re-ships and cites evidence.
