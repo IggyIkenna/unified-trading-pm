@@ -729,5 +729,9 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `run-bounded-analysis.sh --mem-cap 12G`. **Note for future resumers**: the durable merged checkpoint at
   `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`
   is still valid for the 299 enriched days, but the migration now runs via the driver + a fresh run-report
-  (`prediction_trades_migration_report_run.jsonl`) since the script's manifest date-source is gone. See next entry for
-  the outcome.
+  (`prediction_trades_migration_report_run.jsonl`) since the script's manifest date-source is gone. **ALL migration
+  tooling is durable in GCS** at `gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_scratchpad_2026_08_06/`
+  (`run_4bi_delete.py`, `4bi_watchdog.sh`, `scan_legacy_presence.py`, `legacy_348_days.txt`, `legacy_presence.json`);
+  the LIVE working checkpoint is synced there every 5 min at
+  `gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_run_checkpoint_latest.jsonl` (pull that + the two
+  `.txt`/`.json` inputs to resume). See next entry for the outcome.
