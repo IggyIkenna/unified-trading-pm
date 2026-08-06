@@ -164,11 +164,21 @@ formula would be `high`. The displayed band is a stale snapshot, not current sta
       the cannot-recover escalation path does. Test: `…::test_repeated_ineffective_forces_recover_the_wedged_session`
       asserts the kill, the cleared session id and the notify.
 
-- [ ] [INFRA] P3. **Stop rendering a stale `context_pressure`/`context_used_pct` as if it were current.** Both fields
+- [x] ✅ [INFRA] P3. **Stop rendering a stale `context_pressure`/`context_used_pct` as if it were current.** Both fields
       freeze at their last heartbeat value, so a wedged or silent slot shows a confidently wrong band (slot 3:
       `thrashing` with `compactions_last_hour=0`, which the live formula would score `high`). Either recompute the band
       on read from the current `compactions_last_hour`, or mark the reading stale in `/api/state` (e.g. alongside the
-      existing `worker_alive` chip) so the dashboard can grey it out rather than assert it.
+      existing `worker_alive` chip) so the dashboard can grey it out rather than assert it. **SHIPPED —
+      agent-orchestrator@06a2865.** Took the mark-it-stale option (not recompute-on-read): a recomputed band would still
+      be built from stale inputs, so it would be a different confident lie rather than an honest "we don't know".
+      `/api/state` gains `SlotView.context_reading_stale`, set when there is no recent heartbeat AND
+      `context_used_pct > 0` — the `pct > 0` half matters, otherwise every idle slot at 0% would be flagged for a
+      reading nobody could be misled by. The dashboard dims the fill + number and dashes the bar outline, with a
+      `— STALE: last known, no recent heartbeat` tooltip and a `?` marker. Tests:
+      `tests/test_context_lifecycle.py::test_context_reading_stale_flags_a_silent_slot` (asserts the exact prod slot-3
+      shape flags, and an idle 0% slot does NOT), `…::test_context_reading_not_stale_for_a_live_worker`, plus playwright
+      `dashboard/tests/e2e/context-pressure-bar.spec.ts` "a stale cell visibly de-emphasises the fill and number" —
+      **pw:L2 ✓** (3 specs green in that file).
 
 ## Progress Log
 
