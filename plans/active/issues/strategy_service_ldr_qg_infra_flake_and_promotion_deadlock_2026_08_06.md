@@ -519,3 +519,11 @@ trunk — expect promote-PR churn while other slots/fleet push to it.
 
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [CICD] P0/P1 live promotion-deadlock incident
   items (sit-gate completion wait + main-backmerge notify-slack ref fix), operator/live-CI judgment in flight.
+- **slot-15 agt-e33f21 session-end 2026-08-06 ~11:06Z (mid-flight, compaction)**: promotion is GREEN-READY at the last
+  gate. Resume: v2 PR run **31095759328** (PR #499, head `dd11550a`) queued → on SUCCESS, #499 auto-merges (SQUASH,
+  armed) → verify strategy-service main HEAD == the promote squash (tree == 308bdfd3) → POST `/api/slots/15/done`
+  `{"task_id":"","sha":"","evidence":"","one_shot_complete":true}` as the LAST action. Do-not-cancel the run (cache-save
+  is ~15-min slow). If LDR advances before terminal, the v2-gated guard protects #499; if it advances AFTER, the bot
+  supersedes → resolve the new promote PR take-LDR (recipe in the P0 todo). Deferred (tracked todos): [OPERATOR] P2
+  orphan `promote/strategy-service/32f0a859d0ae@92231302` branch; [CICD] P2 dispatch-storm mutex promote; [OPERATOR] P2
+  glue-runner cache-save investigation.
