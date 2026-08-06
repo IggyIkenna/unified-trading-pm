@@ -376,3 +376,22 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   `infra` tranches, and per the concurrent-sharded- worker safety rule a non-owning tranche must not write a retag to a
   doc it doesn't clearly own — left for a future corpus-wide retag pass (mirroring
   `asset_group_ao_ci_infra_schema_expansion_2026_07_27`) or the `infra` tranche's own audit to resolve.
+- **2026-08-06 (slot 5, batch5 todo 1 worker — step 2 guard rollout; IN-FLIGHT SHIP RECORD).** Template forward-ports
+  (step 1) had landed via slot-4 `unified-trading-pm@7a6e27916`, but step 2 was NOT on the branch at pickup: 0/17
+  consumers carried `SAFE_SHA` and the drift checker was RED (6 repos over baseline). Slot 5 completed step 2: the
+  empty-tag guard is now hand-applied to all **17 image-building consumers**, the 4 over-baseline repos were reconciled
+  (execution + market-tick-data quality-gates → `_RUN_INIMAGE_QG` guard; market-tick-data auth-precheck + extract-
+  version → render; unified-trading-system-ui quality-gates → pnpm), `check_cloudbuild_template_drift.py` is GREEN
+  (exit 0) and the baseline re-ratcheted down (ibkr 1→0). Classification + details: source issue doc
+  `plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` Progress Log (slot-5
+  2026-08-06 entry). **Shipped to LDR**: `unified-trading-pm@46ecadedc` (baseline + issue-doc record) and
+  `alerting-service@834623e` (guard). **Committed locally, QG+quickmerge PENDING (16 repos, each ahead=1 unpushed)**:
+  batch-live@46393d1, client-reporting-api@a9c195f, deployment-api@0fa1b3f, deployment-ui@82d5bcb,
+  execution-service@18767409, features-service@1ab0d494, fund-administration-service@78603f6, greeks-service@0f2339d,
+  ibkr-gateway-infra@0de7c71, instruments-service@ea8247ef, market-data-processing-service@3b60d3c,
+  market-tick-data-service@232bd29f, ml-service@ac3c71b, strategy-service@db3bdc26, trading-agent-service@214b2cc,
+  unified-trading-system-ui@c035c2aa. **Remaining before this todo is DONE**: (1) QG+quickmerge each of the 16
+  (shared-host ≤2 concurrent); (2) end-to-end proof — manual `gcloud builds submit` (storageSource, SHORT_SHA empty)
+  recovering via VERSION, build id cited; (3) flip this plan's todo 1 checkbox (source issue doc checkbox already
+  flipped by slot-4) + `/done` with the evidence. Resume: fresh-pull each repo, run `quality-gates.sh`, quickmerge
+  `--agent --files cloudbuild.yaml`, then the proof + flip.
