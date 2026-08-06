@@ -181,5 +181,11 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
   31078053624). Tarball rebuilt immediately with sha=467a3cd1 (SKIP_PREFLIGHT=true; upload verified to GCS deployment
   bucket). Backfill VM launched: `cefi-fwd-20260806-064507` (e2-standard-8, asia-northeast1-c, NOT preemptible per
   cefi-fwd launcher default); date range 2026-05-23→2026-08-05; Tardis guard confirmed 0 running + 1 planned ≤ cap 1.
-  Monitoring for BINANCE-FUTURES/BYBIT/DERIBIT shards being captured (not skipped). Will flip todo when VM completes +
-  GCS objects verified for those venues.
+  - **Critical blocker (same session)**: VM `cefi-fwd-20260806-064507` was SKIPPING `derivative_ticker` for all target
+    venues due to false "captured" manifest entries written by the prior buggy run (`cefi-fwd-20260804-021235`) — when
+    IS returned empty symbol list (IAM bug), it still called `record_captured()` with 0 rows, so the pre-flight saw
+    those entries as legitimate coverage and skipped. GCS confirmed 0 objects for BINANCE-FUTURES derivative_ticker on
+    2026-05-23. VM stopped; relaunched `cefi-fwd-20260806-065837` with `VM_FORCE=true` metadata (→ `--force` CLI flag →
+    pre-flight is a no-op → forces full re-download). Tarball sha=467a3cd1 used (confirmed fresh). Confirmed by log:
+    `derivative_ticker` requests firing for binance-futures, bybit (okex-swap, deribit expected next). Date range
+    2026-05-23→2026-08-05. Monitoring to completion.
