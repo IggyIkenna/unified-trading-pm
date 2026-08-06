@@ -136,6 +136,15 @@ they would silently inherit the same architecture gap this whole chain exists to
   phantom `COL_CLOSING_*` (`odds_home_close`) to the `odds_targets`-emitted `odds_closing_*` names. Two [CODE] P2
   implementation todos filed in Follow-ups below.
 
+- **slot-6 2026-08-06**: SHIPPED the features-service [CODE] P2 todo (features-service@b4b7ad82, QG green + quickmerge
+  landed on LDR). `compute_opening_odds()` now emits `odds_closing_{home/draw/away}` (renamed from `_closing_*`, kept in
+  the return DataFrame); `odds_features_exporter._compute_aux_features` strips them from the model-input `odds_features`
+  path so the closing line stays only in the PIT-unrestricted `odds_targets` export; `export_odds_targets()` docstring +
+  `ODDS_TARGETS_COLUMNS` schema updated; tests added (closing-odds exposure, NaN-when-no-closing, features-path guard,
+  cross-repo parity doc). The ml-service [CODE] P2 todo below is now un-gated on the data side — its GCS-backfill
+  verification step still needs `odds_targets` re-run over ≥1 date to confirm the `odds_closing_*` columns appear in the
+  parquet.
+
 ## Follow-ups
 
 - [x] ✅ [DECISION] P2. File the fix-or-moot decision for CLVTargetBuilder's ALWAYS-NULL raw closing-odds columns:
@@ -149,10 +158,11 @@ they would silently inherit the same architecture gap this whole chain exists to
       207 of `odds_velocity.py`). Expose these as `odds_closing_{home/draw/away}` in `odds_targets`; extend
       `merge_clv_target_columns()` to pull them; update `CLVTargetBuilder.build()` defaults to match. Implementation
       todos below.
-- [ ] [CODE] P2. features-service: in `compute_opening_odds()` (`features_service/sports/calculators/odds_velocity.py`
-      line ~207), instead of dropping `_closing_{home/draw/away}`, rename them to `odds_closing_{home/draw/away}` and
-      include them in the return DataFrame. Update the `export_odds_targets()` docstring in `odds_targets_exporter.py`
-      to list these 3 new columns. QG green. (repo: features-service)
+- [x] ✅ [CODE] P2. features-service: in `compute_opening_odds()`
+      (`features_service/sports/calculators/odds_velocity.py` line ~207), instead of dropping
+      `_closing_{home/draw/away}`, rename them to `odds_closing_{home/draw/away}` and include them in the return
+      DataFrame. Update the `export_odds_targets()` docstring in `odds_targets_exporter.py` to list these 3 new columns.
+      QG green. (repo: features-service) — features-service@b4b7ad82
 - [ ] [CODE] P2. ml-service: (a) extend `merge_clv_target_columns()` in
       `ml_service/training/app/core/training_targets.py` to also pull `odds_closing_home`, `odds_closing_draw`,
       `odds_closing_away` and `odds_opening_home`, `odds_opening_draw`, `odds_opening_away` from `odds_targets` into
