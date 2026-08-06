@@ -1141,10 +1141,21 @@ basedpyright ran (fleet-wide false-green; fixed PM@71a2e103b). Detail: `quality-
 require the derived context `Quality Gates (<repo>) / quality-gates-v2`. The v1 callers (`quality-gates.yml`,
 `workspace-qg.yml`) are RETIRED + deleted fleet-wide (2026-05-30) — the legacy names no longer exist as workflows.
 
-| Repo type    | Caller                                   | Callee                                                                                          |
-| ------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| PM           | `.github/workflows/quality-gates-v2.yml` | `.github/workflows/python-quality-gates-v2.yml` (local ref — PM calls itself)                   |
-| Service repo | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` |
+| Repo type             | Caller                                   | Callee                                                                             |
+| --------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| Every repo (incl. PM) | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-ci/.github/workflows/python-quality-gates-v2.yml@main` |
+
+**Host moved to `unified-trading-ci` (2026-08-06).** The reusable `python-quality-gates-v2.yml` +
+`image-build-validate.yml` (+ the two `setup-python-tools`/`setup-agent-tools` composite actions) used to live in PM —
+which meant flipping PM's own GitHub visibility (private↔public) broke every repo's CI fleet-wide the moment a public
+caller couldn't resolve a reusable workflow hosted in a private repo (`main_ci_red` incident, 2026-08-06). Extracted to
+a small, always-public, single-branch (`main`-only) repo dedicated to hosting these files, so PM's own visibility can
+never again take down the fleet's CI. PM is now just another caller — the old chicken-and-egg self-reference special
+case (PM calling its own local copy since it couldn't reference itself remotely) no longer applies. `notify-slack.yml`
+did NOT move: every repo (PM included) keeps its own local copy (`uses: ./.github/workflows/notify-slack.yml`) since it
+was never referenced cross-repo. Full incident + migration history:
+`plans/archive/shared_ci_workflow_repo_extraction_2026_08_06.md` (once archived) or
+`plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`.
 
 **SSOT template**: `scripts/workflow-templates/quality-gates-v2.yml.tmpl`. **Roll-forward** a workflow change: (1) edit
 the template; (2) `rollout-workflow-templates.sh --template <tmpl>`; (3) commit + push the rendered file to each repo's
