@@ -178,22 +178,21 @@ currently nothing at all.
       env-var bridge, launcher invocation fix, live-vs-batch features bug, 2 smaller features bugs, an `[OPERATOR]`
       process-topology redesign decision for CEFI/DeFi scale, a re-pilot plan) filed as the named successor:
       `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`.
-- [ ] [BACKEND] P1. **Register a `CandleAdapterRegistry` entry for `(MarketAssetGroup.PREDICTION, "book_snapshot_5")`,
-      or explicitly declare it a deliberate bypass.** Either (a) add a `PredictionBookSnapshotAdapter` (mirrors
-      `CefiBookSnapshotAdapter`/`DefiBookSnapshotAdapter`) so book_snapshot_5 actually produces candle output once live
-      processing runs, or (b) if book-candle output for prediction is genuinely not needed (a real product decision, not
-      a default), flip `NEEDS_CANDLE_PROCESSING["book_snapshot_5"]` to a prediction-scoped False (the map is currently
-      shared/global with CeFi — would need a per-asset-group override, check `needs_candle_processing()`'s signature) so
-      the silent WARNING-only skip becomes an honest bypass log instead. Repo: market-data-processing-service (+
-      unified-api-contracts if (b)). Done when: either a new adapter ships with tests + QG green, or an explicit bypass
-      declaration ships with a one-line justification comment, and the "⚠️ No adapter for PREDICTION/book_snapshot_5"
-      warning no longer fires on the next live scan.
+- [x] ✅ [BACKEND] P1. **Register a `CandleAdapterRegistry` entry for
+      `(MarketAssetGroup.PREDICTION, "book_snapshot_5")`, shipped `market-data-processing-service@d0925d5`.** Chose
+      option (a): added `PredictionBookSnapshotAdapter` (mirrors `DefiBookSnapshotAdapter` — extends
+      `CefiBookSnapshotAdapter` unchanged, registers under `MarketAssetGroup.PREDICTION`) with 5 unit tests
+      (registration, get_adapter, class attributes, empty-data output, prior-day-seed flag); updated
+      `prediction/__init__.py` + `adapters/__init__.py` to import the new adapter class so its
+      `@CandleAdapterRegistry.register(...)` decorator fires; updated `test_adapter_registry_coverage.py` allowlist.
+      `quality-gates.sh` green (2017 passed, 138 skipped). The `"⚠️ No adapter for PREDICTION/book_snapshot_5"` warning
+      in `orchestration_service.py:659` will no longer fire on the next live scan.
 
       > **⚠️ HEADS-UP (2026-08-05):** Even once this adapter ships, it will never be invoked by the
-                      > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
-                      > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
-                      > `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
-                      > before treating this adapter registration as a depth-history fix.
+                          > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
+                          > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
+                          > `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
+                          > before treating this adapter registration as a depth-history fix.
 
 - [x] ✅ [DATA] P2. **Re-verify multi-hour processed accumulation once todos 1-2 land.** Re-ran the same bounded
       GCS-timespan check (`processed_candles/by_date/day={D}/pipeline_mode=live_*` for 2026-08-01 through 2026-08-04).
