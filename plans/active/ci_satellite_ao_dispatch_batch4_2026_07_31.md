@@ -177,14 +177,10 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md` ([DOC] P2) — filed 2026-07-30 as a
     byproduct of batch2 todo 1's own post-phase codex audit, never previously extracted into any batch.
 
-- [ ] [SCRIPT] P3. **Fix the stale structural-anchor pattern in
-      `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh:50`.** It still expects the old quoted
-      literal `pip install "uv==0.10.8"`; `setup.sh` (line 438) now reads
-      `"$PYTHON_CMD" -m pip install uv==0.10.8 --quiet ... || pip install uv==0.10.8 --quiet ...` (unquoted, `--quiet`,
-      `$PYTHON_CMD -m` prefix) — the anchor never updated when `setup.sh` changed, so it silently stopped verifying
-      anything about the real fallback path. **Done when**:
-      `bash scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed (currently 4/5 —
-      only the structural anchor fails, confirmed via a live re-run 2026-07-31).
+- [x] ✅ [SCRIPT] P3. **Fix the stale structural-anchor pattern in
+      `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh:50`.** — unified-trading-pm@eff7413da.
+      Updated the structural-anchor glob to match `setup.sh:438`'s current pip-fallback form (unquoted `uv==0.10.8`,
+      `--quiet` flag, `$PYTHON_CMD -m` prefix). Test passes 5/5, QG green, shipped.
   - Source: `issues/uv_bootstrap_fallback_test_structural_anchor_stale_2026_07_30.md` (sole todo) — never cited by any
     covering doc; a clean, small, previously-untriaged orphan.
 
