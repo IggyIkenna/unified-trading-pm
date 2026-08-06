@@ -441,8 +441,20 @@ copy_workspace_file() {
     #     slot N but the SCM panel / multi-root tree points at the main checkout.
     #   * Fix: rewrite paths to BARE-RELATIVE on copy — `../../<repo>` → `<repo>` and the
     #     workspace-root `../../` → `.` — so they resolve against the slot dir. This is the
-    #     style the deployed tab files already use. Settings arrays (git.scanRepositories /
-    #     git.ignoredRepositories) hold absolute paths and are copied as-is (harmless).
+    #     style the deployed tab files already use.
+    #   * Settings arrays (git.scanRepositories / git.ignoredRepositories) are NOT harmless
+    #     copied as-is — bug found 2026-08-06 (operator report: only 2/23 repos showing in
+    #     Cursor's Source Control for slot 3). Root cause: `git.ignoredRepositories` in the
+    #     canonical file blocklists EVERY `.tabs/<N>/<repo>` path across all slots (so the
+    #     ROOT/canonical workspace — opened at the repos-root, whose `.` folder would
+    #     otherwise recurse into every slot's nested `.git` — doesn't vacuum up 11 tabs
+    #     worth of duplicate repos). Copied verbatim into slot N's own file, that same list
+    #     also blocklists slot N's OWN repos — self-exclusion bug. `git.scanRepositories`
+    #     has the mirror bug: its absolute paths point at the repos-root checkout (correct
+    #     for the canonical/root workspace), not `.tabs/N/<repo>` (needed for the slot copy).
+    #     Fix (below): post-process the settings JSON per slot — drop this slot's own
+    #     `/.tabs/<N>/` entries from `ignoredRepositories`, and rewrite `scanRepositories`
+    #     entries to point at this slot's own worktree.
     local slot="$1" sd src dst
     sd="$(slot_dir "${slot}")"
     src="${WORKSPACE_ROOT}/unified-trading-system-repos.code-workspace"
@@ -452,10 +464,55 @@ copy_workspace_file() {
         # the `"../../` prefix from the remaining `"../../<repo>"` entries. Use a redirect
         # (not `sed -i`) for BSD/GNU portability.
         sed -e 's#"\.\./\.\./"#"."#g' -e 's#"\.\./\.\./#"#g' "${src}" > "${dst}"
+        rewrite_slot_workspace_git_settings "${dst}" "${slot}"
         log "  WS   slot ${slot} workspace file written, paths slot-relative (${dst})"
     else
         log "  WS   slot ${slot} skipped (no canonical .code-workspace at ${src})"
     fi
+}
+
+# Post-process a slot's copied .code-workspace: fix the git.ignoredRepositories /
+# git.scanRepositories self-exclusion + wrong-path bugs described above.
+# Tolerant JSONC read (the canonical file carries prettier's trailing commas — same
+# tolerance as check_workspace_code_workspace_drift.py's `_load_jsonc`), strict-JSON write
+# (fine: slot copies are untracked local artifacts, never prettier/QG-checked).
+rewrite_slot_workspace_git_settings() {
+    local dst="$1" slot="$2"
+    python3 - "${dst}" "${slot}" "${WORKSPACE_ROOT}" <<'PY'
+import json
+import re
+import sys
+
+dst, slot, workspace_root = sys.argv[1], sys.argv[2], sys.argv[3].rstrip("/")
+own_tab_segment = f"/.tabs/{slot}/"
+root_prefix = f"{workspace_root}/"
+
+raw = open(dst, encoding="utf-8").read()
+no_comments = "\n".join(line for line in raw.splitlines() if not line.lstrip().startswith("//"))
+stripped = re.sub(r",(\s*[}\]])", r"\1", no_comments)
+ws = json.loads(stripped)
+
+settings = ws.get("settings", {})
+
+ignored = settings.get("git.ignoredRepositories")
+if isinstance(ignored, list):
+    settings["git.ignoredRepositories"] = [p for p in ignored if own_tab_segment not in p]
+
+scanned = settings.get("git.scanRepositories")
+if isinstance(scanned, list):
+    rewritten = []
+    for p in scanned:
+        if isinstance(p, str) and p.startswith(root_prefix) and "/.tabs/" not in p:
+            repo = p[len(root_prefix):]
+            rewritten.append(f"{workspace_root}/.tabs/{slot}/{repo}")
+        else:
+            rewritten.append(p)
+    settings["git.scanRepositories"] = rewritten
+
+with open(dst, "w", encoding="utf-8") as f:
+    json.dump(ws, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+PY
 }
 
 # Seed a slot's Claude Code agent symlinks at provision time:
