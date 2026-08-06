@@ -108,33 +108,61 @@ formula would be `high`. The displayed band is a stale snapshot, not current sta
       fail-safe here, because the deleted script makes the stale hook exit 127, a NON-blocking hook error (only exit 2
       blocks), so auto-compact proceeds on those sessions too rather than staying blocked until respawn.
 
-- [ ] [INFRA] P1. **Re-arm the worker force-compact latch on a FAILED compaction, not only on an observed drop.**
+- [x] ✅ [INFRA] P1. **Re-arm the worker force-compact latch on a FAILED compaction, not only on an observed drop.**
       `_tick_worker` (`server/context_lifecycle.py`) early-returns while `state.forced_at is not None`, and the caller
       only clears it when a compaction is OBSERVED (a `context_used_pct` drop). A compaction that is verifiably
       submitted but then fails at the API layer leaves the latch set forever, which is precisely the state that needs
       another attempt. Add an outcome check: if pct has not dropped within N ticks of a force, clear `forced_at` and
       escalate rather than latching. Cite the sibling fix
       `cefi_tardis_derivative_ticker_historical_gap_ao_context_pct_stuck_post_compact_2026_08_06` — it fixed the
-      delivery half of this same latch; this is the outcome half.
+      delivery half of this same latch; this is the outcome half. **SHIPPED** — agent-orchestrator@e608378. New
+      `_rearm_if_force_ineffective()` in `server/context_lifecycle.py`: `_TargetState` gained `forced_pct` (context%
+      when `/compact` was accepted) + `ineffective_forces`; past `tuning.context_force_compact_retry_after_seconds`
+      (new, default 300s) with no drop, the latch is cleared and the next tick forces again. An OBSERVED compaction
+      resets the counter. Tests: `tests/test_context_lifecycle.py::test_ineffective_force_rearms_after_retry_window`,
+      `…::test_ineffective_force_does_not_rearm_inside_grace_window` (no double-inject inside the window),
+      `…::test_observed_compaction_resets_ineffective_counter`. Negative-controlled: with the knob set to 0 (old latched
+      behaviour) 3 of these fail.
 
-- [ ] [INFRA] P1. **Never `--resume` a transcript that is known to be at/over the model's context limit.** Both resume
-      paths in `server/worker_liveness_watchdog.py` (usage-cap ~line 1794, heartbeat-silence ~line 2109) pass
+- [x] ✅ [INFRA] P1. **Never `--resume` a transcript that is known to be at/over the model's context limit.** Both
+      resume paths in `server/worker_liveness_watchdog.py` (usage-cap ~line 1794, heartbeat-silence ~line 2109) pass
       `resume_session_id=stored_sid` unconditionally when one exists. Gate them: if the slot's last known
       `context_used_pct` is ≥ a saturation threshold, OR the pane shows a `maximum context length` 400, take the
       existing `not stored_sid → fresh respawn` branch instead. Recovery that restores the exact state that caused the
       failure is not recovery — and the `last_msg` it writes, "resumed after heartbeat-silence (context intact)",
-      advertises the defect as a feature.
+      advertises the defect as a feature. **SHIPPED** — agent-orchestrator@e608378. Root cause was narrower than first
+      written and is now recorded accurately: the gate already existed (`resume_lifecycle.classify_dead_worker`'s
+      `resume_fresh_context_pct` check, added 2026-07-14 for the earlier slot-2 loop) — the two watchdog paths simply
+      BYPASSED it. Both now consult the SAME knob (no second threshold invented) and fall through to the fresh-respawn
+      branch, logging `slot_resume_skipped`. Tests:
+      `tests/test_self_healing_hardening.py::test_heartbeat_silent_at_saturated_context_refuses_resume` and
+      `…::test_heartbeat_silent_below_threshold_still_resumes` (proves normal context-preserving recovery is intact).
 
-- [ ] [INFRA] P2. **Persist `_heartbeat_resume_count` across orchestrator restarts.** It is an in-memory dict on the
+- [x] ✅ [INFRA] P2. **Persist `_heartbeat_resume_count` across orchestrator restarts.** It is an in-memory dict on the
       watchdog instance, so `_HEARTBEAT_RESUME_MAX` (`tuning.watchdog_heartbeat_resume_max`) is silently reset by any
       restart — slot 3's budget was zeroed by the 12:45:22Z restart four minutes after its resume. Move it to the slot
-      row / state DB so the bound survives, otherwise the "bounded" resume loop is unbounded in practice.
+      row / state DB so the bound survives, otherwise the "bounded" resume loop is unbounded in practice. **SHIPPED** —
+      agent-orchestrator@e608378. Persisted via the existing `dedup_state` int-map store (new
+      `heartbeat_resume_count_path()`) rather than an ORM migration — same durable-state mechanism the alert throttles
+      already use. Seeded in `__init__`, flushed on every mutation through `_persist_heartbeat_resumes` /
+      `_clear_heartbeat_resumes`. Test: `…::test_heartbeat_resume_count_survives_restart` — a second watchdog instance
+      (== a restart) still sees the spent budget and fresh-respawns instead of resuming.
 
-- [ ] [INFRA] P2. **Detect the terminal-wedge signature explicitly and auto-recover + alert.** A pane matching
+- [x] ✅ [INFRA] P2. **Detect the terminal-wedge signature explicitly and auto-recover + alert.** A pane matching
       `maximum context length is \d+ tokens` after a forced `/compact` is a MEASURED terminal state, not a transient
       one: it cannot self-heal, every subsequent retry is wasted, and no heartbeat will ever arrive. Classify it, force
       a FRESH session (not a resume), and page it per `/codex/04-architecture/agent-orchestrator-alerting.md` (this is a
-      failure, so it pages; the automatic recovery itself logs + digests, never pages).
+      failure, so it pages; the automatic recovery itself logs + digests, never pages). **SHIPPED** —
+      agent-orchestrator@e608378, with one deliberate deviation from this todo's own wording: it does NOT page.
+      Detection is by OUTCOME rather than by pane-scraping for `maximum context length` — after
+      `tuning.context_force_compact_wedge_after_failures` (new, default 3) consecutive ineffective forces the target is
+      terminally wedged, which is measured, cheaper, and does not depend on CLI error wording that changes between
+      versions. `_recover_wedged_target()` kills the session, clears `claude_session_id` (the load-bearing half —
+      without it every respawn path finds a stored id and re-resumes the over-limit transcript) and sets `status=killed`
+      so AutoSpawn respawns FRESH. Routed to `notify_agent_stuck_respawned`, which logs + feeds the daily digest and
+      does NOT page: per `/codex/04-architecture/agent-orchestrator-alerting.md` an automatic recovery never pages; only
+      the cannot-recover escalation path does. Test: `…::test_repeated_ineffective_forces_recover_the_wedged_session`
+      asserts the kill, the cleared session id and the notify.
 
 - [ ] [INFRA] P3. **Stop rendering a stale `context_pressure`/`context_used_pct` as if it were current.** Both fields
       freeze at their last heartbeat value, so a wedged or silent slot shows a confidently wrong band (slot 3:
