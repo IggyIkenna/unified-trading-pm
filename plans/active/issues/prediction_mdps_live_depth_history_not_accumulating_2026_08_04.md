@@ -66,6 +66,7 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
+    /plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md,
   ]
 ---
 
@@ -189,10 +190,10 @@ currently nothing at all.
       in `orchestration_service.py:659` will no longer fire on the next live scan.
 
       > **⚠️ HEADS-UP (2026-08-05):** Even once this adapter ships, it will never be invoked by the
-                          > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
-                          > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
-                          > `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
-                          > before treating this adapter registration as a depth-history fix.
+                                  > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
+                                  > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
+                                  > `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
+                                  > before treating this adapter registration as a depth-history fix.
 
 - [x] ✅ [DATA] P2. **Re-verify multi-hour processed accumulation once todos 1-2 land.** Re-ran the same bounded
       GCS-timespan check (`processed_candles/by_date/day={D}/pipeline_mode=live_*` for 2026-08-01 through 2026-08-04).
@@ -292,3 +293,7 @@ currently nothing at all.
   `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`. Flagged a note
   on todo 4 (CandleAdapterRegistry for prediction book_snapshot_5) in that new doc: even once shipped, it will never be
   invoked by this launch path since MDPS runs zero prediction shards structurally.
+
+- **context-scout 2026-08-06**: populated/refreshed context_scope (5 entries) — added
+  `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`, the named
+  successor doc this issue's Progress Log repeatedly cites as owning all further follow-up work.

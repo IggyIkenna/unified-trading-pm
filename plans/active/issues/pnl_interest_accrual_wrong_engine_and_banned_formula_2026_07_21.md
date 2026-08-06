@@ -800,3 +800,4 @@ code.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
   `strategy-service/strategy_service/engine/backtest/benchmark_fills.py`, the file that computes and currently discards
   the entry-spot price the still-open Option B todo needs to persist for the true-native-return metric.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

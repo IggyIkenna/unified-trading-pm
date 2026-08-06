@@ -350,3 +350,4 @@ but it is a deliberate, disclosed contribution to a RED ratchet, not an accident
   evidence — the fix had already landed same-day as a sibling doc's Progress Log entry (`unified-trading-pm@d872efb3a`)
   but was never back-flipped here. All todos now `[x]`, no `locked_by` — archival-eligible, routing through the standard
   6-step ritual.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -229,3 +229,4 @@ whole suite (1609 passed).
   reclassified: dispatching the todo as written would ship banned-pattern code, and rewriting its substance is a scope
   change beyond a mechanical citation fix.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

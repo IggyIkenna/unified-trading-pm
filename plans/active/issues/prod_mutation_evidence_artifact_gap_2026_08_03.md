@@ -104,3 +104,4 @@ not a code defect.
   tagged, a standards/scope-change ruling request (whether to extend PLAN_FORMAT.md §8b evidence-backing to prod
   data-mutation completions) consolidating 3 independent review-flagged instances — a genuine policy decision, not a
   worker-determinable fact.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

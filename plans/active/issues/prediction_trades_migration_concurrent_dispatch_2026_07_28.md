@@ -195,3 +195,4 @@ solution.
   heartbeat-staleness threshold and the stale-claim takeover rule"), which the dispatch-scope eligibility bar keeps
   human-resolved before any AO todo is cut against their outcome. Verdict agrees with the ruling; no change.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
