@@ -317,8 +317,9 @@ this doc are this audit + the acknowledged handoff, now resolved); no new chat-o
 to compact — YES.**
 
 **Wait-loop cycle 1 2026-08-06 ~21:54 UTC:** bxmxi5mlo completed — 12/12 heartbeats 200, then
-`WAIT-TIMEOUT-1H-NO-ANSWERS`. Q1-Q6 still open (can_continue: true). Per STEP 8 rule, re-armed the wait-loop (cycle 2,
-task bxw5z7w6, 12×285s, ~22:54 expiry); on ANSWERS-ARRIVED apply → checkpoint-commit BY NAME → push →
+`WAIT-TIMEOUT-1H-NO-ANSWERS`. Q1-Q6 still open (can_continue: true). Per STEP 8 rule, re-armed the wait-loop: cycle 2
+(task bx1qe43th, 12×285s) was externally KILLED ~21:56 (~2 min in, empty output, queue confirmed empty) — re-armed as
+cycle 2b (task bxw5z7w6, 12×285s, ~22:57 expiry). On ANSWERS-ARRIVED apply → checkpoint-commit BY NAME → push →
 `POST /api/slots/12/done` (THE LAST ACTION). Never /done with questions open.
 
 **Candidate registry:** all pending candidates are above, per hunter. Writable-doc fixes with CONFIRMED-verification
