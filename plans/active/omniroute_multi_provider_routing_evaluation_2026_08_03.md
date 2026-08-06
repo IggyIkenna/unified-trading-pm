@@ -29,7 +29,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2
 assigned_role: infra
 drift_direction: none
-last_updated: 2026-06-27
+last_updated: "2026-08-06"
 locked_by:
 locked_since:
 supersedes:
@@ -745,3 +745,5 @@ here rather than forced through.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **fixed 2026-08-06 (/plan-reconcile ao)**: frontmatter `last_updated` was `2026-06-27`, predating this doc's own
+  `created: 2026-08-03` — impossible given the real edit history through today. Corrected to `"2026-08-06"`.
