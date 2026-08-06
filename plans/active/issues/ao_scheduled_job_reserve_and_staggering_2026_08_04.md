@@ -200,11 +200,17 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
 - [x] ✅ [SCRIPT] P2. Re-verify `github.slice`'s weight survives an actual VM restart — VERIFIED 2026-08-06:
       `io.weight=default 20`, `cpu.weight=20`, systemd `LoadState=loaded`/`ActiveState=active`/`UnitFileState=static`,
       survived both VM restarts from 2026-08-04 (T09:45:16Z item-1 redeploy + T11:08:18Z item-3 redeploy).
-- [ ] [SCRIPT] P2. Check final outcome of the 3 redispatched tranches fired after the github.slice fix: `agt-d4a899`
+- [x] ✅ [SCRIPT] P2. Check final outcome of the 3 redispatched tranches fired after the github.slice fix: `agt-d4a899`
       (na_eligibility[sports], slot 8), `agt-8b3403` (na_eligibility[infra], slot 9), `agt-7322c2` (ag_closeout[sports],
-      slot 4) — all registered ~2026-08-04T13:50Z, all still active as of this doc's writing. Query
-      `GET /api/agents?include_finished=true` for each id; expect `status=archived exit_reason=lifecycle-     complete`
-      if the fix holds under sustained real load, not just the initial 5-minute PSI snapshot.
+      slot 4) — CHECKED 2026-08-06 via `GET /api/agents?include_finished=true`: **NEGATIVE — all 3 ended
+      `status=archived exit_reason=reaped-stale`, NOT `lifecycle-complete`** (`agt-d4a899` archived 2026-08-04
+      T14:01:31.4Z, `agt-8b3403` T14:01:31.5Z, `agt-7322c2` T14:27:08Z). The fix does NOT hold under sustained real load
+      on the basis of these 3. Root-cause note: the two na_eligibility tranches died in a MASS simultaneous session-loss
+      at 14:01:32-14:02:35 that ALSO killed a cicd escalation (`agt-de0d1e` ldr_qg_failure, slot 4) and a review
+      (`agt-99f380`) — a host/service-level teardown (slots 1/4/5/8/9), NOT auditor-specific IO contention; `agt-7322c2`
+      died separately at 14:27:08 after ~36min. github.slice weights ARE confirmed live today (`LoadState=loaded`,
+      `UnitFileState=static`, `IOWeight=20`/`CPUWeight=20`), and 08-06 auditor runs are now mostly `lifecycle-complete`
+      (17/20) — see the follow-up todos below.
 - [ ] [SCRIPT] P3. Re-measure PSI io/cpu/memory a few hours after this fix, under a full day of normal CI+audit traffic,
       to confirm the 57.34->32.58 improvement holds (not just an artifact of the specific 5-minute window measured) and
       to tune `IOWeight=20`/`CPUWeight=20` against real data rather than this session's initial estimate — raise toward
@@ -215,9 +221,30 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       rebuild would silently lose it.
 - [ ] [DATA] P3. Investigate the 2026-08-02 ~11:34 UTC 58-way simultaneous `timeout` cluster (see "Corrected an earlier
       claim" above) if it recurs — not investigated this session, out of window.
+- [ ] [SCRIPT] P2. Root-cause the 2026-08-04 14:01:32-14:02:35 mass session-death: 5+ tmux sessions lost in two waves
+      (slots 4/8 then 1/5/9), archiving 3 one_shot/scheduled agents simultaneously (`agt-d4a899`, `agt-8b3403`,
+      `agt-de0d1e` [cicd], plus `agt-99f380` [review]) ~21min after the github.slice fix was applied. journald for 08-04
+      is gone (storage reset 08-06 00:45) so the exact trigger (orchestrator.service restart? cgroup/host event?) is
+      unverified — check systemd restart history, the ao-self-pull/deploy path, and the ~32-min gap before AutoSpawn
+      respawned (14:33). (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Investigate the 2026-08-05 full-day `no_capacity` for ALL scheduled auditors: every
+      na_eligibility/ag_closeout/plan_reconciler/docs_reconciler run hit no_capacity (0 dispatched all day), plus the
+      01:45 na_eligibility batch TIMED OUT at 04:00 (~2h15m) — scheduled audits effectively did not run on 08-05.
+      Confirm whether the fleet was genuinely saturated or a reserve/dispatch bug (item 2's reserve 2->4 + batch 3->4
+      was live by then). (repo: agent-orchestrator)
+- [ ] [DATA] P3. Track residual `reaped-stale` after the fix: on 08-06, 3/20 auditor runs still ended reaped-stale
+      (04:31 `agt-b334ff` ~37min, 06:31 `agt-121905` ~35min — no `tmux_session_lost` event in the archival window, so
+      the sessionless-silent path) while siblings in the same batches completed. Determine mid-run death vs post-work
+      /done failure. (repo: agent-orchestrator)
 
 ## Progress Log
 
+- **worker slot-8 2026-08-06**: checked the 3 redispatched tranches — all `reaped-stale` (NOT `lifecycle-complete`). The
+  two na_eligibility tranches (`agt-d4a899`/`agt-8b3403`) died in a mass simultaneous session-loss at 14:01:32-14:02:35
+  (slots 1/4/5/8/9, also archiving a cicd escalation + a review agent); `agt-7322c2` died separately 14:27:08 after
+  ~36min. Discovered 08-05 = full-day `no_capacity` (0 scheduled-auditor dispatches) + a 01:45 na_eligibility batch
+  timeout at 04:00; 08-06 = 17/20 `lifecycle-complete`, 3 residual `reaped-stale`. github.slice weights confirmed live
+  (`LoadState=loaded`, `UnitFileState=static`, IOWeight=20/CPUWeight=20). Follow-up todos added.
 - **na-eligibility-audit 2026-08-06**: RECLASSIFY NA→planning — all 5 open todos are bounded verification/engineering
   with deterministic outcomes (cgroup io.weight check after VM restart, API query for 3 tranche outcomes, PSI
   re-measure, commit cpu-priority.conf drop-in tracking, conditional 58-timeout cluster investigation); conflict-check
