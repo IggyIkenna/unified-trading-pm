@@ -310,21 +310,20 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
 ## Follow-ups (added 2026-08-06 ~07:57Z)
 
 - [ ] [CICD] P0. Complete strategy-service LDR→main: PR #496 (head `f369eda7`) v2 run **31085361119** (31082724876
-      cancelled 08:33Z — cache-save hang) → auto-merge → verify main HEAD is the promote squash → POST /done
-      (`one_shot_complete: true`). If superseded by a newer promote PR, repeat the conflict-resolution recipe above. If
-      v2 STILL hangs on `Post Cache uv package cache`, that is the systematic infra-block below, NOT code. Provenance:
-      agt-e33f21.
-- [ ] [OPERATOR] P0. Remove `/tmp/test_slice.log` on the shared fleet host (199 MB, live `ghp_` fine-grained PATs,
-      world-readable, abandoned 05:57Z, foreign session's). Slot-15 deliberately leaves it untouched. Provenance:
-      agt-e33f21 security finding.
+      cancelled 08:33Z — cache-save wait; both legs PASS on 31085361119) → auto-merge → verify main HEAD is the promote
+      squash → POST /done (`one_shot_complete: true`). If superseded by a newer promote PR, repeat the
+      conflict-resolution recipe above. Provenance: agt-e33f21.
+- [x] [OPERATOR] P0. Remove `/tmp/test_slice.log` on the shared fleet host (199 MB, live `ghp_` fine-grained PATs,
+      world-readable, abandoned 05:57Z, foreign session's). **RESOLVED: file gone as of 09:25Z (operator/cleanup removed
+      it).** Provenance: agt-e33f21 security finding.
 - [ ] [CICD] P2. Ensure dispatch-storm mutex `unified-trading-pm@16c9653eb` promotes to `main` — the fleet bot runs from
       `main`; without it a 2-repo BREAKING-delta tick recurs the 06:45Z 3-dispatch storm (which re-poisons the
       full-workspace-sit top-10 and re-reds fleet-green). It is currently only on LDR + promote PR
       `promote/unified-trading-pm/1dacca9be5e1`. Provenance: agt-e33f21.
-- [ ] [OPERATOR] P0. Remediate the glue runner `glue-ip-172-31-3-59-1` cache-save hang — FREE DISK or patch the reusable
-      `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml` cache step (e.g. `save: false` on self-hosted,
-      or disk-low detection) so `Post Cache uv package cache` stops hanging. Blocks ALL fleet v2 on the glue runner +
-      promotion PR #496. Precedent: PR #491 0MB-disk cache-save failure (08-05 06:48Z). Provenance: agt-e33f21.
+- [ ] [OPERATOR] P2. Investigate the ~15-min `Post Cache uv package cache` save on glue runner `glue-ip-172-31-3-59-1`
+      (performance/cost: ~30 min of runner time per v2 run, shared fleet-wide). Optional: `save: false` on self-hosted,
+      or disk-low detection. NOT a correctness blocker — the save completes (~15 min). Distinct from PR #491's real
+      0MB-disk failure (08-05 06:48Z). Provenance: agt-e33f21.
 
 ## agt-e33f21 follow-up — glue-runner cache-save hang is SYSTEMATIC (2026-08-06 ~09:15Z)
 
@@ -345,6 +344,23 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
   remediated at the fleet level.
 - Slot-15's plan: bounded wait on `31085361119` (~09:22Z) in case the save completes, then cancel to free the runner; NO
   further blind re-dispatch.
+
+## agt-e33f21 follow-up — CORRECTION: cache-save is ~15-min SLOW, not a hang (2026-08-06 ~09:26Z)
+
+**The "systematic infra-block" framing in the section above was WRONG — the v2 run IS going green.**
+
+- Run `31085361119`'s checks-job `Post Cache uv package cache` **COMPLETED at 09:18:25Z** (started 09:03:32Z = **14.9
+  min**). Not a hang — a slow save of the large uv-cache on the shared glue runner.
+- Both QG legs then PASSED on `f369eda7`: **checks ✅** and **tests ✅** (leg-tests step success 09:22:52Z). Tests job's
+  own post-cache started 09:22:55Z → run terminal ETA ~09:38Z → PR #496 auto-merge (SQUASH, armed) fires.
+- **Run `31082724876` (cancelled 08:33Z after 12 min) was very likely cancelled PREMATURELY** — its save would probably
+  have completed ~15 min like 31085361119's 14.9-min save did. The "2/2 hang" was 2/2 runs each showing a ~15-min save
+  in progress; neither was actually stuck.
+- **Correct lesson: give a glue-runner v2 run ≥20 min of `Post Cache uv package cache` before considering a cancel.**
+  The 15-min save is a performance/cost quirk of the shared runner + large uv cache, NOT a blocker — the run, not the
+  cache-save, is the gate.
+- Correction applies to the follow-up todos below: the cache-save is NOT a P0 blocker; PR #491's 0MB-disk failure (a
+  real disk-full) is a distinct event from today's slow-but-successful saves.
 
 ## Lessons / traps (agt-e33f21, re-learned at cost)
 
@@ -368,6 +384,13 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
   `head_sha` instead.
 - **Background `Bash run_in_background` watchers get reaped by the harness under load** (two killed mid-wait); the
   `Monitor` tool is the reliable long-watch mechanism for external state.
+- **The glue-runner `Post Cache uv package cache` step is ~15-min SLOW, not a hang** — give a v2 run ≥20 min of
+  cache-save before cancelling. Cancelling run 31082724876 at 12 min was premature (its save very likely would have
+  completed ~15 min like 31085361119's 14.9-min save did). A "2/2 hang" where each shows ~15 min in_progress is a
+  slow-save pattern, not a deadlock.
+- **Harness reaps long-lived background bash** (heartbeat loops, `run_in_background` watchers, and even `Monitor`
+  scripts all died mid-session, exit 144 / silent). Reliable long-wait mechanisms: `ScheduleWakeup` (fired on time every
+  time) + `CronCreate` recurring prompts (harness-managed, survive reaping) + one-shot `Bash` backup checks.
 
 ## Progress Log
 
