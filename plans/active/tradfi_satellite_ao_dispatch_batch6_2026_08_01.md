@@ -258,6 +258,51 @@ evidence. This plan's own reconciliation-then-archive step is machine-gated via 
 `tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md` (`depends_on` on this plan plus `gate_on_depends: true`),
 mirroring the batch1-5 finalize pattern.
 
+## Progress Log
+
+### 2026-08-06 — slot 2, task `tradfi_satellite_ao_dispatch_batch6-002` (todo #2, ES_OPT launch) — pre-compact checkpoint
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Blocked on the Databento singleton lock (expected; operator-approved wait, no
+`--force`).** Nothing shipped this session; no checkbox flipped (the task's done-when is not yet met).
+
+**Phase 1 — launch (NOT yet executed):**
+
+- Singleton lock re-verified 2026-08-06T~15:45Z: HELD by a live concurrent `tradfi-bf-*` fleet in `asia-northeast1-c`
+  (32 VMs at first check, draining to 28 by ~16:20Z — NASDAQ/NYSE OHLCV shards, CBOE VX 2026, CME g01 roots
+  ES/CL/MET/MBT/BTC; all created 2026-08-06T08:00-08:12Z, all verified actively progressing via run.log + monotonic
+  `PROGRESS.json` — NOT stale, do NOT force/delete).
+- Dry-run confirmed the launch plan:
+  `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` → 5 VMs
+  `tradfi-bf-es-opt-light-{2022..2026}-<ts>`, `e2-standard-4`, SPOT, `data_types=ohlcv_1m`, `asia-northeast1-c`.
+- **NEXT ACTION (fresh session):** re-check
+  `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING' --zones=asia-northeast1-c`. When count
+  == 0, run the launch command; confirm VM(s) STARTED (<60s) + RUNNING at T+10min per async-wait-and-poll-discipline (no
+  fire-and-forget).
+
+**Phase 2 — post-launch manifest-count check (NOT yet run; query vocabulary LOCKED via baseline probe 2026-08-06):**
+
+- Baseline census of `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`
+  (6,831,204 rows, 2026-08-06T15:50Z snapshot): venue=CME × data_type=ohlcv_1m × instrument_type=`options_chain` =
+  68,604 rows, of which 68,203 carry EMPTY instrument_id (the legacy null-id population — tracked by todo #1 of this
+  batch) and 401 carry `CME:OPTION:SP500` (pre-existing SPX index-option data). **ZERO rows carry the ES_OPT roots'
+  canonical ids pre-launch.**
+- **WRITER VOCABULARY (probed, do not assume):** options rows are `instrument_type=options_chain` (NOT
+  `option`/`OPTION`); row-key atom is canonical `CME:OPTION:<ROOT>` for roots ∈ {ES,EW,EW1,EW2,EW4,E1A,E2A,E3A,E4A,
+  E5A,EOM}.
+- **POST-LAUNCH QUERY** (mirrors ES-futures precedent `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
+  manifest-count-only, single manifest read, no bucket walk): venue=CME × data_type=ohlcv_1m ×
+  instrument_type=options_chain × instrument_id ∈ {CME:OPTION:ES, CME:OPTION:EW, CME:OPTION:EW1, CME:OPTION:EW2,
+  CME:OPTION:EW4, CME:OPTION:E1A, CME:OPTION:E2A, CME:OPTION:E3A, CME:OPTION:E4A, CME:OPTION:E5A, CME:OPTION:EOM};
+  report capture_status distribution + `row_count>0` counts + date span. Record the result in
+  `tradfi_consolidated_closeout_2026_07_18.md` MVP-cell table "S&P index options" row (line ~259). Baseline to compare
+  against: 0 scoped rows pre-launch (all 11 roots absent).
+
+**Observation (not this task's scope — flagged for the NASDAQ/NYSE OHLCV fleet owner):** sampled run.log for
+`tradfi-bf-nyse-ohlcv-1m-2024-d02-*` shows repeated
+`ERROR Schema validation FAILED: venue=NYSE data_type=ohlcv_1m missing columns=['timestamp']` while still emitting rows
+(`rows_emitted` rising) — ambiguous (validation log that does not block writes, or a real schema gap). Belongs to the
+fleet's own plan, not this batch; verify before filing.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
