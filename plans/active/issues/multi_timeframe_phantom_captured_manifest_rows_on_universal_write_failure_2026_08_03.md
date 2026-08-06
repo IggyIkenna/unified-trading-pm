@@ -190,11 +190,11 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
       `test_market_structure_1h_passes_through_raw_ohlcv` covering the (a) fix. The remaining root-cause factor —
       `market_structure_sequence`/`polynomial_trendlines` not being in delta-one's `DEFAULT_FEATURE_GROUPS` — is a
       genuine design decision, not a mechanical fix; tracked as its own todo below rather than left as prose here.
-- [ ] [CODE] P2. **DEFAULT-RULED 2026-08-06: trim multi_timeframe's calculator set, not expand delta-one's defaults.**
-      `[CODE]` tag (was `[OPERATOR]`) — narrower blast radius (doesn't inflate compute cost fleet-wide for every
-      asset_group running delta_one's defaults); if the trimmed calculators turn out load-bearing elsewhere, expanding
-      delta-one's `DEFAULT_FEATURE_GROUPS` remains the fallback. **Decide: expand delta-one's default feature-group set,
-      or trim multi_timeframe's calculator set?** `tf_structure_context` needs
+- [x] ✅ [CODE] P2. **DEFAULT-RULED 2026-08-06: trim multi_timeframe's calculator set, not expand delta-one's
+      defaults.** — features-service@94b64472 `[CODE]` tag (was `[OPERATOR]`) — narrower blast radius (doesn't inflate
+      compute cost fleet-wide for every asset_group running delta_one's defaults); if the trimmed calculators turn out
+      load-bearing elsewhere, expanding delta-one's `DEFAULT_FEATURE_GROUPS` remains the fallback. **Decide: expand
+      delta-one's default feature-group set, or trim multi_timeframe's calculator set?** `tf_structure_context` needs
       `market_structure_bias_4h`/`market_structure_bias_1d` from `market_structure_sequence`, and
       `wedge_confluence`/`tf_risk_reward` need `polynomial_trendlines` — neither group is in delta-one's
       `DEFAULT_FEATURE_GROUPS` (confirmed 2026-08-03: only 18 of the 33 `CALCULATOR_REGISTRY` groups are
