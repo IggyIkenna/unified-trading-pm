@@ -194,13 +194,14 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (`## Follow-up`, `[REVIEW] P2`) —
     never cited by any covering doc.
 
-- [ ] [VERIFY] P1. **Confirm a real post-flip triggered run succeeded (not just the YAML edit) for each of the 4
+- [x] ✅ [VERIFY] P1. **Confirm a real post-flip triggered run succeeded (not just the YAML edit) for each of the 4
       "borderline" Tier-B self-hosted-runner files** — `cascade-qg-ordering.yml`, `freeze-deferred-build-replay.yml`,
       `reconcile-staging-versions.yml`, `update-repo-version.yml` — and append the sign-off + run URL/id for each into a
       new "## Tier-B sign-off log" section in the source doc (that section does not exist yet). Ground-truth check
       already confirms all 21 Tier-A files carry `runs-on: [self-hosted, glue]` (their own 2 checkbox todos are stale
       pointers, not real remaining work — do not re-do them). **Done when**: all 4 Tier-B files each have one
-      run-id-cited successful post-flip run recorded in the new section.
+      run-id-cited successful post-flip run recorded in the new section. **COMPLETE 2026-08-06** — all 4 confirmed +
+      sign-off log appended (`unified-trading-pm@f83716c0b`).
   - Source: `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md` ([VERIFY] P1) — never cited by any
     covering doc.
 
