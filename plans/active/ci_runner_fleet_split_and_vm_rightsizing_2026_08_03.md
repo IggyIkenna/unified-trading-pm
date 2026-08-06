@@ -23,7 +23,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: "2026-08-03"
-last_updated: "2026-08-03"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -309,14 +309,20 @@ new pool is confirmed green, (3) only then resize AO down.
       `deployment-api` right now — filed as
       `/plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (shipped). The
       fix + test sit locally uncommitted in this session's checkout until that issue clears.
-- [ ] [INFRA] P1. **Gate already met as of 2026-08-05** — `gh api .../actions/runners` shows zero runners registered
-      against the old VM across all 25 pools (confirmed via full fleet sweep, see above), and
-      `systemctl list-units     'github-glue-runner*.service' --state=active` on the old VM returns empty. **Stated
-      precondition not yet elapsed**: this todo's own 24h soak ("no runner-claimed job has landed... for a full day")
-      only starts counting from 2026-08-05 — don't run an explicit `teardown`/directory cleanup before ~2026-08-06 even
-      though the functional gate is already satisfied, in case any straggler job was mid-flight at sweep time. Gate: as
-      stated, now met — re-confirm once the day passes, then remove the on-disk artifacts (`/opt/github-glue-runners*`,
-      `/etc/github-glue-runner*.env`) if desired (cosmetic — no runner is actually live either way).
+- [ ] [OPERATOR] P2. **24h soak now elapsed (2026-08-06) — prep done this session, final deletion needs a human hands-on
+      run, deliberately deferred to quiet time (operator instruction, 2026-08-06).** Re-confirmed live 2026-08-06: zero
+      `github-glue-runner*` registrations on GitHub across all 25 pools, zero active systemd units. **Already done this
+      session** (fully reversible, no data touched): stopped + disabled all 25
+      `github-glue-slot-refresh-*.timer`/`.service` (were still firing every ~10min, git-pulling dead runner checkouts)
+      and all 25 `github-glue-runner-*@.service` templates. **Remaining — the actual on-disk delete
+      (`/opt/github-glue-runners*` ~139GB, `/etc/github-glue-runner*.env`, the now-inert systemd unit FILES)** is
+      blocked for an agent by the local destructive-command guardrail (recursive `rm`, by design — no override
+      attempted) and needs the operator to run it directly (SSM Session Manager or `aws ssm send-command`) during a
+      quiet window. Full ready-to-run script (verified-safe: everything it touches already confirmed dead+stopped
+      above):
+      `bash     #!/bin/bash     set -euo pipefail     echo "=== disk usage before ==="; df -h /; du -sh /opt/github-glue-runners* 2>/dev/null | sort -h     echo "=== removing /opt/github-glue-runners* (~139GB) ==="; rm -rf /opt/github-glue-runners*     echo "=== removing /etc/github-glue-runner*.env ==="; rm -f /etc/github-glue-runner*.env     echo "=== removing systemd unit FILES (already stopped+disabled) ==="     rm -f /etc/systemd/system/github-glue-runner-*.slice     rm -f /etc/systemd/system/github-glue-runner-*@.service     rm -f /etc/systemd/system/github-glue-runner@.service     rm -f /etc/systemd/system/github-glue-slot-refresh-*.service     rm -f /etc/systemd/system/github-glue-slot-refresh-*.timer     rm -f /etc/systemd/system/github-glue-slot-refresh.service     rm -f /etc/systemd/system/github-glue-slot-refresh.timer     systemctl daemon-reload     echo "=== verify: no github-glue-runner*/slot-refresh* units remain ==="     systemctl list-unit-files 'github-glue-runner*' 'github-glue-slot-refresh*' --no-legend 2>/dev/null || echo "NONE — clean"     echo "=== verify: crash-loop-watchdog left untouched (permanent, shared with the CI VM) ==="     systemctl is-enabled glue-runner-crash-loop-watchdog.timer     echo "=== disk usage after ==="; df -h /     echo "=== orchestrator unaffected? ==="; systemctl is-active orchestrator     `
+      Expected result: root volume drops from 85% used to ~64% (700GB provisioned, 575GB used pre-cleanup). Gate:
+      operator runs the script, output pasted/confirmed here, checkbox flipped.
 - [ ] [INFRA] P1. **Downsize `i-0c9b283b31d6b5ca7` from `m8i.4xlarge` to `m8i.2xlarge`** (stop →
       modify-instance-attribute --instance-type → start). Per CLAUDE.md's maintenance-window rule, brief orchestrator
       downtime during this is pre-authorized (pre-live-trading) — do now, no separate scheduling needed. Verify AO's own
