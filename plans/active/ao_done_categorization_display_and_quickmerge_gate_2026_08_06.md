@@ -138,12 +138,48 @@ are all already correctly exempted there). Mirrors the shape of the existing `_e
       tab automatically (no separate wiring needed there — both consume the same `DONE_FAILED_TYPES` set). Done-when:
       `activity.test.ts` case asserting the new type's label + summary text (both tip and mid-history remedy phrasing) —
       green, 42/42 tests pass. — agent-orchestrator@ef59837
-- [ ] [REVIEW] P3. `_(stretch, optional)_` File a follow-up LOCAL todo (not built in this plan) for wiring
-      `promotion_lag_monitor.py`'s existing `provenance_blocked` finding into an auto-filed AO backlog task (P0,
-      `[BACKEND]`) instead of Slack-only — this plan intentionally does NOT auto-execute `reprovenance_bypass.sh` from
-      an unattended monitor (it pushes a commit to a shared branch; keep a worker/operator in the loop), but a standing
-      Slack-only alert for something this rare and high-impact is easy to miss. Scope the exact trigger condition +
-      backlog-task shape as its own small LOCAL plan before dispatching.
+
+## Track D — auto-escalate a provenance-blocked promote instead of Slack-only (operator ask 2026-08-06, same session)
+
+Research (Explore agent) found the stretch item above was scoped to the wrong mechanism: this codebase has no "auto-file
+a plan-doc todo" primitive a monitor can call — the real pattern (already used by `CIReconcileLoop` for CI-failure
+auto-dispatch) is the **escalation queue** (`POST /api/escalate` → `server/escalation.py::escalate()` → spawns a tmux
+worker, DB-deduped via `find_open_escalation_id` on `(repo, pr_number, wall_type)`). Also found: the resolved bypass
+SHA(s) only exist at ONE point — `ldr_to_main_fleet_promote.sh`'s `provenance_check_ok()`, which already runs
+`check_strict_quickmerge.py` with a real checkout — `promotion_lag_monitor.py` (the originally-scoped target) never
+resolves a SHA, only a bool, and its own docstring explicitly scopes it OUT of stuck/conflict-PR handling ("this monitor
+is the SSOT for branch-pair PROPAGATION lag ONLY"). So Track D dispatches from `provenance_check_ok()` directly, not
+`promotion_lag_monitor.py`.
+
+- [x] 1. ✅ [BACKEND] P1. Added `"provenance_blocked"` wall_type to `server/escalation.py` `WALL_TYPES` (routes to the
+      generic `cicd` boot prompt, not `_CONFLICT_RESOLVER_WALLS` — the fix is on `live-defi-rollout`, not the
+      auto-generated promote PR branch) + the matching `Literal` in `server/models/escalation.py` (the two MUST stay in
+      sync — see that file's own docstring on `ci_escalation_wall_type_mismatch_silent_human_only_2026_07_27`, the exact
+      failure class this todo could have repeated) + a regression test mirroring the existing
+      `stuck_promotion_pr`/`ldr_main_qg_failure`/`harness_lint` wall-type tests. Done-when:
+      `test_provenance_blocked_is_a_valid_wall_type` + the full `test_escalation.py` suite (108 tests) green. —
+      agent-orchestrator@a2a254d
+- [x] 2. ✅ [BACKEND] P1. Updated `unified-trading-pm/.github/workflows/escalate-to-orchestrator.yml`'s wall_type
+      validation (5 spots: 2 input descriptions, the `workflow_dispatch` options array, the case-statement accept list,
+      the case-statement error message) to accept `provenance_blocked` — also backfilled `harness_lint`'s pre-existing
+      absence from the 3 documentation-only spots (case-statement itself already accepted it; only the docs/dropdown
+      were stale) while already touching those exact lines. Done-when: `python3 -c "import yaml; yaml.safe_load(...)"`
+      parses clean + all 5 occurrences present. — unified-trading-pm@<pending, see Deferred table>
+- [x] 3. ✅ [BACKEND] P1. Wired the actual dispatch into `scripts/cicd/ldr_to_main_fleet_promote.sh`'s
+      `provenance_check_ok()`, right after it posts the PR comment: builds a `context` string carrying `$_PROV_OUT`
+      verbatim (the real `check_strict_quickmerge.py` output, naming the violating commit(s) — the worker doesn't have
+      to re-derive what's already known) plus tip-vs-mid-history remedy guidance, JSON-safe via `jq -n --arg` (the
+      established idiom already used by `ldr-to-main-promote.yml`'s own `ldr_main_qg_failure` dispatch — never
+      hand-interpolated, `_PROV_OUT`/commit subjects can contain quotes/backticks/newlines), fired via
+      `gh api -X POST repos/.../dispatches --input -` with `GH_TOKEN="$GH_PAT_FOR_ARM"` (the token every other mutating
+      `gh` call in this file already uses). Best-effort (`|| echo WARN...`, never blocks the provenance gate itself).
+      Dedup is entirely downstream (DB-backed, per wall_type item 1) — no client-side idempotency needed, same posture
+      as `ci_failure_watcher.py`'s own `_dispatch_escalation`. Verified via `bash -n` (syntax) + **functional**
+      verification (`sed`-extracted the real inserted lines into an isolated harness with a stubbed `gh` function — not
+      a re-typed copy — confirmed the exact JSON payload `jq` produces is well-formed with correct field names/types,
+      backtick/newline/quote content properly escaped, and `GH_TOKEN` propagates) + `shellcheck` (clean — the one SC2016
+      info-note on the new line is the same accepted single-quote-intentional pattern the pre-existing `_PROV_BODY` code
+      two lines above already carries). — unified-trading-pm@<pending, see Deferred table>
 
 ## Track C — Fleet + Backlog Detail done-categorization display
 
@@ -231,3 +267,28 @@ Backlog Detail gets all three of retry-count-on-done, rejection-count-on-dispatc
   meta-population sweep, not the corpus-wide `meta` triage this same category otherwise defers to
   (`ag_closeout_audit_scope_widening_triage_2026_07_26.md`). Self-covering (its own remaining `[REVIEW] P3` stretch item
   is tracked in this doc's own Todos) — no batch extraction needed.
+- **2026-08-06 (same interactive session, Track D — operator asked for the stretch item)**: Built and verified in full
+  (see Track D above) — code-complete, tested, NOT a "figure it out later" scope note anymore. Shipped 2/3 files:
+  `agent-orchestrator@a2a254d` (the new wall_type + test) landed clean. The 2 `unified-trading-pm` files
+  (`escalate-to-orchestrator.yml` + `ldr_to_main_fleet_promote.sh`) hit the SAME already-tracked, already-open
+  fleet-wide blocker 3 consecutive times (`workflow-template-parity` QG failing on OTHER repos' `image-build-gate.yml`
+  copies — confirmed via `workflow_template_drift_baseline.json` neither file I touched is even tracked by that check;
+  the drift is 100% collateral from concurrent unrelated activity) — see
+  `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md` (open, same root cause: multiple slots racing
+  workflow-copy rollouts against a moving target). Per the retry-discipline rule (two identical consecutive failures =
+  stable, stop blind-retrying), stopped after attempt 3 rather than repeat a 4th time against the same external
+  condition. **Not lost** — both files sit correct, tested, and unstaged-committed-locally in this session's own
+  worktree; will ship the moment the fleet-wide gate clears (either that OTHER rollout settles, or an operator/agent
+  runs `detect_template_drift.py --baseline-write` to accept the unrelated drift — neither is this plan's call to make
+  unilaterally). See Deferred table below.
+
+## Deferred work after 2026-08-06
+
+| Item                                                                                                                     | State / why deferred                                                                                                                                                                                                                      | Blocked on                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Ship `unified-trading-pm@<pending>` (Track D todos 2+3: `escalate-to-orchestrator.yml` + `ldr_to_main_fleet_promote.sh`) | **Cannot be done yet** — code complete/tested/shellcheck-clean, sitting correct in the local worktree; quickmerge blocked 3x by an already-tracked, already-open fleet-wide `workflow-template-parity` failure unrelated to these 2 files | `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md` clearing, or an operator/agent re-baselining the unrelated drift |
+
+**Recommended next**: re-run
+`bash scripts/quickmerge.sh "feat(cicd): dispatch provenance_blocked escalation from the fleet promote bot instead of Slack-only" --agent --files '.github/workflows/escalate-to-orchestrator.yml scripts/cicd/ldr_to_main_fleet_promote.sh'`
+from this same worktree once `python3 scripts/quality_gates/detect_template_drift.py --workflows` reports no NEW
+(non-baselined) drift — check that first rather than blind-retrying a 4th time.
