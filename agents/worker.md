@@ -384,6 +384,49 @@ escalation fires for this kind (there's no CI failure to fix).
 3. Then: same posture as `qg_red` — if you have other dispatchable work, do that; otherwise send ONE heartbeat and WAIT
    QUIETLY. The resolution arrives as an outbox message on your next `/progress` or `/heartbeat`.
 
+### 4c) GATED on an external ref — park durably on FIRST detection
+
+**The class**: your task requires verifying that a specific commit (or promote) has landed on a branch (e.g.
+`git merge-base --is-ancestor <sha> origin/main` returns non-zero — the fix is not on `main` yet). This gate is
+**invisible to the dispatcher**: `/api/backlog/<id>/blockers` returns "ready (no blockers)" because there is no
+backend `depends_on` condition wired to an external git ancestry check. Without action, the task re-dispatches to a
+fresh worker every tick (observed 3× in one window, slots 8→2→5,
+`external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25`).
+
+**Why `priority=999 + priority_override=True` alone is NOT a durable block**: it de-prioritises the task in the
+queue but does NOT prevent dispatch — the dispatcher will still pick it when the queue empties or all
+higher-priority work is done. The truly durable block is a named prereq condition (`auto_unpark__<task-id>`) set
+FALSE in SQLite: the dispatcher's `_blocks_prereqs` filter returns "blocked" regardless of priority until the
+condition is set TRUE. A `priority_override`-only park (without the SQLite condition) is half-parked.
+
+**The correct one-shot flow (does not require skip-count threshold to accumulate)**:
+
+```bash
+# 1. Detect the gate:
+git fetch origin main --quiet
+git merge-base --is-ancestor <sha_to_check> origin/main \
+  || echo "gate not cleared — parking now"
+
+# 2. Park durably IMMEDIATELY (creates auto_unpark__<task-id> condition=false in SQLite):
+curl -sS -X POST $SERVER_URL/api/backlog/$TASK_ID/park \
+  -H 'Content-Type: application/json' \
+  -d '{"requested_by": "slot-'$SLOT_ID'", "reason": "ext-gate: <sha> not yet on origin/main"}'
+
+# 3. Release the slot (reason_code GATED keeps it out of the dispatch-noise count):
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/skip-current-task \
+  -H 'Content-Type: application/json' \
+  -d '{"task_id": "'$TASK_ID'", "reason": "<sha> not yet on origin/main", "reason_code": "GATED"}'
+```
+
+The task now stays gated. The unpark path is the same as for any auto-parked task: once the gate clears (the
+promote lands), an operator (or the `AutoParkReconciler`, if the condition is flipped TRUE by an automated system)
+calls `POST /api/prerequisites/auto_unpark__<task-id>` with `{"value": true}` — the reconciler then reverses the
+park and the task re-enters the dispatch queue.
+
+**Do NOT** use this section for a repo-QG red (that is § 4b) or a dependency on another backlog task
+(`prereqs.completed_tasks`, handled by the dispatcher automatically) — only for a genuine external-ref gate that
+the backend cannot represent as a `depends_on`.
+
 ### 4.5) FINDINGS CLOSURE (HARD RULE — codified 2026-06-10)
 
 If your task PRODUCES FINDINGS you are NOT fixing inline in this same task (an audit, review, consistency-check,
