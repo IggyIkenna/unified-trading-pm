@@ -20,7 +20,7 @@ summary:
   `ml-inference-service`, consolidated into `ml-service` per a 2026-05-21 comment in shard_builder.py itself; and
   `market-tick-data-handler` instead of `market-tick-data-service`), suggesting these two scripts may be superseded
   fleet-sweep tooling rather than a one-off naming slip -- that needs to be confirmed before blindly patching them.'
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -52,7 +52,7 @@ locked_since:
 depends_on: []
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-service@138c82d, deployment-service@3d1d817
 context_scope:
   [
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,

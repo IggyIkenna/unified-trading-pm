@@ -6,12 +6,12 @@ summary: >-
   with the T-12h↔T-24h dead-zone hypothesis. No pure-dead-zone dates found (all empty, <=5 rows), but the pattern is
   strong. TIER_1_OFFSETS multi-shot loop gap likely relates to the odds_api scraper cadence on low-fixture days — fewer
   fixtures → fewer fetch iterations → more odds land in the 615-minute dead zone.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
 parent_epic: sports_master
-resolved_by: []
+resolved_by: market-data-processing-service@814ead6
 repos: [market-data-processing-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, odds, dead-zone, track-o, diagnosis, bm-minutes]

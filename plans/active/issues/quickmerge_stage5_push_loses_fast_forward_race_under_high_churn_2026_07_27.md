@@ -11,7 +11,7 @@ summary: >-
   during quickmerge's own ~45-300s QG re-verification window, so by the time Stage 5 reaches the final push, the remote
   has already moved again — every single time, 16/16. A genuine SEPARATE bug was found and fixed along the way (see
   "What I found" #1), which reduced but did not eliminate the race.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -35,6 +35,8 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  see Recommended fix path — 4 sub-fixes each with commit sha (trailer pre-stamp, push-retry-rebase, push_race blocker,
+  MERGE_HEAD guard)
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,

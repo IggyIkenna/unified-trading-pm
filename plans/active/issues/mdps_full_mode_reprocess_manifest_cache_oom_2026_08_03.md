@@ -15,7 +15,7 @@ summary: >-
   mode's manifest pre-flight) was NEVER previously exercised at this data scale — the original 4-shard sweep used
   `force` mode throughout, which skips the pre-flight lookup entirely (see `reprocess_sports_odds.py`'s `if not force
   and not dry_run:` guard around Pre-flight 2) — so this is a newly-discovered gap, not a regression.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -33,7 +33,7 @@ estimate_class: infra
 source:
   "worker, slot 5, executing mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md's P2 shard4 full-mode retry
   todo — VM OOM-killed at ~24/571 days"
-resolved_by:
+resolved_by: unified-trading-library@4dc12dbe
 locked_by:
 context_scope:
   [

@@ -20,7 +20,7 @@ summary: >-
   caution, and the AUTONOMOUS_AGENT_RULES stop-short precedent already used by the sibling perp_daily_ctx task on this
   same plan) — documented the live row-count evidence + both remediation paths for the next session/operator to choose
   from.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -65,7 +65,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: instruments-service@942e0808, unified-api-contracts@28c7102d
 depends_on: []
 context_scope:
   [

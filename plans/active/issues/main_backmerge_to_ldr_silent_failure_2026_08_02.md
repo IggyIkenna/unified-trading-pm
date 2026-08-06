@@ -19,7 +19,7 @@ summary: >
   `escalate-to-orchestrator` dispatch) never triggers. This has been silently invisible: no PR opened, no escalation
   fired, and the only externally-visible signal is a plain GitHub Actions red X on a job most humans do not watch
   directly.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -58,7 +58,7 @@ assigned_role: infra
 drift_direction: advance-code
 last_updated: 2026-08-02
 locked_by:
-resolved_by:
+resolved_by: see Progress Log — live-triggered runs + fleet-wide template rollout verified 0 drift
 depends_on: []
 context_scope:
   [

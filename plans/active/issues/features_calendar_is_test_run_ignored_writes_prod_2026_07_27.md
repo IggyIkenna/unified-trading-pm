@@ -13,7 +13,7 @@ summary: >-
   lookup, unlike every other feature family (`delta_one` is the documented-correct pattern). This run wrote 0 rows (no
   real damage this time), but the SAME code path would silently write REAL rows to PROD on any day with actual economic
   events — a genuine production-data-pollution risk, not a cosmetic bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -42,7 +42,7 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: features-service@ba5143fd (see Progress Log for remaining todos' shas)
 locked_by:
 locked_since:
 context_scope:

@@ -19,7 +19,7 @@ summary: >-
   `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`-class regression. This is a one-time process gap (an intended
   edit that didn't happen), not a recurrence of a code defect — the fix is simply to perform the edit; the code path is
   sound.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Same AO backlog/park
@@ -50,7 +50,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: see Progress Log — root cause diagnosed + 2026-08-05 live-verified park holding in /api/backlog
 source: >-
   Observed 2026-07-31T22:55Z (slot 15) on dispatch of live_event_log_warm_sink_recovery_and_cold_compaction-011: live
   read of agent-orchestrator/data/config/backlog.yaml shows priority=20/priority_override=false/prereqs=[] despite

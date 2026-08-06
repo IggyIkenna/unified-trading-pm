@@ -18,7 +18,7 @@ summary: >-
   YES, the pattern also fires on GH Actions-hosted `quality-gates-v2` runs, not only local multi-slot hosts — likely via
   intra-job `pytest-xdist -n auto` worker contention (CI branch of the same PARGS line auto-scales workers to the
   runner's core count) rather than cross-job host sharing.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -60,6 +60,8 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  see Progress Log — timeout made overridable + investigated; ongoing OS-scheduler contention tracked separately in
+  fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md
 context_scope:
   [
     /plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,

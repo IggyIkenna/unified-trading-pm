@@ -21,7 +21,7 @@ summary: >-
   is a documentation-completeness / SSOT-contradiction gap per CLAUDE.md's definition, low-urgency (no data loss, no
   broken gate). Filed by main agt-1756f6 on review's routing request; review pinged no worker slot (all shipped fixes
   functionally correct).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +39,7 @@ parent_epic: agent_operating_framework_master
 priority: P3
 assigned_vm: planning
 execution_scope: orchestrator-agent
-resolved_by:
+resolved_by: unified-trading-pm@9eddba7f7, backfill@a6e5eae25
 locked_by:
 source: ["review sweep msg #3671 (2026-08-04), ebc2075b9 slot-8 fix_frontmatter follow-up"]
 drift_direction: advance-process

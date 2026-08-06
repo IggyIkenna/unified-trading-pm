@@ -8,7 +8,7 @@ summary: >-
   bare caller is one cache-miss/cold-start away from an OOM on a memory-constrained Cloud Run job or VM. ~35-40
   bare+defi-reachable call sites found across 8 repos; no QG gate currently enforces the projection pattern (prose-only
   convention in codex/02-data docs).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -54,6 +54,8 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  see Progress Log — ~35-40 call sites across 8 repos fixed/verified + permanent QG gate
+  check_bare_read_availability_index.py shipped
 locked_by:
 context_scope:
   [

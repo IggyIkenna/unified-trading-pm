@@ -24,7 +24,7 @@ summary: >-
   self-recover from this and would hang indefinitely, eventually growing RSS on the shared host into the exact incident
   class RULES.md's memory-bounding HARD RULE exists to prevent (3 prior same-shape shared-host OOM incidents:
   2026-07-27, 2026-07-31, 2026-08-01).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -58,7 +58,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-library@1bf3e7d1, market-tick-data-service@dde4ba1d, market-tick-data-service@18c3f4d3
 depends_on: []
 context_scope:
   [

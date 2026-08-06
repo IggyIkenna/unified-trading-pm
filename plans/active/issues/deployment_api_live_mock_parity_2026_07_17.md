@@ -13,7 +13,7 @@ summary: |
   (`/api/builds/history`, `/api/fixtures/upcoming`) from `ImportError: artifactregistry_v1`, and `/api/vm-deployments`
   exceeds 90s. The comparison tool is promoted to `deployment-api/scripts/compare_live_mock_parity.py` — **re-run it;
   parity decays every time an endpoint is added to one side only**.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment-api/deployment-ui
@@ -38,7 +38,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
-resolved_by:
+resolved_by: see Progress Log — 9/9 todos shipped+verified with individual commit shas + quickmerge evidence
 locked_by:
 drift_direction: advance-code
 source:

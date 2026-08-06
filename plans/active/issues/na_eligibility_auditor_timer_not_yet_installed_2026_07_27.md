@@ -9,7 +9,7 @@ summary:
   the dry-run Progress Log entry below. The one remaining open question is whether the DAILY CRON path (opus/effort-max
   dispatch mode, tranche-sharded, lifecycle-complete registration) fires and completes correctly on its own,
   unsupervised.
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -33,7 +33,7 @@ source: >-
 assigned_vm: planning
 assigned_role: infra
 sequential: true # both todos touch the same timer/install-script + the same first-fire verification surface
-resolved_by:
+resolved_by: see Progress Log — 2026-08-04 live verification, 8 agents reached lifecycle-complete
 locked_by:
 context_scope:
   [

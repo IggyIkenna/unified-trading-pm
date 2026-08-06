@@ -13,7 +13,7 @@ summary: >-
   representative sample of the 17 failures surfaced SIX DISTINCT, GENUINE, REPRODUCIBLE root causes spanning at least 3
   repos — this is a real data-pipeline-correctness finding, not infra flakiness, and is being escalated per the
   workspace's "big finding" rule (cross-repo + data-correctness).
-status: open
+status: resolved
 nature: issue
 asset_group:
   [cefi, tradfi, sports] # deduped 2026-07-30 by /ag-closeout-audit Phase 0.3 -- `tradfi` was listed twice. Found
@@ -69,6 +69,8 @@ context_scope:
     features-service/features_service/multi_timeframe/cli/main.py,
   ]
 resolved_by:
+  see Progress Log — 6 failure classes A-F each shipped with own commit sha across
+  features-service/UTL/MDPS/deployment-service
 ---
 
 # Full-matrix features check surfaced 6 distinct genuine failure classes — data-pipeline-correctness escalation

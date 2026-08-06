@@ -5,7 +5,7 @@ summary: >-
   7 domain smoke_matrix.py files in e2e-testing/scripts/ still reference the dead launch-features-backfill-vm.sh and the
   archived institutional_smoke_matrix_2026_04_20 plan. Found while fixing the sports file
   (infra_satellite_ao_dispatch_batch2-004). Citation-only.
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -27,7 +27,7 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: e2e-testing@2bee452
 supersedes:
 superseded_by:
 depends_on: []

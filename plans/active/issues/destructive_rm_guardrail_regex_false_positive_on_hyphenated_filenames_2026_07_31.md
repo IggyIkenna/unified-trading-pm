@@ -31,7 +31,7 @@ summary: >-
   docstring) — worth fixing precisely BECAUSE it is a safety mechanism: false positives that "cry wolf" on routine, safe
   operations train agents to route around the hook entirely rather than trust it, which weakens the real protection it
   exists to provide.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -55,7 +55,7 @@ execution_scope: ao-eligible
 drift_direction: none
 last_updated: 2026-07-31
 locked_by:
-resolved_by:
+resolved_by: agent-orchestrator@7b1a251, agent-orchestrator@c23eac2
 depends_on: []
 context_scope:
   [

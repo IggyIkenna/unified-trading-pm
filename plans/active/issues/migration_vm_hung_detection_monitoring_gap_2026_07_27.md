@@ -19,7 +19,7 @@ summary: >-
   logs continuously. This is a monitoring/observability gap, not a data-correctness issue — no data was lost, the
   migration was simply invisible while wedged. Per operator ruling this is human-prioritized work, not
   agent-orchestrator-dispatched, for now.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [infrastructure] # corrected 2026-07-30 (/ag-closeout-audit infra, Phase 0.3 Orthogonality HARD CHECK) -- was
@@ -83,6 +83,8 @@ context_scope:
     /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
   ]
 resolved_by:
+  deployment-api@ea594d60d, deployment-service@fde4f4f3b, deployment-service@b2d135a1e, deployment-service@9c4bfef,
+  deployment-service@727e3ca
 ---
 
 # cefi Script-1 canonical-migration campaign: 10/42 GCE VMs silently hung — no automatic detection
@@ -524,6 +526,10 @@ actuator gap, out of this doc's exact Gap-1/2/3 scope).
 genuinely unresolved open work, so marking this doc `resolved` would misrepresent that. Todos 1, 2, 3, 4, and 6 are all
 genuinely done with verified, shipped, ancestor-confirmed commits (or, for todo 3, a verified no-code-needed
 resolution); todo 5's audit deliverable is complete but its own follow-up tracking is what todo 7 now carries forward.
+
+> **CORRECTION 2026-08-06 (plan_reconciler agt-4fdce1):** the paragraph above is now stale — todo 7 and the later todo 8
+> have both since shipped and verified (commits cited in their own checkbox lines), so this doc has 8/8 todos done with
+> no remaining open work. `status:` flipped `open` → `resolved` and this doc archived.
 
 ### Direct answer to the operator's SPOT-recovery question
 

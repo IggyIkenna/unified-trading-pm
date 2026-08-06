@@ -15,7 +15,7 @@ summary: >-
   `[OPERATOR]` retag so a dispatched worker cannot execute the stale instruction while the ruling is pending — that is
   the skill's "superseded content with no banner -> add banner" auto-fix, and for § 1b it also executes an amendment
   already RULED on 2026-07-28 but never applied. Neither banner picks an option.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,7 +43,7 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: review
 drift_direction: correct-codex
 depends_on: []
-resolved_by:
+resolved_by: see Progress Log — 11 operator rulings each cited with option chosen + executing commit
 locked_by:
 locked_since:
 supersedes:

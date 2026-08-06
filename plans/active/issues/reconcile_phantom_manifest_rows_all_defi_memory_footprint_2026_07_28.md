@@ -7,7 +7,7 @@ summary:
   stalled a 64GB VM at 96% memory without completing. A scoped, 6-column pyarrow read of the same 27.3M-row file
   completed in well under a minute. Proposes a lighter-weight read path for verification/audit use cases that don't need
   the full frame, mirroring the cf_manifest_audit.py precedent already used for this same corpus.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -28,7 +28,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 parent_epic: infrastructure_master
-resolved_by:
+resolved_by: see Progress Log — re-verified 2026-08-05 (batch-6 todo 26)
 locked_by:
 context_scope:
   [

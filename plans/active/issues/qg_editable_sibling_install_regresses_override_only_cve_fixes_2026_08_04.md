@@ -9,7 +9,7 @@ summary:
   live: unified-api-contracts's cryptography>=50.0.0 fix (override-dependencies-only) is silently downgraded back to
   49.0.0 in the CONSUMING repo's local .venv the moment that repo's QG editable-installs unified-api-contracts. 22 of 23
   fleet repos declare LOCAL_DEPS, so this is a fleet-wide local-QG-integrity gap, not PM-specific."
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -34,7 +34,7 @@ source:
     `.venv` had cryptography 50.0.0 and `.venv/bin/python -m pip_audit` reported clean.",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: see Progress Log — --overrides fix + quality-gates.sh exit 0 with pip-audit clean
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
