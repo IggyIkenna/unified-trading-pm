@@ -1,0 +1,272 @@
+---
+doc_type: plan
+title: Sports satellite AO batch 10 — /ag-closeout-audit orphan extraction (2026-08-06)
+summary: >-
+  Tenth AO-dispatch batch for sports, produced by a fresh `/ag-closeout-audit sports` run (2026-08-06, scheduled
+  tranche-sharded dispatch agt-7b0c34, slot-13): 82 sports AG-primary docs classified via a per-doc Workflow pass (Phase
+  1, 82/82 agents, 0 errors), then re-classified for self-dispatched coverage (19 docs are their own dispatch vehicle —
+  assigned_vm: planning + active/open — and are covered by themselves, not orphans). Final verdicts: 16 archivable_now,
+  25 covered-by-active-work (6 external + 19 self-dispatched), 10 exclude_cross_cutting (genuinely cross-AG/meta
+  content, reported not orphaned), and 31 orphaned (20 partial coverage + 11 never touched by any covering plan). Every
+  orphaned doc's remaining items were taxonomy-classified against the batch9 (2026-08-04) Deferred record +
+  conflict-checked against the full covering-plan set. 4 items across 4 docs cleared the conflict check as genuinely
+  uncovered, bounded, and AO-eligible (including 1 doc whose item batch9 had parked conflict-gated but whose competing
+  claim — the consolidated closeout's backfill-path fix — provably covered a different code path, leaving the
+  capture-path item genuinely open); these became the 4 todos below. The remaining 30 orphaned docs' items stay parked
+  in the Deferred section, taxonomy-tagged (operator-gated / time-gated / conflict-gated / too-large-or-risky /
+  human-only), referenced against batch9's deeper per-item record where unchanged. Status: draft — not
+  ingested/dispatched until operator approval flips it active.
+status: draft
+nature: process
+asset_group: [sports]
+stage: [data]
+repos: [unified-trading-pm, market-tick-data-service, deployment-service, instruments-service]
+scope: [engineer]
+tags: [sports, ao-dispatch, close-out, batch-10, satellite-docs, ag-closeout-audit]
+related:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
+    /plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
+    /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
+created: "2026-08-06"
+last_updated: "2026-08-06"
+parent_epic: sports_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 2.5
+estimate_calibrated_ai_days: 2.0
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: []
+source: >-
+  /ag-closeout-audit sports tranche run, 2026-08-06 — scheduled ag_closeout_auditor dispatch (agt-7b0c34, slot-13).
+  Phase 0 (82-doc discovery via generate_ag_closeout_audit_candidates.py: 82 members, 13 covering docs, 16 never-cited
+  NA) + Phase 1 (82-doc classification via Workflow fan-out, sonnet/medium, 82/82 agents) + Phase 2 (synthesis: 31
+  orphans after self-dispatched reclassification) + Phase 3 (taxonomy + conflict-check vs the batch9 Deferred record and
+  the full covering set) per cursor-configs/skills/ag-closeout-audit/SKILL.md's autonomous-mode procedure.
+assigned_role: data_engineering
+sequential: false
+drift_direction: advance-code
+---
+
+# Sports satellite AO batch 10 — /ag-closeout-audit orphan extraction (2026-08-06)
+
+## Methodology
+
+Per `/cursor-configs/skills/ag-closeout-audit/SKILL.md`'s iterative-drain methodology, this run's Phase 3 first
+re-checked the prior batch's (`sports_satellite_ao_dispatch_batch9_2026_08_04.md`) Deferred record before any fresh
+triage: the 84 non-batchable items across 42 docs from 2026-08-04 were re-verified against today's live doc state, and
+every orphaned doc's remaining items were re-classified + conflict-checked. 4 items became conflict-cleared batch todos;
+30 orphaned docs remain parked (their items are unchanged since batch9's record unless noted). The full Phase 1 verdict
+set (82 docs) is recorded in this run's report, which was carried in the dispatch's `/done` evidence string.
+
+## Todos
+
+- [ ] [DATA] P3. Trace and fix the upstream sports player/team-name UTF-8-as-Latin-1 mojibake encoding defect that
+      produced this incident's `'JeleÅ\x84'` (real name `'Jeleń'`) — most likely an MTDS api_football lineups adapter or
+      sports-reference orchestrator write path (`sports_reference/by_date/.../entity=fixture_lineups/`): grep the MTDS
+      sports capture code for a wrong-charset decode (`.decode("latin-1")` / `.encode("latin-1").decode("utf-8")`
+      anti-pattern), or pull the specific corrupted by_date blob(s) to identify the source league/day; fix the charset
+      round-trip at the write site; add a regression test; run `quality-gates.sh --no-fix` green; ship via quickmerge.
+      The `junk_name_skips` warning log (instruments-service@497c4f5e) is the observability hook. Source:
+      `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`. Done when: the write site is identified with cited
+      evidence, the fix ships via quickmerge, and a fresh sample of the previously-corrupted by_date blob(s) shows
+      correctly-encoded player/team names (or the corrupted rows are provably isolated to a re-captureable window with a
+      stated plan).
+- [ ] [CONFIG] P2. Close the sports trigger-tier residual gap — add `odds_t12h`, `odds_t4h`, `odds_t2h` forward snapshot
+      triggers to `deployment-service/configs/sports-trigger-tiers.yaml`'s `pre_match.triggers` (following the existing
+      `odds_t24h`/`t6h`/`t1h` pattern, each with `cloud_run_job_name: "uts-prod-market-tick-data-service-fast-t1-recon"`
+      and tolerances ±30min for T-12h, ±15min for T-4h/T-2h), then relaunch the sports-scheduler VM via
+      `bash deployment-service/scripts/vm/launch-sports-scheduler-vm.sh`, then verify via a sample day's manifest that
+      all 6 forward horizons (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h) show full per-fixture coverage. VM-launch safety
+      justification (stated safe-idempotent per task_template.md finding O path (c)): the sports-scheduler is a
+      singleton-locked scheduler VM whose state is GCS-backed and whose resume design tolerates preemption (SPOT
+      explicitly OK per the source doc's own text) — a relaunch is reversible and loses no data. Source:
+      `sports_features_layer_findings_sweep_2026_07_18.md`. Done when: the 3 new trigger entries are shipped, the
+      scheduler VM relaunches cleanly (exit 0), and a sample-day manifest check shows all 6 horizons with per-fixture
+      coverage (or a cited reason why a horizon cannot fire).
+- [ ] [INFRA] P3. File (or fold into an existing infra doc) the proposal to default `mtds-live-*` VM relaunches to
+      `LC_TARBALL_FRESHNESS=enforce`, per the source doc's sole remaining open todo — the proposal must state the
+      recommended default, the rationale (freshness-verified tarball deploys vs stale-image relaunch risk), and the
+      change surface (deployment-service launchers). Source:
+      `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: a proposal doc exists (either
+      a new `plans/active/issues/` doc or a named section folded into an existing infra doc, with the fold cited)
+      carrying the recommendation + rationale.
+- [ ] [DATA] P1. Verify-then-fix the ODDS_API CAPTURE path's blank-`fixture_id` raw generation: the halftime doc's open
+      checkbox (line ~185) says the capture path still emits `fixture_id=""` alongside a populated `event_id`, while the
+      consolidated closeout's Track E `[x]` todo claims the mechanism fixed via `market-tick-data-service@3401c0ab`
+      (2026-07-24) — that fix targeted the odds_api BACKFILL path (`_build_fixture_rows()`); per the closeout's own note
+      it was never re-verified against a fresh live capture. First read the current ODDS_API capture writer to determine
+      whether it shares the fixed code path; if the capture path still writes blank `fixture_id`, fix it (populate
+      `fixture_id` at write time, or drop the column rather than writing blank-but-present —
+      `/codex/02-data/honest-absence-downstream-handling.md`); if it is already fixed, close the halftime doc's checkbox
+      with cited code+live evidence. Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. Done when: either (a)
+      the fix ships via quickmerge and a fresh sample shows no blank `fixture_id` on the capture path, or (b) written
+      evidence (code read + live sample) proves the capture path already emits populated `fixture_id` and the halftime
+      doc's checkbox is flipped with that citation.
+
+## Deferred — non-batchable (30 orphaned docs with parked items + 1 fully extracted, taxonomy-tagged)
+
+Per the skill's iterative-drain methodology: before any future `batch11` triage, re-check the conflict-gated entries
+below first (cheap — a few greps + reads) since a competing claim may have shipped/superseded by then. Operator-gated
+and human-only entries need a real ruling, not re-triage. Time-gated entries need elapsed time/credentials, not
+re-triage. Too-large-or-risky entries need their own dedicated plan. Where an entry was already recorded in
+`sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s Deferred (the 84-item, 42-doc record), this section carries the
+doc-level verdict + category and references that record; entries NOT in batch9's record are flagged `NEW`.
+
+### Operator-gated (undecided design/judgment call or explicit sign-off requirement) (13 docs)
+
+- **sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md** — design-only spec, 11 open items (§1-§3), exists
+  BECAUSE of operator ruling BLK-b567ce7d (2026-07-21) requiring operator/spec sign-off before implementation dispatch.
+  (batch9 record: 11 operator-gated items.) Not re-triageable.
+- **sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md** — E8 legacy-delete irreversible
+  `--apply`/`--drop-stale` firing for pre-canonical sports GCS objects — BLOCKED-OPERATOR pending explicit sign-off +
+  the hard-stop-#2 carve-out contradiction + Part-5 100%-canonical-twin-coverage proof. (batch9: operator-gated.)
+- **sports_catalog_league_grain_only_scope_2026_07_08.md** — 4 open todos: manifest-schema-extension DESIGN (operator
+  ruling 2026-07-14), the gated builder, reference-data adapter extension, post-decision codex alignment — design +
+  sequencing gated. (batch9: operator + conflict.)
+- **sports_fixtures_browser_single_catalogue_source_2026_07_24.md** — freshness-cadence either/or: accept+label
+  live-status lag vs build a live-day overlay — a design fork with no evidence-based tiebreaker. (batch9:
+  operator-gated.)
+- **sports_group_c_execution_backtest_harness_2026_07_21.md** — all 5 todos open (CLI wiring, fixture data source with
+  CatalogManager branch decision, SportsMatchingEngine-vs-L0Matcher duplication resolution, docs placement) — each
+  involves an undecided design/architecture call. (batch9: 5 operator-gated.)
+- **sports_odds_bookmaker_coverage_enumeration_2026_06_20.md** — P1 Todo 2 (extend EXPECTED_BOOKMAKER_MARKET_SETS to 28
+  unmapped league_ids OR add a tier_3_global/no_expectation tier) is an either/or design fork; P1 Todo 4 `trades`
+  cluster-validation is a decide+implement. (batch9: 2 operator-gated.)
+- **sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md** — [DATA] P0 extend venue→class mapping to 19
+  unmapped venues (292,117 shards / 51.3M rows) — explicitly an operator/data-engineering decision. (batch9:
+  operator-gated.)
+- **sports_predictions_live_mode_activation_readiness_2026_07_21.md** — Todo 5 (run a sports archetype through the live
+  path) + Todo 6 (permanent [OPERATOR] final go-ahead for live mode) + Todo 2(b) ODDS quota/second-source decision.
+  (batch9: operator + conflict.)
+- **sports_prelaunch_cf5_verify_residual_2026_07_24.md** — C3 pre-launch-window corpus decision (10,345 objects) —
+  either/or fork explicitly operator-gated in the doc's own todo text. (batch9: operator-gated.)
+- **ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md** — [CODE] P3 wire-vs-drop `--family` scope
+  flag — unresolved design decision. (batch9: operator + conflict.)
+- **sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md** — `_build_fixture_league_map_from_gcs` mapping-coverage
+  gap (22-82 real leagues vs 0-2 overlapping) — doc's own text: "needs an operator/architecture decision on whether the
+  mapping should use the…". (batch9: operator + conflict.)
+- **sports_features_layer_findings_sweep_2026_07_18.md** — §E [MODEL] P2 (T-6h/T-2h as MODEL horizons) — a model design
+  call (the §E [CONFIG] P2 trigger-tier item was extracted into todo 2 above). (batch9: operator + conflict.)
+- **sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md** — R [PROCESS] P1 codify an entity-rename/split
+  consumer-migration authoring rule into codex — operator/codex-authoring ruling required. (batch9: operator +
+  conflict.)
+
+### Conflict-gated (already claimed by an open todo elsewhere in the covering set) (5 docs)
+
+- **sports_odds_feature_naming_canonicalization_2026_07_21.md** — todo 9 [REVIEW] P3 FSS↔ml-service↔strategy-service
+  naming parity test — explicitly sequenced after the still-unshipped 3-repo four-way naming migration (see the
+  too-large entry for `sports_odds_feature_naming_four_way_mismatch` below); not dispatchable ahead of it. (batch9:
+  conflict-gated; the batch9 citation text is truncated mid-sentence — re-checked this run, no live claiming todo exists
+  yet, the gate is the sequencing dependency itself.)
+- **instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md** — Todo 4 [DATA] P1 historical
+  migration of ~172,592 sports `league=` instrument_availability objects — batch9 defers Time-gated (league_id namespace
+  migration prereqs) + conflict-gated (batch9's own prediction-migration todo covers part of the same migration
+  ground) + operator-gated (Todo 1 canonical question_group target ruling).
+- **sports_halftime_odds_sfi_vs_inplay_2026_07_16.md** — (a) reconcile the market-data-sports manifest for 2,436 deleted
+  T-0 shards — owned by the in-flight bucket cutover (its unmerged shard must not be merged by anyone else); (b) retrain
+  the 3 quarantined CLV models post-ODDS_FEATURES-recompute — time-gated on the recompute landing. (The blank-fixture_id
+  capture-path item was extracted into todo 4 above — batch9's conflict-gated citation for it is truncated, and the
+  closeout's competing claim provably covered the backfill path, not the capture path.)
+- **footystats_matches_predictions_fetch_gaps_2026_07_08.md** — sole open todo #4 (re-verify + re-dispatch footystats
+  backfill VM) is BLOCKED-PREREQUISITES on the fix tracked in its sibling self-dispatched doc
+  `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md` (a permanently-regenerating
+  422-row 4-league population needing a real fix, not a re-verify) — conflict-gated on the sibling claim, and the doc's
+  own na-eligibility entries confirm KEEP-NA. NEW (not in batch9's Deferred record as a sports entry).
+- **sports_predictions_live_mode_activation_readiness_2026_07_21.md** — Todo 3 launch-mdps-features-live.sh
+  cross-cutting exec-dispatch wiring — production deployment of the MDPS+FSS live path claimed by the
+  consolidated-closeout Track V open todos. (batch9: conflict + operator.)
+
+### Time-gated (elapsed-time/credential/vendor dependency not yet reached) (2 docs)
+
+- **data_completion_sports_2026_07_24.md** — item 4: API-Football daily-quota bump to 1.5M/day — the branch decision is
+  RULED (2026-07-28) but the vendor account-tier upgrade + spend is the outstanding credential-gated action. (batch9:
+  time-gated.) Items 1-3 are covered by batch9's open todos.
+- **sports_odds_feature_naming_four_way_mismatch_2026_07_21.md** — the 3-repo four-way naming migration (UAC schema +
+  features-service producer + ml-service loader + strategy-service consumers) — too-large-or-risky for a batch todo
+  (cross-repo schema change with blast radius), needs its own dedicated migration plan; ALSO the sequenced-gate for the
+  parity-test item above. NEW (not in batch9's Deferred record).
+
+### Too-large-or-risky-for-a-batch-todo (own dedicated migration/design pass needed) (1 doc)
+
+- **sports_catalog_league_grain_only_scope_2026_07_08.md** — (also operator-gated, above — listed once, both tags apply:
+  schema-extension design + fixture-grain catalogue builder are a dedicated design+migration pass, not batch todos.)
+
+### Genuinely human-only / multi-tranche index (report-only per primary-owner rule) (6 docs)
+
+The following docs are `assigned_vm: NA` multi-tranche indexes / findings ledgers whose remaining sports-scoped items
+could not be resolved to a bounded AO-eligible extraction this run. Per the skill's primary-owner rule (parent_epic),
+the OWNING tranche for the instruments-master-parented docs below is NOT sports — this tranche reports their sports
+orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not in batch9's Deferred record):
+
+- **instruments_remaining_work_audit_2026_07_10.md** — multi-tranche synthesis index (all 5 AGs + cross-cutting,
+  parent_epic: instruments_master); open sports-scoped work items cited but each resolves to a sibling doc's claim (e.g.
+  mtds_is_full_adapter_smoketest_findings as the 12-open-todo master record) — needs the owning tranche's fold-in, not a
+  sports batch todo.
+- **mtds_is_full_adapter_smoketest_findings_2026_07_07.md** — cross-tranche master findings ledger (12 open todos incl.
+  P0 crash classes); sports slice not cleanly separable into a bounded batch item without re-reading every finding —
+  owning tranche: instruments_master.
+- **instruments_docs_audit_outstanding_items_2026_07_08.md** — multi-tranche index with open sports-scoped work
+  (fixture/player catalogue items) — owning tranche: instruments_master.
+- **adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md** — sole remaining open item is the
+  [DECISION] P2 reconciliation-cadence todo — operator decision (tradfi batch7 (2026-08-06) independently reached the
+  same verdict); also claimed in tradfi's consolidated closeout Sources list.
+- **estate_orphan_assessment_2026_07_21.md** — sports-scoped work complete; the open item is the cross-tranche cefi/defi
+  CONTESTED todo 6 (KEEP-NA vs RECLASSIFY) — claimed by cefi batch7 + tradfi batch7 records; owning tranche:
+  instruments_master.
+- **predictions_ml_walk_forward_and_arb_2026_06_20.md** — 4 open todos, one chained walk-forward/arb research arc —
+  sports/prediction dual-tag (the historically-confirmed same-work pairing); parent_epic: predictions_master → the
+  prediction tranche is the owner; its consolidated closeout + prediction batch6 already cite it.
+
+### Fully extracted this batch (1 doc)
+
+- **sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md** — sole remaining open todo (the [INFRA] P3
+  LC_TARBALL_FRESHNESS proposal) was extracted into todo 3 above; all other todos closed (LADBROKES re-stamp DONE
+  2026-08-05, honest-coverage rollup DONE, capture-VM fix DONE). The doc's batch9 operator-gated record (LADBROKES
+  re-stamp) is resolved since.
+
+## Progress Log
+
+- **slot-13 (ag_closeout_auditor agt-7b0c34) 2026-08-06**: Full `/ag-closeout-audit sports` run per SKILL.md autonomous
+  mode. Phase 0: `generate_ag_closeout_audit_candidates.py --tranche sports` — 82 members, 13 covering docs, 16
+  never-cited (all NA). Phase 1: Workflow pipeline over all 82 docs (sonnet/medium) — 82/82 agents completed, 0 errors.
+  Phase 2: self-dispatched reclassification (19 docs, assigned_vm: planning + active/open) — final: 16 archivable_now,
+  25 covered (6 + 19), 10 exclude_cross_cutting, 31 orphaned (20 partial + 11 never-touched). Phase 3: taxonomy mapping
+  vs batch9's Deferred (84 items/42 docs) + per-candidate conflict-check (grep covering set for every candidate's
+  claims: halftime fixture_id → closeout Track E's fix provably covers the BACKFILL path, capture path genuinely open;
+  parity test → sequenced after the too-large migration; footystats → sibling self-dispatched claim;
+  instrument_availability league= → league_id migration prereqs; etc.). 4 conflict- cleared bounded items → this batch's
+  4 todos (status: draft — operator approval required before activation, per the skill's never-auto-flip rule). 30
+  orphaned docs' items parked in Deferred above (29 with non-batchable taxonomy entries + 1 fully extracted); ledger:
+  parked_findings = 29 doc-level entries written in this Deferred section (plus 6 report-only multi-tranche index docs
+  counted separately as report-only, not parked). No retags, no shared doc writes performed this run (classification +
+  draft only — no multi-tranche doc was edited). OOM-directive acknowledgment (2026-08-06 operator broadcast): no heavy
+  RAM/IO-bound local process was launched by this session — Phase 1 ran as subagent model calls only; nothing OOM-killed
+  on this slot; no progress-log event to record beyond this statement.
+- **Observation for the operator**: several batch9 Deferred citations are truncated mid-sentence with a trailing "…"
+  (e.g. the halftime fixture_id, parity-test, and CLV-retrain entries), making the 08-04 conflict claims not fully
+  recoverable from the record — this run re-verified each affected item live instead (see the per-item notes above), but
+  a future audit would benefit from batch9's Deferred entries being completed or explicitly retired.
+
+## Codex SSOTs
+
+- /plans/active/task_template.md §4 — finalize-plan-coverage rule + dispatch-scope eligibility test
+- /plans/PLAN_FORMAT.md — `status: draft` semantics, frontmatter schema
+- /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md § "Dispatch-scope eligibility"
+- /codex/11-project-management/ — findings triage, archival ritual
+- /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 2-3 — primary-owner rule + the shared
+  conflict-check protocol
+- /cursor-configs/skills/ag-closeout-audit/SKILL.md — this skill (procedure SSOT)
+- /codex/02-data/honest-absence-downstream-handling.md — blank-but-present column anti-pattern (todo 4)
+- /codex/05-infrastructure/data-pipeline-alerts.md + /codex/04-architecture/shard-level-failure-isolation.md —
+  DP-CATALOG-001 context (todo 1)
