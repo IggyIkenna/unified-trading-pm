@@ -223,14 +223,28 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       the `ExecStart` line + `daemon-reload` + `restart`) — safe to do at any time per `KillMode=process` (confirmed:
       kills only the uvicorn main PID, tmux/claude worker sessions survive). Added the `[REVIEW]` follow-up below to
       verify the live deploy + confirm the hang stops recurring.
-- [ ] [OPERATOR] P2. **Apply `agent-orchestrator@ee98ccb`'s `--reload` removal to the LIVE deployed
+- [x] ✅ [OPERATOR] P2. **Apply `agent-orchestrator@ee98ccb`'s `--reload` removal to the LIVE deployed
       `/etc/systemd/system/orchestrator.service`** on this VM — re-run `install-orchestrator-service.sh` (or manually
       remove `--reload --reload-dir server` from the `ExecStart` line), then
       `sudo systemctl daemon-reload && sudo     systemctl restart orchestrator`. Safe per `KillMode=process` (kills only
       the uvicorn main PID; tmux/claude worker sessions in the cgroup survive, confirmed in this doc's Progress Log). No
       worker has privileged access to do this from a sandboxed slot session (`NoNewPrivileges=yes`). (repo:
-      agent-orchestrator, infra action)
-- [ ] [REVIEW] P2. **Once the live unit is updated (prior todo), confirm via `journalctl` that the
+      agent-orchestrator, infra action) — **✅ DONE 2026-07-30, VERIFIED LIVE 2026-08-06.** Operator flagged this as
+      already applied; confirmed against the running planning VM (`i-0c9b283b31d6b5ca7`, ap-northeast-1) by read-only
+      SSM rather than taken on trust. Evidence, four ways: (1) the loaded unit's `ExecStart` is
+      `…/.venv/bin/python3 -m uvicorn server.server:app --host 0.0.0.0 --port 8765 --log-level info` — **no `--reload`,
+      no `--reload-dir`**; (2) `NeedDaemonReload=no`, so the on-disk unit and the loaded unit agree — this is not an
+      edited-but-never-reloaded file; (3) the service is `SubState=running` since 2026-08-06 16:13:41 UTC, i.e. it has
+      restarted since the change and came up clean; (4) `/etc/systemd/system/orchestrator.service` does still contain
+      the literal string `--reload` **3 times, but all three are COMMENTS documenting the removal** — line 83 reads
+      `# NO --reload here (removed 2026-07-30, ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md P2 todo)`, and
+      lines 84/100 explain why (it was redundant: `scripts/ao-self-pull.sh` already runs `systemctl restart`, and the
+      sibling unit never used it). **Trap for whoever re-verifies this**: a bare `grep -c -- '--reload'` on the unit
+      file returns `3` and reads like the fix was never applied. It is a false positive — check `ExecStart` via
+      `systemctl show orchestrator -p ExecStart`, not the raw file. **Why this sat unflipped**: the work shipped
+      2026-07-30 and the checkbox was never flipped in the same turn, so it kept re-surfacing as an open operator
+      decision for a week — the false-unchecked class CLAUDE.md's commit+push+flip rule exists to prevent.
+- [x] ✅ [REVIEW] P2. **Once the live unit is updated (prior todo), confirm via `journalctl` that the
       `"Started reloader process"` / `"Stopping reloader process"` log lines stop appearing on future restarts** (proves
       `--reload` is actually off in the running process, not just the repo), then watch the next several
       `ao-self-pull.sh`-triggered or explicit restarts for the previously-observed
@@ -238,7 +252,28 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       this issue with that evidence; if it still recurs even without the reload-supervisor layer, the root cause is
       elsewhere (do not re-guess — the resource_tracker/spawn-context teardown lead in the `[BACKEND]` todo above
       becomes the next thing to check directly, e.g. via `py-spy dump` on a hung process before SIGKILL fires). (repo:
-      agent-orchestrator)
+      agent-orchestrator) — **✅ BOTH HALVES VERIFIED 2026-08-06** by read-only SSM `journalctl` on the planning VM.
+      **Half 1 (reloader lines stop): PROVEN** — `0` occurrences of `"reloader process"` across **26 real systemd unit
+      starts** in the retained journal. **Half 2 (`"State 'stop-sigterm' timed out. Killing."` stops recurring): PROVEN
+      by absence across restarts** — `0` occurrences of `stop-sigterm` and `0` of `timed out. Killing` anywhere in the
+      retained journal, across those same 26 restarts. Since the failure mode manifested _on shutdown/restart_, 26 clean
+      restarts is a real sample, not a quiet window.
+
+      **Stated limitation — do not over-read this as a before/after comparison.** This VM's journald retention is only
+                  ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
+                  journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
+                  silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
+                  the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
+                  terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
+                  (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
+                  `--since` older than retention produces a confident-looking zero that means nothing.
+
+                  **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
+                  restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
+                  glance against
+                  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
+                  Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
+
 - [x] ✅ [BACKEND] P2. **Second, independent contributing-latency finding + fix, 2026-07-30** (downstream of Problem 1
       above, NOT a duplicate of the `--reload`/`ee98ccb` finding two todos up — both are real, `ee98ccb` is the one that
       actually explains the specific incidents named in this doc). Chased two leads before the `ee98ccb` journalctl
@@ -363,3 +398,20 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-06 (`/plan-reconcile ao`, operator-flagged, interactive)** — **⚠️ ARCHIVAL NOTE: this doc now has 0 open
+  `- [ ]` todos but MUST NOT be archived on that signal alone.** Both remaining todos closed this pass (the live
+  `--reload` removal, verified by SSM; and its journalctl follow-up, verified across 26 restarts). That drops the
+  checkbox count to zero, which makes this doc surface in `scripts/plan-hygiene/check_archive_candidates.sh` — but
+  **Problem 1 of the two this doc tracks, the SQLite `database is locked` storm, is not closed by anything above.** The
+  `--reload` work only ever addressed Problem 2 (the stuck shutdown / SIGKILL). The 2026-07-27 update in this doc
+  records the storm as ONGOING and causing a real functional failure (143 `database is locked` occurrences in a
+  32-minute window; the plan-reconciler's `POST /api/plan-health/dispatch` returning `500` and silently not retrying
+  until the next day's fire).
+
+  This is precisely the failure mode
+  `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` warns about — "a doc can have
+  every listed `- [ ]` checked while its own summary/Progress Log still describes an open question" — and it is why that
+  backlog requires a per-doc content read rather than a mechanical batch archive. **Before archiving**: confirm the
+  lock-storm question is resolved (or re-opened as its own tracked todo/doc), not merely that the checkboxes are ticked.
+  `status:` is deliberately left `open`.
