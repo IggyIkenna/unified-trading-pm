@@ -288,6 +288,79 @@ shard. FLIP candidates (all but #4 need STEP-4 verify):
    `pm_scripts_typecheck_debt_2026_06_11.md` (0 open / 6 checked) flagged as archive-candidate shapes — the former is
    ui-tranche (ui shard owns), the latter is the LOCKED archive candidate already listed above.
 
+## Hunter results — F (infra issues batch 3, 13 docs) — 2026-08-06
+
+19 findings; 2 docs clean (production_readiness_checklist_file_missing, silent_wrong_answer_audit). No true missed-flip
+candidates (no open todo cites a sha/PR/build); closest analogs are flipped-[x]-with-placeholder + unverified done-when.
+
+1. **W** `s5_7_required_docs_gaps_2026_07_29.md:4,9` vs `:60-76` — P2 contradiction: title+summary claim "9 of 17" repos
+   miss required docs but the doc's own table lists 8 missing + 9 OK rows. → fix: correct to 8/17 (table is the truth) +
+   summary line 9.
+2. **G** `vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md:4-5,118` vs `:107-116` — P2 contradiction: "6 of the 8"
+   have no protective layer but the table marks 7 of 8 False; 08-03 NOTE (:153-155) dropped gcs-migration-bundle without
+   reconciling the count. GRACE — report only.
+3. **G** `plan_reconcile_autonomous_sweep_2026_07_30.md:11-12` vs `:71,89-90` — P2 contradiction: summary lists the
+   codex dangling-ref as unresolvable but body shows P1-A RESOLVED with option A APPLIED by the same run. GRACE — report
+   only.
+4. **G** `plan_reconcile_autonomous_sweep_2026_07_30.md:101-105` — P2 contradiction: P2-B parks
+   `cicd_mvp_ldr_to_main_pipeline` as locked-unarchivable; it was operator-unlocked + archived 2026-07-31 (banner at
+   archive path :64-66). Parked question already acted on. GRACE — report only.
+5. **G** `plan_reconcile_autonomous_sweep_2026_07_30.md:201-209` — P3: P2-D presents stale-agentwork-clone deletion as
+   open, no cross-ref to the 07-30 ruling (option A, bundle-then-delete) + gate fix in sibling doc 10
+   (stale_agentwork_scratch_clone:93-101). GRACE — report only.
+6. **G** `pm_scripts_typecheck_debt_2026_06_11.md:119` vs `:32` — P2: body cites
+   `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` at ACTIVE path; file lives at
+   `plans/archive/issues/` (dangling). Also second confirmation this doc was MISSED by the 07-31 "7 fully-done locked
+   docs" unlock sweep (all 6 todos [x], status open). LOCKED — annotate only, no edit.
+7. **G** `pm_scripts_typecheck_debt_2026_06_11.md:108` — P2: evidence cite `active/issues/uv_pin_fleet_drift...`
+   dangling (file archived) + missing /plans/ prefix. LOCKED — annotate only.
+8. **G** `pm_scripts_typecheck_debt_2026_06_11.md:121` — P3: bare `orchestrator_self_healing_hardening_2026_06_21.md`
+   ref (resolves only at plans/archive/2026_06/). LOCKED — annotate only.
+9. **W** `prod_terraform_drift_backlog_reconcile_2026_07_24.md:193-195` vs `:202-204` — P2: [x] P2 ignore_changes todo's
+   done-when ("fresh tofu plan shows 0 changes") explicitly NOT verified at flip ("no `tofu apply` run" — code-only
+   deployment-service@f57c96e). → fix: DEFERRED/partial annotation on the [x] line (do NOT unflip — code did ship).
+10. **W** `prod_terraform_drift_backlog_reconcile_2026_07_24.md:37` — P2: frontmatter `source` cites
+    `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (archived). → fix: repoint to /plans/archive path.
+11. **W** `prod_terraform_drift_backlog_reconcile_2026_07_24.md:197-205` — P3 structural: lines 198-205 carry 390
+    leading spaces each (runaway whitespace, same class doc-1 fixed 2026-08-06) — breaks markdown rendering of the DONE
+    block. → fix: de-indent.
+12. **W** `reference_path_convention_2026_07_23.md:133-135` — P2: open todo targets
+    `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (premise: 1000L at cap); file is ARCHIVED (999L,
+    bare `issues/fss_bookmaker...` ref still at its :399); 08-03 na-elig marker (:209) also treats it as active. → fix:
+    stale-premise annotation on the todo + marker.
+13. **W** `reference_path_convention_2026_07_23.md:67,69,117,158` — P2: 4 [x] DONE todos carry `pm@<commit-pending>`
+    placeholder evidence — flips without real shas. → fix: verify each against git log; replace with real shas or
+    annotate.
+14. **W** `reference_path_convention_2026_07_23.md:207-208` vs `:195-196` — P3: 08-03 marker calls backlogs "large" (109
+    format / 1,286 existence) while same-day entry records live counts 88 vs baseline 87; magnitude jump 901→87
+    incoherently narrated. → fix: correct the marker counts.
+15. **W** `shared_host_home_filesystem_full_2026_07_26.md:90` vs `:148,340` — P2: [x] MOOT todo's "145G total" matches
+    no other measurement (290G→484G→678G) and its own slot-9 entry (:148) declares the MOOT resolution STALE
+    (RECURRENCE). → fix: STALE-annotate the [x] MOOT line (claim false-as-written).
+16. **W** `shared_host_home_filesystem_full_2026_07_26.md:242` — P3: relative markdown link
+    `sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` resolves nowhere (target archived). → fix:
+    repoint to /plans/archive/issues/ path.
+17. **G** `vm_launcher_setup_script_freshness_gap_2026_07_31.md:141-142` vs `:149-150` — P2: open todo records
+    "DEFAULT-RULED 2026-08-06, option (a)" on a decision the same todo calls "not a worker-determinable fact"; 08-04
+    Progress Log (:201,206) still calls it `[OPERATOR]`. GRACE — report only (retag happened TODAY; may be another
+    slot's in-flight work — do NOT touch).
+18. **G** `vm_launcher_setup_script_freshness_gap_2026_07_31.md:120-121` vs
+    `session_bound_vm_monitoring_reliability_gap_2026_07_26.md:117-119` — P2 cross-doc: doc 13 declares af-backfill
+    PREEMPTED-marker gap RESOLVED (self-contained baked-in); doc 7 records 2 fresh af-backfill preemptions (08-03/04)
+    with marker STILL absent after the hardened helper. Doc 13 GRACE — report only. Doc 11's [x] todo
+    (vm_billing_waste:350-355, deployment-service@b4503ef) is the same claim doc 7 refutes → STEP-4 decide
+    stale-annotation on that [x] line.
+19. **W** `stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md:147` — P3: bare
+    `issues/ag_closeout_audit...` ref (format violation). → fix: prefix /plans/.
+20. **W** `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md:12,141,264,408` — P3: 4 bare references
+    (no leading slash; all resolve when slash-prefixed; format-only). → fix: prefix /plans/ (ratchet-relevant).
+21. **G** `vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md:154` — P3: bare
+    `bucket_iam_write_protection_per_tier_2026_06_09.md` ref. GRACE — report only.
+22. **W** `prod_terraform_drift_backlog_reconcile_2026_07_24.md:107,112` — P3: bare refs (2 archived, 1 active —
+    format-only). → fix: prefix /plans/.
+23. **G** `vm_launcher_setup_script_freshness_gap_2026_07_31.md` — P3: `assigned_vm: planning` with no na-eligibility
+    verdict recorded. GRACE — report only.
+
 ## Coverage (hunters / batches / docs)
 
 - 10 hunters launched 2026-08-06 ~22:05 UTC (model=sonnet): A infra-satellite family (10 docs), B governance legacy (6),
