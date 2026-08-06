@@ -133,3 +133,19 @@ requested rather than autonomously starting it.
     either way. Remedy (B) only matters if the failure is workflow-content, not corpus-state.
   - **`GET /api/agents?session=` is unreliable for one-off lookups** (returned unrelated agents this session) — query by
     the agent id directly (`GET /api/agents/<id>`), which is what confirmed agt-80c470 is absent (all-null).
+- **2026-08-06 (slot 5, re-dispatch of the SAME escalation agt-80c470):** confirms this doc's diagnosis is still
+  current — the promote PR is now #2393 (superseded #2388), still `mergeStateStatus: BLOCKED` on the same
+  `QG slice (checks)` failure. `/api/slots/5/messages` shows no answer to BLK-46fa5703 yet; not re-posting an
+  identical blocked-question (already asked + bounded-waited once). Found and fixed an ADDITIONAL, independent,
+  compounding blocker while re-verifying: the self-hosted `glue` runner pool `ldr-to-main-promote.yml` itself needs
+  is structurally down (host `ip-172-31-5-118`: token-refresh services `203/EXEC`, `/opt/github-glue-runners*`
+  missing, zero `github-glue-runner@` template units) AND GitHub Actions hosted-runner acquisition is ALSO currently
+  failing account-wide (recurrence of the archived 2026-06-11/2026-07-29 billing-wall pattern) — so even
+  re-dispatching the promote bot was failing to start a job at all, on top of the plan-hygiene gate this doc already
+  covers. Reverted `ldr-to-main-promote.yml`'s `runs-on` to `ubuntu-latest` (unified-trading-pm@ce7073ba3) to remove
+  the self-hosted-pool half of that; the GH Actions hosted-runner wall is operator-only and self-resolves per
+  precedent — no code fix applies. Neither of these findings changes this doc's core conclusion or its pending
+  BLK-46fa5703 decision — they only explain why even a successful operator decision might not visibly land until the
+  hosted-runner wall also clears. Full writeup:
+  `/plans/active/issues/github_actions_hosted_and_glue_runner_dual_outage_2026_08_06.md`. This session's `/done` may
+  hit the same AgentRow-absent 400 described above; not re-litigating that known bug here.
