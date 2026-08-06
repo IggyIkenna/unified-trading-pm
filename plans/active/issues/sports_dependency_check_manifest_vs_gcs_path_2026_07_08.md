@@ -46,7 +46,7 @@ thinking_tier: medium
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
-last_updated: 2026-07-08
+last_updated: 2026-08-06
 supersedes:
 superseded_by:
 depends_on:

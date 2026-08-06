@@ -20,7 +20,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-06-27
+last_updated: 2026-08-06
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:

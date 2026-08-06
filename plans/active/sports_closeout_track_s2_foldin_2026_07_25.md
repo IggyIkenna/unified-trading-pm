@@ -45,7 +45,7 @@ related:
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-05"
+last_updated: "2026-08-06"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -388,7 +388,7 @@ context_scope:
       pending a purge/retype pass, not real work. (repo: instruments-service). **Done when**: P2a(c) (sibling
       plan)/P2b's odds_api backfill/P2c all confirmed landed AND the full gate re-run passes corpus-wide with a fresh
       census.
-- [x] ✅ [DATA] P2. **RELAUNCHED 2026-08-06 (slot-4) — Features recompute for enriched dates.** Gated on
+- [ ] [DATA] P2. **RELAUNCHED 2026-08-06 (slot-4) — Features recompute for enriched dates.** Gated on
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s INJURIES 94-league enrichment backfill landing first** (that
       plan was archived 2026-07-28 with `[x]` ✅ 94-league enrichment backfill COMPLETE — prereq met). After
       full-history AF enrichment lands, re-run sports features with force/no-skip for the enriched dates
@@ -404,6 +404,15 @@ context_scope:
       `fts-backfill-20260805-045644` (slot-13, 2026-08-05) was PREEMPTED mid-run at ~2021-01-30 (~10% of range).
       Launcher comma-escaping fix `deployment-service@1fabb73` (gcloud `^|^` delimiter for multi-table `--tables`
       values) already shipped on prior attempt.
+
+      > **Corrected 2026-08-06 (plan_reconciler agt-132fc8)**: this todo was `[x]`-flipped at relaunch (08-06, slot-4)
+      > with its own done-when ("VM exit 0, manifest rows written for enriched dates") unmet — VM
+      > `fts-backfill-20260806-012831` was still RUNNING (slot-16 verified at 02:34Z; live re-verified RUNNING
+      > 2026-08-06 ~22:30Z via `gcloud compute instances list`), no exit signal, no manifest rows yet. Reverted to `[ ]`
+      > so the backlog re-derives it; re-flip only on VM exit 0 + manifest rows for enriched dates — same correction
+      > slot-13 applied to the identical 08-05 launch-flip pattern. Flag note: launcher `--redo-all` composes CLI
+      > `--force` (lock bypass ≠ CLI force); do NOT relaunch with bare launcher `--force` — it would skip every date
+      > (2026-07-18 silent-no-op class).
 - [ ] [VERIFY] P2. BLOCKED-PREREQUISITES — **ML-readiness re-verify, transitively gated behind the features-recompute
       todo above.** (repo: unified-trading-pm). **Done when**: the features-recompute todo above is confirmed done AND
       the ML-readiness re-verify passes.
@@ -526,3 +535,7 @@ context_scope:
   ("P2a/P2b confirmed done AND features matrix extension completes with fresh coverage census") unmet on both clauses.
   Same root cause as prior dispatches: `BLOCKED-PREREQUISITES` marker not recognized by `_NON_DISPATCHABLE_RE`
   (`blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` case (b)).
+- **2026-08-06 (plan_reconciler agt-132fc8, sports-tranche daily reconciliation)**: reverted the features-recompute
+  todo's `[x]` flip to `[ ]` — false-progress: done-when ("VM exit 0, manifest rows written for enriched dates") unmet,
+  VM `fts-backfill-20260806-012831` still RUNNING at 02:34Z (slot-16) and re-verified RUNNING ~22:30Z via
+  `gcloud compute instances list`. Re-flip only on VM exit 0 + manifest rows. See the todo-body correction note.

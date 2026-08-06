@@ -24,7 +24,7 @@ related:
     /codex/04-architecture/promote-workflow-architecture.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-21"
+last_updated: "2026-08-03"
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

@@ -160,7 +160,10 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       diagnosable) or accepting the gaps as permanently unexplained. Did not attempt the backfill itself — the
       credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
       deployment-service, read-only investigation, no code changed)
-- [ ] [DATA] P1. **BLOCKED-CREDENTIALS 2026-08-02 (slot 14, data_engineering, task `-004`) — the-odds-api.com account is
+- [ ] [DATA] P1. **BLOCKED-CREDENTIALS 2026-08-02 → RESOLVED 2026-08-03** (10M top-up landed, live-verified
+      `x-requests-remaining: 14992590`; quota doc archived resolved) — the do-NOT-relaunch directive below is
+      superseded; re-verify live via curl before any launch. (2026-08-02, slot 14, data_engineering, task `-004`) —
+      the-odds-api.com account is
       OUT OF USAGE CREDITS (a NEW, DIFFERENT blocker than the July `DEACTIVATED_KEY` one below; see the 2026-08-02
       Progress Log entry for full detail).** Live-verified via direct curl: `x-requests-used: 5000772` against the
       5,000,000/month subscription (`x-requests-remaining: -772`), `error_code=OUT_OF_USAGE_CREDITS` on the
@@ -188,7 +191,8 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       history): the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has since rotated
       `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a 5,000,000-credits/month
       subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) — see
-      `sports_odds_api_key_deactivated_2026_07_26.md`. (repo: deployment-service)
+      `sports_odds_api_key_deactivated_2026_07_26.md`. (repo: deployment-service) *(2026-07-31 state — superseded by
+      the 2026-08-02 quota marker above, itself RESOLVED 2026-08-03; not current, act only after live re-verification.)*
 
       **2026-07-31 (slot 16) — LAUNCHED, in progress, NOT flipping yet.** `mtds-backfill-odds-sentinel-fix-20260731`
                                                                                                                       (`asia-northeast1-c`, `e2-highmem-4`, SPOT, `--start 2020-06-06 --end 2026-07-31`, no `--force`), confirmed

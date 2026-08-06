@@ -23,7 +23,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-30"
+last_updated: "2026-08-03"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

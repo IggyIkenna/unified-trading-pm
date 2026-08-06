@@ -52,7 +52,7 @@ related:
   ]
 created: 2026-07-26
 author: unknown
-last_updated: 2026-07-29
+last_updated: 2026-08-06
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -84,6 +84,17 @@ source:
 
 # batch_odds_api capture outage recurrence check — live bug found + fixed, backfill decision needed
 
+> 🟠 CORRECTED 2026-08-06 — the 2026-08-02 "both gates are clear" claim below predates the same-day discovery (in
+> `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` P1) that the-odds-api.com was OUT OF USAGE CREDITS
+> (`x-requests-remaining: -772`, `/v4/historical` 401 since 2026-08-01 12:40:24Z — a NEW blocker, distinct from the July
+> `DEACTIVATED_KEY` one; corroborated by `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md` todo 2). That quota
+> blocker is RESOLVED 2026-08-03: operator purchased a 10,000,000-credit top-up (BLK-6728ec9a Option B), live-verified
+> `x-requests-remaining: 14992590` — see
+> `plans/archive/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md` (resolved). Launch is
+> genuinely unblocked on the credential side; re-verify live (curl `/v4/historical/...` → non-401) before launching per
+> standing discipline, and respect the sibling OOM P1 (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`): small
+> chunk sizes, no blind relaunch.
+>
 > # 🟢 RESOLVED 2026-07-29 — the credential gate is CLEARED; both gates now agree, item 1 is launchable.
 >
 > The 2026-07-28 `BLOCKED-CREDENTIALS` finding below (kept for history) was correct at the time: this doc's item 1 cited

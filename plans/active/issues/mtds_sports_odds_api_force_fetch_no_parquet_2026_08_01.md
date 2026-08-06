@@ -186,7 +186,9 @@ here — worth folding into whichever future pass touches `DataTypeCapability` f
         signature of an exhausted request-credit/quota balance, not a transient outage. Needs an operator credential
         check (account dashboard/billing at the-odds-api.com) + quota top-up or key rotation before SPORTS/ODDS_API
         capture (test OR prod) can resume. Per the external-data-always-available rule this is a credential ask, not a
-        descope — SPORTS/ODDS_API force-refetch is currently blocked pending this action.
+        descope — SPORTS/ODDS_API force-refetch is currently blocked pending this action. **✅ RESOLVED 2026-08-03 —
+      operator topped up 10M credits (BLK-6728ec9a); live-verified `x-requests-remaining: 14992590`; SPORTS/ODDS_API
+      force-refetch is unblocked.**
   - [x] [DATA] P3. Confirm whether `odds_horizon_bucket`'s `batch_mdps_...` pipeline_mode label reflects a genuine
         ownership split (MDPS writes this data_type, not MTDS) that the pipeline-check's SPORTS enumeration should
         exclude, rather than a real MTDS capture defect. — ✅ CONFIRMED via UAC trace (Diagnosis §3): `SOURCE_PRIORITY`

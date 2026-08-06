@@ -25,7 +25,7 @@ summary: |
   verify green twice, zero captured-key losses; ALL 100 FIXTURES cells were truthset gaps (see body). REMAINING:
   the INFRA image redeploy + the P3 fleet sweep + 2 residual atoms (parked blank-data_type row; new TEAMS/TFF
   nightly-image masking).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -37,6 +37,7 @@ related:
   - /codex/02-data/availability-manifest-and-data-status.md
 created: 2026-07-13
 author: unknown
+last_updated: 2026-08-06
 parent_epic: sports_master
 priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
@@ -248,3 +249,6 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Note (out of scope to
   fix): the 2026-08-05 progress-log entry states this closes the last open todo, but `status:` frontmatter still reads
   `open`.
+- **2026-08-06 (plan_reconciler agt-132fc8, sports-tranche reconciliation)**: status flipped `open` → `resolved` — all 7
+  todos done (the 2026-08-05 entry closed the last open todo; the frontmatter was left stale). `last_updated` set to
+  2026-08-06. Archive per the reconciler follow-up todo once roster references check out.

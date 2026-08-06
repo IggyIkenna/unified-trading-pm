@@ -27,7 +27,7 @@ related:
     /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-08-06"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -147,7 +147,7 @@ context_scope:
       market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
       carrying the country-prefixed contaminated vocabulary (excluding any quarantine population, tracked separately if
       non-empty).
-- [x] ✅ [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** —
+- [ ] [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** —
       `market-tick-data-service@03b9ffd6` + `deployment-service` (no-op: clean). **Finding (2026-08-04, slot-4)**: both
       worktrees (`deployment-service-sports-wt`, `market-tick-data-service-sports-wt`) no longer exist — no git
       worktrees, branches, stashes, or wip-preserve refs found anywhere on the host. The specific files (the
@@ -158,6 +158,17 @@ context_scope:
       clean (0 ahead). Original `Done when` ("both changes land via normal path") is not actionable — the changes are
       gone. The next worker that picks up the launcher task should author it from scratch per the plan's spec. (repo:
       deployment-service / market-tick-data-service).
+
+      > **Corrected 2026-08-06 (plan_reconciler agt-132fc8)**: the `[x]` flip was false progress — the parked changes
+      > are LOST (worktrees `deployment-service-sports-wt` / `market-tick-data-service-sports-wt` gone; no branches,
+      > stashes, or wip-preserve refs), not shipped; the original done-when ("both changes land via normal path") can
+      > never be met for them. Reverted to `[ ]`; the re-author todo below tracks the real remaining work.
+
+- [ ] [CODE] P2. **Re-author the sports league-id relocation launcher + CLI shard filters from scratch.** The 2 parked
+      changes (`launch-sports-league-id-relocation-vm.sh` launcher, `--shard-of`/`--shard-index` CLI filter, `START_DATE`
+      clamp edits) were lost when their worktrees disappeared (finding 2026-08-04, slot-4). Author per the plan spec
+      (context: `market-tick-data-service/scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`)
+      and land via quickmerge. **Done when**: launcher + filters + clamp all shipped via the normal path.
 
 ## Codex SSOTs
 

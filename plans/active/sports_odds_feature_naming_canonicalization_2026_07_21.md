@@ -22,7 +22,7 @@ related:
     plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-21"
+last_updated: "2026-08-03"
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

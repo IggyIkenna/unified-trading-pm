@@ -308,16 +308,23 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
       RULING" above): ADD `instrument_type=` (amend codex + full migration) + KEEP SOURCE `data_type` on the path, align
       the manifest to match. LOCKED shape documented; codex `per-asset-group-bucket-layouts.md:166` amended
       (`mdps@752eaff`).
-- [x] 2. [DATA] P1. **[already covered by plans/active/candle_canonical_path_migration_execution_2026_07_24.md, see that
-      doc for execution]** Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge or
+- [ ] 2. [DATA] P1. **REVERTED 2026-08-06 (plan_reconciler agt-132fc8) — premature flip: this todo's own text says
+      "Repair itself is still **pending P7 `--apply`** (content-repair gated)", so the done-when (purge or repair) is
+      unmet.** [already covered by `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md`,
+      see that doc for execution] Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge or
       repair. These cannot be attributed to a shard. **P0 census counted them exactly 2026-07-22**: cefi
       `EMPTY_STEM_WITH_UNDERLYING`=2,576 + `EMPTY_STEM_WITHOUT_UNDERLYING`=2,198; tradfi
       `EMPTY_STEM_WITH_UNDERLYING`=428,792 (!) + `EMPTY_STEM_WITHOUT_UNDERLYING`=6,780; defi/prediction had none of this
       class. Repair itself is still **pending P7 `--apply`** (content-repair gated).
-- [x] 3. [DATA] P1. **✅ VERIFIED 2026-08-04 (slot-11, `tradfi_manifest_content_recovery_completion-004`)** — covered by
-      the now-archived `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` (all 20 todos
-      `[x]`, 0 open, archived 2026-07-28). Canonicalise **TradFi candle leaf ids** (`E1AF0_C3200_migrated_*` →
-      `VENUE:TYPE:SYMBOL`) or rule the migration naming acceptable. **P0 census counted them exactly 2026-07-22**:
+- [ ] 3. [DATA] P1. **REVERTED 2026-08-06 (false-progress audit, plan_reconciler agt-132fc8) — falsely flipped [x]
+      2026-08-04 (slot-11, e0a44adb4)** — the cited
+      `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` covers the PATH migration (17
+      todos [x], not 20) + the executor's leaf-id-resolution CODE, but its own todo-14 + BIG-FINDING entries explicitly
+      exclude this deliverable ("TRADFI's ~7.1M quarantined objects = its todo 3 ... NOT duplicated by this plan's todo
+      list"); no content-read leaf-id resolution pass has run and no accept-the-loss operator ruling exists (unanswered
+      authority call per 2026-07-30/08-03/08-04 audits; gating deliverable
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md` L343 still `- [ ]`).** Canonicalise **TradFi candle
+      leaf ids** (`E1AF0_C3200_migrated_*` → `VENUE:TYPE:SYMBOL`) or rule the migration naming acceptable. **P0 census counted them exactly 2026-07-22**:
       `NEEDS_CONTENT_TRADFI_ID`=6,487,045 — **84.8% of the entire 7.65M-object TradFi corpus** needs content-read
       leaf-id repair, by far the dominant disposition class and the reason tradfi is sequenced LAST/hardest. **UPDATE
       2026-07-23 (post-P7/P8)**: `--apply` ran; the vast majority of this class did NOT auto-resolve and was routed to

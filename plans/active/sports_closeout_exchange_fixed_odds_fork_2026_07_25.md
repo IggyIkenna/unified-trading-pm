@@ -34,7 +34,7 @@ related:
     /plans/archive/2026_07/sports_odds_exchange_fixed_fork_2026_07_18.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-02"
+last_updated: "2026-08-03"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

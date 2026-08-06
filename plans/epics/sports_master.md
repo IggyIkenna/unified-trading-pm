@@ -59,7 +59,7 @@ related_plans:
   - ../active/sports_predictions_live_mode_activation_readiness_2026_07_21.md
   - ../archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md
   - ../active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
-last_updated: 2026-07-12 # was: 2026-06-24, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
+last_updated: 2026-08-02 # was: 2026-07-12, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
