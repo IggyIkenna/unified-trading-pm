@@ -152,3 +152,18 @@ checkbox signal alone, but confirming it actually IS requires reading:
   NA-corpus ratchets stay tracked here and in `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` for
   `plan_reconciler`'s daily pass / `/na-eligibility-audit`; out of scope for this bounded CI-fix per the same carve-out.
   This doc's own Todos 2-5 remain open.
+
+## Operational lessons (cicd, from resolving a PM ldr_qg_failure wall)
+
+Two measurement traps worth carrying for the next cicd worker on a PM `ldr_qg_failure` wall (recorded here as the
+closest active tracking doc for this wall family):
+
+1. **A qg_red blocker's DECLARED cause is usually only ONE of several ratchets red.** RB-fbeef249 declared
+   `finalize-plan-coverage` (already green on origin via the archival commit by dispatch time), but the full
+   `run_hygiene_sweep.sh --ci --no-regen` reproduced 4 additional hard failures (terminal-status-archived, AG-closeout
+   linkage, NA-corpus, archive-candidates). Diagnose with the full sweep, never just the named check.
+2. **`check_plan_commit_sha_evidence.py` false-reports unresolvable `<repo>@<sha>` citations against STALE sibling
+   clones** — it flags any cited SHA that `git cat-file -t` can't resolve, and a sibling checkout that hasn't fetched
+   today's commits reads every recent citation as fabricated. Before treating its quickmerge re-gate failure as real,
+   `git -C <sibling> fetch origin` each cited repo and re-run; only the citations that STILL don't resolve are genuine
+   (and they're ratchet-baselined — a count at/below baseline passes). This cost a wasted re-gate cycle this session.
