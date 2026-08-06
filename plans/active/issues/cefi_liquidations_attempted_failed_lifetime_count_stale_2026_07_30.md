@@ -165,9 +165,11 @@ not lost if the bound expires unanswered.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide among options A/B/C above (or another approach) for how `DP-FETCH-009` should treat a cell
-      whose `attempted_failed` classification is dominated by already-fixed historical incidents. Repo:
-      deployment-service.
+- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`), AO-dispatchable —
+      change `check_high_attempted_failed` to compute thresholds over a trailing window (7-14 days) instead of the full
+      lifetime manifest, closing this alert class generally. Decide among options A/B/C above (or another approach) for
+      how `DP-FETCH-009` should treat a cell whose `attempted_failed` classification is dominated by already-fixed
+      historical incidents. Repo: deployment-service.
 - [ ] [DIAG] P3. If the operator wants the residual trickle root-caused before deciding: pull Cloud Logging /
       Tardis-side request logs for the exact process that produced the 2026-07-29 09:00 UTC
       `Tardis HTTP 403 code=274 concurrent-IP-lock` COINBASE-FUTURES rows (the VM-creation audit-log trace in this doc

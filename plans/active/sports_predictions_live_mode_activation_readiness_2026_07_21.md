@@ -270,13 +270,17 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` — scoped but not yet built in
       `sports_group_c_execution_backtest_harness_2026_07_21.md`, which must land first) — no new promote-workflow
       engineering, just executing the existing chain. (repo: strategy-service, execution-service)
-- [ ] [OPERATOR] P3. Final explicit go-ahead to flip sports (and separately, prediction, once it reaches this rung) from
-      paper to live trading — requires the full readiness-ladder checklist (Groups A-H,
-      `master_to_live_defi_2026_05_23.md`) passing for the asset group, same bar cefi/defi cleared. **This is the actual
-      activation step; nothing above it authorizes live trading on its own.** **Reviewed 2026-07-28, confirmed remains a
-      permanent hard-stop — NOT retagged.** Flipping paper→live puts real capital at risk; per workspace HARD RULE this
-      always requires a human's explicit, personal go-ahead, same as every other live-trading activation (cefi/defi's
-      May-23 gate). No amount of readiness-ladder completion below removes this gate.
+- [ ] [OPERATOR] P3. **STILL NEEDS YOUR OWN EXPLICIT GO-AHEAD — deliberately not defaulted, real-money live trading.**
+      This is exactly the class of decision the workspace's live-trading-activation HARD RULE reserves for a human's
+      personal sign-off, not something I should default or infer from adjacent rulings this session — please review the
+      full Groups A-H readiness-ladder checklist directly before deciding. Final explicit go-ahead to flip sports (and
+      separately, prediction, once it reaches this rung) from paper to live trading — requires the full readiness-ladder
+      checklist (Groups A-H, `master_to_live_defi_2026_05_23.md`) passing for the asset group, same bar cefi/defi
+      cleared. **This is the actual activation step; nothing above it authorizes live trading on its own.** **Reviewed
+      2026-07-28, confirmed remains a permanent hard-stop — NOT retagged.** Flipping paper→live puts real capital at
+      risk; per workspace HARD RULE this always requires a human's explicit, personal go-ahead, same as every other
+      live-trading activation (cefi/defi's May-23 gate). No amount of readiness-ladder completion below removes this
+      gate.
 
 ## Codex SSOTs
 

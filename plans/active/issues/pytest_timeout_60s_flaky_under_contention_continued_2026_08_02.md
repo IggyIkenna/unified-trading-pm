@@ -119,8 +119,11 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
       `features-service@c092df50`, verified green — see Progress Log entries below), so this todo is partially
       addressed, but "other repos" beyond `features-service` is broader than one confirmed repo — staying open, not
       closing.
-- [ ] 3. [OPERATOR] P2. The `features-service` `wall_type=main_ci_red` escalation has now fired **9 times today**
-      (agents `agt-4e5bc3`/`agt-637862`/`agt-a7a7b6`/`agt-3bc731`/`agt-0dbb62`/this session, plus 3 more implied by the
+- [ ] 3. [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option (a): minimum cooldown since the last dispatch for the same repo
+      with an unchanged target-branch HEAD.** `[SCRIPT]` tag (was `[OPERATOR]`) — same ruling applies to the identical
+      gap in `_continued2`/`_continued3` sibling docs, not re-decided separately there. The `features-service`
+      `wall_type=main_ci_red` escalation has now fired **9 times today** (agents
+      `agt-4e5bc3`/`agt-637862`/`agt-a7a7b6`/`agt-3bc731`/`agt-0dbb62`/this session, plus 3 more implied by the
       numbering) for the literal same underlying state — LDR fix shipped, waiting on a runner slot, nothing new to do —
       each dispatch independently re-reads the same run IDs and re-confirms the same "no action, pure wait" verdict. Per
       `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition principle (standing conditions

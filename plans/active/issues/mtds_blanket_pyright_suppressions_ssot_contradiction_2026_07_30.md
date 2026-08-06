@@ -153,11 +153,15 @@ and are correct under both outcomes; todo 3 sets the eventual target.
       it should" gap immediately regardless of the operator's todo-3 answer: even if vendor-glue suppressions get
       sanctioned, net-new UNSANCTIONED ones should still be gated to 0 per the codex's own existing rule. (repo:
       market-tick-data-service) — market-tick-data-service@d072b035.
-- [ ] [OPERATOR] P3. **Choose the durable policy direction** for the 237-file / 658-comment inventory once todos 1-2
-      ship: (a) drive it toward zero as genuine codex enforcement (a real type-safety recovery project — likely large,
-      since it's 54% of the repo, and would need its own follow-up plan with a scoped rollout), OR (b) formally ACCEPT
-      blanket suppressions as the sanctioned convention specifically for loosely-typed vendor-response glue code (the
-      CLI stage-handler modules under `cli/handlers/`) and relax the codex wording in
+- [ ] [DOCS] P3. **DEFAULT-RULED 2026-08-06, option (b): formally accept blanket suppressions as sanctioned for
+      loosely-typed vendor-response glue code, scoped narrowly.** `[DOCS]` tag (was `[OPERATOR]`) — a full drive-to-zero
+      type-safety recovery across 54% of the repo is a large, likely-low-value project given the suppressed code is
+      specifically vendor-glue; relax codex wording scoped to the `cli/handlers/` glob, not a workspace-wide relaxation.
+      **Choose the durable policy direction** for the 237-file / 658-comment inventory once todos 1-2 ship: (a) drive it
+      toward zero as genuine codex enforcement (a real type-safety recovery project — likely large, since it's 54% of
+      the repo, and would need its own follow-up plan with a scoped rollout), OR (b) formally ACCEPT blanket
+      suppressions as the sanctioned convention specifically for loosely-typed vendor-response glue code (the CLI
+      stage-handler modules under `cli/handlers/`) and relax the codex wording in
       `/codex/06-coding-standards/README.md` + `/codex/06-coding-standards/quality-gates.md` STEP 5.22 to say so
       explicitly, scoped to that glob (not a blanket workspace-wide relaxation). Repo: unified-trading-pm (codex
       wording, if (b)); market-tick-data-service (follow-up cleanup plan, if (a)).

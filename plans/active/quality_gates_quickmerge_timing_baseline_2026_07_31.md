@@ -408,9 +408,12 @@ noisy individual runs.
 _(status: draft in spirit — kept as open todos here rather than a separate draft-gated file since this whole plan is
 LOCAL/non-dispatched; do not start until Phase 1's table is filled in.)_
 
-- [ ] [INFRA] P2. BLOCKED-OPERATOR-DECISION — confirm with the operator how to reach the planning-vm interactively (SSM
-      session vs an AO-dispatched task) to run the SAME measurement suite as Phase 1 while ~15 agents are concurrently
-      active, since this is explicitly about observing real contention, not an idle-VM number.
+- [ ] [INFRA] P2. **DEFAULT-RULED 2026-08-06: AO-dispatched task, not an interactive SSM session.** Phase 2 needs a real
+      quality-gates.sh run on the planning VM, which is exactly what AO dispatch already does routinely — no need for an
+      interactive human-in-the-loop SSM session for a mechanical benchmark run. BLOCKED-OPERATOR-DECISION — confirm with
+      the operator how to reach the planning-vm interactively (SSM session vs an AO-dispatched task) to run the SAME
+      measurement suite as Phase 1 while ~15 agents are concurrently active, since this is explicitly about observing
+      real contention, not an idle-VM number.
 - [ ] [INFRA] P2. Re-run every Phase-1 flag/script combination on planning-vm under real concurrent load and record the
       same table. Done-when: a second results table, same shape as Phase 1's, with a stated concurrent-agent-count at
       measurement time.

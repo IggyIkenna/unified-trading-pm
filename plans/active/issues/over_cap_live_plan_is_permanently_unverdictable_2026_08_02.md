@@ -122,9 +122,12 @@ than acted on:
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **BLOCKED-OPERATOR-DECISION** — rule on A/B/C/D above. A is a change to a hard quality gate's
-      policy (`scripts/plan-hygiene/check_line_caps.sh` + its codex SSOT), which is not a worker-determinable outcome.
-      (repo: unified-trading-pm)
+- [ ] [SCRIPT] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception.** `[SCRIPT]` tag
+      (was `[OPERATOR]`), AO-dispatchable — allow a commit whose diff to an over-cap plan is confined to appending a
+      dated audit marker / `last_updated` bump (no checkbox lines touched, no net new content) through the line-cap
+      gate. **BLOCKED-OPERATOR-DECISION** — rule on A/B/C/D above. A is a change to a hard quality gate's policy
+      (`scripts/plan-hygiene/check_line_caps.sh` + its codex SSOT), which is not a worker-determinable outcome. (repo:
+      unified-trading-pm)
 - [ ] [SCRIPT] P2. Once ruled: if A, implement the marker-only carve-out in `scripts/plan-hygiene/check_line_caps.sh`
       (diff-shape check: no checkbox lines touched), update
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "The line-cap does NOT block archival of

@@ -146,11 +146,15 @@ once P2.2 lands per the plan's own note.
       corrected, properly-gated todo breakdown, and split `bucket_iam_write_protection_per_tier_2026_06_09.md`'s P2.2
       into P2.2a-P2.2d (mirroring this plan's own P1.2/P2.1 split precedent) — unified-trading-pm@HEAD. No terraform/IAM
       state mutated.
-- [ ] [OPERATOR] P2. Once P1 above is live-verified (every write-path runtime confirmed running as its tier SA, not
-      `unified-trading-sa`), execute `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.1b: remove
-      `unified_trading_storage_admin` (`main.tf:598-602`), then verify live/batch prod workloads retain `-prd-` write
-      (now via the tier SA) and a dev/stg credential is IAM-denied a `-prd-` write. (repo: deployment-service) Retag to
-      plain `[TERRAFORM]` once the sibling doc's P2.2 chain (see Addendum below) actually lands and is live-verified.
+- [ ] [TERRAFORM] P2. **RESOLVED 2026-08-06 — same ruling already made in
+      `bucket_iam_write_protection_per_tier_2026_06_09.md`'s P2.1b, do not duplicate the decision here.** `[TERRAFORM]`
+      tag (was `[OPERATOR]`) — operator ruled APPROVED there with live evidence (P2.2e done 2026-08-04, P2.3 integration
+      test passed 2026-08-02); this doc's own gate condition is satisfied. AO-dispatchable per that ruling. Once P1
+      above is live-verified (every write-path runtime confirmed running as its tier SA, not `unified-trading-sa`),
+      execute `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.1b: remove `unified_trading_storage_admin`
+      (`main.tf:598-602`), then verify live/batch prod workloads retain `-prd-` write (now via the tier SA) and a
+      dev/stg credential is IAM-denied a `-prd-` write. (repo: deployment-service) Retag to plain `[TERRAFORM]` once the
+      sibling doc's P2.2 chain (see Addendum below) actually lands and is live-verified.
 
 ## Addendum (2026-07-31, slot-14)
 

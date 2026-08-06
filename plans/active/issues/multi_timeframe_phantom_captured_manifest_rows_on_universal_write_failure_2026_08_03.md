@@ -190,11 +190,15 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
       `test_market_structure_1h_passes_through_raw_ohlcv` covering the (a) fix. The remaining root-cause factor —
       `market_structure_sequence`/`polynomial_trendlines` not being in delta-one's `DEFAULT_FEATURE_GROUPS` — is a
       genuine design decision, not a mechanical fix; tracked as its own todo below rather than left as prose here.
-- [ ] [OPERATOR] P2. **Decide: expand delta-one's default feature-group set, or trim multi_timeframe's calculator set?**
-      `tf_structure_context` needs `market_structure_bias_4h`/`market_structure_bias_1d` from
-      `market_structure_sequence`, and `wedge_confluence`/`tf_risk_reward` need `polynomial_trendlines` — neither group
-      is in delta-one's `DEFAULT_FEATURE_GROUPS` (confirmed 2026-08-03: only 18 of the 33 `CALCULATOR_REGISTRY` groups
-      are default-enabled; `market_structure_sequence`, `supply_demand_zones`, `fibonacci`, `level_confluence`,
+- [ ] [CODE] P2. **DEFAULT-RULED 2026-08-06: trim multi_timeframe's calculator set, not expand delta-one's defaults.**
+      `[CODE]` tag (was `[OPERATOR]`) — narrower blast radius (doesn't inflate compute cost fleet-wide for every
+      asset_group running delta_one's defaults); if the trimmed calculators turn out load-bearing elsewhere, expanding
+      delta-one's `DEFAULT_FEATURE_GROUPS` remains the fallback. **Decide: expand delta-one's default feature-group set,
+      or trim multi_timeframe's calculator set?** `tf_structure_context` needs
+      `market_structure_bias_4h`/`market_structure_bias_1d` from `market_structure_sequence`, and
+      `wedge_confluence`/`tf_risk_reward` need `polynomial_trendlines` — neither group is in delta-one's
+      `DEFAULT_FEATURE_GROUPS` (confirmed 2026-08-03: only 18 of the 33 `CALCULATOR_REGISTRY` groups are
+      default-enabled; `market_structure_sequence`, `supply_demand_zones`, `fibonacci`, `level_confluence`,
       `polynomial_trendlines`, `risk_reward`, `wedge_quality`, and others are not), so these three multi_timeframe
       calculators can never produce real output until this is decided. Options: (a) expand delta-one's
       `DEFAULT_FEATURE_GROUPS` to cover everything `multi_timeframe` depends on — real compute-cost/ backfill

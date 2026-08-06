@@ -83,7 +83,10 @@ not a code defect.
 
 ## Todos
 
-- [ ] [OPERATOR] P3. Rule on whether to extend the §8b evidence-backing contract to prod DATA-mutation completions:
+- [ ] [SCRIPT] P3. **RULED 2026-08-06: YES, extend it.** `[SCRIPT]` tag (was `[OPERATOR]`) — directly supports the
+      existing data-pipeline-correctness HARD RULE; prod data mutations deserve the same evidence rigor builds already
+      get. Add the artifact convention + the `check_evidence_backed_completion.py` prod-mutation branch.
+      AO-dispatchable. Rule on whether to extend the §8b evidence-backing contract to prod DATA-mutation completions:
       require restamp/backfill/rename/delete/tofu-state scripts to emit a verifiable summary artifact (a manifest-delta
       row, a `vm-logs/<unit>/RESULT.json`, a GCS operation id, or a before/after `state list`) that a `- [x]` must cite,
       the same way builds cite `cloudbuild=<id>` — and whether `check_evidence_backed_completion.py` should grow a

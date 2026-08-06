@@ -185,8 +185,12 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
       `aws codebuild start-build --project-name deployment-api`. No change needed.
 - [x] [INFRA] P3. **Measure the true import drift** — all 23 live resources imported into a throwaway local state (never
       written to S3): `Plan: 19 to add, 22 to change, 0 to destroy`. Inventory above.
-- [ ] [OPERATOR] P3. **Rule D1-D4 above** — one ruling per row, so the residual becomes mechanical. Blocks every
-      remaining todo here.
+- [ ] [OPERATOR] P3. **STILL NEEDS YOUR INPUT — D1-D4's specific rows weren't in the scope of this governance pass, not
+      confident enough to rule blind on IAM-policy-import specifics.** One sub-question I can answer with confidence:
+      the provider-pin question (v5-align vs v6-adopt) — recommend v5-align (`~> 5.82`) for consistency with every
+      sibling module, avoiding a one-off v6 deprecation surface (`data.aws_region.name`) this module alone would carry.
+      D1-D4's IAM-policy-drift specifics need your own read of the table above before ruling. **Rule D1-D4 above** — one
+      ruling per row, so the residual becomes mechanical. Blocks every remaining todo here.
 - [ ] [INFRA] P3. **Reconcile `main.tf` to the D1-D4 rulings**, then `terraform import` all 23 resources into the live
       S3 state and prove `terraform plan` is a genuine no-op. Do NOT import before D1-D4 — an imported state plus these
       diffs is an armed destructive apply.

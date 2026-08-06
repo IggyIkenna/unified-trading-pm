@@ -236,9 +236,13 @@ scope on every run. Fix belongs with Finding 3's script todo.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Rule on Finding 4 (A / A2 / B / C / D) — where the incremental-skip verdict marker lives for a doc
-      pinned at the 1000L hard cap. **Done when**: the ruling is recorded here and, for A/A2/B, the marker mechanism is
-      implemented in `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` + named in
+- [ ] [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option A+A2: frontmatter scalar (`na_audit_verdict: KEEP-NA <date>`),
+      paired with excluding frontmatter lines from the line-cap count entirely.** `[SCRIPT]` tag (was `[OPERATOR]`) —
+      lowest-friction, consistent with how markers already work elsewhere in this corpus; the line-cap exclusion avoids
+      the marker itself contributing to over-cap pressure. Rule on Finding 4 (A / A2 / B / C / D) — where the
+      incremental-skip verdict marker lives for a doc pinned at the 1000L hard cap. **Done when**: the ruling is
+      recorded here and, for A/A2/B, the marker mechanism is implemented in
+      `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` + named in
       `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 0, and the three docs in the table above carry a
       readable verdict. (repo: unified-trading-pm)
 - [x] ✅ [OPERATOR] P1. Rule on Finding 1 (A / B / C / D) — how concurrent per-tranche audits arbitrate ownership of a

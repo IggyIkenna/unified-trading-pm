@@ -95,11 +95,13 @@ operator-approved wider edit.
 
 ## Todo 3 — stalled DEX-swaps backfill VM needs a relaunch decision
 
-- [ ] [OPERATOR] P2. `mtds-dex-swaps-backfill-3` (one of the 3-VM date-sharded fleet covering `2025-12-15 → 2026-07-21`)
-      FAILED 2026-07-27 03:54 UTC with `exit_code=137` (`Killed` — OOM-shaped, same signature as the already-filed
-      `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` P0, which as of 2026-08-03 is still open and itself
-      blocked on vendor-credit exhaustion investigating the root cause) and has NOT been relaunched since — verified
-      live via
+- [ ] [INFRA] P2. **RULED 2026-08-06 (operator): plain relaunch, same --start/--end, no --force** (the doc's own recipe,
+      already proven 3x on sibling VMs). `[INFRA]` tag (was `[OPERATOR]`), AO-dispatchable — relies on the collector's
+      freshness-skip to resume. `mtds-dex-swaps-backfill-3` (one of the 3-VM date-sharded fleet covering
+      `2025-12-15 → 2026-07-21`) FAILED 2026-07-27 03:54 UTC with `exit_code=137` (`Killed` — OOM-shaped, same signature
+      as the already-filed `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` P0, which as of 2026-08-03 is still
+      open and itself blocked on vendor-credit exhaustion investigating the root cause) and has NOT been relaunched
+      since — verified live via
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill-3/run.log | tail`
       (2026-08-03). It self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`), so it no longer shows in
       `gcloud compute instances list` as a red flag — a silent 6+ day stall on its shard. Sibling VMs: `-1` completed
