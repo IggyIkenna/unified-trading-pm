@@ -395,3 +395,50 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   recovering via VERSION, build id cited; (3) flip this plan's todo 1 checkbox (source issue doc checkbox already
   flipped by slot-4) + `/done` with the evidence. Resume: fresh-pull each repo, run `quality-gates.sh`, quickmerge
   `--agent --files cloudbuild.yaml`, then the proof + flip.
+- **2026-08-06 (slot 5, batch5 todo 1 worker — step 2 guard rollout; SECOND entry: two guard gaps found + fixed).**
+  Continuing the QG+quickmerge pipeline from the entry above, an audit BEFORE the end-to-end proof caught that the
+  hand-applied guard was INCOMPLETE in two ways, both discovered by actually running the proof instead of trusting the
+  diff:
+  1. **Build-step tag never re-pointed.** Every consumer got the SAFE_SHA guard block, but the docker build
+     `-t ...:${_SERVICE_NAME}:$SHORT_SHA` line was still `$SHORT_SHA` in 13/17 repos (4 — deployment-api/deployment-ui/
+     ibkr-gateway-infra/unified-trading-system-ui — had been re-pointed). A manual submit (SHORT_SHA empty) still
+     collapsed the tag to `<svc>:` → `invalid reference format`. Fixed all 17 to `:$$SAFE_SHA` (template SSOT line).
+  2. **quality-gates step used `:$SHORT_SHA` + lacked the `_RUN_INIMAGE_QG` skip guard** (client-reporting-api only;
+     fleet audit showed every other consumer uses `:$$VERSION` or has the skip guard). First proof build `b7bcfccc`
+     (storageSource, SHORT_SHA empty) reached the build step — the SAFE_SHA guard WORKED (VERSION=0.0.0.dev0, valid
+     `-t :0.0.0.dev0`, no invalid-reference-format at the tag) — but the build still exited 125 from the quality-gates
+     step's own empty `:$SHORT_SHA`. Root cause: the guard rollout only forward-ported the SERVICE template;
+     `cloudbuild-api-template.yaml` still carried the OLD quality-gates form. **Fix**: api-template quality-gates
+     forward-ported to the canonical service-template form (skip guard default false + `:$$VERSION` + declare
+     `_RUN_INIMAGE_QG`), client-reporting-api + deployment-api quality-gates aligned byte-identically to the render.
+     Baseline ratcheted DOWN deployment-api 16→15 (client-reporting stays 3). Drift checker GREEN (exit 0). **Discovery
+     (empirically measured, not assumed) — manual-submit submission viability**: `gcloud builds submit <src>` on gcloud
+     SDK 569.0.0 auto-injects a `_BRANCH` substitution (from the git branch) into the build request; these configs
+     reference `_BRANCH` only via the shell-default form `${_BRANCH:-...}` which Cloud Build's substitution scanner does
+     NOT count as a template reference, so strict-mode configs are rejected with "key _BRANCH ... not matched in the
+     template" BEFORE any step runs. `substitutionOption: ALLOW_LOOSE` fixes it (added to api-template +
+     client-reporting-api, with a comment citing build b7bcfccc; gcloud 569 also confirmed SHORT_SHA auto-substitutes
+     empty for manual submits via a no-source busybox probe f1654600). **Fleet-wide ALLOW_LOOSE rollout = follow-up
+     operator decision** (all other consumers still reject plain manual submits on gcloud 569). **Discovery — unrelated
+     to the guard**: the build step's `--cache-from ...:latest` fails with
+     `docker-credential-gcloud resolves to executable in current directory (./docker-credential-gcloud)` (BuildKit
+     credential-helper resolution) when the cache tag does not exist in AR — an environment/infra quirk, independent of
+     the empty-tag guard; proof config works around it (removing --cache-from in the proof copy) and it is recorded as a
+     follow-up. **Ship state (updated SHAs, all committed; QG+quickmerge for the rest in progress ≤2 concurrent)**:
+     Shipped (ahead=0): alerting/batch-live/client-reporting/fund-administration (guard originals), execution, features,
+     greeks, market-data-processing, instruments. Committed-ahead=1 pending QG+merge: alerting@8b8ecd9,
+     batch-live@00b6ab8, client-reporting@99171ca, deployment-api@7eaabba, deployment-ui, ibkr-gateway-infra,
+     market-tick-data, ml, strategy, trading-agent, unified-trading-system-ui, fund-administration@82d8905,
+     unified-trading-pm@9d0684b5b. **Proof in flight**: build `54020585-ff2c-4152-a88b-1bcde265454e`
+     (client-reporting-api committed config, storageSource, SHORT_SHA empty,
+     _SERVICE_NAME=client-reporting-api-guardproof, ALLOW_LOOSE in committed config) — submission accepted; final
+     verdict pending.
+- **2026-08-06 (slot 5) — follow-up todos (per pre-compact discovery→todo rule):**
+  - [ ] [DEVOPS] P2. **Roll `substitutionOption: ALLOW_LOOSE` out to the remaining consumer cloudbuilds + service/ui
+        templates** — gcloud SDK 569.0.0 auto-injects `_BRANCH` for source submits and strict configs reject it, so a
+        plain `gcloud builds submit` is impossible on all consumers except client-reporting-api until they gain
+        ALLOW_LOOSE. Evidence: builds b7bcfccc + 54020585 + no-source busybox probe f1654600; template comments in
+        api-template already describe it. Tradeoff (loose substitutions mask missing trigger subs) → operator decision.
+  - [ ] [DEVOPS] P3. **Investigate the BuildKit `--cache-from` credential-helper quirk**
+        (`docker-credential-gcloud resolves to executable in current directory`) that breaks AR cache-import for
+        non-existent cache tags on manual submits — blocks a fully-clean manual-submit build; independent of the guard.
