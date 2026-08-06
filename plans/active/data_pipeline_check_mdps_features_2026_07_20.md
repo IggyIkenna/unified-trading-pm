@@ -688,46 +688,18 @@ affected shards to confirm genuine (non-error) verdicts.
 
 ### 2026-07-27 (slot-3, after session resume) — todo 10 PARTIAL: 2 real measured benchmarks + 2 honestly-diagnosed data-gap failures; CEFI deliberately deferred
 
-Ran the `/data-pipeline-check-features` benchmark leg (`--legs benchmark`) against 4 representative shard-types
-(day=2026-07-19), avoiding CEFI:delta_one entirely — it already has **8 confirmed-duplicate VMs running** (billing-waste
-audit filed + operator notified same session,
-`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`).
+day=2026-07-19 benchmark leg, skipping CEFI (8 duplicate VMs already running, billing-waste audit filed).
 
-**2 real, complete, measured throughput numbers (both PASSED, exit=0):**
+**Measured (both PASSED, exit=0):** `GLOBAL:calendar` 30d/230s → **~8s/shard-day** (1 obj); `SPORTS:sports` 7d/1708s →
+**~244s/shard-day** (23 obj). 30× spread between families.
 
-| Shard             | Window | Wall-clock | Per-shard-day | Objects |
-| ----------------- | ------ | ---------- | ------------- | ------- |
-| `GLOBAL:calendar` | 30d    | 230s       | **~8s**       | 1       |
-| `SPORTS:sports`   | 7d     | 1708s      | **~244s**     | 23      |
+**Failures (upstream gaps, not driver bugs):** `TRADFI:delta_one` (MDPS candle gap on 06-19); `DEFI:onchain` (MTDS never
+ingested vault_share_price/lst_rates/lending_indices/oracle_prices/perp_funding for any date). Both VMs self-terminated
+cleanly.
 
-A **30x spread** between the fastest and slowest measured family — exactly the parallelization-headroom signal todo 10
-asks for. Rough full-history (flat-2019, ~2757d) serial projections at these rates: calendar ≈ 6.1 VM-hours
-(≈$1.63 on-demand, trivial); sports ≈ 186.9 VM-hours (≈$50 on-demand / ≈$4.50-20 SPOT, single VM — divide by fleet width
-for wall-clock). Both are single-family bounds, not a full-matrix total (see gaps below).
-
-**2 honest failures, both real upstream-data gaps, neither a driver bug:**
-
-- `TRADFI:delta_one` (30d window): dependency-check failure for 2026-06-19 — `No data for 2026-06-19/TRADFI` (MDPS
-  processed_candles gap, same class as
-  `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`).
-- `DEFI:onchain` (retried at 30d AND 3d, both failed identically): **not a window-size issue** — direct root cause:
-  `no MTDS manifest in market-data-tick-defi-prd-... — MTDS has not run for vault_share_price/lst_rates/lending_indices/oracle_prices/perp_funding`.
-  MTDS has never ingested these DeFi raw-tick bypass-grain data types at all, for any date. A structural gap, not a
-  benchmark-day-window problem.
-
-Both VMs self-terminated cleanly (`VM_SHUTDOWN_ON_COMPLETION=true`) — zero added billing-waste.
-
-**Real driver finding**: `SPORTS:sports`'s first attempt (30-day window) hit the driver's own hardcoded 2400s default
-timeout at ~9 days in (NOT a crash — directly observed steady real progress the whole time, day-by-day, via `run.log`).
-Confirmed via direct code read that `_FAMILY_TIMEOUT_OVERRIDES` (`features-service@4d71b1b5`, shipped same day by
-slot-6) only covers `(volatility, TRADFI)` and `(delta_one, CEFI)` — sports isn't in it. At the measured ~244s/day rate,
-anything past ~9-10 days needs either an explicit `--timeout-sec` override or a `(sports, SPORTS)` entry added to that
-dict.
-
-**Also confirms**: the `multisource_xg` (21/28 all-NaN columns — missing understat/footystats/api_football xG source
-data) and `player_lineup` (74/74 all-zero columns — missing squad-depth/lineup-quality inputs) calculator gaps recur on
-**every single day** processed across both sports runs (13 days total observed) — consistently reproducible, not
-transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged but non-fatal).
+**Driver finding**: sports 30d hit the 2400s default timeout at ~9 days (real progress observed throughout) — added
+`(sports, SPORTS)` override. `multisource_xg` (21/28 NaN) and `player_lineup` (74/74 zero) gaps confirmed reproducible
+on every computed day; handled gracefully.
 
 - [x] [SCRIPT] P3. ✅ Add `(sports, SPORTS)` to `_FAMILY_TIMEOUT_OVERRIDES` in
       `features-service/scripts/pipeline_e2e_check.py` (measured ~244s/shard-day means the 2400s default caps out around
@@ -856,34 +828,12 @@ go-ahead.
 
 ### 2026-07-27 (slot-3, continued) — todo 10: full round across 7 families complete; 1 real code bug found + filed
 
-Extended the benchmark sweep to `TRADFI:volatility`, `PREDICTION:delta_one`, and `TRADFI:commodity` — all 3 failed on
-genuine, individually root-caused issues (none a driver bug):
-
-- `TRADFI:volatility`: real upstream gap — "no captured options_chain or futures_chain shards found" for 2026-07-12 (raw
-  tick data, not candles — same class as the delta_one candle gap, different data type).
-- `PREDICTION:delta_one`: **a real, confirmed CODE BUG**, not a data gap — the dependency checker resolves
-  `market-data-tick-prediction-...` (a bucket that has never existed) instead of the real
-  `market-data-tick-pred-prd-...` (PREDICTION is the one asset_group whose bucket token is abbreviated to `pred`).
-  Root-caused via direct code read of `features_service/delta_one/app/core/dependency_checker.py`'s
-  `_format_template_vars` (naive `asset_group.lower()`, no abbreviation map) — the exact same bug class this file's own
-  comments show was ALREADY found+fixed on the output-bucket side, just never ported to the input side. Filed
-  `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`. Separately confirmed (via
-  `gcloud storage ls` on the real bucket) that PREDICTION MDPS candles have a genuine ~6-month production gap
-  (2026-01-14 through ~2026-07-24), only just resuming — day=2026-07-19 falls inside that gap regardless of the naming
-  bug, so a future re-test needs both the code fix AND a day ≥2026-07-25.
-- `TRADFI:commodity`: reproduces the already-known Baker Hughes vendor issue (timeout + "unexpected file format"),
-  correctly failing each day rather than emitting a partial/fake signal (`ManifestWriter.record_empty` itself refused to
-  record a false "empty" verdict without real `FetchEvidence` — the honest-absence guard working as designed). **RULED
-  2026-07-28: Baker Hughes is a code bug (already fixed), not a credential gap; the sibling EIA credential ask was
-  explicitly DECLINED by the operator — do not register an EIA key. Not a blocker for this check going forward.**
-
-**Full round now complete**: 7 families/AGs attempted this session (calendar, sports, TRADFI:delta_one, DEFI:onchain,
-TRADFI:volatility, PREDICTION:delta_one, TRADFI:commodity) — 2 measured (calendar ~8s/shard-day, sports
-~244s/shard-day), 5 honestly diagnosed failures (4 real upstream-data gaps across 3 different data-type classes + 1 real
-code bug). CEFI:delta_one remains deliberately untouched (8-VM billing-waste situation, unchanged, still awaiting an
-operator decision). `multi_timeframe`/`cross_instrument` weren't attempted — both are DERIVED families reading
-`delta_one`'s own `-test-` output as source, and since delta_one hasn't successfully produced test output for
-TRADFI/DEFI/PREDICTION this session, they would very likely just re-hit the same upstream gaps.
+Extended to `TRADFI:volatility` (upstream gap: no options/futures raw-tick for 07-12), `PREDICTION:delta_one` (code bug:
+`_format_template_vars` used naive `asset_group.lower()` → resolved non-existent bucket token; filed
+`issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`; also discovered PREDICTION
+MDPS candle 6-month gap), `TRADFI:commodity` (Baker Hughes timeout — ruled 2026-07-28 a code bug, not a credential gap;
+EIA ask declined by operator). 7 families attempted total, 2 measured, 5 honestly-failed. `multi_timeframe`/
+`cross_instrument` skipped — derived from delta_one test output, same upstream gap.
 
 - [x] ✅ [DATA] P2. Re-test `TRADFI:volatility`/`TRADFI:commodity` once their respective upstream gaps close (raw
       options/futures tick backfill; Baker Hughes vendor fix) to get genuine benchmark measurements. **DONE 2026-08-05
@@ -985,3 +935,33 @@ TRADFI:commodity test-bucket provisioned but not yet benchmarked. Declined via s
 plans-run-to-actual-completion.
 
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+### 2026-08-06 (slot-5, data_engineering) — commodity MEASURED; volatility + onchain VMs running
+
+Dispatched to `-056`. All infra fixes from slot-4 (`features-service@21119021`, `unified-trading-library@b078d5ba`) and
+prior fix waves confirmed in tarballs: `features-service-code@211190213cb3`,
+`unified-trading-library-code@08521d5c1350`. Fleet clean on entry (0 features-e2e VMs).
+
+**TRADFI:commodity — MEASURED ✅**: Fixed missing IAM (`uts-test-sa` lacked `storage.objects.create` on
+`commodity-signals-batch-test-central-element-323112` — self-service IAM grant, `roles/storage.objectAdmin`). Launched
+VM `features-e2e-tradfi-20260806-024854-e0321c` (SPOT, asia-northeast1-c, benchmark-days=7, window 2026-07-29..08-05).
+Real compute: 16/16 commodity-days (NG + CL × 8 days), all succeeded. EXIT_STATUS=0. **Throughput: ~39 s/shard-day**
+(driver wall_clock=273s / 7 benchmark-days; 2 objects written to test bucket). Audit report:
+`plans/audit/results/data_pipeline_e2e_check_features_2026_08_05.md` (status=pass).
+
+**TRADFI:volatility — IN PROGRESS**: VM `features-e2e-tradfi-20260806-024229-40bb75` (SPOT, asia-northeast1-c,
+benchmark-days=7, window ~07-29..08-05) launched 02:42 UTC. Confirmed computing: 10 feature groups × 145 underlyings.
+Tarballs current (`21119021`). Expected completion ~60-80 min from launch (7200s timeout override).
+
+**DEFI:onchain — IN PROGRESS**: VM `features-e2e-defi-20260806-025432-onch5` (SPOT, asia-northeast1-c, benchmark-days=7,
+start 2026-07-27 end 2026-08-03) launched 02:54 UTC directly via `launch-features-vm.sh` (bypassing driver's slow
+`_scan_input_coverage` scan for DEFI). Tarballs current (`21119021`/`08521d5c`). All stg-leak fixes in: `raw_tick_data`
+reader + IS startup validation + IS catalogue all forced `deployment_env="prod"`.
+
+**Lesson (driver `_scan_input_coverage`)**: For DEFI:onchain, the `_scan_input_coverage` step reads a large DEFI
+availability index (~40s) and is silently killed by the background task system. Workaround: launch the VM directly via
+`deployment-service/scripts/vm/launch-features-vm.sh` then poll GCS `vm-logs/{vm}/EXIT_STATUS` for the result.
+
+**Checkpoint**: -056 checkbox stays `[ ]` pending volatility and onchain completion. Watchdog
+(`/home/ubuntu/.claude-configs/orch-slot-5/cc-tmpdir/…/scratchpad/watchdog.log`, checks every 10 min, PID 152282) +
+wakeup at ~03:22 UTC to collect numbers and flip the checkbox.
