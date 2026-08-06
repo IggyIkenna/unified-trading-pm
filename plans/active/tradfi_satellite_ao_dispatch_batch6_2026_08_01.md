@@ -351,6 +351,14 @@ later re-scoped or the campaign ends, launch ES_OPT per the phase-1 command belo
 (empty stdout). Use an error-aware loop: only fire CLEAR when the gcloud call rc==0 AND the result is empty; on rc!=0
 hold the wait. Current armed watcher (this session) is error-aware; a fresh session should re-arm the same shape.
 
+**THIRD WAVE — CONTINUOUS-LAUNCH PATTERN CONFIRMED (2026-08-06T~21:00Z).** A 3rd wave launched at 21:00Z (14:01 PDT):
+es-es-2020, met-met-2023, nasdaq-2023-d01, alongside the still-running originals → **6 RUNNING**. Waves so far: 08:00Z,
+18:00Z, 21:00Z — the campaign **replenishes year-shards as slots free**. The Databento singleton is held INDEFINITELY;
+there is no count==0 window in sight by construction, not just by estimate. This is exactly the scenario of the 18:10Z
+operator decision (keep-waiting, no `--force`), so no re-ask is needed — the decision stands. A fresh session should
+treat "count >0" as the permanent expected state and NOT expect the lock to clear on its own; launch ES_OPT only if a
+real count==0 window appears or the operator re-scopes/overrides.
+
 **Phase 2 toolchain verified intact post-compaction:** `_scratch/availability_index.parquet` (119 MiB snapshot) + the
 market-tick-data-service `.venv` python (pyarrow 23.0.1) still present; baseline re-run clean (0 canonical ES_OPT rows
 pre-launch). Post-launch = re-download a FRESH manifest + run the phase-2 query above.
