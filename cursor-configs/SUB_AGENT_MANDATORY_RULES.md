@@ -37,8 +37,9 @@ tree is the contract.** SSOT: `/codex/06-coding-standards/quality-gates.md`.
    scope on the prek retry — never `git add -A`), commits, lands on LDR; the Tier-C drain promotes LDR→staging→main with
    the server `quality-gates-v2` gate. **A raw `git push` of code is BANNED** (it dodges the dep gates + early-exits on
    a clean tree so commits pile up behind main with no PR). Closed carve-out direct pushes: dirty-deps; the FF-pull-in +
-   cross-repo PM `docs(plans):` flip. **Never `[skip ci]`** a commit destined for a v2-gated promotion PR (required
-   check goes MISSING → PR BLOCKED). **NEVER force-push a shared branch.**
+   cross-repo PM `docs(plans):` flip — doc-push via `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the
+   index). **Never `[skip ci]`** a commit destined for a v2-gated promotion PR (required check goes MISSING → PR
+   BLOCKED). **NEVER force-push a shared branch.**
    - **Pre-`--files` hygiene (MANDATORY)**: `git status && git diff --cached --stat` (NO path arg — see the WHOLE index)
      so you pass only YOUR paths. `--no-verify` only on prek auto-restore symptoms; verify `git show --stat HEAD` that
      your file landed.

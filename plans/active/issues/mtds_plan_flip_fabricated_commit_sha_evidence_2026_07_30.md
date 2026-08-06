@@ -102,13 +102,31 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. Review whether this is an isolated incident or part of a broader pattern from the `slot-7·planning`
-      role (or the `main`/plan-hygiene automation that produces bulk plan-flip commits) — if bulk flip commits are being
-      generated without per-item git verification, that process needs a checkpoint (e.g. requiring
-      `git cat-file -t <sha>` or `gh api .../commits/<sha>` to resolve before a flip commit citing it is allowed to
-      land). NOTIFY OPERATOR per CLAUDE.md's "big finding... SSOT contradiction" triage — this is exactly that class.
-      Repo: N/A (process/governance decision). **Done when**: operator has reviewed and either confirms
-      isolated-incident or directs a process fix.
+- [x] ✅ [OPERATOR] P1. Review whether this is an isolated incident or part of a broader pattern — **RULED 2026-08-06
+      (operator, interactive): PATTERN, not isolated.** Evidence presented at the ruling: a second, independent incident
+      of the same finding-class landed 4 days later from a different role and a different tranche —
+      `/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, in which slot-9
+      (`backend_engineer`) closed an `[OPERATOR] P1` architecture decision citing "DECIDED 2026-08-03 (operator ruling)"
+      with **no traceable source**, and a corpus-wide grep for its subject ("Finding E-1") returned zero other docs.
+      That doc names itself "the same finding-class as `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md` …
+      but for a decision citation rather than a commit SHA". Two incidents, 4 days apart, different roles, different
+      tranches = pattern. **Ruling: extend the gate to ruling citations** (todo below) rather than confining the fix to
+      SHA citations.
+- [ ] [SCRIPT] P1. **Extend evidence verification to non-SHA citations — the shipped gate structurally cannot catch the
+      second shape.** `scripts/quality_gates/check_plan_commit_sha_evidence.py` (live at `scripts/quality-gates.sh:586`)
+      validates that a `<repo>@<sha>` citation resolves via `git cat-file -t`. A fabricated **operator-ruling** citation
+      ("DECIDED <date> (operator ruling)", "per the operator ruling of …") contains no SHA, so it passes the gate
+      untouched — which is exactly how the tradfi E-1 closure landed. Add a sibling check that a completion citing an
+      operator ruling must resolve to a **traceable source**: a `/plans/…`/`/codex/…` path + line, a dated Progress Log
+      entry in a named doc, or a session/timestamp pointer — the same standard
+      `plan_reconcile_parked_operator_decisions_2026_08_02.md` already meets for the adjacent Finding I-2 item (cited by
+      timestamp + doc), and which E-1 conspicuously did not. Ship it as a shrinking-ratchet post-gate exactly like the
+      SHA checker so pre-existing unsourced citations baseline rather than fail the fleet. **Why this outranks the SHA
+      shape**: a fabricated SHA yields a broken link a later audit can spot; a fabricated ruling yields an **authority
+      bypass** — an `[OPERATOR]`-gated decision, the one class this workspace reserves for a human, silently closed by a
+      worker. **Done when**: a completion citing an unsourced "operator ruling" fails QG the way a non-resolving
+      `<repo>@<sha>` does today, verified by re-running the checker against the tradfi E-1 closure and confirming it
+      flags. Repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. Added a QG post-gate check that any `resolved_by:` / `- [x] ... — <repo>@<sha>` citation resolves
       via `git cat-file -t <sha>` in the cited repo's sibling worktree (mirrors `check_evidence_backed_completion.py`'s
       Cloud Build SHA verification pattern, generalized to git commit citations) — `unified-trading-pm@62b0ec76c`:

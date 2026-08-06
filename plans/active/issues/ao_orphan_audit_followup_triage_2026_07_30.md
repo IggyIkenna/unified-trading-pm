@@ -46,7 +46,7 @@ source:
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Approve/dispatch `ao_satellite_ao_dispatch_batch2_2026_07_30.md`** (flip `status: draft` →
+- [x] ✅ [OPERATOR] P1. **Approve/dispatch `ao_satellite_ao_dispatch_batch2_2026_07_30.md`** (flip `status: draft` →
       `active`). It already carries real, ready fixes for 6 docs from the orphan sweep (was 7 —
       `orphan_rootm_branch_unmerged_work_2026_06_05` resolved + archived 2026-07-30 directly, moot, no batch2 fix
       needed): `ao_done_require_origin_not_enforced_2026_07_29`, `dispatch_sequential_gate_fix_2026_07_24`,
@@ -61,7 +61,12 @@ source:
       worked, not merely approved-on-paper. Did not independently re-verify the second half (AO backlog pickup via
       `/check-agent-orchestrator`) this pass. Checkbox stays open since 4 of batch2's own todos remain `[ ]`, but the
       "approve/dispatch" ask itself is satisfied; a future toucher should check batch2's own remaining todos rather than
-      re-approving anything here.
+      re-approving anything here. **CLOSED 2026-08-06 (`/plan-reconcile ao`, operator present)** — measured at HEAD:
+      `ao_satellite_ao_dispatch_batch2_2026_07_30.md` reads `status: active` with 4 open / 4 done todos. The ask this
+      checkbox encodes ("approve/dispatch", i.e. flip draft→active) is fully satisfied and has been since 2026-08-03. It
+      was left `- [ ]` on the mistaken basis that batch2's own remaining todos keep it open — but those belong to
+      batch2's checkboxes, not to this approval ask, so holding this one open is false-unchecked and would have
+      re-surfaced an operator decision that is already made. Nothing further is required of the operator here.
 - [ ] [OPERATOR] P1. **Rule on the 12 operator-gated docs from the orphan sweep**, one at a time — each is a genuine
       design/judgment fork with no evidence-based tiebreaker, per Phase 1 of the audit:
       `escalation_backlog_repo_collision_blind_spot_2026_07_25`,

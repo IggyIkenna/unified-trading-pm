@@ -239,18 +239,28 @@ nil: it authenticates as the existing Max subscription, so it returns the same q
 
 ### Phase 3 — decision
 
-- [ ] [OPERATOR] P1. **Go/no-go on adopting OmniRoute for non-Claude routing**, written into this plan with the matrix
-      as evidence. The question is NOT "free tokens" (disproven) — it is whether managed failover across paid+free API
-      keys beats the status quo. Feeds the AI Compute Optimisation Strategy classification work still open in
+- [x] ✅ [OPERATOR] P1. **Go/no-go on adopting OmniRoute for non-Claude routing** — **RULED 2026-08-06 (operator,
+      interactive): NO-GO for now.** OmniRoute is not adopted for non-Claude routing. The matrix in this plan stands as
+      the evidence of record, and the ruling is explicitly reversible: it is "no-go for now", not "never" — a future
+      revisit should start from this plan's findings 2-3 (failover works, ~3% overhead) plus a real invoice
+      reconciliation, which the two open `[OPERATOR] P1` cost todos below still name as never having been done. Feeds
+      the AI Compute Optimisation Strategy classification work still open in
       `/plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md`.
 - [ ] [OPERATOR] P2. **Decide whether the earlier audit needs a correction banner.**
       `/plans/audit/results/omniroute_free_tier_cost_analysis_2026_07_31.md` concluded "do not integrate"; findings 2-3
       here (failover works, ~3% overhead) are new evidence its desk-research could not have had. It also stated
       "Anthropic appears nowhere" — the registry does carry a `Claude Web` cookie provider, which is ToS-barred but
       factually present.
-- [ ] [SCRIPT] P2. **Decommission if no-go** — `omniroute stop`, `npm uninstall -g omniroute`, revoke all 5 provider
-      keys at source, delete `~/.omniroute/` and `~/.claude-accounts/*.key`, delete the eval script directory. The keys
-      are live credentials; leaving them on a decommissioned box is the failure mode.
+- [ ] [SCRIPT] P2. **Decommission the gateway — but DO NOT revoke the provider keys.** No-go is ruled (above), so tear
+      down the OmniRoute gateway itself: `omniroute stop`, `npm uninstall -g omniroute`, delete `~/.omniroute/`, delete
+      the eval script directory. **⚠️ OPERATOR OVERRIDE 2026-08-06 — the "revoke all 5 provider keys at source" step
+      that this todo previously carried is CANCELLED, deliberately.** The operator ruled the keys are retained: the
+      no-go is on OmniRoute as a routing layer, not on the underlying model providers, which may be used via other
+      methods later. Re-provisioning them is friction with no offsetting benefit. **Do not "helpfully" revoke these
+      keys** — this todo used to instruct exactly that, and the instruction is now void. Standing residual risk,
+      knowingly accepted by the operator rather than overlooked: 5 live provider credentials remain on the box, so they
+      stay in scope for normal credential hygiene (rotation, gitleaks, never committing them) even though the evaluation
+      that provisioned them is closed. `~/.claude-accounts/*.key` likewise stays — it is not OmniRoute state.
 
 ### Housekeeping
 

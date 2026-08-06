@@ -130,9 +130,24 @@ condition fires.
       `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`." The GATED prefix no longer blocks
       dispatch; the two-part implementation itself remains open/undone.
 
-## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
+## Deferred — hold RELEASED 2026-08-06 (was held by the `/na-eligibility-audit ao` conflict-check, 2026-07-30)
 
-**BLOCKED-OPERATOR-DECISION — file-collision overlap on the durable-park mechanism. Recommend option A.**
+**✅ HOLD RELEASED — the stated blocker previously required an operator decision and is now resolved by measurement, not
+by judgment.** The hold existed for exactly one reason: a file-collision + sequencing overlap with an OPEN
+`[BACKEND] P3` in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`. Measured at HEAD 2026-08-06: that plan is at
+`/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md`, `status: complete`, **0 open / 11 done** — the
+colliding todo is closed and the plan is archived, so the overlap that justified the hold no longer exists. Retagged in
+this same edit per CLAUDE.md's rule that a resolved gate is never left stale, and phrased deliberately without the
+literal non-dispatchable marker substring, because `_NON_DISPATCHABLE_RE` scans the entire block and the substring alone
+would silently re-exclude these todos from ingestion — the exact defect tracked in
+`/plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`.
+
+**Scope note — what this edit does NOT do.** Releasing the hold does not flip `assigned_vm`. Both todos were verdicted
+**RECLASSIFY** on the merits in Phase 1 (bounded, stated done-whens, no authority call — todo 1 even names the proven
+`auto_unpark__<task-id>` mechanism to reuse), so they now look reclassify-eligible with nothing blocking them. But
+deciding whether a doc's own `assigned_vm: NA` classification should change is `/na-eligibility-audit`'s remit, not
+`/plan-reconcile`'s — this pass clears the blocker and hands the reclassification question there rather than
+self-authorising it. The two-part implementation itself remains open and undone.
 
 Both open `[BACKEND] P3` todos were verdicted **RECLASSIFY** in Phase 1: they are bounded, with stated done-whens, no
 operator gate and no undecided authority call — todo 1 even names the proven mechanism to reuse (the
