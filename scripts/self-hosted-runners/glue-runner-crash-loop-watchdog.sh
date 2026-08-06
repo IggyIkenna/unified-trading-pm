@@ -130,8 +130,28 @@ unit_active_seconds() {
   echo $(( now - epoch ))
 }
 
+# True iff <unit-name>'s own runner log shows it genuinely idle right now -- the LAST line
+# matching either marker is "Listening for Jobs" (not "Running job: ..."). Cheap, local,
+# no GitHub API call needed: Runner.Listener logs exactly one of these two lines per state
+# transition, so the most recent one is authoritative for current state. Empty/unreadable
+# journal -> NOT idle (fail toward the wedge check still applying, never toward silently
+# waiving it).
+is_idle_listening() {
+  local unit="$1" last_line
+  last_line="$(journalctl -u "$unit" --no-pager -o cat 2>/dev/null \
+    | grep -E 'Listening for Jobs|Running job:' | tail -1)"
+  [ -n "$last_line" ] && [[ "$last_line" == *"Listening for Jobs"* ]]
+}
+
 # <unit-name> is wedged if it's a JIT-ephemeral glue-* instance (never writer-*, those are
-# long-lived by design) that's been continuously active well past any legitimate single job.
+# long-lived by design) that's been continuously active well past any legitimate single job
+# AND is not simply idle waiting for its next job (2026-08-06 fix -- live false-positive:
+# execution-service's glue-1 paged CRITICAL at 3.1h/48MB with GitHub's own API confirming
+# `busy: false` and the runner's own log showing "Listening for Jobs" as its last line the
+# entire window; a pool that simply hasn't had a new job in hours is healthy, not wedged --
+# the ORIGINAL 2026-08-05 case this check was built for was a real hung job at 5.6GB RSS with
+# "Running job: ..." as its last log line, a genuinely different signature this now
+# distinguishes instead of conflating).
 is_wedged() {
   local unit="$1" active_state
   case "$unit" in
@@ -140,7 +160,8 @@ is_wedged() {
   esac
   active_state="$(systemctl show "$unit" -p ActiveState --value 2>/dev/null || echo "")"
   [ "$active_state" = "active" ] || return 1   # crash-looping units are "activating", not "active"
-  [ "$(unit_active_seconds "$unit")" -ge "$WEDGED_THRESHOLD_SEC" ]
+  [ "$(unit_active_seconds "$unit")" -ge "$WEDGED_THRESHOLD_SEC" ] || return 1
+  ! is_idle_listening "$unit"
 }
 
 was_alerted()  { grep -qxF "$1" "$STATE_FILE" 2>/dev/null; }
