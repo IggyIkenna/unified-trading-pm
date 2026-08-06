@@ -222,10 +222,9 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       load shows zero pressure. Auditor completion today: 17/20 lifecycle-complete (3 reaped-stale). Tuning verdict:
       keep IOWeight=20/CPUWeight=20 — no evidence of CI throughput degradation at current weights, and
       audit-traffic-only pressure is negligible. Re-measure again if CI throughput complaints surface.
-- [ ] [SCRIPT] P3. Track `/etc/systemd/system/orchestrator.service.d/cpu-priority.conf` in a repo — it currently exists
-      ONLY as a live VM drop-in, same "no home" gap this doc's own `scripts/github.slice` just closed for the newer fix.
-      (The 2026-07-28 CPUWeight=4000/IOWeight=1000 fix referenced throughout this doc.) Same risk: a VM rebuild would
-      silently lose it.
+- [x] ✅ [SCRIPT] P3. Track `/etc/systemd/system/orchestrator.service.d/cpu-priority.conf` in a repo —
+      agent-orchestrator@c6366f5 (scripts/orchestrator-cpu-priority.conf, mirrored from live VM drop-in with lifecycle
+      markers + install instructions).
 - [ ] [DATA] P3. Investigate the 2026-08-02 ~11:34 UTC 58-way simultaneous `timeout` cluster (see "Corrected an earlier
       claim" above) if it recurs — not investigated this session, out of window.
 - [x] ✅ [SCRIPT] P2. Root-cause the 2026-08-04 14:01:32-14:02:35 "mass session-death" — NOT a discrete incident: host
