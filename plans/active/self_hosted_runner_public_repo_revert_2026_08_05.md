@@ -5,7 +5,10 @@ summary: >-
   17 of the 25-repo self-hosted CI fleet are PUBLIC GitHub repos, confirmed intentional by the operator 2026-08-05 —
   GitHub Actions is unmetered on GitHub-hosted runners for public repos, so their self-hosted CI can revert to
   ubuntu-latest at zero billing cost while directly relieving the shared self-hosted VM's documented capacity
-  contention. Only 8 fleet repos are private and genuinely need to stay self-hosted.
+  contention. Only 8 fleet repos are private and genuinely need to stay self-hosted. **Correction 2026-08-06**:
+  `unified-trading-pm` — one of the 8 — was itself flipped PUBLIC on 2026-08-06 (see todo 24; it had been accidentally
+  left private, which broke every repo's `quality-gates-v2` since public repos cannot call reusable workflows hosted in
+  a private repo). PM is now in scope for the same revert this plan already does for the other 17.
 status: active
 nature: process
 asset_group: [ci, infrastructure]
@@ -40,7 +43,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-05
-last_updated: 2026-08-05
+last_updated: 2026-08-06
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -251,6 +254,25 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 - [x] 19. ✅ [INFRA] P1. **`unified-trading-system-ui` reverted** — `unified-trading-system-ui@6441e477`, every
       self-hosted workflow reverted EXCEPT `ui-quality-gates-v2.yml` (already correctly `ubuntu-latest`); full QG green
       (254s), landed.
+- [ ] 24. [INFRA] P1. **Revert `unified-trading-pm`'s own self-hosted workflows to `ubuntu-latest`, now that PM itself
+      is PUBLIC (flipped 2026-08-06, see Progress Log below).** PM is the one repo in the private-8 where
+      `hosted-baseline.sh` actually applies (its snapshot covers ~56 of PM's own workflow filenames — confirmed
+      PM-scoped-only by todo 2 above) — treat this with the SAME per-file mechanism-landscape care as the 17-repo
+      revert, not a blind find-replace: (a) remove `unified-trading-pm` from
+      `scripts/workflow-templates/self-hosted-qg-repos.txt` and re-run `rollout-workflow-templates.sh` for PM to
+      regenerate the ~9 `{{RUNS_ON}}`-templated files + the `quality-gates-v2.yml`/`semver-agent.yml` `.tmpl`-rendered
+      files (including PM's own copy of `python-quality-gates-v2.yml`'s `self_hosted_runner_labels` input — the
+      mechanism confirmed in todo 23 as what actually governs the heavy `qg-slices` job); (b) for PM-only bespoke files
+      not covered by any template (the ~39 MOVE-classified set from the now-superseded
+      `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md`, all already self-hosted per that plan's
+      Progress Log), triage each individually the same way that plan's Tier-A/Tier-B split did — Tier-B
+      trading-pipeline-adjacent files (`cloud-build-router.yml`, `sit-gate.yml`, `ldr-to-main-promote.yml`, etc.) get
+      one-at-a-time flip + a real triggered-run verification before moving to the next, never a batch commit; (c) leave
+      the 7 fleet-health-watchdog-class files (mirroring the reasoning already used for
+      `cloud-build-failure-watcher.yml` etc. in this plan's own Findings section) on `ubuntu-latest` regardless — they
+      need to detect an outage of the thing they'd be running on if self-hosted. Evidence: per-file commit SHA(s) +
+      `grep -rn 'runs-on:.*self-hosted' unified-trading-pm/.github/workflows/` showing only the deliberately-kept
+      watchdog files remain.
 - [ ] 20. [INFRA] P2. **Re-measure GitHub Actions billing for the 17 reverted repos** (should read $0/unmetered,
       confirming the public-repo-unmetered premise held in practice) and the self-hosted VM's steady-state load average
       before vs. after (not a spot-check — matches `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own
@@ -435,3 +457,17 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
     `runs-on:` in the caller file tells the whole story; find the `uses:` target and check IT.
   - **Genuinely remaining**: only todo 20 (billing/load re-measurement, needs a few days of real elapsed usage). Nothing
     else is open. Plan stays `status: active` until that closes, then archive per the standard ritual.
+
+- **2026-08-06 (interactive session, main_ci_red incident)**: `unified-trading-pm` was found accidentally PRIVATE,
+  breaking `quality-gates-v2` fleet-wide (public repos cannot call a reusable workflow hosted in a private repo — a
+  GitHub platform rule, not a settings toggle; confirmed via `unified-api-contracts` PR #860 stuck with the required
+  check never reporting). Flipped PM back to PUBLIC (`gh repo edit --visibility public`), verified fixed (a fresh
+  `workflow_dispatch` run on `unified-api-contracts`'s `quality-gates-v2.yml` resolved real jobs instead of 0-jobs/
+  "workflow not found"). This makes PM the 18th repo in this plan's scope for the SAME reason as the other 17 — added as
+  todo 24. Also marked `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md` **superseded**: it was
+  scoping moving MORE of PM's workflows TO self-hosted (billing-motivated, written while PM was private); that premise
+  is now moot in the opposite direction. Separately started
+  `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md` (LOCAL plan) to extract the reusable workflow YAML
+  itself into a small dedicated public repo (`unified-trading-ci`), so PM can go private again in the future (e.g. if
+  today's accidental flip reflects a real sensitivity concern) without breaking CI fleet-wide — that plan is the durable
+  architecture fix; this plan's todo 24 is the same billing-driven revert already applied to the other 17.

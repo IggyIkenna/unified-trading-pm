@@ -15,7 +15,7 @@ summary: >-
   2026-07-28 on the plan-destination `/blocked` question (BLK-7593bf4c) — the documented CLAUDE.md default, given Tier
   B's trading-safety stakes; whether Tier A should later be re-tiered to `assigned_vm: planning` for AO execution is
   left OPEN as a genuine operator routing call, not self-promoted here.
-status: active
+status: superseded
 nature: process
 asset_group:
   [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is PM's own
@@ -28,7 +28,7 @@ related:
   - /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md
   - /plans/active/github_actions_operator_gated_followups_2026_07_17.md
 created: "2026-07-28"
-last_updated: 2026-07-28
+last_updated: 2026-08-06
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -43,7 +43,7 @@ source: "slot-11 (tabs/11), gha_fleet_wide_missed_ubuntu_latest_workflows_wave2-
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: self_hosted_runner_public_repo_revert_2026_08_05
 context_scope:
   [
     /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md,
@@ -55,6 +55,16 @@ context_scope:
 ---
 
 # unified-trading-pm's own 39 MOVE-classified workflows — self-hosted-runner migration scoping
+
+> **🔴 SUPERSEDED 2026-08-06** — this plan's entire premise (move MORE of PM's workflows TO self-hosted, to save GitHub
+> Actions billing while PM was a PRIVATE repo) is now moot: PM was found accidentally flipped private, breaking
+> `quality-gates-v2` fleet-wide, and has been flipped back PUBLIC. GitHub Actions is unmetered for GitHub-hosted runners
+> on a public repo, so self-hosting no longer saves anything for PM — the correct direction is now the OPPOSITE of what
+> this plan scopes, tracked as todo 24 of `/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`. **Do not
+> execute the two still-open Tier-A todos below** (migrate pilot / batch-flip remaining 20) — they would move PM's CI
+> further in the wrong direction. Left in place (not archived) since it retains useful history — the Tier-B triage
+> below, and the confirmation that all 39 MOVE-classified files were already self-hosted as of 2026-07-29 — for whoever
+> executes todo 24's revert.
 
 > **`assigned_vm: NA` CONFIRMED (interim)** — main-agent answered the plan-destination `/blocked` question
 > (BLK-7593bf4c) 2026-07-28 with option A (`NA`, human-driven), citing the CLAUDE.md default + Tier B's trading-safety
@@ -106,12 +116,13 @@ build silently promotes" or "the kill-switch doesn't fire."
 `rules-alignment-agent.yml`, `ruleset-drift-alert.yml`, `secret-health-check.yml`, `supersede-stale-dep-update-prs.yml`,
 `version-coherence-check.yml`, `workspace-quickmerge-validation.yml`.
 
-- [ ] [INFRA] P2. **Migrate the Tier-A pilot** — flip `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]` on ONE
-      Tier-A file first (recommend `digest-drift-sweep.yml` — schedule-only, already a known-quantity workflow per the
-      Wave-1 archive), trigger it for real (`workflow_dispatch` or wait for its schedule), and confirm a clean run on
-      the glue pool before touching the rest (rule 11 / Wave-1's own playbook). Evidence: the pilot run's URL/id.
-- [ ] [INFRA] P2. **Batch-flip the remaining 20 Tier-A files** in one commit once the pilot is confirmed clean, then
-      confirm zero remaining `ubuntu-latest` across the Tier-A list via
+- [ ] [INFRA] P2. BLOCKED-SUPERSEDED **Migrate the Tier-A pilot** — flip `runs-on: ubuntu-latest` →
+      `runs-on:     [self-hosted, glue]` on ONE Tier-A file first (recommend `digest-drift-sweep.yml` — schedule-only,
+      already a known-quantity workflow per the Wave-1 archive), trigger it for real (`workflow_dispatch` or wait for
+      its schedule), and confirm a clean run on the glue pool before touching the rest (rule 11 / Wave-1's own
+      playbook). Evidence: the pilot run's URL/id. **Superseded 2026-08-06 — do not execute, see banner above.**
+- [ ] [INFRA] P2. BLOCKED-SUPERSEDED **Batch-flip the remaining 20 Tier-A files** in one commit once the pilot is
+      confirmed clean, then confirm zero remaining `ubuntu-latest` across the Tier-A list via
       `grep -rn '^\s*runs-on:\s*ubuntu-latest' .github/workflows/<each-file>` and that
       `scripts/self-hosted-runners/detect_template_drift.py --workflows` (if applicable to hand-authored, non-template
       files — verify whether it even covers these before citing it) stays clean. Evidence: batch commit SHA + the
@@ -206,3 +217,9 @@ the review doesn't silently drop them into either bucket without a look):**
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- all resolve, list already minimal/accurate, no
   change needed.
+- **2026-08-06 (interactive session, main_ci_red incident)**: `unified-trading-pm` was discovered accidentally PRIVATE
+  (breaking `quality-gates-v2` fleet-wide) and flipped back PUBLIC. That makes this plan's entire self-hosting-to-save-
+  billing premise moot — marked `status: superseded`, `superseded_by: self_hosted_runner_public_repo_revert_2026_08_05`,
+  banner added, both open Tier-A todos tagged `BLOCKED-SUPERSEDED` (not executed, not deleted — kept for the Tier-B
+  triage history). The correct-direction work (revert PM's self-hosted workflows back to `ubuntu-latest`) is tracked as
+  todo 24 of that plan instead.
