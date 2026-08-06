@@ -523,3 +523,39 @@ deribit_dated_option, cefi_backfill, autonomous_decisions, defi_pipeline_finaliz
 - **C6 CONFIRMED** — cryptovenue:605-609 BLOCKED-DATA → retag reflecting: KRX twins shipped (005380/005930/000660 .KS,
   UAC tradfi_ticker_universe.py:402-404 + KrxEquityDef + venue_mapping.py:249 "KRX": "yahoo_finance", uac@844c5ee6b);
   residual = low-latency/intraday basis feed only.
+
+### Cluster C (live-state) — REFUTER DONE 6/6 CONFIRMED (matches confirmer)
+
+- C1 — replace :76-79 with 5-relaunch chain (2×2026-07-30 preempted 18:48Z/06:14Z, 08-01 WORKER_STALLED kill, 08-02
+  self-delete, 08-06 ON_DEMAND RUNNING). False from authoring moment — relaunch-1 landed 2026-07-30.
+- C2 — annotate :69 as 2026-07-18 ruling; measured 2026-07-28 ≈3.25 days/hr → ~30-day ETA; last_updated :25 stale
+  (separate flag).
+- C3 — qualify :139-140: carve-out added commit d4f7fab9d 2026-08-02; applicability to shard-24 is an operator call (fix
+  09a2374 fixed the monitor, not launch path) — fix text frames carve-out exists, do not assert applies.
+- C4 — mechanism corrected, conclusion stands (14 elapsed days > 7-day baseline window; never claim restorable).
+- C5 — honest close: FLIP :225 [x] + fold residual (delete dead `"BARCHART"` key smoke_matrix.py:143); step (1) "~30
+  files" never literally zeroed — close is "verification + one dead-key cleanup".
+- C6 — retag :605-608 to plain `[DATA]` (drop BLOCKED-DATA), re-scope to live low-latency basis feed only; sibling
+  BLOCKED-DATA mentions :402/:532/:560/:566 share staleness class → flag, don't fix.
+
+### Cluster A (flips/archive) — REFUTER DONE: A1/A2/A5 CONFIRMED, A3 REFUTED, A4 REFUTED-as-blocked
+
+- **A1 CONFIRMED + SHA TRAP**: `instruments-service@1284606a` is a DIVERGED DUPLICATE — NOT on origin/LDR (lives only on
+  `origin/wip-preserve/slot-5-instruments-service-diverged-20260805T111826Z`); identical tree shipped as **`97801b5d`**
+  (ancestor of origin/LDR) — FLIP MUST CITE `97801b5d`, never 1284606a. Also `investigate_chain_lossy_20260724.py` does
+  NOT exist in scripts/ (scratchpad only) — new scoped todo must promote it first. Update :834-837 + :875 sha cites.
+- A2 CONFIRMED — batch7_finalize:70-72 → "archived-resolved, not deleted": plans/archive/issues/
+  mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md (status: resolved, flip 64ef0b9e3 + archive
+  a04f74e1c/ff619d49f, all [x]); stray active duplicate removed by unified-trading-pm@82d6d6bf7; batch7 todo 2
+  DONE-ELSEWHERE 2026-08-06.
+- A3 REFUTED — honest_coverage:474-475 [x] LEGITIMATE (DONE annotation verified; batch1 todo 4 + uac@e34afc1d reachable;
+  deployment-api@554cde9 + deployment-ui@8f6c4bc reachable). Keep. No un-flip. (Nit: follow-up cite is non-slash — out
+  of scope.)
+- A4 REFUTED-as-blocked — coinbase_cde NOT archive-ready: frontmatter `status: open` (must be resolved) +
+  `locked_by: live-defi-rollout` (human `[unlock-plan]` only) + 6-step ritual incl. referrer repoint (3 active docs cite
+  via RELATIVE issues/... path — closeout:252, track2:125, launcher-guard:136) + sha correction (todo 3 cites f9fa7587 —
+  diverged; real = 82d86feb/00930194 on LDR). B0-C4 "stale pending" caveat REFUTED as blocker (dated narrative, subject
+  todo 3 DONE). → route to operator (unlock + ritual) or report.
+- A5 CONFIRMED — cefi_master:631 "5 active plans" vs actual 19 active non-issue plans (46 incl. 27 issue docs);
+  populate_epic_bodies_2026_05_21.py has NO --epic flag (only --dry-run/--apply, non-recursive over active/*.md) → full
+  regen (dry-run first) or flagged hand-fix. → scope question to STEP 6.
