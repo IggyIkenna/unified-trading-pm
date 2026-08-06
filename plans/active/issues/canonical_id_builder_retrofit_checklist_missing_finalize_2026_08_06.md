@@ -81,10 +81,10 @@ is a real AO plan whose completion needs a closeout gate before archival.
 
 - [x] ✅ [DOC] P2. **RESOLVED 2026-08-06 — superseded by archival, no finalize authored.** The flagged plan
       `canonical_id_builder_retrofit_checklist_2026_07_08.md` was a COMPLETED plan (0 open / 14 closed todos); slot-6
-      (task -002) archived it to `plans/archive/2026_08/` and deleted the stale `status: active` twin
-      (unified-trading-pm@dda85c8cc, operator-authorized), which cleared `finalize-plan-coverage` to GREEN for the
-      fleet. Authoring a finalize plan for a done+archived plan is no longer applicable.
-      `check_finalize_plan_coverage.py` re-verified at 0 violations. No baseline bump needed.
+      (task -002) archived it to `plans/archive/2026_08/` and deleted the stale `status: active` twin (operator-
+      authorized), which cleared `finalize-plan-coverage` to GREEN for the fleet. Authoring a finalize plan for a done+
+      archived plan is no longer applicable. `check_finalize_plan_coverage.py` re-verified at 0 violations. No baseline
+      bump needed.
 
 ## Progress Log
 
