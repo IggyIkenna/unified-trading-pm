@@ -128,16 +128,17 @@ workspace).
 > until the operator activates it. That is an activation decision, not a reason to reclassify this doc (which would
 > create a second, competing dispatch path for the same read-only diff); see this run's report for the parked item.
 
-- [ ] [DATA] P1. **MIGRATED 2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (never shipped)**
-      — **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Extend the archived
-      migration plan's 5-day sample to every day the existing Phase-1 scope-audit output
-      (`_index/audit/bybit_futures_chain_shape_scope_2026_07_13.parquet`, `market-tick-data-service@5e367479`)
-      classified `bare_flat_only`/`bundled_flat_only`/`mixed` — row-level diff each bare_flat/bundled_flat object
-      against its hive/canonical counterpart using the same columns Phase 1 Todo 2 used, and write a per-day
-      duplicate-verdict audit parquet. Read-only verification only — does NOT delete anything (the actual cleanup stays
-      BLOCKED-OPERATOR-DECISION). Repo: market-tick-data-service. **Done when**: a new audit parquet gives a per-day
-      duplicate/not-duplicate verdict for every day the Phase-1 scope audit classified
-      bare_flat_only/bundled_flat_only/mixed, closing the "sample-based, not exhaustive" caveat.
+- [x] ✅ [DATA] P1. **MIGRATED 2026-07-30 — DONE 2026-08-06, `market-tick-data-service@1a32b6e7`.** Full-scope duplicate
+      verification completed across all 546 scope days (2023-04-05 → 2025-09-23), processing 1,114 flat objects (408
+      mixed / 97 bare_flat_only / 41 bundled_flat_only). **Results** — 490 duplicate (44%; flat rows ⊆ hive counterpart;
+      safe to supersede once hive verified present), 290 not_duplicate (26%; flat has rows NOT in hive counterpart;
+      unique data at risk), 334 no_counterpart (30%; no same-day hive counterpart exists anywhere; flat is the ONLY copy
+      — deleting it would lose data permanently). The original 5-day sample's "all duplicates" conclusion was a sampling
+      artifact: the full scope reveals 56% of shape-2 objects carry unique or orphan data. Audit parquet:
+      `gs://.../_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet` (1,114 rows). Script
+      already shipped: `scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py` (`1a32b6e7`). The
+      "sample-based, not exhaustive" caveat is now closed. Read-only — no GCS objects modified. Actual cleanup of the
+      490 pure-duplicate objects stays BLOCKED-OPERATOR-DECISION per the original scope.
 
 ## Progress Log
 
@@ -185,3 +186,10 @@ workspace).
   `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1, which remains `status: draft` (unactivated 6+ days,
   confirmed via today's `ag_closeout_audit_cefi_parked_2026_08_06.md`). Nothing to fix; revisit only if batch4 stalls
   without ever activating.
+- **DONE 2026-08-06 (slot 13, `data_engineering`, `cefi_satellite_ao_dispatch_batch4-001`)** — full-scope duplicate
+  verification completed. `market-tick-data-service/scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py`
+  (`1a32b6e7`, already shipped) run across all 546 scope days (2023-04-05 → 2025-09-23), 1,114 flat objects. Results:
+  490 duplicate (44%), 290 not_duplicate (26%), 334 no_counterpart (30%). The 5-day sample's "all duplicates" was
+  misleading — 56% of shape-2 objects have unique/orphan data. Audit parquet written to
+  `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet`. P1 checkbox flipped above; the
+  "sample-based, not exhaustive" caveat is closed.

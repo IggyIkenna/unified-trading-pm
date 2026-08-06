@@ -83,14 +83,13 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Migrated
-      2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (batch1's one undone todo out of 33,
-      folded back into the source doc rather than left to evaporate in the archived batch). Run the row-level diff of
-      `bare_flat`/`bundled_flat` objects vs their hive counterparts across every day classified
-      `bare_flat_only`/`bundled_flat_only`/`mixed` in the Phase-1 scope-audit parquet (the archived predecessor plan
-      only sampled 5 days). Read-only verification, no writes. Source:
-      `issues/bybit_futures_chain_write_shape_2026_07_13.md`. **Done when**: the full-scope diff completes, results are
-      recorded in the source doc, and its open P1 todo is flipped citing this run.
+- [x] ✅ [SCRIPT] P1. **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope — DONE
+      `market-tick-data-service@1a32b6e7`.** Full-scope audit run 2026-08-06 (slot 13) across all 546 scope days
+      (2023-04-05 → 2025-09-23), 1,114 flat objects. Results: 490 duplicate (44%), 290 not_duplicate (26%), 334
+      no_counterpart (30%). Audit parquet:
+      `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet`. Source doc
+      `issues/bybit_futures_chain_write_shape_2026_07_13.md` P1 flipped, Progress Log updated. The 5-day sample's "all
+      duplicates" was a sampling artifact; 56% of shape-2 objects carry unique/orphan data.
 
 - [ ] [DATA] P2. **Re-check ASTER + spot-check 2 other venues for post-relaunch live data landing.** Run the cited
       `gcloud storage ls gs://market-data-tick-cefi-prd-central-element-323112/pipeline_mode=live_aster/...` check for
