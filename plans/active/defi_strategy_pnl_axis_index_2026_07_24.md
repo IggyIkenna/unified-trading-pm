@@ -47,6 +47,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 assigned_role: data_engineering
 drift_direction: none
+archive_exempt: true
 locked_by:
 locked_since:
 supersedes:
@@ -157,3 +158,8 @@ independently-startable item any session can pick up without waiting on the phas
   doc's own text had not been updated to reflect it. Flipped `[x]` with citation; doc has zero remaining open scope
   (index/entry-point doc, `assigned_vm` unchanged).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: `archive_exempt: true` — this is an
+  index/entry-point doc (`nature: process`) serving as a standing reference hub for the DeFi strategy/PnL/backtest
+  engine axis. All 1/1 native checkboxes are done; the doc's purpose is to aggregate pointers to the strategy-service
+  track's source docs, not to carry its own executable work. Archiving it would orphan the entry-point reference for the
+  strategy/PnL axis.

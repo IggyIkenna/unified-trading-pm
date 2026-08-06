@@ -384,5 +384,5 @@ progress + STOPPED/FAILED at exit; events stream to
   [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
 - **`classify_venue_error()` unclassified-default retry_safe convention + QG lint (STEP 5.104) — plan + parent
   incident**:
-  [`plans/active/mtds_retry_safe_default_audit_2026_07_14.md`](../../plans/active/mtds_retry_safe_default_audit_2026_07_14.md),
+  [`plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md`](../../plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md),
   [`plans/active/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`](../../plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md)

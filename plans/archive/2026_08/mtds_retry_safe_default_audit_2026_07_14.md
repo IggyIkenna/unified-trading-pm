@@ -11,7 +11,7 @@ summary:
   fail-fast). What remains is pinning the convention so it cannot silently regress — a QG lint banning the `else True`
   fallback idiom (repo is at 2 deliberate residual sites, see body), a decision on those 2 residual transient-path
   sites, and the codex SSOT update documenting the convention in shard-level-failure-isolation.md.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /plans/archive/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
   ]
 created: 2026-07-14
-last_updated: 2026-07-14
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -180,3 +180,11 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
   already archived + resolved, `resolved_by:` populated with all 4 fix shas. The batch1b plan's `[BACKEND] P3` todo is
   being flipped simultaneously with this commit.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: Archived per the standard 6-step ritual. All
+  5/5 checkboxes were already done (completed by slot 16 on 2026-08-04). `status: active → complete`,
+  `last_updated: 2026-08-06`, all 10 corpus referrers (codex, epics, INDEX.md, 7 active plans) repointed to archive
+  path.
+
+> **ARCHIVED 2026-08-06** — post-audit remainder plan for the MTDS `retry_safe` convention. All 5 todos completed by
+> `market-tick-data-service@0041a8a6` + `unified-trading-pm@4d3713ade`; the fleet-wide STEP 5.104 lint in
+> `base-service.sh` is the durable pin. superseded_by: N/A (self-contained, work complete).

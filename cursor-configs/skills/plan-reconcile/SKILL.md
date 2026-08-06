@@ -289,14 +289,14 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
    rule/invariant/formula, re-derived against an example or formula the same doc shows elsewhere, must not contradict it
    or itself mid-sentence.
 8. **Hedge-pointer / stale-candidate hunter** — added 2026-08-03 after a real todo
-   (`data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3) named 3 "candidates found by grep" for 4 follow-up
-   items — only 1 of the 3 was a real owner, and 2 of the 4 items were actually owned by an entirely different, unlisted
-   doc found only by a fresh corpus-wide grep. Grep the corpus for hedge language a doc's own prose/todos use in place
-   of a confirmed reference — "candidates found by grep", "likely owned by", "probably tracked in", "TBD which doc
-   covers this", "not yet identified" — and treat every hit as an unverified claim, same bar as hunter 4's plan↔codex
-   drift: grep-then-READ every named candidate, confirm whether it actually owns/tracks the claim, and (per this
-   workspace's grep-then-conclude ban) don't stop at the named candidates — a fresh corpus grep for the item's real
-   owner is required before concluding "not yet identified" is still accurate. Mirrors
+   (`../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3) named 3 "candidates found by
+   grep" for 4 follow-up items — only 1 of the 3 was a real owner, and 2 of the 4 items were actually owned by an
+   entirely different, unlisted doc found only by a fresh corpus-wide grep. Grep the corpus for hedge language a doc's
+   own prose/todos use in place of a confirmed reference — "candidates found by grep", "likely owned by", "probably
+   tracked in", "TBD which doc covers this", "not yet identified" — and treat every hit as an unverified claim, same bar
+   as hunter 4's plan↔codex drift: grep-then-READ every named candidate, confirm whether it actually owns/tracks the
+   claim, and (per this workspace's grep-then-conclude ban) don't stop at the named candidates — a fresh corpus grep for
+   the item's real owner is required before concluding "not yet identified" is still accurate. Mirrors
    `cursor-configs/skills/context-scout/SKILL.md` Phase 1 step 4, which does the identical verification but can only
    ever update `context_scope` — it is this skill's job (not context-scout's) to actually rewrite the doc's own hedge
    prose once a candidate is confirmed right, wrong, or replaced by a different real owner. If a confirmed owner's todo

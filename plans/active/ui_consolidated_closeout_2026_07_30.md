@@ -84,7 +84,7 @@ context_scope:
 **Sources**:
 [data_status_tab_and_downloads_remediation_2026_06_16.md](/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md)
 (data-status tab UI bugs + instruments CSV download regressions, gated on v9 manifest migration) ·
-[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
 (honest-coverage fix shipped + P2-P8 UX/canonicalisation follow-ups) ·
 [data_status_catalogue_true_source_phase2_2026_07_24.md](/plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md)
 (Phase 2 true-catalogue/expected-universe source for the catalogue explorer) ·

@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for watchdog_kill_events_deployment_observability_2026_08_05.md — machine-held via depends_on +
   gate_on_depends: true until all its todos are done. Reconciles the source plan's checkboxes, re-checks the Deferred
   item, and archives the plan via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -18,7 +18,7 @@ related:
     /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md,
   ]
 created: "2026-08-05"
-last_updated: "2026-08-05"
+last_updated: "2026-08-06"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -71,3 +71,11 @@ Machine-held (`depends_on` + `gate_on_depends: true`) until every todo in
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged. No Progress Log section
   exists in this doc; appended as the final line per the skill's no-Progress-Log fallback.
+- **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: Archived per the standard 6-step ritual. All
+  3/3 checkboxes were already done; source plan already archived at
+  `plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md`. `status: active → complete`,
+  `last_updated: 2026-08-06`, all 2 corpus referrers (INDEX.md + issue doc) repointed to archive path.
+
+> **ARCHIVED 2026-08-06** — this finalize plan completed its gated closeout of
+> `watchdog_kill_events_deployment_observability_2026_08_05.md`. All 3 checkboxes verified done; source plan already
+> resides in `plans/archive/2026_08/`. superseded_by: N/A (finalize plan, not superseded).

@@ -9,7 +9,7 @@ summary:
   browser + instrument-type canonicalisation (SPOT_ASSET already exists in UAC) + drilldown de-duplication + catalogue
   explorer + cefi chain-axis drift + sports league-drilldown consistency. Each point carries a self-contained design
   guide; operator decisions are all resolved.
-status: active
+status: complete
 nature: process
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; title/summary are the
@@ -38,7 +38,7 @@ related:
     /plans/archive/2026_07/data_status_page_ux_and_canonicalisation_history_2026_07_24.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-24
+last_updated: "2026-08-06"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -626,3 +626,13 @@ safely-completable work. Terminal state:
   `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` (already `assigned_vm: planning`,
   operator-ruled 2026-08-06 to run only via that plan's own AO workers, not an interactive/one-shot session) — deferring
   to that plan rather than racing it.
+- **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: Archived per the standard 6-step ritual. All
+  3/3 checkboxes were already done — every P1-P10 point shipped or deduped to other plans. `status: active → complete`,
+  `last_updated: 2026-08-06`, all 16 corpus referrers (2 skills, 1 epic, 10 active plans, 3 issue docs) repointed to
+  archive path.
+
+> **ARCHIVED 2026-08-06** — human/local plan for the data-status page honest-coverage fix + UX & canonicalisation
+> follow-ups. All P1-P10 work shipped (full evidence in
+> `/plans/archive/2026_07/data_status_page_ux_and_canonicalisation_history_2026_07_24.md`). The one remaining finding
+> (`InstrumentRecord extra='forbid'`) is deduped to `instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
+> superseded_by: N/A (self-contained, all work complete).

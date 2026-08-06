@@ -97,12 +97,13 @@ context_scope:
       proper banners — e2e doc at `/plans/archive/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`
       (clean banner, `status: resolved`); mtds_perp doc at
       `/plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md` (archived per commit bec54efeb, banner "🟢
-      RESOLVED 2026-07-14"). Formal `related:` corpus referrers fixed: `mtds_retry_safe_default_audit_2026_07_14.md` and
-      `defi_consolidated_closeout_2026_07_18.md` both updated from `issues/...` to
-      `/plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`. e2e doc already correctly referenced in
-      `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` as `/plans/archive/issues/...`. (2) Retag NOT done —
-      batch2 finalize's `[DOC] P2` todo still `- [ ]` (`defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md`);
-      handed off — batch2 finalize owns it, no duplicate todo authored here.
+      RESOLVED 2026-07-14"). Formal `related:` corpus referrers fixed:
+      `../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md` and `defi_consolidated_closeout_2026_07_18.md`
+      both updated from `issues/...` to `/plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`. e2e doc
+      already correctly referenced in `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` as
+      `/plans/archive/issues/...`. (2) Retag NOT done — batch2 finalize's `[DOC] P2` todo still `- [ ]`
+      (`defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md`); handed off — batch2 finalize owns it, no duplicate
+      todo authored here.
 - [x] ✅ [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch3_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have resolved or re-confirmed all of them — verify none silently vanish) → add the archive banner → run the

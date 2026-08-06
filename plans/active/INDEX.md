@@ -653,9 +653,9 @@ by hand._
 - [`mtds_file_size_refactor_2026_06_08`](./mtds_file_size_refactor_2026_06_08.md) — MTDS/MDPS tech-debt plan — split 15
   pre-existing >900-line source files, apply pandas-to-polars adapter seam, and clear QG residuals after per-AG data
   migrations complete. Resumed 2026-07-27 (operator directive, interactive operator-gate…
-- [`mtds_retry_safe_default_audit_2026_07_14`](./mtds_retry_safe_default_audit_2026_07_14.md) — Follow-up to
-  issues/mtds_perp_funding_backfill_hang_2026_07_14.md. The ~70-site audit this plan was originally sized for completed
-  concurrently while it was being authored — market-tick-data-service@f82f29c1 (slot-8) classified all 70…
+- [`mtds_retry_safe_default_audit_2026_07_14`](../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md) —
+  Follow-up to issues/mtds_perp_funding_backfill_hang_2026_07_14.md. The ~70-site audit this plan was originally sized
+  for completed concurrently while it was being authored — market-tick-data-service@f82f29c1 (slot-8) classified all 70…
 - [`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`](./mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md)
   — Split 3 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). Carries the venue-onboarding + operational-hardening workstreams that accumulated inline in the
@@ -885,7 +885,7 @@ by hand._
   Measure wall-clock + per-phase timing of `quality-gates.sh` (across its mode/scope flags) and `quickmerge.sh` on
   unified-trading-pm — first a single-agent baseline on this host, then the same measurements on the planning-vm where
   ~15…
-- [`watchdog_kill_events_deployment_observability_2026_08_05_finalize`](./watchdog_kill_events_deployment_observability_2026_08_05_finalize.md)
+- [`watchdog_kill_events_deployment_observability_2026_08_05_finalize`](../archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05_finalize.md)
   — Gated closeout for watchdog_kill_events_deployment_observability_2026_08_05.md — machine-held via depends_on +
   gate_on_depends: true until all its todos are done. Reconciles the source plan's checkboxes, re-checks the Deferred
   item, and…

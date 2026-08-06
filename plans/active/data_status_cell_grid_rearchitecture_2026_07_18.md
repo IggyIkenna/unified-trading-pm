@@ -19,7 +19,7 @@ tags: [data-status, deployment-api, cell-grid, oom, performance, precompute]
 related:
   [
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
-    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-18
@@ -43,7 +43,7 @@ context_scope:
     /codex/05-infrastructure/deployment-observability.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
     /plans/archive/2026_07/mtds_data_status_page_parity_2026_07_21.md,
     deployment-api/deployment_api/services/data_status/live_build_guard.py,
   ]

@@ -125,11 +125,16 @@ checkbox signal alone, but confirming it actually IS requires reading:
       (it drifts with ongoing AO churn — do not reuse this doc's snapshot list without refreshing it first) — DONE
       2026-08-06 (slot-10): fresh run against LDR HEAD `6c3c14cb8` reports **121 live candidates** (116 issue docs + 5
       active plans); snapshot + deltas recorded in the Progress Log below.
-- [ ] [DOC] P1. For each of the 6 active-plan candidates: read the full doc, confirm genuine completion (not just
-      checkbox count), then EITHER archive it via the standard 6-step ritual
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — `git mv` to `plans/archive/<YYYY_MM>/`,
-      flip `status` to a terminal value, fix every corpus referrer — OR set `archive_exempt: true` with a one-line
-      Progress Log justification if it's a genuine standing-reference hub.
+- [x] ✅ [DOC] P1. For each of the ~~6~~ **5** active-plan candidates (refreshed count per slot-10's Todo 2 re-run):
+      read the full doc, confirmed genuine completion, then acted: - **Archived** (3):
+      `data_status_page_ux_and_canonicalisation_2026_07_16.md` (3/3 done, all P1-P10 shipped/deduped),
+      `mtds_retry_safe_default_audit_2026_07_14.md` (5/5 done, fleet-wide STEP 5.104 is the durable pin),
+      `watchdog_kill_events_deployment_observability_2026_08_05_finalize.md` (3/3 done, source already archived) — all 3
+      `git mv`→`plans/archive/2026_08/`, `status→complete`, 28 total corpus referrers fixed. -
+      **`archive_exempt: true`** (2): `defi_strategy_pnl_axis_index_2026_07_24.md` (index/entry-point hub for
+      strategy/PnL/backtest axis, 1/1 done), `tradfi_consolidated_closeout_2026_07_18.md` (umbrella coordination index
+      with 3 active child plans, 2/2 done, "Aggregated source docs" digest actively maintained). —
+      unified-trading-pm@<sha> (slot 9, review, 2026-08-06)
 - [ ] [DOC] P1. For the ~110 issue-doc candidates: batch them into reviewable chunks (e.g. by `asset_group`, mirroring
       `/ag-closeout-audit`'s tranche split) and, per doc, confirm genuine completion then archive (flip `status` to
       `resolved`/`false-positive`/`superseded` + `git mv` to `plans/archive/issues/` + fix referrers) or apply

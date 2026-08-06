@@ -96,18 +96,18 @@ read only once grep shows most of the doc is actually relevant):
    grep-then-READ every named candidate and confirm whether it actually owns/tracks the claim (real incident: a plan's
    own todo named 3 grep candidates for 4 follow-up items — only 1 of the 3 was a real owner, and 2 of the 4 items were
    actually owned by an entirely different, unlisted doc found only by a fresh corpus-wide grep, per
-   `data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3, 2026-08-03). Any CONFIRMED owner goes straight into
-   `context_scope` — even though the doc's own hedge was never resolved, a future worker should get the verified doc,
-   not redo the grep. Any candidate that turns out NOT to own the claim, or a hedge that resolves to "no doc found," is
-   surfaced in the Phase 3 report as a stale-candidate-pointer finding — **do not rewrite the doc's own todo/body prose
-   to fix it**; that correction is `/plan-reconcile`'s job (this skill only ever writes `context_scope` + the dated
-   marker, per its scope boundary above). 4a. **Cross-reference by evidence fingerprint, not just topic** — for a doc
-   whose "Evidence"/findings section quotes a distinctive literal (an exact error code, an HTTP header value, a
-   secret/resource name, a VM name, a byte-identical log line), grep the rest of `plans/active/` (and `.../issues/`) for
-   that EXACT string before finalizing `context_scope`. Two docs independently recording the same distinctive
-   fingerprint is strong evidence they're investigating the SAME underlying incident, even when their titles/topics look
-   unrelated (real incident: `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`'s original scout
-   pass — 4 entries, all topically about the live connector — never surfaced
+   `../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3, 2026-08-03). Any CONFIRMED owner
+   goes straight into `context_scope` — even though the doc's own hedge was never resolved, a future worker should get
+   the verified doc, not redo the grep. Any candidate that turns out NOT to own the claim, or a hedge that resolves to
+   "no doc found," is surfaced in the Phase 3 report as a stale-candidate-pointer finding — **do not rewrite the doc's
+   own todo/body prose to fix it**; that correction is `/plan-reconcile`'s job (this skill only ever writes
+   `context_scope` + the dated marker, per its scope boundary above). 4a. **Cross-reference by evidence fingerprint, not
+   just topic** — for a doc whose "Evidence"/findings section quotes a distinctive literal (an exact error code, an HTTP
+   header value, a secret/resource name, a VM name, a byte-identical log line), grep the rest of `plans/active/` (and
+   `.../issues/`) for that EXACT string before finalizing `context_scope`. Two docs independently recording the same
+   distinctive fingerprint is strong evidence they're investigating the SAME underlying incident, even when their
+   titles/topics look unrelated (real incident: `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`'s
+   original scout pass — 4 entries, all topically about the live connector — never surfaced
    `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, which had independently recorded the identical
    `x-requests-remaining: -772`/`x-requests-used: 5000772` evidence a day earlier and already contained the full
    root-cause forensic trail; a worker who later got only the shallow scope had to redo ~215k tokens of fleet-wide
