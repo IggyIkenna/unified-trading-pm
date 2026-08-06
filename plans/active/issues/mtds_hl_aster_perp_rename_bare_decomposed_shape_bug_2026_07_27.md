@@ -246,3 +246,4 @@ sibling todo reads `[x]`.
 - **slot-3 investigation 2026-08-05**: Traced the full HL/ASTER batch write path from adapters → `write_chunk` →
   `_normalize_cefi_instrument_id_column` → `_resolve_file_symbol` → GCS filename. Adapters still stamp bare symbols;
   wire-map normalization is the only defense and it fails open. Filed fix todo 6.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

@@ -301,3 +301,6 @@ objects and every one is a genuine 0-row write, not a row_count>0 capture.**
   genuinely not-yet-built — no action needed beyond this note. If/when ml-service graduates to persisting predictions,
   the `get_writer("ml_predictions", ...)` scaffold is already in place and just needs to be passed into the handler
   instead of discarded.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged. All 4 todos are now closed
+  (0 open checkboxes) — a completion-candidate for a future archival pass, not this skill's scope.

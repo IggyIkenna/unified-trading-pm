@@ -150,3 +150,4 @@ an image for something that should not run again.
   on an unresolved scoping/judgment call ("still-relevant vs dead/superseded... a scoping/judgment call, not
   determinable by this investigation alone"); the second todo is conditional on that decision. Not worker-determinable.
 - **context-scout 2026-08-03**: populated context_scope (4 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

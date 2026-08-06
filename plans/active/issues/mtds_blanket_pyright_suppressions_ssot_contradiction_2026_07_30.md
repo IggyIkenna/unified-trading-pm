@@ -198,3 +198,4 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   underlying type errors are actually fixed"). Ratchet count back to 237; full MTDS QG re-gate pending. This is the
   first evidence the freeze-and-shrink ratchet (todo 2) actively catches net-new suppressions even when the
   mirror-the-dominant-convention instinct produces one — relevant context for the operator's open todo-3 policy call.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

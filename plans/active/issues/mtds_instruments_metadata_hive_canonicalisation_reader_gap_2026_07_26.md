@@ -358,3 +358,4 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   `test_rule11_per_ag_shard_counts_byte_unchanged` DEFI expected count 2856→2958 and removed unneeded blanket pyright
   suppression header from `lending_rewards_handler.py`. Smoke-fetch verification deferred to next capture cycle per todo
   9(b-c).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

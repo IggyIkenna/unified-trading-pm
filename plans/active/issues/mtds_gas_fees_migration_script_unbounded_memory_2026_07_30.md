@@ -220,3 +220,4 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
   both remaining open items are self-flagged, undecided design forks (ManifestWriter safety-check warn-vs-refuse choice;
   per-slot RSS ceiling explicitly out of scope to design here). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -602,3 +602,5 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — all 4 open todos remain
   judgment/design/blocked investigative work into an unresolved native-memory OOM root cause across CEFI/sports MTDS
   backfills, not worker-determinable facts.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

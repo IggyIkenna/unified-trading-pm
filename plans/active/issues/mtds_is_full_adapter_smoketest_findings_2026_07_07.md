@@ -665,3 +665,4 @@ the todos already promised.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped the archived lending-split doc for
   `fluid_adapter.py`, the actual target file of the largest remaining open todo (FLUID's ~18-month pre-resolver coverage
   gap).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

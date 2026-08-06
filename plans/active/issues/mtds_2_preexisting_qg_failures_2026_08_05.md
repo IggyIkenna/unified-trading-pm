@@ -27,6 +27,12 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md,
+    market-tick-data-service/tests/unit/test_collect_handler_schema.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py,
+  ]
 ---
 
 # 2 pre-existing QG test failures block MTDS quickmerge
@@ -64,3 +70,8 @@ pre-existing failures prevent ANY unrelated code change (including the both-legs
 **2026-08-05 (slot-2, data_engineering)** — discovered while trying to ship both-legs-varying dedup rule extension.
 Confirmed pre-existing via isolated re-run of both failing tests. Filing this issue doc + declaring qg_red repo-blocker
 so the backend owns the resolution signal.
+
+- **context-scout 2026-08-06**: populated context_scope (3 entries — the originating doc that hit this repo-blocker,
+  plus the two real fix-target files: `test_collect_handler_schema.py` (owns `_CLI_OP_TO_MODULE`, todo 1's target) and
+  `sentinels.py` (owns the Polymarket per-data-type sentinel via `is_per_instrument_shard_data_type`, todo 2's target)).
+  Both todos are already closed (0 open checkboxes).
