@@ -219,3 +219,5 @@ team_ids (0/1/2 per row). Ties on canonical count stay undecidable. Added diagno
 `market-tick-data-service@18f635ea` but cannot quickmerge-ship until pre-existing QG red resolves (repo-blocker
 RB-04b8981e, 2 unrelated test failures: lending CLI module + Polymarket sentinel). Filed issue doc
 `/plans/active/issues/mtds_2_preexisting_qg_failures_2026_08_05.md` + declared blocker.
+
+**context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

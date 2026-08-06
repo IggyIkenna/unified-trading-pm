@@ -266,3 +266,4 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   hang, daemon silent startup crash) — GCS EXIT_STATUS still lands in both cases, Pub/Sub event lost but separately
   observable via missing heartbeats. No code change needed — the suspected gap does not exist. All 5 todos in this issue
   doc are now done; plan is eligible for archival.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

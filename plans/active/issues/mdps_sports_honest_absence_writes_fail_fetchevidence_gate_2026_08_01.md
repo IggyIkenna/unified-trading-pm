@@ -410,3 +410,5 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries — added `candle_write_mixin.py` (Finding 5's
   root-cause file, open `[CODE] P2` todo) and `batch_workers.py` (Findings 3/4's `_collect_future_result` crash-hunt,
   open `[DIAG]` todos); the original 4 entries (Finding 2's FetchEvidence-gate call sites) remain accurate and kept.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

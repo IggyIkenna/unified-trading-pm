@@ -41,7 +41,8 @@ locked_by:
 locked_since:
 context_scope:
   [
-    market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/core/live_workers.py,
+    market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py,
     market-data-processing-service/market_data_processing_service/app/calculators/fast_candle_aggregation.py,
     market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
   ]
@@ -161,3 +162,6 @@ genuine defect — hence P3, not P1 like todo 1.
      `read_row_groups()` filtered by row-group statistics on the `data_type` column. This loads ONLY the row groups
      containing the target data_type, never materializing book_snapshot_5/trades data into memory. Alternatively,
      restructure MTDS to write separate files per data_type so MDPS never needs to filter post-load.
+- **context-scout 2026-08-06**: re-scouted; the 2026-08-05 root-cause analysis pinpointed the actual defect to
+  `live_workers.py`'s `_read_tick_data` (not `derivative_adapter.py`, the prior list's pick) plus a secondary
+  contributor in `orchestration_scanner.py` — swapped `derivative_adapter.py` out for those two, now 4 entries.

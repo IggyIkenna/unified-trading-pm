@@ -206,32 +206,32 @@ leakage-sensitive, and looks safely AO-eligible on its own. Finding 3 is a small
       (`GCP_PROJECT_ID=central-element-323112`, bucket `features-sports-prd-*`). Three findings:
 
       **1. 758 fixtures / 13 dates is the CORRECT current count.** Live `_query_sports_features` (the shared code path
-                  all three loaders ultimately call) returns exactly 758 fixtures x 956 features across 13 dates for 2026-04-01..17.
-                  The 4 dropped dates are 04-03, 04-04, 04-10, 04-11 — each has ONLY `odds_features` (day-level parquet,
-                  `last_modified=2026-07-19`) with NO `derived_features`, NO entity-state groups, NO sibling frame carrying
-                  `{fixture_id, home_team_id, away_team_id}`. The join-key resolution (`_resolve_odds_join_keys`) correctly logs
-                  `no sibling frame ... groups ['odds_features'] stay event_id-keyed and will not merge`, and
-                  `_merge_sports_groups_for_date` correctly drops them (no `fixture_id` column). The per-date derived_features
-                  fixture counts sum to exactly 758: 24+24+127+122+39+33+26+173+29+33+28+24+76 = 758. Every fixture in the merged
-                  result originates from `derived_features`; `odds_features` contributes columns only (via the event_id→fixture_id
-                  crosswalk), never rows.
+                          all three loaders ultimately call) returns exactly 758 fixtures x 956 features across 13 dates for 2026-04-01..17.
+                          The 4 dropped dates are 04-03, 04-04, 04-10, 04-11 — each has ONLY `odds_features` (day-level parquet,
+                          `last_modified=2026-07-19`) with NO `derived_features`, NO entity-state groups, NO sibling frame carrying
+                          `{fixture_id, home_team_id, away_team_id}`. The join-key resolution (`_resolve_odds_join_keys`) correctly logs
+                          `no sibling frame ... groups ['odds_features'] stay event_id-keyed and will not merge`, and
+                          `_merge_sports_groups_for_date` correctly drops them (no `fixture_id` column). The per-date derived_features
+                          fixture counts sum to exactly 758: 24+24+127+122+39+33+26+173+29+33+28+24+76 = 758. Every fixture in the merged
+                          result originates from `derived_features`; `odds_features` contributes columns only (via the event_id→fixture_id
+                          crosswalk), never rows.
 
-                  **2. The 2,383 fixtures / 17 dates (07-26) is NOT reproducible today — producer-side data regression.** The
-                  `odds_features` blobs were last modified 2026-07-19, one week before the 2,383 report. Between 07-26 and 08-03,
-                  the sports features data was regenerated/reprocessed: the 4 dates above lost `derived_features` entirely, and
-                  per-date league/fixture counts are substantially lower now (~54 fixtures/date vs the ~140/date implied by
-                  2,383/17). The entity state groups (`team_state`, `player_state`, `lineup_state`, `manager_state`,
-                  `transition_state`, `validity_state`) are defined in `SPORTS_FEATURE_GROUPS` but have ZERO GCS data for ANY date
-                  in this window — they are effectively dead feature groups. This is a **producer-side data regression**, not a
-                  code bug. The loading code (`_query_sports_features` → `_resolve_odds_join_keys` →
-                  `_merge_sports_groups_for_date`) is working correctly; the data changed underneath.
+                          **2. The 2,383 fixtures / 17 dates (07-26) is NOT reproducible today — producer-side data regression.** The
+                          `odds_features` blobs were last modified 2026-07-19, one week before the 2,383 report. Between 07-26 and 08-03,
+                          the sports features data was regenerated/reprocessed: the 4 dates above lost `derived_features` entirely, and
+                          per-date league/fixture counts are substantially lower now (~54 fixtures/date vs the ~140/date implied by
+                          2,383/17). The entity state groups (`team_state`, `player_state`, `lineup_state`, `manager_state`,
+                          `transition_state`, `validity_state`) are defined in `SPORTS_FEATURE_GROUPS` but have ZERO GCS data for ANY date
+                          in this window — they are effectively dead feature groups. This is a **producer-side data regression**, not a
+                          code bug. The loading code (`_query_sports_features` → `_resolve_odds_join_keys` →
+                          `_merge_sports_groups_for_date`) is working correctly; the data changed underneath.
 
-                  **3. TrainingOrchestrator's 597/9 is a downstream target-generation filter, not a separate loading path.**
-                  `_query_sports_features` → 758/13 (same as PipelineHandler). `build_legacy_sports_target` then calls
-                  `CLVTargetGenerator.generate()` and drops rows where the target is NaN (`valid_mask = targets.notna()`), reducing
-                  758→597 fixtures and 13→9 dates. The three "different" counts are: (a) 2,383 = 07-26 data state, (b) 758 =
-                  current `_query_sports_features` output, (c) 597 = 758 minus NaN-CLV-target fixtures. All consistent with a
-                  single shared loader and a single data regression. (repo: ml-service)
+                          **3. TrainingOrchestrator's 597/9 is a downstream target-generation filter, not a separate loading path.**
+                          `_query_sports_features` → 758/13 (same as PipelineHandler). `build_legacy_sports_target` then calls
+                          `CLVTargetGenerator.generate()` and drops rows where the target is NaN (`valid_mask = targets.notna()`), reducing
+                          758→597 fixtures and 13→9 dates. The three "different" counts are: (a) 2,383 = 07-26 data state, (b) 758 =
+                          current `_query_sports_features` output, (c) 597 = 758 minus NaN-CLV-target fixtures. All consistent with a
+                          single shared loader and a single data regression. (repo: ml-service)
 
 ### New findings this session (slot-3, 2026-08-03) — Findings 1+2 fixed the target-generation gap; getting from
 
@@ -357,3 +357,6 @@ if not in its originally-literal command text.
   flags, not ml-service's training-arg wiring). No finalize-plan companion authored — `doc_type: issue`, structurally
   exempt per `task_template.md`'s finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
   `plans/active/*.md`).
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. All todos are now closed
+  (0 open checkboxes) — a completion-candidate for a future archival pass, not this skill's scope.

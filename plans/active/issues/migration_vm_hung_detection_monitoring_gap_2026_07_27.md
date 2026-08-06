@@ -557,3 +557,6 @@ resolution); todo 5's audit deliverable is complete but its own follow-up tracki
   `deployment-api/.../routes/deployments_inventory.py`, which has since been refactored from a single file into a
   package (`deployments_inventory/__init__.py` + `_classification.py` + `_aggregation.py` + ...); repointed to the
   directory. The other 4 entries were unchanged/still accurate).
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. All todos now closed (todo
+  7 landed 2026-08-04); doc is a completion-candidate for a future archival pass, not this skill's scope.

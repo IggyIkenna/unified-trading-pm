@@ -211,3 +211,4 @@ not another blind resource-scaling guess — see the P1 todo below.
 ## Progress Log
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

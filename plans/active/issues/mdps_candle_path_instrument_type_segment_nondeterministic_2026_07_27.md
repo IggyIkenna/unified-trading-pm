@@ -121,3 +121,5 @@ here.
   which always includes the `instrument_type=` segment (UTL `registry.py:324-362` → `_candle_prefix` appends it when
   `instrument_type is not None`, i.e. always for the public API). The migration script will converge the two objects
   onto the canonical path. No code fix needed for MDPS — the write path is already correct and deterministic.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

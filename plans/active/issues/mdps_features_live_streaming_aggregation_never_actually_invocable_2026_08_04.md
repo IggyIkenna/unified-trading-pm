@@ -376,3 +376,5 @@ OOM if left running). The named successor is this issue doc's Todos below.
   `defi-delta-one-features-ready-sub`, `defi-cross-instrument-features-ready` to close the same gap proactively across
   all 3 asset groups. All resources in `central-element-323112` (prod) via `unified-trading-sa`. Zero-cost when idle —
   unblocks the next TradFi re-pilot on the Pub/Sub front.
+- **context-scout 2026-08-06**: populated context_scope (5 entries) — verified all 5 pre-existing frontmatter entries
+  resolve on disk; list still accurate against current doc content, no change made.

@@ -208,3 +208,11 @@ same CLI path would hit the identical wall.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added
   `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`, the doc directly explaining the "unresolved
   judgment call" the 2026-08-03 na-eligibility-audit entry above references.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. Note (not context_scope,
+  flagging only):
+  `/plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md` reports the
+  CLV retrain actually succeeded end-to-end (2026-08-03, via `--operation train --skip-dependency-check`, 3 GCS-verified
+  model artifacts) — this doc's own open `[ML] P2` todo 2 ("retrain the 3 CLV model variants") may already be satisfied
+  in substance by that separate doc's work; not verified in enough depth this pass to flip the checkbox myself (out of
+  this skill's scope).
