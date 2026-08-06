@@ -26,6 +26,13 @@ source:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    market-tick-data-service/tests/unit/test_collect_handler_schema.py,
+    market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py,
+    /plans/active/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md,
+    /plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
+  ]
 ---
 
 # MTDS — 2 pre-existing test failures blocking QG-green ship (2026-08-05)
@@ -83,3 +90,4 @@ Both are likely one-line fixes.
   - Also resolved a rebase conflict: upstream independently added `"collect-rewards": "eigenlayer_rewards_handler"` in
     `_CLI_OP_TO_MODULE`; consolidated to single mapping → `"lending_rewards_handler"` (the dedicated handler).
   - QG green, shipped via quickmerge at market-tick-data-service@ea9e6e1e.
+- **context-scout 2026-08-06**: populated context_scope (4 entries).

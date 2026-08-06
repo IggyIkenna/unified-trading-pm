@@ -158,3 +158,4 @@ guardrail was created to catch (3 prior real outages).
   called early in `main()` before any potentially-blocking work. 7 unit tests in
   `test_pipeline_e2e_check_post_completion_exit.py::TestWallClockTimeout`. QG: 9966 passed. All 3 todos now closed —
   issue doc is archival-eligible.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.

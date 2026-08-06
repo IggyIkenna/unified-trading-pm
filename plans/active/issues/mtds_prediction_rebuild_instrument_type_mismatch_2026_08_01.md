@@ -251,3 +251,4 @@ identically.
   `# type: ignore`-count ratchet, a false-positive matching a comment that merely MENTIONS the string in prose, not a
   real suppression — resolved on retry once whatever concurrent session caused it also resolved it, never touched by
   this change).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

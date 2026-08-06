@@ -35,6 +35,13 @@ related:
     /plans/archive/issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
+context_scope:
+  [
+    market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py,
+    market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /plans/archive/issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md,
+  ]
 ---
 
 # 15 of 16 `migrate_*_2026_07*.py` executors lack PROGRESS.json checkpoint
@@ -138,3 +145,4 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
 
 - [x] ✅ [DATA] P3. Slot 7 (2026-08-05): shipped `migrate_prediction_trades_legacy_bundle_2026_07_28.py` checkpoint
       (market-tick-data-service@ad9de1ac), raced with slot-4 (@9ba50aa0) — both landed; idempotent change.
+- **context-scout 2026-08-06**: populated context_scope (4 entries).

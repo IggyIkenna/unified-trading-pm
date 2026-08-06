@@ -186,3 +186,4 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   `scripts/dev/safe-doc-push.sh` directly for doc-only batches rather than raw `git commit`/quickmerge, pending that
   operator decision.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

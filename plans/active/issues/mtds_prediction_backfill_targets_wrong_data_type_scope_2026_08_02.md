@@ -191,3 +191,4 @@ whoever wants to close the loop.
   here; batch7 is the correct, already-vetted path to dispatch, pending only an operator/main-agent flip from `draft` to
   `active` (outside this audit's own mandate to perform). Doc stays NA (not because the work isn't AO-eligible — it is —
   but because a parallel, already-conflict-checked vehicle already owns it).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

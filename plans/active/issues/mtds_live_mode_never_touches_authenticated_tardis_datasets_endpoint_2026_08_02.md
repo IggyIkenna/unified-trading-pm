@@ -181,3 +181,4 @@ as this update.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid (first pass, no prior marker) — the
   sole remaining open item is an explicitly non-actionable standing tripwire for a hypothetical future connector change,
   not currently dispatchable work.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

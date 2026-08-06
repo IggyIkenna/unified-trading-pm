@@ -207,3 +207,4 @@ here — worth folding into whichever future pass touches `DataTypeCapability` f
   signature), confirmed to affect PROD identically (same credential); (3) `odds_horizon_bucket`'s MDPS ownership is
   confirmed via UAC `SOURCE_PRIORITY` — it should be excluded from MTDS's own force-fetch enumeration. Filed the
   vendor-credential ask as `[OPERATOR]` P2 and the enumeration-exclusion as a new `[DATA]` P3 code-fix todo.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

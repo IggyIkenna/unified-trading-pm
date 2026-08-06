@@ -136,3 +136,4 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   are still present unchanged in both adapters). Same shape as the sibling Polymarket dead-fixture finding: the doc's
   own "Recommended decision" section frames (A) delete vs (B) keep-and-document as a genuine judgment call, not
   auto-resolved. Doc stays NA.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

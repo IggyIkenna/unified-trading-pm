@@ -286,3 +286,4 @@ on `_index/per_vm/features-e2e-cefi-20260803-161807-38e1b8.parquet`).
   stays `active`, not archived.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `delta_one/config.py`
   (`DEFAULT_FEATURE_GROUPS`), the exact artifact the sole remaining open `[OPERATOR]` todo needs to weigh.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

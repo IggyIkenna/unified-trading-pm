@@ -119,3 +119,4 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
   `mtds_blanket_pyright_suppressions_ssot_contradiction_2026_07_30.md` as "cosmetically confusing... but functionally
   harmless"), which is very likely why quickmerge's re-gate treats this finding as fatal while the standalone script
   reports "ALL QUALITY GATES PASSED."
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

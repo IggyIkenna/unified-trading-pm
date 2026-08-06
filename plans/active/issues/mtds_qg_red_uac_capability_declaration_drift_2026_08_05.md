@@ -32,6 +32,15 @@ drift_direction: advance-docs
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    market-tick-data-service/tests/unit/test_collect_handler_schema.py,
+    market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py,
+    /plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
+    /plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+  ]
 ---
 
 # MTDS QG red from UAC capability-declaration drift
@@ -185,3 +194,5 @@ same UAC-churn class:
   present across all 102 venues, solend/marginfi already within the 102) and shipped the correcting comment at
   `market-tick-data-service@655c9320`. All three blockers from this issue are cleared; the staged iterrows fix shipped
   at `market-tick-data-service@5d428486` (see fred plan).
+
+- **context-scout 2026-08-06**: populated context_scope (6 entries).

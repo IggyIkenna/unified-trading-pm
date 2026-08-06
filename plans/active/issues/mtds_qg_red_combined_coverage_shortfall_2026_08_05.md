@@ -254,3 +254,4 @@ back RED. A clean-tree verification QG (slot-12's diff stashed, LDR HEAD) establ
   is actually touched — so the watch signal is **blob-change on the 2 target files at origin tip** (precision signal, no
   false fire on unrelated commits), NOT import-grep. On fire: re-gate (authoritative), then ship the 3 gas_fee files +
   flip P3 same-turn. Watcher recipe re-armed as `/tmp/watch_ratchet_fix2.sh`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
