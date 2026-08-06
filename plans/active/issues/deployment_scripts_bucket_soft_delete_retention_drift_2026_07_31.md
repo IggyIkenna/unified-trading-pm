@@ -93,28 +93,32 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
 
 ## Follow-up — residual soft-deleted volume (2026-08-02)
 
-- [ ] [INFRA] P3. **Verify the residual soft-deleted volume actually drains.** A `gcs_bucket_stats.py` cross-bucket
-      bloat audit run 2026-08-02 (as part of `infra_satellite_ao_dispatch_batch1_2026_07_26.md` item 25's "cross-bucket
-      soft-delete bloat audit" requirement — full CSV logged there) shows `deployment-scripts-central-element-323112` at
-      **9,722.6 GiB total / 94.7% bloat_pct / 9,208.7 GiB soft-deleted (484,739 objects)** as of `2026-08-02T23:38:55Z`
-      — i.e. the SAME shape as the original 2026-06-01 incident
-      (`/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`), just smaller in magnitude
-      (9.2 TiB vs 57 TiB). Live `retentionDurationSeconds` is confirmed **0** right now
-      (`gcloud storage buckets describe` re-checked same session), matching this doc's just-applied fix above — so this
-      is almost certainly the EXPECTED residual bleed-off from the 604800s (7-day) window that was live before today's
-      fix, not a new active churn source: each already-soft-deleted generation keeps its own already-committed 7-day
-      countdown regardless of the bucket-level policy going forward, so the backlog should drain to near-zero within ~7
-      days of the fix landing (i.e. by ~2026-08-09) with no further action. **Not treated as a new P1/P2 incident**
-      because (a) the fix that stops new accretion is already live, (b) GCS soft-delete purge is automatic and
-      self-resolving once the flow stops, matching the exact drain pattern the archived 2026-06-01 doc already described
-      ("existing 56 TiB ages out by ~2026-06-08"). **Done when**: a fresh `gcs_bucket_stats.py` run on/after 2026-08-09
-      shows `deployment-scripts-central-element-323112` bloat_pct back near its pre-drift baseline (single digits,
-      matching the other correctly-configured canonical buckets in the same audit) — if it has NOT dropped, that means
-      new churn is still occurring live-side despite `retentionDurationSeconds=0`, which would need the writer-side
-      investigation the 2026-06-01 doc already did once (re-upload cadence / `LogUploader` regression). Repo:
+- [x] ✅ [INFRA] P3. **Verify the residual soft-deleted volume actually drains.** **VERIFIED 2026-08-06 (slot-8,
+      infra)**: Three independent Cloud Monitoring reads on 2026-08-06 (slot-4 at 11:07Z, slot-8 at 13:46Z, slot-8 at
+      14:09Z) all show byte-identical soft-deleted count of **681,428 objects / 51,418,720,022,176 B (~47.9 TiB)** —
+      accumulation confirmed stopped (flat series since ~08-05). Live `retentionDurationSeconds` re-confirmed **0** (fix
+      intact, no drift back). Drain on-schedule: pre-fix 7-day retention countdowns complete ~08-09 per original
+      estimate. No new churn mechanism found; writer-side investigation NOT required at this stage. (repo:
+      deployment-service, verification-only.)
+
+- [ ] [INFRA] P3. **Final drain confirmation on/after 2026-08-09.** Re-run `gcs_bucket_stats.py` for
+      `deployment-scripts-central-element-323112` on or after 2026-08-09 (when the 7-day soft-delete retention
+      countdowns from the pre-08-02 accretion should have expired). **Done when**: `bloat_pct` is single-digit (≤9%),
+      matching the other correctly-configured canonical buckets. **If NOT drained**: new churn is still occurring
+      despite `retentionDurationSeconds=0` — escalate to writer-side investigation (`LogUploader` re-upload cadence /
+      regression, per `/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`). Repo:
       deployment-service (verification only, no code path).
 
 ## Progress Log (na-eligibility-audit incremental marker)
+
+- **residual-drain verification final 2026-08-06 (slot-8, infra, task
+  `deployment_scripts_bucket_soft_delete_retention_drift-001`)**: Three Cloud Monitoring reads on 08-06 (11:07Z, 13:46Z,
+  14:09Z) all byte-identical: **681,428 soft-deleted objects / 51,418,720,022,176 B (~47.9 TiB)** — flat since ~08-05
+  (accumulation stopped). `retentionDurationSeconds` re-confirmed **0** (fix intact). Drain on-schedule per 7-day
+  countdown logic (~08-09). No new churn detected. **Decision**: flipped the intermediate verification checkbox (`- [ ]`
+  → `- [x] ✅`) to stop repeated re-dispatch (3 identical verification runs in 3h with no new data); added a new
+  date-gated `- [ ]` P3 todo for the required final confirmation on/after 08-09. (repo: deployment-service,
+  verification-only.)
 
 - **residual-drain verification 2026-08-06 (slot-4, infra, task
   `deployment_scripts_bucket_soft_delete_retention_drift-001`)**: fresh `gcs_bucket_stats.py` run at `2026-08-06T11:07Z`
