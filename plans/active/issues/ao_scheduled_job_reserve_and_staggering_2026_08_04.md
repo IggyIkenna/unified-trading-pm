@@ -301,7 +301,24 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
 
 ## Progress Log
 
-- **worker slot-8 2026-08-06 (todo 7 — 08-05 full-day no_capacity, this task)**: INVESTIGATED + CONFIRMED. VERDICT:
+- **worker slot-16 2026-08-06 (todo 8 — plan-reconciler timer re-install, this task)**: ATTEMPTED + BLOCKED-ON-OPERATOR
+  (`BLK-f602483b`). Verified the repo installer is already correct+shipped on LDR (`--max-time 5950` /
+  `TimeoutStartSec=6000`, commits e38756b/c547566) while the LIVE unit is stale
+  (`/usr/local/bin/plan-reconciler-dispatch.sh` `--max-time 2400`, `/etc/systemd/system/plan-reconciler.service`
+  `TimeoutStartSec=2450`, timer active/enabled, next fire 14:00:16 UTC). Re-install requires
+  `sudo bash scripts/install-plan-reconciler-timer.sh`, but sudo is hard-blocked for every orchestrator-spawned worker.
+  DEFINITIVE ROOT CAUSE: `orchestrator.service` sets `NoNewPrivileges=yes` (unit hardening, line 137) +
+  `ProtectSystem=strict` — the tmux server and all worker sessions inherit `no_new_privs`, so ALL setuid escalation
+  (sudo/pkexec/su) is disabled. Exhausted alternatives: no SSM agent installed on the instance (`amazon-ssm-agent` unit
+  absent; instance i-0c9b283b31d6b5ca7), no polkit rules, no NOPASSWD sudoers, no root cron auto-applies installer
+  units, no AO API endpoint runs installers, and the AWS identity is `ikenna-worker` (a user, not
+  `uts-orchestrator-epic-role` — no host-root grant). Docker is the only non-sudo root path (ubuntu is a docker member)
+  but it circumvents the deliberate NoNewPrivileges control — NOT used without explicit operator authorization. Asked
+  the operator to either run the single command
+  (`sudo bash /home/ubuntu/unified-trading-system-repos/agent-orchestrator/scripts/install-plan-reconciler-timer.sh`),
+  authorize the docker path, or gate the todo so it stops auto-dispatching to sandboxed workers. (OOM-directive
+  acknowledgment: this worker launched no heavy/RAM-bound process; no OOM contribution today.)
+
   **dispatch bug + external Claude-credit outage, NOT fleet saturation** — 225/240 (94%) of 08-05 no_capacity =
   `no headroom setup-token account available` from plan_health's Claude-only
   `pick_headroom_account(provider='anthropic')` (DeepSeek never a candidate); the 08-05 live outage left all 6 Anthropic
