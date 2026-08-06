@@ -82,12 +82,12 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                          |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                        |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 354,049 already resolved, **30,435 needed** (continued strong progress, -860) — ACTIVE via `af-backfill-20260806-022033`                           |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 361,511 already resolved, **29,392 needed** (continued strong progress, -1,043) — ACTIVE via `af-backfill-20260806-022033`                         |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                |
 | **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,373 already resolved, **only 998 needed** — nearly done                                                                                                   |
 | **INJURIES**     | **all-383**                  | 108,663 expected, 45,954 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                |
-| **STANDINGS**    | **all-383**                  | 108,663 expected, 100,711 already resolved, **7,952 needed** (was 64,439 on 08-04, **-56,487**) — **ACTIVE** via a separately-discovered dedicated VM, chunk 67/76, see below |
-| **TEAMS**        | **all-383**                  | 108,663 expected, 104,592 already resolved, **4,071 needed** (was 64,723 on 08-04, **-60,652**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk 67/76)  |
+| **STANDINGS**    | **all-383**                  | 108,663 expected, 101,610 already resolved, **7,053 needed** (was 64,439 on 08-04, **-57,386**) — **ACTIVE** via a separately-discovered dedicated VM, chunk 69/76, see below |
+| **TEAMS**        | **all-383**                  | 108,663 expected, 105,491 already resolved, **3,172 needed** (was 64,723 on 08-04, **-61,551**) — **ACTIVE** via `instr-backfill-sports-teams-20260805-055622` (chunk 69/76)  |
 | **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                   |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
@@ -97,9 +97,9 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T18:09Z: 75,730 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~61% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
-**+ 88,958 across FIXTURE_STATS+FIXTURE_LINEUPS** (30,435 + 58,523). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
+**Grand total needed, 2026-08-06T18:33Z: 73,932 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~62% drop — mostly STANDINGS/TEAMS backlog draining via a separately-discovered dedicated VM, see Progress Log)
+**+ 87,915 across FIXTURE_STATS+FIXTURE_LINEUPS** (29,392 + 58,523). TEAMS/STANDINGS and FIXTURE_STATS are BOTH
 confirmed active concurrently (2 lanes, see Progress Log correction). LEAGUES excluded per the resolved verdict below.
 **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since it could converge quickly
 once dispatched.
@@ -666,3 +666,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   chunk-loop VM now at chunk 67/76 (~9 chunks left). FIXTURE_STATS 31,295→30,435 (-860). Grand total 75,730 (core 4)
   - 88,958 (FIXTURE_STATS+LINEUPS). Corrected a stale FIXTURE_STATS figure (38,077) in the summary paragraph above the
     table that had drifted out of sync with the table row itself — now both read 30,435.
+- **2026-08-06T18:33Z** — All 3 lanes healthy. odds_api bigmem VM log shows a normal sawtooth memory pattern (climbs to
+  ~25-32GB per date processed, resets to ~1.5-6.5GB after each write) — peaked at rss=31,798MiB (52% of the
+  e2-highmem-8's 64GB), comfortably clear of the ceiling; confirmed NOT a repeat crash, just per-date accumulation
+  behavior. TEAMS 4,071→3,172 (-899), STANDINGS 7,952→7,053 (-899) — chunk-loop VM now at chunk 69/76 (~7 chunks left).
+  FIXTURE_STATS 30,435→29,392 (-1,043). Grand total 73,932 (core 4) + 87,915 (FIXTURE_STATS+LINEUPS).
