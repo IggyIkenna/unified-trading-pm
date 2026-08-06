@@ -89,6 +89,14 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, post-compact
+  re-arm)**: session re-armed after `/compact`. Forward-poll `cefi-fwd-20260806-065837` still RUNNING
+  (market_tick_data_service PID active, ~348% CPU), fleet re-counted =1 via `tardis_running_vm_count` (Tardis cap still
+  held by the forward-poll). day watermark at 2026-05-25, ETA unchanged ~2026-08-11/12. Watchdog re-armed as bg task
+  `bzsx5gthk` (`/tmp/wd-cefi-fwd-wait.sh`, 10-min cadence, exits on VM non-RUNNING / 8h re-arm cap) — same rule applies:
+  a fresh session MUST re-arm it. Heartbeat sent to orchestrator, still assigned task
+  `cefi_tardis_derivative_ticker_historical_gap-003`. P2 checkbox still unchecked (gated on launch). Operator ruling
+  stands: NO `--force` override unless explicitly said.
 - **slot-9 2026-08-06 (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, P2 wait-phase note)**:
   **Watchdogs do NOT survive session teardown** — bg task `b95w87dq6` was killed by a Claude Code process exit ("no
   completion record from the previous session"); re-armed as `bn7y95d1z` (10-min cadence; exits on VM termination /
