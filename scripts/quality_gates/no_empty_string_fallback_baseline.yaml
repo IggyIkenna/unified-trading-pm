@@ -56,8 +56,8 @@ repos:
     commit: 43d8f7d7d30de3430202bf91568cdb61e3a652fc
     count: 66
   market-tick-data-service:
-    commit: c3fe35b752c9f5857e702491a404be42b979e6f8
-    count: 85
+    commit: e8c5d29a003ae985fa4f3853fed04ead624418d1
+    count: 79
   ml-service:
     commit: 8c2ca3cd26aca20a58567f3ca9f6a4a4a4570b8c
     count: 6
