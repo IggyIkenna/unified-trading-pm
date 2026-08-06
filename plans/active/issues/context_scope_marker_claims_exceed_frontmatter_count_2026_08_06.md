@@ -133,7 +133,7 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
 
 ## Todos
 
-- [ ] [DOC] P1. **Root-cause the 4 confirmed instances**: `git log -p` / `git blame` across
+- [x] ✅ [DOC] P1. **Root-cause the 4 confirmed instances**: `git log -p` / `git blame` across
       `data_completion_defi_2026_07_15.md`, `perp_funding_data_semantics_and_cadence_2026_06_16.md`,
       `pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md`, and
       `sports_consolidated_closeout_2026_07_19.md` around their respective marker-write commits (2026-08-01 /
@@ -141,7 +141,7 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       batch/cohort commit that wrote the marker but only partially applied the list edit, or a LATER unrelated commit
       that trimmed/reformatted context_scope without touching the marker? **Done when**: a root-cause hypothesis is
       stated with the specific commit SHA(s) cited as evidence, or a documented "inconclusive, evidence trail does not
-      survive in history" verdict.
+      survive in history" verdict. — unified-trading-pm@see-progress-log-2026-08-06
 - [ ] [SCRIPT] P2. **Corpus-wide sweep for the same shape beyond today's 13-doc sample**: for every doc among the full
       ~644 in-scope population (not just today's STALE set), parse its most recent context-scout Progress Log marker's
       claimed entry count (regex on `\((\d+) entries?\)`) and compare against the live `context_scope` list length;
@@ -171,3 +171,23 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
   confirmed `generate_context_scope_inventory.py` has no checkbox-counting logic at all); no sibling candidate or
   cross_cutting_consolidated_closeout overlap either. `assigned_role: data_engineering` (already correctly set at
   filing) left unchanged.
+- **2026-08-06 (infra, slot 4, task context_scope_marker_claims_exceed_frontmatter_count-001)**: **Root-cause
+  confirmed** — all 4 instances follow the same shape: a **subsequent context-scout batch/cohort commit edited the
+  existing `context_scope` frontmatter list (removing entries judged redundant or stale by that later pass) WITHOUT
+  updating the Progress Log marker from the prior scout run.** The prior marker's claimed count was accurate when it was
+  written; the mismatch was introduced entirely by the later entry-drop commit that left the marker stale.
+
+  Per-instance evidence:
+
+  | Doc                                                                  | Marker-write commit (correct at time of writing)                                                                                          | Entry-drop commit (created the mismatch)                                                                                                                                                                                                                                         |
+  | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `data_completion_defi_2026_07_15.md`                                 | `9bf4fd50a` (2026-08-01, "context_scope backfill residual, 90 docs") — wrote 5-entry list + "5 entries" marker                            | `98651a2b7` (2026-08-05, "context-scout cohort 1/5 batch b — refresh context_scope (19 docs)") — removed `data_completion_to_100_all_ag_2026_06_21.md` + `migrate_defi_full_v9_canonical.py`, leaving 3; no marker update (file was at 1000L cap)                                |
+  | `perp_funding_data_semantics_and_cadence_2026_06_16.md`              | `3fac05949` (2026-08-03, "context-scout rescout batch 4/6") — wrote 4-entry list + "4 entries" marker                                     | `f968e4937` (2026-08-06, "context-scout batch — refresh context_scope (16 docs)") — removed `carry-venue-live-integration-reference.md`, leaving 3; no marker update                                                                                                             |
+  | `pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md` | `4bf5416cb` (2026-08-03, "context-scout pass over residual STALE doc (batch 2/2)") — wrote 6-entry list + "6 entries" marker              | `76acd63be` (2026-08-06, "context-scout batch — refresh context_scope (15 docs)") — removed `pytest_timeout_60s_flaky_under_contention_2026_07_29.md` + `deployment-service/scripts/quality-gates.sh` + `features-service/scripts/quality-gates.sh`, leaving 3; no marker update |
+  | `sports_consolidated_closeout_2026_07_19.md`                         | `d5c1eb454` (2026-08-03, "context-scout full corpus re-scout, updated methodology (batch 6/7)") — wrote 5-entry list + "5 entries" marker | `a74dea524` (2026-08-06, "context-scout cohort 5/5 batch 6/6") — removed `sports_consolidated_native_ao_extract_2026_07_25.md` + `canonical_writer_shaping.py`, leaving 3; no marker update                                                                                      |
+
+  **This is NOT a one-time batch anomaly** — four distinct entry-drop commits on two separate dates (2026-08-05 and
+  2026-08-06) each independently reproduced the same omission: edit the frontmatter list, skip the marker update. This
+  confirms the pattern is **systemic** (any context-scout pass that removes or replaces entries in an existing
+  `context_scope` list omits the marker update step), not a single bad commit. Todo 3 (detection-gap fix) is unblocked
+  by this finding: the root cause is ongoing, not a one-time event already fully remediated.
