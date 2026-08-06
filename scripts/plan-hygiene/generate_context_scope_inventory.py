@@ -16,7 +16,16 @@ cancelled/resolved/false-positive doc is dead weight, never scouted):
                      `last_updated`, when present, and the file's real git last-commit date --
                      never `last_updated` alone, which nothing auto-bumps on edit and so silently
                      goes stale; see `_last_touched`'s docstring)
-  - UP_TO_DATE     — marker date >= last-touched date; skip (incremental mode)
+  - COUNT_MISMATCH — has `context_scope` and a date-fresh marker (marker date >= last-touched),
+                     but the marker's parenthetical count claim (e.g. "(4 entries)") disagrees
+                     with the actual length of the live frontmatter list. Triggers a re-scout
+                     pass so the list is restored to agreement. Root cause: a subsequent
+                     context-scout batch edits the frontmatter list without updating the prior
+                     marker's claimed count -- confirmed systemic (4 instances in one 13-doc
+                     sample, 2026-08-06; see
+                     plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md).
+  - UP_TO_DATE     — marker date >= last-touched date AND claimed count matches actual (or the
+                     marker carries no parenthetical count claim); skip (incremental mode)
 
 # Epic: agent_operating_framework_master
 # Lifecycle: permanent
@@ -44,6 +53,13 @@ IN_SCOPE_STATUS = {
     "issue": {"open", "blocked"},
 }
 MARKER_RE = re.compile(r"context-scout\s+(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
+
+# COUNT_MISMATCH detection: parenthetical count claim in a context-scout Progress Log bullet.
+COUNT_RE = re.compile(r"\((\d+)\s+entries?\)")
+# Marker bullet window: bounds how far to scan before/after the marker text.
+_WINDOW_END_PATTERNS = ("\n- ", "\n## ", "\n```", "\n---", "\n> ")
+_MAX_MARKER_WINDOW_CHARS = 2000
+_BULLET_LOOKBACK = 300
 
 
 def _load_docspec():
@@ -236,9 +252,36 @@ def _last_touched(fm: dict, path: Path, marker: str | None) -> str | None:
     return max(candidates) if candidates else None
 
 
+def _latest_marker_info(body: str) -> tuple[str, int] | None:
+    """Return (date, position) of the latest context-scout marker in `body`, or None."""
+    matches = list(MARKER_RE.finditer(body))
+    if not matches:
+        return None
+    latest_date = max(m.group(1) for m in matches)
+    latest_pos = max(m.start() for m in matches if m.group(1) == latest_date)
+    return latest_date, latest_pos
+
+
 def _latest_marker(body: str) -> str | None:
-    dates = MARKER_RE.findall(body)
-    return max(dates) if dates else None
+    info = _latest_marker_info(body)
+    return info[0] if info is not None else None
+
+
+def _marker_claimed_count(body: str, marker_pos: int) -> int | None:
+    """Return the `(N entries)` count claimed in the Progress Log bullet containing
+    `marker_pos`, or None if the bullet carries no parenthetical count claim."""
+    start = body.rfind("\n- ", max(0, marker_pos - _BULLET_LOOKBACK), marker_pos)
+    if start == -1:
+        start = body.rfind("\n-", max(0, marker_pos - _BULLET_LOOKBACK), marker_pos)
+    if start == -1:
+        start = max(0, body.rfind("\n", 0, marker_pos))
+    end = len(body)
+    for pat in _WINDOW_END_PATTERNS:
+        idx = body.find(pat, marker_pos, min(len(body), marker_pos + _MAX_MARKER_WINDOW_CHARS))
+        if idx != -1 and idx < end:
+            end = idx
+    m = COUNT_RE.search(body[start:end])
+    return int(m.group(1)) if m else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -270,10 +313,19 @@ def main(argv: list[str] | None = None) -> int:
         if not context_scope:
             verdict = "NEVER_SCOUTED"
         else:
-            marker = _latest_marker(body)
+            marker_info = _latest_marker_info(body)
+            marker = marker_info[0] if marker_info is not None else None
             last_touched = _last_touched(fm, path, marker)
             if marker is not None and last_touched is not None and marker >= last_touched:
-                verdict = "UP_TO_DATE"
+                # Date-fresh: also verify the marker's claimed count matches the actual list.
+                if marker_info is not None:
+                    claimed = _marker_claimed_count(body, marker_info[1])
+                    if claimed is not None and claimed != len(context_scope):
+                        verdict = "COUNT_MISMATCH"
+                    else:
+                        verdict = "UP_TO_DATE"
+                else:
+                    verdict = "UP_TO_DATE"
             else:
                 verdict = "STALE"
 
@@ -296,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
     for r in records:
         by_verdict[r["verdict"]] = by_verdict.get(r["verdict"], 0) + 1
     print(f"Total in-scope plan/issue docs: {len(records)}")
-    for verdict in ("NEVER_SCOUTED", "STALE", "UP_TO_DATE"):
+    for verdict in ("NEVER_SCOUTED", "STALE", "COUNT_MISMATCH", "UP_TO_DATE"):
         print(f"  {verdict:14s} {by_verdict.get(verdict, 0)}")
     return 0
 
