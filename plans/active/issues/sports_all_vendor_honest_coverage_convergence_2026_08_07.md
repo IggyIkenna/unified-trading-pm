@@ -554,3 +554,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   chunk boundary, not trusted from `PROGRESS.json` alone — worth a rule-1b/4a addendum if this recurs. Reverting to
   lightweight per-tick `PROGRESS.json` checks per the standing instruction, since the outlier is now closed; will only
   re-deep-dive if a future chunk shows the same multi-hour-stall signature.
+- **2026-08-07T23:17Z — self-correction: FIXTURE_STATS's chunk NUMBER had gone stale in the journal for several ticks.**
+  Every tick's `last_completed_date` reading was genuinely accurate (each one re-fetched live), but I'd been carrying
+  forward the label "chunk 6/26" from an early tick without re-verifying it against `run.log` — a live check just now
+  shows it's actually **chunk 9/26** (`2022-05-27→2022-08-24`, chunks 6-8 each cleared in well under an hour: chunk 6 @
+  21:25:10Z, chunk 7 @ 21:56:53Z, chunk 8 @ 22:51:26Z). No data-integrity issue — the underlying values were never
+  wrong, only the derived chunk-number label I was echoing. At this clip (~3-9 chunks/hour once past quota-limited early
+  chunks), 26/26 is plausibly within the next 1-3 hours. Using the verified chunk 9/26 going forward.
