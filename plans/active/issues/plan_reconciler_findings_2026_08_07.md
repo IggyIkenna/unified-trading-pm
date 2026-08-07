@@ -229,9 +229,54 @@ path), C8 (cefi_book_snapshot5 body cites predecessor at active dir), C11/C12 (d
 not-root-caused vs ROOT-CAUSED; 35 vs 42 rows), C13/C14 (cefi_track2_backfill_vm_preempted: prose claims a non-existent
 [OPERATOR] todo; last_updated), C1-doc last_updated.
 
-## Contradictions
+## STEP-5 pending apply checklist (all existence/evidence-verified as of 00:50)
 
-<!-- routed + filed -->
+FLIPS (HARD): (1) cefi_4surface_migration_execution_log:793 [SCRIPT] P0 chain dry-run —
+instruments-service@97801b5d+766549c7 on origin, `_DRYRUN_COLS` has "chain"; (2) same doc:134 [DATA] P2 PACIFICA-SOLANA
+quarantine — uac@989e9d16 on origin, quarantine.py has it; (3) onchain_venues_mislabeled_batch_tardis_lane:177 same
+evidence; (4) cefi_track2_coverage_backfill_checkpoints_finalize:69 [REVIEW] P1 — baselines verified in archived
+extract:121-135 + record verdict in Progress Log; (5) estate_orphan_assessment todo 3 false-unchecked (all 4 AG sweeps
+COMPLETED, apply 637,523 vs dry-run 637,724) — verify todo line inline first; (6)
+prediction_capture_incident_remediation descope items (~225/228/235/239/245/247/300) — flip with "DESCOPED-NOT-MVP
+2026-07-14 ruling" evidence (banner verified at :223/233/243/300/348). UN-TICK: (7)
+cefi_residual_followups_after_honest_done:422 [BACKEND] P0 — ticked while STILL OPEN (corroborated archived
+cefi_batch2_010_misscoped_gated_bundle:126).
+
+REPOINTS (existence-verified): (8) cefi_e4_e8:283, data_completion_cefi:474/541/733, candle_feature:497/505/523/603,
+instruments_docs_audit:51, instruments_remaining:609, mdps_features_deadcode:90/96/104/110 (all →plans/archive/...),
+plans/audit/results/data_pipeline_reconciliation_cefi:170.
+
+ANNOTATIONS: (9) cefi_residual_followups:171 residual-#3 body stale (DONE 2026-07-27, 28,755 dropped 0 residual); (10)
+cefi_residual_followups reversal banner (50.79% acceptance REVERSED 2026-07-18 ruling, track2 resumed); (11)
+closeout:14/222 track-2 ETA ~30 days correction; (12) closeout:533 UPBIT root-cause pointer (pipeline stoppage,
+restorable — upbit_cefi_data_gap_may issue); (13) data_completion:427 E4 ~1.2M→287,074 measured (e4_e8:158-161); (14)
+instruments_remaining_work_audit:162-168 "12 open" → align to headline-4 (~2/13); (15)
+mtds_is_full_adapter_smoketest:110-113 add resolution banners (huobi RESOLVED 07-12, polymarket fixed
+uac@42ce2de3/mtds@f4a118be); (16) estate_orphan na-eligibility "6+8 NA" note vs todo-8 DONE 07-30; (17)
+cryptovenue:116-137 todo text align to 2026-07-16 ruling (PERPETUAL + is_equity_perp tags; banner :143-149 says edits
+1-3 DONE) — do NOT flip the checkbox (H4: genuinely open).
+
+HYGIENE last_updated: (18) cefi_onchain_perp_batch_venue_allowlist_gap, estate_orphan_assessment,
+honest_coverage_shard_dimension_model, mtds_is_full_adapter_smoketest_findings.
+
+LINKAGE (H5, 2 writable orphans): (19) mtds_cefi_docker_image_stale_5mo + mtds_live_mode_never_touches... add
+closeout-family related:/body mention → cefi_consolidated_closeout_2026_07_18/_aggregated_sources_2026_07_24.
+
+ZERO-CHECKBOX (H6): (20) convert prose→todos in mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp (3 todos:
+2×[SCRIPT] P1 + [REVIEW] P2) + mtds_pipeline_check_process_killed_during_skip_leg_poll (3 todos: [DATA] P1/[REVIEW]
+P1/[OPERATOR] P2); classify the 2 NEW/unclassified rows in zero_checkbox_sweep_all_tranches_2026_07_31 register.
+
+## STEP-6 route (operator-alerted + filed — codex edits never autonomous)
+
+- **P0-class ALERT**: track-7 delete-before-verify (C5 — bundles unverified while 96/112 cells MISSING; deletion of 149
+  objects confirmed 404; residual plan flip cited 404s not completeness).
+- Codex drift (3): cefi-capture-universe 50.79% verdict; data-lineage-MTDS-features-ml onchain-perp candle gap;
+  cefi-capture-universe BINANCE-DELIVERY MVP-scope vs cross-asset SSOT. Plus codex/02-data/defi-data-pipeline.md
+  wrong-path ref to hyperliquid_aster doc (never moved). CLAUDE.md + skill LIGHTER-ZKSYNC exemption (C4).
+- Locked linkage orphan (features_universe_filter, locked_by) — unlock needed to add the family link.
+- Grace-deferred files: H2 C1/C4/C5/C8-C14, H8 C3, 3 grace linkage orphans, inventory orphan
+  (hyperliquid_aster_finalize), 4 P1 grace referrers, 29 P2 archived referrers (class), phantom-SHA aaa0866c,
+  codex/CLAUDE.md unresolvable ref (3 citer docs), C18 BLOCKED-CREDENTIALS restoration unrecorded.
 
 ## Doc-drift
 
