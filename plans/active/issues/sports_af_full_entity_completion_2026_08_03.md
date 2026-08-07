@@ -804,3 +804,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` and
   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. SFI backfill also confirmed healthy this tick (real writes,
   21,742 rows for 2020-10-17). Not this campaign's scope, noted for completeness.)
+- **2026-08-07T12:40Z** — PLAYER_STATS climbing (2025-03-08 → 2025-05-31, chunk 21/26, ~5 chunks left). footystats
+  climbing (2023-04-23 → 2023-10-16). Both healthy — verified this time via actual date-value diffs against last tick
+  per the new codex rule 1b, not just log-line presence. (Aside, sibling-doc scope: added codex rule 1b to
+  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` documenting the crash-loop-looks-like-progress lesson;
+  relaunched the odds_api full-range backfill with `--chunk-size 5 --allow-parallel` alongside the still-healthy
+  `mtds-backfill-odds-401-retry` (confirmed zero OOM signatures across its full log, credits healthy at 14.46M
+  remaining) — full detail in `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
