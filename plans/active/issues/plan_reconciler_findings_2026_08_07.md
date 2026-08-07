@@ -199,6 +199,27 @@ Writable P1 repoints to apply (old→new, all existence-verified):
   pending that measurement").
 - candle_feature:442 → NOT a flip (doc self-documents remaining deliverable). cefi_track2_finalize:69 → HARD (baselines
   verified in archived extract doc:121-135, both `[x]` with run evidence).
+- Post-compact pass (2026-08-07, H1 + final verify): data_completion_cefi:500 E8 → HARD flip (cefi_e4_e8:227-231 Phase F
+  [x] DONE-BY-OPERATOR-2026-07-14; bucket 404 + audit-log delete 07-14T11:02:29Z; explicit "NOT a claim gates honored"
+  caveat; E7 :495-498 stays [ ] — RED, owned by successor Phase D/E).
+- prediction_capture descope set VERIFIED at :225/:227/:235/:238/:245/:248/:300 — all 7 under dated
+  DESCOPED-NOT-MVP-2026-07-14 banners (:220/:223/:233/:243); ruling record ANSWERED :295-298 ("NO prod access… Re-open
+  only on explicit operator announcement"). Matches doc's own "7 DESCOPED" accounting.
+- estate_orphan_assessment todo 3 (:108) → **REFUTED — already `[x]` DONE closed 2026-07-30** (na-eligibility cefi
+  tranche); checklist item (5) DROPPED. Todos 6+8 genuinely NA per :546-547.
+- cefi_4surface:793/:134 + onchain_venues_mislabeled_batch_tardis_lane:177 lines re-read — exact text matches flip
+  intent (chain-drop blind spot; PACIFICA-SOLANA quarantine registration; same evidence chain).
+- cefi_track2_finalize:69 "Cross-check the 2 PRE-BACKFILL baselines" — extract :121-135 both [x]; report files EXIST on
+  disk (plans/audit/results/data_pipeline_e2e_check_{is,mtds}_2026_03_15.md); flip with extract citation + sha
+  95074df6e.
+- closeout:14 "fillable in ~1-2 days" (frontmatter summary) — no "30 days" text in closeout; the ~30-day measured ETA
+  lives in cefi_track2_coverage_backfill_checkpoints:198/:234 (Progress Log, already accurate) → annotation = add
+  measured-rate caveat to closeout summary only.
+- residual:422 [BACKEND] P0 = FALSE-TICK confirmed (archived cefi_batch2_010_misscoped_gated_bundle:118-125 "Sub-items 1
+  (reader-bridge deploy) and 3 remain open — genuinely gated, not attempted") → UN-TICK.
+- residual:171 "Residual #3 (10,368-row eu-twin) still OPEN" stale vs todo :516-529 DONE 2026-07-27 → annotate.
+- Register: mtds_qg_red_uac_capability_declaration_drift = asset_group [defi, prediction] → NOT cefi → stays
+  unclassified; only the 2 mtds_pipeline_check docs convert.
 
 ## Epic-cluster issues batch1 (H2 result — 19 candidates, none P0)
 
@@ -283,12 +304,11 @@ FLIPS (HARD): (1) cefi_4surface_migration_execution_log:793 [SCRIPT] P0 chain dr
 instruments-service@97801b5d+766549c7 on origin, `_DRYRUN_COLS` has "chain"; (2) same doc:134 [DATA] P2 PACIFICA-SOLANA
 quarantine — uac@989e9d16 on origin, quarantine.py has it; (3) onchain_venues_mislabeled_batch_tardis_lane:177 same
 evidence; (4) cefi_track2_coverage_backfill_checkpoints_finalize:69 [REVIEW] P1 — baselines verified in archived
-extract:121-135 + record verdict in Progress Log; (5) estate_orphan_assessment todo 3 false-unchecked (all 4 AG sweeps
-COMPLETED, apply 637,523 vs dry-run 637,724) — verify todo line inline first; (6)
-prediction_capture_incident_remediation descope items (~225/228/235/239/245/247/300) — flip with "DESCOPED-NOT-MVP
-2026-07-14 ruling" evidence (banner verified at :223/233/243/300/348). UN-TICK: (7)
-cefi_residual_followups_after_honest_done:422 [BACKEND] P0 — ticked while STILL OPEN (corroborated archived
-cefi_batch2_010_misscoped_gated_bundle:126).
+extract:121-135 + record verdict in Progress Log; (5) ~~estate_orphan_assessment todo 3~~ **REFUTED inline 2026-08-07 —
+already `[x]` (closed 2026-07-30); DROPPED**; (6) prediction_capture_incident_remediation descope items
+(~225/228/235/239/245/247/300) — flip with "DESCOPED-NOT-MVP 2026-07-14 ruling" evidence (banner verified at
+:223/233/243/300/348). UN-TICK: (7) cefi_residual_followups_after_honest_done:422 [BACKEND] P0 — ticked while STILL OPEN
+(corroborated archived cefi_batch2_010_misscoped_gated_bundle:126).
 
 REPOINTS (existence-verified): (8) cefi_e4_e8:283, data_completion_cefi:474/541/733, candle_feature:497/505/523/603,
 instruments_docs_audit:51, instruments_remaining:609, mdps_features_deadcode:90/96/104/110 (all →plans/archive/...),
@@ -334,7 +354,10 @@ plans/epics/cefi_master.md:631 roster stale-marker annotation (generator re-run 
 
 ## Doc-drift
 
-<!-- flagged, routed to operator -->
+- **Cross-tranche parentage error (NEW, grep-verified 2026-08-07)**: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`
+  (asset_group [defi]) + `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (asset_group [tradfi]) both declare
+  `parent_epic: cefi_master` — copy-paste parentage on non-cefi docs (21 total `parent_epic: cefi_master` docs, 19
+  cefi-tagged + these 2). NOT editable here (other tranches) → routed to owning tranche reconcilers (STEP 6).
 
 ## Hygiene fixes
 
