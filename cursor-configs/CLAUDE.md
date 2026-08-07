@@ -1,33 +1,27 @@
 # Unified Trading System — Claude Code Instructions
 
-> **This is the lean index of workspace rules — and the rules for maintaining THIS file. Editing CLAUDE.md? Keep this
-> shape.**
+> **Lean index of workspace rules — and the rules for maintaining THIS file.**
 >
-> **General format**: each rule = a 1-line essence + a pointer to its SSOT; **condense, don't drop** (push detail to the
-> codex SSOT, leave the directive + pointer here); honour the size budget below.
+> **Format**: each rule = 1-line essence + SSOT pointer; **condense, don't drop** (push detail to codex, keep the
+> directive + pointer here); honour the size budget below.
 >
-> **Conditional format (the organizing rule)**: the body splits into **always-on** (apply to every task — read it) and a
-> **conditional domain index** (`§ When your task touches X`). **Only open a codex SSOT when your current task actually
-> involves that rule/domain** — a grep-0 on a domain you're not working in is irrelevant; a rule you ARE working under,
-> you read in full first. **Placing a new rule**: always-on block only if it applies to EVERY task; otherwise a
-> one-liner under the matching conditional `§` (+ its codex SSOT).
+> **Conditional format**: body splits into **always-on** (every task) and a **conditional domain index**
+> (`§ When your task touches X`) — open a codex SSOT only when the task touches that domain, then read it in full. **New
+> rule**: always-on only if it applies to EVERY task, else a one-liner under the matching `§` (+ codex SSOT).
 >
-> **Durable facts live in codex (SSOT) + a one-liner here, NEVER in agent `memory/` (HARD RULE)**: memory is per-cwd,
-> local-only, NOT inherited by sub-agents. Sub-agents reach topic-parity via `SUB_AGENT_MANDATORY_RULES.md`.
+> **Durable facts live in codex + a one-liner here, NEVER in agent `memory/` (HARD RULE)**: memory is per-cwd,
+> local-only, NOT inherited by sub-agents — they reach topic-parity via `SUB_AGENT_MANDATORY_RULES.md`.
 >
-> **Agent memory writes are BANNED (HARD RULE)**: agents MUST NOT write to the `memory/` directory or `MEMORY.md`.
-> Session-scoped findings go into the active plan's **Progress Log** section; personal/secrets-adjacent state is the
-> only permitted use (operator-written only, never agent-written). At session start: if any memory files exist, delete
-> them and reset `MEMORY.md` to an empty index — do not read or carry forward stale memory state.
+> **Agent memory writes are BANNED (HARD RULE)**: never write to `memory/` or `MEMORY.md`. Session findings go to the
+> plan's **Progress Log**; the only exception is operator-written personal/secrets state. Session start: delete any
+> memory files and reset `MEMORY.md` to an empty index — never carry forward stale memory.
 >
-> **SSOT direction (HARD RULE)**: the SSOT for a durable rule is a **codex doc — NEVER an active plan** (plans archive).
-> An active plan **references** codex (it does not duplicate heavy content); CLAUDE.md references the active plan only
-> for _in-flight_ work. So pointers below resolve to `codex/…`; `plans/active/…` appears only where the work is
-> genuinely in flight.
+> **SSOT direction (HARD RULE)**: SSOT for a durable rule is a **codex doc — never an active plan** (plans archive). A
+> plan **references** codex, never duplicates it; CLAUDE.md references an active plan only for _in-flight_ work — so
+> pointers below resolve to `codex/…`, and `plans/active/…` only where genuinely in flight.
 >
-> **Size budget — QG-ENFORCED**: CLAUDE.md ≤ **40 KB / ~10k tok**; `SUB_AGENT_MANDATORY_RULES.md` ≤ **10 KB / ~2.5k
-> tok**. `scripts/quality_gates/check_agent_rules_size_cap.py` fails PM QG on breach. Hit the cap → condense a rule +
-> migrate detail to codex, **never raise the cap.**
+> **Size budget — QG-ENFORCED**: CLAUDE.md ≤ **40 KB**; `SUB_AGENT_MANDATORY_RULES.md` ≤ **10 KB**.
+> `check_agent_rules_size_cap.py` fails PM QG on breach — condense + migrate to codex, **never raise the cap.**
 
 ---
 
@@ -111,7 +105,12 @@ Cloud Run revision pin can freeze deploys at 0% — verify `status.traffic`. **`
 Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_stale_write` ordering) — NEVER re-add a
 per-transition manifest commit, the `manifest-update` concurrency group, or the retired `ci-status-reconciler`; the
 hourly `ci-status-consolidator` owns the manifest-cache projection (manifest stays a fallback cache, read Firestore for
-live state). SSOT: `/codex/08-workflows/ci-cd-flow.md`.
+live state). **Never `gh workflow run ldr-to-main-promote-fleet.yml` just to check whether your repo promoted** — it's a
+shared, single-concurrency-slot workflow every agent verifying its own promotion converges on, and ad-hoc dispatches
+starve it under multi-agent load (measured: 2+ hour livelock, 2026-08-07,
+`plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`) — read
+`scripts/cicd/promotion_lag_monitor.py`'s live output or `gh pr list --search "chore(promote)"` instead. SSOT:
+`/codex/08-workflows/ci-cd-flow.md`.
 
 ## Commit + Push + Flip plan checkboxes as you ship (HARD RULE)
 
@@ -295,30 +294,19 @@ architecture (L0–L4)".
   instrument-gates-download model)** → `/codex/02-data/honest-coverage-model.md`. **Sports 2020-06 DATA FLOOR** (odds
   start 2020-06-06; pre-floor is fabrication-by-construction — WIPED from GCS + manifest, denominators/launchers/gates
   clamp to it) → `/codex/02-data/sports-2020-06-data-floor.md`.
-- **RECONCILING an AG's estate against canonical (paths ↔ manifest ↔ catalogue)?** Use `/data-pipeline-reconciliation`
-  (per-AG, PROD-only, read-only; deletes are SUGGESTIONS gated on a 5-part proof — prod-bucket deletes are human-only
-  unless reversibility-qualified, delete-safety-protocol §3a). Canonical/non-canonical is the UAC
-  `canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule; pass `require_pipeline_mode` from the
-  cutover register (it defaults FALSE = weaker than the codex declaration). **The oracle answers PATH STRUCTURE ONLY —
-  it does NOT validate the filename instrument_id** (drops the last segment; stem rule is tradfi-gated), so ~811,200
-  wire-named cefi objects read CANONICAL — structure and id-form are ORTHOGONAL, neither alone proves canonical; check
-  id-form separately or say it wasn't checked →
-  `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`. The oracle is ALSO **value-blind**
-  (never checks `instrument_type`/`data_type`/`venue`/`chain` VALUES vs their enums) — the **distinct-value CENSUS**
-  (manifest via deployment-api `_axis_census.py`; GCS via delimiter descent) is the cheap vocabulary complement; heavy
-  **per-datapoint id+schema** validation runs on a **Tier-2 SPOT VM** (one sanctioned single-walk), NEVER in-session →
-  `…/reconciliation-census-and-compute-tiers.md`. **C2a instrument_type COLUMN casing + defi market/event `LENDING` are
-  RULED (D1/D2 2026-07-20) but `migration_pending`** — compare case-insensitively, do NOT flag, do NOT refuse. **An
-  absence result is evidence ONLY once you confirm you probed the vocabulary the WRITER emits** (Solana AMM writes
-  `instrument_type=solana_amm_pool`, not `pool` — this exact slip produced a false "twin absent" verdict 2026-07-20).
-  **`dex_pools/` + `lending_indices/` — FOLDED + DELETED 2026-07-21** (648 legacy-only Solana twins folded to
-  canonical + verified, reader repointed, operator prod-deleted; legacy prefixes now 0 objects — the earlier
-  DO-NOT-DELETE is RESOLVED; residual = the twins' manifest rows are unregistered) →
-  `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md` (RESOLVED),
-  `…/defi_fold_manifest_registration_pending_2026_07_21.md`. SSOTs:
-  `/codex/02-data/four-surface-reconciliation-procedure.md`, `…/reconciliation-finding-taxonomy.md`,
-  `…/gcs-and-manifest-delete-safety-protocol.md`, `…/non-canonical-path-inventory.md`,
-  `…/canonical-cutover-register.md`, `…/orphan-object-detection.md`, `…/reconciliation-census-and-compute-tiers.md`.
+- **RECONCILING an AG's estate against canonical (paths ↔ manifest ↔ catalogue)?** READ
+  `/codex/02-data/four-surface-reconciliation-procedure.md` FIRST (it + siblings carry the oracle's full blind spots,
+  the census/compute-tier split, the C2a casing ruling, and closed-out incidents — not repeated here). Use
+  `/data-pipeline-reconciliation` (per-AG, PROD-only, read-only; deletes are SUGGESTIONS on a 5-part proof, prod-bucket
+  deletes human-only unless reversibility-qualified). Canonical/non-canonical is the UAC `canonical_path_violations()`
+  MACHINE ORACLE, never a re-implemented rule — but it's **PATH-STRUCTURE-ONLY** (doesn't validate the filename
+  instrument_id) and **VALUE-BLIND** (doesn't check `instrument_type`/`data_type`/`venue`/`chain` VALUES): check
+  id-form + values separately or say they weren't checked. **An absence result is evidence ONLY once you've confirmed
+  you probed the vocabulary the WRITER actually emits** — a wrong-vocabulary probe already produced one false "twin
+  absent" verdict. SSOTs: `/codex/02-data/four-surface-reconciliation-procedure.md`,
+  `…/reconciliation-finding-taxonomy.md`, `…/gcs-and-manifest-delete-safety-protocol.md`,
+  `…/non-canonical-path-inventory.md`, `…/canonical-cutover-register.md`, `…/orphan-object-detection.md`,
+  `…/reconciliation-census-and-compute-tiers.md`.
 - **`pipeline_mode` / sourcing?** SOURCE-AWARE `{mode}_{source}[_{transport}]` (`source`=VENDOR only; GCS paths carry it
   left of `asset_group=`, readers PREFIX-MATCH) → `/codex/02-data/pipeline-mode-partition.md`. **TradFi/Databento** (3
   datasets billing-fail-closed; `SOURCE_PRIORITY` databento-first; backfill silent-0-row gotchas; VIX=VX-futures via
@@ -338,33 +326,15 @@ architecture (L0–L4)".
   per-tier SAs), `/codex/05-infrastructure/gcs-object-operations.md`.
 - **Touching UI?** No Python tools (tsc/ESLint/Vitest/Playwright only); TS strict; **playwright gate** — no tick without
   `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
-- **Launching VMs / infra?** **Heavy I/O never runs from the operator's local machine (HARD RULE, unconditional)** —
-  full-corpus GCS walks / manifest-index rewrites / >few-hundred-object renames go on a VM in-region ALWAYS; does NOT
-  apply to the human-planning or AO-orchestrator VMs (already cloud-hosted) →
-  `/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-I/O rule. **That exemption is I/O-only** — in-memory
-  whole-corpus scripts on the shared planning-vm need bounding too (`run-bounded-analysis.sh` mem-cap or a dedicated VM)
-  → same SSOT § heavy-compute-on-shared-host. **No fire-and-forget** (STARTED <60s + ≥1 progress/hr + STOPPED/FAILED;
-  verify T+10min); launchers in `deployment-service/scripts/vm/` (name MUST match a real `VM_PREFIX_TO_BUCKET` entry +
-  `lifecycle_class` — **grep the registry FIRST, never hand-roll a name**: unregistered silently vanishes from
-  deployment-ui/cockpit/Slack; prefer extending an existing `launch-*.sh` over a new one; zone `asia-northeast1-c`);
-  per-VM shards `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`; **pre-migration drain** (stop ALL VMs both clouds,
-  consolidate, snapshot before any GCS cutover); every compute unit is a classified DEPLOYMENT TARGET
-  (`classify_deployment_target`). **Backfill VMs default to SPOT (HARD RULE)**: every backfill/idempotent launcher
-  provisions `--provisioning-model=SPOT` (~60-91% cheaper; idempotent shards re-run on preemption) — `--on-demand` (env
-  `ON_DEMAND=true`) is the only opt-out; **preemption recovery MUST resume from measured PROGRESS, never replay
-  `START_DATE` (HARD RULE)** — auto-resumed via the PROGRESS-checkpoint contract (`vm-logs/{vm}/PROGRESS.json`,
-  monotonic-gated; non-monotonic/no-checkpoint force still PAGEs); live/forward/cron/paper VMs + `--mode live` stay
-  on-demand (preemption loses live data); on-demand for backfill is a bug. **Stalled SPOT VM: verify
-  `compute.instances.preempted` via `gcloud compute operations list` FIRST** — one-offs aren't fleet-monitored. **Tardis
-  VMs: HARD cap 1 concurrent, both clouds** (lease does NOT lift it — AMPLIFIES the storm; measured N=1 clean vs N>1
-  mass 403s/`attempted_failed`/coverage-regression) — count the fleet BEFORE launching (`tardis-concurrency-guard.sh`,
-  wired into cefi/mtds launchers); scale via `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT`
-  on the ONE IP, never more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every
-  VM for preemption-without-recovery + silent `attempted_failed` billing-waste** (non-retriable errors re-attempted
-  forever = real money) — run `/vm-preemption-billing-waste-audit` proactively. SSOTs:
-  `/codex/05-infrastructure/vm-launcher-runbook.md`, `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`,
-  `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`. **VM/monitoring-tool escalation
-  design** (auto-recover-before-page, file-issue-worthy classes) → `…/data-pipeline-alerts.md`.
+- **Launching VMs / infra?** READ `/codex/05-infrastructure/vm-launcher-runbook.md` FIRST (full gotchas + measured
+  incidents live there, not here). Headline HARD RULES: heavy I/O (full-corpus GCS walks, manifest rewrites, bulk
+  renames) NEVER runs on the operator's local machine, always a VM in-region; **no fire-and-forget** (verify STARTED +
+  ongoing progress + a terminal state); name/register every launcher via the `VM_PREFIX_TO_BUCKET` registry, never
+  hand-roll; **backfill VMs default SPOT**, preemption recovery resumes from measured PROGRESS, never replays
+  `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (N>1 storms the API — count the fleet before
+  launching); regularly audit for preemption-without-recovery + billing-waste (`/vm-preemption-billing-waste-audit`).
+  SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`, `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`,
+  `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
 - **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
   (`disabled` != auto-clear on `rate_limited_until`; check `weekly_resets_at`). Queue never needs manual replay. SSOT
   (diagnostic order + fix-vs-not table, per service): `/codex/15-runbooks/safe-service-restart-procedures.md`.
