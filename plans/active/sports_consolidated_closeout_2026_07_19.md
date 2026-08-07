@@ -448,13 +448,11 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [x] [REVIEW] P1. ✅ Superseded by actual execution — `delete_stale_uppercase_2026_07_27.py` fresh-re-verifies each
       object immediately before its own delete (never trusts a prior candidate list), and the population is now
       independently confirmed empty (0 uppercase objects, full-corpus post-delete scan). No stale-list risk remains.
-- [ ] [DIAG] P2. **NEW 2026-07-27 — cross-link, not new work.** The census's `PREDICTION_MARKET`/`prediction_market`/
-      `prediction` residue is NOT a sports casing bug — it's the tracked cross-AG bleed in
-      `plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (ROUND 6/7: a
-      fleet-wide `manifest_consolidator.py` CAS/TOCTOU concurrency bug; 2 prior remediation attempts already reverted;
-      ROUND 7 todos 12-14 fixing the consolidator itself are `BLOCKED-OPERATOR-DECISION`, "needs a proper fix + deploy
-      cycle, not a same-session patch"). **Done when**: that doc's own todos close — do not duplicate scope here, only
-      keep this cross-link current.
+- [x] ✅ [DIAG] P2. **CLOSED 2026-08-07 — that doc's todos closed.** The TOCTOU fix shipped 2026-07-24
+      (`unified-trading-library@2f1582ee`), Round 8 removed all 11,727 bleed rows 2026-07-27, and a fresh independent
+      re-check 2026-08-07 confirms 0 bleed rows holding 11 days later — see
+      `plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` for full
+      evidence (all 4 original todos + Round 7's follow-ups now closed).
 - [x] [VERIFY] P1. ✅ **CLOSED 2026-07-27 — the parts[]-index fix's own stated verification gap is now satisfied.** Two
       independent read-only censuses (`read_availability_index` on `market-data-tick-sports-prd-central-element-323112`,
       columns=[instrument_type, written_at]) both found: 0 rows for all 15 bookmaker-name values the original finding
@@ -741,7 +739,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       built + unit-tested, never run in production; CF-8 stays ~40-50% `available_at` fill until it does. Lift operator
       stop `BLK-d9137d48` and clear the still-false backlog parking-gate condition
       (`sports-cf8-maintenance-window-scheduled`) to run it. Detail:
-      `sports_cf8_available_at_backfill_regression_2026_07_13.md`.
+      `sports_cf8_available_at_backfill_regression_2026_07_13.md`. **AUTHORIZED 2026-08-07** — `BLK-d9137d48` lifted;
+      not executed this pass (prior regressions + a coordinate-first lesson mean real scheduling care), see that doc.
 
 ## Track V — COVERAGE: backfill to honest-100% · P1 (operator-gated where noted)
 

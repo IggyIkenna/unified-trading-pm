@@ -586,6 +586,90 @@ orphans the loop immediately — MUST launch WITHOUT `&` inside when using the h
   inside. (4) Check `bip2gkahl.output` — if heartbeat dead, re-arm heartbeat.sh same way. Do NOT re-arm either if alive
   — singleton lock race risk.
 
+### 2026-08-07T12:48Z — slot 5, session 12 — killed tasks re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Both `bprxba91n` + `bip2gkahl` were KILLED (harness kill) at ~12:44Z.** Fleet
+at kill (poll 10): **21 VMs** (draining; peak was 30 at poll 4). Re-armed immediately:
+
+- Watcher: **`bfinzvap4`** (started 12:48:13Z, poll 1 = **20 VMs** — still draining)
+- Heartbeat: **`bksv7kopi`** (started 12:48:13Z, 20-min intervals)
+
+Trend: 30 (12:13Z) → 27 → 26 → 24 → 21 (killed) → 20 (re-arm poll). Draining ~1-2 VMs/poll on average.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bfinzvap4.output`
+  (TaskOutput non-blocking). (3) If watcher dead: re-arm from scratchpad `watcher/es_opt_watcher_slot5.sh` (exists) with
+  `run_in_background:true`, NO `&` inside. (4) Check `bksv7kopi.output` — if heartbeat dead, re-arm
+  `watcher/heartbeat.sh` same way.
+
+### 2026-08-07T13:15Z — slot 5, session 12 cont — repeated harness kills; re-armed third time
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Harness killing tasks every ~25-46 min (pattern: bprxba91n killed at 12:44Z →
+bfinzvap4 killed at ~13:14Z → bcrfqbh96 armed 13:15Z).** Fleet at bfinzvap4 poll 1 (12:48Z): **20 VMs**. Fleet at
+bfinzvap4 poll 6/kill (13:13Z): **12 VMs**. Direct check (13:15Z): **12 VMs**. Third re-arm: watcher=**`bcrfqbh96`**,
+heartbeat=**`bakt5sekk`**.
+
+Trend: 30→27→26→24→21→20→18→15→14→12. Steady drain ~2/poll (~10 VMs/25 min). **Pattern**: harness kills
+`run_in_background:true` tasks every 25-46 min (context compaction trigger suspected). Re-arm reactively on each kill
+notification. Watcher is idempotent — resumes from live fleet state on each re-arm.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bcrfqbh96.output`
+  (TaskOutput non-blocking). (3) If watcher dead: re-arm `watcher/es_opt_watcher_slot5.sh` with
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way. **Harness will
+  likely kill again — always re-arm on notification; never let watcher stay dead >5 min** (risk: fleet clears mid-kill,
+  watcher misses launch window and ES_OPT never gets dispatched).
+
+### 2026-08-07T15:07Z — slot 3, session 13 — watcher re-armed (run 1: bg6z344sq, run 2: bscbuhfi3)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher `bcrfqbh96` (slot 5, session 12) dead at this boot.** Fleet at
+boot: **10 VMs** (direct gcloud check at boot); grown to **22 VMs** by watcher poll 1 — new wave launched. Operator
+keep-waiting decision unchanged.
+
+**Session 13 re-arm (run 1):** Watcher `bg6z344sq` launched 15:07:12Z. Poll 1 = 22 VMs. Killed by harness ~4 min after
+start (before poll 2). Re-armed as run 2.
+
+**Session 13 re-arm (run 2):** Watcher `bscbuhfi3` launched 15:11:13Z with `run_in_background:true`, NO `&`. Slot-3 copy
+at `<scratchpad>/watcher/es_opt_watcher_slot3.sh` (sed-patch of committed `es-opt-backfill-watcher.sh` with SLOT_ID=3,
+SLOT_TABS=.tabs/3, PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python). Poll 1: 35 VMs (15:11:14Z). Poll 2: **37
+VMs** (15:12:15Z). Fleet growing. Heartbeat loop: **`bbe677smy`** (20-min intervals).
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bscbuhfi3.output`
+  (TaskOutput non-blocking). (3) If watcher dead: create slot-<new> copy of committed
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) + launch with
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm heartbeat loop same way. **Harness will likely
+  kill again (~25-46 min) — always re-arm on notification; never let watcher stay dead >5 min.**
+
+### 2026-08-07T15:20Z — slot 3, session 15 — post-compact health check + false re-arm corrected
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. bscbuhfi3 confirmed ALIVE (TaskOutput status=running, poll 3 at 15:21Z, poll
+4 at 15:22Z).** Fleet: 36 VMs at 15:20Z (no change).
+
+**Root cause of confusion:** Task `bw62u9xn1` launched post-compact as a re-arm attempt, but immediately failed with
+`No such file or directory` — it used the wrong scratchpad path (`/scratchpad/es_opt_watcher_slot3.sh` missing
+`/watcher/` subdirectory). bscbuhfi3 was still running the whole time.
+
+**Critical lesson (session 15):** `TaskList` does NOT show harness background tasks (`run_in_background:true` Bash
+tasks). Use `TaskOutput <task_id>` with the KNOWN task ID (non-blocking) to check liveness — `TaskList` always returns
+"No tasks found" for background Bash tasks and is useless for watcher liveness checks.
+
+**False re-arm corrected:** bpkyhj1yr was launched unnecessarily while bscbuhfi3 was still alive — immediately stopped
+via TaskStop (dual-watcher race risk). Heartbeat b7ya1ojo7 kept (bscbuhfi3 does not send heartbeats).
+
+**Pre-compact ritual (2026-08-07T15:20Z, autonomous mode):**
+
+- Step 1: git clean, ahead=0; scratchpad watcher.sh exists; no dangling refs; no secrets.
+- Step 3: No new todos. Lesson above captured in this log.
+- Step 4: Nothing new to flip (checkbox still `[ ]`).
+- Step 7: This commit IS the update.
+- Step 8 verdict: **Safe to compact: YES.** bscbuhfi3 running (poll 3 @ 15:21Z). b7ya1ojo7 heartbeat running. Nothing
+  lost.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, use
+  `TaskOutput bscbuhfi3 --non-blocking` to check liveness. **Do NOT use TaskList — it will always show "No tasks found"
+  for background Bash tasks.** (3) If bscbuhfi3 dead: re-arm from committed
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=<new>/SLOT_TABS/PYTHON) +
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead (check b7ya1ojo7 or equivalent via TaskOutput): re-arm
+  `scratchpad/watcher/heartbeat.sh` same way.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,

@@ -605,17 +605,21 @@ traffic to count until the migration is finished. What is certain is that their 
       `bash     aws ssm send-command --instance-ids i-042a6332509482556 --region ap-northeast-1 \       --document-name AWS-RunShellScript --parameters commands='[         "cd /opt/glue-deploy/agent-orchestrator/data/state/resource_history && python3 -c \"     import json, glob     rows = [json.loads(l) for f in sorted(glob.glob(\"2026-08-0[78].jsonl\")) for l in open(f)]     print(\"n_samples:\", len(rows))     print(\"max load_avg_1m:\", max(r[\"load_avg_1m\"] for r in rows))     print(\"max ram_percent:\", max(r[\"ram_percent\"] for r in rows))     print(\"max swap_percent:\", max(r[\"swap_percent\"] for r in rows))     print(\"p95 load_avg_1m:\", sorted(r[\"load_avg_1m\"] for r in rows)[int(len(rows)*0.95)])\""       ]'     `
 
       | Reading | Before (2026-08-07 ~10:50 UTC, pre-PM-revert) | Immediately after PM revert (2026-08-07 ~11:39 UTC) |
-          | ------- | ---------------------------------------------- | ----------------------------------------------------- |
-          | Load avg (1/5/15m) | 0.39 / 0.90 / 1.06 | 0.02 / 0.15 / 0.36 |
-          | RAM used / total | 2.5Gi / 30Gi | 1.9Gi / 30Gi |
-          | Swap used | 507Mi / 15Gi | 326Mi / 15Gi |
-          | Registered runner units (fleet-wide) | 73 (`gh api` count) | 65 (73 − PM's 8; other 7 private repos confirmed unchanged) |
+                  | ------- | ---------------------------------------------- | ----------------------------------------------------- |
+                  | Load avg (1/5/15m) | 0.39 / 0.90 / 1.06 | 0.02 / 0.15 / 0.36 |
+                  | RAM used / total | 2.5Gi / 30Gi | 1.9Gi / 30Gi |
+                  | Swap used | 507Mi / 15Gi | 326Mi / 15Gi |
+                  | Registered runner units (fleet-wide) | 73 (`gh api` count) | 65 (73 − PM's 8; other 7 private repos confirmed unchanged) |
 
-          **At/after 2026-08-08 11:00 UTC**: pull the full 2026-08-07 + 2026-08-08(partial) JSONL history (query above),
-          report max + p95 load/RAM/swap across every `ldr-to-main-promote-fleet` wave in that window (not idle
-          snapshots), and if the picture holds against the `m8i.2xlarge` targets (8 vCPU fits per the CPU-seconds math
-          above; keep 32 GB), proceed with the resize (stop → `aws ec2 modify-instance-attribute --instance-type
-          m8i.2xlarge` → start → re-provision the EBS volume → start).
+                  **At/after 2026-08-08 11:00 UTC**: pull the full 2026-08-07 + 2026-08-08(partial) JSONL history (query above),
+                  report max + p95 load/RAM/swap across every `ldr-to-main-promote-fleet` wave in that window (not idle
+                  snapshots), and if the picture holds against the `m8i.2xlarge` targets (8 vCPU fits per the CPU-seconds math
+                  above; keep 32 GB), proceed with the resize (stop → `aws ec2 modify-instance-attribute --instance-type
+                  m8i.2xlarge` → start → re-provision the EBS volume → start).
+
+              **Operator re-confirmed 2026-08-07 (interactive session)**: "11am utc on 8th august we can do this after
+              checking the previous 24h data" — matches the already-scoped 2026-08-08 11:00 UTC check window above exactly;
+              no change to the plan, just an explicit go-ahead for whoever executes the check + resize at that time.
 
 - [ ] [INFRA] P2. **Reap the governor marker-file leak** — 344 stale `running.<pid>` files accumulating ~115/day in the
       shared coordination dir any new concurrency work would build on.
@@ -636,8 +640,9 @@ traffic to count until the migration is finished. What is certain is that their 
       longer on the planning VM); `self-hosted-runner-security-posture.md` (dedicated VM **and** the public-repo threat
       model); `agent-orchestrator-deploy.md` (AO instance size once the downsize resolves).
 
-- [ ] [OPERATOR] P3. **Complete the AO box downsize.** `i-0c9b283b31d6b5ca7` still `m8i.4xlarge`; migration plan targets
-      `m8i.2xlarge`. On hold pending operator confirmation.
+- [x] ✅ [OPERATOR] P3. **DONE 2026-08-07 — already executed before being re-asked.** `i-0c9b283b31d6b5ca7` downsized
+      `m8i.4xlarge` → `m8i.2xlarge` (see `plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,
+      `status: complete`, full AWS-instance-modify evidence). Operator re-confirmed 2026-08-07 ("already done").
 
 ---
 

@@ -97,26 +97,33 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
 
 ## Todos
 
-- [ ] [BACKEND] P3. Instrument or trace `slot-git-status-report.sh`'s `reported_at`/dirty-transition posting to confirm
-      whether it sends a fresh timestamp per run or a fixed value (repo: agent-orchestrator). **Already tracked**:
-      combined with the next item into one open `[BACKEND] P3` todo in
+- [x] ✅ [BACKEND] P3. Instrument or trace `slot-git-status-report.sh`'s `reported_at`/dirty-transition posting to
+      confirm whether it sends a fresh timestamp per run or a fixed value (repo: agent-orchestrator). **Already
+      tracked**: combined with the next item into one open `[BACKEND] P3` todo in
       `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (line ~160, status: active, assigned_vm:
-      planning) — that todo explicitly sources this doc's items #1+#2 by path. Do not duplicate a fresh dispatch for
-      this item; the batch3 todo is the live tracker. **Diagnostic complete 2026-08-07** (parent batch3 todo now `[x]`)
-      — see verdict in Progress Log below. Checkbox intentionally left open here: the gated finalize twin
-      (`infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md` todo 1) owns closing this item with its own
-      sha-reverification, per that plan's explicit "source docs' own checkboxes are NOT touched by [the parent]"
-      convention.
-- [ ] [BACKEND] P3. Audit `GET /api/fleet/git-health`'s aggregation path to confirm it surfaces
+      planning) — that todo explicitly sources this doc's items #1+#2 by path. **Verdict: (i) REFUTED** — reporter sends
+      a fresh `reported_at` per run (`NOW_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"`, `slot-git-status-report.sh` line 173,
+      computed fresh at invocation; confirmed live: `reported_at` advanced 06:22:04Z → 06:27:03Z across two consecutive
+      cron ticks). Closed 2026-08-07 by finalize twin todo 1 — sha re-verified. unified-trading-pm@594aea342.
+- [x] ✅ [BACKEND] P3. Audit `GET /api/fleet/git-health`'s aggregation path to confirm it surfaces
       `SlotGitStatusRow`-scoped `not_clean_since` per (host, slot, repo) rather than any global/shared snapshot value
       (repo: agent-orchestrator). **Already tracked** — same
-      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo as the item above. **Diagnostic complete
-      2026-08-07** — see verdict in Progress Log below. Checkbox intentionally left open — same finalize-twin note as
-      the item above.
+      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo as the item above. **Verdict: (ii) REFUTED**
+      — aggregation does NOT collapse to a global value; `SlotGitStatusRow` keyed by `(host, slot_id)`,
+      `_propagate_not_clean_since` builds `prior_by_name` keyed by repo name; live snapshot simultaneously showed
+      distinct `not_clean_since` values (`null`, `2026-08-07T06:17:03Z`, `2026-08-07T06:27:03Z`) across slots/repos on
+      the same host — impossible under a collapsed-global path. Closed 2026-08-07 by finalize twin todo 1.
+      unified-trading-pm@594aea342.
 - [ ] [BACKEND] P3. Based on the above, either fix the upstream timestamp source, or add a distinct "last observed dirty
       transition" field alongside the existing hysteresis-gated `not_clean_since` so worktree-health consumers
       (review.md § 3d) can reliably distinguish a fresh edit from a genuinely long-stuck worktree (repo:
-      agent-orchestrator).
+      agent-orchestrator). **Recommendation (verdict (iii) confirmed, 2026-08-07):** the bugfix-the-existing-field
+      branch is provably right — swap `slot-git-status-report.sh` line 198's forwarded host-wide
+      `dirty_consecutive_ticks` aggregate for a per-repo lookup via the already-existing `_read_repo_dirty_ticks` (keyed
+      by repo path in the same `/tmp/slot-cron-ff-pull.result.json`) so `_propagate_not_clean_since`'s confirm-gate is
+      keyed to the same repo it is clearing/preserving, matching `ff_one()`'s own per-repo confirm-gate logic. No
+      schema/field addition required. Stays open: implementation requires QG in agent-orchestrator; out of scope for
+      this finalize plan.
 
 ## Progress Log
 

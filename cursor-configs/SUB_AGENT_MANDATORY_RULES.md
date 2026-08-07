@@ -104,8 +104,10 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live) → **NOTIFY THE O
 Never report a backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness
 tasks); poll only external work on a **progress metric** (flat = STALL → diagnose); monitors read terminal `exit_code` +
 log-mtime + reach a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match). `ScheduleWakeup` / a
-dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min). SSOT:
-`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min). **Never
+`gh workflow run ldr-to-main-promote-fleet.yml` just to check if your repo promoted** — starves its one concurrency slot
+under multi-agent load (2+ hour livelock, measured 2026-08-07); read `promotion_lag_monitor.py`'s output or
+`gh pr list --search "chore(promote)"` instead. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 
 ## When YOU spawn sub-agents
 
@@ -116,21 +118,10 @@ agent MUST NOT proceed. Send all `Task` calls in ONE message; set `model=` expli
 
 ## When escalating a question to the operator (HARD RULE)
 
-**Always present options — never ask an open-ended question.** Every escalation must be structured as:
-
-```
-<question text>
-
-A: <option — include your recommendation here if you have one>
-B: <option>
-C: <option>
-Other: operator can type a custom answer
-```
-
-- Minimum 2 options; include your recommended option and mark it explicitly (e.g. "A: … [WORKER REC]").
-- If genuinely only one path exists, say so and confirm rather than framing it as a choice.
-- The orchestrator dashboard exposes an "Other" input for free-text — structure your options so the operator can pick
-  one or override with custom text. Never block on a yes/no without framing both sides.
+**Always present options, never an open-ended question** — min 2, your recommendation marked explicitly (e.g. "A: …
+[WORKER REC]"); the dashboard already exposes an "Other" free-text input, no need to add your own. Genuinely only one
+path exists → say so and confirm, don't frame it as a fake choice. Never block on a bare yes/no without framing both
+sides.
 
 ## When in doubt — retrieve less but right
 

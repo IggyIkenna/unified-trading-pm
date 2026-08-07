@@ -29,7 +29,7 @@ related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -63,7 +63,7 @@ context_scope:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md,
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
   ]

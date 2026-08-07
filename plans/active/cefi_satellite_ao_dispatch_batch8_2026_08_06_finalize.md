@@ -19,7 +19,7 @@ related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
@@ -47,7 +47,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -86,11 +86,11 @@ context_scope:
       Option A 2026-08-06); checkbox left open per plan; 3 items nominally open (`[SCRIPT] P1` shell, `[SCRIPT] P2`,
       `[RESEARCH] P2`).
 
-- [ ] [REVIEW] P1. **Re-check the two items carried forward from batch4→batch6→batch7's Deferred/re-check sections for
-      cleared gates — still unresolved as of 2026-08-06, third consecutive re-check to find them unchanged.** (a) Has
-      `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" todo (line
-      ~156) closed? If so, the Schema v10 `instrument_id_form` backfill becomes a normal batch9 candidate — record it,
-      do NOT draft the todo here (this finalize plan's scope is reconciliation, not fresh drafting). (b) Has the
+- [x] ✅ [REVIEW] P1. **Re-check the two items carried forward from batch4→batch6→batch7's Deferred/re-check sections
+      for cleared gates — still unresolved as of 2026-08-06, third consecutive re-check to find them unchanged.** (a)
+      Has `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" todo
+      (line ~156) closed? If so, the Schema v10 `instrument_id_form` backfill becomes a normal batch9 candidate — record
+      it, do NOT draft the todo here (this finalize plan's scope is reconciliation, not fresh drafting). (b) Has the
       operator ruled on `issues/estate_orphan_assessment_2026_07_21.md` todo 6's cross-tranche boundedness disagreement
       (cefi/sports KEEP-NA vs. defi RECLASSIFY, line ~549's "Operator/next-toucher: rule on todo 6's boundedness" note)?
       If so, record the ruling and its consequence (a batch9 candidate if ruled AO-eligible; a closed non-issue
@@ -98,7 +98,18 @@ context_scope:
       operator as a standing item rather than silently re-deferring a fourth time — three consecutive no-change
       re-checks (batch6→7→8) is a real signal this needs direct attention, not more automated re-triage. **Done when**:
       both items carry either a "gate cleared → batch9 candidate" note or a dated re-verification that they are still
-      blocked, exactly as batch7 and batch8's own bodies already re-confirmed for this run.
+      blocked, exactly as batch7 and batch8's own bodies already re-confirmed for this run. — **DONE 2026-08-07**: **⚠️
+      4TH CONSECUTIVE NO-CHANGE — OPERATOR ACTION REQUESTED** (this plan's own body called this escalation trigger): (a)
+      `fail_hard_canonical_enforcement_design_2026_07_20.md` `[DESIGN] P1` "close the three §5 gaps" is STILL OPEN —
+      confirmed by na-eligibility-audit 2026-08-06 (tranche=cefi, KEEP-NA): "enforcement design APPROVED-IN-PRINCIPLE
+      but not ready to implement pending 3 adversarially-confirmed architecture gaps." Schema v10 `instrument_id_form`
+      backfill (`[DATA] P3`) is NOT yet a batch9 candidate; gate unchanged. (b) `estate_orphan_assessment_2026_07_21.md`
+      todo 6 cross-tranche boundedness ruling is STILL PENDING — no operator decision since the contested 2026-07-30
+      defi-tranche RECLASSIFY was reverted; na-eligibility-audit 2026-08-07 (tranche=cefi, KEEP-NA): "Stays NA until the
+      operator makes the explicit boundedness ruling the doc itself asks for." Standing tally: cefi+sports=KEEP-NA,
+      defi=RECLASSIFY (reverted), operator ruling outstanding. Both items are now 4 re-checks deep
+      (batch6→7→8→batch8-finalize) with zero gate movement. Per this plan's own escalation rule: these require direct
+      operator attention rather than continued automated re-triage.
 
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch8_2026_08_06.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes", "Archival-hygiene housekeeping" and
@@ -120,3 +131,8 @@ context_scope:
 - **context-scout 2026-08-06**: populated/refreshed context_scope (4 entries) — added the batch7 finalize sibling
   (immediate precedent in the finalize-pattern chain); `_finalize` gate doc, no source-code paths per the skip-source
   carve-out.
+- **batch8-finalize re-check 2026-08-07** (slot-10): 4th consecutive no-change re-check (batch6→7→8→batch8-finalize).
+  (a) `fail_hard_canonical_enforcement_design` `[DESIGN] P1` STILL OPEN (na-eligibility-audit 2026-08-06, KEEP-NA — 3
+  architecture gaps unresolved, Schema v10 backfill not a batch9 candidate). (b) `estate_orphan_assessment` todo-6
+  boundedness ruling STILL PENDING (na-eligibility-audit 2026-08-07, KEEP-NA — operator ruling outstanding since
+  2026-07-30 contested defi-tranche verdict). Both items flagged to operator per this plan's own escalation rule.

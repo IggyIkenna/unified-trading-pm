@@ -61,7 +61,7 @@ source: >-
 
 ## Todos
 
-- [ ] [DOC] P2. **Reconcile both source docs' checkboxes — and deliberately do NOT archive either.** Once the parent
+- [x] ✅ [DOC] P2. **Reconcile both source docs' checkboxes — and deliberately do NOT archive either.** Once the parent
       batch's 2 todos are `[x]`: (1) in
       `issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md`, close the first
       `[SCRIPT] P2` item (the `--dry-run` gating fix) citing the parent todo's actual commit sha — **re-verify the sha
@@ -93,4 +93,13 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-07 (slot 10) — todo 1 done. unified-trading-pm@08cfee7f7.** Reconciled all 4 extracted checkboxes: (1)
+  `gitignore_sync…` item 1: already `[x]` @ `78a3740bf` — re-verified SHA exists (`git show --stat`), correct. (2)
+  `git_health…` item 1: closed `[x] ✅` — verdict (i) REFUTED (fresh `reported_at` per cron run); citing
+  `unified-trading-pm@594aea342` where verdict was recorded. (3) `git_health…` item 2: closed `[x] ✅` — verdict (ii)
+  REFUTED (aggregation surfaces per-repo values, not collapsed-global); citing same `594aea342`. (4) `git_health…` item
+  3: explicitly left open `[ ]` — annotated with bugfix recommendation (per-repo `_read_repo_dirty_ticks` lookup instead
+  of host-wide aggregate); implementation out of scope, requires AO QG. Both source docs retain `status: open`,
+  `assigned_vm: NA`: gitignore doc has 2 open items (template reconciliation + gated VERIFY), git_health doc has 1 open
+  item (field-design fork). Neither is archivable. Neither was archived.
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries) — finalize gate, code-free by design.

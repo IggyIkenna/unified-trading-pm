@@ -12,7 +12,7 @@ codex_refs:
   - /codex/02-data/availability-manifest-and-data-status.md
   - /codex/02-data/data-status-drilldown.md
   - /codex/02-data/subscription-model.md
-  - /codex/02-data/per-category-bucket-layouts.md
+  - /codex/02-data/per-asset-group-bucket-layouts.md
 ---
 
 # Price Chart — Historical Data from GCS to UI
@@ -546,7 +546,7 @@ After A + B + (E baseline) land:
 - `unified-trading-pm/reports/price_chart_gcs_benchmark_2026_04_29.md`: Unit E baseline results.
 - `unified-trading-pm/reports/price_chart_gcs_benchmark_2026_04_29_post.md`: post-Unit-A re-run for diff against
   baseline.
-- `/codex/02-data/per-category-bucket-layouts.md`: confirm the file matches reality — it does, per the listing I did
+- `/codex/02-data/per-asset-group-bucket-layouts.md`: confirm the file matches reality — it does, per the listing I did
   2026-04-29. No edit needed unless drift surfaces.
 - Follow-up plan stub `unified-trading-pm/plans/ai/watchlist_from_instruments_2026_04_30.plan.md` — empty skeleton
   noting we'll source the watchlist from instruments-service once the chart path is live.

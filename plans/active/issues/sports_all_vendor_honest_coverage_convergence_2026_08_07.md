@@ -143,6 +143,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 
 ## Todos
 
+- [ ] [SCRIPT] P2. **Retry EPL's odds_api tail gap** (`mtds-backfill-odds-401-retry`'s chunk 1/2 OOM'd 2026-08-07T13:31Z
+      after covering most of `2025-09-01→2026-05-08` — the last ~2 months before the crash are likely still unresolved)
+      — only launch this AFTER `mtds-backfill-odds-401-retry` finishes its full league sweep (the wrapping loop
+      auto-recovers per-league; premature action here would just be redone by the eventual full-range small-chunk VM
+      anyway). Re-census `source=odds_api, league_id=EPL, capture_status=attempted_failed` first to find the exact
+      residual date range before relaunching.
 - [x] ✅ [SCRIPT] P0. **Investigate + fix the odds_api SOURCE_RETURNED_ZERO cluster** (13,045 rows) — root-caused as
       genuine per-bookmaker vendor gap: v1 sentinel's `SOURCE_RETURNED_ZERO` branch lacked the
       `_is_bookmaker_league_covered_exact` gate that v2 already had. Fix: add per-bookmaker coverage gate; uncovered
@@ -168,9 +174,26 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers — confirmed still
       returning HTTP 502 at 2026-08-07T12:21Z (3h+ after initial failure at 10:17Z; RapidAPI message: "API (not
       working)"). Tagged BLOCKED-UPSTREAM-OUTAGE; do not relaunch without verifying the endpoint returns 200 first.
-- [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill** — `weather-backfill-20260807-120241`,
-      `launch-openmeteo-backfill-vm.sh --entity WEATHER 2020-06-06 2026-08-07`, confirmed RUNNING (auto-republished a
-      stale instruments-service tarball before create, then succeeded). Watch for completion + re-census next tick.
+- [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill, ran to `exit_code=0`** —
+      `weather-backfill-20260807-120241` completed cleanly but did NOT resolve the gap (re-census:
+      `expected_unattempted` barely moved 205,517→205,302; 16,241 new `attempted_failed` rows appeared) — split into the
+      two follow-up todos below rather than reopening this one, since the LAUNCH itself succeeded; what's left is
+      root-cause work.
+- [x] ✅ [SCRIPT] P1. **Root-cause weather's 16,241 `ClientResponseError` rows** — root cause: spurious `raise` inside
+      the inner `except` for the `customer-previous-runs-api.open-meteo.com` call aborted the entire fetch instead of
+      skipping forecasts and continuing to actual weather (the comment at line 136 already described the correct
+      behaviour). Fix: removed the `raise`; added regression test. `instruments-service@1fafbe23`, QG green. On next
+      backfill run the 16,241 `attempted_failed` shards will be re-touched and should resolve to `captured` or
+      `empty_confirmed`.
+- [x] ✅ [SCRIPT] P1. **Explain why weather's `expected_unattempted` barely dropped** — root-caused: NOT a
+      skip-condition false-positive or per-venue sub-loop bug. The 205K rows are for non-Prediction leagues NOT in
+      `_expected_weather_league_ids = get_expected_leagues_for_source("open_meteo", classifications=["Prediction"])`
+      (~33 leagues). Every write path in `_fetch_weather_data` (season-window guard, coverage-start guard,
+      `_record_weather_empty`, `_record_weather_failed`, end-of-function EXPECTED_NO_FIXTURE loop) writes ONLY for those
+      33 leagues; non-Prediction league rows persist as `expected_unattempted` indefinitely. The -215 net reduction came
+      from 215 Prediction-league rows resolved by this run. The 350 rows on 2026-07-28 are for non-Prediction leagues —
+      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py     --apply` (already exists
+      for this exact pattern). See Progress Log 2026-08-07 (slot 7).
 - [x] ✅ [SCRIPT] P2. **Launched SFI full backfill** — `sfi-backfill-20260807-123519` confirmed RUNNING
       (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363
       expected_unattempted shards (distinct from the already-resolved 89-row attempted_failed cluster).
@@ -276,3 +299,101 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   Now 3h+ since initial failure at 10:17Z. Secret Manager access confirmed working (key len=50 chars); the 8
   `attempted_failed` PLAYER_VALUES rows remain unretried. Tagged todo `[BLOCKED-UPSTREAM-OUTAGE]` — do not relaunch
   blind; verify endpoint returns 200 before dispatching a retry VM.
+- **2026-08-07T12:38Z** — Applied the new codex rule 1b (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`,
+  added this tick) properly this time: verified all five running VMs by diffing actual progress VALUES against the prior
+  tick's readings, not just checking that log lines were still appearing. All genuinely healthy: AF campaign
+  PLAYER_STATS 2025-03-08→2025-05-31 (chunk 21/26), footystats 2022-10-13→2023-10-16, SFI 2020-10-17→2021-02-17..19
+  (distinct advancing dates), weather processing 2024-02-18..22, `mtds-backfill-odds-401-retry` 2026-02-23→2026-03-01
+  with **zero** `CHUNK_FAILED`/`OOM_KILLED` matches across its entire log (not just the tail) — genuinely clean, still
+  mid-chunk-1-of-2. Live-reverified odds-api credits: 14,463,684 remaining (only ~12,690 used since the ~11:35Z check,
+  very low burn rate). Since `401-retry` is EPL-only/2025-09→2026-05 (non-overlapping in practical terms with a
+  full-range/all-league relaunch — by the time a full sweep reaches that window, `401-retry`'s work will already be
+  captured and skip-fast) and credits are healthy, launched the full-range small-chunk backfill WITH `--allow-parallel`
+  rather than waiting further: `mtds-backfill-odds-smallchunk-20260807`
+  (`--chunk-size 5 --start 2020-06-06 --end 2026-08-07`, no `--force`). This is the mitigation
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` itself flags as imperfect (previously OOM'd 4/75 chunks) —
+  watching closely next tick for `CHUNK_FAILED`/`OOM_KILLED` recurrence, not treating this as fire-and-forget.
+- **2026-08-07T13:08Z — both odds VMs confirmed genuinely healthy, zero OOM signatures.**
+  `mtds-backfill-odds-smallchunk-20260807`: 0 `CHUNK_FAILED`/`OOM_KILLED` matches across its full log, now at chunk
+  6/451 (`2020-07-01→2020-07-05`), skip-fasting + real-fetching correctly across ~30 leagues per chunk. Full-range,
+  5-day-chunked, so a fresh subprocess baseline every chunk — the mitigation appears to be holding.
+  `mtds-backfill-odds-401-retry`: also 0 `CHUNK_FAILED`/`OOM_KILLED`, still chunk 1/2 but genuinely progressing
+  (2026-03-01 → date not yet logged this check, prior tick's date confirmed superseded). Its memory (`RESOURCE_SAMPLE`
+  over the last 8 minutes: 50.8%→78.5%→50.4%→70.1%→39.3%→67.5%→10.5%→...→71.1%) is **oscillating, not monotonically
+  climbing** — this is the healthy per-date-cleanup signature, distinct from the broken default-chunk-size VM's
+  cumulative-growth pattern from two ticks ago. No action needed; continuing to watch since this VM's single chunk spans
+  8+ months uninterrupted (no 5-day respawn safety net like the sibling VM has), so it remains the more theoretically
+  exposed of the two, just not currently showing distress.
+- **2026-08-07T13:38Z — `mtds-backfill-odds-401-retry` finally OOM'd, but this is the GOOD failure mode, not a repeat of
+  the earlier bad one.**
+  `CHUNK_FAILED: chunk=1/2 league=EPL range=2025-09-01→2026-05-08 exit=137 reason=OOM_KILLED time=2026-08-07T13:31:29Z`
+  — EPL's single 8-month chunk finally hit the ceiling, but only after covering the overwhelming majority of the range
+  (Sept 2025 through ~March 2026 already confirmed captured in prior ticks' checks, written incrementally via
+  `ManifestWriter` per-date, not held in memory — that data is durable regardless of the crash). The wrapping
+  `mtds_chunk_loop.sh` correctly caught the failure and **auto-recovered by moving to the next league (LA_LIGA)** rather
+  than freezing — exactly the "fail-loud, self-recovering" design
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` documents working correctly for chunk-level failures. No
+  manual intervention taken; letting it continue through the remaining leagues. **Residual gap to track**: EPL's tail
+  (~2026-03 through 2026-05-08, the portion after the last confirmed-captured date) may still need a narrow follow-up
+  retry once this VM finishes its full league sweep — added as a todo below rather than acting now, since the sweep
+  isn't done yet and a premature narrow retry would just get re-covered by the eventual full-range small-chunk VM
+  anyway. `mtds-backfill-odds-smallchunk-20260807` remains fully clean: 0 `CHUNK_FAILED`/`OOM_KILLED` matches, now at
+  chunk 13/451 (`2020-08-05→2020-08-09`).
+- **2026-08-07T14:17Z — `401-retry` OOM'd 5 more times (6 total), but produced a genuinely useful diagnostic, not just
+  churn.** Precise timing: EPL (first subprocess this VM's lifetime) survived 93.3 min; every subsequent league
+  (LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE) OOM'd in a tight 6.5-8.9 min band — too consistent across leagues
+  with genuinely different real-fetch densities to be pure per-process real-fetch-volume variance, suggesting something
+  persists across subprocess launches within one VM lifetime (candidate mechanisms + full writeup added to
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s Progress Log — not investigated further here, out of scope
+  for an operational tick). No data lost (per-date incremental writes are durable); self-recovery continues working
+  correctly (now on PRIMEIRA_LIGA). Not killing it — still net-positive real progress each cycle. AF campaign
+  PLAYER_STATS now at **chunk 24/26** (only 2 left). footystats (2024-09-22→2025-04-06), SFI (2021-11-02→2022-03-11),
+  weather (→2026-07-25), `mtds-backfill-odds-smallchunk-20260807` (chunk 17/451, still 0 OOM) all confirmed healthy via
+  value-diffs.
+- **2026-08-07T14:47Z — CORRECTION: weather backfill finished (exit_code=0, self-deleted) but did NOT actually resolve
+  the honest-coverage gap — do not read `exit_code=0` as "done" (exactly the trap codex rule 4a warns about).**
+  `weather-backfill-20260807-120241` reached `last_completed_date=2026-08-07` (the full range end) and exited cleanly,
+  but a fresh census shows: `expected_unattempted` barely moved (205,517 → 205,302, only -215) and **16,241 NEW
+  `attempted_failed` rows appeared** (`error_reason=ClientResponseError`, spread across ~478 distinct dates from
+  2024-01-03 to 2026-08-07 — not a narrow today-only edge case, a genuine broad vendor-API issue; the tail log showed
+  the concrete signature: `400 Bad Request` against
+  `customer-previous-runs-api.open-meteo.com/v1/forecast?...&previous_day1&...`). Also confirmed the remaining
+  `expected_unattempted` rows span the FULL date range including recent dates (e.g. 2026-07-28: 350 rows on a single
+  date) — meaning many (date, venue) shards were never even attempted despite the date-loop completing, a separate
+  puzzle from the `ClientResponseError` cluster. **Two genuinely new, unresolved findings, not a closed line item**: (1)
+  root-cause the `customer-previous-runs` 400 errors (vendor contract issue? request malformed for certain date/venue
+  combos?); (2) explain why so many shards remain fully untouched despite the date-iteration reaching the full range (a
+  skip-condition false-positive, a per-venue sub-loop bug, or a rate-limit silently short-circuiting without recording
+  `attempted_failed`?). Neither investigated further this tick — flagging clearly rather than claiming a false win.
+  `mtds-backfill-odds-smallchunk-20260807` had its first OOM this tick (chunk 18/451, EPL, `exit=137`) but
+  self-recovered correctly (moved to LA_LIGA) — 1 failure in 18 chunks, consistent with (better than) the OOM doc's own
+  "4/75 chunks" precedent for `--chunk-size 5`, not concerning. `401-retry`'s per-league OOM cadence holds steady at
+  ~6-9 min (4 more failures: PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG, SCOTTISH_PREMIERSHIP; now on GREEK_SUPER_LEAGUE, 10
+  total) — stable, not degrading further, no action needed.
+- **2026-08-07 (slot 4) — Root-caused and fixed weather's 16,241 `ClientResponseError` rows
+  (`instruments-service@1fafbe23`).** Root cause: inside `OpenMeteoAdapter.get_weather_match_window`, the inner `except`
+  block for the `customer-previous-runs-api.open-meteo.com` call (lines 154-162) had a spurious `raise` that propagated
+  the 400 Bad Request upward, aborting the entire fetch. The adapter's OWN comment at line 136 already stated the
+  correct intent ("if Previous Runs API is down, skip forecasts and still get actuals"), but the `raise` contradicted it
+  — so every date ≥ 2024-01-01 where the customer previous-runs endpoint returned 400 became an `attempted_failed` row
+  instead of getting actual weather from the archive/forecast endpoint. Fix: removed `raise`; added regression test
+  `test_prev_runs_400_falls_back_to_actuals` in `test_open_meteo_adapter_coverage.py` and updated
+  `test_previous_runs_api_exception_propagates` (renamed, docstring and `call_count` assertion corrected). QG green. On
+  the next weather backfill run, the 16,241 shards will be re-touched; they should resolve to `captured` (venues with
+  weather data) or `empty_confirmed` (venues with no data) rather than `attempted_failed`.
+- **2026-08-07 (slot 7) — Root-caused why weather's `expected_unattempted` barely moved (205,517→205,302, -215).**
+  Confirmed via code inspection of `weather.py` +
+  `instruments-service/scripts/type_weather_eu_no_provider_coverage_2026_06_27.py`. **Not** a skip-condition
+  false-positive or per-venue sub-loop bug. Definitive finding: `_fetch_weather_data` builds
+  `_expected_weather_league_ids` using `get_expected_leagues_for_source("open_meteo", classifications=["Prediction"])` —
+  only ~33 leagues. All write paths (season-window guard → `record_expected_empty` → `EMPTY_CONFIRMED`; coverage-start
+  guard; `_record_weather_empty`; `_record_weather_failed`; end-of-function EXPECTED_NO_FIXTURE loop) write exclusively
+  for league_ids in that 33-league set. The 205K `expected_unattempted` rows are for the ~172 non-Prediction leagues
+  seeded historically (dates 2026-02-20→2026-06-26, documented in the existing one-off script's own docstring) by an
+  older weather VM that used a broader league set. Since the backfill never emits ANY manifest entry for non-Prediction
+  leagues — not captured, not empty_confirmed, not attempted_failed — those rows are structurally unreachable by the
+  weather writer regardless of date range. The -215 reduction = 215 Prediction-league rows that happened to still be
+  expected_unattempted and got resolved. The 350 rows on 2026-07-28 are for non-Prediction leagues, untouched by design.
+  Resolution path: `instruments-service/scripts/type_weather_eu_no_provider_coverage_2026_06_27.py --apply`
+  (reclassifies to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`) + consolidator pass — separate action, not this
+  task.

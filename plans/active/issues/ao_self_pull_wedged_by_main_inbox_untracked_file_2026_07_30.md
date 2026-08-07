@@ -20,7 +20,7 @@ summary: >-
   access outside any slot worktree's scope.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
@@ -233,3 +233,9 @@ follows correctly — only the webhook config is missing).
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: `asset_group` mistag
+  RULED — Option B/C combined ("make it correct"). Retagged `[infrastructure]` → `[ao]` directly (this doc is the
+  finding-6 original, 5 consecutive days parked as `ag_closeout_audit_infra_parked`'s `BLOCKED-OPERATOR-DECISION`). See
+  `ag_closeout_audit_infra_parked_2026_08_07.md` findings 6/18/19 for full cross-finding context — a 3rd instance
+  (`ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md`) retagged in the same pass; the authoring-time
+  default fix (Option C) tracked separately.

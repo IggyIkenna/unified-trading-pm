@@ -306,3 +306,23 @@ the highest-priority open question.
   `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`, now archived). The `[DATA] P1` relaunch-the-purge-VM todo directly
   below is now UNBLOCKED — annotated it accordingly, left `[ ]` for the next worker on
   `defi_satellite_ao_dispatch_batch9-003` to execute.
+- **2026-08-07 (AO dispatch #9, `infra`, slot 8)**: relaunched VM `20260807-100248` per dispatch #8's resume point.
+  Found it GONE (deleted 10:55:51Z) despite the `vm_zombie_watchdog.py` fix being confirmed live — **this is a SECOND,
+  previously-unknown killer, not a recurrence of the fix's own gap.** Cloud Audit Log
+  (`protoPayload.requestMetadata.callerSuppliedUserAgent="python-requests/2.34.2"` +
+  `serviceAccountDelegationInfo.firstPartyPrincipal=service-1060025368044@serverless-robot-prod.iam.gserviceaccount.com`,
+  a Cloud Run identity — NOT the VM-side watchdog) plus the watchdog's own serial-console log (independently confirmed
+  "killed 0/0 zombies" across sweep cycles 10:53→10:58Z, spanning the exact kill) together PROVE the delete came from
+  `deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py`'s Cloud-Run `sweep()` — a
+  SEPARATE mechanism (`_kill_stalled_vm` calls the watchdog's `_kill_vm` primitive directly, bypassing
+  `PREFIX_IDLE_THRESHOLDS`) with its own flat `DEFAULT_KILL_MINUTES=45.0`, which the 2026-08-06 fix never touched even
+  though `canonical-migration-` is explicitly in this sweep's watched-prefix list (`_is_backfill_vm` docstring). Fixed
+  by adding `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` + `_resolve_kill_minutes()` (mirrors
+  `vm_zombie_watchdog._resolve_idle_thresholds`) to `heartbeat_stall_watcher.py`'s `sweep()` loop, + 2 new regression
+  tests. Manifest generation confirmed UNCHANGED by the failed run (CAS never fired) — safe to retry, no partial state.
+  QG in flight at time of writing; ships via quickmerge once green, then relaunches the purge VM a 3rd time under this
+  new fix. See `defi_satellite_ao_dispatch_batch9_2026_08_06.md` Progress Log for the mirrored full write-up.
+- **2026-08-07 (AO dispatch #9 continued, `infra`, slot 8)**: `heartbeat_stall_watcher.py` fix **SHIPPED**
+  `deployment-service@14240378194039fe5a2cfb5e2d86dbed6cffe8d8` — `quality-gates.sh` full run green (246s, 0 failures),
+  landed on `live-defi-rollout` via `quickmerge.sh --agent`, post-push ancestry verified (ahead=0). Proceeding to the
+  purge VM's 3rd relaunch attempt with fresh pre-flight re-verification.

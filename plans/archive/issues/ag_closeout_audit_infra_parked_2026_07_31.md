@@ -13,7 +13,7 @@ summary: >-
   safety rule, only the owning tranche may write the retag, so this run only reports it. All three are evidence-backed,
   not judgment calls — recorded here per the "Parked findings ALWAYS get a durable issue doc" hard rule so they are not
   lost in either run's ephemeral chat/evidence text.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -23,7 +23,7 @@ tags: [infra, ag-closeout-audit, plan-reconcile, false-unchecked, parked-finding
 related:
   [
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
-    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/active/infra_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -47,7 +47,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "unified-trading-pm session, 2026-08-07 — all 3 findings independently verified resolved (see Todos)"
 depends_on: []
 source: >-
   `/ag-closeout-audit infra` run 2026-07-31 (ag_closeout_auditor scheduled worker, slot 13), Phase 1 per-doc
@@ -60,10 +60,17 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
-    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
   ]
 ---
+
+> ## ✅ RESOLVED 2026-08-07 — archived (ACKED-INTO-CODE / ACKED-AS-INVALID)
+>
+> All 3 findings independently re-verified resolved: (1) `delta_proxy_repricer.py` checkbox already flipped
+> `execution-service@89fbf99d` (closed 2026-08-02); (2) the stale scratch clone is genuinely absent on the real host
+> (directly confirmed this session) and its target doc is already `status: resolved` + archived; (3) the `asset_group`
+> mistag is already corrected to `[ao]`. No open work remains.
 
 # Parked findings — 2026-07-31 `/ag-closeout-audit infra` run
 
@@ -158,15 +165,15 @@ so the retag is a corpus-hygiene fix, not an unlock of new dispatchable work.
       `/ag-closeout-audit     infra` runs (07-31, 08-01, 08-02) because that skill is scoped out of false-unchecked
       flips; it is in scope for `/na-eligibility-audit`'s KEEP-NA-stale-items verdict, which uses the same HARD evidence
       bar.
-- [ ] [DOCS] P3. Positively confirm (on the real target host, not just this sandbox) whether
-      `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` has genuinely been deleted, then reconcile
-      `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` per finding 2 above. Done
-      when: the doc's todo 3 and `status`/`assigned_vm` accurately reflect confirmed reality, with the confirmation
-      method cited.
-- [ ] [DOCS] P3. Retag `issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`'s `asset_group`
-      `[infrastructure]` → `[ao]` per finding 3 above (owning-tranche fix — leave to the `ao`-tranche's own audit/a
-      corpus-wide retag pass, not this run). Done when: the tag is corrected and `check_ag_closeout_linkage.py` stays
-      clean for both tranches.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-07 — positively confirmed on the real target host (this session runs on that same
+      shared VM, `.tabs/3/` is a sibling directory).** `ls .tabs/3/` shows no
+      `instruments-service-agentwork-sports-2026-07-13/` and no `stash-bundles/` — genuinely deleted, not a
+      sandbox-provisioning artifact. `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
+      is independently already `status: resolved`, all 3 todos `[x]`, and archived to
+      `plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` — the operator
+      ruled it an accepted unrecovered loss on 2026-08-07. Both sides now agree.
+- [x] ✅ [DOCS] P3. **DONE — already applied.** `issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`
+      carries `asset_group: [ao]` (verified live), confirming the `ao`-tranche's own retag pass already picked this up.
 
 ## Progress Log
 

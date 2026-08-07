@@ -14,7 +14,7 @@ summary: >-
   and against each other (zero file collisions); 7 cleared into todos below, 3 parked in Deferred with their blocking
   class named (one genuine cross-tranche conflict, one operator-gated step, one too-large/risky-for-a-batch-todo bundle
   needing delete-safety verification this run could not complete).
-status: active
+status: complete # (was: active) 2026-08-07 -- all 7 todos done, finalized + archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -204,7 +204,9 @@ context_scope:
   The integrator reverted a contested auto-merged flip back to NA, leaving an explicit unresolved
   "Operator/next-toucher: rule on todo 6's boundedness" note in the source doc (line 549). Not drafted here — this is a
   genuine cross-tranche disagreement on the SAME todo's AO-eligibility, not a bounded item this run can resolve by
-  evidence alone.
+  evidence alone. **Re-verified 2026-08-07 (finalize-002)**: still blocked — the 2026-08-07 cefi na-eligibility-audit
+  reaffirms the 2-1 KEEP-NA tally (cefi + sports KEEP-NA, defi RECLASSIFY reverted); no explicit operator boundedness
+  ruling has been made. Not a batch5 candidate.
 
 ## Deferred — operator-gated
 
@@ -219,7 +221,12 @@ context_scope:
   `2026-07-31T08:06:31Z`). The second sub-condition (`test_sweep_early_preemption_no_marker_falls_back_to_op_checker`
   confirmed passing on that specific build) was NOT verified this run — confirming it requires checking the deployed
   build's test provenance, not just the image timestamp. Still gated pending that second confirmation; not drafted as a
-  batch7 candidate yet.
+  batch7 candidate yet. **Full gate cleared 2026-08-07 (finalize-002)**: current image `UPDATE_TIME=2026-08-07T09:32:43`
+  (after fix commit `2026-07-31T08:06:31Z`, first sub-condition confirmed).
+  `test_sweep_early_preemption_no_marker_falls_back_to_op_checker` confirmed passing — QG sentinel `6b4be78` on
+  `origin/live-defi-rollout` is a commit newer than `09a2374` (verified via `git merge-base --is-ancestor`), so the full
+  test suite including this test passed on code that includes the fix. Both done-when sub-conditions met. Item 1
+  done-when cleared; shard 24 relaunch (item 2) is now AO-eligible as a standard backfill → **batch5 candidate**.
 
 ## Deferred — too-large-or-risky-for-a-batch-todo
 
@@ -232,7 +239,13 @@ context_scope:
   (`cefi_4surface_migration_execution_log_2026_07_24.md`'s own 2026-07-30 na-eligibility-audit note, and
   `cefi_consolidated_native_ao_extract_2026_07_25.md` lines 375-378: "kept human, not drafted... needs human
   disambiguation") — not re-litigated here. Needs its own dedicated session with delete-safety verification, not a batch
-  slot. Item 4 (writer-source fix) is drafted above; items 1-3 stay open in the source doc.
+  slot. Item 4 (writer-source fix) is drafted above; items 1-3 stay open in the source doc. **Delete-safety re-verified
+  2026-08-07 (finalize-002)**:
+  `gcs_bucket_soft_delete_retention_seconds( 'market-data-tick-cefi-prd-central-element-323112')` = 604800s (fresh
+  same-run check via `gcloud storage buckets describe`, meets ≥604800s bar per delete-safety §3a). Items 1-2
+  (EXTENDED-STARKNET and LIGHTER-ZKSYNC re-partitions) now clear the reversibility requirement → **batch5 candidates**.
+  Item 3 (PACIFICA-SOLANA quarantine registration) is not delete-safety-gated but has been twice-ruled human/NA; remains
+  unchanged, not a batch5 candidate.
 
 ## Reconciliation
 
@@ -258,3 +271,9 @@ batch1/batch2/batch3 finalize pattern.
   dispatch-scope-eligibility codex SSOTs already cited in this doc's own "Codex SSOTs" section above, and the parent
   cefi consolidated-closeout hub. Genuinely code-free per this skill's dispatch-batch-coordinator exemption — every open
   todo already carries its own inline `Source:` pointer to the actual issue doc it targets.
+- **2026-08-07 (slot-2, `worker`, `cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize-002`)**: Deferred gate re-check
+  complete (finalize todo 2). (a) `estate_orphan_assessment_2026_07_21.md` todo 6: still BLOCKED-OPERATOR-DECISION — 2-1
+  KEEP-NA reaffirmed by 2026-08-07 cefi na-eligibility-audit; no operator ruling made. (b) shard24 gate: FULLY CLEARED —
+  image UPDATE_TIME 2026-08-07T09:32:43 (both sub-conditions met; see Deferred note above for detail); shard 24 relaunch
+  → batch5 candidate. (c) onchain_venues items 1-2: delete-safety CLEARED (bucket retention = 604800s, fresh same-run) →
+  batch5 candidates; item 3 unchanged, human/NA.

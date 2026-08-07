@@ -14,9 +14,9 @@ summary: >-
   claim — the consolidated closeout's backfill-path fix — provably covered a different code path, leaving the
   capture-path item genuinely open); these became the 4 todos below. The remaining 30 orphaned docs' items stay parked
   in the Deferred section, taxonomy-tagged (operator-gated / time-gated / conflict-gated / too-large-or-risky /
-  human-only), referenced against batch9's deeper per-item record where unchanged. Status: draft — not
-  ingested/dispatched until operator approval flips it active.
-status: draft
+  human-only), referenced against batch9's deeper per-item record where unchanged. Status: active — operator-approved
+  2026-08-07, flipped from draft.
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -246,13 +246,13 @@ orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not
   claims: halftime fixture_id → closeout Track E's fix provably covers the BACKFILL path, capture path genuinely open;
   parity test → sequenced after the too-large migration; footystats → sibling self-dispatched claim;
   instrument_availability league= → league_id migration prereqs; etc.). 4 conflict- cleared bounded items → this batch's
-  4 todos (status: draft — operator approval required before activation, per the skill's never-auto-flip rule). 30
-  orphaned docs' items parked in Deferred above (29 with non-batchable taxonomy entries + 1 fully extracted); ledger:
-  parked_findings = 29 doc-level entries written in this Deferred section (plus 6 report-only multi-tranche index docs
-  counted separately as report-only, not parked). No retags, no shared doc writes performed this run (classification +
-  draft only — no multi-tranche doc was edited). OOM-directive acknowledgment (2026-08-06 operator broadcast): no heavy
-  RAM/IO-bound local process was launched by this session — Phase 1 ran as subagent model calls only; nothing OOM-killed
-  on this slot; no progress-log event to record beyond this statement.
+  4 todos (flipped `active` 2026-08-07, operator-approved). 30 orphaned docs' items parked in Deferred above (29 with
+  non-batchable taxonomy entries + 1 fully extracted); ledger: parked_findings = 29 doc-level entries written in this
+  Deferred section (plus 6 report-only multi-tranche index docs counted separately as report-only, not parked). No
+  retags, no shared doc writes performed this run (classification + draft only — no multi-tranche doc was edited).
+  OOM-directive acknowledgment (2026-08-06 operator broadcast): no heavy RAM/IO-bound local process was launched by this
+  session — Phase 1 ran as subagent model calls only; nothing OOM-killed on this slot; no progress-log event to record
+  beyond this statement.
 - **Observation for the operator**: several batch9 Deferred citations are truncated mid-sentence with a trailing "…"
   (e.g. the halftime fixture_id, parity-test, and CLV-retrain entries), making the 08-04 conflict claims not fully
   recoverable from the record — this run re-verified each affected item live instead (see the per-item notes above), but
@@ -270,3 +270,9 @@ orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not
 - /codex/02-data/honest-absence-downstream-handling.md — blank-but-present column anti-pattern (todo 4)
 - /codex/05-infrastructure/data-pipeline-alerts.md + /codex/04-architecture/shard-level-failure-isolation.md —
   DP-CATALOG-001 context (todo 1)
+
+## Progress Log
+
+- **Operator ruling 2026-08-07**: APPROVED — flipped `status: draft` → `active`. Pre-flip investigation (read-only)
+  confirmed 82-doc Phase-1 classification + Phase-3 conflict-check against the full covering set, 4 todos targeting 4
+  distinct files/repos with no overlap, no rename/archival ops among them.

@@ -24,7 +24,7 @@ summary: >-
   todos below, zero genuine conflicts, zero BLOCKED-OPERATOR-DECISION parked this run (the 2 carried conflict-gated
   items are re-verified still open — 5th consecutive re-check — and flagged explicitly for the operator per
   batch8-finalize's own instruction, not silently re-deferred).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -234,6 +234,13 @@ for a linkage gap; same pattern as batch8's "Self-dispatched, linkage-fix-only" 
   batch's Phase 3 ran (shared with /na-eligibility-audit).
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — the
   bounded/checkable test applied to each candidate.
-- `plans/PLAN_FORMAT.md` — `status: draft` semantics (this batch is draft until operator-approved).
+- `plans/PLAN_FORMAT.md` — `status: draft` semantics (this batch was operator-approved 2026-08-07, now `active`).
 - `/codex/05-infrastructure/vm-launcher-runbook.md` — VM lifecycle (STARTED/progress/STOPPED) + the SPOT default rule
   todo 3 must respect for its observation VM.
+
+## Progress Log
+
+- **Operator ruling 2026-08-07**: APPROVED — flipped `status: draft` → `active`. Pre-flip investigation (read-only,
+  separate from this edit) confirmed this batch's own explicit Phase 3 conflict-check + cross-todo file-collision
+  statement, no rename/archival ops among its todos (the class of the 2026-07-25 mass-flip safety incident), content
+  verified safe to dispatch.

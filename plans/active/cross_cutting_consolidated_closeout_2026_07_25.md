@@ -653,24 +653,31 @@ the cron launcher-SSOT reconcile, the missing `{service_name}-events` topic crea
 [issues/manifest_hygiene_red_2026_06_27.md](/plans/archive/issues/manifest_hygiene_red_2026_06_27.md) (defi instance) +
 [issues/manifest_hygiene_red_2026_06_29.md](/plans/archive/issues/manifest_hygiene_red_2026_06_29.md) (cefi instance) —
 both from `manifest_hygiene_daily.py`;
-[issues/phantom_captures_prediction_2026_06_28.md](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md)
-
-- [issues/phantom_captures_tradfi_2026_06_28.md](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md) — both
-  from the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`).
+[issues/phantom_captures_prediction_2026_06_28.md](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md) from
+the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`). (`phantom_captures_tradfi_2026_06_28.md`
+retagged `[tradfi]` 2026-08-07 — see cross-reference below, no longer claimed here.)
 
 **Close-out criterion**: each candidate CSV triaged (real gap → backfill, code bug → fix adapter/writer, intentional new
 venue → extend the UAC oracle); the prediction/tradfi phantom rows reconciled via `--apply` flips to `attempted_failed`.
 
-**Ownership note (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #20, 2026-07-26)**: these 4 docs
-are tagged `[cross-cutting]` because the underlying MONITOR (`manifest_hygiene_daily.py` /
+**Cross-reference**:
+[issues/phantom_captures_tradfi_2026_06_28.md](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md) — same G3
+phantom-manifest monitor as the 3 docs above, but tradfi-owned (`asset_group: [tradfi]`) since 2026-08-07; tracked in
+`tradfi_consolidated_closeout_2026_07_18.md`'s own aggregated-source list, not this Track. Listed here only because it
+shares the monitor, not as a Track-22 close-out obligation.
+
+**Ownership note (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #20, 2026-07-26; PARTIALLY
+OVERRIDDEN 2026-08-07)**: the remaining 3 docs (2× `manifest_hygiene_red`, `phantom_captures_prediction`) stay tagged
+`[cross-cutting]` because the underlying MONITOR (`manifest_hygiene_daily.py` /
 `reconcile_phantom_manifest_rows_all.py`) is shared fleet-wide, even though each instance's content/fix is single-AG
-(defi/cefi/prediction/tradfi respectively). **Kept `[cross-cutting]` deliberately, NOT retagged** — retagging
-mid-rollout while other agents concurrently audit those same AG tranches is the greater hazard (a doc disappearing from
-this tranche's Sources mid-audit vs. reappearing in another tranche's is exactly the kind of race this rollout has
-repeatedly hit). `phantom_captures_tradfi_2026_06_28.md` is double-claimed (also named in tradfi's own batch2 Deferred
-section) — that duplication is intentional pending a real merge, not a bug.
-`phantom_captures_prediction_2026_06_28.md`'s 1 remaining open todo (the 15-month re-fetch/backfill) was **SUPERSEDED
-2026-07-29 (BLK-eb3f4765, main Option A) and the doc archived** — extracted into the operator-driven
+(defi/cefi/prediction respectively). **Kept `[cross-cutting]` deliberately for these 3, NOT retagged** — retagging
+during concurrent per-tranche audits is still the greater hazard (a standing condition, not a one-time rollout risk,
+since the audits run on a permanent cron). **The 4th, `phantom_captures_tradfi_2026_06_28.md`, was retagged `[tradfi]`
+2026-08-07** — operator explicitly overrode the 2026-07-26 ruling for this one doc after seeing the rationale (see
+`tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 6 for the override record); its prior double-claim
+(also named in tradfi's own batch2 Deferred section) is now resolved — tradfi is its sole home, this Track no longer
+claims it. `phantom_captures_prediction_2026_06_28.md`'s 1 remaining open todo (the 15-month re-fetch/backfill) was
+**SUPERSEDED 2026-07-29 (BLK-eb3f4765, main Option A) and the doc archived** — extracted into the operator-driven
 (`assigned_vm: NA`), gated plans that own it: `/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
 (P0 MVP-backfill-readiness gate, only after A–D smoke-green) + `/plans/active/data_completion_prediction_2026_07_15.md`.
 No open todo remains under this Track for it; nothing was launched (running it ahead of the canonical-migration +

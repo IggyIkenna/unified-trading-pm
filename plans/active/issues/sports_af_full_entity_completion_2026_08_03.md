@@ -189,15 +189,14 @@ not urgent enough to block this campaign.
 - [x] ✅ [SCRIPT] P0. ~~Recompute PLAYER_STATS/INJURIES/STANDINGS/TEAMS needed counts~~ — **CORRECTED 2026-08-04**: both
       census scripts had an empty_confirmed blind spot, fixed (`instruments-service@579421bf`). See the corrected table
       above. **PLAYER_STATS reprioritized to P0** — only 1,006 needed (was 17,440), genuinely near-complete.
-- [ ] [SCRIPT] **P0** (reprioritized, near-complete). **Launch PLAYER_STATS MVP-96 backfill**
-      (`--entity PLAYER_STATS 2020-06-06 <today>`) once the singleton lock frees up — only **998 needed shards**
-      (2026-08-05 re-census), should converge fast.
-- [ ] [SCRIPT] P1. **Launch TEAMS all-leagues backfill** (46,786 needed as of 2026-08-05T19:11Z — **IN PROGRESS**,
-      `af-backfill-20260805-201310` launched 20:13Z after FIXTURE_STATS's rate slowed; likely 1 call/league not 1
-      call/shard, confirm real call cost before estimating timeline; may complete far faster than the shard count
-      implies).
-- [ ] [SCRIPT] P1. **Launch STANDINGS all-leagues backfill** (51,114 needed, 2026-08-05 re-census — dropped from
-      64,439). Same discipline. Next up after TEAMS.
+- [x] ✅ [SCRIPT] **P0** (reprioritized, near-complete). **Launch PLAYER_STATS MVP-96 backfill** — **DONE
+      2026-08-07T15:15Z**: `af-backfill-20260807-013716` ran its full 26-chunk sweep to `exit_code=0`; re-census
+      confirms `needed=18` (was 998), 99.96% resolved.
+- [x] ✅ [SCRIPT] P1. **Launch TEAMS all-leagues backfill** — **CONFIRMED DONE 2026-08-07T15:15Z** via the same
+      re-census: `needed=96` (was 46,786) — `af-backfill-20260805-201310` (launched 2026-08-05, before this session) had
+      already closed nearly all of this gap; only just discovered/confirmed now.
+- [x] ✅ [SCRIPT] P1. **Launch STANDINGS all-leagues backfill** — **CONFIRMED DONE 2026-08-07T15:15Z**, same re-census:
+      `needed=271` (was 51,114) — same earlier-VM explanation as TEAMS above.
 - [ ] [SCRIPT] P2. **Launch INJURIES all-leagues backfill** (62,709 needed, unchanged — no backfill run against it yet)
       — likely per-fixture-date cadence, apply the daily stop/resume discipline.
 - [x] ✅ [SCRIPT] P2. ~~Launch LEAGUES all-leagues backfill~~ — NOT APPLICABLE, resolved above: LEAGUES is a retired
@@ -804,3 +803,48 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` and
   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. SFI backfill also confirmed healthy this tick (real writes,
   21,742 rows for 2020-10-17). Not this campaign's scope, noted for completeness.)
+- **2026-08-07T12:40Z** — PLAYER_STATS climbing (2025-03-08 → 2025-05-31, chunk 21/26, ~5 chunks left). footystats
+  climbing (2023-04-23 → 2023-10-16). Both healthy — verified this time via actual date-value diffs against last tick
+  per the new codex rule 1b, not just log-line presence. (Aside, sibling-doc scope: added codex rule 1b to
+  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` documenting the crash-loop-looks-like-progress lesson;
+  relaunched the odds_api full-range backfill with `--chunk-size 5 --allow-parallel` alongside the still-healthy
+  `mtds-backfill-odds-401-retry` (confirmed zero OOM signatures across its full log, credits healthy at 14.46M
+  remaining) — full detail in `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
+- **2026-08-07T13:09Z** — PLAYER_STATS climbing fast (2025-05-31 → 2025-08-19), now **chunk 22/26 — only 4 chunks
+  left**, likely to finish within the next 1-2 ticks. footystats climbing (2023-10-16 → 2024-03-30). Both healthy,
+  verified via actual date-value diffs again (rule 1b). Watch closely next tick for chunk 26/26 + clean exit — once that
+  lands, the `af-backfill-*` singleton lock frees and FIXTURE_STATS (this doc's next queued P0 todo) should launch
+  immediately, resuming from its own `PROGRESS.json` checkpoint per the doc's existing Todos section.
+- **2026-08-07T13:39Z** — PLAYER_STATS still chunk 22/26, actively working through it (fixture lookups now at
+  2025-10-26, cheap 0-extra-API-call URDI passthrough). Not done yet — no completion signal, still ~4 chunks remaining.
+  footystats climbing (2024-03-30 → 2024-09-22). Both healthy. (Aside, sibling-doc scope: the odds_api 401-retry VM's
+  EPL chunk finally OOM'd after covering most of its 8-month range — the wrapping loop self-recovered correctly by
+  moving to the next league, matching documented "working as designed" behavior, not a repeat of the earlier bad
+  crash-loop. The independently-tracked SOURCE_RETURNED_ZERO cluster (13,045 rows) turned out to already be root-caused
+  and fixed by another worker this session — one less open item. Full detail in
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
+- **2026-08-07T14:18Z** — PLAYER_STATS now **chunk 24/26** (was 22/26), only **2 chunks left** — should complete within
+  the next tick or two. footystats climbing (2024-09-22 → 2025-04-06). Both healthy, verified via date-value diffs.
+  Watching closely for chunk 26/26 + clean exit to launch FIXTURE_STATS immediately once the lock frees.
+- **2026-08-07T14:48Z** — PLAYER_STATS now **chunk 25/26 — only 1 chunk left, imminent.** footystats climbing
+  (2025-10-17), SFI climbing (2022-08-13). All healthy. (Aside, sibling-doc scope, important correction: the weather
+  backfill VM completed with `exit_code=0` but a re-census showed it did NOT actually resolve the honest-coverage gap —
+  `expected_unattempted` barely moved and 16,241 new genuine `attempted_failed` rows appeared. Caught this via a proper
+  post-completion re-census rather than trusting the clean exit code, per codex rule 4a. Full detail + follow-up todos
+  in `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`. Not this campaign's scope.)
+- **2026-08-07T15:15Z — MILESTONE: PLAYER_STATS genuinely converged.** `af-backfill-20260807-013716` reached chunk
+  26/26, `instruments-backfill loop complete`, `exit_code=0`, self-deleted — and this time VERIFIED via a real re-census
+  (`census_all_af_entities_completion_2026_08_03.py`) rather than trusted on the exit code alone (per this session's own
+  weather-backfill lesson, applied immediately): **PLAYER_STATS needed=18** (down from 998 at the start of this run, and
+  1,006/17,440 before that) — 99.96% resolved, the residual 18 is plausibly a genuine honest-absence floor, not a real
+  gap. **Bonus finding from the same census**: TEAMS (needed=96) and STANDINGS (needed=271) are ALSO already near-fully
+  resolved — turns out an earlier VM run (`af-backfill-20260805-201310`, before this session's PLAYER_STATS focus began)
+  had already closed most of their gaps; this campaign is further along than the standing Progress Log entries
+  suggested. The `af-backfill-*` singleton lock freed — immediately launched the next queued P1 entity,
+  **FIXTURE_STATS** (`launch-api-football-backfill-vm.sh --entity FIXTURE_STATS 2020-06-06 2026-08-07`, should resume
+  from its own `PROGRESS.json` checkpoint at `2023-11-19` per the existing Todos section — confirming next tick). Note:
+  this doc's own AO-parked condition (`auto_unpark__sports_af_full_entity_completion-003`) only blocks AO's own
+  task-offering, not a direct manual VM launch, so no unpark action was needed to proceed.
+- **2026-08-07T16:19Z** — **FIXTURE_STATS confirmed launched and RUNNING**: `af-backfill-20260807-161736` (auto-
+  republished 2 stale tarballs — instruments-service, deployment-service — before create, then succeeded). Will confirm
+  actual date-progress + resume-from-checkpoint behavior next tick.

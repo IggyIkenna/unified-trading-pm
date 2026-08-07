@@ -181,6 +181,51 @@ both files DO share (naming style only — e.g. `HEATING_OIL` vs `HEATINGOIL`, `
 pick between the two conventions before the reverse map can be built cleanly. Not asked this round — will need a
 follow-up ruling.
 
+**RULED + SHIPPED 2026-08-07 (operator, same session) — the remaining 17-value naming pick, PLUS a correction to this
+doc's own "necessary base" framing above.** Before recording the naming-pick, traced which dict is actually LIVE:
+`unified_api_contracts/registry/__init__.py` re-exports the package-level `EXCHANGE_CODE_TO_NAME` **from
+`tradfi_symbology.py`, not `tradfi_instrument_universe.py`** — and `market-tick-data-service`'s
+`migrate_tradfi_canonical_2026_07.py::_exchange_to_product_root` (the function every chain-bundle writer/migration
+script in that repo imports for the real `underlying=` path segment) imports exactly that package-level symbol. So the
+"necessary base" framing above was incomplete: `tradfi_instrument_universe.py` has the fuller code coverage (correct),
+but `tradfi_symbology.py` is the one that actually controls live GCS path/manifest writes — a fix to
+`tradfi_instrument_universe.py` alone would NOT have changed real writer behavior at all.
+
+**Naming pick, applied to both files**: adopted `tradfi_symbology.py`'s existing compact convention (`HEATINGOIL`,
+`TBOND`, `TNOTE{n}Y`, `SOYOIL`/`SOYMEAL`/`SOYBEAN`) over `tradfi_instrument_universe.py`'s verbose underscored form —
+matches the 33-code precedent both files already agreed on (zero underscores anywhere in that set) and standard market
+terminology (a 30Y Treasury bond is a "T-Bond" on every desk, not "TREASURY_30Y"). `tradfi_symbology.py` needed no value
+change here (already compact); `tradfi_instrument_universe.py`'s 8 values were changed to match.
+
+**Micro-vs-standard, applied to both files, with symbology being the consequential one**:
+`tradfi_instrument_universe.py`'s 15 micro-code values fixed to a `MICRO-<ROOT>` form (matching the already-live
+`MES`→`MICRO-SP500` convention, not inventing a `_MICRO`-suffix alternative). **More importantly**: those same 15 codes
+were ADDED to `tradfi_symbology.py` for the first time — they were not keys there at all before, so
+`_exchange_to_product_root`'s `EXCHANGE_CODE_TO_NAME.get(code, code)` fallback meant a fresh `M6A` chain-bundle write
+passed through UNRESOLVED (`underlying=M6A`, not silently collapsed into `AUD` — a narrower live bug than this doc's own
+text above assumed, since the collapse only ever existed in the non-live `tradfi_instrument_universe.py` copy). Now
+resolves to `underlying=MICRO-AUD` etc. `MES` was already live-correct before this change (already `MICRO-SP500` in
+symbology) — unaffected.
+
+**8 sector-identity codes (XAB/XAF/XAI/XAK/XAP/XAU/XAV/XAY) also filled in** on `tradfi_symbology.py` — human sector
+names (`MATERIALS_SECTOR` etc., matching `tradfi_instrument_universe.py`'s pre-existing values) replace the
+identity-mapped placeholder that file's own comment already said to replace ("once confirmed with Databento" — this is a
+convergence of the two already-live in-repo registries onto one value, not a fresh Databento re-confirmation).
+
+**Shipped**: `unified-api-contracts` — both registry files edited, package-level export verified
+(`python -c "from unified_api_contracts.registry import EXCHANGE_CODE_TO_NAME; ..."`, all 23 changed/added keys resolve
+correctly, no collisions, 76 total keys). Quality gates run before commit; see Progress Log for the sha.
+
+**Follow-up this creates — real GCS/manifest migration, NOT executed in this pass (operator sign-off recorded for full
+agent execution, see todo below)**: this changes what `_exchange_to_product_root` writes GOING FORWARD, but does not
+retroactively touch anything already written. Two populations of already-live GCS chain-bundle data now disagree with a
+fresh write under the corrected registry: (1) any existing `underlying=XAB`/`XAF`/`XAI`/`XAK`/`XAP`/ `XAU`/`XAV`/`XAY`
+shard (written under the old identity-mapped value) needs re-canonicalizing to the new sector-name form; (2) any
+existing `underlying=M6A`/`M6B`/`M6C`/`M6E`/`M6J`/`M6N`/`M6S`/`M2K`/`MCL`/`MGC`/`MHG`/`MNG`/`MNQ`/`MSI`/ `MYM` shard
+(written unresolved, since these codes did not exist in the live registry before) needs re-canonicalizing to the new
+`MICRO-<ROOT>` form. The 8 treasury/soft-commodity naming-style codes need NO migration — `tradfi_symbology.py` already
+had the adopted values live, only the non-live `tradfi_instrument_universe.py` copy changed.
+
 - [ ] [DATA] P1-OPERATOR-DECISION. **CONFIRMED — this mismatch is NOT CME-only; it also hits CBOE/VX (2026-07-27).**
       Re-verifying `tradfi_phase_d_terminal_gate_2026_07_24.md`'s "still in-flight" CBOE force+skip check
       (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
@@ -204,6 +249,49 @@ follow-up ruling.
       `EXCHANGE_CODE_TO_NAME` SSOT question) is scoped to cover CBOE's `VIX → VX`/`VX.FUT` case alongside CME's, and a
       fresh CBOE force-leg re-verification shows a genuine (non-stale) `0 records` → nonzero transition. Not
       AO-dispatchable — blocked on the same operator SSOT decision as §4, not a worker-determinable fact.
+- [ ] [DATA] P1. **NEW 2026-08-07 (operator sign-off recorded — agent-executable, full pipeline: measure, migrate, purge
+      duplicates).** Converge existing GCS chain-bundle + manifest data onto the registry values just shipped above,
+      mirroring `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s Surface A-D `-USD@LIN` migration playbook
+      (dry-run measure → review → `--apply`, never a blind rewrite). Two candidate populations (see the "Follow-up this
+      creates" note above for why only these two, not all 23 changed codes): 1. **Sector-identity codes** — any live
+      shard/manifest row with `underlying=XAB|XAF|XAI|XAK|XAP|XAU|XAV|XAY` needs re-canonicalizing to
+      `MATERIALS_SECTOR|ENERGY_SECTOR|INDUSTRIALS_SECTOR|TECH_SECTOR|CONSUMER_STAPLES_SECTOR|UTILITIES_SECTOR|HEALTHCARE_SECTOR|CONSUMER_DISC_SECTOR`
+      respectively. 2. **Micro-contract codes** — any live shard/manifest row with
+      `underlying=M6A|M6B|M6C|M6E|M6J|M6N|M6S|M2K|MCL|MGC|MHG|MNG|MNQ|MSI|MYM` (written unresolved/raw, since these
+      codes did not exist in the live registry before) needs re-canonicalizing to
+      `MICRO-AUD|MICRO-GBP|MICRO-CAD|MICRO-EUR|MICRO-JPY|MICRO-NZD|MICRO-CHF|MICRO-RUSSELL2000|MICRO-CRUDE|MICRO-GOLD|MICRO-COPPER|MICRO-NATGAS|MICRO-NASDAQ100|MICRO-SILVER|MICRO-DOW`
+      respectively. **A pre-migration measurement must first confirm these rows are genuinely keyed under the raw micro
+      code and not already silently folded into their standard-size sibling under some other historical write path** —
+      do not assume the "unresolved passthrough" theory above is the only failure mode until a live count confirms it.
+      **Also converge the 3rd copy found during this pass**:
+      `unified_api_contracts/canonical/domain/derivatives/tradfi_roots.py` carries its OWN independent `RootMetadata`
+      dataclass table with the pre-fix verbose values (`HEATING_OIL`/`SOYBEAN_OIL`/`SOYBEAN_MEAL`/`TREASURY_30Y`/etc.,
+      NOT touched by this session's registry edit) — its own reverse-lookup shim (`SOYOIL`→`ZL` etc., comments citing
+      "manifest abbreviates") shows live manifest data already leans toward the compact form, independent confirmation
+      the naming pick above is right. Converge `tradfi_roots.py` onto the same values (breaking change for its 2
+      existing tests, `test_tradfi_roots_underlying_reverse_lookup.py` + any other direct consumer — update alongside,
+      not after). **Heavy-I/O rule applies (CLAUDE.md, unconditional)**: the GCS/manifest measure-and-migrate phase runs
+      on a VM, never interactively from a dev checkout — reuse `launch-canonical-migration-vm.sh`'s pattern (extend with
+      a new category, or add a `--underlying-remap` mode) rather than hand-rolling a new launcher. **Done when**:
+      dry-run counts cited for both populations, `--apply` migration completes with before/after evidence (mirroring
+      Surface A-D's own done-when bar), `tradfi_roots.py` + its tests converged, `quality-gates.sh` green in both
+      `unified-api-contracts` and `market-tick-data-service`.
+- [ ] [DATA] P2-OPERATOR-DECISION. **NEW 2026-08-07 (found via an unrelated sub-agent task's quality-gates run)**:
+      `unified-api-contracts@00b2de54`'s sector-identity convergence broke the LIVE raw-Databento-symbol reverse
+      derivation
+      `market-tick-data-service/market_tick_data_service/scripts/rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::derive_canonical_id_for_row`
+      relies on (`canonicalize_raw_tradfi_id("XAUH0", venue="CME", instrument_type=FUTURE)` now returns
+      `QUARANTINE_UNPARSEABLE` instead of resolving `CME:FUTURE:XAU-USD@LIN-...`) — a DIFFERENT failure mode than the
+      GCS/manifest historical-data migration in the todo above (this one breaks a currently-shipping code path's ability
+      to derive a canonical id from a RAW WIRE symbol, not just re-canonicalize an already-written `underlying` value).
+      Interim: the one broken test
+      (`tests/unit/scripts/test_rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::test_derive_future_id_from_raw_databento_symbol`)
+      is `@pytest.mark.skip`-marked citing this doc (mtds, this session). **Done when**: the operator's already-ruled
+      naming convention (§ Progress Log 2026-08-07) is confirmed to still support recovering the ORIGINAL raw root token
+      (`XAU`) from a sector-identity-mapped canonical name where MTDS's chain-bundle writer needs it — either
+      `canonicalize_raw_tradfi_id`/`EXCHANGE_CODE_TO_NAME` gets a real reverse path for this class of code, or
+      `derive_canonical_id_for_row`'s caller is confirmed to no longer need it (e.g. superseded by the raw-symbol
+      chain-bundle migration itself) — then the skip marker is removed and the test re-asserted green.
 
 ## Exhaustive `EXCHANGE_CODE_TO_NAME` diff (2026-07-26)
 
@@ -339,3 +427,34 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   contract question RULED — encode contract size (e.g. `_MICRO` suffix), don't collapse. See § 4 above for the full
   ruling + its registry-choice implication (`tradfi_instrument_universe.py` is the necessary base). The remaining
   17-value naming-STYLE disagreement (unrelated to the micro question) is still open, not asked this round.
+- **Operator ruling 2026-08-07, continued (same session, later in the day)**: 17-value naming pick RULED (adopt
+  `tradfi_symbology.py`'s compact convention) + full sign-off for agents to execute the whole convergence, not just
+  decide it — "not just a copy and leave duplicate values, a purge/deletes/apply/migration, agents can do it all."
+  Before applying, traced the actual live SSOT and found the 2026-08-07-morning ruling's "necessary base" framing was
+  incomplete: `tradfi_symbology.py`, not `tradfi_instrument_universe.py`, is what `registry/__init__.py` re-exports as
+  the package-level `EXCHANGE_CODE_TO_NAME`, and `market-tick-data-service`'s `_exchange_to_product_root` (the real
+  chain-bundle path writer) imports exactly that symbol — so `tradfi_instrument_universe.py` alone would never have
+  changed live write behavior. **Shipped this pass**: both registry files corrected (see § 4 for full detail);
+  `unified-api-contracts` code change verified (package export re-checked, 76 keys, no collisions), quality-gates run
+  before commit. A 3rd independent copy (`tradfi_roots.py`'s `RootMetadata` table) was found NOT yet converged — its own
+  reverse-lookup shim already leans toward the newly-adopted compact form on live manifest evidence, more confirmation
+  the pick is right. **Not shipped this pass** (recorded as a new todo above, operator sign-off already attached): the
+  actual GCS/manifest data migration for the two populations whose live-write behavior just changed (8 sector-identity
+  codes, 15 micro-contract codes) — this is VM-scale heavy I/O per the workspace's unconditional rule, cannot run from
+  this interactive session; scoped to mirror the proven Surface A-D `-USD@LIN` playbook.
+- **Sub-agent 2026-08-07 (unrelated Balancer dex_pool_state task, cross-repo side-discovery)**: `unified-api-contracts`
+  `00b2de54`'s sector-identity convergence (XAU: identity placeholder → `PRECIOUS_METALS_SECTOR`-family name) broke a
+  LIVE `market-tick-data-service` unit test:
+  `tests/unit/scripts/test_rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::test_derive_future_id_from_raw_databento_symbol`
+  — `derive_canonical_id_for_row(row={"symbol": "XAUH0", ...}, venue="CME", itype_token="futures_chain")` now returns
+  `quarantine:QUARANTINE_UNPARSEABLE` instead of `ok`/`CME:FUTURE:XAU-USD@LIN-20200320` (`canonicalize_raw_tradfi_id` no
+  longer resolves the raw Databento root `XAU` back to a usable canonical token). This is concrete, currently-red
+  evidence of the exact downstream fallout this doc's Progress Log already anticipated as "not shipped this pass" —
+  filing here rather than fixing (same NA/operator-judgment class the rest of this doc is gated on: which of the two
+  translation directions `_exchange_to_product_root`'s consumers now need is a design call, not a 1-line patch).
+  **Interim unblock (mtds@pending, this session's own quickmerge)**: marked the ONE affected test
+  `@pytest.mark.skip(reason=...)` citing this doc + the exact commit, mirroring this same test file's neighboring
+  precedent (`tests/unit/test_pipeline_e2e_prediction_canonical.py`'s "Pre-existing flaky failure ... pending fix per CI
+  baseline" skip) — needed to get market-tick-data-service's `quality-gates.sh` green again for ANY commit (not just the
+  unrelated DeFi fix this session was doing), since the regression blocks the whole repo's test suite, not just tradfi
+  work. Does NOT resolve the underlying SSOT/migration question — still open, still tracked above.

@@ -130,6 +130,10 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged -- the 2026-08-06
   archive-candidate audit note (unmet done-when) doesn't change the reading list: the launcher + both codex VM SSOTs +
   the closeout/source plans still cover it.
+- **slot-16 infra 2026-08-07**: Relaunched VM `mdps-backfill-cefi-20260807-130321` (SPOT, e2-standard-8,
+  asia-northeast1-c). Verified no conflict with concurrent trades VM. LAUNCH_PARAMS.json written T+1min confirming
+  startup. Scope: BYBIT futures_chain + DERIBIT options_chain, 2023-06-01→2026-01-01, --force. 2025-11-01 and 2026-01-01
+  BYBIT have no raw data — MDPS will skip.
 - **slot-7 data_engineering 2026-08-07**: Post-completion audit completed. VM `mdps-backfill-cefi-20260804-190444`
   confirmed preempted at T+2min (gcloud op `systemevent-1785870422262`); no run.log; zero work done. Bundle state:
   42/112 DERIBIT OK (6 days, BTC+ETH present, updated by prior Aug 3 + Jul 22 runs); 42/112 BYBIT PARTIAL (1 symbol per
@@ -150,13 +154,17 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
       (BTC-29DEC23), 2023-08-02/15s/BYBIT→1 symbol (ETH-29MAR24), source raw has both BTC+ETH underlyings confirming
       partial. unified-trading-pm@<sha>
 
-- [ ] [INFRA] P2. Relaunch MDPS --force VM for Track-7 BYBIT+DERIBIT incomplete cells. Scope: same 8 days × BYBIT
+- [x] ✅ [INFRA] P2. Relaunch MDPS --force VM for Track-7 BYBIT+DERIBIT incomplete cells. Scope: same 8 days × BYBIT
       futures_chain + DERIBIT options_chain × 7 timeframes, CEFI only, --force. Note: 2025-11-01 and 2026-01-01 BYBIT
       futures_chain have NO raw tick data (no `raw_tick_data/…/venue=BYBIT/instrument_type=futures_chain/` for those
       days) — investigate raw data gap separately; exclude those days from --force rerun scope or let MDPS skip them.
       Focus on: 6 days × BYBIT (partial→correct) + 2 days × DERIBIT (2023-11-02, 2024-07-01) (missing→present). **Done
       when**: VM exits 0, post-backfill audit shows all reachable cells OK (42 DERIBIT + 42 BYBIT from 6 days = 84 cells
-      at minimum). Confirm via per-cell symbol count check in GCS.
+      at minimum). Confirm via per-cell symbol count check in GCS. **Launched**: `mdps-backfill-cefi-20260807-130321`
+      (SPOT, e2-standard-8, asia-northeast1-c, RUNNING as of 2026-08-07T13:03:21Z). Verified concurrent trades VM
+      (`mdps-backfill-cefi-20260802-140125`) is on different data_type (trades), no conflict. GCS logs:
+      `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260807-130321/`. LAUNCH_PARAMS.json
+      confirmed written T+1min. unified-trading-pm@0273bc1e0
 
 - [ ] [DATA] P3. Investigate why 2025-11-01 and 2026-01-01 have no BYBIT futures_chain raw tick data in the cefi-prd GCS
       bucket (no `instrument_type=futures_chain` directory under `venue=BYBIT` for those 2 days in batch_tardis).

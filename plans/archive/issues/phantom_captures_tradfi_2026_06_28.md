@@ -4,7 +4,7 @@ title: Phantom captures — tradfi manifest (2026-06-28)
 summary: "Manifest: `gcp://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`"
 status: resolved
 nature: process
-asset_group: [cross-cutting]
+asset_group: [tradfi]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
@@ -27,6 +27,15 @@ locked_since: 2026-05-21
 ---
 
 > **🟢 RESOLVED 2026-06-28 -- both todos done/delegated. Archived per issue-doc-lifecycle.**
+>
+> **Retagged 2026-08-07 (operator, override of the 2026-07-26 Track-22 ruling)**: `asset_group` changed from
+> `[cross-cutting]` to `[tradfi]`. The 2026-07-26 ruling (item 20,
+> `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`) had deliberately kept this
+> `[cross-cutting]` — concurrent per-tranche audits mid-rollout was judged the greater hazard than a doc's content being
+> single-AG. Operator explicitly overrode that ruling 2026-08-07, having seen the rationale, in favor of the doc's
+> content (100% tradfi-specific — buckets, provenance line, venue table all name tradfi only) driving its tag. See
+> `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 6 for the override record, and
+> `cross_cutting_consolidated_closeout_2026_07_25.md` Track 22 for the corresponding cross-reference update.
 
 # Phantom captures — tradfi manifest (2026-06-28)
 

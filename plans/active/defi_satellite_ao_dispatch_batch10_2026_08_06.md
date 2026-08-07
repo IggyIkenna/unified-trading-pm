@@ -18,7 +18,7 @@ summary: >-
   operator ruling or elapsed time. 3 additional docs surfaced a probable frontmatter-mistag during Phase 1 (2 already
   known from batch9's own report; 1 newly confirmed this run) — reported below, not retagged (out of defi's sole
   ownership per the concurrent-sharded-worker safety rule).
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -69,8 +69,8 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 10 — 2026-08-06
 
-**status: draft — awaiting operator approval to flip `active` and dispatch**, per this skill's autonomous-mode safety
-rail (`cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Modes"). Drafted autonomously by the scheduled
+**status: active — operator-approved 2026-08-07, flipped from `draft`**, per this skill's autonomous-mode safety rail
+(`cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Modes"). Drafted autonomously by the scheduled
 `ag_closeout_auditor` running `/ag-closeout-audit defi` — every todo below cleared the shared conflict-check
 ([`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`](/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md)
 § 3) against the live defi consolidated-closeout + every active batch/finalize plan (including batch9, activated the
@@ -78,12 +78,14 @@ same day) before being drafted here.
 
 ## Todos
 
-- [ ] [INFRA] P1. **Wire `self._write_lock` (converted to `RLock`) around `ManifestWriter`'s
+- [x] ✅ [INFRA] P1. **Wire `self._write_lock` (converted to `RLock`) around `ManifestWriter`'s
       `add()`/`write()`/`close()`/`_drain()` critical sections** in `unified_trading_library/manifest_writer/`, to fix a
       confirmed concurrent-duplication race when multiple `ThreadPoolExecutor` workers share one `ManifestWriter`
       instance. Add a regression test (N threads x M distinct `add()` calls, assert no duplicated rows). Repo:
       unified-trading-library. Source: `issues/manifestwriter_add_concurrent_duplication_race_2026_08_06.md`. Done when:
       the lock is wired around all 4 critical sections, the new regression test passes, and `quality-gates.sh` is green.
+      — unified-trading-library@85bd0354 · QG green (174s) · regression test: 10 threads × 50 calls → 500 rows, no
+      duplication
 - [ ] [DIAG] P2. **Audit every other `ThreadPoolExecutor`-sharing-one-`ManifestWriter` script** for the same race
       (`market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py`,
       `market-tick-data-service/scripts/fold_legacy_composite_venue_objects_2026_07_31.py`, plus a fresh grep for any
@@ -134,12 +136,14 @@ same day) before being drafted here.
       Todo1+Todo2. Repo: unified-trading-pm. Source: `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`
       (Todo1+Todo2, combined — sequentially dependent on the same file). Done when: the plan is verified under 1000L via
       `check_line_caps.sh` and all 3 named checkboxes are flipped with citations.
-- [ ] [INFRA] P1. **Relaunch the stalled `mtds-dex-swaps-backfill-3` VM** with `--start 2025-12-15 --end 2026-07-21` (no
-      `--force`) — per the 2026-08-06 operator ruling this is now AO-dispatchable, no longer gated on the OOM root-cause
-      investigation. **Safe-idempotent justification: standard backfill relaunch, SPOT, skip-if-captured, no GCS
-      delete.** Repo: market-tick-data-service. Source:
+- [x] ✅ [INFRA] P1. **Relaunch the stalled `mtds-dex-swaps-backfill-3` VM** with `--start 2025-12-15 --end 2026-07-21`
+      (no `--force`) — per the 2026-08-06 operator ruling this is now AO-dispatchable, no longer gated on the OOM
+      root-cause investigation. **Safe-idempotent justification: standard backfill relaunch, SPOT, skip-if-captured, no
+      GCS delete.** Repo: market-tick-data-service. Source:
       `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (Todo3). Done when: the VM is health-verified
-      RUNNING at T+10min and progress (throughput/coverage) is logged in the source doc's Progress Log.
+      RUNNING at T+10min and progress (throughput/coverage) is logged in the source doc's Progress Log. Evidence: VM
+      RUNNING 2026-08-07T15:42Z (SPOT, SHARD_INDEX=6, asia-northeast1-c); 95,236 swap rows written in first shard
+      (uniswap_v3_ETHEREUM) at T+5min, RSS=840MiB, PIPELINE_HEARTBEATs firing; progress logged in source doc.
 
 ## Deferred — non-batchable, no operator ruling needed (27; tagged by category, cite-only)
 
@@ -241,5 +245,12 @@ sizing/scoping pass across 5 protocols before it is worker-determinable; batch9 
 - 2026-08-06 (scheduled `ag_closeout_auditor`, tranche=defi, autonomous, slot 9): Drafted alongside its finalize twin
   after a 107-agent Phase-1 classification Workflow (against the 11-doc covering set, including same-day batch9) + a
   manual Phase-3 conflict-check (grep of all 11 covering docs for each candidate todo's target files/mechanisms — zero
-  collisions found). `status: draft` per this skill's autonomous-mode safety rail — awaiting operator approval to flip
-  `active` and dispatch.
+  collisions found). Flipped `active` 2026-08-07 (operator ruling) — see Progress Log.
+
+## Progress Log
+
+- **Operator ruling 2026-08-07**: APPROVED — flipped `status: draft` → `active`. Pre-flip investigation (read-only)
+  confirmed the 107-agent Phase-1 classification + manual Phase-3 conflict-check above, no rename/archival ops among its
+  9 todos. One minor same-file overlap noted between todos 8/9 (both touch `lst_rate_honest_coverage_2026_07_21.md` via
+  different source citations) — not a real conflict, worth a quick self-check whenever this batch actually dispatches
+  those two.

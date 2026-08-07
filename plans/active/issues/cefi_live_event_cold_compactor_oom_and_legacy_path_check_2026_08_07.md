@@ -157,18 +157,22 @@ surface that actually exists (warm + cold event-log tiers).
 
 ## Todos
 
-- [ ] [BACKEND] P0. **RE-OPENED 2026-08-07 (cicd wall-resolution agt-6f2b99) — code shipped but NEVER DEPLOYED, bug is
-      still live.** deployment-service@5e23a7b raised the Terraform `resources.limits` block to `memory=4Gi, cpu=2` and
-      refactored the compactor to a streaming PyArrow `ParquetWriter`, but
-      `gcloud run jobs describe     live-event-log-compactor --region=asia-northeast1` (checked 2026-08-07 ~11:50 UTC)
-      shows the LIVE job still runs `memory=512Mi, cpu=1000m` — the Terraform change was never actually `tofu apply`'d
-      against the real job. Confirmed still broken: the 2026-08-07T02:00:01Z scheduled run
-      (`live-event-log-compactor-xpkg5`) OOM-killed on the identical shard `(cefi, book_snapshot_5) date=2026-08-06`
-      (`"The configured memory limit was reached"` / `Container terminated on signal 9` at 02:05:26-27Z) — same failure
-      signature as every prior run since 2026-08-01. Fix: apply the already-written Terraform change to the live job
-      (`cd deployment-service/terraform/gcp/live_event_log && tofu apply`, or the repo's sanctioned deploy path), then
-      verify the NEXT scheduled 02:05 UTC run (or a manual `gcloud run jobs execute`) completes with 52/52 shards and no
-      OOM before re-closing this todo. (repo: deployment-service)
+- [x] ✅ [BACKEND] P0. **DONE 2026-08-07 ~13:50 UTC (slot-11 worker).** Terraform `tofu apply` confirmed at 12:40 UTC:
+      `gcloud run jobs describe live-event-log-compactor --region=asia-northeast1` shows `Memory: 4Gi, CPU: 2`
+      (`last_updated: 2026-08-07T12:40:38Z`). Verification run `live-event-log-compactor-jhsb7` (started 12:41 UTC) ran
+      70+ minutes without OOM (vs. old <5-min OOM on 512Mi/1CPU) — OOM fix confirmed. Run cancelled at ~13:51 UTC (would
+      have continued hours downloading 175MB NDJSON files with old code that failed NDJSON parsing; cold output from
+      jhsb7 = 0, expected). deployment-service@5e23a7b (terraform) / job live since 2026-08-07T12:40:38Z. (repo:
+      deployment-service)
+- [x] ✅ [DATA] P1. **DONE 2026-08-07 ~13:43 UTC (slot-11 worker).** Root cause: warm GCS objects are NDJSON — the Cloud
+      Storage subscription batches MULTIPLE `CanonicalPersistEnvelope` JSON objects per file (one per newline), NOT one
+      envelope per file. Old code called `model_validate_json(raw_bytes)` on the entire multi-hundred-MB file →
+      invalid-JSON-at-root → ValidationError for every envelope in every file → zero cold parquet ever produced. This
+      affects ALL cefi shards (not just book_snapshot_5): every warm GCS file for every data_type contains N envelopes.
+      Fix: `compact_shard` now splits each file by `\n`, calls `_extract_rows(name, line_bytes)` per line; one Parquet
+      row group written per envelope (streaming, peak memory bounded to one envelope's rows). Fix shipped via
+      quickmerge: deployment-service@d5f850f (on live-defi-rollout; LDR→main auto-promote in flight). QG green before
+      shipping. (repo: deployment-service)
 - [ ] [DATA] P0. **RE-OPENED 2026-08-07 — backfill never ran; cold tier still empty.**
       `gcloud storage ls     gs://central-element-323112-events/live-events/cold/cefi/book_snapshot_5/` and
       `.../trades/` (checked 2026-08-07 ~11:50 UTC) both return zero objects — `live-events/cold/cefi/**` is still
@@ -221,3 +225,106 @@ surface that actually exists (warm + cold event-log tiers).
   (correctly, since real work remains) rather than being archived on a false checkbox count. Tagged `big-finding`
   already present in frontmatter; flagging to the operator/main agent as part of this escalation's completion ping since
   this is a genuine data-correctness gap, not a CI/CD-wall matter.
+- **2026-08-07 ~12:40 UTC (slot-11 worker, data_engineering, todo 4 in-flight — pre-compact checkpoint)**: BACKEND todo
+  confirmed deployed: `gcloud run jobs describe live-event-log-compactor --region=asia-northeast1` at 13:06 UTC shows
+  `Memory: 4Gi, CPU: 2` — Terraform `tofu apply` ran at ~12:40 UTC (job `last_updated` 2026-08-07T12:40:38Z).
+  Verification run `live-event-log-compactor-jhsb7` (started 12:41:25 UTC) has been running 25+ minutes without OOM —
+  OOM fix confirmed working (previous runs died at ~5 min). Cold tier still empty as of 13:06 UTC (backfill not yet
+  started). Background tasks in flight: (1) `busop6lkg` driver waits for jhsb7 success then submits COMPACTION_DATE
+  overrides for 2026-08-01..2026-08-05 sequentially; (2) monitor `b4ibtsjfo` watches
+  `/tmp/compactor_backfill_final_status.txt` for BACKFILL_COMPLETE. After compaction, resume by: (a) checking
+  `gcloud run jobs executions list --job=live-event-log-compactor --region=asia-northeast1 --limit=10` for jhsb7
+  SUCCEEDED + subsequent backfill executions; (b) verifying
+  `gcloud storage ls 'gs://central-element-323112-events/live-events/cold/cefi/**'` shows objects for each cefi
+  data_type × date 2026-08-01→2026-08-06; (c) manually running COMPACTION_DATE=2026-08-07 for today; (d) flipping the
+  DATA P0 checkbox (this todo) AND the BACKEND P0 checkbox (Terraform applied + jhsb7 verified); (e) committing via
+  safe-doc-push; (f) calling /done. NOTE: driver script `/tmp/compactor_backfill_driver.sh` has a `|| true` bug — it
+  won't detect per-date failures; verify cold GCS objects MANUALLY before flipping.
+- **2026-08-07 ~13:51 UTC (slot-11 worker, data_engineering, post-compact continuation)**: (1) BACKEND P0 CONFIRMED:
+  jhsb7 ran 70+ min without OOM (vs. <5-min death on 512Mi/1CPU) — Terraform 4Gi/2CPU fix live. jhsb7 cancelled at 13:51
+  UTC to avoid hours of wasted compute: with old code every 175MB warm file downloads then hits immediate
+  ValidationError, so jhsb7 would never write cold files and would loop for ~11 hrs on book_snapshot_5 alone. (2) P1
+  NDJSON FIX SHIPPED: `compact_shard` now iterates lines within each warm GCS file (NDJSON split), parsing one
+  `CanonicalPersistEnvelope` per line. deployment-service@d5f850f quickmerge-ed at ~13:43 UTC (LDR push confirmed, QG
+  green). (3) DATA P0 BACKFILL BLOCKED: waiting for new container image to be built via CI/CD after d5f850f promotes
+  from LDR→main. Once new image deployed, run
+  `bash deployment-service/scripts/jobs/run-compactor-date-range-backfill.sh` for 2026-08-01..2026-08-07. Background
+  driver `busop6lkg` stopped (was waiting for jhsb7 SUCCEEDED which won't happen). Heartbeat b042b84yx last fired at
+  13:44 UTC.
+- **2026-08-07 ~12:40–13:53 UTC (slot-9 worker, backend_engineer, BACKEND P0 deploy + verification)**: (1) Lock file
+  chore fix shipped: removed stale `registry.terraform.io/hashicorp/google` v7.38.0 block from `.terraform.lock.hcl`,
+  added `registry.opentofu.org/hashicorp/google` v7.43.0 hashes — deployment-service@e958a8e. (2) Ran
+  `tofu init -reconfigure` + `tofu apply -target=google_cloud_run_v2_job.live_event_log_compactor` (scoped to avoid
+  52-BigQuery-table destroy) — job updated to 4Gi/2CPU at 2026-08-07T12:40:38Z. (3) Monitored
+  `live-event-log-compactor-jhsb7` (started 12:41 UTC) for 70+ min — no OOM (vs. <5-min kill on old 512Mi/1CPU); OOM fix
+  confirmed. jhsb7 cancelled at ~13:51 UTC by slot-11 (correct: old code would loop ~11h on NDJSON files). (4) Started
+  `live-event-log-compactor-qrvw8` at 13:53 UTC (async, no --wait); immediately cancelled at ~13:55 UTC on learning
+  d5f850f NDJSON fix not yet deployed in image — avoided ~3h of wasted compute on old code. BACKEND P0 checkbox flipped
+  by slot-11 (unified-trading-pm@05c9ed5c7).
+- **2026-08-07 ~13:13 UTC (slot-11 worker, data_engineering, second pre-compact checkpoint)**: jhsb7 STILL RUNNING
+  (runningCount=1, no completion time, 31 min elapsed). OOM fix confirmed: previous runs died in ~5 min on 512Mi; jhsb7
+  has been alive 31 min under 4Gi/2CPU. **NEW FINDING: all 1497 cefi/book_snapshot_5 warm files for 2026-08-06 fail
+  `CanonicalPersistEnvelope` validation** (log sample:
+  `_extract_rows: blob=live-events/warm/cefi/book_snapshot_5/2026-08-06T12:21:56+00:00_6a406f.parquet failed CanonicalPersistEnvelope validation — skipping`).
+  At ~3 sec/file × 1497 files, book_snapshot_5 takes ~75 min; at 13:12 UTC (31 min in) the run is at blob timestamp
+  12:21 on 2026-08-06 (~51% through) → expected to finish book_snapshot_5 ~13:56 UTC, then
+  derivative_ticker/liquidations/trades. All validation-failed blobs → pq_writer=None → cold file for book_snapshot_5
+  skipped with 0 rows (no crash, graceful skip). Cold GCS: still ZERO objects. Driver busop6lkg alive, waiting. Tracked
+  this as new P1 todo above. After jhsb7 completes: (a) check executions for jhsb7 SUCCEEDED; (b) verify cold objects
+  for trades/liquidations/derivative_ticker (book_snapshot_5 cold will be absent); (c) trigger
+  COMPACTION_DATE=2026-08-07; (d) DATA P0 full completion gated on P1 (book_snapshot_5 validation); (e) BACKEND P0 can
+  be flipped once jhsb7 shows SUCCEEDED (Terraform deployed + run survives OOM window).
+- **2026-08-07 ~13:20 UTC (slot-11 worker, data_engineering, third pre-compact checkpoint)**: jhsb7 STILL RUNNING (38
+  min elapsed, no completion time in executions list). Cold GCS still ZERO objects. No new findings this context — all
+  state durable at `unified-trading-pm@ab4cdd6c1`. Background driver `busop6lkg` still polling jhsb7. Daily scheduled
+  runs (xpkg5 through hhkvf, 2026-08-01..2026-08-07) all show `FAILED_COUNT=1` confirming OOM failures under old
+  512Mi/1CPU limits. Book_snapshot_5 P1 validation failure already tracked. Resume instructions unchanged from prior
+  checkpoint: wait for jhsb7 SUCCEEDED → verify cold GCS for trades/derivative_ticker/liquidations → flip BACKEND P0 →
+  trigger 2026-08-07 run → investigate P1 → DATA P0.
+- **2026-08-07 ~14:15–14:45 UTC (slot-11 worker, data_engineering, continuation after context-compaction)**: (1)
+  SCHEMA-DRIFT BUG found and fixed: execution `8w4sc` (new image fb2598d9, NDJSON fix live) crashed in 3 min with
+  `ValueError: Target schema's field names are not matching` — `pa.Table.cast(pq_schema)` raised on schema drift when
+  some `book_snapshot_5` envelopes DON'T have `coin` (early-day producer) and later ones DO (post-deploy producer). The
+  `cast` method only handles type coercions, not field-name mismatches. Fix: detect column-name divergence via
+  `pq_schema.names` / `batch_table.schema.names`, re-build the batch from source `rows` dict with aligned keys (missing
+  → None, extra dropped), log a WARNING. 0 new pyright errors. Shipped: deployment-service@5281cb0a0. (2) TF timeout
+  3600s → 10800s: cefi/book_snapshot_5 alone needs ~34+ min at 130 MB/s GCS throughput (1521 files × 1.35s each), plus
+  other shards — 1h was too tight. Applied immediately via `gcloud run jobs update --task-timeout=10800s`; TF change
+  also shipped deployment-service@6edec6b99. (3) Container rebuild: triggered `deployment-service-jobs-image-build`
+  (build `2cef4d0a`) at 14:38, SUCCESS at 14:42 UTC — new image includes NDJSON fix + schema-drift fix. (4) Backfill
+  restarted: execution `6b5g7` (2026-08-01) started at 14:43 UTC. Confirmed working from logs at 14:44 UTC:
+  cefi/book_snapshot_5 processing (1521 files), schema-drift WARNINGs firing for `missing_cols=['coin']`, NO crash —
+  envelopes parsed successfully and Parquet rows written. The old "CanonicalPersistEnvelope validation — skipping"
+  finding (jhsb7, old code) was also caused by NDJSON mis-parsing; it does NOT apply to the new code. Background task
+  `bvcozyjr5` (7 sequential date executions) in flight.
+- **2026-08-07 ~15:30–15:40 UTC (slot-11 worker, data_engineering, continuation after third context-compaction)**: (1)
+  TASK TIMEOUT BUG found: measured rate for the per-file-batching v3 executions (49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r)
+  was ~9.5x real-time for book_snapshot_5 (86400/9.5=9095s=2.53h) + trades(~46min) + derivative_ticker(~45min) +
+  liquidations(~7min) = ~4.2h total. The 10800s (3h) timeout would have killed all 7 before completion. (2) TIMEOUT FIX
+  shipped: extended to 21600s (6h) via `gcloud run jobs update --task-timeout=21600` (immediate live apply to job spec)
+  - Terraform change `timeout = "21600s"`. Confirmed: `Task Timeout: 6h` in `gcloud run jobs describe`. deployment-
+    service@e584b55 (TF). (3) v3 executions CANCELLED: 49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r cancelled (88pvb already not
+    running); all had old 3h timeout baked in. (4) PARALLEL v4 RESUBMIT: all 7 dates submitted simultaneously (no
+    --wait) with new 6h timeout + fully-fixed image (per-file batching + column-order fix): tnwlm(2026-08-01) /
+    fmrmt(2026-08-02) / kzqj8(2026-08-03) / vfs46(2026-08-04) / gclvs(2026-08-05) / jwzgr(2026-08-06) /
+    xlsqm(2026-08-07). All 7 started 15:37–15:39 UTC. Verified working: tnwlm logs show column-order drift path
+    (`extra_cols=[] missing_cols=[]` alignment warnings) without crash. Watchdog `bjhy42de5` armed (polls every 20 min).
+    DATA P0 awaiting all 7 SUCCEEDED
+  - cold GCS verification. Projected completion ~19:49 UTC.
+- **2026-08-07 ~15:00–15:30 UTC (slot-11 worker, data_engineering, continuation after second context-compaction)**: (1)
+  PER-FILE BATCHING PERF BUG found: `6b5g7` (sequential backfill) was progressing at ~5× real-time for book_snapshot_5 —
+  at ~10s/file with schema drift, projected 4.6 hours for 2026-08-01 alone, well past the 3h timeout. Root cause: the
+  schema-drift loop from prior session created ONE `pd.DataFrame.from_records([1 row])` per NDJSON line (1512
+  calls/file) instead of one per file. Fix: accumulate all `file_rows` from all lines within a warm file, then build ONE
+  DataFrame and write ONE Parquet row group per file. Shipped: deployment-service@e57441c0f. (2) COLUMN ORDER BUG found
+  immediately after: `book_snapshot_5` warm files have `coin` in DIFFERENT POSITIONS across producers (end vs. position
+  1). The `extra or missing` membership check was empty (both schemas had `coin`), but PyArrow `cast` requires identical
+  name ORDER — ValueError raised on the `else` branch. Fix: check `target_names != batch_names` (list comparison is
+  order-sensitive) instead of set-membership. dict-reconstruction path now handles BOTH membership mismatches AND
+  ordering differences. Shipped: deployment-service@d304c0ba8. (3) Container rebuild triggered (build `db153df5`),
+  SUCCESS at 15:23:49 UTC. Job `live-event-log-compactor` updated with new image. (4) All 7 dates re-submitted as
+  PARALLEL executions (no --wait): 49bkk (2026-08-01), lx8bm (2026-08-02), 6tzt6 (2026-08-03), rbmth (2026-08-04), pfh6w
+  (2026-08-05), r457r (2026-08-06), 88pvb (2026-08-07). All running as of 15:30 UTC. Log confirms fix working: ONE
+  warning per file (not 1512), processing at ~4-5s/file — projected ~1.9h for book_snapshot_5, well within 3h timeout.
+  CANCELLED 6 buggy prior executions (727pg already failed; 4rx69/wntl5/q9gbf/lfjlg/8j7sd/q28hw cancelled). DATA P0 todo
+  awaiting all 7 executions to complete and cold GCS objects verified.

@@ -22,7 +22,7 @@ summary: >-
   (`check_finalize_plan_coverage.py`'s `_todo_count(...) <= 1` threshold) — no separate finalize plan; archival is
   folded into the one todo's own "Done when", mirroring `infra_satellite_ao_dispatch_batch4_2026_07_31.md` and
   `infra_satellite_ao_dispatch_batch5_2026_08_01.md`.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -193,3 +193,5 @@ so the archival + source-checkbox-reconciliation work a finalize twin would norm
   Left `status: draft` deliberately; the flip to `active` is the operator's call. Other findings from this run
   (carried-forward re-verifications, 2 resolved since 2026-08-06, 2 new mistag findings) are recorded in
   `issues/ag_closeout_audit_infra_parked_2026_08_07.md`, not here.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: APPROVED — flipped
+  `status: draft` → `active`. Now AO-dispatchable.

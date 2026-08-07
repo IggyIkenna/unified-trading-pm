@@ -18,7 +18,7 @@ summary: >-
   is simply unproven in both directions. Per the operator's own stated condition, and per the workspace HARD RULE that
   destroying a stash is UNRECOVERABLE, the directory was left in place (1.2 GB) pending a ruling. The QG false-positive
   that motivated the deletion is independently FIXED and no longer depends on this directory going away.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -44,7 +44,9 @@ estimate_calibrated_ai_days: 0.1
 assigned_role: NA
 drift_direction: flat
 source: ["2026-07-30 operator instruction to delete the stale scratch clone (infra-methodology fix pass)"]
-resolved_by:
+resolved_by: >-
+  RESOLVED 2026-08-07 (operator ruling) -- unrecovered loss, accepted, no further investigation. Both the source
+  directory and the stash-backup bundle are confirmed genuinely absent; the operator declined recovery.
 locked_by:
 depends_on: []
 context_scope:
@@ -56,6 +58,8 @@ context_scope:
     /plans/epics/infrastructure_master.md,
   ]
 ---
+
+> **🟢 RESOLVED 2026-08-07 — unrecovered loss, accepted by operator. Archived per issue-doc-lifecycle.**
 
 # Stale agentwork scratch clone — deletion blocked on unproven stash WIP
 
@@ -111,22 +115,16 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
       git-tracked — a 94% reduction from the 1.2 GB source directory). **Done when** criteria met: bundle verifies, path
       is cited here (above), all 10 stash SHAs confirmed present by direct unbundle-and-cat-file test (not just
       `bundle verify`).
-- [ ] [OPERATOR] P2. **NOT independently resolvable — depends on the sibling stash-bundle investigation this same
-      governance sweep already flagged** (`ag_closeout_audit_infra_parked_2026_08_03.md` finding-11, "Investigate the
-      missing stash-backup bundle" — needs your own direct knowledge/backup check, not delegable). Do not duplicate that
-      investigation here; once it resolves, this todo's done-when re-evaluates automatically. **Done-when NO LONGER
-      SATISFIABLE AS WRITTEN — see 2026-08-03 Progress Log entries before acting.** Original text: delete
-      `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` now that its 10 stash entries are durably bundled +
-      verified above. **This step cannot be done by an agent**: the workspace's own
-      `agent-orchestrator/scripts/hooks/block_destructive_commands.py` PreToolUse guardrail unconditionally blocks any
-      `rm -rf`/recursive delete for autonomous workers (by design, with no override — its own docstring says not to
-      circumvent it), and this is exactly the "filesystem command, no SDK equivalent" case its own block message names
-      as an operator-escalation, not a workaround. Original done-when: directory is gone,
-      `du -sh .tabs/3/stash-bundles/` confirms the bundle is the only remaining trace. **As of 2026-08-03, BOTH the
-      directory AND the bundle are already absent** (see Progress Log) — the directory-gone half is met, but the
-      bundle-survives half is NOT, and no agent here performed this delete. Do NOT flip this to `[x]` until the
-      `ag_closeout_audit_infra_parked_2026_08_03.md` finding-11 investigation (durable relocation vs. genuine loss of
-      the 10 stash entries) resolves — flipping now would silently certify a done-when that isn't actually met.
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-07 — RULED unrecovered loss, accepted, no further investigation.** Operator:
+      "its lost no biggie forget about it." The 67.8 MB `instruments-service-agentwork-sports-2026-07-13-stashes.bundle`
+      (10 unpushed stash entries, ~5,000 lines of diff) is confirmed genuinely absent — not durably relocated, not
+      recoverable. Both halves of the original done-when are now moot: the directory is gone (confirmed since
+      2026-08-03) and the bundle is gone too (also confirmed since 2026-08-03) — nothing remains to delete, and the
+      operator has explicitly accepted the loss rather than pursuing recovery. See
+      `ag_closeout_audit_infra_parked_2026_08_07.md`'s corresponding todo for the cross-reference. Original text
+      (preserved for context): "NOT independently resolvable — depends on the sibling stash-bundle investigation...
+      needs your own direct knowledge/backup check, not delegable... Do NOT flip this to `[x]` until the...
+      investigation... resolves." That investigation is now closed — this is its resolution.
 
 ## Progress Log
 

@@ -91,7 +91,12 @@ title: <concise — what this plan achieves>
 summary: <2–4 lines; NO ": " colon-space in unquoted text — use an em-dash —>
 status: active # draft (NOT ingested) | active | blocked | paused | complete | cancelled | superseded (was: "active | draft (NOT ingested) | done | blocked" — corrected 2026-07-12, doc-reconciliation autofix finding 382, plan_reconciliation_operator_decisions_2026_07_11.md §A2 "50 reclassified" blanket ruling; PLAN_FORMAT.md:86 + scripts/docs/docspec.py:59 are the enforced enum, which has no "done" value)
 nature: process # process | design
-asset_group: [<group>] # e.g. [defi] [tradfi] [meta]
+asset_group: [<group>] # e.g. [defi] [tradfi] [meta] -- agent-orchestrator-internal content (repos: [agent-orchestrator]
+# + parent_epic: orchestrator_master -- worker lifecycle, dispatch, boot/context, spawn/recycle) is [ao], NOT
+# [infrastructure]. `infra` is "generic infrastructure/hygiene work that ISN'T agent-orchestrator-internal"; `ao` is
+# "agent-orchestrator dispatch/worker-lifecycle" specifically. This exact mistag recurred 3x within 8 days
+# (2026-07-30..08-06, see ag_closeout_audit_infra_parked_2026_08_07.md findings 6/18/19) before being fixed by operator
+# ruling 2026-08-07 -- check repos:/parent_epic: against this rule before defaulting to [infrastructure].
 stage: [<stage>] # e.g. [data] [meta]
 repos: [<repo>, ...]
 scope: [engineer]

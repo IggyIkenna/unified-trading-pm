@@ -211,21 +211,54 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       inside `request-major-bump.yml` itself — corrected to describe what the file actually does (a self-contained
       canonical flat copy; its only `uses:` is `actions/checkout@v5`, no reusable-workflow call).
       `unified-trading-pm@037e181559`.
-- [ ] 3. [INFRA] P0. **Convert ONE file end-to-end as the pattern-proof, including a live (non-local) CI run** — pick
-      the smallest, lowest-blast-radius flat-copy candidate (`version-registry-notify.yml`, 48 lines, likely the
-      simplest) as the canary: host it in `unified-trading-ci/.github/workflows/`, replace its copy in ONE low-churn
-      fleet repo with a thin caller stub, ship, and confirm via `gh run list`/`gh run view` that the ACTUAL GitHub
-      Actions run (not just local `quality-gates.sh`) resolves the cross-repo `uses:` and produces the same behavior as
-      the old flat copy. Done-when: a real GH Actions run ID cited, `conclusion: success` (or behavior-equivalent to the
-      pre-migration copy if the workflow doesn't run on every push).
-- [ ] 4. [INFRA] P1. **Convert the remaining 6 straightforward flat-copy files** (`main-backmerge-to-ldr.yml`,
+- [x] ✅ 3. [INFRA] P0. **Convert ONE file end-to-end as the pattern-proof — DONE 2026-08-07.**
+      `version-registry-notify.yml` hosted in `unified-trading-ci` (`unified-trading-ci@b498ec2`) with a
+      `self_hosted_runner_labels` input — **correction to this plan's own "Confirmed technical facts": the file is NOT
+      zero-customization, its `runs-on` uses the `__RUNS_ON__` double-underscore substitution
+      (`rollout-workflow-templates.sh`'s `get_runs_on_value()`), which the plan's `{{...}}`-only grep missed. Applies to
+      all 9 files, not just this one — re-check each for `__RUNS_ON__` before assuming "zero markers."** Canary:
+      `trading-agent-service` (lowest tag-count, public, non-CI-critical) — thin stub shipped
+      (`trading-agent-service@baed4337`). Live-verified via a real (non-3-part, guard-skipped by design so it can't
+      pollute the real Firestore version registry) tag push: `gh run view 31180100767` shows
+      `Uses: IggyIkenna/unified-trading-ci/.github/workflows/version-registry-notify.yml@refs/heads/main (b498ec28091a0f810fb9ab059e77b4b3c08d4b46)`,
+      `conclusion: success`, and the SAME "not plain 3-part X.Y.Z; not forwarding" guard message the original flat copy
+      would have produced — behavior-equivalent, cross-repo `uses:` resolution proven live. Test tag deleted after
+      verification (`v0.12.12-ci-canary-test`, both remote + local).
+- [x] ✅ 4. [INFRA] P1. **Convert 5 of the 6 remaining flat-copy files — DONE 2026-08-07** (`main-backmerge-to-ldr.yml`,
       `major-bump-issue-handler.yml`, `request-major-bump.yml`, `staging-backmerge-to-ldr.yml`,
-      `staging-lock-check.yml`, `update-dependency-version.yml`) using the pattern proven in todo 3 — host each in
-      `unified-trading-ci`, verify the `notify-slack.yml` local-reference edge for the 2 that need it (todo 1's
-      finding), then fan the caller-stub replacement out fleet-wide per repo (respecting dependency-root-first ordering
-      the same way `shared_ci_workflow_repo_extraction_2026_08_06.md`'s Wave 2-4 did — `unified-api-contracts`
-      /`unified-trading-library` before their dependents). Done-when: every repo that carried a full copy (per todo 1's
-      table) now carries only the thin stub, each shipped + evidenced with `<repo>@<sha>`.
+      `update-dependency-version.yml` — `staging-lock-check.yml` split out to todo 11, see below, a real landmine this
+      todo's original scope didn't anticipate). Hosted all 5 in `unified-trading-ci@892bb81` with a
+      `self_hosted_runner_labels` input (same pattern as todo 3). **Correction to this plan's own "Confirmed technical
+      facts" — confirmed via independent re-research, not just todo 3's single-file finding**: ALL 6 files (not just
+      `version-registry-notify.yml`) contain `__RUNS_ON__`, contradicting the "8 files are LITERALLY BYTE-IDENTICAL...
+      zero template markers" claim. **`request-major-bump.yml` needed an additional fix actionlint caught**: its
+      `workflow_dispatch: inputs:` (proposed_version/reason/approver) had to be mirrored onto the reusable workflow's
+      `workflow_call: inputs:` too — `github`/`inputs` context rules differ between the two trigger types. **PM
+      exception**: `major-bump-issue-handler.yml` and `request-major-bump.yml` were NOT converted for
+      `unified-trading-pm` — independent re-research found PM's local copies are genuinely customized (dedup/cooldown
+      Slack alerting via `notify-slack.yml`, richer than the fleet canonical), not stale; converting them would have
+      regressed PM. PM's `main-backmerge-to-ldr.yml` matched canonical exactly and WAS converted
+      (`unified-trading-pm@12832f77ab`). Fan-out order: `unified-api-contracts`/`unified-trading-library` first, then
+      the other 22 non-PM carriers, then PM. Every one of the 24 non-PM carriers (main-backmerge-to-ldr.yml) + 24 (the
+      other 4 files) shipped + independently re-verified via a direct `git show origin/live-defi-rollout:<path>` content
+      check per repo (not just trusting quickmerge's own "✅ Landed" message — see the shared-clone race note below) —
+      zero failures on the final sweep. Also had to re-baseline
+      `scripts/quality_gates/workflow_template_drift_baseline.json` (PM's own local-only cross-repo parity checker
+      flagged the 6 new `unified-trading-ci` reusable-workflow files as "new drift" against the old flat-copy template —
+      correctly caught, explicitly blessed via `--baseline-write --baseline-write-allow-additions`). **Real gap found in
+      `hosted-baseline.sh`-adjacent tooling, unrelated to this plan but discovered while shipping**: none — that was the
+      separate PM self-hosted-revert session earlier the same day. **Process note (recurring today)**: this shared
+      workspace is under heavy concurrent multi-session load — hit the
+      `shared_clone_concurrent_commit_message_swap_2026_07_28.md` race repeatedly (quickmerge's own "already committed"
+      check raced against a different session's commit and silently no-op'd at least twice, once losing uncommitted
+      generated content entirely with an empty autostash left behind) and one genuine inherited-foreign-WIP stash-pop
+      conflict (market-tick-data-service: `cloudbuild.yaml`/`Dockerfile`, unrelated GAR-auth hardening WIP — reset to
+      HEAD without dropping the stash, never touched the content). Recovery pattern that worked every time: regenerate
+      (cheap, script-driven) → `git add`+`git commit` immediately (close the race window) → quickmerge to push →
+      **always independently verify via `git show origin/<branch>:<path>`**, never trust the tool's own success message
+      alone. CI-VM impact of this rollout (resource-history-sampler, 5s granularity): real burst during the 24-repo push
+      wave (max load_avg_1m 7.84, max CPU 60.7%, max RAM 28.6%, zero OOM kills), settled back to idle immediately after
+      — the box absorbed a genuine fleet-wide CI wave cleanly at its current 16 vCPU/32GB size.
 - [ ] 5. [INFRA] P1. **Convert `semver-agent.yml.tmpl`** (1034 lines — the largest and only one with real per-repo
       substitution beyond `{{RUNS_ON}}`'s already-proven pattern) — separated from todo 4 given its size and the fact
       it's the one file genuinely worth an isolated careful review rather than batching with the trivial ones; convert
@@ -269,6 +302,24 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       relying on someone noticing fleet-wide CI going red again. Genuinely optional — the risk already exists
       identically for `unified-trading-pm` today and has no such guard either; scope this as its own small follow-up if
       pursued, don't block this plan on it.
+
+- [ ] 11. [INFRA] P1. **`staging-lock-check.yml` — split out of todo 4, DO NOT convert with the naive stub pattern.**
+      Found 2026-08-07: this file's `check-staging-lock` job is registered as a literal required-status-check context
+      (`"check-staging-lock"`, exact string, no prefix — confirmed live on `execution-service`'s
+      `require-staging-lock-check` ruleset, and the same ruleset name/shape exists on 16 of 24 repos per the canonical
+      template's own header comment). Empirically confirmed (via the already-shipped `version-registry-notify.yml`
+      canary's real check-run) that a `workflow_call` caller job produces a check named
+      `"<caller job name> / <callee job name>"`, NOT the bare callee job name — converting this file with the same stub
+      pattern used for the other 9 would silently change the reported check name to
+      `"check-staging-lock / check-staging-lock"`, permanently failing to satisfy the ruleset's exact-string match. Low
+      blast radius TODAY only because `staging` is frozen with 0 open PRs fleet-wide (per the file's own 2026-07-23
+      comment) — but a real landmine for whenever staging is un-frozen, and NOT something to leave silently broken. Two
+      viable fixes, pick one before converting: (a) update the ruleset's `required_status_checks` context string in all
+      16 affected repos to the new `"check-staging-lock / check-staging-lock"` form as part of the SAME migration commit
+      (verify via a real triggered run before considering it safe, the same way todo 3's canary did); or (b) name the
+      reusable workflow's job something that makes the caller-side name collapse back to the bare string (GitHub does
+      NOT support this — the prefix is structural, not cosmetic, so (a) is the only real option). Do NOT silently skip
+      this file forever — track it here until resolved.
 
 ## Todo 1 findings (2026-08-06)
 

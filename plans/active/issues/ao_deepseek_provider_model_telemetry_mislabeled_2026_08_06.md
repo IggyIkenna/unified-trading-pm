@@ -20,7 +20,7 @@ summary: >-
   (explicit or implicit) that scales scrutiny by model tier.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
@@ -135,3 +135,8 @@ and nothing on the server side catches the mismatch.
   same `AccountDef`/provider schema this doc's finding depends on. Added
   `agent-orchestrator/scripts/orchestrator/context_history_report.py`, the exact consumer the open `[DOC] P3` todo names
   (`--group-by model`).
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: `asset_group` mistag
+  RULED — Option B/C combined ("make it correct"). Retagged `[infrastructure]` → `[ao]` directly (finding 19,
+  `ag_closeout_audit_infra_parked_2026_08_07.md`, 3rd confirmed instance of the same pattern). Sibling doc
+  `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` (finding 6) retagged in the same pass; the
+  authoring-time default fix (Option C) tracked separately.

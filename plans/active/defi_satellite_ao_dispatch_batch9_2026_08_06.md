@@ -479,3 +479,74 @@ remaining items besides the over-cap-gated one above).
   `gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-defi-cron --location asia-northeast1`, (c)
   await ≥4 clean `--verify-only` cycles in cron run.log, (d) flip todos 3+4 in this plan + [DATA] P1 in issue doc, (e)
   push, (f) /done.
+- **2026-08-07 (AO dispatch #9, `infra`, slot 8, todo 3-adjacent [INFRA] P0 relaunch todo)**: VM `100248` (from dispatch
+  #8) found GONE (deleted 10:55:51Z, ~50min after its heartbeat sidecar died at 10:06:02Z — consistent with dispatch
+  #8's own SIGPIPE finding). Manifest generation UNCHANGED (`1786048462981342`, still 2,642,951,426 bytes) — the CAS
+  rewrite never fired, so no partial/corrupt state; safe to retry. **ROOT-CAUSED via GCP Cloud Audit Log (previously
+  unknown — the 2026-08-06 fix `deployment-service@0e94ceee1` did NOT actually cover this kill path):** the delete's
+  `protoPayload.requestMetadata.callerSuppliedUserAgent="python-requests/2.34.2"` +
+  `serviceAccountDelegationInfo.firstPartyPrincipal=service-1060025368044@serverless-robot-prod.iam.gserviceaccount.com`
+  proves a **Cloud Run** identity fired the delete — NOT the VM-side `vm_zombie_watchdog.py` daemon (independently
+  verified via its own serial-console log: it logged "killed 0/0 zombies" across the EXACT kill-window sweep cycles
+  10:53→10:58, i.e. its 90min canonical-migration- override was never even tested). The actual killer is
+  `deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py`'s Cloud-Run-deployed
+  `sweep()` (`_kill_stalled_vm` reuses the watchdog's `_kill_vm` primitive directly, bypassing `PREFIX_IDLE_THRESHOLDS`
+  entirely) — a SEPARATE mechanism with its own flat `DEFAULT_KILL_MINUTES=45.0`, which explicitly watches the
+  `canonical-migration-` family (`_is_backfill_vm` docstring) but was never given the same per-prefix override the
+  2026-08-06 fix added to the OTHER watchdog. 45min + up to one ~5min sweep-cycle lands exactly on the observed ~50min
+  kill. **Fix shipped this dispatch**: added `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` +
+  `_resolve_kill_minutes()` (mirrors `vm_zombie_watchdog._resolve_idle_thresholds`) to `heartbeat_stall_watcher.py`,
+  threaded into the `sweep()` loop's `should_auto_kill` call + the `DP_VM_STALL` log event; 2 new tests
+  (`test_resolve_kill_minutes_canonical_migration_override`,
+  `test_sweep_does_not_kill_canonical_migration_vm_before_override_threshold`). QG in flight at time of writing — ships
+  via quickmerge once green, then relaunches the purge VM a 3rd time. Full evidence:
+  `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log (cross-cited).
+- **2026-08-07 (AO dispatch #9 continued, `infra`, slot 8)**: `heartbeat_stall_watcher.py` fix **SHIPPED**
+  `deployment-service@14240378194039fe5a2cfb5e2d86dbed6cffe8d8` — `quality-gates.sh` full run green (246s, 0 failures),
+  landed on `live-defi-rollout` via `quickmerge.sh --agent`, post-push ancestry verified
+  (`git rev-list --count origin/live-defi-rollout..HEAD` = 0). Proceeding to the purge VM's 3rd relaunch attempt with
+  fresh pre-flight re-verification per the `[INFRA] P0` todo's own checklist.
+- **2026-08-07 13:43Z (AO dispatch #9 continued, `infra`, slot 8) — 3rd relaunch**: fresh pre-flight `--verify-only`
+  scan confirmed 0 GCS objects across all 1881 TARGET-signature day(s) x 10 `TARGET_VENUES` (matches manifest generation
+  `1786048462981342`, unchanged since the dispatch #8 failure — CAS never fired, safe retry); zombie watchdog RUNNING;
+  consolidator cron PAUSED. Launched `canonical-migration-defi-gas-fees-legacy-purge-20260807-134308` (e2-highmem-8,
+  SPOT, tarball verified fresh @ `142403781940` = includes the just-shipped fix). Boot clean (`run.log`): sanity-check
+  12,425 rows confirmed, cron PAUSED confirmed, soft-delete retention 604800s confirmed, 0/0 GCS objects deleted
+  (expected), streaming download started 13:47:09Z — the exact recovery point where dispatch #8's VM was killed by the
+  (now-patched) `heartbeat_stall_watcher.py` at ~50min. Monitoring for survival past 45min to confirm the fix, then to
+  terminal EXIT_STATUS.
+- **2026-08-07 14:12Z (AO dispatch #9 continued, `infra`, slot 8) — pre-compact checkpoint**: VM confirmed RUNNING at
+  T+25min (14:12Z), well past the halfway point of the expected 30-60min operation, no `EXIT_STATUS` yet. All repo
+  worktrees in this slot clean and pushed (`deployment-service`@`1424037` ahead=0, `unified-trading-pm`@`bcf8e00d1`
+  ahead=0; a `market-tick-data-service` `uv.lock` drift from an unrelated `scripts/setup.sh` invocation was discarded,
+  not committed — environment artifact, not task output). **Resume point**: poll
+  `gcloud compute instances describe canonical-migration-defi-gas-fees-legacy-purge-20260807-134308 --zone asia-northeast1-c`
+  for status +
+  `gcloud storage ls gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-gas-fees-legacy-purge-20260807-134308/`
+  for `EXIT_STATUS`. On `EXIT_STATUS=0`: (a) verify `_index/availability_index.parquet` 3-part TARGET-signature filter =
+  0 rows, (b)
+  `gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-defi-cron --location asia-northeast1`, (c)
+  await ≥4 clean `--verify-only` cycles in the cron's own run.log, (d) flip todo 3 (`[DIAG] P1`) and the `[INFRA] P0`
+  relaunch todo above with full evidence citing both this doc and the issue doc, (e) commit+push, (f) `/done` on
+  `defi_satellite_ao_dispatch_batch9-018`. **Lesson**: `ScheduleWakeup` `delaySeconds` does not track 1:1 with actual
+  elapsed wall-clock time when interleaved with frequent external `/heartbeat` triggers — always confirm elapsed time
+  via `date -u` against the operation's own logged start timestamp, not cumulative scheduled-delay arithmetic (caught a
+  "~30min" miscount that was actually ~10min this session). **Lesson**: the VM's GCS log directory is keyed by the FULL
+  VM name (`vm-logs/<full-vm-name>/`), not the bare timestamp suffix used as shorthand in prior Progress Log entries — a
+  `gcloud storage ls` on the shorthand path returns "no objects" even though logs exist.
+- **2026-08-07 15:22Z (AO dispatch #10, `infra`, slot 8)**: VM
+  `canonical-migration-defi-gas-fees-legacy-purge-20260807-134308` (dispatch #9) found GONE — killed at 14:36Z by Cloud
+  Run `heartbeat_stall_watcher.py` (audit log: `python-requests/2.34.2` UA + `unified-trading-sa` identity), ~49min
+  after launch. Root cause: `heartbeat_stall_watcher.py` fix (`deployment-service@1424037`) is on `live-defi-rollout`
+  but NOT yet on `main` or in the Cloud Run image (`deployment-api:latest` last built 09:31Z, pre-fix; LDR→main promote
+  stalled — last promote at 10:51Z). Pre-flight: 0 GCS objects confirmed for all 10 TARGET_VENUES; manifest generation
+  `1786048462981342` unchanged (CAS never fired in dispatch #9). **Mitigation**: paused
+  `uts-prod-dp-heartbeat-watcher-cron` Cloud Scheduler job to prevent further Cloud Run kills during the blocking 2.46
+  GiB download; zombie watchdog `vm-zombie-watchdog-20260807-075242` still RUNNING (90-min threshold) as backup.
+  Launched 4th relaunch: `canonical-migration-defi-gas-fees-legacy-purge-20260807-152116` (SPOT, e2-highmem-8). Boot
+  clean: 12,425 rows confirmed, cron PAUSED, 0/0 GCS objects, streaming download started 15:25:19Z. Expected completion
+  ~16:25Z. **Resume**: poll
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-gas-fees-legacy-purge-20260807-152116/EXIT_STATUS`;
+  on EXIT_STATUS=0: (a) verify manifest 3-part TARGET filter = 0 rows, (b) resume both
+  `uts-prod-manifest-consolidator-market-data-defi-cron` AND `uts-prod-dp-heartbeat-watcher-cron`, (c) await ≥4 clean
+  `--verify-only` cycles, (d) flip todo 3 ([DIAG] P1) + [INFRA] P0 relaunch todo, (e) push + /done.

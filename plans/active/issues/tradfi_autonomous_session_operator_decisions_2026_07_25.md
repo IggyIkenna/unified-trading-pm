@@ -127,11 +127,33 @@ resolved (or you explicitly accept current evidence as sufficient), that gate st
 explicitly accept the current Phase-D evidence as sufficient and unblock the MVP backfill gate without fixing this.
 Other.
 
+**Option A APPLIED 2026-08-07 (operator, same session as items 1/2/4/6/9 above) — SSOT contradiction resolved, NOT the
+same as the Phase-D gate being unblocked yet.** The two `EXCHANGE_CODE_TO_NAME` registries were converged (naming-style
+pick + micro-contract distinguishing fix, `unified-api-contracts@00b2de546`) — full detail in
+`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4. **What is still NOT done**: the actual
+canonical-root→raw-Databento-symbol reverse-translation step the sampler needs to call CME/GLBX.MDP3 with the right
+instrument-ids — that's real code that doesn't exist yet (scoped in that doc's §4 recommendation: venue-scoped,
+CME/GLBX.MDP3-only, default to the standard non-micro contract code). The Phase-D MVP backfill readiness gate stays
+blocked until that's built, not automatically unblocked by the registry fix alone. Not scoped as its own todo yet — next
+natural step once the GCS/manifest migration todo (already recorded there) lands, since the reverse-translation design
+benefits from knowing the final converged values are actually live in data first.
+
 ## 4. Legacy-twin bucket deletes — still a hard stop, not re-raised, just confirming it's still parked correctly
 
 `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` — `BLOCKED-OPERATOR-DECISION`, Ikenna's migration sign-off
 gates this. Untouched this session, correctly (never autonomous per the workspace HARD RULE). No action needed from you
 unless you want to move on it; just confirming this session didn't touch it.
+
+**CORRECTED 2026-08-07 — the deletes are NOT done.** Operator asked to sign off 2026-08-07 believing this was complete;
+verified against the plan's own Progress Log first. As of the last measurement (2026-07-30 dry-run, no fresher re-check
+through the 2026-08-06 na-eligibility-audit passes), Part 5's twin-coverage check came back **0%**: all 900 class-B
+legacy-twin candidate rows were BLOCKED with "canonical twin NOT captured in manifest — would delete the only copy." 0
+rows have ever been deleted. Separately: **no operator sign-off is actually needed or blocking here** — the 2026-07-28
+§3a extension already made this delete class agent-executable once twin-coverage independently measures 100%
+(content-verified) AND bucket retention ≥604800s; it is not gated on you anymore. The real blocker is the twin-coverage
+measurement itself sitting at 0%, not lack of approval — worth investigating WHY (e.g., whether the canonical-side
+migration for these 900 rows genuinely never landed, or the coverage check has a bug) as its own follow-up if you want
+it pursued; not investigated further here.
 
 ## What this session DID decide from documented intent (informational, not asking)
 
@@ -205,6 +227,31 @@ with its linkage line. (Tradfi's side already holds — `tradfi_consolidated_clo
   the option is explicitly ruled out.
 - Other: your call.
 
+**ALREADY RESOLVED 2026-07-26 — opposite of this doc's own [WORKER REC], not stale-in-the-usual-sense but a real
+standing ruling this session's recommendation missed.** The identical question was asked (and answered) as item 20 of
+the sibling doc `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` (the general/multi-AG decision
+queue from the same 2026-07-25/26 session, distinct from this tradfi-only doc): **"A: keep the cross-cutting tag...
+[WORKER REC] — retagging mid-rollout while other agents audit those same tranches concurrently is the greater hazard."**
+Resolved as Option A there — kept `[cross-cutting]`, added an ownership note to
+`cross_cutting_consolidated_closeout_2026_07_25.md` instead (`unified-trading-pm@2c61a8dc4`). The "mid-rollout" hazard
+cited is not a one-time event — concurrent per-tranche `na-eligibility-audit`/`ag-closeout-audit` sweeps are a standing
+cron pattern in this workspace, so the stated rationale still holds today, not just as of 2026-07-26. **Did NOT apply
+the operator's 2026-08-07 "A: retag" answer** — recording it here would silently reverse an existing, reasoned,
+already-shipped ruling on the same question without the operator having seen it. Flagged back to the operator instead of
+applied; see chat for the ask.
+
+**OVERRIDDEN 2026-08-07 (operator, having seen the standing-ruling rationale above) — retag applied, "switch to
+tradfi."** `plans/archive/issues/phantom_captures_tradfi_2026_06_28.md`'s `asset_group` changed `[cross-cutting]` →
+`[tradfi]`. `cross_cutting_consolidated_closeout_2026_07_25.md` Track 22 updated in lockstep: the doc converted from a
+direct Sources claim to a cross-reference note (still mentions the shared G3 monitor, no longer claims ownership); the 3
+sibling docs (2× `manifest_hygiene_red`, `phantom_captures_prediction`) stay `[cross-cutting]` — this override was
+scoped to this one doc only, not a blanket reversal of the standing hazard-avoidance rule.
+`tradfi_consolidated_closeout_2026_07_18.md:570` already linked it (no change needed there — its side of the
+double-claim was always correct). Verified `check_ag_closeout_linkage.py` post-retag: 64 orphans (baseline 69, unrelated
+pre-existing drift) — this doc does not appear in the orphan list (archived docs are out of scope for the active-linkage
+check), confirming the retag introduced no new orphan. Item 20 of the sibling
+`autonomous_session_operator_decisions_2026_07_25.md` doc updated to note the override for future readers.
+
 ## 7. An AO todo that launches a billed VM with neither `[OPERATOR]` nor a stated justification [RECOMMEND OPTION A]
 
 **The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147` (`assigned_vm: planning`)
@@ -270,6 +317,15 @@ what each sentence was going to say, and rewriting another session's just-commit
 - B: Accept as-is and let batch3_finalize's re-check todo re-derive each conflict from scratch (costs a full re-triage
   of those 3 docs).
 - C: Delete the 3 truncated entries and re-triage those docs into batch4 as if never deferred.
+
+**STALE — Option A already happened 2026-07-26, before this item was re-asked 2026-08-07.**
+`tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own todo 2 re-verified all 3 flagged entries and appended
+full "RE-VERIFIED STILL OPEN/GATED (2026-07-26, finalize todo 2)" clarifications restoring the substance each truncated
+sentence was cut off from (the raw truncated fragment is still visible mid-paragraph, but the content is recovered and
+each entry is fully usable) — see `plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s "Deferred"
+sections. Both batch3 and its finalize are now archived; this whole tranche closed out. Operator's 2026-08-07 "A" answer
+matches what already happened — no further action needed.
+
 - Other: your call.
 
 ## Open todo
@@ -283,15 +339,33 @@ what each sentence was going to say, and rewriting another session's just-commit
 - [x] ✅ [PM] P2. **Item 2 — CLOSED 2026-08-07, was already stale.** Already reviewed, re-dry-run, and applied
       2026-07-26 (65,628 rows retired) — see the "STALE" note under item 2 above. Operator's 2026-08-07 answer
       independently matches what already shipped; nothing further to execute.
-- [ ] [PM] P2. **PARTIALLY RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — items 5, 7, 8
-      answered below; items 1, 2 closed 2026-08-07 as stale-already-shipped (see their own todos above); items 3, 4, 6,
-      9 remain open, not asked this round.** - **Item 5 — RULED: Option A, flip all 8 draft tradfi AO plans to active**
-      (not the worker-recommended narrower Option B). Operator's literal instruction was unqualified "flip to active" —
-      taking the plain reading (all 8), not the smaller-blast-radius subset. **Flagging for visibility, not re-asking**:
-      the worker's own caution was that this lands 49 todos on the fleet at once alongside batch3's 9 — if that's not
-      what was intended, say so and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its
-      finalize per Option B instead. Propagation not yet executed (flip each of the 8 plans' `status: draft` → `active`
-      frontmatter) — ready to execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated
+- [x] ✅ [PM] P2. **Item 4 — CORRECTED 2026-08-07, no sign-off recorded.** Operator believed the twin-bucket deletes
+      were done and offered to sign off; verified first — they are NOT done (twin-coverage last measured 0%, 0 rows
+      deleted), and no sign-off is actually needed anymore since the 2026-07-28 §3a extension (agent-executable once
+      twin-coverage clears). See the "CORRECTED 2026-08-07" note under item 4 above.
+- [x] ✅ [PM] P2. **Item 6 — OVERRIDDEN 2026-08-07, retag applied.** The identical question was already resolved
+      2026-07-26 the OPPOSITE way (keep `[cross-cutting]`, not retag) as item 20 of the sibling
+      `autonomous_session_operator_decisions_2026_07_25.md` doc, for a stated ongoing reason (concurrent-tranche-audit
+      race hazard). Flagged back to the operator instead of silently applying; operator explicitly overrode it ("switch
+      to tradfi") having seen the rationale. Retag executed — see the "OVERRIDDEN 2026-08-07" note under item 6 above
+      for full evidence (`asset_group` changed, Track 22 cross-reference updated, linkage check clean).
+- [x] ✅ [PM] P2. **Item 9 — CLOSED 2026-08-07, was already stale.** Already done 2026-07-26 via
+      `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own re-check todo; both docs now archived. See the
+      "STALE" note under item 9 above.
+- [x] ✅ [PM] P2. **Item 3 — Option A applied 2026-08-07 (SSOT resolved), gate NOT yet unblocked.** See the "Option A
+      APPLIED" note under item 3 above — registry converged (`unified-api-contracts@00b2de546`), but the sampler's
+      reverse-translation code itself still needs building before the Phase-D MVP backfill readiness gate actually
+      clears. Not fully closed — the remaining build step is real work, not a decision.
+- [ ] [PM] P2. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — items 5, 7, 8 answered below;
+      items 1, 2, 3, 4, 6, 9 all closed/corrected/applied 2026-08-07 (see their own todos above).** Of the 9 original
+      items, only item 6 still needs the operator's attention (a standing ruling this session's own [WORKER REC]
+      initially missed — see item 6's note above). - **Item 5 — RULED: Option A, flip all 8 draft tradfi AO plans to
+      active** (not the worker-recommended narrower Option B). Operator's literal instruction was unqualified "flip to
+      active" — taking the plain reading (all 8), not the smaller-blast-radius subset. **Flagging for visibility, not
+      re-asking**: the worker's own caution was that this lands 49 todos on the fleet at once alongside batch3's 9 — if
+      that's not what was intended, say so and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` +
+      its finalize per Option B instead. Propagation not yet executed (flip each of the 8 plans' `status: draft` →
+      `active` frontmatter) — ready to execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated
       safe-idempotent justification to `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard
       launch sub-item (cite `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns,
       name the launcher + a shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed —
@@ -388,3 +462,16 @@ every day narrows or closes it permanently.
   source for a more recent resolution before re-presenting it as open. Both items closed 2026-08-07 by citation (see
   their own "STALE" notes above); item 1's new incremental scope (the delete, which is genuinely new work, not
   duplicated) is tracked in the completion doc.
+- **Operator ruling 2026-08-07, continued (items 4, 6, 9)**: same verify-before-recording pass extended to the remaining
+  answered items. **All three rested on an incorrect premise** — item 4 (operator believed the twin-bucket deletes were
+  done; they are not, 0% twin-coverage), item 9 (already resolved 2026-07-26, both docs archived), and item 6 (already
+  resolved 2026-07-26 — but the OPPOSITE way from this doc's own recommendation, discovered only by finding a second,
+  larger decision-queue doc — `autonomous_session_operator_decisions_2026_07_25.md`, 38 items across
+  cross-cutting/sports/defi/prediction/ao/ci/infra — whose item 20 duplicates this doc's item 6 exactly). **Pattern
+  worth naming**: 4 of the 4 items answered in this exchange were stale or false-premised, not 0 — items 1, 2, 6, 9 had
+  all already been resolved and shipped between 2026-07-26 and 2026-07-28, and this doc simply never got its checkboxes
+  flipped to cite those ships, while repeated `na-eligibility-audit` passes kept re-verifying it as "unchanged, still
+  open" without cross-checking the cited source plans. None of items 4/6/9's answers were applied as new rulings (4: no
+  sign-off recorded, wasn't actually needed; 6: not retagged, flagged back to the operator instead; 9: nothing to do,
+  already done) — item 6 is the only one still needing operator attention, the standing 2026-07-26 ruling was left in
+  place pending that.

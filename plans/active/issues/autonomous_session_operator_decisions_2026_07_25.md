@@ -637,6 +637,14 @@ data-correctness fix). Other: operator can type a custom answer.
 hazard) and added an explicit ownership note to `cross_cutting_consolidated_closeout_2026_07_25.md`.
 `unified-trading-pm@2c61a8dc4`.
 
+**PARTIALLY OVERRIDDEN 2026-08-07 (operator)** — re-asked independently via
+`tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 6 (same question, tradfi-scoped framing, not knowing
+this ruling already existed). Flagged back before applying; operator then explicitly overrode Option A for
+`phantom_captures_tradfi_2026_06_28.md` specifically ("switch to tradfi") — retagged `[tradfi]`, Track 22 updated to a
+cross-reference. **The other 3 docs (2× `manifest_hygiene_red`, `phantom_captures_prediction`) are UNCHANGED** — this
+was a scoped, single-doc override, not a reversal of Option A's general rationale, which still holds for the rest
+(concurrent-audit races are a standing condition of this workspace, not a one-time rollout risk).
+
 ## 21. WorkerLivenessWatchdog — harden vs. soften, and ordering (2026-07-26, ao)
 
 Six docs touch the kick/escalation mechanism; two prescribe opposite directions —

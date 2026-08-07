@@ -387,7 +387,7 @@ unchanged:
       `git show --stat 89fbf99d` in the execution-service checkout,
       `git merge-base --is-ancestor 89fbf99d     origin/live-defi-rollout` → ancestor confirmed, and the live wiring +
       test file re-read on disk. This closes finding 1 of
-      `/plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md`, carried forward unreconciled by three
+      `/plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md`, carried forward unreconciled by three
       consecutive `/ag-closeout-audit infra` runs (07-31, 08-01, 08-02) because that skill is scoped out of
       false-unchecked flips — it is in scope for this skill's KEEP-NA-stale-items verdict, which uses the same HARD
       evidence bar. Original text preserved below for the record. Was: **CORRECTED 2026-07-27**: the "dead-code delete

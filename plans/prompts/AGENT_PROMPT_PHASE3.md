@@ -72,8 +72,8 @@ If any check fails: STOP. Complete Phase 1/2 first.
 | Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 63 repos, 13 levels (L0-L12, AUTHORITATIVE). L0=PM, L1=codex, L2+=code repos |
 | Runtime topology       | `deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`                                                               |
 | Service pair flows     | `unified-trading-/codex/08-workflows/service-pair-flows.md`                                                                    |
-| Tier architecture      | `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md`                                                                  |
-| Batch/live symmetry    | `unified-trading-/codex/04-architecture/batch-live-symmetry.md`                                                                |
+| Tier architecture      | `unified-trading-/codex/04-architecture/tier-and-import-architecture.md`                                                       |
+| Batch/live symmetry    | `unified-trading-/codex/09-strategy/operational/paper-batch-live-reconciliation.md`                                            |
 | Integration layers     | `unified-trading-/codex/06-coding-standards/integration-testing-layers.md`                                                     |
 
 ---
@@ -364,9 +364,9 @@ If any step fails: fix and re-run **that step**. Never skip forward. L3b passing
 - `unified-trading-pm/workspace-manifest.json` — repo registry
 - `deployment-service/configs/runtime-topology.yaml` — runtime topology
 - `unified-trading-/codex/08-workflows/service-pair-flows.md` — service-to-service data flows
-- `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md` — tier rules
+- `unified-trading-/codex/04-architecture/tier-and-import-architecture.md` — tier rules
 - `unified-trading-/codex/06-coding-standards/integration-testing-layers.md` — 4-layer strategy
-- `unified-trading-/codex/04-architecture/batch-live-symmetry.md` — batch/live seam pattern
+- `unified-trading-/codex/09-strategy/operational/paper-batch-live-reconciliation.md` — batch/live seam pattern
 - `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs
 - `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template (populate during hardening)
 - `.cursor/rules/delete-deprecated.mdc` — no backward compat

@@ -45,7 +45,7 @@ related:
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md,
     /plans/active/issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md,
-    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
@@ -206,18 +206,21 @@ since it produced a shipped draft artifact, not an unresolved item).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Resolve the agent-orchestrator-internal `asset_group` mistag pattern (findings 6, 18, 19 — 3
-      confirmed instances)** — pick one of: (A) authorize per-doc retags one at a time (slow, will recur); (B) a
-      corpus-wide non-sharded retag pass for `infrastructure`-tagged-but-agent-orchestrator-internal content; (C) fix
-      the authoring-time default so a new doc with `repos: [agent-orchestrator]` + `parent_epic: orchestrator_master`
-      suggests `asset_group: [ao]`, not `[infrastructure]`.
-- [ ] [OPERATOR] P1. **Investigate the missing stash-backup bundle** (finding 11, 4th consecutive day confirmed absent)
-      — confirm whether `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated to a
-      durable location or represents an unrecovered loss. Update
-      `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the outcome either way.
-- [ ] [OPERATOR] P2. **Review + flip `infra_satellite_ao_dispatch_batch8_2026_08_07.md` from `draft` to `active`** —
-      single conflict-clear todo (fix `lc_verify_tarball_freshness`'s auto-mode silent dirty-tree skip + regression
-      test), pre-conflict-checked, no operator-gated sub-items.
+- [x] ✅ [OPERATOR] P1. **RULED 2026-08-07 — B+C combined ("make it correct").** Corpus-wide re-check found only 2
+      genuinely live instances (finding 18's doc archived same-day, already moot) —
+      `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` (finding 6) and
+      `ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md` (finding 19) — both retagged `[infrastructure]` →
+      `[ao]` directly. Also swept the full corpus for other `repos: [agent-orchestrator]` +
+      `asset_group: [infrastructure]` docs before retagging anything (found + correctly EXCLUDED
+      `shared_host_home_filesystem_full_2026_07_26.md` — `parent_epic: infrastructure_master`, genuinely fleet-wide
+      infra content, not a mistag). Option C: added explicit guidance to `plans/active/task_template.md`'s `asset_group`
+      field (repos:[agent-orchestrator] + parent_epic:orchestrator_master → `[ao]`, not `[infrastructure]`) so this
+      stops recurring at authoring time.
+- [x] ✅ [OPERATOR] P1. **RULED 2026-08-07 — unrecovered loss, accepted.** Operator: "its lost no biggie forget about
+      it." Recorded as a confirmed, accepted data loss (not further investigated) in
+      `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`.
+- [x] ✅ [OPERATOR] P2. **APPROVED 2026-08-07 — flipped to `active`.** See
+      `infra_satellite_ao_dispatch_batch8_2026_08_07.md` frontmatter.
 - [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
       (finding 12, carried). Design/tooling-priority call, not urgent.
 - [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch-era candidates** (finding 13, carried: `CITE_RE` hardening

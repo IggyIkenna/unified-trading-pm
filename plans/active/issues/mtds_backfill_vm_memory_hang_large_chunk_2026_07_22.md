@@ -620,3 +620,21 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   backfills. Flagging for whoever next touches this doc: the `BLOCKED-CREDENTIALS` item has a 2026-08-02 operator
   purchase-decision with no later in-doc confirmation credits were actually restored — worth a live re-check rather than
   assuming still-blocked.
+- **2026-08-07T14:15Z (autonomous session)** — **New data point for the P1 root-cause: first-subprocess-vs-subsequent
+  survival time, from a live `mtds-backfill-odds-401-retry` run today.** This VM (single 8-month chunk,
+  `2025-09-01→2026-05-08`, all Prediction-tier leagues, one fresh python subprocess per league via `mtds_chunk_loop.sh`)
+  OOM-killed on 6 consecutive leagues. Precise timing: EPL (the FIRST subprocess this VM lifetime) survived **93.3
+  minutes** before OOM; every subsequent league OOM'd in a **remarkably tight 6.5-8.9 minute band** (LA_LIGA 8.9,
+  BUNDESLIGA 8.7, SERIE_A 6.5, LIGUE_1 8.6, EREDIVISIE 8.8). That consistency across 5 different leagues — which should
+  have genuinely different real-fetch-day densities and therefore genuinely different survival times if the leak were
+  purely a function of per-process real-fetch volume — argues there is ALSO a component that persists ACROSS subprocess
+  launches within the same VM's lifetime, not purely within one process. Candidate mechanisms worth checking first (none
+  confirmed): OS page-cache/disk-buffer pressure that isn't application-visible but still counts toward the cgroup's OOM
+  accounting; a lingering child/zombie process from the prior subprocess not fully reaped before the next spawn; a
+  host-level DNS resolver cache or connection-pool artifact (`market_tick_data_service`'s own `ThreadedResolver`
+  hypothesis, flagged but unconfirmed in this doc's 2026-07-31 entries, would fit — if the resolver cache is a
+  module-level singleton it wouldn't reset per-subprocess the way in-process object state does). Real captured data is
+  NOT lost in any of this — the shard-atom write pattern is per-date via `ManifestWriter`, so each subprocess's partial
+  progress before its own OOM is durable; this is a performance/cost finding, not a data-loss one. Not investigated
+  further this session (out of scope for an operational monitoring tick) — logged here as fresh, specific evidence for
+  whoever picks up the still-open memray/tracemalloc profiling work below.

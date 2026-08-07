@@ -402,6 +402,13 @@ perp-MVP-but-underlying-not. **Only gap: the 3 KRX names (HYUNDAI/SAMSUNG/SKHYNI
 UNDERLYING is BLOCKED-DATA (no US-listed twin on databento DBEQ.BASIC; neither vendor covers KRX → operator
 Korea-equity-vendor credential ask).
 
+**RULED 2026-08-07 (operator, interactive session)**: no dedicated Korea-equity tick vendor — "daily from yahoo finance
+is enough." Accept reduced fidelity for these 3 basis-arb cash-twin legs specifically: use the already-live KRX-venue
+Yahoo daily OHLCV coverage (`unified-api-contracts@844c5ee6b` + `instruments-service@1ba5da4b`, Phase 5 above —
+Samsung/SK Hynix/Hyundai already registered as `venue=KRX`, `source=yahoo`) as HYUNDAI/SAMSUNG/SKHYNIX's cash UNDERLYING
+reference, rather than pursuing a paid tick-level vendor. Closes the credential ask; the basis-arb comparison for these
+3 pairs runs at daily resolution, not tick, as an accepted limitation.
+
 ### 2026-06-24 — corrections: granular source structure + commodity/crypto representative ETFs
 
 **B1 backfill ran to completion** (`instr-backfill-tradfi-20260623` exit_code=0): log confirms "fetching 352 equity/ETF
