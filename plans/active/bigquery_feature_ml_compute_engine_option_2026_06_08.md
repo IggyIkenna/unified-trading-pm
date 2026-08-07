@@ -119,6 +119,9 @@ context_scope:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-07-30 (unchanged): the 3 unresolved operator
+  design questions (feature-SQL scope, BQML-vs-feature-store, sequencing behind the canonical-v9 migration) still gate
+  every one of the 5 remaining open todos; `locked_by: live-defi-rollout` still applies.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — 3 unresolved operator design questions (feature-SQL scope,
   BQML-vs-feature-store, sequencing behind the canonical-v9 migration) gate every remaining todo;
   `locked_by: live-defi-rollout`.

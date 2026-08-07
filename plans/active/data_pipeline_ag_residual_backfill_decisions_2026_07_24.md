@@ -322,3 +322,9 @@ items:
 - **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries) -- added the
   honest-absence-downstream-handling SSOT + the two source files the tradfi-retry/defi-evidence-fidelity todos actually
   name (`wave_launcher.py`, `governance_adapter.py`).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged, 3 open todos): the tradfi
+  attempted_failed retry (GENUINE_WORK, bounded) is real but small residual work; the defi DIVERGENT_EMPTY campaign
+  still carries the operator HARD RULE (no flat clip, per-venue backfill-vs-scope decision — GENUINE_WORK, judgment-
+  laden); the DeFi evidence-fidelity item's 2026-07-28 re-scoping (25+ non-uniform call sites, a per-fetch-family
+  return-signature widen, NOT a bounded 1-hour change) still holds on a fresh read — no new evidence changes any of the
+  three verdicts.

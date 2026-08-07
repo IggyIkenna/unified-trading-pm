@@ -516,3 +516,7 @@ overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.p
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) --
   `funding_reversion_crossvenue_book.py` is confirmed the doc's own primary shipped script (cited 5x incl. "THE full
   deployable stack" line); parent/sibling fork + custody-providers codex remain the minimal correct set.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged, 13 open todos): every open item
+  is strategy/ML research judgment (GBM squeeze models, archetype-shelving decisions, structure-5 candidacy,
+  prime-broker research, productionisation calls gated on research conclusions) — one item (the day-mean→per-settlement
+  funding switch) is explicitly blocked-by a separate issue doc, tagged DEPENDENCY_BLOCKED; the rest are GENUINE_WORK.

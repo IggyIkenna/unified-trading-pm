@@ -89,14 +89,18 @@ Requires the strict strategy-service QG + the manifest-allocation-guard tests + 
 is a multi-file live-trading-system integration — done as a focused build, not rushed; the shipped paper/ensemble engine
 is the validated foundation + a runnable paper path TODAY.
 
-- [ ] [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 `carry_and_yield` + allocator with a
+- [x] ✅ [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 `carry_and_yield` + allocator with a
       complete-data DATA*SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
-      granted) — **PARTIAL: config piece DONE `strategy-service@c412f6af`** (2026-06-19): typed
+      granted) — **DONE (na-eligibility-audit 2026-08-07) — both halves shipped, closing the stale open checkbox.**
+      Config piece: `strategy-service@c412f6af` (2026-06-19): typed
       `StrategyServiceConfig.data_source: Literal['live','gcs_complete']` + `gcs_complete_data_path` (the complete-data
       env mode; NO os.getenv) + `ensemble_weight*{funding_dispersion,spot_perp_basis,dated_basis,staked_basis}`+
       `ensemble_split()` accessor (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests.
-      strategy-service QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC
-      archetype enum is the follow-up below** (descoped this session — see why).
+      strategy-service QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). The ENGINE + UAC
+      archetype enum half (originally the follow-up below) is ALSO done — see the item directly below
+      (`unified-api-contracts@487b9a9` + `strategy-service@6b285fad`, both verified ancestors of
+      `origin/live-defi-rollout` per that item's own 2026-07-31 evidence trail). No remaining sub-piece of this todo is
+      open.
 - [x] ✅ [STRATEGY] P1. **funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)** — **DONE
       `unified-api-contracts@487b9a9` + `strategy-service@6b285fad`** (2026-06-19, second autonomous pass when UAC was
       clean). The new `CARRY_FUNDING_DISPERSION` archetype landed ATOMICALLY: UAC `enums.py`
@@ -329,6 +333,15 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, stale items — closed the "Fold the funding-reversion + ensemble..."
+  todo (line ~92): its own text already recorded the config half DONE (`strategy-service@c412f6af`) and the ENGINE+UAC
+  archetype half is independently DONE per the very next todo's 2026-07-31 verified-ancestor evidence
+  (`unified-api-contracts@487b9a9` + `strategy-service@6b285fad`) — no sub-piece remained open, just an unflipped
+  checkbox. Doc stays KEEP-NA overall: the 5 remaining open NICE-TO-HAVE items (rank-allocator increment, UI wizard
+  surfacing, daily-recurrence scheduler, ruff cleanup, asset-class filter) are bounded engineering follow-ups with no
+  stated operator gate — flagged as a lower-confidence RECLASSIFY signal in this session's report rather than reclassified
+  here (the prior 2026-08-02 pass's "design judgment" framing looks looser than a close read supports, but this batch's
+  own rubric requires reporting, not unilaterally flipping `assigned_vm`).
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
   KEEP-NA, valid — remaining todos are strategy/UI design judgment (rank-allocator increment, archetype surfacing,
   asset-class filter). NOTE the `[HISTORICAL] P3` todo is self-labelled 'SUPERSEDED — DONE above' (UAC@487b9a9 +

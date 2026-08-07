@@ -134,3 +134,7 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (5 entries) -- the 2026-08-06 commit only
   flipped the mbp_10/CME docs-fix checkbox, no new reference target.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 1 open todo): the sole
+  remaining item is a genuine real-wall-clock observation window (up to 24h, needed to watch a RESOLVED/green bookend
+  post once the underlying sports/tradfi/cefi conditions actually clear) — DEPENDENCY_BLOCKED on time passing, not
+  agent effort; the explicit operator "run this locally" instruction still governs the doc's `assigned_vm: NA`.

@@ -103,6 +103,10 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   of `autonomous_session_operator_decisions_2026_07_25.md` entry #19 (option A). No content triaged yet — that is this
   doc's own todo 1.
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged, still the sole todo): the
+  triage-and-split work is real, but its output is a new AO dispatch batch, and the ask-before-creating HARD RULE makes
+  plan destination an operator call; the doc's own framing ("design/research judgment, not a checkable fact") still
+  holds on a fresh read.
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
   frontmatter, body byte-identical): KEEP-NA, valid — the sole todo's second half is authoring a new AO dispatch batch —
   the ask-before-creating HARD RULE makes plan destination an operator call; the doc itself frames its content as

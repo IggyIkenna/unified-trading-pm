@@ -319,3 +319,8 @@ droppability now rather than treated as still-gated.
   closure), leaving 1 open todo: the fleet-wide msgpack >=1.2.1 bump on the last 2/20 repos, explicitly blocked on
   foreign gates outside this plan's own repos and fix authority. `locked_by: live-defi-rollout` still applies.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 1 open todo): the fleet-wide
+  msgpack `>=1.2.1` bump on the last 2/20 repos (agent-orchestrator, alerting-service) remains DEPENDENCY_BLOCKED on
+  foreign repo state (UI test-infra `vitest: not found`/`tsc TS2307` on agent-orchestrator; a foreign `DAILY_LEDGER_DIGEST`
+  parity-test/version-alignment chain on alerting-service) — outside this plan's own fix authority.
+  `locked_by: live-defi-rollout` still applies.

@@ -464,3 +464,7 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   sign-off, which is explicitly still HOLD, not on the doc-wide gate as a whole.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the DataStatusTab.tsx + reference_scope.py
   source targets the remaining open UI/backend todos actually touch.
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the 3 UI todos stay
+  correctly blocked pending a fresh `pw:L2` full-suite green (the cited nav-regression blocker doc is resolved but no
+  re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay
+  correctly HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).

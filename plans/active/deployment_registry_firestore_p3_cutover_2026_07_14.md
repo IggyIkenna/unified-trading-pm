@@ -215,6 +215,9 @@ QG-green per repo.
   stay blocked until the dual-write deploy precondition is satisfied and the full checklist clears.
 - **context-scout 2026-08-07**: re-verified context_scope (5 entries) -- all 5 still resolve; unchanged after the
   2026-08-06 na-eligibility-audit reaffirmation (no new named artifacts).
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; the dated operator
+  HALT (2026-07-14) on the 4-item GO/NO-GO checklist is still in force (criterion 1 last re-measured 2026-07-30, not
+  yet re-checked since); irreversible cutover todos stay correctly blocked.
 
 ## Codex SSOTs
 

@@ -390,3 +390,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   operator kind-vs-prefix decision before it can even be scoped; ml-models-store delete P1 is a proven-safe disposition
   that is still a human-only hard stop per delete-safety-protocol.md §3.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged, only 2 open todos): recon-bucket
+  P0 remains OPERATOR_QUESTION-blocked (kind-vs-prefix decision); ml-models-store delete P1 remains OPERATOR_QUESTION
+  (fully-proven-safe disposition, but a human-only hard stop per `gcs-and-manifest-delete-safety-protocol.md` §3 —
+  agent execution is categorically excluded, not just judgment-gated).

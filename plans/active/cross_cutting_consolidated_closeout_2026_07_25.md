@@ -915,3 +915,8 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): explicit 2026-07-25 operator
   gate blocks flipping assigned_vm until the operator personally runs /ag-closeout-audit + /plan-reconcile for this AG.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): explicit dated 2026-07-25
+  operator gate ("do NOT flip to `assigned_vm: planning` until they confirm they've personally run
+  `/ag-closeout-audit` + `/plan-reconcile` for this AG... on the planning VM") still governs; the sole open todo
+  (line ~708, a meta-note that Track open items aren't tracked as checkboxes in this digest) is not itself
+  dispatchable work.

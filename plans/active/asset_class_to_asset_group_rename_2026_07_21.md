@@ -148,6 +148,9 @@ trusting that).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, open-todo count still 6):
+  explicit dated destination ruling (BLK-87fc93e4, 2026-07-21) governs — LOCAL/human by deliberate operator-protective
+  default for a 9+-repo atomic breaking rename; "do not [flip assigned_vm] unilaterally."
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; only change since = context-scout `context_scope`
   frontmatter, body byte-identical): KEEP-NA, valid — explicit dated destination ruling (BLK-87fc93e4, 2026-07-21):
   LOCAL/human by deliberate operator-protective default for a 9+-repo atomic breaking rename — 'do not do that

@@ -136,3 +136,5 @@ real fix is to never load the whole manifest per request.
   real todo is an explicit DESIGN GATE (pick bound vs stream vs precompute) and every later todo depends on that unmade
   choice.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries).
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; todo 2 is still an
+  unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on.

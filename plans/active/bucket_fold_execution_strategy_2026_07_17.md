@@ -271,3 +271,6 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): governed by the 2026-07-17
   operator ruling that all 5 bucket folds are HUMAN plans; residual AWS-leg/IAM/alias-sunset items not re-litigated.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged, 3 open todos): explicit dated
+  operator ruling (2026-07-17, "all 5 bucket folds as HUMAN plans") governs the AWS-leg/IAM+lifecycle/alias-sunset
+  residuals — bounded work but explicitly held out of AO dispatch by that ruling, not re-litigated here.

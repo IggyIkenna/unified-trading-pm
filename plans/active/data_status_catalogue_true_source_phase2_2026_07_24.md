@@ -151,3 +151,6 @@ prior design history verbatim from the parent plan's Progress Log.)_
   todo is self-described architecturally open-ended with a prerequisite (prediction /catalogue 79-row collapse) that
   must be decided first.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries).
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; the sole todo
+  remains self-described architecturally open-ended with the prediction /catalogue 79-row-collapse prerequisite still
+  unresolved.
