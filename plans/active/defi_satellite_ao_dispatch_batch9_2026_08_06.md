@@ -404,6 +404,13 @@ remaining items besides the over-cap-gated one above).
   Confirmed both code fixes still in LDR (`vm_zombie_watchdog.py` line 248: `"canonical-migration-": (90.0, 360.0)`;
   `launch-canonical-migration-vm.sh` line 2094: `STALL_TIMEOUT_SEC=7200`). No new findings. Posting /blocked with
   specific ask: activate `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`. No VM/GCS/cron mutation performed.
+- **2026-08-07 (AO dispatch #7, `data_engineering`, slot 10)**: VM `20260807-082535` (from dispatch #6) confirmed DEAD
+  via background monitor — STOPPING at 09:17Z, GONE by 09:20Z, no EXIT_STATUS. Root cause: `_download_index_chunked()`
+  range-request approach hung ~47 min inside `_purge_manifest_rows()` during 3rd consecutive 2.46 GiB download (3 outer
+  × 4 inner × ~timeout). Manifest NOT modified. Code fix shipped `market-tick-data-service@eb380b71b` —
+  `_purge_manifest_rows()` now uses `blob.download_as_bytes(timeout=900)` (streaming) instead of range-request chunks.
+  QG green. Consolidator cron still PAUSED. Posting /blocked for another infra relaunch with fixed code. Evidence in
+  `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log.
 - **2026-08-07 (AO dispatch #6, `infra`, slot 4)**: daemon `vm-zombie-watchdog-20260807-075242` confirmed RUNNING with
   fresh code (created 07:52:45Z per operator-authorized relaunch recorded in issue doc); GCS 0-object verified fresh
   (all 10 TARGET_VENUES 0 objects); consolidator cron paused; launched
