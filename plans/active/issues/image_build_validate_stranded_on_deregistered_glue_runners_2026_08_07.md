@@ -26,7 +26,9 @@ summary: >-
   repos: `alerting-service` PR #347 (queued since `2026-08-07T05:41:54Z`) and `greeks-service` run `31081812648` (queued
   since `2026-08-06T07:40:14Z`, >24h) — predates and is unrelated to the 2026-08-06/07 GitHub Actions platform incident
   (which is separately confirmed fully resolved).
-status: resolved
+status:
+  open # the blocking P0 fix landed + is live-verified (see "Fix applied"); 2 non-blocking P2/P3 follow-up
+  # sweep/hardening todos remain open below
 nature: issue
 asset_group: [cross-cutting, ci]
 stage: [meta]

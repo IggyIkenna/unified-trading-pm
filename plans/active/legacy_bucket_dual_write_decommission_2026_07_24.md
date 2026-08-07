@@ -163,7 +163,7 @@ context_scope:
       **Do NOT delete an AG's legacy bucket while its L3 plan is open** — prediction/cefi hold legacy-only history.
       **cefi: ✅ BUCKET ALREADY DELETED 2026-07-14** (10 days before this doc's own L3 gate was attempted;
       operator-confirmed deliberate; see
-      `/plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`). CF-11 normalization-aware
+      `/plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`). CF-11 normalization-aware
       comparison run 2026-08-07 shows 59,488 unique (date,venue,itype,dtype) cells from the legacy 2026-05-16 snapshot
       absent from -prd; breakdown is pre-canonical-era data (2019+ DERIBIT/BYBIT/etc.) + pre-CF-11 empty-itype/dtype
       ghost rows — not a post-migration regression gap. Full counts recorded in that issue doc. **prediction: ✅ DONE

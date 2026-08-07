@@ -349,22 +349,22 @@ default from an external reference.
       credential exists. — **CLOSED 2026-08-06 (operator, interactive): buildable part done; the real-pilot-dispatch
       proof is deliberately deferred to first real use.** Ruling source: the same 2026-08-06 `/plan-reconcile ao`
       session that ruled the sibling provider-strategy decision recorded in
-      `/plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision" (OmniRoute no-go)
-      — one coherent call about which providers this workspace routes to, recorded in two docs.
+      `/plans/archive/2026_08/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision"
+      (OmniRoute no-go) — one coherent call about which providers this workspace routes to, recorded in two docs.
 
       **Why closed rather than left open**: the original done-when required proving the abstraction "via a real
-                  isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
-                  out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
-                  **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
-                  front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
-                  integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
-                  few hours".
+                      isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
+                      out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
+                      **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
+                      front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
+                      integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
+                      few hours".
 
-                  **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
-                  executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
-                  simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
-                  **The first real second-provider integration must treat this as unverified code**, not as a working feature to
-                  configure. Do not re-file this as a standing todo — re-open it at that moment instead.
+                      **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
+                      executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
+                      simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
+                      **The first real second-provider integration must treat this as unverified code**, not as a working feature to
+                      configure. Do not re-file this as a standing todo — re-open it at that moment instead.
 
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
@@ -376,17 +376,17 @@ default from an external reference.
       further execution-cost layer once the multi-provider generalization above is proven — a GPU-hosting/infra-cost
       business decision, not to build speculatively ahead of it. — **DONE / RULED 2026-08-06 (operator, interactive).**
       Ruling source: the same 2026-08-06 `/plan-reconcile ao` session recorded in
-      `/plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision", where the
-      companion OmniRoute no-go was ruled — both are the same provider-strategy call. The evaluation happened: **"all
-      these models were evaluated briefly on a few tasks."** **Outcome: Claude + DeepSeek only for now** — no
+      `/plans/archive/2026_08/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision", where
+      the companion OmniRoute no-go was ruled — both are the same provider-strategy call. The evaluation happened:
+      **"all these models were evaluated briefly on a few tasks."** **Outcome: Claude + DeepSeek only for now** — no
       self-hosted open-weight layer, no GPU hosting. The gate this todo was waiting on (the multi-provider
       generalization) is therefore moot for THIS decision; the operator answered the underlying business question
       directly rather than waiting for the abstraction.
 
       **Explicitly NOT a permanent no**, and the reason it needs no standing todo: per the operator, integrating a
-                  further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
-                  future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
-                  there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
+                      further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
+                      future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
+                      there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
 
 - [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (available-balance-only design — DeepSeek's
       API exposes no spend/usage-history endpoint). — New `DeepSeekBalancePoller` (30-min cadence) +
@@ -419,14 +419,14 @@ default from an external reference.
       literal key is removed from both files.
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
-                  > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
-                  > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
-                  > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
-                  > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
-                  > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
-                  > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-                  > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
-                  > retention returned a confident zero that meant nothing.
+                      > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
+                      > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
+                      > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
+                      > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
+                      > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
+                      > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
+                      > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+                      > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —
       `agent-orchestrator@b310c68`. Same-session follow-up: historical backfill script (dry-run default) +

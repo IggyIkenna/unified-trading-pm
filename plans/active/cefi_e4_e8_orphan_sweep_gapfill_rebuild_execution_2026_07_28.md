@@ -43,7 +43,7 @@ depends_on:
 source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main-agent ruling BLK-650261be (slot-4)]
 context_scope:
   [
-    /plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md,
+    /plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_cefi_manifest.py,
     unified-trading-library/unified_trading_library/cf_manifest_audit.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
@@ -126,7 +126,7 @@ step.
 > | Doc                                                                                       | Relationship to this plan                                                                                                                                                                                         |
 > | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 > | `/plans/active/data_completion_cefi_2026_07_15.md`                                        | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
-> | `/plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`            | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
+> | `/plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`           | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
 > | `/plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` | **GATES Phase B's framing** (the hard-stop carve-out question) — not the execution.                                                                                                                               |
 > | `/plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md`                       | **CITES** for sequencing only.                                                                                                                                                                                    |
 >
@@ -182,9 +182,9 @@ step.
       `market-data-tick-cefi-central-element-323112` this phase's `--also-legacy` flag reads from **no longer exists** —
       `gcloud storage buckets describe` returns 404; Cloud Audit Logs confirm `storage.buckets.delete` by
       `ikenna@odum-research.com` at `2026-07-14T11:02:29Z`, well before this plan (or its L3 predecessor) was authored.
-      Full evidence: `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. Do NOT dispatch this
-      phase as written — `launch-canonical-migration-vm.sh cefi ... --also-legacy` will fail immediately against the
-      now-nonexistent bucket. **Gated on the linked issue doc's migration-before-delete verification** (attempted
+      Full evidence: `plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. Do NOT dispatch
+      this phase as written — `launch-canonical-migration-vm.sh cefi ... --also-legacy` will fail immediately against
+      the now-nonexistent bucket. **Gated on the linked issue doc's migration-before-delete verification** (attempted
       read-only via the pre-migration snapshot's manifest index — INCONCLUSIVE, naive tuple-diff is unreliable per the
       same false-phantom normalization bug class already found in
       `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`; a proper CF-11-style normalized comparison is
@@ -232,7 +232,7 @@ step.
       — ~2 weeks before this plan (or its predecessor todos) were even authored, and before gates (1)/(2) below were
       satisfied. Flipping so this phase never gets dispatched against a bucket that no longer exists; **this is NOT a
       claim that gates (1)/(2) were properly honored before the delete happened** — see
-      `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md` for the full finding (confirmed
+      `plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md` for the full finding (confirmed
       plan-vs-reality drift + an operator-confirmation todo on whether this was intentional). Original gating (kept for
       history, in case a future different-AG copy of this plan needs it): **Gated on ALL of**: (1) Phase E reads GREEN
       on all four criteria; (2) `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md`:134 — "Do NOT delete
@@ -272,7 +272,7 @@ CF-11 finding). **Phase F** (E8 legacy delete) flipped DONE-BY-OPERATOR-2026-07-
 dispatching this phase would just 404; explicitly NOT a claim that its gates were honored before the delete happened.
 **Phase A/B/D/E unchanged** — Phase B's orphan-sweep targets the `-prd` bucket itself (still live), and D/E (manifest
 rebuild + verify) don't touch the legacy bucket at all. Full evidence + the operator-intent question + the open
-verification item: `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. No code shipped (plan
+verification item: `plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. No code shipped (plan
 reconciliation only, per the finding's own recommended decision).
 
 ### 2026-07-30 (rulings-closeout pass, separate session) — re-confirmed, no change

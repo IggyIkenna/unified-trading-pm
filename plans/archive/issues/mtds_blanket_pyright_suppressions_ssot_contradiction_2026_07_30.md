@@ -22,7 +22,7 @@ summary: >-
   ("institutionalise the downgrade... net-new broad/blanket suppressions must be 0") and every suppression must be
   logged — so this repo's "basedpyright clean" QG signal currently proves far less than the codex implies, since real
   type errors could be silently masked under any of the 7 disabled checks across 237 files.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -58,6 +58,8 @@ estimate_calibrated_ai_days: 1.8
 assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by:
+  "unified-trading-pm@d2fc4bad (todo 3, DEFAULT-RULED 2026-08-06 option (b)); market-tick-data-service@409ee88f (todo
+  1), market-tick-data-service@d072b035 (todo 2)"
 locked_by:
 context_scope:
   [
@@ -75,6 +77,11 @@ source:
   finding — SSOT-vs-reality contradiction in a required compliance artifact' and directed this doc's filing +
   decomposition."
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. All 3 todos done: audit-doc correction, freeze-and-shrink ratchet, and the operator's
+> DEFAULT-RULED option (b) policy call — codex updated at `unified-trading-pm@d2fc4bad`; no open work remains.
 
 # market-tick-data-service's basedpyright-exceptions audit doc contradicts the actual codebase
 

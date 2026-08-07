@@ -18,7 +18,7 @@ summary: >-
   cleared duplicate-implementation suspicion (MTDS `_umi_yahoo.py`/ `_umi_fred.py` are a routing layer, not competing
   fetch implementations); no duplicate-implementation violations found anywhere in the 3 directories. 21/29 MTDS files,
   8/11 instruments-service files, and the execution-service duplicate-check are clean.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -58,6 +58,8 @@ locked_by:
 locked_since:
 assigned_vm: planning
 resolved_by:
+  "all 9 findings closed across instruments-service, market-tick-data-service, execution-service, unified-api-contracts,
+  unified-trading-pm — see Todos section for per-finding SHAs"
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
@@ -66,6 +68,12 @@ context_scope:
     market-tick-data-service/docs/tradfi-venue-coverage-matrix.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. All 9 findings closed across instruments-service, market-tick-data-service,
+> execution-service, unified-api-contracts, unified-trading-pm — see Todos section for per-finding SHAs; no open work
+> remains.
 
 # TradFi adapter audit — dead code, silent fallbacks, duplicate-implementation check
 

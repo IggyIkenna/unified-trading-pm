@@ -56,7 +56,7 @@ context_scope:
     market-tick-data-service/scripts/smoke_matrix.py,
     unified-trading-pm/cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     unified-trading-pm/agents/cefi_mtds_smoke_tester.md,
-    /plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
+    /plans/archive/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 ---

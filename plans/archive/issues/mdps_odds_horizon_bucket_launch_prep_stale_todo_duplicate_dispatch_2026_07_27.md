@@ -15,7 +15,7 @@ summary: >-
   re-confirms/re-writes the same canonical shape, independently CONFIRMING the original run's stability with an
   identical residual-failure signature 2 days apart) but wasteful, and the same gap will recur for any issue doc whose
   "ready-to-execute" recipe gets run ad-hoc without closing that SAME doc's own todo.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -38,6 +38,8 @@ priority: P2
 estimate_class: refactor
 source: mdps_odds_horizon_bucket_reprocess_launch_prep-001 (slot 9, 2026-07-27) — discovered mid-task, after launch
 resolved_by:
+  "operator ruling 2026-08-06 (interactive) closed the sole open [BACKEND] P3 todo — no mechanical detector needed, the
+  codex process-habit rule (/codex/12-agent-workflow/pre-task-plan-conflict-check.md) is sufficient"
 locked_by:
 context_scope:
   [
@@ -49,6 +51,11 @@ context_scope:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. The sole `[BACKEND] P3` todo was RULED closed 2026-08-06 (operator, interactive) — no
+> mechanical detector needed; no open work remains.
 
 # Stale issue-doc todo → duplicate dispatch 2 days after the work was already done
 
@@ -117,21 +124,21 @@ described work was already done, complete, and separately documented.
       time; they don't protect the next hour."
 
       **Why no detector, stated so this is not re-proposed**: (a) the detector's core test — does a later sibling doc
-                  describe *the same work*? — is a semantic judgement a regex cannot make, and a dispatch-gating check with false
-                  positives is one that gets ignored; (b) the realised cost was low and bounded — the reprocess is `--force`
-                  idempotent on cheap SPOT, so the duplicate run corrupted nothing and in fact independently re-confirmed the
-                  original run's stability with an identical residual-failure signature; (c) one observed occurrence, with the
-                  preventing rule now in place. Weighed explicitly against the same-day precedent where an honor-system HARD RULE
-                  *was* replaced with a mechanical enforcer
-                  (`/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` → `resource-watchdog`):
-                  that one had 4 recurrences in a week and each was a fleet-wide outage. The cost/recurrence profiles are not
-                  comparable, and the proportionate answer differs.
+                      describe *the same work*? — is a semantic judgement a regex cannot make, and a dispatch-gating check with false
+                      positives is one that gets ignored; (b) the realised cost was low and bounded — the reprocess is `--force`
+                      idempotent on cheap SPOT, so the duplicate run corrupted nothing and in fact independently re-confirmed the
+                      original run's stability with an identical residual-failure signature; (c) one observed occurrence, with the
+                      preventing rule now in place. Weighed explicitly against the same-day precedent where an honor-system HARD RULE
+                      *was* replaced with a mechanical enforcer
+                      (`/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` → `resource-watchdog`):
+                      that one had 4 recurrences in a week and each was a fleet-wide outage. The cost/recurrence profiles are not
+                      comparable, and the proportionate answer differs.
 
-                  **Known residual, accepted**: the codex rule specifies *what* to check but not *when*. In this incident the
-                  worker did run the conflict check — but while writing its completion note, after the 4 VMs had already run. If
-                  this class recurs on an expensive or non-idempotent action, the fix to reach for first is tightening that timing
-                  for VM-launching / `--force` todos (a population `scripts/plan-hygiene/check_delete_vm_launch_gating.sh` already
-                  identifies), not building the semantic detector declined here.
+                      **Known residual, accepted**: the codex rule specifies *what* to check but not *when*. In this incident the
+                      worker did run the conflict check — but while writing its completion note, after the 4 VMs had already run. If
+                      this class recurs on an expensive or non-idempotent action, the fix to reach for first is tightening that timing
+                      for VM-launching / `--force` todos (a population `scripts/plan-hygiene/check_delete_vm_launch_gating.sh` already
+                      identifies), not building the semantic detector declined here.
 
 ## Progress Log
 

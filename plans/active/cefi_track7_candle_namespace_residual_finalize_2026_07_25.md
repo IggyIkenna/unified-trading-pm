@@ -17,7 +17,7 @@ related:
   [
     /plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-30"
@@ -45,7 +45,7 @@ context_scope:
   [
     /plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---

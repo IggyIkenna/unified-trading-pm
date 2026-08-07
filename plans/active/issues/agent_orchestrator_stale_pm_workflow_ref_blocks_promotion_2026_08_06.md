@@ -156,7 +156,7 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
   rollout script named by todo 4.
 - **context-scout 2026-08-07 (fingerprint cross-reference, batch 8)**: confirmed step-4a match — this doc's PR #813
   literal is the SAME `agent-orchestrator` PR independently tracked in
-  `/plans/active/issues/ao_fleet_health_investigation_followups_2026_08_06.md` (same date), which attributes #813's
+  `/plans/archive/issues/ao_fleet_health_investigation_followups_2026_08_06.md` (same date), which attributes #813's
   stall to the still-unresolved main↔LDR backmerge PR #791. Complementary, not duplicate: that doc doesn't yet know
   about this doc's Problem 1 (dangling PM-workflow ref) or Problem 2 (the genuine 7-file code conflict) blocking #813
   independently of #791. Added to `context_scope` (now 6 entries); added the reverse pointer on that doc too.

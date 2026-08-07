@@ -202,7 +202,7 @@ different task than writing the ruling:
   todo moved and any future NA work must keep green), and added
   `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` (the open P2 conflict-check item's own text names it
   "highest priority of the 6"). **Stale-candidate finding**: this doc's own `related:` frontmatter still cites
-  `/plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`, which no longer exists at that path —
+  `/plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`, which no longer exists at that path —
   it was archived to `/plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md` (`status: resolved`)
   since this doc's own related-list was written; not added to context_scope (fully resolved, superseded by this doc's
   own newer 2026-08-06 sweep) but the dead active-path citation is a `/plan-reconcile`-class fix this skill does not

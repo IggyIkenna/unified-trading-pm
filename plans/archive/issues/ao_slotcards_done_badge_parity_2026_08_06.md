@@ -36,6 +36,10 @@ drift_direction: advance-code
 context_scope: [agent-orchestrator/dashboard/src/layout.tsx, agent-orchestrator/dashboard/src/activity.test.ts]
 ---
 
+> **🟢 ARCHIVED 2026-08-07** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. The only todo shipped `agent-orchestrator@777bd3e` (QG green) — no open work remains.
+
 ## Todos
 
 - [x] 1. ✅ [UI] P3. Add the same `DoneBadge` (✓/✗ pill, hover reason) to `SlotCards` that `SlotTable` already carries,

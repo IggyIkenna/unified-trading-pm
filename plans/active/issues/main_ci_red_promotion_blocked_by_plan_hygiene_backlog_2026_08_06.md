@@ -51,7 +51,7 @@ context_scope:
   [
     unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
     unified-trading-ci/.github/workflows/python-quality-gates-v2.yml,
-    /plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md,
+    /plans/archive/issues/archive_candidates_content_verification_backlog_2026_08_06.md,
     unified-trading-pm/scripts/plan-hygiene/check_archive_candidates.sh,
     agent-orchestrator/server/ci_reconcile.py,
     unified-trading-pm/.github/workflows/quality-gates-v2.yml,

@@ -20,7 +20,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
@@ -52,7 +52,7 @@ context_scope:
   [
     /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
     plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv,

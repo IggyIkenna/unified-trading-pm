@@ -55,7 +55,7 @@ code_refs:
 > **2026-08-03 — the removal is NOW COMPLETE ACROSS ALL REPOS.** The two commits cited above (`uac@a2beed46` +
 > `mtds@362a487e`) only ever covered the **read-time `SOURCE_PRIORITY` dict** and **MTDS tick routing** — neither
 > touched **instruments-service**, whose Massive **reference-data** adapter stayed live, tested and fully wired for two
-> more weeks (found by `/plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` Finding I-2; the
+> more weeks (found by `/plans/archive/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` Finding I-2; the
 > same inconsistent-sweep root cause also left `VENUE_DATA_AVAILABILITY["POLYGON"]` behind, see
 > `/plans/archive/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`). Operator ruling 2026-08-02
 > chose option A (finish the removal). `instruments-service@e7933317` deletes
