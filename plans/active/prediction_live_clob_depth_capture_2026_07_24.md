@@ -257,7 +257,14 @@ context_scope:
         date → re-run the `book_snapshot_5` batch backfill → verify `row_count>0`" (`Source:` this exact item,
         verbatim). That section deliberately holds the item NOT-dispatched-speculatively, sequenced after batch4's own
         todo #1 lands (else it re-enumerates against the old write path). Reclassifying this doc's `assigned_vm` would
-        create a second, competing dispatch surface — stays NA, batch4 is the correct owner.
+        create a second, competing dispatch surface — stays NA, batch4 is the correct owner. **Reconciled 2026-08-07
+        (finalize P1)** — stays `- [ ]`, NOT run: batch4's Deferred "Re-enumerate the IS POLYMARKET universe for a
+        recent past date → re-run the `book_snapshot_5` batch backfill → verify `row_count>0`" item is still parked
+        there (it was re-tagged off `[OPERATOR]` 2026-07-28 but remains sequenced AFTER batch4 P0 lands; that gate has
+        now cleared with the P0 ship `instruments-service@3617261f`, yet the re-enum+backfill itself has NOT been
+        dispatched/run). The corresponding batch4 depth-history verify (this doc's own `[x]` item above) returned
+        VERDICT: FAIL — this row-proof backfill does not change that verdict. Re-open in a future batch as a ready
+        `[DATA]` candidate now that its P0 dependency has landed.
 - [x] ✅ [SCRIPT] P1. **Prediction BATCH recent-window (05-23→06-22) zero-capture — TWO-LAYER root cause, BOTH FIXED
       (2026-06-23 batch-column-close session)**: (1) **Pre-flight layer (already fixed pre-session, mtds@84504e6 on
       LDR)** — the 28,448 Polymarket-trades manifest rows for 05-23→06-22 are `empty_confirmed[SOURCE_RETURNED_ZERO]`

@@ -59,7 +59,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P1. **Reconcile the 2 sibling source docs' checkboxes to batch4's outcomes.** For each batch4 dispatched
+- [x] ✅ [DATA] P1. **Reconcile the 2 sibling source docs' checkboxes to batch4's outcomes.** For each batch4 dispatched
       todo that shipped, flip the corresponding `- [ ]` in its `Source:` doc to `- [x] ✅ — <repo>@<sha>` with evidence:
       the P0 lifecycle item + (if its gate opened) the manifest-canonicalisation walk in
       `prediction_cross_venue_arb_and_coverage_2026_07_24.md`; the MDPS depth-history retention verify + (if run) the

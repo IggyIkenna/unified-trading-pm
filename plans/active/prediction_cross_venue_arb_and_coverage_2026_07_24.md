@@ -430,13 +430,14 @@ exist"). **CONFIRMED — mislabeling.** Drill-down (`market-data-tick-pred-prd/_
 - **Impact**: honest coverage (POLYMARKET 95.54%) is over an inflated set including non-existent-market cells; manifest
   is full of meaningless empties rather than blanks-where-data-was-expected.
 
-- [ ] [SCRIPT] P0. **Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it (honest-
-      absence correctness)**: ~~(1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path) MUST set
-      `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from `endDate`/`closedTime`
-      (today both NULL → 0/25). (2) MTDS/UTL honest-absence — only emit a cell (captured/empty/failed) for dates WITHIN
-      `[available_from, available_to]`; outside the market's life = honest BLANK (absence) / `expected_unattempted`,
-      NEVER `empty_confirmed`. Reconsider whether `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` belong
-      in `EMPTY_CONFIRMED_REASONS` (UAC) — operator: "better to have the blanks where we expected data."~~ (3) Re-walk
+- [x] ✅ [SCRIPT] P0. **Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it
+      (honest- absence correctness)**: ~~(1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path)
+      MUST set `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from
+      `endDate`/`closedTime` (today both NULL → 0/25). (2) MTDS/UTL honest-absence — only emit a cell
+      (captured/empty/failed) for dates WITHIN `[available_from, available_to]`; outside the market's life = honest
+      BLANK (absence) / `expected_unattempted`, NEVER `empty_confirmed`. Reconsider whether
+      `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` belong in `EMPTY_CONFIRMED_REASONS` (UAC) —
+      operator: "better to have the blanks where we expected data."~~ (3) Re-walk
       (`rebuild_prediction_manifest --venue POLYMARKET`) to drop/reclassify the ~49.6k out-of-existence empties so
       honest coverage reflects the in-lifecycle universe; audit whether the 93,264 `SOURCE_RETURNED_ZERO` include
       out-of-lifecycle dates (same root cause). ~~**Same NULL-lifecycle check for KALSHI** (adapter sets
@@ -451,6 +452,8 @@ exist"). **CONFIRMED — mislabeling.** Drill-down (`market-data-tick-pred-prd/_
       numerator/denominator (operator ruling `autonomous_session_operator_decisions_2026_07_25.md` #13 — keep the enum
       members). **Remaining open scope = (3) the historical manifest re-walk only** — that batch4 todo's own text calls
       it "the SEPARATE `[OPERATOR]` walk in the Deferred section (gated on this todo landing)", not yet executed.
+      **Reconciled 2026-08-07 (finalize P1)** — flipped `[x] ✅` (batch4 P0 shipped `instruments-service@3617261f`);
+      struck legs DONE; (3) = the separate `[OPERATOR]` combined `_index` walk (hard-stop 2026-07-28).
 
 ### 2026-06-23 (autonomous) — Kalshi canonicalization EXPANDED to sports + EUR-FX collision fix (operator: "do proper kalshi / more crossover")
 
@@ -613,11 +616,14 @@ Residual data-correctness items captured as todos below (lowercase-venue manifes
       manifest canonicalisation that maps lowercase `kalshi`→`KALSHI` + resolves blank/UNKNOWN venue, bundled into the
       next prediction single-walk (NOT a standalone whole-corpus walk — single-walk discipline). Repo:
       market-tick-data-service (manifest canonicalisation). **NICE-TO-HAVE** — ~313 of 194k rows (~0.16%), does not
-      materially move the 99.73% denominator.
+      materially move the 99.73% denominator. **Reconciled 2026-08-07 (finalize P1)** — stays `- [ ]`: leg (b) of the
+      `[OPERATOR]` combined `_index` walk (hard-stop 2026-07-28) — parked at batch4 Deferred.
 - [ ] [DATA] P3. **1,454 prediction `_index` rows still at schema v4** (vs 192,713 at v9; DISCOVERED 2026-06-23): the
       Kalshi-history tail not yet re-walked to v9 (the POLYMARKET v9 re-walk completed; Kalshi-bulk seed rode a later
       stack). v9-schema polish only (rows already captured); rides the next prediction canonicalisation walk. Repo:
-      market-tick-data-service. **NICE-TO-HAVE.**
+      market-tick-data-service. **NICE-TO-HAVE.** **Reconciled 2026-08-07 (finalize P1)** — stays `- [ ]`: leg (c) of
+      the `[OPERATOR]` combined `_index` walk (v9 re-walk DONE; only the Kalshi v4 tail rides it) — parked at batch4
+      Deferred.
 
 **Cross-cutting findings captured as todos:**
 
