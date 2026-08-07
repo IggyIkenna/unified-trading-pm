@@ -618,18 +618,21 @@ notification. Watcher is idempotent — resumes from live fleet state on each re
   likely kill again — always re-arm on notification; never let watcher stay dead >5 min** (risk: fleet clears mid-kill,
   watcher misses launch window and ES_OPT never gets dispatched).
 
-### 2026-08-07T15:07Z — slot 3, session 13 — watcher re-armed
+### 2026-08-07T15:07Z — slot 3, session 13 — watcher re-armed (run 1: bg6z344sq, run 2: bscbuhfi3)
 
 **Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher `bcrfqbh96` (slot 5, session 12) dead at this boot.** Fleet at
 boot: **10 VMs** (direct gcloud check at boot); grown to **22 VMs** by watcher poll 1 — new wave launched. Operator
 keep-waiting decision unchanged.
 
-**Session 13 re-arm:** Watcher launched with `run_in_background:true`, NO `&` inside. Slot-3 copy at
-`<scratchpad>/watcher/es_opt_watcher_slot3.sh` (sed-patch of committed `es-opt-backfill-watcher.sh` with SLOT_ID=3,
-SLOT_TABS=.tabs/3, PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python). Harness task: **`bg6z344sq`** (started
-15:07:12Z, poll 1 = 22 VMs). Heartbeat loop: **`bbe677smy`** (20-min intervals).
+**Session 13 re-arm (run 1):** Watcher `bg6z344sq` launched 15:07:12Z. Poll 1 = 22 VMs. Killed by harness ~4 min after
+start (before poll 2). Re-armed as run 2.
 
-- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bg6z344sq.output`
+**Session 13 re-arm (run 2):** Watcher `bscbuhfi3` launched 15:11:13Z with `run_in_background:true`, NO `&`. Slot-3 copy
+at `<scratchpad>/watcher/es_opt_watcher_slot3.sh` (sed-patch of committed `es-opt-backfill-watcher.sh` with SLOT_ID=3,
+SLOT_TABS=.tabs/3, PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python). Poll 1: 35 VMs (15:11:14Z). Poll 2: **37
+VMs** (15:12:15Z). Fleet growing. Heartbeat loop: **`bbe677smy`** (20-min intervals).
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bscbuhfi3.output`
   (TaskOutput non-blocking). (3) If watcher dead: create slot-<new> copy of committed
   `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) + launch with
   `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm heartbeat loop same way. **Harness will likely
