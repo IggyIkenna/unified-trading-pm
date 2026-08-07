@@ -392,6 +392,26 @@ commit `docs(plans):` push, call `/done`. Script at:
   (`launch-tradfi-backfill-vm.sh` for the P0 ES_OPT todo, `urdi_reference_provider.py` for the CME
   instrument-definitions todo).
 
+**SLOT-11 SESSION 4 (2026-08-07T05:58Z) — Watcher re-armed after session-3 instance died.** Original watcher (PID
+957114, harness task `bff5b50zn`) went silent after poll 10 (05:41:01Z, 3 VMs); confirmed DEAD via `kill -0` at 05:57Z
+(~17min gap, no poll 11 despite 300s cadence — process died, root cause not investigated, not needed). Todo #2 checkbox
+confirmed still `[ ]` (not a stale-DEAD false alarm). Live re-check at re-arm time: 2 tradfi-bf-* VMs running (down from
+3 — fleet still draining). Re-armed from the promoted script `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`
+into the SAME scratchpad dir (prior log renamed to `es_opt_watcher.log.run1` to avoid poll-number confusion with the new
+run). New instance: **PID 2186673**, PPID=1 (confirmed fully detached from the launching harness task — nohup + `&`
+reparented it to init, so it will NOT die when the launching Bash tool call's own background-task wrapper exits). Poll 1
+(05:58:35Z): 2 VMs. Same 6-phase autonomous script (poll → launch ES_OPT → verify T+30s/T+10min → poll completion →
+manifest query → flip+commit+push+`/done`).
+
+- **NEXT ACTION (fresh session, supersedes the PID-957114 instructions above):** First check if watcher is still alive:
+  `kill -0 2186673 2>/dev/null && echo ALIVE || echo DEAD`. If ALIVE: wait for autonomous completion (no harness task ID
+  for this instance — it was launched detached; poll the log at `<scratchpad>/es_opt_watcher.log` or just check
+  `plans/active/` for the checkbox flip). If DEAD: check if todo #2 checkbox is already flipped (done). If not done,
+  re-arm AGAIN from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (update `SCRATCHPAD` var to a fresh
+  writable dir, relaunch with `nohup bash script.sh &` backgrounded via a shell `&`, NOT solely via the Bash tool's
+  `run_in_background` flag — `&`+nohup is what gives PPID=1 detachment; verify with `ps -o pid,ppid,cmd -p <pid>` that
+  PPID=1 before trusting it survives). Do NOT re-run if watcher is alive — singleton lock race risk.
+
 ### 2026-08-07T~04:46Z — slot 11, task `tradfi_satellite_ao_dispatch_batch6-002` (todo #2) — fresh session
 
 **Status: IN FLIGHT — todo #2 still `[ ]`. Fleet draining (6 VMs remain from 03:00Z wave; operator decision to keep
