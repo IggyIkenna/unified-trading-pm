@@ -14,7 +14,11 @@ stage: [meta]
 repos: [unified-api-contracts, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [multi-agent-safety, collision, red-tree, yahoo-finance, incident]
-related: [/plans/archive/2026_07/cefi_completion_program_2026_07_15.md]
+related:
+  [
+    /plans/archive/2026_07/cefi_completion_program_2026_07_15.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+  ]
 created: 2026-07-15
 author: unknown
 last_updated: 2026-07-15

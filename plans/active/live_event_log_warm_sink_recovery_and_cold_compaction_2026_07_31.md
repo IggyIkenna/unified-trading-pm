@@ -19,6 +19,7 @@ related:
   [
     /plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md,
     /plans/active/june_2026_vintage_audit_findings_2026_07_27.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-31
 last_updated: 2026-07-31

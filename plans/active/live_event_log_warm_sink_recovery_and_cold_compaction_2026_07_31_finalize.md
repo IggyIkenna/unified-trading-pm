@@ -14,7 +14,11 @@ stage: [data]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [infra, pubsub, warm-sink, ao-dispatch, finalize, archival]
-related: [/plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md]
+related:
+  [
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 created: "2026-07-31"
 last_updated: "2026-07-31"
 parent_epic: batch_live_symmetry_master
