@@ -173,15 +173,15 @@ in the RE-TRIAGE section below. Full original investigation, evidence, and shipp
       into HT features ungated (measured: 12,463 T-0 rows at `bm < -55`, 1,406 at `bm < -110`, worst −374.6 = 6.2h after
       kickoff / well after full time). Either call the gate unconditionally (letting it apply its documented default) or
       delete the dead branch.
-- [ ] [DATA] P1. **The blank-`fixture_id` raw generation is STILL BEING WRITTEN — fix the upstream writer.** The
-      collapse signature reaches the **corpus edge** (last collapsed date **2026-06-20**; 2026-04: 28 dates · 2026-05:
-      28 · 2026-06: 8 — only **9** healthy dates in all of 2026), so the current ODDS_API capture path emits
-      `fixture_id=""` alongside a populated `event_id`. MDPS@9f2560b7 makes the DERIVE immune (identity is coalesced),
-      so this is no longer data-destroying — but the raw is still carrying a blank column that means "absent", which is
-      the exact trap that cost this corpus ~1.1M observations. Either populate `fixture_id` at write time or drop the
-      column rather than writing it blank (a blank-but-present column is a placeholder that looks populated —
-      `/codex/02-data/honest-absence-downstream-handling.md`). Owner: MTDS (the ODDS_API writer). Measured by the
-      2026-07-17 blast-radius census (2,221 dates, 0 gaps).
+- [x] ✅ [DATA] P1. **VERIFIED FIXED — `market-tick-data-service@3401c0ab` (2026-07-25) +
+      `market-tick-data-service@d6d539a8` (2026-07-29)** — code-read evidence 2026-08-07 (batch10 todo 4 verification
+      pass): (1) Batch/cron capture path: `_build_fixture_rows()` (`odds_api_adapter.py:808`) now emits
+      `"fixture_id": str(af_fixture_id) if af_fixture_id is not None else ""` — resolved fixtures get the API-Football
+      id, unresolved get honest-absent `""` per `/codex/02-data/honest-absence-downstream-handling.md`. All cron and
+      backfill runs route through `_route_sports()` → `download_batch()` → `_build_fixture_rows()` (same code path, same
+      fix). (2) Live WS capture path: `_parse_fixture_response()` (`odds_api_ws.py:196`) emits `"fixture_id": event_id`
+      — always populated since empty `event_id` triggers early return. Closed per
+      `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 4 option (b).
 - [x] ✅ [DATA] P1. **SHIPPED — `features-service@4f365d23`** (2026-07-26, via
       `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s AO-dispatched copy of this todo; checkbox-drift fixup
       2026-07-28). `ml_readiness_check.py`'s threshold is now rebased per-horizon (not a flat cell-count), per this

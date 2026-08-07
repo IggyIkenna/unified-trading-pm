@@ -121,14 +121,15 @@ same day) before being drafted here.
       widen-return-signature pattern other subgraph-HTTP helpers can reuse. Repo: market-tick-data-service. Source:
       `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (item 4). Done when: both callers return the
       real HTTP status, existing tests pass, and `quality-gates.sh --no-fix` is green.
-- [ ] [CODE] P1. **Ship the operator-approved BLAZESTAKE known-outage exemption** in `dependency_checker.py`'s
-      `_KNOWN_OUTAGE_VENUES_BY_SVC` for `market-tick-data-service-lst` (confirmed NOT yet in the live code). Then
+- [x] ✅ [CODE] P1. **Ship the operator-approved BLAZESTAKE known-outage exemption** in `dependency_checker.py`'s
+      `_KNOWN_OUTAGE_VENUES_BY_SVC` for `market-tick-data-service-lst-rates` (confirmed NOT yet in the live code). Then
       relaunch the DEFI:onchain benchmark VM (`launch-features-vm.sh FAMILY=onchain ASSET_GROUP=DEFI`, target date
       2026-07-29/30) and capture throughput numbers for the `-056` pipeline check. **Safe-idempotent justification:
       benchmark VM run, SPOT, no GCS delete.** Repo: features-service (exemption), deployment-service (VM launch).
-      Source: `issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` (items 1-2). Done when: the
-      exemption is live in `_KNOWN_OUTAGE_VENUES_BY_SVC`, and the benchmark VM run completes with throughput numbers
-      recorded against the `-056` pipeline check.
+      Source: `issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` (items 1-2). — ✅ **Done
+      2026-08-07 (slot-10)**: exemption live `features-service@919ab7ed`; VM `features-onchain-defi-20260807-172238`
+      exit_code=0; dep-check ✅; 7/13 groups; lending_rates 28045 rows + lst_yields 18 rows; throughput ~121
+      s/benchmark-day. Numbers in source issue doc progress log (pipeline check plan at 1000L hard cap).
 - [ ] [DATA] P3. **Sync a stale checkbox**: `defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`'s Todo 5 ("Append
       F10 to the reconciliation register") is unchecked but the substance already shipped 2026-07-26
       (`unified-trading-pm@0c4172c31`, via `defi_satellite_ao_dispatch_batch2_2026_07_26.md`, appended to

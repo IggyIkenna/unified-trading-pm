@@ -115,16 +115,16 @@ BLAZESTAKE still blocking — Option A still needed).
 
 ## Todos
 
-- [ ] [CODE] P1. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`), AO-dispatchable —
-      add BLAZESTAKE to the known-outage exemption in `dependency_checker.py`'s `_KNOWN_OUTAGE_VENUES_BY_SVC`.
-      **Duplicate-claim note (2026-08-07): combined with item 2 below, already extracted verbatim into
-      `defi_satellite_ao_dispatch_batch10_2026_08_06.md:116-123` (status: draft, pending operator approval, explicit
-      `Source:` citation to "items 1-2" of this doc). Do NOT reclassify this doc while that claim stands — close both
-      items by citation once batch10's todo ships.**
-- [ ] [DATA] P1. **Implement chosen option and relaunch DEFI:onchain benchmark VM** — once dep check passes for any
+- [x] ✅ [CODE] P1. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`),
+      AO-dispatchable — add BLAZESTAKE to the known-outage exemption in `dependency_checker.py`'s
+      `_KNOWN_OUTAGE_VENUES_BY_SVC`. **Closed via `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo —
+      `features-service@919ab7ed`** (2026-08-07, slot-10).
+- [x] ✅ [DATA] P1. **Implement chosen option and relaunch DEFI:onchain benchmark VM** — once dep check passes for any
       date, relaunch `launch-features-vm.sh FAMILY=onchain ASSET_GROUP=DEFI start_date=<clean_date>` and capture
-      throughput numbers for -056. Target date: 2026-07-29 or 2026-07-30 (if Option A ships + lending_indices present
-      through 2026-07-31). **Same duplicate-claim note as item 1 above — batch10 combines both into one todo.**
+      throughput numbers for -056. **Closed via `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo** (2026-08-07,
+      slot-10): VM `features-onchain-defi-20260807-172238` (SPOT, asia-northeast1-c, 1-day benchmark date=2026-07-29)
+      exit_code=0; dep-check ✅ passed; 7/13 groups; lending_rates: 28045 rows written, lst_yields: 18 rows written;
+      wall_clock≈121s/benchmark-day. Numbers recorded in progress log below.
 - [ ] [DATA] P2. **Investigate lending_indices capture stall (post-2026-07-31)** — diagnose why DEFI MTDS isn't writing
       lending_indices rows for 2026-08-01+; may require a separate issue in MTDS. **Conflict-park note (2026-08-07):
       `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (2026-08-06) ran this exact conflict-check and found
@@ -190,3 +190,17 @@ BLAZESTAKE still blocking — Option A still needed).
   should re-check batch10's approval status and, separately, whether item 3's live-availability- index re-check (per
   batch9's own recommendation) has been done.
 - **context-scout 2026-08-07**: populated context_scope (5 entries).
+
+- **2026-08-07 (slot-10, backend_engineer)**: items 1+2 closed via `defi_satellite_ao_dispatch_batch10_2026_08_06.md`.
+  BLAZESTAKE exemption shipped (`features-service@919ab7ed`); benchmark VM launched + completed. **DEFI:onchain
+  benchmark — MEASURED ✅**: VM `features-onchain-defi-20260807-172238` (SPOT, asia-northeast1-c, 1-day benchmark
+  date=2026-07-29, `launch-features-vm.sh --feature-family onchain --asset-group DEFI`).
+  - dep-check: ✅ `Dependencies verified for 2026-07-29/DEFI` at 17:27:03 UTC (BLAZESTAKE exemption live)
+  - IS catalogue: 7161 DEFI instruments; 13 on-chain feature groups processed
+  - Results: 7/13 groups succeeded; 2 groups wrote real data (`lending_rates`: 28045 rows, `lst_yields`: 18 rows);
+    remaining 5 `empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)` or
+    `attempted_failed(calculator_produced_base_columns_only)` (honest-absent — IS no availability partition for
+    2026-07-29)
+  - EXIT_STATUS=0; wall_clock≈121s/1-benchmark-day (17:27:09→17:29:10 UTC)
+  - **Throughput: ~121 s/benchmark-day** (for reference: TRADFI:commodity was ~39 s/shard-day on a 7-day run)
+  - Note: `data_pipeline_check_mdps_features_2026_07_20.md` at 1000L hard cap — numbers recorded here, not in -056 plan.
