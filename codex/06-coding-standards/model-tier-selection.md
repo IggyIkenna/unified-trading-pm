@@ -206,7 +206,6 @@ Sonnet 5 at high effort; cross-repo architecture judgment and trading judgment w
 see "Opus — only for this" above — both now run on sonnet-5, `sonnet_variant: default`):
 
 - Master plan refresh + inventory regeneration (main-orchestrator role)
-- Full workspace impact pre-audit for a public API change, where assessing blast radius is itself the judgment call
 - Work-split drafting itself (main-orchestrator role — allocating scope across the fleet)
 
 Add `model_tier: sonnet-doable | opus-required` to each plan's frontmatter on the next substantive touch (same logical

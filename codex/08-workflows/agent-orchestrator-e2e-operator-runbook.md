@@ -345,7 +345,6 @@ Escalate to the other operator or stop autonomous work when:
 | Auth lockout (401 on all endpoints) post-deploy                     | Check `~/.config/agent-orchestrator/jwt-secret` exists + matches `.env.local`; restart unit     |
 | Repeated stale slots from the same slot ID                          | Check tmux session health (`tmux ls`); inspect `.agent-claim`; reassign if claim is fresh       |
 | Slack webhook 401 errors                                            | Rotate `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in Secret Manager + `.env.local`                      |
-| Mirror-events stop landing in `GET /api/mirror-events`              | GHA workflow may have errored — check Actions tab on a recent tab-branch push                   |
 | Spawn returns 30s `did not become ready`                            | Verify `/tmp` is in `ReadWritePaths`; re-run `install-orchestrator-service.sh --restart`        |
 
 For data-correctness issues (trading pipeline, manifest, GCS parquets): those are outside this service's scope — raise a

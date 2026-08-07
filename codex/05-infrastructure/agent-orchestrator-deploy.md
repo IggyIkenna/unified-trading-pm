@@ -37,8 +37,9 @@ author: ikenna-claude-subagent
 # agent-orchestrator — Deploy + Infra Reference
 
 > **Scope**: This doc covers deploy + infra for the **single central orchestrator VM** — the one TLS-terminating box
-> (EC2 `13.113.200.22`, id `planning`) that runs the backend, serves the dashboard SPA over HTTPS, and hosts all N slot
-> workers as in-process tmux sessions. There are no epic VMs (that fleet was retired 2026-06-27; topology SSOT:
+> (EC2 `13.113.200.22`, id `planning`) that runs the backend API and hosts all N slot workers as in-process tmux
+> sessions. The dashboard SPA itself is **Firebase-hosted** (§ "CORS + SPA cross-origin" below) and calls this VM
+> cross-origin — the VM does not serve the SPA. There are no epic VMs (that fleet was retired 2026-06-27; topology SSOT:
 > [`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)).
 > The separate interactive-only `human-planning` VM (`i-0dd9812a96cdda5dc`) was TERMINATED 2026-08-03 — the `planning`
 > VM above is now the only VM; do not reference `human-planning` as a live host.
