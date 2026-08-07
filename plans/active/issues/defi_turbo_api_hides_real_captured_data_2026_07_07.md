@@ -291,17 +291,14 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       full onboarding is real feature work, properly scoped as its own follow-up:
       `issues/defi_plasma_chain_onboarding_gap_2026_07_26.md` (not attempted here — identity resolution was this todo's
       actual scope).
-- [ ] [CODE] P1. **PARTIALLY FIXED 2026-07-21 (Track 6, `defi_consolidated_closeout_2026_07_18.md`) — user-facing
-      symptom resolved via a deployment-api-local stopgap, UAC declaration still open.** `deployment-api@427ede5` adds a
-      supplemental whitelist (`_CEFI_DEFI_HYBRID_VENUE_CHAIN_PAIRS` in `defi.py`) admitting the exact confirmed
-      `(HYPERLIQUID, HYPERLIQUID)`/`(ASTER, BSC)` pairs so their real captured rows stop being dropped by
-      `_filter_to_canonical_defi_venues` — NOT a double-counting risk (this whitelist only gates DEFI-category bucket
-      reads; CEFI's own coverage numbers come from a completely separate CEFI-category read), matching the
-      operator-confirmed hybrid architecture already on record (Update §3 below: CEFI holds instrument definitions, DEFI
-      holds chain-level settlement data — two distinct row sets). **Still open**: the durable fix — declaring
-      HYPERLIQUID/ASTER in UAC's own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — is out of scope for a
-      deployment-api/deployment-ui-only dispatch; this stopgap unblocks the dashboard today but the registry-level
-      declaration (and any UAC-side dual-counting axis decision it still needs) remains a real follow-up.
+- [x] ~~[CODE] P1. **PARTIALLY FIXED 2026-07-21... "Still open": the durable fix — declaring HYPERLIQUID/ASTER in UAC's
+      own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES`...**~~ **MOOT — superseded by the opposite operator
+      ruling.** The 2026-08-02 `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (all 5 phases `[x]`,
+      closed 2026-08-06) migrated all 7,599 HYPERLIQUID/ASTER `asset_group=defi` objects to `asset_group=cefi` and
+      **deleted** the `defi`-bucket originals — confirmed empty. There is no longer any DeFi-bucket data for these
+      venues to declare DEFI coverage against; declaring them in `ALL_DEFI_VENUES` would now be wrong. The
+      `deployment-api@427ede5` stopgap whitelist this todo describes may itself now be dead code worth a follow-up
+      cleanup check (not verified here — out of plans-only scope). — plan_reconciler agt-a2268a 2026-08-07.
 - [x] [OPS] P1. **New 2026-07-10.** Restart/fix the `uts-prod-data-status-rollup` Cloud Run Job — Cloud Scheduler has
       been firing into `UNAVAILABLE` (gRPC code 14) since at least 2026-07-05T15:53Z (confirmed still broken 2026-07-10,
       blob age ~4.8 days at check time). The 2026-07-08 staleness-gate fix (3847d6f) means `/turbo` now degrades to

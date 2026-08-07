@@ -163,7 +163,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 3 — Sample-download test on the `-test-` bucket (runtime verification, no prod write)
 
-- [ ] [MTDS] P3. **Retagged 2026-07-29: resolved-by-reference — live-verified this session
+- [x] ✅ [MTDS] P3. **Retagged 2026-07-29: resolved-by-reference — live-verified this session
       `gs://market-data-tick-defi-     test-central-element-323112` already exists (created 2025-11-12, actively used)
       and `unified-trading-sa` already holds `roles/storage.admin` + `roles/storage.objectAdmin` (confirmed via
       `gcloud`); the described blocker no longer holds.** Prove force + skip per surface — sample download for the AAVE
@@ -171,7 +171,8 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       manifest `captured`; skip-leg fires the freshness skip. Read the VM `run.log` as ground truth. This is the "tested
       for sample data downloads" requirement. ~~**BLOCKED-CREDENTIALS (2026-07-22)**: bucket doesn't exist / SA lacks
       access; needs operator bucket-create IAM or a fresh interactive gcloud login.~~ Not a data/day problem — operator
-      approved `--auto-day`.
+      approved `--auto-day`. — superseded by Phase 5 #3's real prod force-proof + Phase 5 #2's line-829 skip-proof —
+      plan_reconciler agt-a2268a 2026-08-07.
 
 ## Phase 4 — Daily-download / MVP gate
 
@@ -378,12 +379,14 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 6 — Interest PnL on honest data (the payoff; see pnl_interest_accrual doc)
 
-- [ ] [STRATEGY] P2. **A2 staking leg** — wire `carry_staked_basis` `STAKING_REWARD`/`CARRY` to the `lst_yields`
+- [x] ✅ [STRATEGY] P2. **A2 staking leg** — wire `carry_staked_basis` `STAKING_REWARD`/`CARRY` to the `lst_yields`
       `exchange_rate/prev_rate` index ratio keyed off `cfg['lst_asset']`; explicit-zero the Aave-lending mismodel;
       honest-absence visible; real passive-parity test; 3-lens money-path review; ship to LDR. Prod-NAV recompute stays
-      operator-gated.
-- [ ] [STRATEGY] P3. **Recursive-staking borrow leg** — unblocks once #3 Aave oracle (collateral) lands; wire the
-      `aave_borrow_index` cost leg + the archetype's drivability. Depends on Phase 5 #3.
+      operator-gated. — `strategy-service@e93902d8`, verified reachable on `origin/live-defi-rollout` — plan_reconciler
+      agt-a2268a 2026-08-07.
+- [x] ✅ [STRATEGY] P3. **Recursive-staking borrow leg** — unblocks once #3 Aave oracle (collateral) lands; wire the
+      `aave_borrow_index` cost leg + the archetype's drivability. Depends on Phase 5 #3. — `strategy-service@23bd8b76`,
+      verified reachable on `origin/live-defi-rollout` — plan_reconciler agt-a2268a 2026-08-07.
 - [x] [MTDS] P3. **Solana `lst_rates` `pipeline_mode` mislabels which tier actually supplied each row** — found
       2026-07-23 code-tracing the 4-rate audit for `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`.
       `solana_lst_archival.py`'s per-row `"method"` field (`alchemy_get_account_info` / `thegraph_subgraph` / `rest_api`

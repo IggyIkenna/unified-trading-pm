@@ -442,10 +442,13 @@ rather than buried in a 345-line residuals plan. C: Fold it instead into
 `/plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (2 open), the other Phase-A3 split sibling. Other:
 operator can type a custom answer.
 
-**Status**: resolved — option A. The lock is mandatory (CLAUDE.md's own text is unambiguous); sharpened the
-mechanism-fix todo in `issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md` with the real
-commit-msg-vs-pre-commit staging nuance found while scoping it, and retro-cleaned the stale `locked_by:` on the
-already-independently-verified archived doc. `unified-trading-pm@2c61a8dc4`.
+**Status**: resolved — option A (fold into `prediction_phase_ab_residuals_2026_07_24.md` § A3, archive the shell).
+Executed: the shell plan is archived at
+`/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md`, and
+`prediction_phase_ab_residuals_2026_07_24.md`'s § A3 explicitly carries the folded-in item ("…parked_2026_07_24.md's
+sole remaining open item folds in here — Polymarket-perp enumerator, BLOCKED-UPSTREAM"). — corrected by plan_reconciler
+agt-a2268a 2026-08-07 (this Status block previously repeated entry 11's text verbatim instead of describing this entry's
+own resolution).
 
 ---
 

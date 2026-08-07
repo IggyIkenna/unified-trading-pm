@@ -38,7 +38,7 @@ summary: >-
   `defi_kamino_solend_lending_indices_legacy_shape_fabricated_history_2026_07_28.md` migration, which fixed a DIFFERENT
   bug (fabricated timestamps on a historical population that itself used bare `venue=KAMINO`, not `KAMINO_LENDING`) in
   the same lending_indices data family.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -79,7 +79,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: plan_reconciler agt-a2268a 2026-08-07 (closed by citation — see Progress Log)
 depends_on: []
 source:
   [
@@ -87,6 +87,15 @@ source:
     (KAMINO_LENDING half)",
   ]
 ---
+
+> **✅ RESOLVED 2026-08-07 (closed by citation).** This doc's own "Recommended next step" (run the bounded VM-based
+> `read_availability_index` read, fold any found rows) was executed in full by the 2026-08-05 interactive session
+> recorded in `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 (the doc that
+> originally spawned this one): the live index DID carry stale rows (extended past the original 64-object/4-day scope to
+> 565 rows/5 days), `relabel_kamino_lending_venue_2026_08_05.py --apply` + a new
+> `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` companion folded + retired them, verified directly against
+> the freshly-written index: **0 remaining captured `venue=KAMINO_LENDING` rows.** Closing per plan_reconciler
+> agt-a2268a 2026-08-07 (verified `market-tick-data-service@bd153821` reachable on `origin/live-defi-rollout`).
 
 # KAMINO_LENDING venue-naming-drift — code fixed, live-data remediation unverified
 
@@ -122,7 +131,7 @@ older handlers never picked up that pattern.
 Added `canonical_lending_venue()` to the shared `_lending_grain.py` sibling module (mirrors `solana_defi_handler.py`'s
 precedent), routed all 11 `venue=protocol` call sites across `lending_indices_handler.py` + `risk_params_handler.py`
 through it. No-op for every protocol except `kamino_lending` → `kamino`.
-`market-tick-data-service@<fill in at ship time — see this doc's Progress Log>`.
+`market-tick-data-service@bd153821793540a2871c1e2f942e538ea9e1751d`.
 
 ## What is NOT resolved — the live-data verification gap
 
@@ -173,3 +182,8 @@ supersedes it) — close this doc.
 - **2026-08-04 (sub-agent dispatch)**: root-caused + code fix shipped (see summary). Live-data verification attempted,
   blocked by the documented heavy-index-read connection issue (see above) — filed as this doc rather than guess at a
   fold that could not be evidenced.
+- **plan_reconciler agt-a2268a, 2026-08-07**: closed by citation.
+  `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 executed this doc's own recommended next step
+  on 2026-08-05 and found + folded 565 stale rows across 5 days (`market-tick-data-service@bd153821`, verified reachable
+  on `origin/live-defi-rollout`), independently confirming zero remaining `venue=KAMINO_LENDING` captured rows. No
+  genuine remaining work; archiving.

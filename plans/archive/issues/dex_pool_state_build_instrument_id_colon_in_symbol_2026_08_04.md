@@ -6,7 +6,7 @@ summary: >
   Investigation of dex_pool_state's build_instrument_id errors. Root cause: some pool symbols contain `:` (the canonical
   ID's own VENUE:TYPE:SYMBOL delimiter), triggering a hard ValueError in `build_instrument_id`. 33 rows across 4
   venue+chain pairs.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -20,8 +20,8 @@ priority: P2
 author: slot-5 (data_engineering)
 assigned_vm: planning
 source: [mvp_backfill_defi_onchain_v10-005]
-locked_by: ""
-resolved_by: ""
+locked_by:
+resolved_by: plan_reconciler agt-a2268a 2026-08-07 (both todos verified done with hard evidence; archived)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
