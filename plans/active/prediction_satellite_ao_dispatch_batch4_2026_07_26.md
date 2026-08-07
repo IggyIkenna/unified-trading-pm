@@ -282,14 +282,21 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
   policy simply reserves execution of a production manifest `--apply` write like this for a human forever, because a
   false positive would silently mark good captured data as failed. Confirm you (or whoever you designate) will
   personally review and run it once todo #1 lands. Source: `prediction_cross_venue_arb_and_coverage_2026_07_24.md`
-  (P2/P3 residual-manifest items, both "NICE-TO-HAVE", both "ride the next prediction canonicalisation walk").
+  (P2/P3 residual-manifest items, both "NICE-TO-HAVE", both "ride the next prediction canonicalisation walk"). **Gate
+  cleared 2026-08-07** (`instruments-service@3617261f`). Finalize P2 live counts (slot-11, 2,666,644 total rows):
+  out-of-lifecycle `empty_confirmed` = **38,020** (was ~49.6k, 2026-06-23); `SOURCE_RETURNED_ZERO` = 1,953,482 (was
+  93,264); legs (b)/(c) (lowercase/blank/UNKNOWN venue + v4 rows) = **0** — already resolved. Remaining: leg (a) only
+  (38,020 rows + `SOURCE_RETURNED_ZERO` out-of-lifecycle scope audit). Source doc P2/P3 flipped `[x] ✅`. Batch5
+  candidate.
 - **[SCRIPT] Re-enumerate the IS POLYMARKET universe for a recent past date → re-run the `book_snapshot_5` batch
   backfill → verify `row_count>0`.** A bounded, idempotent re-enumeration+backfill; it shares the POLYMARKET IS
   enumeration path with todo #1 so it should sequence AFTER #1 lands (else it re-enumerates against the old write path).
   **Re-tagged off `[OPERATOR]` (2026-07-28)**: the safe-idempotent justification already stated here (the shard re-runs
   cleanly on preemption) satisfies CLAUDE.md's VM-launch-gating OR-clause — launches via the standard backfill-VM
   mechanism, no separate operator sign-off needed. Source: `prediction_live_clob_depth_capture_2026_07_24.md` (the
-  "DEFERRED-CROSS-DEP" `book_snapshot_5` row-proof item).
+  "DEFERRED-CROSS-DEP" `book_snapshot_5` row-proof item). **Gate cleared 2026-08-07** (`instruments-service@3617261f` —
+  todo #1 landed). **Promoted to ready `[DATA]` candidate** (finalize P2, slot-11): AO-dispatchable (re-tagged off
+  `[OPERATOR]` 2026-07-28), no remaining gates. Batch5 or standalone plan.
 
 ## RULED 2026-07-28 — arb-pairing wiring + politics/geo canonicalization (was: operator / design-gated)
 

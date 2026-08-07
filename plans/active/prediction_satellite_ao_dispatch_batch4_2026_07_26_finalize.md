@@ -68,7 +68,7 @@ context_scope:
       when**: every shipped batch4 todo has its source-doc checkbox flipped with a resolving `<repo>@<sha>` + evidence
       in the same commit; any NOT-shipped todo is left `- [ ]` with a dated note on why.
 
-- [ ] [DATA] P2. **Re-check the two gated `[OPERATOR]` deferrals now that todo #1 (lifecycle code) has landed.** With
+- [x] ✅ [DATA] P2. **Re-check the two gated `[OPERATOR]` deferrals now that todo #1 (lifecycle code) has landed.** With
       the lifecycle bounds populated, (a) confirm the combined prediction `_index` manifest canonicalisation single-walk
       is now unblocked (gate on #1 cleared) and re-file it as a ready `[OPERATOR]` item (or a batch5 candidate) with the
       current out-of-lifecycle-empty / lowercase-venue / v4-tail counts re-measured live; (b) same for the POLYMARKET
@@ -112,3 +112,17 @@ context_scope:
     gated `[OPERATOR]` deferrals) + P3 (archival) remain for the follow-on dispatches.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged — genuinely code-free
   finalize gate; the 4 plan/codex entries still cover the remaining P2/P3 work.
+- **2026-08-07 (slot-11, data_engineering, task `…finalize-002`) — P2 re-check DONE.** Gate confirmed cleared:
+  `instruments-service@3617261f` (batch4 P0, lifecycle-bounds code). Live counts re-measured 2026-08-07 from
+  `_index/availability_index.parquet` (2,666,644 total rows; pyarrow column-pruned batched scan,
+  market-tick-data-service venv): out-of-lifecycle POLYMARKET `empty_confirmed` = **38,020** (was ~49.6k, 2026-06-23);
+  `SOURCE_RETURNED_ZERO` (all `empty_confirmed`) = **1,953,482** (was 93,264 — pipeline running since); lowercase
+  `venue=kalshi` = **0** (was ~124 — cleaned); blank venue = **0** (was ~168 — cleaned); UNKNOWN venue = **0** (was ~21
+  — cleaned); v4 schema rows = **0** (was 1,454 — POLYMARKET v9 re-walk completed). **Deferral (a)** — combined `_index`
+  canonicalisation single-walk: gate cleared; legs (b)/(c) already resolved (0 rows) — source doc P2/P3
+  (`cross_venue_arb`) flipped `[x] ✅` in this commit. Remaining: only leg (a) (38,020 out-of-lifecycle rows + 1,953,482
+  `SOURCE_RETURNED_ZERO` out-of-lifecycle scope audit). Still a **permanent `[OPERATOR]` hard-stop** (workspace policy
+  unchanged — manifest `--apply` reserved for human execution forever). Batch4 Deferred entry updated with fresh counts;
+  filed as batch5 candidate. **Deferral (b)** — POLYMARKET re-enum + `book_snapshot_5` backfill: gate cleared; re-tagged
+  off `[OPERATOR]` 2026-07-28; **promoted to ready `[DATA]` candidate** — batch5 or standalone plan, AO-dispatchable, no
+  remaining gates. Batch4 Deferred entry updated.

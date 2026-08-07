@@ -606,7 +606,7 @@ Residual data-correctness items captured as todos below (lowercase-venue manifes
       market-tick-data-service@d6edd704 + instruments-service (VM). Provenance: autonomous catalogue/backfill session
       2026-06-23 / fix 2026-06-26. (Composes with the line-339 Kalshi-historical residual.)
 
-- [ ] [DATA] P2. **Residual lowercase `venue=kalshi` + blank/UNKNOWN venue rows in the prediction `_index` manifest**
+- [x] ✅ [DATA] P2. **Residual lowercase `venue=kalshi` + blank/UNKNOWN venue rows in the prediction `_index` manifest**
       (DISCOVERED 2026-06-23 verifying Item A): the consolidated
       `market-data-tick-pred-prd-…/_index/availability_index.parquet` carries ~124 `venue=kalshi` (lowercase,
       pre-venue-case-fix) + ~168 blank-venue + ~21 `UNKNOWN` rows alongside canonical `KALSHI` 25,605 / `POLYMARKET`
@@ -616,14 +616,13 @@ Residual data-correctness items captured as todos below (lowercase-venue manifes
       manifest canonicalisation that maps lowercase `kalshi`→`KALSHI` + resolves blank/UNKNOWN venue, bundled into the
       next prediction single-walk (NOT a standalone whole-corpus walk — single-walk discipline). Repo:
       market-tick-data-service (manifest canonicalisation). **NICE-TO-HAVE** — ~313 of 194k rows (~0.16%), does not
-      materially move the 99.73% denominator. **Reconciled 2026-08-07 (finalize P1)** — stays `- [ ]`: leg (b) of the
-      `[OPERATOR]` combined `_index` walk (hard-stop 2026-07-28) — parked at batch4 Deferred.
-- [ ] [DATA] P3. **1,454 prediction `_index` rows still at schema v4** (vs 192,713 at v9; DISCOVERED 2026-06-23): the
+      materially move the 99.73% denominator. **Resolved 2026-08-07 (finalize P2)**: live count = 0 rows — already
+      cleaned before measurement; `[OPERATOR]` walk leg (b) is moot; batch4 Deferred updated with fresh counts.
+- [x] ✅ [DATA] P3. **1,454 prediction `_index` rows still at schema v4** (vs 192,713 at v9; DISCOVERED 2026-06-23): the
       Kalshi-history tail not yet re-walked to v9 (the POLYMARKET v9 re-walk completed; Kalshi-bulk seed rode a later
       stack). v9-schema polish only (rows already captured); rides the next prediction canonicalisation walk. Repo:
-      market-tick-data-service. **NICE-TO-HAVE.** **Reconciled 2026-08-07 (finalize P1)** — stays `- [ ]`: leg (c) of
-      the `[OPERATOR]` combined `_index` walk (v9 re-walk DONE; only the Kalshi v4 tail rides it) — parked at batch4
-      Deferred.
+      market-tick-data-service. **NICE-TO-HAVE.** **Resolved 2026-08-07 (finalize P2)**: live count = 0 v4 rows —
+      already re-walked to v9; `[OPERATOR]` walk leg (c) is moot; batch4 Deferred updated with fresh counts.
 
 **Cross-cutting findings captured as todos:**
 
