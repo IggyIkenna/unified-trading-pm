@@ -5,20 +5,23 @@ description:
   Slack channel. Cross-checks every repo's REAL GitHub Actions state against what Slack/ci_status claims (Slack
   timestamps and declared states are not ground truth and go stale fast), classifies every red/lagging item by root
   cause (fleet template-rollout breakage / genuine code regression / transient self-hosted-runner flake / dependency
-  phantom-clone / alert-accuracy bug / promotion-lag / provenance-gate block / runner-fleet or Cloud-Build infra
-  health), fixes each at the root via the correct documented recovery path, cross-checks whether the AO
-  `ci_failure_watcher` escalation should have caught it and didn't, and re-sweeps the full fleet before declaring done.
-  Needs no Slack read access at all — every signal it checks (quality-gates-v2 runs, promotion lag, provenance gate,
-  self-hosted runner API health, Cloud Build triggers) has a directly-queryable system of record via `gh`/ `gcloud`, so
-  it runs identically whether invoked interactively or dispatched to AO (which has no Slack access and can't be pasted
-  into). Always auto-fixes — no separate `--fix` flag, no propose-then-wait; it ships corrections directly (quickmerge /
-  reprovenance_bypass.sh / a reviewed template rollout) the same way this workspace's background agents already do, and
-  reports what it found + did + verified. A genuinely foreign/bulk/design-level decision (bulk-blessing someone else's
-  bypass commits, a branching-model change) still stops for an operator decision with structured options — auto-fix
-  means "don't ask before shipping an obvious fix," not "never ask." Trigger on `/ci-reconcile`, "unblock the CI
-  alerts", "fix these Slack CI alerts at the root", "reconcile the pipeline", "why is Slack saying X but CI shows Y",
-  "is the pipeline actually unblocked", "check if CI escalation caught this", "check the runner fleet / Cloud Build
-  health".
+  phantom-clone / alert-accuracy bug / promotion-lag / provenance-gate block / a standing monitor's own decision
+  silently not taking effect, e.g. a release-tag minter that reports success while minting nothing), fixes each at the
+  root via the correct documented recovery path, cross-checks whether the AO `ci_failure_watcher` escalation should have
+  caught it and didn't, and re-sweeps EVERY repo AND every standing monitor before declaring done — the monitor
+  population is re-derived fresh each run from the generated `CICD-WORKFLOW-CATALOG.md`, never a hand-picked list of
+  "other alert sources I happened to notice," because that whack-a-mole pattern already produced one false "unblocked"
+  declaration this skill had to walk back. Needs no Slack read access at all — every signal it checks has a
+  directly-queryable system of record via `gh`/`gcloud`, so it runs identically whether invoked interactively or
+  dispatched to AO (which has no Slack access and can't be pasted into). Always auto-fixes — no separate `--fix` flag,
+  no propose-then-wait; it ships corrections directly (quickmerge / reprovenance_bypass.sh / a reviewed template
+  rollout) the same way this workspace's background agents already do, and reports what it found + did + verified,
+  closing with a visible checklist of every repo and monitor swept so "unblocked" doesn't have to be taken on faith. A
+  genuinely foreign/bulk/design-level decision (bulk-blessing someone else's bypass commits, a branching-model change)
+  still stops for an operator decision with structured options — auto-fix means "don't ask before shipping an obvious
+  fix," not "never ask." Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these Slack CI alerts at the root",
+  "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline actually unblocked", "check if CI
+  escalation caught this", "check the runner fleet / Cloud Build health", "make sure nothing is left unresolved".
 ---
 
 # /ci-reconcile — fleet CI/CD reconciliation and root-cause fix
@@ -52,33 +55,56 @@ A repo named in an old alert may have already self-recovered (measured: 6/8 repo
 again within 90 minutes, via a fix commit nobody re-announced). Build the CURRENT red/lagging list from this sweep, not
 from the alert text — the alert text tells you where to START looking, not what's still true.
 
-## 0b. The `ci-failures` channel also carries runner-fleet and Cloud-Build infra alerts — sweep those directly too
+## 0b. The completeness contract — sweep EVERY standing monitor via the generated catalog, not a hand-picked list
 
-Not every `ci-failures` post is a `quality-gates-v2`/promotion signal. `glue-runner-health-monitor`,
-`glue-runner-crash-loop-watchdog`, `cloud-build-router`, and `cloud-build-failure-watcher` check a DIFFERENT underlying
-system (self-hosted runner fleet health, GCP Cloud Build triggers) — same principle applies: query the real system
-directly rather than trusting the alert text, and every one of these has a direct query, no Slack needed:
+**This section exists because of a real failure**: an earlier run of this skill hand-curated a short list of "other
+alert sources" (glue-runner health, Cloud Build) after encountering them, declared the pipeline "unblocked," and was
+wrong — a `release-tag-stall` alert (from a monitor never even considered) and a recurrence of the SAME glue-runner 403
+(wrongly written off as "transient" from a handful of green runs, with no understood mechanism) surfaced within hours.
+**A hand-picked list of "other alert sources I happened to notice" is exactly the whack-a-mole pattern this skill exists
+to replace.** Do not repeat it — the population of standing monitors is enumerable, so enumerate it, every time:
 
 ```bash
-# Same call the runner-health monitor makes — a 403 here is either a transient token hiccup (check if the NEXT
-# scheduled run already recovered before treating it as broken) or a real permissions regression
-gh api repos/IggyIkenna/unified-trading-pm/actions/runners?per_page=100
-gh run list --workflow=glue-runner-health-monitor.yml --limit 8 --json conclusion,createdAt
-
-# Cloud Build trigger existence/config — a "trigger did not fire" alert branches on whether the trigger exists at all
-# (NOT_FOUND → recreate it, mirror a working repo's config) vs exists-but-invocation-failing (check
-# cloud-build-router.yml's own trigger-invocation logic first, don't assume the trigger is gone)
-gcloud builds triggers describe <trigger-name> --project=<project> --region=<region>
-gh run list --workflow=cloud-build-router.yml --limit 6 --json conclusion,createdAt
+cd unified-trading-pm && python3 scripts/generate-workflow-catalog.py   # regenerate fresh, don't trust a stale copy
 ```
 
-A `glue-runner-crash-loop-watchdog` "recovered" message is informational, not an open finding — it means an existing
-automated watchdog already un-wedged a runner service; no action needed unless the SAME runner keeps recurring (that
-crosses into a genuine flake vs a real host-level problem worth its own finding). A Cloud-Build alert that references an
-existing dated issue doc (check `plans/active/issues/` and `plans/active/` — including `plans/archive/issues/` for ones
-already closed) is a pre-existing, separately-tracked condition, not part of THIS sweep's incident — confirm its current
-state briefly (don't just assume the archived doc means it's still resolved) and note it in § 7's report without
-re-diagnosing it from scratch unless it's now genuinely different from what the doc describes.
+This writes `docs/repo-management/CICD-WORKFLOW-CATALOG.md` — every workflow in the PM repo (the fleet's shared CI/CD
+brain), grouped by stage, with its trigger type. **The standing-monitor population is every row whose Trigger column has
+a `schedule(...)` and whose Mutates column includes `Slack`** — as of 2026-08-07 that's ~23 workflows
+(`cloud-build-failure-watcher`, `reconcile-release-tags`, `cassette-drift-check`, `ldr-ci-monitor`,
+`removed-symbols-workspace-sweep`, `ruleset-drift-alert`, `secret-health-check`, `build-smoke-all-repos`,
+`cold-storage-cleanup`, `fix-approval-timeout`, `overnight-agent-orchestrator`, `overnight-dead-man-switch`,
+`branch-health`, `ci-health`, `digest-drift-sweep`, `glue-pool-starvation-monitor`, `glue-runner-health-monitor`,
+`ldr-docs-gate`, `ldr-to-main-promote-fleet`, `promote-fleet-startup-failure-monitor`, `sit-gate-stuck-detector`,
+`stale-build-watcher`, `version-coherence-check` — **do not hardcode this list going forward; re-derive it from the
+catalog every run**, since workflows get added/removed and a stale hardcoded list silently drifts out of sync the same
+way a hand-picked one does).
+
+Most of these are already covered by name in earlier sections (`branch-health`/`ci-health` → § 4/§5,
+`ldr-to-main-promote-fleet` → § 4). For every one that ISN'T already covered by an earlier section's specific recipe:
+don't wait for its next scheduled tick or trust its last Slack post — get its current truth directly, right now:
+
+```bash
+gh run list --workflow=<name>.yml --limit 3 --json conclusion,createdAt   # is its last run recent + green?
+gh workflow run <name>.yml   # if its last run predates its own schedule interval by >2x, trigger a fresh one
+```
+
+**A `success` conclusion is necessary but not sufficient for a DECISION-making monitor.** `reconcile-release-tags` and
+`semver-agent` are the concrete lesson: `semver-agent` ran `success` on every trigger for 41 days straight while
+silently minting zero tags — the workflow "succeeding" only proves the job didn't error, not that it did its actual job.
+For any monitor whose purpose is a decision/action (mint a tag, detect a stall, promote a PR — as opposed to a pure
+read-only health check), verify the OUTCOME, not just the run conclusion: did a new tag actually appear
+(`git tag -l --sort=-creatordate | head -3` on the target repo), did the stall count the detector itself reports
+actually go to zero, did the PR it was supposed to merge actually merge. Read the underlying script the workflow invokes
+if the outcome doesn't match a green conclusion — that mismatch (green run, wrong/no outcome) is a bug class of its own,
+not a lower-priority one.
+
+A recovery/informational post (e.g. `glue-runner-crash-loop-watchdog` "recovered") is not an open finding by itself —
+but if the SAME condition (same runner, same monitor) recurs across the sweep window, that crosses from "an existing
+watchdog handling a flake" into "a real host-level problem," and gets its own finding. An alert that references an
+existing dated issue doc (`plans/active/issues/`, including `plans/archive/issues/` for closed ones) is
+separately-tracked — confirm its CURRENT state briefly rather than assuming the doc's last status still holds, and
+report it in § 7 without a full from-scratch re-diagnosis unless it's now genuinely different from what the doc says.
 
 ## 1. Classify each still-red item before touching it
 
@@ -175,12 +201,23 @@ isn't running on the cadence it's supposed to), that's a finding for `plans/acti
 operator notification per the findings-triage HARD RULE — don't quietly patch around agent-orchestrator's own logic
 without understanding the design intent first.
 
-## 6. Verify — full-fleet sweep, not just the repos that were named
+## 6. Verify — full-fleet sweep AND full-monitor sweep, not just the repos/monitors that were named
 
-Re-run § 0's sweep across every repo in `workspace-manifest.json`'s registry, not just the ones the original alert named
-(the alert's repo list is itself just a symptom of one incident, not the definition of "the fleet"). Every repo should
-show `quality-gates-v2` conclusion `success` on its trigger branch, and every branch-pair from § 4 should be either
-caught up or genuinely just waiting on its next scheduled tick with a healthy cron behind it.
+Two separate sweeps, both required before the word "unblocked" is allowed in § 7's report:
+
+1. Re-run § 0's sweep across every repo in `workspace-manifest.json`'s registry, not just the ones the original alert
+   named. Every repo should show `quality-gates-v2` conclusion `success` on its trigger branch, and every branch-pair
+   from § 4 should be either caught up or genuinely just waiting on its next scheduled tick with a healthy cron behind
+   it.
+2. Re-run § 0b's catalog-derived monitor sweep, fresh (not reused from earlier in the same session — a monitor you
+   checked at the start of a long session may have re-fired since). Every standing monitor gets an explicit verdict.
+
+**The bar for saying "unblocked": every repo from sweep 1 AND every monitor from sweep 2 has an explicit, current,
+verified-clean status in this run — not "I didn't see anything more in Slack."** Silence is not evidence of health;
+several of this skill's own real findings were monitors that were failing/stale while posting nothing new (a
+dedup/cooldown suppressing a repeat page, or a monitor that's simply not running on its expected cadence). If a
+monitor's coverage genuinely can't be verified this pass (no direct query path, credentials unavailable), say so
+explicitly as a coverage gap in § 7 — never silently drop it from the count.
 
 ## 7. Report
 
@@ -189,6 +226,12 @@ shipped (repo + sha, or template diff + rollout confirmation), and post-fix veri
 out: (1) any alert that was already stale/self-resolved by the time you looked (don't re-fix what's already fixed), (2)
 any alert-accuracy issue found and its fix, (3) the AO-escalation verdict from § 5, (4) anything that could NOT be
 resolved this pass — file it per findings-triage, never leave it as an unlogged "still broken."
+
+**Close every report with the § 6 checklist made visible**: a table or list of every repo swept (sweep 1) and every
+standing monitor swept (sweep 2, from the regenerated catalog) with its verified status — not a prose summary that asks
+the reader to trust the sweep happened. This is the concrete fix for the failure mode that motivated § 0b: the reader
+should be able to look at the list and see for themselves that nothing was skipped, rather than taking "unblocked" on
+faith.
 
 ## Under `/autonomous`
 
