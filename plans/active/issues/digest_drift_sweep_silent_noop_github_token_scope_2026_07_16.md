@@ -67,7 +67,7 @@ assigned_vm: NA
 execution_scope: local-only
 assigned_role: devops
 drift_direction: advance-code
-last_updated: 2026-07-16
+last_updated: 2026-08-06
 locked_by:
 context_scope:
   [
@@ -332,4 +332,5 @@ RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change
   body; no change needed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
-**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts stand
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts
+stand

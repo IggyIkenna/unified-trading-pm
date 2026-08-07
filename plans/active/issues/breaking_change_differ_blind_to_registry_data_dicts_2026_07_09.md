@@ -51,7 +51,7 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-31
+last_updated: 2026-08-06
 context_scope:
   [
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,

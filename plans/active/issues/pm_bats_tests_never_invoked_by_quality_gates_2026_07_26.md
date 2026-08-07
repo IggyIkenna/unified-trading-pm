@@ -34,7 +34,7 @@ related:
   ]
 created: "2026-07-26"
 author: unknown
-last_updated: "2026-07-26"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 source: "slot-11 (infra), discovered while executing ao_satellite_ao_dispatch_batch1_2026_07_26.md item 3"
 assigned_vm: NA
@@ -78,9 +78,12 @@ depends_on: []
   `test_slot_cron_ff_pull_dirty_gate.bats`, `test_slot_git_status_dirty_count.bats`, `test_sync_pull.bats`, and now
   `test_slot_git_status_loopback_preference.bats`) exercise real, security/reliability-relevant shell logic (per-tab
   worktree invariants, FF-pull starvation detection, git-status dirty-count integrity, the loopback-auth fix from this
-  task) but a regression in ANY of them would currently go undetected by `quality-gates.sh`, by the `quality-gates-v2`
-  required GitHub check, and by the LDR→main promotion gate. Only a human manually running `bats tests/` (or an agent
-  doing so ad hoc, as I did here) would ever notice.
+  task) — **inventory note 2026-08-07 (plan_reconciler agt-6eb8c5): 13 `.bats` files on disk now** (7 added since this
+  doc: e.g. `test_quickmerge_dep_tier_gate.bats`, `test_quickmerge_stage5_no_regression_guard.bats`,
+  `test_pkill_guard.bats`, `test_qg_mem_wrap_typecheck_retry.bats`, `test_context_threshold_nudge.bats`) — the
+  un-executed-suite gap below only grows with each addition — but a regression in ANY of them would currently go
+  undetected by `quality-gates.sh`, by the `quality-gates-v2` required GitHub check, and by the LDR→main promotion gate.
+  Only a human manually running `bats tests/` (or an agent doing so ad hoc, as I did here) would ever notice.
 
 ## Why it matters
 
@@ -111,8 +114,11 @@ todo.
       PATH + any `tests/*.bats` files, run them, and initially treat failures as WARN-ONLY (mirroring the actionlint
       transitional pattern at base-service.sh [5.5]) since the fleet-wide pass/fail baseline across every repo's `.bats`
       files (if any exist outside PM) has never been measured. Wire the CI-side bats-core install
-      (`.github/actions/setup-python-tools/action.yml`) so the binary installed there is actually the one
-      `quality-gates.sh` finds on PATH inside the same job. (repo: unified-trading-pm)
+      (`.github/actions/setup-python-tools/action.yml` — **note 2026-08-07 (plan_reconciler agt-6eb8c5): that PM-local
+      action was deleted 2026-08-06 (`b62a209dc`); the bats-core install now lives at
+      `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml:368-375` + its unified-trading-ci
+      counterpart — target those**), so the binary installed there is actually the one `quality-gates.sh` finds on PATH
+      inside the same job. (repo: unified-trading-pm)
 - [ ] [INFRA] P3. Once the WARN-ONLY phase above has run clean across a full fleet PR cycle, re-harden it to a hard
       failure (`exit 1` on any bats test failure), same re-harden-after-baseline pattern used for actionlint. (repo:
       unified-trading-pm)
@@ -127,19 +133,21 @@ the shared fleet framework — an authority call this audit cannot make.
 
 **na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, valid — re-confirmed, citation updated. The E1
 conflict-gate is now stale (batch2 archived 2026-07-31, file contention cleared), but the underlying verdict is
-independently re-derived: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (still `status: draft`) re-examined this doc
-as D4-10 and escalated the TRUE blocker to the operator as an authority/scope question ("should adding a BATS phase to
-the shared, fleet-wide `base-service.sh` be its own AO-dispatched or human plan?") — still unanswered anywhere in the
-corpus. Both todos stay KEEP-NA on that unresolved escalation, not the stale E1 citation.
+independently re-derived: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (still `status: draft` at that time — since
+flipped `active` 2026-08-06, annotation 2026-08-07 plan_reconciler agt-6eb8c5) re-examined this doc as D4-10 and
+escalated the TRUE blocker to the operator as an authority/scope question ("should adding a BATS phase to the shared,
+fleet-wide `base-service.sh` be its own AO-dispatched or human plan?") — still unanswered anywhere in the corpus. Both
+todos stay KEEP-NA on that unresolved escalation, not the stale E1 citation.
 
 **na-eligibility-audit 2026-08-04** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA, valid — 3rd consecutive pass.**
 Independently re-ran the doc's own core factual claim
 (`grep -rn "bats" scripts/quality-gates.sh scripts/quality-gates-base/base-service.sh` plus the CI workflow) — still
 zero hits, coverage gap still real, not ARCHIVE-eligible. `ci_satellite_ao_dispatch_batch4_2026_07_31.md` is still
-`status: draft` and D4-10's operator authority/scope question is still unanswered anywhere in the corpus (checked the
-newer `batch5_2026_08_02.md`, which explicitly re-confirmed batch4 remains D4-10's home rather than re-adopting it).
-Fails RECLASSIFY on its own merits regardless: a multi-file change to the 3880-line shared fleet `base-service.sh`
-framework is exactly the live-dispatch-critical-path class that stays NA even bundled as one todo.
+`status: draft` at that time — **since flipped `active` 2026-08-06 (annotation 2026-08-07, plan_reconciler agt-6eb8c5)**
+— and D4-10's operator authority/scope question is still unanswered anywhere in the corpus (checked the newer
+`batch5_2026_08_02.md`, which explicitly re-confirmed batch4 remains D4-10's home rather than re-adopting it). Fails
+RECLASSIFY on its own merits regardless: a multi-file change to the 3880-line shared fleet `base-service.sh` framework
+is exactly the live-dispatch-critical-path class that stays NA even bundled as one todo.
 
 ## Progress Log
 

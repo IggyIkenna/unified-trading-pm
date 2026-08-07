@@ -42,7 +42,7 @@ source:
     "discovered 2026-07-20 while root-causing the overnight T0 FAILURE + CI REGRESSION alerts on unified-trading-library",
   ]
 locked_by: live-defi-rollout
-locked_since: 2026-05-21
+locked_since: # blanked 2026-08-07 (plan_reconciler agt-6eb8c5) — the prior value 2026-05-21 predated this doc's own created 2026-07-20 (copy-paste artifact); actual lock time unknown
 resolved_by:
 context_scope:
   [

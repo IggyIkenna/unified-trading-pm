@@ -86,9 +86,14 @@ context_scope:
       because `github_actions_operator_gated_followups_2026_07_17.md` was already claimed by todo 9's sweep) — is that
       file free again (todo 9 landed)? If so, both are ready-for-batch-5, note and do not draft. D4-4
       (`sit_validated_tree_treadmill`'s stuck-gate monitor) — confirm it is still exactly batch1's own still-open todo
-      and no new doc has claimed it since. **Done when**: each of D4-1 through D4-4 has either (a) a note that it is
-      ready for batch-5 extraction because its blocker cleared, or (b) a re-verified confirmation the blocker is still
-      open. Do NOT draft follow-up todos here — this plan's scope is reconciliation, not fresh drafting.
+      and no new doc has claimed it since. — **premise annotation 2026-08-07 (plan_reconciler agt-6eb8c5)**: batch1's
+      stuck-gate-monitor todo is NOT still-open — it shipped 2026-08-03 (`unified-trading-pm@409c35437`, reachable on
+      origin/live-defi-rollout; see batch1's
+      `- [x] ✅ [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter     ticks…**`); adjust the D4-4 re-check
+      accordingly (the batch1-owned half is done; verify whether any remaining monitor gap still exists). **Done when**:
+      each of D4-1 through D4-4 has either (a) a note that it is ready for batch-5 extraction because its blocker
+      cleared, or (b) a re-verified confirmation the blocker is still open. Do NOT draft follow-up todos here — this
+      plan's scope is reconciliation, not fresh drafting.
 - [ ] [REVIEW] P2. **Re-verify the operator-gated (D4-5 through D4-18), live-incident (D4-19), and needs-re-scoping
       (D4-20) Deferred items have not silently changed state.** In particular: has the operator ruled on D4-10 (the
       `pm_bats_tests` base-service.sh plan-destination question, escalated below)? Has

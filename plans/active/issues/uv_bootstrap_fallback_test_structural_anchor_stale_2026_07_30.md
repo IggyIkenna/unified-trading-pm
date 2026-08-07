@@ -80,14 +80,17 @@ exact quoting/flags), so a genuine future rewording of this line doesn't require
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Fix `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh`'s structural-anchor
+- [x] ✅ [SCRIPT] P3. Fix `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh`'s structural-anchor
       `case` pattern (line 50) to match `setup.sh`'s current pip-fallback wording (unquoted `uv==0.10.8`, `--quiet`,
       `$PYTHON_CMD -m` prefix) instead of the stale quoted-literal expectation. Done when:
       `bash     scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed.
       **Extraction citation (na-eligibility-audit 2026-08-02):** the AO-dispatchable copy of this todo lives in
       `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines ~178-185, citing this doc as its Source) —
       that plan is still `status: draft`, so no commit/sha exists to cite yet. This doc stays `assigned_vm: NA`; flip
-      this checkbox from batch4 when it ships.
+      this checkbox from batch4 when it ships. — **FLIPPED 2026-08-07 (plan_reconciler agt-6eb8c5)**: batch4 shipped the
+      fix — its todo updated the structural-anchor glob to match `setup.sh:438`'s current pip-fallback form,
+      `unified-trading-pm@eff7413da` (reachable on origin/live-defi-rollout); batch4 is `status: active` since
+      2026-08-06.
 
 ## na-eligibility-audit verdict
 

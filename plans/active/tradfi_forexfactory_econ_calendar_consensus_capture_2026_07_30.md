@@ -72,7 +72,9 @@ releases"_, and `internal/domain/trading_api/calendar.py`'s `EconomicResultItem`
 `unified_api_contracts/internal/reference/economic_calendar.py`'s `MacroResultRecord` docstring says _"Used by
 features-calendar-service for macro result GCS output"_ — a service name that does not exist in this workspace today;
 per operator direction, this is presumed pre-repo-consolidation naming and the real home is the current
-`features-service` repo, not a new one.
+`features-service` repo, not a new one. **CORRECTED 2026-07-30 (see Progress Log + todo 3): a dedicated investigation
+found `features_service/calendar/` IS the real, already-built "features-calendar-service" `MacroResultRecord`'s
+docstring refers to — treat this paragraph as superseded by that finding.**
 
 **No official free API exists for consensus/forecast data** (researched 2026-07-30) — Bloomberg/TradingEconomics/
 Econoday-class stable APIs are paid; the free options (Apify's ForexFactory-JSON wrapper, Pineify, Investing.com's

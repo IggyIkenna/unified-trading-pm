@@ -57,8 +57,12 @@ context_scope:
 # Close the 3 remaining CI VM exposure items
 
 Machine: `i-042a6332509482556` (`ci-escalation-runner-vm-1`), `c8i.4xlarge` (16 vCPU / 32 GB), ap-northeast-1, all 25
-self-hosted runner pools since the 2026-08-05 split. All work below is live infra, done directly (human-driven per
-operator instruction), verified via AWS SSM — no smoke-test-only claims.
+self-hosted runner pools since the 2026-08-05 split — **correction 2026-08-07 (plan_reconciler agt-6eb8c5): "all 25
+pools" is stale — 17 of 25 were deregistered 2026-08-05 by `self_hosted_runner_public_repo_revert_2026_08_05.md` (only
+the 8 private repos' pools remain per that doc's `systemctl` sweep +
+`scripts/workflow-templates/ self-hosted-qg-repos.txt` final state = 8 entries); open todo 3 below was investigated
+against the 25-pool model**. All work below is live infra, done directly (human-driven per operator instruction),
+verified via AWS SSM — no smoke-test-only claims.
 
 ## Todos
 

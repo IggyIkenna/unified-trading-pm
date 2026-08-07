@@ -2,7 +2,8 @@
 doc_type: issue
 title: >-
   The orchestrator VM's shared gcloud active-account gets poisoned by GitHub Actions self-hosted-runner job steps,
-  breaking every gcloud/gsutil call fleet-wide until manually repointed — third occurrence, same SA, one week apart
+  breaking every gcloud/gsutil call fleet-wide until manually repointed — third occurrence at write time; 5 occurrences
+  + a second SA (`github-deploy@`) by 2026-08-01 per body (title updated 2026-08-07, plan_reconciler agt-6eb8c5)
 summary: >-
   On 2026-07-25 a worker slot's `gcloud compute instances stop` failed with "Unable to retrieve Identity Pool subject
   token: job is already completed" -- the same failure class documented in
@@ -37,7 +38,7 @@ related:
   ]
 created: 2026-07-25
 author: unknown
-last_updated: 2026-08-01
+last_updated: 2026-08-06
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

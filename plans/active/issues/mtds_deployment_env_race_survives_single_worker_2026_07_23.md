@@ -143,9 +143,14 @@ below.
 
 ## Todos
 
-- [ ] [INFRA] P2. **Instrument quickmerge's cascade/pull step** — diff `os.environ` before/after `STAGE 0: Cascade` and
-      check whether ancestor repos' dependency-install steps execute Python in the same shell; per "Recommendation,"
-      this is the concrete next step to root-cause the race, not another blind retry loop.
+- [x] ✅ [INFRA] P2. **Instrument quickmerge's cascade/pull step** — diff `os.environ` before/after `STAGE 0: Cascade`
+      and check whether ancestor repos' dependency-install steps execute Python in the same shell; per "Recommendation,"
+      this is the concrete next step to root-cause the race, not another blind retry loop. — **ROOT-CAUSED elsewhere,
+      closed by plan_reconciler agt-6eb8c5 2026-08-07**: the mechanism is `quickmerge.sh`'s STAGE-2 environment
+      auto-detect exporting `ENVIRONMENT=development` (off-main) into the Pass-2 re-gate child process — not the cascade
+      step — per `mtds_flaky_is_test_run_pollution_2026_07_25.md` (resolved, `market-tick-data-service@1dbdbb90`);
+      `tests/conftest.py` `_scrub_ambient_deployment_env` strips `DEPLOYMENT_ENV`/`ENVIRONMENT` before every test
+      (verified live at HEAD).
 
 ## na-eligibility-audit verdict
 

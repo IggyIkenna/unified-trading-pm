@@ -6,14 +6,19 @@ title:
 summary: >-
   quickmerge exports `ENVIRONMENT=development` for any non-`main` branch (scripts/quickmerge.sh:1216-1222) — which is
   EVERY slot, since every slot lives on live-defi-rollout. UTL's bucket resolver defaults to **prod** when ENVIRONMENT
-  is unset (unified_trading_library/cloud_interface/bucket_naming.py:162), and three repos hardcode prod bucket names in
-  tests. Net: those tests FAIL DETERMINISTICALLY under quickmerge and PASS standalone. That alone is only an annoyance —
+  is unset (unified_trading_library/cloud_interface/bucket_naming.py:162), and (at discovery) three repos hardcoded prod
+  bucket names in tests. Net: those tests FAIL under quickmerge and PASS standalone. That alone is only an annoyance —
   the real problem is the documented recovery. Re-running `bash scripts/quality-gates.sh --no-fix` standalone passes
   (prod default) and WRITES THE SENTINEL; quickmerge then matches the sentinel hash and SKIPS the gate entirely, so a
   suite that genuinely fails in quickmerge's environment ships green. The sentinel is a bare sha256 of tree content with
   NO environment dimension, so it cannot distinguish "verified in dev" from "verified in prod". Same class as the
   2026-07-18 deployment-ui incident already documented at quickmerge.sh:1288-1300 (sentinel satisfied → Pass 2 skipped →
-  tsc-red tree landed on LDR); that fix closed the tree-drift dimension but not the environment dimension.
+  tsc-red tree landed on LDR); that fix closed the tree-drift dimension but not the environment dimension. **Status
+  corrections (in-body, updated 2026-08-07 by plan_reconciler agt-6eb8c5)**: the failure was NON-deterministic (depends
+  on whether the `--agent` sentinel was stale — see `mtds_flaky_is_test_run_pollution_2026_07_25.md`), NOT
+  "deterministic"; `deployment-api`/`strategy-service` were CONFIRMED CLEAN 2026-07-31 (no fix needed); the MTDS env
+  leak is fixed at the root by `market-tick-data-service/tests/conftest.py`'s ambient-env scrub
+  (`market-tick-data-service@1dbdbb90`); the sentinel hardening itself shipped `unified-trading-pm@4545df4c6`.
 status: open
 nature: issue
 asset_group: [ci]
@@ -163,7 +168,7 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       `_qg_content_hash()` now folds `ENVIRONMENT`/`DEPLOYMENT_ENV` into the sentinel hash, 2 regression test files
       (5/5 + 6/6 assertions), verified live against real `quickmerge.sh`. Checkbox never flipped here when that landed —
       closing now, na-eligibility-audit 2026-07-31.
-- [ ] [INFRA] P2. Fix the env-coupled tests in `unified-trading-library`
+- [x] ✅ [INFRA] P2. Fix the env-coupled tests in `unified-trading-library`
       (`tests/cloud_interface/unit/test_constants.py`), `deployment-api`, `strategy-service`, and the two
       `market-tick-data-service` cases — set the environment explicitly per-test instead of relying on the ambient
       default. **PARTIAL 2026-07-25 — 1 of 4 repos done; box stays open** (`/plan-reconcile ci`, 2026-07-26): the
@@ -191,7 +196,14 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       from `-prd-` literals, unlike MTDS's 2 explicitly-named/verified reproducers) does not hold up under direct
       verification; `git log` in both repos shows no intervening fix commit, so this wasn't silently patched elsewhere
       either. Box stays open only because the MTDS half (E7 above) remains genuinely unresolved. Full write-up:
-      `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 3.
+      `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 3. **MTDS half RESOLVED — box closed
+      by plan_reconciler agt-6eb8c5 2026-08-07**: the E7 sequencing hold's premise is falsified — the leak's mechanism
+      WAS confirmed (`mtds_flaky_is_test_run_pollution_2026_07_25.md`, `status: resolved`,
+      `market-tick-data-service@1dbdbb90`: quickmerge STAGE-2 `ENVIRONMENT=development` export into the Pass-2 re-gate
+      child process; the cascade-step instrumentation was never the right next step) and the ambient leak is fixed at
+      the root by `market-tick-data-service/tests/conftest.py`'s autouse `_scrub_ambient_deployment_env` (strips
+      `DEPLOYMENT_ENV` + `ENVIRONMENT` before every test, verified live at HEAD). All 4 components resolved: UTL shipped
+      (in-doc), deployment-api/strategy-service confirmed-clean (in-doc), MTDS hermetic via conftest scrub.
 - [x] ✅ [DOC] P2. Correct the "re-run quality-gates.sh --no-fix then retry" guidance wherever it is taught (agent
       prompts, runbooks): as written it is a sentinel-laundering step, not a fix. It is only safe once the sentinel
       binds configuration. — **Verified 2026-07-31: already done as a byproduct of the sentinel-binding fix above

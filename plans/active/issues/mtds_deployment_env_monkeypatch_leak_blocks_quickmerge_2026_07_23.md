@@ -332,10 +332,18 @@ investigation" guidance) — retrying with real spacing (not back-to-back) per t
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Root-cause the `DEPLOYMENT_ENV` monkeypatch leak recurring under quickmerge's re-gate** — 14+
+- [x] ✅ [SCRIPT] P2. **Root-cause the `DEPLOYMENT_ENV` monkeypatch leak recurring under quickmerge's re-gate** — 14+
       confirmed occurrences, mechanism still not identified (the cascade-step theory — quickmerge's STAGE 0 re-pulling
       ancestor repos before re-running the suite — is the leading candidate); `PYTEST_WORKERS=1` is a stopgap, not a
-      fix, and the practical impact (quickmerge blocked) recurred worse than the original "resolved" status claimed.
+      fix, and the practical impact (quickmerge blocked) recurred worse than the original "resolved" status claimed. —
+      **RESOLVED by `mtds_flaky_is_test_run_pollution_2026_07_25.md` (status: resolved,
+      `market-tick-data-service@1dbdbb90`)**: the cascade-step theory was wrong — the mechanism is `quickmerge.sh`'s
+      STAGE-2 environment auto-detect exporting `ENVIRONMENT=development` into its own shell (off-main branches) before
+      invoking the Pass-2 re-gate as a child process; `bucket_naming._resolve_deployment_env_short` falls back to
+      `ENVIRONMENT` when `DEPLOYMENT_ENV` is unset; the conftest `_scrub_ambient_deployment_env` autouse fixture (live
+      at `market-tick-data-service/tests/conftest.py`) strips both vars before every test. The earlier test-level
+      "fixes" and `PYTEST_WORKERS=1` are documented in that resolution as falsified/no-op. — verified by plan_reconciler
+      agt-6eb8c5 2026-08-07.
 
 ## Progress Log
 

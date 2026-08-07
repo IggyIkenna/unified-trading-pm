@@ -15,3 +15,4 @@ plan-hygiene sweep now alerts via Slack + Cloud Run logs instead of appending he
 
 Full ledger history is in git.
 -->
+- plan_reconciler ci-tranche run agt-6eb8c5 2026-08-07: findings doc plans/active/issues/plan_reconciler_findings_2026_08_07.md — 8 flips verified, 7 routed-filed todos (token re-probe, fleet-git orphan VERIFY, runner-fleet live check, AG-orphan checker glob, epic index drift, A6 coordination, speed-cache re-scope, batch5 premise)
