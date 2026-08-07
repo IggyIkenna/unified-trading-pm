@@ -322,3 +322,7 @@ the highest-priority open question.
   tests. Manifest generation confirmed UNCHANGED by the failed run (CAS never fired) — safe to retry, no partial state.
   QG in flight at time of writing; ships via quickmerge once green, then relaunches the purge VM a 3rd time under this
   new fix. See `defi_satellite_ao_dispatch_batch9_2026_08_06.md` Progress Log for the mirrored full write-up.
+- **2026-08-07 (AO dispatch #9 continued, `infra`, slot 8)**: `heartbeat_stall_watcher.py` fix **SHIPPED**
+  `deployment-service@14240378194039fe5a2cfb5e2d86dbed6cffe8d8` — `quality-gates.sh` full run green (246s, 0 failures),
+  landed on `live-defi-rollout` via `quickmerge.sh --agent`, post-push ancestry verified (ahead=0). Proceeding to the
+  purge VM's 3rd relaunch attempt with fresh pre-flight re-verification.

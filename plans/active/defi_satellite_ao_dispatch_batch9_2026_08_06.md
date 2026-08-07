@@ -501,3 +501,8 @@ remaining items besides the over-cap-gated one above).
   `test_sweep_does_not_kill_canonical_migration_vm_before_override_threshold`). QG in flight at time of writing — ships
   via quickmerge once green, then relaunches the purge VM a 3rd time. Full evidence:
   `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log (cross-cited).
+- **2026-08-07 (AO dispatch #9 continued, `infra`, slot 8)**: `heartbeat_stall_watcher.py` fix **SHIPPED**
+  `deployment-service@14240378194039fe5a2cfb5e2d86dbed6cffe8d8` — `quality-gates.sh` full run green (246s, 0 failures),
+  landed on `live-defi-rollout` via `quickmerge.sh --agent`, post-push ancestry verified
+  (`git rev-list --count origin/live-defi-rollout..HEAD` = 0). Proceeding to the purge VM's 3rd relaunch attempt with
+  fresh pre-flight re-verification per the `[INFRA] P0` todo's own checklist.
