@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
@@ -2225,13 +2225,13 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.75.1.dev3+g9c202a849",
-      "published_at": "2026-08-07T20:21:34Z",
+      "version": "0.75.1.dev4+g86228f294",
+      "published_at": "2026-08-07T21:06:44Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.96.2.dev1+g7566d1c2b",
-      "published_at": "2026-08-07T20:22:13Z",
+      "version": "0.96.2.dev2+g17e48a3ac",
+      "published_at": "2026-08-07T20:52:37Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
