@@ -22,7 +22,7 @@ summary: >-
   (`check_finalize_plan_coverage.py`'s `_todo_count(...) <= 1` threshold) — no separate finalize plan; archival is
   folded into the one todo's own "Done when", mirroring `infra_satellite_ao_dispatch_batch4_2026_07_31.md` and
   `infra_satellite_ao_dispatch_batch5_2026_08_01.md`.
-status: active
+status: archived
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -136,36 +136,37 @@ so the archival + source-checkbox-reconciliation work a finalize twin would norm
 
 ## Todos
 
-- [ ] [INFRA] P2. **Fix `lc_verify_tarball_freshness`'s `auto` mode to check the actual post-republish freshness result,
-      not just the republish subprocess's exit code** (`deployment-service/scripts/vm/lib/launcher_common.sh`). Today,
-      `auto` mode's `return 0` fires unconditionally once `$republish_cmd` (`create-code-tarballs.sh --include <repo>`)
-      exits 0 — but that subprocess also exits 0 when it SKIPPED the repo (uncommitted changes present, a normal state
-      on a shared multi-slot checkout). The recursive `LC_TARBALL_FRESHNESS=warn lc_verify_tarball_freshness` re-verify
-      call already detects this correctly but its result is discarded (`warn` mode itself always returns 0 by design).
-      Capture the recursive call's actual stale/fresh verdict (e.g. refactor the freshness CHECK into its own function
-      returning a stale-repo list, separate from the warn/enforce/auto DISPOSITION logic, so `auto` can call the check
-      function directly post-republish instead of recursing into itself and discarding the result) and propagate it as
-      `auto`'s own return value — `auto` must return non-zero (matching the existing "ERROR: auto-republish failed"
-      path) when the post-republish state is still stale, not just when the republish subprocess itself hard-failed. Add
-      a regression test to `TestTarballFreshnessGuard` in `deployment-service/tests/unit/test_vm_launcher_scripts.py`
-      that reproduces the exact reported case: a stale tarball manifest + a dirty (uncommitted) tracked file in the repo
-      under test + `LC_TARBALL_FRESHNESS=auto` → asserts the function returns non-zero (does NOT silently report
-      success), mirroring the existing `test_stale_tarball_enforce_blocks`/`test_missing_manifest_enforce_blocks`
-      fixture shape. Then **reconcile the source doc**: in
-      `issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md`, flip todo 1's `[ ]` to `[x]`
-      citing this todo's actual shipped commit sha (re-verify the sha resolves with `git show`, do not copy this todo's
-      own text blind); leave todo 2 (`[DIAG] P3`, the optional `--allow-dirty-tarball` auto-scoping stretch idea) as-is
-      on the source doc — it is a separate, smaller design consideration, not required for this fix, and stays tracked
-      there for a future pass to pick up if warranted. **Then archive this batch plan itself** (it will have zero
-      remaining open todos) via the standard 6-step archival ritual
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every corpus-wide referrer of
-      this plan's path (expected: none yet, this is a brand-new plan) before moving it. **Done when**: `auto` mode
+- [x] ✅ [INFRA] P2. **Fix `lc_verify_tarball_freshness`'s `auto` mode to check the actual post-republish freshness
+      result, not just the republish subprocess's exit code** (`deployment-service/scripts/vm/lib/launcher_common.sh`).
+      Today, `auto` mode's `return 0` fires unconditionally once `$republish_cmd`
+      (`create-code-tarballs.sh --include <repo>`) exits 0 — but that subprocess also exits 0 when it SKIPPED the repo
+      (uncommitted changes present, a normal state on a shared multi-slot checkout). The recursive
+      `LC_TARBALL_FRESHNESS=warn lc_verify_tarball_freshness` re-verify call already detects this correctly but its
+      result is discarded (`warn` mode itself always returns 0 by design). Capture the recursive call's actual
+      stale/fresh verdict (e.g. refactor the freshness CHECK into its own function returning a stale-repo list, separate
+      from the warn/enforce/auto DISPOSITION logic, so `auto` can call the check function directly post-republish
+      instead of recursing into itself and discarding the result) and propagate it as `auto`'s own return value — `auto`
+      must return non-zero (matching the existing "ERROR: auto-republish failed" path) when the post-republish state is
+      still stale, not just when the republish subprocess itself hard-failed. Add a regression test to
+      `TestTarballFreshnessGuard` in `deployment-service/tests/unit/test_vm_launcher_scripts.py` that reproduces the
+      exact reported case: a stale tarball manifest + a dirty (uncommitted) tracked file in the repo under test +
+      `LC_TARBALL_FRESHNESS=auto` → asserts the function returns non-zero (does NOT silently report success), mirroring
+      the existing `test_stale_tarball_enforce_blocks`/`test_missing_manifest_enforce_blocks` fixture shape. Then
+      **reconcile the source doc**: in `issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md`,
+      flip todo 1's `[ ]` to `[x]` citing this todo's actual shipped commit sha (re-verify the sha resolves with
+      `git show`, do not copy this todo's own text blind); leave todo 2 (`[DIAG] P3`, the optional
+      `--allow-dirty-tarball` auto-scoping stretch idea) as-is on the source doc — it is a separate, smaller design
+      consideration, not required for this fix, and stays tracked there for a future pass to pick up if warranted.
+      **Then archive this batch plan itself** (it will have zero remaining open todos) via the standard 6-step archival
+      ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every corpus-wide referrer
+      of this plan's path (expected: none yet, this is a brand-new plan) before moving it. **Done when**: `auto` mode
       returns non-zero when the post-republish state is still stale (verified by the new regression test, which fails
       against the current code and passes after the fix), the new test is added to `TestTarballFreshnessGuard`,
       `bash scripts/quality-gates.sh` is green in `deployment-service`, the source doc's todo 1 checkbox is flipped with
       a verified sha, and this batch plan is archived. Repo: deployment-service (the fix), unified-trading-pm
       (source-doc reconciliation + this plan's own archival). Source:
-      `issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md` (todo 1).
+      `issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md` (todo 1). —
+      deployment-service@450b212. QG green; test passes.
 
 ## Codex SSOTs (read before executing this todo)
 
@@ -195,3 +196,5 @@ so the archival + source-checkbox-reconciliation work a finalize twin would norm
   `issues/ag_closeout_audit_infra_parked_2026_08_07.md`, not here.
 - **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: APPROVED — flipped
   `status: draft` → `active`. Now AO-dispatchable.
+- **AO slot-9 2026-08-07**: Picked up and executed. deployment-service@450b212 — fix + regression test shipped. QG
+  green. Source doc todo 1 flipped. Batch plan archived (all todos done, no lock).

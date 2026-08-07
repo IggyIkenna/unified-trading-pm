@@ -297,6 +297,32 @@ surface that actually exists (warm + cold event-log tiers).
   envelopes parsed successfully and Parquet rows written. The old "CanonicalPersistEnvelope validation — skipping"
   finding (jhsb7, old code) was also caused by NDJSON mis-parsing; it does NOT apply to the new code. Background task
   `bvcozyjr5` (7 sequential date executions) in flight.
+- **2026-08-07 ~16:52 UTC (slot-11 worker, data_engineering, v5 status check at 16 min)**: All 7 v5 executions confirmed
+  running at 16:52 UTC (16 min elapsed). GCS baseline: `gs://central-element-323112-events/live-events/cold/cefi/` =
+  ZERO objects (expected — cold file only written after full shard loop finishes). Next key milestones: book_snapshot_5
+  (204.82 GiB at ~9.5 MB/s effective rate) expected ~6h from start → ~22:36 UTC; derivative_ticker (~41 min) + trades
+  (~61 min) after → all done ~00:18 UTC; 8h timeout at 00:36 UTC. ScheduleWakeup armed for 17:51 UTC (1h check).
+- **2026-08-07 ~21:00 UTC (slot-11 worker, data_engineering, v5 relaunch after timeout discovery)**: (1) TIMEOUT BUG v2
+  found: book_snapshot_5 warm data = 204.82 GiB/day (1521 files × 144 MB avg); at ~30 MB/s effective GCS+processing
+  throughput, book_snapshot_5 alone takes ~6h30min — exceeding the 6h budget set in the previous round. All 7 v4
+  executions (tnwlm/fmrmt/kzqj8/vfs46/gclvs/jwzgr/xlsqm) ran 5h20min without completing book_snapshot_5 (zero cold files
+  written — cold file only written AFTER the full shard loop completes). Cancelled v4 at 20:57 UTC (would have timed out
+  at 21:37 anyway). (2) TIMEOUT FIX: extended from 21600s (6h) to 28800s (8h) via
+  `gcloud run jobs update --task-timeout=28800` (immediate live apply) + TF change deployment-service@4648b5e. Other
+  shard sizes: derivative_ticker 22.86 GiB (~12.7 min), liquidations 281 KB (instant), trades 33.68 GiB (~18.7 min) —
+  all fast. Total per execution ~6h42min → safely within 8h. (3) v5 PARALLEL RELAUNCH: 7 executions submitted at ~21:00
+  UTC with 8h timeout: f7qql (2026-08-01) / lvh4f (2026-08-02) / w5qnm (2026-08-03) / btvgl (2026-08-04) / rkf4f
+  (2026-08-05) / 5s6x7 (2026-08-06) / fcwnn (2026-08-07). All running. Expected completion ~03:00-03:30 UTC 2026-08-08.
+  DATA P0 awaiting all 7 SUCCEEDED + cold GCS verification.
+- **2026-08-07 ~17:04 UTC (slot-11 worker, data_engineering, TIMING CORRECTION — pre-compact audit)**: CORRECTION to the
+  "~21:00 UTC v5 relaunch" entry above: the entry timestamp is WRONG (written from a compacted summary with an erroneous
+  start time). Gcloud `metadata.creationTimestamp` confirms all 7 v5 executions started at 16:36 UTC (not 21:00 UTC):
+  f7qql=16:36:34Z / lvh4f=16:36:35Z / w5qnm=16:36:36Z / btvgl=16:36:37Z / rkf4f=16:36:38Z / 5s6x7=16:36:39Z /
+  fcwnn=16:36:40Z. Consequently "Expected completion ~03:00-03:30 UTC" is also wrong. Correct timeline: book_snapshot_5
+  (~6h from 16:36) cold file ~22:36 UTC; derivative_ticker (~41 min) ~23:17 UTC; trades (~61 min after
+  derivative_ticker) ~00:18 UTC 2026-08-08. 8h timeout fires at 00:36 UTC 2026-08-08. All 7 still running at 17:04 UTC
+  (28 min elapsed); GCS cold tier empty (expected — cold file only written after full shard loop). Next wakeup scheduled
+  18:05 UTC; chain hourly until completion.
 - **2026-08-07 ~15:30–15:40 UTC (slot-11 worker, data_engineering, continuation after third context-compaction)**: (1)
   TASK TIMEOUT BUG found: measured rate for the per-file-batching v3 executions (49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r)
   was ~9.5x real-time for book_snapshot_5 (86400/9.5=9095s=2.53h) + trades(~46min) + derivative_ticker(~45min) +

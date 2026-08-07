@@ -41,7 +41,7 @@ tags: [infra, ag-closeout-audit, parked-findings, asset-group-mistag, linkage, b
 related:
   [
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
-    /plans/active/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md,
     /plans/active/issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md,
@@ -74,7 +74,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
-    /plans/active/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 source: >-

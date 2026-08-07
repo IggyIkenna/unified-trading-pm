@@ -57,13 +57,6 @@ by hand._
   — Gated closeout for cefi_satellite_ao_dispatch_batch6_2026_08_02.md — machine-held via depends_on + gate_on_depends:
   true until all 6 of that plan's todos are done. Mirrors the batch1 through batch5 finalize pattern: reconcile each
   source…
-- [`cefi_satellite_ao_dispatch_batch8_2026_08_06`](./cefi_satellite_ao_dispatch_batch8_2026_08_06.md) — Eighth
-  AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-06 (scheduled autonomous dispatch,
-  tranche=cefi, slot 3, dispatch agt-02411c). Phase 0 re-derived the covering-plan set via…
-- [`cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize`](./cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md)
-  — Gated closeout for cefi_satellite_ao_dispatch_batch8_2026_08_06.md — machine-held via depends_on + gate_on_depends:
-  true until all 3 of that plan's todos are done. Mirrors the batch1 through batch7 finalize pattern: reconcile each
-  source…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) **[draft]** —
   Ninth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous
   dispatch, tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
@@ -805,13 +798,6 @@ by hand._
   — Gated closeout for `infra_satellite_ao_dispatch_batch1_2026_07_26.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 25 of that plan's todos are done, so this can never dispatch early. Batch 1 was
   extracted from 17…
-- [`infra_satellite_ao_dispatch_batch3_2026_07_30`](./infra_satellite_ao_dispatch_batch3_2026_07_30.md) — Third
-  AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (2026-07-30). The tranche's
-  covering set is now real (batch1 active, batch2 active, both with gated finalize twins) and the same-day…
-- [`infra_satellite_ao_dispatch_batch3_finalize_2026_07_30`](./infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md)
-  — Gated closeout for infra_satellite_ao_dispatch_batch3_2026_07_30.md, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
-  scripts/quality_gates/check_finalize_plan_coverage.py, which is…
 - [`infra_satellite_ao_dispatch_batch4_2026_07_31`](./infra_satellite_ao_dispatch_batch4_2026_07_31.md) — Fourth
   AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode, 2026-07-31).
   Batch3's own 2026-07-30 audit recommended treating the tranche as having reached its stop-iterating condition;…
@@ -829,10 +815,6 @@ by hand._
   — Gated closeout for `infra_satellite_ao_dispatch_batch7_2026_08_04.md`, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
   `scripts/quality_gates/check_finalize_plan_coverage.py`). Once…
-- [`infra_satellite_ao_dispatch_batch8_2026_08_07`](./infra_satellite_ao_dispatch_batch8_2026_08_07.md) **[draft]** —
-  Eighth AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode,
-  2026-08-07). Phase 0 re-derived the covering set via `generate_ag_closeout_audit_candidates.py --tranche infra` (51
-  members /…
 - [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](./na_docs_validity_and_ao_eligibility_audit_2026_07_26.md) —
   Scoped 2026-07-26 per operator directive, for a FUTURE session (not this one). The 2026-07-25/26 `/ag-closeout-audit`
   9-tranche run + this session's mass-flip only ever acted on ORPHANED docs (no active plan covering them) — it never…

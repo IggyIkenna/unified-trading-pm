@@ -8,7 +8,7 @@ summary: >-
   transitive gate, estate_orphan_assessment todo 6 cross-tranche conflict — both re-confirmed still blocked as of
   2026-08-06, unchanged since batch7's own 2026-08-03 re-check) for any whose gate has since cleared, then archive
   batch8 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -17,13 +17,13 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-8, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,7 +46,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -54,6 +54,9 @@ context_scope:
 ---
 
 # CeFi satellite AO batch 8 — finalize
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos complete; moved to `plans/archive/2026_08/` alongside batch8 in the same
+> commit (slot 16, task `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize-003`).
 
 > **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
 > every todo below until batch8's own 3 tasks are `done`, regardless of batch8's own `status` (draft or active) — see
@@ -111,7 +114,7 @@ context_scope:
       (batch6→7→8→batch8-finalize) with zero gate movement. Per this plan's own escalation rule: these require direct
       operator attention rather than continued automated re-triage.
 
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch8_2026_08_06.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch8_2026_08_06.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes", "Archival-hygiene housekeeping" and
       "Self-dispatched, linkage-fix-only" sections (informational, not gated AO items) need no separate migration since
       they were never batch todos → add the archive banner → run the codex-alignment check (batch8 creates no new
@@ -119,7 +122,12 @@ context_scope:
       `cefi_satellite_ao_dispatch_batch8_2026_08_06` and repoint each to the archived path → clear `locked_by` (already
       empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
       the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same
-      commit.
+      commit. — **DONE 2026-08-07** (slot 16): (1) Informational sections confirmed — no migration needed (were never
+      batch todos; 3 archivable docs from housekeeping section already archived separately). (2) Archive banners added
+      to both batch8 and batch8_finalize. (3) Codex alignment: batch8 creates no new durable contract (doc-only edits +
+      one predicate-pushdown bug fix); no codex update needed. (4) Corpus referrers updated: INDEX.md entries removed;
+      batch9/batch9_finalize `related:`/`context_scope:` paths repointed; `ag_closeout_audit_cefi_parked` paths
+      repointed. (5) `locked_by:` empty, confirmed. (6) Both plans moved to `plans/archive/2026_08/`.
 
 ## Codex SSOTs
 

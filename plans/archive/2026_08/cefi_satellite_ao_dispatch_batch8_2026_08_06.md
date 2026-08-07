@@ -23,7 +23,7 @@ summary: >-
   in todo 2's own text to prevent future confusion, not a real conflict). 3 todos below, zero genuine conflicts found,
   zero items parked BLOCKED-OPERATOR-DECISION this run (all operator-gated residuals were already correctly parked by
   prior audit rounds and are re-confirmed, not re-parked, in the tranche's parked-findings doc).
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -73,12 +73,15 @@ context_scope:
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
   ]
 ---
 
 # CeFi satellite AO batch 8 — iterative-drain extraction
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos complete; moved to `plans/archive/2026_08/` via the standard 6-step ritual
+> (finalize plan `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md`).
 
 > **Status: active — operator-approved 2026-08-06, dispatching.** Todo 3 was found already done-elsewhere before
 > dispatch (docstring already correct — see its checkbox); todo 1's SHA citation was corrected for the 2026-08-05

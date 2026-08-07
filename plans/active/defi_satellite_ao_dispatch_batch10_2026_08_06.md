@@ -93,14 +93,20 @@ same day) before being drafted here.
       (previous todo) lands. Repo: market-tick-data-service. Source:
       `issues/manifestwriter_add_concurrent_duplication_race_2026_08_06.md`. Done when: every script found by the grep
       either has the mitigation applied or is confirmed (with a one-line reason) not to need it.
-- [ ] [DATA] P1. **Run the DeFi MVP backfill to 100%** on the canonical/migrated corpus (SPOT VMs; DRIFT/Velocity
+- [x] ✅ [DATA] P1. **Run the DeFi MVP backfill to 100%** on the canonical/migrated corpus (SPOT VMs; DRIFT/Velocity
       historical grind is CULL residue, dropped not filled), then flip
       `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` true on first real progress per the unpark note in the
       source doc. **Safe-idempotent justification: standard SPOT backfill launcher with skip-if-captured semantics — no
       GCS delete, idempotent re-run on preemption per the standing backfill convention. No `[OPERATOR]` gate needed.**
       Repo: market-tick-data-service. Source: `defi_track5_coverage_mvp_backfill_2026_07_24.md` (Todo 1). Done when: the
       VM run is health-verified STARTED/progressing at T+10min, and either the unpark condition is flipped true with
-      cited evidence, or the run's terminal state (STOPPED/FAILED) is recorded with a follow-up filed.
+      cited evidence, or the run's terminal state (STOPPED/FAILED) is recorded with a follow-up filed. — VM
+      `mtds-perp-funding-backfill` RUNNING 2026-08-07T16:53Z (SPOT, asia-northeast1-c); 1824 rows written for 2023-11-05
+      (manifest: 15 entries, 2 new); prerequisite `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` flipped
+      `true` 2026-08-07T16:44Z (set_by=slot-7) citing `mtds-dex-swaps-backfill` writing 63,765 swap rows at
+      2026-08-07T16:27:22Z. Other DeFi MVP data_types: dex_pool_state (completed 2026-08-05), lending_indices (completed
+      2026-07-30), lst_rates (completed 2026-07-26), oracle_prices (completed 2026-08-03), dex_pool_swaps
+      (`mtds-dex-swaps-backfill` running 2026-08-07, 63k+ rows/shard).
 - [ ] [DATA] P2. **Run and verify a production bridge-events historical backfill**: now that the `mode=` threading
       precondition has shipped (`market-tick-data-service@c38e1b3f`, `bridge_events_handler.py:265`), run
       `--operation collect-bridge-events --mode batch --start-date 2021-11-11 --end-date <run-date> --asset-group     defi`,

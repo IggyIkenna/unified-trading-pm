@@ -129,12 +129,19 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
 
 ## Todos
 
-- [ ] [DEVOPS] P2. **#4** — coordinate with Ikenna; when AWS resumes, widen the replay filter to also match
-      `deferred-aws-build-*` (or normalise the two routers to one prefix). `freeze-deferred-build-replay.yml:112,189`.
-      AWS-deferred — verify by a real freeze-window replay once AWS is live.
-- [ ] [DEVOPS] P2. **#7** — point the AWS tarball uploader and launcher at one bucket (`aws_ec2_launch_lib.sh:232,285`
-      vs `create-code-tarballs.sh` → `uts-prod-deployment-state/code/`). AWS-deferred — verify by a real AWS tarball VM
-      launch once AWS is live.
+- [x] ✅ [DEVOPS] P2. **#4 — SHIPPED 2026-08-07, `unified-trading-pm@b87cc06fcf`.** Operator: "do the code fixes, just
+      don't permanently run live vms or do heavy backfills on aws until we have credits again." Widened both
+      `freeze-deferred-build-replay.yml` filters (lines 112, 189) to match either `deferred-build-` or
+      `deferred-aws-build-`. **Not verified by a real freeze-window replay** — AWS stays intentionally parked, per the
+      operator's own constraint; verify live once AWS resumes.
+- [x] ✅ [DEVOPS] P2. **#7 — SHIPPED 2026-08-07, `deployment-service@61cf93f44`.** Fixed `lc_aws_code_bucket()` + the
+      log-upload trap block in `aws_ec2_launch_lib.sh`, plus the same hardcoded wrong bucket name duplicated in all 6
+      AWS launcher heredocs
+      (`launch-{cefi-sharded-backfill,defi-backfill-vm,features-backfill-vm,     instruments-backfill-vm,mtds-backfill-vm,mdps-backfill-vm}-aws.sh`)
+      — all now point at `uts-prod-deployment-state`, matching `create-code-tarballs.sh`'s real uploader target. Wider
+      than the originally-cited 2 line numbers: the same wrong bucket was duplicated 6 more times in launcher heredocs,
+      not caught by the original finding. **Not verified by a real AWS tarball VM launch** — same AWS-deferred
+      constraint as #4.
 - [ ] [DEVOPS] P3. **#1** — inspect a real `qg-passed` dispatch payload to confirm whether `version` is sent; decide if
       SHA-only tagging is intentional before any fix. Coordinate with Ikenna/Harsh (CI area).
 - [ ] [DEVOPS] P3. **#3** — confirm whether the cicd-events ledger should carry `build_id`; low priority.

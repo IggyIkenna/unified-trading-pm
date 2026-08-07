@@ -1022,6 +1022,30 @@ to the real binary unchanged.
 Full incident history (two recurrences + root cause + rollout verification):
 `plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`.
 
+## Dashboard e2e ports are slot-namespaced (fixed 2026-08-07)
+
+Same failure CLASS as the pkill guard above, different surface:
+`agent-orchestrator/dashboard/tests/e2e/run-e2e-backend*.sh`
+
+- `dashboard/playwright.config.ts` boot local `ORCHESTRATOR_MODE=mock` backend/dashboard pairs on fixed ports. Before
+  this fix every slot used the SAME absolute ports (8790-8794 backend, 5198-5202 dashboard) — two slots running the
+  Playwright suite concurrently collided, and `reuseExistingServer: false`'s port-clear
+  (`lsof -ti tcp:$PORT | xargs kill`) killed whichever process was ACTUALLY listening, with no ownership check —
+  confirmed live: killed `.tabs/3`'s in-progress `switch-model.spec.ts`/`edit-agent-modal.spec.ts` run this way while a
+  different slot debugged an unrelated port conflict. Incident + investigation:
+  `plans/active/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md`.
+
+**Fix**: `playwright.config.ts` derives `SLOT_OFFSET = slot_number * 10` from its own file path (same
+`…/.tabs/<N>/<repo>` regex as `scripts/hooks/slot-identity-lib.sh`, kept local rather than shelling out) and adds it to
+every port; the un-tabbed main checkout resolves to offset 0 (original ports unchanged). Each slot's own
+`run-e2e-backend*.sh` computes its `ORCHESTRATOR_CORS_ORIGINS` from a `PLAYWRIGHT_*_PORT` env var that the config now
+explicitly passes through (previously unwired — worked only by coincidence when the vite port always matched the
+script's hardcoded literal default; a slot-offset port broke that coincidence and failed every dashboard→backend fetch
+on CORS until this was wired). `reuseExistingServer` deliberately stays `false` (unchanged) — several specs mutate their
+backend's seeded state durably (dispatch/park, collision-fix, chat-send), so reusing a not-freshly-reseeded server
+across local reruns produces false failures; SLOT_OFFSET alone already fully closes the cross-slot collision, so reuse
+was not needed. Shipped `agent-orchestrator@5d2ed4b09`.
+
 ## Pre-spawn branch-state + liveness-gated dirty resolution (Phase 4, 2026-06-01)
 
 The orchestrator's spawn paths (`server.py::spawn_slot`, `autospawn._do_spawn`,

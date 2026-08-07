@@ -18,7 +18,7 @@ tags: [cefi, ao-dispatch, close-out, batch-9, finalize, iterative-drain]
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
     /plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

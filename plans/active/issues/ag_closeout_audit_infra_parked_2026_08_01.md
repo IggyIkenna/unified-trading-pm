@@ -26,7 +26,7 @@ tags: [infra, ag-closeout-audit, plan-reconcile, false-unchecked, parked-finding
 related:
   [
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md,

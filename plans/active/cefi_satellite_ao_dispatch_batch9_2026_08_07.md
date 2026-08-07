@@ -35,8 +35,8 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
     /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
@@ -72,7 +72,7 @@ source: >-
   before drafting.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -80,10 +80,10 @@ context_scope:
 
 # CeFi satellite AO batch 9 — iterative-drain extraction
 
-> **Status: DRAFT — awaiting operator review (2026-08-07).** Per the `/ag-closeout-audit` skill's safety design, a
-> drafted batch is inert (never ingested/dispatched); flipping this to `status: active` is the operator's call. The
-> paired finalize plan ships `status: active` from the start — `gate_on_depends: true` machine-holds it until this
-> batch's todos are done, no double gate.
+> **Status: ACTIVE — operator-approved 2026-08-07** (was DRAFT; missed by an earlier casing-sensitive grep fixing the
+> frontmatter and PLAN_FORMAT.md reference but not this differently-cased banner — corrected here). The paired finalize
+> plan ships `status: active` from the start — `gate_on_depends: true` machine-holds it until this batch's todos are
+> done, no double gate.
 >
 > **Cross-todo file-collision check: PASS.** The 3 todos touch, respectively: (1) `market-tick-data-service` — a
 > read-only confirm/refute audit with a conditional scoped fix in `HyperliquidS3Downloader.fetch_l2_book`'s S3-key path;

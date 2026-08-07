@@ -6,21 +6,24 @@ title: >-
 summary: >-
   Discovered live 2026-08-07 while building/testing the AO dashboard critical-health-visibility feature
   (`ao_dashboard_critical_health_visibility_2026_08_07`, shipped `agent-orchestrator@7daa63e8d`). Two distinct findings,
-  both real, both reverted before shipping (no damage landed), neither root-caused yet: (1) running
-  `ORCHESTRATOR_MODE=mock` uvicorn locally for Playwright e2e testing triggers some background job (log evidence points
-  at "CIReconcile", which scanned "26 repos") that TRUNCATED 5 GitHub Actions workflow files
-  (`main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`, `request-major-bump.yml`,
-  `staging-backmerge-to-ldr.yml`, `update-dependency-version.yml`) by ~85-90% (removed 1400+ lines each) across
-  agent-orchestrator itself PLUS 21 sibling repos in the shared workspace (unified-trading-library,
-  unified-api-contracts, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api,
-  deployment-service, deployment-ui, e2e-testing, execution-service, features-service, fund-administration-service,
-  greeks-service, ibkr-gateway-infra, instruments-service, market-data-processing-service, market-tick-data-service,
-  ml-service, strategy-service, system-integration-tests, trading-agent-service, unified-trading-api,
-  unified-trading-system-ui) — every repo checked except unified-trading-pm. (2) The dashboard's Playwright `webServer`
-  port scheme (8790-8794/5198-5202, `dashboard/playwright.config.ts`) is NOT slot-namespaced — running the e2e suite
-  from two different `.tabs/N` slots concurrently collides on the SAME ports, and `reuseExistingServer: false` means the
-  second invocation's port-clear attempt can kill the FIRST slot's legitimate, in-progress run (confirmed: killed
-  `.tabs/3`'s `playwright test tests/e2e/switch-model.spec.ts tests/e2e/edit-agent-modal.spec.ts` run this way).
+  both real, both reverted before shipping (no damage landed). UPDATE 2026-08-07 follow-up: Finding 2 (port collision)
+  is FIXED + shipped (`agent-orchestrator@5d2ed4b09`); Finding 1 (workflow truncation) is still open — CIReconcile is
+  now confirmed real-but-not-mock-gated (fixed regardless) AND confirmed NOT the file-writer (3 candidates ruled out),
+  but the actual truncation mechanism remains unidentified. Original description: (1) running `ORCHESTRATOR_MODE=mock`
+  uvicorn locally for Playwright e2e testing triggers some background job (log evidence points at "CIReconcile", which
+  scanned "26 repos") that TRUNCATED 5 GitHub Actions workflow files (`main-backmerge-to-ldr.yml`,
+  `major-bump-issue-handler.yml`, `request-major-bump.yml`, `staging-backmerge-to-ldr.yml`,
+  `update-dependency-version.yml`) by ~85-90% (removed 1400+ lines each) across agent-orchestrator itself PLUS 21
+  sibling repos in the shared workspace (unified-trading-library, unified-api-contracts, alerting-service,
+  batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui,
+  e2e-testing, execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra,
+  instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
+  system-integration-tests, trading-agent-service, unified-trading-api, unified-trading-system-ui) — every repo checked
+  except unified-trading-pm. (2) The dashboard's Playwright `webServer` port scheme (8790-8794/5198-5202,
+  `dashboard/playwright.config.ts`) is NOT slot-namespaced — running the e2e suite from two different `.tabs/N` slots
+  concurrently collides on the SAME ports, and `reuseExistingServer: false` means the second invocation's port-clear
+  attempt can kill the FIRST slot's legitimate, in-progress run (confirmed: killed `.tabs/3`'s `playwright test
+  tests/e2e/switch-model.spec.ts tests/e2e/edit-agent-modal.spec.ts` run this way).
 status: open
 nature: issue
 asset_group: [ao, cross-cutting]
@@ -96,22 +99,62 @@ semver bump, dependency-update automation) on ~22 repos simultaneously.
   first), and whether this can happen in a REAL (non-mock) orchestrator boot too (if `CIReconcile` isn't
   mock-mode-gated, this could be live-orchestrator-reachable, which would be P0 not P1).
 
+**2026-08-07 follow-up session — advanced but did NOT close this finding:**
+
+- **Confirmed** (read the full `agent-orchestrator/server/ci_reconcile.py` + its `server.py` wiring): `CIReconcileLoop`
+  was started completely unconditionally on every server boot — `ci_reconcile_interval_seconds` defaults to 900s with
+  **no `ORCHESTRATOR_MODE` gate anywhere** (unlike every OTHER mock-scoped resource in `config.py`, e.g.
+  `state.mock.db`/`backlog.mock.yaml`), first tick fires 45s after startup. So a local `ORCHESTRATOR_MODE=mock` boot
+  (manual dev OR a Playwright `webServer`) genuinely shells real `gh api` calls against the real GitHub org
+  (`_active_repos()` reads the REAL `unified-trading-pm/workspace-manifest.json` sibling on disk, not a mock one) — this
+  fully explains the "26 scanned" / "gh non-200 for unified-trading-ci" log lines as REAL, not mock artifacts. This
+  alone was worth fixing regardless of whether it's THE truncation cause (real external side effects — GH API rate
+  spend, a possible real `escalation.escalate()` dispatch — have no business firing from mock mode, matching every other
+  mock-isolated resource in this codebase) — **fixed**: `CIReconcileLoop` now defaults `interval_seconds=0` (disabled)
+  under `config.is_mock()` unless a caller explicitly passes `interval_seconds=` (every existing test already does). 3
+  new regression tests in `tests/test_ci_reconcile.py`. Shipped `agent-orchestrator@5d2ed4b09` (quality-gates-v2 green).
+- **Ruled out as the direct file-writer** (read each candidate's full source, not just grepped for a mention):
+  - `ci_reconcile.py` itself — zero file-write code touching `.github/workflows/*.yml`; its only I/O is `gh api` reads +
+    its own ETag-cache JSON + calling `escalation.escalate()` (which picks a slot/account and spawns a worker — it
+    doesn't touch local files either, and an e2e-isolated DB with zero configured slots just queues a row).
+  - `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh` (the per-slot 5-min FF-pull cron, a serious background actor
+    across ALL repos in a slot) — its file-touching logic is a narrow, explicit allowlist (`*.svg` DAG exports,
+    `coverage*.xml`, `uv.lock`, `plan_health_digest.md`/`plan_skeleton.md`, 4 named "managed" cron files) that does NOT
+    include any workflow yml; it only ever does `git checkout -q --` restores of files ALREADY matching
+    `origin/<branch>` content, never a truncating write.
+  - `unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh` — the actual template-sync script — is
+    manual-invocation-only; grepped the whole workspace for any programmatic/cron/hook caller and found none.
+  - `unified-trading-pm/scripts/quality_gates/detect_template_drift.py` — a read-only drift DETECTOR; its only write
+    path is its own baseline JSON cache, never the workflow files it compares.
+- **Still open**: the actual write mechanism remains unknown. The next session should NOT re-assume CIReconcile (ruled
+  out above) — pursue: (a) a genuine isolated-worktree reproduction with a `git status` snapshot after EACH discrete
+  action (not "run mock server 15 min, check at the end") to narrow the trigger to one specific action; (b) whether
+  something OUTSIDE agent-orchestrator's own code did it (an IDE extension, a format-on-save misconfiguration, a local
+  `prettier`/`lint-staged` watcher — CLAUDE.md already documents unpinned prettier <3.9.5 mangling content as a known
+  class of corruption elsewhere); (c) whether this was a one-time environmental fluke rather than a repeatable bug,
+  given it has not recurred since (no truncation observed across this entire 2026-08-07 follow-up session's many
+  repeated local mock-server boots, now further reduced in surface by the CIReconcile fix above).
+
 ### Todos
 
-- [ ] [INFRA] P1. **Find and read `CIReconcile`'s source** (`agent-orchestrator/server/` — grep for the class/function
-      and whatever calls it on startup/interval) — confirm it's the actual actor, understand its trigger condition
-      (every boot? gated by something?), and whether it's reachable outside `ORCHESTRATOR_MODE=mock`.
+- [x] [INFRA] P1. **Find and read `CIReconcile`'s source** — done 2026-08-07: confirmed the actual trigger condition
+      (unconditional on every boot, not mock-gated) and confirmed it is reachable outside `ORCHESTRATOR_MODE=mock` too
+      (it's not gated by mode at all — live and mock both ran the identical unconditional sweep). See follow-up above.
 - [ ] [INFRA] P1. **Reproduce deliberately** in a disposable/throwaway git worktree (never the operator's real checkout)
       — boot `ORCHESTRATOR_MODE=mock` once, check `.github/workflows/*.yml` diffs immediately after; if clean, boot a
       second/third/fourth/fifth instance (matching the 5-webServer-pair pattern) and re-check after each, to isolate
-      whether it's a single-boot bug or a multi-instance race.
-- [ ] [INFRA] P1. **If confirmed live-reachable (not mock-gated), treat as P0** — file a follow-up issue doc and notify
-      the operator directly; a background job that can silently truncate CI workflows across the whole workspace from
-      the LIVE orchestrator is a standing risk to every repo's CI, not just a local-dev annoyance.
-- [ ] [INFRA] P2. **Once root-caused, fix at the source** (whatever `CIReconcile` reads as its "canonical" workflow
-      content) and add a regression test / guard rail (e.g. a size-sanity check before any workflow-file write — refuse
-      to write a workflow file that's <50% the size of what's already there, or require a human-reviewed diff for any
-      write to `.github/workflows/` from this component at all).
+      whether it's a single-boot bug or a multi-instance race. **Still open** — CIReconcile itself is now ruled out as
+      the direct writer (see follow-up above), so this reproduction should snapshot `git status` after every discrete
+      action rather than assuming CIReconcile is the trigger to watch for.
+- [x] [INFRA] P1. **If confirmed live-reachable (not mock-gated), treat as P0** — CIReconcile IS confirmed
+      not-mock-gated (done above), but is ALSO confirmed NOT to be the workflow-file writer (no file-write code touching
+      `.github/workflows/`), so this does not escalate to P0 — the real writer is still unidentified and could be
+      anything, not specifically CIReconcile. Fixed the confirmed real-but-separate issue (real `gh api` calls from mock
+      mode) regardless; see follow-up above.
+- [ ] [INFRA] P2. **Once root-caused, fix at the source** (whatever actually writes `.github/workflows/*.yml`) and add a
+      regression test / guard rail (e.g. a size-sanity check before any workflow-file write — refuse to write a workflow
+      file that's <50% the size of what's already there, or require a human-reviewed diff for any write to
+      `.github/workflows/` from this component at all). **Still open** — blocked on the P1 reproduction above.
 
 ## Finding 2 (P2 — smaller, but real and reproducible): dashboard e2e ports aren't slot-namespaced
 
@@ -126,15 +169,32 @@ conflict for a NEW e2e project (`critical-health`) added to the same config.
 
 ### Todos
 
-- [ ] [INFRA] P2. **Slot-namespace the e2e ports** — derive each port from the slot number (e.g. `8790 + slot_number*10`
-      or similar) via `scripts/hooks/slot-identity-lib.sh`'s existing slot-N-from-PATH derivation, so two slots running
-      the dashboard e2e suite concurrently never collide. Alternatively/additionally, default
-      `reuseExistingServer: true` locally (`!process.env.CI`, the standard Playwright convention) so a free/healthy port
-      is reused instead of fought over — this alone would have prevented the kill (a healthy existing server would just
-      get reused, not need "clearing").
-- [ ] [DOC] P3. **Add a CLAUDE.md/codex one-liner** (once fixed) under the per-tab-worktrees SSOT
-      (`/codex/05-infrastructure/per-tab-worktrees.md`) noting the dashboard e2e port scheme is slot-safe, so this isn't
-      silently re-discovered by the next person who runs two slots' e2e suites at once.
+- [x] [INFRA] P2. **Slot-namespace the e2e ports** — done 2026-08-07: `dashboard/playwright.config.ts` derives
+      `SLOT_OFFSET = slot_number * 10` from its own file path (mirrors `scripts/hooks/slot-identity-lib.sh`'s
+      `…/.tabs/<N>/<repo>` derivation) and adds it to every port; un-tabbed main checkout stays at offset 0 (original
+      ports unchanged). Found + fixed a SECOND live bug while verifying this: each `run-e2e-backend*.sh` computes
+      `ORCHESTRATOR_CORS_ORIGINS` from a `PLAYWRIGHT_*_PORT` env var the config never actually passed through — worked
+      only by coincidence before (hardcoded defaults matched), broke every dashboard→backend fetch on CORS once ports
+      became slot-dependent (caught via a real e2e run: login never completed, `getByText(/Slots:/)` timed out). Wired
+      `PLAYWRIGHT_*_PORT` into each backend `webServer` entry's `env` to fix. Deliberately did **NOT** also flip
+      `reuseExistingServer` to `!process.env.CI` — tried it, then reverted: several specs (park/dispatch, collision-fix,
+      chat-send) durably mutate their backend's seeded state, so a REUSED (not freshly re-seeded) server on a second
+      local run sees state the first run already consumed and fails. SLOT_OFFSET alone already fully closes the
+      cross-slot collision (two slots can no longer share a port at all), so reuse wasn't needed for the incident this
+      fixes. `reuseExistingServer: false` stays unchanged everywhere. Verified: full `npx playwright test` suite run + a
+      stash-based control run against the unmodified baseline confirmed the remaining failures
+      (deepseek-per-turn-metrics, deepseek-wallet-reconciliation, worker-chat x2, backlog-collision — intermittent)
+      reproduce IDENTICALLY on baseline, i.e. pre-existing and unrelated; filed separately (see
+      `ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`). `dashboard/tests/e2e/parked-tasks.spec.ts`'s "Dispatch
+      now clears the park" test is ALSO pre-existing-flaky for an unrelated, already-understood reason (mutates the
+      checked-in `fixtures/parked.e2e.yaml` on disk instead of an isolated copy, so a second local run sees
+      already-mutated state) — not newly filed, already known from this same session's earlier work; not fixed here (out
+      of scope for this issue). Full `quality-gates.sh` green (2659 pytest + tsc clean + 259 vitest). Shipped
+      `agent-orchestrator@5d2ed4b09` (quality-gates-v2 + Deploy Dashboard CI green).
+- [x] [DOC] P3. **Add a CLAUDE.md/codex one-liner** — done 2026-08-07: added a
+      `## Dashboard e2e ports are     slot-namespaced` section to `/codex/05-infrastructure/per-tab-worktrees.md` (right
+      after the analogous pkill cross-slot-kill guard section) — CLAUDE.md itself was already near its size cap, so the
+      note lives in the codex SSOT only, matching the "condense, don't duplicate" convention.
 
 ## Why this wasn't chased further this session
 
@@ -143,3 +203,11 @@ Both findings surfaced as a side effect of shipping an unrelated dashboard featu
 in a disposable worktree, which is out of scope for that session's actual task. Reverted all live damage before shipping
 (verified clean via `git status --short -- .github/workflows/` on all 22 affected repos); no truncated content was ever
 committed.
+
+**2026-08-07 follow-up (same day, separate session)**: picked both findings back up. **Finding 2 is fully resolved and
+shipped.** Finding 1 is advanced but still open — CIReconcile is now confirmed NOT to be the file-writer (ruling it out
+was itself real progress, since it was the leading suspect), a real-but-separate issue with it was found and fixed
+anyway, and 3 total candidate actors have now been read in full and ruled out. The genuine isolated-worktree
+reproduction (the only way left to actually catch the real writer) remains undone — it needs careful per-action
+snapshotting, not a repeat of "run mock server for 15 minutes and check at the end," and is real, non-trivial work
+better scoped as its own session.
