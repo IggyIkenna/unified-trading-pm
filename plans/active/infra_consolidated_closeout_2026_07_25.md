@@ -219,6 +219,11 @@ not data-pipeline).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since the 2026-08-06 verdict. The 3
+  remaining `[REVIEW]` Track close-out todos are unchanged all-of-N gates created by an explicit resolved operator
+  decision (`issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38); read end-to-end,
+  `grep -cE '^- \[ \]'` = 3, matching. Only ag-closeout-audit linkage-discoverability entries and a context-scout
+  refresh touched the doc since the last marker — no change to the 3 gates' own content or bounded-outcome status.
 - **ag-closeout-audit 2026-08-06 (infra tranche)**: linkage fix — added
   `cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md` (Track 2) +
   `smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md` (Track 3) to Sources;

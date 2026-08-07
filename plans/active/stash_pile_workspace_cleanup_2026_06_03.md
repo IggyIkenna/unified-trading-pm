@@ -190,6 +190,12 @@ surface — do not auto-drop — genuine WIP.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA-STALE, unchanged — re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 17, matching the 2026-08-02 verdict's count. The 3 items already cross-referenced into
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` remain correctly cited and still not done there (re-checked, no
+  citation change needed). Doc stays NA: the 12-item Phase-3 fan-out still targets the retired per-epic-VM topology,
+  gated by the same unresolved `BLOCKED-OPERATOR-DECISION` in
+  `/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`; Phase 4 stays downstream-gated on that.
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — cross-referenced the 3 items
   already duplicated verbatim in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (smoke-test + sweep-this-host → its
   "Measure fleet-wide..." todo; Phase 5 regrowth signal → its own separate todo). Doc stays NA overall — the Phase 3

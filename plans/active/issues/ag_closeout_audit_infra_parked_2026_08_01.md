@@ -221,6 +221,11 @@ no drift:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 1, matching. The sole remaining open item (harden `generate_ag_closeout_audit_candidates.py`'s
+  `CITE_RE` so a Progress Log narrative mention doesn't count as a citation) is still a genuine, unresolved, corpus-wide
+  shared-tooling gap outside this tranche's own remit — only a context-scout scope refresh touched the doc since the
+  last marker.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: **KEEP-NA-STALE-ITEMS — 3 of 4 closed, doc stays NA.** Closed:
   batch3 stale draft banner (replaced by ACTIVE+DISPATCHABLE banner, verified); qg_owner_gate retag (live `[ao]`,
   verified); re-carry-forward (superseded by the 08-02/08-03/08-04 registers). Item 2 (CITE_RE harden in

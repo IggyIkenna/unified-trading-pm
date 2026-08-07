@@ -149,3 +149,8 @@ Two independently-shippable angles:
   data-complete — conflated the two), used it, and the `shards_ok: 260` anomaly in the otherwise-clean completion log
   was the tell that led to this root-cause. Corrected the launcher's own comment in the same session; filing this doc
   for the deeper library-level design question and to make sure the dex_swaps run isn't mistakenly counted as done.
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — first verdict for this same-day doc. Read
+  end-to-end; `grep -cE '^- \[ \]'` = 2, matching. Todo 1 ([DESIGN] P2, the stale-fallback detection/warning mechanism)
+  needs a design call on threshold/signal per its own text; todo 2 ([DATA] P1, relaunch the dex_swaps fold) is
+  dependency-blocked on the DeFi consolidator genuinely catching up (the concurrent `canonical-migration-defi-rebuild`
+  VM finishing or the cron resuming) — neither is worker-determinable today.

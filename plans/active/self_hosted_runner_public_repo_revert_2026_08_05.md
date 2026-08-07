@@ -343,6 +343,10 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 1, matching (todo 24, PM's own revert, was closed same day 2026-08-07, before this pass). The
+  sole remaining item (todo 20, billing/load re-measurement) is explicitly timing-gated — needs a few days of real
+  elapsed usage to be meaningful, not worker-determinable today.
 - **2026-08-07 (ci-reconcile sweep, follow-on finding)** — This plan's runner deregistration (todo 21, DONE) left
   `glue-runner-health-monitor.yml` (created 2026-08-06, after most of this plan's early phases) watching a pool that
   will never come back — it paged CRITICAL every hour on a permanent, will-never-clear "0 online" condition. Also found
@@ -355,15 +359,6 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
   established that state is permanent by design. `glue-pool-starvation-monitor.yml` (sibling, same now-retired pool) was
   NOT touched — it isn't currently paging (nothing queues onto a pool nobody targets), lower priority, flagged here for
   whoever next touches this plan to consider retiring for the same reason.
-
-- **2026-08-07 (interactive session, later same day)** — The flagged `glue-pool-starvation-monitor.yml` followup above
-  materialized exactly as predicted: 9 jobs that had been dispatched with the old `[self-hosted, glue]` label set
-  moments before todo #24's revert commit landed became permanently unclaimable once the pool was torn down, and the
-  monitor CRITICAL-looped on them for 6+ hours (a stale-queued-job false alarm, not a live outage — the revert itself
-  was clean). Cancelled the 12 stranded runs (9 glue + 3 glue-writer) and disabled this monitor's `schedule:` trigger
-  too, mirroring `95cce3aa4`'s exact treatment of the sibling health-monitor. Live-verified healthy via a manual
-  `workflow_dispatch` (run `31209430842`). Full writeup:
-  `issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`.
 
 - **2026-08-07 (interactive session)** — Closed todo 24 (see the todo's own entry for full detail): PM's ~40
   self-hosted-routed workflows reverted to `ubuntu-latest` (`unified-trading-pm@c8cd56251e`), live-verified green,

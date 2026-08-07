@@ -288,6 +288,11 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 3, matching (finding 10's re-apply todo already closed 2026-08-06 by a separate governance
+  sweep, per that todo's own text). Remaining: finding 11 (operator-only — confirm whether the missing stash-backup
+  bundle was durably relocated or lost) and findings 12/13 ([DOCS] P3, both explicitly self-described as not-yet-bounded
+  design/scoping calls). No new evidence changes any of the three.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [OPERATOR] findings 10/11 (batch3 blank-flip
   re-apply; missing stash-backup bundle) + tooling findings 12/13 (design-scope); operator-gated, not
   worker-determinable.

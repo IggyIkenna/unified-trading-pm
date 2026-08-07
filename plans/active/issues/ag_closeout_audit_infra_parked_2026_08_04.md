@@ -159,9 +159,19 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Re-apply `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly**
-      (finding 10, third consecutive day open) — set line 39 to `assigned_vm: planning` (currently blank), then verify
-      the `[BACKEND] P3` todo actually reaches the live AO backlog.
+- [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-07 (na-eligibility-audit) — re-verified DONE, not by this doc's own citation.**
+      `infra_satellite_ao_dispatch_batch3_2026_07_30.md` is now archived at
+      `plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md` with `status: complete` and
+      `assigned_vm: planning` confirmed live (`grep -n '^assigned_vm:\|^status:'` on the archived file, 2026-08-07) —
+      the blank-flip regression this finding tracked is fixed, matching that doc's own 2026-08-06 governance-sweep
+      Progress Log entry ("root cause identified... Corrected to a plain single-line `assigned_vm: planning`... Verified
+      live"). This doc's own context-scout entry (2026-08-07) had already flagged this exact discrepancy ("a direct live
+      read confirms `infra_satellite_ao_dispatch_batch3_2026_07_30.md` now has `assigned_vm: planning` set... a
+      stale-checkbox discrepancy... not fixed here (out of this skill's scope)") — closing it here, in scope for this
+      skill's HARD evidence bar. Original text preserved below for record. Was: **Re-apply
+      `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly** (finding 10, third consecutive
+      day open) — set line 39 to `assigned_vm: planning` (currently blank), then verify the `[BACKEND] P3` todo actually
+      reaches the live AO backlog.
 - [ ] [OPERATOR] P1. **Investigate the missing stash-backup bundle** (finding 11, second consecutive day confirmed
       absent) — confirm whether `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated
       to a durable location before `.tabs/3/stash-bundles/` disappeared, or represents an unrecovered loss of 10 real
@@ -181,6 +191,12 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, stale-items — closed finding 10's re-apply todo (batch3
+  `assigned_vm` flip): verified live on `plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md`
+  (`status: complete`, `assigned_vm: planning` confirmed via direct `grep`, 2026-08-07) — the blank-flip regression is
+  fixed, matching that doc's own 2026-08-06 governance-sweep entry; this doc's own context-scout (2026-08-07) had
+  already flagged the discrepancy but left it unfixed as out-of-scope for that pass. Doc stays NA overall: finding 11
+  (stash-backup bundle) remains operator-only, findings 12/13 remain not-yet-bounded design/scoping calls.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — findings 10/11/14 [OPERATOR]-gated (incl. the 4
   backlogged draft infra batches awaiting operator review) + 12/13 carried tooling design items; no bounded worker-only
   item.

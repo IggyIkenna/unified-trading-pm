@@ -666,6 +666,16 @@ process itself in this pass).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 4, matching. The `[OPERATOR]`-tagged branch-delete todo flipped `[x]` this same session
+  (2026-08-07, with verification evidence) is confirmed done on fresh read; nothing else in the doc reads stale.
+  Remaining 4: fleet-wide backmerge-hang investigation (unified-api-contracts) and the dispatch-storm-mutex-to-main todo
+  are live-CI-incident follow-ups on the still-recurring fleet-wide promotion stall (confirmed recurring again
+  2026-08-07 per this doc's own latest entry); the glue-runner cache-save investigation is explicitly `[OPERATOR]`.
+  **RECLASSIFY-candidate surfaced**: the orchestrator one-shot `/done` 500 fix (`_done_one_off` in
+  `agent-orchestrator/server/routes/slots_worker.py` ~L1620) is a bounded, well-scoped code fix with a cited pattern to
+  mirror (`ss.to_utc(...)`, matching the Class-A path at ~L1698) — looks worker-determinable, not actioned this run
+  pending a conflict-check.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [CICD] P0/P1 live promotion-deadlock incident
   items (sit-gate completion wait + main-backmerge notify-slack ref fix), operator/live-CI judgment in flight.
 - **slot-15 agt-e33f21 session-end 2026-08-06 ~11:06Z (mid-flight, compaction)**: promotion is GREEN-READY at the last

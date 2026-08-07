@@ -103,6 +103,13 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-07-30. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 2, matching. Primary todo remains a genuine design/judgment call (which reliability model to
+  commit to) with no decision made. The secondary P3 audit todo now carries stronger measured evidence (2026-08-04
+  entry: 2/2 fresh SPOT preemptions still show no `PREEMPTED` marker even after the hardened write helper) but its own
+  done-when ("measured evidence the race is rare, OR a mitigation is proposed") isn't fully met — evidence gathered
+  points the opposite way (race is common, not rare), but no mitigation has been proposed/decided yet. Re-flagging as a
+  RECLASSIFY-candidate worth a fresh scoping look given the new evidence, not actioned this run.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Primary todo is explicitly
   self-declared as a design/judgment call (which reliability model to commit to for ad hoc backfill VMs) with no
   decision made yet — stays NA as a whole; the secondary measurement/audit todo is an individually plausible future
