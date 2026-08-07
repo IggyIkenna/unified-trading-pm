@@ -126,7 +126,7 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
 
 ## Todos
 
-- [ ] [DATA] P1. **UAC: register `JUPITER-SOLANA` as a live DeFi venue.** In
+- [x] ✅ [DATA] P1. **UAC: register `JUPITER-SOLANA` as a live DeFi venue.** In
       `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py`, add
       `VENUE_TO_ADAPTER_KEY["JUPITER-SOLANA"] = "jupiter"` (currently absent — the file's own comment "Jupiter is
       execution-only (swap aggregator), not instrument discovery" near the DeFi section is stale now that
@@ -135,7 +135,9 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       from `"pipeline"` to `"live"` (correct its "JUPITER is execution-only aggregator, no IS adapter" comment — also
       stale). Do NOT separately edit any MVP list — see "Scope corrections" above; the MVP flip is automatic. Done-when:
       `unified-api-contracts` `quality-gates.sh` green, and a targeted check confirms
-      `"JUPITER-SOLANA" in VENUES_BY_ASSET_GROUP["defi"]` resolving to adapter key `"jupiter"`.
+      `"JUPITER-SOLANA" in VENUES_BY_ASSET_GROUP["defi"]` resolving to adapter key `"jupiter"`. —
+      unified-api-contracts@ad003d03 QG green; targeted check confirms JUPITER-SOLANA ∈ VENUES_BY_ASSET_GROUP["defi"]
+      with adapter key "jupiter"
 
 - [ ] [DATA] P1. **instruments-service: wire `JupiterReferenceDataAdapter` into the live factory + venue list.** Depends
       on todo 1 (this repo's `unified-api-contracts` dependency must be bumped to the version containing todo 1's change
