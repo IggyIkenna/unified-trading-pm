@@ -367,8 +367,9 @@ independent plans.
 
 ## Follow-ups
 
-- [ ] [SERVICE] P2. Implement staking-yields capability-completion for the 11 missing protocols (Phase 1: 8 DefiLlama
+- [x] [SERVICE] P2. Implement staking-yields capability-completion for the 11 missing protocols (Phase 1: 8 DefiLlama
       protocols ~2.5d; Phase 2: 3 AAVE Oracle protocols ~1.5d) — file as a new plan per §7
+      ✅ Phase 1 complete — market-tick-data-service@c2bd2d532; YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/SYMBIOTIC/KARAK/JITORESTAKING added via DefiLlama yields batch-fetch; QG green; 2026-08-07
 
 > **2026-08-06 archive-candidate audit**: All 4 checkboxes are [x], but §7 describes ~30-32h of unimplemented work
 > ('File as a single plan with two sequential phases') — the capability-completion for
