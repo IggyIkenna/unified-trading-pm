@@ -174,9 +174,17 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers — confirmed still
       returning HTTP 502 at 2026-08-07T12:21Z (3h+ after initial failure at 10:17Z; RapidAPI message: "API (not
       working)"). Tagged BLOCKED-UPSTREAM-OUTAGE; do not relaunch without verifying the endpoint returns 200 first.
-- [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill** — `weather-backfill-20260807-120241`,
-      `launch-openmeteo-backfill-vm.sh --entity WEATHER 2020-06-06 2026-08-07`, confirmed RUNNING (auto-republished a
-      stale instruments-service tarball before create, then succeeded). Watch for completion + re-census next tick.
+- [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill, ran to `exit_code=0`** —
+      `weather-backfill-20260807-120241` completed cleanly but did NOT resolve the gap (re-census:
+      `expected_unattempted` barely moved 205,517→205,302; 16,241 new `attempted_failed` rows appeared) — split into the
+      two follow-up todos below rather than reopening this one, since the LAUNCH itself succeeded; what's left is
+      root-cause work.
+- [ ] [SCRIPT] P1. **Root-cause weather's 16,241 `ClientResponseError` rows** (400 Bad Request against
+      `customer-previous-runs-api.open-meteo.com`, spread across ~478 dates 2024-01-03→2026-08-07 — a genuine broad
+      vendor-contract issue, not a today-only edge case) before any retry.
+- [ ] [SCRIPT] P1. **Explain why weather's `expected_unattempted` barely dropped** despite the backfill's date-loop
+      reaching the full range end (`last_completed_date=2026-08-07`) — e.g. 350 untouched rows on 2026-07-28 alone.
+      Likely a skip-condition false-positive or a per-venue sub-loop bug; find it before relaunching blind.
 - [x] ✅ [SCRIPT] P2. **Launched SFI full backfill** — `sfi-backfill-20260807-123519` confirmed RUNNING
       (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363
       expected_unattempted shards (distinct from the already-resolved 89-row attempted_failed cluster).
@@ -333,3 +341,23 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   PLAYER_STATS now at **chunk 24/26** (only 2 left). footystats (2024-09-22→2025-04-06), SFI (2021-11-02→2022-03-11),
   weather (→2026-07-25), `mtds-backfill-odds-smallchunk-20260807` (chunk 17/451, still 0 OOM) all confirmed healthy via
   value-diffs.
+- **2026-08-07T14:47Z — CORRECTION: weather backfill finished (exit_code=0, self-deleted) but did NOT actually resolve
+  the honest-coverage gap — do not read `exit_code=0` as "done" (exactly the trap codex rule 4a warns about).**
+  `weather-backfill-20260807-120241` reached `last_completed_date=2026-08-07` (the full range end) and exited cleanly,
+  but a fresh census shows: `expected_unattempted` barely moved (205,517 → 205,302, only -215) and **16,241 NEW
+  `attempted_failed` rows appeared** (`error_reason=ClientResponseError`, spread across ~478 distinct dates from
+  2024-01-03 to 2026-08-07 — not a narrow today-only edge case, a genuine broad vendor-API issue; the tail log showed
+  the concrete signature: `400 Bad Request` against
+  `customer-previous-runs-api.open-meteo.com/v1/forecast?...&previous_day1&...`). Also confirmed the remaining
+  `expected_unattempted` rows span the FULL date range including recent dates (e.g. 2026-07-28: 350 rows on a single
+  date) — meaning many (date, venue) shards were never even attempted despite the date-loop completing, a separate
+  puzzle from the `ClientResponseError` cluster. **Two genuinely new, unresolved findings, not a closed line item**: (1)
+  root-cause the `customer-previous-runs` 400 errors (vendor contract issue? request malformed for certain date/venue
+  combos?); (2) explain why so many shards remain fully untouched despite the date-iteration reaching the full range (a
+  skip-condition false-positive, a per-venue sub-loop bug, or a rate-limit silently short-circuiting without recording
+  `attempted_failed`?). Neither investigated further this tick — flagging clearly rather than claiming a false win.
+  `mtds-backfill-odds-smallchunk-20260807` had its first OOM this tick (chunk 18/451, EPL, `exit=137`) but
+  self-recovered correctly (moved to LA_LIGA) — 1 failure in 18 chunks, consistent with (better than) the OOM doc's own
+  "4/75 chunks" precedent for `--chunk-size 5`, not concerning. `401-retry`'s per-league OOM cadence holds steady at
+  ~6-9 min (4 more failures: PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG, SCOTTISH_PREMIERSHIP; now on GREEK_SUPER_LEAGUE, 10
+  total) — stable, not degrading further, no action needed.
