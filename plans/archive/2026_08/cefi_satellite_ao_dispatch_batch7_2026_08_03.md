@@ -21,7 +21,7 @@ summary: >-
   target files/topics (zero overlap); 2 of the source docs' internally-sequential 3-step Phase 1 work is combined into
   ONE todo per the shared conflict-check protocol's no-fan-out-racing-steps rule. 3 todos below, zero genuine conflicts
   found, zero items parked BLOCKED-OPERATOR-DECISION this run.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -74,6 +74,9 @@ context_scope:
 ---
 
 # CeFi satellite AO batch 7 — iterative-drain extraction
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos complete; moved to `plans/archive/2026_08/` via the standard 6-step ritual
+> (finalize plan `cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md`).
 
 > **Status: active — operator-approved 2026-08-06, dispatching.** Todo 2 was found already done-elsewhere before
 > dispatch (see its checkbox) — the other 2 todos are unaffected and dispatch as originally drafted.

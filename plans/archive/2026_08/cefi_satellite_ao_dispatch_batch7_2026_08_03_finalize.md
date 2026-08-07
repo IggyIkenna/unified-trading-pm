@@ -7,7 +7,7 @@ summary: >-
   source doc's checkboxes once its batch-7 todo lands, re-check the two still-blocked items carried forward from batch6
   (Schema v10 transitive gate, estate_orphan_assessment todo 6 cross-tranche conflict) for any whose gate has since
   cleared, then archive batch7 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-7, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -45,13 +45,16 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
 # CeFi satellite AO batch 7 — finalize
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos complete; moved to `plans/archive/2026_08/` alongside batch7 in the same
+> commit (slot 2, task `cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize-003`).
 
 > **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
 > every todo below until batch7's own 3 tasks are `done`, regardless of batch7's own `status` (draft or active) — see

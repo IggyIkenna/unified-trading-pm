@@ -19,7 +19,7 @@ related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
@@ -47,7 +47,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
