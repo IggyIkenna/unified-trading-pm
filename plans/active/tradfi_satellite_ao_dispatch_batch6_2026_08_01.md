@@ -485,9 +485,16 @@ wake") — this registers the background job with the harness as an OWNED task, 
 `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (committed `deployment-service@cab7f2d`). Scratchpad:
 `/home/ubuntu/.claude-configs/orch-slot-11/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-11/de9e9cdd-eaf0-4210-a43e-575c4fe333fd/scratchpad`.
 
-- **NEXT ACTION (fresh session):** Check todo #2 checkbox first (watcher may have completed autonomously). If still
-  `[ ]`, check `kill -0 <watcher-pid>` from the run_in_background harness tracking. If dead, re-arm again with
-  `run_in_background: true` from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`.
+**Harness task**: `b9iintlzz` (started 06:32:40Z, poll 1 = 33 VMs). Output file:
+`…/de9e9cdd-eaf0-4210-a43e-575c4fe333fd/tasks/b9iintlzz.output`. Watcher log:
+`…/de9e9cdd-eaf0-4210-a43e-575c4fe333fd/scratchpad/es_opt_watcher.log`.
+
+- **NEXT ACTION (post-compact or fresh session):** (1) Check if todo #2 checkbox is `[x]` already (watcher may have
+  auto-completed). (2) If `[ ]`, check `b9iintlzz.output` file for completion status. (3) If watcher still running
+  (harness will notify on completion): wait for notification, then verify checkbox flip in git log. (4) If watcher
+  failed or no harness notification arrives: re-arm with `run_in_background: true` (Bash tool, no `nohup`/`&`) from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — set `SCRATCHPAD` to a fresh writable dir first. (5) Do
+  NOT re-arm if watcher is running — singleton lock race risk.
 
 ## Codex SSOTs
 
