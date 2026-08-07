@@ -68,10 +68,10 @@ source: >-
 
 # Infra satellite AO batch 3
 
-> **✅ ACTIVE + DISPATCHABLE (2026-08-02).** `status: active` since authoring; `assigned_vm` flipped `NA` → `planning`
-> 2026-08-02 (operator ruling, `ag_closeout_audit_infra_parked_2026_08_02.md` finding 7) to match sibling batches 1/2's
-> convention — this banner was stale (still said `draft`/`NOT dispatched` after the doc had already gone active,
-> compounding the separate `assigned_vm` gap). The remaining `[BACKEND] P3` todo is now genuinely AO-dispatchable.
+> **ARCHIVED 2026-08-07** — Both todos `[x]` done. `[SCRIPT] P2` todo 1: `unified-trading-pm@78a3740bf` (dry-run gate).
+> `[BACKEND] P3` todo 2: `agent-orchestrator@594aea342` (root-cause verdict on fleet git-health). Finalize twin archived
+> in same batch (`plans/archive/2026_08/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md`). G1 re-checked:
+> still gated by infra batch6's active base-service.sh claim. G3 already shipped: `deployment-ui@fecd67c` (2026-08-06).
 
 ## Why this batch is thin — and why it is the last one
 

@@ -336,11 +336,11 @@ taxonomy:
   duplicates `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s own todo — both that doc's annotation and
   batch1's archived Deferred section explicitly forbid drafting a competing todo here); **moved here 2026-08-06
   (/plan-reconcile ao)**: `git_health_not_clean_since_pinned_constant_2026_07_27.md` (2 of its 3 `[BACKEND] P3` todos
-  are already tracked as one combined todo in `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (active,
-  `assigned_vm: planning`), same "another doc's own already-owned todo" shape as the `orchestrator_planregen_prune...`
-  case just above — its 3rd todo is a genuine design-judgment fork (new field vs. hysteresis bugfix) that batch3's own
-  combined todo explicitly excludes from its bounded scope, so it was previously mis-bucketed under
-  "Credential/host-access gaps" below, which does not describe its actual blocker).
+  are already tracked as one combined todo in `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch3_2026_07_30.md`
+  (archived 2026-08-07, `assigned_vm: planning`), same "another doc's own already-owned todo" shape as the
+  `orchestrator_planregen_prune...` case just above — its 3rd todo is a genuine design-judgment fork (new field vs.
+  hysteresis bugfix) that batch3's own combined todo explicitly excludes from its bounded scope, so it was previously
+  mis-bucketed under "Credential/host-access gaps" below, which does not describe its actual blocker).
 - **Credential/host-access gaps** beyond a standard dev checkout:
   `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s optional leg.
 - **Newly-created (2026-08-01..08-03) docs**, each independently gated on a design fork or operator decision per their

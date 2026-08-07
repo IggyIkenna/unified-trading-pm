@@ -805,13 +805,6 @@ by hand._
   — Gated closeout for `infra_satellite_ao_dispatch_batch1_2026_07_26.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 25 of that plan's todos are done, so this can never dispatch early. Batch 1 was
   extracted from 17…
-- [`infra_satellite_ao_dispatch_batch3_2026_07_30`](./infra_satellite_ao_dispatch_batch3_2026_07_30.md) — Third
-  AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (2026-07-30). The tranche's
-  covering set is now real (batch1 active, batch2 active, both with gated finalize twins) and the same-day…
-- [`infra_satellite_ao_dispatch_batch3_finalize_2026_07_30`](./infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md)
-  — Gated closeout for infra_satellite_ao_dispatch_batch3_2026_07_30.md, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
-  scripts/quality_gates/check_finalize_plan_coverage.py, which is…
 - [`infra_satellite_ao_dispatch_batch4_2026_07_31`](./infra_satellite_ao_dispatch_batch4_2026_07_31.md) — Fourth
   AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode, 2026-07-31).
   Batch3's own 2026-07-30 audit recommended treating the tranche as having reached its stop-iterating condition;…

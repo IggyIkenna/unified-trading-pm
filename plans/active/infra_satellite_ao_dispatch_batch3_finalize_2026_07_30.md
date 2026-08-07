@@ -56,8 +56,9 @@ source: >-
 
 # Infra satellite AO batch 3 — finalize
 
-> **⚠️ STATUS: `draft`** — flips to `active` with its parent; `gate_on_depends: true` additionally keeps the dispatcher
-> from queueing this plan's todos until the parent's 2 todos are `[x]`.
+> **ARCHIVED 2026-08-07** — Both todos done. Parent batch (`infra_satellite_ao_dispatch_batch3_2026_07_30.md`) and this
+> finalize plan archived together. G1 re-check: still gated by infra batch6's active base-service.sh claim. G3 re-check:
+> already shipped by `deployment-ui@fecd67c`. Stop-iterating verdict re-confirmed. See Progress Log for full evidence.
 
 ## Todos
 
@@ -75,7 +76,7 @@ source: >-
       6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), not just a checkbox flip.
       **Done when**: each of the 4 extracted checkboxes is closed with a re-verified sha or explicitly left open with a
       re-confirmed reason, and each source doc's `status`/`assigned_vm` matches its actual residual.
-- [ ] [DOC] P2. **Re-check the parent's Deferred table, then archive the batch pair.** (1) Re-test the two
+- [x] ✅ [DOC] P2. **Re-check the parent's Deferred table, then archive the batch pair.** (1) Re-test the two
       ruled-but-gated clusters the parent recorded as still-blocked — G1 (`base-service.sh`/`base-library.sh`
       serialization, entry #36) and G3 (`DataStatusTab.tsx` sequencing, entry #35): if
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s `base-service.sh` sub-item and
@@ -103,3 +104,25 @@ source: >-
   `assigned_vm: NA`: gitignore doc has 2 open items (template reconciliation + gated VERIFY), git_health doc has 1 open
   item (field-design fork). Neither is archivable. Neither was archived.
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries) — finalize gate, code-free by design.
+- **2026-08-07 (slot 13) — todo 2 done. Both plans archived.** Deferred re-check (measured live, not assumed): **G1**
+  (`base-service.sh`/`base-library.sh` serialization): The two named blocking conditions are now met —
+  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s `[BACKEND] P3` is `[x]` done;
+  `ci_satellite_ao_dispatch_batch2_2026_07_29.md` is fully archived (todos 1 and 11 both `[x]`). However, a NEW active
+  claim exists: `infra_satellite_ao_dispatch_batch6_2026_08_02.md` has an open `[INFRA] P3` touching `base-service.sh`
+  (re-verified via `rg`). Under the serialized-resource ruling (one owning plan at a time), G1 remains **GATED** —
+  re-check once infra batch6's `base-service.sh` todo is done. **G3** (`DataStatusTab.tsx` `DATA_PIPELINE_SERVICES`):
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[INFRA] P2` part (B) is `[x]` done. No competing batch
+  claims on `DataStatusTab.tsx`. Re-checked live: `deployment-ui@fecd67c` (2026-08-06) already updated
+  `DATA_PIPELINE_SERVICES` with FOLD A names + strategy-service + ml-service — the G3 work is **already shipped**. No
+  follow-up needed. **Stop-iterating re-check**: `generate_ag_closeout_audit_candidates.py --tranche infra` now reports
+  47 members / 13 covering docs / 4 never-cited orphans (vs. 32/7/6 at 2026-07-30). All 4 new orphans assessed: (a)
+  `ci_pipeline_speed_and_cost_redesign_2026_08_05.md` — design plan, design-preference-gated; not batchable. (b)
+  `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` — actively BLOCKED
+  (event-timing/operation-gated); not batchable. (c)
+  `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md` — `[DESIGN] P2` requires a design
+  decision first; not batchable. (d) `self_hosted_runner_public_repo_revert_2026_08_05.md` — item 20 is measurement-only
+  (read billing metrics, update doc; no code change); borderline AO-eligible but gates on a "longer-window measurement"
+  — does not justify a batch4. Stop-iterating verdict **re-confirmed**: no new orphan with bounded code/plan-change work
+  has appeared. **6-step ritual**: (1) all deferred items tracked in batch1's Deferred section (batch1 at 1000-line hard
+  cap — G1 new gate noted here only); G3 already shipped; (2) archived banners added; (3) no codex contracts changed;
+  (4) no CLAUDE.md updates; (5) corpus-wide referrers updated below; (6) both plans moved to `plans/archive/2026_08/`.
