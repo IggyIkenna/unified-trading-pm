@@ -108,13 +108,11 @@ source: >-
 - **2026-08-01** — Drafted alongside batch3 (`/ag-closeout-audit cross-cutting`, autonomous, dispatch `agt-a5c7d6`, slot
   13). `status: active` from creation (no-double-gate finding); `gate_on_depends: true` holds every todo until batch3's
   8 todos are done.
-- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries). NOTE: this doc's own "Codex SSOTs"
-  section above cites `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` and
-  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — both paths are STALE (the two docs' actual
-  directories are swapped: the naming/conflict-check doc lives at `/codex/11-project-management/`, the
-  archival-discipline doc at `/codex/12-agent-workflow/`). `context_scope` above uses the CORRECTED, disk-verified
-  paths; the body line is left unedited per this pass's scope (frontmatter + Progress Log only) — flagging for a future
-  doc-body fix.
+- **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries). NOTE (CORRECTED 2026-08-07 by
+  /plan-reconcile, agt-c6e8c7): this doc's own "Codex SSOTs" section cites
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` and
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — both paths RESOLVE exactly as cited
+  (disk-verified); the earlier "swapped/stale" claim in this note was itself wrong and is retracted. No body fix needed.
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) -- finalize gate doc, code-free
   by rule; the "Codex SSOTs" body-line staleness flagged above is unrelated to the (already-correct) context_scope
   entries and remains a body-content fix outside this pass's scope.

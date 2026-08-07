@@ -263,10 +263,10 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
   (`Workflow`, 6 agents, one per never-cited candidate): **all 6 verdicted `exclude_cross_cutting`** — 2 fixed directly
   (see above, both drop-cross-cutting-keep-sibling-tag cases), 4 parked here (findings 1-4, each needs a tag ADDED that
   isn't present, i.e. real ownership by a different tranche). **Net result: zero genuine new cross-cutting orphans this
-  run** — no Phase 3 batch draft warranted (`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains
-  `status: draft`, still awaiting operator approval to dispatch — not flipped by this run per the "ASK BEFORE
-  CREATING"/never-auto-flip HARD RULE). **Ledger**: 5 new parked findings this run (4 from Phase 1 + 1 from the
-  Orthogonality check), 5 entries written above (1-5) — balanced.
+  run** — no Phase 3 batch draft warranted (`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains was
+  FLIPPED `status: active` 2026-08-06 (de1d795de); this entry predates that flip — corrected 2026-08-07). **Ledger**: 5
+  new parked findings this run (4 from Phase 1 + 1 from the Orthogonality check), 5 entries written above (1-5) —
+  balanced.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — fresh doc (filed today), same parked-findings-register class as
   its 2026-08-02 sibling; all 5 todos are cross-tranche retag+fold-in actions the OWNING tranche must execute per the
   skill's primary-owner rule, not this doc's write.

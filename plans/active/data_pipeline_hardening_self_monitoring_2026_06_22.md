@@ -33,7 +33,7 @@ related:
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 22
