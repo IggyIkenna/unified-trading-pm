@@ -91,6 +91,30 @@ Grace-set zero-checkbox docs: 0. finished-record / informational / ambiguous: 0 
 application in STEP 4/5; the standing register (`zero_checkbox_sweep_all_tranches_2026_07_31.md`) gets its two
 NEW/unclassified rows classified at apply time.
 
+## Mechanical adjudication (H5 result — pending STEP-4 verify)
+
+- **AG-closeout linkage: 6 REAL cefi orphans (P2 each), not checker artifacts.** 3 writable:
+  `issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md`,
+  `issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md` (both
+  `parent_epic: cefi_master`, related-edges all archived/codex), and
+  `issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md` —
+  **`locked_by: live-defi-rollout` → lock-protocol, operator-routed, NOT auto-fixed**. 3 same-tranche but in GRACE set
+  (deferred, filed): `issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`,
+  `issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`,
+  `issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` (related-edges all archived/codex). The
+  closeout family's own 2026-08-02 linkage-gap fix (aggregated_sources:776) added only 2 docs — these 6 are pre-existing
+  gaps it missed. Fix shape for writable ones: add family `related:`/body mention resolving to
+  cefi_consolidated_closeout_2026_07_18 / _aggregated_sources_2026_07_24.
+- **Terminal-status-archived: ZERO cefi hits confirmed** (sit_stamp=cross-cutting, sports_mtds=sports, omniroute=ao,
+  tradfi_batch2=tradfi — all read from frontmatter).
+- **Reference-path: ZERO cefi hits confirmed** in plans/active + issues (12 unique active-dir docs with dangling refs,
+  all sports/infra/cross-cutting/ao; scratch_scenarios_day1 format hits are asset_group-less scratch docs).
+- **Inventory orphans (8): exactly 1 cefi-tagged** —
+  `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02_finalize.md` (P3, real: mtds_mdps_master epic exists
+  but 0 refs to it) — **in GRACE set → deferred, filed**; fix = reference in owning epic.
+- Side-effect: H5's sanctioned inventory regen re-wrote
+  `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` (dirty, regenerable; left uncommitted).
+
 ## Contradictions
 
 <!-- routed + filed -->
