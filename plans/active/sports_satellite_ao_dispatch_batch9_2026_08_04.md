@@ -750,6 +750,26 @@ doc's `[SCRIPT]` P3 no-relaunch STOP is cleared.
   own inline `Source:` citation) — no single source path is appropriate per SKILL.md's dispatch-batch-coordinator
   exemption.
 
+### 2026-08-07 — P2 PLAYER_VALUES Transfermarkt backfill launched (slot 14)
+
+VM `tm-backfill-20260807-233040` (SPOT e2-standard-8, `asia-northeast1-c`) launched 2026-08-07T23:30:40Z via
+`bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`.
+All 4 tarballs confirmed fresh at launch time.
+
+**Status at pre-compact (2026-08-07T23:36Z):** VM RUNNING. GCS log at
+`gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260807-233040/run.log` shows:
+
+- Service started, PLAYER_VALUES+TRANSFERMARKT filters applied
+- `TRANSFERMARKT short-circuit: skipping orchestrator for date=2025-09-01` — skip-fresh working correctly (captured
+  dates skipped, only `attempted_failed` cells re-attempted)
+- 502 retry from `transfermarkt-football-data-api.p.rapidapi.com` in progress (attempt 1/10, backoff 3.0s)
+
+**Next step after VM completes (exit_code=0):** run manifest re-measurement to count PLAYER_VALUES `attempted_failed`
+cells in 2025-09-01..2025-11-30 (baseline=256), then flip this todo's checkbox citing VM name + measurement result.
+Measurement script pattern: 3-col read (`date`, `data_type`, `capture_status`) from
+`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, filter
+`data_type==PLAYER_VALUES AND date∈[START,END]`. Run via `run-bounded-analysis.sh` per memory-bounding rule.
+
 ## Codex SSOTs
 
 - `/cursor-configs/skills/ag-closeout-audit/SKILL.md` — the full Phase 0-3 procedure this batch executes.
