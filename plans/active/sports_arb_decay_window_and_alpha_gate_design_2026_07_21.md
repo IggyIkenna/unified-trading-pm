@@ -176,3 +176,4 @@ must map into, not invent a parallel "other" bucket for), `/codex/04-architectur
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped the parent epic for the
   `SportsArbDutchingEngine` source path the doc's own "existing building blocks" section names as required grounding.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 8 open items, all genuine unblocked design/build work.

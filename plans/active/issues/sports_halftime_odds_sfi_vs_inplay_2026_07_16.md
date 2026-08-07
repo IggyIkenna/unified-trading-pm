@@ -272,3 +272,5 @@ already-fixed-but-unflipped** — every one is genuinely still open.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — open-item count updated 3->2 (the blank-fixture_id item verified
+  fixed today); 2 dependency-blocked items remain.

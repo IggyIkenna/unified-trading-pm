@@ -341,3 +341,4 @@ it's titled after never consults the manifest) is unchanged today.
   follow from the code shape, not from plausible-but-untrusted measurements alone.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is an operator question.

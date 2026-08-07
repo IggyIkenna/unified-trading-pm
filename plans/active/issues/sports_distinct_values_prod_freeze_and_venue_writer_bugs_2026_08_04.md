@@ -373,3 +373,5 @@ confirming before scoping a re-stamp for it.
 **This doc's scope is fully resolved** — the sports distinct-values panel is 0/0/0/0 non-canonical across every axis,
 verified live. The one remaining todo (`LC_TARBALL_FRESHNESS=enforce`) is an unrelated small process-hardening proposal
 that doesn't block or affect anything here; pick it up whenever, no urgency.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is genuine unblocked work.

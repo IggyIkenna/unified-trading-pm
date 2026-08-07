@@ -765,3 +765,4 @@ have moved; use the section index above to locate it.
   `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`, which now holds the gating todo for this
   doc's one genuinely open item (§E's `[CONFIG] P1`).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items: 1 dependency-blocked, 1 genuine work.

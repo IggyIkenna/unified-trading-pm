@@ -230,11 +230,11 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       market-tick-data-service, unified-api-contracts)
 
       **UNBLOCKED 2026-08-07 (operator)**: the quota-exhaustion blocker is resolved — "now we have 15m credits on the
-              api key so all good unblocked." Root cause of the 4-days-to-exhaustion still not independently tracked as its
-              own finding (unchanged from the note above). **Checkbox NOT flipped** — this todo's own done-when additionally
-              requires "a fresh poll cycle succeeding against the live key in production, not just a direct-API-call
-              verification," which has not been independently confirmed here; the api_football second-source half also
-              remains STRUCK/not-pursued. Whoever next touches this doc should re-verify a live poll cycle before closing.
+                      api key so all good unblocked." Root cause of the 4-days-to-exhaustion still not independently tracked as its
+                      own finding (unchanged from the note above). **Checkbox NOT flipped** — this todo's own done-when additionally
+                      requires "a fresh poll cycle succeeding against the live key in production, not just a direct-API-call
+                      verification," which has not been independently confirmed here; the api_football second-source half also
+                      remains STRUCK/not-pursued. Whoever next touches this doc should re-verify a live poll cycle before closing.
 
 - [ ] [INFRA] P3. **CORRECTED 2026-07-29 (was: "build `launch-mtds-live-sports.sh` +
       `launch-mdps-features-live-sports.sh`" — 2 new per-asset-group scripts from scratch)** — `launch-mtds-live.sh`
@@ -339,3 +339,5 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   the actual remaining blocker doc (MDPS/features live-launcher exec-dispatch) + its target script + the sibling
   live-availability plan, since 2 of the 3 remaining open todos trace back to those.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items: 1 genuine work, 2 dependency-blocked, 1 operator
+  question.
