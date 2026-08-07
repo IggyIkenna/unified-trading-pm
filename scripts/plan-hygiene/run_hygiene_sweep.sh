@@ -116,6 +116,16 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Finalize-plan coverage (staged plans)" \
       || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion (task_template.md §4)"; PF=$(( PF + 1 )); }
+    # Terminal-status-archived, --only-scoped (2026-08-07): a staged doc that's
+    # status:resolved/complete/etc with all todos done but still physically under
+    # plans/active/[issues/] is unconditionally wrong regardless of the corpus-wide
+    # ratchet baseline below — no need to wait for the full sweep to catch a doc
+    # THIS commit is creating/leaving unarchived. Same blast-radius-safe pattern as
+    # finalize-plan-coverage above (--only, no baseline math, a pre-existing
+    # unrelated violation elsewhere in the fleet never blocks this commit).
+    python3 "$SCRIPT_DIR/check_terminal_status_archived.py" --quiet --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Terminal-status-archived (staged plans)" \
+      || { echo "  ❌ A staged plan/issue doc is terminal-status but not archived — git mv it to plans/archive/[issues/] (see plan-completion-and-archival-discipline.md)"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
