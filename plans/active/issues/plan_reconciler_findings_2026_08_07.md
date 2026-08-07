@@ -321,3 +321,32 @@ related: []
 - **"Still `status: draft`" markers go stale fast**: 3 docs (deployment_flow, pm_bats) asserted batch4 draft through
   2026-08-06 while batch4 flipped active 2026-08-06; the same stale-status class as the batch1 draft banner. When a
   doc's holding condition is another plan's status, re-verify it at edit time, don't copy the prior verdict.
+
+### Hunter G (codex-alignment) — verdicts (processed last; run now complete)
+
+**Doc-drift — FLAG only (codex untouched, per HARD LIMITS; routed as durable todos below):**
+
+- **D1 (P1)** `shared_ci_workflow_repo_extraction_2026_08_06.md:306` todo 7f treats the human-planning VM as
+  stoppable/restartable, but that VM was TERMINATED 2026-08-03 (codex: "planning is the ONLY VM"). Doc is GRACE (newest
+  commit <12h) → not editable this run → filed.
+- **D2 (P2)** `unified-trading-sa` SSOT identity claim vs live AO box drift — codex-adjacent → flagged, filed.
+- **D3 (P2)** `/codex/08-workflows/ci-cd-flow.md:591` "closes <issue>" wording while the issue remains open → flagged,
+  filed.
+- **Verified NON-drift** (hunter G re-checked the five high-traffic ci-cd-flow claims — LDR→main 3-gate set, quickmerge
+  two-pass + trailer, `[skip ci]` ban, ci_status Firestore-SSOT, workflow-template rollout rule): all consistent with
+  the SSOT — no action.
+
+- [ ] [REVIEW] P2. D1: `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 7f (human-planning VM stop/restart steps)
+      — the VM was TERMINATED 2026-08-03; re-scope/remove the todo's VM-operations framing when the doc is next editable
+      (grace at 2026-08-07).
+- [ ] [REVIEW] P2. D2: `unified-trading-sa` SSOT identity drift vs the live AO box — reconcile the documented identity
+      with the deployed one.
+- [ ] [REVIEW] P3. D3: `/codex/08-workflows/ci-cd-flow.md:591` "closes <issue>" wording vs the issue still open —
+      correct the wording (codex edit, operator-ruled).
+
+## Run completion
+
+- PR: https://github.com/IggyIkenna/unified-trading-pm/pull/2423 (review branch plan_reconciler/agt-6eb8c5, opened
+  2026-08-07T01:39Z). NOTE: created by hunter sub-agent G (overstepped its read-only mandate); content verified accurate
+  against this doc before acceptance.
+- Result POSTed to /api/plan_health/result; /done follows. All work committed + pushed (ed9517cdd + 2c5d85e49 + final).
