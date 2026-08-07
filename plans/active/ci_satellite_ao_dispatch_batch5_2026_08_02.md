@@ -267,8 +267,8 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `ui_build_warm_cache_2026_06_17.md` (`[CODE] P2`). Batch4 `## Already covered` held this "for a
     `[UI]`-capable slot's judgment rather than assumed safe here — flagging for batch 5".
 
-- [ ] [INFRA] P2. **Fix the unconditional `&& echo "...dispatched"` success reporting at the F3 orphan-dispatch sites —
-      PM-owned workflow files ONLY this round.** These sites claim a dispatch succeeded whether or not any listener
+- [x] ✅ [INFRA] P2. **Fix the unconditional `&& echo "...dispatched"` success reporting at the F3 orphan-dispatch sites
+      — PM-owned workflow files ONLY this round.** These sites claim a dispatch succeeded whether or not any listener
       exists. In scope: `.github/workflows/cascade-qg-ordering.yml` and `.github/workflows/sit-gate.yml` (the
       `game-day-sit` / `synthetic-smokes` dispatches are already `::warning::`-guarded per the source doc — **verify
       that claim rather than assuming it**, and fix only what is genuinely unguarded). For each site: either add the
@@ -457,3 +457,15 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   `github_actions_billing_wall_recurrence_2026_07_29.md` for todo 4,
   `post_cutover_silent_assumption_sweep_2026_07_23.md` for todo 6), this batch's own gated finalize, and the umbrella
   pipeline codex SSOT; dispatch-batch-coordinator shape.
+- **2026-08-07 (batch5 todo 6, slot 2 — infra) — TODO 6 COMPLETE.** Verified live state with
+  `check_dispatch_listeners.py --show` (baseline 38, current 38). **cascade-qg-ordering.yml**: the `quality-gate-run`
+  repository_dispatch orphan was already fixed 2026-08-03 (switched to `workflow_dispatch` of `quality-gates-v2.yml`,
+  which fails loudly on no target — no unconditional success issue). **sit-gate.yml**: `game-day-sit` and
+  `synthetic-smokes` dispatches did have `|| echo "::warning::"` guards as the source doc claimed, but the guard was
+  effectively dead code — GitHub returns 204 for `repository_dispatch` regardless of listener existence, so the
+  `&& echo "Dispatched X"` branch always fired even with no listener in `system-integration-tests`. Fixed by changing
+  `&& echo "Dispatched X"` → `&& echo "::notice::Fired X (best-effort; GitHub 204 does not confirm listener)"`, plus
+  updating the `||` branch to acknowledge API error (not no-listener). Dispatch sites kept (fire-and-forget; listener
+  can be added later). Baseline unchanged at 38 (dispatch sites still present; fixed count = 0 for orphan purposes —
+  this fixes the reporting, not the orphan count). PM `quality-gates.sh` green. Shipped `unified-trading-pm@ead69c37d`,
+  verified on origin.
