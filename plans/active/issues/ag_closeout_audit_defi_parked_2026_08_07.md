@@ -29,6 +29,9 @@ source: >-
   ag_closeout_auditor scheduled run 2026-08-07 (tranche=defi, slot 7, DISPATCH_ID=agt-6f12db)
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # ag-closeout-audit defi parked findings — 2026-08-07
