@@ -174,8 +174,10 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
       instrument) — this is a MERGE, not a blind move, because the split-brain means both sides can hold the same atom.
 - [ ] [DATA] P1. Re-partition LIGHTER-ZKSYNC `ohlcv_1m` under `batch_tardis` on days < 2026-04-17 → `batch_lighter_api`
       (20 sampled), same de-dup requirement. Leave `derivative_ticker` under `batch_tardis` ALONE — it is correct.
-- [ ] [DATA] P2. Quarantine PACIFICA-SOLANA (13 sampled, 265 census-wide): no valid lane, no catalogue rows, venue
-      culled. Register in the quarantine set so fail-hard can be enabled around it.
+- [x] ✅ [DATA] P2. Quarantine PACIFICA-SOLANA (13 sampled, 265 census-wide): no valid lane, no catalogue rows, venue
+      culled. Register in the quarantine set so fail-hard can be enabled around it. **DONE (flipped 2026-08-07,
+      plan_reconciler) — unified-api-contracts@989e9d16 on origin (ancestor-verified); `quarantine.py` carries the
+      PACIFICA-SOLANA ResolutionEvidence (10 hits).**
 - [ ] [DATA] P1. Find the WRITER that stamped `batch_tardis` on a non-Tardis venue and fix the derivation at source,
       before any re-partition — otherwise the next capture re-creates the mislabel. Start from the UTL
       `_VENUE_OVERRIDES` map that `PipelineMode` cites for ASTER / HYPERLIQUID / EXTENDED-STARKNET.

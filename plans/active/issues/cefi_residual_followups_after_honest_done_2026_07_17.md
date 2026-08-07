@@ -48,7 +48,7 @@ related:
   ]
 created: 2026-07-17
 author: unknown
-last_updated: 2026-07-30
+last_updated: 2026-08-07 # reversal banner + residual-#3 annotation + :422 un-tick (plan_reconciler)
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -77,6 +77,13 @@ context_scope:
 ---
 
 # CeFi residual follow-ups after honest-done close-out
+
+> **⚠️ 50.79% ACCEPTANCE REVERSED 2026-07-18 (banner added 2026-08-07, plan_reconciler)**: the "honest-done" framing
+> below rests on the 2026-07-17 accept-50.79% decision, which was REVERSED by the ruling in
+> `cefi_consolidated_closeout_2026_07_18.md` :222-224 — the ~350x throughput-collapse code bug (not a physical N=1
+> ceiling) made the gap fillable; Track-2 backfill resumed (VM 2026-07-27) and coverage is re-opened. The
+> `N=1 Tardis ceiling ≈ 1.8 years` premise in the context block below is superseded — read the closeout + track2
+> checkpoints for the current numbers.
 
 > **Context**: `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` closed at honest-done on 2026-07-17 —
 > operator chose **accept current coverage** (50.79%, denominator COMPLETE, the 2,892,108-cell gap honestly-labelled
@@ -168,7 +175,9 @@ tick bytes).
 **Manifest raw remainder (C) is NOT purely delisted debris:** dominated by BYBIT (278,427), OKX-FUTURES (116,742),
 OKX-SWAP (21,403), BINANCE-FUTURES (16,272) — includes ACTIVE majors (BYBIT `BTCUSDT`/`ETHUSDT`) left raw by the
 relabel's 297-ambiguous-pair exclusion. Plus live double-keying: same instrument under `…:BTC-USDT@LIN` (137,985) +
-`…:BTC-USDT` no-marker (221,388) + bare-wire — these do not join. Residual #3 (10,368-row eu-twin) still OPEN.
+`…:BTC-USDT` no-marker (221,388) + bare-wire — these do not join. Residual #3 (10,368-row eu-twin) still OPEN. **—
+RESOLVED 2026-07-27 (annotated 2026-08-07, plan_reconciler): the eu-twin was among the 28,755 rows dropped by the final
+apply (8,778,675 rows processed, 0 residual — todo 4, :516-529, DONE 2026-07-27).**
 
 ## Operator decisions (2026-07-17, AskUserQuestion)
 
@@ -419,7 +428,10 @@ pairs stay honest-unresolved (reported, never guessed).
       `CanonicalParquetReader` → inherits D3, REDEPLOY REQUIRED — not named in the blueprint). **VERIFIED OUT (3)**:
       ml-service (0 `raw_tick` refs), batch-live-reconciliation-service (0 refs), strategy-service runtime
       (`asset_group="defi"` hardcoded). Evidence in the Progress Log.
-- [x] [BACKEND] P0. **DEPLOY the reader bridge to all 4 in-scope consumers** — already covered by
+- [ ] [BACKEND] P0. **DEPLOY the reader bridge to all 4 in-scope consumers** — **UN-TICKED 2026-08-07 (plan_reconciler):
+      checkbox falsely ticked while its own text says STILL OPEN; the spun-out follow-up (archived
+      `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 1) records sub-item 1 (reader-bridge deploy) as
+      "remain[ing] open exactly as originally scoped — genuinely gated, not attempted" (:118-125).** already covered by
       /plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md todo 1 (see that doc for execution) —
       the D4 GCS cutover cannot run until every one carries it (the drain stops WRITERS only; readers keep running
       against renamed/rewritten objects). Includes an **execution-service redeploy** even though it needs no code

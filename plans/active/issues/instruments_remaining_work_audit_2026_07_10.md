@@ -160,12 +160,13 @@ Real code fixes / features needed (not backfills, not pure doc drift).
    yet executed.
 
 3. **Full MTDS + instruments-service adapter smoke test — 59 real bugs**
-   `plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md` Master record, 12 open todos: P0 crash
-   risks (Deribit live-WS misclassification, Polymarket `book_snapshot_5` schema crash), P1 fixes (OKX/Bybit margin-type
-   mislabeling, VENUS/BENQI/ RADIANT/EULER_V2 orchestrator wiring, Curve factory-pool undercount), several pending
-   operator decisions (GMX V2 coverage — **moot, GMX removed platform-wide 2026-07-25, see
-   `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`** —, IDLE/JITORESTAKING/SYMBIOTIC/KARAK empty-feed
-   acceptance).
+   `plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md` Master record, ~2 of 13 open (corrected
+   2026-08-07, plan_reconciler — was "12 open todos"; the headline-4 note above confirms both P0 crash risks fixed,
+   Deribit @c55c1509 + Polymarket @42ce2de3/@f4a118be): P0 crash risks (Deribit live-WS misclassification, Polymarket
+   `book_snapshot_5` schema crash), P1 fixes (OKX/Bybit margin-type mislabeling, VENUS/BENQI/ RADIANT/EULER_V2
+   orchestrator wiring, Curve factory-pool undercount), several pending operator decisions (GMX V2 coverage — **moot,
+   GMX removed platform-wide 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`** —,
+   IDLE/JITORESTAKING/SYMBIOTIC/KARAK empty-feed acceptance).
 
 ### P1
 

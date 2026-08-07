@@ -31,6 +31,8 @@ tags: [data-pipeline, docker-image, stale-image, cloud-run, cefi, dp-fetch-009, 
 related:
   [
     /plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 created: 2026-07-30

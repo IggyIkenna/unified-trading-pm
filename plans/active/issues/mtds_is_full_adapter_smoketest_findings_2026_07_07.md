@@ -67,7 +67,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 7.2
-last_updated: 2026-07-12
+last_updated: 2026-08-07 # resolution banners + refresh (plan_reconciler)
 supersedes:
 superseded_by:
 depends_on:
@@ -108,9 +108,11 @@ Most venues/dimensions are WORKS-NOW. Standout non-working ones: FLUID lending_i
 oracle_prices/apy always fabricated (1.0/0.0, never a real call); GMX perp_funding always synthetic (native funding
 schema fails silently, 100% of rows are OI-imbalance-derived, not real); GMX liquidations always fails (schema mismatch,
 recorded as honest zero — indistinguishable from real absence); DRIFT perp_funding dead endpoint; HUOBI-FUTURES fully
-unenumerable in production (raw data confirmed working when called directly — pure wiring gap); ICE/CBOE INDEX
-data_types fail silently (routed to Databento instead of Yahoo, empty with no error); POLYMARKET book_snapshot_5 crashes
-the entire date's capture (schema mismatch, uncaught).
+unenumerable in production (raw data confirmed working when called directly — pure wiring gap) — **RESOLVED 2026-07-12
+(banner added 2026-08-07, plan_reconciler — wiring fixed; see the doc's todo list)**; ICE/CBOE INDEX data_types fail
+silently (routed to Databento instead of Yahoo, empty with no error); POLYMARKET book_snapshot_5 crashes the entire
+date's capture (schema mismatch, uncaught) — **FIXED (banner added 2026-08-07, plan_reconciler):
+unified-api-contracts@42ce2de3 + market-tick-data-service@f4a118be (schema fix); see todo list**.
 
 ## 3. Full bug list (59 items, grouped by cluster, priority-tagged)
 

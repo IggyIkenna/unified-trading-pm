@@ -22,6 +22,8 @@ related:
   [
     /plans/archive/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-02
