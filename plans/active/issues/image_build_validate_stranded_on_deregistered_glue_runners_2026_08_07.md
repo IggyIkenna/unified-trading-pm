@@ -121,3 +121,35 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
   chase — this is that doc's 4th layer, filed separately per its own todo #3 rule). Did NOT chase the "other reusable
   workflows might have the same pattern" question further in this session (see open todo 1) to keep this converging on
   the immediate blocker; flagged for a dedicated follow-up sweep instead.
+- **2026-08-07 ~08:35-08:50 UTC**: fleet-wide sweep for other promotion PRs stuck on this same symptom (dispatched agent
+  task, not the open todos above — a same-day mechanical retrigger, not new tracked work). Confirmed the fix is live on
+  `unified-trading-ci@main` (`5bbc277` at `2026-08-07T06:49:24Z`, all 3 jobs `runs-on: ubuntu-latest`). Checked every
+  open `chore(promote): LDR → main` PR across every `ldr_main` repo in `workspace-manifest.json`
+  (`unified-trading-library`/`instruments-service` excluded — separate agent owns a different provenance-gate issue on
+  those two).
+  - `batch-live-reconciliation-service` PR #315 (queued since `06:35:37Z`, predates the fix) — **self-healed, no manual
+    action needed**: the fleet's own `uts-ci-poller[bot]` closed #315 + its head ref at `08:28:49Z`, a short-lived #316
+    also got closed at `08:37:24Z`, and a fresh #317 (created `08:37:27Z`) merged clean at `08:37:51Z` with
+    `validate / GCP Cloud Build` passing in 14s on a GitHub-hosted runner — the stale-PR-recycle cycle re-dispatched the
+    check against the now-fixed workflow on its own before I intervened.
+  - `market-data-processing-service` PR #603 (queued since `05:30:44Z`, predates the fix) — **still stuck, no
+    self-heal**; applied the identical #347 recovery (verified via `gh pr view 347 --json commits`: an empty,
+    tree-identical `git commit --allow-empty` pushed directly to the PR branch, not a quickmerge/code change). Pushed
+    `5bbd18ed` to `promote/market-data-processing-service/5891de922ef6`. Result: `validate / GCP Cloud Build` flipped
+    `pending` → `pass` (14s, GitHub-hosted runner) within seconds; the retrigger also re-ran the full QG slice (expected
+    side effect of a new commit), which came back clean. `mergeStateStatus` remained `BLOCKED` only on
+    `sit-gate/fleet-green` not yet having reported for the new commit (its own 15-min cadence) — not this symptom.
+  - `strategy-service` PR #501 — not stuck: its `validate / GCP Cloud Build` check ran and passed at
+    `2026-08-06T22:41:33Z`, inside the broken window (`f20c59f` extraction `04:18:31Z` → `5bbc277` fix `06:49:24Z`),
+    landing on runner `glue-ip-172-31-3-59-1` — at least one glue runner was evidently still transiently reachable
+    during part of the "zero runners" window, which is why some PRs got lucky and others hung forever. No action needed.
+  - `client-reporting-api` PR #654 (created `08:10:53Z`, after the fix) and `deployment-ui` PR #480 — not affected:
+    neither ever triggered `image-build-gate.yml` for their PR branch (no run exists at all — path/job-condition
+    dependent, `deployment-ui` is Vercel-deployed and doesn't build a Cloud Build image); their `BLOCKED`/`DIRTY` states
+    trace to unrelated causes (a real merge conflict on #654; `sit-gate/fleet-green` cadence on #480). Also noted for
+    the record: `validate / GCP Cloud Build` is **not** in any of these repos' native branch-protection
+    `required_status_checks` ruleset (only `Quality Gates (…) / quality-gates-v2` + `sit-gate/fleet-green` are) — it
+    still matters because the fleet promote automation and the downstream deploy chain (per the alerting-service layer-4
+    chase) treat it as a hard gate even where GitHub's ruleset doesn't.
+  - Full sweep covered all 20 remaining `ldr_main`/other repos in the manifest with zero other open `chore(promote)` PRs
+    at sweep time.
