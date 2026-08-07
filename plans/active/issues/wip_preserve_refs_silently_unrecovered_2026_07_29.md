@@ -172,18 +172,13 @@ closing the "then what" gap:
       carries zero refs with content not on `origin/live-defi-rollout`, satisfying the done-when for THIS host; the
       sibling `[SCRIPT] P1` daily-scheduled-job todo above is what runs this same script on every OTHER host going
       forward.
-- [ ] [SCRIPT] P1. **Add post-push verification to `quickmerge.sh` — and FAIL, not warn.** Operator ruling 2026-08-06.
-      Immediately after a successful push, assert `git merge-base --is-ancestor <pushed-sha> origin/<branch>` (re-fetch
-      first) and exit non-zero if it does not hold. **Verified 2026-08-06 that quickmerge does NOT do this today** — its
-      only ancestry checks are a pre-push early-exit guard (`scripts/quickmerge.sh:1472`), a sentinel check (`:1584`),
-      and a pre-stage-5 HEAD check (`:1779`); none confirms the push actually landed. **Why sha-ancestry is the right
-      oracle HERE specifically** (it is not, elsewhere — see the wolf-crying trap in the measurement section): at the
-      instant after the push you pushed that exact sha, so ancestry is exactly the claim being made. Cost is one fetch +
-      one O(1) check. **Why fail rather than warn**: the failure this prevents is a false `SHIPPED` log line, which is
-      strictly worse than a hard error — it makes everyone downstream believe work landed when it did not, which is
-      precisely how this doc's originating incident went unnoticed. A warning in a long quickmerge log gets scrolled
-      past. **Done when**: a simulated push failure (or a push to a branch that is then force-moved) makes quickmerge
-      exit non-zero rather than print SHIPPED. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **Add post-push verification to `quickmerge.sh` — and FAIL, not warn.** Operator ruling
+      2026-08-06. Immediately after a successful push, assert
+      `git merge-base --is-ancestor <pushed-sha> origin/<branch>` (re-fetch first) and exit non-zero if it does not
+      hold. **Shipped `unified-trading-pm@98b99afa2`** (`scripts/quickmerge.sh` lines 2152-2173: re-fetches
+      `origin/$BRANCH`, asserts sha ancestry, exits 1 on fetch failure OR non-ancestor; prints
+      `✅ post-push ancestry verified` on success). QG: exit 0; the new check ran and passed on its own push
+      (`98b99afa2 is an ancestor of origin/live-defi-rollout`). Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -214,6 +209,11 @@ closing the "then what" gap:
   passed. `WipPreserveSweepWatchdog` daemon runs daily (default `86400s`); subprocess-invokes
   `unified-trading-pm/scripts/dev/wip_preserve_sweep.py --apply --json`; logs activity events; integrated into
   `LoopSupervisor`.
+- **2026-08-07 (slot-2 infra, task wip_preserve_refs_silently_unrecovered-001 context-2)**: `[SCRIPT] P1` post-push
+  verification todo flipped `[x]` — `unified-trading-pm@98b99afa2` (`scripts/quickmerge.sh` lines 2152-2173). Re-fetches
+  `origin/$BRANCH` after push exits 0, asserts `git merge-base --is-ancestor HEAD origin/$BRANCH`, exits 1 on fetch
+  failure or non-ancestor. The check ran and passed on its own push
+  (`98b99afa2 is an ancestor of origin/live-defi-rollout`). All todos in this issue are now `[x]`.
 
 ## Measurement 2026-08-06 (`/plan-reconcile ao`, interactive) — the pattern is ACTIVE and far larger than filed
 
