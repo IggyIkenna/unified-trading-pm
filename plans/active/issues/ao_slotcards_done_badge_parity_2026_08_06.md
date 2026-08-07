@@ -21,9 +21,9 @@ created: "2026-08-06"
 author: unknown
 priority: P3
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
-assigned_role: frontend
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: ui_developer
 sequential: false
 depends_on: []
 locked_by:
@@ -47,3 +47,13 @@ context_scope: [agent-orchestrator/dashboard/src/layout.tsx]
 
 Low priority, cosmetic parity gap — `SlotTable` is the default `slotLayout` and already covers the operator's daily
 view. Pick up opportunistically, not urgent.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): RECLASSIFY → `planning`. Bounded, deterministic-outcome
+  UI parity task — reuses an existing helper (`latestDoneOutcomeBySlot`), a named second render site, and a stated
+  done-when (a vitest/Playwright case analogous to the existing `SlotTable` badge test). Conflict-check clear: only
+  other `SlotCards`/`DoneBadge` hit in the active corpus is the unrelated, already-shipped `ProviderBadge` feature
+  (`deepseek_claude_blended_provider_routing_2026_07_28.md`, agent-orchestrator@12ae7c2) — no active claim on this exact
+  fix. Also corrected `assigned_role` from `frontend` (not a real role — no `agents/frontend.md`) to `ui_developer` (the
+  live registry's TS/React dashboard role) and `execution_scope` to `orchestrator-agent` to match the `planning` flip.
