@@ -231,6 +231,54 @@ not urgent enough to block this campaign.
       FIXTURE_STATS past the SPOT storm; it needs an explicit operator check-in (dashboard's parked-tasks view now
       surfaces this task per `get_parked_tasks()`'s design intent) rather than relying on redispatch churn to notice.
 
+## Off-campaign follow-ups (vendor-completion audit, opened 2026-08-07)
+
+Not part of the 9-entity AF picture above — surfaced during the same session's parallel vendor-completion audit
+(weather/SFI/footystats/understat/transfermarkt) and tracked here only because that's where the narrative context
+already lives. Anyone picking this doc up cold should treat these as independent of the AF todos above.
+
+- [x] ✅ [SCRIPT] P1. **Ship the FootyStats 50-league subscription-scope widening to UAC + purge stale China/Russia
+      manifest rows** — DONE 2026-08-07: `unified-api-contracts@7810dad61` + `instruments-service@bbba584ef` (registry +
+      tests) and `instruments-service@8548182b5` (purge script, operator-authorized, 4,458 rows removed, verified 0
+      remaining).
+- [ ] [SCRIPT] P1. **Verify the footystats backfill VM (`fs-backfill-20260807-100731`, scoped to the new 50-league
+      registry, no `--force`) reaches completion** — check `PROGRESS.json` / `run.log` for exit_code=0 and a
+      `last_completed_date` at or near today; relaunch (same command, no `--force`) if preempted. Re-run
+      `census_other_vendors_gap_2026_08_06.py`'s footystats rows once done to confirm the 18 newly-added leagues'
+      history actually filled in.
+- [x] ✅ [SCRIPT] P1. **Fix the SFI 89-row `attempted_failed` cluster** — DONE 2026-08-07: root cause was a mis-scoped
+      retry (targeted `features-service`'s derived `SFI_PROGRESSIVE_FEATURES` instead of `instruments-service`'s raw
+      `SFI_PROGRESSIVE_STATS`), not a persistent vendor failure. Corrected retry
+      (`deployment-service/scripts/vm/launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2026-07-20 2026-08-01`)
+      confirmed 89 → 0 `attempted_failed` for `source=soccer_football_info`.
+- [ ] [SCRIPT] P1. **Resolve the Transfermarkt 8-row `attempted_failed` cluster (`source=transfermarkt`,
+      `data_type=PLAYER_VALUES`)** — retry VM `tm-backfill-20260807-085636` is correctly scoped
+      (`instruments_service --sports-provider TRANSFERMARKT --sports-entity PLAYER_VALUES`, single day `2026-08-04`) but
+      as of 2026-08-07T10:19Z was hitting repeated live HTTP 502s from
+      `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` — a currently-degraded vendor
+      endpoint, not the original resolved one-off. Re-check whether it eventually succeeded (re-query manifest for
+      `source=transfermarkt, capture_status=attempted_failed`, should drop from 8); if it's still spinning identically
+      after an extended period, kill it and retry later once the vendor endpoint recovers (billing-waste judgment call —
+      502 is legitimately retryable, so this is a "vendor is down" situation, not a bug to fix in our code).
+- [ ] [OPERATOR] P2. **Decide how to fix `transfermarkt_player_values_data_discarded_2026_08_07.md`** (separate issue
+      doc, full details there) — the PLAYER_VALUES pipeline fetches real per-player market values from Transfermarkt but
+      discards them before writing to GCS; every "captured" row today contains zero value signal. Needs an operator
+      decision between: persist per-player values (biggest schema/storage change), persist just the team-level aggregate
+      (cheap), rename the entity to reflect what it actually stores (roster index, not values), or park it.
+- [ ] [OPERATOR] P2. **Scope the cross-vendor honest-absence/denominator-hardening generalization ask** — operator's
+      original ask (session transcript, not yet written up as its own doc): generalize the fixtures-based expected-set +
+      per-vendor league-filter + start-date-filter + not-in-season-filter denominator hardening (proven out for
+      footystats/transfermarkt this session) across ALL data vendors, not just sports; introduce/formalize an "outside
+      range" manifest classification distinct from `empty_confirmed`; purge manifest rows accordingly; document as a new
+      general codex SSOT (sports as the worked example). Explicitly NOT started — needs proper scoping with the operator
+      before any implementation, per the operator's own instruction that this needs design input.
+- [ ] [SCRIPT] P2. **Bake vendor-completion/attempted_failed/honest-absence audit checks into a daily AO run** —
+      operator asked (repeated twice this session) for the checks done ad hoc this session (per-vendor completion %,
+      attempted_failed clustering + root-cause, honest-absence-vs-generic-empty breakdown) to be added to either
+      `/data-pipeline-check-*` or `/data-pipeline-reconciliation` so AO runs them automatically every day. Operator left
+      the exact skill choice open — `/data-pipeline-reconciliation` (per-AG PROD-only four-surface audit) is the closer
+      fit structurally; `/data-pipeline-check-*` are lighter per-service smoke tests. Not yet started.
+
 ## Sequencing note
 
 All of these share the SAME `af-backfill-*`/`af-audit-*` singleton lock (one API-Football-consuming VM at a time, shared
