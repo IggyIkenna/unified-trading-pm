@@ -222,18 +222,14 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       `LEVEL_MAX_LOOKBACK_DAYS` / `earliest_allowed_start` / `assert_lookback_allowed`
       (databento_subscription_allowlist) + the manifest enumerator's floor-clip to the EXACT measured values. QG test:
       one day past the boundary rejected, one day inside allowed. Repo: unified-api-contracts.
-- [ ] [REFACTOR] P2. **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the
-      VIX cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via databento
-      XCBF.PITCH). Per delete-deprecated-code: (1) `rg -i barchart` workspace-wide (~30 files: SOURCE*PRIORITY tradfi
-      ohlcv_15m list, `SOURCE_MODE_CAPABILITY["barchart"]`, `EMISSION_LATENCY_MS_BY_SOURCE["barchart"]`,
-      data_source_continuity BARCHART_VIX*\* constants + SourceWindow, `_umi_yahoo`/tradfi adapters, IS enumerator,
-      multiple UAC tests, CLAUDE.md "VIX 15m: Barchart preload" note, docs); (2) VERIFY no live MVP cell is
-      source=barchart + the VIX path uses VX-futures-databento (repoint any straggler FIRST); (3) DELETE the
-      adapter/client/source-entries (remove code, no deprecation shim); remove `barchart` from every source enum /
-      SOURCE_PRIORITY / continuity registry; (4) UPDATE CLAUDE.md VIX note → VX-futures-via-databento; (5) update the
-      source-priority/parity tests (deleting a source must not break them). The new parity gate then finds NO
-      source=barchart-with-no-adapter (cross-check). If Barchart is load-bearing somewhere unexpected → STOP + flag.
-      Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
+- [x] ~~[REFACTOR] P2. **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).**~~ **SUPERSEDED — operator
+      ruling reversed this 2026-07-20, reconfirmed 2026-07-30
+      (`plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` "Final open todo (barchart
+      keep-vs-purge) CLOSED" entry): disposition is KEEP, no purge, no code change**
+      (`distinct_values_noncanonical_audit_2026_07_20.md`'s 47-agent classification ruled "quarantine-with-tracking";
+      live re-verification found the 9,119 BARCHART rows 100% `empty_confirmed`, a dead/harmless label from a retired
+      source, not an active drain). Durably recorded in `/codex/02-data/tradfi-databento-sourcing-ssot.md` (Barchart
+      section). Do NOT execute this todo's original delete instructions. — plan_reconciler agt-a2268a 2026-08-07.
 
 ## Progress Log
 
