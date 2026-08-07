@@ -48,6 +48,27 @@ Run journal + presentation doc. Sections appended as the run progresses.
 - Hygiene sweep: 4 hard failures (reference-path 83/81; existence 92/86; AG-closeout linkage 77/69;
   terminal-status-archived 4/0; archive-candidates 0), 8 inventory orphans, INDEX drift 21
 
+## Phase-0 mechanical feed (itemized, adjudicated subset)
+
+Adjudicated inline from the sweep report (2026-08-07 00:14 run) — cefi-tagged subset only:
+
+- **Terminal-status-archived (4, baseline 0): ALL NON-cefi** — sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06
+  (resolved), sports_mtds_backfill_vm_unscoped_fetch_oom_2026_08_06 (resolved),
+  omniroute_multi_provider_routing_evaluation_2026_08_03 (superseded),
+  tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25 (complete). Owned by sibling tranches; not touched here.
+- **AG-closeout linkage (77 vs baseline 69): cefi orphans = 7** — 4 in grace set (cefi_book_snapshot5…,
+  cefi_derivative_ticker_tardis_resolver…, cefi_liquidations_attempted_failed…, plan_reconciler_findings_2026_08_07
+  [this doc, expected]) + **3 writable**:
+  features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27,
+  mtds_cefi_docker_image_stale_5mo_2026_07_30,
+  mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02. Corpus-wide regression already tracked
+  in ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06 (grace).
+- **Reference-path ratchet (format 83/81, existence 92/86): ZERO violations in cefi-tagged plans/active docs** — the 39
+  plans/active hits are scratch_scenarios_day1 (defi) + sports/infra/ao/cross-cutting docs. Standing issue:
+  reference_path_convention_2026_07_23.
+- **Inventory orphans (8): cefi-tagged count TBD** — H5 mechanical adjudicator verifying.
+- **Archive candidates: 0** (0 locked / 0 archivable) — nothing to do this run.
+
 ## Flips verified
 
 <!-- appended as STEP 4/5 confirms -->
