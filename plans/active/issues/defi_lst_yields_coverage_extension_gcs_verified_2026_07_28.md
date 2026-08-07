@@ -256,6 +256,12 @@ structural limitation.
   reproduced the same verdict (resolved 08-03 as prior, lst_rates probe empty, "No lst_yields data available", rc=1).
   **The features backfill is complete for every day source data permits; the 4-day residual is tracked as a follow-up
   (upstream lst_rates capture gap, see Follow-ups).**
+- **2026-08-07 (slot-8, data_engineering)** — `[DATA] P2` CLOSED. `lst_rates` for 2026-08-01/02/03 confirmed present
+  upstream (50 blobs/day; pipeline caught up between 2026-08-06 and 2026-08-07). Re-ran lst_yields features compute for
+  2026-08-01..08-04 inline (bounded 4G RSS, ~88s, `--skip-dependency-check`,
+  `features_service --feature-family onchain --operation compute --mode batch --asset-group DEFI --feature-group lst_yields --start-date 2026-08-01 --end-date 2026-08-04`):
+  wrote 18 rows/day for all 4 days. GCS listing: **1,815** unique lst_yields day-partitions (target met; was 1,811 + 4
+  residual).
 
 ## Follow-ups
 
@@ -267,10 +273,12 @@ structural limitation.
       fix VM re-verified 08-04. Coverage is full for every day the upstream source permits; 08-01..08-04 are provably
       un-computable (upstream `lst_rates` capture gap for 08-01/02/03, see follow-up below). NOT the false-progress
       pattern the audit flagged — completion was verified against GCS, not assumed.
-- [ ] [DATA] P2. Backfill MTDS `lst_rates` capture for 2026-08-01/02/03 (0 `data_type=lst_rates` blobs upstream; a
-      capture gap, not a features defect) — then re-run the lst_yields compute for 08-01..08-04 (the 4-day residual
-      documented above). Repo: `market-tick-data-service` capture pipeline owner; features-side rerun is the same
-      idempotent `launch-features-vm.sh` shard once source exists.
+- [x] ✅ [DATA] P2. **DONE 2026-08-07 (slot-8, data_engineering)** — `lst_rates` for 2026-08-01/02/03 confirmed already
+      present upstream (50 blobs/day, real data, pipeline_mode=batch_onchain_subgraph; backfilled between 2026-08-06 and
+      2026-08-07 by the live pipeline). Re-ran `lst_yields` compute for 2026-08-01..08-04 inline (bounded 4G, ~88s,
+      `--skip-dependency-check`): 18 rows written per day. **GCS verified**: lst_yields day-partition count = **1,815**
+      (target met; was 1,811 + 4 residual days now filled). All 5 days 08-01..08-05 present in features bucket. Source:
+      this doc.
 
 > **2026-08-06 archive-candidate audit**: Single [x] [DATA] P1 todo claims DONE but its own body says the backfill
 > stalled and only the RESUME was LAUNCHED for the ~980 missing days — completion of that range was never verified.
