@@ -166,7 +166,7 @@ context_scope:
   `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`,
   `issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`,
   `issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`,
-  `issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`,
+  `archive/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`,
   `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`. Next: conflict-checked batch3 draft for the
   AO-eligible subset (triage workflow `wf_74a99101-69b` launched).
 

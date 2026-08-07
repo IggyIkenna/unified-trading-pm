@@ -21,7 +21,7 @@ summary:
   transfermarkt cache-hit design only writes on refresh-trigger days), with ZERO real data loss found — only a
   ~1,335-row (0.19%) residual left unexamined. The two-card audit-split design gap itself remains open. Operator
   decision 2026-07-14: leave code as-is, document only.'
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -71,6 +71,11 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — both todos closed: residual 1,335-row spot-check closed by reference to decision-16
+> investigation (unified-trading-pm@09ce04535); cross-bucket fix built and shipped (instruments-service@27e29a91).
+> Operator's "leave code as-is" ruling remains in effect; the design gap between the two cockpit cards is now documented
+> rather than fixed.
 
 # Sports phantom audit targets the reference manifest, not market-data
 

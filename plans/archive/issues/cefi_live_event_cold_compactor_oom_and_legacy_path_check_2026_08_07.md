@@ -18,7 +18,7 @@ summary: >-
   is anchored to a retired legacy direct-GCS live-tick surface — the active sink is the LiveEventFacadeSink (Pub/Sub),
   so the "no live_* rows in raw_tick_data" observation is expected under the event-log spine and should not be
   re-flagged as a fresh outage once the cold compactor is fixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -57,6 +57,10 @@ context_scope:
     deployment-service/terraform/gcp/live_event_log/compaction_job.tf,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — all 4 todos done and verified: OOM fix deployed (4Gi/2CPU, deployment-service@5e23a7b),
+> NDJSON parsing fix shipped (deployment-service@d5f850f), cold tier backfilled (28 parquet files confirmed across 7
+> dates × 4 data_types), and retired legacy path documented (unified-trading-pm@5db5fedba).
 
 # CeFi live capture is alive (warm tier healthy) but the cold compactor OOMs — raw_tick_data/live_* is a retired path
 
