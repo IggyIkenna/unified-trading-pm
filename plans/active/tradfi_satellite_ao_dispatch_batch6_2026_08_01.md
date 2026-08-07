@@ -670,6 +670,25 @@ via TaskStop (dual-watcher race risk). Heartbeat b7ya1ojo7 kept (bscbuhfi3 does 
   `run_in_background:true`, NO `&` inside. (4) If heartbeat dead (check b7ya1ojo7 or equivalent via TaskOutput): re-arm
   `scratchpad/watcher/heartbeat.sh` same way.
 
+### 2026-08-07T16:04Z — slot 3, session 16 — all tasks killed, re-armed (watcher run 3)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. All 4 harness tasks killed simultaneously at ~16:03Z** (bscbuhfi3, b7ya1ojo7,
+bbe677smy, bg6z344sq). Fleet at kill (bscbuhfi3 poll 12): **26 VMs** (was 36 at 15:27Z — draining ~10 VMs in 37 min,
+~0.27 VMs/min).
+
+Re-armed immediately:
+
+- Watcher: **`b8x6hz4a6`** (run 3, started 16:04:00Z, poll 1 = **24 VMs** — draining continues)
+- Heartbeat: **`bf1tvygme`** (started 16:04Z, 20-min intervals)
+
+Trend: 36 (15:27Z) → 26 (16:02Z) → 24 (16:04Z). Fleet consistently draining.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, use
+  `TaskOutput b8x6hz4a6 --non-blocking` to check liveness. **Do NOT use TaskList — always "No tasks found" for
+  background Bash tasks.** (3) If watcher dead: re-arm from committed
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) +
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
