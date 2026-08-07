@@ -20,7 +20,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-06-27
+last_updated: 2026-08-07 # was 2026-06-27 -- plan_reconciler agt-e7f024: fixed 2 stale self-referential line/date citations
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:
@@ -47,7 +47,8 @@ context_scope:
 > `predictions_master.md`" — so these are predictions-owned, NOT sports-owned.
 
 > **🔴 GATED ON `sports_master:Group E`** — the walk-forward run is BLOCKED until the sports half's FSS produces ≥95%
-> non-NULL features for the trained universe at the buckets (`sports_master` line 463
+> non-NULL features for the trained universe at the buckets (`sports_master` line 629 — corrected 2026-08-07,
+> plan_reconciler agt-e7f024, was a stale "line 463" citation
 > `[GATE] P0. Block predictions Group E until FSS produces ≥95% non-NULL features`). The sports half (288M ODDS_API row
 > migration + MDPS bucketing + FSS run) lives in `sports_master`; this plan picks up the moment that gate is GREEN.
 
@@ -67,9 +68,10 @@ downstream of the sports-half FSS feature production (the Group E gate).
       `backtest_v2/acceptance_metrics.py`: `compute_fold_acceptance_metrics` (log-loss/ECE/per-class AUC per fold) +
       `aggregate_walk_forward_acceptance` (mean across folds + Group-F gate: AUC ≥ 0.55 AND ECE ≤ 5%); 18 unit tests.
       Code + tests only — NOT yet run against real walk-forward output.
-- [ ] [ANALYSIS] P0. Run the acceptance-metrics computation above against the real walk-forward output (BLOCKED-ON line
-      53's walk-forward run, itself BLOCKED-ON `sports_master:Group E` gate — `plans/epics/sports_master.md` line 598,
-      still unchecked as of that epic's last_updated 2026-06-24).
+- [ ] [ANALYSIS] P0. Run the acceptance-metrics computation above against the real walk-forward output (BLOCKED-ON the
+      Model 2A walk-forward run above, itself BLOCKED-ON `sports_master:Group E` gate — `plans/epics/sports_master.md`
+      line 629, still unchecked as of that epic's `last_updated` 2026-07-12 — corrected 2026-08-07, plan_reconciler
+      agt-e7f024, was a stale "line 53"/"line 598"/"2026-06-24" citation).
 - [x] ✅ [SCRIPT] P0. Training-config sanity check: feature columns match the FSS schema, label leakage absent,
       walk-forward window correct. — ml-service@872acbb | Fixed: (1) `SPORTS_MODEL_2A_GRID.feature_groups` corrected
       from 15 invalid calculator-level names to `["derived_features","odds_features"]` (the two valid GCS path groups);
