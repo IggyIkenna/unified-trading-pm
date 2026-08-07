@@ -22,7 +22,7 @@ tags: [ci-cd, self-hosted-runners, i-o-starvation, capacity, performance, optimi
 related:
   [
     /plans/active/ci_vm_exposure_remediation_2026_08_06.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
     /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,

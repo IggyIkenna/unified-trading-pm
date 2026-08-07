@@ -39,7 +39,7 @@ tags: [ci-cd, cost, self-hosted-runners, github-actions, capacity, public-repos]
 related:
   [
     /plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-05
@@ -57,7 +57,7 @@ depends_on:
 context_scope:
   [
     /plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     scripts/workflow-templates/self-hosted-qg-repos.txt,
     scripts/self-hosted-runners/hosted-baseline.sh,
     scripts/workflow-templates/rollout-workflow-templates.sh,

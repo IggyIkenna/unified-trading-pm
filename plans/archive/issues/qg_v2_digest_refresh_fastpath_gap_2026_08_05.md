@@ -28,7 +28,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
     /plans/archive/issues/ldr_to_main_promote_churn_fix_verification_2026_07_27.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
   ]
 created: 2026-08-05
 author: unknown

@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
 tags: [quickmerge, test-failure, deployment-api, blocking]
-related: [/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md]
+related: [/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md]
 created: 2026-08-04
 author: unknown
 priority: P1

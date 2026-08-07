@@ -19,7 +19,7 @@ tags: [ci-cd, self-hosted-runners, capacity, swap, observability, concurrency, i
 related:
   [
     /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
     scripts/self-hosted-runners/github-glue-runner.slice,
     agent-orchestrator/scripts/install-resource-history-sampler.sh,

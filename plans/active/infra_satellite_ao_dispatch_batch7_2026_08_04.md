@@ -30,7 +30,7 @@ related:
     /plans/active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md,
     /plans/active/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
     /plans/active/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,

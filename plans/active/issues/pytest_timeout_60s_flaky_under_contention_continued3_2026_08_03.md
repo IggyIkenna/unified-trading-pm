@@ -489,11 +489,11 @@ cap, not ones a marker would push over); flagged for a future pass rather than r
   re-run of the test-impact-selector backtest**
   (`/plans/active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`). Re-ran `test_impact_backtest.py`
   against `features-service` now that the CI-runner fleet split
-  (`/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) has meaningfully reduced (not eliminated)
-  fleet contention — got a usable sample for the first time (5, up from 0) and all 5 flagged as "selector divergences"
-  (narrowed test set missed the actual failing test). Investigated each one's real CI log directly rather than trusting
-  the backtest's naive attribution: **all 5 show the identical `pytest-timeout` `+++++ Timeout +++++` marker this
-  doc-chain already tracks** — `test_numba_kernels.py`, `test_feature_touchup.py`, `test_momentum.py`,
+  (`/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) has meaningfully reduced (not
+  eliminated) fleet contention — got a usable sample for the first time (5, up from 0) and all 5 flagged as "selector
+  divergences" (narrowed test set missed the actual failing test). Investigated each one's real CI log directly rather
+  than trusting the backtest's naive attribution: **all 5 show the identical `pytest-timeout` `+++++ Timeout +++++`
+  marker this doc-chain already tracks** — `test_numba_kernels.py`, `test_feature_touchup.py`, `test_momentum.py`,
   `test_cross_timeframe_sanity.py` (the doc-chain's already-named test), and `test_anomaly.py` (all under
   `features-service`, 2026-08-03/04). **This is NOT a selector safety bug** — the selector correctly narrowed the test
   set based on the diff's actual content; these tests then separately, coincidentally timed out under load, unrelated to

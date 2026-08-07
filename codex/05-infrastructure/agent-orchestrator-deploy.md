@@ -11,7 +11,8 @@ asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: [orchestrator, infrastructure, aws, ec2, deployment, cloud-run, dns]
+tags:
+  [orchestrator, infrastructure, aws, ec2, deployment, cloud-run, dns, ci-runner-vm, ci-escalation-runner, glue-runner]
 related:
   [
     /codex/04-architecture/agent-orchestrator-overview.md,
@@ -19,7 +20,11 @@ related:
     /codex/05-infrastructure/launcher-script-ssot.md,
   ]
 created: 2026-05-19
-authoritative_for: [agent-orchestrator central API VM deploy + infra reference]
+authoritative_for:
+  [
+    agent-orchestrator central API VM deploy + infra reference,
+    CI-runner VM identity and split-off history (ci-escalation-runner-vm-1),
+  ]
 referenced_by:
   [
     /codex/04-architecture/agent-orchestrator-overview.md,
@@ -30,7 +35,7 @@ referenced_by:
 owner:
 last_reviewed:
 code_refs:
-last_updated: 2026-08-05
+last_updated: 2026-08-07
 author: ikenna-claude-subagent
 ---
 
@@ -61,7 +66,7 @@ author: ikenna-claude-subagent
 
 | Resource       | Value                                                                                                                                                                                                                                                                                                |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Instance       | `i-0c9b283b31d6b5ca7` — `m8i.4xlarge` (16 vCPU / 64 GB Intel Granite Rapids)                                                                                                                                                                                                                         |
+| Instance       | `i-0c9b283b31d6b5ca7` — `m8i.2xlarge` (8 vCPU / 32 GB Intel Granite Rapids)                                                                                                                                                                                                                          |
 | Region / AZ    | `ap-northeast-1` / `ap-northeast-1c`                                                                                                                                                                                                                                                                 |
 | Elastic IP     | `13.113.200.22` (allocation `eipalloc-07b7bfe509d63c477`)                                                                                                                                                                                                                                            |
 | OS             | Ubuntu 24.04 LTS, kernel 6.17                                                                                                                                                                                                                                                                        |
@@ -69,7 +74,7 @@ author: ikenna-claude-subagent
 | Listen         | `127.0.0.1:8765` behind nginx (`api.agent-orchestrator.odum-research.com` :443 with Let's Encrypt)                                                                                                                                                                                                   |
 | Workspace root | `/home/ubuntu/unified-trading-system-repos/`                                                                                                                                                                                                                                                         |
 | Slot worktrees | `.tabs/1..17/` (code-only ~3.7 GB each)                                                                                                                                                                                                                                                              |
-| Root EBS       | `vol-0b4f0237fa0f5cd0f` — `gp3`, 500 GB / 3000 IOPS / 125 MB/s baseline (raised from 300 GB 2026-07-27, see Disk hygiene below)                                                                                                                                                                      |
+| Root EBS       | `vol-0b4f0237fa0f5cd0f` — `gp3`, 700 GB / 16000 IOPS / 1000 MB/s provisioned (live-confirmed 2026-08-07 via `describe-volumes`; grown from the 300→500GB progression documented in Disk hygiene below)                                                                                               |
 | Cost           | ~$1/hr on-demand — **AWS credits do NOT reliably cover this** (re-confirmed 2026-08-03, live `aws ce get-cost-and-usage`: July 2026 real out-of-pocket cost $1,020, August 1-4 real cost $268 with only $0.01 credited — treat spend as real, not moot). Stop the instance when idle to halt compute |
 
 ### SSH access
@@ -133,13 +138,17 @@ Full root-cause + fix audit: `plans/archive/issues/orchestrator_spawn_tmux_silen
 This box previously ran BOTH the orchestrator role AND ~25 repos' worth of self-hosted GitHub Actions runner pools
 (`github-glue-runner*` systemd units) colocated on the same VM — the confirmed root cause of the fleet-wide CI capacity
 crisis (`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`: load average 25-65 on
-this box's 16 vCPUs). All 25 pools have now been migrated to a dedicated escalation VM (`i-042a6332509482556`,
+this box's 16 vCPUs). All 25 pools have now been migrated to a dedicated VM (`i-042a6332509482556`,
 `ci-escalation-runner-vm-1`, `c8i.4xlarge`, ap-northeast-1) — confirmed zero `github-glue-runner*` units remain active
-on this box (`/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`). **This box's own instance type is
-UNCHANGED** — still `m8i.4xlarge` per the table above; a planned downsize to `m8i.2xlarge` (now that it no longer
-carries runner load) is tracked in that same plan's todo 8 and is explicitly on operator hold pending fresh
-confirmation, not yet executed. Do not describe this box as still hosting the runner fleet, and do not assume the
-downsize has happened.
+on this box (`/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`). **Naming gotcha**:
+"escalation" in this box's NAME is unrelated to the agent-orchestrator's own `/api/escalations/active` (stuck-PR worker
+assignment, surfaced in deployment-ui's Repos-CI board via
+`deployment-api/deployment_api/routes/_repo_ci_escalations.py`) — the name is a holdover from this box's origin as an
+emergency overflow VM during the capacity crisis; its actual, current, sole job is hosting the fleet's self-hosted GHA
+workflow runners, nothing escalation-specific. **This box's instance type changed 2026-08-07** — downsized from
+`m8i.4xlarge` to `m8i.2xlarge` (8 vCPU / 32 GB) per that same plan's todo 8, after 24h of live usage data confirmed
+CPU/RAM headroom post-migration; operator-confirmed before execution. Do not describe this box as still hosting the
+runner fleet, and do not assume it is still `m8i.4xlarge`.
 
 ### Disk hygiene
 
