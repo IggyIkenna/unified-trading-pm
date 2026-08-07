@@ -343,6 +343,19 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 
 ## Progress Log
 
+- **2026-08-07 (ci-reconcile sweep, follow-on finding)** — This plan's runner deregistration (todo 21, DONE) left
+  `glue-runner-health-monitor.yml` (created 2026-08-06, after most of this plan's early phases) watching a pool that
+  will never come back — it paged CRITICAL every hour on a permanent, will-never-clear "0 online" condition. Also found
+  its `GET .../actions/runners` call had been 403ing 100% of the time on `secrets.GITHUB_TOKEN` (structural: the
+  `administration` scope it needs isn't grantable to the automatic token at all), which is WHY it took this long to
+  notice the pool was empty — the query itself was broken, not just alarmingly honest. Fixed the token
+  (`unified-trading-pm@f05e93d10a`, switched to the existing `GH_PAT` already used to register the pool) so the monitor
+  could see reality, confirmed reality is genuinely 0 registered runners (not a query-scope bug — verified
+  independently), then disabled its `schedule:` trigger (`unified-trading-pm@95cce3aa4`) since this plan already
+  established that state is permanent by design. `glue-pool-starvation-monitor.yml` (sibling, same now-retired pool) was
+  NOT touched — it isn't currently paging (nothing queues onto a pool nobody targets), lower priority, flagged here for
+  whoever next touches this plan to consider retiring for the same reason.
+
 - **2026-08-07 (interactive session)** — Closed todo 24 (see the todo's own entry for full detail): PM's ~40
   self-hosted-routed workflows reverted to `ubuntu-latest` (`unified-trading-pm@c8cd56251e`), live-verified green,
   runners deregistered. Only todo 20 (billing re-measure, P2, timing-gated) remains open in this plan.
