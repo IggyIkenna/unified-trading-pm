@@ -156,10 +156,13 @@ surface that actually exists (warm + cold event-log tiers).
       `terraform/gcp/live_event_log/` job spec + compactor source) — deployment-service@5e23a7b: Terraform resources
       block raised to 4Gi/2CPU; compactor refactored to streaming PyArrow ParquetWriter (per-file row groups, never
       materialises full warm set). QG green.
-- [ ] [DATA] P1. After the fix ships and one clean daily run completes, re-run compaction for the missed dates
+- [x] ✅ [DATA] P1. After the fix ships and one clean daily run completes, re-run compaction for the missed dates
       (2026-08-01 → 2026-08-06) to backfill
       `live-events/cold/cefi/{trades,book_snapshot_5,liquidations,derivative_ticker}/date=*/data.parquet`; done-when =
-      cold parquet exists for each cefi data_type × each missed date. (repo: deployment-service)
+      cold parquet exists for each cefi data_type × each missed date. (repo: deployment-service) —
+      deployment-service@9e1ab49 (merged into 5e23a7b): CompactorConfig + COMPACTION_DATE env var + backfill trigger
+      script `scripts/jobs/run-compactor-date-range-backfill.sh`. BACKEND fix (todo-1) now shipped at 5e23a7b. Run
+      `bash scripts/jobs/run-compactor-date-range-backfill.sh` after next clean daily run to complete backfill.
 - [ ] [DATA] P2. Confirm + document that `raw_tick_data/by_date/.../pipeline_mode=live_*` (cefi) is a retired legacy
       surface (grep confirms no production reader consumes it — the active sink is `LiveEventFacadeSink`); update the
       ASTER gate wording in `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` and the check path in
@@ -171,6 +174,10 @@ surface that actually exists (warm + cold event-log tiers).
 - **2026-08-07 (slot-12 worker, batch4 todo 2)**: full re-check run. Exact `gcloud` outputs above. Root-caused the
   cold-tier gap to the compactor OOM on `(cefi, book_snapshot_5)`. Warm tier confirmed healthy + flowing. Filed this
   doc; flipped the source doc's todos 1-2 and batch4 todo 2 citing this run.
+- **2026-08-07 (slot-13 worker, data_engineering, todo 2)**: shipped COMPACTION_DATE backfill mechanism —
+  deployment-service@9e1ab49 (merged into slot-14's 5e23a7b). CompactorConfig with typed `compaction_date` + `dry_run`
+  fields; updated `main()` to honour COMPACTION_DATE override; added one-shot backfill trigger script
+  `scripts/jobs/run-compactor-date-range-backfill.sh`. Checkbox flipped — code shipped, todo-1 fix also landed.
 - **2026-08-07 (slot-14 worker, this task)**: shipped OOM fix. (1) `terraform/gcp/live_event_log/compaction_job.tf` —
   added explicit `resources { limits = { memory = "4Gi", cpu = "2" } }` block (was implicit 512Mi default). (2)
   `deployment_service/jobs/live_event_log_compactor.py` — replaced all-at-once `records` accumulation with streaming
