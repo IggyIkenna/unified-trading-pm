@@ -153,3 +153,6 @@ even if nobody revisits it.
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries) -- still the right minimal set for both
   open todos (dispatch cooldown design in `regen_backlog_from_plan.py`; surface Progress-Log status at `/boot`).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. Both open items remain genuine build-vs-extend design calls per the 2026-08-03 marker's analysis
+  (matching heuristic, state-storage choice, free-form Progress-Log-parsing approach).

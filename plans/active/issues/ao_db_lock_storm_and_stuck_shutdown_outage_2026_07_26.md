@@ -422,6 +422,10 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   `server/autospawn.py` (`ensure_review_agents`, the already-fixed reference pattern a future fix should mirror); kept
   `tmux_pruner.py` (the confirmed second instance of the same anti-pattern) and both the original fix's archived issue
   doc and the background-loop architecture codex.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. Sole open item (Follow-ups: DB-lock-storm root-cause, DO-NOT-ARCHIVE guard) remains a genuine,
+  still-unresolved live-incident investigation ("genuine SECOND undiagnosed bug, or genuine extreme concurrent-write
+  contention" — not yet distinguished per the doc's own open question).
 
 ## Follow-ups
 

@@ -190,3 +190,6 @@ Two independent, complementary fixes — either alone helps, both together close
   carries a `<repo-name>/` prefix, e.g. `agent-orchestrator/server/...`; a bare `agents/worker.md` doesn't resolve from
   the workspace root, only from inside the PM repo itself). Fixed to `unified-trading-pm/agents/worker.md`, which
   resolves. Still 6 entries, no other changes.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. All 3 open todos remain in the fleet-wide worker-boot critical path the 2026-07-31 operator
+  directive (`unified-trading-pm@14478ca26`) routed to `execution_scope: local-only`.

@@ -461,3 +461,10 @@ default from an external reference.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. Of the 6 open items: 2 are operator-review pilots, 1 is a live-VM-only data check, 2 are
+  operator-credential items (one blocked on the other), 1 is a design-judgment CLI-support fix. Note (not blocking this
+  marker): this doc's `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` predates its own `created: 2026-07-28`
+  — the same bogus copy-paste-lock pattern this corpus already flags elsewhere (see
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s note on `ao_park_disposition_blocked_answer_no_follow_through`)
+  — flagged for operator awareness, not acted on here since this is a Progress Log append, not an archival action.

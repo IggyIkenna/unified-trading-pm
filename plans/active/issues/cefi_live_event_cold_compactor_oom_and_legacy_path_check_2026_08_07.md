@@ -339,6 +339,16 @@ surface that actually exists (warm + cold event-log tiers).
   tznqd(2026-08-01)/jskph(2026-08-02)/l9jxq(2026-08-03)/nwzrc(2026-08-04)/q8psv(2026-08-05)/45bvw(2026-08-06)/
   wfbbc(2026-08-07). Background completion detector armed (polls every 10 min, posts heartbeats). Projected cold Parquet
   peak: ~6–10 GB BytesIO — fits in 16Gi. Estimated completion: 21:30–23:30 UTC.
+- **2026-08-07 18:44 UTC (slot-11 worker, pre-compact audit #3)**: Fourth compaction triggered. Audit clean. Status: all
+  7 v6 executions still running at 18:44 UTC (25 min in), all returning empty completionTime from gcloud — none terminal
+  yet. PID 1136001 (nohup v2 detector, `trap '' HUP`) confirmed alive; `/tmp/v6_completion.txt` shows startup line only
+  (5-min sleep not yet elapsed, first iteration fires ~18:46 UTC). Both repos ahead=0, clean. Scratchpad files
+  (compactor_v5_monitor.sh, compactor_v5_monitor2.sh, v6_heartbeat_monitor.sh, v6_completion_detector.sh) all disposable
+  — regenerable, no committed doc references them. Resume instruction unchanged: check
+  `gcloud run jobs executions list --job=live-event-log-compactor --region=asia-northeast1 --limit=10` until all 7
+  SUCCEEDED, then `gcloud storage ls 'gs://central-element-323112-events/live-events/cold/cefi/**'` ≥28 files, flip P0
+  with evidence (deployment-service@ 454cccd9c), safe-doc-push, /done. Execution ids:
+  tznqd(01)/jskph(02)/l9jxq(03)/nwzrc(04)/q8psv(05)/45bvw(06)/ wfbbc(07).
 - **2026-08-07 18:38 UTC (slot-11 worker, pre-compact audit #2)**: Context compacted again. Pre-compact audit clean. Key
   finding: completion detector (PID 577519) died due to SIGHUP on context compaction — `sleep 600` got SIGHUP, bash ran
   all 36 loop iterations instantly → false "TIMEOUT: 6 hours" at iter=1. Jobs themselves are FINE: all 7 v6 executions
