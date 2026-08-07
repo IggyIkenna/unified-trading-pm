@@ -15,7 +15,7 @@ summary: >-
   respectively. This is a deliberately thin batch, and the audit's own conclusion is that a batch4 could not extract
   anything new: after these two land, every remaining orphaned infra doc's open work is PURELY non-batchable, which is
   the skill's explicit stop-iterating condition.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-3, plan-hygiene, tooling-safety, fleet-monitoring]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -54,7 +54,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
   ]
 supersedes:
 superseded_by:

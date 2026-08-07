@@ -53,7 +53,7 @@ context_scope:
     agent-orchestrator/server/routes/git_health.py,
     scripts/dev/slot-git-status-report.sh,
     agents/review.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
   ]
 drift_direction: advance-code
 depends_on: []

@@ -10,7 +10,7 @@ summary: >-
   source doc becomes archivable — both were partial carve-outs and both keep judgment-gated todos at assigned_vm: NA —
   so this plan's main job is to flip accurately and then explicitly NOT archive, rather than to run the 6-step ritual on
   the sources. It does run the ritual on the batch pair itself.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, finalize, batch-3, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -42,7 +42,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
