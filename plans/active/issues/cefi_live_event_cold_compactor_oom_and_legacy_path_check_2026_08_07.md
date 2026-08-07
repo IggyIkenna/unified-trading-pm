@@ -339,6 +339,14 @@ surface that actually exists (warm + cold event-log tiers).
   tznqd(2026-08-01)/jskph(2026-08-02)/l9jxq(2026-08-03)/nwzrc(2026-08-04)/q8psv(2026-08-05)/45bvw(2026-08-06)/
   wfbbc(2026-08-07). Background completion detector armed (polls every 10 min, posts heartbeats). Projected cold Parquet
   peak: ~6–10 GB BytesIO — fits in 16Gi. Estimated completion: 21:30–23:30 UTC.
+- **2026-08-07 18:30 UTC (slot-11 worker, pre-compact audit)**: Context compaction triggered. Pre-compact audit clean:
+  no uncommitted changes, no dangling scratchpad references in active todos (the `/tmp/` refs in earlier Progress Log
+  entries are historical, not live pointers), no secrets. Scratchpad files (v6 monitors/detectors) are disposable —
+  running processes survive independently of file deletion. deployment-service@454cccd9c and PM@70f282771 both pushed
+  (ahead=0). **Resume instruction**: when completion detector exits (check `/tmp/v6_completion.txt`), run
+  `gcloud storage ls 'gs://central-element-323112-events/live-events/cold/cefi/**'` to verify ≥28 cold Parquet files (7
+  dates × 4 data types that have warm data), flip the P0 checkbox with evidence, ship via safe-doc-push, call /done.
+  Execution ids: tznqd(01)/jskph(02)/l9jxq(03)/nwzrc(04)/q8psv(05)/45bvw(06)/wfbbc(07).
 - **2026-08-07 ~15:30–15:40 UTC (slot-11 worker, data_engineering, continuation after third context-compaction)**: (1)
   TASK TIMEOUT BUG found: measured rate for the per-file-batching v3 executions (49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r)
   was ~9.5x real-time for book_snapshot_5 (86400/9.5=9095s=2.53h) + trades(~46min) + derivative_ticker(~45min) +
