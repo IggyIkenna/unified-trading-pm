@@ -23,9 +23,13 @@ related: [/plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md]
 created: 2026-08-06
 parent_epic: infrastructure_master
 source: conflict_resolver escalation agt-7e7e2c (fleet-bot promotion-conflict dispatch, 2026-08-06)
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.24
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -65,3 +69,16 @@ manual step for anyone who closes a promote PR outside the fleet bot.
 
 - [ ] [P3] fleet-bot orphan-ref sweep: delete `promote/<repo>/*` refs with no open PR (and not current PROMOTE_HEAD) in
       `ldr_to_main_fleet_promote.sh` — owner: LDR→main fleet bot maintainer (unified-trading-pm).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-07**: RECLASSIFY `assigned_vm: NA` → `planning` — never previously assessed (no prior
+  Progress Log entry); the single open todo (option A, the fleet-bot orphan sweep) is a bounded, worker-determinable
+  outcome with no open design call — add one sweep step to `ldr_to_main_fleet_promote.sh` (or its PM-only
+  `ldr-to-main-promote.yml` twin) deleting `promote/<repo>/*` refs with no open PR and not equal to `PROMOTE_HEAD`.
+  Conflict-check clear: grepped all 71 active `assigned_vm: planning` docs in `infrastructure_master` for
+  orphan-ref/`ldr_to_main_fleet_promote`/`promote/<repo>` overlap — several CI-pipeline plans reference the same script
+  for unrelated fixes (arm-failure tally, `sit_retry_cap` escalation, `SIT_VALIDATED` messaging), none claim this
+  specific orphan-ref-cleanup work. Filled `assigned_role: cicd` (was missing) + `estimate_class: infra` (0.3/0.24
+  baseline/calibrated AI-days). Issue doc — structurally exempt from the finalize-plan-coverage requirement
+  (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`, not `plans/active/issues/*.md`).

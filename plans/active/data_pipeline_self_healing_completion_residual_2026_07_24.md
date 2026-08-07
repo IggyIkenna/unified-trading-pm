@@ -25,7 +25,7 @@ related:
 created: "2026-07-24"
 last_updated: "2026-07-24"
 parent_epic: observability_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
@@ -274,6 +274,22 @@ context_scope:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: RECLASSIFY `assigned_vm: NA` → `planning`. The 2026-08-02 PARK below is now
+  moot — its conflicted item (the `[PERF] P2` digest-memory-antipattern duplicate of
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`) was itself flipped `[x]` KEEP-NA-STALE the same day and
+  is no longer in this doc's open-item set. Independently re-read the doc in full (296 lines) before flipping: 5 open
+  todos remain (checkbox count verified via `grep -cE '^- \[ \]'`), all bounded/deterministic engineering with a stated
+  done-when — ship an already-QG-green e2e half once a peer's dirty dep clears, flip a registry YAML mode per already-
+  wired escalation tier, verify an in-flight build+image-swap with a checkable exit-0 gate, rebuild an image via an
+  existing reusable Cloud Build pipeline, and a stretch `DeploymentRegistryEntry` field following an existing
+  launcher→heartbeat→registry pattern. No open design/judgment call. Also verified the doc's own historical
+  "already applied to prod" false claim on the (already-closed) OOM-fix todo was itself corrected by a 2026-07-26 audit
+  with fresh `gcloud run jobs describe` re-verification (cpu=4;memory=16Gi confirmed) — not a live issue today.
+  Conflict-check clear: grepped all 6 active `assigned_vm: planning` docs in `observability_master` for
+  `DeploymentRegistryEntry`/launch-spec/extras-pattern overlap (the one item with real collision risk) — no hits.
+  `execution_scope`/`assigned_role`/`estimate_class` were already correctly set at authoring time. Companion
+  `data_pipeline_self_healing_completion_residual_2026_07_24_finalize_2026_08_07.md` authored (draft, gated on this
+  doc's remaining todos).
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-checked the parked conflict -- it has RESOLVED:
   batch2's `[PERF] P2` execution vehicle LANDED (e2e-testing@5d7f53a + @edd12c6, both verified ancestors of LDR) so this
   doc's twin todo was flipped `[x]` as KEEP-NA-STALE, open todos 7 -> 6. Doc STAYS NA (remaining 6 are

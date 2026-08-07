@@ -39,8 +39,8 @@ parent_epic: orchestrator_master
 source:
   "daily plan-reconcile (slot 2, agt-4fdce1) raised it as BLK-5eeacb63; answered + de-raced by the operator's
   interactive session 2026-08-06"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
@@ -82,3 +82,14 @@ evidence (`terraform plan`/`apply` output, `gcloud pubsub subscriptions list` co
 epsilon=0 determinism report path) that the survivor lacked entirely; blindly superseding the "extra" plan would have
 silently dropped that check. That asymmetry is the reason todo 3 above insists on porting-before-superseding rather than
 just picking a winner by filename.
+
+### 2026-08-07 — na-eligibility-audit
+
+RECLASSIFY `assigned_vm: NA` → `planning` — never previously assessed. All 3 open todos are bounded, mechanical
+plan-hygiene engineering (a create-time idempotency guard keyed on `depends_on`, a corpus-wide duplicate-gate detector,
+one sweep-and-fix pass reusing the same de-race procedure already proven on this exact pair) with no open design call.
+Conflict-check clear: grepped all 9 active `assigned_vm: planning` docs in `orchestrator_master` — the 6 hits were all
+just `check_finalize_plan_coverage.py` cited as boilerplate in unrelated AO-batch finalize plans' own Codex-SSOTs
+sections, not competing claims on the idempotency-guard/detector work. `assigned_role: infra` and `estimate_class:
+refactor` were already set correctly at authoring time — no changes needed there. Issue doc — structurally exempt from
+the finalize-plan-coverage requirement.

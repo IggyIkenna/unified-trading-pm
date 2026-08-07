@@ -15,7 +15,10 @@ summary: >-
   `/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`); confirmed pre-existing/unrelated by
   re-running the same test against a `git stash`-clean HEAD (5d157d6) -- same failure, same StopIteration. Not fixed as
   part of that dispatch (out of its narrow scope); filed here per the outside-every-plan findings-triage rule.
-status: open
+status:
+  complete # archived 2026-08-07 -- sole todo confirmed complete: deployment-api@cf55369 verified an ancestor of
+  # origin/live-defi-rollout via git merge-base --is-ancestor, test_artifact_pipeline.py:876-882 confirmed to compute a
+  # relative date instead of the hardcoded literal; archived by na-eligibility-audit cross-cutting
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -87,7 +90,7 @@ string. Low-risk, mechanical — no production behavior change, test-only.
 > re-run — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc's own Progress Log
 > had already self-nominated for exactly this conversion. Scope and fix shape are unchanged.
 
-- [ ] [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
+- [x] ✅ [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
       trailing-7-day health window deterministic under test: either parameterize `_resolve_window`'s "today"
       (`deployment_api/services/artifact_pipeline/service.py:79-92`) behind an injectable clock, or compute the
       `_fact(...)` fixture date relative to a frozen `datetime.now(UTC)` rather than the literal
@@ -117,3 +120,9 @@ mid-dispatch.
   `_resolve_window()`, and the discovery-context archive doc still resolve and remain the minimal correct set.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: ARCHIVE — the sole checkbox's own trailing text already documented
+  `deployment-api@cf55369` shipping the fix 2 days before the checkbox even existed (checkbox-vs-prose contradiction,
+  ARCHIVE-favorable direction); independently re-verified this pass: commit exists, is an ancestor of
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor`), and `test_artifact_pipeline.py:876-882` on disk
+  confirms the relative-date fix is live. Flipped `[x]`, ran the 6-step archival ritual — moved to
+  `plans/archive/2026_08/issues/`.

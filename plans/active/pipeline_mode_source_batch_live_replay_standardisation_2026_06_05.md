@@ -462,12 +462,22 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       non-blocking): reconciliation tolerance + TTL horizon. Repo: batch-live-reconciliation-service (+ UTL TTL helper).
 - [ ] [DESIGN] P0. **M8 — cadence axis. PARTIAL — Phase 0.1 shipped the `Cadence` enum
       (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) in UAC@a2eab633.**
-      REMAINING: wire **cadence** as a manifest COLUMN (UTL) + deployment-registry `run_class` (deployment-service) +
-      writer stamp (MTDS/IS) + slice-by-cadence (deployment-api/UI). ORTHOGONAL to `pipeline_mode` (NOT a path key,
-      never fragments the union). Also shipped Phase 0.1: **M9 `MOCK_SOURCE`** (dev-tier-only mock) in the same commit.
-      **NOTE 2026-06-07**: the SIBLING `transport` manifest column (M5b/C-TRANSPORT) is now wired (utl@d0745bde —
-      `AvailabilityRecord.transport`, stamped via `default_transport_for_source`) — it is the model the cadence column
-      should follow (a v9 additive column, not a path key). The cadence column itself remains.
+      REMAINING (na-eligibility-audit 2026-08-07 — 3 of the original 4 sub-pieces now have shipped evidence elsewhere
+      in this doc; trimmed): ~~wire cadence as a manifest COLUMN (UTL)~~ — DONE, I6a `unified-trading-library@dfe3385f`
+      (Success-criteria checklist above); ~~slice-by-cadence (deployment-api/UI)~~ — DONE, M5b
+      `deployment-api@66e8562d` + M5c/d `deployment-ui@687d4ce`/`unified-trading-system-ui@41b1567c` (pw:L2 ✓, same
+      checklist); writer stamp (MTDS/IS) — GATE-0 SIT Leg 1 ("writer stamps pm+source+cadence+transport") is green
+      (system-integration-tests@ec46de8, "ALL legs... un-skipped"), but that leg tests at the UAC/UTL contract level
+      per this doc's own WAVE-D description — it proves the shared writer helper correctly carries a `cadence` kwarg
+      through, NOT that every real MTDS/IS capture call-site actually passes one; **stays open, narrowed**: verify the
+      real MTDS/instruments-service capture call sites pass an explicit `cadence=` (not relying on a default) before
+      considering this sub-piece closed. **Genuinely untouched**: deployment-registry `run_class` (deployment-service)
+      — no shipped evidence anywhere in this doc. ORTHOGONAL to `pipeline_mode` (NOT a path key, never fragments the
+      union) — GATE-0 itself (the "Success criteria (GATE 0 met)" checklist above) does not depend on M8's remaining
+      scope; it is a secondary axis layered on top. Also shipped Phase 0.1: **M9 `MOCK_SOURCE`** (dev-tier-only mock)
+      in the same commit. **NOTE 2026-06-07**: the SIBLING `transport` manifest column (M5b/C-TRANSPORT) is now wired
+      (utl@d0745bde — `AvailabilityRecord.transport`, stamped via `default_transport_for_source`) — it is the model
+      the cadence column should follow (a v9 additive column, not a path key). The cadence column itself remains.
 - [ ] [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
       CONTRADICTS M1–M8 and reconcile: CLAUDE.md (the `source=` provenance rule, the `pipeline_mode=` partition rule,
       the "Live = batch" rule, the VIX/sports source notes) · codex (`02-data/pipeline-mode-partition.md`,
@@ -956,7 +966,18 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - **na-eligibility-audit 2026-08-01**: KEEP-NA, valid -- Full audit rationale: Read the whole 961-line doc top to bottom
   including the append-only Progress Log. This is a P0 foundation/gate plan for the batch/live/replay pipeline_mode
   redesign, locked_by live-defi-rollout since 2026-06-05, still in-flight. Of the 7 open checkboxes, 4 (M6
-  capability-driven startup gate -- the l...
+  capability-driven startup gate, M7 autonomous recovery, T+1 reconciliation, and the doc-corpus audit #7) are genuine
+  in-flight code/design work with no shipped evidence yet. **[Entry found truncated here — 2026-08-07, fixed in
+  place; the remainder of this 2026-08-01 entry's original text was not recoverable, so this closes the sentence
+  rather than inventing its content.]**
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, stale item narrowed — M8's REMAINING sub-scope list carried 4 pieces;
+  3 now have shipped evidence elsewhere in this same doc (manifest COLUMN/UTL — I6a `dfe3385f`; slice-by-cadence on
+  both deployment-api and UI — M5b/M5c/M5d) and were struck from the list with citations. The writer-stamp (MTDS/IS)
+  piece stays open but narrowed to a more precise ask (verify real capture call-sites pass `cadence=` explicitly —
+  GATE-0 SIT Leg 1 proves the shared UTL contract carries it through, not that every call site supplies it). The
+  deployment-registry `run_class` piece is untouched, confirmed no shipped evidence anywhere in the doc. Checkbox
+  itself (M8) stays open — this is a REMAINING-list correction, not a closure; doc stays KEEP-NA (locked_by
+  live-defi-rollout, 3 other genuinely-open P0 items: M6/M7/T+1, plus #7 and the `_merge_dataframes` dedup-key fix).
 
 ## Deferred work — migrated to:
 
