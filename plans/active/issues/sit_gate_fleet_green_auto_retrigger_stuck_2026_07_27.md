@@ -279,3 +279,10 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   `failure`/`cancelled` (`gh run list --workflow=full-workspace-sit.yml --limit 15`). No 5th recurrence yet (~4.5h clean
   so far). Todo NOT closed — done-when is "no recurrence by ~2026-08-21", still 2 weeks out; leaving the checkbox open
   for the window to run its course (re-check on next dispatch of this monitoring todo).
+- **2026-08-07 monitoring check-in (slot 6, task `sit_gate_fleet_green_auto_retrigger_stuck-005`)**: checked runs since
+  slot-10 check-in (31146220479, 04:03Z) through latest (31158938494, 07:45Z) — 7 additional runs (6 success, 1
+  cancelled-by-newer-dispatch), no failures. **Both poll-budget fixes confirmed live on `main`**: `b3da771` promoted via
+  system-integration-tests PR #348 (merged 2026-08-07T00:03:42Z); `full-workspace-sit.yml` on `main` now reads run-ID
+  poll `seq 1 30` (150s) and completion poll `seq 1 64` (320s) — verified via `git show origin/main:...`. Total clean
+  runs since verified-good 31131969006: 13 consecutive successes (~8h). No 5th recurrence. Monitoring window still open
+  (~14 days remaining, until 2026-08-21); checkbox left open for re-check on next dispatch.
