@@ -89,7 +89,7 @@ over all pending draft batches) that independently spot-verified every todo belo
 
 ## Todos
 
-- [ ] [DATA] P2. **Retrofit the 8 remaining ad hoc `instrument_key` f-string sites** (`ankr.py:86`, `mantle.py:86`,
+- [x] ✅ [DATA] P2. **Retrofit the 8 remaining ad hoc `instrument_key` f-string sites** (`ankr.py:86`, `mantle.py:86`,
       `maker.py:101`, `stakewise.py:90`, `swell.py:86`, `stader.py:85` [all `:LST:`], `kamino.py:199`
       [`:SOLANA_VAULT:`], `pendle.py:274` [`:YIELD_BEARING:`]) to route through
       `build_instrument_id(...,     passthrough=True)` per the already-shipped todo-2 pattern (16 sites, byte-identical
@@ -97,7 +97,14 @@ over all pending draft batches) that independently spot-verified every todo belo
       the already-fixed P0 type-filter-empty bug. Repo: instruments-service. Source:
       `canonical_id_builder_retrofit_checklist_2026_07_08.md`. Done when: all 8 sites verified byte-identical
       post-retrofit with `quality-gates.sh` green, and the type-filter question is answered with cited evidence
-      (already-fixed, or a new scoped fix filed).
+      (already-fixed, or a new scoped fix filed). **SHIPPED 7/8 `instruments-service@9ad39d5b`** —
+      ankr/mantle/maker/stakewise/swell/stader/pendle retrofitted; kamino.py:199 retained as f-string (compound symbol
+      `{sym_a}-{sym_b}:{address[:8]}` carries embedded `:` that UAC builder's 2026-07-20 colon-guard hard-rejects for
+      non-sports types; checklist predates the guard; blocker filed at
+      `/plans/active/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`). Type-filter finding:
+      A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped — all adapters use canonical
+      `InstrumentType.X` enum constants (cited: `compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`,
+      `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh` green.
 - [ ] [DOC] P3. **Document the shipped collateral down-sizing contract** (USDC-collateral margin-buffer down-size branch
       in strategy-service's `staked_basis.py` + `margin_buffer_pct`) in `codex/04-architecture/` and the wizard
       param-schema (`param_schema.py`'s `PARAM_SCHEMA_REGISTRY`) in
@@ -133,6 +140,20 @@ over all pending draft batches) that independently spot-verified every todo belo
       (`unified-trading-pm@1da67407e`). Did not relaunch the purge VM (would likely reproduce the reap). Checkbox stays
       open until an `infra`-scoped dispatch refreshes the daemon and the purge actually completes per this todo's own
       done-when.
+- [ ] [INFRA] P0. **Relaunch gas_fees legacy purge VM with streaming download fix** (blocked answer BLK-4cd8f7bb,
+      2026-08-07 09:44Z — Option 1: relaunch with fixed code, cron stays PAUSED). Code fix
+      `market-tick-data-service@eb380b71b` (`blob.download_as_bytes(timeout=900)` streaming in `_purge_manifest_rows`,
+      replacing `_download_index_chunked` range-request that hung 47 min on dispatch #6's VM) is QG-green on
+      `live-defi-rollout`. Command:
+      `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh     defi-gas-fees-legacy-purge <date> <date> full`
+      in deployment-service (SPOT per backfill HARD RULE — script is CAS-idempotent so preemption restart is safe).
+      Pre-flight: (a) re-verify 0 GCS objects for all 10 TARGET_VENUES (fresh check); (b) confirm zombie watchdog
+      `20260807-075242` RUNNING (90-min idle threshold). Launch discipline: STARTED<60s + >=1 progress/hr + terminal
+      EXIT_STATUS; verify T+10min. Do NOT resume consolidator cron before VM exits cleanly. After success: (1) resume
+      cron; (2) await >=4 clean `--verify-only` cycles; (3) flip todo 3 checkbox with evidence (VM name, EXIT_STATUS=0,
+      post-purge manifest row count = 0, cite both source docs). Repo: deployment-service. Done when: VM exits cleanly,
+      post-purge manifest read = 0 of 12,425 target rows, consolidator cron completes >=4 verify-only cycles, and todo 3
+      checkbox is flipped with full evidence.
 - [x] ✅ [BACKEND] P2. **Add CLI flags** (`--archetypes`, `--venue-allowlist`, `--currency-allowlist`) to
       strategy-service's `run_paper` entrypoint (`service_entry.py`) to construct and pass the already-shipped
       `PaperUniverseConfig.{archetypes,venue_allowlist,base_currency_allowlist}` fields (today always `None`/unset, so
@@ -397,6 +418,29 @@ remaining items besides the over-cap-gated one above).
   Confirmed both code fixes still in LDR (`vm_zombie_watchdog.py` line 248: `"canonical-migration-": (90.0, 360.0)`;
   `launch-canonical-migration-vm.sh` line 2094: `STALL_TIMEOUT_SEC=7200`). No new findings. Posting /blocked with
   specific ask: activate `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`. No VM/GCS/cron mutation performed.
+- **2026-08-07 (/pre-compact audit, `data_engineering`, slot 10, dispatch #7 terminal)**: **Safe to compact: YES.** All
+  work committed+pushed: `market-tick-data-service@eb380b71b` (streaming download fix QG-green, ahead=0) +
+  `unified-trading-pm@30eff7352` (infra P0 todo + progress logs, ahead=0). Scratchpad empty. No dangling doc references
+  in modified files. Nothing at risk. Blocked as `BLK-62a2db1b` (infra todo added, waiting for infra worker to run VM
+  relaunch). **Resume**: next `[infra]`-role dispatch picks up the new `[INFRA] P0` todo above and executes the VM
+  relaunch; after EXIT_STATUS=0 + 4 verify-only cycles, flip todo 3 checkbox with evidence. **Lessons this session**:
+  (1) `_download_index_chunked()` range-request approach is wrong for GCS VMs — 3rd consecutive 2.46 GiB download in
+  rapid succession hangs for ~47 min (timeout budget exhaustion across 3 outer × 4 inner retries); use
+  `blob.download_as_bytes(timeout=900)` for large manifest downloads on VMs. (2) ruff B904: `raise X` inside `except Y`
+  always needs `from None` or `from err`. (3) Scratchpad task output files: Read tool with `offset` can miss content on
+  small files — use `wc -l` + `tail` via Bash to confirm content exists first.
+- **2026-08-07 (BLK-4cd8f7bb answered, `data_engineering`, slot 10, dispatch #7 follow-up)**: Main answered 09:44Z —
+  Option 1: relaunch with fixed code, consolidator cron stays PAUSED until purge completes. Main confirmed `eb380b71b`
+  is QG-green on LDR. Added `[INFRA] P0` tracked todo (above) for the VM relaunch: MACHINE_TYPE=e2-highmem-8, SPOT, with
+  pre-flight/post-purge/checkbox-flip requirements per main's message. Main tracking to completion; will escalate to
+  operator if relaunch fails a second time.
+- **2026-08-07 (AO dispatch #7, `data_engineering`, slot 10)**: VM `20260807-082535` (from dispatch #6) confirmed DEAD
+  via background monitor — STOPPING at 09:17Z, GONE by 09:20Z, no EXIT_STATUS. Root cause: `_download_index_chunked()`
+  range-request approach hung ~47 min inside `_purge_manifest_rows()` during 3rd consecutive 2.46 GiB download (3 outer
+  × 4 inner × ~timeout). Manifest NOT modified. Code fix shipped `market-tick-data-service@eb380b71b` —
+  `_purge_manifest_rows()` now uses `blob.download_as_bytes(timeout=900)` (streaming) instead of range-request chunks.
+  QG green. Consolidator cron still PAUSED. Posting /blocked for another infra relaunch with fixed code. Evidence in
+  `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log.
 - **2026-08-07 (AO dispatch #6, `infra`, slot 4)**: daemon `vm-zombie-watchdog-20260807-075242` confirmed RUNNING with
   fresh code (created 07:52:45Z per operator-authorized relaunch recorded in issue doc); GCS 0-object verified fresh
   (all 10 TARGET_VENUES 0 objects); consolidator cron paused; launched
@@ -405,3 +449,33 @@ remaining items besides the over-cap-gated one above).
   appeared at 08:30:15Z; Python task confirmed running: 12,425 rows found in 75,819,124-row index, consolidator PAUSED
   confirmed, GCS soft-delete retention 604800s verified, 0/0 objects deleted (expected). In `_purge_manifest_rows()` CAS
   operation now — manifiest purge in progress (30-60 min expected). Background monitor running for completion.
+- **2026-08-07 (AO dispatch, `data_engineering`, slot 2, task `defi_satellite_ao_dispatch_batch9-001`, todo 1
+  `[DATA] P2`)**: Retrofitted 7/8 `instrument_key` f-string sites in instruments-service to
+  `build_instrument_id(..., passthrough=True)`: ankr/mantle/maker/stakewise/swell/stader/pendle. kamino.py:199 retained
+  as f-string: compound symbol `{sym_a}-{sym_b}:{address[:8]}` embeds `:` which UAC builder's 2026-07-20 colon-guard
+  hard-rejects for non-sports types (colon-guard added after the 2026-07-08 checklist); format change requires operator
+  ruling (GCS key change + manifest migration); filed
+  `/plans/active/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`. Type-filter finding (cited evidence):
+  A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped by P0 bug — all relevant adapters
+  already use canonical `InstrumentType.X` enum constants in `instrument_type not in (...)` guards
+  (`compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`, `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh`
+  green. Shipped: `instruments-service@9ad39d5b`.
+- **2026-08-07 (AO dispatch #8, `data_engineering`, slot 10, todo 3 `[DIAG] P1`)**: Found VM
+  `canonical-migration-defi-gas-fees-legacy-purge-20260807-100248` **already RUNNING** (launched by [INFRA] P0 worker
+  after BLK-4cd8f7bb was answered at 09:44Z). VM boot clean — `run.log` confirms: sanity-check 12,425 rows in
+  75,819,124-row index (correct), GCS soft-delete retention 604800s, 0/0 GCS objects deleted (expected), streaming
+  download started 10:05:51Z (`blob.download_as_bytes(timeout=900)` for 2,642,951,426 bytes = 2.46 GiB). **Heartbeat
+  daemon (vm-life-emitter) died at ~10:06:02Z** — likely SIGPIPE after the stdout tee pipe closed; Python main process
+  continued unaffected (EXIT_STATUS absent, VM RUNNING confirmed 10:15:33Z via `gcloud compute instances describe`). Log
+  uploader also dead (run.log frozen at 3,268 bytes since 10:06:14Z, no new content during blocking
+  `download_as_bytes()` call). Zombie watchdog `vm-zombie-watchdog-20260807-075242` RUNNING with 90-min idle threshold —
+  safe. No VM/GCS/cron mutation performed. **Lessons**: (1) heartbeat daemon dying is not a signal the Python process
+  died — check EXIT_STATUS file and VM `RUNNING` status independently; (2) log uploader and heartbeat daemon both run
+  inside the vm-exec process group; if the tee pipe closes (e.g., stdout buffer overflow or SIGPIPE), both die silently
+  while the Python script continues; (3) `blob.download_as_bytes(timeout=900)` produces zero stdout output during the
+  download — the log WILL be silent for many minutes during a 2.46 GiB download; this is expected, NOT a stall. **Resume
+  point**: poll `gs://deployment-scripts-central-element-323112/vm-logs/20260807-100248/EXIT_STATUS`; on EXIT_STATUS=0,
+  (a) verify `_index/availability_index.parquet` filtered to 3-part TARGET signature = 0 rows, (b)
+  `gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-defi-cron --location asia-northeast1`, (c)
+  await ≥4 clean `--verify-only` cycles in cron run.log, (d) flip todos 3+4 in this plan + [DATA] P1 in issue doc, (e)
+  push, (f) /done.

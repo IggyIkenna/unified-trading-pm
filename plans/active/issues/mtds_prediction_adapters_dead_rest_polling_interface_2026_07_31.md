@@ -119,11 +119,13 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
 
 ## Todos
 
-- [ ] [BACKEND] P2. Decide (A) vs (B) above with the operator/plan owner, then either delete
+- [ ] [BACKEND] P2. **RULED 2026-08-07 (operator) — DELETE (option A).** Same rationale as the sibling
+      instruments-service finding (`is_polymarket_dead_fixture_cross_reference_2026_07_31.md`): prediction markets
+      should get fixture/market availability from the canonical manifest/GCS-objects batch path, not a live-polling REST
+      interface. Delete
       `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds,_load_tickers_from_gcs}` +
-      `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market,_build_order_book_record,parse_market,     parse_token,parse_order_book,normalize_market,normalize_odds,_load_condition_ids_from_gcs}`
-      and their dedicated tests, or add the concrete activation-path documentation the codex rule requires to keep them.
-      (repo: market-tick-data-service)
+      `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market,_build_order_book_record,parse_market,parse_token,parse_order_book,normalize_market,normalize_odds,_load_condition_ids_from_gcs}`
+      and their dedicated tests. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -142,3 +144,5 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   keep-and-document as a genuine judgment call, not auto-resolved; live-verified `KalshiAdapter._load_tickers_from_gcs`
   (kalshi_adapter.py) and `PolymarketAdapter._load_condition_ids_from_gcs` (polymarket_adapter.py) are both still
   present unchanged. Doc stays NA.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: RULED — delete (option
+  A). See Todos section above for the full ruling + rationale.

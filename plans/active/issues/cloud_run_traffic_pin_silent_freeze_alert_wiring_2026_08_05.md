@@ -202,12 +202,31 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   (`setup-traffic-pin-alert.sh`, `traffic-pin-to-slack-bridge.py`) and `ci-alerting.md` (the Slack-routing convention
   the remaining webhook/Cloud-Run-deploy work depends on); dropped the now-closed drift-check todo's
   `cloud_run_traffic_drift_check.py` and `deployment-api/cloudbuild.yaml` to stay minimal.
+- **2026-08-07 (slot-4, infra, task cloud_run_traffic_pin_silent_freeze_alert_wiring-004)**: Audited infrastructure
+  state. Finding: Cloud Run service `traffic-pin-slack-bridge` already deployed and Ready
+  (`deployment-service@6b4be78`); push subscription `traffic-pin-slack-bridge-push` wired to
+  `cloud-monitoring-traffic-pin-alerts` Pub/Sub topic; GSM secret shell `cloud-monitoring-slack-ci-failures-webhook`
+  created (no versions). The Slack webhook URL lives only in GitHub Actions secret `SLACK_CI_WEBHOOK_URL`
+  (write-only/unreadable by agents — genuine credential ask, not an IAM gap). Wrote a test log entry
+  (`cloud-run-traffic-pin-alert`, `alert_type=cloud_run_traffic_pinned`) to validate the Cloud Logging → Cloud
+  Monitoring → Pub/Sub → bridge pipeline. Flipped INFRA todo [x] with evidence. Created [OPERATOR] P2 todo for webhook
+  URL population + e2e Slack delivery verification (exact gcloud command included).
 
 ## Follow-ups
 
-- [ ] [INFRA] P2. Store the Slack #ci-failures webhook in Secret Manager (cloud-monitoring-slack-ci-failures-webhook),
-      deploy traffic-pin-to-slack-bridge.py as a Cloud Run service with a push subscription on the Pub/Sub topic, and
-      trigger a canary rollback to verify end-to-end Slack delivery.
+- [x] ✅ [INFRA] P2. Deploy traffic-pin-to-slack-bridge.py as a Cloud Run service with a push subscription on the
+      Pub/Sub topic, and create the GSM secret shell for the Slack webhook — deployment-service@6b4be78. Evidence: Cloud
+      Run service `traffic-pin-slack-bridge` Ready at https://traffic-pin-slack-bridge-cldtjniqvq-an.a.run.app; push
+      subscription `traffic-pin-slack-bridge-push` wired to topic `cloud-monitoring-traffic-pin-alerts`; GSM secret
+      shell `cloud-monitoring-slack-ci-failures-webhook` created (no versions yet — operator-gated credential step
+      below). End-to-end Slack delivery NOT yet verified (awaiting webhook URL population per [OPERATOR] todo below).
+
+- [ ] [OPERATOR] P2. Populate the GSM secret with the #ci-failures Slack incoming webhook URL and verify end-to-end
+      Slack delivery. The webhook URL is stored in GitHub Actions secret `SLACK_CI_WEBHOOK_URL` (write-only/unreadable
+      by agents — a genuine credential ask, not an IAM gap). Command to populate the secret:
+      `printf "<#ci-failures-webhook-url>" | gcloud secrets versions add cloud-monitoring-slack-ci-failures-webhook     --data-file=- --project=central-element-323112`
+      — then verify e2e by triggering a canary rollback on a UAT Cloud Run service and confirming the Slack message
+      arrives in #ci-failures.
 
 > **2026-08-06 archive-candidate audit**: Todo 1 is flipped [x] but its own body lists 'NOT DONE (needs operator): (a)
 > store Slack webhook, (b) deploy the bridge as Cloud Run, (c) verify end-to-end Slack delivery' — the alert is loggable

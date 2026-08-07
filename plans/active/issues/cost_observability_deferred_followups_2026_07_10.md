@@ -61,20 +61,23 @@ context_scope:
 > tracked after archival. All seven were `- [ ]` in that plan's _Deferred / fast-follow_ and _Data-fidelity audit_
 > sections. Not dispatched — `assigned_vm: NA`. Two are **operator-gated** (marked below).
 
-## Operator-gated (waiting on a decision)
+## Ruled 2026-08-07 (operator, via consolidated NA-blocker-digest audit)
 
-- [ ] [BACKEND] P3. **Business-context enrichment — asset_group / archetype view.** Derive `asset_group` / archetype
-      from GCP `labels`/`system_labels` + AWS resource tags → a spend-by-strategy view (restores + generalises what the
-      retired narrow page showed). **Gated:** operator is evaluating the By-label view first (2026-07-10); if it adds
-      value, enrich by stamping `asset_group` on every launcher + a backfill (AWS also needs cost-allocation tags
-      activated). Today's `asset_group` coverage is ~0.16% ($34), so the axis reads mostly "(unlabeled)".
-- [ ] [BACKEND] [INFRA] P2. **AWS CUR historical backfill — Athena holds July-2026 only.**
-      `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (the CUR delivery started in July), so `/ops/costs`
-      structurally cannot show pre-July AWS spend; the operator's Cost-Explorer CSV (Jan–Jun, ~$8.6k gross) has zero
-      overlap with the CUR. **Gated:** waiting on Ikenna. With the CUR "include historical data" method it is
-      essentially just more data + one Glue crawler re-run (~12 months, still tiny — ~150k rows / a few MB — no code
-      change if the same table/schema). Else document the AWS tab as **July-2026-onward** (operator: acceptable). Not a
-      code bug — a data-source coverage gap.
+- [ ] [BACKEND] P2. **RULED — YES, do the business-context enrichment follow-on work.** Stamp `asset_group` on every
+      launcher + run a backfill; AWS also needs cost-allocation tags activated. Was gated on the operator evaluating the
+      By-label view first (2026-07-10) — ruling: proceed. Original context: today's `asset_group` coverage is ~0.16%
+      ($34), so the axis reads mostly "(unlabeled)"; this closes that gap and restores/generalises what the retired
+      narrow spend-by-strategy page showed.
+- [x] ✅ **RULED — CLOSED as July-2026-onward, final.** AWS CUR historical backfill was originally framed as "just more
+      data + one Glue crawler re-run" — **that premise is wrong, corrected 2026-08-07**: the deployed report
+      (`aws cur describe-report-definitions` → `uts-cost-usage`) is the LEGACY CUR API, which cannot backfill at all;
+      historical data (up to 36mo) is a CUR 2.0 / Data Exports feature requiring (a) creating a brand-new export (zero
+      exist today — confirmed via `aws bcm-data-exports list-exports`), (b) filing an AWS Support case naming
+      account/export/months, real turnaround time, not self-service, and (c) reconciling CUR 2.0's different,
+      incompatible schema (nested columns, 2 new fields) against the existing Athena/Glue setup — genuine engineering
+      work, not a toggle. Operator's own fallback ruling applies given the true cost exceeds what made this worth Ikenna
+      trying quickly: **`/ops/costs`'s AWS tab is documented as July-2026-onward, accepted as final.** Revisitable later
+      with these corrected facts if priorities change — not re-opened by default.
 
 ## Unscheduled P3 enhancements
 
@@ -113,3 +116,9 @@ context_scope:
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — all 5 still resolve and
   span both the operator-gated items (billing-cost-observability.md, the cost_observability service dir) and the
   unscheduled UI/backend P3 enhancements (costs.py, CostObservability.tsx).
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: both previously
+  operator-gated items are now RULED — see the "Ruled 2026-08-07" section above (replaces the old "Operator-gated"
+  section). (1) Business-context enrichment: proceed. (2) AWS CUR historical backfill: CLOSED as July-2026-onward final,
+  after live verification found the doc's "cheap toggle" premise was wrong (legacy CUR can't backfill; CUR 2.0 needs a
+  new export + AWS Support case + schema reconciliation) — the true cost no longer matches what made this worth a quick
+  try, per the operator's own cost-conditioned fallback.

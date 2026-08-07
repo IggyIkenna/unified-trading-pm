@@ -44,7 +44,7 @@ context_scope:
     /codex/05-infrastructure/gcs-object-operations.md,
     /codex/05-infrastructure/deployment-observability.md,
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
-    /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
+    /plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
     unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
   ]
 ---
@@ -169,9 +169,9 @@ QG-green per repo.
   force.** Dispatched via `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md` (gated finalize
   plan, itself gated on the sibling migration-overview doc's dual-write-deploy todo, which slot-12 flipped `[x]` earlier
   today with an honest FAIL result — see that doc's Progress Log and
-  `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`). Independently
-  re-measured criterion 1 with fresh live data (did not just trust slot-12's snapshot): Firestore REST API, full
-  pagination, prod `deployments` collection = **193 docs** (190 `status=failed`, 3 `status=completed`, **0
+  `/plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`).
+  Independently re-measured criterion 1 with fresh live data (did not just trust slot-12's snapshot): Firestore REST
+  API, full pagination, prod `deployments` collection = **193 docs** (190 `status=failed`, 3 `status=completed`, **0
   `status=running`**); cross-referenced every doc's `vm_name` against **50** currently-`RUNNING` GCE instances
   (`gcloud compute instances list --filter=status=RUNNING`, project `central-element-323112`) — **zero overlap**. Root
   cause is unchanged from the linked issue doc: the Cloud Run dual-write flag only governs deployment-api's own process,
@@ -189,13 +189,13 @@ QG-green per repo.
   linked issue doc's own P2 todo).** The project-metadata fallback fix shipped (deployment-service@deba676) and its soak
   ran (fresh 2026-07-30 ~03:52 UTC measurement, 5 real non-benchmark production VMs launched via their normal launchers)
   — full detail in
-  `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`'s soak todo.
-  Result: **3 of 4 GO/NO-GO criteria FULLY PASS** with fresh live evidence — (2) resource stats read from Firestore
-  (real non-zero cpu/mem/disk on a live, non-reap-created VM), (3) per-VM `/{id}/detail` retrievable from Firestore for
-  that same live VM, (4) Firestore doc == GCS blob parity, byte-for-byte, for a live deployment. **Criterion (1)'s
-  underlying MECHANISM is confirmed correct** — every freshly-booted VM (including one independent VM the soak worker
-  never launched) now writes Firestore with `status=running` and heartbeats advancing every ~60s — but literal
-  fleet-wide doc-count parity has NOT yet been reached: only 4 of ~19 currently-`RUNNING` GCE instances were
+  `/plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`'s soak
+  todo. Result: **3 of 4 GO/NO-GO criteria FULLY PASS** with fresh live evidence — (2) resource stats read from
+  Firestore (real non-zero cpu/mem/disk on a live, non-reap-created VM), (3) per-VM `/{id}/detail` retrievable from
+  Firestore for that same live VM, (4) Firestore doc == GCS blob parity, byte-for-byte, for a live deployment.
+  **Criterion (1)'s underlying MECHANISM is confirmed correct** — every freshly-booted VM (including one independent VM
+  the soak worker never launched) now writes Firestore with `status=running` and heartbeats advancing every ~60s — but
+  literal fleet-wide doc-count parity has NOT yet been reached: only 4 of ~19 currently-`RUNNING` GCE instances were
   Firestore-represented at soak time, because the other ~15 are long-running processes that booted BEFORE the fix landed
   (03:11:34 UTC) and won't re-read the corrected metadata until they cycle (complete/restart). This is the expected
   transient shape of a read-at-boot metadata fallback, not a residual defect — a materially different failure mode than

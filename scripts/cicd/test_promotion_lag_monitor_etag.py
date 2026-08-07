@@ -18,6 +18,7 @@ from typing import cast
 from unittest.mock import patch
 
 import promotion_lag_monitor as plm
+import pytest
 
 _ETAG = 'W/"abc123"'
 
@@ -363,3 +364,55 @@ def test_main_direct_repos_staging_dormant_toggle_includes_all(tmp_path: Path) -
     md_off = plm._main_direct_repos(manifest_path=str(mpath))
     assert "e2e-testing" not in md_off
     assert "no-field-repo" not in md_off
+
+
+# ── _single_branch_repos (unified-trading-ci: no LDR/staging pipeline at all) ────────────────────
+
+
+def test_single_branch_repos_includes_flagged_repo_only(tmp_path: Path) -> None:
+    manifest = {
+        "repositories": {
+            "unified-trading-ci": {"promotion_model": "single_branch"},
+            "greeks-service": {"promotion_model": "ldr_main"},
+            "no-field-repo": {},
+        }
+    }
+    mpath = tmp_path / "workspace-manifest.json"
+    mpath.write_text(json.dumps(manifest), encoding="utf-8")
+    sb = plm._single_branch_repos(manifest_path=str(mpath))
+    assert sb == {"unified-trading-ci"}
+
+
+def test_single_branch_repos_empty_on_unreadable_manifest(tmp_path: Path) -> None:
+    """Manifest unreadable → fall back to empty (no exemption), never crash."""
+    sb = plm._single_branch_repos(manifest_path=str(tmp_path / "does-not-exist.json"))
+    assert sb == set()
+
+
+def test_single_branch_repo_skipped_entirely_in_main_loop(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A single_branch repo must produce NO entries in repo_lags at all — not one direction skipped,
+    the WHOLE repo — so it can never appear in the lagging list in either direction (the regression
+    unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md exists to fix). Runs `main()` for
+    real with `_repos()`/`_gh_json()`/`_branch_exists()` mocked: any of the latter two firing for this
+    repo is itself a bug (there is nothing to probe), so they raise if called."""
+    manifest = {"repositories": {"unified-trading-ci": {"promotion_model": "single_branch"}}}
+    mpath = tmp_path / "workspace-manifest.json"
+    mpath.write_text(json.dumps(manifest), encoding="utf-8")
+
+    monkeypatch.delenv("GH_ETAG_CACHE_FILE", raising=False)
+    monkeypatch.delenv("GCP_PROJECT_ID", raising=False)
+    real_single_branch_repos = plm._single_branch_repos
+    monkeypatch.setattr(plm, "_repos", lambda: ["unified-trading-ci"])
+    monkeypatch.setattr(plm, "_main_direct_repos", lambda: set())
+    monkeypatch.setattr(plm, "_ldr_terminal_repos", lambda: set())
+    monkeypatch.setattr(plm, "_single_branch_repos", lambda: real_single_branch_repos(manifest_path=str(mpath)))
+
+    def _must_not_be_called(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("no gh call should fire for a fully-skipped single_branch repo")
+
+    monkeypatch.setattr(plm, "_gh_json", _must_not_be_called)
+    monkeypatch.setattr(plm, "_branch_exists", _must_not_be_called)
+    monkeypatch.setattr(plm.sys, "argv", ["promotion_lag_monitor.py", "--now-iso", "2026-08-07T00:00:00Z"])
+
+    exit_code = plm.main()
+    assert exit_code == 0  # nothing lagging (nothing monitored) → clean exit

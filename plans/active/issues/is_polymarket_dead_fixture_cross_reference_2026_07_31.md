@@ -126,10 +126,12 @@ Not adjudicated here:
 
 ## Todos
 
-- [ ] [BACKEND] P2. Decide (A) vs (B) above with the operator/plan owner, then either delete
-      `PolymarketReferenceDataAdapter._cross_reference_fixture()` + `_fixture_cache` + the `api_football_api_key`
-      constructor param + `factory.py`'s `af_key` threading + the dedicated test class, or add a concrete named
-      activation path (real plan/todo reference) to the code comment. (repo: instruments-service)
+- [ ] [BACKEND] P2. **RULED 2026-08-07 (operator) — DELETE (option A).** Operator's rationale: prediction markets should
+      get fixture availability from the canonical manifest/GCS-objects path (the shipped `PredictionFixtureResolver`
+      mechanism), not direct API-Football calls — consistent with this doc's own finding that the live mechanism already
+      covers this. Delete `PolymarketReferenceDataAdapter._cross_reference_fixture()` + `_fixture_cache` + the
+      `api_football_api_key` constructor param + `factory.py`'s `af_key` threading + the dedicated test class
+      (`TestCrossReferenceFixture`). (repo: instruments-service)
 
 ## Progress Log
 
@@ -149,3 +151,5 @@ Not adjudicated here:
   since the 2026-08-04 marker. The sole todo is still an explicit "Not adjudicated here" operator/plan-owner-gated (A)
   vs (B) architecture decision (delete dead code vs. keep-and-document activation path) — a genuine judgment call, not a
   worker-determinable fact. Third consecutive audit pass (07-31, 08-04, 08-07) reaching the same verdict. Doc stays NA.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: RULED — delete (option
+  A). See Todos section above for the full ruling + rationale.

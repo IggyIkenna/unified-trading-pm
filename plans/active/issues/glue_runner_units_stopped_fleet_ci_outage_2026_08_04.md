@@ -203,10 +203,10 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       read-only SSM on BOTH real instances: the "0 loaded units for every per-repo pool" / "ENTIRE glue/writer pool ...
       is down" finding below was measured against `i-0c9b283b31d6b5ca7` — the OLD orchestrator VM, whose runner fleet
       was CORRECTLY, deliberately migrated off per
-      `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (complete 2026-08-05) — not a real outage.
-      The actual dedicated runner VM (`i-042a6332509482556`) was healthy the entire time (17/17 units active, 0 failed):
-      there was nothing to `systemctl start` or reinstall. **No operator action remains from this todo** — its own
-      actual dispatch reason (unified-api-contracts main QG-v2 RED) was already independently fixed within this same
+      `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (complete 2026-08-05) — not a real
+      outage. The actual dedicated runner VM (`i-042a6332509482556`) was healthy the entire time (17/17 units active, 0
+      failed): there was nothing to `systemctl start` or reinstall. **No operator action remains from this todo** — its
+      own actual dispatch reason (unified-api-contracts main QG-v2 RED) was already independently fixed within this same
       entry (see below), and that fix stands regardless of the wrong-box misdiagnosis. Original diagnosis + shipped fix
       preserved verbatim below for the audit trail. **4th recurrence, 2026-08-06 (cicd slot-4, agt-80cfec, `main_ci_red`
       for unified-api-contracts) — worse than every prior occurrence: the ENTIRE glue/writer pool on the planning VM
@@ -242,11 +242,12 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       `hostname -I`, matching this doc's "planning VM (ip-172-31-5-118)" references) genuinely shows 0 loaded
       `@glue-N`/`@writer-N` job-runner units (only `.slice` cgroup caps and `@github-glue-token-refresh-*` oneshot
       timers, both cosmetic/expected) — **but this is CORRECT and BY DESIGN**, not a fault: the entire runner fleet was
-      deliberately migrated off this box per `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,
-      confirmed complete as of 2026-08-05. (2) The actual dedicated escalation-runner VM (`i-042a6332509482556`, private
-      IP `172.31.3.59`, the SAME instance this doc's own 2026-08-05 entry calls "writer-pool host" and separately warns
-      "the planning VM and this writer-pool host are DIFFERENT instances despite the similar naming") is **healthy right
-      now**: 17 active `@glue-N`/`@writer-N` units, 0 failed, covering `agent-orchestrator`, `unified-trading-pm`,
+      deliberately migrated off this box per
+      `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`, confirmed complete as of
+      2026-08-05. (2) The actual dedicated escalation-runner VM (`i-042a6332509482556`, private IP `172.31.3.59`, the
+      SAME instance this doc's own 2026-08-05 entry calls "writer-pool host" and separately warns "the planning VM and
+      this writer-pool host are DIFFERENT instances despite the similar naming") is **healthy right now**: 17 active
+      `@glue-N`/`@writer-N` units, 0 failed, covering `agent-orchestrator`, `unified-trading-pm`,
       `market-tick-data-service`, `execution-service`, `features-service`, `ml-service`, `strategy-service`,
       `e2e-testing`. Practical consequence: the live `main_ci_red` escalations at the time of writing (deployment-api,
       deployment-service, ibkr-gateway-infra, market-tick-data-service) are almost certainly genuine app/test-level CI

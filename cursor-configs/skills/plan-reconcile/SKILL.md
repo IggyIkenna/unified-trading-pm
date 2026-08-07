@@ -346,8 +346,12 @@ docs and epics too. For every `- [ ]` in each of the three surfaces, hunt eviden
    verifiably done (all its todos flipped, or it's archived). A ticked epic box over an unfinished child is the inverse
    contradiction (route to Phase 1), not a flip.
 
-(`status: draft` plans are excluded — WIP, not yet dispatched.) The same HARD-evidence bar below applies to all three
-surfaces; evidence in descending strength — a flip requires at least one HARD item:
+(`status: draft` plans are excluded — WIP, not yet dispatched.) **Sweep for `- [ ]` with a pattern that also catches
+indented/star-bullet variants** (`grep -nE '^[[:space:]]*[-*] \[ \]'`, not the plain `^- \[ \]` anchor-only form) — a
+2026-08-07 cross-check against `/na-eligibility-audit`'s Phase 0 inventory found a doc whose sole open item used
+`  * [ ]` and was silently missed by the plain pattern; the plain form under-counts on any doc using that style. The
+same HARD-evidence bar below applies to all three surfaces; evidence in descending strength — a flip requires at least
+one HARD item:
 
 - **HARD**: a pushed commit implementing the item, verified reachable (`git log`/`gh api` on the named repo;
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout` or on main); the named artifact demonstrably live (the
@@ -361,6 +365,15 @@ surfaces; evidence in descending strength — a flip requires at least one HARD 
 Flip format is the CLAUDE.md HARD RULE: `- [x] … — <repo>@<sha> + <one-line evidence>`, committed with the
 `docs(plans):` prefix (**not** `plan(...)` — hook-rejected). Half-done items: flip only the shipped half, annotate the
 rest `**DEFERRED**:` with why.
+
+**Line-cap-blocked-done is a distinct sub-case, not ordinary done-but-unchecked (2026-08-07 finding, surfaced by
+`/na-eligibility-audit`)**: an item can carry full HARD evidence of shipping yet still be sitting over its own doc's
+Phase 5 line-cap (normal plan >1000 hard, epic >2000 hard), where the split-then-close sequence that would let it be
+safely checked off hasn't run yet. Do not simply flip it in place if the doc is over-cap — flipping checkboxes inside an
+already-over-cap doc doesn't fix the cap violation and can mask how much the split actually needs to shed. Route it as
+this skill's own Phase 4/5 split finding (operator-gated: splitting a plan is a planning decision) with a note that at
+least one of the pending items is HARD-evidence-verified-done and should be closed as part of the split, not discovered
+fresh afterward.
 
 ### 4. ZERO-CHECKBOX docs — this skill's standing responsibility, all 10 tranches (added 2026-07-30)
 

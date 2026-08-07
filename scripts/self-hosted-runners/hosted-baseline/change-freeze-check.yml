@@ -32,10 +32,18 @@ on:
         description: "Description of the blocking freeze window (empty if not blocked)"
         value: ${{ jobs.check.outputs.reason }}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
+# NO concurrency group (removed 2026-07-27, cloud_build_router_concurrency_drops_dispatch_2026_07_27.md):
+# this is a workflow_call reusable invoked by 4+ unrelated callers (cloud-build-router.yml,
+# cloud-build-router-aws.yml, freeze-deferred-build-replay.yml, overnight-agent-orchestrator.yml),
+# all firing on the same default-branch ref. `${{ github.workflow }}-${{ github.ref }}` resolved to
+# ONE shared group ("Change Freeze Check-refs/heads/main") across every caller regardless of which
+# repo's build it was gating, so `cancel-in-progress: true` cancelled one caller's in-progress
+# freeze-check (and therefore its whole run, since route-build needs: freeze-check) the moment ANY
+# other caller's freeze-check started — this is what actually dropped instruments-service's build
+# dispatch on 2026-07-27, not cloud-build-router.yml's own concurrency group (that was already
+# correctly scoped per-repo since 3dadfdbd9, 2026-06-25). The check itself is a stateless, read-only
+# CSV/time comparison with no shared state to protect, so there is no correctness reason to serialize
+# it at all — every invocation can simply run to completion independently.
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -48,6 +56,7 @@ jobs:
           sparse-checkout: |
             plans/ops/change-freeze-calendar.csv
             scripts/telegram-helpers.sh
+            scripts/cicd/verdict_store.py
 
       - name: Check freeze windows
         id: freeze
@@ -161,30 +170,69 @@ jobs:
           echo "reason=" >> "$GITHUB_OUTPUT"
           echo "::notice::No active freeze window — $CHECK_TYPE operations allowed"
 
-  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
-  notify-freeze-block:
-    name: Slack — Change Freeze Block
-    needs: [check]
-    if: always() && needs.check.outputs.blocked == 'true'
-    uses: ./.github/workflows/notify-slack.yml
-    with:
-      message:
-        "CHANGE FREEZE BLOCK [${{ inputs.check_type }}]: ${{ needs.check.outputs.reason }} — deploy deferred (expected;
-        auto-replays when the window lifts)"
-      severity: "WARNING"
-      # conclusion is intentionally EMPTY (advisory), NOT "failure". A freeze block is an
-      # expected, scheduled control outcome — passing conclusion:failure made notify-slack's
-      # truthful-severity rule force it to CRITICAL :x: (the recurring daily US/EU-open spam in
-      # #ci-failures). With no conclusion, severity (WARNING) drives the icon → :warning:. The
-      # `check` job still exit-1s as the gate (cloud-build-router relies on that) — only the
-      # human-facing alert is reclassified from a CRITICAL failure to a WARNING advisory.
-      conclusion: ""
-      workflow_name: "Change Freeze Check"
-      run_url: ""
-      # One advisory per window per check-type, not one per deferred attempt (measured
-      # 2026-07-17: 4 identical WARNINGs in a single 5-min US-open window). 30 min covers
-      # every configured window; the reason string names the window either way, and the
-      # per-key dedup marker (notify-slack 2026-07-17 fix) makes this actually stick.
-      dedup_key: "freeze-block-${{ inputs.check_type }}"
-      cooldown_min: 30
-    secrets: inherit
+      # ── Firestore verdict-store write (2026-07-27, operator decision — the real generalisation,
+      # not a faithful UI port) ──────────────────────────────────────────────────────────────────
+      # Surfaces THIS evaluator's own pass/fail verdict for the deployment-ui G5 freeze-window
+      # banner, so the panel reads the STORED verdict of the recurrence/DST bash logic above rather
+      # than re-evaluating it in TypeScript (that would risk drifting from the real gate — the exact
+      # trap plans/active/monitoring_control_plane_master_2026_06_10.md's G5 item flags).
+      #
+      # `if: always()` — the "Check freeze windows" step above `exit 1`s on a genuine block (that IS
+      # the gate; callers `needs: freeze-check` on it), but it writes blocked/reason to
+      # $GITHUB_OUTPUT BEFORE exiting, so both steps below still see them and must run regardless of
+      # that exit code. `continue-on-error: true` on both — a Firestore hiccup must NEVER turn an
+      # advisory side-write into a blocker for the 4+ real callers of this reusable workflow.
+      - name: Authenticate to GCP (Firestore verdict-store write)
+        id: freeze_gcp_auth
+        if: always()
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Write change-freeze verdict to Firestore
+        if: always() && steps.freeze_gcp_auth.outcome == 'success'
+        continue-on-error: true
+        env:
+          CHECK_TYPE: ${{ inputs.check_type }}
+          BLOCKED: ${{ steps.freeze.outputs.blocked }}
+          REASON: ${{ steps.freeze.outputs.reason }}
+        run: |
+          set -euo pipefail
+          python3 -c "import google.cloud.firestore" 2>/dev/null \
+            || python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+          CHECKED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          VERDICT="CLEAR"
+          if [ "${BLOCKED:-false}" = "true" ]; then
+            VERDICT="BLOCKED"
+          fi
+          REASONS_JSON=$(python3 -c "import json,os; print(json.dumps([os.environ['REASON']] if os.environ.get('REASON') else []))")
+          python3 scripts/cicd/verdict_store.py set \
+            --collection change_freeze_verdicts \
+            --key "$CHECK_TYPE" \
+            --verdict "$VERDICT" \
+            --reasons-json "$REASONS_JSON" \
+            --checked-at "$CHECKED_AT"
+
+  # ── NO SLACK NOTIFY ON A FREEZE BLOCK (operator ruling 2026-07-20) ────────────────────────────
+  #
+  # A freeze block is NOT actionable: the window is short (every window is now capped at <= 30 min,
+  # see scripts/ops/generate-freeze-calendar.py) and the deferred prod build is PERSISTED and
+  # auto-replayed by freeze-deferred-build-replay.yml once the window lifts. Nobody does anything
+  # with the advisory, so it is pure noise on a channel whose value depends on everything in it
+  # being worth reading — the same actionable-only principle the AO alert channel already follows
+  # (codex/04-architecture/agent-orchestrator-alerting.md).
+  #
+  # The block itself is NOT silent: the `check` job still exit-1s as the gate (cloud-build-router
+  # depends on that), still emits a ::notice:: naming the window, and the deferral is recorded for
+  # replay. What is removed is only the human page for an expected, self-resolving control outcome.
+  #
+  # The FAILURE mode — a deferral that never replays — is covered by the stale-deferral guard in
+  # freeze-deferred-build-replay.yml, which pages when a marker outlives every window. That guard
+  # was ADDED alongside this removal: before it, a stuck deferral was genuinely unalerted, so
+  # deleting this job on its own would have gone dark on the one case that actually matters.
+  #
+  # Previous history, kept so it is not re-litigated: this alert was first a CRITICAL (conclusion:
+  # failure forced notify-slack's truthful-severity rule to :x:), then downgraded to a WARNING
+  # advisory with a 30-min dedup on 2026-07-17 after 4 identical alerts fired in a single 5-min
+  # US-open window. Silencing it entirely is the end of that same arc, not a new judgement.

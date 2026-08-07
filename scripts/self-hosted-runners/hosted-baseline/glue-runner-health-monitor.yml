@@ -1,0 +1,89 @@
+name: glue-runner-health-monitor
+
+# Runner-health monitor for the self-hosted `glue` pool — pages when fewer than `min_online`
+# `glue`-labelled runners are `online`.
+#
+# Incident (2026-08-06, issues/fleet_promoter_glue_runner_stall_2026_08_06.md): the LDR→main fleet
+# promoter stalled 3+ hours because the `glue` pool ran at 25% capacity (2 of 4 runners online, one
+# busy) — every `*/5` schedule event queued a run that cancelled its queued predecessor before any
+# runner picked it up, so ZERO promotions completed. The sibling glue-pool-starvation-monitor
+# catches "glue jobs queued, nothing in progress"; this monitor closes the DEPLETED-pool gap at the
+# cheapest honest signal: count the `glue`-labelled runners actually `online` right now. The check
+# script is FAIL-CLOSED — if it cannot query the runner API (permission/network), it pages too,
+# because a monitor that goes dark is the original incident class.
+#
+# MUST run on a GitHub-hosted runner, never `glue` itself — see
+# scripts/self-hosted-runners/classify-glue-workflows.sh KEEP_MONITORS: a dead-man-switch that ran
+# on the pool it watches would go dark exactly when it is needed.
+#
+# SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
+# Source: issues/fleet_promoter_glue_runner_stall_2026_08_06.md
+#         ([INFRA] P1 "Add a runner-health monitor for the glue pool: alert when fewer than N
+#          runners are online")
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # every 15 min — the fleet promoter runs every 5 min; a depleted pool
+      # should page well inside the hour, not after another multi-hour silent stall
+  workflow_dispatch:
+    inputs:
+      min_online:
+        description: "Minimum online glue runners before paging"
+        default: "3"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: glue-runner-health-monitor
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      low: ${{ steps.scan.outputs.low }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Count online glue runners
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIN_ONLINE: ${{ github.event.inputs.min_online || '3' }}
+        run: |
+          set +e
+          REPORT=$(python3 scripts/cicd/glue_runner_health_monitor.py \
+            --repo "${{ github.repository }}" --min-online "$MIN_ONLINE" --slack)
+          RC=$?
+          echo "$REPORT"
+          # RC 1 = depleted pool OR monitor-query failure (both page — fail-closed); RC 0 = healthy.
+          [ "$RC" -eq 0 ] && LOW=false || LOW=true
+          {
+            echo "low=$LOW"
+            echo "report<<__EOR__"
+            echo "$REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+
+  notify:
+    needs: check
+    if: needs.check.outputs.low == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.check.outputs.report }}
+      severity: CRITICAL
+      workflow_name: glue-runner-health-monitor
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Standing condition (the pool stays depleted tick-to-tick until fixed) — page on the
+      # false->true transition, re-remind every hour while it persists. Distinct key from
+      # glue-pool-starved / promotion-lag / promote-fleet-startup-failure so the independent
+      # conditions never share a cooldown.
+      dedup_key: glue-runner-pool-low
+      cooldown_min: 60
+    secrets: inherit

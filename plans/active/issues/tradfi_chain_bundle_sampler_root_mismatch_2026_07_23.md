@@ -165,6 +165,22 @@ the reverse-translation step deliberately (probably scoped inside
 (non-micro) contract code) rather than a blind dict inversion. Not attempted in this session — flagged for operator
 input on which registry wins and which contract family the checker should prefer.
 
+**RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — the micro-vs-standard half of this question.**
+6A vs M6A is purely a contract-SIZE difference (standard vs micro futures on the same underlying), not a naming
+inconsistency to resolve by picking a winner. **Do not collapse them to the same canonical value** — the canonical
+`underlying` needs to encode contract size (e.g. a `_MICRO` suffix or an explicit contract-size field) so `6A` and `M6A`
+stay distinguishable as two different economic instruments, not silently merged into one `AUD`. **Registry-choice
+implication, derived from this ruling**: `tradfi_symbology.py` cannot be the sole base — it is MISSING every
+micro-contract code entirely (no `M6A`/`M6B`/`M6C`/`M6E`/`M6J`/`M6N`/`M6S`/`M2K`/`MCL`/`MES`/`MGC`/`MHG`/
+`MNG`/`MNQ`/`MSI` — none of the 15 "present ONLY in `tradfi_instrument_universe.py`" M-prefixed rows above exist there),
+so it structurally cannot represent the distinction this ruling requires. `tradfi_instrument_universe.py` is the
+necessary base (it has the code coverage) but currently has the OPPOSITE defect — it collapses `M6A`→`AUD` same as
+`6A`→`AUD` (needs its micro-code values changed to a distinguishing form, e.g. `M6A`→`AUD_MICRO`, applied consistently
+across all 15 micro codes). **Still open, not answered by this ruling**: the 17 value-FORMAT disagreements for codes
+both files DO share (naming style only — e.g. `HEATING_OIL` vs `HEATINGOIL`, `TBOND` vs `TREASURY_30Y`) still need a
+pick between the two conventions before the reverse map can be built cleanly. Not asked this round — will need a
+follow-up ruling.
+
 - [ ] [DATA] P1-OPERATOR-DECISION. **CONFIRMED — this mismatch is NOT CME-only; it also hits CBOE/VX (2026-07-27).**
       Re-verifying `tradfi_phase_d_terminal_gate_2026_07_24.md`'s "still in-flight" CBOE force+skip check
       (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
@@ -319,3 +335,7 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   2026-08-04 verdict — only context-scout `context_scope` touches since. Still self-tagged `P1-OPERATOR-DECISION`,
   blocked on the non-injective `EXCHANGE_CODE_TO_NAME` SSOT contradiction (two disagreeing `unified-api-contracts`
   files, 17 mismatched values); nothing to reclassify.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: micro-vs-standard
+  contract question RULED — encode contract size (e.g. `_MICRO` suffix), don't collapse. See § 4 above for the full
+  ruling + its registry-choice implication (`tradfi_instrument_universe.py` is the necessary base). The remaining
+  17-value naming-STYLE disagreement (unrelated to the micro question) is still open, not asked this round.

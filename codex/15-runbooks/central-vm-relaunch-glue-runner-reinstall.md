@@ -1,107 +1,107 @@
 ---
 doc_type: codex-runbook
-title: Central/planning VM relaunch — glue-runner reinstall (interim manual step)
+title: CI-runner-VM relaunch — glue-runner reinstall (interim manual step)
 summary:
-  "A from-scratch relaunch of the central/planning box (`launch-central-brain-aws.sh`) brings the agent-orchestrator
-  backend back but does NOT re-provision the self-hosted GitHub Actions glue/glue-writer runner pool that also lives on
-  that same VM — every self-hosted-glue-labeled workflow (39 unified-trading-pm CI workflows) queues forever until
-  someone manually reinstalls the runner pool. This is the manual interim safety net; the durable fix (auto-wiring the
-  reinstall into the relaunch script itself) is tracked as a follow-on todo, not yet shipped as of this doc."
+  "SUPERSEDED SCOPE (2026-08-05): the self-hosted GitHub Actions glue/glue-writer runner pool no longer lives on the
+  central/planning box — it was fully migrated to a dedicated VM, `ci-escalation-runner-vm-1` (`i-042a6332509482556`,
+  private IP `172-31-3-59`, `c8i.4xlarge`), split off specifically because colocating it with the orchestrator was the
+  confirmed root cause of a fleet-wide CI capacity crisis. A relaunch of the PLANNING box (`i-0c9b283b31d6b5ca7`, EIP
+  `13.113.200.22`) no longer touches runners at all — this runbook now applies only to a from-scratch relaunch of the
+  CI-runner VM itself. There is no registered VM-launcher script for that box yet (it was provisioned ad-hoc); relaunch
+  is a manual `aws ec2 run-instances` from the same AMI/IAM profile, then the reinstall steps below."
 status: current
 nature: process
-asset_group: [ao]
+asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-service, unified-trading-pm]
+repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [runbook, agent-orchestrator, disaster-recovery, self-hosted-runners, ci-cd, planning-vm, glue-runners]
+tags: [runbook, disaster-recovery, self-hosted-runners, ci-cd, ci-runner-vm, glue-runners]
 related:
   [
     /codex/15-runbooks/agent-orchestrator-failover-re-enable-checklist.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/archive/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md,
   ]
 created: "2026-07-30"
-owner: operator (ad-hoc — only exercised during a central-VM relaunch)
+owner: operator (ad-hoc — only exercised during a CI-runner-VM relaunch)
 cadence: on-demand (post-relaunch step — not periodic)
 verifier:
-  "setup-glue-runners.sh status on the new box shows GLUE_COUNT+WRITER_COUNT live runners registered to
-  IggyIkenna/unified-trading-pm, AND a glue-routed workflow (e.g. reconcile-release-tags) picks up a runner on the new
-  box"
+  "setup-glue-runners.sh status on the new box shows GLUE_COUNT+WRITER_COUNT live runners registered per repo, AND a
+  glue-routed workflow (e.g. reconcile-release-tags) picks up a runner on the new box"
 last_executed:
 code_refs:
   [
-    deployment-service/scripts/vm/launch-central-brain-aws.sh,
     unified-trading-pm/scripts/self-hosted-runners/setup-glue-runners.sh,
+    unified-trading-pm/scripts/self-hosted-runners/ssm-run.sh,
   ]
 audience: operator / dev
-last_updated: "2026-07-30"
+last_updated: "2026-08-07"
 execution:
   {
-    owner: "operator (ad-hoc — only exercised during a central-VM relaunch)",
+    owner: "operator (ad-hoc — only exercised during a CI-runner-VM relaunch)",
     cadence: "on-demand (post-relaunch step — not periodic)",
     verifier:
-      "setup-glue-runners.sh status on the new box shows GLUE_COUNT+WRITER_COUNT live runners registered to
-      IggyIkenna/unified-trading-pm, AND a glue-routed workflow (e.g. reconcile-release-tags) picks up a runner on the
-      new box",
+      "setup-glue-runners.sh status on the new box shows GLUE_COUNT+WRITER_COUNT live runners registered per repo, AND a
+      glue-routed workflow (e.g. reconcile-release-tags) picks up a runner on the new box",
     last_executed: NEVER,
   }
 ---
 
-# Central/planning VM relaunch — glue-runner reinstall (interim manual step)
+# CI-runner-VM relaunch — glue-runner reinstall (interim manual step)
 
-## What this is
+## What this is (updated 2026-08-07 — read this before the old planning-VM framing below)
 
-The central/planning box (`agent-orchestrator-vm-1`, EIP `13.113.200.22`) hosts TWO independent things:
+Two previously-colocated things now live on **two separate boxes**:
 
-1. The **agent-orchestrator backend + slot fleet** — covered by
-   [`deployment-service/scripts/vm/launch-central-brain-aws.sh`](../../../deployment-service/scripts/vm/launch-central-brain-aws.sh),
-   which re-associates the Elastic IP and runs `bootstrap_vm.sh --role planning` on the new box.
-2. A **self-hosted GitHub Actions runner pool** (`glue` JIT-ephemeral + `glue-writer` long-lived) that ~39
-   `unified-trading-pm` CI workflows route through via `runs-on: [self-hosted, glue]` / `[self-hosted, glue-writer]` —
-   installed separately via
-   [`unified-trading-pm/scripts/self-hosted-runners/setup-glue-runners.sh`](../../scripts/self-hosted-runners/setup-glue-runners.sh).
+1. **The agent-orchestrator backend + slot fleet** — the **planning VM**, `i-0c9b283b31d6b5ca7`
+   (`agent-orchestrator-vm-1`, EIP `13.113.200.22`). Covered by
+   [`deployment-service/scripts/vm/launch-central-brain-aws.sh`](../../../deployment-service/scripts/vm/launch-central-brain-aws.sh).
+   **This box has hosted zero `github-glue-runner*` units since the 2026-08-05 split — relaunching it needs none of the
+   steps below.** Full deploy reference: `/codex/05-infrastructure/agent-orchestrator-deploy.md`.
+2. **The self-hosted GitHub Actions runner pool** (`glue` JIT-ephemeral + `glue-writer` long-lived) — the **CI-runner
+   VM**, `i-042a6332509482556` (`ci-escalation-runner-vm-1`, private IP `172-31-3-59`, `c8i.4xlarge`, no public EIP —
+   SSM only). Every self-hosted-glue-labeled workflow across the fleet's still-private repos routes through
+   `runs-on: [self-hosted, glue]` / `[self-hosted, glue-writer]` to units installed via
+   [`unified-trading-pm/scripts/self-hosted-runners/setup-glue-runners.sh`](../../scripts/self-hosted-runners/setup-glue-runners.sh),
+   run once per repo needing a pool on this box.
 
-`bootstrap_vm.sh --role planning` has **no knowledge of, and does not call**, `setup-glue-runners.sh install`. So a
-from-scratch relaunch brings the orchestrator back online but leaves every glue-routed workflow queued forever — no
-runner registration exists on the new box until this step runs (the registration lived only on the dead box). This is
-the **manual interim safety net** until the durable auto-wired fix ships (tracked in the issue doc below).
+**This runbook's steps apply only to case 2** — a from-scratch relaunch/replacement of the CI-runner VM. There is no
+`bootstrap_vm.sh`-style role for it and no registered `VM_PREFIX_TO_BUCKET` launcher; standing it back up is a manual
+`aws ec2 run-instances` (same AMI `ami-0bf052f8a9dd8bf42` + IAM instance profile the current box uses — confirm via
+`aws ec2 describe-instances --instance-ids i-042a6332509482556` before it's gone) followed by the reinstall steps below,
+run once per repo that needs a pool on the new box.
 
 ## When to run this
 
-Immediately after any `launch-central-brain-aws.sh` invocation (fresh box, disaster recovery, or a deliberate rebuild) —
-run this BEFORE assuming CI is healthy again. Check first whether the automatic fix has since landed:
-`grep -n "setup-glue-runners" deployment-service/scripts/vm/launch-central-brain-aws.sh` — if it appears in the
-bootstrap sequence, this manual step is no longer needed (the relaunch script does it for you); otherwise, follow the
-steps below.
+Immediately after replacing the CI-runner VM (disaster recovery, or a deliberate rebuild) — run this BEFORE assuming CI
+is healthy again. Do **not** run this after a planning-VM (`i-0c9b283b31d6b5ca7`) relaunch — that box carries no runner
+pools to reinstall.
 
 ## Steps
 
-1. **SSH / SSM onto the new box** (same box `launch-central-brain-aws.sh` just stood up):
+1. **SSM onto the new box** (no SSH — see `unified-trading-pm/scripts/self-hosted-runners/ssm-run.sh`, and note its
+   default target is stale/points at the old pre-split box; pass the new instance ID explicitly):
    ```bash
-   aws ssm start-session --target <new-instance-id>
+   aws ssm start-session --target <new-ci-runner-instance-id>
    ```
-2. **Confirm the AO backend is already up** (this step runs AFTER `bootstrap_vm.sh --role planning` completes, not
-   before):
-   ```bash
-   curl -sf http://localhost:8765/health
-   ```
-3. **Install the glue runner pools** (as root, with the VM's `GH_PAT` secret — the same admin token
-   `launch-central-brain-aws.sh` already fetches from Secrets Manager for its own bootstrap):
+2. **Install the glue runner pools** (as root, with the VM's `GH_PAT` secret), once per repo that needs a pool on this
+   box:
    ```bash
    cd /home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/self-hosted-runners
    sudo GH_TOKEN_SECRET=GH_PAT ./setup-glue-runners.sh install
    ```
    This downloads+verifies the pinned runner tarball, builds the slot (venv + runner-owned clone), registers both pools
    (`glue-1..N`, `writer-1..N`) with GitHub, and starts the systemd units.
-4. **Verify**:
+3. **Verify**:
    ```bash
    ./setup-glue-runners.sh status
    ```
-   Expect `GLUE_COUNT` ephemeral + `WRITER_COUNT` long-lived runners listed as `online` under
-   `IggyIkenna/unified-trading-pm`. If any are missing, check `journalctl -u 'github-glue-runner@*.service'` for the
-   crash reason (common causes: missing `GH_TOKEN_SECRET` IAM grant, slot-venv Python version mismatch — see the
-   script's own preflight for the full toolchain check).
-5. **Confirm a real workflow picks up a runner on the new box**: trigger (or wait for) a glue-routed workflow —
-   `reconcile-release-tags` is the documented canary — and confirm it claims a runner registered in step 4, not stuck
+   Expect `GLUE_COUNT` ephemeral + `WRITER_COUNT` long-lived runners listed as `online`. If any are missing, check
+   `journalctl -u 'github-glue-runner@*.service'` for the crash reason (common causes: missing `GH_TOKEN_SECRET` IAM
+   grant, slot-venv Python version mismatch — see the script's own preflight for the full toolchain check).
+4. **Confirm a real workflow picks up a runner on the new box**: trigger (or wait for) a glue-routed workflow —
+   `reconcile-release-tags` is the documented canary — and confirm it claims a runner registered in step 3, not stuck
    queued.
 
 ## Cross-references

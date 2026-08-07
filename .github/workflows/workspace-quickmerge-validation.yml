@@ -15,11 +15,7 @@ concurrency:
 
 jobs:
   validate:
-    # CI-cost B1: moved off billed GitHub-hosted minutes onto the self-hosted glue pool on the
-    # orchestrator VM. Labels are a SUBSET match, so [self-hosted, glue] lands ONLY on the
-    # JIT-ephemeral pool — never on the glue-writer pool, which deliberately omits `glue`.
-    # SSOT: scripts/self-hosted-runners/README.md + plans/active/github_actions_ci_cost_reduction_2026_07_15.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout unified-trading-pm
         uses: actions/checkout@v5

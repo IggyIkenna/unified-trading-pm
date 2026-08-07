@@ -130,12 +130,41 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged -- the 2026-08-06
   archive-candidate audit note (unmet done-when) doesn't change the reading list: the launcher + both codex VM SSOTs +
   the closeout/source plans still cover it.
+- **slot-7 data_engineering 2026-08-07**: Post-completion audit completed. VM `mdps-backfill-cefi-20260804-190444`
+  confirmed preempted at T+2min (gcloud op `systemevent-1785870422262`); no run.log; zero work done. Bundle state:
+  42/112 DERIBIT OK (6 days, BTC+ETH present, updated by prior Aug 3 + Jul 22 runs); 42/112 BYBIT PARTIAL (1 symbol per
+  bundle, race-winner state unchanged); 14/112 DERIBIT MISSING (2023-11-02, 2024-07-01 — raw data exists); 14/112 BYBIT
+  MISSING (2025-11-01, 2026-01-01 — NO raw tick data). Added relaunch (P2 INFRA) and raw-gap investigation (P3 DATA)
+  todos.
 
 ## Follow-ups
 
-- [ ] [DATA] P2. Post-completion bundle audit: confirm mdps-backfill-cefi-20260804-190444 exited 0 and all 112 cells are
-      OK (correct per-leg symbol counts)
+- [x] ✅ [DATA] P2. Post-completion bundle audit: confirm mdps-backfill-cefi-20260804-190444 exited 0 and all 112 cells
+      are OK (correct per-leg symbol counts) — **FINDING: VM was preempted at T+2min (insert 2026-08-04T19:04:54Z →
+      preempted 2026-08-04T19:07:05Z, confirmed via `gcloud compute operations list`). No run.log in GCS. ZERO work
+      done.** Current bundle state (audited 2026-08-07): 42/112 DERIBIT cells OK (6 days × 7 tf, BTC+ETH underlyings
+      present); 42/112 BYBIT cells EXIST but PARTIAL (6 days × 7 tf, only 1 symbol per bundle — same race-winner state
+      as pre-launch); 14/112 DERIBIT cells MISSING (2023-11-02 + 2024-07-01, raw data exists); 14/112 BYBIT cells
+      MISSING (2025-11-01 + 2026-01-01, NO raw tick data in GCS). **NOT 112/112 OK. VM must be relaunched.** Evidence:
+      gcloud op systemevent-1785870422262-6583d5c2244d0 (preempted); bundle sampling: 2023-06-01/15s/BYBIT→1 symbol
+      (BTC-29DEC23), 2023-08-02/15s/BYBIT→1 symbol (ETH-29MAR24), source raw has both BTC+ETH underlyings confirming
+      partial. unified-trading-pm@<sha>
+
+- [ ] [INFRA] P2. Relaunch MDPS --force VM for Track-7 BYBIT+DERIBIT incomplete cells. Scope: same 8 days × BYBIT
+      futures_chain + DERIBIT options_chain × 7 timeframes, CEFI only, --force. Note: 2025-11-01 and 2026-01-01 BYBIT
+      futures_chain have NO raw tick data (no `raw_tick_data/…/venue=BYBIT/instrument_type=futures_chain/` for those
+      days) — investigate raw data gap separately; exclude those days from --force rerun scope or let MDPS skip them.
+      Focus on: 6 days × BYBIT (partial→correct) + 2 days × DERIBIT (2023-11-02, 2024-07-01) (missing→present). **Done
+      when**: VM exits 0, post-backfill audit shows all reachable cells OK (42 DERIBIT + 42 BYBIT from 6 days = 84 cells
+      at minimum). Confirm via per-cell symbol count check in GCS.
+
+- [ ] [DATA] P3. Investigate why 2025-11-01 and 2026-01-01 have no BYBIT futures_chain raw tick data in the cefi-prd GCS
+      bucket (no `instrument_type=futures_chain` directory under `venue=BYBIT` for those 2 days in batch_tardis).
+      Determine if Tardis re-download is needed. (repo: market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: The only todo's own done-when (VM exit 0 + post-backfill bundle audit shows
 > all 112 cells OK) is unmet — evidence cites only 'Launched... RUNNING as of 2026-08-04T19:04:44Z', and the promised
 > 'Post-completion audit todo below' was never actually created.
+
+> **2026-08-07 audit result**: VM confirmed preempted T+2min. 42/112 cells OK (DERIBIT only). Relaunch + raw-data
+> investigation todos added above.

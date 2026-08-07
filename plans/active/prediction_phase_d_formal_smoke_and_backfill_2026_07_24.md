@@ -119,16 +119,28 @@ context_scope:
       type-segment); soccer rows checked for `af_fixture_match_status`. Cross-AG byte-unchanged (cefi/tradfi/defi/sports
       pinned). Skills already accept `--asset-group PREDICTION`; the RUN (below) needs an operator `--day`. (repos:
       market-tick-data-service ✅, instruments-service ✅)
-- [ ] [DATA] P0. **Run `data-pipeline-check-is` for prediction-only, all shards, post-migration** — real operator-given
-      `--day` against `-test-` buckets; both prediction IS shards prove force/skip + canonical shape; report path cited.
-- [ ] [DATA] P0. **Run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration** — same day, all 4
-      prediction MTDS shards prove force/skip + canonical shape; report path cited. **BOTH skills green across all
-      prediction shards = prediction is code-complete, migrated, honestly-covered, and verified.** **PARTIAL 2026-07-19
-      (tick 22):** all 6 smoke fixes landed; IS force leg DEMONSTRATED end-to-end (0-obj→182 CQG-first objects w/
-      canonical `PREDICTION_MARKET`, `-test-` bucket, day=2026-06-28) — the dominant IS 0/14 RED is resolved;
-      `book_snapshot_5` now honest live-only skip. Formal all-green still blocked ONLY by the `trades` catalogue-gating
-      (next todo). The orphaned re-run produced no formal report (VM cleaned up); re-run cleanly once the
-      catalogue-order follow-up lands.
+- [ ] [DATA] P0. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — use `--day 2026-08-05`
+      (recommended after research; operator asked for a representative day with data across shards rather than naming
+      one directly).** Reasoning: must postdate the 07-01→07-06 prediction capture-incident gap AND the 2026-07-30
+      Kalshi `canonical_question_group` write-time-bug fix (`instruments-service@e0f7aaad`) to reflect the CURRENT,
+      fixed pipeline state, not a pre-fix day; 2026-08-05 is 2 days before this ruling (2026-08-07), safely
+      settled/finalized. **Caveat, stated honestly**: live per-shard row-count verification wasn't feasible from this
+      session — the `coverage-summary` API refused the full computation (~83GB estimated, over its 768MB safety budget)
+      and a manual GCS walk would violate the single-walk-discipline rule. A documented, already-PROVEN fallback exists
+      if 2026-08-05 turns out sparse on any shard: **`2026-06-28`** — this doc's own earlier tick-22 entry confirms the
+      IS force leg ran end-to-end against it (0-obj→182 real canonical `PREDICTION_MARKET` objects). The pipeline-check
+      run itself will immediately reveal if either day is sparse on a given shard (that is what force/skip proving is
+      for) — try 2026-08-05 first, fall back to 2026-06-28 if any shard comes up empty. Run `data-pipeline-check-is` for
+      prediction-only, all shards, post-migration — both prediction IS shards prove force/skip + canonical shape; report
+      path cited.
+- [ ] [DATA] P0. **Same `--day` ruling as above.** Run `data-pipeline-check-mtds` for prediction-only, all shards,
+      post-migration — same day, all 4 prediction MTDS shards prove force/skip + canonical shape; report path cited.
+      **BOTH skills green across all prediction shards = prediction is code-complete, migrated, honestly-covered, and
+      verified.** **PARTIAL 2026-07-19 (tick 22):** all 6 smoke fixes landed; IS force leg DEMONSTRATED end-to-end
+      (0-obj→182 CQG-first objects w/ canonical `PREDICTION_MARKET`, `-test-` bucket, day=2026-06-28) — the dominant IS
+      0/14 RED is resolved; `book_snapshot_5` now honest live-only skip. Formal all-green still blocked ONLY by the
+      `trades` catalogue-gating (next todo). The orphaned re-run produced no formal report (VM cleaned up); re-run
+      cleanly once the catalogue-order follow-up lands.
 - [x] [DATA] P1. **✅ DONE 2026-07-19 (tick 23) — `market-tick-data-service@7b0768d9`: pinned `deployment_env="prod"` on
       the 3 prediction universe-enumeration catalogue reads (`_polymarket_helpers.py` load + JSON fallback,
       `base_prediction_adapter.py::_load_market_lifecycle_for_date` = Kalshi's universe) — option (a): the market
@@ -143,19 +155,23 @@ context_scope:
       `IS_TEST_RUN`-aware (`deployment_env="test"`), OR (b) accepting the prod-catalogue read as canonical (arguably
       more correct) and marking the `-test-` trades universe as prod-catalogue-sourced. NOT a data-correctness bug. Then
       re-run both skills for a formal all-green Phase-D. (repos: market-tick-data-service)
-- [ ] [DATA] P2. **`data-pipeline-check-is` 3x cadence top-up (relocated 2026-07-25 from the parent's "Queued audits +
-      reviews" section).** Run `/data-pipeline-check-is --asset-group prediction` twice more — a pre-Phase-B baseline
-      checkpoint and a Phase-B mid-migration spot-check — to reach the 3x cadence `task_template.md` finding K requires
-      (checkpoint 3, the post-migration final gate, is already this doc's own P0 todo above). Also tracked as an
-      AO-dispatchable partial-slice execution copy in `prediction_consolidated_native_ao_extract_2026_07_25.md`
-      (`status: draft`) todo 2 — that plan's own Done-when now cites THIS checkbox's Progress Log (updated 2026-07-25,
-      corpus-wide referrer fixup), not the parent's now-relocated section; it explicitly does NOT flip this checkbox
-      itself (only the pre-Phase-B leg lands there — the mid-migration leg stays tracked here). Done when: both runs'
-      report paths + dates are cited in this plan's Progress Log.
-- [ ] [DATA] P2. **`data-pipeline-check-mtds` 3x cadence top-up (relocated 2026-07-25 from the parent's "Queued audits +
-      reviews" section).** Run `/data-pipeline-check-mtds --asset-group prediction` twice more — the same pre-Phase-B
-      baseline + Phase-B mid-migration checkpoints as the `-is` todo above — to reach the 3x cadence (checkpoint 3 is
-      this doc's own sibling P0 todo above). Also tracked as an AO-dispatchable partial-slice execution copy in
+- [ ] [DATA] P2. **`--day` ruled 2026-08-07 same as the P0 todo above (`2026-08-05`, fallback `2026-06-28`)** — these
+      are baseline/mid-migration checkpoints, not the post-migration final gate, so exact day matters less; any
+      reasonably representative day works. `data-pipeline-check-is` 3x cadence top-up (relocated 2026-07-25 from the
+      parent's "Queued audits + reviews" section). Run `/data-pipeline-check-is --asset-group prediction` twice more — a
+      pre-Phase-B baseline checkpoint and a Phase-B mid-migration spot-check — to reach the 3x cadence
+      `task_template.md` finding K requires (checkpoint 3, the post-migration final gate, is already this doc's own P0
+      todo above). Also tracked as an AO-dispatchable partial-slice execution copy in
+      `prediction_consolidated_native_ao_extract_2026_07_25.md` (`status: draft`) todo 2 — that plan's own Done-when now
+      cites THIS checkbox's Progress Log (updated 2026-07-25, corpus-wide referrer fixup), not the parent's
+      now-relocated section; it explicitly does NOT flip this checkbox itself (only the pre-Phase-B leg lands there —
+      the mid-migration leg stays tracked here). Done when: both runs' report paths + dates are cited in this plan's
+      Progress Log.
+- [ ] [DATA] P2. **`--day` ruled 2026-08-07, same as above.** `data-pipeline-check-mtds` 3x cadence top-up (relocated
+      2026-07-25 from the parent's "Queued audits + reviews" section). Run
+      `/data-pipeline-check-mtds --asset-group prediction` twice more — the same pre-Phase-B baseline + Phase-B
+      mid-migration checkpoints as the `-is` todo above — to reach the 3x cadence (checkpoint 3 is this doc's own
+      sibling P0 todo above). Also tracked as an AO-dispatchable partial-slice execution copy in
       `prediction_consolidated_native_ao_extract_2026_07_25.md` (`status: draft`) todo 3 — same reconciliation-target
       update as the `-is` todo above. Done when: both runs' report paths + dates are cited in this plan's Progress Log.
 - [x] ✅ [REVIEW] P2. **Adversarial AO-dispatch-readiness pass, Track-Y-style — DONE 2026-08-04 (slot-7). 0 findings.

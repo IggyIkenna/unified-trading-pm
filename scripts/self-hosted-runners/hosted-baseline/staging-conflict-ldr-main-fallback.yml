@@ -36,8 +36,21 @@ name: staging-conflict-ldr-main-fallback
 #       codex/08-workflows/ci-cd-flow.md § "LDR is the SSOT".
 
 on:
-  schedule:
-    - cron: "47 * * * *" # hourly, offset — staging->main dams are low-urgency (recurrence prevention)
+  # STOPPED 2026-07-23 (operator ruling; staging-machinery shutdown). Ran 142×/week, 100%
+  # schedule/success — and STRUCTURALLY a no-op: the job skips PM and skips every repo whose
+  # `promotion_model` is `ldr_main`, which today is ALL 25 repos in workspace-manifest.json, so
+  # every run hits a `continue` before any PR logic. Despite the "ldr-main-fallback" in the name
+  # this is NOT the live LDR→main safety net — that path is owned by ldr-to-main-promote-fleet.yml.
+  # It exists to un-dam staging→main promotions, and there are no staging→main dams while `staging`
+  # is frozen (since 2026-06-27, 0 open staging PRs fleet-wide). Self-hosted, so $0 — stopped
+  # anyway per "free doesn't mean we want it to run".
+  #
+  # KEPT REVERSIBLE: `workflow_dispatch` (incl. its dry_run input) stays live; UNCOMMENT the two
+  # lines below when a repo is routed back THROUGH staging. NOTE: a `schedule:` fires from the
+  # DEFAULT branch, so this only takes effect once promoted to `main`.
+  # SSOT: plans/active/issues/staging_workflow_shutdown_2026_07_23.md
+  # schedule:
+  #   - cron: "47 * * * *" # hourly, offset — staging->main dams are low-urgency (recurrence prevention)
   workflow_dispatch:
     inputs:
       dry_run:

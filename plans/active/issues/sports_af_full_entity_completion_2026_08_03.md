@@ -231,6 +231,23 @@ not urgent enough to block this campaign.
       FIXTURE_STATS past the SPOT storm; it needs an explicit operator check-in (dashboard's parked-tasks view now
       surfaces this task per `get_parked_tasks()`'s design intent) rather than relying on redispatch churn to notice.
 
+## Off-campaign follow-ups (vendor-completion audit, opened 2026-08-07) — SUPERSEDED, moved out 2026-08-07
+
+**Promoted to its own doc**: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`. The operator widened the
+mandate the same day from "every AF entity" to "every sports vendor (incl. odds_api/MTDS) down to captured +
+empty_confirmed only" — genuinely broader than this doc's AF-specific scope and this doc was already at 800/1000 lines,
+so the new doc is the tracking home for all of it (including the two items below, which finished before the split and
+are kept here only as a compact record):
+
+- [x] ✅ FootyStats 50-league subscription widening + China/Russia purge — DONE 2026-08-07
+      (`unified-api-contracts@7810dad61`, `instruments-service@bbba584ef`, `instruments-service@8548182b5`).
+- [x] ✅ SFI 89-row `attempted_failed` cluster — DONE 2026-08-07, root cause was a mis-scoped retry (see the new doc's
+      Progress Log for the full writeup); confirmed 89 → 0.
+
+Everything still open (footystats VM verification, Transfermarkt's 8-row retry, the PLAYER_VALUES data-discard decision,
+the cross-vendor generalization scoping ask, baking checks into a daily AO run, plus the much larger
+odds_api/api_football/MTDS picture found during the split) now lives in the new doc.
+
 ## Sequencing note
 
 All of these share the SAME `af-backfill-*`/`af-audit-*` singleton lock (one API-Football-consuming VM at a time, shared
@@ -709,3 +726,81 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `EXPECTED_NO_PROVIDER_COVERAGE` at 91.9% — a distinct, already-implemented "outside scope" reason-code, not a generic
   empty; flagged a larger open ask from the operator (generalize this reason-level denominator hardening across all 5
   vendors + a manifest purge + a new codex SSOT doc) as needing proper scoping before starting, not yet begun.)
+- **2026-08-07T09:53Z** — PLAYER_STATS checkpoint climbing (last_completed_date 2023-12-26 as of 09:15Z, monotonic),
+  still healthy — no dedicated re-census this tick, deferred to let the following off-loop corrections land first.
+  (Aside, all unrelated to this campaign: (1) executed the operator-authorized China/Russia footystats manifest purge —
+  `instruments-service/scripts/footystats_purge_out_of_scope_leagues_2026_08_07.py`, confirmed 0 captured rows in the
+  drop set, 4,458 rows removed, verified 0 remaining canonical + per-VM, backup at
+  `_index/availability_index.20260807-085052.footystats_purge.bak.parquet`, shipped `instruments-service@8548182b5`; (2)
+  launched the footystats backfill VM scoped to the new 50-league registry — first launch used `--force`, which this
+  launcher's `VM_FORCE=true` metadata translates into a `--force` CLI flag on the actual `instruments_service`
+  invocation, i.e. a full redo-all across the whole `--start-date 2020-06-06` range (confirmed via serial console);
+  caught before meaningful cost (~2 min into execution, no existing `fs-backfill-*` VM was even running so the
+  lock-bypass half of `--force` was never needed), deleted `fs-backfill-20260807-095916` and relaunched clean as
+  `fs-backfill-20260807-100731` (no `--force`, skip-if-captured default); (3) went to verify the SFI retry VM launched
+  last tick (`features-sfi-progressive-20260807-085632`, exit_code=0) actually cleared the 89 attempted_failed rows — it
+  hadn't: **root cause was mis-scoping, not a persistent vendor failure**. The 89 rows are
+  `service_name=instruments-service, data_type=SFI_PROGRESSIVE_STATS` (raw ingestion, `soccer_football_info` adapter,
+  `sfi.py` orchestrator), but the retry ran `features-service`'s `compute_sfi_progressive_only`, which writes a
+  _different_ downstream data_type (`SFI_PROGRESSIVE_FEATURES`) — it never touched the failing rows at all (their
+  `attempted_at` timestamps are still 07-20/07-27/08-03, none from the retry's run). Relaunched correctly via
+  `deployment-service/scripts/vm/launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2026-07-20 2026-08-01` (no
+  `--force` needed, no existing `sfi-*` VM running; `sfi.py`'s per-league `record_failed` path — already fixed
+  2026-07-14 to mirror the footystats/weather per-league pattern per its own inline comment — means `attempted_failed`
+  is not in this orchestrator's skip set either, so this run should genuinely retry all 89 shards). Transfermarkt's
+  retry (`tm-backfill-20260807-085636`) was checked too and is correctly scoped (`instruments_service`,
+  `--sports-provider TRANSFERMARKT --sports-entity PLAYER_VALUES`, single day `2026-08-04`) — its `--force` is low-risk
+  since the date range is a single day, left running as-is. Both SFI (corrected) and TM retries pending confirmation
+  next tick.)
+- **2026-08-07T10:19Z** — PLAYER_STATS checkpoint climbing (2023-12-26 → 2024-04-07, +103 days), still healthy. (Aside,
+  all unrelated to this campaign: (1) **SFI retry CONFIRMED RESOLVED** — `sfi-backfill-20260807-101503` (correctly
+  re-scoped to `instruments-service --sports-provider SOCCER_FOOTBALL_INFO`) completed exit_code=0, wrote 5,669 real
+  progressive-stat rows for 2026-08-01 alone; manifest re-query confirms **89 → 0** `attempted_failed` for
+  `source=soccer_football_info` — the mis-scoping diagnosis from last tick was the true root cause, not a persistent
+  vendor failure; (2) footystats backfill VM (`fs-backfill-20260807-100731`) healthy, climbing (2021-01-26 as of 09:49Z)
+  — working through the 2020-06-06 floor forward, will take a while given the ~6-year, 50-league range but no concerning
+  behavior; (3) **Transfermarkt retry is a live, ongoing vendor problem, not the resolved one-off it looked like last
+  tick** — `tm-backfill-20260807-085636` is hitting repeated real-time HTTP 502s from
+  `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` (10-attempt exponential-backoff cycles,
+  restarting the outer cycle after each exhaustion) continuously from at least 09:35Z through 09:49Z on TODAY's date
+  (2026-08-07), not just the original 2026-08-04 cluster — this is correct retry behavior (502 is legitimately
+  retryable) so left running, but it means the vendor's `standings` endpoint is currently degraded, not transiently
+  blipped; will re-check next tick and consider killing/deferring if it's still spinning identically (billing-waste
+  judgment call, not yet warranted at ~1h of retries on a SPOT e2-standard-8).)
+- **2026-08-07T10:35Z** — PLAYER_STATS checkpoint climbing (2024-04-07 → 2024-08-14, +129 days). footystats backfill
+  climbing (2021-01-26 → 2021-10-09, +257 days). Both healthy. (Aside, all unrelated to this campaign — a big off-loop
+  tick: (1) killed `tm-backfill-20260807-085636` after confirming 2h17m of an identical HTTP-502 retry cycle against
+  `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` with zero forward progress — a
+  durably-down vendor endpoint, not a transient blip, so continuing to let it spin was confirmed billing waste; (2)
+  operator widened this session's mandate from "every AF entity" to "every sports vendor (incl. odds_api/MTDS) down to
+  captured + empty_confirmed only" — ran a full cross-vendor manifest census (10,463,368 rows) and found the real scope
+  is much larger than earlier believed: weather has 205,517 `expected_unattempted` shards and SFI 205,363 (both were
+  called "100% clean" earlier this session based only on `attempted_failed=0` — an incomplete check, corrected now), and
+  odds_api has by far the largest `attempted_failed` cluster (13,916 rows). Given the AF doc was already at 800/1000
+  lines and this is genuinely broader in kind, opened `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` as
+  the new tracking home (this doc's own off-campaign section trimmed to a pointer); (3) traced
+  `mdps_odds_horizon_bucket`'s gap to an ALREADY-FIXED freshness-check bug (shipped 2026-07-30) and found the actual
+  backfill is tracked in a pre-existing doc (`sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`) whose P1/P2 todos
+  were stuck `BLOCKED-CREDENTIALS` from the 2026-08-02 odds-api quota exhaustion — stale, since the operator's
+  10M-credit top-up landed 2026-08-03; retagged both after live-reverifying 14.4M credits available today. Deliberately
+  did NOT launch that backfill VM this tick — that doc's own history (5+ uncoordinated relaunches, preemptions, silent
+  freezes, one contributing to the original quota-exhaustion incident) argued for a dedicated, attentive next tick
+  rather than a rushed launch at the tail of an already-dense one.)
+- **2026-08-07T11:08Z** — PLAYER_STATS checkpoint climbing (2024-08-14 → 2024-10-06), chunk 18-19/26. footystats
+  backfill climbing (2021-10-09 → 2022-05-01). Both healthy. (Aside, all in
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s scope, not this campaign's: this tick delivered on
+  last tick's stated priority — launched the odds_api gap-backfill VM (`mtds-backfill-odds-1`, guard-verified
+  `0 running + 1 planned <= cap 1`, no `--force`) and the weather full backfill (`weather-backfill-20260807-120241`)
+  cleanly; both confirmed RUNNING. Also root-caused the bulk of api_football's 35,058 attempted_failed rows (78% is the
+  already-known 2026-08-06 quota exhaustion, self-resolving via this very campaign's active sweep). Full fleet as of
+  this tick: 4 VMs RUNNING (this campaign's `af-backfill`, `fs-backfill`, plus `mtds-backfill-odds-1` and
+  `weather-backfill` from the sibling doc) — no conflicts, no shared locks contended.)
+- **2026-08-07T12:12Z** — PLAYER_STATS climbing (2024-12-04 → 2025-03-08), footystats climbing (2022-10-13 →
+  2023-04-23). Both healthy. (Aside, sibling-doc scope: correction to last tick's optimistic odds_api VM read — it
+  turned out `mtds-backfill-odds-1` was OOM-crash-looping the whole time (10 leagues, 10 identical chunk-1 OOM kills,
+  zero real progress) and got killed; a relaunch attempt was correctly blocked by the concurrency guard because another
+  worker's `mtds-backfill-odds-401-retry` (a legitimate, `--allow-parallel`, guard-respecting parallel launch targeting
+  the 871-row 401 retry todo) is still running and healthy. Full detail + the pre-existing OOM bug this reproduces in
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` and
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. SFI backfill also confirmed healthy this tick (real writes,
+  21,742 rows for 2020-10-17). Not this campaign's scope, noted for completeness.)

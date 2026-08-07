@@ -54,8 +54,12 @@ permissions:
 jobs:
   frontmatter-gate:
     name: Doc frontmatter gate (LDR)
-    # MUST match exactly what glue-runner-run.sh registers (LABELS_JSON='["self-hosted","glue"]').
-    runs-on: [self-hosted, glue]
+    # REVERTED 2026-08-07 (self_hosted_runner_public_repo_revert_2026_08_05.md todo 24): PM went
+    # PUBLIC 2026-08-06, so ubuntu-latest is free/unmetered for it, and self-hosted-on-a-public-repo
+    # is a fork-PR security exposure. This job was BORN self-hosted (created 2026-07-17 directly on
+    # the glue pool) — added the setup-python + pyyaml install below since there is no ambient venv
+    # on a hosted runner (check_frontmatter_schema.py imports yaml).
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       verdict: ${{ steps.gate.outputs.verdict }}
@@ -74,12 +78,18 @@ jobs:
           # 500 comfortably covers 40+ hours), while staying far short of full history.
           fetch-depth: 500
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install checker dependencies
+        run: python3 -m pip install --quiet pyyaml
+
       - name: Corpus frontmatter check + per-file attribution
         id: gate
         shell: bash
         run: |
           set -uo pipefail
-          # The glue slot's venv python (unit PATH) carries the PM deps the checker needs.
           OUT="$(python3 scripts/plan-hygiene/check_frontmatter_schema.py --quiet 2>&1)"
           RC=$?
           echo "$OUT"

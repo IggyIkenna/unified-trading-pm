@@ -30,7 +30,7 @@ tags: [ci-cd, cloud-build-router, concurrency, deployment, silent-failure, fleet
 related:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    /plans/archive/2026_08/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
     /plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md,
   ]
 created: 2026-07-27

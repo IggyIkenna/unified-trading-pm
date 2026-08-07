@@ -261,10 +261,27 @@ what each sentence was going to say, and rewriting another session's just-commit
 
 - [ ] [PM] P2. Once you've answered items 1-3 above, record the decision inline in this doc (flip to resolved) and
       propagate into the relevant plan doc(s)' todos per the standing "plan references, doesn't duplicate" rule.
-- [ ] [PM] P2. Same for items 5-9 (appended 2026-07-26 by `/plan-reconcile`, tradfi tranche): record each decision
-      inline here and propagate into the named plan doc(s). Items 5 and 7 additionally need their target plans'
-      frontmatter / todo tags edited to match the ruling; item 6 must re-run
-      `scripts/plan-hygiene/check_ag_closeout_linkage.py` and confirm 0 orphans in the SAME commit as any retag.
+- [ ] [PM] P2. **PARTIALLY RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — items 5, 7, 8
+      answered below; items 1-4, 6, 9 remain open, not asked this round.** - **Item 5 — RULED: Option A, flip all 8
+      draft tradfi AO plans to active** (not the worker-recommended narrower Option B). Operator's literal instruction
+      was unqualified "flip to active" — taking the plain reading (all 8), not the smaller-blast-radius subset.
+      **Flagging for visibility, not re-asking**: the worker's own caution was that this lands 49 todos on the fleet at
+      once alongside batch3's 9 — if that's not what was intended, say so and I'll narrow to just
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its finalize per Option B instead. Propagation not yet
+      executed (flip each of the 8 plans' `status: draft` → `active` frontmatter) — ready to execute. - **Item 7 —
+      RULED: Option A** (matches worker rec) — add the stated safe-idempotent justification to
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard launch sub-item (cite
+      `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns, name the launcher + a
+      shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed — ready to execute. -
+      **Item 8 — RULED, conditional: operator said fold/archive IF the doc's todos are mostly done — condition IS met**
+      (1 open todo, near-complete, per the doc's own item-8 analysis). **Important**: the worker's own Option-B
+      recommendation argued to KEEP it specifically because it's the tranche's aggregator/linkage anchor
+      (`check_ag_closeout_linkage.py` resolves against its aggregated-source list) — archiving without re-homing that
+      role would orphan the linkage. Applying the operator's literal instruction safely means **Option C**, not a bare
+      archive: fold the remnant into `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` (where
+      its derivative already lives), archive the shell via the 6-step ritual, AND re-home the linkage anchor onto a new
+      `tradfi_consolidated_closeout_aggregated_sources_*.md` (the cefi/defi pattern) — then re-run
+      `check_ag_closeout_linkage.py` and confirm 0 orphans in the same commit. Not yet executed — ready to execute.
 
 ## 10. TIME-CRITICAL — the legacy-bucket delete was 2026-07-14, not 2026-07-06; your soft-delete check is more likely to succeed than the doc says [RECOMMEND OPTION A]
 

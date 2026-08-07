@@ -274,12 +274,12 @@ to be per repo — not measured here, out of this todo's scope.
       (`market-data-processing-service`, done-when 2026-08-17 — moot now that MDPS runs a real gate instead of a shadow
       trial; re-derive fleet-wide evidence from the post-promotion divergence-analysis tool instead, see above) OR the
       historical backtest clearing with zero divergences over a sample the reviewer judges large enough to trust.
-      **Re-ran the backtest 2026-08-05** now that `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`
-      has meaningfully (not fully) reduced fleet contention: `execution-service`/`instruments-service`/
-      `market-data-processing-service` still 0 usable (100% unattributable infra kills — contention reduced, not
-      eliminated), but `features-service` produced a real usable sample for the first time — **5/5, and investigated
-      each one directly rather than trusting the raw tool output**: all 5 are the SAME already-tracked
-      pytest-timeout-under-contention flakiness
+      **Re-ran the backtest 2026-08-05** now that
+      `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` has meaningfully (not fully)
+      reduced fleet contention: `execution-service`/`instruments-service`/ `market-data-processing-service` still 0
+      usable (100% unattributable infra kills — contention reduced, not eliminated), but `features-service` produced a
+      real usable sample for the first time — **5/5, and investigated each one directly rather than trusting the raw
+      tool output**: all 5 are the SAME already-tracked pytest-timeout-under-contention flakiness
       (`/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md`, identical
       `+++ Timeout +++` signature), NOT genuine selector divergences — the selector's narrowing was correct in every
       case; the tests separately timed out under load, unrelated to the diffs. **Net: 0 genuine divergences found in the
@@ -462,13 +462,13 @@ due for its own pre-authorized next action independent of this audit.
 - **context-scout 2026-08-03 (re-scout)**: re-verified context_scope (6 entries) -- all paths resolve
   (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, already correctly dated); no change needed.
 - **2026-08-05 (interactive session)**: re-ran the historical backtest after completing
-  `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (fleet contention measurably down, load average
-  ~65 peak → ~29 on the new dedicated VM, not fully resolved). `features-service` finally produced a usable sample (5,
-  up from 0) — investigated each divergence directly against the raw CI logs rather than trusting the tool's summary,
-  and all 5 turned out to be the same already-tracked pytest-timeout-under-contention flakiness, not genuine selector
-  bugs (cross-linked into `pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md`). Net: first real, if
-  modest, positive evidence point (0/5 genuine divergences) — updated the fleet-wide evidence-sufficiency todo above
-  accordingly. The other 3 backtested repos remain at 0 usable sample; re-run again once contention drops further.
+  `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (fleet contention measurably down,
+  load average ~65 peak → ~29 on the new dedicated VM, not fully resolved). `features-service` finally produced a usable
+  sample (5, up from 0) — investigated each divergence directly against the raw CI logs rather than trusting the tool's
+  summary, and all 5 turned out to be the same already-tracked pytest-timeout-under-contention flakiness, not genuine
+  selector bugs (cross-linked into `pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md`). Net: first
+  real, if modest, positive evidence point (0/5 genuine divergences) — updated the fleet-wide evidence-sufficiency todo
+  above accordingly. The other 3 backtested repos remain at 0 usable sample; re-run again once contention drops further.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator-directed human plan, sequential judgment-gated items

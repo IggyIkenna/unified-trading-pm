@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [ci-cd, sit, sit-gate, detached-head, promote-gate, ldr-main, stamping, infinite-loop]
 related:
   [
-    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    /plans/archive/2026_08/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
   ]
 created: 2026-08-06
@@ -55,7 +55,7 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     system-integration-tests/.github/workflows/full-workspace-sit.yml,
     unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
-    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    /plans/archive/2026_08/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
   ]
 source:
   [

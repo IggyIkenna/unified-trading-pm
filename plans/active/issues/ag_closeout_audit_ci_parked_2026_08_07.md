@@ -64,7 +64,7 @@ re-derives.
 
 All `parent_epic: infrastructure_master`, all dated 2026-08-03 through 2026-08-06 (recent):
 
-- `plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`
+- `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`
 - `plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md`
 - `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`
 - `plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`

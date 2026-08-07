@@ -18,7 +18,7 @@ tags: [ci-cd, fleet-promoter, self-hosted-runners, ldr-to-main]
 related:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    /plans/archive/2026_08/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-06
@@ -36,7 +36,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    /plans/archive/2026_08/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
     .github/workflows/ldr-to-main-promote-fleet.yml,
     scripts/cicd/glue_runner_health_monitor.py,
   ]
@@ -69,7 +69,8 @@ of load or a single additional offline runner triggers a complete stall.
 - [x] ✅ [INFRA] P1. Add a runner-health monitor for the `glue` pool: alert when fewer than N runners are online (repo:
       unified-trading-pm). Minimum viable: a scheduled workflow that counts online glue runners and posts to Slack when
       the count drops below a threshold (suggest 3). — unified-trading-pm@64c3fd63a + evidence
-- [ ] [INFRA] P2. Investigate why glue-3 and glue-5 are offline — restart or replace (repo: unified-trading-pm).
+- [x] ✅ [INFRA] P2. Investigate why glue-3 and glue-5 are offline — restart or replace (repo: unified-trading-pm). —
+      unified-trading-pm@HEAD (investigation finding: no restart/replace needed — see Progress Log 2026-08-07)
 - [ ] [INFRA] P2. Hardening: add a `workflow_dispatch` trigger to `ldr-to-main-promote-fleet.yml` so an operator can
       manually kick off a promotion tick when the schedule is stuck (already exists — documented here for awareness).
 
@@ -83,3 +84,13 @@ of load or a single additional offline runner triggers a complete stall.
 - **2026-08-06 (slot 12)**: Filed after discovering promoter stall during sit-gate fleet-green investigation. Promoter
   self-recovered at ~22:35 UTC when a glue runner picked up the 22:30 run.
 - **context-scout 2026-08-07**: populated context_scope (5 entries).
+- **2026-08-07 (slot 9, fleet_promoter_glue_runner_stall-002)**: Investigated glue-3 and glue-5 offline status. GitHub
+  API (`repos/IggyIkenna/unified-trading-pm/actions/runners`) confirms all 5 glue runners (`glue-ip-172-31-3-59-{1..5}`)
+  are **online** and not busy as of 2026-08-07. Cross-referenced
+  `glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md` Progress Log (2026-08-06 session): glue-3 and glue-5 were in
+  the **normal JIT-runner between-job restart window** (`Restart=always`, `StartLimitIntervalSec=0`), not a real failure
+  — they self-recovered within ~6 minutes, and the crash-loop watchdog was false-positiving on clean `Result=success`
+  exits throughout that window. That false-positive bug was already fixed and shipped as `879e3e109`. **No restart or
+  replacement was needed**: the runners recovered by design, monitoring is now correct, and the pool is fully healthy.
+  SSM host-level verification not possible from `ikenna-worker` identity (consistent with all prior entries in the
+  sibling issue doc); GitHub API is the authoritative signal and shows clean state.

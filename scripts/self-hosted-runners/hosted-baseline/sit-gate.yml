@@ -228,15 +228,20 @@ jobs:
             || { echo "::error::failed to dispatch full-workspace-sit — staging lock will dangle"; exit 1; }
 
           # Tier-E additions: game-day + synthetic smokes (best-effort; cascade is NOT gated).
+          # NOTE: GitHub returns 204 for repository_dispatch regardless of whether a listener
+          # exists — the API response cannot confirm delivery. No handler is currently
+          # registered in system-integration-tests for these event types (verified 2026-08-07
+          # via check_dispatch_listeners.py). Firing as fire-and-forget in case a listener is
+          # added later; the ::notice:: is honest about the ambiguity (F3 fix, batch5 todo 6).
           set +e
           gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
             -X POST -f event_type="game-day-sit" \
-            && echo "Dispatched game-day-sit" \
-            || echo "::warning::game-day-sit dispatch skipped (handler may not exist yet — best-effort)"
+            && echo "::notice::Fired game-day-sit (best-effort; GitHub 204 does not confirm listener)" \
+            || echo "::warning::game-day-sit dispatch API error (best-effort — ignoring)"
           gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
             -X POST -f event_type="synthetic-smokes" \
-            && echo "Dispatched synthetic-smokes" \
-            || echo "::warning::synthetic-smokes dispatch skipped (handler may not exist yet — best-effort)"
+            && echo "::notice::Fired synthetic-smokes (best-effort; GitHub 204 does not confirm listener)" \
+            || echo "::warning::synthetic-smokes dispatch API error (best-effort — ignoring)"
           exit 0
 
       - name: Dispatch staging-locked to all repos (re-runs Staging Lock Check on open PRs)
@@ -348,7 +353,11 @@ jobs:
         run: |
           set +e
           CTX="SIT harness lint issues (cascade was NOT blocked — this is a background fix-task): ${{ steps.lint.outputs.issues }} Investigate system-integration-tests harness config. Do NOT interrupt the in-flight SIT run. Playbook: codex/08-workflows/ci-cd-flow.md"
-          gh api "repos/${{ github.repository }}/dispatches" \
+          # MUST target unified-trading-pm, NOT ${{ github.repository }}: the escalate-to-orchestrator.yml
+          # LISTENER lives ONLY in unified-trading-pm. This file is correct today only because sit-gate.yml
+          # exists solely in PM — rolling it into another repo would make this dispatch a silent self-no-op
+          # there, same fleet-wide bug main-backmerge-to-ldr.yml's fix already closed.
+          gh api "repos/${{ github.repository_owner }}/unified-trading-pm/dispatches" \
             -f event_type=escalate-to-orchestrator \
             -f "client_payload[repo]=system-integration-tests" \
             -f 'client_payload[pr_number]=0' \

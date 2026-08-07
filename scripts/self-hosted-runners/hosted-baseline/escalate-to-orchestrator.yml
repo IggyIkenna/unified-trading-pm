@@ -33,8 +33,8 @@ on:
         type: number
       wall_type:
         description:
-          "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health |
-          data_pipeline_failure"
+          "merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure |
+          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked"
         required: true
         type: string
       context:
@@ -63,12 +63,25 @@ on:
         type: number
       wall_type:
         description:
-          "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health |
-          data_pipeline_failure"
+          "merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure |
+          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked"
         required: true
         type: choice
         options:
-          [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, main_ci_red, plan_health, data_pipeline_failure]
+          [
+            merge_conflict,
+            label_mismatch,
+            sit_failure,
+            stuck_promotion_pr,
+            ldr_qg_failure,
+            ldr_main_qg_failure,
+            main_ci_red,
+            plan_health,
+            data_pipeline_failure,
+            sit_retry_cap,
+            harness_lint,
+            provenance_blocked,
+          ]
       context:
         description: "Free-text context for the worker"
         required: true
@@ -133,9 +146,9 @@ jobs:
 
           # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
           case "$IN_WALL" in
-            merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure) ;;
+            merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked) ;;
             *)
-              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure)"
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked)"
               exit 1
               ;;
           esac
@@ -294,6 +307,9 @@ jobs:
         Escalation FAILED for {0}#{1} — the orchestrator dispatch errored (auth/DNS/TLS or a bad request; see the run
         log). The wall is STILL OPEN and no worker was spawned. → <{2}|open dashboard>.', needs.escalate.outputs.repo,
         needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) }}
+      # This job runs IN unified-trading-pm; the alert is ABOUT the repo whose PR was escalated
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.escalate.outputs.repo }}
       severity: ${{ needs.escalate.outputs.dispatched == 'true' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.escalate.result }}
       workflow_name: ${{ github.workflow }}

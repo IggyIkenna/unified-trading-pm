@@ -52,14 +52,25 @@ def _run(ts: str, run_id: int = 101) -> dict:
 
 def _router(
     *,
-    runs: list[dict] | None,
+    runs: list[dict] | None = None,
+    runs_by_repo: dict[str, list[dict]] | None = None,
     jobs: list[dict] | None = None,
     runners: list[dict] | None = None,
 ):
-    """Route mocked gh_json calls by argv shape (run list / runs-jobs / runners)."""
+    """Route mocked gh_json calls by argv shape (run list / runs-jobs / runners).
+
+    ``runs_by_repo`` (repo name -> its run list) lets a test give DIFFERENT repos different
+    queued-run fixtures — needed to cover the fleet-wide scan (2026-08-07): a single flat ``runs``
+    list can't express "PM is clean but alerting-service has a stuck job". When absent, every
+    repo's ``run list`` returns the flat ``runs`` fixture (single-repo tests, unchanged).
+    """
 
     def _side_effect(args: list[str]):
         if args[0] == "run" and args[1] == "list":
+            if runs_by_repo is not None:
+                repo_arg = args[args.index("--repo") + 1]  # "IggyIkenna/<repo>"
+                repo = repo_arg.split("/", 1)[-1]
+                return runs_by_repo.get(repo, [])
             return runs
         if args[0] == "api" and args[1].endswith("/jobs"):
             return {"jobs": jobs or [], "total_count": len(jobs or [])}
@@ -82,21 +93,23 @@ def _runner(name: str, label: str, *, status: str = "online", busy: bool = False
 
 # ── detect_glue_starvation ──────────────────────────────────────────────────────
 
+PM_REPO = ["unified-trading-pm"]
+
 
 class TestDetectGlueStarvation:
     def test_no_queued_runs_is_none(self) -> None:
         with patch.object(MOD, "gh_json", side_effect=_router(runs=[])):
-            assert MOD.detect_glue_starvation(NOW) is None
+            assert MOD.detect_glue_starvation(PM_REPO, NOW) is None
 
     def test_gh_failure_is_none(self) -> None:
         """Best-effort: a gh error must never page (and never raise)."""
         with patch.object(MOD, "gh_json", side_effect=_router(runs=None)):
-            assert MOD.detect_glue_starvation(NOW) is None
+            assert MOD.detect_glue_starvation(PM_REPO, NOW) is None
 
     def test_queued_under_threshold_is_none(self) -> None:
         """A job queued 3 min is normal scheduling latency, not an outage."""
         with patch.object(MOD, "gh_json", side_effect=_router(runs=[_run(FRESH_TS)])):
-            assert MOD.detect_glue_starvation(NOW) is None
+            assert MOD.detect_glue_starvation(PM_REPO, NOW) is None
 
     def test_hosted_job_queued_does_not_page(self) -> None:
         """THE false-positive guard: a HOSTED job queueing on GitHub's capacity is not our outage.
@@ -106,24 +119,25 @@ class TestDetectGlueStarvation:
         """
         jobs = [{"status": "queued", "labels": ["ubuntu-latest"]}]
         with patch.object(MOD, "gh_json", side_effect=_router(runs=[_run(STALE_TS)], jobs=jobs)):
-            assert MOD.detect_glue_starvation(NOW) is None
+            assert MOD.detect_glue_starvation(PM_REPO, NOW) is None
 
     def test_glue_job_queued_with_zero_runners_online_diagnoses_vm_down(self) -> None:
         jobs = [{"status": "queued", "labels": ["self-hosted", "glue"]}]
         with patch.object(MOD, "gh_json", side_effect=_router(runs=[_run(STALE_TS)], jobs=jobs, runners=[])):
-            out = MOD.detect_glue_starvation(NOW)
+            out = MOD.detect_glue_starvation(PM_REPO, NOW)
         assert out is not None
         assert out["count"] == 1
         assert out["oldest_min"] == 20
         assert "down" in out["diagnosis"]
         assert "ci-status-update" in out["workflows"]
+        assert out["repos"] == "unified-trading-pm"
 
     def test_glue_job_queued_with_runners_online_diagnoses_wedged(self) -> None:
         """Runners online but nothing draining is a DIFFERENT fault than a dead VM — say so."""
         jobs = [{"status": "queued", "labels": ["self-hosted", "glue"]}]
         runners = [_runner("glue-planning-1", "glue", busy=True)]
         with patch.object(MOD, "gh_json", side_effect=_router(runs=[_run(STALE_TS)], jobs=jobs, runners=runners)):
-            out = MOD.detect_glue_starvation(NOW)
+            out = MOD.detect_glue_starvation(PM_REPO, NOW)
         assert out is not None
         assert "wedged" in out["diagnosis"]
         assert "down" not in out["diagnosis"]
@@ -132,13 +146,58 @@ class TestDetectGlueStarvation:
         """glue-writer is a DISJOINT label — it must be watched too, not just `glue`."""
         jobs = [{"status": "queued", "labels": ["self-hosted", "glue-writer"]}]
         with patch.object(MOD, "gh_json", side_effect=_router(runs=[_run(STALE_TS)], jobs=jobs, runners=[])):
-            assert MOD.detect_glue_starvation(NOW) is not None
+            assert MOD.detect_glue_starvation(PM_REPO, NOW) is not None
 
     def test_running_job_is_not_starved(self) -> None:
         """Only QUEUED jobs count — an in-progress job is the pool working, not starving."""
         jobs = [{"status": "in_progress", "labels": ["self-hosted", "glue"]}]
         with patch.object(MOD, "gh_json", side_effect=_router(runs=[_run(STALE_TS)], jobs=jobs)):
-            assert MOD.detect_glue_starvation(NOW) is None
+            assert MOD.detect_glue_starvation(PM_REPO, NOW) is None
+
+    def test_scans_every_fleet_repo_not_just_pm(self) -> None:
+        """The 2026-08-07 fix: image-build-validate.yml (glue-runner-dependent) was extracted to the
+        public unified-trading-ci repo and is now invoked BY every fleet repo's promotion PRs — a
+        glue-labelled job stuck QUEUED on a NON-PM repo's own run list must still be caught, not just
+        unified-trading-pm's. PM itself is clean here; only alerting-service has the stuck job.
+        """
+        runs_by_repo = {
+            "unified-trading-pm": [],
+            "alerting-service": [_run(STALE_TS, run_id=202)],
+        }
+        jobs = [{"status": "queued", "labels": ["self-hosted", "glue"]}]
+        with patch.object(MOD, "gh_json", side_effect=_router(runs_by_repo=runs_by_repo, jobs=jobs, runners=[])):
+            out = MOD.detect_glue_starvation(["unified-trading-pm", "alerting-service"], NOW)
+        assert out is not None
+        assert out["count"] == 1
+        assert out["repos"] == "alerting-service"
+
+    def test_pm_only_scan_would_have_missed_a_non_pm_repo(self) -> None:
+        """Sanity companion to the fleet test above: scanning ONLY unified-trading-pm (the pre-fix
+        behaviour) against the same fixture must return None — proving the fleet-wide scan is what
+        actually catches it, not some other code path.
+        """
+        runs_by_repo = {
+            "unified-trading-pm": [],
+            "alerting-service": [_run(STALE_TS, run_id=202)],
+        }
+        jobs = [{"status": "queued", "labels": ["self-hosted", "glue"]}]
+        with patch.object(MOD, "gh_json", side_effect=_router(runs_by_repo=runs_by_repo, jobs=jobs, runners=[])):
+            out = MOD.detect_glue_starvation(["unified-trading-pm"], NOW)
+        assert out is None
+
+    def test_starved_jobs_across_multiple_repos_are_aggregated(self) -> None:
+        """Both a PM job AND a fleet-repo job stuck at once → one combined alert (still one root
+        cause per pool), with BOTH repos named."""
+        runs_by_repo = {
+            "unified-trading-pm": [_run(STALE_TS, run_id=101)],
+            "greeks-service": [_run(STALE_TS, run_id=303)],
+        }
+        jobs = [{"status": "queued", "labels": ["self-hosted", "glue"]}]
+        with patch.object(MOD, "gh_json", side_effect=_router(runs_by_repo=runs_by_repo, jobs=jobs, runners=[])):
+            out = MOD.detect_glue_starvation(["unified-trading-pm", "greeks-service"], NOW)
+        assert out is not None
+        assert out["count"] == 2
+        assert out["repos"] == "greeks-service, unified-trading-pm"
 
 
 # ── _glue_runner_counts ─────────────────────────────────────────────────────────

@@ -534,6 +534,58 @@ YES. SHA = 7cb83ddcd, ahead=0. Nothing at risk.**
   SLOT_TABS=.tabs/<new-slot>, PYTHON=.tabs/<new-slot>/market-tick-data-service/.venv/bin/python — and launch with
   `run_in_background:true`. Verify poll 1 in output before updating progress log. Do NOT re-arm if watcher running.
 
+**Session-8 (context-8) fleet-surge update (2026-08-07T09:08Z):** Watcher baz81km0n still alive. Poll drain history
+(session 8): 23→21→19→18→15→15→14→14→12→12→12→10→7→7→6→6→6→6→6→6→3→3→3→**10→24** VMs (polls 1-27). Drain pattern:
+original batch (~23 VMs launched ~06:00Z) drained to 3 by poll 21 (~08:38Z). Then at ~09:01Z, AO dispatched a new wave:
+CBOE vx-2026, CME es/mbt/met 2023-2025, Nasdaq/NYSE ohlcv-1m 2023-2024 (25 VMs total, 1 STAGING at 09:08Z). New batch
+ETA: ~2-3h based on prior batch pace (~11:00-12:00Z). All confirmed gcloud STATUS=RUNNING. No preemptions detected.
+Long-pole from original batch: met-met-2023-030119 still running at ~6.5h. watcher.log latest: poll 27 = 24 VMs at
+09:08:03Z. Monitor byo75kl1a armed (persistent).
+
+- **NEXT ACTION (fresh session or next compact):** (1) Check watcher log for PHASE-2 or completion. (2) Send heartbeat
+  to /api/slots/8/heartbeat every ~5-10 polls to avoid watchdog timeout. (3) If watcher dies unexpectedly, re-arm slot-8
+  copy from `es-opt-backfill-watcher.sh` with SLOT_ID=8. (4) Do NOT interfere with running VMs.
+
+**Session-crash recovery (2026-08-07T11:23Z, session 9):** Whole session died at some point after poll 6 (10:24:48Z, 11
+VMs) — all 4 background harness tasks (3 Monitors + the watcher itself, `bkittgj51`) failed together with exit 144,
+confirming `run_in_background:true` does NOT survive session death (only survives `/compact`; CLAUDE.md's existing note
+undersold this). Session auto-resumed via `/heartbeat` re-offering the same task. Gap: ~58min dead
+(10:24:48Z→11:22:40Z), fleet drained unattended from 11→5 VMs during the gap (no harm — watcher was only observing, not
+gating anything). PM repo confirmed clean/ahead=0 across the gap (both prior commits had already landed). No ES_OPT VMs
+existed yet (confirmed via `gcloud … name~'tradfi-bf-.*es-opt'` — empty). **Fix applied**: re-armed the watcher using
+the script's OWN documented survival method (its header comment, lines 32-38) instead of harness `run_in_background` —
+`setsid nohup bash es_opt_watcher_slot8.sh > log 2>&1 < /dev/null & disown`, found the real PID via `ps -ef | grep` (NOT
+`$!`), verified via `ps -o pid,ppid,pgid,sid -p <pid>` that PGID=SID=PID=457933 (genuine new session+process-group,
+confirmed isolated from this Claude Code session). PID recorded at `scratchpad/watcher/watcher.pid`. Poll 1 confirmed: 5
+VMs at 11:23:01Z. **Lesson for future watchers**: `setsid ... & disown` (not `run_in_background:true`) is required for
+any watcher that must outlive a session crash, not just a `/compact`.
+
+- **NEXT ACTION (fresh session):** (1) Check `scratchpad/watcher/watcher.pid` — `kill -0 <pid>` to check liveness
+  (PPID=1 process, independent of any Claude Code session). (2) Check watcher log tail for PHASE-2/completion/FATAL. (3)
+  If watcher dead and task not done: re-launch the SAME way (`setsid nohup … & disown`, verify real PID + PGID=SID=PID)
+  — never plain `run_in_background`, it does not survive session death. (4) Send heartbeat periodically.
+
+### 2026-08-07T11:58Z — slot 5, session 10 — watcher re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher PID 457933 (session 9, setsid) found DEAD at boot.** Fleet at
+slot-5 boot: **5 VMs running** (CME g01 wave: es-es-2020, mbt-mbt-2024, met-met-2023/2024/2025 all from 09:00Z wave).
+
+Re-armed with `run_in_background:true`. Harness task: **`bprxba91n`** (started 11:58:48Z, poll 1 = 5 VMs). Watcher:
+slot-5 copy at scratchpad watcher/es_opt_watcher_slot5.sh. Long-pole ETA: met-met-2023 ~14:00-17:00Z.
+
+### 2026-08-07T12:07Z — slot 5, session 11 — post-compact health check
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. `bprxba91n` survived `/compact` (TaskOutput: status=running confirmed).**
+Poll 2 (12:03:50Z): **12 VMs** (fleet grew 5→12 between polls — new wave launched). Heartbeat loop **`bip2gkahl`** armed
+(20-min intervals, harness-tracked, no `&` inside command). Lesson: `run_in_background:true` + `&` inside the command
+orphans the loop immediately — MUST launch WITHOUT `&` inside when using the harness.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bprxba91n.output`
+  (TaskOutput non-blocking). (3) If watcher dead: re-arm from committed
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` with `SLOT_ID=<new>` + `run_in_background:true`, NO `&`
+  inside. (4) Check `bip2gkahl.output` — if heartbeat dead, re-arm heartbeat.sh same way. Do NOT re-arm either if alive
+  — singleton lock race risk.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,

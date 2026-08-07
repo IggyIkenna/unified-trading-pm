@@ -399,17 +399,42 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
 
 ## 6. Follow-up todos (not made in this pass — each is a real, scoped decision)
 
-- [ ] [SERVICE] P2. instruments-service: decide `jupiter.py::JupiterReferenceDataAdapter`'s fate — register as a live
-      DeFi venue (`factory.py::_ADAPTERS["jupiter"]`) or delete the class + its two test files.
+- [ ] [SERVICE] P1. **RULED 2026-08-07 (operator) — register Jupiter as a live DeFi venue, full-stack.** Jupiter is a
+      major Solana DEX aggregator; scope is NOT just `factory.py::_ADAPTERS["jupiter"]` — it needs: (a) UAC venue
+      registration (`VENUE_TO_ADAPTER_KEY` + manifest schema so captured rows get a canonical path), (b)
+      instruments-service catalogue/reference-data entry (wire `JupiterReferenceDataAdapter` into `_ADAPTERS`, the
+      class + its 2 test files are already built and passing), (c) MVP-venues list inclusion, (d) an MTDS
+      market-tick-data-service adapter (does not exist yet — `jupiter.py` today is IS-side reference-data only, no MTDS
+      capture-side adapter), (e) execution-service support so Jupiter routes are actually tradable. This is real,
+      multi-repo build-out, not a same-pass fix — needs its own scoped plan (LOCAL vs AO-dispatch TBD, see this doc's
+      Progress Log). **Tracked as of 2026-08-07**: AO-dispatched plan
+      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` now covers this (todos
+      1-4 + close-out todo 6, which flips this checkbox) — that plan's investigation also found (c) is automatic (no
+      separate list) and (e) already exists unwired (`JupiterConnector`), narrowing the real remaining scope; see its
+      "Scope corrections vs the operator's framing" section. Leave this checkbox open until that plan's todo 6 lands.
 - [ ] [SERVICE] P1. market-tick-data-service: re-verify the governance-parameters-refresh feature end-to-end
       (features-service `aave_risk_calculator.py` asof reads, strategy-service sizing) against the measured fact that
       `GovernanceParamsEventPoller` never runs in production; either wire the poller into a real entrypoint (a
       `live/connectors/`-style registration, or a scheduled batch job) or update the plan/codex record to state plainly
       that this feature has never been live.
-- [ ] [SERVICE] P2. market-tick-data-service: decide disposition for `adapters/defi/live/onchain_event_poller.py`,
-      `adapters/defi_live/{alchemy_adapter.py,thegraph_ws_adapter.py}` — wire in or delete.
+- [ ] [SERVICE] P2. **RULED 2026-08-07 (operator) — wire in, do not delete.** market-tick-data-service:
+      `adapters/defi/live/onchain_event_poller.py` and `adapters/defi_live/{alchemy_adapter.py,thegraph_ws_adapter.py}`
+      register into the real `live/connectors/` registration mechanism (`register_all()` /
+      `WS_FEED_CONNECTOR_FACTORIES`) — the code is already built + tested per § 2.2, this is wiring, not new
+      implementation. **Tracked as of 2026-08-07**: AO-dispatched plan
+      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 5 covers
+      `onchain_event_poller.py` (Aave-liquidation path only — its own investigation found none of the 3 named classes is
+      a `WSFeedConnector`-conforming self-registering class, so real new wrapper code is needed, not a one-line
+      `register_all()` addition; the Uniswap-Swap-topic half is deliberately excluded as a duplicate of the already-live
+      `dex_swap_uniswap_v3_ws.py`). `alchemy_adapter.py`/`thegraph_ws_adapter.py` are NOT covered — that plan's "Open
+      questions" section explains why they lack a determinable single-venue wiring target and need a further
+      operator/design decision before they can become a todo. Leave this checkbox open until scoped for those 2 files
+      too.
 - [ ] [SERVICE] P2. market-tick-data-service: consolidate `onchain/helius_solana.py::HeliusSolanaAdapter` and
-      `cli/handlers/native_staking_handler.py`'s hand-rolled Helius calls onto one implementation.
+      `cli/handlers/native_staking_handler.py`'s hand-rolled Helius calls onto one implementation. **2026-08-07 note**:
+      the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE — `helius-api-key` was approved + provisioned 2026-05-15
+      (confirmed live in `/codex/05-infrastructure/credentials-matrix.md`); this is not credential-blocked, it is a pure
+      consolidation decision (which of the two implementations becomes canonical) pending final operator sign-off.
 - [x] [SERVICE] P3. market-tick-data-service: land the corrected `onchain/__init__.py` docstring quoted in § 2.2 once
       the shared checkout is clean. — DONE 2026-07-30 (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
       defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 12 for full evidence (market-tick-data-service@0cd76b93).
@@ -486,3 +511,25 @@ files.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — all 4 open items remain scoped
   product/architecture disposition decisions (jupiter.py venue registration, governance-params poller OPERATOR-NOTIFY,
   +2 more), none worker-determinable.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: two of the four §6
+  decisions are now RULED (see §6 for full text): (1) Jupiter — register as a live DeFi venue, full cross-repo build-out
+  (UAC venue registration, IS catalogue, MVP-venues list, a new MTDS adapter that does not exist yet, execution-service
+  routing) — this is materially bigger than the original todo's "add one line to `_ADAPTERS`" framing, now needs its own
+  scoped plan. (2) `onchain_event_poller.py` + `defi_live/{alchemy_adapter,thegraph_ws_adapter}` — wire in via
+  `live/connectors/register_all()`, not delete. Also corrected: the Helius consolidation item's `BLOCKED-CREDENTIALS`
+  framing (§2.2) is stale — `helius-api-key` was approved + provisioned 2026-05-15
+  (`/codex/05-infrastructure/credentials-matrix.md`), so that item is a pure consolidation call, not credential-gated.
+  Governance-params poller re-verify (item 2 of 4) remains unruled. **Doc stays `assigned_vm: NA`** — the two ruled
+  items are now real scoped engineering work that needs its own plan (dispatch destination TBD), not something this
+  issue doc itself executes.
+- **2026-08-07 (interactive session)**: authored the AO-dispatched plan pair
+  `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` + `..._finalize_2026_08_07.md`
+  covering both 2026-08-07 rulings, per full cross-repo investigation (UAC/
+  instruments-service/market-tick-data-service/execution-service). Both this doc's §6 checkboxes updated with pointers
+  to that plan (not flipped — work not yet shipped). Key findings that change the operator's own framing: Jupiter's
+  "MVP-venues list inclusion" is automatic (no separate list — `_mvp_defi_venues()` derives from `DEFI_VENUE_PHASE`);
+  Jupiter's "execution-service support... does not exist" is wrong —
+  `execution_service/defi_execution/protocols/jupiter.py::JupiterConnector` already exists, fully built, just unwired
+  (same pattern as the IS-side `jupiter.py` this doc already flagged); the wire-in item narrows from 3 files to 1
+  (`onchain_event_poller.py` only — `alchemy_adapter.py`/`thegraph_ws_adapter.py` lack a determinable single-venue
+  target, flagged as an open question in the new plan rather than forced into a todo).

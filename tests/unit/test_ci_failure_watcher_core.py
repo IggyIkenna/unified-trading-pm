@@ -541,8 +541,98 @@ class TestDetectStuckPrs:
         with patch.object(MOD, "gh_json", side_effect=[[pr], []]):
             result = MOD.detect_stuck_prs("mtds", 30, NOW)
         r = result[0]
-        for field in ("repo", "base", "number", "state", "auto_merge", "age_min", "url", "failed_check", "v2_present"):
+        for field in (
+            "repo",
+            "base",
+            "number",
+            "state",
+            "auto_merge",
+            "age_min",
+            "url",
+            "failed_check",
+            "v2_present",
+            "blocking_signature",
+        ):
             assert field in r, f"missing field: {field}"
+
+    def test_blocking_signature_differs_by_which_check_is_blocking(self) -> None:
+        """Two stuck PRs BLOCKED for genuinely different reasons (a failed quality-gates-v2 vs a
+        never-draining glue-labelled check stuck QUEUED) must get DIFFERENT blocking_signature
+        values — this is the field the reason-scoped escalation idempotency keys on
+        (2026-08-07 fix)."""
+        rollup_a = [{"name": "quality-gates-v2", "conclusion": "FAILURE", "state": "FAILURE"}]
+        rollup_b = [{"name": "validate / GCP Cloud Build", "conclusion": None, "status": "QUEUED"}]
+        pr_a = self._pr(rollup=rollup_a)
+        pr_b = self._pr(rollup=rollup_b)
+        with patch.object(MOD, "gh_json", side_effect=[[pr_a], []]):
+            sig_a = MOD.detect_stuck_prs("mtds", 30, NOW)[0]["blocking_signature"]
+        with patch.object(MOD, "gh_json", side_effect=[[pr_b], []]):
+            sig_b = MOD.detect_stuck_prs("mtds", 30, NOW)[0]["blocking_signature"]
+        assert sig_a != sig_b
+
+    def test_blocking_signature_stable_for_the_same_reason(self) -> None:
+        """Same rollup shape twice → the same signature (it's a pure function of state + the
+        blocking check names, not e.g. current time)."""
+        rollup = [{"name": "quality-gates-v2", "conclusion": "FAILURE", "state": "FAILURE"}]
+        pr = self._pr(rollup=rollup)
+        with patch.object(MOD, "gh_json", side_effect=[[pr], []]):
+            sig_1 = MOD.detect_stuck_prs("mtds", 30, NOW)[0]["blocking_signature"]
+        with patch.object(MOD, "gh_json", side_effect=[[pr], []]):
+            sig_2 = MOD.detect_stuck_prs("mtds", 30, NOW)[0]["blocking_signature"]
+        assert sig_1 == sig_2
+
+
+# ── _blocking_check_names / _blocking_signature (pure) ─────────────────────────
+
+
+class TestBlockingCheckNames:
+    def test_success_conclusion_is_not_blocking(self) -> None:
+        rollup = [{"name": "quality-gates-v2", "conclusion": "SUCCESS"}]
+        assert MOD._blocking_check_names(rollup) == []
+
+    def test_failure_conclusion_is_blocking(self) -> None:
+        rollup = [{"name": "quality-gates-v2", "conclusion": "FAILURE"}]
+        assert MOD._blocking_check_names(rollup) == ["quality-gates-v2"]
+
+    def test_action_required_is_blocking(self) -> None:
+        rollup = [{"name": "quality-gates-v2", "conclusion": "ACTION_REQUIRED"}]
+        assert MOD._blocking_check_names(rollup) == ["quality-gates-v2"]
+
+    def test_no_conclusion_no_state_is_blocking(self) -> None:
+        """A CheckRun still QUEUED (no conclusion reported yet) — the glue-starvation symptom."""
+        rollup = [{"name": "validate / GCP Cloud Build", "status": "QUEUED"}]
+        assert MOD._blocking_check_names(rollup) == ["validate / GCP Cloud Build"]
+
+    def test_pending_status_context_is_blocking(self) -> None:
+        rollup = [{"context": "AWS CodeBuild us-east-1", "state": "PENDING"}]
+        assert MOD._blocking_check_names(rollup) == ["AWS CodeBuild us-east-1"]
+
+    def test_multiple_checks_sorted_and_deduped(self) -> None:
+        rollup = [
+            {"name": "b-check", "conclusion": "FAILURE"},
+            {"name": "a-check", "conclusion": "FAILURE"},
+            {"name": "a-check", "conclusion": "FAILURE"},
+        ]
+        assert MOD._blocking_check_names(rollup) == ["a-check", "b-check"]
+
+    def test_empty_rollup_is_empty(self) -> None:
+        assert MOD._blocking_check_names([]) == []
+
+
+class TestBlockingSignature:
+    def test_same_inputs_same_signature(self) -> None:
+        assert MOD._blocking_signature("BLOCKED", ["quality-gates-v2"]) == MOD._blocking_signature(
+            "BLOCKED", ["quality-gates-v2"]
+        )
+
+    def test_different_state_different_signature(self) -> None:
+        assert MOD._blocking_signature("BLOCKED", ["x"]) != MOD._blocking_signature("CONFLICTING", ["x"])
+
+    def test_different_checks_different_signature(self) -> None:
+        assert MOD._blocking_signature("BLOCKED", ["a"]) != MOD._blocking_signature("BLOCKED", ["b"])
+
+    def test_check_order_does_not_matter(self) -> None:
+        assert MOD._blocking_signature("BLOCKED", ["a", "b"]) == MOD._blocking_signature("BLOCKED", ["b", "a"])
 
 
 # ── detect_resolved_prs ────────────────────────────────────────────────────────

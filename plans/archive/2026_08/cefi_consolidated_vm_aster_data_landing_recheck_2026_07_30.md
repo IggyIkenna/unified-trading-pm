@@ -105,13 +105,17 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 > here, so those workers own closing them.
 
 - [x] ✅ [DATA] P2. **After 2026-07-30T13:30Z UTC**, re-check whether real rows are landing:
-      `gcloud storage ls "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-30/pipeline_mode=live_aster/**"`.
-      If populated: flip `infra_capture_and_devops_leftovers_2026_07_06.md`'s ASTER-connector todo's remaining checkbox
-      with this evidence, and archive/retire `issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md` as
-      resolved (both per that plan's own completion mandate). If still empty well past 13:30 UTC, treat as a genuine new
-      bug (this doc's finding only explains absence BEFORE the catalogue refresh) and investigate the live shard logs
-      fresh (SSH, `sudo tail -f /home/ikennaigboaka/logs/live-aster-*.log`) rather than assuming the same root cause
-      applies. **STILL NOT VERIFIED, checked 2026-08-02T13:32Z UTC (slot 2, spot-check during an unrelated finalize-plan
+      ~~`gcloud storage ls "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-30/pipeline_mode=live_aster/**"`~~
+      **[RETIRED PATH 2026-08-07: `raw_tick_data/pipeline_mode=live_*` is the legacy direct-GCS sink — zero objects
+      confirmed for all dates; active surface is the warm event-log tier:
+      `gs://central-element-323112-events/live-events/warm/cefi/{book_snapshot_5,liquidations}/`; see
+      `/plans/active/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`]**. If populated:
+      flip `infra_capture_and_devops_leftovers_2026_07_06.md`'s ASTER-connector todo's remaining checkbox with this
+      evidence, and archive/retire `issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md` as resolved
+      (both per that plan's own completion mandate). If still empty well past 13:30 UTC, treat as a genuine new bug
+      (this doc's finding only explains absence BEFORE the catalogue refresh) and investigate the live shard logs fresh
+      (SSH, `sudo tail -f /home/ikennaigboaka/logs/live-aster-*.log`) rather than assuming the same root cause applies.
+      **STILL NOT VERIFIED, checked 2026-08-02T13:32Z UTC (slot 2, spot-check during an unrelated finalize-plan
       reconciliation)**: ran the exact command above for day=2026-07-30 AND day=2026-07-31 AND day=2026-08-01 — **all
       three return zero objects** (`ERROR: ... matched no objects`); listing each day's full `pipeline_mode=` partition
       set shows only `batch_*` modes present (e.g. `batch_hyperliquid`, `batch_kalshi_perp`, `batch_tardis`,

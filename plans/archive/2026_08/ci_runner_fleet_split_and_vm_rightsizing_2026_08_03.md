@@ -7,7 +7,7 @@ summary: >-
   runner fleet to a dedicated escalation VM, right-sizes AO down afterward, and separately retires the
   operator-interactive human-planning VM (i-0dd9812a96cdda5dc) once idle. Operator-approved 2026-08-03; human plan (not
   AO-dispatched) because each phase gate is a live judgment call, not a determinable worker todo.
-status: active
+status: complete
 nature: process
 asset_group: [ci, infrastructure]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: "2026-08-03"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -50,6 +50,14 @@ locked_since:
 ---
 
 # Split self-hosted CI-runner fleet off the AO box, right-size AO, retire human-planning VM
+
+> **🟢 ARCHIVED 2026-08-07.** Every todo shipped: all 25 self-hosted-runner pools migrated off the AO box onto the
+> dedicated `ci-escalation-runner-vm-1` (verified zero old-VM units + zero old-VM GitHub registrations, corpus-wide),
+> the human-planning VM was terminated, and the final held todo — downsizing `i-0c9b283b31d6b5ca7` from `m8i.4xlarge` to
+> `m8i.2xlarge` — executed live 2026-08-07 after fresh 24h resource-usage data (CPU/RAM/swap/disk/I/O, both the on-box
+> `resource-history-sampler` JSONL log and CloudWatch) was presented to the operator and confirmed, saving ~$399/mo. AO
+> backlog/dispatch verified healthy post-resize. Codex SSOTs (`agent-orchestrator-deploy.md`,
+> `orchestrator-cloud-identity-self-service.md`) already reflect the final state.
 
 ## Why (evidence, gathered live this session — not estimates)
 
@@ -322,11 +330,29 @@ new pool is confirmed green, (3) only then resize AO down.
       boundary with nothing left parented under it now; zero risk either way, not worth a follow-up todo for a no-op
       cleanup pass. Prep (stopping/disabling every unit) was done earlier the same session; this entry closes the final
       on-disk-delete step. Command ref: `fd1e3c8f-07da-45b3-9eb8-c26ff586e334` via SSM on `i-0c9b283b31d6b5ca7`.
-- [ ] [INFRA] P1. **Downsize `i-0c9b283b31d6b5ca7` from `m8i.4xlarge` to `m8i.2xlarge`** (stop →
-      modify-instance-attribute --instance-type → start). Per CLAUDE.md's maintenance-window rule, brief orchestrator
-      downtime during this is pre-authorized (pre-live-trading) — do now, no separate scheduling needed. Verify AO's own
-      dispatch/backlog functionality afterward (`/check-agent-orchestrator` or equivalent). Gate: instance shows
-      `m8i.2xlarge` `running`, AO backlog responds normally post-restart.
+- [x] ✅ [INFRA] P1. **Downsize `i-0c9b283b31d6b5ca7` from `m8i.4xlarge` to `m8i.2xlarge` — DONE 2026-08-07,
+      operator-confirmed against fresh 24h usage data (not a re-run of the 2026-08-04 hold on stale assumptions).**
+      **Pre-check**: pulled real 24h history from the on-box `resource-history-sampler.service` JSONL log (17,278
+      samples at ~5s cadence, 2026-08-06 10:32 → 2026-08-07 10:32 UTC) — CPU avg 18.3%/p95 36.2%/max 98.7% (time ≥50%:
+      1.3%, ≥80%: 0.2%), RAM avg 15.9%/p95 29.1%/max 45.3% (10.5GB avg, 30.0GB peak of 64GB total, time ≥50%: 0%), swap
+      avg 9.3%/max 14.5% of 47GB configured, disk 73.8% avg/80.1% max (independent of instance size). Cross- confirmed
+      CPU via CloudWatch `AWS/EC2` (avg 15-27%/hr, one peak hour 77%) and EBS write throughput via `AWS/EBS`
+      (477.5GB/24h ≈ 5.5MB/s avg, 11.8M ops ≈ 136/s avg — negligible vs the 1000MB/s/16000-IOPS provisioned gp3 volume).
+      Confirmed no CloudWatch agent installed on this host (0 `CWAgent` metrics) and `deployment-api`'s fleet-wide
+      `resource_samples` BigQuery table has zero rows for this hand-provisioned box (deployment-ui's `/ops/vm-resources`
+      won't show it) — the JSONL sampler + CloudWatch EBS metrics were the real data sources, not deployment-ui. Live
+      AWS Pricing API (ap-northeast-1): `m8i.4xlarge` $1.09368/hr → `m8i.2xlarge` $0.54684/hr =
+      **$13.12/day / $399.19/mo / $4,790/yr savings** (storage cost unchanged — EBS is instance-type-independent).
+      Presented full data + one real caveat (RAM's single 30GB peak sample would be 93.8% of the new 32GB ceiling,
+      though p95 is well under and 47GB of swap remains as an instance-size-independent buffer) to the operator via
+      `AskUserQuestion`; operator chose "Proceed now." **Execution** (live AWS CLI, ap-northeast-1): `stop-instances` →
+      `aws ec2 wait instance-stopped` (confirmed `stopped`) → `modify-instance-attribute --instance-type m8i.2xlarge`
+      (confirmed via `describe-instances` before restart) → `start-instances` → `aws ec2 wait instance-running` +
+      `wait instance-status-ok` (both passed) → final state: `running`, `m8i.2xlarge`, EIP `13.113.200.22` re-associated
+      correctly. **Post-verify**: `/check-agent-orchestrator` (`check-ao-backlog-status.sh`) against the resized box
+      returned `mode: live, is_mock: false`, `TOTAL_TASKS=1976`, normal status distribution (308 queued / 1 actively
+      dispatched to slot 8 / 14 blocked / 59 cancelled / 1594 done) — dispatch/backlog fully functional post-resize, no
+      degradation. Gate met in full.
 - [x] ✅ [INFRA] P2. **Partial re-verification done 2026-08-05 — real improvement, not fully resolved.** Post-migration
       spot-check: dispatched 3 fresh `quality-gates-v2` runs (`ml-service`, `deployment-service`, `greeks-service`) and
       measured the new VM's load average — **29.25/29.36/30.65 on 16 vCPUs**, vs the old VM's measured peak of
@@ -341,10 +367,10 @@ new pool is confirmed green, (3) only then resize AO down.
 - [x] ✅ [INFRA] P2. **Partially done 2026-08-05 — the parts that ARE true now.** Added a "CI-runner fleet — split off
       to a dedicated VM" section to `/codex/05-infrastructure/agent-orchestrator-deploy.md` documenting the migration
       (escalation VM details, 0 runner units remaining on this box) and fixed the stale "AWS credits cover" cost line to
-      match todo 1's re-confirmed finding. **Deliberately NOT claimed**: "AO at `m8i.2xlarge`" — the instance is still
-      `m8i.4xlarge` (todo 8 remains on operator hold); the new section explicitly says so, so the doc doesn't get
-      re-drifted once that downsize actually happens and someone forgets to flip it. Re-touch this same section when
-      todo 8 resolves either way.
+      match todo 1's re-confirmed finding. **Deliberately NOT claimed at the time**: "AO at `m8i.2xlarge`" — the
+      instance was still `m8i.4xlarge` then (todo 8 was on operator hold). **Update 2026-08-07 — DONE**: todo 8 has
+      resolved (downsize executed), and this codex section (both the spec table and the prose note) has been re-touched
+      to state `m8i.2xlarge` as current fact.
 
 ### Human-planning VM retirement (separate box, tracked here since bundled by the operator)
 
@@ -370,6 +396,20 @@ new pool is confirmed green, (3) only then resize AO down.
       `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.
 
 ## Progress Log
+
+- **2026-08-07**: Operator asked whether the held AO downsize (todo 8, 2026-08-04 hold) should proceed, and whether we
+  have monitoring for VM resource usage. Found real historical monitoring already exists on this host
+  (`resource-history-sampler.service`, 5s-cadence CPU/RAM/swap/disk/iowait JSONL since 2026-07-31 — NOT surfaced in
+  deployment-ui, which only covers deployment-service-launched VMs) — pulled a genuine 24h window (17,278 samples) plus
+  CloudWatch `AWS/EC2`+`AWS/EBS` cross-checks, confirmed the box is now lightly loaded (CPU p95 36%, RAM p95 29% of
+  64GB, negligible EBS I/O relative to provisioned capacity) with one real but non-blocking caveat (RAM's single 24h
+  peak sample at 93.8% of the new 32GB ceiling). Live AWS Pricing API: downsize saves $399.19/mo ($4,790/yr). Presented
+  full findings to the operator; operator confirmed "Proceed now." **Executed live**: stop → verified `stopped` →
+  `modify-instance-attribute --instance-type m8i.2xlarge` → start → verified `running` + `instance-status-ok` + EIP
+  `13.113.200.22` intact. **Post-verify**: `/check-agent-orchestrator` confirmed normal backlog/dispatch behavior
+  post-resize (1976 tasks, live dispatch to slot 8, no degradation). Todo 8 flipped done. Also fixed
+  `agent-orchestrator-deploy.md`'s stale `m8i.4xlarge` references (table + prose) to `m8i.2xlarge` in the same pass
+  (todo 7's entry updated to match) — every open item in this plan is now closed.
 
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — operator-approved human plan with explicit dated
   hold (Progress Log 2026-08-04: "STOP before the actual AO box downsize and wait for explicit confirmation"); remaining

@@ -180,11 +180,25 @@ the highest-priority open question.
         cutover; stale daemon `vm-zombie-watchdog-20260805-125558` deleted. Operator authorized the relaunch to main at
         2026-08-07T07:30Z; executed by main. Cited here + `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`
         on close.
-- [ ] [DATA] P1. **UNBLOCKED as of 2026-08-07 — the `[INFRA] P0` daemon-relaunch todo directly above is DONE** (fresh
-      daemon `vm-zombie-watchdog-20260807-075242` is running `deployment-service@0e94ceee1`'s `canonical-migration-`
-      threshold; it no longer reaps `canonical-migration-defi-gas-fees-legacy-purge-*` VMs on the stale 15-min default).
-      The next worker on `defi_satellite_ao_dispatch_batch9-003` can proceed with this relaunch now. Once the watchdog
-      daemon is confirmed running fresh code, relaunch
+- [ ] [DATA] P1. **BLOCKED AGAIN 2026-08-07 (dispatch #7, `data_engineering`, slot 10): VM
+      `canonical-migration-defi-gas-fees-legacy-purge-20260807-082535` (launched by infra dispatch #6) booted cleanly
+      but DIED at ~09:17Z (47 min in) without completing — no EXIT_STATUS written, manifest NOT modified (still from
+      2026-08-06). Root cause: `_download_index_chunked()`'s range-request approach (20 × 128 MiB chunks × 300s timeout
+      each, 3 outer retry attempts) hung on the 3RD consecutive 2.46 GiB download inside `_purge_manifest_rows()`. The
+      first 2 downloads (`_days_with_legacy_gas_fees()` at 08:29:14Z + `_assert_sane_target_row_count()` at 08:29:37Z)
+      both completed in ~20s; the 3rd hung for 47 min until timeout budget exhausted. `_download_index_chunked()` was
+      designed for operator's local-network 256 MiB proxy cutoff (see its own comment) — not for GCS VMs where a single
+      streaming response is more robust. Also notable: `WATCHDOG_TRACE.log` only showed iter=1 (watchdog itself died
+      after one check at 08:29:48Z); zombie watchdog kill window (90 min from 08:29:44Z last heartbeat = ~09:59Z) was
+      NOT reached — the VM shut down ~09:17Z, 42 min BEFORE the watchdog kill window, consistent with Python process
+      exiting after exhausting all retries (~47 min total: 3 × 4 × ~235s average). Consolidator cron still PAUSED (was
+      paused by dispatch #6 pre-launch, never resumed since purge didn't complete — needs resume if next infra relaunch
+      takes >a few hours). Code fix shipped: `market-tick-data-service@eb380b71b` — `_purge_manifest_rows()` now uses
+      `blob.download_as_bytes(timeout=900)` (single streaming response via `_raw_client()`) instead of
+      `_download_index_chunked()` (range-request chunks). Next action: another infra dispatch to relaunch the VM (with
+      fixed code). `_days_with_legacy_gas_fees()` and `_assert_sane_target_row_count()` still use
+      `_download_index_chunked()` (both worked fine); only the critical 3rd download in `_purge_manifest_rows()` is
+      changed.** Once the next infra dispatch is ready, relaunch
       `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh defi-gas-fees-legacy-purge     <any-date> <any-date> full`
       (deployment-service; dates are cosmetic for this category; keep the highmem machine-type override, it's confirmed
       necessary). Before launching: (a) pause the consolidator cron again
@@ -271,6 +285,17 @@ the highest-priority open question.
   flips it `active`. The `[INFRA] P0` todo below is unchanged (still the source of truth for the fix's intent); the new
   plan is a dispatch-routing wrapper around it, not a duplicate decision. No VM/GCS/cron mutation performed this
   session.
+- **2026-08-07 (AO dispatch #7, `data_engineering`, slot 10)**: VM `20260807-082535` (launched by infra dispatch #6)
+  confirmed DEAD via background monitor (STOPPING at 09:17Z, GONE at 09:20Z, no EXIT_STATUS written). Root cause:
+  `_download_index_chunked()` range-request approach hung for ~47 min during the 3rd consecutive 2.46 GiB download
+  inside `_purge_manifest_rows()`. Evidence: WATCHDOG_TRACE.log only had iter=1 (watchdog itself died after first check
+  at ~08:29:48Z); vm-heartbeat last write at 08:29:44Z; run.log 19 lines / 3148 bytes last uploaded 08:29:57Z (never
+  grew); manifest last modified 2026-08-06T20:34:22Z (NOT updated); no pre-purge snapshot in `_index/snapshots/` from
+  2026-08-07; VM STOPPING at 09:17Z (47 min after `_purge_manifest_rows()` started at 08:29:37Z). Code fix shipped:
+  `market-tick-data-service@eb380b71b` — `_purge_manifest_rows()` now uses `blob.download_as_bytes(timeout=900)` (single
+  streaming response) instead of `_download_index_chunked()` (range requests). QG green, landed on live-defi-rollout.
+  Consolidator cron still PAUSED (needs resume if next infra dispatch delayed). Posting /blocked for another infra
+  relaunch.
 - **2026-08-07 (main, operator-authorized relaunch)**: operator authorized the real-mode relaunch at 07:30Z; main drove
   it via an infra sub-agent. Dry-run validated safe first (2 clean cycles, zero reaps), then cutover: stale
   `vm-zombie-watchdog-20260805-125558` deleted, new instance `vm-zombie-watchdog-20260807-075242` created

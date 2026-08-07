@@ -40,7 +40,7 @@ scope: [engineer, admin]
 tags: [ci-cd, promotion-blocked, dangling-reference, code-conflict, agent-orchestrator, cross-repo]
 related:
   [
-    /plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
+    /plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
   ]
@@ -64,7 +64,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
+    /plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
     /plans/archive/issues/ao_fleet_health_investigation_followups_2026_08_06.md,
     agent-orchestrator/.github/workflows/,

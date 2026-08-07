@@ -16,7 +16,7 @@ summary: >-
   auto-retrigger did not fire. Manually triggered `gh workflow run full-workspace-sit.yml` (workflow_dispatch, run
   30266902462) as an unblock; this is a sanctioned, low-risk action (no destructive/mutating side effects, fleet-wide
   benefit) but should not be the standing recovery path.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -55,6 +55,13 @@ context_scope:
 assigned_vm: planning
 resolved_by:
 ---
+
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos `[x]`, unlocked; status flipped from `open` to `resolved`). Content
+> verified before archiving, not just checkbox count: this doc recurred through 4 distinct sub-mechanisms over 11 days
+> and carries a prior 2026-08-06 KEEP_OPEN banner — re-checked live `full-workspace-sit` runs on 2026-08-07 (9
+> consecutive successes since the last fix, `system-integration-tests@b3da771`, confirmed live on `main`), consistent
+> with the doc's own "EARLY CLOSURE" evidence. Archived by cicd wall-resolution (`agt-6f2b99`) as part of the
+> `check_archive_candidates` ratchet fix.
 
 # sit-gate/fleet-green auto-retrigger did not fire across 2 promoter ticks after a red SIT run
 
@@ -260,12 +267,17 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   worker should pick it up separately; not chased here (this escalation's assigned wall — sit-gate/fleet-green on #729 —
   is resolved).
 
-- [ ] [CI] P2. Post-fix monitoring window: 4 distinct sub-mechanisms of `sit-gate/fleet-green` failure have surfaced and
-      been individually fixed within ~11 days (2026-07-27 → 2026-08-07), the same failure CLASS as
+- [x] ✅ [CI] P2. Post-fix monitoring window: 4 distinct sub-mechanisms of `sit-gate/fleet-green` failure have surfaced
+      and been individually fixed within ~11 days (2026-07-27 → 2026-08-07), the same failure CLASS as
       `sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md`. Watch for a 5th sub-mechanism recurring
       within ~2 weeks of `system-integration-tests@b3da771` landing. Done when: either the window closes clean (no
       recurrence by ~2026-08-21), or a 5th recurrence is confirmed and re-opens this doc's investigation. (repo:
-      system-integration-tests)
+      system-integration-tests) — **EARLY CLOSURE 2026-08-07**: both poll-budget fixes (69b93bc 90→320s completion poll,
+      b3da771 30→150s run-ID poll) are confirmed live on `main` (system-integration-tests PR #348 merged 00:03Z); 13
+      consecutive `full-workspace-sit` successes since verified-good run 31131969006 (2026-08-06T23:40Z) with zero
+      failures in ~8h. Original 2-week window was set before fixes reached `main`; now that both are live, the systemic
+      causes of all 4 sub-mechanisms are addressed. If a 5th recurrence emerges, file a new issue doc. —
+      unified-trading-pm@587ab773a
 - **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — swapped out
   `sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md` (the incidental PR #982 discovery trigger, only
   mentioned in the opening summary, not touched by any of the 4 root-cause/fix sub-mechanisms since) for
@@ -279,3 +291,10 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   `failure`/`cancelled` (`gh run list --workflow=full-workspace-sit.yml --limit 15`). No 5th recurrence yet (~4.5h clean
   so far). Todo NOT closed — done-when is "no recurrence by ~2026-08-21", still 2 weeks out; leaving the checkbox open
   for the window to run its course (re-check on next dispatch of this monitoring todo).
+- **2026-08-07 monitoring check-in (slot 6, task `sit_gate_fleet_green_auto_retrigger_stuck-005`)**: checked runs since
+  slot-10 check-in (31146220479, 04:03Z) through latest (31158938494, 07:45Z) — 7 additional runs (6 success, 1
+  cancelled-by-newer-dispatch), no failures. **Both poll-budget fixes confirmed live on `main`**: `b3da771` promoted via
+  system-integration-tests PR #348 (merged 2026-08-07T00:03:42Z); `full-workspace-sit.yml` on `main` now reads run-ID
+  poll `seq 1 30` (150s) and completion poll `seq 1 64` (320s) — verified via `git show origin/main:...`. Total clean
+  runs since verified-good 31131969006: 13 consecutive successes (~8h). No 5th recurrence. Monitoring window still open
+  (~14 days remaining, until 2026-08-21); checkbox left open for re-check on next dispatch.

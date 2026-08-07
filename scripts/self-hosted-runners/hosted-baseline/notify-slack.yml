@@ -22,6 +22,16 @@ on:
         required: false
         type: string
         default: ""
+      subject_repo:
+        description: >-
+          The repo the alert is ABOUT (not the repo running this workflow). Leave blank for the common case where a repo
+          reports on its own CI/build/deploy — the ledger then defaults it to the caller repo. Set explicitly when a
+          fleet-wide watcher (running in unified-trading-pm) reports on a DIFFERENT repo via a repository_dispatch
+          payload (e.g. ci-status-update.yml, cascade-qg-ordering.yml) — otherwise the ledger's `subject_repo` wrongly
+          records the watcher itself (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+        required: false
+        type: string
+        default: ""
       run_url:
         description: URL to the GHA run (shown as context link)
         required: false
@@ -60,6 +70,16 @@ on:
         required: false
         type: boolean
         default: false
+      concurrency_suffix:
+        description: >-
+          Distinct-lane token. The run-scoped concurrency group is notify-slack-<ref>-<run_id>-<suffix>; callers that
+          fire MORE THAN ONE notify-slack in the same run MUST pass a distinct suffix per call, else they land in one
+          group and GitHub cancels the previously-PENDING member when a newer one queues (cancel-in-progress:false only
+          protects the RUNNING one) — silently dropping an all-clear. Empty (default) keeps the pre-existing single-lane
+          behaviour for single-call callers.
+        required: false
+        type: string
+        default: ""
     secrets:
       SLACK_WEBHOOK_URL:
         required: false
@@ -78,7 +98,10 @@ on:
 permissions: {}
 
 concurrency:
-  group: notify-slack-${{ github.ref }}-${{ github.run_id }}
+  # Per-caller lane (…-<suffix>) so multiple notify-slack calls in ONE run never cancel each other's
+  # PENDING member — GitHub cancels a previously-pending group member when a newer one queues, even
+  # with cancel-in-progress:false. Empty suffix = the prior single-lane behaviour.
+  group: notify-slack-${{ github.ref }}-${{ github.run_id }}-${{ inputs.concurrency_suffix }}
   cancel-in-progress: false
 
 jobs:
@@ -386,6 +409,7 @@ jobs:
           INPUT_MESSAGE: ${{ inputs.message }}
           INPUT_SEVERITY: ${{ inputs.severity }}
           INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+          INPUT_SUBJECT_REPO: ${{ inputs.subject_repo }}
           INPUT_RUN_URL: ${{ inputs.run_url }}
           INPUT_CONCLUSION: ${{ inputs.conclusion }}
           INPUT_DEDUP_KEY: ${{ inputs.dedup_key }}
@@ -393,33 +417,48 @@ jobs:
           set -euo pipefail
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           DATE_PARTITION=$(date -u +"%Y-%m-%d")
+          # subject_repo: the repo the alert is ABOUT. Defaults to the caller (repo=emitter=self,
+          # the common case) when the caller didn't pass one explicitly — see the `repo` field's
+          # docstring above and deployment_alerts_ingestion_completeness_2026_07_20.md todo 4.
+          EMITTING_REPO="${CALLER_REPO#*/}"
+          SUBJECT_REPO="${INPUT_SUBJECT_REPO:-$EMITTING_REPO}"
           ALERT_JSON=$(jq -n -c \
             --arg event_type "slack_alert" \
             --arg timestamp "$TIMESTAMP" \
-            --arg repo "${CALLER_REPO#*/}" \
+            --arg repo "$EMITTING_REPO" \
+            --arg subject_repo "$SUBJECT_REPO" \
             --arg workflow_name "$INPUT_WORKFLOW_NAME" \
             --arg severity "$INPUT_SEVERITY" \
             --arg conclusion "$INPUT_CONCLUSION" \
             --arg run_url "$INPUT_RUN_URL" \
             --arg message "$INPUT_MESSAGE" \
             --arg dedup_key "${INPUT_DEDUP_KEY:-}" \
-            '{event_type:$event_type, timestamp:$timestamp, repo:$repo, workflow_name:$workflow_name,
-              severity:$severity, conclusion:$conclusion, run_url:$run_url, message:$message, dedup_key:$dedup_key}')
+            '{event_type:$event_type, timestamp:$timestamp, repo:$repo, subject_repo:$subject_repo,
+              workflow_name:$workflow_name, severity:$severity, conclusion:$conclusion, run_url:$run_url,
+              message:$message, dedup_key:$dedup_key}')
           # DEDUP MARKER first (root-cause fix 2026-07-17): the per-key object the dedup gate
           # reads. Atomic single-object overwrite — immune to the read-modify-write clobbering
           # that silently erased keys from the shared ledger and made every "dedup'd" alert
           # re-page each tick.
+          SAFE_KEY=""
           if [ -n "${INPUT_DEDUP_KEY:-}" ]; then
             SAFE_KEY="$(printf '%s' "$INPUT_DEDUP_KEY" | tr -c 'A-Za-z0-9._-' '_')"
             printf '%s' "$ALERT_JSON" | gsutil cp - "gs://${CICD_EVENTS_BUCKET}/cicd/alerts/dedup/${SAFE_KEY}.json" \
               && echo "Dedup marker written: dedup/${SAFE_KEY}.json" || true
           fi
-          # History append (best-effort; KNOWN-LOSSY under concurrency — the open D2 ledger-race
-          # decision. Dedup deliberately does NOT depend on this object.)
-          OBJECT_PATH="cicd/alerts/${DATE_PARTITION}/alerts.jsonl"
+          # History append — ONE OBJECT PER ALERT (root-cause fix, matching persist-event/action.yml's
+          # events-ledger fix and deployment-api's _persist_alert() fix, 2026-07-21): the OLD path did
+          # an unlocked cp-down -> append -> cp-up onto one shared alerts.jsonl per day, so two
+          # overlapping writers silently clobbered each other
+          # (persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md; this step's own prior
+          # comment flagged it as "KNOWN-LOSSY under concurrency" but left it deferred). The reader
+          # (deployment-api's _repo_ci_alerts.py::_read_ledgers_sync) already globs the whole
+          # cicd/alerts/{date}/ prefix and parses every blob it finds, so writing each alert straight
+          # to its OWN never-overwritten object eliminates the race with zero reader changes: no read,
+          # no local merge, no lock.
+          UNIQUE_KEY="${SAFE_KEY:-$RANDOM}-${GITHUB_RUN_ID}-$(date -u +%s%N)"
+          OBJECT_PATH="cicd/alerts/${DATE_PARTITION}/${UNIQUE_KEY}.jsonl"
           GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
-          LOCAL_FILE="/tmp/alerts.jsonl"
-          gsutil cp "$GCS_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
-          echo "$ALERT_JSON" >> "$LOCAL_FILE"
-          gsutil cp "$LOCAL_FILE" "$GCS_URI" || true
+          printf '%s\n' "$ALERT_JSON" | gsutil cp - "$GCS_URI" \
+            || echo "::warning::GCS write failed — alert not persisted"
           echo "Alert persisted to $GCS_URI"

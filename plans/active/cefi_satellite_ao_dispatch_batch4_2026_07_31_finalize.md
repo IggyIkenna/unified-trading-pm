@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-07"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -65,7 +65,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 7 distinct source docs' checkboxes.** Batch 4's 7 todos draw from 7 source docs:
+- [x] ✅ [REVIEW] P1. **Reconcile all 7 distinct source docs' checkboxes.** Batch 4's 7 todos draw from 7 source docs:
       `issues/bybit_futures_chain_write_shape_2026_07_13.md`,
       `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`,
       `issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md`,
@@ -115,3 +115,20 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) unchanged — `_finalize` gate doc, no source-code
   paths added per the skip-source carve-out; all 4 entries confirmed resolving on disk.
+- **2026-08-07 (slot-9, `backend_engineer`, `cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize-001`)**: Todo 1 DONE
+  — all 7 source docs verified and reconciled. All 8 batch4-cited commits verified reachable on
+  `origin/live-defi-rollout` (`market-tick-data-service@1a32b6e7`, `unified-trading-library@89eabac2`,
+  `deployment-service@4ee514e`, `unified-trading-library@f135d4fd8`, `unified-trading-pm@aa30fcaf2`,
+  `market-tick-data-service@878b750b`, `deployment-service@cca27b3`, `unified-trading-library@a4779c8b`). Per-doc
+  remaining-open count (explicitly restated, not assumed): (1) `bybit_futures_chain_write_shape_2026_07_13.md` — 0
+  batch4-related open; `locked_by: live-defi-rollout` + operator-gated 490-duplicate cleanup stays open outside scope.
+  (2) `cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` — 0; `status: resolved` + archived. (3)
+  `cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md` — 3 open P3 corroborating
+  items (not batch4 scope; feeding the separate shard-16 investigation). (4)
+  `cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md` — 0; `status: resolved` +
+  archived. (5) `cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md` — 0; `status: resolved` + archived. (6)
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` — 1 open: sports-scoped P1 BLOCKED-CREDENTIALS (deliberately
+  excluded per batch4's scope, consistent with plan's "leave the sports-scoped item open" instruction). (7)
+  `onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` — 3 open: items 1-3 (re-partitions from the
+  too-large-or-risky Deferred section, each retaining their explicitly-excluded residual per batch4). Docs 4 and 5
+  already zero open; docs 2, 6, 7 retain only deliberately-excluded residuals — none were silently overlooked.

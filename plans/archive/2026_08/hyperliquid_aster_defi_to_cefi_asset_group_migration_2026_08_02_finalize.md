@@ -7,7 +7,7 @@ summary: >-
   and the two codex SSOTs the source plan's own Phase 5 names, then archives both docs. Authored `status: active` (not
   draft) per the no-double-gate finding — `gate_on_depends` alone already machine-holds every task here until the source
   plan's todos land, regardless of the source plan's own status.
-status: active
+status: complete # (was: active) 2026-08-07 archival: all todos [x], no locked_by
 nature: process
 asset_group: [cefi, defi]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [migration, asset-group, cefi, defi, hyperliquid, aster, archival]
 related:
   [
-    /plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
+    /plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
     /plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -44,7 +44,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
+    /plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
     /plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -64,9 +64,9 @@ context_scope:
       dual-classified or `asset_group=defi`-resident, per Phase 5's own todo. **Done when**: the reconciliation is
       recorded in this plan's own Progress Log with the exact commit citation.
 
-- [ ] [DOC] P2. **Archive the source plan + this finalize plan.** Once all 5 phases (including the Phase 4 delete) and
-      this plan's todo 1 are done, archive both `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` and
-      this finalize doc to `plans/archive/2026_08/` per the 6-step archival ritual
+- [x] ✅ [DOC] P2. **Archive the source plan + this finalize plan.** Once all 5 phases (including the Phase 4 delete)
+      and this plan's todo 1 are done, archive both `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`
+      and this finalize doc to `plans/archive/2026_08/` per the 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every referrer (this doc's own
       `related:`, `defi_code_codex_drift_2026_05_27.md`'s D15 reference). **Done when**: both files are in
       `plans/archive/2026_08/` and `regenerate_active_plan_inventory.py` shows 0 orphaned referrers.
@@ -89,3 +89,8 @@ context_scope:
   `gate_on_depends: true` already fully holds both todos above until every phase of the source plan is `done`, so no
   second manual flip is needed later (2026-07-30 no-double-gate finding).
 - **context-scout 2026-08-07**: populated/refreshed context_scope (3 entries)
+- 2026-08-07 (slot 3, task `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02_finalize-002`): **Todo 2
+  DONE — archival complete.** Updated path referrers (defi_code_codex_drift_2026_05_27.md context_scope + D15 prose,
+  cefi_satellite_ao_dispatch_batch7_2026_08_03.md related:, INDEX.md entries removed, this doc's own
+  related:/context_scope updated) and flipped status to complete. Both plans moved to plans/archive/2026_08/ via git mv.
+  Ran regenerate_active_plan_inventory.py — 0 orphaned referrers.

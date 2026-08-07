@@ -1,11 +1,13 @@
 # quality-gates-v2.yml — unified-trading-pm per-repo caller (v2, escapes GHA ghost cache)
 #
-# DESIGN: PM-specific caller for python-quality-gates-v2.yml. Unlike service repos that
-# reference the remote PM ref (IggyIkenna/unified-trading-pm/.github/workflows/...@live-defi-rollout),
-# PM calls the LOCAL reusable workflow (./.github/workflows/python-quality-gates-v2.yml)
-# because PM IS the host — it cannot reference itself via a remote ref without a chicken-and-egg
-# problem. The job key "quality-gates-v2" registers a fresh check context, bypassing the
-# GitHub ghost-cache bug on the old "quality-gates" context (Option D).
+# DESIGN: PM-specific caller for python-quality-gates-v2.yml. Since 2026-08-06, the reusable
+# workflow is hosted in unified-trading-ci (extracted from PM so the fleet's CI never again
+# breaks if PM's own visibility changes — see
+# plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md) — PM calls the same remote ref
+# every other repo uses (IggyIkenna/unified-trading-ci/.github/workflows/python-quality-gates-v2.yml@main).
+# The former chicken-and-egg self-reference problem no longer applies: PM is just another
+# caller now, not the host. The job key "quality-gates-v2" registers a fresh check context,
+# bypassing the GitHub ghost-cache bug on the old "quality-gates" context (Option D).
 #
 # dep_repos: unified-trading-library unified-api-contracts
 #   (mirrors sibling_deps in the legacy quality-gates.yml)
@@ -15,15 +17,25 @@ name: quality-gates-v2
 on:
   push:
     branches: [main]
+    # workspace-manifest.json-only commits (ci-status-consolidator.yml's hourly Firestore->manifest
+    # projection) don't need a full gate re-run -- excluding them here (instead of the consolidator's
+    # blanket `[skip ci]` commit-message marker) lets OTHER push-triggered workflows on main, notably
+    # main-backmerge-to-ldr.yml, still fire normally on that commit. See
+    # plans/active/issues/ci_status_consolidator_skip_ci_starves_ldr_backmerge_2026_08_03.md.
+    paths-ignore: ["workspace-manifest.json"]
   pull_request:
     branches: [main, staging]
   workflow_dispatch:
 
-# Concurrency: cancel in-progress runs for the same ref on new push (saves Action minutes during
-# rapid push cadence). PR runs serialize per-PR.
+# Concurrency: cancel in-progress runs for the same ref on a new push OR a new commit to an open PR
+# (saves Action minutes). PR runs used to only serialize (queue), which meant a standing promote PR
+# with a moving head (e.g. PM's own LDR->main PR) billed a full run for every superseded intermediate
+# commit instead of collapsing to the latest — the group is already scoped per-ref (a PR's ref is
+# refs/pull/<n>/merge, unique per PR), so cancelling in-progress here can never cross-cancel a
+# different PR or a push to main.
 concurrency:
   group: quality-gates-v2-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'push' }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -32,13 +44,21 @@ permissions:
 jobs:
   quality-gates-v2:
     name: Quality Gates (unified-trading-pm)
-    uses: ./.github/workflows/python-quality-gates-v2.yml
+    uses: IggyIkenna/unified-trading-ci/.github/workflows/python-quality-gates-v2.yml@main
     with:
       dep_repos: "unified-trading-library unified-api-contracts"
+      # REVERTED 2026-08-07 (self_hosted_runner_public_repo_revert_2026_08_05.md todo 24): PM
+      # itself went PUBLIC 2026-08-06, which makes ubuntu-latest free/unmetered for it (the
+      # 2026-08-05 "single largest ubuntu-latest cost driver" framing below no longer applies) and
+      # makes self-hosted-on-a-public-repo a fork-PR security exposure instead of a savings.
+      # `self_hosted_runner_labels` empty -> the reusable's `runs-on:` input falls back to
+      # ubuntu-latest (see python-quality-gates-v2.yml's own default). PM's local `uses: ./...`
+      # self-call fell outside rollout-workflow-templates.sh's scope (it targets REMOTE-ref
+      # callers), which is why this was hand-set instead of template-derived.
+      self_hosted_runner_labels: ""
     secrets: inherit
-    # Note: PM calls the LOCAL reusable workflow (not the remote PM ref) because
-    # PM cannot reference itself via IggyIkenna/unified-trading-pm@<ref>. All other
-    # service repos use the remote ref. This is the only repo where uses: is local.
+    # Note: PM calls the same unified-trading-ci remote ref every other repo uses. See
+    # codex/08-workflows/ci-cd-flow.md for the current SSOT on the reusable-workflow host.
 
   # Dispatch qg-passed to PM cloud-build-router on staging merge so Cloud Build runs the image build.
   # cloud-build-router.yml in PM listens for this event and triggers the GCP Cloud Build pipeline.
