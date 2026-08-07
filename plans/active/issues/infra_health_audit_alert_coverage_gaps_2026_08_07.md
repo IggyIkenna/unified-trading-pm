@@ -163,9 +163,11 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
       all non-consolidator GCP Cloud Run Jobs in `CLOUD_RUN_JOBS`, reads most-recent `run_v2` execution, emits
       `DP_CLOUD_RUN_JOB_FAILED` (CRITICAL, PAGE_OPERATOR) when `failed_count > 0` for N consecutive sweeps via
       MissTracker; wired into `cli.py` meta sweep; 19 unit tests; QG green.
-- [ ] [CODE] P2. Route `write_config_snapshot`'s GCS exceptions through the `DP_GCS_429_THRASH` event when the
+- [x] ✅ [CODE] P2. Route `write_config_snapshot`'s GCS exceptions through the `DP_GCS_429_THRASH` event when the
       underlying error classifies as rate-limit (429/RESOURCE_EXHAUSTED), instead of the generic `SERVICE_ERROR` path.
-      Repo: alerting-service.
+      Repo: alerting-service. — alerting-service@773bb55c2 — `_is_gcs_rate_limit()` + `DP_GCS_429_THRASH` routing in all
+      4 write methods (`write_config_snapshot`, `write_alert_history`, `write_quietness_report`,
+      `write_cooldown_state`) + 16 unit tests; QG green, quickmerge landed on LDR.
 - [ ] [CODE] P2. Register an `AlertCode` family (e.g. `CLOUD_AUTH_FAILED` or similar) for cross-cloud IAM/STS failures +
       wire `cost_snapshot_worker.py`'s per-cloud failure path to emit it instead of the unregistered `SERVICE_FAILED`.
       Repo: unified-api-contracts + deployment-api.
@@ -182,3 +184,5 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
   this doc's scope is deliberately narrowed to the alerting-coverage gap only.
 - **2026-08-07 (item 2)**: DP-WATCHER-006 shipped — `cloud_run_job_failure_watcher.py` + CLI wiring + 19 unit tests.
   deployment-service@302dcef33. QG green.
+- **2026-08-07 (item 3)**: GCS 429 routing fix shipped — `_is_gcs_rate_limit()` helper + `DP_GCS_429_THRASH` routing in
+  all 4 AlertStorageStore write methods + 16 unit tests. alerting-service@773bb55c2. QG green.
