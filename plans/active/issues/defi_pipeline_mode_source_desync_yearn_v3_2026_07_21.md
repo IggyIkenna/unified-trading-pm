@@ -163,9 +163,10 @@ vault-share-price collector) end-to-end:
       forced single-source auto-stamp? That is a genuine operator/design call (adds a multi-source cell, requires
       `source_required()`→True for this pair, and a one-time backfill/no-op decision on the 7,476 existing rows) — not
       resolved here (repo: unified-api-contracts + market-tick-data-service, design decision).
-- [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
-      audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
-      `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
+- [x] 5. ✅ [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note —
+      `unified-trading-pm@0c4172c31` ("docs(codex): append F10 pipeline_mode<->source desync to the cutover register"),
+      verified reachable on `origin/live-defi-rollout` and present at `codex/02-data/canonical-cutover-register.md:136`
+      — verified by plan_reconciler agt-a2268a 2026-08-07.
 
 ## Progress Log
 
