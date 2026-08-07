@@ -183,3 +183,20 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   rejection). Killed the stuck Transfermarkt retry VM after confirming 2h17m of zero progress against a durably-502ing
   vendor endpoint. No remediation done yet beyond what's already tracked in the AF doc — this tick was entirely
   discovery + scoping; next tick should start on the P0 odds_api items.
+- **2026-08-07T11:35Z** — **`mtds-backfill-odds-1` is behaving genuinely differently from every prior attempt in
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s history** — actively skip-fasting through already-covered
+  dates at ~0.2-0.3s each (2020-08-01→2020-08-26 in under a minute) and correctly real-fetching genuinely-missing dates
+  (2020-08-18: 782 rows written via the Tier-2 sentinel fan-out). This is the first live confirmation that the
+  2026-07-30 freshness-scoping fix's own claim — "narrower/cheaper run, won't re-touch the 1,545 already-covered days" —
+  is actually true in practice, not just in the fix author's analysis. One minor non-fatal warning noted
+  (`venue=ODDS_API: data_type 'ODDS' is not valid for this venue's asset group`) but it didn't block the real write —
+  not chasing it further this tick. No `PROGRESS.json` yet (still inside its first 250-day chunk). Still RUNNING, no
+  signs of the preemption/freeze/OOM patterns that killed every prior attempt — watching through to actual completion.
+  Weather backfill (`weather-backfill-20260807-120241`) also healthy: 16,361+ entries written, real per-date
+  fixture-venue matching working, automatic archive-tier fallback handling minor upstream 400s cleanly. Launched the SFI
+  expected_unattempted backfill (205,363 shards,
+  `launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`) — confirm it reached RUNNING next
+  tick. Checked Transfermarkt for endpoint recovery signal: no new manifest activity for `source=transfermarkt` since
+  before the VM was killed (still 8 attempted_failed, unchanged) — this session's identity lacks Secret Manager access
+  to the RapidAPI key to check the endpoint directly, so deferring rather than blind-retrying into a possibly-still-down
+  endpoint.
