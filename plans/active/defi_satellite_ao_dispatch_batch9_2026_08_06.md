@@ -390,3 +390,10 @@ remaining items besides the over-cap-gated one above).
   call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING". This todo's own checkbox stays open (no code shipped,
   no daemon relaunched) — unchanged from prior dispatches; the new plan doc is the only new artifact this dispatch
   produced. No VM/GCS/cron mutation performed.
+- **2026-08-07 (AO re-dispatch #5, `data_engineering`, slot 10)**: fifth consecutive dispatch; state entirely unchanged.
+  Daemon `vm-zombie-watchdog-20260805-125558` still RUNNING (confirmed via serial-console: last poll 06:58 UTC
+  2026-08-07, real-mode, 46 VMs, 0 zombies). Infra plan `infra_vm_zombie_watchdog_relaunch_2026_08_07.md` still
+  `status: draft`. Spot-checked GCS: ETHEREUM + GMX still 0 objects (data-delete phase confirmed still complete).
+  Confirmed both code fixes still in LDR (`vm_zombie_watchdog.py` line 248: `"canonical-migration-": (90.0, 360.0)`;
+  `launch-canonical-migration-vm.sh` line 2094: `STALL_TIMEOUT_SEC=7200`). No new findings. Posting /blocked with
+  specific ask: activate `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`. No VM/GCS/cron mutation performed.
