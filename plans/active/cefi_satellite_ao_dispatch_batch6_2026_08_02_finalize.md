@@ -113,14 +113,23 @@ context_scope:
       BLOCKED-OPERATOR-DECISION — not a batch7 candidate**. Neither deferred entry has cleared its gate; both
       re-confirmed blocked as of 2026-08-07.
 
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate every remaining Deferred item to a tracked todo elsewhere (todo 2 above
       should have resolved or re-confirmed each — verify none silently vanish) → add the archive banner → run the
       codex-alignment check (batch6 creates no new durable contract; confirm still true) → grep the corpus for every
       referrer of `cefi_satellite_ao_dispatch_batch6_2026_08_02` and repoint each to the archived path → clear
       `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus
       referrer resolves to the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside
-      it in the same commit.
+      it in the same commit. — **unified-trading-pm@<SHA> 2026-08-07.** Step 1: no deferred items to migrate (both
+      Deferred entries re-confirmed still-blocked by todo 2 above — Schema v10 transitive gate unchanged, estate_orphan
+      todo-6 operator ruling still absent). Step 2+6: archive banners + status: complete added to both plans; locked_by
+      already empty. Step 3: codex-alignment check — batch6's 6 todos (script extension, GCS census, fail-hard Stage 0,
+      Cloud Run job investigation, parity test, OKX live-verify) create no new durable contract; confirmed still true.
+      Step 4: no CLAUDE.md/codex updates needed. Step 5: referrer updates — repointed /plans/active/ →
+      /plans/archive/2026_08/ in INDEX.md (entries removed), deribit_dated_option_trades_perpetual_misclassification
+      (context_scope + prose ref), ag_closeout_audit_cefi_parked_2026_08_06, cefi_satellite_ao_dispatch_batch7
+      (related + context_scope), cefi_satellite_ao_dispatch_batch7_finalize (related). Both plans moved via git mv to
+      plans/archive/2026_08/ in the archival commit.
 
 ## Codex SSOTs
 
