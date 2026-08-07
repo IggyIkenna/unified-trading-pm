@@ -297,6 +297,11 @@ surface that actually exists (warm + cold event-log tiers).
   envelopes parsed successfully and Parquet rows written. The old "CanonicalPersistEnvelope validation — skipping"
   finding (jhsb7, old code) was also caused by NDJSON mis-parsing; it does NOT apply to the new code. Background task
   `bvcozyjr5` (7 sequential date executions) in flight.
+- **2026-08-07 ~16:52 UTC (slot-11 worker, data_engineering, v5 status check at 16 min)**: All 7 v5 executions confirmed
+  running at 16:52 UTC (16 min elapsed). GCS baseline: `gs://central-element-323112-events/live-events/cold/cefi/` =
+  ZERO objects (expected — cold file only written after full shard loop finishes). Next key milestones: book_snapshot_5
+  (204.82 GiB at ~9.5 MB/s effective rate) expected ~6h from start → ~22:36 UTC; derivative_ticker (~41 min) + trades
+  (~61 min) after → all done ~00:18 UTC; 8h timeout at 00:36 UTC. ScheduleWakeup armed for 17:51 UTC (1h check).
 - **2026-08-07 ~21:00 UTC (slot-11 worker, data_engineering, v5 relaunch after timeout discovery)**: (1) TIMEOUT BUG v2
   found: book_snapshot_5 warm data = 204.82 GiB/day (1521 files × 144 MB avg); at ~30 MB/s effective GCS+processing
   throughput, book_snapshot_5 alone takes ~6h30min — exceeding the 6h budget set in the previous round. All 7 v4
