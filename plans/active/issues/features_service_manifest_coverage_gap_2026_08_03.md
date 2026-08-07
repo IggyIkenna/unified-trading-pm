@@ -186,7 +186,7 @@ not something an AO worker should guess at.
       recording failures; objects already deleted, rows retracted to `empty_confirmed` (`features-service@5706e1a3` +
       `@66919769`). Residual gaps surfaced by this live verification are filed as new todos 5 + 6 below. Full evidence
       in the Progress Log.
-- [ ] 5. [SCRIPT] P2. **Close the 2026-08-04 calendar manifest-completeness gap (2 cells)** — `economic_events` and
+- [x] 5. ✅ [SCRIPT] P2. **Close the 2026-08-04 calendar manifest-completeness gap (2 cells)** — `economic_events` and
       `yield_curve` 0-row parquet objects exist for `day=2026-08-04`
       (`calendar/{group}/by_date/day=2026-08-04/features.parquet`) but the manifest has NO rows for them (only
       `economic_results` got its captured row; row_count=6, real FRED data, backing object confirmed). Root-cause
@@ -194,7 +194,8 @@ not something an AO worker should guess at.
       historical part-(b) finding; no Cloud Logging records retrievable for the 2026-08-04T05:46Z run window to
       confirm), then record `empty_confirmed` for the 2 cells via CAS `record_empty` (0-row objects = honest empty), and
       harden `_write_success_manifest` so a swallowed recording failure is at least visible (metric / log event) instead
-      of silent. Repo: features-service.
+      of silent. Repo: features-service. — features-service@6f4fdb46 + QG ✅ sentinel=6f4fdb46; dry-run confirmed both
+      cells already empty_confirmed; metric hardening shipped; correction script idempotent.
 - [ ] 6. [SCRIPT] P3. **Reconcile the stale `_legacy_seed.parquet` phantom rows** — the per-VM seed
       (`_index/per_vm/_legacy_seed.parquet`) still carries the 2 phantom `captured` time_features rows (2026-07-04/05,
       written 2026-07-27). The consolidated index is correct (`empty_confirmed`), but `read_availability_index`'s
