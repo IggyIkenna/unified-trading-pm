@@ -236,3 +236,24 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
 > system-integration-tests@69b93bc 'had NEVER reached main' ('fix authored + on LDR', not live), and 08-06 recurrence
 > (dispatch-flood variant, 20+ cancelled runs, deployment-service PR #716 blocked) was 'diagnosis filed as escalation
 > agt-f85daa' - the gate is still failing fleet-wide [KEEP_OPEN todo synthesized from justification by archive sweep]
+
+- **2026-08-06/07 recurrence — 4th distinct sub-mechanism found + fixed (cicd escalation agt-6398a6, slot 9,
+  deployment-service PR #729)**: `sit-gate/fleet-green` FAILURE on #729 (blocked 53m+) traced to
+  `cross-repo-invariants`' **run-ID-identification poll** — a SEPARATE loop from the completion-poll already widened by
+  69b93bc ("Poll (up to ~30s) for a run id NOT in PRE_RUN_IDS", `for _ in $(seq 1 6); do sleep 5; done`). Confirmed
+  genuinely transient/ load-dependent, not per-repo: across 2 SIT runs observed live, the SET of repos hitting
+  `run-not-found` differed each time (6 repos one run incl. `deployment-service`; 6 different repos the next,
+  `deployment-service` itself succeeding) — consistent with `?per_page=10` recent-runs listing transiently missing a
+  just-dispatched run under fleet-dispatch volume, not a structural per-repo bug. **Fix**: widened 30s (6×5s) → 150s
+  (30×5s), same pattern as 69b93bc — system-integration-tests@b3da771 (direct push to `live-defi-rollout`, QG green 62s,
+  verified on origin). **Verified live**: next `full-workspace-sit` run (31131969006) completed SUCCESS; independently
+  reconfirmed when a manually `workflow_dispatch`-triggered
+  `ldr-to-main-promote-fleet.yml --only_repo=deployment-service` run (31133410830, used because GH's declared `*/5`
+  schedule under-delivers ~37% per the doc up top — the untouched next scheduled tick hadn't fired in the 10+ min
+  waited) posted `sit-gate/fleet-green=success` — visible on deployment- service's PR #731 (the promote branch had
+  rolled to a newer LDR sha meanwhile, superseding/closing original #729; #731 shows `sit-gate/fleet-green: SUCCESS`,
+  independent confirmation the fix holds across two different PRs/runs). **Out of scope, left for its own escalation**:
+  PR #731 carries a genuinely NEW/unrelated `quality-gates-v2` FAILURE (QG slice/tests) — its own deterministic workflow
+  already auto-fired "Escalate LDR-QG failure to orchestrator", so a fresh dedicated `ldr_qg_failure`/`sit_failure`
+  worker should pick it up separately; not chased here (this escalation's assigned wall — sit-gate/fleet-green on #729 —
+  is resolved).

@@ -750,7 +750,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       not a new/separate blocker, just this todo's dependency made explicit so the next investigator doesn't re-derive
       it. No code shipped (pure verification). Leaving unchecked. (repo: deployment-api)
 
-- [ ] [BACKEND] P2. **NEW, opened 2026-08-06 (slot-8, infra, on flip of the `[REVIEW] P2` above) — reduce the
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-08-06 (slot-8, infra, on flip of the `[REVIEW] P2` above) — reduce the
       single-call memory footprint of the cockpit rollup handlers, not just bound their concurrency.** The shared
       cockpit-build guard (`deployment-api@59fc391`) prevents multi-GiB builds from STACKING, but a lone
       `repo_ci.get_overview` still peaks 0.36-2.9 GiB and `health_overview.get_health_overview` ~2.6 GiB per call, and
@@ -759,7 +759,31 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       candidate: `_overview_row`/`latest_workflow_run_with_jobs` retaining full per-repo GitHub workflow-run + jobs
       JSON, and `load_manifest_view` materializing the whole registry — and trim/stream so a single call stays well
       under ~1 GiB. Done-when: a fresh `repo_ci.get_overview` memory-profile delta is < ~1 GiB on a live deployment, OR
-      the dominant allocation is identified + trimmed with evidence. (repo: deployment-api)
+      the dominant allocation is identified + trimmed with evidence. (repo: deployment-api) — **2026-08-07 (slot 14,
+      backend_engineer): dominant allocation IDENTIFIED + TRIMMED with live byte-size evidence — flipping on the OR
+      done-when branch.** Measured the actual payloads the overview retains (live `gh api`): the workspace-manifest.json
+      is only 78 KB (registry-materialization REFUTED as the GiB source), the GCP/AWS build paths return small formatted
+      dicts, and the total per-call GitHub JSON is ~10 MB — but the largest SINGLE retained payloads are the compare
+      responses (full file patches: 1.3 MB unified-trading-pm / 1.1 MB agent-orchestrator) and the pulls list (219 KB
+      PM), held in the 90 s `_response_cache` across the burst while only 3-5 fields per response are read. Shipped
+      `deployment-api@0050de6`: an optional `project=` callable on `gh_get_json` reduces each payload BEFORE it is
+      returned AND cached — `_project_compare` (compare_branches + diverged_content_lag), `_project_pulls` (pulls list +
+      per-PR detail), `_project_workflow_runs` (head_check_rollup) — cutting the retained per-response shape from up to
+      1.3 MB to a few KiB, behavior-neutral (same URL always fetched with the same projector; the read slices are
+      unchanged). 4 new unit tests, QG green (93 s, sentinel matches HEAD), shipped + verified on origin. Filed a
+      `[REVIEW]` P2 below to measure the next memory-profile delta.
+
+- [ ] [REVIEW] P2. **NEW, opened 2026-08-07 (slot 14, backend_engineer) — once `deployment-api@0050de6` (the
+      response-projection trim, todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api`, read the
+      next `repo_ci.get_overview` `memory-profile` line (from `130c3a2`'s `log_rss_delta` instrumentation) and confirm
+      the peak_rss_delta drops below the pre-fix 0.36-2.9 GiB band — the parent todo flipped on its IDENTIFIED + TRIMMED
+      branch; this monitors the measured effect.** The projection cuts the RETAINED GitHub bodies (compare 1.3 MB → ~2
+      KiB, pulls 219 KB → ~5 KiB) but does NOT bound the transient aiohttp parse or the sync-tile allocations (fleet
+      Compute census / BigQuery cost / alert ledger) that the same cockpit burst drives — so the post-fix single-call
+      delta is expected to be dominated by those, not GitHub JSON. If the delta is not materially lower, the next-ranked
+      lever is the sync-handler allocations (profile + trim the fleet census / cost / alerts tiles), not another
+      concurrency guard — the guard + projection already cover the stacking + retention mechanisms. (repo:
+      deployment-api)
 
 ## Progress Log
 
@@ -862,3 +886,17 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   revision OOM-killed. Shipped `deployment-api@59fc391` (shared cockpit-build guard, see flipped `[REVIEW] P2`) + filed
   a fresh `[BACKEND] P2` follow-up for the single-call footprint reduction. No cloud-only guesses — all numbers from
   live `gcloud logging read` / `revisions describe`. (repo: deployment-api)
+
+- **2026-08-07 (slot 14, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-030` (the `[BACKEND] P2`
+  cockpit-rollup single-call memory-footprint todo). Identified the dominant allocation with live byte-size evidence:
+  the workspace-manifest is only 78 KB (registry-materialization REFUTED as the GiB source), GCP/AWS build paths return
+  small formatted dicts, and the total per-call GitHub JSON is ~10 MB — but the compare responses (1.3 MB
+  unified-trading-pm / 1.1 MB agent-orchestrator, full file patches) and the pulls list (219 KB PM) dominate the
+  RETAINED payloads in the 90 s `_response_cache`, while each caller reads only 3-5 fields. Shipped
+  `deployment-api@0050de6` — an optional `project=` callable on `gh_get_json` that reduces each payload BEFORE it is
+  returned AND cached, wired into compare_branches / diverged_content_lag / pulls list+detail / head_check_rollup
+  (`_project_compare` / `_project_pulls` / `_project_workflow_runs`); 4 unit tests, QG green (93 s, sentinel matches
+  HEAD), SHA verified on origin via `merge-base --is-ancestor`. Flipped the checkbox on its OR done-when branch
+  (identified + trimmed with evidence) + filed a `[REVIEW]` P2 monitoring follow-up. **OOM directive ack**: ran no
+  un-bounded heavy processes on the shared host this session (QG is the standard bounded flow; host load ~3.0, no
+  concurrent QG) — no OOM event to record.
