@@ -305,3 +305,46 @@ the same file, concurrently, from another worker — almost certainly
 stale-note fix in that file may already be partially/fully superseded by the concurrent worker's commit — worth a fresh
 read of that file's CURRENT live-defi-rollout state before merging (not just trusting my branch's diff), rather than a
 naive rebase/force-resolve.
+
+## Session checkpoint (pre-compact, 2026-08-07 ~02:2x UTC)
+
+STEPs 1–7 are fully complete and durable: every commit on `plan_reconciler/agt-e7f024` (13 commits,
+`014fef134`..`402846b20`) is pushed — `git status` clean, `git rev-list --count origin/plan_reconciler/agt-e7f024..HEAD`
+= 0. STEP 8 (loop-and-wait) is in progress: both `/blocked` questions below are still open server-side and in the
+dashboard, unanswered as of this checkpoint. Nothing from this session exists only in chat/context — every finding, fix,
+and open question is on disk in this doc or registered via the API. A fresh session (or the next wakeup of this one) can
+resume STEP 8 purely from: (a) this doc, (b) `GET /api/slots/9/messages`, (c) the two `blocked_id`s below.
+
+## Deferred work after 2026-08-07
+
+| Item                                                                                           | State / why deferred                                                                                                                                                            | Blocked on                                               |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `BLK-6ecd6940` — codex-vs-plan cross-venue-arb-status question                                 | Operator-owned — genuine authority call, evidence alone can't settle which doc is right for the specific Kalshi/Polymarket-football sub-scope                                   | Operator answer in the dashboard                         |
+| `BLK-88d7ab7b` — codex-internal drilldown-table contradiction                                  | Operator-owned — codex/SSOT edits are never autonomous per the HARD GATE, even with strong evidence                                                                             | Operator answer in the dashboard                         |
+| Filed item 1-4 (closeout digest, batch4 4b-iii, batch7 line-wrap, task_template.md marker gap) | Cannot be done yet — purely time-gated by the 12h grace window, not a judgment call; fixes are already fully specified in the Filed section above                               | Grace window clearing (~08:00-14:30 UTC today, per-item) |
+| Filed item 5 (`ag_closeout_audit_prediction_parked_2026_07_31.md` banner)                      | Not done — real work, low priority, not started                                                                                                                                 | Nobody — pick up anytime                                 |
+| Filed item 6 (batch4_finalize todo3 stale count)                                               | Not done — real work, trivially low priority (self-resolves when that todo executes)                                                                                            | Nobody — pick up anytime                                 |
+| Filed item 7 (`plan_reconciler.md` STEP 6b + STEP 7 typo)                                      | Not done — outside this run's `plans/**` edit mandate (file lives in `agents/`)                                                                                                 | A session with `agents/` in scope                        |
+| PR #2419 merge conflict                                                                        | Not done — needs a human/reviewer decision on whether my 2 flips in `prediction_cross_venue_arb_and_coverage_2026_07_24.md` are superseded by the concurrent `bb48fc09e` commit | PR reviewer                                              |
+
+**Recommended next item once resumed**: keep looping STEP 8 (nothing above needs action before the 2 blocked questions
+resolve — they're the only items requiring live operator input; everything else is either time-gated or independently
+pickable by any future session with no ordering dependency on these two).
+
+## Lessons (carry forward)
+
+- **A hunter's characterization of "what the rules say" is not itself verified** — the DEFERRED-BY-DESIGN episode
+  (Doc-drift + Refuted sections above) happened because a hunter correctly read `task_template.md` but that doc itself
+  turned out to be stale vs. the live enforcement code (`regen_backlog_from_plan.py`). When a finding implies "the
+  system will misbehave," check the actual enforcing code/live API before acting — not just the corpus doc describing
+  it, even when that doc is a normative reference. Caught this run via self-verification before it reached
+  `live-defi-rollout`, but the instinct to trust a documented rule-list at face value is a real trap. This same session
+  found the doc itself (`task_template.md`) is now filed as needing the identical correction, so the class of error is
+  now also documented at its source.
+- **Grace-window status must be re-checked per-file, not inherited from a sibling** — `batch4`/`batch7` (base docs) were
+  grace-protected but their `_finalize` siblings and `batch6` (a related but distinct doc in the same series) were not,
+  despite being topically adjacent. Verified each file's own `git log -1 --format=%ct` independently rather than
+  assuming a shared status across a doc family.
+- **`plan_reconciler.md`'s own STEP text has 2 small bugs** (retired ping-ledger append target; underscore/hyphen typo
+  in the STEP-7 result-POST endpoint) — both discovered by literally executing the steps, not by reading. Filed for a
+  future session with `agents/` in scope; not something this run could fix itself (outside `plans/**`).
