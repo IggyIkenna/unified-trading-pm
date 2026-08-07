@@ -1,20 +1,30 @@
 ---
 doc_type: issue
 title:
-  ldr-to-main-promote-fleet stuck 2+ hours — every queued run cancelled before starting, likely account-wide
-  GitHub-hosted concurrent-job saturation
+  ldr-to-main-promote-fleet's single concurrency group starves under heavy multi-agent trigger volume — queued runs keep
+  getting superseded before ever starting a job
 summary: >-
-  Since ~2026-08-07T12:00Z, every ldr-to-main-promote-fleet run (both schedule and workflow_dispatch triggers, from
-  multiple concurrent sessions) shows conclusion=cancelled with ZERO jobs ever started (gh run view shows an empty JOBS
-  list). concurrency.cancel-in-progress is false, so this isn't the usual cancel-in-progress churn — a run only gets
-  superseded while still QUEUED, meaning no run has actually been allocated a ubuntu-latest runner in 2+ hours.
-  promote-fleet-startup-failure-monitor.yml (the workflow meant to catch exactly this) reports success throughout — its
-  failure signature doesn't cover "queued forever, never starts," a coverage gap of the same class found earlier today
-  in ci_failure_watcher.py. Leading hypothesis (not confirmed): this session (an interactive /ci-reconcile pass) and
-  other concurrent sessions on the same GitHub account generated an unusually large burst of parallel Actions activity
-  (many quality-gates.sh runs, many gh workflow run dispatches across dozens of repos) that may have saturated an
-  account-wide concurrent GitHub-hosted-runner job limit, starving this workflow of a runner slot indefinitely. Net
-  effect: no repo has promoted from live-defi-rollout to main since ~12:00Z, which also blocks live-verifying the
+  Since ~2026-08-07T11:23Z (the moment its sibling ldr-to-main-promote.yml's own runs-on flipped self-hosted→
+  ubuntu-latest in the same commit, ruled out as cause — see evidence), every ldr-to-main-promote-fleet run shows
+  conclusion=cancelled with ZERO jobs ever created (gh api .../jobs → total_count:0, not a mid-run cancellation).
+  Account-wide GitHub-hosted concurrent-job saturation was the leading hypothesis but is RULED OUT: (1) operator
+  confirmed no account-wide cap is in effect; (2) other workflows in the same repo (ci-status-update, sit-gate-stuck-
+  detector, glue-pool-starvation-monitor, promote-fleet-startup-failure-monitor) ran successfully throughout the same
+  window; (3) most tellingly, ldr-to-main-promote.yml — the sibling workflow dispatched by the SAME 15-min heartbeat at
+  the SAME instant, verified via live SSM inspection of the orchestrator VM's systemd timer (firing exactly on its
+  documented */15 schedule, no drift) — succeeded on every single run in the same window, one even mid-flight
+  in_progress when checked. The heartbeat itself is fully healthy and not the cause. The asymmetry between the two
+  sibling workflows is the real lead: ldr-to-main-promote-fleet is the one every per-repo agent verifying a fleet-wide
+  promotion naturally triggers via workflow_dispatch (confirmed: at least 3 different agents in this session alone did
+  exactly this for instruments-service, market-data-processing-service, and unified-trading-ci), while
+  ldr-to-main-promote.yml (PM-only) is not a natural target for that pattern. Combined with its own native */5 schedule
+  AND the 15-min heartbeat AND ad-hoc manual dispatches from potentially multiple concurrent sessions, the trigger rate
+  for THIS SPECIFIC concurrency group appears to exceed whatever rate at which GitHub actually promotes a queued run to
+  in_progress for it — each new arrival keeps re-winning the single queued-waiter slot before the previous one is ever
+  allocated a runner. A genuine GitHub-side incident today (ARC runner pods stuck idle, job assignment failures,
+  status.github.com, marked resolved) may have contributed a baseline layer of flakiness on top, but does not explain
+  the sustained, isolated-to-one-workflow pattern by itself. Net effect: no repo has promoted from live-defi-rollout to
+  main since ~11:23Z, which also blocks live-verifying the
   semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md fix end-to-end (fix is shipped and correct, but no tag
   can mint until a real promotion happens).
 status: open
@@ -70,19 +80,39 @@ context_scope:
 
 ## Not fixed autonomously — why
 
-The leading hypothesis (account-wide GitHub-hosted concurrent-job saturation from this session's own unusually high
-parallel CI volume) is plausible but unconfirmed — I don't have visibility into the account's actual Actions capacity/
-usage dashboard from `gh`/`gcloud`. If true, this should self-resolve once concurrent load drops and needs no code
-change. If false (something is actually broken, e.g. a runner-group misconfiguration), it needs investigation with
-account-admin visibility this session doesn't have. Recommend re-checking after this session's own concurrent activity
-has fully wound down before concluding a code fix is needed.
+The fix here is a design choice with fleet-wide behavioral consequences, not a mechanical patch: debouncing/rate-
+limiting manual dispatches of a shared fleet-critical workflow, or changing its concurrency semantics, changes how every
+agent's "did my repo promote yet" verification pattern needs to work going forward. That's worth an operator decision on
+the actual mechanism (see options below), not a same-session unilateral change to CI infrastructure this central to the
+whole fleet's shipping pipeline.
+
+## Evidence chain (in order investigated, ruled out is marked)
+
+1. ❌ RULED OUT — account-wide GitHub-hosted concurrent-job cap (operator confirmed no cap in effect).
+2. ❌ RULED OUT — general GitHub-side outage (other workflows in the same repo ran fine throughout).
+3. ❌ RULED OUT — heartbeat misconfiguration (live SSM check: systemd timer firing exactly on its documented `*/15`
+   schedule, zero drift, both dispatches per tick succeed at the API-call level).
+4. ❌ RULED OUT (as sole cause) — the same-commit self-hosted→ubuntu-latest revert (`c8cd56251e`, landed 11:23:30 UTC,
+   suspicious timing match): the sibling workflow changed `runs-on` in the identical commit and works perfectly, so the
+   revert itself isn't the mechanism, though its timing coincides with when the pattern was first observed.
+5. ✅ LEADING, evidenced — trigger-volume asymmetry: `ldr-to-main-promote-fleet` uniquely absorbs schedule (`*/5`) +
+   heartbeat (`*/15`, both workflows) + ad-hoc `workflow_dispatch` from every per-repo agent verifying its own repo's
+   promotion (confirmed 3 separate agents did this today) + potentially other concurrent sessions. Its PM-only sibling
+   shares the schedule+heartbeat baseline but not the ad-hoc per-repo-verification trigger pattern, and never starved.
+6. Contributing, unconfirmed — a same-day GitHub Actions incident (ARC runner pods stuck idle, job assignment failures)
+   may add background flakiness but doesn't explain the isolation to one specific workflow.
 
 ## Todos
 
-- [ ] [DEVOPS] P1. Re-check whether this has cleared on its own once concurrent Actions load across the account has
-      settled. If still stuck with genuinely nothing else running concurrently, escalate to account-admin visibility
-      (GitHub billing/usage dashboard) to confirm or rule out a concurrent-job cap.
-- [ ] [DEVOPS] P2. If confirmed as account-wide job-limit contention: consider whether
-      `promote-fleet-startup-failure-monitor.yml` should be hardened to also catch "queued, never started" as its own
-      failure signature (same class of gap as `ci_failure_watcher.py`'s glue-starvation/escalation-label bugs found
-      earlier today).
+- [ ] [OPERATOR] P1. Decide the fix mechanism: (a) debounce — the workflow itself checks for an already-queued/
+      in-progress run of itself before accepting more dispatches (e.g. an early `gh run list --status queued` guard that
+      no-ops instead of piling on), (b) rate-limit ad-hoc verification — establish a convention that agents check
+      `promotion_lag_monitor.py`'s live output instead of manually dispatching this specific workflow to verify their
+      repo promoted, (c) split concurrency groups per triggering source so ad-hoc verification dispatches don't compete
+      with the schedule/heartbeat's own slot, or (d) something else.
+- [ ] [DEVOPS] P2. Once decided: implement + verify a real promotion completes end-to-end under normal multi-agent load,
+      not just in isolation.
+- [ ] [DEVOPS] P2. Harden `promote-fleet-startup-failure-monitor.yml` to also catch "queued, never started for an
+      extended period" as its own failure signature — it currently reports success throughout this entire incident (same
+      class of coverage gap as `ci_failure_watcher.py`'s glue-starvation/escalation-label bugs found earlier
+      2026-08-07).
