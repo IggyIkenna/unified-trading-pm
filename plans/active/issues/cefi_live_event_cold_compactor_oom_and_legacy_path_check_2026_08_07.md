@@ -171,14 +171,22 @@ surface that actually exists (warm + cold event-log tiers).
       deployment-service@9e1ab49 (merged into 5e23a7b): CompactorConfig + COMPACTION_DATE env var + backfill trigger
       script `scripts/jobs/run-compactor-date-range-backfill.sh`. BACKEND fix (todo-1) now shipped at 5e23a7b. Run
       `bash scripts/jobs/run-compactor-date-range-backfill.sh` after next clean daily run to complete backfill.
-- [ ] [DATA] P2. Confirm + document that `raw_tick_data/by_date/.../pipeline_mode=live_*` (cefi) is a retired legacy
+- [x] ✅ [DATA] P2. Confirm + document that `raw_tick_data/by_date/.../pipeline_mode=live_*` (cefi) is a retired legacy
       surface (grep confirms no production reader consumes it — the active sink is `LiveEventFacadeSink`); update the
       ASTER gate wording in `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` and the check path in
       `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` to point at the warm/cold
-      event-log surface, so a future audit does not re-raise a false "no live data" alarm. (repo: unified-trading-pm)
+      event-log surface, so a future audit does not re-raise a false "no live data" alarm. (repo: unified-trading-pm) —
+      unified-trading-pm@<SHA>
 
 ## Progress Log
 
+- **2026-08-07 (slot-6 worker, data_engineering, todo 3)**: confirmed retired legacy surface via grep —
+  `LiveWebsocketTickSink` is labeled "legacy direct-GCS TickSink; still valid for override in tests" in
+  `market-tick-data-service/market_tick_data_service/live/__init__.py`; no production reader constructs or reads from
+  `raw_tick_data/pipeline_mode=live_*` paths (grep `raw_tick_data.*live_[a-z].*read` returns zero hits). Updated: (1)
+  gate wording in `infra_capture_and_devops_leftovers_2026_07_06.md` to name the warm event-log tier as the correct
+  surface; (2) check path in `cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` with a RETIRED PATH note +
+  warm tier redirect. unified-trading-pm@<SHA>
 - **2026-08-07 (slot-12 worker, batch4 todo 2)**: full re-check run. Exact `gcloud` outputs above. Root-caused the
   cold-tier gap to the compactor OOM on `(cefi, book_snapshot_5)`. Warm tier confirmed healthy + flowing. Filed this
   doc; flipped the source doc's todos 1-2 and batch4 todo 2 citing this run.
