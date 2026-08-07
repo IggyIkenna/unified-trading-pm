@@ -183,3 +183,21 @@ proven this run.
   argues against a whole-session teardown and toward a NAME/PATTERN-targeted kill instead, but is not conclusive.
 - If a cross-slot `pkill` is confirmed as the mechanism: get `install-pkill-guard-shell-env.sh` running host-wide (every
   slot's shell init, not opt-in per-session) so the guard actually protects against the failure mode it was built for.
+
+## Todos
+
+Converted from the prose above by the plan_reconciler zero-checkbox sweep (2026-08-07, cefi tranche — register row
+classified).
+
+- [ ] [DATA] P1. Reproduce the ~300-330s-from-start silent death with `strace -f`/`py-spy dump` attached to the
+      process (or a `setsid` fully-detached run, ruling out session-group signal propagation) to capture the actual
+      signal number + sender — determine OOM-kill vs external SIGKILL vs cgroup/session teardown. Repo:
+      unified-trading-library (evidence capture; needs VM-level access). **Done when**: signal number + sender
+      identified and recorded here.
+- [ ] [REVIEW] P1. Check whether this host has a systemd `user@.service`/`loginctl` `KillUserProcesses`/idle-session-
+      reaper policy that tears down a user's cgroup slice after ~5min of quiet (needs root/kernel access this sandbox
+      lacked). **Done when**: policy confirmed or denied by name, and the verdict recorded here.
+- [ ] [OPERATOR] P2. If a cross-slot `pkill` is confirmed as the mechanism: install
+      `scripts/dev/install-pkill-guard-shell-env.sh` host-wide (every slot's shell init, not opt-in per-session) so the
+      guard actually protects against the recurring cross-slot kill incident class it was built for. **Done when**:
+      guard active in every slot's shell.

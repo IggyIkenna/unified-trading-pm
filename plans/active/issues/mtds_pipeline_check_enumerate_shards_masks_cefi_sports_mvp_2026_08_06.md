@@ -148,3 +148,23 @@ call's own `shards` list is genuinely empty before fallback. This also sidesteps
 collision bug (`data_pipeline_e2e_check_mtds_<day>.md`/`.json` gets silently overwritten by each subsequent invocation —
 see the 2026-08-02 report's provenance note) by giving each asset_group's invocation its own `--report-dir`, merged by
 hand into one combined report afterward.
+
+## Todos
+
+Converted from the prose above by the plan_reconciler zero-checkbox sweep (2026-08-07, cefi tranche — register row
+classified).
+
+- [ ] [SCRIPT] P1. Add `_CEFI_MVP_SHARDS` (+ SPORTS equivalent) hand-listed override in `_venue_data_type_is_mvp()`
+      (`pipeline_e2e_check.py` ~:494) mirroring `_TRADFI_MVP_SHARDS` (~:308) — thread a per-venue representative
+      `base_ccy`/`league` into the enumeration-time probe so CEFI/SPORTS stop returning a blanket `False`. Repo:
+      market-tick-data-service. **Done when**: `enumerate_mtds_shards(None, None, None, True, False)` returns CEFI (225)
+      + SPORTS (110) shards via the primary path (currently 0 — silently dropped from the combined sweep).
+- [ ] [SCRIPT] P1. Fix the last-resort fallback (`pipeline_e2e_check.py` ~:688, `if shards: return shards`) to fire
+      **per asset_group** — fallback-enumerate via `smoke_matrix.enumerate_cells(asset_group_filter=<group>)` only the
+      groups that contributed zero shards — instead of gating on the aggregate list's truthiness (which lets any one
+      working group mask every other group's silent zero). Repo: market-tick-data-service. **Done when**: a combined
+      sweep containing a zero-shard group produces that group's shards.
+- [ ] [REVIEW] P2. Once the two fixes land, re-run the documented full-matrix invocation (SKILL.md §3 — no
+      `--asset-group` filter, single call) and confirm cefi + sports shards appear in the written report. **Done when**:
+      the written report includes the CEFI 225 + SPORTS 110 shards (this issue's false-negative gap is the role's
+      reason to exist).
