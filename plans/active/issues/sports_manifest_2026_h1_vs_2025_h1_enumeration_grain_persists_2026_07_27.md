@@ -74,6 +74,10 @@ source: >-
 depends_on: []
 ---
 
+> **🟡 IN-FLIGHT 2026-08-07 — slot-15 running `launch-expected-universe-v2-historical-backfill-vm.sh sports` (sequential
+> 7-chunk backfill, chunks 1-7 from 2020-06-06..2026-04-08). Chunk 1 verified done 2026-08-05, chunk 2 partially seeded
+> (~14M rows from prior runs), chunks 3-7 not started. Monitoring in background.**
+
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 
 ## What I found
@@ -411,6 +415,17 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
   `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **data_engineering worker (slot-15) 2026-08-07**: Resumed 7-chunk sequential backfill via
+  `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (background task b87iwccgr, heartbeat
+  watchdog byb2en7p2). Confirmed no RUNNING VMs before launch (idempotent restart). **Chunk 1/7
+  (2020-06-06..2020-12-31)**: VM `expected-universe-v2-sports-20260807-214049` completed EXIT_STATUS=0, wrote 638,521
+  rows (~4 min — rows already in present-set, enumerated instantly). **Chunk 2/7 (2021-01-01..2021-12-31)**: VM
+  `expected-universe-v2-sports-20260807-214629` RUNNING (bootstrapping) at context compaction time. Chunks 3-7 not
+  started. IN-FLIGHT banner added. Lessons: (1) child launcher output is buffered — silence for several min is normal,
+  output appears after child exits; (2) chunk 1 re-ran idempotently and exited 0 quickly with no new rows needed; (3)
+  sports 2021 full-year window is heavy (prior sessions seeded 14M+ rows, EXIT_STATUS=5 halts). **Resume point**: check
+  task b87iwccgr output when re-invoked; if VM gone without EXIT_STATUS=0, relaunch via same script (idempotent);
+  continue monitoring until all 7 chunks complete EXIT_STATUS=0; then run post-run ratio re-check.
 
 ## Follow-ups
 
