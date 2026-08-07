@@ -240,6 +240,18 @@ the operator's 2026-08-07 "A: retag" answer** — recording it here would silent
 already-shipped ruling on the same question without the operator having seen it. Flagged back to the operator instead of
 applied; see chat for the ask.
 
+**OVERRIDDEN 2026-08-07 (operator, having seen the standing-ruling rationale above) — retag applied, "switch to
+tradfi."** `plans/archive/issues/phantom_captures_tradfi_2026_06_28.md`'s `asset_group` changed `[cross-cutting]` →
+`[tradfi]`. `cross_cutting_consolidated_closeout_2026_07_25.md` Track 22 updated in lockstep: the doc converted from a
+direct Sources claim to a cross-reference note (still mentions the shared G3 monitor, no longer claims ownership); the 3
+sibling docs (2× `manifest_hygiene_red`, `phantom_captures_prediction`) stay `[cross-cutting]` — this override was
+scoped to this one doc only, not a blanket reversal of the standing hazard-avoidance rule.
+`tradfi_consolidated_closeout_2026_07_18.md:570` already linked it (no change needed there — its side of the
+double-claim was always correct). Verified `check_ag_closeout_linkage.py` post-retag: 64 orphans (baseline 69, unrelated
+pre-existing drift) — this doc does not appear in the orphan list (archived docs are out of scope for the active-linkage
+check), confirming the retag introduced no new orphan. Item 20 of the sibling
+`autonomous_session_operator_decisions_2026_07_25.md` doc updated to note the override for future readers.
+
 ## 7. An AO todo that launches a billed VM with neither `[OPERATOR]` nor a stated justification [RECOMMEND OPTION A]
 
 **The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147` (`assigned_vm: planning`)
@@ -331,11 +343,12 @@ matches what already happened — no further action needed.
       were done and offered to sign off; verified first — they are NOT done (twin-coverage last measured 0%, 0 rows
       deleted), and no sign-off is actually needed anymore since the 2026-07-28 §3a extension (agent-executable once
       twin-coverage clears). See the "CORRECTED 2026-08-07" note under item 4 above.
-- [x] ✅ [PM] P2. **Item 6 — NOT applied 2026-08-07, flagged back to operator instead.** The identical question was
-      already resolved 2026-07-26 the OPPOSITE way (keep `[cross-cutting]`, not retag) as item 20 of the sibling
+- [x] ✅ [PM] P2. **Item 6 — OVERRIDDEN 2026-08-07, retag applied.** The identical question was already resolved
+      2026-07-26 the OPPOSITE way (keep `[cross-cutting]`, not retag) as item 20 of the sibling
       `autonomous_session_operator_decisions_2026_07_25.md` doc, for a stated ongoing reason (concurrent-tranche-audit
-      race hazard). This session's own [WORKER REC] missed that standing ruling. See the "ALREADY RESOLVED" note under
-      item 6 above; operator to confirm whether to keep the standing ruling or override it now.
+      race hazard). Flagged back to the operator instead of silently applying; operator explicitly overrode it ("switch
+      to tradfi") having seen the rationale. Retag executed — see the "OVERRIDDEN 2026-08-07" note under item 6 above
+      for full evidence (`asset_group` changed, Track 22 cross-reference updated, linkage check clean).
 - [x] ✅ [PM] P2. **Item 9 — CLOSED 2026-08-07, was already stale.** Already done 2026-07-26 via
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own re-check todo; both docs now archived. See the
       "STALE" note under item 9 above.
