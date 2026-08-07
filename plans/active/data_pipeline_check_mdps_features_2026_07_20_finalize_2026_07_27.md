@@ -54,8 +54,9 @@ context_scope:
 
 # data_pipeline_check_mdps_features_2026_07_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **🔒 GATED, not draft** — machine-gated via `depends_on` + `gate_on_depends: true`; frontmatter `status: active`
+> (banner corrected 2026-08-07, plan_reconciler — previously read "STATUS: `draft` — NOT dispatched" while the
+> frontmatter was already active; same fix as `ci_satellite_ao_dispatch_batch1_finalize` 2026-08-02).
 
 ## Todos
 

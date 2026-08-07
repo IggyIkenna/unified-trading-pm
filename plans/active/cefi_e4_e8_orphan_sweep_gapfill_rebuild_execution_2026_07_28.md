@@ -7,7 +7,10 @@ summary: >-
   sibling / data_completion_cefi-013, and the "NEXT SESSION — execute the migration" todo) into ONE properly-scoped,
   phased execution chain — main-agent ruling BLK-650261be, 2026-07-28. All steps are human-executed (LOCAL, not
   AO-dispatched) — this is ~1.2M-object prod-bucket delete + VM-scale work, squarely the delete-safety-protocol
-  hard-stop class, never an autonomous-agent action.
+  hard-stop class, never an autonomous-agent action. ⚠️ **SUPERSEDED 2026-08-03 (operator ruling) for Phase B — executed
+  by AO dispatch (287,074/287,074 deleted, 0 errors; measured 287,074, NOT the ~1.2M estimate — candle destination-shape
+  bug, market-tick-data-service@fa991f12). The human-only sentence above is the ORIGINAL 2026-07-28 ruling, kept as
+  historical record; see the `last_updated` comment + Phase B Progress Log.**
 status: active
 nature: process
 asset_group: [cefi]
@@ -280,7 +283,7 @@ reconciliation only, per the finding's own recommended decision).
 Re-verified this doc's live-gate state per a workspace-wide sweep closing out recorded operator rulings implying
 unshipped work. Phase A remains correctly flipped done (already verified complete this session by an earlier pass,
 `canonical-migration-cefi-20260730-012546`). **Phase B remains correctly gated** — re-read
-`plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` directly: `status: open`,
+`plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` directly: `status: open`,
 unchanged, no new resolution. Per this sweep's own explicit constraint (do not resolve an open operator-only policy
 contradiction, do not execute a ~1.2M-object prod delete without an independently-verified §3a citation), Phase B was
 NOT executed and the hard-stop-2 contradiction was NOT adjudicated. No action taken; no changes needed.

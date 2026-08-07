@@ -131,7 +131,9 @@ context_scope:
       as ready — this checkbox's ask was the DESIGN only; the actual partition-move APPLY (15,119 rows) is a separate,
       still-open, operator-gated action tracked by the cross-reference todo further down this file and by table row 7
       below ("DERIBIT combo PARTITION-MOVE — Operator-owned, explicitly out of scope").
-- [ ] [DATA] P2. Register PACIFICA-SOLANA (265) in the fail-hard quarantine set.
+- [x] ✅ [DATA] P2. Register PACIFICA-SOLANA (265) in the fail-hard quarantine set. **DONE (flipped 2026-08-07,
+      plan_reconciler) — unified-api-contracts@989e9d16 on origin (ancestor-verified); `quarantine.py` now carries the
+      PACIFICA-SOLANA ResolutionEvidence (10 hits).**
 
 > **NOTE (2026-07-24, added at extraction time — verify before acting, do not assume stale-closed):** later DELTA
 > entries below (2026-07-22/23) show substantial forward progress that may already satisfy several of the todos above
@@ -790,7 +792,7 @@ schema were never re-measured this tick. **Nothing was mutated**: this was a pur
 
 **New tracked todo (do not lose this finding)**:
 
-- [ ] [SCRIPT] P0. Fix (or explicitly justify) `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`'s dry-run
+- [x] ✅ [SCRIPT] P0. Fix (or explicitly justify) `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`'s dry-run
       chain-drop blind spot: `_DRYRUN_COLS` excludes `"chain"`, so `_chain_merge_safety()` always reports `(0, 0)` in
       dry-run mode regardless of the real data — the STOP-ON-SURPRISE gate for this invariant only ever fires at
       `--apply` time. Either add `"chain"` to `_DRYRUN_COLS` (small perf cost, real safety value: a dry-run would then
@@ -798,7 +800,9 @@ schema were never re-measured this tick. **Nothing was mutated**: this was a pur
       dry-run is never mistaken for a proven-safe one. Re-run `investigate_chain_lossy_20260724.py` (scratchpad, this
       session — promote it to `scripts/` first per the one-off lifecycle rule if it earns its keep) against the FULL
       schema to get the actual current lossy-group count and inspect a sample before deciding `--keep-chain` vs. a
-      repair vs. a fixed dry-run + clean `--apply`.
+      repair vs. a fixed dry-run + clean `--apply`. **DONE 2026-07-24 (flipped 2026-08-07, plan_reconciler) — `"chain"`
+      added to `_DRYRUN_COLS` (complete_cefi_manifest_canonical_dedup script :219, comment "found 2026-07-24 after a
+      dry-run claiming 0/0…"); instruments-service@97801b5d + @766549c7 on origin (ancestor-verified).**
 
 **Operator returned and said stop** (not the 6-hour window elapsing — an explicit interrupt). Per the autonomous skill's
 own instruction ("On operator 'stop': kill the loop/sleeper PID immediately and don't re-arm"), this session is ending

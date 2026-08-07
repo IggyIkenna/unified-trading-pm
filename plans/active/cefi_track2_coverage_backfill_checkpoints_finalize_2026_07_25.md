@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-31"
+last_updated: "2026-08-07" # todo 2 flipped w/ evidence (plan_reconciler)
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -66,7 +66,12 @@ context_scope:
       report actually exists before citing it. Record the new coverage % superseding the archived 50.79% in the Track-2
       section. Repo: unified-trading-pm. **Done when**: all 5 named checkboxes are flipped with verified evidence and
       the new coverage % is recorded.
-- [ ] [REVIEW] P1. **Cross-check the 2 PRE-BACKFILL baseline checkpoints landed.**
+- [x] ✅ [REVIEW] P1. **Cross-check the 2 PRE-BACKFILL baseline checkpoints landed.** **VERIFIED 2026-08-07
+      (plan_reconciler) — both landed: `cefi_consolidated_native_ao_extract_2026_07_25.md` (archived) :121-135 records
+      both `[x]` with report paths + dates — `/data-pipeline-check-is`:
+      `plans/audit/results/data_pipeline_e2e_check_is_2026_03_15.md` (+ `.json`), run 2026-03-15;
+      `/data-pipeline-check-mtds`: `plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md`, executed 2026-07-28
+      04:20-05:08 UTC (unified-trading-pm@95074df6e). Both report files confirmed present on disk.**
       `cefi_consolidated_native_ao_extract_2026_07_25.md` drafted the `/data-pipeline-check-is`/`-mtds` PRE-BACKFILL
       baselines as independent, ungated todos (timing-independent of when the backfill itself launches). Confirm both
       actually ran (report path + date) before this plan's resume-backfill todo launched — if either never ran, note the
@@ -101,3 +106,5 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) unchanged — `_finalize` gate doc, no source-code
   paths added per the skip-source carve-out; all 6 entries confirmed resolving on disk.
+- **plan_reconciler 2026-08-07 (todo 2)**: PRE-BACKFILL baseline cross-check VERIFIED — both landed (extract :121-135,
+  `[x]` with report paths + run dates; both report files present on disk) → todo 2 flipped with evidence.

@@ -629,7 +629,10 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 ## Assigned active plans
 
 _5 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
-Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._ ⚠️ **STALE ROSTER (noted 2026-08-07,
+plan_reconciler): 19 active cefi-tagged docs actually declare `parent_epic: cefi_master` — the generator has not been
+re-run since the batch4/6/7/8 + finalize + track2/7 docs were activated, so this roster misses 14 of them (incl. all
+finalizes). Re-run `populate_epic_bodies_2026_05_21.py` (corpus-wide — PM/operator-owned).**
 
 ## P0 — must complete before next foundation gate
 

@@ -20,7 +20,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated: 2026-06-27
+last_updated: 2026-08-07 # ruling-aligned item 2/2a stamping note (plan_reconciler)
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -131,7 +131,11 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
      every other CeFi PERPETUAL — confirm with the venue's already-wired builder (Binance/OKX/Bybit are all landed as of
      this session) rather than reinventing margin-type resolution for this new `InstrumentType` value. Add this as an
      explicit acceptance check in step 3's unit tests below (assert the real target shape, e.g.
-     `BINANCE-FUTURES:PERPETUAL:META-USDT@LIN`, not just that the type stamps EQUITY_PERP).
+     `BINANCE-FUTURES:PERPETUAL:META-USDT@LIN`, not just that the type stamps EQUITY_PERP). **⚠️ RULING 2026-07-16
+     (supersedes items 2/2a's stamping instructions — text aligned 2026-08-07, plan_reconciler): NO
+     `EQUITY_PERP`/`TOKENIZED_EQUITY` instrument_type — stamp broad `PERPETUAL`/`SPOT_PAIR` + the
+     `is_equity_perp`/`tracks_equity` tags via `_cefi_equity_tags` (per the STATUS banner below: edits 1–3 DONE
+     2026-07-18, only sub-item 4 OPEN; checkbox stays `[ ]` — genuine remaining work).**
   3. Unit tests: METAUSDT/NVDAUSDT(Binance) + META-USDT-SWAP(OKX) pass the filter AND stamp EQUITY_PERP; SPCXUSDT →
      EQUITY_PERP (standalone); a crypto perp (BTCUSDT) still stamps PERPETUAL (no regression); AAPLX(Bybit) →
      TOKENIZED_EQUITY. Then `bash scripts/quality-gates.sh` green.
