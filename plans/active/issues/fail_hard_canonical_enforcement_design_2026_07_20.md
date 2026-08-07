@@ -161,10 +161,12 @@ of a venue-day outage.
       `enforce_structural_and_observe_id_form()` helper wired into all 3 callsites (`partitioned_writer.py`,
       `websocket_runner.py`, `book_microstructure_handler.py`). Stale checkbox flip per the same Deferred-item re-check
       — commit verified to exist.
-- [ ] [DATA] P2. Stage 0 — classify-and-log at every write/manifest/read site, zero behaviour change. — **PARTIALLY
-      done**: the write-side observe-log landed in `market-tick-data-service@e49e1395`, but manifest- and read-site
-      classify-and-log were not confirmed shipped anywhere in the cefi covering-plan set as of the 2026-07-26
-      Deferred-item re-check — genuinely still open, correctly not flipped.
+- [x] ✅ [DATA] P2. Stage 0 — classify-and-log at every write/manifest/read site, zero behaviour change. — Write-side:
+      `market-tick-data-service@e49e1395` (wired into `partitioned_writer.py` / `websocket_runner.py` /
+      `book_microstructure_handler.py` via `enforce_structural_and_observe_id_form()`). Manifest + read-side:
+      `market-tick-data-service@4bd7e87e` (`manifest_recorder._observe_cefi_id_form()` in all 4 `record_*` methods;
+      `tardis_cefi_shards._emit_per_symbol_manifest` classify after `_sym` resolves; `reader._cefi_candidate_stems`
+      walrus-form classify). Regression test (9 tests) proves zero behaviour change. QG green.
 - [x] ✅ [UAC] P2. `is_quarantined_instrument_id` + `ResolutionEvidence` + the registry (composes, no fenced-file edit).
       — **SHIPPED `unified-api-contracts@989e9d16`** (quarantine model + `classify_id_form()`) — standalone module, not
       yet wired into any write/read guard (that's Stage 3, still future work per the `[DESIGN] P1` todo above). Stale

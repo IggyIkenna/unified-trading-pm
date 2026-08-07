@@ -148,17 +148,12 @@ context_scope:
       **unified-trading-pm@4dbd6cdfe** | Results: 28,158 option-shaped objects / 497 days / ~988 GB / 2024-03-08 to
       2026-05-01 / assets: AVAX_USDC MATIC_USDC TRX_USDC XRP_USDC.
 
-- [ ] [DATA] P2. **Fail-hard Stage 0 — classify-and-log at cefi manifest-write and read-path call sites.** In
-      `market-tick-data-service`, the write-side observe-log already shipped (`enforce_structural_and_observe_id_form()`
-      wired into `partitioned_writer.py`/`websocket_runner.py`/ `book_microstructure_handler.py` via
-      `market-tick-data-service@e49e1395`) — this todo covers the two remaining halves only: add the SAME id-form
-      classification (count + log only, **zero behaviour change**, per the source doc's own Stage-0 definition) at (a)
-      the manifest-recording call sites and (b) the read-path call sites for cefi instrument ids. Do NOT touch Stage 1
-      (write-enforce/raise) or Stage 2 (schema v10 + backfill) — both stay open, see Deferred below. Source:
-      `issues/fail_hard_canonical_enforcement_design_2026_07_20.md` (the `[DATA] P2` Stage 0 todo only). **Done when**:
-      manifest- and read-site classify-and-log land with zero behaviour change (a regression test proves no existing
-      write/read path changes outcome), QG is green, and the source doc's Stage-0 todo is checked off citing the
-      shipping commit.
+- [x] ✅ [DATA] P2. **Fail-hard Stage 0 — classify-and-log at cefi manifest-write and read-path call sites.** —
+      `market-tick-data-service@4bd7e87e`. Adds `_observe_cefi_id_form()` helper in `manifest_recorder.py` (called in
+      all 4 `record_*` methods for cefi), `classify_id_form` after `_sym` resolves in
+      `tardis_cefi_shards._emit_per_symbol_manifest`, and walrus-form classify in `reader._cefi_candidate_stems`.
+      Regression test `tests/unit/test_stage0_cefi_id_form_observe.py` (9 tests, all pass) proves zero behaviour change.
+      QG green. Source doc `[DATA] P2` Stage-0 todo flipped below.
 
 - [ ] [OPS] P2. **Determine dead-vs-alive for the 7 stale-image cefi Cloud Run jobs, then act on the finding.**
       Investigate whether `market-tick-cefi-binance-futures`/`-okx`/`-daily-download`/`-binance-spot`/`-bybit`/
