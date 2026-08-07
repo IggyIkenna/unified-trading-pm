@@ -18,7 +18,7 @@ summary: >-
   operator ruling or elapsed time. 3 additional docs surfaced a probable frontmatter-mistag during Phase 1 (2 already
   known from batch9's own report; 1 newly confirmed this run) — reported below, not retagged (out of defi's sole
   ownership per the concurrent-sharded-worker safety rule).
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -69,8 +69,8 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 10 — 2026-08-06
 
-**status: draft — awaiting operator approval to flip `active` and dispatch**, per this skill's autonomous-mode safety
-rail (`cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Modes"). Drafted autonomously by the scheduled
+**status: active — operator-approved 2026-08-07, flipped from `draft`**, per this skill's autonomous-mode safety rail
+(`cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Modes"). Drafted autonomously by the scheduled
 `ag_closeout_auditor` running `/ag-closeout-audit defi` — every todo below cleared the shared conflict-check
 ([`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`](/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md)
 § 3) against the live defi consolidated-closeout + every active batch/finalize plan (including batch9, activated the
@@ -241,5 +241,12 @@ sizing/scoping pass across 5 protocols before it is worker-determinable; batch9 
 - 2026-08-06 (scheduled `ag_closeout_auditor`, tranche=defi, autonomous, slot 9): Drafted alongside its finalize twin
   after a 107-agent Phase-1 classification Workflow (against the 11-doc covering set, including same-day batch9) + a
   manual Phase-3 conflict-check (grep of all 11 covering docs for each candidate todo's target files/mechanisms — zero
-  collisions found). `status: draft` per this skill's autonomous-mode safety rail — awaiting operator approval to flip
-  `active` and dispatch.
+  collisions found). Flipped `active` 2026-08-07 (operator ruling) — see Progress Log.
+
+## Progress Log
+
+- **Operator ruling 2026-08-07**: APPROVED — flipped `status: draft` → `active`. Pre-flip investigation (read-only)
+  confirmed the 107-agent Phase-1 classification + manual Phase-3 conflict-check above, no rename/archival ops among its
+  9 todos. One minor same-file overlap noted between todos 8/9 (both touch `lst_rate_honest_coverage_2026_07_21.md` via
+  different source citations) — not a real conflict, worth a quick self-check whenever this batch actually dispatches
+  those two.
