@@ -179,6 +179,40 @@ Two reasons, mirroring the UTL-34-bypass precedent
 
 ## Progress Log
 
+- **2026-08-07 (branch-health lag re-verification session)**: Re-verified all repos flagged by the morning
+  `PROMOTION LAG > 60m` Slack alert via `promotion_lag_monitor.py` directly (not the alert text). Cross-checked the 2
+  repos this doc + the sibling `instruments_service_pr1084...` doc already identified as blocked on the GENUINE
+  foreign-bypass backlog (not the marker bug, which stays fixed): `instruments-service` (was ~19, now **11** real bypass
+  commits — some cleared since 08-06, still a multi-subsystem/multi-agent list spanning sports/cefi/defi/prediction) and
+  `market-data-processing-service` (**13** real bypass commits, spanning candle-perf/thread-safety/
+  schema-fix/cefi-wire-bridge/sports-odds work). Per this doc's own established precedent (§ "Why this is not something
+  I fixed autonomously", mirroring
+  `/plans/archive/issues/utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md`), did **NOT** bulk-bless
+  either — both lists are foreign, multi-subsystem, multi-agent work the acting agent cannot independently verify as
+  promote-ready. Left BLOCKED, exact current lists below for whoever picks up the P2 tactical-unblock todo or an
+  operator-authorized sweep.
+  - Also found (NOT previously tracked by this doc) that `strategy-service` LDR→main had independently fallen into the
+    SAME provenance-blocked state (3 bypass commits: `6514fe87`, `12dc136c`, `2b2e326c`, all dated 2026-07-13, all
+    authored by the operator (`ikennaigboaka`) across 2 slots, all small (64/109/56 lines) with accompanying tests, all
+    part of the same `utl_reuse_phase1_strategy_risk_hwm` plan/topic). Read all 3 diffs in full — coherent, tested,
+    self-contained. Unlike the two lists above, judged these safe to reprovenance directly (small number, single
+    coherent effort, fully diff-reviewed, not "many foreign multi-subsystem commits from many agents"):
+    `reprovenance_bypass.sh` ×3 + push (`strategy-service@0bba3ab0`), promote PR #502 merged clean.
+  - Also cleared `unified-trading-library`'s provenance block the same way: only **2** bypass commits remained
+    (`e5b833ad` credentials-registry naming fix, `6a7ab64f` missing `gcs_copy_object` re-export; both operator-authored,
+    small, diff-reviewed) — reprovenanced + pushed (`unified-trading-library@20e906b1`), promote PR #763 merged. This
+    also self-healed UTL's `main→LDR` backmerge deadlock (main now carries `notify-slack.yml`, which the backmerge
+    workflow needed).
+  - Net: fleet lag dropped from 13 measured pairs (21 in the original alert, partly stale) to 3 — the 2
+    provenance-blocked repos tracked here (now with fresher, smaller bypass lists) plus an unrelated
+    `unified-trading-ci` promotion-infra gap (filed separately, see
+    `/plans/active/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`).
+  - Also fixed, unrelated to this doc's own bug but found while re-verifying: `agent-orchestrator`
+    (`promotion_model: ldr_terminal`) was a permanent false-positive in `promotion_lag_monitor.py` — the monitor never
+    got a `ldr_terminal` exemption when that promotion model was introduced 2026-08-05. Added `_ldr_terminal_repos()`
+    (mirrors `_main_direct_repos()`'s pattern) and skip both main-facing directions for those repos. Shipped
+    `unified-trading-pm@aeeffc00d`.
+
 - **2026-08-06** — Filed while re-shipping the DP-CATALOG-001 sports-catalogue fix for instruments-service (see
   `instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`). `497c4f5e` was found to already be
   correctly quickmerge-provenanced — nothing to re-ship there — so the closed PR #1084 sent me looking at what actually
