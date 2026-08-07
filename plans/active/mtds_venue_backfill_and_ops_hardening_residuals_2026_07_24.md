@@ -585,3 +585,16 @@ Two genuine hits in this plan:
   several independently-bounded items; whole doc stays NA.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — re-verified all 5 still resolve;
   unchanged (still the right minimal set across this doc's many topics).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-08-06 (same-day standing verdict, unchanged).
+  Read all 22 open todos: real mix holds — credential-adjacent/dependency-chained items (B0→B1→B2 sequencing, the
+  FLEET-WIDE `_index` v9-populate homed under an archived doc — `data_source_provenance_all_asset_groups_2026_06_01.md`
+  is now folded→M-1 and archived per `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s sub-plan
+  registry, a stale citation worth fixing on a future touch but not actioned here since the item itself is still
+  genuinely open, not done), a foreign-repo dependency (paper_engine.py, source not yet on LDR), and a dirty-tree
+  dependency (PREDICTION tarball rebuild). **Secondary finding (not actioned, per the established 2026-08-06 ruling to
+  keep the whole doc together)**: roughly half the 22 open items (`--operation status` prediction bucket fix, DeFi
+  venue-grain adapter alignment, B3 e2e-data canonical copy, Kalshi pipeline wiring, Extended backfill+hardening,
+  `ohlcv-1s` BarTimeframe gap, sports mvp-column league-id fix, SFI hang diagnosis, VM-launcher script fixes, UEI
+  ratchet re-baseline) read as independently bounded/mechanical with no operator or credential gate of their own — a
+  candidate for a future doc-split (mirroring how this doc's own siblings were split out of
+  `instruments_mtds_subset_consistency_remediation_2026_06_17.md`), not executed this run.

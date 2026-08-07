@@ -115,3 +115,6 @@ should be filed as its own todo against that decision's outcome.
   contract should say"), citing the dispatch-scope-eligibility SSOT directly. The bounded P0 half was already split out
   2026-07-30 into its own AO-dispatchable doc.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-07-30/2026-08-04; the sole open todo remains an
+  explicitly undecided schema-contract design question (no per-pair schema/NaN-tolerance contract exists to check
+  against), not bounded work a worker could resolve alone.

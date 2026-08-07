@@ -75,3 +75,7 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
   and the doc's real subject-matter owner is `ui` (asset_group mistag). Disposition (retag + verify + archive) is
   already tracked as ag_closeout_audit_cross_cutting_parked_2026_08_06.md's own todo #3, owned by the `ui` tranche —
   deferring to that rather than duplicating or archiving here.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-08-06; citation verified real
+  (`plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md` line ~228 still carries an open
+  `[DOCS] P3` retag+verify todo naming this doc, `assigned_vm: NA` there too — the disposition owner, not a duplicate AO
+  dispatch).

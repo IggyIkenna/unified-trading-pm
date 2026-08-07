@@ -299,3 +299,10 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the MVP-scope codex SSOT + the UAC/
   deployment-api/ml-service source paths behind the two still-open P2b-2/verify todos.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-07-30. Of the 3 open todos: the parent
+  "Features/strategy/model MVP sections" item and P2b-2 both resolve to the same explicit open design call (models
+  could-exist scope + where trained-model identities get recorded — self-documented as needing a LOCAL/interactive
+  design session first, not an AO todo). The real-DATA "Verify" todo (line ~215) looks closer to a bounded check
+  (re-confirm consolidator freshness, run the parity verify) than a design call — flagged here as a possible
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE candidate for a future pass, not reclassified this run since it shares the doc with
+  genuinely operator-gated scope.

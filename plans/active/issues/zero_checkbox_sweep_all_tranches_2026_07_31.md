@@ -216,3 +216,7 @@ them as a finding; the population definition is deliberately left unchanged.
   open and NA: it is a deliberately-permanent standing register (own todo 2 / P3: "NOT archive-on-complete — archiving
   is what orphaned this class twice already"), owned by the `/plan-reconcile` scheduled job, not AO dispatch.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-08-04; the sole remaining open todo (P3, re-run
+  the sweep at the next monthly `/plan-reconcile` pass) is this doc's own deliberately-permanent standing-register
+  cadence item, owned by that scheduled skill, not AO dispatch (archiving/dispatching it is exactly what orphaned this
+  class twice before, per this doc's own history).
