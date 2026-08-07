@@ -34,7 +34,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-07" # was 2026-07-24 -- plan_reconciler agt-e7f024 caught the field was never bumped for the 2026-08-03 DP_CATALOG checkbox flip (na-eligibility-audit)
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only

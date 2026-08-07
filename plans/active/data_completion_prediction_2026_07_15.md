@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-15
+last_updated: "2026-08-07" # was 2026-07-15 (never bumped, incl. through two 2026-08-06 na-eligibility-audit checkbox flips) -- fixed by plan_reconciler agt-e7f024
 locked_by:
 locked_since:
 supersedes:
