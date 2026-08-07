@@ -80,10 +80,10 @@ context_scope:
 
 # CeFi satellite AO batch 9 — iterative-drain extraction
 
-> **Status: DRAFT — awaiting operator review (2026-08-07).** Per the `/ag-closeout-audit` skill's safety design, a
-> drafted batch is inert (never ingested/dispatched); flipping this to `status: active` is the operator's call. The
-> paired finalize plan ships `status: active` from the start — `gate_on_depends: true` machine-holds it until this
-> batch's todos are done, no double gate.
+> **Status: ACTIVE — operator-approved 2026-08-07** (was DRAFT; missed by an earlier casing-sensitive grep fixing the
+> frontmatter and PLAN_FORMAT.md reference but not this differently-cased banner — corrected here). The paired finalize
+> plan ships `status: active` from the start — `gate_on_depends: true` machine-holds it until this batch's todos are
+> done, no double gate.
 >
 > **Cross-todo file-collision check: PASS.** The 3 todos touch, respectively: (1) `market-tick-data-service` — a
 > read-only confirm/refute audit with a conditional scoped fix in `HyperliquidS3Downloader.fetch_l2_book`'s S3-key path;
