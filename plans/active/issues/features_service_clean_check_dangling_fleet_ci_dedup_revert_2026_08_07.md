@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title: >-
-  Uncommitted, unexplained staged revert of fleet-workflow-dedup thin-caller-stubs found in
-  features-service-clean-check worktree -- stashed, not applied
+  Uncommitted, unexplained staged revert of fleet-workflow-dedup thin-caller-stubs found in features-service-clean-check
+  worktree -- stashed, not applied
 summary: >-
   Found staged (index != HEAD, no commit) changes in the `features-service-clean-check` worktree that revert 5
   `.github/workflows/*.yml` files (`main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`,
@@ -14,9 +14,9 @@ summary: >-
   (accidental partial apply of a revert experiment vs. a deliberate mid-flight rollback of the dedup plan by another
   worker), so per the exact precedent already on file for this same worktree
   (`features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md` -- "unimportant WIP ->
-  slot-tagged stash" path when a finding is not part of the current task and intent can't be determined), stashed
-  rather than committed or discarded: `stash@{0}` "slot8-2026-08-07: unexplained staged revert of
-  fleet-workflow-dedup thin-caller-stubs...". Repo is now clean (`git status` empty, `ahead=0`).
+  slot-tagged stash" path when a finding is not part of the current task and intent can't be determined), stashed rather
+  than committed or discarded: `stash@{0}` "slot8-2026-08-07: unexplained staged revert of fleet-workflow-dedup
+  thin-caller-stubs...". Repo is now clean (`git status` empty, `ahead=0`).
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -50,26 +50,26 @@ resolved_by:
 content differing from HEAD, worktree matching index (i.e. fully staged, `git add`-ed, never committed). The staged
 content is the pre-dedup full-inline form of each workflow -- exactly what `git diff --cached` shows as a revert of
 `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s thin-caller-stub migration for this repo. No
-commit message, no branch note, no Progress Log entry in the dedup plan mentions touching
-`features-service-clean-check` specifically as of the last read.
+commit message, no branch note, no Progress Log entry in the dedup plan mentions touching `features-service-clean-check`
+specifically as of the last read.
 
 ## Why not just commit it
 
 - Not part of the current task (`defi_satellite_ao_dispatch_batch9-018`, an unrelated gas_fees GCS purge VM relaunch).
-- The dedup plan is active/in-flight and high-blast-radius (26-repo fleet CI machinery) with a documented prior
-  incident class (`shared_ci_workflow_repo_extraction_2026_08_06.md`'s "revert incident"). Committing an unexplained
-  revert of live-dispatch-critical CI on a guess risks re-breaking fleet CI the same way.
+- The dedup plan is active/in-flight and high-blast-radius (26-repo fleet CI machinery) with a documented prior incident
+  class (`shared_ci_workflow_repo_extraction_2026_08_06.md`'s "revert incident"). Committing an unexplained revert of
+  live-dispatch-critical CI on a guess risks re-breaking fleet CI the same way.
 - This exact worktree has a standing precedent for exactly this situation (see `related`), resolved by stashing +
   filing, not by guessing intent.
 
 ## Resolution path
 
 Whoever next works `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (or owns
-`features-service-clean-check`) should: `git stash show -p stash@{0}` in that worktree, determine whether this is (a)
-an abandoned experiment (drop the stash), (b) a deliberate rollback that should actually land (investigate why, then
-commit with a real message + a Progress Log entry in the dedup plan), or (c) already superseded by a later commit
-(diff `stash@{0}` against current HEAD to check). Stash entry: `slot8-2026-08-07: unexplained staged revert of
-fleet-workflow-dedup thin-caller-stubs...`.
+`features-service-clean-check`) should: `git stash show -p stash@{0}` in that worktree, determine whether this is (a) an
+abandoned experiment (drop the stash), (b) a deliberate rollback that should actually land (investigate why, then commit
+with a real message + a Progress Log entry in the dedup plan), or (c) already superseded by a later commit (diff
+`stash@{0}` against current HEAD to check). Stash entry:
+`slot8-2026-08-07: unexplained staged revert of fleet-workflow-dedup thin-caller-stubs...`.
 
 ## Progress Log
 

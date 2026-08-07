@@ -25,6 +25,8 @@ source: >-
   slot 2, 2026-08-07) — UAC colon-guard (added 2026-07-20) post-dates the 2026-07-08 retrofit checklist.
 resolved_by: ""
 locked_by: ""
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Finding
