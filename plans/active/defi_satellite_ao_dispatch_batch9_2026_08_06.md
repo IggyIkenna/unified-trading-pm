@@ -479,3 +479,25 @@ remaining items besides the over-cap-gated one above).
   `gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-defi-cron --location asia-northeast1`, (c)
   await ≥4 clean `--verify-only` cycles in cron run.log, (d) flip todos 3+4 in this plan + [DATA] P1 in issue doc, (e)
   push, (f) /done.
+- **2026-08-07 (AO dispatch #9, `infra`, slot 8, todo 3-adjacent [INFRA] P0 relaunch todo)**: VM `100248` (from dispatch
+  #8) found GONE (deleted 10:55:51Z, ~50min after its heartbeat sidecar died at 10:06:02Z — consistent with dispatch
+  #8's own SIGPIPE finding). Manifest generation UNCHANGED (`1786048462981342`, still 2,642,951,426 bytes) — the CAS
+  rewrite never fired, so no partial/corrupt state; safe to retry. **ROOT-CAUSED via GCP Cloud Audit Log (previously
+  unknown — the 2026-08-06 fix `deployment-service@0e94ceee1` did NOT actually cover this kill path):** the delete's
+  `protoPayload.requestMetadata.callerSuppliedUserAgent="python-requests/2.34.2"` +
+  `serviceAccountDelegationInfo.firstPartyPrincipal=service-1060025368044@serverless-robot-prod.iam.gserviceaccount.com`
+  proves a **Cloud Run** identity fired the delete — NOT the VM-side `vm_zombie_watchdog.py` daemon (independently
+  verified via its own serial-console log: it logged "killed 0/0 zombies" across the EXACT kill-window sweep cycles
+  10:53→10:58, i.e. its 90min canonical-migration- override was never even tested). The actual killer is
+  `deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py`'s Cloud-Run-deployed
+  `sweep()` (`_kill_stalled_vm` reuses the watchdog's `_kill_vm` primitive directly, bypassing `PREFIX_IDLE_THRESHOLDS`
+  entirely) — a SEPARATE mechanism with its own flat `DEFAULT_KILL_MINUTES=45.0`, which explicitly watches the
+  `canonical-migration-` family (`_is_backfill_vm` docstring) but was never given the same per-prefix override the
+  2026-08-06 fix added to the OTHER watchdog. 45min + up to one ~5min sweep-cycle lands exactly on the observed ~50min
+  kill. **Fix shipped this dispatch**: added `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` +
+  `_resolve_kill_minutes()` (mirrors `vm_zombie_watchdog._resolve_idle_thresholds`) to `heartbeat_stall_watcher.py`,
+  threaded into the `sweep()` loop's `should_auto_kill` call + the `DP_VM_STALL` log event; 2 new tests
+  (`test_resolve_kill_minutes_canonical_migration_override`,
+  `test_sweep_does_not_kill_canonical_migration_vm_before_override_threshold`). QG in flight at time of writing — ships
+  via quickmerge once green, then relaunches the purge VM a 3rd time. Full evidence:
+  `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log (cross-cited).
