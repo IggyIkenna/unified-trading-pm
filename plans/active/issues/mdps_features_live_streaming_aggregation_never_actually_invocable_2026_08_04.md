@@ -409,6 +409,25 @@ OOM if left running). The named successor is this issue doc's Todos below.
   fixes CEFI (117) / DeFi (3,535) scale; a CEFI/DeFi re-launch still needs operator sign-off (per the RULING) — re-pilot
   with `MDPS_SHARDS_PER_WORKER=N` and watch RSS. Acknowledged the 2026-08-06 operator OOM directive: no heavy local
   compute launched this session (only the standard per-repo QG runs), no OOM-killed process to record.
+- **2026-08-07 (slot-10, infra, re-pilot session — IN PROGRESS)**: executing the follow-up re-pilot todo for CEFI +
+  DeFi. **Launcher fix shipped**: `deployment-service@84442d6` — added `MDPS_SHARDS_PER_WORKER` env var default (10) and
+  VM metadata passthrough in `launch-mdps-features-live.sh`. Full QG green + quickmerge landed on LDR. **Critical
+  discovery — GCS startup script staleness**: CEFI VM #1 (`mdps-features-live-cefi-20260806-235430`) OOMed within ~8 min
+  despite `MDPS_SHARDS_PER_WORKER=10` metadata being correctly set (verified via `gcloud compute instances describe`).
+  Root cause: the GCS-hosted startup script
+  (`gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`) was 2754 lines with ZERO consolidation
+  code — the `deployment-service@da788b8` changes (`_mfl_shards_per_worker` grouping, `_mfl_flush` batching) never
+  reached the deployed artifact. The tarball auto-republish (`lc_verify_tarball_freshness`) only updates `.tar.gz`
+  files, NOT the standalone startup script. Fix:
+  `bash scripts/vm/create-code-tarballs.sh --include deployment-service --force` republished it (now 2855 lines, 181KB,
+  2 `MDPS_SHARDS_PER_WORKER` hits). This is a **deployment-process gap** — consolidation shipped to LDR code but the GCS
+  artifact was never updated; every VM launch since da788b8 has been running the PRE-consolidation startup script.
+  **CEFI VM #1 deleted** (OOM-loop, 6+ cascading OOM kills at 297-401MB RSS each). **CEFI VM #2 launched**
+  (`mdps-features-live-cefi-20260807-001235`, MDPS_SHARDS_PER_WORKER=10, all tarballs fresh, updated GCS startup
+  script). At time of this log entry: VM RUNNING, **0 OOM events** in serial console (was 6+ at same point in VM #1),
+  consolidation working, run.log not yet written (startup in progress). Monitor armed for log appearance. **DeFi launch
+  pending** — will use MDPS_SHARDS_PER_WORKER=150 (~24 workers for 3,535 shards) once CEFI verified. Acknowledged the
+  2026-08-06 operator OOM directive: no heavy local compute launched.
 
 ## Follow-ups
 
