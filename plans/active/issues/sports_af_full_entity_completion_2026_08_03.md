@@ -931,3 +931,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   transition — cross-check `run.log`'s own `PROGRESS: chunk=N` line near a suspected boundary rather than trusting
   `PROGRESS.json` alone. Full detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`8c34027029`.
   Reverting to lightweight per-tick checks now that the outlier is resolved.
+- **Self-correction**: FIXTURE_STATS's chunk-number label had gone stale in this doc for several ticks (I kept writing
+  "chunk 6/26" from an early read without re-verifying against `run.log`) — a live check shows it's actually **chunk
+  9/26**. The `last_completed_date` values reported each tick were always accurate; only the chunk-number label was
+  stale. Chunks 6-8 each cleared in under an hour once past the early quota-limited chunks. Using chunk 9/26 going
+  forward.
