@@ -735,3 +735,18 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `--sports-provider TRANSFERMARKT --sports-entity PLAYER_VALUES`, single day `2026-08-04`) — its `--force` is low-risk
   since the date range is a single day, left running as-is. Both SFI (corrected) and TM retries pending confirmation
   next tick.)
+- **2026-08-07T10:19Z** — PLAYER_STATS checkpoint climbing (2023-12-26 → 2024-04-07, +103 days), still healthy. (Aside,
+  all unrelated to this campaign: (1) **SFI retry CONFIRMED RESOLVED** — `sfi-backfill-20260807-101503` (correctly
+  re-scoped to `instruments-service --sports-provider SOCCER_FOOTBALL_INFO`) completed exit_code=0, wrote 5,669 real
+  progressive-stat rows for 2026-08-01 alone; manifest re-query confirms **89 → 0** `attempted_failed` for
+  `source=soccer_football_info` — the mis-scoping diagnosis from last tick was the true root cause, not a persistent
+  vendor failure; (2) footystats backfill VM (`fs-backfill-20260807-100731`) healthy, climbing (2021-01-26 as of 09:49Z)
+  — working through the 2020-06-06 floor forward, will take a while given the ~6-year, 50-league range but no concerning
+  behavior; (3) **Transfermarkt retry is a live, ongoing vendor problem, not the resolved one-off it looked like last
+  tick** — `tm-backfill-20260807-085636` is hitting repeated real-time HTTP 502s from
+  `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` (10-attempt exponential-backoff cycles,
+  restarting the outer cycle after each exhaustion) continuously from at least 09:35Z through 09:49Z on TODAY's date
+  (2026-08-07), not just the original 2026-08-04 cluster — this is correct retry behavior (502 is legitimately
+  retryable) so left running, but it means the vendor's `standings` endpoint is currently degraded, not transiently
+  blipped; will re-check next tick and consider killing/deferring if it's still spinning identically (billing-waste
+  judgment call, not yet warranted at ~1h of retries on a SPOT e2-standard-8).)
