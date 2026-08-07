@@ -121,7 +121,18 @@ over all pending draft batches) that independently spot-verified every todo belo
       `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (same underlying hang — merged
       into one todo, cite both on close). Done when: a fresh `_index/availability_index.parquet` read confirms 0 of the
       12,425 target gas_fees legacy rows remain, and the consolidator cron has completed >=4 clean post-resume
-      `--verify-only` cycles.
+      `--verify-only` cycles. **PARTIAL 2026-08-07 (data_engineering, slot 12) — root cause CONFIRMED, not yet
+      closeable.** This todo's own "gsutil hang" framing is stale — the source doc's 2026-08-06 findings already
+      superseded it (did not recur; real blocker was an in-script OOM, since fixed, then a zombie-watchdog
+      heartbeat-staleness miscalibration). This dispatch independently confirmed the miscalibration theory via commit
+      history (`deployment-service@0e94ceee1`, a different slot-4/planning dispatch, already added the fix) — but the
+      fix is DORMANT: the live watchdog daemon predates the commit by 1+ day and only loads its code once at VM boot.
+      Filed the daemon relaunch as a new blocking `[INFRA] P0` todo (out of `data_engineering` craft scope — real-mode
+      relaunches of this exact daemon have twice caused confirmed live-VM kills historically) in
+      `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` — full evidence there
+      (`unified-trading-pm@1da67407e`). Did not relaunch the purge VM (would likely reproduce the reap). Checkbox stays
+      open until an `infra`-scoped dispatch refreshes the daemon and the purge actually completes per this todo's own
+      done-when.
 - [x] ✅ [BACKEND] P2. **Add CLI flags** (`--archetypes`, `--venue-allowlist`, `--currency-allowlist`) to
       strategy-service's `run_paper` entrypoint (`service_entry.py`) to construct and pass the already-shipped
       `PaperUniverseConfig.{archetypes,venue_allowlist,base_currency_allowlist}` fields (today always `None`/unset, so
