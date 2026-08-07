@@ -382,6 +382,32 @@ pre-launch). Post-launch = re-download a FRESH manifest + run the phase-2 query 
   (`launch-tradfi-backfill-vm.sh` for the P0 ES_OPT todo, `urdi_reference_provider.py` for the CME
   instrument-definitions todo).
 
+### 2026-08-07T~04:46Z — slot 11, task `tradfi_satellite_ao_dispatch_batch6-002` (todo #2) — fresh session
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Fleet draining (6 VMs remain from 03:00Z wave; operator decision to keep
+waiting unchanged).** Background watcher armed.
+
+**Fleet snapshot at ~04:46Z (slot 11 fresh session):**
+
+- `tradfi-bf-nyse-ohlcv-1m-2023-d01-20260807-030305` — COMPLETED (exit_code=0, self-deleting; verified via run.log)
+- `tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260807-030050` — RUNNING at chunk 19/53 (2020-05-18), ~3h remaining
+- `tradfi-bf-cme-ohlcv-1m-g01-mbt-mbt-2024-20260807-030438` — RUNNING at 2024-09-03, progressing
+- `tradfi-bf-cme-ohlcv-1m-g01-met-met-2023-20260807-030119` — RUNNING, just (re)initialized DatabentoAdapter
+- `tradfi-bf-nyse-ohlcv-1m-2024-d04-20260807-030741` — RUNNING, 2024 date range active
+- `tradfi-bf-nyse-ohlcv-1m-2024-d05-20260807-030801` — RUNNING at 2024-12-09 (near end), ~60min
+- `tradfi-bf-nyse-ohlcv-1m-2025-d04-20260807-031131` — RUNNING at 2025-10-10
+
+Count dropped from 28 (2026-08-06T18:10Z) → 6 (2026-08-07T04:46Z). Drain is progressing. ETA: es-es-2020 is the long
+pole (~3h from check time); if no new wave launches, count==0 likely ~07:00-09:00Z 2026-08-07.
+
+**Watcher armed:** background script `es_opt_watcher.sh` will:
+
+1. Poll every 300s for tradfi-bf-* count==0 (error-aware: rc!=0 = hold)
+2. Launch ES_OPT per phase-1 command when clear
+3. Verify T+30s started + T+10min RUNNING
+4. Poll for tradfi-bf-es-opt-* completion
+5. Download fresh manifest, run count query, update closeout plan, flip checkbox, commit+push, call /done
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
