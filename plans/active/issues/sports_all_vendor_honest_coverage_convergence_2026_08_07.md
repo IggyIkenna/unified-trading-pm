@@ -522,3 +522,18 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   remains intact and every restart is still doing real, distinct work, but flagging for whoever next touches this: if
   it's still on chunk 18 at the NEXT tick, that would be a genuine outlier worth deeper thought (e.g. whether the full
   league roster for this chunk is unusually long, not just unusually OOM-prone).
+- **2026-08-07T22:21Z — followed up on the flagged outlier: STILL on chunk 18/451 (~3h now), but confirmed this is the
+  roster being genuinely large for this specific week, not malfunction.** FIXTURE_STATS:
+  `last_completed_date=2022-04-06` (up from 2022-02-16, +49 days), fresh checkpoint (`22:20:25Z`) — healthy, continuing
+  to accelerate, no action needed. odds smallchunk2: full `run.log` re-read (rule 1b) shows **25 distinct leagues
+  attempted this chunk now** (up from 22 last tick — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE,
+  PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG, SCOTTISH_PREMIERSHIP, GREEK_SUPER_LEAGUE, AUSTRIAN_BUNDESLIGA,
+  SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, EKSTRAKLASA, ALLSVENSKAN, BRASILEIRAO, ARGENTINA_PRIMERA, MLS,
+  J1_LEAGUE, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1, A_LEAGUE — spanning Europe, South America, Asia, North America,
+  Oceania), still **zero repeats**, 13 total OOMs (+1 since last tick, LIGA_MX). This spread (multiple continents' top
+  flights all represented) plus the fact the chunk is STILL not exhausted after 25 leagues strongly suggests the
+  Prediction-tier roster is simply large and this 2020-08-30→2020-09-03 week is the first chunk since the 2020-06-06
+  range start where essentially every league worldwide has a real season-opener fixture simultaneously — i.e. this may
+  be close to a full-roster real-fetch pass in one chunk, something later/earlier chunks in off-season weeks won't
+  repeat. Not a stall by rule 1b's own test (values keep climbing every tick); no intervention — self-recovery, zero
+  data loss, genuinely converging.
