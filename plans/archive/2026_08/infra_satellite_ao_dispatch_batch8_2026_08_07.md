@@ -22,7 +22,7 @@ summary: >-
   (`check_finalize_plan_coverage.py`'s `_todo_count(...) <= 1` threshold) — no separate finalize plan; archival is
   folded into the one todo's own "Done when", mirroring `infra_satellite_ao_dispatch_batch4_2026_07_31.md` and
   `infra_satellite_ao_dispatch_batch5_2026_08_01.md`.
-status: active
+status: archived
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

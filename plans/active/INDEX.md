@@ -822,10 +822,6 @@ by hand._
   — Gated closeout for `infra_satellite_ao_dispatch_batch7_2026_08_04.md`, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
   `scripts/quality_gates/check_finalize_plan_coverage.py`). Once…
-- [`infra_satellite_ao_dispatch_batch8_2026_08_07`](./infra_satellite_ao_dispatch_batch8_2026_08_07.md) **[draft]** —
-  Eighth AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode,
-  2026-08-07). Phase 0 re-derived the covering set via `generate_ag_closeout_audit_candidates.py --tranche infra` (51
-  members /…
 - [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](./na_docs_validity_and_ao_eligibility_audit_2026_07_26.md) —
   Scoped 2026-07-26 per operator directive, for a FUTURE session (not this one). The 2026-07-25/26 `/ag-closeout-audit`
   9-tranche run + this session's mass-flip only ever acted on ORPHANED docs (no active plan covering them) — it never…
