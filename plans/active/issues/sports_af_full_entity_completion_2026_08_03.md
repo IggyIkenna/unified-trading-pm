@@ -921,3 +921,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   Concluded this is a genuinely large Prediction-tier roster hitting its first true global season-opener week
   simultaneously (2020-08-30→2020-09-03), not malfunction — values keep climbing every tick (rule 1b), no intervention.
   Full detail + league list: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`949f0c59bf`.
+- **2026-08-07T22:50Z** — FIXTURE_STATS +45 days (`last_completed_date=2022-05-21`, fresh `22:49:35Z`), steady. odds
+  smallchunk2 still chunk 18/451 (~3.5h) — 29 leagues (up from 25), 15 OOM (up from 13), zero repeats — continued
+  genuine progress, root cause already established, no further deep-dive needed each tick.
