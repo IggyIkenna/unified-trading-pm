@@ -871,3 +871,5 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `mtds-backfill-odds-smallchunk2-20260807` is 0/5-chunks-clean OOM and, more importantly, odds_api's total
   `attempted_failed` count has generated exactly **0 new rows** since the fixed VM launched at 17:18Z (26,934→26,937,
   the +3 is noise) — the SOURCE_RETURNED_ZERO bug is genuinely not recurring anymore.)
+- **2026-08-07T18:17Z** — FIXTURE_STATS chunk 4/26 (2021-04-15), SFI (2025-01-31), `mtds-backfill-odds-smallchunk2`
+  (chunk 10/451, still 0 OOM). All healthy, quiet tick — no new incidents.
