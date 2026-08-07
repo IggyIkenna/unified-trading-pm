@@ -229,6 +229,54 @@ path), C8 (cefi_book_snapshot5 body cites predecessor at active dir), C11/C12 (d
 not-root-caused vs ROOT-CAUSED; 35 vs 42 rows), C13/C14 (cefi_track2_backfill_vm_preempted: prose claims a non-existent
 [OPERATOR] todo; last_updated), C1-doc last_updated.
 
+## Epic-cluster top-level plans (H1 result — 33 files read, 9 candidates, cross-verified post-return)
+
+New actionable (verified inline post-return):
+
+- **H1-C2 P1 → FLIP** `data_completion_cefi_2026_07_15.md:500` E8 [DATA] P0 (delete legacy `market-data-tick-cefi`
+  permanently, "only after E7 GREEN") — successor `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution:227-229` Phase F
+  "✅ DONE-BY-OPERATOR-2026-07-14"; legacy bucket deleted 2026-07-14T11:02:29Z (Phase C :179 CANNOT-RUN-AS-WRITTEN;
+  `issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md` exists). Flip with DONE-BY-OPERATOR annotation +
+  note: E7 verify still RED (successor Phase D/E owns it) — operator's early delete mooted E8's own precondition. Doc's
+  ONLY open todo → `data_completion_cefi` all-done.
+- **H1-C5 P2 → ANNOTATE** "STATUS: `draft` — NOT dispatched" header vs frontmatter `status: active` in
+  `data_completion_cefi_2026_07_15_finalize:58` + `data_pipeline_check_mdps_features_2026_07_20_finalize:57` → align to
+  "🔒 GATED, not draft" (precedent `ci_satellite_ao_dispatch_batch1_finalize:58` corrected 2026-08-02). Both finalizes
+  verified WRITABLE (not in 38-doc grace set; last commit 08-03 23:08); mdps SOURCE stays grace (commit 08-06 21:12Z) →
+  its last_updated (H1-C6) DEFERRED.
+- **H1-C9 P3 → ANNOTATE** `cefi_e4_e8:8-10` banner "never an autonomous-agent action" — superseded 2026-08-03 (Phase B
+  AO-executed 287,074/287,074, 0 errors; self-documented at `last_updated` comment :26-28) → add SUPERSEDED marker.
+- **H1-C1 P1 → ANNOTATE epic only** `plans/epics/cefi_master.md:631` roster "5 active plans" vs 19 actual
+  (generator-stale `populate_epic_bodies_2026_05_21.py`; 14 missing incl. all finalizes) — generator re-run is
+  corpus-wide (touches other tranches) → annotate line + route re-run to PM/operator.
+
+Owned elsewhere / no action:
+
+- **H1-C4 P2** `instruments_cefi_g1_g5_gate_execution:368` GATE G4 "OPEN, pending D2" vs D2 archived-resolved (+2
+  residual threads resolved) — OWNED by `cefi_satellite_ao_dispatch_batch8` todo 1 (open, dispatched) → note-only, do
+  NOT apply (would race the worker).
+- **H1-C3 P2** `cefi_consolidated_closeout:540-543` Track-7 "✅ DONE 2026-08-04" vs own close-out criterion (96 missing
+  cells, bundle regen in `issues/cefi_track7_candle_bundle_regeneration_vm`) — INDEPENDENT corroboration of my C5
+  P0-class alert (delete-before-verify); banner self-caveats within the same block → P2, no new action beyond existing
+  routing.
+
+Deferred (grace) / reported:
+
+- **H1-C6 P3** mdps `last_updated:59` 2026-07-27 vs body 08-05 → GRACE (commit 08-06 21:12Z) — DEFERRED.
+- **H1-C7 P3** `data_completion_cefi` `last_updated:30` 08-03 vs body 08-05 → already in checklist item (18) refresh
+  batch.
+- **H1-C8 P3** epic `:345` roadmap "tick-data ~60%" (May-era) vs 44.96% measured baseline — no post-backfill % exists
+  (all docs agree) → REPORTED only; roadmap = historical snapshot, no edit.
+
+Excluded (verified consistent — recorded to prevent re-flagging): coverage-% spread 44.96/50.79/no-post-backfill (all
+docs agree none exists post-backfill); DERIBIT gap open across epic/closeout/track2-finalize (time-series snapshots);
+PACIFICA-SOLANA quarantine "human/NA" framing (batch4 deferred note; 4surface:134 flip still stands on uac@989e9d16 +
+quarantine.py evidence — H1 lacked the code evidence); aster migration clean no-op; batch4 `batch_tardis`-vs-
+`batch_databento` DIAG (different venues, both tracked); enumerator scheduler evolution (chronological, same doc);
+batch7 "DELETED issue" `mdps_cefi_candle_manifest_orphan_reconciliation` = actually ARCHIVED (`plans/archive/issues/`,
+82d6d6bf7) — false alarm; batch6 finalize:68 boundary (ml_directional flip limited to 1 sub-requirement, VM half stays
+open — no action).
+
 ## STEP-5 pending apply checklist (all existence/evidence-verified as of 00:50)
 
 FLIPS (HARD): (1) cefi_4surface_migration_execution_log:793 [SCRIPT] P0 chain dry-run —
@@ -265,6 +313,12 @@ closeout-family related:/body mention → cefi_consolidated_closeout_2026_07_18/
 ZERO-CHECKBOX (H6): (20) convert prose→todos in mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp (3 todos:
 2×[SCRIPT] P1 + [REVIEW] P2) + mtds_pipeline_check_process_killed_during_skip_leg_poll (3 todos: [DATA] P1/[REVIEW]
 P1/[OPERATOR] P2); classify the 2 NEW/unclassified rows in zero_checkbox_sweep_all_tranches_2026_07_31 register.
+
+H1 ADDITIONS (2026-08-07, post-compact — evidence inline-verified): (21) data_completion_cefi:500 E8 flip with
+DONE-BY-OPERATOR-2026-07-14 annotation (cefi_e4_e8:227-229 + bucket deleted 07-14T11:02:29Z); (22)
+data_completion_cefi_finalize:58 + data_pipeline_check_mdps_features_finalize:57 draft-header → "🔒 GATED, not draft"
+alignment (precedent ci_satellite_batch1_finalize:58); (23) cefi_e4_e8:8-10 SUPERSEDED-2026-08-03 banner; (24)
+plans/epics/cefi_master.md:631 roster stale-marker annotation (generator re-run → operator/PM).
 
 ## STEP-6 route (operator-alerted + filed — codex edits never autonomous)
 
