@@ -75,8 +75,9 @@ depends_on: []
 ---
 
 > **🟡 IN-FLIGHT 2026-08-07 — slot-15 running `launch-expected-universe-v2-historical-backfill-vm.sh sports` (sequential
-> 7-chunk backfill, chunks 1-7 from 2020-06-06..2026-04-08). Chunk 1 verified done 2026-08-05, chunk 2 partially seeded
-> (~14M rows from prior runs), chunks 3-7 not started. Monitoring in background.**
+> 7-chunk backfill, chunks 1-7 from 2020-06-06..2026-04-08). Chunk 1 EXIT_STATUS=0 (638,521 rows). Chunk 2/7
+> (2021-01-01..2021-12-31) on retry 3/50: retries 1-2 each hit EXIT_STATUS=5 (1M-row cap), seeded ~2M rows so far;
+> parent PID 1397101 alive, retry 3 launching. Chunks 3-7 not started. Monitoring in background.**
 
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 
@@ -419,13 +420,20 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (background task b87iwccgr, heartbeat
   watchdog byb2en7p2). Confirmed no RUNNING VMs before launch (idempotent restart). **Chunk 1/7
   (2020-06-06..2020-12-31)**: VM `expected-universe-v2-sports-20260807-214049` completed EXIT_STATUS=0, wrote 638,521
-  rows (~4 min — rows already in present-set, enumerated instantly). **Chunk 2/7 (2021-01-01..2021-12-31)**: VM
-  `expected-universe-v2-sports-20260807-214629` RUNNING (bootstrapping) at context compaction time. Chunks 3-7 not
-  started. IN-FLIGHT banner added. Lessons: (1) child launcher output is buffered — silence for several min is normal,
-  output appears after child exits; (2) chunk 1 re-ran idempotently and exited 0 quickly with no new rows needed; (3)
-  sports 2021 full-year window is heavy (prior sessions seeded 14M+ rows, EXIT_STATUS=5 halts). **Resume point**: check
-  task b87iwccgr output when re-invoked; if VM gone without EXIT_STATUS=0, relaunch via same script (idempotent);
-  continue monitoring until all 7 chunks complete EXIT_STATUS=0; then run post-run ratio re-check.
+  rows (~4 min — rows already in present-set, enumerated instantly). **Chunk 2/7 (2021-01-01..2021-12-31)**: retry 1 →
+  VM `expected-universe-v2-sports-20260807-214629` → EXIT_STATUS=5 (~999,635 rows, 4×250K minus minor remainder; per-VM
+  shards confirmed in GCS). Retry 2 → VM `expected-universe-v2-sports-20260807-215210` → EXIT_STATUS=5 (+1,000,000 rows,
+  exactly 4×250K; GCS log verified). Total chunk 2 rows seeded so far across all retries (prior sessions ~14M + retry 1
+  ~1M + retry 2 1M = ~16M). Parent script (PID 1397101) alive and auto-cycling (retry 3/50 launching at compaction
+  time). Chunks 3-7 not started. Lessons: (1) child launcher output is buffered — silence for several min is normal,
+  output appears after child exits; (2) chunk 1 re-ran idempotently and exited 0 quickly (rows already present); (3)
+  2021 full-year window is very large — likely ~3-4 more retries needed to exhaust remaining cells; (4) each retry
+  correctly excludes already-written per-VM shards (oscillation guard confirmed working). **Resume point**: parent PID
+  1397101 is running the loop autonomously; if session restarts, check
+  `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'` — if a VM is RUNNING, monitor its GCS
+  log; if no VM and no parent process, re-run
+  `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (idempotent). All 7 chunks must
+  complete EXIT_STATUS=0, then run post-run ratio re-check.
 
 ## Follow-ups
 
