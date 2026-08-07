@@ -78,17 +78,17 @@ as resolved (see Progress Log). Numbers below are the LATEST re-census, post con
 Log 2026-08-05T16:04Z entry — treat these as more current than the 08-04 figures but the consolidator is still not fully
 healthy, so even these may understate true progress).
 
-| Entity           | Scope                        | Status (2026-08-05)                                                                                                                                                                                                                         |
-| ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                                                                                        |
-| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                                                                      |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 414,893 already resolved, **24,483 needed** (-2,808) — **PAUSED**: VM deleted after hitting the API-Football daily quota wall (billing-waste), resumable from `PROGRESS.json` checkpoint `2023-11-19`, see below |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                                                                              |
-| **PLAYER_STATS** | **MVP-96**                   | 42,371 expected, 41,373 already resolved, **only 998 needed** — nearly done                                                                                                                                                                 |
-| **INJURIES**     | **all-383**                  | 108,663 expected, 45,954 already resolved, **62,709 needed** (unchanged — no backfill run yet)                                                                                                                                              |
-| **STANDINGS**    | **all-383**                  | 108,663 expected, 108,392 already resolved, **271 needed (99.75%)** — chunk-loop VM finished 76/76 (`exit_code=0`); residual is the API-Football daily-quota tail, PAUSED pending quota reset, see below                                    |
-| **TEAMS**        | **all-383**                  | 108,663 expected, 108,567 already resolved, **96 needed (99.9%)** — chunk-loop VM finished 76/76 (`exit_code=0`); residual is the API-Football daily-quota tail, PAUSED pending quota reset, see below                                      |
-| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                                                                                 |
+| Entity           | Scope                        | Status (2026-08-05)                                                                                                                                                                                                                             |
+| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                                                                                            |
+| FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                                                                          |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,325 expected (non-MVP), ~415,755 already resolved, **24,495 needed** — **QUEUED**: quota has reset (confirmed), resumable from `PROGRESS.json` checkpoint `2023-11-19`; queued behind PLAYER_STATS (af-backfill-* singleton lock), see below |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                                                                                  |
+| **PLAYER_STATS** | **MVP-96**                   | 42,376 expected, 41,348 already resolved, **1,028 needed** — **ACTIVE**, quota confirmed RESET, genuinely backfilling via `af-backfill-20260807-013716`, see below                                                                              |
+| **INJURIES**     | **all-383**                  | 108,701 expected, 45,992 already resolved, **62,709 needed** (unchanged — queued behind PLAYER_STATS/FIXTURE_STATS)                                                                                                                             |
+| **STANDINGS**    | **all-383**                  | 108,701 expected, 108,430 already resolved, **271 needed (99.75%)** — quota-tail residual; **QUEUED** for a small completion pass once af-backfill-* frees up, see below                                                                        |
+| **TEAMS**        | **all-383**                  | 108,701 expected, 108,605 already resolved, **96 needed (99.9%)** — quota-tail residual; **QUEUED** for a small completion pass once af-backfill-* frees up, see below                                                                          |
+| **LEAGUES**      | ~~all-383~~ **RETIRED**      | **RESOLVED 2026-08-03** — writer path killed 2026-05-07, **0 genuinely needed**. See below.                                                                                                                                                     |
 
 Denominator = distinct `(date, league_id)` pairs with a captured `FIXTURES`/`FIXTURES_SCHEDULE` row (a genuine fixture
 existed that day), intersected with each entity's own `get_entity_league_coverage()` scope — mirrors
@@ -97,12 +97,13 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-06T21:55Z: 64,074 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~67% drop — TEAMS/STANDINGS both essentially converged, see Progress Log) **+ 83,006 across
-FIXTURE_STATS+FIXTURE_LINEUPS** (24,483 + 58,523). **All active VM lanes PAUSED as of this tick** — the API-Football
-daily request quota was exhausted campaign-wide; resuming once it resets (see Progress Log). LEAGUES excluded per the
-resolved verdict below. **PLAYER_STATS is the standout — genuinely near-complete (97.6%), worth launching soon** since
-it could converge quickly once dispatched.
+**Grand total needed, 2026-08-07T01:45Z: 64,104 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+further ~67% drop — TEAMS/STANDINGS both essentially converged, see Progress Log) **+ 83,051 across
+FIXTURE_STATS+FIXTURE_LINEUPS** (24,495 + 58,556). **The API-Football daily quota exhaustion has RESET (confirmed
+2026-08-07T01:45Z)** — PLAYER_STATS is ACTIVE again via `af-backfill-20260807-013716`; FIXTURE_STATS + the small
+TEAMS/STANDINGS residual + FIXTURE_LINEUPS/INJURIES are queued behind it (the launcher's own singleton lock blocks
+concurrent `af-backfill-*` VMs against the shared API key — documented anti-pattern, avoided). LEAGUES excluded per the
+resolved verdict below.
 
 ## ✅ RESOLVED 2026-08-03 — LEAGUES verdict: retired entity, 0 real work, do not launch
 
@@ -256,122 +257,20 @@ are genuinely in scope for the operator's "no exceptions" directive.
   ordering. Until then, any worker dispatched a `Launch <ENTITY> backfill` todo here MUST first verify no other
   `af-backfill-*`/`af-audit-*` VM is RUNNING (singleton lock free) and that the immediately-prior entity's census shows
   ~0 needed — if not, `skip-current-task` and it requeues (do NOT launch a 2nd concurrent AF VM).
-- **2026-08-04 (slot 4)** — Dispatched the same `sports_af_full_entity_completion-003` (Launch FIXTURE_LINEUPS) todo.
-  Re-verified the gate per the risk note above: singleton lock was FREE (no `af-backfill-*`/`af-audit-*` VM RUNNING —
-  confirmed via `gcloud compute instances list`), but FIXTURE_STATS had **not converged**: re-ran
-  `census_fixture_stats_lineups_widening_volume_2026_07_31.py`, which showed only 125/68,409 non-MVP shards captured
-  (0.18%) — essentially unchanged from launch. Root cause: the prior FIXTURE_STATS VM (`af-backfill-20260803-233053`)
-  was **SPOT-preempted ~17 min after launch** (audit log: `compute.instances.preempted` at 2026-08-03T23:47-48Z, ~16 min
-  after the 23:31 `instances.insert`) and **never auto-resumed** — the VM no longer exists at all (not even TERMINATED
-  in the instance list), and no successor `af-backfill-*` VM was ever launched. This is exactly the class the codex HARD
-  RULE "preemption recovery must resume from measured PROGRESS, never replay START_DATE" exists for
-  (`/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis/backfill preemption); the
-  `exit_code_fleet_monitor`/`RelaunchPreemptedVm` auto-recovery apparently did not fire for this VM (worth a follow-up
-  look at why, not chased further here — out of this doc's scope). **Action taken**: relaunched FIXTURE_STATS as
-  `af-backfill-20260804-001203` (`launch-api-football-backfill-vm.sh --entity FIXTURE_STATS 2020-06-06 2026-08-04`,
-  SPOT, idempotent skip-if-captured — no `--force`, so this is a safe resume, not a redo_all). Verified healthy at
-  T+~4min: `run.log` shows genuine per-fixture FIXTURE_STATS fetches (`Fetched 2 stat rows for fixture=...`), correct
-  skip-already-captured + observed-out-of-coverage handling, and correct 429 rate-limit backoff — not a crash-loop.
-  **FIXTURE_LINEUPS remains blocked** — its gate ("after FIXTURE_STATS converges") is still unmet; did NOT launch it.
-  `skip-current-task`'d `sports_af_full_entity_completion-003` again so it requeues once FIXTURE_STATS genuinely
-  converges. The durable fix flagged above (a real `depends_on` convergence gate instead of dispatch-order
-  `sequential:true`) is still not implemented — a future worker will hit this same trap a third time until it is; not
-  fixed in this session (outside this task's scope, flagging again for whoever next touches plan authoring for this
-  campaign).
-- **2026-08-04 (slot 6)** — Dispatched `sports_af_full_entity_completion-003` a third time. Re-verified the gate per the
-  standing risk note: singleton lock FREE (no `af-backfill-*`/`af-audit-*` VM RUNNING), but FIXTURE_STATS still NOT
-  converged — re-ran `census_fixture_stats_lineups_widening_volume_2026_07_31.py`: 125/68,409 non-MVP shards captured
-  (0.18%), essentially unchanged from slot 4's check. Root cause: slot 4's relaunch (`af-backfill-20260804-001203`,
-  launched 00:12:03Z) was **SPOT-preempted again ~6 min later** (audit log: `compute.instances.preempted` at
-  00:18:20-31Z) — the **second same-day preemption of the same entity's backfill**, and again with **no auto-recovery**:
-  `dp_exit_code_monitor_cron` runs `*/5 * * * *`, so 1-2 ticks had already elapsed with no successor VM launched by the
-  time I checked (~00:25-00:30Z). Investigated whether this is a config gap (it isn't — `af-backfill-` is correctly
-  registered in `launcher_registry.py`, the PREEMPTED relaunch budget is 48/day and nowhere near exhausted, resume-env
-  is correctly persisted via `lc_write_launch_params`) and filed the recurring-pattern finding as its own issue doc
-  since it's a genuine infra gap outside this campaign's scope:
-  `/plans/archive/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md` (leading hypothesis: a VM whose
-  full lifetime is shorter than one 5-min monitor tick may be structurally invisible to the monitor's
-  prior-tick/this-tick census diff — both preempted VMs today died in ~6-17 min). **Action taken**: relaunched
-  FIXTURE_STATS again as `af-backfill-20260804-002608` (same safe idempotent resume, no `--force`) — verified healthy at
-  boot (serial console: dependencies installed, task launched PID 8317, `=== VM setup complete ===` exit 0) and
-  confirmed genuine fetch activity in `run.log` shortly after. **FIXTURE_LINEUPS remains blocked** — gate still unmet;
-  did NOT launch it. `skip-current-task`'d `sports_af_full_entity_completion-003` again so it requeues once
-  FIXTURE_STATS genuinely converges. Given this is now 2 preemptions in <24h with 2 manual relaunches, the durable
-  convergence-gate fix (flagged twice above, still not implemented) and the new auto-recovery issue doc are both now
-  higher-priority than before — a fourth dispatch of this same todo without either fix landing is a near-certainty.
-- **2026-08-04 (slot 6, continued)** — Root-caused + fixed the auto-recovery gap in the same session (see
-  `af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`): `af-backfill-`/`af-audit-` were entirely missing
-  from `exit_code_fleet_monitor`'s `_DATA_VM_PREFIXES`, making these VMs structurally invisible to the preemption
-  classifier regardless of timing. Shipped `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`.
-- **2026-08-04 (slot 5)** — Dispatched `sports_af_full_entity_completion-003` a fourth time, exactly as slot 6's note
-  predicted. Re-verified the gate: singleton lock FREE, FIXTURE_STATS still NOT converged (125/68,409 non-MVP shards,
-  unchanged). Relaunched FIXTURE_STATS as `af-backfill-20260804-004955` (same safe idempotent resume) — preempted almost
-  immediately (~1.5 min lifetime, 00:49:55Z→00:51:21Z), the **third** preemption of this entity in <24h, each faster
-  than the last (17min→6min→1.5min). Investigated further and found this is **not af-backfill-specific**:
-  `asia-northeast1-c` is in an active, sustained SPOT preemption storm — 151 `compute.instances.preempted` events over
-  the prior 5h, hitting sports/tradfi/cefi concurrently, still firing as of the check. Filed
-  `/plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (P1, cross-cutting) with the full
-  evidence and a recommended decision (confirm the auto-recovery fix above is actually deployed to the live Cloud Run
-  job image; re-check preemption volume in a few hours; do not keep blind-relaunching into an active storm). **Did NOT
-  attempt a further relaunch** — burning more SPOT minutes into a confirmed active storm is not productive.
-  `skip-current-task`'d `sports_af_full_entity_completion-003` again so it requeues once the storm subsides and
-  FIXTURE_STATS can make real progress. The durable convergence-gate fix (flagged three times now) remains the standing
-  structural recommendation — but the storm, not the gate mechanism, is now the actual blocker for FIXTURE_STATS itself;
-  a fifth dispatch should first check `/plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`
-  before relaunching again.
-- **2026-08-04 (slot 8)** — Dispatched `sports_af_full_entity_completion-003` a sixth time
-  (`already_in_progress: true`/resume — this session had this task before, per an earlier turn). Per the storm doc:
-  confirmed via `gcloud artifacts docker images describe ...:latest` that the af-backfill/af-audit prefix fix IS
-  deployed (digest `sha256:1ba77ac3...`, matching what slot 5 already verified independently — my own first read of the
-  images-list table briefly pointed at the wrong row/timestamp before the digest check corrected it). Re-verified the
-  gate: singleton lock was occupied by `af-backfill-20260804-015704` (launched 00:58:21Z) when I first checked, so I
-  waited rather than launching a 2nd concurrent AF VM — it was preempted at 01:04:30-41Z (~6.2min lifetime), the **6th
-  FIXTURE_STATS launch and 5th-or-6th preemption today** (full today's timeline: `-233053` ~16.5min → `-001203` ~5.8min
-  → `-002608` ~12min → `-004955` ~1.5min → `-015704` ~6.2min; zero clean completions). Re-ran
-  `census_fixture_stats_lineups_widening_volume_2026_07_31.py`: still 125/68,284 non-MVP shards captured (0.18%,
-  byte-identical to every prior check today) — **zero net progress across 5 launch attempts and ~1.5h of wall-clock
-  storm exposure.** The `asia-northeast1-c` storm is confirmed STILL ACTIVE (this fresh preemption, ~4 min before this
-  check). Consistent with slot 5's judgment, did **NOT** attempt a 6th blind FIXTURE_STATS relaunch — the storm shows no
-  sign of subsiding and each attempt is now converting to preemption within single-digit minutes regardless. Did **NOT**
-  launch FIXTURE_LINEUPS (both gates still unmet). Filed the durable convergence-gate fix as a proper `- [ ]` todo above
-  (P1, repo: agent-orchestrator) instead of a 4th prose-only flag — this worker has no filesystem access to the live
-  `data/config/backlog.yaml` to implement it directly. `skip-current-task`'d `sports_af_full_entity_completion-003`
-  again. Recommend the next dispatch check both the storm doc's "re-check after several hours" todo (not yet due — only
-  ~15-20 min of storm-doc-tracked time has elapsed since it was filed) and this doc's new durable-gate-fix todo before
-  repeating the same manual check a 7th time.
-- **2026-08-04 (slot 13)** — Dispatched `sports_af_full_entity_completion-003` a seventh time. Singleton lock was FREE.
-  Bucketed the storm doc's preemption log into 10-min buckets over the trailing 90 min and found a real peak-then-taper
-  shape (32→1-6/10min) plus an 11-min clean gap right before checking — read as genuine subsidence and relaunched
-  FIXTURE_STATS as `af-backfill-20260804-011911` (safe idempotent resume). Preempted again at 01:21:36-48Z, ~2.5min
-  lifetime — the **7th FIXTURE_STATS preemption today**, zero clean completions across all 7 attempts. Re-ran
-  `census_fixture_stats_lineups_widening_volume_2026_07_31.py` beforehand: still 125/68,284 non-MVP shards (0.18%,
-  unchanged). Full analysis + revised recommendation in
-  `/plans/archive/issues/asia_northeast1_c_spot_preemption_storm_2026_08_04.md`'s Progress Log — zone-wide aggregate
-  rate alone was NOT sufficient evidence to safely relaunch this `e2-standard-8` entity; a future dispatch should wait
-  for a longer confirmed-clean window before trying again. Did NOT attempt an 8th relaunch. **FIXTURE_LINEUPS remains
-  blocked** — gate still unmet; did NOT launch it. `skip-current-task`'d again so it requeues. The durable
-  convergence-gate fix (now a proper `- [ ]` todo above, P1, repo: agent-orchestrator) is unchanged by this dispatch —
-  confirmed (again) this worker has no filesystem access to the live orchestrator `data/config/backlog.yaml` from
-  `.tabs/13/agent-orchestrator` (only the `backlog.test.yaml` fixture) to implement it directly; still needs
-  main/operator.
-- **2026-08-04 (slot 11)** — Dispatched `sports_af_full_entity_completion-003` an eighth time. Re-verified both gates
-  fresh: singleton lock FREE (no `af-backfill-*`/`af-audit-*` VM RUNNING or even listed — today's ephemeral VMs are
-  fully deleted on preemption, not just terminated), FIXTURE_STATS re-censused at 125/68,284 non-MVP shards (0.18%) —
-  byte-identical to slot 13's check ~19 min earlier, zero net progress. Pulled the raw `compute.instances.preempted`
-  audit log for `asia-northeast1-c` 01:02Z→01:34Z: events at 01:04 (af-backfill), 01:06×4 (2 tradfi VMs), 01:21×2
-  (af-backfill), and **01:33:47Z** — an `expected-universe-v2-sports-*` VM (non-af-backfill), i.e. the zone was still
-  actively preempting sports-campaign VMs **~1 minute before this check**. Given that fresher, still-active evidence
-  plus the established 7/7 relaunch-failure pattern, did **NOT** attempt a further FIXTURE_STATS relaunch (would only
-  repeat slot 13's just-failed judgment call on comparably-thin evidence of a "clean window"). **Root-fixed the
-  redispatch waste instead of re-logging it a 5th time**: found `POST /api/backlog/{task_id}/park`
-  (`server/routes/backlog.py:709`, live since `ao_park_disposition_blocked_answer_no_follow_through_2026_07_31`) — a
-  worker-callable API that applies RULES.md §4's exact park recipe without needing the backlog.yaml filesystem access
-  that blocked slots 5/6/8/13. Called it (see todo above, now flipped) — `sports_af_full_entity_completion-003` is now
-  durably parked (`condition=auto_unpark__sports_af_full_entity_completion-003`, confirmed via
-  `GET /api/backlog/parked`), so this task will NOT be redispatched to any slot again until an operator (or an
-  explicitly instructed worker) confirms FIXTURE_STATS convergence and flips the condition true. Did not attempt to also
-  fix FIXTURE_STATS's own lack-of-a-retry-mechanism (out of scope for a park action) — flagged as a residual gap in the
-  todo above instead. `skip-current-task`'d (reason_code=GATED) to release the slot per the now-parked state.
+- **2026-08-04 (condensed, slots 4-11, 00:12Z-01:34Z)** — 8 repeated dispatches of
+  `sports_af_full_entity_completion-003` (Launch FIXTURE_LINEUPS) against an unmet FIXTURE_STATS-convergence gate,
+  during an active `asia-northeast1-c` SPOT preemption storm: 7 consecutive FIXTURE_STATS relaunch attempts (`-233053`
+  through `-011911`) were ALL preempted within 1.5-17 min, zero clean completions, zero net progress (stuck at
+  125/68,284 non-MVP shards, 0.18%, across the entire window). Root-caused + FIXED a genuine infra gap along the way:
+  `af-backfill-`/`af-audit-` were missing from `exit_code_fleet_monitor`'s `_DATA_VM_PREFIXES`, making these VMs
+  invisible to preemption auto-recovery regardless of timing — shipped
+  `deployment-service@c3594db647c25ae2656ba020e15d3f55a42bd179`. Filed 2 issue docs (both since resolved/archived):
+  `af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md` (the auto-recovery gap) and
+  `asia_northeast1_c_spot_preemption_storm_2026_08_04.md` (the zone-wide storm itself, 151+ preemption events across
+  sports/tradfi/cefi). After the 7th failed relaunch, durably PARKED the redispatching todo via
+  `POST /api/backlog/{task_id}/park` (`condition=auto_unpark__sports_af_full_entity_completion-003`) rather than let an
+  9th dispatch repeat the same doomed check — this stopped the redispatch churn until FIXTURE_STATS genuinely converged
+  (which it since has, many times over, in later ticks below).
 - **2026-08-04 (condensed, 05:38Z-13:37Z)** — A day of SPOT-preemption churn: 15 relaunch attempts for FIXTURE_STATS/
   PLAYER_STATS against a zone-wide `asia-northeast1-c` low-intensity background preemption rate (documented + resolved
   in `asia_northeast1_c_spot_preemption_storm_2026_08_04.md`); root cause was a missing backoff on
@@ -721,3 +620,20 @@ are genuinely in scope for the operator's "no exceptions" directive.
   (core 4) + 82,985 (FIXTURE_STATS+LINEUPS). **Decision: wait well past the inferred UTC-midnight reset before the next
   probe** — re-arming for ~45 min out rather than retrying immediately, to avoid a third wasted probe VM right at the
   boundary.
+- **2026-08-07T01:45Z — CONFIRMED: the API-Football daily quota has RESET. Campaign resumed.** Third probe VM
+  (`af-backfill-20260807-013716`, launched ~00:44Z) shows ZERO `'reached the request limit'` errors across its full
+  233-line log (grepped explicitly to confirm) — genuine successful `Fetched N player stat entries`, real
+  `ManifestWriter` shard updates, real per-fixture enrichment batches. UTC-midnight daily-reset hypothesis from the
+  prior tick is now confirmed, not just inferred. **Left this VM running** rather than treat it as a disposable probe —
+  it's doing real PLAYER_STATS work. Re-census: PLAYER_STATS 1,028 (was 998; the small increase is normal
+  daily-denominator drift, not regression — the "as of today" boundary advanced one day, adding a handful of new
+  expected fixture-day shards), INJURIES 62,709, STANDINGS 271, TEAMS 96, FIXTURE_STATS 24,495, FIXTURE_LINEUPS 58,556
+  (all similarly denominator-drifted, not regressed). Grand total 64,104 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS).
+  **Decision: did NOT relaunch FIXTURE_STATS or a TEAMS/STANDINGS residual pass concurrently** — the launcher's own
+  singleton lock refuses a second `af-backfill-*`/`af-audit-*` VM while one is running, and its own doc cites a
+  documented thundering-herd incident (2026-04-19 SFI: 10 concurrent VMs / 6h / ~4 useful writes) from sharing one API
+  key across concurrent VMs — respecting that, FIXTURE_STATS (from its `PROGRESS.json` checkpoint `2023-11-19`) and the
+  small TEAMS/STANDINGS residual (96+271) queue behind PLAYER_STATS, to be launched once it completes or shows a genuine
+  slowdown. Given PLAYER_STATS is only ~1,028 shards from done (97.6%+ resolved) and `--force` is omitted
+  (already-captured shards skip fast), expect it to converge quickly — monitoring on the normal ~15-20 min cadence now
+  that real work has resumed.
