@@ -219,19 +219,51 @@ cycle).
   `pyproject.toml`, essentially just a README). Deliberately excluded — out of scope for this fix, a separate decision
   about whether this repo should have semver-agent at all.
 
-## Verification — IN PROGRESS, blocked by an unrelated live incident
+## Verification
 
-- [ ] [DEVOPS] P1. Confirm a NEW tag mints on `main` for at least 2 repos in different staleness clusters
-      (batch-live-reconciliation-service=41d, instruments-service=3.5d) once the fix reaches `main`. **Blocked**: the
-      LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`, the ONLY path code reaches `main` under the `ldr_main`
-      promotion model) has 0 self-hosted `glue` runners registered as of this writing
-      (`gh api repos/IggyIkenna/unified-trading-pm/actions/runners` → `{"total_count": 0}`), preceded by roughly an hour
-      of consecutive `cancelled` promote-fleet runs. This is a recurrence of the ALREADY-TRACKED
-      `/plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (noted there, not re-investigated here — out
-      of scope for this task). All 21 repos' fixes are correctly landed on LDR and will promote automatically once the
-      runner pool recovers (the doc's history shows this class of incident usually self-heals within minutes to hours).
+- [x] ✅ [DEVOPS] P1. **Logic-level verification (DONE, real evidence, side-effect-free)**: the live GH-Actions
+      end-to-end run (actual `push:[main]` trigger → actual tag mint) is BLOCKED — see the next todo — so verified the
+      fix's actual DECISION LOGIC instead, against real repository state, using the EXACT rendered script content that
+      ships to each repo. Method: for each of the 2 target-cluster repos, created an isolated
+      `git worktree     --detach` pinned exactly at `origin/main` HEAD (no contamination of the primary checkout —
+      confirmed `git status --porcelain` clean before/after), overlaid the fixed `semver-agent.yml` (the exact content
+      shipped to LDR) on top, extracted the "Compute next semver via diff analysis" step's `run:` block verbatim,
+      substituted only the `${{ github.* }}`/`${{ secrets.GH_PAT }}` GH-Actions-context expressions with their real
+      values (actual HEAD SHA, real `GH_TOKEN`, etc. — the same substitution GH Actions itself performs), and ran it
+      unmodified up through the `Resolved bump category` line (truncated there — no `gh api POST .../statuses`, no
+      version-bump dispatch, no tag push: zero side effects, this only PROVES what BUMP would resolve to).
+      **Results**: - `instruments-service` (3.5d cluster, `origin/main`=`51f45049`): baseline `0.98.0` correctly
+      resolved (`git describe --tags`), 10 squash commits scanned (all `chore(promote)`, message-blind as expected),
+      differ correctly found `old_export_count==new_export_count==63` (`is_breaking: false`) — and the NEW fallback
+      fired:
+      `"No feat:/fix:/breaking commit labels visible (squash-promote) and no net-new export, but 49 file(s) under       instruments_service/ changed since baseline → defaulting to PATCH (internal change)."`
+      → **`Resolved bump category: patch`** (was `""`/skip before this fix — confirmed via the earlier live
+      `31170013899` run log in `## Root cause` above). - `batch-live-reconciliation-service` (41d cluster,
+      `origin/main`=`448af64`): baseline `0.49.0` correctly resolved, 97 squash commits scanned, differ found
+      `old_export_count==new_export_count==13` — fallback fired:
+      `"...but 4 file(s) under batch_live_reconciliation_service/ changed since baseline → defaulting to PATCH..."` →
+      **`Resolved bump category: patch`** (was `""`/skip — matches the `31165314543` live run log above and the real
+      `resolution_api.py`/`config.py`/`stage0_manifest_reason_check.py`/`stage5_results_writer.py` content changes
+      already identified in `## Root cause`). Both worktrees removed cleanly (`git worktree remove --force` +
+      `git worktree list` confirms only the pre-existing session's own worktrees remain); both primary checkouts
+      confirmed `git status --porcelain` clean afterward. This is real, reproducible verification of the fix's
+      correctness on real data — not a live GH-Actions run, but not theory either.
+- [ ] [DEVOPS] P1. **Live end-to-end verification (BLOCKED, external)**: confirm a NEW tag actually mints on `main` via
+      a real `push:[main]`-triggered GH Actions run. Blocked because the LDR→main fleet promoter
+      (`ldr-to-main-promote-fleet.yml`, the ONLY path code reaches `main` under the `ldr_main` promotion model) has 0
+      self-hosted `glue` runners registered — reconfirmed repeatedly 13:34–13:45 UTC
+      (`gh api repos/IggyIkenna/unified-trading-pm/actions/runners` → `{"total_count": 0, "runners": []}`, HTTP 200, not
+      an auth artifact), with a run of consecutive `cancelled` promote-fleet conclusions from 12:23–13:45 UTC (6
+      cancelled runs across `schedule` + `workflow_dispatch` events) and the newest dispatch (`31184137209`, 13:45:05
+      UTC) still `status=pending` with no runner picking it up. This is a live recurrence of the ALREADY-TRACKED
+      `/plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (Progress Log entry added there the same
+      session) — NOT investigated or fixed here, out of scope for this task (requires VM/SSM-level runner-pool
+      intervention owned by that doc). All 21 repos' fixes are correctly landed on LDR (verified SHAs above,
+      `git merge-base --is-ancestor` confirmed post-push for each) and will promote to `main` automatically — no further
+      action needed from this task — the instant the runner pool recovers.
 - [ ] [DEVOPS] P1. Once promoted, re-run `python3 scripts/cicd/reconcile_release_tags.py --dry-run` and confirm the
-      stall count drops from 13 (baseline re-measured 2026-08-07, matches the original alert almost exactly).
+      stall count drops from 13 (baseline re-measured 2026-08-07 13:45 UTC, still 13 — expected, nothing has reached
+      `main` yet; unblocked purely by the runner-pool recovery above, not by anything left to do in this task).
 - [ ] [DEVOPS] P2. Ship the fix to `market-tick-data-service` once its unrelated pre-existing test failure is fixed
       (tracked in the docs cited above — this todo is just the reminder to circle back, not a duplicate of that fix).
 
