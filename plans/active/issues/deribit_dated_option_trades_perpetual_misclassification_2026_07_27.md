@@ -135,9 +135,11 @@ remain exactly as they were before Script 1 ran, for every shard where the exclu
 1. **Root-cause the writer-side classification bug** — find the exact `market-tick-data-service` adapter/ingestion path
    that produces `instrument_type=perpetual` for a DERIBIT dated-option trade, and why multiple instruments' trades
    appear to land in one merged object instead of per-instrument objects.
-2. **Exhaustive census** — this doc's evidence is 5 sampled days, not a corpus-wide count. Someone should determine how
-   many days/how much of DERIBIT's history (2019-present) carries this pattern, and the total affected byte volume,
-   before scoping a fix.
+2. ✅ **Exhaustive census — DONE 2026-08-07** (see Progress Log and Evidence §2 below). Corpus-wide listing across all
+   `day=*` partitions: **28,158 option-shaped objects** across **497 distinct days**, totalling **≈988 GB**. Affected
+   period: **2024-03-08 to 2026-05-01** (not "2019-present" — no such objects exist before March 2024). Affected base
+   assets: AVAX_USDC, MATIC_USDC, TRX_USDC, XRP_USDC. Source:
+   `/plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md` todo 2.
 3. **Backfill/reclassify pass** — once the writer bug is fixed going forward, already-captured mis-classified objects
    need their own migration (split the merged file back into per-instrument `option/` objects, or reclassify+recanon in
    place) — likely mirroring the `--exclude-venues`-then-dedicated-pass pattern already used for HYPERLIQUID/ASTER in
@@ -149,6 +151,8 @@ remain exactly as they were before Script 1 ran, for every shard where the exclu
 
 ## Evidence / how to reproduce
 
+**§1 — Original 5-day samples (2026-07-27):**
+
 ```
 gcloud storage ls -l gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2025-12-01/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=perpetual/data_type=trades/** | sort -k1 -n -r | head -5
 ```
@@ -156,6 +160,40 @@ gcloud storage ls -l gs://market-data-tick-cefi-prd-central-element-323112/raw_t
 returns the 6.3GB `XRP_USDC-5DEC25-2D2-C.parquet` object as the largest file in that partition by a wide margin (next
 largest legitimate perpetual object in the same partition is <2MB). Repeat for any of the 5 days in the table above to
 reproduce.
+
+**§2 — Corpus-wide census (2026-08-07, `cefi_satellite_ao_dispatch_batch6_2026_08_02.md` todo 2):**
+
+```bash
+# List all objects in the DERIBIT perpetual/trades path across all day= partitions
+gcloud storage ls -l \
+  "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=*/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=perpetual/data_type=trades/**" \
+  > full_listing.txt
+
+# Filter for dated-option-shaped files (ending -C.parquet or -P.parquet)
+# then tally distinct days and total bytes
+awk '$3 ~ /-[CP]\.parquet$/' full_listing.txt | awk '
+  match($3, /day=([0-9]{4}-[0-9]{2}-[0-9]{2})/, a) { days[a[1]] = 1 }
+  { total += $1; count++ }
+  END { printf "Objects: %d  Days: %d  Bytes: %d (%.2f GB)\n", count, length(days), total, total/(1024^3) }
+'
+```
+
+Output:
+
+```
+Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
+```
+
+**Census key findings:**
+
+- **38,839** total objects in the `instrument_type=perpetual/data_type=trades/` path (all day partitions)
+- **28,158** (72.5%) are option-shaped (`-C.parquet` / `-P.parquet`) — misclassified in the perpetual partition
+- **497** distinct `day=` partitions affected
+- **Total affected byte volume: ~988 GB** (1,060,914,050,589 bytes)
+- **Affected date range: 2024-03-08 to 2026-05-01** — no option-shaped objects exist before March 2024
+- **Affected base assets:** AVAX_USDC, MATIC_USDC, TRX_USDC, XRP_USDC
+- **Year breakdown:** 2024: 7,816 objects | 2025: 17,248 objects | 2026: 3,094 objects
+- **Largest single object:** `day=2024-12-01/XRP_USDC-6DEC24-2D6-C.parquet` — 9.65 GB
 
 ## Todos
 
@@ -177,3 +215,10 @@ reproduce.
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; the
   sole todo still bundles an untraced writer root-cause, a corpus-wide census, and an open design fork on the
   remediation approach, none of which is worker-determinable alone.
+- **corpus-wide census 2026-08-07** (`cefi_satellite_ao_dispatch_batch6_2026_08_02.md` todo 2, slot 13): "What's NOT
+  done" item 2 is now complete. Full `gcloud storage ls -l` enumeration across all `day=*` partitions in the
+  `venue=DERIBIT/instrument_type=perpetual/data_type=trades/` path: **28,158 option-shaped objects** (72.5% of 38,839
+  total) across **497 distinct days**, totalling **≈988 GB** (1,060,914,050,589 bytes). Affected period corrected to
+  **2024-03-08 to 2026-05-01** — no option-shaped objects found before March 2024 despite "2019-present" range
+  enumerated. Affected base assets: AVAX_USDC, MATIC_USDC, TRX_USDC, XRP_USDC. Items 1/3/4 remain open. Evidence: see §2
+  above.
