@@ -178,12 +178,18 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
       pass (repos:-grep + content spot-check), not an exhaustive sweep. Mirror
       `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s methodology: grep the full corpus for
       `infrastructure`/`cross-cutting`/`meta`-tagged docs whose real content is deployment-ui/deployment-api/
-      unified-trading-system-ui-primary (candidates already spotted but deliberately deferred this session:
+      unified-trading-system-ui-primary (candidates already spotted but deliberately deferred:
       `monitoring_control_plane_master_2026_06_10.md` and `ui_build_warm_cache_2026_06_17.md` — both currently `ci`,
-      genuinely borderline CI-vs-UI scope, need a real per-doc read before retagging either way), retag with the same
-      evidence-cited convention, and re-run `check_ag_closeout_linkage.py` + `check_frontmatter_schema.py` after. Done
-      when: `/ag-closeout-audit ui`'s own Phase 0.3 discovery count stops changing between two consecutive runs a week
-      apart.
+      genuinely borderline CI-vs-UI scope; PLUS 2 more found 2026-08-07 by the `ag_closeout_auditor` run —
+      `issues/deployment_api_prod_disable_auth_true_2026_08_06.md` (currently `cross-cutting`; content read in full, is
+      100% deployment-api-specific, ownership only ambiguous because it also touches the shared
+      `unified-trading-library` config surface) and
+      `issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` (currently `defi`, corroborated by the
+      `defi`-tranche's own 2026-08-07 audit finding, not independently re-verified here) — all 4 need a real per-doc
+      read before retagging either way, see `issues/ag_closeout_audit_ui_parked_2026_08_07.md` for the 2 newest
+      candidates' evidence), retag with the same evidence-cited convention, and re-run `check_ag_closeout_linkage.py` +
+      `check_frontmatter_schema.py` after. Done when: `/ag-closeout-audit ui`'s own Phase 0.3 discovery count stops
+      changing between two consecutive runs a week apart.
 - [ ] [INFRA] P2. First `/ag-closeout-audit ui` + `/plan-reconcile ui` runs, scoped to this tranche — establishes the
       real orphan-projection baseline (this tracker's own todos above are a manual first pass, not a substitute for the
       skill's per-doc Phase 1 judgment) and drafts `ui_satellite_ao_dispatch_batch1_<date>.md` if warranted.
