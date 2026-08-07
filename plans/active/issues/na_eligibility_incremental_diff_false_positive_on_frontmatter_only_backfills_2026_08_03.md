@@ -136,16 +136,11 @@ second named exclusion added every time a new one ships.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Implement content-hash (or equivalent frontmatter-blind diff) verification in
-      `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`'s incremental-mode output (or document the alternative
-      narrower diff approach if hashing is rejected), per "Recommended fix" above. **Done when**: a doc whose only
-      post-marker change is a `context_scope:` backfill reports as unchanged (skippable) rather than in-scope, verified
-      against at least the 5 docs in the measurement table above; a unit/regression test pins the distinction so a
-      future frontmatter-only maintenance skill cannot silently reintroduce this class. (repo: unified-trading-pm)
-- [ ] [DOCS] P3. Update `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s Phase 0 section to instruct verifying an
-      "in scope via date-fallback" doc's actual diff (not just trusting the date comparison) until the SCRIPT todo above
-      lands — so a run that hasn't yet picked up the tooling fix still catches this class by hand, the way this run did.
-      **Done when**: the skill file's Phase 0 section states this explicitly. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P3. **RULED 2026-08-07 (operator, "less work and edits, still correct") — Option A: citation-closed,
+      tracked in `infra_satellite_ao_dispatch_batch7_2026_08_04.md` (already `status: active`, not draft as last
+      believed) — same content-hash/frontmatter-blind-diff fix verbatim, its own todo there.** Not duplicated here.
+- [x] ✅ [DOCS] P3. **Same ruling — Option A, citation-closed.** `infra_satellite_ao_dispatch_batch7_2026_08_04.md`
+      already carries the identical SKILL.md Phase-0-update todo verbatim. Not duplicated here.
 
 ## Plan-destination note
 

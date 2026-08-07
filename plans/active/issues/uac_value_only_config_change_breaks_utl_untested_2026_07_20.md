@@ -233,6 +233,12 @@ nothing: it is architecturally cached against exactly the input that changed.
       red SIT escalate to a background worker rather than Issue + Slack only) stays **explicitly unresolved by design**
       per that same doc (~lines 832-839) — "a genuine design call and should stay NA regardless of which option is
       picked" — so this item stays open for that clause only.
+
+      **RULED 2026-08-07 (operator, interactive session)**: YES — a red SIT should escalate to a background worker,
+              not just Issue + Slack. Design decision only; not yet scoped into an implementation todo (needs its own
+              bounded-outcome scoping — which worker/skill picks it up, what triggers the escalation, dedup against the
+              existing Issue+Slack path) before it's AO-dispatchable.
+
 - [x] ✅ [DEVOPS] P2. **EXTRACTED 2026-08-02** (same ruling, item 18) to
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md`. Correct the `full-workspace-sit` messaging/naming so
       `SIT_VALIDATED` cannot be read as "the resolved cross-repo combination was executed" — it is a surface check.

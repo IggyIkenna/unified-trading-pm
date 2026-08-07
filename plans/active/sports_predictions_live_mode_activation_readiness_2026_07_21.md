@@ -228,6 +228,14 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       (BLK-b969f5f0, not pursued) and a NEW blocker — the `odds-api-key` quota went exhausted 2026-08-02, 4 days after
       provisioning, root cause untracked as its own P1 finding). Checkbox stays open on (b) alone. (repo:
       market-tick-data-service, unified-api-contracts)
+
+      **UNBLOCKED 2026-08-07 (operator)**: the quota-exhaustion blocker is resolved — "now we have 15m credits on the
+              api key so all good unblocked." Root cause of the 4-days-to-exhaustion still not independently tracked as its
+              own finding (unchanged from the note above). **Checkbox NOT flipped** — this todo's own done-when additionally
+              requires "a fresh poll cycle succeeding against the live key in production, not just a direct-API-call
+              verification," which has not been independently confirmed here; the api_football second-source half also
+              remains STRUCK/not-pursued. Whoever next touches this doc should re-verify a live poll cycle before closing.
+
 - [ ] [INFRA] P3. **CORRECTED 2026-07-29 (was: "build `launch-mtds-live-sports.sh` +
       `launch-mdps-features-live-sports.sh`" — 2 new per-asset-group scripts from scratch)** — `launch-mtds-live.sh`
       already works for sports today: it's the SAME generic (not per-asset-group) launcher used across every asset
