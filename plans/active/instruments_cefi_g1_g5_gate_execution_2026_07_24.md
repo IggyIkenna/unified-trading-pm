@@ -757,3 +757,5 @@ Coverage is the verification lens — every number flows through `compute_honest
   consolidator-health-gated `MANIFEST_ALLOW_STALE_FALLBACK` revert) are still genuinely human/judgment/gated work.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate — the only change since
   the 2026-08-05 marker was a 2026-08-06 na-eligibility-audit verdict entry, no new content/targets.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — MANIFEST_ALLOW_STALE_FALLBACK revert already closed earlier
+  today by a concurrent session; 2 open items remain, both operator design/sign-off gates.

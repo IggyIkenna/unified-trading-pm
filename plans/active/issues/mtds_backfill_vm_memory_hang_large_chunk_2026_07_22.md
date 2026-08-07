@@ -638,3 +638,5 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   progress before its own OOM is durable; this is a performance/cost finding, not a data-loss one. Not investigated
   further this session (out of scope for an operational monitoring tick) — logged here as fresh, specific evidence for
   whoever picks up the still-open memray/tracemalloc profiling work below.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is the native-memory OOM root-cause investigation
+  (memray/tracemalloc profiling); AWS credits confirmed cleared today, work can proceed.

@@ -145,3 +145,5 @@ run already covers them under different instrument routing), not a mechanical da
   (signal-only, no `run_paper()`/ledger write; 4660 executions, last ran 2026-08-07T05:15Z). `paper-trading-engine`
   (ledger writer) inactive since 2026-06-21; zero GCE paper VMs. P1.2 ledger-pointer update NOT triggered (NO finding).
   `[DECISION] P2` `[OPERATOR]` item unchanged and remains open.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — the [DIAG] item was closed today by a concurrent session; the
+  sole remaining [DECISION] P2 [OPERATOR] item stays open, unchanged.

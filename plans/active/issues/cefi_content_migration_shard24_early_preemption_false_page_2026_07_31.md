@@ -198,3 +198,5 @@ someone checks.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **context-scout 2026-08-07 (batch11 independent re-verify)**: all 4 entries confirmed resolving on disk; content
   unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items, 1 operator question and 1 dependency-blocked
+  (test-pass confirmation half of item 1's done-when).

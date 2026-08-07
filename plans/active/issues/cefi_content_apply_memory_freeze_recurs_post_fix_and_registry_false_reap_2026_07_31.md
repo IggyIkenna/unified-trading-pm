@@ -248,3 +248,5 @@ depend on.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — items 1-2 are now `[x]`
   shipped (`unified-trading-library@89eabac2`, `deployment-service@4ee514e`), items 3-5 remain open corroborating data
   points; existing list still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 3 open items remain, all dependency-blocked corroborating data
+  points feeding the sibling shard-16 investigation.

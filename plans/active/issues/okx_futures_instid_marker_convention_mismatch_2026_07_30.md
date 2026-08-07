@@ -180,3 +180,5 @@ reasoning above.
   the load-bearing open gate. Today's independent `/ag-closeout-audit cefi` run reached convergent classification,
   drafting (not activating) the non-operator sub-items into batch6/batch8 — strong cross-validation that whole-doc NA
   pending operator ratification is correct.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — do NOT re-litigate: the 2026-08-07 batch8-finalize pass already
+  explicitly ruled to leave the [SCRIPT] P1 item open nominal-only; 3 genuine-work items remain.

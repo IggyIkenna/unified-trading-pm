@@ -620,3 +620,6 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries) — all 6 (2 codex SSOTs, the
   aggregated-sources + migration-cutover-critical-path + execution-log children, and the noncanonical-enumeration audit
   script) re-verified still resolving on disk.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — hub doc, 15 open items: 9 genuine build/investigation work, 3
+  operator-gated (Korea-equity vendor ask, 2 strategy-desk design calls), 3 dependency-blocked (Track 1 cutover + 2
+  Track 2 post-backfill gates in sibling fleet docs).

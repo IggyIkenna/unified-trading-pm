@@ -206,3 +206,5 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
   of 4 closure actions are still prod GCS `pipeline_mode` re-partition/merges against a live split-brain needing
   delete/move-safety gating, and the 4th (find+fix the writer) sequences before them via batch4 (still draft), so the
   doc stays NA as a unit.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — the writer-fix item was already closed today by a concurrent
+  session; 3 genuine-work items remain (prod GCS pipeline_mode re-partition/merges against a live split-brain).
