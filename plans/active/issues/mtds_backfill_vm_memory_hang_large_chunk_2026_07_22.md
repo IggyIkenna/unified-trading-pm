@@ -664,3 +664,14 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   follow-up narrow-range re-run to close, same pattern as the EPL 401-retry gap noted earlier in the sibling doc. No
   intervention taken — self-recovery is functioning correctly and killing/relaunching would lose the 8 completed
   leagues' progress within this chunk for no benefit.
+- **2026-08-07T23:47Z — separate, lower-severity finding on the same VM: `PROGRESS.json`'s GCS upload appears to have
+  stopped entirely after chunk 17, unrelated to the OOM pattern above.** `mtds-backfill-odds-smallchunk2-20260807`'s
+  `PROGRESS.json` last wrote a real value at `19:22:22Z` (chunk 17's completion). Chunks 18 (22:59:42Z), 19 (23:18:02Z),
+  20 (23:24:10Z), and 21 (23:30:17Z) have all since completed per `run.log`'s own `PROGRESS: chunk=N` lines — genuine,
+  verified progress — but `PROGRESS.json` in GCS never picked up any of them, still reading the stale chunk-17 value
+  4.5+ hours later. The VM itself is unambiguously healthy (log growing, manifest shards writing, heartbeats firing,
+  chunks 19-21 each cleared in ~6 min with zero new OOMs) — this looks like the `PROGRESS.json` upload step itself broke
+  or silently stopped being invoked for this specific run, not a VM hang. Not investigated further this tick
+  (monitoring-only impact, not data-loss) — worth a look at `mtds_chunk_loop.sh`'s `PROGRESS.json` upload call next time
+  someone touches that script, since a future session trusting `PROGRESS.json` alone (without the run.log cross-check
+  this doc's rule-1b guidance already recommends) would wrongly conclude this VM has been stuck since 19:22Z.
