@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [migration, asset-group, cefi, defi, hyperliquid, aster, archival]
 related:
   [
-    /plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
+    /plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
     /plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -44,7 +44,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
+    /plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md,
     /plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
