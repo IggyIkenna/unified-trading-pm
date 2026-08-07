@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
@@ -2235,8 +2235,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.98.1.dev17+ga0ba99912",
-      "published_at": "2026-08-07T21:34:15Z",
+      "version": "0.98.1.dev18+gdb7f7d3b4",
+      "published_at": "2026-08-07T23:03:48Z",
       "registry": "artifact-registry"
     }
   }
