@@ -786,3 +786,12 @@ are genuinely in scope for the operator's "no exceptions" directive.
   did NOT launch that backfill VM this tick — that doc's own history (5+ uncoordinated relaunches, preemptions, silent
   freezes, one contributing to the original quota-exhaustion incident) argued for a dedicated, attentive next tick
   rather than a rushed launch at the tail of an already-dense one.)
+- **2026-08-07T11:08Z** — PLAYER_STATS checkpoint climbing (2024-08-14 → 2024-10-06), chunk 18-19/26. footystats
+  backfill climbing (2021-10-09 → 2022-05-01). Both healthy. (Aside, all in
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s scope, not this campaign's: this tick delivered on
+  last tick's stated priority — launched the odds_api gap-backfill VM (`mtds-backfill-odds-1`, guard-verified
+  `0 running + 1 planned <= cap 1`, no `--force`) and the weather full backfill (`weather-backfill-20260807-120241`)
+  cleanly; both confirmed RUNNING. Also root-caused the bulk of api_football's 35,058 attempted_failed rows (78% is the
+  already-known 2026-08-06 quota exhaustion, self-resolving via this very campaign's active sweep). Full fleet as of
+  this tick: 4 VMs RUNNING (this campaign's `af-backfill`, `fs-backfill`, plus `mtds-backfill-odds-1` and
+  `weather-backfill` from the sibling doc) — no conflicts, no shared locks contended.)
