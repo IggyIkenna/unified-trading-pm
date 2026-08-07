@@ -186,41 +186,47 @@ Every item below is auto-fixable (no judgment call, evidence already gathered) b
 grace window (or, for task_template.md, is a corpus-wide normative-ref fix arguably outside one shard's remit) — next
 `plan_reconciler` prediction-tranche pass (or a human) can apply directly from this doc without re-deriving anything:
 
-1. **`prediction_consolidated_closeout_2026_07_18.md`** — apply every digest-count correction in the Contradictions
-   table above (prefer deleting the hardcoded counts in favor of "see child doc" per Phase 4's calibration note, OR
-   re-state each verified-current — either is fine, just re-verify at apply time since more time will have passed). Also
-   fix the stale "top item" citations (capture_incident, live_clob_depth_capture) and the misnamed phantom_reconciler
-   citation.
-2. **`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`** — item **4b-iii** ("merge shape #4 into canonical +
-   delete legacy objects", ~line 690) is real, scoped, bounded work — now UNBLOCKED (4b-i completed 2026-08-06) — but is
-   written as a bare bold bullet (`- **[DATA] P2. 4b-iii...`) with NO `- [ ]` checkbox, so it is invisible to
-   `regen_backlog_from_plan.py` and to every "is this doc fully done" check (incl. this run's own Phase-0 archive-
-   candidate scan, which would otherwise have flagged this doc as a 7/7-done archive candidate — it is NOT). Fix:
-   convert to a canonical `- [ ] [DATA] P2.` todo. **High priority** — until fixed, any archive-candidates sweep or
-   casual "is batch4 done?" read will wrongly conclude yes.
-3. **`prediction_satellite_ao_dispatch_batch7_2026_08_04.md`** — its one todo's first physical line breaks mid-bold-
-   span ("Check whether any real downstream consumer reads `available_at` for" / next line
-   "`data_type in {trades, book_snapshot_5}`..."), exactly `task_template.md`'s documented "finding L" failure mode.
-   **Confirmed live impact** (not just theoretical): `GET /api/backlog` shows the derived task
-   `prediction_satellite_ao_dispatch_batch7-001`'s own `brief` field IS truncated at the exact same point. Fix: close
-   the bold span on one physical line. (Checked the adjacent "zero-derived-parent-row" dispatch-pipeline concern a
-   hunter raised for this same task — REFUTED via the live backlog: the task has a normal derived row, correctly gated,
-   just queued waiting for a slot; no pipeline bug here.)
-4. **`plans/active/task_template.md`** §3 (lines 175-176) — add `DEFERRED-BY-DESIGN` as a 4th recognized
-   non-dispatchable marker, matching `agent-orchestrator/server/regen_backlog_from_plan.py` lines 1188-1196/1275-1280
-   and `check_plan_discipline.py`'s `_DEFERRED_BY_DESIGN_RE`. Corpus-wide (not prediction-specific) — this exact gap
-   caused a real mistake in this run (see Doc-drift above).
-5. **`plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md`** — grace-protected; per hunter E, two
-   NEWER runs of the same report already exist and are already archived
-   (`plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_04.md`, `..._2026_08_06.md`, both
-   `status: resolved`). This doc's own remaining content (Finding 1) is independently confirmed still genuinely open, so
-   it is not a stale/wrong doc — but it should probably get a `SUPERSEDED`-style pointer to its newer siblings (or be
-   folded/archived once its Finding 1 resolves) rather than silently reading as "the last run" to a cold reader. Not
-   urgent.
-6. **`plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`** todo 3 (P3, low priority) — names
-   "the 3 A3-relocated sibling docs" for an eventual archival check; 1 of the 3
-   (`prediction_perps_kalshi_polymarket_parked_2026_07_24.md`) is already archived. Harmless (a future worker will
-   discover this in seconds), just a minor scope-count staleness.
+- [ ] [DOC] P2. **`prediction_consolidated_closeout_2026_07_18.md`** — apply every digest-count correction in the
+      Contradictions table above (prefer deleting the hardcoded counts in favor of "see child doc" per Phase 4's
+      calibration note, OR re-state each verified-current — either is fine, just re-verify at apply time since more time
+      will have passed). Also fix the stale "top item" citations (capture_incident, live_clob_depth_capture) and the
+      misnamed phantom_reconciler citation. Blocked by: 12h grace window only (clears ~2026-08-07 ~10:00 UTC). **Done
+      when**: every count/citation in the Contradictions table above matches a fresh `grep -cE` re-verification.
+- [ ] [DOC] P1. **`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`** — item **4b-iii** ("merge shape #4 into
+      canonical + delete legacy objects", ~line 690) is real, scoped, bounded work — now UNBLOCKED (4b-i completed
+      2026-08-06) — but is written as a bare bold bullet (`- **[DATA] P2. 4b-iii...`) with NO `- [ ]` checkbox, so it is
+      invisible to `regen_backlog_from_plan.py` and to every "is this doc fully done" check (incl. this run's own
+      Phase-0 archive-candidate scan, which would otherwise have flagged this doc as a 7/7-done archive candidate — it
+      is NOT). Blocked by: 12h grace window only (clears ~2026-08-07 ~08:00 UTC). **Done when**: the bullet reads
+      `- [ ] [DATA] P2. 4b-iii ...` and is dispatchable. High priority — until fixed, any archive-candidates sweep or
+      casual "is batch4 done?" read will wrongly conclude yes.
+- [ ] [DOC] P2. **`prediction_satellite_ao_dispatch_batch7_2026_08_04.md`** — its one todo's first physical line breaks
+      mid-bold-span ("Check whether any real downstream consumer reads `available_at` for" / next line
+      "`data_type in {trades, book_snapshot_5}`..."), exactly `task_template.md`'s documented "finding L" failure mode.
+      Confirmed live impact (not just theoretical): `GET /api/backlog` shows the derived task
+      `prediction_satellite_ao_dispatch_batch7-001`'s own `brief` field IS truncated at the exact same point. Blocked
+      by: 12h grace window only (clears ~2026-08-07 ~14:30 UTC). **Done when**: the bold span closes on one physical
+      line. (The adjacent "zero-derived-parent-row" dispatch-pipeline concern a hunter raised for this same task was
+      REFUTED via the live backlog this run — the task has a normal derived row, correctly gated, just queued; no
+      pipeline bug, no further action needed on that half.)
+- [ ] [DOC] P2. **`plans/active/task_template.md`** §3 (lines 175-176) — add `DEFERRED-BY-DESIGN` as a 4th recognized
+      non-dispatchable marker, matching `agent-orchestrator/server/regen_backlog_from_plan.py` lines 1188-1196/1275-1280
+      and `check_plan_discipline.py`'s `_DEFERRED_BY_DESIGN_RE`. Corpus-wide (not prediction-specific) — this exact gap
+      caused a real mistake in this run (see Doc-drift above). Blocked by: 12h grace window only (clears ~2026-08-07
+      ~08:30 UTC). **Done when**: §3's marker list names all 4 real markers.
+- [ ] [DOC] P3. **`plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md`** — grace-protected; per
+      hunter E, two NEWER runs of the same report already exist and are already archived
+      (`plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_04.md`, `..._2026_08_06.md`, both
+      `status: resolved`). This doc's own remaining content (Finding 1) is independently confirmed still genuinely open,
+      so it is not a stale/wrong doc — but it should probably get a `SUPERSEDED`-style pointer to its newer siblings (or
+      be folded/archived once its Finding 1 resolves) rather than silently reading as "the last run" to a cold reader.
+      **Done when**: either a pointer banner is added, or the doc's Finding 1 resolves and it archives normally. Not
+      urgent.
+- [ ] [DOC] P3. **`plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`** todo 3 — names "the 3
+      A3-relocated sibling docs" for an eventual archival check; 1 of the 3
+      (`prediction_perps_kalshi_polymarket_parked_2026_07_24.md`) is already archived. Harmless (a future worker will
+      discover this in seconds during normal execution of that todo), just a minor scope-count staleness. **Done when**:
+      the todo's prose says "2 of 3 still active" or is corrected when todo 3 actually executes.
 
 ## Archive candidates (operator review)
 
