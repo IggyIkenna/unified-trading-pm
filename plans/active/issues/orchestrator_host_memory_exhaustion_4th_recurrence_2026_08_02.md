@@ -145,6 +145,16 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
 - [ ] [DIAG] P2. Best-effort: root-cause today's specific 49.3G/16G-swap peak more precisely if feasible (aggregate
       oversubscription vs. a specific process that had already exited/rotated out by ~14:40Z) -- would sharpen whether
       option 1 or 2 above is the better fix. Not gating.
+- [ ] [OPERATOR] P2. **Confirm or rule out kernel-level OOM-killer activity via `dmesg`/`journalctl -k` with root access
+      on the host.** Every read attempt so far has hit ring-buffer permission denial ("dmesg still permission-denied on
+      this host (inconclusive, not ruled out)" -- recurring across the ~18:08Z, ~18:40Z, and 2026-08-06 Progress Log
+      entries below); agent slots have no root on this box. Needs the operator to either (a) run
+      `sudo dmesg -T | grep -i "killed process\|oom"` + `sudo journalctl -k --since "2026-08-02" | grep -i oom` directly
+      on ip-172-31-5-118 (or via SSM) and report back what it shows, or (b) grant the orchestrator service account read
+      access to the kernel ring buffer (`sysctl kernel.dmesg_restrict=0`, or an ACL on `/dev/kmsg`) so future
+      recurrences self-diagnose without a human in the loop. This is the one open question that would distinguish
+      genuine kernel-level OOM kills from the resource-watchdog's own soft RSS-threshold kills -- still unresolved as of
+      2026-08-07.
 
 ## Progress Log
 
@@ -356,3 +366,7 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-07 (interactive session)**: the recurring "dmesg permission-denied, inconclusive" aside (logged as a
+  diagnostic footnote in multiple prior entries above, never tracked as actionable) was formalized into the
+  `[OPERATOR] P2` todo above. The exact commands were handed to the operator directly in-session; not yet run as of this
+  entry -- still open.
