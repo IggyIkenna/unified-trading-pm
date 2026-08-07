@@ -287,10 +287,25 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       patch-fallback logic on a real `push:[main]` was not forced this session (would need an actual promote cycle per
       repo); the fleet promoter is healthy (see Progress Log) so this will exercise naturally on each repo's next real
       promotion, not left as a gap requiring further action.
-- [ ] 6. [INFRA] P2. **Delete now-dead `notify-slack.yml` copies per todo 1's audit** — for every non-PM repo where todo
-      1 determined the ONLY local callers were files now migrated to `unified-trading-ci` (todos 4-5), delete that
-      repo's local `notify-slack.yml` copy; leave PM's untouched (44 internal-only consumers, confirmed unrelated).
-      Done-when: zero repos outside PM carry a `notify-slack.yml` copy with zero remaining local callers of it.
+- [x] ✅ 6. [INFRA] P2. **Delete now-dead `notify-slack.yml` copies — DONE 2026-08-07.** Re-verified per-repo rather
+      than relying solely on todo 1's now-stale audit (todo 1 predates today's semver-agent.yml migration, which is
+      exactly what made several repos' last local caller disappear) — grepped every fleet repo's `.github/workflows/`
+      for any remaining `uses: ./.github/workflows/notify-slack.yml` reference. Result: 22 of 23 fleet repos had zero
+      remaining local callers (their only callers were `main-backmerge-to-ldr.yml`/`staging-backmerge-to-ldr.yml`/
+      `semver-agent.yml`, all now thin stubs whose logic — including the `notify-slack.yml` call — moved into
+      `unified-trading-ci`). Deleted and independently verified via
+      `git show origin/live-defi-rollout:     .github/workflows/notify-slack.yml` (absent) in each: agent-orchestrator,
+      alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui,
+      e2e-testing, execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra,
+      instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
+      system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api,
+      unified-trading-library, unified-trading-system-ui. **`deployment-service` KEPT** — still has a live local caller,
+      `cloud-run-traffic-drift-check.yml`, unrelated to this migration. **PM's own copy KEPT** untouched (44
+      internal-only consumers, confirmed unrelated). Process note: `unified-api-contracts` and `unified-trading-library`
+      each hit quickmerge.sh's "Reset to origin" local-commit-discard bug during this todo too (on top of the 3 times
+      during todo 5) — same recovery (`git cherry-pick`) worked every time; root cause is ordinary high push-contention
+      from multiple concurrent sessions on the same repos' remotes (confirmed via `ps aux` showing other active Claude
+      Code tabs working the same repo set), not a defect in this todo's approach.
 - [ ] 7. [INFRA] P2. **Delete the 9 now-redundant template sources from
       `unified-trading-pm/scripts/workflow-templates/`** and remove their entries from `rollout-workflow-templates.sh`'s
       target list (header comment + the main rollout loop) — mirrors exactly how
