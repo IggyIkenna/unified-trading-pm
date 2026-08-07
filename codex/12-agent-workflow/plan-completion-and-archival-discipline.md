@@ -99,6 +99,36 @@ loophole:
   scoping, do not shrink a finished doc to appease it, and never delete content from a done plan just to get under a
   cap.
 
+### The line-cap does NOT block a small audit-marker append to an already-over-cap LIVE plan (RULED 2026-08-02)
+
+**A commit that only appends a small, dated audit-verdict marker to an already-over-cap `plans/active/*.md` is allowed
+through the gate, even when the doc has open todos.** This covers the recurring case where an audit skill (e.g.
+`/na-eligibility-audit`, `/plan-reconcile`, `/ag-closeout-audit`) writes its incremental-skip anchor — a short dated
+Progress Log line — onto the largest, most expensive-to-re-read docs in the corpus.
+
+**The failure this closes**: once a live, still-open-todo doc crossed 1000L, EVERY future commit to it — including a
+trivial 4-line audit marker with zero content change — was permanently blocked. The consequence is the exact opposite of
+what the incremental-skip mechanism is for: every future audit run re-reads all 1000+ lines of the most expensive docs
+from scratch, forever, defeating the optimization that marker exists to provide (confirmed empirically on 4 live docs in
+2026-08-02).
+
+Mechanics: a **narrow diff-shape check** in `check_line_caps.sh`'s SCOPED mode accepts the append and emits SOFT (not
+HARD). Four things keep this exception honest:
+
+- **The doc must already be over cap before this commit** — a doc newly crossing the cap in this commit is a real
+  regression and is blocked as before. The script verifies `(pre-commit line count) > PLAN_HARD_CAP`.
+- **Zero deleted lines** (`DELETED == 0` in `git diff --cached --numstat`). A rewrite or reformatting pass does not
+  qualify, even if the net change is small. This disqualifies a mandatory whole-file prettier reformat that happens to
+  touch the file as a side effect (if prettier introduces deletions, the exception does not fire — split the doc instead).
+- **At most 10 added lines** (`ADDED ≤ 10`). Keeps it genuinely marker-sized; a structural edit hiding as a "marker
+  append" cannot sneak through.
+- **No checkbox lines added** — none of the added lines may match `- [ ]` or `- [x]`. This can never be used to add new
+  tracked work to an over-cap doc; only a dated verdict/Progress-Log line qualifies.
+
+This exception is narrowly scoped. It does **not** cover checkbox closes, structural rewrites, or any net content
+additions beyond the marker itself. If you need to close stale checkboxes or restructure an over-cap live plan, split it
+under 1000L first, then apply the content changes normally.
+
 ## 2. Every follow-up is a canonical `- [ ]` todo — never prose
 
 A "next steps" paragraph, a Progress Log aside that only describes future work in prose, or a chat-summary bullet that

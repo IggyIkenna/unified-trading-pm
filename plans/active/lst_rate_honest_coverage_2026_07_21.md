@@ -163,7 +163,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 3 — Sample-download test on the `-test-` bucket (runtime verification, no prod write)
 
-- [ ] [MTDS] P3. **Retagged 2026-07-29: resolved-by-reference — live-verified this session
+- [x] ✅ [MTDS] P3. **Retagged 2026-07-29: resolved-by-reference — live-verified this session
       `gs://market-data-tick-defi-     test-central-element-323112` already exists (created 2025-11-12, actively used)
       and `unified-trading-sa` already holds `roles/storage.admin` + `roles/storage.objectAdmin` (confirmed via
       `gcloud`); the described blocker no longer holds.** Prove force + skip per surface — sample download for the AAVE
@@ -171,7 +171,10 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       manifest `captured`; skip-leg fires the freshness skip. Read the VM `run.log` as ground truth. This is the "tested
       for sample data downloads" requirement. ~~**BLOCKED-CREDENTIALS (2026-07-22)**: bucket doesn't exist / SA lacks
       access; needs operator bucket-create IAM or a fresh interactive gcloud login.~~ Not a data/day problem — operator
-      approved `--auto-day`.
+      approved `--auto-day`. — **dispatched to
+      `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md` (2026-08-02); `-test-`-bucket force+skip
+      verified 2026-08-05 (54 parquet files + 56 manifest captured rows); additionally superseded by Phase 5 production
+      proofs (force-write + skip-leg). Evidence: `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 2.**
 
 ## Phase 4 — Daily-download / MVP gate
 
