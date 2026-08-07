@@ -127,6 +127,17 @@ resolved (or you explicitly accept current evidence as sufficient), that gate st
 explicitly accept the current Phase-D evidence as sufficient and unblock the MVP backfill gate without fixing this.
 Other.
 
+**Option A APPLIED 2026-08-07 (operator, same session as items 1/2/4/6/9 above) — SSOT contradiction resolved, NOT the
+same as the Phase-D gate being unblocked yet.** The two `EXCHANGE_CODE_TO_NAME` registries were converged (naming-style
+pick + micro-contract distinguishing fix, `unified-api-contracts@00b2de546`) — full detail in
+`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4. **What is still NOT done**: the actual
+canonical-root→raw-Databento-symbol reverse-translation step the sampler needs to call CME/GLBX.MDP3 with the right
+instrument-ids — that's real code that doesn't exist yet (scoped in that doc's §4 recommendation: venue-scoped,
+CME/GLBX.MDP3-only, default to the standard non-micro contract code). The Phase-D MVP backfill readiness gate stays
+blocked until that's built, not automatically unblocked by the registry fix alone. Not scoped as its own todo yet — next
+natural step once the GCS/manifest migration todo (already recorded there) lands, since the reverse-translation design
+benefits from knowing the final converged values are actually live in data first.
+
 ## 4. Legacy-twin bucket deletes — still a hard stop, not re-raised, just confirming it's still parked correctly
 
 `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` — `BLOCKED-OPERATOR-DECISION`, Ikenna's migration sign-off
@@ -328,16 +339,20 @@ matches what already happened — no further action needed.
 - [x] ✅ [PM] P2. **Item 9 — CLOSED 2026-08-07, was already stale.** Already done 2026-07-26 via
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own re-check todo; both docs now archived. See the
       "STALE" note under item 9 above.
-- [ ] [PM] P2. **PARTIALLY RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — items 5, 7, 8
-      answered below; items 1, 2, 4, 6, 9 closed/corrected 2026-08-07 (see their own todos above, all found stale or
-      resting on an incorrect premise — none was actually a fresh open decision); item 3 remains genuinely open, not
-      asked this round.** - **Item 5 — RULED: Option A, flip all 8 draft tradfi AO plans to active** (not the
-      worker-recommended narrower Option B). Operator's literal instruction was unqualified "flip to active" — taking
-      the plain reading (all 8), not the smaller-blast-radius subset. **Flagging for visibility, not re-asking**: the
-      worker's own caution was that this lands 49 todos on the fleet at once alongside batch3's 9 — if that's not what
-      was intended, say so and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its finalize
-      per Option B instead. Propagation not yet executed (flip each of the 8 plans' `status: draft` → `active`
-      frontmatter) — ready to execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated
+- [x] ✅ [PM] P2. **Item 3 — Option A applied 2026-08-07 (SSOT resolved), gate NOT yet unblocked.** See the "Option A
+      APPLIED" note under item 3 above — registry converged (`unified-api-contracts@00b2de546`), but the sampler's
+      reverse-translation code itself still needs building before the Phase-D MVP backfill readiness gate actually
+      clears. Not fully closed — the remaining build step is real work, not a decision.
+- [ ] [PM] P2. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — items 5, 7, 8 answered below;
+      items 1, 2, 3, 4, 6, 9 all closed/corrected/applied 2026-08-07 (see their own todos above).** Of the 9 original
+      items, only item 6 still needs the operator's attention (a standing ruling this session's own [WORKER REC]
+      initially missed — see item 6's note above). - **Item 5 — RULED: Option A, flip all 8 draft tradfi AO plans to
+      active** (not the worker-recommended narrower Option B). Operator's literal instruction was unqualified "flip to
+      active" — taking the plain reading (all 8), not the smaller-blast-radius subset. **Flagging for visibility, not
+      re-asking**: the worker's own caution was that this lands 49 todos on the fleet at once alongside batch3's 9 — if
+      that's not what was intended, say so and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` +
+      its finalize per Option B instead. Propagation not yet executed (flip each of the 8 plans' `status: draft` →
+      `active` frontmatter) — ready to execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated
       safe-idempotent justification to `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard
       launch sub-item (cite `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns,
       name the launcher + a shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed —
