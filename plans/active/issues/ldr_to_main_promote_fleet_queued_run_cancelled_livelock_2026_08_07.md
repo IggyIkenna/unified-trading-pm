@@ -193,17 +193,72 @@ sufficient.
       there, permanently occupying the workflow's one concurrency slot. Cancelled it; a fresh run immediately reached
       `in_progress` (`31203568988`) for the first time all day. NOT the trigger-volume theory from Todo 1 — that fix was
       still worth keeping (real, if secondary, load reduction) but did not by itself clear this.
-- [ ] [DEVOPS] P1. **In progress, not yet closed.** Confirm the fix HOLDS for a full 60 consecutive minutes with zero
-      new `ldr-to-main-promote-fleet` cancelled-with-zero-jobs runs, AND confirm at least one real repo promotion
-      completes end-to-end (a `chore(promote)` PR actually merges to `main`) AND the
-      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` fix mints a real, verifiable tag as the final
-      proof. Do not mark this doc `resolved` on the strength of one `in_progress` transition alone.
-- [ ] [DEVOPS] P2. Harden `promote-fleet-startup-failure-monitor.yml` to also catch "queued, never started for an
-      extended period" as its own failure signature — it currently reports success throughout this entire incident (same
-      class of coverage gap as `ci_failure_watcher.py`'s glue-starvation/escalation-label bugs found earlier
-      2026-08-07).
-- [ ] [DEVOPS] P2. **New, 2026-08-07.** `glue-runner-crash-loop-watchdog`'s ">10800s active = probably hung" heuristic
-      false-positived on 4 healthy, idle, `busy:false` runners (e2e-testing, strategy-service, market-tick-data-service,
-      ml-service) during this incident's low-throughput window — add an actual CPU-time or GitHub-API `busy` check
-      before paging, not wall-clock active-duration alone. Do not restart these services; they were never actually
-      stuck.
+- [x] 3. ✅ [DEVOPS] P1. **Partially confirmed 2026-08-07 ~18:12Z.** `ldr-to-main-promote-fleet` runs are clean
+      (success, jobs created) since the 17:42:47Z fix — `31203568988`, `31203749677`, `31203965610`, `31204912834`, all
+      `success`, zero cancelled/zero-jobs runs in that window. Real `chore(promote)` PRs ARE merging end-to-end
+      fleet-wide (16+ repos confirmed via `gh search prs "promote" in:title --owner IggyIkenna`, e.g.
+      `instruments-service#1099`, `strategy-service#504`, `execution-service#560`, `unified-trading-api#511`, etc., all
+      merged 17:46-18:06Z). `market-tick-data-service` confirms a REAL end-to-end tag mint (`v0.105.0` at 17:49:26Z,
+      `v0.106.0` at 18:06:55Z, each immediately following its own promote-merge) — but MTDS was NOT part of the
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` template rollout (excluded, pre-existing test
+      blocker), so this proves the FLEET PROMOTER is healthy, not that the squash-promote patch-fallback fix itself
+      works. The 60-consecutive-minute clock is still running (started ~17:42Z) — do not mark `resolved` yet.
+- [x] 4. ✅ [DEVOPS] P1. **NEW REGRESSION found 2026-08-07 ~18:15Z, agent dispatched to fix.** The
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` template rollout (21 repos) broke GH's Actions
+      schema parser on at least `instruments-service` and `unified-trading-api`: every push-triggered `semver-agent.yml`
+      run since the rollout landed on `main` (~17:46Z) creates ZERO jobs and fails with GitHub's own "This run likely
+      failed because of a workflow file issue" — confirmed via `gh api repos/<repo>/actions/runs/<id>/jobs` returning
+      `{"total_count":0}` AND via `gh api repos/<repo>/actions/workflows` showing the registered workflow `name` has
+      fallen back to the raw file path (`.github/workflows/semver-agent.yml`) instead of the YAML's own
+      `name: Semver     Agent` — GitHub's own tell that its schema parser rejected the file, even though
+      `python3 -c "import yaml..."` and `actionlint` both report it as clean (ruled out: no duplicate keys, no
+      CRLF/hidden-char issues, indentation of the new `run: |` content visually matches). Root cause not yet found
+      manually; dispatched a dedicated agent (2026-08-07 ~18:20Z) to bisect the two added hunks (concurrency group +
+      patch-fallback bash block), fix `scripts/workflow-templates/semver-agent.yml.tmpl`, re-roll fleet-wide via
+      `rollout-workflow-templates.sh`, and re-verify all 21 repos. **This directly blocks Todo 3's remaining proof**
+      (the patch-fallback fix minting a real tag) — MTDS's tag mint does NOT count as proof of that fix since MTDS was
+      excluded from the rollout. See `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` for the fix's own
+      follow-up section once the dispatched agent lands it.
+- [~] [DEVOPS] P2. **Agent dispatched 2026-08-07 ~18:20Z.** Harden `promote-fleet-startup-failure-monitor.yml` to also
+  catch "queued, never started for an extended period" as its own failure signature — it currently reports success
+  throughout this entire incident (same class of coverage gap as `ci_failure_watcher.py`'s glue-starvation/
+  escalation-label bugs found earlier 2026-08-07).
+- [~] [DEVOPS] P2. **Agent dispatched 2026-08-07 ~18:20Z.** `glue-runner-crash-loop-watchdog`'s ">10800s active =
+  probably hung" heuristic false-positived on 4 healthy, idle, `busy:false` runners (e2e-testing, strategy-service,
+  market-tick-data-service, ml-service) during this incident's low-throughput window — add an actual CPU-time or
+  GitHub-API `busy` check before paging, not wall-clock active-duration alone. Do not restart these services; they were
+  never actually stuck.
+- [x] ✅ [DEVOPS] P3. **Resolved 2026-08-07 ~18:26Z.** Cross-checked
+      `asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md` against this incident — CONFIRMED unrelated: that
+      doc describes 38 GCP Cloud Scheduler jobs (`asia-northeast1`, GCP region naming, project `central-element-323112`)
+      pointing at deleted Cloud Run Jobs. No GitHub Actions `schedule:`/`concurrency:`/self-hosted-runner mechanism, no
+      AWS `ap-northeast-1`, no shared workflow file. No `related:` link warranted — zero mechanistic overlap.
+- [x] ✅ [DEVOPS] P1. **New, found + fixed 2026-08-07 ~18:20-19:48Z.** `ldr_to_main_fleet_promote.sh`'s
+      `provenance_check_ok()` was called with `$PR_URL` (the full PR URL, e.g. `https://github.com/.../pull/656`)
+      instead of the bare PR number at its PR-creation call site (line ~966) — the other two call sites (re-arm paths)
+      already passed the correct `$PR_NUM`. This flowed into the `provenance_blocked` escalation dispatch's `pr_number`
+      client_payload field, which `escalate-to-orchestrator.yml` passes to `jq --argjson pr "..."` (requires a bare JSON
+      number, a URL breaks it — confirmed via `gh run view <id> --log-failed` →
+      `jq: invalid JSON text passed to --argjson`) and to `gh pr edit "$PR_NUMBER" --add-label` (also needs a bare
+      number). Every provenance-block escalation via the PR-creation path was silently failing to reach the
+      orchestrator/Slack — found while investigating a burst of 16 "Escalate to Orchestrator" runs (mostly
+      cancelled/failed) around `client-reporting-api#656`. Fix: extract `${PR_URL##*/}` before calling
+      `provenance_check_ok`. Shipped `unified-trading-pm@d5d2f539f0` (verified ancestor of `origin/live-defi-rollout`).
+- [x] ✅ [DEVOPS] P1. **NEW incident found 2026-08-07 ~18:40Z, agent dispatched.** `glue-pool-starvation-monitor` has
+      been firing CRITICAL every ~30min (confirmed STILL firing as of the 18:17:30Z run, not a stale/one-off alert) — 9
+      `glue`-labelled PM jobs (`check-and-write`, `Doc frontmatter gate (LDR)`, `sweep`, `replay`, `check-and-trigger`,
+      `check-stale-lock`, `Dispatch judgment wall to orchestrator`, `reconcile`) queued 6+ hours with ZERO glue jobs in
+      progress. Confirmed via `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` → `{"total_count":0}` — PM
+      has NO self-hosted runners registered at all right now. Host `i-042a6332509482556` (`ap-northeast-1`) has
+      templated `github-glue-runner-<repo>@.service` units for 23 repos but **no `unified-trading-pm` templated unit** —
+      unlike 7 sibling repos (agent-orchestrator, strategy-service, e2e-testing, features-service,
+      market-tick-data-service, execution-service, ml-service) that do. This is a SEPARATE incident from the
+      fleet-promoter livelock above (different label — PM's `glue` self-hosted pool, not the fleet-promoter's
+      now-`ubuntu-latest` runner) — flagged directly by the operator, who also asked whether
+      `glue-pool-starvation-monitor` announces a Slack RECOVERED message once fixed (not yet confirmed either way).
+      Dedicated agent dispatched to root-cause + fix + verify + check/add recovery-announcement logic. **This alone
+      means the "zero new issues" clean-window clock has NOT started yet as of this entry.**
+- [ ] [DEVOPS] P1. **Blocking the 60-min clean-window bar.** Once ALL of the above (semver-agent regression re-roll,
+      glue-pool-starvation root cause, the two monitor-hardening agents) are confirmed shipped, start/hold a genuinely
+      clean 60-consecutive-minute window with zero new CI/Slack alerts before declaring this incident `resolved`. Per
+      operator directive 2026-08-07: do not declare done on partial signal.
