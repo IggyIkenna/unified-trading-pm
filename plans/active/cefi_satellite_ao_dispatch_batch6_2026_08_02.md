@@ -182,7 +182,7 @@ context_scope:
       (`market-tick-data-service@8a6bbc97`), and the source doc's `[SCRIPT] P2` checkbox is checked off citing the test
       file + a passing QG run. — market-tick-data-service@d964dce4 + source-doc checkbox flipped; QG green 2026-08-07.
 
-- [ ] [RESEARCH] P2. **Live-verify whether AAPL-USD (and other equity-underlying) OKX-FUTURES dated-future universe
+- [x] ✅ [RESEARCH] P2. **Live-verify whether AAPL-USD (and other equity-underlying) OKX-FUTURES dated-future universe
       entries are real, currently-listed OKX contracts.** Pull `/api/v5/public/instruments?instType=FUTURES` live (NOT
       ccxt's cached market list) and check whether `AAPL-USD@LIN-20310613`-shaped entries correspond to actual
       OKX-listed contracts or a synthetic/placeholder universe entry. This is the source doc's own Option-C
@@ -190,7 +190,9 @@ context_scope:
       Option A in production without it. Read-only research — no code change. Source:
       `issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` (the `[RESEARCH] P2` todo only). **Done
       when**: the live API pull result is recorded in the source doc with the exact response evidence, and its
-      `[RESEARCH] P2` checkbox is checked off citing this run.
+      `[RESEARCH] P2` checkbox is checked off citing this run. — **CONFIRMED 2026-08-07 (slot 15)**: entries are REAL
+      (ruleType=xperp live OKX contracts, `AAPL-USD_UM_XPERP-310613`); source doc `[RESEARCH] P2` flipped + secondary
+      xperp wire-format finding documented + new `[DATA] P1` (OPERATOR-gated) added to source doc.
 
 ## What was NOT drafted and why
 

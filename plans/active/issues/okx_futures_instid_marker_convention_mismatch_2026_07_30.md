@@ -140,15 +140,38 @@ reasoning above.
       (2026-07-31). No code change needed for sub-part (a). (b) MOOT — `[OPERATOR] P1` ratified Option A 2026-08-06, no
       Option-B revert will be performed. Checkbox left open per
       `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md` todo 1 (batch8 finalize reconciliation 2026-08-07).
-      **Remaining open in this doc: `[SCRIPT] P1` (nominally — both sub-parts resolved/moot as noted above),
-      `[RESEARCH] P2` (AAPL-USD live check)** — 2 items. `[SCRIPT] P2` closed below.
+      **Remaining open in this doc: `[SCRIPT] P1` (nominally — both sub-parts resolved/moot as noted above), `[DATA] P1`
+      (xperp wire-format fix — see new todo below)** — 2 items. `[SCRIPT] P2` and `[RESEARCH] P2` closed.
 - [x] ✅ [SCRIPT] P2. Add a live-vs-batch OKX-FUTURES instrument_id parity test (mirroring the existing
       BINANCE-FUTURES/KRAKEN-FUTURES parity tests) so this class of drift can't silently regress again.
       `market-tick-data-service/tests/unit/test_okx_futures_live_batch_id_parity.py` —
       market-tick-data-service@d964dce4; QG green 2026-08-07 (exit 0, 14 parity tests pass).
-- [ ] [RESEARCH] P2. Live-verify whether AAPL-USD (and any other equity-underlying) OKX-FUTURES dated-future universe
+- [x] ✅ [RESEARCH] P2. Live-verify whether AAPL-USD (and any other equity-underlying) OKX-FUTURES dated-future universe
       entries correspond to real, currently-listed OKX contracts (option C above) -- confirm via
-      /api/v5/public/instruments?instType=FUTURES, not ccxt's cached market list.
+      /api/v5/public/instruments?instType=FUTURES, not ccxt's cached market list. **CONFIRMED 2026-08-07 (slot 15,
+      cefi_satellite_ao_dispatch_batch6-006)**: AAPL-USD and all equity-underlying OKX-FUTURES entries ARE real live OKX
+      contracts (`ruleType=xperp`, "extended perpetual" 5-year dated futures). Live API
+      (`/api/v5/public/instruments?instType=FUTURES`, 2026-08-07): 139 instruments total — 35 `ruleType=normal`
+      (weekly/quarterly BTC/ETH) + 104 `ruleType=xperp` (wire format `BASE-USD_UM_XPERP-YYMMDD`). AAPL:
+      `AAPL-USD_UM_XPERP-310613`, state=live, ctType=linear, expiry=2031-06-13. 28 equity/ETF-like xperp confirmed: AAPL
+      AMD AMZN GOOGL META MSFT NVDA TSLA AAOI BILL COIN CRCL EWY HOOD INTC MRVL MSTR MU PLTR QCOM QQQ SAMSUNG SKHYNIX
+      SNDK SOFTBANK SOXL SPCX SPY (all state=live). ⚠️ **SECONDARY FINDING (data-correctness, OPERATOR NOTIFIED)**: all
+      104 xperp instruments use wire format `BASE-USD_UM_XPERP-YYMMDD` which `_OKX_FUTURES_WIRE_RE` (only matches
+      `_UM-YYMMDD` and plain inverse) and `_instrument_to_okx_futures_inst_id` do NOT handle — xperp wire ids fall
+      through to passthrough on inbound, and the reverse mapper produces `AAPL-USD_UM-310613` (a non-existent OKX
+      instId) for subscription. The just-shipped parity test (`market-tick-data-service@d964dce4`) also uses the wrong
+      `AAPL-USD_UM-310613` wire form for its AAPL parity case. All 104 xperp subscriptions silently fail at 0 rows. New
+      `[DATA] P1` todo added below.
+- [ ] [DATA] P1. **Add `_XPERP` infix support to OKX-FUTURES wire-format handling** (`market-tick-data-service`). In
+      `okx_futures_ws.py`: (1) extend `_OKX_FUTURES_WIRE_RE` to match `BASE-USD_UM_XPERP-YYMMDD` (add optional `_XPERP`
+      after `_UM`) and set infix group to linear; (2) update `_instrument_to_okx_futures_inst_id` to emit
+      `AAPL-USD_UM_XPERP-{yymmdd}` for xperp instruments (operator decision needed: how to distinguish xperp vs
+      non-xperp linear contracts from the canonical id alone — the canonical `@LIN-YYYYMMDD` shape is shared by
+      `BTC-USD_UM-260814` and `AAPL-USD_UM_XPERP-310613`; options: (a) lookup via instruments-service at subscribe time,
+      (b) encode `_XPERP` in the instFamily field, (c) use expiry heuristic: >3 years = xperp). **Also update**
+      `tests/unit/test_okx_futures_live_batch_id_parity.py` to add `AAPL-USD_UM_XPERP-310613` ↔
+      `OKX-FUTURES:FUTURE:AAPL-USD@LIN-20310613` parity. Source: `[RESEARCH] P2` above (2026-08-07). Needs `[OPERATOR]`
+      decision on (a)/(b)/(c) before implementation — tagging `[OPERATOR]` until decided.
 
 ## Progress Log (na-eligibility-audit)
 
@@ -184,3 +207,10 @@ reasoning above.
   pending operator ratification is correct.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — do NOT re-litigate: the 2026-08-07 batch8-finalize pass already
   explicitly ruled to leave the [SCRIPT] P1 item open nominal-only; 3 genuine-work items remain.
+- **research-worker 2026-08-07 (slot 15, cefi_satellite_ao_dispatch_batch6-006)**: `[RESEARCH] P2` DONE — OKX DOES list
+  AAPL-USD and other equity-underlying FUTURES as real contracts: 28 equity/ETF-like + 76 crypto = 104 `ruleType=xperp`
+  instruments, all `state=live`, wire format `BASE-USD_UM_XPERP-YYMMDD`, 5-year expiries (alias=`this_five_years`).
+  Universe NOT synthetic. ⚠️ DATA-CORRECTNESS FINDING: `_OKX_FUTURES_WIRE_RE` + `_instrument_to_okx_futures_inst_id` do
+  not handle `_XPERP` infix — 104/139 OKX-FUTURES contracts fall through to passthrough or generate a non-existent
+  subscribe instId; parity test (`market-tick-data-service@d964dce4`) tests wrong wire format for AAPL. New `[DATA] P1`
+  (needs `[OPERATOR]` decision on xperp-vs-linear disambiguation) added above.

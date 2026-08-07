@@ -883,3 +883,13 @@ are genuinely in scope for the operator's "no exceptions" directive.
   months of dates in one ~27 min tick) — **now only ~4.5 months from the full-range end, likely to finish within the
   next tick or two.** `mtds-backfill-odds-smallchunk2` chunk 18/451, one new EPL OOM self-recovered correctly (moved to
   LA_LIGA, 1/18 chunks — consistent with the established low, tolerable rate). All healthy.
+- **2026-08-07T21:17Z** — FIXTURE_STATS chunk 6/26 (2021-09-14). `mtds-backfill-odds-smallchunk2` chunk 18/451 (3 OOM
+  total, still self-recovering, still within tolerable range). Both healthy. (Aside, sibling-doc scope, major milestone:
+  SFI backfill genuinely COMPLETED and self-deleted — verified via re-census, not just exit_code=0, per rule 4a — found
+  the exact same structural pattern weather hit (`expected_unattempted` completely unmovable by any amount of
+  re-running, seeded by a historically-broader-scope writer than the current one). Ran the already-built, sanctioned
+  reclassification scripts for both weather and SFI (`type_weather_eu_no_provider_coverage_2026_06_27.py`,
+  `type_sfi_eu_no_provider_coverage_2026_06_27.py`), retyping a combined 410,665 rows from misleading
+  `expected_unattempted` to honest `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)` — safe, additive per-VM-shard
+  writes, pending the next consolidator merge cycle. Full detail in
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)

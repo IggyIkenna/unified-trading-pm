@@ -135,11 +135,13 @@ same day) before being drafted here.
       RUNNING 2026-08-07T18:09:29Z; genesis 2021-11-11 confirmed in first log entry; zero
       UPSTREAM_INSTRUMENTS_CATALOG_STALE; PIPELINE_HEARTBEATs firing; 60+ manifest entries at T+7min. Evidence in source
       doc Progress Log.
-- [ ] [CODE] P2. **Thread the real HTTP status through the direct `async_post_to_subgraph` callers**
+- [x] ✅ [CODE] P2. **Thread the real HTTP status through the direct `async_post_to_subgraph` callers**
       (`dex_swaps_handler.py`, `liquidations_handler.py` — re-verify current file state at pickup), establishing the
       widen-return-signature pattern other subgraph-HTTP helpers can reuse. Repo: market-tick-data-service. Source:
       `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (item 4). Done when: both callers return the
-      real HTTP status, existing tests pass, and `quality-gates.sh --no-fix` is green.
+      real HTTP status, existing tests pass, and `quality-gates.sh --no-fix` is green. —
+      market-tick-data-service@b16c9f69 · QG green (233s) · async_post_to_subgraph returns tuple[dict, int]; dex_swaps +
+      liquidations callers thread http_status through all return paths; tests assert status propagation.
 - [x] ✅ [CODE] P1. **Ship the operator-approved BLAZESTAKE known-outage exemption** in `dependency_checker.py`'s
       `_KNOWN_OUTAGE_VENUES_BY_SVC` for `market-tick-data-service-lst-rates` (confirmed NOT yet in the live code). Then
       relaunch the DEFI:onchain benchmark VM (`launch-features-vm.sh FAMILY=onchain ASSET_GROUP=DEFI`, target date

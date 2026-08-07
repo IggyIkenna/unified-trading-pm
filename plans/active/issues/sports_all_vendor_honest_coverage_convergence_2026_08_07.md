@@ -219,6 +219,16 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       extends. Documents the 5-step procedure (per-source pivot, error_reason sub-classification, timestamp liveness
       check, never-trust-exit_code-alone, mid-run tarball-staleness check) with the concrete gotchas measured this
       session, cross-linked back to this doc's Progress Log for full worked examples.
+- [ ] [SCRIPT] P1. **Confirm the SFI + weather `expected_unattempted`→`empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`
+      reclassifications (410,665 rows combined, applied 2026-08-07T21:16Z as per-VM shards
+      `type-sfi-eu-1786133580.parquet` / `type-weather-eu-1786133699.parquet`) actually landed in the canonical index**
+      once the manifest consolidator's next cycle runs — re-census both sources, confirm `expected_unattempted` drops to
+      ~0 for both (modulo the small residual `attempted_failed` clusters, tracked separately).
+- [ ] [SCRIPT] P2. **Check whether `type_understat_eu_no_provider_coverage.py` and any equivalent for footystats/
+      transfermarkt/odds_api are needed** — the same "narrower current write-scope vs broader historically-seeded
+      `expected_unattempted`" pattern hit weather AND SFI independently; worth a quick dry-run sweep across the
+      remaining sources to check whether it's a systemic issue across more vendors than currently known, now that the
+      fix pattern + tooling are proven to work.
 
 ## Progress Log
 
@@ -457,3 +467,24 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   code as of commit `52d6da40`) is running and will naturally re-attempt all 206 rows when its sweep reaches EPL's date
   ranges — consistent with the todo's own rationale. VM confirmed active at 20:00Z (chunk 18/451, EREDIVISIE 2020-08,
   memory oscillating 5-71%, no monotonic growth).
+- **2026-08-07T21:16Z — MILESTONE: SFI genuinely converged (verified via re-census, rule 4a), AND both weather's + SFI's
+  `expected_unattempted` backlogs (410,665 rows combined) are now correctly reclassified.**
+  `sfi-backfill-20260807-123519` reached `last_completed_date=2026-08-07` (full range end), `exit_code=0`, self-deleted.
+  Re-census showed the SAME pattern weather hit: `expected_unattempted` completely unchanged (205,363→205,363, zero
+  movement) plus 80 new `attempted_failed` rows — exit_code=0 again did NOT mean the gap resolved (rule 4a validated a
+  second time). Root-cause verification: **zero overlap** between SFI's 33 captured leagues (≈ its 34-league
+  Prediction-tier write scope) and the 350 leagues comprising the stuck backlog — those 205,363 rows were seeded
+  historically by a broader-scope run and are structurally unreachable by the current narrower-scope writer, no matter
+  how many times it's re-run. Exact same pattern as weather (already diagnosed by another worker, "slot 7," but its own
+  remediation script had never actually been RUN). Found the sanctioned, already-built, precedent-tested fix for both:
+  `scripts/type_sfi_eu_no_provider_coverage_2026_06_27.py` and
+  `scripts/type_weather_eu_no_provider_coverage_2026_06_27.py` (dated 2026-06-27, correctness-fixed 2026-07-08 to
+  exclude genuinely-covered leagues from the retype) — both reclassify `expected_unattempted` + blank-reason +
+  non-covered-league rows to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`, writing ONLY an additive per-VM shard
+  (never touching the canonical index directly — the consolidator's last-write-wins merge picks up the retype next
+  cycle, so this is much lower-risk than a canonical-index rewrite). Ran both dry-run then `--apply`: SFI 205,363 rows
+  retyped (`type-sfi-eu-1786133580.parquet`), weather 205,302 rows retyped (`type-weather-eu-1786133699.parquet`).
+  **Pending the next manifest-consolidator cycle to actually land in the canonical index** — the live
+  `expected_unattempted` count will still read the old figures until that merge completes; re-verify next tick. The 80
+  new SFI `attempted_failed` rows and weather's pre-existing 16,241 (already root-caused + code-fixed earlier this
+  session) are separate, smaller residuals, not touched by this reclassification.
