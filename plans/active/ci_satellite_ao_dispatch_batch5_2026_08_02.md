@@ -215,8 +215,21 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     Deferred **D4-19**, whose only stated gate was "re-triage once the doc's own Progress Log shows the incident
     resolved" — that doc is now `status: resolved` (P0 cleared 2026-07-31), so the gate is met.
 
-- [ ] [BACKEND] P3. **Make the `quality-gates-v2` CI-status dispatch outage-aware.** The workflow's "Record CI status"
-      step (`if: always()`) still dispatches a normal FAILING status when the run was a 0-job billing/outage kill
+- [x] ✅ [BACKEND] P3. **DONE-ELSEWHERE 2026-08-07 (slot-10,
+      `feat(ci): add billing-wall / startup_failure guard to     quality-gates-v2`).** Verification confirmed this
+      shipped before dispatch. `unified-trading-ci@0afd236` (2026-08-07 04:38Z, verified ancestor of
+      `origin/live-defi-rollout`): the "Record CI status" step in `python-quality-gates-v2.yml` now detects the
+      infrastructure-kill pattern (`CONTENT_GATE_RESULT=failure` AND `SLICES_RESULT=failure` → `BILLING_KILL=true`) and
+      skips the `ci-status-update` FAILING dispatch, emitting only a `::notice::` annotation. This is the suppression
+      the 2026-06-11 P1 asked for and the `D4-19`-gated batch5 triage was checking for. Verified the implementation is
+      byte-correct against the done-definition: a billing-wall run (both-failed) exits before the dispatch; a genuine
+      failing run (content-gate succeeds / slices fails) still dispatches `STATUS=FAILING`. The 2026-06-11 archived
+      doc's `[ ] [CICD] P1. Outage-aware v2 status dispatch` item is effectively delivered — the implementation lives in
+      `unified-trading-ci` rather than as a PM template edit (the reusable workflow was extracted to
+      `unified-trading-ci` per `shared_ci_workflow_repo_extraction_2026_08_06.md`, so the "edit
+      `quality-gates-v2.yml.tmpl` + rollout" instruction no longer applies; the single source file is the right place).
+      **Make the `quality-gates-v2` CI-status dispatch outage-aware.** The workflow's "Record CI status" step
+      (`if: always()`) still dispatches a normal FAILING status when the run was a 0-job billing/outage kill
       (`jobs: []`, `conclusion: startup_failure`) — so an account-level wall no worker can fix generates
       `ldr_qg_failure` escalation spam fleet-wide, burning escalation-worker dispatches. **Step 1 is a verification, not
       an assumption**: the source doc attributes this to a still-open P1 in the archived 2026-06-11 precedent doc —
