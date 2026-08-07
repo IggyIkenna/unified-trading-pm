@@ -915,3 +915,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   (~2h40m now) but confirmed still genuinely progressing — 22 distinct leagues attempted (up from 18), currently
   `J1_LEAGUE`, RSS cycling normally, 12 total OOMs (up from 10, still zero repeats). Watching; would escalate if still
   stuck on chunk 18 at the next tick. Full detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
+- **2026-08-07T22:21Z** — FIXTURE_STATS +49 days (`last_completed_date=2022-04-06`, fresh `22:20:25Z`), still
+  accelerating. odds smallchunk2 STILL on chunk 18/451 (~3h) — followed up on the flagged outlier: 25 distinct leagues
+  now attempted (up from 22, zero repeats, spanning Europe/S.America/Asia/N.America/Oceania), 13 OOMs (+1, LIGA_MX).
+  Concluded this is a genuinely large Prediction-tier roster hitting its first true global season-opener week
+  simultaneously (2020-08-30→2020-09-03), not malfunction — values keep climbing every tick (rule 1b), no intervention.
+  Full detail + league list: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`949f0c59bf`.
