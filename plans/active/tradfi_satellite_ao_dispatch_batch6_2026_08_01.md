@@ -741,6 +741,37 @@ Fleet drain: 2→2→3→19→35→38→38 (polls 1-7, run 1). New wave at ~21:0
   `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way. Do NOT use
   TaskList — always "No tasks found" for background Bash tasks.
 
+### 2026-08-07T21:38Z — slot 12 — rapid-kill loop run 12; fleet stable at 38 VMs; pre-compact
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Fleet at 38 VMs** — new campaign wave arrived at ~21:06Z (jumped 3→19→35→38),
+lock multi-hour. Harness rapid-kill pattern has been active throughout this session: each watcher re-arm (runs 1–12)
+killed after 1 poll (~seconds–minutes). Coverage maintained — each poll confirms 38 VMs. No draining observed since the
+new wave.
+
+**Session runs (all run_in_background:true, NO `&` inside):**
+
+- Runs 1–11: watcher killed after 1 poll each (be00zdpbw through bucm7h3tg). Fleet confirmed 38 each time.
+- Run 12: watcher `bba37joyr`, heartbeat `b6xpigmh5` (both armed 21:38Z).
+
+**Pre-compact ritual (2026-08-07T21:38Z, autonomous mode):**
+
+- Step 1: git clean, ahead=0; scratchpad: `es_opt_watcher_slot12.sh` + `heartbeat.sh` + `es_opt_watcher.log` +
+  `manifest_query.py` — all regenerable from committed `es-opt-backfill-watcher.sh`; no dangling refs from this
+  session's scratchpad in committed docs; no secrets.
+- Step 2: Nothing to promote — watcher SSOT is committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`.
+- Step 3: No new todos. Rapid-kill pattern documented in prior entries.
+- Step 4: Nothing to flip — todo #2 still `[ ]`.
+- Step 5: "Cannot be done yet" — fleet at 38 VMs, new campaign wave, singleton held.
+- Step 6: Fleet jumped 3→38 in one interval (~5 min) — the continuous-launch pattern can add 35+ VMs in a single cron
+  tick; do not extrapolate drain rate from a low count.
+- Step 7: This commit IS the update.
+- Step 8 verdict: **Safe to compact: YES.** Watcher run 12 active (`bba37joyr`). Heartbeat `b6xpigmh5`. Fleet at 38.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, immediately re-arm
+  watcher: sed-patch `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (SLOT_ID=12, SLOT_TABS=.tabs/12,
+  PYTHON=.tabs/12/market-tick-data-service/.venv/bin/python) → scratchpad, then `run_in_background:true` with NO `&`
+  inside. Re-arm heartbeat same way. Do NOT use TaskList.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
