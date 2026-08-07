@@ -724,6 +724,21 @@ NASDAQ/NYSE/CME continuous-launch pattern where the last N shards are slow.
   SLOT_ID/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm
   `watcher/heartbeat.sh` same way. Fleet at 4 — may break loose soon or may keep replenishing.
 
+### 2026-08-07T20:51Z — slot 12 — watcher re-armed (be00zdpbw)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Fleet at boot: 2 VMs** (met-met-2023, met-met-2025 — draining from 4-VM
+stable of session 16). Prior watcher `brxkxvoh5` dead at boot (no task found). Operator keep-waiting decision unchanged.
+
+Re-armed: watcher `be00zdpbw` (started 20:51:28Z, poll 1 = **2 VMs**). Slot-12 copy at
+`<scratchpad>/watcher/es_opt_watcher_slot12.sh` (sed-patch of committed `es-opt-backfill-watcher.sh` with SLOT_ID=12,
+SLOT_TABS=.tabs/12). Heartbeat `bip8ges53` (20-min intervals). Both `run_in_background:true`, NO `&` inside.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `be00zdpbw.output`
+  via TaskOutput non-blocking. (3) If watcher dead: re-arm from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) +
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way. Do NOT use
+  TaskList — always "No tasks found" for background Bash tasks.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
