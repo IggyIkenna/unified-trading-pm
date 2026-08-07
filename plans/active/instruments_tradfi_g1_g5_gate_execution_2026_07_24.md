@@ -344,9 +344,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
           `expiry`/`delisted_at` for dated instruments. QG-green, 54 roll-up tests pass. NOTE: tradfi prod-regen verify
           rides tradfi G3 (catalogue-regen-tradfi is operator-PAUSED pending tradfi G1 retirement/sign-off — do NOT
           regen it before the §9 retirement purge or it re-bakes the ICE/OPRA pollutants).
-    - [ ] [INFRA] P0. **G1 retirement (§8, 4 legs) — OPERATOR-CONFIRM before purge** — ICE (whole venue, 16,158) · CBOE
-          OPRA OPTION (33,258) · CBOE VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class
-          SPOT_PAIR (318) · cefi-singles. Pause consolidator→snapshot→filter→resume; verify gone all 4 legs.
+    - [ ] [INFRA] P0. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — GO AHEAD.** G1
+          retirement (§8, 4 legs), approved to purge — ICE (whole venue, 16,158) · CBOE OPRA OPTION (33,258) · CBOE
+          VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class SPOT_PAIR (318) ·
+          cefi-singles. Execute: pause consolidator→snapshot→filter→resume; verify gone all 4 legs. Ready to execute.
     - [x] ✅ [SCRIPT] P1. **G1.a.2 §7.1 follow-up — massive.py (the OPRA/I:VIX pollution source)** — DONE
           instruments-service@1198549 (LDR). massive KEPT as the tradfi FALLBACK (operator 2026-06-25); endpoint
           `https://api.polygon.io` VERIFIED correct (Polygon.io→Massive 2025-10-30 rebrand kept the host). Removed the
@@ -589,9 +590,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       full re-fetch — filed as a NEW P2 finding (§ "Deferred work after 2026-07-26") for a dedicated future backfill
       plan; a full re-fetch of that range is a real campaign, not "small sample" scope, and was not attempted here.
       Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [SCRIPT] P3. **OPTIONAL physical-GCS cleanup of old ICE-Databento instrument parquets** once tombstone
-      reconciliation confirms 0 consumers (twin-verify; operator-gated delete, never blind). Repo: deployment-service +
-      instruments-service. (MIGRATED FROM: same.)
+- [ ] [SCRIPT] P3. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — GO AHEAD**, conditional on
+      the doc's own pre-existing gate: physical-GCS cleanup of old ICE-Databento instrument parquets, approved once
+      tombstone reconciliation confirms 0 consumers (twin-verify still required before delete — operator approval covers
+      the delete itself, not a waiver of the twin-verify safety check). Repo: deployment-service + instruments-service.
+      (MIGRATED FROM: same.)
 
 ### G1.f.2 post-retirement cleanup (2026-06-26)
 

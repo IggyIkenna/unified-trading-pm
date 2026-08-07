@@ -110,18 +110,16 @@ after each backfill VM run and recurring patterns promoted to first-class groups
       regression: tests/smoke/ + data-testid="prediction-hierarchical-drilldown" verifiable with dev server. Code:
       isPredictionCqgAxis(catData) gate inserts HierarchicalShardDrilldown in TURBO per-catName loop, after chains
       section (line 4009), assetGroup=catName.toLowerCase().
-- [ ] [VERIFY][UI] P0. After the writer + UI ship: re-walk the deployment-ui prediction panel; POLYMARKET drill-down
-      renders as
-      `(venue=POLYMARKET, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)` per
-      CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
-      groups. `[UI]` — playwright gate before ticking. > **[BLOCKED-PLAYWRIGHT 2026-06-24 slot-21 — synced
-      2026-07-11]**: PREREQUISITE (3-level hierarchy above) IS now ticked — deployment-ui@319075e, see the P0 item above
-      (was: "not yet ticked"); condition (1) code-ships is satisfied, but pw:L2 ✓ on a UI-capable slot is still
-      outstanding per that same item's own
-      `[BLOCKED-PLAYWRIGHT] fleet VM has no dev server; pw:L2 gate pending UI-capable slot` note. This VERIFY still
-      cannot run until: pw:L2 ✓ on a UI-capable slot for the 3-level hierarchy item; then re-walk confirms rendering. >
-      Assign to a local/laptop slot with a running deployment-ui dev server. Synced per
-      plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 239).
+- [x] ✅ [VERIFY][UI] P0. **DONE 2026-08-07 — the "no UI-capable slot" premise was wrong; this interactive session IS
+      one.** The `[BLOCKED-PLAYWRIGHT]` framing assumed fleet VMs (no dev server) — this session has full Node/npm + a
+      working local checkout, so ran it directly instead of waiting for a slot assignment. `pw:L2 ✓`:
+      `cd deployment-ui && npx playwright test --project=chromium tests/smoke/prediction_v9_breakdown.spec.ts` — **5/5
+      passed (9.0s)**, self-managed mock dev server (per-slot port derivation, no manual setup needed). Regression spec
+      directly covers this todo's acceptance criteria: "OTHER CQG bucket never renders out-of-scope badge" (test 3) +
+      "OTHER CQG bucket span carries catch-all hover tooltip" (test 4) + "PREDICTION drill-down shape exposes
+      canonical_question_group axis via shard-axis-matrix" (test 5). Re-walk confirmed via the passing spec, not a
+      manual click-through — same evidentiary bar. No code changes needed; this was a pure environment-access gap, now
+      closed.
 - [x] ✅ [VERIFY] P0. Predictions timeline / panel VERIFY gate: Phase-1 timeline check + after-Phase-1 re-walk that
       POLYMARKET no longer renders "out of scope" in deployment-ui (the badge driven by UAC
       `VENUE_DATA_TYPE_CAPABILITIES` vs the live manifest data_type). This is the operator-facing acceptance gate for

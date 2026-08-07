@@ -217,9 +217,15 @@ Unchanged from batch6 (not re-asked): `issues/tradfi_chain_bundle_sampler_root_m
 `EXCHANGE_CODE_TO_NAME` registry is authoritative);
 `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s `[DESIGN] P2` on whether
 real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted;
-`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s residual catalogue-script `--apply` reapplication
-(91 CBOE + 312 DBEQ rows); the entirety of `issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md` (item 3
-is the same `EXCHANGE_CODE_TO_NAME` gate above).
+~~`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s residual catalogue-script `--apply` reapplication
+(91 CBOE + 312 DBEQ rows)~~ — **STALE, corrected 2026-08-07 (operator ruling, via consolidated NA-blocker-digest audit):
+"go ahead" is the confirmed-current answer.** This doc's own listing here was written ~3h BEFORE that ruling landed in
+the source doc (`canonical_id_p1...`'s own todo already reads "RULED 2026-08-06: go-ahead to run `--apply`" and
+correctly self-flagged this exact staleness) — this doc's copy just never got updated. No longer operator-gated; the
+`--apply` is cleared to run. See `plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md` item 1/6 (now
+closed) for the full contradiction trace; the entirety of
+`issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md` (item 3 is the same `EXCHANGE_CODE_TO_NAME` gate
+above).
 
 Newly found this pass:
 

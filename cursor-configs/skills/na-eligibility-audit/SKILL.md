@@ -35,6 +35,17 @@ evidenced judgment work (majority), stale-but-harmless duplication, and genuinel
 regardless of `assigned_vm` (`/plan-reconcile`'s corpus, though its Phase 2 "done-but-unchecked" bar is the SAME
 evidence bar this skill uses for a KEEP-NA-STALE verdict).
 
+**Why RECLASSIFY volume is inherently low per run (2026-08-07 clarification, so this doesn't get re-derived from
+scratch)**: `assigned_vm` flips at the WHOLE-DOC level, not per-todo, and the bar is that the doc's ENTIRE remaining
+scope must be bounded/deterministic. A doc with 15 open todos where one item's operator question just got answered does
+NOT become RECLASSIFY-eligible — the other 14 are usually still real judgment/design work, so the doc correctly stays NA
+(confirmed live: a full 10-tranche, 373-doc run on 2026-08-07 found only 4 genuine whole-doc RECLASSIFYs). **This is not
+the corpus's main unblock-to-AO pathway.** `/ag-closeout-audit`'s satellite-batch extraction
+(`<topic>_satellite_ao_dispatch_batchN.md`) is — it pulls just the specific newly-actionable item(s) out of an NA-heavy
+doc into their own small `assigned_vm: planning` doc without needing the WHOLE source doc to qualify. If a session's
+real question is "why isn't previously-unblocked work reaching AO", check satellite-batch cadence for that topic before
+assuming this skill's RECLASSIFY rate is the bottleneck.
+
 ## The verdict rubric (unchanged from the proven plan — do not re-derive a new one)
 
 For each `assigned_vm: NA`, `status` ∈ `{active, open}` doc with ≥1 open todo:
@@ -44,6 +55,12 @@ For each `assigned_vm: NA`, `status` ∈ `{active, open}` doc with ≥1 open tod
    future incremental run can skip it (see Phase 0). No other action.
 2. **KEEP-NA, stale items** — some open checkboxes are superseded/decommissioned/already-done-elsewhere. Close those
    specific items with evidence (same HARD-evidence bar as `/plan-reconcile` Phase 2); doc stays NA otherwise.
+   **Distinct sub-case (2026-08-07 finding, do not conflate with ordinary staleness)**: an item can have full HARD
+   evidence of being shipped yet be genuinely un-flippable right now because the doc itself sits over its
+   `/plan-reconcile` Phase 5 line-cap and the split-then-close sequence hasn't executed — the work is real and done, the
+   checkbox mechanics are just gated. Do not classify this as GENUINE_WORK-remaining or as ordinary staleness; report it
+   as a `/plan-reconcile` line-cap-split finding instead (that skill's Phase 5 owns the split), and leave the checkbox
+   open with a note pointing at the blocking line-cap rather than closing it out of sequence.
 3. **KEEP-NA-STALE (already-duplicated)** — the doc's own remaining open checkboxes describe work an active
    `assigned_vm: planning` doc already extracted verbatim (checkbox simply never got flipped to cite the extraction).
    Fix the citation, do NOT reclassify — flipping `assigned_vm` here would dispatch a duplicate.
@@ -147,6 +164,20 @@ its tranche END TO END (not a checkbox count — this corpus has confirmed traps
 RE-TRIAGE section overriding an earlier checkmark, a `DECOMMISSIONED` item deliberately left unchecked as "ruled-out,
 not completed") and returns one of the four verdicts + evidence per doc.
 
+**HARD — splitting a large tranche is the ORCHESTRATOR's decision, made up front, never a dispatched hunter's own call
+(2026-08-07 finding)**: on a 10-tranche run, 2 of 10 hunters (`cross-cutting` at 81 docs, `defi` at 41 docs) responded
+to a large doc list by spawning their OWN further sub-agents to split the load, then returned a "done" final message
+that was really just "I launched helpers, I'll wait for their results" — but a sub-agent's final message IS terminal;
+there is no "wait" state for an agent that has already returned. That first-level report was worthless (zero output
+files), and the orchestrator has no visibility into a nested child's existence until the grandchild independently
+completes and its own notification happens to surface (it worked out this time, but only because the harness happened to
+still track the grandchildren — do not rely on that; a hunter has no way to know or guarantee it). **A dispatched
+Phase-1 hunter must never itself call the Agent/Task tool.** If a tranche is large enough to warrant splitting, the
+orchestrator splits it BEFORE Phase 1 starts — explicit separate dispatches (e.g. `defi-batch-1-of-6` .. `-6-of-6`),
+each given its own disjoint doc sublist and its OWN pre-agreed output filenames (`na_audit_<tranche>_detail_batchN.json`
+/ `_blocks_batchN.md`) — never left to an individual hunter's discretion mid-task. State this constraint explicitly in
+every Phase-1 spawn prompt ("you must personally Read every doc yourself; do not delegate").
+
 **Verify completeness before trusting a hunter's per-doc verdict set — do not skip this, even under time pressure**
 (2026-07-27 finding: a sonnet-tier hunter classifying
 `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` reported only 6 of its 14 actual open items on
@@ -158,6 +189,14 @@ the hunter's own reported verdicts for that doc (KEEP items
 - RECLASSIFY items + ARCHIVE items, counting a multi-item KEEP-NA-stale-items verdict's named checkboxes). A mismatch
   means the doc was under-read — re-dispatch it for a fresh full read (or re-read it directly yourself) before authoring
   any Phase 2/3 output against it; never extract, close, or flip a doc's content on a partial read.
+
+**The verification grep pattern itself has the same false-negative class Phase 0 already patched in the inventory script
+(2026-08-07 finding)**: `grep -cE '^- \[ \]'` misses an indented/star-bullet open item (`  * [ ]`), same bug as the
+`* [ ]` false-negative noted in Phase 0 above — confirmed live on `defi_expected_unattempted_backlog_1m_2026_07_03.md`,
+which grepped 0 via the plain pattern but Phase 0's inventory annotation said `open_todos=1` (the correct count). **Use
+`grep -nE '^[[:space:]]*[-*] \[ \]' <doc>` for the verification count, not the plain anchor-only pattern** — and treat a
+mismatch against Phase 0's own `open_todos` annotation for that doc (not just against the hunter's self-reported total)
+as an equally valid trigger to broaden the pattern and re-check before concluding a doc has zero or N open items.
 
 **Never re-litigate an established ruling.** A doc whose own text already cites an explicit dated operator ruling, a
 `depends_on`+`gate_on_depends` gate on a still-open prerequisite, or a "🟡 DO NOT DISPATCH" banner is KEEP-NA on that
@@ -216,10 +255,47 @@ related fixes into coherent commits (one per tranche or per verdict class, not o
 notify the operator + file `plans/active/issues/<slug>_<date>.md`. NEVER write agent memory; NEVER create `*_SUMMARY.md`
 — the final report is chat text.
 
+## Phase 1b — blocker-classification tag (STANDARD, every run, added 2026-08-07)
+
+Every Phase-1 hunter tags each open todo with a SECOND, finer-grained blocker-classification tag alongside the
+KEEP-NA/RECLASSIFY/ARCHIVE verdict above — this is not optional and not a special-request extra; it is how Phase 5
+reports the corpus every run, the same way a 373-doc/1,272-todo full sweep produced it live on 2026-08-07:
+
+- `OPERATOR_QUESTION` — the item itself is an unresolved question/decision needing the operator's input (explicit
+  `[OPERATOR]` tag, "ruling needed", a named judgment call with no decision on record).
+- `CREDENTIAL_BLOCKED` — needs a vendor API key/account/secret the agent can't self-serve (`PERMISSION_DENIED` on the
+  trading GCP/AWS service accounts is agent-self-serviceable per codex, NOT this class).
+- `DEPENDENCY_BLOCKED` — cite the root blocker and what THAT reduces to (usually one of the two tags above, or in-flight
+  `GENUINE_WORK`).
+- `GENUINE_WORK` — real, unblocked build/design/investigation work.
+- `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` — this is the SAME finding as a RECLASSIFY candidate under the primary rubric,
+  tagged here specifically when the hunter's confidence is lower than a clean RECLASSIFY call (e.g. only PART of a
+  multi-todo doc looks bounded, or the hunter wants a second pass before committing to a flip). **This tag is not a dead
+  end** — see the closing-the-loop rule below.
+
+Each hunter writes a per-tranche `_blocks.md` consolidating the DISTINCT questions/asks found (dedup near-identical asks
+across docs into one entry, cite every doc/todo it unblocks) under `## Operator questions` /
+`## Credentials/access needed` headings — this is the artifact that makes the corpus's real Q&A/credential surface
+batchable instead of buried across hundreds of docs.
+
+**Close the loop on `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` — it must not just sit flagged forever (2026-08-07 finding).** A
+prior one-off session tagged 169 items this way across a full run and then stopped, because that session was scoped
+read-only. On a standard `/na-eligibility-audit` run (which IS authorized to apply verdicts), every
+`MISCLASSIFIED_LIKELY_AO_ELIGIBLE` item from THIS run or a PRIOR run's report is a mandatory Phase-1 input list for the
+NEXT run on that tranche: re-assess it against the primary RECLASSIFY bar (bounded, deterministic, whole-doc-qualifies)
+and either promote it to a real RECLASSIFY (through Phase 2's conflict-check, same as any other candidate) or downgrade
+it to KEEP-NA with a marker explaining why it doesn't clear the bar after a second look. A tag that never gets
+re-examined is exactly the false-progress class this whole skill exists to prevent — track it the same way Phase 0
+tracks incremental-skip markers, not as prose.
+
 ## Phase 5 — report, including the ratchet
 
-Finish with text: per-tranche verdict counts (KEEP-NA valid / KEEP-NA-STALE / RECLASSIFY / ARCHIVE), docs flipped +
-their new open-todo count entering the AO backlog, docs archived, checkboxes corrected, and any parked
+Finish with text: per-tranche verdict counts (KEEP-NA valid / KEEP-NA-STALE / RECLASSIFY / ARCHIVE), **and the Phase 1b
+blocker-classification totals — grand total plus a per-tranche breakdown of OPERATOR_QUESTION / CREDENTIAL_BLOCKED /
+DEPENDENCY_BLOCKED / GENUINE_WORK / MISCLASSIFIED_LIKELY_AO_ELIGIBLE counts, same shape as the 2026-08-07 run (373 docs
+/ 1,272 todos: 210 OPERATOR_QUESTION, 42 CREDENTIAL_BLOCKED, 334 DEPENDENCY_BLOCKED, 517 GENUINE_WORK, 169
+MISCLASSIFIED_LIKELY_AO_ELIGIBLE)** — this is a standing stat every run reports now, not a special request. Also report:
+docs flipped + their new open-todo count entering the AO backlog, docs archived, checkboxes corrected, and any parked
 `BLOCKED-OPERATOR-DECISION` items. **Then run `python3 scripts/plan-hygiene/check_na_corpus_ratchet.py` and report its
 verdict verbatim** (current NA doc-count + open-todo count vs. baseline). If this run's own RECLASSIFY/ARCHIVE work
 shrank the corpus, re-run with `--update-baseline` and note the old→new numbers in the report — do not leave a shrunk

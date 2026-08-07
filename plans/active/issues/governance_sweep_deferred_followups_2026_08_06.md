@@ -114,13 +114,17 @@ context_scope:
       (operator): go-ahead to run --apply" with no cited session/decision-doc provenance, but
       `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (same date, `status: active`) lists the identical item under
       "Deferred — operator-gated ... unchanged, NOT re-asked if already asked", asserting it is STILL unruled. Needs a
-      direct read to determine which doc is actually current before either can be trusted. 2.
-      `plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` — todo 1 duplicates an
-      already-open `[CI] P1` todo in `instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`, and
-      this doc's own premise (PR #1084 "merges via the standard auto-merge pipeline") is stale — PR #1084 was actually
-      CLOSED (not merged) by the fleet provenance gate at 2026-08-06T10:30:44Z; the real blocker is the larger
-      provenance-marker-corruption issue tracked in
-      `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`. 3.
+      direct read to determine which doc is actually current before either can be trusted. **RESOLVED 2026-08-07
+      (operator, via consolidated NA-blocker-digest audit): "go ahead" confirmed as the current, correct ruling** —
+      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s "RULED 2026-08-06: go-ahead" text was right;
+      `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` was simply stale (written ~3h before the ruling landed) —
+      fixed in that doc directly (its "Deferred — operator-gated" paragraph now points here). Item 1 of 6 CLOSED; items
+      2-6 below remain open. 2. `plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` — todo
+      1 duplicates an already-open `[CI] P1` todo in
+      `instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`, and this doc's own premise (PR
+      #1084 "merges via the standard auto-merge pipeline") is stale — PR #1084 was actually CLOSED (not merged) by the
+      fleet provenance gate at 2026-08-06T10:30:44Z; the real blocker is the larger provenance-marker-corruption issue
+      tracked in `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`. 3.
       `plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` — todo 3's lending_indices
       stall premise ("no captured data since 2026-07-31") is contradicted by
       `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 and

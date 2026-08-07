@@ -94,9 +94,10 @@ context_scope:
       (`measure_honest_coverage.py` header says `last_executed: NEVER`; the Cloud Scheduler `honest-coverage-daily`
       create was pending — `gcloud scheduler jobs describe honest-coverage-daily     --location=asia-northeast1`).
       (repos: instruments-service, deployment-service)
-- [ ] [BACKEND] P1. **Close the prediction UI drilldown + synthetic OTHER CQG bucket** — the 3 residuals on the
-      catch-all `OTHER` canonical-question-group bucket end-to-end + the deployment-ui 3-level drilldown
-      (`venue → canonical_question_group → day`). `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` (3 open).
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-07 — pointer target closed.** The sole remaining open item in
+      `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s P0 section (the pw:L2 VERIFY gate) is now done — 5/5
+      playwright tests passing (`tests/smoke/prediction_v9_breakdown.spec.ts`), see that doc's Progress Log for full
+      evidence. The catch-all `OTHER` CQG bucket + deployment-ui 3-level drilldown are both shipped and verified.
       (repos: deployment-api, deployment-ui)
 - [x] [BACKEND] P2. ✅ **DP_CATALOG stale alert (shared w/ sports)** — the `DP_CATALOG_NOT_RUNNING` alert fired for both
       sports + prediction `prod/catalog.parquet` (~25h stale); confirm the prediction catalogue writer runs on schedule.

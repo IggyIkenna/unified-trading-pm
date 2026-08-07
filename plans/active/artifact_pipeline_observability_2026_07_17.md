@@ -712,18 +712,18 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       `ENV PYTHONUNBUFFERED=1` in the `Dockerfile`. Verified BOTH fixes are genuinely baked into the live image (not a
       stale-deploy illusion): pulled the exact running digest (`sha256:1df38dd2…`) via `docker pull` + inspected it
       directly (`docker inspect` for the env var, `docker create`+`cat` for the `main.py` source) — both present.
-- [ ] [REVIEW] P0. **STILL OPEN — prod is silent even with all three fixes live on a fresh revision.** Ran the EXACT
-      deployed image locally via `docker run` (same digest, same env vars) — it logs completely correctly (full
-      gunicorn + app startup sequence, INFO/WARNING lines) once given ~15s to finish importing. This proves the image
-      itself is healthy; the remaining gap is something about the CLOUD RUN RUNTIME specifically, not the code. Also
-      ruled out: a stale/warm container (tested against a brand-new revision, same symptom) and a code/permission bug
-      (the exact service-path call, run locally with impersonated `unified-trading-sa` credentials, returned 20 real
-      repos with zero errors). **Leading untested hypothesis**: this Cloud Run service has no
-      `run.googleapis.com/cpu-throttling` override, i.e. it runs GCP's DEFAULT throttled-CPU mode (CPU only allocated
-      during active request handling) — a well-documented cause of exactly this class of symptom (background/deferred
-      I/O starved between requests). **Paused 2026-07-24 by operator ask** ("let's not worry about the deployed version
-      for now, let's check the locally running one first") before testing `--no-cpu-throttling` — resume here when the
-      operator wants to come back to it.
+- [x] ✅ [BACKEND] P0. **RESOLVED 2026-08-07 — CONFIRMED FIXED, hypothesis was correct.** Operator ruled 2026-08-07 (via
+      consolidated NA-blocker-digest audit) to resume this paused (2026-07-24) investigation. Checked the live prod
+      Cloud Run service (`uts-shared-deployment-api`, asia-northeast1) directly:
+      `run.googleapis.com/cpu-throttling: 'false'` is ALREADY set (the override the leading hypothesis called for).
+      Live-verified `GET /api/artifacts/images` against the real prod endpoint 2026-08-07 08:25 UTC — returns full,
+      correctly-populated data: 39 repos, 2 running, 8 legacy, **0 empty**, real `last_pushed` timestamps and byte sizes
+      throughout (e.g. `deployment-api` itself: 31 images, `running_on: uts-shared-deployment-api`, `state: running`).
+      The silent-empty symptom described below is **no longer reproducible** — the fix is live and confirmed working
+      end-to-end. (Original hypothesis, preserved for the record: prod showed empty even with all 3 root-cause fixes —
+      IAM grant, logging config, stdout buffering — live on a fresh revision; local `docker run` against the exact same
+      image+digest worked fine, ruling out the image/code; leading theory was GCP's default throttled-CPU mode starving
+      background log-flush I/O between requests, fixed by disabling CPU throttling.)
 - [x] [REVIEW] P2. ✅ **Separate finding, surfaced while investigating — issue doc FILED 2026-07-24.** This project's
       Cloud Logging ingestion is dominated by GCS Data Access audit logs — MEASURED 151 GB over one 7-day sample
       (project-wide, all resources), spiking to 76.5 GB on 2026-07-19 and 37.6 GB on 2026-07-22, both days correlating
@@ -952,3 +952,8 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   12 items are operator-paused (CPU-throttling test), explicitly-optional stretch items (Phase 6 P3s), or follow-on
   cleanup tied to the same operator-reviewed design track.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: RESUMED the paused
+  Phase 7 CPU-throttling investigation — operator confirmed ready. **RESOLVED same session**: live-checked
+  `uts-shared-deployment-api`'s Cloud Run config, `cpu-throttling: false` already set; live-verified
+  `/api/artifacts/images` returns full real data (39 repos, 0 empty) — symptom no longer reproducible, hypothesis
+  confirmed correct, Phase 7's last open todo closed.

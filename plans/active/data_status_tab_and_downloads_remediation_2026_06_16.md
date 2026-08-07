@@ -355,10 +355,16 @@ the canon plan; track there, not as duplicate todos:
       green, beta blobs write) — but those services' coverage is degraded. Root-fix each service's coverage bucket
       resolution (override / kind-only / correct cat enumeration) so their data-status panels are accurate. —
       deployment-api
-- [ ] [DATA] P0. **APPLY GATE sign-off**: eyeball every service × asset_group projected index in the data-status tab
-      under Manifest-beta mode (`DATA_STATUS_BETA_MANIFEST_BLOB` set); confirm the projected captured/attempted/empty/
-      failed split makes sense (orphan recovery looks right, no phantom over-count) BEFORE any TIER 2 `--apply` runs for
-      that AG. No `--apply` without this. — deployment-api / market-tick-data-service / instruments-service
+- [x] ✅ [DATA] P0. **APPLY GATE sign-off — cefi, tradfi, prediction: DONE, eyeballed by Ikenna (operator ruling
+      2026-08-07).** Projected captured/attempted/empty/failed split confirmed sane (orphan recovery looks right, no
+      phantom over-count) for these 3 AGs under Manifest-beta mode. **TIER 2 `--apply` is UNBLOCKED for cefi, tradfi,
+      prediction** — proceed per the APPLY GATE banner above (per-AG, not a whole-doc gate).
+- [ ] [DATA] P0. **APPLY GATE sign-off — defi, sports: HOLD (operator ruling 2026-08-07).** NOT yet eyeballed — Ikenna
+      is still wrestling with agents on manifest canonicalisation for these 2 AGs (see their own outstanding
+      canonicalisation todos elsewhere in the corpus); the projected index isn't stable enough to sign off yet. **TIER 2
+      `--apply` STAYS GATED for defi and sports** until this is re-run and confirmed clean after canonicalisation lands.
+      Re-check status before assuming this has cleared — do not infer from the cefi/tradfi/ prediction sign-off above. —
+      deployment-api / market-tick-data-service / instruments-service
 
 ## Phase D (TIER 1 cleanup) — TradFi canonical naming + Deribit spot fix (instruments-service / UAC)
 
@@ -451,5 +457,10 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   requiring operator eyeball of every service × asset_group projected index before any TIER-2 `--apply`, and 3 UI todos
   blocked on a separate playwright-suite regression doc.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: APPLY GATE sign-off
+  split per-AG — cefi/tradfi/prediction eyeballed by Ikenna, DONE, TIER 2 `--apply` unblocked for those 3. defi/sports
+  HOLD — Ikenna still wrestling with agents on manifest canonicalisation for those two, sign-off not attempted yet. The
+  DeFi sub-bucket phantom-row audit todo (§ "Deferred work") stays blocked accordingly — it's gated on defi's own
+  sign-off, which is explicitly still HOLD, not on the doc-wide gate as a whole.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the DataStatusTab.tsx + reference_scope.py
   source targets the remaining open UI/backend todos actually touch.
