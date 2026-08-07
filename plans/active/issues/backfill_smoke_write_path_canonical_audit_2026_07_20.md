@@ -276,9 +276,9 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `…/day={D}/pipeline_mode={m}/asset_group={ag}/venue={V}/instruments.parquet` using the sink **PREFIX** mechanism
       (`sports_fixtures.py:99-113` is the working reference), NOT the partition dict — the UTL sink sorts keys
       alphabetically (`protocol_impls.py:26`). Provenance: this audit § 3b/§ 3c.
-- [x] 2. [DATA] P1. **[already covered by plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md, see
-      that doc for execution]** market-tick-data-service: rule on and fix the cefi chain tail —
-      `partitioned_writer.py:291-293` populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare
+- [x] 2. [DATA] P1. **[already covered by /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md
+      (archived, resolved), see that doc for execution]** market-tick-data-service: rule on and fix the cefi chain tail
+      — `partitioned_writer.py:291-293` populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare
       `underlying={U}/ticks.parquet` while W2 (`tardis_shared.py:861-870`) emits the canonical v6 tail. Include the
       `:198` vs `:201` casing divergence. Provenance: this audit § 3a.
 - [ ] 3. [DOCS] P2. instruments-service + market-tick-data-service: correct the three in-repo comments that assert the
