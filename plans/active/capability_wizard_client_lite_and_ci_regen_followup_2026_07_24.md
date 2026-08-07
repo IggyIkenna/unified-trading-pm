@@ -99,6 +99,20 @@ on a `.venv-workspace`-capable CI runner being provisioned (operator action).
 (`ui-reference-data.json`, `config-registry.json`, `unified-trading-system.openapi.json`) freshly regenerated and
 committed.
 
+**RE-SCOPED 2026-08-07 (operator: "do it, agent can do it that's fine")** — investigated before executing. **The gate
+does NOT actually require new CI infrastructure** — the doc's own alternative ("a laptop with full workspace") already
+exists: the AO orchestrator VM (`ip-172-31-5-118`) has a full multi-repo checkout + healthy disk headroom (171G free,
+75% used — not a capacity risk). **But its `.venv-workspace` directory exists without being properly populated** —
+`import instruments_service` fails (`ModuleNotFoundError`), confirming the exact F12 footgun class this doc warns about
+(an incomplete/stale venv, not the 32-service editable-install workspace the regen needs). Real remaining work, not done
+this pass: (1) run the proper `.venv-workspace` setup (`scripts/setup-workspace-venv.sh` or
+`scripts/workspace/setup-dev-environment.sh`) on that VM to completion, (2) verify ALL 32 services import cleanly before
+touching the regen (not just spot-checking 1-2), (3) run `generate-unified-openapi.sh`, and CRITICALLY (4) check the
+extraction count BEFORE committing anything — F12's own history shows a broken venv silently extracts 0/32 and would
+empty the committed registry if blindly committed. Deferred to its own pass given the real-data-corruption risk of
+rushing step 4 under time pressure, not because it needs new infrastructure — that part of the original framing was
+wrong.
+
 ## Residual 2 — Client-lite wizard successor (use case 4)
 
 Context (carried verbatim from the parent plan's use-case list and "Out of scope / named successors" section): the
