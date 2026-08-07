@@ -152,14 +152,21 @@ context_scope:
       `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md` checkbox flipped
       citing this run.
 
-- [ ] [DATA] P2. **Legacy-bucket 3-part reconciliation bundle.** (a) Update
+- [x] ✅ [DATA] P2. **Legacy-bucket 3-part reconciliation bundle.** (a) Update
       `issues/legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 to reflect that cefi's legacy bucket is
       already deleted (bounded doc edit). (b) Check for any additional cefi legacy backup beyond the ~136MB snapshot
       already found (bounded investigation, read-only). (c) Run a proper CF-11 normalization-aware comparison between
       the pre-migration snapshot manifest and the current `-prd` manifest in market-tick-data-service (the false-phantom
       bug that previously blocked this is confirmed fixed). Source:
       `issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. **Done when**: all 3 sub-items complete, the
-      CF-11 comparison result is recorded, and the source doc's 3 open checkboxes are flipped citing this run.
+      CF-11 comparison result is recorded, and the source doc's 3 open checkboxes are flipped citing this run. — **DONE
+      2026-08-07** (slot-8): unified-trading-pm@aa30fcaf2. (a) Decommission plan updated: L6 + version-delete rows now
+      cite `**cefi: ✅ BUCKET ALREADY DELETED 2026-07-14**`. (b) Backup check: 3 snapshot prefixes in
+      `central-element-323112-pre-migration-snapshot/`, all index-only; 2026-05-19 snapshot identical to 2026-05-16; no
+      raw-tick backup exists. (c) CF-11 normalized cell comparison
+      (`market-tick-data-service/scripts/one_offs/compare_cefi_legacy_vs_prd_cf11_norm_2026_08_07.py`): 59,488/96,338
+      eligible unique cells absent from -prd — all pre-canonical-era or empty itype/dtype ghost rows, no unexpected
+      post-migration data loss. Source-doc status flipped resolved; all 3 source checkboxes flipped.
 
 - [ ] [DATA] P2. **CEFI-scoped items from the mtds backfill-VM memory-hang investigation.** Three of this doc's four
       open items are cefi-scoped (the fourth, retained-memory root-cause in the sports `odds_api` download path, is
