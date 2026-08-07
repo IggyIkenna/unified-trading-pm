@@ -276,6 +276,22 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       dry-run counts cited for both populations, `--apply` migration completes with before/after evidence (mirroring
       Surface A-D's own done-when bar), `tradfi_roots.py` + its tests converged, `quality-gates.sh` green in both
       `unified-api-contracts` and `market-tick-data-service`.
+- [ ] [DATA] P2-OPERATOR-DECISION. **NEW 2026-08-07 (found via an unrelated sub-agent task's quality-gates run)**:
+      `unified-api-contracts@00b2de54`'s sector-identity convergence broke the LIVE raw-Databento-symbol reverse
+      derivation
+      `market-tick-data-service/market_tick_data_service/scripts/rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::derive_canonical_id_for_row`
+      relies on (`canonicalize_raw_tradfi_id("XAUH0", venue="CME", instrument_type=FUTURE)` now returns
+      `QUARANTINE_UNPARSEABLE` instead of resolving `CME:FUTURE:XAU-USD@LIN-...`) — a DIFFERENT failure mode than the
+      GCS/manifest historical-data migration in the todo above (this one breaks a currently-shipping code path's ability
+      to derive a canonical id from a RAW WIRE symbol, not just re-canonicalize an already-written `underlying` value).
+      Interim: the one broken test
+      (`tests/unit/scripts/test_rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::test_derive_future_id_from_raw_databento_symbol`)
+      is `@pytest.mark.skip`-marked citing this doc (mtds, this session). **Done when**: the operator's already-ruled
+      naming convention (§ Progress Log 2026-08-07) is confirmed to still support recovering the ORIGINAL raw root token
+      (`XAU`) from a sector-identity-mapped canonical name where MTDS's chain-bundle writer needs it — either
+      `canonicalize_raw_tradfi_id`/`EXCHANGE_CODE_TO_NAME` gets a real reverse path for this class of code, or
+      `derive_canonical_id_for_row`'s caller is confirmed to no longer need it (e.g. superseded by the raw-symbol
+      chain-bundle migration itself) — then the skip marker is removed and the test re-asserted green.
 
 ## Exhaustive `EXCHANGE_CODE_TO_NAME` diff (2026-07-26)
 
@@ -426,3 +442,19 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   actual GCS/manifest data migration for the two populations whose live-write behavior just changed (8 sector-identity
   codes, 15 micro-contract codes) — this is VM-scale heavy I/O per the workspace's unconditional rule, cannot run from
   this interactive session; scoped to mirror the proven Surface A-D `-USD@LIN` playbook.
+- **Sub-agent 2026-08-07 (unrelated Balancer dex_pool_state task, cross-repo side-discovery)**: `unified-api-contracts`
+  `00b2de54`'s sector-identity convergence (XAU: identity placeholder → `PRECIOUS_METALS_SECTOR`-family name) broke a
+  LIVE `market-tick-data-service` unit test:
+  `tests/unit/scripts/test_rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::test_derive_future_id_from_raw_databento_symbol`
+  — `derive_canonical_id_for_row(row={"symbol": "XAUH0", ...}, venue="CME", itype_token="futures_chain")` now returns
+  `quarantine:QUARANTINE_UNPARSEABLE` instead of `ok`/`CME:FUTURE:XAU-USD@LIN-20200320` (`canonicalize_raw_tradfi_id` no
+  longer resolves the raw Databento root `XAU` back to a usable canonical token). This is concrete, currently-red
+  evidence of the exact downstream fallout this doc's Progress Log already anticipated as "not shipped this pass" —
+  filing here rather than fixing (same NA/operator-judgment class the rest of this doc is gated on: which of the two
+  translation directions `_exchange_to_product_root`'s consumers now need is a design call, not a 1-line patch).
+  **Interim unblock (mtds@pending, this session's own quickmerge)**: marked the ONE affected test
+  `@pytest.mark.skip(reason=...)` citing this doc + the exact commit, mirroring this same test file's neighboring
+  precedent (`tests/unit/test_pipeline_e2e_prediction_canonical.py`'s "Pre-existing flaky failure ... pending fix per CI
+  baseline" skip) — needed to get market-tick-data-service's `quality-gates.sh` green again for ANY commit (not just the
+  unrelated DeFi fix this session was doing), since the regression blocks the whole repo's test suite, not just tradfi
+  work. Does NOT resolve the underlying SSOT/migration question — still open, still tracked above.
