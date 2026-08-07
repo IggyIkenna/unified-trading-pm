@@ -260,3 +260,10 @@ surface that actually exists (warm + cold event-log tiers).
   for trades/liquidations/derivative_ticker (book_snapshot_5 cold will be absent); (c) trigger
   COMPACTION_DATE=2026-08-07; (d) DATA P0 full completion gated on P1 (book_snapshot_5 validation); (e) BACKEND P0 can
   be flipped once jhsb7 shows SUCCEEDED (Terraform deployed + run survives OOM window).
+- **2026-08-07 ~13:20 UTC (slot-11 worker, data_engineering, third pre-compact checkpoint)**: jhsb7 STILL RUNNING (38
+  min elapsed, no completion time in executions list). Cold GCS still ZERO objects. No new findings this context — all
+  state durable at `unified-trading-pm@ab4cdd6c1`. Background driver `busop6lkg` still polling jhsb7. Daily scheduled
+  runs (xpkg5 through hhkvf, 2026-08-01..2026-08-07) all show `FAILED_COUNT=1` confirming OOM failures under old
+  512Mi/1CPU limits. Book_snapshot_5 P1 validation failure already tracked. Resume instructions unchanged from prior
+  checkpoint: wait for jhsb7 SUCCEEDED → verify cold GCS for trades/derivative_ticker/liquidations → flip BACKEND P0 →
+  trigger 2026-08-07 run → investigate P1 → DATA P0.
