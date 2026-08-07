@@ -722,3 +722,8 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   unified-trading-pm `checks`-slice has 2 failures (runs `31226390424`/`31225701549`, both `QG slice (checks)` only,
   `tests`-slice clean — known ratchet class, not pytest-timeout). Zero pytest-timeout recurrence anywhere. Window NOT
   yet closed (day ~2 of ~14); skipping per slot-4/slot-15 precedent.
+- **slot-6 2026-08-07 (fourth pass, same task)**: corroborates slot-4/15/16 — 45/45 `quality-gates-v2` runs across 9
+  service repos all `conclusion=success` (5 runs each, latest deployment-service/market-tick-data-service runs at
+  ~23:12Z); unified-trading-pm latest failure (run `31227348039`, 23:30:37Z) confirmed `QG slice (checks): failure`,
+  `QG slice (tests): success` — known ratchet class, not pytest-timeout. Zero pytest-timeout recurrence. Window NOT yet
+  closed (day ~2 of ~14); skipping per prior-pass precedent.
