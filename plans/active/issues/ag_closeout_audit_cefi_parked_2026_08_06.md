@@ -179,10 +179,12 @@ itself). 5 `exclude_cross_cutting` flagged above with one-line reasoning (durabl
       `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` (7 todos), `batch6_2026_08_02.md` (6 todos),
       `batch7_2026_08_03.md` (3 todos), and this run's `batch8_2026_08_06.md` (3 todos, incl. 1 P1 confirmed-defect
       fix).
-- [ ] [DOCS] P3. **Add a `related:`/digest mention for
+- [x] ✅ [DOCS] P3. **Add a `related:`/digest mention for
       `multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md`** in the cefi closeout
       family (finding from Phase 1 candidate set B) — self-dispatched and already being worked, just missing from the
-      graph `check_ag_closeout_linkage.py` checks.
+      graph `check_ag_closeout_linkage.py` checks. **MOOT — flipped 2026-08-07 (ag-closeout-audit cefi run, slot 4,
+      dispatch agt-ed7b44)**: the doc was archived 2026-08-06 in the 76-doc resolved-issues archive sweep (work
+      resolved), so the linkage mention is void; no digest addition needed.
 
 ## Progress Log
 
