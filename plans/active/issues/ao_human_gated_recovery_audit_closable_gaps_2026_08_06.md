@@ -68,7 +68,7 @@ Full research-agent report (grounded, file:line cited) is in this session's tran
 **Already fine / irreducible (no action)**: usage-cap freeze (re-probes every tick, auto-resumes), auth-fail eviction
 (`rotate_all_slots_off_account`, fully automatic, preserves in-flight task+worktree), auth-fail cooldown self-heal,
 `notify_all_accounts_unusable`'s rate-limit-vs-auth-failed split, ~~CI-wall re-escalation cap (defensible judgment
-bar)~~ **SUPERSEDED 2026-08-07** — see `/plans/active/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md`:
+bar)~~ **SUPERSEDED 2026-08-07** — see `/plans/archive/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md`:
 live dashboard evidence (two `unified-trading-pm` escalations stuck `unresolved — still_red_past_deadline` well after
 their underlying walls had actually cleared) showed the cap=1/page-on-first-miss/no-way-back design was NOT just a
 judgment call but a structural dead end (a terminal `unresolved` row is never re-polled, so a wall fixed by a human or
