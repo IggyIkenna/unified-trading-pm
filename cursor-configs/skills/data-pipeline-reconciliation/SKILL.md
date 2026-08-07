@@ -199,7 +199,12 @@ inspection is unavoidable, use only the three sanctioned no-walk routes:
    `list_prefixes`). ⚠️ **The UTL facade drops `.prefixes`** — `get_storage_client().list_blobs(...)` yields
    `BlobMetadata` and swallows the delimiter's child-prefixes (measured on sports). For child-prefix listing reach the
    native handle: `client._client.bucket(b).list_blobs(delimiter='/')`, then read `.prefixes`; or use a
-   confirmed-working `storage_facade.list_prefixes`;
+   confirmed-working `storage_facade.list_prefixes`. ⚠️⚠️ **Even on the native handle, `.prefixes` is EMPTY until the
+   iterator is advanced** (it reflects only the pages fetched so far) — the 2026-08-07 cefi run read `.prefixes`
+   directly on a fresh iterator and silently got `[]` for every listing (empty GCS-vs-manifest spot-check, empty
+   honest-coverage date list, phantom "missing" probes — all false). Always force the first page first:
+   `it = client._client.bucket(b).list_blobs(prefix=..., delimiter='/'); list(it)` (or iterate any page), THEN read
+   `it.prefixes`. A `[]` prefix result on a bucket you know has objects is this bug, not an absence verdict;
 3. **reuse of an existing single walk** (`migration_orphan_sweep.py`), bundling every pass onto that ONE snapshot.
 
 The reconciled rule is **one walk per corpus per campaign**, with all passes bundled onto that snapshot — see the shared
