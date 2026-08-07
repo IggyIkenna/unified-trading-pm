@@ -34,7 +34,7 @@ related:
   ]
 created: 2026-08-06
 author: ag_closeout_auditor (cefi tranche, dispatch agt-02411c, slot 3)
-last_updated: 2026-08-06
+last_updated: 2026-08-07
 parent_epic: plan_hygiene_master
 assigned_vm: NA
 execution_scope: local-only
@@ -68,13 +68,29 @@ context_scope:
 
 # check_ag_closeout_linkage.py ratchet regression — 87 vs. baseline 69
 
+> **Re-measured 2026-08-07 (`/ag-closeout-audit cross-cutting`, dispatch `agt-a2b8a4`, slot 5)**:
+> `python3 scripts/plan-hygiene/check_ag_closeout_linkage.py` now reports **71 orphan(s) (baseline 69)** — down from 72
+> (2026-08-06 later re-measure) / 87 (2026-08-06 initial), still +2 over baseline. Per-tranche breakdown today:
+> cross-cutting 37, ao 14, defi 9, ci 7, infrastructure 2, tradfi 1, sports 1 (71 total). **Insight from this run**: the
+> cross-cutting tranche's own same-day `/ag-closeout-audit` Phase 1 pass (see
+> `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`) independently classified 7 fresh never-cited cross-cutting-
+> tagged docs and found **all 7 are mistags** (real content ci ×5 / ui ×1 / infrastructure ×1) — the same
+> same-day-issue-doc-cluster pattern repeats (a debugging/incident session files several new issue docs and default-tags
+> them cross-cutting/meta instead of their real ci/ui/infra home). This is direct evidence that a large fraction of
+> cross-cutting's 37-doc share of the 71 is **retag-fixable by the owning tranche**, not evidence of a real
+> cross-cutting closeout-family coverage gap — consistent with, and reinforcing, this doc's own Todo 2. Not
+> independently verified for all 37 (would require reading each one; out of the cross-cutting run's own Phase 0 scope,
+> since most of the 37 are already cited under that skill's broader `covering_paths` definition and only fail THIS
+> checker's narrower main-doc-only family resolution — a documented, distinct blind spot, not the same bug as the
+> mistags above).
+>
 > **Re-measured 2026-08-06 (/plan-reconcile ao), later same day**:
 > `python3 scripts/plan-hygiene/check_ag_closeout_linkage.py` now reports **72 orphan(s) (baseline 69)** — down from the
 > 87 this doc was filed against, but still over baseline. This is a **dated snapshot, not a fixed target**: the
 > population churns constantly (concurrent audits/dispatch batches land continuously across the corpus), so 69→87→72 in
 > under a day is expected behavior for this gate, not evidence either count was measured wrong. Treat any cited orphan
-> count in this doc (87, or 72) as "as of its stated timestamp," and re-run the command yourself before acting on either
-> number.
+> count in this doc (87, 72, or 71) as "as of its stated timestamp," and re-run the command yourself before acting on
+> any of them.
 
 ## What I found
 
@@ -174,3 +190,14 @@ the triage given their concentration.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — fresh doc (filed today); genuine mix — todos 1-2 are bounded
   audit/hygiene work with explicit Done-when clauses, todo 3 is an open "is this worth building" feature-investment call
   phrased as "Consider whether...", no stated done-when.
+- **2026-08-07 — re-measured by the scheduled `/ag-closeout-audit cross-cutting` tranche run (slot 5, dispatch
+  `agt-a2b8a4`)**: `check_ag_closeout_linkage.py` = **71 orphan(s) (baseline 69)**, down from 72 (2026-08-06 later) / 87
+  (2026-08-06 initial) — see the updated banner above for the per-tranche breakdown and the cross-cutting-specific
+  insight (this run's own Phase 1 pass found all 7 of its fresh never-cited candidates are mistags, real owners ci ×5 /
+  ui ×1 / infrastructure ×1 — direct, current-day evidence for Todo 2's "add the missing link OR retag" fix path,
+  favoring retag for at least this slice of cross-cutting's 37). Did not attempt Todo 1's full genuinely-new-vs-
+  pre-existing per-doc split (same reasoning as the 2026-08-06 close-out: the population's churn rate makes a frozen
+  attribution stale within hours) and did not attempt Todo 2's fleet-wide fix (cross-tranche, most of the 37/71 belong
+  to tranches other than cross-cutting — retagging them is each owning tranche's own action per the
+  concurrent-sharded-worker rule, not this run's to execute). KEEP-NA-consistent: still a fresh-enough, still-open
+  tracking doc: no reclassification needed.

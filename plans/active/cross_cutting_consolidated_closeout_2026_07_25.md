@@ -71,7 +71,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-02"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -714,6 +714,30 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-08-07** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
+  dispatch `agt-a2b8a4`, slot 5). Phase 0: 83 tranche members, 6 covering docs, 11 never-cited (net -3 vs 2026-08-06's
+  86, matching that run's 2 retags-out + 1 archival). Iterative-drain re-check of batch1/1b/3's Deferred sections: no
+  new clearances. Orthogonality HARD CHECK: 0 new dual-tag mistags (the 1 pre-existing hit,
+  `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`, unchanged). Phase 1 (`Workflow`, 7 agents, one per
+  genuinely-new candidate): **all 7 verdicted `exclude_cross_cutting`** (real owners: ci ×5, ui ×1, infrastructure ×1 —
+  the same same-day-issue-doc-cluster mistag pattern as 2026-08-06) — reported, not retagged, per the
+  concurrent-sharded-worker owning-tranche rule; full evidence in
+  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md).
+  **Zero genuine new orphans found — no Phase 3 batch draft this run.** Confirmed
+  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` is now `status: active` (operator-approved since
+  2026-08-06), 7/8 todos done via a governance-sweep activation-readiness check, 1 genuinely open and already
+  dispatched. Bonus: re-measured the corpus-wide `check_ag_closeout_linkage.py` ratchet regression (87→72→71, still +2
+  over the 69 baseline) in `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` — see that doc for detail.
+- **2026-08-06** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
+  dispatch `agt-681f2d`, slot 6). Phase 0: 86 tranche members, 6 covering docs, 6 never-cited. Orthogonality HARD CHECK
+  (corpus-wide): found + fixed 2 genuine mistags directly (drop-cross-cutting-keep-sibling-tag cases), found 1 more
+  mistag-on-both-axes parked (`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`). Phase 1 (`Workflow`, 6
+  agents): all 6 verdicted `exclude_cross_cutting` — 2 fixed directly, 4 parked. **Zero genuine new orphans — no Phase 3
+  batch draft.** A same-day na-eligibility-audit follow-up independently retagged + archived one of the 4 parked targets
+  (`resource_watchdog_host_guardian_2026_08_05.md`, singly-tagged cross-cutting so genuinely this tranche's own to act
+  on). Full evidence in
+  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md)
+  — **backfilled here 2026-08-07** since this entry was missed at the time.
 - **2026-08-05** — **Membership-scope gap recorded (batch2 finalize finding 1).** The 2026-07-26 audit's own Progress
   Log entry documented this but it wasn't actioned as a durable process change. **The tranche-membership derivation for
   cross-cutting MUST use

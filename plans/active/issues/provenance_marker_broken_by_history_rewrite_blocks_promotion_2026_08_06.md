@@ -210,7 +210,7 @@ Two reasons, mirroring the UTL-34-bypass precedent
   passed, lint/type-check/codex-compliance clean; the only failure was an unrelated pre-existing
   `plan-commit-sha-evidence` ratchet regression in 3 OTHER already-committed plan docs from concurrent agents, confirmed
   via direct script run + git blame — not caused by, or touching, this change). **Shipped via the PM `scripts/**`
-  direct-to-main carve-out** (`codex/08-workflows/ci-cd-flow.md` carve-out #3): confirmed
+  direct-to-main carve-out** (`/codex/08-workflows/ci-cd-flow.md` carve-out #3): confirmed
   `ldr-to-main-promote-fleet.yml`'s cron checks out PM at its DEFAULT branch (`main`, verified via
   `gh repo view --json defaultBranchRef`), so a normal LDR-first ship would not have taken effect for the cron without
   first surviving the very promotion pipeline being fixed (circular). Built the commit in a scratch worktree at
