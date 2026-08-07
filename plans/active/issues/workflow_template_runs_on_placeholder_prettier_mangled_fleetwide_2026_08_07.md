@@ -146,9 +146,18 @@ source: cicd-escalation-agt-62ba62
       `only_repo=execution-service` to fast-path the re-gate instead of waiting for the next `*/5` scheduled tick — PR
       #557 still showed its stale pre-fix head SHA as of this edit; the scheduled `*/5` tick should supersede it shortly
       if the manual dispatch didn't. (agt-02e6a8, 2026-08-07)
-- [ ] [DEVOPS] P1. Re-roll + ship for the other 7 locally-confirmed repos: batch-live-reconciliation-service,
-      client-reporting-api, deployment-api, features-service, fund-administration-service, ibkr-gateway-infra,
-      instruments-service (same recipe as above, one commit+push per repo).
+- [x] ✅ [DEVOPS] P1. Re-roll + ship `batch-live-reconciliation-service`'s workflow templates —
+      `batch-live-reconciliation-service@afcdd11` (via
+      `rollout-workflow-templates.sh --repo     batch-live-reconciliation-service`, shipped via quickmerge, verified on
+      origin ancestor). Fresh `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (33s)`; all 8
+      previously-broken/drifted workflow files now parse (`yaml.safe_load` clean across all 12
+      `.github/workflows/*.yml`). This was blocking promotion PR batch-live-reconciliation-service#315
+      (`ci_status=FAILING` on LDR → fleet promoter GATE BLOCK → sit-gate/fleet-green never posted, mis-surfaced upstream
+      as a stuck/"merge_conflict" promotion PR — no actual git conflict existed, `mergeable_state=blocked` not `dirty`).
+      (conflict_resolver agt-8289f1, 2026-08-07)
+- [ ] [DEVOPS] P1. Re-roll + ship for the other 6 locally-confirmed repos: client-reporting-api, deployment-api,
+      features-service, fund-administration-service, ibkr-gateway-infra, instruments-service (same recipe as above, one
+      commit+push per repo).
 - [ ] [SCRIPT] P2. Sweep the remaining ~14 fleet repos not locally checked out here (full list in
       `workspace-manifest.json`) for the same broken `runs-on: { { RUNS_ON } }` pattern in their
       `.github/workflows/*.yml`, and re-roll any that are affected.
