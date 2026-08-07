@@ -29,11 +29,35 @@ self-service rule, a registry-entry append for a newly-discovered class), then v
 The findings-triage HARD RULE (in-your-file → fix in same commit; outside-plan small+clear → ≤30 min) covers the
 judgment calls; escalate only a genuinely big/cross-repo/ambiguous finding per that rule.
 
-## 0. Ground truth first — the alert text is a claim, live state is the fact
+## 0. Ground truth first — read the LIVE channel programmatically, never require a paste
 
-**Never act on what an alert says happened.** An alert fired hours ago may already be routine noise (a heartbeat that's
-supposed to fire), already self-resolved, or describing a condition that a downstream fix already closed. Re-derive
-current reality before touching anything:
+**Never act on what a pasted alert says happened, and never make Slack-reading a manual copy/paste step** — a paste
+doesn't scale, goes stale the moment you read it, and structurally can't be what AO (agent-orchestrator) dispatches this
+skill against, since AO has no Slack access of its own and nothing can be pasted into a dispatched worker. Pull the
+channel directly instead:
+
+```bash
+cd unified-trading-pm
+python3 scripts/dev/slack-read-channel.py data-pipeline-alerts 24
+# On a fresh macOS Python.org install this may hit SSL: CERTIFICATE_VERIFY_FAILED (missing CA bundle,
+# unrelated to the Slack token/auth itself) — fix by pointing at certifi's bundle, don't skip verification:
+#   SSL_CERT_FILE=$(python3 -c "import certifi; print(certifi.where())") python3 scripts/dev/slack-read-channel.py ...
+```
+
+This resolves `SLACK_ALERTS_READER_BOT_TOKEN` via GCP Secret Manager over `gcloud` ADC (no OAuth, no browser, never
+touches disk/argv) and works identically from any identity with `secretmanager.versions.access` on that secret — an
+operator's laptop, a slot worker, or (once granted) AO's own service account. **AO cannot run this skill autonomously
+today** — confirm/grant AO's SA that specific IAM binding before dispatching this skill to it; until then, this is an
+interactive-session-only skill, unlike `/ci-reconcile` (which needs no Slack access at all because every CI signal has a
+directly-queryable `gh`/`gcloud` system of record — the data-pipeline domain has no such non-Slack equivalent for many
+of these events).
+
+The script writes raw JSON to `slack-<channel>-<hours>h.json` in the CWD (grep/re-analyze without re-fetching) and
+prints a rendered timeline to stdout. **Re-run it fresh each time** — its answer has a date on it, same as any other "is
+it currently broken" check in this workspace.
+
+Then cross-check what you found against the registry and live infra state — an alert fired hours ago may already be
+routine noise, self-resolved, or superseded by a downstream fix:
 
 ```bash
 # The registry itself — never eyeball-classify an event, look it up
@@ -53,9 +77,11 @@ gcloud scheduler jobs describe <cron-name> --location=... --format="value(state)
 ```
 
 **Distinguish routine heartbeat noise from a real failure before reading further** — `DP_FLEET_MONITOR_RUN_STARTED`/
-`_COMPLETED` (DP-DIGEST-003/004) are `⚪` INFO telemetry, not incidents; only `DP_FLEET_MONITOR_RUN_FAILED`
-(DP-WATCHER-003) or an actual `DP-*` failure-mode row is work. If you don't already know which is which, check the
-registry's `severity` column — don't infer from tone.
+`_COMPLETED` (DP-DIGEST-003/004) are `⚪` INFO telemetry that should never even reach the live channel (fixed 2026-08-07
+— they now carry `mirror_live=False` on their `DataPipelineAlertRule`; if you see them firing live again, that IS a
+regression worth root-causing, not routine noise to skip past). Only `DP_FLEET_MONITOR_RUN_FAILED` (DP-WATCHER-003) or
+an actual `DP-*` failure-mode row is work. If you don't already know which is which, check the registry's `severity` AND
+`mirror_live` fields — don't infer from tone.
 
 ## 1. Classify each still-live alert before touching it
 
@@ -66,10 +92,17 @@ registry's `severity` column — don't infer from tone.
     routing key) instead of a graceful capability probe + fallback. Symptom: `ALERT_DISPATCH_FAILED` spam, not the
     underlying condition. Fix: an `lru_cache`-wrapped capability probe + a documented fallback channel (email/Telegram)
     — see `alerting_service/notifiers/pagerduty.py` + `email.py` for the shipped pattern.
-  - **Same condition re-fires every tick** — the event isn't in `_RECURRING_ALERT_COOLDOWNS`
-    (`alerting_service/notifiers/router.py`) or its cooldown is shorter than the detector's own cadence (the codex doc's
-    wiring caveat: DP-`*` bypasses the real incident gateway and relies on this cooldown map as its de facto dedup
-    layer). Fix: add/raise the event's cooldown ≥ detector cadence.
+  - **Same condition re-fires every tick, but it's a REAL failure that should eventually stop** — the event isn't in
+    `_RECURRING_ALERT_COOLDOWNS` (`alerting_service/notifiers/router.py`) or its cooldown is shorter than the detector's
+    own cadence (the codex doc's wiring caveat: DP-`*` bypasses the real incident gateway and relies on this cooldown
+    map as its de facto dedup layer). Fix: add/raise the event's cooldown ≥ detector cadence.
+  - **Same event fires every tick BY DESIGN and is never going to stop** (routine per-sweep telemetry, not a failure) —
+    a cooldown is the wrong tool here (it would still spam, just less often); the event needs to never reach the live
+    channel at all. Fix: set `mirror_live=False` on its `DataPipelineAlertRule` (UAC
+    `canonical/crosscutting/alerting/rules.py`) — this keeps the event registered (so it can't regress into the
+    wrong-channel bug below) while the router (`route_event`'s `if dp_rule.mirror_live:` gate) skips the actual
+    Slack/page dispatch but still logs `ALERT_SENT` for audit. Shipped 2026-08-07 for DP-DIGEST-003/004
+    (`DP_FLEET_MONITOR_RUN_STARTED`/`_COMPLETED`) — use that commit as the pattern.
   - **Registered under the wrong registry ID** — two distinct events sharing one `DP-WATCHER-00N` id (happened twice,
     see the codex doc's 2026-07-27/07-31 fix notes) means one of them has no exact-match rule and falls through to the
     generic catch-all, paging the wrong channel entirely. Fix: assign the unregistered event its own id in BOTH the
