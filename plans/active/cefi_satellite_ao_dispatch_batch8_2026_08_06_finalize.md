@@ -111,7 +111,7 @@ context_scope:
       (batch6→7→8→batch8-finalize) with zero gate movement. Per this plan's own escalation rule: these require direct
       operator attention rather than continued automated re-triage.
 
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch8_2026_08_06.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch8_2026_08_06.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes", "Archival-hygiene housekeeping" and
       "Self-dispatched, linkage-fix-only" sections (informational, not gated AO items) need no separate migration since
       they were never batch todos → add the archive banner → run the codex-alignment check (batch8 creates no new
@@ -119,7 +119,12 @@ context_scope:
       `cefi_satellite_ao_dispatch_batch8_2026_08_06` and repoint each to the archived path → clear `locked_by` (already
       empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
       the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same
-      commit.
+      commit. — **DONE 2026-08-07** (slot 16): (1) Informational sections confirmed — no migration needed (were never
+      batch todos; 3 archivable docs from housekeeping section already archived separately). (2) Archive banners added
+      to both batch8 and batch8_finalize. (3) Codex alignment: batch8 creates no new durable contract (doc-only edits +
+      one predicate-pushdown bug fix); no codex update needed. (4) Corpus referrers updated: INDEX.md entries removed;
+      batch9/batch9_finalize `related:`/`context_scope:` paths repointed; `ag_closeout_audit_cefi_parked` paths
+      repointed. (5) `locked_by:` empty, confirmed. (6) Both plans moved to `plans/archive/2026_08/`.
 
 ## Codex SSOTs
 
