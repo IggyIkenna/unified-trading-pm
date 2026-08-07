@@ -565,6 +565,19 @@ any watcher that must outlive a session crash, not just a `/compact`.
   If watcher dead and task not done: re-launch the SAME way (`setsid nohup … & disown`, verify real PID + PGID=SID=PID)
   — never plain `run_in_background`, it does not survive session death. (4) Send heartbeat periodically.
 
+### 2026-08-07T11:58Z — slot 5, session 10 — watcher re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher PID 457933 (session 9, setsid) found DEAD at boot.** Fleet at
+slot-5 boot: **5 VMs running** (CME g01 wave: es-es-2020, mbt-mbt-2024, met-met-2023/2024/2025 all from 09:00Z wave).
+
+Re-armed with `run_in_background:true`. Harness task: **`bprxba91n`** (started 11:58:48Z, poll 1 = 5 VMs). Watcher:
+slot-5 copy at scratchpad watcher/es_opt_watcher_slot5.sh. Long-pole ETA: met-met-2023 ~14:00-17:00Z.
+
+- **NEXT ACTION (fresh session):** (1) Check if todo #2 checkbox is `[x]`. (2) If `[ ]`, check `bprxba91n.output`. (3)
+  If watcher dead and task not done: re-arm from slot-N copy (SLOT_ID=<new>, SLOT_TABS=.tabs/<new>,
+  PYTHON=.tabs/<new>/market-tick-data-service/.venv/bin/python), launch with `run_in_background:true`. Do NOT re-arm if
+  watcher alive — singleton lock race risk.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
