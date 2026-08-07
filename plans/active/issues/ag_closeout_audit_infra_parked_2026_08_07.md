@@ -236,3 +236,10 @@ since it produced a shipped draft artifact, not an unresolved item).
   (status: draft, single-todo, no finalize twin per the carve-out). **Ledger**: 2 new parked findings + 4 re-verified
   carry-forwards (2 resolved, 2 still open) + 3 net-new docs classified (1 → batch8, 1 ci-owned, 2 → new mistag
   findings) + 1 batch drafted — balanced.
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid. Every open todo is genuine operator-judgment
+  work: the 3-instance `asset_group` mistag pattern (findings 6/18/19) needs an operator pick among A/B/C, none of which
+  is worker-determinable; the stash-backup-bundle investigation (finding 11) has already been searched repeatedly with
+  zero hits and now needs a human call on durable-relocation-vs-loss; reviewing/flipping
+  `infra_satellite_ao_dispatch_batch8_2026_08_07.md` from draft to active is explicitly an operator action (this skill's
+  own scope excludes flipping a drafted batch itself); the 2 `[DOCS] P3` items are tooling-design calls, self-described
+  as "not urgent." Freshly created today, nothing stale yet. `assigned_vm: NA` is correct.

@@ -32,15 +32,15 @@ tags: [quality-gates, false-positive, worktree, tooling-gap, claude-worktrees]
 related: [/codex/05-infrastructure/per-tab-worktrees.md]
 created: "2026-08-06"
 author: unknown
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 priority: P3
 source: >-
   Surfaced while shipping the pipeline_e2e_check driver-VM pattern (2026-08-06) — chasing 3 confirmed false-positive QG
   failures on deployment-service back to a common root cause (a locked nested worktree lacking a `.claude` scan
   exclusion), then grepping for the same pattern workspace-wide.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.2
@@ -153,3 +153,22 @@ unrelated VM-launch-pattern deliverable) per the "every deferral is a tracked to
 ## Progress Log
 
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: RECLASSIFY, `assigned_vm: NA -> planning` (`execution_scope` ->
+  `orchestrator-agent`). The one open todo is bounded, mechanical, deterministic-outcome work: add the literal string
+  `".claude"` to an existing dir-exclusion set/frozenset/tuple in each of 28 named files, following an exact
+  already-proven reference pattern from 2 sibling files in this same repo, with the file list independently regenerable
+  via the grep command given in the doc body and a stated verification bar (each touched file still
+  parses/imports/runs). No design ambiguity, no live-infra blast radius (the change only widens what a checker IGNORES,
+  it cannot change checker PASS/FAIL semantics for real repo content). `assigned_role: data_engineering` is a valid
+  registry role (`unified-trading-pm/agents/data_engineering.md`) — left as authored, not changed. Conflict-check
+  (`ao-dispatch-batch-naming-and-conflict-check.md` § 3): grepped the full `plans/active/` corpus for the fix's own
+  signature (`claude.*worktree.*exclusion`, `EXCLUDE_DIR.*claude`) — the only other hits are (a) this doc's own citation
+  in `infra_consolidated_closeout_2026_07_25.md`'s Sources list (a pure linkage/tracking entry on an `assigned_vm: NA`
+  hub doc with no todo of its own claiming this fix — not a competing claim), (b) a same-day
+  `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` finding recommending the exact retag-out-of-cross-cutting this
+  doc already received earlier today (no fix-work claim, a tagging note only), and (c) two unrelated mentions of a
+  DIFFERENT already-fixed checker's `.claude` exclusion used as an incidental precedent citation. No active
+  `assigned_vm: planning` plan, satellite/finalize batch, or the infra tranche's own closeout doc claims this fix. Clear
+  to flip. No finalize-plan twin required — `doc_type: issue` docs live under `plans/active/issues/` and
+  `check_finalize_plan_coverage.py` globs only `plans/active/*.md` (verified by reading the script), so this doc type is
+  structurally exempt regardless of todo count.

@@ -31,7 +31,7 @@ related:
   ]
 created: "2026-08-06"
 author: unknown
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -158,3 +158,13 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
   minimal and correct — the `auto` mode call site and the republish command it shells out to) re-verified; added
   `features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`, the doc this bug's own text names
   as "the exact incident class" the `lc_verify_tarball_freshness` mechanism was built to prevent.
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — deliberately NOT reclassified directly. Todo 1
+  (the bounded, worker-determinable `auto`-mode fix) is already conflict-clear-extracted by `/ag-closeout-audit infra`'s
+  2026-08-07 run into `infra_satellite_ao_dispatch_batch8_2026_08_07.md` (`assigned_vm: planning`, currently
+  `status: draft` awaiting operator flip). Directly reclassifying this doc too would open a second, competing dispatch
+  path onto the same fix — exactly what the shared conflict-check exists to prevent — and would step on the sibling
+  skill's own in-flight batch-drafting workflow, which this skill's own scope explicitly defers to (never flip a drafted
+  batch to active itself). Todo 2 (`[DIAG] P3`, the optional `--allow-dirty-tarball` auto-scoping idea) is correctly NOT
+  covered by batch8 — its own Progress Log calls it "a separate, smaller design consideration, not required for this
+  fix" — and remains a genuine open design call here. Once batch8 is approved and ships, its own todo reconciles this
+  doc's todo 1 checkbox directly; no action needed from this skill until then.

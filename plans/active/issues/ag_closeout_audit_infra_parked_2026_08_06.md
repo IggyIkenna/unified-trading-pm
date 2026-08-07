@@ -46,7 +46,7 @@ related:
   ]
 created: "2026-08-06"
 author: slot-8 (ag_closeout_auditor, infra tranche, dispatch agt-42686f)
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -197,9 +197,12 @@ findings since each produced either a durable entry here or a shipped fix).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Re-apply `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly**
-      (finding 10, FIFTH consecutive day open) — set line 39 to `assigned_vm: planning` (currently blank), then verify
-      the `[BACKEND] P3` todo actually reaches the live AO backlog.
+- [x] ✅ [OPERATOR] P1. **RESOLVED (verified by na-eligibility-audit 2026-08-07, infra tranche)** — direct read of
+      `infra_satellite_ao_dispatch_batch3_2026_07_30.md` line 39 confirms `assigned_vm: planning` (no longer blank).
+      **Re-apply `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly** (finding 10, was
+      FIFTH consecutive day open) — set line 39 to `assigned_vm: planning` (currently blank), then verify the
+      `[BACKEND] P3` todo actually reaches the live AO backlog (live-backlog dispatch itself not independently
+      re-verified this pass — the frontmatter fix is the mechanical fact this audit checks).
 - [ ] [OPERATOR] P1. **Investigate the missing stash-backup bundle** (finding 11, third consecutive day confirmed
       absent) — confirm whether `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated
       to a durable location or represents an unrecovered loss. Update
@@ -214,7 +217,12 @@ findings since each produced either a durable entry here or a shipped fix).
       below for record. **Review + approve/decline the 4 backlogged drafted infra batches** (findings 14/17) —
       `infra_satellite_ao_dispatch_batch4` (1 todo), `batch5` (1), `batch6` (2, 1 resolved-elsewhere), `batch7` (3) —
       combined 7 todos, all pre-conflict-checked; oldest 6 days.
-- [ ] [OPERATOR] P2. **Complete the traffic-pin Slack routing** (finding 15, option A recommended) — store the
+- [x] ✅ [OPERATOR] P2. **KEEP-NA-STALE — already re-tracked (verified by na-eligibility-audit 2026-08-07, infra
+      tranche)** — `issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md` now carries a real open
+      `## Follow-ups` checkbox (`- [ ] [INFRA] P2. Store the Slack #ci-failures webhook...`) covering this exact
+      (a)/(b)/(c) work, and that doc is `assigned_vm: planning` (already self-dispatched/AO-visible) — closing here to
+      avoid two open asks for the same work; the live tracking location is that doc's Follow-ups section, not this one.
+      **Complete the traffic-pin Slack routing** (finding 15, option A recommended) — store the
       `cloud-monitoring-slack-ci-failures-webhook` secret (a); then dispatch/execute the bridge deploy (b) + canary
       verify (c), which become a clean batch candidate once (a) lands.
 - [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
@@ -240,3 +248,13 @@ findings since each produced either a durable entry here or a shipped fix).
   entries) -- 2 of the doc's 5 open todos (findings 12/13: `self_dispatched_orphan_count` addition, `CITE_RE` hardening)
   are specifically about hardening/extending that exact script, named explicitly in both findings' own text, and it was
   missing from the prior pass's list.
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, stale items — closed 2 of 6 open todos with hard
+  evidence: (1) the batch3 `assigned_vm` flip is genuinely done (direct read confirms line 39 = `planning`); (2) the
+  traffic-pin Slack-routing item is already re-tracked as a real open checkbox in an `assigned_vm: planning` doc
+  (`cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md`'s `## Follow-ups`) — closing here avoids a duplicate
+  open ask. Left the remaining 4 items OPEN and UNCHANGED: the asset_group-mistag (finding 6) and stash-backup-bundle
+  (finding 11) items are also restated in the successor `ag_closeout_audit_infra_parked_2026_08_07.md`, but restatement
+  in a newer doc is not evidence of resolution — closing them here on that basis alone would manufacture a
+  false-complete, the exact anti-pattern this doc's own finding-15 was filed to catch. The 2 `[DOCS] P3`
+  tooling-suggestion items (12/13) are genuine open design calls, also correctly left open. Doc stays `assigned_vm: NA`
+  (its remaining content is real operator-judgment work, not a mis-default).
