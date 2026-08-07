@@ -506,3 +506,12 @@ remaining items besides the over-cap-gated one above).
   landed on `live-defi-rollout` via `quickmerge.sh --agent`, post-push ancestry verified
   (`git rev-list --count origin/live-defi-rollout..HEAD` = 0). Proceeding to the purge VM's 3rd relaunch attempt with
   fresh pre-flight re-verification per the `[INFRA] P0` todo's own checklist.
+- **2026-08-07 13:43Z (AO dispatch #9 continued, `infra`, slot 8) — 3rd relaunch**: fresh pre-flight `--verify-only`
+  scan confirmed 0 GCS objects across all 1881 TARGET-signature day(s) x 10 `TARGET_VENUES` (matches manifest generation
+  `1786048462981342`, unchanged since the dispatch #8 failure — CAS never fired, safe retry); zombie watchdog RUNNING;
+  consolidator cron PAUSED. Launched `canonical-migration-defi-gas-fees-legacy-purge-20260807-134308` (e2-highmem-8,
+  SPOT, tarball verified fresh @ `142403781940` = includes the just-shipped fix). Boot clean (`run.log`): sanity-check
+  12,425 rows confirmed, cron PAUSED confirmed, soft-delete retention 604800s confirmed, 0/0 GCS objects deleted
+  (expected), streaming download started 13:47:09Z — the exact recovery point where dispatch #8's VM was killed by the
+  (now-patched) `heartbeat_stall_watcher.py` at ~50min. Monitoring for survival past 45min to confirm the fix, then to
+  terminal EXIT_STATUS.
