@@ -640,3 +640,27 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   whoever picks up the still-open memray/tracemalloc profiling work below.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is the native-memory OOM root-cause investigation
   (memray/tracemalloc profiling); AWS credits confirmed cleared today, work can proceed.
+- **2026-08-07T21:22Z (autonomous session)** — **Second data point: a single chunk with an anomalously high per-league
+  OOM rate (10/18 = 55%), strongly correlated with real-fetch density, not span.**
+  `mtds-backfill-odds-smallchunk2-20260807` (`--chunk-size 5`, full 2020-06-06→2026-08-07 odds_api range) has spent ~2h
+  on chunk 18/451 (`2020-08-30→2020-09-03`) alone — verified via full `run.log` read (rule 1b: diffed actual per-league
+  outcomes, not just log-line activity) that this is genuine progress, not a repeat-loop: 18 distinct leagues attempted
+  (EPL→LA_LIGA→BUNDESLIGA→SERIE_A→LIGUE_1→EREDIVISIE→PRIMEIRA_LIGA→JUPILER_PRO→SUPER_LIG→SCOTTISH_PREMIERSHIP→
+  GREEK_SUPER_LEAGUE→AUSTRIAN_BUNDESLIGA→SWISS_SUPER_LEAGUE→DANISH_SUPERLIGA→ELITESERIEN→EKSTRAKLASA→ALLSVENSKAN→
+  BRASILEIRAO), each a genuinely fresh subprocess/date-range combo, zero identical repeats. EKSTRAKLASA fully completed
+  (`Batch complete: 5 results collected`); 10 of the 18 OOM'd once each (exit=137) and were correctly marked
+  `CHUNK_FAILED` + advanced to the next league (self-recovery working as designed — no data loss, no freeze). This
+  chunk's 55% per-league OOM rate is far above the historical `--chunk-size 5` baseline (~4/75 chunks). Circumstantial
+  support for the season-opener/real-fetch-density hypothesis: the successful/failed leagues that DID get through show
+  non-trivial real `ODDS_API` payloads (e.g. 828 rows/day) rather than skip-fast dates, and 2020-08-30→2020-09-03 is a
+  genuine European-football season-opener window (matches the fixture-calendar pattern flagged in the sibling doc
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`). **Not a stall** — PROGRESS.json only checkpoints at
+  the whole-chunk boundary (all leagues done), so a chunk with an unusually deep/failure-prone league list can go a long
+  time without advancing the visible `last_completed_date`, which is exactly what was observed (stuck at `2020-08-29`
+  since 19:22:22Z while real per-league work continued underneath). Residual-gap risk worth flagging for whoever next
+  re-censuses odds_api: leagues that OOM'd this pass (EPL, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG,
+  GREEK_SUPER_LEAGUE, SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, ALLSVENSKAN — for this specific
+  2020-08-30→2020-09-03 range) are NOT auto-retried within this run; they'll show as `attempted_failed` and need a
+  follow-up narrow-range re-run to close, same pattern as the EPL 401-retry gap noted earlier in the sibling doc. No
+  intervention taken — self-recovery is functioning correctly and killing/relaunching would lose the 8 completed
+  leagues' progress within this chunk for no benefit.
