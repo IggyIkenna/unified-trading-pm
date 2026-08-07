@@ -32,7 +32,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
-last_updated: "2026-07-24"
+last_updated: "2026-08-07" # was 2026-07-24 -- plan_reconciler agt-e7f024: 2 hard-evidenced flips + 1 stale-note fix
 locked_by:
 locked_since:
 supersedes: [prediction_venue_perps_and_live_clob_depth_2026_06_20]
@@ -490,8 +490,10 @@ already on LDR.
     [`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`](/plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md)'s
     `[UAC] P2` "Politics/geo cross-venue canonicalization — structured audit + build" todo** (`status: active`,
     `assigned_vm: planning`), which names this item verbatim as its `Source:` and whose `Done when` explicitly ends "and
-    the source doc's checkbox is flipped". Citation added by `/na-eligibility-audit` 2026-08-02 — checkbox stays `[ ]`
-    as the tracking anchor, `assigned_vm` untouched.
+    the source doc's checkbox is flipped". Citation added by `/na-eligibility-audit` 2026-08-02 (checkbox held `[ ]` as
+    the tracking anchor at that time); since flipped `[x]` 2026-08-05 once `unified-api-contracts@6c11d0d5` shipped —
+    corrected by plan_reconciler agt-e7f024 2026-08-07 (the trailing "checkbox stays `[ ]`" clause was stale, the box
+    itself was already correctly `[x]`).
 - [x] [UAC] P1. **Cross-venue canonicalization BREADTH audit — close the non-crypto gaps (MEASURED 2026-06-24, operator
       "kalshi isn't as verbose as polymarket? sports not just soccer, weather, politics across ALL asset classes")**:
       empirical catalogue snapshot (`instruments-store-pred-prd`, day=2026-06-23): **KALSHI 34 cqg groups / POLYMARKET
@@ -603,21 +605,22 @@ Residual data-correctness items captured as todos below (lowercase-venue manifes
       market-tick-data-service@d6edd704 + instruments-service (VM). Provenance: autonomous catalogue/backfill session
       2026-06-23 / fix 2026-06-26. (Composes with the line-339 Kalshi-historical residual.)
 
-- [ ] [DATA] P2. **Residual lowercase `venue=kalshi` + blank/UNKNOWN venue rows in the prediction `_index` manifest**
-      (DISCOVERED 2026-06-23 verifying Item A): the consolidated
-      `market-data-tick-pred-prd-…/_index/availability_index.parquet` carries ~124 `venue=kalshi` (lowercase,
-      pre-venue-case-fix) + ~168 blank-venue + ~21 `UNKNOWN` rows alongside canonical `KALSHI` 25,605 / `POLYMARKET`
-      168,249. These split the Kalshi denominator (a lowercase `kalshi` row is a phantom of `KALSHI`). The catalogue
-      (instruments-store) was cleaned this session; the MANIFEST (market-data-tick) was NOT (a manual phantom-reconcile
-      `--apply` is risky per CLAUDE.md — flips real captured→attempted_failed on a false positive). Fix = a scoped
-      manifest canonicalisation that maps lowercase `kalshi`→`KALSHI` + resolves blank/UNKNOWN venue, bundled into the
-      next prediction single-walk (NOT a standalone whole-corpus walk — single-walk discipline). Repo:
-      market-tick-data-service (manifest canonicalisation). **NICE-TO-HAVE** — ~313 of 194k rows (~0.16%), does not
-      materially move the 99.73% denominator.
-- [ ] [DATA] P3. **1,454 prediction `_index` rows still at schema v4** (vs 192,713 at v9; DISCOVERED 2026-06-23): the
-      Kalshi-history tail not yet re-walked to v9 (the POLYMARKET v9 re-walk completed; Kalshi-bulk seed rode a later
-      stack). v9-schema polish only (rows already captured); rides the next prediction canonicalisation walk. Repo:
-      market-tick-data-service. **NICE-TO-HAVE.**
+- [x] ✅ [DATA] P2. **CLOSED — verified by plan_reconciler agt-e7f024 2026-08-07.** Residual lowercase `venue=kalshi` +
+      blank/UNKNOWN venue rows in the prediction `_index` manifest (DISCOVERED 2026-06-23 verifying Item A): the
+      consolidated `market-data-tick-pred-prd-…/_index/availability_index.parquet` carried ~124 `venue=kalshi`
+      (lowercase) + ~168 blank-venue + ~21 `UNKNOWN` rows. **Both resolved**: the 124 lowercase rows were purged
+      2026-07-11 (`purge_prediction_index_final_residuals_2026_07_11.py --apply`, exact-key-matched against canonical
+      `KALSHI` rows, 0 `captured` among them; `_index` post-delete: 0 lowercase `kalshi` rows); the 189 blank/UNKNOWN
+      rows were superseded by a full manifest rebuild, confirmed via a fresh full-index live re-read 2026-07-27
+      (`df["venue"].value_counts()` = exactly two distinct values, `POLYMARKET` 584,219 / `KALSHI` 199,337 — zero
+      nulls/blanks/UNKNOWN across all 783,556 rows). Evidence:
+      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (2026-07-11 + 2026-07-27 Progress Log
+      entries).
+- [x] ✅ [DATA] P3. **CLOSED — verified by plan_reconciler agt-e7f024 2026-08-07.** 1,454 prediction `_index` rows still
+      at schema v4 (vs 192,713 at v9; DISCOVERED 2026-06-23) — the Kalshi-history tail. **Resolved**: a full v9 rebuild
+      superseded the entire legacy schema family; confirmed via the same 2026-07-27 fresh full-index live re-read —
+      `df["schema_version"]` is 100% `9` across all 783,556 rows, no v4/v5 rows of ANY capture_status remain. Evidence:
+      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (2026-07-27 Progress Log entry).
 
 **Cross-cutting findings captured as todos:**
 
