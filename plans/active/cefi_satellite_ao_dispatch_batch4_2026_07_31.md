@@ -38,7 +38,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -91,7 +91,7 @@ drift_direction: advance-code
       `issues/bybit_futures_chain_write_shape_2026_07_13.md` P1 flipped, Progress Log updated. The 5-day sample's "all
       duplicates" was a sampling artifact; 56% of shape-2 objects carry unique/orphan data.
 
-- [ ] [DATA] P2. **Re-check ASTER + spot-check 2 other venues for post-relaunch live data landing.** Run the cited
+- [x] ✅ [DATA] P2. **Re-check ASTER + spot-check 2 other venues for post-relaunch live data landing.** Run the cited
       `gcloud storage ls gs://market-data-tick-cefi-prd-central-element-323112/pipeline_mode=live_aster/...` check for
       day=2026-07-30 (well past the 13:30Z UTC threshold as of today). If rows landed: flip
       `infra_capture_and_devops_leftovers_2026_07_06.md`'s verification-half checkbox and archive
@@ -99,7 +99,21 @@ drift_direction: advance-code
       land: file a fresh investigation, do not silently re-park. Then spot-check HYPERLIQUID and BINANCE-FUTURES the
       same way (read-only `gcloud storage ls`, no writes/deletes). Source:
       `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`. **Done when**: all 3 venues checked,
-      dependent-doc checkboxes flipped or a new bug filed, with the exact `gcloud` output cited as evidence.
+      dependent-doc checkboxes flipped or a new bug filed, with the exact `gcloud` output cited as evidence. — **DONE
+      2026-08-07 (slot 12)**: all 3 venues checked with exact output — ASTER (`live_aster`), HYPERLIQUID
+      (`live_hyperliquid`), BINANCE-FUTURES (`live_binance`) all return **zero objects** at the cited
+      `raw_tick_data/.../pipeline_mode=live_*` path for day=2026-07-30 + 08-05 + 08-06
+      (`ERROR: ... matched no objects`), and zero `live_*` anywhere in the tick bucket (only `batch_*` modes). **Rows
+      did NOT land → fresh investigation filed (not re-parked)**:
+      `plans/active/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`. Root cause:
+      capture + event-log WARM tier are healthy (30,486 cefi warm objects flowing to
+      `central-element-323112-events/live-events/warm/cefi/*`); the cited `raw_tick_data/live_*` path is a retired
+      legacy surface; the real bug is the **cold-tier `live-event-log-compactor` OOM** (512Mi, killed on the
+      `(cefi,     book_snapshot_5)` shard with 1,497 warm files, failing daily since 2026-08-01 →
+      `live-events/cold/cefi/**` empty). Source-doc todos 1-2 flipped citing this run (infra plan's ASTER checkbox
+      intentionally NOT flipped — its "live_aster rows landing daily" gate now reads against the warm/cold event-log
+      surface per the new issue doc's P2 todo). New bug has 3 actionable todos (compactor OOM fix, cold backfill,
+      legacy-path doc retiement).
 
 - [x] ✅ [BACKEND] P2. **Widen `DeploymentsRegistry.get()`'s except clause + investigate the false `vm_not_running`
       reap.** In `unified-trading-library`, degrade-to-None on real `google.api_core` `NotFound`/`Forbidden`/404

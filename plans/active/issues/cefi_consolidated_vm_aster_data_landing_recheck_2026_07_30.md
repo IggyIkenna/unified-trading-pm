@@ -96,7 +96,7 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 > dispatch path for checks already claimed twice over. Each batch's done-when includes flipping the source checkbox
 > here, so those workers own closing them.
 
-- [ ] [DATA] P2. **After 2026-07-30T13:30Z UTC**, re-check whether real rows are landing:
+- [x] ✅ [DATA] P2. **After 2026-07-30T13:30Z UTC**, re-check whether real rows are landing:
       `gcloud storage ls "gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-07-30/pipeline_mode=live_aster/**"`.
       If populated: flip `infra_capture_and_devops_leftovers_2026_07_06.md`'s ASTER-connector todo's remaining checkbox
       with this evidence, and archive/retire `issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md` as
@@ -117,10 +117,27 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
       with zero live rows from the OLD VM, and an unexplained VM replacement with no landed-data window in between.
       Whoever picks this up next should SSH the current VM, `sudo tail -f` the ASTER shard logs fresh (per this todo's
       own fallback instruction), and separately check why the 07-30 VM disappeared (self-heal/zombie-watchdog relaunch?
-      crash? manual replace?) before assuming the fresh VM will behave differently.
-- [ ] [DATA] P3. Spot-check 2-3 of the 15 pre-existing venues (e.g. HYPERLIQUID, BINANCE-FUTURES) the same way — they
+      crash? manual replace?) before assuming the fresh VM will behave differently. **✅ VERIFIED 2026-08-07 (slot-12,
+      batch4 todo 2)**: re-ran the exact command for day=2026-07-30 (and 08-05, 08-06) — **still zero `live_aster`
+      objects**; `gcloud storage ls .../day=2026-07-30/` and `.../day=2026-08-05/` show only `batch_*` modes.
+      **ROOT-CAUSED, NOT a capture outage**: the capture pipeline is ALIVE — current VM
+      `mtds-live-cefi-consolidated-20260806-163414` runs all 16 shards and the event-log **warm tier is flowing**
+      (30,486 cefi objects in
+      `gs://central-element-323112-events/live-events/warm/cefi/{trades,book_snapshot_5,liquidations,derivative_ticker}/`,
+      latest 2026-08-06T23:56Z). The `raw_tick_data/pipeline_mode=live_*` path is a **retired legacy surface** (active
+      sink is `LiveEventFacadeSink` → Pub/Sub). The real bug is the **COLD tier**: `live-event-log-compactor` (512Mi) is
+      OOM-killed on the `(cefi, book_snapshot_5)` shard (1,497 warm files) every daily run since 2026-08-01, so
+      `live-events/cold/cefi/**` = zero objects. Full evidence + fix todos:
+      `issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`. Infra plan's ASTER checkbox NOT
+      flipped (its gate is "live_aster rows landing daily" — that gate now reads against the warm/cold event-log
+      surface, see the P2 todo in the new issue doc).
+- [x] ✅ [DATA] P3. Spot-check 2-3 of the 15 pre-existing venues (e.g. HYPERLIQUID, BINANCE-FUTURES) the same way — they
       hit the identical empty-universe wait, so their data-landing should resume at the same time; confirms the fix is
-      fleet-wide, not ASTER-specific relief only.
+      fleet-wide, not ASTER-specific relief only. — **✅ VERIFIED 2026-08-07 (slot-12, batch4 todo 2)**: HYPERLIQUID
+      (`pipeline_mode=live_hyperliquid`) and BINANCE-FUTURES (`pipeline_mode=live_binance` — note the UAC name, not
+      `live_binance_futures`) both return ZERO objects for day=2026-08-05 + 08-06; same story as ASTER — legacy
+      raw_tick_data surface, warm tier healthy for all venues on the current VM. See
+      `issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`.
 - [x] ✅ [DATA] P3. **ASTER `liquidations` shows 100% `empty_confirmed` in the manifest (563/563 samples) — investigated
       2026-07-31, inconclusive, needs a longer real-world check, not a re-guess.** **RESOLVED 2026-08-05 (slot 2):
       NOT-A-BUG — data-source reality.** Evidence: `cefi_satellite_ao_dispatch_batch5_2026_08_02.md` todo 4 verdict. VM
@@ -144,6 +161,9 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 
 ## Progress Log
 
+- **2026-08-07 (slot-12 worker, batch4 todo 2)**: both open todos re-checked + flipped. Cited path still zero `live_*`
+  objects (legacy surface); warm tier confirmed healthy; cold-tier compactor OOM root-caused. Fresh investigation + fix
+  todos filed: `issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check:
   `infra_capture_and_devops_leftovers_2026_07_06.md` (active, assigned_vm:planning) already carries the near-verbatim
   "verify `live_aster` rows land" claim, and this doc's own todo says to flip THAT plan's checkbox. Duplicate dispatch
