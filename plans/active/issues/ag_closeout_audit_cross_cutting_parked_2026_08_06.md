@@ -280,3 +280,6 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
 - **context-scout 2026-08-07**: populated context_scope (5 entries) — pointed at the 4 still-open findings' actual retag
   targets (findings 1/2/3/5) plus SKILL.md for process context; dropped the generic conflict-check codex doc (no batch
   drafted this run) and the hub/prior-sibling pointers (less load-bearing than the todos' own direct targets).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — verified all 4 open findings' targets directly today: findings
+  1/2/3/5 target docs all still carry their original mistagged `asset_group` (fresh grep confirms `[cross-cutting]` /
+  `[defi, cross-cutting]`, unretagged) — all 4 todos remain genuinely open, owning-tranche work.

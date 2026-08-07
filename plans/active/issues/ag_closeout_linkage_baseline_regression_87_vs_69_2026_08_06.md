@@ -201,3 +201,8 @@ the triage given their concentration.
   to tranches other than cross-cutting — retagging them is each owning tranche's own action per the
   concurrent-sharded-worker rule, not this run's to execute). KEEP-NA-consistent: still a fresh-enough, still-open
   tracking doc: no reclassification needed.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms the 2026-08-07 re-measurement above (unchanged): todo
+  2 is a corpus-wide, cross-tranche fix-or-retag sweep (most of its docs belong to OTHER tranches — this doc's own
+  same-day re-measurement shows cross-cutting's 37-doc share is dominated by the same same-day-mistag-cluster pattern —
+  retag-by-owning-tranche, not this doc's own write); todo 3 is an open "is this worth building" feature-investment call
+  with no stated done-when.

@@ -227,9 +227,12 @@ member, not just a retag.
       — the doc's real home is the `ci` tranche (`ci_consolidated_closeout_2026_07_25.md`, itself also archived
       `status: complete`), not `ao`. The underlying goal (fix the wrong cross-cutting tag) is achieved; this todo's
       specific proposed target tranche was superseded by the operator ruling.
-- [ ] [DOCS] P3. Retag `plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`'s `asset_group`
-      `[cross-cutting]` → `[tradfi]` (finding 6). Done when: the tag is corrected and the doc is folded into the tradfi
-      tranche's closeout membership as a fresh (previously invisible) member.
+- [x] ✅ [DOCS] P3. ~~Retag `plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`'s
+      `asset_group` `[cross-cutting]` → `[tradfi]` (finding 6)~~ — **DONE (na-eligibility-audit 2026-08-07)**. Verified
+      directly: the target doc's `asset_group` is now `[tradfi]` (inline comment: "corrected 2026-08-02
+      ag-closeout-audit tradfi tranche -- was [cross-cutting], a genuine mistag... tags already say tradfi"). Fold-in
+      confirmed too — the doc is cited in `plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (+ its
+      finalize), the tradfi tranche's live dispatch family. Both Done-when clauses satisfied.
 
 ## Progress Log
 
@@ -254,3 +257,9 @@ member, not just a retag.
   owning tranche's own audit" per the 2026-07-30 concurrent-sharded-worker rule cited in this doc's own `related`/
   `source` — a redirect-banner case, not bounded AO-dispatchable work for this tranche.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, stale items closed — 1 item closed as done (finding 6 / todo 6, verified
+  directly: target doc's `asset_group` is now `[tradfi]`, folded into
+  `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`). The remaining 2 open todos (findings 2, 4) verified still
+  genuinely open — both target docs' `asset_group` still reads `[cross-cutting]` today (fresh grep), unretagged. Doc
+  stays `assigned_vm: NA` — both remaining todos are cross-tranche retags per the 2026-07-30 concurrent-sharded-worker
+  rule, not this tranche's write.

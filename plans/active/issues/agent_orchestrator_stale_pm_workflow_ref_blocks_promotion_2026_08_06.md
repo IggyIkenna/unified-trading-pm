@@ -160,3 +160,7 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
   stall to the still-unresolved main↔LDR backmerge PR #791. Complementary, not duplicate: that doc doesn't yet know
   about this doc's Problem 1 (dangling PM-workflow ref) or Problem 2 (the genuine 7-file code conflict) blocking #813
   independently of #791. Added to `context_scope` (now 6 entries); added the reverse pointer on that doc too.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 3 of 4 todos already done (PRs #817/#814/#813 merged/resolved
+  2026-08-07 per the entries above); the sole remaining open todo (todo 4, rollout-process gap) is explicitly an
+  operator/rollout-process-owner decision ("whether to build this now or accept the recurring cost") — not a
+  worker-determinable outcome as currently scoped.

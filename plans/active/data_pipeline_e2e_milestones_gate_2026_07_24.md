@@ -519,3 +519,5 @@ is the single place to scan them all in one pass.
   standing reference surface by operator ruling; 0 open todos is expected/by design, not an archival signal here.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries) -- still a standing
   tracking/index surface, no source path applies.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): standing reference surface,
+  `archive_exempt: true` by operator ruling, 0 open todos by design.
