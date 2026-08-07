@@ -2149,6 +2149,24 @@ if [ "$_qm_push_ok" != 1 ]; then
   exit 1
 fi
 
+# Post-push ancestry verification (wip_preserve_refs_silently_unrecovered_2026_07_29):
+# Re-fetch origin/<branch>, then assert the just-pushed SHA is an ancestor of it.
+# SHA-ancestry is the correct oracle immediately after a push (unlike aged-ref checks —
+# we pushed this exact sha moments ago, so ancestry holds IFF the push actually landed).
+# FAIL, not warn: a false "SHIPPED" log line is strictly worse than a hard error — it makes
+# every downstream consumer believe work landed when it did not (operator ruling 2026-08-06).
+_QM_PUSHED_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
+if [ -n "$_QM_PUSHED_SHA" ]; then
+  git fetch origin "$BRANCH" --quiet 2>/dev/null || true
+  if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null; then
+    echo "[$REPO_NAME] ❌ POST-PUSH ANCESTRY CHECK FAILED: pushed SHA ${_QM_PUSHED_SHA:0:9} is NOT an ancestor of origin/$BRANCH." >&2
+    echo "[$REPO_NAME]    The push exited 0 but the commit is not on the branch — this is the false-SHIPPED failure mode." >&2
+    echo "[$REPO_NAME]    Check: git reflog && git for-each-ref 'refs/wip-preserve/**'" >&2
+    exit 1
+  fi
+  echo "[$REPO_NAME] ✅ Post-push ancestry verified: ${_QM_PUSHED_SHA:0:9} is on origin/$BRANCH"
+fi
+
 # Extract issue references from commit message for PR body
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")
 
