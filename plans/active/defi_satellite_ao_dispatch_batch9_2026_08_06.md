@@ -140,6 +140,20 @@ over all pending draft batches) that independently spot-verified every todo belo
       (`unified-trading-pm@1da67407e`). Did not relaunch the purge VM (would likely reproduce the reap). Checkbox stays
       open until an `infra`-scoped dispatch refreshes the daemon and the purge actually completes per this todo's own
       done-when.
+- [ ] [INFRA] P0. **Relaunch gas_fees legacy purge VM with streaming download fix** (blocked answer BLK-4cd8f7bb,
+      2026-08-07 09:44Z — Option 1: relaunch with fixed code, cron stays PAUSED). Code fix
+      `market-tick-data-service@eb380b71b` (`blob.download_as_bytes(timeout=900)` streaming in `_purge_manifest_rows`,
+      replacing `_download_index_chunked` range-request that hung 47 min on dispatch #6's VM) is QG-green on
+      `live-defi-rollout`. Command:
+      `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh     defi-gas-fees-legacy-purge <date> <date> full`
+      in deployment-service (SPOT per backfill HARD RULE — script is CAS-idempotent so preemption restart is safe).
+      Pre-flight: (a) re-verify 0 GCS objects for all 10 TARGET_VENUES (fresh check); (b) confirm zombie watchdog
+      `20260807-075242` RUNNING (90-min idle threshold). Launch discipline: STARTED<60s + >=1 progress/hr + terminal
+      EXIT_STATUS; verify T+10min. Do NOT resume consolidator cron before VM exits cleanly. After success: (1) resume
+      cron; (2) await >=4 clean `--verify-only` cycles; (3) flip todo 3 checkbox with evidence (VM name, EXIT_STATUS=0,
+      post-purge manifest row count = 0, cite both source docs). Repo: deployment-service. Done when: VM exits cleanly,
+      post-purge manifest read = 0 of 12,425 target rows, consolidator cron completes >=4 verify-only cycles, and todo 3
+      checkbox is flipped with full evidence.
 - [x] ✅ [BACKEND] P2. **Add CLI flags** (`--archetypes`, `--venue-allowlist`, `--currency-allowlist`) to
       strategy-service's `run_paper` entrypoint (`service_entry.py`) to construct and pass the already-shipped
       `PaperUniverseConfig.{archetypes,venue_allowlist,base_currency_allowlist}` fields (today always `None`/unset, so
@@ -404,6 +418,11 @@ remaining items besides the over-cap-gated one above).
   Confirmed both code fixes still in LDR (`vm_zombie_watchdog.py` line 248: `"canonical-migration-": (90.0, 360.0)`;
   `launch-canonical-migration-vm.sh` line 2094: `STALL_TIMEOUT_SEC=7200`). No new findings. Posting /blocked with
   specific ask: activate `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`. No VM/GCS/cron mutation performed.
+- **2026-08-07 (BLK-4cd8f7bb answered, `data_engineering`, slot 10, dispatch #7 follow-up)**: Main answered 09:44Z —
+  Option 1: relaunch with fixed code, consolidator cron stays PAUSED until purge completes. Main confirmed `eb380b71b`
+  is QG-green on LDR. Added `[INFRA] P0` tracked todo (above) for the VM relaunch: MACHINE_TYPE=e2-highmem-8, SPOT, with
+  pre-flight/post-purge/checkbox-flip requirements per main's message. Main tracking to completion; will escalate to
+  operator if relaunch fails a second time.
 - **2026-08-07 (AO dispatch #7, `data_engineering`, slot 10)**: VM `20260807-082535` (from dispatch #6) confirmed DEAD
   via background monitor — STOPPING at 09:17Z, GONE by 09:20Z, no EXIT_STATUS. Root cause: `_download_index_chunked()`
   range-request approach hung ~47 min inside `_purge_manifest_rows()` during 3rd consecutive 2.46 GiB download (3 outer
