@@ -586,6 +586,21 @@ orphans the loop immediately — MUST launch WITHOUT `&` inside when using the h
   inside. (4) Check `bip2gkahl.output` — if heartbeat dead, re-arm heartbeat.sh same way. Do NOT re-arm either if alive
   — singleton lock race risk.
 
+### 2026-08-07T12:48Z — slot 5, session 12 — killed tasks re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Both `bprxba91n` + `bip2gkahl` were KILLED (harness kill) at ~12:44Z.** Fleet
+at kill (poll 10): **21 VMs** (draining; peak was 30 at poll 4). Re-armed immediately:
+
+- Watcher: **`bfinzvap4`** (started 12:48:13Z, poll 1 = **20 VMs** — still draining)
+- Heartbeat: **`bksv7kopi`** (started 12:48:13Z, 20-min intervals)
+
+Trend: 30 (12:13Z) → 27 → 26 → 24 → 21 (killed) → 20 (re-arm poll). Draining ~1-2 VMs/poll on average.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bfinzvap4.output`
+  (TaskOutput non-blocking). (3) If watcher dead: re-arm from scratchpad `watcher/es_opt_watcher_slot5.sh` (exists) with
+  `run_in_background:true`, NO `&` inside. (4) Check `bksv7kopi.output` — if heartbeat dead, re-arm
+  `watcher/heartbeat.sh` same way.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
