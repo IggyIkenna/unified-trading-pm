@@ -410,3 +410,24 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   extending the same guard to `agents/conflict_resolver.md` + `agents/data_pipeline_failure.md` (same unguarded ping;
   `authoring_slot` is `str`-unvalidated at the escalate API). PM `quality-gates.sh` green; agent-orchestrator
   `quality-gates.sh` green. Sibling guards + flip shipped in this session's commit.
+- **2026-08-07 — `/ag-closeout-audit ci` (autonomous, daily scheduled run, `ag_closeout_auditor` worker, slot 4,
+  `agt-d12c5d`) — IN PROGRESS, checkpointed by `/pre-compact`.** Re-checked this batch's own Deferred section first
+  (iterative-drain step 1): D5-1/D5-2/D5-3 unchanged (batch4's todos 1/2/4 still un-landed); D5-5/D5-6/D5-7 unchanged.
+  Fresh-candidate sweep via `generate_ag_closeout_audit_candidates.py --tranche ci`: **45 total members, 7
+  never-cited**. Dispatched a fresh full Phase 1 sweep as a 46-agent `Workflow` (45 real candidates + 1
+  `asset_group:[meta]` fold-in candidate per the skill's Phase 0.3 meta-sweep rule,
+  `quality_gates_quickmerge_timing_ baseline_2026_07_31.md`) — **run id `wf_1f04b9b2-680`, still executing when this
+  checkpoint was written; results pending, to be reconciled in a follow-up entry.** Phase-0-only findings already
+  written durably (not left in chat): see `/plans/active/issues/ag_closeout_audit_ci_parked_2026_08_07.md` — 6 docs
+  dual-tagged `[ci, infrastructure]` (content reads CI-specific in all 6, not retagged here per the same
+  non-owning-tranche-race caution the 2026-08-04 run applied to the first of these six), 1 doc dual-tagged
+  `[sports, ci]` (sports-owned, not retagged here), the `asset_group:[meta]` fold-in candidate noted above, and a
+  `check_ag_closeout_linkage.py` ratchet cross-check (71 vs baseline 69, corpus-wide — 7 of the 71 are
+  bare-`[ci]`-tagged; spot-verified `pm_bats_tests_never_invoked_by_quality_ gates_2026_07_26.md` is a gate
+  false-positive, already tracked at batch4 D4-10, since the gate's "closeout family" for `ci` is only the archived
+  digest doc, not this batch chain's own Deferred tables). Also observed (out of scope to chase here):
+  `check_reference_paths.py` corpus-wide ratchets are both currently red (format 83 vs baseline 81, existence 92 vs
+  baseline 86) — pre-existing, not caused by this run, not ci-specific; noted for whoever owns that ratchet. **Resume**:
+  re-invoke/inspect Workflow run `wf_1f04b9b2-680` (or its journal.jsonl in the transcript dir), synthesize Phase 2
+  (verdict counts + orphan list), run Phase 3's conflict-check, and append the final report + any batch6 decision to the
+  parked-findings doc above rather than creating a second one.
