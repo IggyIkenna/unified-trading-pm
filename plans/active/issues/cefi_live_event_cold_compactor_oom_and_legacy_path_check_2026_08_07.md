@@ -149,11 +149,13 @@ surface that actually exists (warm + cold event-log tiers).
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `live-event-log-compactor` OOM: raise the container memory above 512Mi (e.g. 2-4Gi — the
+- [x] ✅ [BACKEND] P1. Fix `live-event-log-compactor` OOM: raise the container memory above 512Mi (e.g. 2-4Gi — the
       `(cefi, book_snapshot_5)` shard with ~1,497 warm parquet files OOMs at 512Mi) AND/OR make the compaction streaming
       / chunked so a single shard never materializes the full warm set in memory; verify a full daily run completes
       end-to-end (all 52 shards, no `Out-of-memory`/`signal 9`). (repo: deployment-service —
-      `terraform/gcp/live_event_log/` job spec + compactor source)
+      `terraform/gcp/live_event_log/` job spec + compactor source) — deployment-service@5e23a7b: Terraform resources
+      block raised to 4Gi/2CPU; compactor refactored to streaming PyArrow ParquetWriter (per-file row groups, never
+      materialises full warm set). QG green.
 - [ ] [DATA] P1. After the fix ships and one clean daily run completes, re-run compaction for the missed dates
       (2026-08-01 → 2026-08-06) to backfill
       `live-events/cold/cefi/{trades,book_snapshot_5,liquidations,derivative_ticker}/date=*/data.parquet`; done-when =
@@ -169,3 +171,9 @@ surface that actually exists (warm + cold event-log tiers).
 - **2026-08-07 (slot-12 worker, batch4 todo 2)**: full re-check run. Exact `gcloud` outputs above. Root-caused the
   cold-tier gap to the compactor OOM on `(cefi, book_snapshot_5)`. Warm tier confirmed healthy + flowing. Filed this
   doc; flipped the source doc's todos 1-2 and batch4 todo 2 citing this run.
+- **2026-08-07 (slot-14 worker, this task)**: shipped OOM fix. (1) `terraform/gcp/live_event_log/compaction_job.tf` —
+  added explicit `resources { limits = { memory = "4Gi", cpu = "2" } }` block (was implicit 512Mi default). (2)
+  `deployment_service/jobs/live_event_log_compactor.py` — replaced all-at-once `records` accumulation with streaming
+  `pyarrow.ParquetWriter` that writes one row group per warm file, bounding peak memory to one file's rows plus the
+  accumulated cold parquet buffer. Also merged `CompactorConfig.compaction_date` (COMPACTION_DATE env var) from
+  concurrent todo. QG green. deployment-service@5e23a7b.
