@@ -408,11 +408,16 @@ gap**, not a delete-safety question:
       legacy `collect-lst-rates` Cloud Run job formalized as canonical SOLBLAZE-SOLANA owner; code shipped
       `market-tick-data-service@2c451c33` (canonical venue name) + `deployment-service@51f9fbe` (OOM fix). Producer
       operating at 4Gi; LDR→main promote lag tracked as infra, not code.**
-- [ ] [DATA] P2. Backfill the 2026-08-01..08-03 `lst_rates` gap for `SOLBLAZE-SOLANA` (the OOM window — those dates are
+- [x] [DATA] P2. Backfill the 2026-08-01..08-03 `lst_rates` gap for `SOLBLAZE-SOLANA` (the OOM window — those dates are
       absent from the canonical captured set). Mechanism per the chosen ownership option: Option A → re-run the legacy
       `collect-lst-rates` path for those dates (after `2c451c33` deploys); Option B → adapter-based backfill. Repo:
       market-tick-data-service. Note: if the LDR→main promote stays stalled past 2026-08-07, pre-deploy daily runs keep
-      re-creating `venue=BLAZESTAKE` rows that need the same relabel+retire re-run.
+      re-creating `venue=BLAZESTAKE` rows that need the same relabel+retire re-run. ✅ deployment-service@46eddc9
+      (terraform 8Gi/2CPU bump) + Cloud Run REST API override executions at 8Gi/2CPU: f8m4d (2026-08-01 ✅ 1m52s), q9mkx
+      (2026-08-02 ✅ 1m42s), vqg8n (2026-08-03 ✅ 1m55s). GCS verified: 1 canonical SOLBLAZE-SOLANA lst_rates parquet
+      per date under venue=SOLBLAZE-SOLANA/chain=SOLANA/instrument_type=lst/ data_type=lst_rates/. Deployed image
+      (2c451c33) writes SOLBLAZE-SOLANA directly; no relabel+retire needed. 4Gi/1CPU OOM on historical backfill; bumped
+      to 8Gi/2CPU (Cloud Run constraint: >4Gi requires >=2 CPU).
 
 > **2026-08-06 archive-candidate audit**: Summary says 'RESOLVED for 3 of 4 venues, 1 remaining live-data-gap finding' —
 > BLAZESTAKE/SOLBLAZE-SOLANA has zero live producer, explicitly 'NOT fixed in this dispatch', operator/design decision

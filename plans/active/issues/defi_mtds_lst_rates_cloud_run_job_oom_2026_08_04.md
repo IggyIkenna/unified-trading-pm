@@ -189,12 +189,14 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
       by b5f4t ad-hoc run (2026-08-05T16:16:59Z). `day=2026-08-01` also newly confirmed missing (cron 74rqc at
       2026-08-02 01:00 UTC writing the prior day — extends scope beyond the stated 08-02/03/04). See Progress Log. —
       unified-trading-pm@cc1309869 (GCS-object-listing-verified, no code changes)
-- [ ] [INFRA] P3. Backfill missing `lst_rates` data for `day=2026-08-01`, `day=2026-08-02`, and `day=2026-08-03` (3 days
+- [x] [INFRA] P3. Backfill missing `lst_rates` data for `day=2026-08-01`, `day=2026-08-02`, and `day=2026-08-03` (3 days
       with zero GCS writes: failed cron executions 74rqc/lq977/c9qxr; `day=2026-08-04` already recovered by b5f4t).
       Trigger `uts-prod-mtds-collect-lst-rates` manually against each date (Cloud Run job supports
       `--args "--date <YYYY-MM-DD"`-style override, or equivalent CLI flag) with the current 4Gi image. Verify all LST
       venue directories appear in GCS post-run and manifest rows are written. [OPERATOR]-approved trigger or
-      safe-idempotent re-run required.
+      safe-idempotent re-run required. ✅ deployment-service@46eddc9 (8Gi/2CPU bump, IaC sync). Cloud Run REST API
+      override executions: f8m4d (2026-08-01 ✅ 1m52s), q9mkx (2026-08-02 ✅ 1m42s), vqg8n (2026-08-03 ✅ 1m55s). GCS
+      verified: 1 SOLBLAZE-SOLANA lst_rates parquet per date. Historical OOM at 4Gi resolved.
 - [ ] [INFRA] P2. Prod terraform state holds 26 add / 17 change / 2 destroy of un-applied drift beyond this fix
       (observed 2026-08-06 while syncing the lst-rates scheduler description): includes creation of the
       `liquidation-events` + `risk-params` Cloud Run jobs/crons (wired by deployment-service@b370df8, never applied) and
