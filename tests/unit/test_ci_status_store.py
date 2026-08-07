@@ -85,6 +85,40 @@ def test_non_main_green_cannot_clear_a_main_originated_failing():
     assert resolve_status("FAILING", "MAIN_GREEN", "main", "main") == "MAIN_GREEN"
 
 
+def test_same_commit_sit_validated_cannot_clobber_failing():
+    """SAME-COMMIT GUARD (2026-08-07): SIT proves cross-repo contracts, not this repo's own tests.
+
+    Measured 2026-08-07: batch-live-reconciliation-service@9beb2f73 failed quality-gates-v2 at
+    06:25Z and 07:31Z; full-workspace-sit's stamp step restamped SIT_VALIDATED for the SAME sha
+    at 07:43Z, and the (pre-fix) rank-only store advanced FAILING -> SIT_VALIDATED, producing a
+    misleading "SIT PASSED" recovery message while the repo's own QG was still red. Confirmed
+    systemic (instruments-service hit the identical clobber in the same incident wave).
+    """
+    assert (
+        resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout", prev_sha="9beb2f73", new_sha="9beb2f73")
+        == "FAILING"
+    )
+
+
+def test_newer_commit_sit_validated_still_advances_over_failing():
+    """Scoped to the EXACT same commit only — a SIT stamp for a NEWER (fixed) sha is unaffected."""
+    assert (
+        resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout", prev_sha="old_sha", new_sha="new_sha")
+        == "SIT_VALIDATED"
+    )
+
+
+def test_same_commit_guard_fails_open_without_shas():
+    """No sha info supplied (legacy caller / unattributed doc) → pre-existing rank behaviour."""
+    assert resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout") == "SIT_VALIDATED"
+    assert resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout", prev_sha="", new_sha="abc") == (
+        "SIT_VALIDATED"
+    )
+    assert resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout", prev_sha="abc", new_sha="") == (
+        "SIT_VALIDATED"
+    )
+
+
 def test_non_main_originated_failing_is_still_clearable_by_non_main():
     """The guard is scoped to MAIN-originated reds — it must not jam the LDR/staging axis.
 
@@ -329,6 +363,23 @@ def test_set_status_failing_overrides(store: dict[str, dict[str, object]]):
     prev, written = set_status("uac", "FAILING", "staging", "bad", firestore_module_factory=_factory(store))
     assert (prev, written) == ("SIT_VALIDATED", "FAILING")  # failure surfaces over a green
     assert store["uac"]["status"] == "FAILING"
+
+
+def test_set_status_same_sha_sit_validated_does_not_clobber_failing(store: dict[str, dict[str, object]]):
+    # End-to-end of the same-commit guard — see resolve_status + test_same_commit_sit_validated_cannot_clobber_failing.
+    # A SIT_VALIDATED write for the SAME sha as a stored FAILING must not clear it.
+    store["blrs"] = {"status": "FAILING", "rank": rank("FAILING"), "branch": "live-defi-rollout", "sha": "9beb2f73"}
+    prev, written = set_status(
+        "blrs", "SIT_VALIDATED", "live-defi-rollout", "9beb2f73", firestore_module_factory=_factory(store)
+    )
+    assert (prev, written) == ("FAILING", "FAILING")
+    assert store["blrs"]["status"] == "FAILING"
+    # ...but a SIT_VALIDATED for a NEWER (fixed) sha still advances normally:
+    prev2, written2 = set_status(
+        "blrs", "SIT_VALIDATED", "live-defi-rollout", "fixed_sha", firestore_module_factory=_factory(store)
+    )
+    assert (prev2, written2) == ("FAILING", "SIT_VALIDATED")
+    assert store["blrs"]["status"] == "SIT_VALIDATED"
 
 
 def test_set_status_non_main_failing_does_not_clobber_main_green(store: dict[str, dict[str, object]]):

@@ -62,7 +62,14 @@ def rank(status: str) -> int:
     return _GREEN_RANK.get(status, 0)
 
 
-def resolve_status(prev_status: str, new_status: str, branch: str, prev_branch: str = "") -> str:
+def resolve_status(
+    prev_status: str,
+    new_status: str,
+    branch: str,
+    prev_branch: str = "",
+    prev_sha: str = "",
+    new_sha: str = "",
+) -> str:
     """The no-downgrade compare-and-set DECISION (pure — the heart of Layer 2).
 
     Returns the status that SHOULD be persisted given the previously-stored status, the incoming
@@ -70,6 +77,9 @@ def resolve_status(prev_status: str, new_status: str, branch: str, prev_branch: 
 
       * ``FAILING`` is persisted (a real regression must surface, even over a green) — EXCEPT a
         non-``main`` FAILING may not clobber ``MAIN_GREEN`` (see below);
+      * a same-commit ``SIT_VALIDATED`` may not clear a STORED ``FAILING`` for the IDENTICAL sha
+        (see the ``prev_sha``/``new_sha`` guard below — SIT proves cross-repo contracts, not this
+        repo's own tests);
       * a STORED ``main``-originated ``FAILING`` may be cleared ONLY by another ``main`` signal
         (the symmetric half of the carve-out above — see the ``prev_branch`` guard);
       * a ``main``-branch signal is authoritative (it is the on-main truth — never downgraded);
@@ -83,6 +93,11 @@ def resolve_status(prev_status: str, new_status: str, branch: str, prev_branch: 
             (unknown provenance) so the main-red guard fails OPEN — a doc written before this field
             was consulted keeps the pre-existing rank behaviour rather than jamming on an
             unattributable red.
+        prev_sha: the sha recorded on the STORED doc (``doc["sha"]``). Defaults to ``""`` (unknown)
+            so the same-commit SIT guard fails OPEN — a doc written before this field was consulted,
+            or a caller that doesn't pass it, keeps the pre-existing rank behaviour.
+        new_sha: the sha of the commit that produced ``new_status``. Defaults to ``""`` (unknown),
+            same fail-open rationale as ``prev_sha``.
     """
     if new_status == "FAILING":
         # A non-main red must NOT clobber the on-main truth. This carve-out used to be branch-
@@ -102,6 +117,17 @@ def resolve_status(prev_status: str, new_status: str, branch: str, prev_branch: 
         if branch != "main" and prev_status == "MAIN_GREEN":
             return prev_status
         return new_status
+    # SAME-COMMIT GUARD (2026-08-07): SIT_VALIDATED proves only cross-repo API-surface contracts
+    # (full-workspace-sit.yml's own header disclaims it as proof of this repo's own tests) — it
+    # must not silently clear a FAILING recorded for the IDENTICAL commit (this repo's own
+    # quality-gates-v2 is still known-red for that sha). Measured 2026-08-07:
+    # batch-live-reconciliation-service@9beb2f73 failed quality-gates-v2 at 06:25Z and 07:31Z;
+    # full-workspace-sit's stamp step restamped SIT_VALIDATED for the SAME sha at 07:43Z, and the
+    # rank-only store advanced FAILING -> SIT_VALIDATED, producing a misleading "SIT PASSED"
+    # recovery message while the repo's own QG was still red. Scoped to the exact same commit only
+    # -- a SIT stamp for a NEWER (already-fixed) sha is unaffected and still advances normally.
+    if new_status == "SIT_VALIDATED" and prev_status == "FAILING" and new_sha and prev_sha and new_sha == prev_sha:
+        return prev_status
     # The SYMMETRIC half of the carve-out above (2026-07-20). The block above stops a non-main red
     # from clobbering the on-main truth; this stops a non-main GREEN from clearing a main-originated
     # red. Without it, FAILING is rank 0 on the STORED side and therefore erasable by ANY higher-
@@ -303,7 +329,8 @@ def set_status(
         # behaviour) rather than jamming an unclearable red. Raising here would break every
         # legacy doc; None would just move the same defaulting to the callee.
         prev_branch = str(prev_dict.get("branch", ""))  # noqa: qg-empty-fallback
-        written = resolve_status(prev, status, branch, prev_branch)
+        prev_sha = str(prev_dict.get("sha", ""))  # noqa: qg-empty-fallback
+        written = resolve_status(prev, status, branch, prev_branch, prev_sha=prev_sha, new_sha=sha)
         doc: dict[str, object] = {
             "status": written,
             "rank": rank(written),

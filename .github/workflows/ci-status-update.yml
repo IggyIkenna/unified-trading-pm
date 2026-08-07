@@ -308,7 +308,7 @@ jobs:
             # requires sit_validated_tree == the CURRENT LDR tree AND ci_status != FAILING, evaluated by
             # ldr-to-main-promote-fleet.yml. SIT's guarantee is content-scoped to the tree it saw; say
             # exactly that and let the promote gate be the arbiter.
-            MSG="✅ SIT PASSED: *${REPO}* ${PREV} → *SIT_VALIDATED* (system-integration-tests green on the LDR tree; the promote gate re-checks tree-match + ci_status before promoting)"
+            MSG="✅ SIT PASSED: *${REPO}* ${PREV} → *SIT_VALIDATED* (cross-repo API-surface contracts green on the LDR tree — NOT proof this repo's own quality-gates-v2 passed; the promote gate re-checks tree-match + ci_status before promoting)"
           else
             MSG="🟢 CI RECOVERED: *${REPO}* ${PREV} → *${STATUS}*"
           fi
