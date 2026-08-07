@@ -32,7 +32,7 @@ related:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-07"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -236,3 +236,14 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   N+1, mock/live parity — as open; a future edit should trim them) and the P2 corpus-wide-retag-audit todo above remains
   genuinely untouched (`monitoring_control_plane_master`, `ui_build_warm_cache` still un-triaged). Full reasoning per
   doc: see the batch plan's own Deferred/Findings sections.
+- **ag_closeout_auditor 2026-08-07 (ui tranche, dispatch agt-eb521b)**: second `/ag-closeout-audit ui` run. Candidate
+  set unchanged (12 docs). Orphan count unchanged at 9 of 12, but composition shifted:
+  `data_status_cell_grid_rearchitecture_2026_07_18.md` and `artifact_pipeline_observability_2026_07_17.md` moved
+  `orphaned_never_touched` → `orphaned_partial_coverage` (batch1 didn't exist at 2026-08-06's discovery time; today it
+  does, and its 3 Todos cite specific items in both — expected drift, not a regression). Corrected a stale todo directly
+  in `ui_satellite_ao_dispatch_batch1_2026_08_06.md` (still draft, unshipped — its Todo 2 would have filed a duplicate
+  issue doc; redirected to reconciling the source doc's already-stale checkbox instead). 2 more plausible `ui`-mistag
+  candidates found (folded into the same corpus-wide-retag todo above, not retagged yet). No batch2 drafted — zero of
+  batch1's 11 Deferred items cleared in the 1 day since (verified via git log on all 12 candidate docs); recommend
+  approving + dispatching batch1 next, which is still `status: draft` awaiting operator sign-off. Full write-up:
+  `issues/ag_closeout_audit_ui_parked_2026_08_07.md`.

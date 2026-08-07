@@ -35,7 +35,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -117,16 +117,26 @@ AND conflict-clear today.
       the source doc's own Progress Log, and its own todo 1 checkbox is flipped citing this evidence. Repo:
       deployment-api. Source: `data_status_cell_grid_rearchitecture_2026_07_18.md`.
 
-- [ ] [REVIEW] P2. **File the artifact-pipeline metadata-gaps issue doc.** Create
-      `plans/active/issues/artifact_pipeline_metadata_gaps_<date>.md` with the 6 pipeline bugs the source doc's own
-      "Phase 5 — codex + issue doc + notify" section documents, and flag it for operator/Ikenna visibility (cross-repo,
-      touches v2-gated CI in Ikenna's area) via the standard findings-triage channel. **Verify bug #2 first**, per the
-      source doc's own instruction, before filing. This is a narrowly-scoped documentation/issue-filing action, not
-      implementation work inside the doc's actively-changing pipeline code — see `## Deferred` for why this doc's other
-      10 open items are held back despite this one being safe to extract. **Done when**: the new issue doc exists with
-      all 6 bugs (bug #2 re-verified against current behavior, not just copied), and the source doc's own Phase 5
-      checkbox for this item is flipped citing the new doc's path. Repo: unified-trading-pm. Source:
-      `artifact_pipeline_observability_2026_07_17.md`.
+- [ ] [REVIEW] P2. **CORRECTED 2026-08-07 (was: "file a new artifact-pipeline metadata-gaps issue doc" — stale, would
+      have created a duplicate; see below) — reconcile the source doc's stale Phase-5 issue-filing checkbox + fix the
+      one genuinely-still-wrong item in the doc it should have pointed at.** The source doc's own line 652 checkbox
+      ("File `plans/active/issues/artifact_pipeline_metadata_gaps_<date>.md` with the 6 pipeline bugs above... Verify
+      bug #2 first") is stale: its own "Pipeline bugs found" section (a few lines above) and its "Deferred work after
+      2026-07-23" table both already state this filing was done 2026-07-21, under a DIFFERENT name —
+      `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md` — and bug #2 (the one
+      the stale checkbox says to "verify first") was itself already resolved as **NOT A BUG** in that same section
+      ("never reproduced... dropped"), not something left to verify. Filing a second doc now would duplicate existing,
+      already-mostly-resolved tracking. Correct actions instead: (1) flip the source doc's line 652 checkbox `[x]`,
+      citing `build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md` as where the filing already
+      happened; (2) that issue doc's own #1 item still frames the `version`-tag question as open/unconfirmed, but the
+      source doc's Progress Log (2026-07-24) already root-caused it — "the semver-agent that would compute + send
+      `version` is dead, deliberately... SHA-only tagging is the expected, intentional consequence, not a defect" — the
+      source doc itself flags this exact correction as an owed follow-up ("out of this plan's direct scope; flagging
+      here so it isn't lost"); apply it to that issue doc's #1 with the same evidence. **Done when**: the source doc's
+      line-652 checkbox is flipped citing the existing issue doc, and that issue doc's #1 item reflects the
+      confirmed-dead-semver-agent finding. Repo: unified-trading-pm. Source:
+      `artifact_pipeline_observability_2026_07_17.md` (line 652), cross-referencing
+      `build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`.
 
 - [ ] [REVIEW] P2. **Fix the 5 named `dual-cloud-image-builds.md` codex drifts.** Correct
       `/codex/05-infrastructure/dual-cloud-image-builds.md` per the source doc's own "Phase 5" description: registry
@@ -267,3 +277,24 @@ Approving this plan means: flip `status: draft` → `active` here (the finalize 
 
 - **2026-08-06** — Drafted by `ag_closeout_auditor` (dispatch agt-8d6508, `/ag-closeout-audit ui`, Autonomous mode,
   operator away). Left `status: draft` — flips to `active` only on explicit operator approval.
+- **2026-08-07 (ag_closeout_auditor, dispatch agt-eb521b, slot 9)** — Second `/ag-closeout-audit ui` run (still
+  `status: draft`, still pending operator approval — no dispatch has happened yet). Fresh Phase 1 (12-agent Workflow)
+  re-classified all 12 tranche-primary docs against this batch's now-existing coverage:
+  `data_status_cell_grid_rearchitecture_2026_07_18.md` and `artifact_pipeline_observability_2026_07_17.md` moved from
+  `orphaned_never_touched` (2026-08-06 baseline, before this batch existed) to `orphaned_partial_coverage` (this batch's
+  Todos 1/2/3 now cite them) — expected drift, not a new problem; the other 7 orphaned docs + 3 non-orphaned docs are
+  unchanged. New orphan baseline: 9 of 12 (was 9 of 12 — same count, composition shifted as described). **Corrected Todo
+  2** (was: file a new `artifact_pipeline_metadata_gaps_<date>.md` issue doc) — a fresh per-doc read found the source
+  doc's own "Pipeline bugs found" section + "Deferred work" table already state this filing was done 2026-07-21 under a
+  different name (`issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`), and that the "verify
+  bug #2 first" instruction refers to a bug already resolved as NOT-A-BUG in that same section — executing the original
+  Todo 2 as written would have created a duplicate doc. Redirected it to the actual remaining work: flip the source
+  doc's stale line-652 checkbox citing the existing issue doc, and correct that issue doc's own stale #1 item (the
+  source doc itself already flags this exact correction as an owed follow-up). No conflict-gated items cleared from
+  `## Deferred` (re-checked all 11 via git log + fresh per-doc reads; zero material changes since 2026-08-06 on any of
+  them — see `issues/ag_closeout_audit_ui_parked_2026_08_07.md` for the full Phase 0/1 findings write-up, including 2
+  plausible `ui`-mistag candidates found this run, not retagged pending the tranche's own corpus-wide retag pass). Per
+  the skill's iterative-drain guidance, did NOT draft a batch2: nothing conflict-clear has newly emerged, this batch
+  itself is still unapproved/undispatched, and batch2-candidate discovery is explicitly this batch's own finalize plan's
+  job (todo 2) once triggered. Recommendation carried to `/done` evidence: approve + dispatch this batch; batch2
+  candidates will surface naturally once the finalize plan's re-check runs.
