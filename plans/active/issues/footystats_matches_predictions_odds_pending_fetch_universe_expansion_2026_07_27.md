@@ -36,7 +36,7 @@ related:
   ]
 created: 2026-07-27
 author: unknown
-last_updated: 2026-07-27
+last_updated: 2026-08-07
 parent_epic: sports_master
 priority: P2
 source: sports_satellite_ao_dispatch_batch4-001 (data_engineering slot re-check, 2026-07-27)
@@ -317,13 +317,36 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
   that exact fix in production; dropped the now-superseded `sports_satellite_ao_dispatch_batch4` archived dispatch doc).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
+- **2026-08-07 (slot-10, data_engineering craft, [CODE] P2 follow-up)**: Rebuilt `instruments-service:latest` Docker
+  image from `b001100d` (post-fix `live-defi-rollout` HEAD, confirmed to include `instruments-service@69391ea9` +
+  `unified-api-contracts@2a674aa8` `_FOOTYSTATS_LEAGUE_COVERAGE`). Build:
+  `gcloud builds submit --config=cloudbuild.yaml --substitutions=SHORT_SHA=b001100d,_RUN_INIMAGE_QG=false` (skipped
+  in-image QG since QG is enforced at quickmerge + promotion v2 gate). Cloud Build
+  `84e0a3ca-81f3-481a-a658-63589bbfb340` SUCCESS, finished 2026-08-07T20:54:20Z. Image digest:
+  `sha256:bf73044dca3bbf3b9d5eae7c2c13e952257a677e14e6361b4da37eb10d9127c4`. `expected-universe-v2-sports` (and all
+  other `expected-universe-v2-*`) Cloud Run jobs are configured with `instruments-service:latest` — they will pull the
+  rebuilt image on their next scheduled run (01:30 UTC 2026-08-08). Re-verification over ≥2 consecutive days filed as
+  new [DIAG] P3 follow-up todo above.
+
 ## Follow-ups
 
-- [ ] [CODE] P2. Rebuild + redeploy the instruments-service:latest Docker image from a post-fix live-defi-rollout
+- [x] ✅ [CODE] P2. Rebuild + redeploy the instruments-service:latest Docker image from a post-fix live-defi-rollout
       checkout (to pick up unified-api-contracts@2a674aa8 _FOOTYSTATS_LEAGUE_COVERAGE) and re-verify (footystats,
       MATCHES/PREDICTIONS/ODDS) pending_fetch for the 15 target leagues over >=2 consecutive days — the [x] [DIAG] P3
       todo's own 2026-08-05 text confirms the entity_coverage gate is NOT firing in production (113 post-fix rows, zero
-      EXPECTED_NO_PROVIDER_COVERAGE, deployed image likely predates the fix) and says 'Re-triage needed'.
+      EXPECTED_NO_PROVIDER_COVERAGE, deployed image likely predates the fix) and says 'Re-triage needed'. — ✅ **REBUILD
+      DONE 2026-08-07 (slot-10)**. `gcloud builds submit` from `instruments-service` at b001100d (post-fix LDR HEAD,
+      includes `instruments-service@69391ea9`); `instruments-service:latest` rebuilt and pushed to AR (digest
+      sha256:bf73044dca3bbf3b9d5eae7c2c13e952257a677e14e6361b4da37eb10d9127c4). Evidence:
+      `cloudbuild=84e0a3ca-81f3-481a-a658-63589bbfb340` SUCCESS. `expected-universe-v2-sports` Cloud Run job uses
+      `:latest` — next scheduled run at 01:30 UTC will pull the updated image. **Re-verification over ≥2 consecutive
+      days NOT yet done** (requires calendar time post-deploy) — tracked as new [DIAG] P3 todo below.
+- [ ] [DIAG] P3. Re-verify `(footystats, MATCHES/PREDICTIONS/ODDS)` `pending_fetch` for the 15 target leagues
+      (CHILE_PRIMERA, K_LEAGUE_1, LIGA_MX, ARGENTINA_PRIMERA + 11 PREDICTIONS cup/lower-division leagues) over ≥2
+      consecutive days post-2026-08-07 image rebuild — confirming `entity_coverage` gate now fires in production
+      (`EXPECTED_NO_PROVIDER_COVERAGE` rows appear for the excluded leagues, `pending_fetch` stops growing). **Done
+      when**: ≥2 daily enumerator runs (at 01:30 UTC) both show 0 new `pending_fetch` rows for the target leagues; or a
+      genuine residual is found and re-triaged. (repo: instruments-service, read-only manifest analysis).
 
 > **2026-08-06 archive-candidate audit**: The [x] [DIAG] P3 todo is a clear checkbox-vs-prose contradiction: its body
 > confirms the shipped fix is NOT holding in production, that the deployed Cloud Run image predates the fix, and
