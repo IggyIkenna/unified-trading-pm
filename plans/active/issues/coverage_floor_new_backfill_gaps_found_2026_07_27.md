@@ -149,11 +149,19 @@ context_scope:
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged — all 3 open Follow-ups
   (HYPERLIQUID row re-verify, DERIBIT 2019 dispatch, BINANCE-DELIVERY zombie cleanup) still map to this same 4-entry set
   (parent doc + the 2 registry/orchestrator files + the sharded-backfill launcher).
+- **slot-13 2026-08-07**: closed HYPERLIQUID re-verify P2 follow-up. Bounded column-projected manifest read of
+  `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` confirms 45,261 rows for
+  HYPERLIQUID 2023-04-15..2023-12-31: book_snapshot_5 (8,917 captured/6,170 empty_confirmed), derivative_ticker (9,194
+  captured/5,885 empty_confirmed/8 attempted_failed), trades (15,087 empty_confirmed as expected per
+  S3_TRADES_START=2025-03-22). 261 calendar days now carry capture_status=captured. Backfill VM completed successfully.
 
 ## Follow-ups
 
-- [ ] [DATA] P2. Re-verify HYPERLIQUID captured rows for the 2023-04-15..2023-12-31 window once the backfill VM
-      completes
+- [x] ✅ [DATA] P2. Re-verify HYPERLIQUID captured rows for the 2023-04-15..2023-12-31 window — DONE 2026-08-07
+      (slot-13). Manifest now shows 45,261 rows for HYPERLIQUID 2023-04-15..2023-12-31: book_snapshot_5 (8,917
+      captured + 6,170 empty_confirmed), derivative_ticker (9,194 captured + 5,885 empty_confirmed + 8
+      attempted_failed), trades (15,087 empty_confirmed — expected, S3_TRADES_START=2025-03-22). 261 distinct calendar
+      days with capture_status=captured. Backfill confirmed complete.
 - [ ] [DATA] P2. Dispatch the DERIBIT 2019 historical backfill (YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=heavy,
       then light once heavy frees the Tardis slot)
 - [ ] [INFRA] P3. Resolve the BINANCE-DELIVERY zombie venue (remove from VENUES_BY_ASSET_GROUP["cefi"] or operator
