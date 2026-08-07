@@ -155,7 +155,7 @@ context_scope:
       Regression test `tests/unit/test_stage0_cefi_id_form_observe.py` (9 tests, all pass) proves zero behaviour change.
       QG green. Source doc `[DATA] P2` Stage-0 todo flipped below.
 
-- [ ] [OPS] P2. **Determine dead-vs-alive for the 7 stale-image cefi Cloud Run jobs, then act on the finding.**
+- [x] ✅ [OPS] P2. **Determine dead-vs-alive for the 7 stale-image cefi Cloud Run jobs, then act on the finding.**
       Investigate whether `market-tick-cefi-binance-futures`/`-okx`/`-daily-download`/`-binance-spot`/`-bybit`/
       `-coinbase`/`-upbit` (all currently pinned to the same 5.5-month-stale `market-data-tick-handler:latest` image)
       are still-relevant or dead/superseded by the VM-based Tardis launcher path, using the SAME evidentiary method
