@@ -323,6 +323,22 @@ surface that actually exists (warm + cold event-log tiers).
   derivative_ticker) ~00:18 UTC 2026-08-08. 8h timeout fires at 00:36 UTC 2026-08-08. All 7 still running at 17:04 UTC
   (28 min elapsed); GCS cold tier empty (expected — cold file only written after full shard loop). Next wakeup scheduled
   18:05 UTC; chain hourly until completion.
+- **2026-08-07 18:03–18:19 UTC (slot-11 worker, data_engineering, v5 OOM@4Gi + v6 16Gi relaunch)**: (1) **v5 OOM at 4Gi
+  CONFIRMED**: All 7 v5 executions OOM-killed. lvh4f (2026-08-02) confirmed FAILED with
+  `exit_code=0 message="The configured memory limit was reached"` at 17:57:30 UTC (80 min after start). Remaining 5
+  showed `Retry:True` in condition set = had failed and were retrying. Root cause: `cold_buf = io.BytesIO()` in
+  `compact_shard` accumulates the FULL compressed Parquet output for `book_snapshot_5` in RAM before the GCS upload.
+  With 1497–1573 warm files/day × ~170 MB each, the Parquet output grows to 6–10 GB in BytesIO, exceeding the 4Gi limit.
+  (2) **All 6 running executions CANCELLED**: btvgl/5s6x7/fcwnn/f7qql/rkf4f/w5qnm cancelled via
+  `gcloud run jobs executions cancel` to stop wasting retry budget. (3) **Memory raised to 16Gi**:
+  `gcloud run jobs update live-event-log-compactor --region=asia-northeast1 --memory=16Gi --cpu=4` applied immediately
+  (live: `Memory: 16Gi, CPU: 4` confirmed in describe output). TF updated:
+  `terraform/gcp/live_event_log/compaction_job.tf` now reflects `memory="16Gi", cpu="4"`. Shipped:
+  deployment-service@454cccd9c. QG green (wall=228s, baseline 106s → wall-time advisory but all gates passed). (4) **v6
+  PARALLEL RELAUNCH at 18:19 UTC**: 7 executions submitted for 2026-08-01..2026-08-07:
+  tznqd(2026-08-01)/jskph(2026-08-02)/l9jxq(2026-08-03)/nwzrc(2026-08-04)/q8psv(2026-08-05)/45bvw(2026-08-06)/
+  wfbbc(2026-08-07). Background completion detector armed (polls every 10 min, posts heartbeats). Projected cold Parquet
+  peak: ~6–10 GB BytesIO — fits in 16Gi. Estimated completion: 21:30–23:30 UTC.
 - **2026-08-07 ~15:30–15:40 UTC (slot-11 worker, data_engineering, continuation after third context-compaction)**: (1)
   TASK TIMEOUT BUG found: measured rate for the per-file-batching v3 executions (49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r)
   was ~9.5x real-time for book_snapshot_5 (86400/9.5=9095s=2.53h) + trades(~46min) + derivative_ticker(~45min) +
