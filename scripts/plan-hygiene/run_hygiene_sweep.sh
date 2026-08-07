@@ -104,6 +104,18 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # stays in the <1s precommit budget. The corpus-wide ratchet (line_caps_baseline.yaml) is a
     # separate, full-sweep-only check for debt in files nobody is actively editing.
     "$SCRIPT_DIR/check_line_caps.sh" --quiet "${STAGED_PLANS[@]}" && echo "  ✅ Line caps (staged plans)" || { echo "  ❌ Line cap exceeded in a staged plan — split it (bash scripts/plan-hygiene/check_line_caps.sh <file> for detail)"; PF=$(( PF + 1 )); }
+    # Finalize-plan coverage on staged plans ONLY (--only, ao_kpi_done_vs_detail_mismatch_2026_08_05
+    # follow-up) — a brand-new assigned_vm:planning plan authored in a "pure doc/plan-flip -> prek
+    # only" commit (CLAUDE.md's own carve-out) used to skip this check entirely, since it previously
+    # lived ONLY in the full quality-gates.sh (repeat of the 2026-07-27
+    # finalize_plan_coverage_regression incident, which blocked quickmerge fleet-wide until someone
+    # noticed and authored the missing companions). --only still scans the whole corpus to resolve
+    # gating but only fails on violations among these staged paths, so a pre-existing violation in an
+    # unrelated plan never blocks this commit (RULE-11 blast-radius safety, same as frontmatter-schema
+    # above).
+    python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Finalize-plan coverage (staged plans)" \
+      || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion (task_template.md §4)"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
@@ -203,6 +215,15 @@ run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet
 # terminal-status doc, never on the pre-existing backlog being cleared by
 # terminal_status_archival_backlog_sweep_2026_07_25.md.
 run_check "Terminal-status-archived (plan/issue docs -> plans/archive/, ratchet)" hard python3 "$SCRIPT_DIR/check_terminal_status_archived.py" --quiet
+# Create-only archival-commit guard (issue 2026-08-06) — `git commit --only -- <new-path>` after a
+# `git mv` commits the ADD side of a rename but silently EXCLUDES the DELETE side, leaving a live
+# plans/active/issues/<stem>.md twin next to the archive copy that then diverges. This ABSOLUTE check
+# hard-fails on ANY plans/archive/issues/*.md whose active twin also exists in the same tree (the 5
+# known live pairs + any new create-only residue). Distinct from the terminal-status ratchet above
+# (that only catches unarchived terminal docs; this catches the twin that the create-only commit
+# leaves behind). The 5 current pairs are reconciled by the issue doc's P2 todo; never lower this to
+# advisory to make the sweep pass.
+run_check "Create-only archival guard (archive/active duplicate pairs)" hard python3 "$SCRIPT_DIR/check_create_only_archive_commits.py" --quiet
 # assigned_vm:NA corpus size ratchet (operator directive 2026-07-27) — the NA backlog (doc count +
 # open-todo count over assigned_vm:NA + status in {active,open}) must not grow unattended. Most NA
 # content is genuinely operator-gated/judgment work and correctly stays NA — the point is not to
@@ -220,6 +241,14 @@ run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3
 # baseline as each remaining flagged plan/epic is split/trimmed; it should reach 0.
 run_check "Line caps (plans 500/1000, epics 2000 — no exemption, ratchet)" hard "$SCRIPT_DIR/check_line_caps.sh" --quiet
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
+# Silent-default-effort ratchet (2026-08-05 follow-up to the AO dashboard effort/
+# affinity/blocked-reason visibility work) — a living plan that sets assigned_role but
+# declares neither effort: nor thinking_tier: resolves its reasoning-effort tier to
+# whatever the role's generic default is (often model_tier.py's hardcoded "medium")
+# with nobody having deliberately chosen that for THIS plan. Same shrinking-ratchet
+# shape as the hard ratchets above (effort_signal_baseline.yaml): hard-fails only when
+# the CURRENT count exceeds the baseline, never on the pre-existing 211-plan debt.
+run_check "Silent-default-effort plans (ratchet)" hard python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" --quiet
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
 run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"
@@ -240,7 +269,16 @@ run_check "Priority vs. asset-group tier policy (candidate signal)" soft python3
 # was purely informational (`|| true`) until now — the recurring gap CLAUDE.md's archival rule
 # calls out ("MUST be archived immediately (HARD RULE, recurring gap)") had nothing actually
 # enforcing it. Same shrinking-ratchet shape as the checks above (archive_candidates_baseline.yaml).
-run_check "Archive candidates (0 open todos, unlocked -> plans/archive/, ratchet)" hard "$SCRIPT_DIR/check_archive_candidates.sh"
+#
+# In CI mode (promote path), pass --diff-base origin/main so the check is DIFF-SCOPED: only a
+# candidate NEW since origin/main (i.e. introduced by this promote PR's diff) fails the gate;
+# pre-existing corpus debt at origin/main is tolerated. Operator ruling 2026-08-06 —
+# /plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md.
+ARCHIVE_DIFF_ARGS=()
+if [ -n "$CI_MODE" ]; then
+  ARCHIVE_DIFF_ARGS=(--diff-base origin/main)
+fi
+run_check "Archive candidates (0 open todos, unlocked -> plans/archive/, ratchet)" hard "$SCRIPT_DIR/check_archive_candidates.sh" "${ARCHIVE_DIFF_ARGS[@]}"
 
 # Model-tier coverage is informational — surfaces opus-candidates + plans on the
 # silent Sonnet default for human review (SSOT: codex/06-coding-standards/model-tier-selection.md).

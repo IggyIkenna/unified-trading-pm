@@ -81,7 +81,8 @@ result. It now genuinely derives its covered set from docspec's live `ASSET_GROU
 archived-only and now resolve non-empty, 11/44 and 11/38 enforced respectively), and reports any tranche with no
 discoverable closeout family LOUDLY instead of skipping it in silence. Baseline re-seeded 32 → 69 at the honest measured
 count. Track: `/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
-`/plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md`.
+`/plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (resolved, see below) — repointed
+2026-08-06 (/plan-reconcile ao).
 
 **`ui`**: **`ui` is a real dedicated `asset_group` enum value from the day it was added** (2026-07-30,
 `unified-trading-pm@<sha-this-session>` — `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5, now 11 values:
@@ -117,9 +118,10 @@ sweep `asset_group: meta` and fold genuine hits into whichever of `ci`/`infra`/`
 matches. `check_ag_closeout_linkage.py` does not catch this class either; **the original ~48-doc delta was NOT touched
 by the 2026-07-27 retag** (that pass's population was bare-`[cross-cutting]` docs specifically — a doc already tagged
 `infrastructure`/`meta` was never in scope for it) — re-measured 2026-07-27: 59 docs carry `asset_group: infrastructure`
-and 65 carry `asset_group: meta` corpus-wide right now, still a real, still-open population. The corpus-wide triage is
-tracked in `plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (still `status: open`, 2/4 todos
-done at last check).
+and 65 carry `asset_group: meta` corpus-wide right now, still a real, still-open population. The corpus-wide triage was
+tracked in `/plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` — repointed + updated
+2026-08-06 (/plan-reconcile ao): that doc is now `status: resolved`, 4/4 todos done, and archived (was stale here as
+`active`/2/4-done).
 
 **This skill answers a forward-looking completeness question — it is NOT `/plan-reconcile`.** `/plan-reconcile` fixes
 what's already provably done (false-unchecked flips, contradiction resolution, archival) across the WHOLE corpus (or, as

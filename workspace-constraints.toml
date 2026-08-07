@@ -7,8 +7,12 @@ aiobotocore = "aiobotocore>=2.11.0,<3.0.0"
 aiofiles = "aiofiles>=24.1.0,<25.0.0"
 # aiohttp>=3.14 closes the CVE-2026-34993/47265 cookie cluster; vcrpy>=8.2.1 restored aiohttp-3.14 support
 # (MockStream no longer needs the removed AsyncStreamReaderMixin), unblocking the bump.
-# SSOT: plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md (ARCHIVED 2026-07-27)
-aiohttp = "aiohttp>=3.14.1,<4.0.0"
+# 3.14.3 (not 3.14.1) additionally closes CVE-2026-59881 (RSV1 decompress bomb), CVE-2026-69243 (WebSocket-upgrade
+# request smuggling), CVE-2026-69244 (OOB heap read in the C response parser) — found in the locked 3.14.1 by
+# pip-audit; same fix already shipped in unified-trading-library/market-tick-data-service.
+# SSOT: plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md (ARCHIVED 2026-07-27) +
+#       plans/active/issues/orphan_cve_aiohttp_fix_slot5_unpushed_2026_08_03.md
+aiohttp = "aiohttp>=3.14.3,<4.0.0"
 alembic = "alembic>=1.13.0,<2.0.0"
 anthropic = "anthropic>=0.87.0,<1.0.0"
 asyncio_mqtt = "asyncio-mqtt>=0.16.1,<1.0.0"

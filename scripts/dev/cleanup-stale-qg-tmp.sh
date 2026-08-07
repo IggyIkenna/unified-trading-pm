@@ -110,7 +110,7 @@ for root in "${CANDIDATE_ROOTS[@]}"; do
     # /tmp/pytest-of-ubuntu were >60min stale while the bucket itself read <1min old,
     # so this level-1 sweep alone silently caught nothing on this exact host — the fill
     # to 100% that motivated this fix. See
-    # plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md.)
+    # plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md.)
     sweep_dir "${root}" "pytest-of-*"
     # Level 2 (the actual fix): each per-session pytest-<N> dir one level down, gated on
     # ITS OWN mtime — this is where disk usage actually accumulates and where individual

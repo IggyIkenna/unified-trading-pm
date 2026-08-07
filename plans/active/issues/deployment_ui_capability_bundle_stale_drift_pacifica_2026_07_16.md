@@ -50,7 +50,7 @@ context_scope:
     scripts/openapi/generate_strategy_prospectus.py,
     unified-api-contracts/openapi/prospectus,
     /codex/06-coding-standards/script-homes.md,
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
 execution_scope: local-only
 model_tier: sonnet-doable
@@ -318,7 +318,7 @@ GMX-freedom). All fixed and shipped this session, live-verified (tests green, `c
 - **UAC internal source** — `unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json`: hand-
   edited 9 cells (removed `gmx_v2` from `venue_ids`, dropped gmx-specific `representative_slot_labels`, flipped
   `LIQUIDATION_CAPTURE`/DEFI/perp from PARTIAL→BLOCKED since gmx_v2 was its sole venue — added a new `BL-12` block-list
-  entry, mirrored into `codex/09-strategy/architecture-v2/block-list.md` + `unified-trading-system-ui`'s
+  entry, mirrored into `/codex/09-strategy/architecture-v2/block-list.md` + `unified-trading-system-ui`'s
   `block-list.ts`), regenerated clean via `generate_archetype_capability_manifest.py --write`.
   `unified-api-contracts@5474716e`.
 - **Third instance** (UAC `openapi/capability-manifest.json` + reports) — full regen via
@@ -368,7 +368,7 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 > `capture_status= expected_unattempted`, unrelated to the 4 orphan objects above), meaning some enumerator still treats
 > GMX as a valid venue. Filed as its own issue rather than folded in here since it's a genuinely different, unresolved
 > root cause (a catalogue-level artifact, not the generated-bundle/source-registry class this doc tracks):
-> `/plans/active/issues/defi_gmx_expected_skeleton_rows_still_enumerated_2026_08_04.md`.
+> `/plans/archive/issues/defi_gmx_expected_skeleton_rows_still_enumerated_2026_08_04.md`.
 
 ## Todos
 
@@ -388,3 +388,13 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — instances 1-3 are now resolved, so retargeted the
   list at the sole remaining open item (the 4th instance, the drifted `openapi/prospectus/*.md` generator), replacing
   the stale first-instance-era entries.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — one of the best-evidenced
+  KEEP-NA cases in the corpus: prior audit passes (07-30/08-03/08-04) plus independent Deferred/non-batchable
+  classifications in 3 separate AO-dispatch-batch plans (batch2, batch3, batch6) all carve out the sole open item
+  (4th-instance `openapi/prospectus/*.md` generator resync) as human-design-gated, never dispatched. Independently
+  re-verified live today: grepped `unified-api-contracts` directly, confirmed the identical 5-file DRIFT list the doc
+  names is still affected, generator script unchanged since 2026-06-11. "Edited since" trigger was a metadata-only touch
+  (author-field backfill + context-scout refresh). Incidental, not actioned: 1 untracked prose-only item (build
+  deployment-ui's own capability-manifest generator) — likely moot-by-precedent given the surgical-prune workaround now
+  proven twice (DRIFT 07-21, GMX 08-04). Doc stays `assigned_vm: NA`.

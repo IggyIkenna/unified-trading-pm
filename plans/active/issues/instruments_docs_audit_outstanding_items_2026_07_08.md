@@ -74,7 +74,7 @@ context_scope:
   [
     instruments-service/docs/,
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     /plans/active/issues/instruments_remaining_work_audit_2026_07_10.md,
   ]
 locked_since:
@@ -649,3 +649,8 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   operator calls, so the outcome is not determinable by a worker alone
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — still accurate against current content.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — sole open checkbox is open-ended
+  meta-tracking over dozens of prose findings spanning 5 asset groups, several explicitly §E operator-decision
+  territory; converting it to bounded AO todos itself needs human triage. Reaffirms 3 prior 2026-07-30 passes (cefi x2,
+  sports).

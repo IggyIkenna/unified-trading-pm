@@ -53,7 +53,7 @@ source: >-
   (~3h45m of the required 24h elapsed).
 context_scope:
   [
-    /plans/active/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md,
+    /plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md,
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
     /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -102,13 +102,20 @@ re-applied by hand again.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P0. Re-apply the park on backlog task `live_event_log_warm_sink_recovery_and_cold_compaction-011`:
+- [x] ✅ [OPERATOR] P0. Re-apply the park on backlog task `live_event_log_warm_sink_recovery_and_cold_compaction-011`:
       `priority: 999` + `priority_override: true` + `prereqs.prerequisites: [p1-2-preconditions-met]` in
       `agent-orchestrator/data/config/backlog.yaml` (root clone — requires main/operator-level write access; a
       dispatched worker's slot-scope rules forbid editing root clones), and confirm
       `POST /api/prerequisites/p1-2-preconditions-met {"value": false, "set_by": "main"}` is (re-)set false. Verify it
       actually stuck after the next `PlanRegenLoop` tick / `POST /api/backlog/regen` (not just `/reload`), per the exact
-      verification recipe in `unified-trading-pm/agents/RULES.md` § 4.
+      verification recipe in `unified-trading-pm/agents/RULES.md` § 4. — **ALREADY APPLIED — closed 2026-08-06 by
+      operator ruling during `/plan-reconcile ao`.** The sibling doc
+      `/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md:169` recorded the park as applied and
+      holding on 2026-08-05 (slot 8) citing a live `/api/backlog` read
+      (`priority: 999, status: queued,     dispatched_to: null`); this doc's checkbox was simply never reconciled
+      against it. This run's own read-only `check-ao-backlog-status.sh` pass confirmed task `-011` is
+      `status=queued dispatched_to=None` (that script prints `tier`, not `priority`, so it neither confirms nor refutes
+      the 999 override — the operator ruled to trust the sibling doc's direct read).
 - [x] ✅ [AO] P1. **ALREADY ANSWERED (found 2026-08-04, `/ag-closeout-audit ao`) — cited, not re-derived.** Root-cause
       why the `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` fix (`agent-orchestrator@8dd5763`) did not prevent
       this reversion: `p1_2_backlog_hand_park_did_not_persist_2026_07_31.md` independently investigated this EXACT same
@@ -133,20 +140,20 @@ are stale, duplicated elsewhere, or moot, so NA remains the correct home for the
 
 **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA, valid — **correction to the 2026-08-01 entry above: item
 1 and item 2 are in fact substantially duplicated by a sibling doc, not "duplicated nowhere."**
-`plans/active/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md` (`assigned_vm: planning`, already dispatched)
-investigates the SAME `BLK-085fef5e` park-does-not-persist incident on this SAME backlog task one dispatch cycle
-earlier, and reached a conclusive root-cause via `journalctl` + a static read of `_reconcile_task_fields()`: **this is
-NOT a `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`-class code regression** — the park was never actually
-WRITTEN to `backlog.yaml` in the first place (only the prerequisite condition + a `/reload` were called, no file edit),
-so item 2's "root-cause why the fix did not prevent this reversion / ship a fix + regression test" premise (assuming a
-code-level revert) is likely moot — there is nothing in `regen_backlog_from_plan.py` that strips `prereqs.prerequisites`
-from a still-current task (verified independently twice in that sibling doc). Item 1 ("re-apply the park") duplicates
-that sibling doc's own still-open `[OPERATOR] P1` todo #3 verbatim (same task, same fix). **Not reclassified** — the
-sibling is itself still open pending the same `[OPERATOR]` action, so this is a CONFLICT (duplicate claim), not a
-stale/moot item to silently drop: whoever performs the sibling's `[OPERATOR]` re-park action resolves both docs' item-1
-asks in one edit, and should close item 2 here as NOT-A-REGRESSION per the sibling's evidence unless a fresh read of the
-live `backlog.yaml`/orchestrator log at that time shows this occurrence's edit DID land and then got reverted (a
-genuinely new, distinct finding the sibling doc did not have). Item 3 (a standing hygiene assertion for
+`plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md` (`assigned_vm: planning`, already
+dispatched) investigates the SAME `BLK-085fef5e` park-does-not-persist incident on this SAME backlog task one dispatch
+cycle earlier, and reached a conclusive root-cause via `journalctl` + a static read of `_reconcile_task_fields()`:
+**this is NOT a `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`-class code regression** — the park was never
+actually WRITTEN to `backlog.yaml` in the first place (only the prerequisite condition + a `/reload` were called, no
+file edit), so item 2's "root-cause why the fix did not prevent this reversion / ship a fix + regression test" premise
+(assuming a code-level revert) is likely moot — there is nothing in `regen_backlog_from_plan.py` that strips
+`prereqs.prerequisites` from a still-current task (verified independently twice in that sibling doc). Item 1 ("re-apply
+the park") duplicates that sibling doc's own still-open `[OPERATOR] P1` todo #3 verbatim (same task, same fix). **Not
+reclassified** — the sibling is itself still open pending the same `[OPERATOR]` action, so this is a CONFLICT (duplicate
+claim), not a stale/moot item to silently drop: whoever performs the sibling's `[OPERATOR]` re-park action resolves both
+docs' item-1 asks in one edit, and should close item 2 here as NOT-A-REGRESSION per the sibling's evidence unless a
+fresh read of the live `backlog.yaml`/orchestrator log at that time shows this occurrence's edit DID land and then got
+reverted (a genuinely new, distinct finding the sibling doc did not have). Item 3 (a standing hygiene assertion for
 parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains a distinct, genuinely-open ask.
 `assigned_vm` unchanged (NA) — this is a citation/conflict finding, not a reclassification.
 
@@ -163,3 +170,7 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   listed operator-gated by batch6). Item 3 ([SCRIPT] P2, "consider a standing assertion...") remains an unscoped design
   fork — repo ownership (agent-orchestrator vs. unified-trading-pm) and mechanism (hygiene sweep vs. periodic check)
   both undecided; also independently declined by batch6 as "an unscoped design fork." Not reclassified.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

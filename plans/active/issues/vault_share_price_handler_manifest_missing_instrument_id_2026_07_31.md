@@ -119,3 +119,13 @@ for this exact multi-instrument-per-group shape.
   confirmation step (waiting for a natural fresh capture / next cron cycle to show a non-null `instrument_id` manifest
   row) — that observation is still outstanding since it only affects rows written going forward; leaving `status: open`
   until someone confirms a live post-fix manifest row.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Confirm a live post-fix vault_share_price manifest row carries a non-null instrument_id (observe the
+      next natural cron capture after market-tick-data-service@b0909a5e).
+
+> **2026-08-06 archive-candidate audit**: Fix shipped at b0909a5e but Progress Log explicitly leaves status open:
+> 'Verification of the next NATURAL fresh capture ... is still outstanding' — live post-fix manifest-row confirmation
+> not yet observed.

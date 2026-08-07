@@ -17,7 +17,7 @@ summary: >-
   re-measurement sweep was similarly combined into ONE todo to avoid 4 concurrent writers on the same source doc. 9
   conflict-cleared bounded todos below; the rest deferred by taxonomy (operator-gated / role-mismatch / too-large /
   live-incident / time-gated-not-yet / needs-re-scoping) or already covered.
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -38,7 +38,7 @@ related:
     /codex/08-workflows/deployment-flow.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -62,10 +62,9 @@ source: >-
 
 # CI satellite AO batch 4
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize sibling, which needs no
-> separate flip — `gate_on_depends: true` holds it correctly either way) to `status: active` is the operator's call per
-> CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule.
-> Drafted while the operator was away; nothing here has been shipped.
+> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Todos 7 and 8 were found already shipped via
+> `ci_satellite_ao_dispatch_batch1_2026_07_26.md` before dispatch (see their checkboxes); the other 7 todos are
+> unaffected and dispatch as originally drafted.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (11/30 todos still open) and
 > `ci_satellite_ao_dispatch_batch2_2026_07_29.md` (4/14 still open) both remain active — this is NOT a replacement for
@@ -96,11 +95,11 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 
 ## Todos
 
-- [ ] [INFRA] P2. **Implement the STAGE 1.6 dormancy-aware `scripts/quickmerge.sh` dependency gate (already
+- [x] ✅ [INFRA] P2. **Implement the STAGE 1.6 dormancy-aware `scripts/quickmerge.sh` dependency gate (already
       operator-decided) + delete the now-redundant `scripts/dev/hooks/pre-push-strict-quickmerge.sh` + repoint its
-      referrers.** Two small, independent, already-fully-decided `quickmerge.sh`-touching fixes, combined into one todo
-      per the same-file-contention note above (do them sequentially within one session, do not split into two concurrent
-      todos):
+      referrers.** — unified-trading-pm@b02ba28c7 Two small, independent, already-fully-decided `quickmerge.sh`-touching
+      fixes, combined into one todo per the same-file-contention note above (do them sequentially within one session, do
+      not split into two concurrent todos):
   1. **STAGE 1.6 dormancy gate — na-eligibility-audit 2026-08-01: VERIFIED ALREADY DONE, drop this sub-item.** Performed
      exactly the live-code verification this todo itself demands: `scripts/quickmerge.sh`'s current working tree
      (`_dep_versions_behind`) already reads `dormant = bool(rm.get('staging_dormant_mode', False))` /
@@ -140,75 +139,70 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P3, batch2 Deferred E4 /
     batch1 D4).
 
-- [ ] [INFRA] P2. **Align `UnifiedCloudServicesConfig.environment`'s pydantic alias precedence with
+- [x] ✅ [INFRA] P2. **Align `UnifiedCloudServicesConfig.environment`'s pydantic alias precedence with
       `BaseConfig.environment`'s (caller audit first), then grep the fleet for the same ambient-default-reliant test
-      pattern.** Does NOT touch `scripts/quickmerge.sh` (unlike this doc's step 3, which stays Deferred below). Two-step
-      chain in `unified-trading-library`:
-  1. **Caller audit.** `core/config.py`'s `UnifiedCloudServicesConfig.environment` has
-     `validation_alias=AliasChoices("ENVIRONMENT", "ENV")` (bare `"environment"` OMITTED) and no `populate_by_name`, so
-     an explicit `environment=` constructor kwarg is silently DROPPED in favor of the ambient env var — confirmed via
-     direct repro (`UnifiedCloudServicesConfig(environment='development')` with ambient `ENVIRONMENT=production` set →
-     `.environment == 'production'`). Before changing this, audit every in-repo caller passing `environment=` to this
-     constructor and confirm none currently RELIES on the silently-dropped-kwarg behavior (i.e. currently expects the
-     ambient value to win, not the explicit kwarg).
-  2. **Fix.** Add `populate_by_name=True` + the bare `"environment"` entry to `AliasChoices`, matching
-     `BaseConfig.environment`'s already-correct pattern (`config_interface/base_config.py`), only if the caller audit in
-     step 1 finds no caller relying on the old (broken) precedence — if it does, note the conflict instead of forcing
-     the change.
-  3. **Fleet grep.** Grep the other ~20 repos for the same ambient-default-reliant test pattern (a test asserting a
-     "nothing set" default without `monkeypatch.delenv("ENVIRONMENT"/"DEPLOYMENT_ENV")` first) — this repo's own fix
-     (`tests/cloud_interface/unit/test_constants.py` etc., already shipped 2026-07-25) is the template to check other
-     repos against. Record findings (or "none found") in the source doc.
-  - **Done when**: the caller audit is recorded in the source doc; the alias fix lands (or is explicitly held with the
-    conflicting caller named) with a regression test proving `environment=` kwarg now wins when passed; the fleet grep
-    result (found sites, or a clean "none found") is recorded. `unified-trading-library` `quality-gates.sh` green.
-  - Source: `issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` (Suggested next steps 2 + 4;
-    batch2 Deferred E5 / batch1 D3(4)). **Step 3 of the source doc (broadening `quickmerge.sh`'s branch check) is
-    EXPLICITLY OUT OF SCOPE for this todo** — see `## Deferred` D4-2 below.
+      pattern.** — unified-trading-library@dc1dc7df. Caller audit: zero in-repo callers pass `environment=` to the real
+      constructor (all use `model_construct`, which bypasses alias resolution) — fix safe. Fix: added
+      `populate_by_name=True` to `model_config` + `"environment"` to `AliasChoices("ENVIRONMENT", "ENV")` in
+      `core/config.py`, matching `BaseConfig.environment`'s pattern. Regression test
+      `test_environment_kwarg_wins_over_ambient` proves kwarg wins over ambient env. Fleet grep of 23 repos: none found
+      — no other repo has the ambient-default-reliant test pattern. Findings recorded in source doc Progress Log.
+      `unified-trading-library` QG green (147s).
 
-- [ ] [DOC] P2. **Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
-      1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model.** The doc still describes the
-      retired staging-mediated promotion pipeline; `/codex/08-workflows/ci-cd-flow.md` already got the equivalent
-      rewrite (`unified-trading-pm@b9d0b9209`) — mirror that pattern and cross-reference it. **Done when**: the diagram
-      and Gate 1/2/3 walkthrough match the shipped LDR-direct model, `prettier` + `check_reference_paths.py` clean.
+- [x] ✅ [DOC] P2. **Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram +
+      Gate 1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model.** —
+      unified-trading-pm@445f02081. The doc still described the retired staging-mediated promotion pipeline;
+      `/codex/08-workflows/ci-cd-flow.md` already got the equivalent rewrite (`unified-trading-pm@b9d0b9209`) — mirrored
+      that pattern and cross-referenced it. Rewrote § "Full Pipeline: LDR → Cloud Build" (7-step ASCII diagram →
+      LDR-direct model with dormant staging), § "Gate 2 — Quickmerge (Pass 2)" (renamed from "Staging via Quickmerge",
+      lands on LDR not staging), and § "Gate 3 — Main Promotion + Semver Bump" (LDR→main direct via fleet promoter with
+      3-gate MVP set, semver on push:[main], main-backmerge-to-ldr). `prettier` + `check_reference_paths.py` both clean
+      on the edited file.
   - Source: `issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md` ([DOC] P2) — filed 2026-07-30 as a
     byproduct of batch2 todo 1's own post-phase codex audit, never previously extracted into any batch.
 
-- [ ] [SCRIPT] P3. **Fix the stale structural-anchor pattern in
-      `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh:50`.** It still expects the old quoted
-      literal `pip install "uv==0.10.8"`; `setup.sh` (line 438) now reads
-      `"$PYTHON_CMD" -m pip install uv==0.10.8 --quiet ... || pip install uv==0.10.8 --quiet ...` (unquoted, `--quiet`,
-      `$PYTHON_CMD -m` prefix) — the anchor never updated when `setup.sh` changed, so it silently stopped verifying
-      anything about the real fallback path. **Done when**:
-      `bash scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed (currently 4/5 —
-      only the structural anchor fails, confirmed via a live re-run 2026-07-31).
+- [x] ✅ [SCRIPT] P3. **Fix the stale structural-anchor pattern in
+      `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh:50`.** — unified-trading-pm@eff7413da.
+      Updated the structural-anchor glob to match `setup.sh:438`'s current pip-fallback form (unquoted `uv==0.10.8`,
+      `--quiet` flag, `$PYTHON_CMD -m` prefix). Test passes 5/5, QG green, shipped.
   - Source: `issues/uv_bootstrap_fallback_test_structural_anchor_stale_2026_07_30.md` (sole todo) — never cited by any
     covering doc; a clean, small, previously-untriaged orphan.
 
-- [ ] [REVIEW] P2. **Decide + implement whether `deployment-api` should be REMOVED from
-      `scripts/workflow-templates/self-hosted-qg-repos.txt`** (not just hand-reverted in its own workflow copy, which is
-      how the 2 prior recurrences were patched) so a future template rollout can't silently re-flip it onto self-hosted
-      a 3rd time. The doc's own "Recommended fix path" (self-hosted allowlist posture) was operator-ruled live
-      2026-07-28; this is the one follow-up item the ruling didn't cover. **Done when**: the decision is recorded with
-      rationale, and if "remove" — the entry is deleted from the template allowlist + verified deployment-api's own
-      workflow copy stays on `ubuntu-latest` after the next template rollout dry-run.
+- [x] ✅ [REVIEW] P2. **Decide + implement whether `deployment-api` should be REMOVED from
+      `scripts/workflow-templates/self-hosted-qg-repos.txt`** — unified-trading-pm@917fc626a. **DECISION: YES, remove
+      (already done 2026-08-05).** `deployment-api` is a PUBLIC repo (confirmed `gh repo view --json visibility` →
+      `PUBLIC`) — GitHub-hosted runners are unmetered for public repos; self-hosting wastes shared VM capacity for zero
+      billing benefit. The entry was already removed from the active allowlist on 2026-08-05 as part of the
+      15-public-repos cleanup (`self_hosted_runner_public_repo_revert_2026_08_05.md`, `self-hosted-qg-repos.txt` lines
+      68-77). Verified: (1) `deployment-api` is NOT in the 8 active allowlist entries (lines 80-87, private repos only);
+      (2) `deployment-api`'s own `quality-gates-v2.yml` uses `runs-on: ubuntu-latest` on all 3 jobs (lines 99/154/184);
+      (3) template rollout `--dry-run --repo deployment-api` confirms `get_qg_runner_labels("deployment-api")` returns
+      empty → `ubuntu-latest` fallback — all 8 updated templates render `ubuntu-latest`. No code change needed — the
+      removal was already implemented and verified.
   - Source: `issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (`## Follow-up`, `[REVIEW] P2`) —
     never cited by any covering doc.
 
-- [ ] [VERIFY] P1. **Confirm a real post-flip triggered run succeeded (not just the YAML edit) for each of the 4
+- [x] ✅ [VERIFY] P1. **Confirm a real post-flip triggered run succeeded (not just the YAML edit) for each of the 4
       "borderline" Tier-B self-hosted-runner files** — `cascade-qg-ordering.yml`, `freeze-deferred-build-replay.yml`,
       `reconcile-staging-versions.yml`, `update-repo-version.yml` — and append the sign-off + run URL/id for each into a
       new "## Tier-B sign-off log" section in the source doc (that section does not exist yet). Ground-truth check
       already confirms all 21 Tier-A files carry `runs-on: [self-hosted, glue]` (their own 2 checkbox todos are stale
       pointers, not real remaining work — do not re-do them). **Done when**: all 4 Tier-B files each have one
-      run-id-cited successful post-flip run recorded in the new section.
+      run-id-cited successful post-flip run recorded in the new section. **COMPLETE 2026-08-06** — all 4 confirmed +
+      sign-off log appended (`unified-trading-pm@f83716c0b`).
   - Source: `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md` ([VERIFY] P1) — never cited by any
     covering doc.
 
-- [ ] [CI] P1. **Root-cause and fix `market-tick-data-service`'s promote PRs never getting auto-merge armed** —
-      confirmed reproducing across 12+ consecutive worker re-checks through 2026-07-31 (PRs #788→#793, each superseded
-      before merging despite `mergeable: MERGEABLE` and every required check green; `autoMergeRequest: null` every
-      time). `.github/workflows/ldr-to-main-promote-fleet.yml`'s PR-creation path (~line 1030-1038) DOES attempt
+- [x] ✅ [CI] P1. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated prevention todos from resolved incidents (2026-08-02)"
+      section, commit `unified-trading-pm@4bf65b67c` ("tally auto-merge ARM_FAILED separately from PROMOTED in
+      ldr-to-main-promote-fleet", 2026-08-02) — the root cause was the concurrent GitHub Actions billing-wall incident,
+      not a code defect, plus an adjacent ARM_FAILED-tally bug fixed in the same commit. Verified live on the current
+      branch. No action needed. Original text preserved below for record. **Root-cause and fix
+      `market-tick-data-service`'s promote PRs never getting auto-merge armed** — confirmed reproducing across 12+
+      consecutive worker re-checks through 2026-07-31 (PRs #788→#793, each superseded before merging despite
+      `mergeable: MERGEABLE` and every required check green; `autoMergeRequest: null` every time).
+      `.github/workflows/ldr-to-main-promote-fleet.yml`'s PR-creation path (~line 1030-1038) DOES attempt
       `gh pr merge --auto --squash --delete-branch` loudly (echoes `⛔ WARN: auto-merge ARM FAILED` on failure, not
       silently swallowed) — start by reading the actual run logs for MTDS's recent promote-fleet dispatches to find
       whether that WARN line printed (a real arm failure — check the underlying `gh` error, likely a branch-protection
@@ -227,15 +221,19 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     throttle-banner check) — this is a separate, fully-diagnosed, unrelated bug found while investigating the
     now-self-resolved startup_failure incident.
 
-- [ ] [SCRIPT] P2. **Add a standing monitor for 3+ consecutive `startup_failure` runs on `ldr-to-main-promote.yml` /
-      `ldr-to-main-promote-fleet.yml`.** The 2026-07-30 incident (both workflows failing every tick for ~10h) ran
-      silently until noticed as a side-effect of an unrelated task — a dedicated alert would have caught it in under an
-      hour. Extend `scripts/cicd/promotion_lag_monitor.py` (or add a new lightweight check) to fire through the
-      `notify-slack.yml` carrier with a state-transition `dedup_key` per `/codex/04-architecture/ci-alerting.md` (fire
-      on change / RESOLVED / re-remind, never every tick) — do NOT edit `ldr-to-main-promote-fleet.yml` itself for this
-      (keep it a separate detector, avoiding any collision with todo 7's edits to that file). **Done when**: a synthetic
-      3-consecutive-`startup_failure` case fires exactly one alert, and a healthy/intermittent-failure pattern fires
-      none.
+- [x] ✅ [SCRIPT] P2. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`, commit `unified-trading-pm@ccb1d7b10` ("monitor + page on 3+
+      consecutive startup_failure runs on the LDR->main promote workflows", 2026-08-02). Verified live on the current
+      branch (`scripts/cicd/promote_fleet_startup_failure_monitor.py` present, wired into `notify-slack.yml`). No action
+      needed. Original text preserved below for record. **Add a standing monitor for 3+ consecutive `startup_failure`
+      runs on `ldr-to-main-promote.yml` / `ldr-to-main-promote-fleet.yml`.** The 2026-07-30 incident (both workflows
+      failing every tick for ~10h) ran silently until noticed as a side-effect of an unrelated task — a dedicated alert
+      would have caught it in under an hour. Extend `scripts/cicd/promotion_lag_monitor.py` (or add a new lightweight
+      check) to fire through the `notify-slack.yml` carrier with a state-transition `dedup_key` per
+      `/codex/04-architecture/ci-alerting.md` (fire on change / RESOLVED / re-remind, never every tick) — do NOT edit
+      `ldr-to-main-promote-fleet.yml` itself for this (keep it a separate detector, avoiding any collision with todo 7's
+      edits to that file). **Done when**: a synthetic 3-consecutive-`startup_failure` case fires exactly one alert, and
+      a healthy/intermittent-failure pattern fires none.
   - Source: `issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` ([SCRIPT] P2) — never cited
     by any covering doc.
 

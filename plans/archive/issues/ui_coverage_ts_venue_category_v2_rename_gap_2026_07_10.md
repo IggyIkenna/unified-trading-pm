@@ -59,7 +59,7 @@ resolved_by: unified-trading-system-ui@7900f560
 > `VenueCategoryV2` name per this issue's own finding. Recommended-fix steps 3 (re-run `--write` to pick up unrelated
 > accumulated manifest content drift) and 5 (audit other UAC-side enum drift) are NOT done here — tracked as a real
 > todo, not left as prose, in
-> `/plans/active/issues/ui_coverage_ts_regen_content_drift_after_venue_category_v2_rename_2026_07_28.md`.
+> `/plans/archive/issues/ui_coverage_ts_regen_content_drift_after_venue_category_v2_rename_2026_07_28.md`.
 
 ## What I found
 
@@ -123,7 +123,7 @@ propagated**, not just stale cell content.
       `tests/unit/lib/help/help-search-recall.test.ts`'s generated search-recall coverage, which proves `CROSS_CATEGORY`
       is genuinely reachable end-to-end, not just type-complete. Steps 3 (content-drift regen) + 5 (audit other drifted
       enums) of the recommended fix are NOT done here — tracked as their own todo, not prose, in
-      `/plans/active/issues/ui_coverage_ts_regen_content_drift_after_venue_category_v2_rename_2026_07_28.md`. No
+      `/plans/archive/issues/ui_coverage_ts_regen_content_drift_after_venue_category_v2_rename_2026_07_28.md`. No
       `pw:L2`/`regression:` evidence tag: this change touches only type-level/enum plumbing (no new route, widget, or
       user-visible surface) — covered by L0/L1 (tsc + the existing
       `enums.test.ts`/`help-tree.test.ts`/`help-search-recall.test.ts` unit suite), not an L2 route-smoke concern per

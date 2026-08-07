@@ -1,6 +1,6 @@
 ---
 doc_type: cursor-rule
-description: Every plan in plans/active/ must declare completion_gates and repo_gates; 3-tier readiness model (Code/Deployment/Business) governs archive eligibility
+description: Every plan/issue doc must declare the current PLAN_FORMAT.md frontmatter schema; archival requires every todo done + unlocked, not a legacy gate tier
 alwaysApply: true
 priority: 96
 tags:
@@ -9,84 +9,63 @@ tags:
 - critical
 - workflow
 ---
-# Plan Readiness Gates — 3-Tier Model
+# Plan Frontmatter + Archival Discipline
 
-SSOT: `unified-trading-pm/plans/PLAN_FORMAT.md`
+SSOT: `unified-trading-pm/plans/PLAN_FORMAT.md` (frontmatter schema) +
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (archival ritual).
 
-## RULE: Required YAML Fields
+> **RETIRED 2026-08-02**: the `completion_gates`/`repo_gates`/`type`/`epic` 3-tier C/D/B gate model this rule used to
+> describe is the LEGACY pre-2026-05-21 schema — `plans/PLAN_FORMAT.md`'s own Archive Criteria section rules "no
+> current plan carries those fields, so no plan could ever satisfy it." Do NOT add these fields to a new plan.
 
-Every `.md.md` file in `plans/active/` MUST include these fields in YAML frontmatter:
-- `type`: one of `code | infra | deployment | business | mixed`
-- `epic`: one of `epic-code-completion | epic-deployment | epic-business | epic-infra | none`
-- `completion_gates`: with `code`, `deployment`, and `business` subkeys
-- `repo_gates`: list of repos this plan touches with their current gate level
+## RULE: Required YAML Fields (current schema)
 
-Missing these fields is a plan format violation — fix before committing.
+Every plan/issue doc carries the universal-core fields: `doc_type`, `title`, `summary`, `status`, `nature`,
+`asset_group`, `stage`, `repos`, `scope`, `tags`, `related`, `created`, `parent_epic`, `assigned_vm`,
+`execution_scope`, `priority`, `estimate_class`, `estimate_baseline`/`calibrated_ai_days`, `assigned_role`,
+`drift_direction` — plus optional `depends_on`, `locked_by`/`since`, `supersedes`/`superseded_by`, `source`. Full
+schema + closed-vocab enums: `/codex/11-project-management/doc-frontmatter-schema.md`.
+
+`assigned_vm` ∈ `{planning, NA}` only — `planning` = agent-orchestrator VM dispatches it; `NA` = not auto-dispatched
+(operator-driven). `status: draft` = WIP, NOT ingested by the backlog; flip to `active` to dispatch.
+
+Missing a required field is a plan format violation — fix before committing (enforced by
+`scripts/plan-hygiene/check_frontmatter_schema.py`).
 
 ## RULE: ai/ vs active/ Split
 
-- AI-generated plans → `plans/ai/` ONLY (never directly to `plans/active/`)
-- User-approved plans → `plans/active/` (must have full YAML format)
-- On promotion: check INDEX.md for slug conflicts; resolve before moving
+- AI-generated drafts not yet reviewed → `plans/ai/`
+- User-approved / operator-authored plans → `plans/active/` (current frontmatter schema above)
 
 ## RULE: Archive Eligibility
 
-A plan is eligible for archive ONLY when ALL repos in `repo_gates` have reached the level
-declared in `completion_gates`. Partial repo coverage is NOT sufficient.
+A plan with EVERY todo done (`- [x]`) and unlocked (no `locked_by:`) MUST be archived immediately — don't leave it
+sitting `active`. `locked_by:` blocks archival without an explicit `[unlock-plan]` (ask the operator, never
+autonomous). Full archival ritual (incl. the fact-vs-path referrer rule):
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
-| Plan type | Minimum gate to archive |
-|-----------|------------------------|
-| `code` | C5 (quickmerge) for all repos |
-| `infra` / `deployment` | D3 (staging integration) for all repos — required even during code-completion epic |
-| `business` | B6 (user approved) + domain B3 KPIs met |
-| `mixed` | Highest required gate across declared types |
+NEVER mark a plan done/archived while any todo is still `- [ ]` — partial completion is not archive-eligible.
 
-NEVER mark a plan done/archived because most todos are complete while some repos are still at C0–C4.
+## RULE: blocked_by / depends_on in Todos
 
-## RULE: Gate Definitions
-
-### Code (C)
-- C0 = not started
-- C1 = implementation complete, not tested
-- C2 = unit tests passing, coverage maintained
-- C3 = linter + codex gates (ruff, basedpyright)
-- C4 = full quality-gates.sh Pass 1
-- C5 = quickmerge complete (merged to staging/main)
-
-### Deployment (D)
-- D1 = deployable (infra, configs, Docker)
-- D2 = CI/GHA smoke tests pass — emulators/mocks, NO real service calls
-- D3 = staging integration tests pass — REAL service/API calls (SIT suite)
-- D4 = load/performance tests pass in staging
-- D5 = production-ready (security + operational gates green)
-
-### Business (B)
-- B1 = acceptance criteria defined
-- B2 = scenario analysis complete
-- B3 = performance targets met (ML accuracy, P&L, execution alpha, latency — declared per plan)
-- B4 = batch vs live validation (t+1 check)
-- B5 = staging vs live parity (N-minute replay)
-- B6 = user approved
-
-## RULE: blocked_by in Todos
-
-When a plan is blocked by another plan's incomplete work, use `blocked_by: <plan-slug>` on the
-specific todo item — not on the completion_gates. The gates represent what this plan owns;
-external dependencies belong in todos.
+When a plan is blocked by another plan's incomplete work, use `blocked_by: <plan-slug>` on the specific todo item, or
+`depends_on:` in frontmatter for a whole-plan prerequisite. External dependencies belong in todos/frontmatter, not an
+invented gate field.
 
 ## RULE: New Plans from AI Sessions
 
 When any agent (Claude Code, Cursor, GHA autonomous) generates a new plan:
-1. Write it to `plans/ai/` with proposed frontmatter
-2. Do NOT write it to `plans/active/`
-3. Include a comment at the top: `# AI-GENERATED — awaiting user review and promotion`
-4. When the user promotes it, run the conflict check and add to INDEX.md
+1. **ASK BEFORE CREATING (HARD RULE)**: agent-orchestrator plan (`assigned_vm: planning`) or human plan
+   (`assigned_vm: NA`)? Default is human unless the operator explicitly says otherwise.
+2. Author directly in `plans/active/` with the current frontmatter schema (see above), or `plans/ai/` if genuinely a
+   draft awaiting review before promotion.
 
 ## WHY This Matters
 
-Plans were previously archived when most todos were done, ignoring partial repo coverage and
-infrastructure gaps owned by separate plans. A plan that "implements X" but skips 3 repos is
-not done. A plan that needs deployment infra that doesn't exist yet isn't blocked — it just
-needs the right gates declared. This model makes blocking relationships explicit.
+Plans were previously archived when most todos were done, ignoring the todos still open. Every follow-up is a
+tracked `- [ ]` todo, never prose. A plan with every todo done + unlocked must be archived immediately — don't leave
+stale `active` plans cluttering the corpus (orphan count > 0 is review-blocking, per
+`scripts/plan-hygiene/regenerate_active_plan_inventory.py`).
 
-CODEX: unified-trading-pm/codex/06-coding-standards/README.md
+CODEX: `/codex/11-project-management/doc-frontmatter-schema.md`,
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`

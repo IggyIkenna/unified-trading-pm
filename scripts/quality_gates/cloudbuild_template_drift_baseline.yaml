@@ -15,16 +15,26 @@
 #
 # SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md
 # + plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md.
-note: Seeded 2026-07-28 — ci_satellite_ao_dispatch_batch1 [INFRA] P2.
+note:
+  "Seeded 2026-07-28 (ci_satellite_ao_dispatch_batch1 [INFRA] P2). Ratcheted DOWN 2026-08-06 by
+  ci_satellite_ao_dispatch_batch5 todo 1 (cloudbuild empty-tag-guard rollout: template forward-ports + guard
+  hand-applied to every consumer). Residual counts = category-(b) intentional per-repo divergence (see inline comment
+  above). WHY per repo: operability-probe (repo-specific in-image IMPORT target) on
+  alerting/batch-live/execution/features/instruments/ml/strategy/trading-agent/ deployment-api; gar_token
+  BuildKit-secret build variant on alerting/greeks/ instruments/strategy/client-reporting-api; deployment-api
+  vendor-deps/deploy/ redeploy-monitor-jobs steps; features redeploy-features-jobs; execution stage-siblings;
+  market-tick-data image-import-smoke/stage-workspace-deps (dep-skew gates); extract-version comment/format variants;
+  build-step SCM-arg form (plain SETUPTOOLS_SCM_PRETEND_VERSION vs template _FOR_<PKG_UPPER>). Full classification in
+  the source issue doc Progress Log. Checker GREEN at baseline."
 repos:
   alerting-service:
-    count: 10
+    count: 8
   batch-live-reconciliation-service:
     count: 9
   client-reporting-api:
-    count: 5
+    count: 3
   deployment-api:
-    count: 26
+    count: 16
   deployment-ui:
     count: 0
   e2e-testing:
@@ -34,24 +44,24 @@ repos:
   features-service:
     count: 12
   fund-administration-service:
-    count: 6
+    count: 5
   greeks-service:
-    count: 10
+    count: 5
   ibkr-gateway-infra:
-    count: 4
+    count: 0
   instruments-service:
     count: 7
   market-data-processing-service:
-    count: 6
+    count: 5
   market-tick-data-service:
     count: 8
   ml-service:
-    count: 9
+    count: 8
   strategy-service:
-    count: 13
+    count: 8
   system-integration-tests:
     count: 0
   trading-agent-service:
-    count: 9
+    count: 8
   unified-trading-system-ui:
     count: 0

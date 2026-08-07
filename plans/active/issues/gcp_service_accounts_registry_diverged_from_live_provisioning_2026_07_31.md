@@ -38,7 +38,7 @@ depends_on: []
 context_scope:
   [
     deployment-service/configs/gcp_service_accounts.yaml,
-    /plans/active/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
+    /plans/archive/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
     /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
@@ -113,7 +113,12 @@ Two directions are both plausible and this is an architecture decision, not a bo
 
 ## Open todos
 
-- [ ] [OPERATOR] P2. **Decide direction (a) vs (b) above** — migrate to real per-service SAs, or rewrite the registry to
+- [ ] [INFRA] P2. **DEFAULT-RULED 2026-08-06 (no explicit operator input on this specific P2 item — applying reasoned
+      judgment per the operator's standing P2/P3 policy; override if you disagree), option (a): migrate to real
+      per-service SAs.** `[INFRA]` tag (was `[OPERATOR]`) — consistent with this session's broader IAM-hardening
+      direction (god-SA removal, per-tier SA cutover already approved) — closes the least-privilege gap for real rather
+      than just documenting it away. This is scoped provisioning + redeploy work, not a quick fix — track as its own
+      sub-effort. **Decide direction (a) vs (b) above** — migrate to real per-service SAs, or rewrite the registry to
       document live reality. Blocks the rest of this list.
 - [ ] [INFRA] P2. **Enumerate every live Cloud Run service's actual runtime SA + role set into the registry** (bounded,
       determinable audit — `gcloud run services list` + `describe` per service, cross-reference
@@ -136,3 +141,4 @@ Two directions are both plausible and this is an architecture decision, not a bo
   — not a worker call'), and item 1 (the [OPERATOR] decision between migrate-to-per-service-SAs vs
   rewrite-registry-to-match-reality) is stated...
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

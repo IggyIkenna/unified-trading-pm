@@ -17,7 +17,7 @@ tags: [defi, ao-dispatch, close-out, batch-4, satellite-docs, archival]
 related:
   [
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md,
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -80,13 +80,13 @@ drift_direction: advance-code
       that commit), with a small referrer-path follow-up in `PM@090ce516b` ("archive onchain manifest backfill issue
       doc"). **Done**: both source docs' states confirmed by reading, one-line note each above.
 - [x] ✅ [REVIEW] P3. **DONE 2026-07-31.** Re-checked all three of batch4's dropped-by-conflict-check items against
-      batch3's live state (`plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`, still `status: active`,
-      `locked_by:` empty). Verdict: **all three are covered — one required an in-place correction, one confirmed
-      cleanly, one needed a deeper trace than the disposition-as-written suggested.** 1. **Three read-only audits
-      (`defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`)** — sub-items (a) `_DEFAULT_PROTOCOLS` cross-list
-      reconciliation and (b) FRAX-ETHEREUM `vault_share_price` scheduling check are both still live, unchanged, in
-      batch3's `[DATA] P3` "Two read-only reconciliation checks" todo (still `[ ]` open, same file/line targets).
-      **Confirmed still covered.** Sub-item (c) — the MORPHO-ARBITRUM/OPTIMISM/POLYGON `SUBGRAPH_IDS` scoping
+      batch3's live state (`plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`, still
+      `status: active`, `locked_by:` empty). Verdict: **all three are covered — one required an in-place correction, one
+      confirmed cleanly, one needed a deeper trace than the disposition-as-written suggested.** 1. **Three read-only
+      audits (`defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`)** — sub-items (a) `_DEFAULT_PROTOCOLS`
+      cross-list reconciliation and (b) FRAX-ETHEREUM `vault_share_price` scheduling check are both still live,
+      unchanged, in batch3's `[DATA] P3` "Two read-only reconciliation checks" todo (still `[ ]` open, same file/line
+      targets). **Confirmed still covered.** Sub-item (c) — the MORPHO-ARBITRUM/OPTIMISM/POLYGON `SUBGRAPH_IDS` scoping
       re-verification, which batch4 recorded as `skip_covered` and routed to
       `defi_expected_unattempted_seeder_design_2026_07_26.md`'s `[OPERATOR] P0` — **that routing was already stale the
       day it was written and is now confirmed answered through a different path entirely.** The seeder-design plan's P0
@@ -122,13 +122,14 @@ drift_direction: advance-code
       scheduled invocation does not spin a batch5 that cannot extract anything. If a gate DID clear, name the
       candidate(s) instead. **Done when**: an explicit stop-or-continue verdict with the current residual orphan count
       is written into this doc, dated. — **VERDICT: STOP, 2026-07-31 (slot 15, review).** Re-tested the gate per todo
-      2's own already-completed re-check: batch3 (`plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`) is
-      still `status: active`, `locked_by:` empty, 8 open todos, unchanged since todo 2 ran — no gate cleared and todo 2
-      explicitly confirmed "zero net-new orphans from this re-check" (one stale-duplicate M3 todo was found and FIXED in
-      batch3 along the way, not a new orphan). **Residual count stands at 21 defi-primary orphaned docs**, taxonomy
-      unchanged (13 operator-gated, 3 time-gated, 1 too-large-or-risky, 3 human-only, 1 conflict-gated whose batchable
-      half already shipped). No candidate cleared for a batch5. Proceeding to todo 4 (archival) — this plan's own
-      `sequential: true` gate is satisfied.
+      2's own already-completed re-check: batch3
+      (`plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`) is still `status: active`, `locked_by:`
+      empty, 8 open todos, unchanged since todo 2 ran — no gate cleared and todo 2 explicitly confirmed "zero net-new
+      orphans from this re-check" (one stale-duplicate M3 todo was found and FIXED in batch3 along the way, not a new
+      orphan). **Residual count stands at 21 defi-primary orphaned docs**, taxonomy unchanged (13 operator-gated, 3
+      time-gated, 1 too-large-or-risky, 3 human-only, 1 conflict-gated whose batchable half already shipped). No
+      candidate cleared for a batch5. Proceeding to todo 4 (archival) — this plan's own `sequential: true` gate is
+      satisfied.
 - [x] ✅ [DOC] P3. **Archive `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md`** via the standard
       6-step ritual: migrate any still-live Deferred item to a tracked todo elsewhere (todos 2 and 3 above should have
       resolved or re-confirmed each — verify none silently vanish) → add the archive banner → run the codex-alignment

@@ -32,7 +32,7 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, plan-reconcile, parked-findings, dispatch-gap, data-loss-risk, self-dispatched-caveat]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
@@ -69,7 +69,7 @@ source: >-
   live) before a fresh 45-agent Phase 1 Workflow fan-out over the full candidate set.
 context_scope:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
@@ -264,11 +264,16 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Re-apply `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly**
-      (finding 10) — set line 39 to `assigned_vm: planning` (currently blank), then verify the `[BACKEND] P3` todo
-      actually reaches the live AO backlog. Second attempt at the same finding-7 fix; OPERATOR CONFIRMATION NEEDED again
-      since this is a live dispatch-state change on an active plan.
-- [ ] [OPERATOR] P1. **Investigate the missing stash-backup bundle** (finding 11) — confirm whether
+- [x] ✅ [OPERATOR] P1. **FIXED 2026-08-06 (governance sweep) — root cause identified, not just re-applied.** The
+      previous "flip" attempts landed the value on a continuation line with a trailing inline YAML comment
+      (`assigned_vm:\n  planning # ...`), which reads as blank to whatever parses this corpus's single-line frontmatter
+      convention — that's WHY it kept silently reverting to blank across multiple "fix" attempts. Corrected to a plain
+      single-line `assigned_vm: planning` (matching every other doc in the corpus); `execution_scope` fixed the same
+      way. Verified live: `grep '^assigned_vm:' infra_satellite_ao_dispatch_batch3_2026_07_30.md` now returns
+      `assigned_vm: planning`. Original text preserved below for record. **Re-apply
+      `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly** (finding 10).
+- [ ] [OPERATOR] P1. **Investigate the missing stash-backup bundle** (finding 11) — this needs the operator's own direct
+      knowledge/backup check, not delegable to a worker: confirm whether
       `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB, previously verified to contain all 10
       stash SHAs) was relocated to a durable location before `.tabs/3/stash-bundles/` disappeared, or whether this
       represents an unrecovered loss of 10 real stash entries. Update
@@ -282,6 +287,10 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
       batch as-is.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [OPERATOR] findings 10/11 (batch3 blank-flip
+  re-apply; missing stash-backup bundle) + tooling findings 12/13 (design-scope); operator-gated, not
+  worker-determinable.
 
 - **2026-08-03** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 12). Re-derived the
   candidate set (13 covering docs, 45 members — up from 43 on 2026-08-02 — 2 never-cited). Re-checked all 9
@@ -309,3 +318,4 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) — added the two concrete todo targets
   (`infra_satellite_ao_dispatch_batch3_2026_07_30.md` for finding 10, the stale-agentwork-scratch-clone doc for
   finding 11) alongside the existing 3.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

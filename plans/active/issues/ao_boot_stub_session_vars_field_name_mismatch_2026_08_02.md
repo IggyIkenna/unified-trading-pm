@@ -178,3 +178,7 @@ Two independent, complementary fixes — either alone helps, both together close
   `agents/worker.md` (the STEP 2 example todo 1 says to mirror) — now 6 entries.
 - **context-scout 2026-08-03 (re-pass)**: re-verified under the updated methodology, unchanged (6 entries) — all still
   resolve and remain the right minimal set for the 3 open todos.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

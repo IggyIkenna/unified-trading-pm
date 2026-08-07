@@ -14,7 +14,7 @@
 #
 # This is a bounded-retention prune, NOT a root-cause fix for the separate (and more
 # severe) prek stash/restore corruption bug tracked in the same issue doc — see
-# plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md.
+# plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md.
 # A patch is only ever read by the same in-process struct that wrote it (never re-selected
 # by a directory scan/mtime-newest lookup — confirmed against prek's own keeper.rs source),
 # so an old patch file sitting in this directory is dead weight, not live state a future
@@ -29,7 +29,7 @@
 #
 # Cron install: scripts/dev/install-prune-prek-patch-cache-cron.sh
 #
-# plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
+# plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
 # Codex SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Cron-based FF puller"
 #             (same self-pull / idempotent-install convention as the FF-pull cron)
 

@@ -95,11 +95,13 @@ operator-approved wider edit.
 
 ## Todo 3 — stalled DEX-swaps backfill VM needs a relaunch decision
 
-- [ ] [OPERATOR] P2. `mtds-dex-swaps-backfill-3` (one of the 3-VM date-sharded fleet covering `2025-12-15 → 2026-07-21`)
-      FAILED 2026-07-27 03:54 UTC with `exit_code=137` (`Killed` — OOM-shaped, same signature as the already-filed
-      `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` P0, which as of 2026-08-03 is still open and itself
-      blocked on vendor-credit exhaustion investigating the root cause) and has NOT been relaunched since — verified
-      live via
+- [ ] [INFRA] P2. **RULED 2026-08-06 (operator): plain relaunch, same --start/--end, no --force** (the doc's own recipe,
+      already proven 3x on sibling VMs). `[INFRA]` tag (was `[OPERATOR]`), AO-dispatchable — relies on the collector's
+      freshness-skip to resume. `mtds-dex-swaps-backfill-3` (one of the 3-VM date-sharded fleet covering
+      `2025-12-15 → 2026-07-21`) FAILED 2026-07-27 03:54 UTC with `exit_code=137` (`Killed` — OOM-shaped, same signature
+      as the already-filed `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` P0, which as of 2026-08-03 is still
+      open and itself blocked on vendor-credit exhaustion investigating the root cause) and has NOT been relaunched
+      since — verified live via
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill-3/run.log | tail`
       (2026-08-03). It self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`), so it no longer shows in
       `gcloud compute instances list` as a red flag — a silent 6+ day stall on its shard. Sibling VMs: `-1` completed
@@ -126,3 +128,12 @@ for the compact pointer back to this doc.
   SCRIPT-tagged todos with one explicitly `[OPERATOR]`-tagged genuine judgment call (whether/how to relaunch a stalled
   backfill VM pending an open OOM root-cause investigation); since not essentially all open work qualifies as bounded,
   the whole doc stays NA per the mixing rule. Doc stays `assigned_vm: NA`.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — re-confirms the 2026-08-04
+  verdict; the only change since was a context-scout metadata-only touch. Todo1/Todo2 [SCRIPT] remain bounded-in-
+  isolation but sequentially gated on each other; Todo3 [OPERATOR] remains a genuine judgment call (VM relaunch approach
+  pending the separate still-open P0 OOM issue). Doc stays `assigned_vm: NA` as a whole (per-doc field, one genuine
+  judgment item is enough). Incidental: `mtds-dex-swaps-backfill-3` VM (Todo3's subject) was last independently verified
+  stalled/OOM on 2026-08-03 — 3 days further elapsed with no fresh check in this doc; flagging for a
+  `/vm-preemption-billing-waste-audit` pass, not re-verified live in this run.

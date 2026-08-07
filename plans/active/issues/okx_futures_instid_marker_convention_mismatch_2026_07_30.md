@@ -125,7 +125,11 @@ reasoning above.
 
 ## Follow-up todos (once the operator decides)
 
-- [ ] [OPERATOR] P1. Decide convention A vs B vs C-first for OKX-FUTURES canonical instrument_id (this doc).
+- [x] ✅ [OPERATOR] P1. **RULED 2026-08-06 (operator), option A: ratify the already-shipped convention.** Matches every
+      other dated-derivative venue and instruments-service's actual deployed builder — no revert needed. The sibling
+      `[SCRIPT] P1` todo below (docstring reconciliation) already independently confirmed done-elsewhere in this same
+      governance sweep (see `cefi_satellite_ao_dispatch_batch8_2026_08_06.md` todo 3). Decide convention A vs B vs
+      C-first for OKX-FUTURES canonical instrument_id (this doc).
 - [ ] [SCRIPT] P1. **CORRECTED 2026-08-04 (na-eligibility-audit) — the "whichever side loses, implement" framing is
       stale.** Option A's reverse-mapper fix already shipped (`market-tick-data-service@8a6bbc97`, 2026-07-30 22:55 UTC
       — landed BEFORE this operator decision, without the sign-off `[OPERATOR] P1` above requires). Remaining scope,
@@ -166,3 +170,8 @@ reasoning above.
   that entry only described in prose: rewrote `[SCRIPT] P1`'s text in place (still open — docstring reconciliation +
   contingent Option-B revert remain live work). `[OPERATOR] P1` stays open and NA (genuine, now higher-stakes
   ratification call); `[SCRIPT] P2`/`[RESEARCH] P2` unaffected.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — `[OPERATOR] P1` ratification remains
+  the load-bearing open gate. Today's independent `/ag-closeout-audit cefi` run reached convergent classification,
+  drafting (not activating) the non-operator sub-items into batch6/batch8 — strong cross-validation that whole-doc NA
+  pending operator ratification is correct.

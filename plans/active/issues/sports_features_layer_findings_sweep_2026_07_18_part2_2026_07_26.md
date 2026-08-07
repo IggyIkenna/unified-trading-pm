@@ -786,3 +786,4 @@ into the same fix — carried forward here so it isn't lost with the archive:
   (async-wait-and-poll-discipline / spot-vms-for-backfill, both already-shipped lessons) for
   `data_completion_sports_2026_07_24.md` (owns §M's runtime re-division registry) and `sports_reference_core.py` (the
   actual file behind §O's open `emit_empty_gaps_for_entity` denominator finding).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

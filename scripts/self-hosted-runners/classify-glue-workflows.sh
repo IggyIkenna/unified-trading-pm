@@ -59,7 +59,11 @@ REUSABLE_CROSSREPO="image-build-validate.yml"
 #     build pipeline itself. If the glue pool it would otherwise run on is the thing that's down or
 #     misbehaving, a self-hosted copy of this watcher goes dark at exactly the moment the "did the
 #     build actually happen" check is needed most — the identical reasoning as the other seven.
-KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml glue-pool-starvation-monitor.yml stale-build-watcher.yml"
+#   - glue-runner-health-monitor: the DEPLETED-pool complement to glue-pool-starvation-monitor
+#     (2026-08-06, fleet_promoter_glue_runner_stall_2026_08_06.md) — counts ONLINE `glue` runners
+#     via the Actions API and pages below a threshold. Same failure-independence shape: it watches
+#     the glue pool, so it MUST run on GitHub-hosted (its own header says so).
+KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml glue-pool-starvation-monitor.yml stale-build-watcher.yml glue-runner-health-monitor.yml"
 
 # HOSTED DEPENDENCIES (KEEP-D): a shared reusable on a KEEP workflow's CRITICAL path. A reusable's runs-on is
 # independent of its caller, so a self-hosted reusable would break its HOSTED caller during a VM outage even though the

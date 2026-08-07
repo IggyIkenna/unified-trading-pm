@@ -881,3 +881,5 @@ before concluding it's a real blocker.
 **End of forked content.** For MVP universe / ground-truth-verdict context, Phase A2/C (adapter correctness,
 data-status, honest-coverage) still tracked on the parent, and the full aggregated source-doc list, see
 `tradfi_consolidated_closeout_2026_07_18.md`.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

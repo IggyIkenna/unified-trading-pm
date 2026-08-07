@@ -70,6 +70,22 @@ topic-scoped run genuinely cannot find it. Sharded runs are a good default for r
 `all` run (or a run explicitly covering the 2 tranches in question, if the collision is already suspected) is still
 needed to catch genuinely cross-tranche contradictions. Don't let sharding become the ONLY mode this skill ever runs in.
 
+**The scheduled cadence that resolves that trade-off (operator ruling 2026-08-06)** — the AO timer
+(`agent-orchestrator/scripts/install-plan-reconciler-timer.sh`) runs BOTH modes on a weekly cycle, so neither the
+reliability nor the cross-tranche-coverage half is sacrificed:
+
+- **Sun-Fri: one sharded dispatch per tranche per day** (one worker each, same shape `ag_closeout`/`na_eligibility`
+  already use). Bounded, and a tranche that fails is retried independently of its siblings.
+- **Saturday: ONE unsharded `all` run, and the per-tranche shards do NOT fire that day.** Saturday is the low
+  fleet-activity window, so the whole-corpus sweep gets the slot headroom it actually needs, and skipping the shards
+  that day means the `all` run isn't racing 10 sibling workers for the same corpus (concurrent writes to a shared doc
+  are exactly the collision the primary-owner rule exists to prevent).
+
+**Why this was ruled**: the unsharded daily run was measured on 2026-08-06 across every retained attempt — 7 of 8 ended
+`reaped-stale` (died mid-run, several within 2-5 minutes of spawn, no `/done`), and the single completion took 13.5
+hours (00:01:32 → 13:29:00), holding a slot for the whole day. A daily whole-corpus sweep is not a shape this corpus can
+reliably finish; a weekly one, on a quiet day, is.
+
 **Archival caution in a topic-scoped run**: before archiving a doc that looks fully done within the current shard, grep
 the OTHER 9 tranches' consolidated-closeout docs (or their Sources lists) for a reference to it — a doc can be primary
 to one tranche but still cross-referenced from another's Track content (the way this session's cross-cutting Tracks 2/13
@@ -273,14 +289,14 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
    rule/invariant/formula, re-derived against an example or formula the same doc shows elsewhere, must not contradict it
    or itself mid-sentence.
 8. **Hedge-pointer / stale-candidate hunter** — added 2026-08-03 after a real todo
-   (`data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3) named 3 "candidates found by grep" for 4 follow-up
-   items — only 1 of the 3 was a real owner, and 2 of the 4 items were actually owned by an entirely different, unlisted
-   doc found only by a fresh corpus-wide grep. Grep the corpus for hedge language a doc's own prose/todos use in place
-   of a confirmed reference — "candidates found by grep", "likely owned by", "probably tracked in", "TBD which doc
-   covers this", "not yet identified" — and treat every hit as an unverified claim, same bar as hunter 4's plan↔codex
-   drift: grep-then-READ every named candidate, confirm whether it actually owns/tracks the claim, and (per this
-   workspace's grep-then-conclude ban) don't stop at the named candidates — a fresh corpus grep for the item's real
-   owner is required before concluding "not yet identified" is still accurate. Mirrors
+   (`../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3) named 3 "candidates found by
+   grep" for 4 follow-up items — only 1 of the 3 was a real owner, and 2 of the 4 items were actually owned by an
+   entirely different, unlisted doc found only by a fresh corpus-wide grep. Grep the corpus for hedge language a doc's
+   own prose/todos use in place of a confirmed reference — "candidates found by grep", "likely owned by", "probably
+   tracked in", "TBD which doc covers this", "not yet identified" — and treat every hit as an unverified claim, same bar
+   as hunter 4's plan↔codex drift: grep-then-READ every named candidate, confirm whether it actually owns/tracks the
+   claim, and (per this workspace's grep-then-conclude ban) don't stop at the named candidates — a fresh corpus grep for
+   the item's real owner is required before concluding "not yet identified" is still accurate. Mirrors
    `cursor-configs/skills/context-scout/SKILL.md` Phase 1 step 4, which does the identical verification but can only
    ever update `context_scope` — it is this skill's job (not context-scout's) to actually rewrite the doc's own hedge
    prose once a candidate is confirmed right, wrong, or replaced by a different real owner. If a confirmed owner's todo

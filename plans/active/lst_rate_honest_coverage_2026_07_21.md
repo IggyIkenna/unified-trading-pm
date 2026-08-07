@@ -50,9 +50,9 @@ locked_since:
 context_scope:
   [
     /codex/02-data/lst-exchange-rate-surfaces.md,
+    /plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md,
+    /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
     /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/,
-    instruments-service/instruments_service/reference_data/adapters/defi/,
     features-service/features_service/onchain/engine/lst_features.py,
   ]
 supersedes:
@@ -703,6 +703,8 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   files, then flip the Sanctum-reconciliation todo above with the shipped shas. Do not re-do the on-chain verification —
   it's captured here with full evidence.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: corrected a marker-skip left by an earlier cohort-5 batch (2026-08-06 01:34 UTC edit
+  trimmed context_scope 5→3 entries with no marker added); re-verified the current 3 entries resolve on disk, unchanged.
 
 ## RESUME POINT (pre-compact 2026-07-23) — a fresh session starts HERE
 
@@ -984,3 +986,8 @@ tarball once; always check the launcher's own freshness warning output, and if s
   DEX-fill has a live finding (VM `-3` FAILED exit_code=137 on 2026-07-27, never relaunched — 6-day silent stall).
   Ready-to-apply checkbox text + full evidence filed as real todos:
   [[lst_rate_honest_coverage_over_cap_findings_2026_08_03]]. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-06**: populated/refreshed context_scope (5 entries) — added the companion over-cap-findings
+  issue doc (the doc's own Phase 5 ready-to-apply evidence lives there, not in this frozen-append-only doc) and the
+  `mtds_backfill_vm_memory_hang` issue this doc's Deferred table cites as what the remaining CEX-spot backfill item is
+  blocked on. Doc now at 989/1000 lines — comfortable headroom restored after the recent trim-below-cap commit.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA valid (re-affirms 2026-08-03 ruling; marker-only, at line cap).

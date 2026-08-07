@@ -49,7 +49,7 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     .github/workflows/python-quality-gates-v2.yml,
     scripts/cicd/detect_breaking_change.py,
-    /plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
+    /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/epics/infrastructure_master.md,
   ]
@@ -289,3 +289,8 @@ leave both here until [A] is decided, accepting they stay unshipped; **C** — `
 thing to `assigned_vm: planning` (NOT recommended — [A] is explicitly not an autonomous ship). Note item (i) embeds a
 second clause ("and decide whether a red SIT should escalate to a background worker") that is a genuine design call and
 should stay NA regardless of which option is picked.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator sign-off required, SUPERSEDED/DO-NOT items, adversarial
+verification

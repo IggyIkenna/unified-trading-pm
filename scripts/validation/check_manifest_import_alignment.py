@@ -41,9 +41,14 @@ EXCLUDE_FILENAMES = {"conftest.py"}
 # Build/dependency dirs EXCLUDED from the source walk — os.walk never descends into them, so
 # their contents are never scanned (third-party / generated code, not repo source). Without this
 # a plain rglob("*.py") still enumerates every .venv file before discarding it per-path.
-# (Naming: these dirs are excluded, not "pruned"/removed.)
+# (Naming: these dirs are excluded, not "pruned"/removed.) ".claude" excludes nested per-agent
+# git worktrees (.claude/worktrees/<id>/) — a worktree can carry an older/different snapshot of
+# the SAME repo's source, so scanning it produces false manifest-alignment violations for imports
+# that don't exist in the actual checked-out tree (found live 2026-08-06: a locked worktree's
+# stale deployment_service/ imported several unified_*_interface packages the current tree
+# doesn't, failing deployment-service's gate for code nobody there wrote).
 EXCLUDE_DIR_NAMES = frozenset(
-    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git"}
+    {".venv", ".venv-workspace", "venv", "build", "dist", "node_modules", "__pycache__", ".git", ".claude"}
 )
 
 
@@ -54,6 +59,7 @@ def _iter_source_py(root: Path) -> list[Path]:
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIR_NAMES]
         out.extend(Path(dirpath) / fn for fn in files if fn.endswith(".py"))
     return out
+
 
 # Patterns for Python imports
 FROM_IMPORT_RE = re.compile(r"^\s*from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import")

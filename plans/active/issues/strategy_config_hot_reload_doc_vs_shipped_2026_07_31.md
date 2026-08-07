@@ -94,8 +94,11 @@ stating that the allow-list and error type do not exist and that the instrument 
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Rule between A / B / C — specifically, confirm whether a live instrument-universe swap is
-      position-state-safe. Provenance: codex freshness re-review shard-B, 2026-07-31.
+- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: implement the documented guard.** `[CODE]` tag (was
+      `[OPERATOR]`) — build the safe-field allow-list + `UnsafeConfigChangeError` as originally designed, closing the
+      real gap that any field can currently hot-swap into a live paper/live trading strategy. AO-dispatchable. Rule
+      between A / B / C — specifically, confirm whether a live instrument-universe swap is position-state-safe.
+      Provenance: codex freshness re-review shard-B, 2026-07-31.
 - [x] [DOC] P3. Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in
       `/codex/04-architecture/live-strategy-config-hot-reload.md` — both are shipped and currently absent from the SSOT.
       -- CLOSED (na-eligibility-audit 2026-08-01): already done —
@@ -115,3 +118,6 @@ stating that the allow-list and error type do not exist and that the instrument 
   (`config_reloaders.py`) and its UTL base class (`domain_config_reloader.py`), and the sibling codex doc
   (`instrument-lifecycle-cache-delta-hot-reload.md`) the open `[OPERATOR]` position-state-safety ruling bears on;
   dropped the generic epic pointer.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-01 (unchanged): sole remaining todo is an
+  [OPERATOR] 3-way design call on live-trading position-state safety.

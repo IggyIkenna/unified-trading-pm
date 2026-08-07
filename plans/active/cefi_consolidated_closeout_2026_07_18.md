@@ -39,7 +39,7 @@ related:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
-    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
@@ -612,3 +612,8 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   `origin/live-defi-rollout`, flipped to `[x]`, part (b) stays operator-owned. Plus `_DRYRUN_COLS` P0: `"chain"`
   confirmed in `_DRYRUN_COLS` at `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py:220`,
   `1284606a` on LDR — fix predates the triage. All evidence in `cefi_4surface_migration_execution_log_2026_07_24.md`.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — hub/coordination doc that references
+  (does not duplicate) every open cefi plan/issue; of 15 open items, most sit under explicit redirect banners (the fleet
+  docs are ground truth, not this roll-up) or are embedded judgment/design calls from a source plan per an operator
+  sequencing ruling. Not a dispatchable unit.

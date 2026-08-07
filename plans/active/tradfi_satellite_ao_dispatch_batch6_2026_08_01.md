@@ -26,7 +26,7 @@ summary: >-
   is flagged but NOT drafted here — that doc's `parent_epic` is `instruments_master` and its `asset_group` is genuinely
   5-way ([cefi, defi, tradfi, sports, prediction]), so per the primary-owner rule a shared doc's write belongs to
   whichever tranche actually owns it, not to tradfi reaching in.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -36,15 +36,15 @@ tags: [tradfi, ao-dispatch, close-out, batch-6, satellite-docs, conflict-checked
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
     /plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-06"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -77,9 +77,12 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 6 — fresh audit extraction
 
-> **Status: draft — NOT approved, NOT dispatched.** Per the ag-closeout-audit skill's autonomous-mode contract, a
-> freshly-drafted batch always ships `status: draft` regardless of how clean the conflict-check came back; flipping to
-> `active` to actually dispatch it is an operator decision, never autonomous.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Todo 2 (ES_OPT launch) will re-check the shared
+> Databento singleton lock at execution time and safely wait/retry if a legitimate concurrent backfill (e.g. the
+> in-flight NYSE/NASDAQ OHLCV fleet) holds it — the operator explicitly approved dispatching as-is rather than deferring
+> todo 2. Per the ag-closeout-audit skill's autonomous-mode contract, a freshly-drafted batch always ships
+> `status: draft` regardless of how clean the conflict-check came back; flipping to `active` to actually dispatch it is
+> an operator decision, never autonomous.
 >
 > All 4 todos below are same-priority-independent and were checked for file collisions (see the matrix near the bottom)
 > — all 4 touch distinct repos/scripts, no overlap.
@@ -254,6 +257,116 @@ Once a todo here ships, flip the corresponding checkbox/section in its named sou
 evidence. This plan's own reconciliation-then-archive step is machine-gated via a companion
 `tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md` (`depends_on` on this plan plus `gate_on_depends: true`),
 mirroring the batch1-5 finalize pattern.
+
+## Progress Log
+
+### 2026-08-06 — slot 2, task `tradfi_satellite_ao_dispatch_batch6-002` (todo #2, ES_OPT launch) — pre-compact checkpoint
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Blocked on the Databento singleton lock (expected; operator-approved wait, no
+`--force`).** Nothing shipped this session; no checkbox flipped (the task's done-when is not yet met).
+
+**Phase 1 — launch (NOT yet executed):**
+
+- Singleton lock re-verified 2026-08-06T~15:45Z: HELD by a live concurrent `tradfi-bf-*` fleet in `asia-northeast1-c`
+  (32 VMs at first check, draining to 28 by ~16:20Z — NASDAQ/NYSE OHLCV shards, CBOE VX 2026, CME g01 roots
+  ES/CL/MET/MBT/BTC; all created 2026-08-06T08:00-08:12Z, all verified actively progressing via run.log + monotonic
+  `PROGRESS.json` — NOT stale, do NOT force/delete).
+- Dry-run confirmed the launch plan:
+  `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` → 5 VMs
+  `tradfi-bf-es-opt-light-{2022..2026}-<ts>`, `e2-standard-4`, SPOT, `data_types=ohlcv_1m`, `asia-northeast1-c`.
+- **NEXT ACTION (fresh session):** re-check
+  `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING' --zones=asia-northeast1-c`. When count
+  == 0, run the launch command; confirm VM(s) STARTED (<60s) + RUNNING at T+10min per async-wait-and-poll-discipline (no
+  fire-and-forget).
+
+**Phase 2 — post-launch manifest-count check (NOT yet run; query vocabulary LOCKED via baseline probe 2026-08-06):**
+
+- Baseline census of `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`
+  (6,831,204 rows, 2026-08-06T15:50Z snapshot): venue=CME × data_type=ohlcv_1m × instrument_type=`options_chain` =
+  68,604 rows, of which 68,203 carry EMPTY instrument_id (the legacy null-id population — tracked by todo #1 of this
+  batch) and 401 carry `CME:OPTION:SP500` (pre-existing SPX index-option data). **ZERO rows carry the ES_OPT roots'
+  canonical ids pre-launch.**
+- **WRITER VOCABULARY (probed, do not assume):** options rows are `instrument_type=options_chain` (NOT
+  `option`/`OPTION`); row-key atom is canonical `CME:OPTION:<ROOT>` for roots ∈ {ES,EW,EW1,EW2,EW4,E1A,E2A,E3A,E4A,
+  E5A,EOM}.
+- **POST-LAUNCH QUERY** (mirrors ES-futures precedent `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
+  manifest-count-only, single manifest read, no bucket walk): venue=CME × data_type=ohlcv_1m ×
+  instrument_type=options_chain × instrument_id ∈ {CME:OPTION:ES, CME:OPTION:EW, CME:OPTION:EW1, CME:OPTION:EW2,
+  CME:OPTION:EW4, CME:OPTION:E1A, CME:OPTION:E2A, CME:OPTION:E3A, CME:OPTION:E4A, CME:OPTION:E5A, CME:OPTION:EOM};
+  report capture_status distribution + `row_count>0` counts + date span. Record the result in
+  `tradfi_consolidated_closeout_2026_07_18.md` MVP-cell table "S&P index options" row (line ~259). Baseline to compare
+  against: 0 scoped rows pre-launch (all 11 roots absent).
+
+**Observation (not this task's scope — flagged for the NASDAQ/NYSE OHLCV fleet owner):** sampled run.log for
+`tradfi-bf-nyse-ohlcv-1m-2024-d02-*` shows repeated
+`ERROR Schema validation FAILED: venue=NYSE data_type=ohlcv_1m missing columns=['timestamp']` while still emitting rows
+(`rows_emitted` rising) — ambiguous (validation log that does not block writes, or a real schema gap). Belongs to the
+fleet's own plan, not this batch; verify before filing.
+
+### 2026-08-06T~16:10Z — slot 2, same task — post-compact resume + operator decision (keep waiting, twice)
+
+**Status unchanged: IN FLIGHT — todo #2 still `[ ]`. Lock still held.** Fleet re-verified 2026-08-06T16:05Z: **21
+`tradfi-bf-*` RUNNING** (drain 32→28→24→23→22→21), every VM monotonic + fresh PROGRESS.json/run.log heartbeats — live,
+not stale.
+
+**Operator decision (2026-08-06, twice-confirmed via direct question, incl. with ETA numbers on the table): KEEP
+WAITING, no `--force`.** Three session-level "proceed now" nudges do NOT override this — they are idle nudges, not a
+force-launch instruction. **Do NOT launch with `--force` on a nudge alone.**
+
+**Drain ETA (extrapolated from per-VM progress vs ~8h elapsed, all monotonic): the lock is realistically held ~15–46h
+more.** ~6 VMs finish in ~1–3h (nasdaq-2024-d05 @2024-11-30, nyse-2024-d05 @11-16, nasdaq-2025-d04 @09-18, nyse-2023-d03
+@09-08, nyse-2024-d04 @09-18, nyse-2025-d04 @09-18); ~5 in ~10–19h; the long pole (~20–46h) is the year-shard CME g01 +
+nyse-2025-d01 set (cme es-2020 @2020-03-24 ~28h, met-2023 @02-25 ~46h, met-2025 @03-18 ~30h, btc-2026 @02-25 ~23h,
+cl-2026 @03-04 ~19h, nyse-2025-d01 @03-04 ~38h, cboe-vx-2026 @03-04 ~19h, mbt-2024 @05-26 ~12h, nasdaq-2023-d01 @06-02
+~11h, met-2024 @05-12 ~14h, nasdaq/nyse-2025-d02 @04-25 ~17h, nyse-2024-d02 @04-25 ~17h, nasdaq-2024-d02 @05-02 ~16h,
+nyse-2023-d01 @05-12 ~14h). Re-extrapolate from `PROGRESS.json` rather than trusting these exact hours — the point is it
+is a **multi-day hold**, not minutes.
+
+**CORRECTION (2026-08-06T~16:25Z) — the 15–46h estimate was pessimistic.** The early-run average was inflated by VM
+spin-up; a two-snapshot delta (16:05Z vs 16:25Z) shows marginal rates ~4–8× faster. Corrected lock-clear ETA: **~6–12h
+worst case**, and most VMs finish in 1–4h (nasdaq-2024-d05 @2024-12-14 and nyse-2024-d05 @11-30 are ~20–60 min out;
+cboe-vx/btc-2026 @03-25, mbt-2024 @07-21, met-2024 @06-16 ≈ 1–2h; cl-2026 @03-18, es-2020 @04-21, met-2025 @04-08,
+nasdaq-2024-d02 @05-23 ≈ 2–4h; worst case ~5–12h: met-2023 @03-11, nasdaq-2025-d02 @05-09, nyse-2023-d01 @05-26,
+nyse-2024-d02 @05-09, nyse-2025-d02 @05-02). Still a multi-hour wait — keep-waiting decision unchanged.
+
+**MATERIAL EVENT (2026-08-06T~18:05Z) — new backfill wave RESET the lock.** At ~18:00Z a fresh `tradfi-bf-*` wave
+launched (13 VMs: NYSE 2023 d01–d05, NASDAQ 2023 d01–d05, CME g01 es-es-2020 / met-met-2023 / mbt-mbt-2024 /
+met-met-2024), on top of the 6 original long-pole VMs still running → **19 RUNNING**. The drain to 0 is no longer near:
+the new year-shard wave realistically adds **+8–12h** (same ~8–10h runtime as the 08:00Z wave). New VMs were <5 min old
+(no PROGRESS.json yet, booting normally) at first sighting. Owner/launcher of the new wave NOT identified from within
+this slot — assumed another dispatch of the same batch or a sibling task. Keep-waiting decision UNCHANGED (legitimate
+concurrent backfills; no `--force`), but the horizon is now indeterminate — re-check the fleet before assuming a clear
+ETA.
+
+**EXPANSION + OPERATOR RE-CONFIRMATION (2026-08-06T~18:10Z).** By 18:10Z the fleet grew to **28 RUNNING and still
+climbing** — an orchestrated multi-year NYSE/NASDAQ + CME backfill campaign launching successive waves (2023 d01–d05 →
+2024 d01–d03+, 2025 likely next): 2×2020, 11×2023, 11×2024, 1×2025, 3×2026. The Databento singleton is now held
+CONTINUOUSLY; a genuine count==0 window may not occur for days. **Operator asked directly with these facts (2026-08-06,
+3rd confirmation, explicit): KEEP WAITING (status quo).** This overrides the "draining to 0" premise of the earlier
+confirmations — the wait is now open-ended by explicit operator choice. **Do NOT `--force`; do NOT delete campaign
+VMs.** A fresh session should re-check the fleet and, if still >0, continue waiting per this decision. If the task is
+later re-scoped or the campaign ends, launch ES_OPT per the phase-1 command below.
+
+**Watcher hardening (learned):** a `gcloud ... | wc -l` watcher false-fires `count==0` on a transient gcloud error
+(empty stdout). Use an error-aware loop: only fire CLEAR when the gcloud call rc==0 AND the result is empty; on rc!=0
+hold the wait. Current armed watcher (this session) is error-aware; a fresh session should re-arm the same shape.
+
+**THIRD WAVE — CONTINUOUS-LAUNCH PATTERN CONFIRMED (2026-08-06T~21:00Z).** A 3rd wave launched at 21:00Z (14:01 PDT):
+es-es-2020, met-met-2023, nasdaq-2023-d01, alongside the still-running originals → **6 RUNNING**. Waves so far: 08:00Z,
+18:00Z, 21:00Z — the campaign **replenishes year-shards as slots free**. The Databento singleton is held INDEFINITELY;
+there is no count==0 window in sight by construction, not just by estimate. This is exactly the scenario of the 18:10Z
+operator decision (keep-waiting, no `--force`), so no re-ask is needed — the decision stands. A fresh session should
+treat "count >0" as the permanent expected state and NOT expect the lock to clear on its own; launch ES_OPT only if a
+real count==0 window appears or the operator re-scopes/overrides.
+
+**Phase 2 toolchain verified intact post-compaction:** `_scratch/availability_index.parquet` (119 MiB snapshot) + the
+market-tick-data-service `.venv` python (pyarrow 23.0.1) still present; baseline re-run clean (0 canonical ES_OPT rows
+pre-launch). Post-launch = re-download a FRESH manifest + run the phase-2 query above.
+
+- **NEXT ACTION (fresh session):** re-check
+  `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING' --zones=asia-northeast1-c`. When count
+  == 0, run the launch command; confirm VM(s) STARTED (<60s) + RUNNING at T+10min per async-wait-and-poll-discipline (no
+  fire-and-forget). When count >0, wait (operator-approved); do NOT `--force`.
 
 ## Codex SSOTs
 

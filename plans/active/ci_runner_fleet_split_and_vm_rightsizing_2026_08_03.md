@@ -23,7 +23,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: "2026-08-03"
-last_updated: "2026-08-03"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -309,14 +309,19 @@ new pool is confirmed green, (3) only then resize AO down.
       `deployment-api` right now — filed as
       `/plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (shipped). The
       fix + test sit locally uncommitted in this session's checkout until that issue clears.
-- [ ] [INFRA] P1. **Gate already met as of 2026-08-05** — `gh api .../actions/runners` shows zero runners registered
-      against the old VM across all 25 pools (confirmed via full fleet sweep, see above), and
-      `systemctl list-units     'github-glue-runner*.service' --state=active` on the old VM returns empty. **Stated
-      precondition not yet elapsed**: this todo's own 24h soak ("no runner-claimed job has landed... for a full day")
-      only starts counting from 2026-08-05 — don't run an explicit `teardown`/directory cleanup before ~2026-08-06 even
-      though the functional gate is already satisfied, in case any straggler job was mid-flight at sweep time. Gate: as
-      stated, now met — re-confirm once the day passes, then remove the on-disk artifacts (`/opt/github-glue-runners*`,
-      `/etc/github-glue-runner*.env`) if desired (cosmetic — no runner is actually live either way).
+- [x] ✅ [OPERATOR] P2. **Done 2026-08-06 — operator ran the on-disk cleanup directly via `aws ssm send-command` (SSM
+      Session Manager wasn't available locally — `session-manager-plugin` not installed — so used the `send-command`
+      path with a pre-built `--cli-input-json` file to avoid manual shell-quoting of a multi-line script).** Real,
+      verified result (command output, not estimated): root volume **592G → 459G used (88% → 68%), 133GB freed** — close
+      to the ~139GB estimate, the gap being the `du` estimate's own rounding across 24 dirs.
+      `systemctl is-active orchestrator` → `active` throughout, unaffected. All `github-glue-runner-*.slice`,
+      `github-glue-runner-*@.service`, `github-glue-slot-refresh-*` unit files removed + `daemon-reload`d;
+      `glue-runner-crash-loop-watchdog.timer` (permanent, shared with the CI VM) correctly left untouched, still
+      `enabled`. **One harmless miss**: the bare top-level `github-glue-runner.slice` (no per-repo dash suffix) didn't
+      match the `github-glue-runner-*.slice` glob used, so it's still present — an inert, empty, `static` resource-cap
+      boundary with nothing left parented under it now; zero risk either way, not worth a follow-up todo for a no-op
+      cleanup pass. Prep (stopping/disabling every unit) was done earlier the same session; this entry closes the final
+      on-disk-delete step. Command ref: `fd1e3c8f-07da-45b3-9eb8-c26ff586e334` via SSM on `i-0c9b283b31d6b5ca7`.
 - [ ] [INFRA] P1. **Downsize `i-0c9b283b31d6b5ca7` from `m8i.4xlarge` to `m8i.2xlarge`** (stop →
       modify-instance-attribute --instance-type → start). Per CLAUDE.md's maintenance-window rule, brief orchestrator
       downtime during this is pre-authorized (pre-live-trading) — do now, no separate scheduling needed. Verify AO's own
@@ -359,12 +364,16 @@ new pool is confirmed green, (3) only then resize AO down.
       human-planning-VM-retirement section below): the VM's termination went ahead WITHOUT cross-checking an
       already-filed P1 WIP-preservation warning for that exact host, and the flagged uncommitted work in 5 repos is now
       very likely permanently lost (no snapshot/volume survives). Resolved + escalated in
-      `/plans/active/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md` and
-      `/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (both now
+      `/plans/archive/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md` and
+      `/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (both now
       `status:     resolved`), plus the duplicate now-moot allowlist todo in
       `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — operator-approved human plan with explicit dated
+  hold (Progress Log 2026-08-04: "STOP before the actual AO box downsize and wait for explicit confirmation"); remaining
+  items = AO downsize under hold + 24h-soak-gated on-disk cleanup where this plan already recorded a teardown incident.
 
 - **2026-08-03 (autonomous execution start)**: Operator said "let's do the plan in full" — began execution per
   `/autonomous`, in file order, per this plan's own Hard Sequencing Rule. Todos 1-2 (both read-only, no infra touched)
@@ -401,3 +410,4 @@ any VM is launched.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — swapped `classify-glue-workflows.sh` (never
   mentioned in this doc's own body) for `ssm-run.sh` and `hosted-baseline.sh`, which the doc's own "Mechanics carried
   over" section explicitly flags as "read before touching either VM."
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

@@ -239,7 +239,7 @@ Part 3 writers:      grep+READ every gas_fee* call site across market-tick-data-
 Part 4 readers:      same sweep found ONE live reader still on the legacy scheme —
                       features-service block_priority_gas_distribution_calculator.py (venue=chain). FIXED
                       same-day (features-service@7f800b45); filed as its own doc:
-                      /plans/active/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md
+                      /plans/archive/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md
                       (also documents an 8-day silent-stale-data consequence, now closed).
 Part 5 twin coverage: 100% (12,424/12,424), per the migration's own totals.
 Disposition:         no-migrate-first UNTIL features-service@7f800b45 is confirmed shipped (QG was in flight at

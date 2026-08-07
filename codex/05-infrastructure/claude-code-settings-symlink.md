@@ -51,10 +51,10 @@ Claude Code merges settings from (lowest → highest precedence): `~/.claude/set
 
 1. **TEAM (tracked, shared)** — `unified-trading-pm/cursor-configs/settings.json`. Holds ONLY team policy:
    `permissions.defaultMode: bypassPermissions` + the destructive-command `ask` denylist, `enabledPlugins`, `mcpServers`
-   (playwright), and the bypass-smoothing flags. **It contains NO `model`/`theme`/`effortLevel`/ `workspaces`** — those
-   are personal and must never be committed (a committed `model: opus` would silently force Opus on the whole fleet,
-   violating the Sonnet-default rule in `/codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this
-   file via a project-level symlink.
+   (playwright), the 2 registered `hooks` (`PreToolUse`/`UserPromptSubmit`, see below), and the bypass-smoothing flags.
+   **It contains NO `model`/`theme`/`effortLevel`/ `workspaces`** — those are personal and must never be committed (a
+   committed `model: opus` would silently force Opus on the whole fleet, violating the Sonnet-default rule in
+   `/codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this file via a project-level symlink.
 
 2. **PERSONAL (real file, NOT a symlink, never in git)** — your own `~/.claude/settings.json`. Holds your `model` /
    `theme` / `effortLevel` / trusted `workspaces`. Because it is user-scope (lowest precedence) it provides your
@@ -117,18 +117,18 @@ Keep it a real, personal file.
 
 ## Hook commands: use `$CLAUDE_PROJECT_DIR`, never a hardcoded absolute path
 
-The 3 hooks in this file's `hooks` key (`PreToolUse` → `block_destructive_commands.py`, `UserPromptSubmit` →
-`context-threshold-nudge.sh`, `PreCompact` → `precompact-block-auto.sh`) reference their scripts via
-`$CLAUDE_PROJECT_DIR/...`, not an absolute path. Claude Code exports `CLAUDE_PROJECT_DIR` to every hook-command
-subprocess, set to the project root the session was launched from — confirmed empirically (2026-07-23) to resolve
-correctly and DIFFERENTLY per launch root: a session opened at the true workspace root gets that path, one opened in
-`.tabs/1` gets `.../.tabs/1`, one opened in `.tabs/2` gets `.../.tabs/2` — each then naturally resolves to that root's
-OWN clone of the hook script, not the main root's. This is what makes ONE tracked `settings.json` (symlinked into every
-root) work unmodified fleet-wide, regardless of username or workspace path on a given machine — no per-machine edit
-needed. Official reference: [code.claude.com/docs/en/hooks.md](https://code.claude.com/docs/en/hooks.md)
-(`${CLAUDE_PROJECT_DIR}` env-var table entry) — this fact was never captured anywhere in this codex before 2026-07-23,
-which is why the hardcoded path crept in originally; see
-`/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md` for the full investigation.
+The 2 hooks in this file's `hooks` key (`PreToolUse` → `block_destructive_commands.py`, `UserPromptSubmit` →
+`context-threshold-nudge.sh`) reference their scripts via `$CLAUDE_PROJECT_DIR/...`, not an absolute path. Claude Code
+exports `CLAUDE_PROJECT_DIR` to every hook-command subprocess, set to the project root the session was launched from —
+confirmed empirically (2026-07-23) to resolve correctly and DIFFERENTLY per launch root: a session opened at the true
+workspace root gets that path, one opened in `.tabs/1` gets `.../.tabs/1`, one opened in `.tabs/2` gets `.../.tabs/2` —
+each then naturally resolves to that root's OWN clone of the hook script, not the main root's. This is what makes ONE
+tracked `settings.json` (symlinked into every root) work unmodified fleet-wide, regardless of username or workspace path
+on a given machine — no per-machine edit needed. Official reference:
+[code.claude.com/docs/en/hooks.md](https://code.claude.com/docs/en/hooks.md) (`${CLAUDE_PROJECT_DIR}` env-var table
+entry) — this fact was never captured anywhere in this codex before 2026-07-23, which is why the hardcoded path crept in
+originally; see `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md` for the full
+investigation.
 
 **Known gap (unrelated, flagging so it isn't re-discovered the hard way)**:
 `claude -p ... --dangerously-skip-permissions` (non-interactive print/headless mode) does NOT enforce `PreToolUse` hook
@@ -139,6 +139,30 @@ genuine INTERACTIVE `claude` session inside a detached tmux pane and pastes the 
 anywhere in the real dispatch path), but don't assume hooks gate a `claude -p` invocation if one ever gets scripted
 elsewhere. See `agent-orchestrator/scripts/hooks/block_destructive_commands.py`'s docstring for the same note at the
 code site.
+
+## `PreCompact` stays UNREGISTERED — client-side auto-compact must remain enabled (HARD RULE, 2026-08-06)
+
+This file registers **no** `PreCompact` hook, and must not gain one that blocks compaction. Until 2026-08-06 it wired
+`matcher: "auto"` → `precompact-block-auto.sh`, which `exit 2`'d every automatic compaction fleet-wide; that script is
+now DELETED and the registration removed (operator ruling).
+
+Why it can't come back: auto-compact is the **last-resort safety net** under the backend's own forced path
+(`agent-orchestrator/server/context_lifecycle.py` — `/pre-compact` then `/compact`, injected via
+`tmux_spawn.submit_to_pane`). If the forced injection does not land — the latch is stuck, the pane is wedged, the
+orchestrator is restarting — the session keeps growing until it exceeds the model's hard context limit, at which point
+**every** request 400s, `/compact` INCLUDED (compaction has to send the whole history to summarize it), and the session
+is unrecoverable. That is not hypothetical: prod slot 3 reached exactly that state on 2026-08-06 (~971k message tokens
+against a 1,048,576 limit) and had to be destroyed by hand. Blocking auto-compact removes the one net that catches this
+class, and it costs real money — the wedged stretch burned 76.4M cache-read tokens completing zero calls.
+
+The concern the block was protecting against — a bare compact discarding in-flight findings — is handled by ordering,
+not by blocking: `/pre-compact` runs FIRST and asks the agent to write anything context-only into its plan/issue docs,
+so a later compact loses nothing durable. A hook that blocks auto-compact protects nothing that `/pre-compact` has not
+already protected, and it forfeits the net.
+
+Stale local registrations are swept: `scripts/workspace/link-claude-skills.sh` step (4.5) strips any `PreCompact` key
+from a machine's `.claude/settings.local.json`, so a host still carrying the retired block gets auto-compact back on its
+next run. SSOT for the failure mode: `/plans/archive/issues/ao_worker_context_saturation_unrecoverable_2026_08_06.md`.
 
 ## Notes
 

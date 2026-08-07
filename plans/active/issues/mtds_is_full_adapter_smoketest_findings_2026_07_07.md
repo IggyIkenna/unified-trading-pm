@@ -665,3 +665,8 @@ the todos already promised.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped the archived lending-split doc for
   `fluid_adapter.py`, the actual target file of the largest remaining open todo (FLUID's ~18-month pre-resolver coverage
   gap).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — 3 open checkboxes remain (FLUID's
+  ~18mo pre-resolver coverage gap needing research, 273 mistagged DERIBIT/COMBO rows needing root-cause investigation,
+  an unscoped drilldown-mockup update), all judgment/research-class with no stated done-when. Reaffirms 3 prior
+  2026-07-30 passes.

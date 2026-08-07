@@ -6,7 +6,7 @@ title: >-
   protective layer at any level
 summary: >-
   Discovered as a byproduct of the Gap-3 naming-heuristic fix in
-  /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md (todo 2/5). That doc's Gap 2 was
+  /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md (todo 2/5). That doc's Gap 2 was
   re-verified this session and found narrower than originally stated: canonical-migration-family launchers DO route
   through `setup-data-pipeline-vm.sh`'s shared `_launch_with_tee()` → `vm-exec-with-gcs-tee.sh`, giving them the generic
   30-min byte-growth stall-kill by default (Class A). But a SECOND, separate launcher family —
@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [vm-monitoring, hung-vm, stall-detection, launcher-common, class-b-launcher, deployment-observability]
 related:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
@@ -42,7 +42,7 @@ estimate_class: infra
 assigned_role: infrastructure
 source: >-
   Surfaced during the Gap-3 launcher audit (todo 5) for
-  /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md, 2026-07-27 — an interactive
+  /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md, 2026-07-27 — an interactive
   `/autonomous` session implementing todo 2's `_is_backfill_vm()` naming fix. All code-path claims in this doc were
   independently re-verified this session by direct file read (not trusted from any prior summary): `grep -n
   "STALL\|kill\|timeout" deployment-service/scripts/vm/lib/launcher_common.sh` and `grep -l "lc_log_upload_trap_block"
@@ -57,7 +57,7 @@ locked_since:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,
     deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
     /codex/05-infrastructure/vm-launcher-runbook.md,
@@ -187,6 +187,9 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — 3 [HUMAN] P2 items (stall-timeout/auto-kill
+  design, naming-heuristic allowlist, cron reprioritization); design/operator decisions, not bounded outcomes.
+
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
   fleet-wide blast-radius verification/judgment call (avoiding false positives against legitimately-continuous
   live/paper VM names) that the doc itself says was explicitly rejected as out-of-scope for a prior, narrower fix.
@@ -200,3 +203,4 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own non-batchable table classifies this doc
   **blast-radius-judgment-gated**. Not a bounded worker-determinable outcome.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

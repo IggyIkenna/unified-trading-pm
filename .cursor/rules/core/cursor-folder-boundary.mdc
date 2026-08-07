@@ -12,7 +12,7 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 
 ## What belongs in .cursor/
 
-✅ `rules/` — EPHEMERAL COPY from `unified-trading-pm/cursor-rules/` (copied during setup, removed by cleanup before quickmerge)
+✅ `rules/` — canonical + git-tracked in `unified-trading-pm/.cursor/rules/`; in OTHER (non-PM) repo workspace roots, an ephemeral COPY of PM's `.cursor/rules/` (copied during setup, removed by cleanup before quickmerge)
 ✅ `plans/` — SYMLINK to `unified-trading-pm/plans/active/`
 ✅ `skills-cursor/` — Cursor skill files
 ✅ `workspace-configs/` — Cursor/VSCode workspace .json configs
@@ -35,9 +35,9 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 
 | Location | Role |
 |----------|------|
-| `unified-trading-pm/cursor-rules/` | Canonical rules (git-tracked) |
+| `unified-trading-pm/.cursor/rules/` | Canonical rules (git-tracked) — the bare `unified-trading-pm/cursor-rules/` directory this table used to cite was archived 2026-08-02 and no longer exists |
 | `unified-trading-pm/plans/active/` | Canonical plans (git-tracked) |
-| `.cursor/rules/` | Ephemeral COPY from PM (removed before quickmerge) |
+| `.cursor/rules/` (in a non-PM repo workspace root) | Ephemeral COPY from `unified-trading-pm/.cursor/rules/` (removed before quickmerge) |
 | `.cursorrules` | Ephemeral COPY from PM (workspace root) |
 | `AGENTS.md` | Ephemeral COPY from PM (workspace root) |
 | `.cursor/plans/` | Symlink → `unified-trading-pm/plans/active/` |
@@ -55,7 +55,7 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 **To share rule changes with the team:**
 ```bash
 cd unified-trading-pm
-# Edit cursor-rules/ or AGENTS.md directly
+# Edit .cursor/rules/ or AGENTS.md directly
 bash scripts/quickmerge.sh "feat: add rule for X"
 ```
 

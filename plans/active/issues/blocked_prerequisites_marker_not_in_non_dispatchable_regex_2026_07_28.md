@@ -72,17 +72,36 @@ re-dispatch, `BLOCKED-PREREQUISITES`, was already sitting on the checkbox's own 
 (`/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`, already fixed at
 agent-orchestrator@e856b56).
 
-Read `_NON_DISPATCHABLE_RE` directly (`server/regen_backlog_from_plan.py:975-980`):
+**Evidence block updated 2026-08-06 (/plan-reconcile ao) — the code was refactored since this doc was filed; quoted
+symbols/line numbers below were stale, conclusion re-verified unchanged.** The single `_NON_DISPATCHABLE_RE` this doc
+originally quoted is now two regexes combined by `_is_non_dispatchable()`
+(`server/regen_backlog_from_plan.py:1212-1291`): `_BLOCKED_TOKEN_RE` (the BLOCKED-<TOKEN> subset) +
+`_PERMANENT_NON_DISPATCHABLE_RE` (DEFERRED-BY-DESIGN/stretch-optional), plus a stale-mention-aware guard
+(`_STALE_MARKER_PREFIX_RE`/`_STALE_MARKER_SUFFIX_RE`, ~1227-1256) so a todo citing its OWN old marker in past tense
+isn't permanently excluded. `UPSTREAM-DESIGN` was also added to the alternation since this doc was filed:
 
 ```python
-_NON_DISPATCHABLE_RE = re.compile(
-    r"BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)\b"
-    ...
+_BLOCKED_TOKEN_RE = re.compile(
+    r"BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-(OUTAGE|DESIGN)|PLAYWRIGHT|JURISDICTION)\b"
 )
+...
+_PERMANENT_NON_DISPATCHABLE_RE = re.compile(
+    r"DEFERRED-BY-DESIGN\b"
+    r"|_\(\s*[Ss]tretch"
+    r"|\b[Ss]tretch,\s*optional\b"
+    r"|\*\*[Ss]tretch\*\*"
+)
+
+
+def _is_non_dispatchable(todo_block: str) -> bool:
+    return bool(_PERMANENT_NON_DISPATCHABLE_RE.search(todo_block)) or _has_live_blocked_token(todo_block)
 ```
 
-`PREREQUISITES` is not one of the alternatives. A `BLOCKED-PREREQUISITES` checkbox — no matter where the text sits —
-never matches this regex, so `_parse_open_todos` keeps re-deriving it as an open, dispatchable todo on every regen tick.
+`PREREQUISITES` is still not one of the `_BLOCKED_TOKEN_RE` alternatives — re-verified 2026-08-06:
+`grep -c PREREQUISITE server/regen_backlog_from_plan.py` returns **0**, matching this doc's original zero-hits finding.
+A `BLOCKED-PREREQUISITES` checkbox — no matter where the text sits — still never matches, so `_parse_open_todos` (which
+calls `_is_non_dispatchable()` at line 1393) keeps re-deriving it as an open, dispatchable todo on every regen tick.
+**This doc's conclusion is unchanged** — only the quoted symbol names/line numbers were stale.
 
 **Blast radius**: `grep -rl "BLOCKED-PREREQ" plans/active/` finds 15 files (14 markdown + 1 generated `.json` mirror):
 
@@ -209,3 +228,7 @@ same-corpus dependencies). Instead:
   each occurrence needs per-case classification (external-gate mislabel → retag, vs. same-corpus dependency → convert to
   `sequential`/`depends_on`), and the slot-6 entry records that the structural fix needs an operator plan-destination
   decision, explicitly "not a worker's call to make unilaterally".
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

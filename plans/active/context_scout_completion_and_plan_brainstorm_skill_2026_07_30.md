@@ -87,10 +87,10 @@ catches an underscoped todo post-hoc) — captured as `/plan-brainstorm` below.
 
 A separate, higher-stakes idea (Paperclip-style hard per-agent spend caps + a possible OmniRoute multi-provider
 LLM-gateway pilot) is intentionally NOT in this plan — it's its own LOCAL plan:
-`/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md`. Both of that doc's open objections were since ruled on
-(trust-boundary waived; model-tier-SSOT-conflict resolved via a structural guardrail rather than a standing gate), and
-the doc now carries build-grade implementation detail — but stays `assigned_vm: NA` by explicit operator choice
-(human-executed, not AO-dispatched).
+`/plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md`. Both of that doc's open objections were since
+ruled on (trust-boundary waived; model-tier-SSOT-conflict resolved via a structural guardrail rather than a standing
+gate), and the doc now carries build-grade implementation detail — but stays `assigned_vm: NA` by explicit operator
+choice (human-executed, not AO-dispatched).
 
 ## What shipped
 
@@ -188,3 +188,7 @@ the doc now carries build-grade implementation detail — but stays `assigned_vm
   `/plan-brainstorm` classifies resolved scope against
 - `plans/active/task_template.md` — LOCAL vs AO-dispatched track, finding S (the specific failure mode
   `/plan-brainstorm` is meant to reduce upstream of)
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — Sole open todo (context_scope corpus backfill + docspec.py
+  FieldSpec flip) is the same item already tracked verbatim as todo 1 of ao_satellite_ao_dispatch_batch3 (assigned_vm:
+  planning, real progress). Prior 2026-08-01 marker unchanged.

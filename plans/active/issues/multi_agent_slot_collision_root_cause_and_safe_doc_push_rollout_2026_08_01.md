@@ -134,10 +134,43 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       zero-overlap; a foreign file staged into the shared index mid-run, correctly isolated not swept in; post-commit
       drift forcing the rebase+restore-staged retry) — all pass, shellcheck-clean — then dogfooded live against the
       actual contested `.tabs/1` checkout (5 concurrent sessions active at the time) and succeeded on the first attempt.
-- [ ] [OPERATOR] P1. **Decide whether `safe-doc-push.sh` becomes the CLAUDE.md-mandated default for the doc-push fast
-      path** (replacing the current bare "prek only" direct-git guidance in the "Git discipline + shipping pipeline"
-      section), or stays an optional tool agents can reach for. Fleet-wide behavior-guidance change — needs sign-off
-      before every agent's standing instructions change.
+- [x] ✅ [OPERATOR] P1. **Decide whether `safe-doc-push.sh` becomes the CLAUDE.md-mandated default for the doc-push fast
+      path** — **RULED 2026-08-06 (operator, interactive): MANDATED**, conditional on first verifying the script
+      actually runs the doc validations. **Condition VERIFIED before the mandate landed**, not assumed: (a)
+      `safe-doc-push.sh` contains **zero** `--no-verify`, so it commits through prek rather than around it; (b) prek's
+      `plan-hygiene` hook is scoped `files: ^(plans/|codex/)` — it covers codex, not just plans — and runs
+      `run_hygiene_sweep.sh --precommit`; (c) that hook is explicitly **fail-closed**, refusing the commit if the sweep
+      script is missing (its own comment cites a 2026-07-17 fail-open that shipped 3 fleet-blocking broken docs); (d)
+      proven empirically against a deliberately-broken in-tree doc — `check_frontmatter.sh` exit 1 (6 missing required
+      fields), `check_frontmatter_schema.py` exit 1, `check_conflict_markers.sh` exit 1. (`check_todo_format.sh` is
+      warn-only by design — pre-existing sweep behaviour, identical on the bare-git path, so not a regression the
+      mandate introduces.) Shipped `unified-trading-pm@73bfdbeda`: CLAUDE.md § "Git discipline + shipping pipeline" now
+      reads `pure doc/plan-flip → scripts/dev/safe-doc-push.sh`, with topic parity in `SUB_AGENT_MANDATORY_RULES.md`.
+      CLAUDE.md had **4 bytes** of headroom against its 40,960 B hard cap, so per its own "condense a rule, never raise
+      the cap" rule the mandate paid for itself (two provenance datestamps + one duplicated `label-check ADVISORY`
+      clause); both files land under cap. (Reconciled 2026-08-06: an independently-reached, less-evidenced duplicate
+      ruling from a concurrent session agreed on "mandate" — this fuller version, already executed with the shipped
+      commit, is the one kept.)
+- [ ] [SCRIPT] P1. **`safe-doc-push.sh` corrupts a RENAME on its retry path — fix before the mandate is fully safe.**
+      Discovered live 2026-08-06 while archiving a plan under the newly-mandated flow. Mechanism, verified by
+      reproduction: `git` reports only a rename's **DESTINATION** in `git diff --cached --name-only` (the source is
+      folded into the `R100` status), so the deletion half is carried implicitly by the index. The script's retry path
+      then does `git pull --rebase --autostash` followed by an **unconditional `git restore --staged .`** — the very
+      line that makes the autostash pop safe for ordinary edits — which unstages that implicit deletion. The subsequent
+      `git add -- "${FILES[@]}"` re-adds only the destination, so the commit contains the new file **without the
+      deletion, leaving the doc at BOTH paths**. That is precisely the active/archive duplicate-path divergence already
+      seen in this corpus (`a62bdd8ea`). Reproduced this run: after the autostash pop the old path came back as an
+      unstaged ` D` and a blind commit would have shipped the duplicate; recovered with an explicit `git rm --cached`.
+      **Secondary defect**: the pre-flight `[[ ! -e "$f" ]]` existence check (line ~102) rejects a rename's source path
+      outright — `Refusing: named path does not exist` — so the caller cannot even name both halves to protect them.
+      **Why P1**: the 6-step archival ritual is one of the most common doc operations in this workspace, and
+      `safe-doc-push.sh` is now the MANDATED path for doc pushes, so every archival run through it is exposed. **Fix
+      sketch**: capture `git diff --cached --name-status -M` BEFORE the restore and re-assert staged deletions/renames
+      after re-adding; relax the existence check to accept a path that is absent from disk but tracked in the index.
+      **Done when**: an archival `git mv` + a forced retry (simulate a concurrent push between commit and push) yields a
+      commit whose `git ls-tree -r HEAD` shows the doc at exactly ONE path. Repo: unified-trading-pm. **Until this
+      lands, do an archival/rename commit with plain git**, verifying `git ls-tree -r HEAD --name-only | grep <slug>`
+      returns a single path before pushing.
 - [ ] [SCRIPT] P1. **Implement candidate fix 1 (live heartbeat on `.agent-claim`)** — extend the existing per-slot 5-min
       cron to refresh `.agent-claim`'s mtime, so a future liveness check can tell claimed-and-alive from
       claimed-and-abandoned. Prerequisite for fix 2.
@@ -186,3 +219,7 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   `scripts/dev/safe-doc-push.sh` directly for doc-only batches rather than raw `git commit`/quickmerge, pending that
   operator decision.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

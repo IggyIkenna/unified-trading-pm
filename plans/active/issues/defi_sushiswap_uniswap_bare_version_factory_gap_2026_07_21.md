@@ -208,3 +208,6 @@ original audit and this measurement, not a discrepancy in method; both counts de
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
   the single open todo still requires an undecided design choice (Option A subgraph augmentation vs Option B on-chain
   RPC lookup) plus a cross-repo UAC registry addition. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — doc's own redirect banner still names
+  defi_track01_per_instrument_and_canon_id_2026_07_24 as the doc to work; close all three together, not from here alone.

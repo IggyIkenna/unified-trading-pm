@@ -96,18 +96,18 @@ read only once grep shows most of the doc is actually relevant):
    grep-then-READ every named candidate and confirm whether it actually owns/tracks the claim (real incident: a plan's
    own todo named 3 grep candidates for 4 follow-up items — only 1 of the 3 was a real owner, and 2 of the 4 items were
    actually owned by an entirely different, unlisted doc found only by a fresh corpus-wide grep, per
-   `data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3, 2026-08-03). Any CONFIRMED owner goes straight into
-   `context_scope` — even though the doc's own hedge was never resolved, a future worker should get the verified doc,
-   not redo the grep. Any candidate that turns out NOT to own the claim, or a hedge that resolves to "no doc found," is
-   surfaced in the Phase 3 report as a stale-candidate-pointer finding — **do not rewrite the doc's own todo/body prose
-   to fix it**; that correction is `/plan-reconcile`'s job (this skill only ever writes `context_scope` + the dated
-   marker, per its scope boundary above). 4a. **Cross-reference by evidence fingerprint, not just topic** — for a doc
-   whose "Evidence"/findings section quotes a distinctive literal (an exact error code, an HTTP header value, a
-   secret/resource name, a VM name, a byte-identical log line), grep the rest of `plans/active/` (and `.../issues/`) for
-   that EXACT string before finalizing `context_scope`. Two docs independently recording the same distinctive
-   fingerprint is strong evidence they're investigating the SAME underlying incident, even when their titles/topics look
-   unrelated (real incident: `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`'s original scout
-   pass — 4 entries, all topically about the live connector — never surfaced
+   `../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md` todo P3, 2026-08-03). Any CONFIRMED owner
+   goes straight into `context_scope` — even though the doc's own hedge was never resolved, a future worker should get
+   the verified doc, not redo the grep. Any candidate that turns out NOT to own the claim, or a hedge that resolves to
+   "no doc found," is surfaced in the Phase 3 report as a stale-candidate-pointer finding — **do not rewrite the doc's
+   own todo/body prose to fix it**; that correction is `/plan-reconcile`'s job (this skill only ever writes
+   `context_scope` + the dated marker, per its scope boundary above). 4a. **Cross-reference by evidence fingerprint, not
+   just topic** — for a doc whose "Evidence"/findings section quotes a distinctive literal (an exact error code, an HTTP
+   header value, a secret/resource name, a VM name, a byte-identical log line), grep the rest of `plans/active/` (and
+   `.../issues/`) for that EXACT string before finalizing `context_scope`. Two docs independently recording the same
+   distinctive fingerprint is strong evidence they're investigating the SAME underlying incident, even when their
+   titles/topics look unrelated (real incident: `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`'s
+   original scout pass — 4 entries, all topically about the live connector — never surfaced
    `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, which had independently recorded the identical
    `x-requests-remaining: -772`/`x-requests-used: 5000772` evidence a day earlier and already contained the full
    root-cause forensic trail; a worker who later got only the shallow scope had to redo ~215k tokens of fleet-wide
@@ -157,7 +157,23 @@ read only once grep shows most of the doc is actually relevant):
   marker on that second doc, nothing else.
 - Append a dated Progress Log marker: `**context-scout YYYY-MM-DD**: populated/refreshed context_scope (<n> entries)` —
   this is Phase 0's incremental-skip anchor for every future run. Never skip writing this, even when the computed list
-  is short.
+  is short. **"The list is unchanged" is NOT an exception (confirmed real bug, 2026-08-06)**: a first hunter-fleet pass
+  judged "no content change since the last scout" as a reason to skip the marker on 11/105 docs in one cohort — every
+  one of those 11 came back STALE again on the very next Phase 0 run, since the marker (not the list content) is the
+  only thing Phase 0 checks. The marker's job is to record "this doc was checked on this date", independent of whether
+  the check changed anything. Write it every time this doc is in scope this run, full stop — the only real exception is
+  the line-cap near-cap guard immediately above.
+- **Restoration accuracy (HARD RULE, added 2026-08-06 —
+  `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`)**: when this write is a REMEDIATION recovering
+  entries a prior marker claimed but the live frontmatter was missing (not routine Phase 1 re-scouting), diff the
+  restored list against the SPECIFIC items the prior marker/investigation named as dropped — never against just "is the
+  new marker count self-consistent with the new list." A marker that matches its own list is necessary but NOT
+  sufficient: it can still silently understate a restoration if some originally-dropped items were never actually put
+  back. If any named item can't be restored (superseded, deleted, genuinely no longer relevant), say so explicitly in
+  the Progress Log — `"restored N of M; dropped <item> because <reason>"` — never a bare `"restored to correct count"`
+  claim that reads as complete when it isn't. Confirmed real gap: a same-day remediation pass restored 1 of 3
+  originally-dropped citations on one doc and reported it "restored" with no note on the other 2 — exactly the class of
+  silent-completeness-claim this skill exists to prevent, recurring inside its own fix.
 - Stage by name, mandatory pre-commit `git status && git diff --cached --stat` (no path arg), commit prefix
   `docs(plans):`, ship per CLAUDE.md's git-discipline section (`quickmerge.sh --agent --files`). Batch by cohort (e.g.
   one commit per ~50 docs), not one mega-commit and not one commit per doc.

@@ -54,7 +54,7 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md,
+    /plans/archive/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md,
     features-service/features_service/onchain/cli/main.py,
     features-service/features_service/onchain/app/core/data_loader.py,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
@@ -191,7 +191,7 @@ structural limitation.
 - **2026-07-28 (slot-6)**: Before the backfill could write ANY day, hit two independent bugs that made `lst_yields` (and
   sibling `lst_native_rates`) 100%-unwritable — not historical-data-specific, reproduced even on 2026-04-10 (already
   inside the prior successful window) when re-run under current code. Root-caused + fixed both (see
-  `/plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md` for full detail): (1)
+  `/plans/archive/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md` for full detail): (1)
   `lst_native_rate_ts` called `.dt.epoch()` on the raw MTDS `timestamp` column, which is a bare `YYYY-MM-DD` string not
   a Datetime, producing all-null and tripping the WriteGate's 95%-NaN threshold; (2) unmapped tokens (not in UAC
   `LST_TOKEN_TO_PROTOCOL_ASSET`) were left in output with null protocol/asset, dragging `completeness_fraction` below
@@ -212,3 +212,62 @@ structural limitation.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, was 7) — trimmed the archived batch1 dispatch doc
   and the naming-ssot codex (less load-bearing than the sibling writegate-fix issue, which carries the LIVE backfill
   status the sole remaining [DATA] P1 todo needs to check before re-running).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-06 (slot-14, data_engineering)** — confirm-to-completion task. **FINDING: the 2026-08-05 resume is DEAD, not
+  in-flight.** `/tmp/lst_yields_resume_20260805.log` shows the slot-13 resume
+  (`--start-date 2023-11-01 --end-date 2026-08-05`) received **SIGTERM at 05:29:15 on 2026-08-05 — ~1.5 min after
+  launch**, having written only `day=2023-11-01` (already covered); no process running, no resume VM on either cloud.
+  Live GCS listing (`onchain/by_date/*/feature_group=lst_yields/`) = **835 day-partitions, byte-identical to the
+  pre-resume state** — coverage gap through 2026-08-05 is **980 days** (2023-11-06..2026-08-05 minus the already-present
+  fragments: 2024-01-01..03, 2026-04-03..19, 2026-07-20..25). slot-13's "[x] resume launched" flip was false-progress
+  (the audit note below was right). **Relaunched (2026-08-06, slot-14)** the idempotent backfill on **4 parallel SPOT
+  shard VMs** via the sanctioned `launch-features-vm.sh` (onchain/DEFI, `FEATURE_GROUP=lst_yields`,
+  `SKIP_DEPENDENCY_CHECK=1`, safe-idempotent justification: per-day additive writes + skip-if-fresh, no delete/schema
+  change — no `[OPERATOR]`-gate needed): `features-onchain-defi-lstyields-{s1..s4}-20260806` covering
+  2023-11-01..2024-06-30 / 2024-07-01..2025-02-28 / 2025-03-01..2025-10-31 / 2025-11-01..2026-08-05. Operator
+  shared-host OOM directive acknowledged 2026-08-06: this backfill runs on VMs, NOT locally on the fleet host (no
+  process I launched was OOM-killed; the resume's death was SIGTERM, not OOM). Progress metric = lst_yields
+  day-partition count (target ~1,815 across 2021-08-17..2026-08-05; 835 baseline). **Resume-if-this-session-dies**:
+  coverage =
+  `gcloud storage ls "gs://features-defi-prd-central-element-323112/onchain/by_date/*/feature_group=lst_yields/" | grep -oE 'day=[0-9]{4}-[0-9]{2}-[0-9]{2}' | sort -u | wc -l`
+  (expect 1,815 when complete; was 841 at ~19:14Z 2026-08-06, +6 already); per-VM processing logs at
+  `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`; shards are idempotent — re-launch any shard
+  safely (skip-if-fresh skips done days). **Lessons (2026-08-06, slot-14)**: (1) `DRY_RUN=true` on
+  `launch-features-vm.sh` skips ONLY the tarball-freshness check, NOT VM creation — `--launch-mode dry` = in-VM
+  `--dry-run` (no GCS writes) on a REAL VM; (2) the onchain batch daily-loop is serial per-day (~22s/day measured),
+  `--max-workers` does not parallelize across days — parallelize by launching disjoint date-range shards; (3) a
+  harness-backgrounded process on the shared host is SIGTERM'd when the owning session ends (root cause of the slot-13
+  resume death) — long backfills must run on VMs; (4) VM run.logs upload to `vm-logs/<vm>/run.log` ~every 60s.
+- **2026-08-06 (slot-14, data_engineering) — CONFIRM-TO-COMPLETION: backfill DONE, 1,811/1,811 computable day-partitions
+  written (835 baseline → 1,811, +976 days).** All 4 shard VMs (`features-onchain-defi-lstyields-{s1..s4}-20260806`)
+  exited rc=0 and auto-deleted on completion (~21:42Z); a 5th fix VM (`features-onchain-defi-lstyields-fix-20260806`)
+  independently re-verified the sole ambiguous day. Live GCS listing (`onchain/by_date/*/feature_group=lst_yields/`) =
+  **1,811** unique day-partitions — target 1,815 minus 4 days that are provably un-computable, NOT a features-backfill
+  failure. **Root cause of the 4-day residual (2026-08-01..08-04): upstream MTDS `lst_rates` capture gap for
+  08-01/02/03** — 0 `data_type=lst_rates` blobs under `raw_tick_data/by_date/day=2026-08-0{1,2,3}/` (recursively
+  verified across all pipeline modes), while 07-31/08-04/08-05 each have 58. `compute_lst_features_for_day`
+  (lst_features.py:199) requires BOTH `day` AND `day-1` lst_rates → 08-01 today-empty, 08-02/03/04 prior-day-empty
+  cascade, 08-05 prior=08-04 present → 18 rows written. The `record_empty` gate REFUSED to mark 08-04 honest-absence (no
+  FetchEvidence), confirming the residual is genuinely suspicious upstream — not a silent placeholder. The fix VM
+  reproduced the same verdict (resolved 08-03 as prior, lst_rates probe empty, "No lst_yields data available", rc=1).
+  **The features backfill is complete for every day source data permits; the 4-day residual is tracked as a follow-up
+  (upstream lst_rates capture gap, see Follow-ups).**
+
+## Follow-ups
+
+- [x] ✅ [DATA] P1. Confirm-to-completion of the lst_yields backfill resume (launched 2026-08-05 slot-13, --start-date
+      2023-11-01 --end-date 2026-08-05, ~980 missing days, I/O-bound ~8h) — the [x] todo only verified 835 days
+      (2021-08-17..2023-10 nearly complete) before the backfill stalled; the resume's day-partition completion and full
+      coverage through 2026-08-05 are unconfirmed. **Evidence (2026-08-06, slot-14)**: GCS day-partition count =
+      **1,811** via the documented listing command (835 baseline + 976 new). All 4 shard VMs exited rc=0 + auto-deleted;
+      fix VM re-verified 08-04. Coverage is full for every day the upstream source permits; 08-01..08-04 are provably
+      un-computable (upstream `lst_rates` capture gap for 08-01/02/03, see follow-up below). NOT the false-progress
+      pattern the audit flagged — completion was verified against GCS, not assumed.
+- [ ] [DATA] P2. Backfill MTDS `lst_rates` capture for 2026-08-01/02/03 (0 `data_type=lst_rates` blobs upstream; a
+      capture gap, not a features defect) — then re-run the lst_yields compute for 08-01..08-04 (the 4-day residual
+      documented above). Repo: `market-tick-data-service` capture pipeline owner; features-side rerun is the same
+      idempotent `launch-features-vm.sh` shard once source exists.
+
+> **2026-08-06 archive-candidate audit**: Single [x] [DATA] P1 todo claims DONE but its own body says the backfill
+> stalled and only the RESUME was LAUNCHED for the ~980 missing days — completion of that range was never verified.
+> Prose-only in-flight work under a checked box; the original 'confirm-to-completion' done-when is not met.

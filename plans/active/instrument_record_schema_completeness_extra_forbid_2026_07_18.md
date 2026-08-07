@@ -15,7 +15,7 @@ stage: [data]
 repos: [unified-api-contracts, instruments-service]
 scope: [engineer]
 tags: [uac-contract, instrument-record, pydantic, schema-completeness, honest-absence, silent-drop]
-related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-18
 last_updated: 2026-07-18
 parent_epic: instruments_master
@@ -38,7 +38,7 @@ context_scope:
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
-    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 supersedes:
 superseded_by:
@@ -154,4 +154,6 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still minimal and accurate.
 - **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — re-confirms 2026-07-30; all 4 open todos are sequentially gated
   behind todo 2's still-open operator-judgment verdict on `min_order_size` (explicitly flagged ambiguous, not yet
-  resolved). No content change since the last pass beyond the context-scout re-scout.
+  resolved).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate. No content change since
+  the last pass beyond the context-scout re-scout.

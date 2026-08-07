@@ -136,3 +136,9 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   are still present unchanged in both adapters). Same shape as the sibling Polymarket dead-fixture finding: the doc's
   own "Recommended decision" section frames (A) delete vs (B) keep-and-document as a genuine judgment call, not
   auto-resolved. Doc stays NA.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA, valid — re-verified, 1 open, unchanged
+  since the 2026-08-04 marker. The doc's own "Recommended decision" section still frames (A) delete vs (B)
+  keep-and-document as a genuine judgment call, not auto-resolved; live-verified `KalshiAdapter._load_tickers_from_gcs`
+  (kalshi_adapter.py) and `PolymarketAdapter._load_condition_ids_from_gcs` (polymarket_adapter.py) are both still
+  present unchanged. Doc stays NA.

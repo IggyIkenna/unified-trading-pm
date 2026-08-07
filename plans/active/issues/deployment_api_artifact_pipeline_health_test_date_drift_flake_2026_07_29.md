@@ -93,7 +93,12 @@ string. Low-risk, mechanical — no production behavior change, test-only.
       `_fact(...)` fixture date relative to a frozen `datetime.now(UTC)` rather than the literal
       `"2026-07-22T00:00:00+00:00"`. **Done-when**: the test passes on a clean tree AND still passes when the system
       clock is moved forward a year (the whole point — it must stop aging out). Test-only, no production behaviour
-      change. (repo: `deployment-api`)
+      change. (repo: `deployment-api`) — **SHIPPED `deployment-api@cf55369`** ("fix(test): make health() recent-failures
+      test date relative to now", 2026-07-29, ancestor-verified on `origin/live-defi-rollout`):
+      `tests/unit/api/test_artifact_pipeline.py:876-882` no longer contains the hardcoded literal — it computes
+      `two_days_ago = (datetime.now(UTC) - timedelta(days=2))`, with an inline comment citing this exact bug. The fix
+      landed 2 days BEFORE this checkbox was even mechanically created by the 2026-07-31 zero-checkbox sweep, and no
+      context-scout pass since re-checked code state — found by `/plan-reconcile ao` 2026-08-06.
 
 ## Scope note
 
@@ -110,3 +115,5 @@ mid-dispatch.
 - **context-scout 2026-08-01**: populated context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged) — test file, the `service.py` owning
   `_resolve_window()`, and the discovery-context archive doc still resolve and remain the minimal correct set.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

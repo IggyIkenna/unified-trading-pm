@@ -191,10 +191,10 @@ source: >-
       tracked in the sibling sports plan, not this doc); **ASTER** (freeze already lifted 2026-07-28, but the "+ live
       VM" data-landing verification remains unconfirmed — spot-check this session found ZERO `live_aster` rows across
       2026-07-30 through 2026-08-01 and an unexplained VM replacement, logged as a new finding in
-      `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` rather than chased here). Per this todo's
-      own gate ("only then run the standard 6-step archival ritual"), 3 open checkboxes is NOT "all clear" — **no
-      archival ritual run, this finalize plan and its parent both stay `active`.** This todo remains the standing
-      re-check pointer; re-run again once the rate-limit-probe VM sanction lands, the ASTER live-data-landing
+      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` rather than chased here).
+      Per this todo's own gate ("only then run the standard 6-step archival ritual"), 3 open checkboxes is NOT "all
+      clear" — **no archival ritual run, this finalize plan and its parent both stay `active`.** This todo remains the
+      standing re-check pointer; re-run again once the rate-limit-probe VM sanction lands, the ASTER live-data-landing
       verification confirms, or the Live-ODDS second source ships.
 
 ## Progress Log

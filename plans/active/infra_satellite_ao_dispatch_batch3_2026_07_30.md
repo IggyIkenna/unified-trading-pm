@@ -36,12 +36,8 @@ related:
 created: "2026-07-30"
 last_updated: "2026-08-02"
 parent_epic: infrastructure_master
-assigned_vm:
-  planning # corrected 2026-08-02 (operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md
-  # ag-closeout-audit item 13 / issues/ag_closeout_audit_infra_parked_2026_08_02.md finding 7): batch1/batch2 siblings
-  # both use planning; this doc predates the 2026-07-30 dispatch-safety convention change and was never updated to
-  # match, silently blocking its 1 open todo (fleet git-health pinned constant root-cause) from ever dispatching. (was: NA)
-execution_scope: orchestrator-agent # was: local-only, corrected alongside assigned_vm above
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.7

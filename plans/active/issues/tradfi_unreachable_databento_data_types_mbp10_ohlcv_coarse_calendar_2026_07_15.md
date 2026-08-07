@@ -93,6 +93,11 @@ context_scope:
 
 # TRADFI mbp_10 / ohlcv_15m / ohlcv_24h / corporate_action_confirmed / earnings_result — unreachable fetch paths
 
+> **mbp_10 RESOLVED (2026-07-15):** CME `mbp_10` UAC restriction is a confirmed-still-intentional operator MVP-scope
+> decision — not an open gap. `DP_RUN_MOSTLY_EMPTY` suppression shipped `deployment-service@ba40e4a` (known-dead
+> registry, 2026-08-06). **corporate_action_confirmed/earnings_result RESOLVED** (seeding stopped, orphans cleaned). See
+> "Resolution — mbp_10" below.
+
 ## What I found (read-only code trace, no changes made)
 
 Triaging the alert batch's TRADFI 100%-failed cells against `/codex/02-data/tradfi-databento-sourcing-ssot.md` (cited
@@ -980,7 +985,6 @@ UAC) — no separate deploy needed here.
   write-back/verify-HOLD playbook as the YAHOO_FINANCE cleanup, HOLD proven across 6 real consolidator merge cycles.
   `market-tick-data-service@c24db4cf`. Full evidence in "Resolution — corporate_action_confirmed / earnings_result"
   above.
-
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** Sole open todo is a `[DESIGN] P2` "decide
   whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted" — a scope/product judgment call, not a
   worker-determinable fact. Not reclassified.

@@ -129,6 +129,24 @@ echo "SIT fleet-green signal: state=$SIT_FLEET_STATE desc=\"$SIT_FLEET_DESC\" (c
 # nightly cron, or the process_repo BREAKING-delta dispatch below) — that run IS the retry
 # already in flight, so a same-tick or next-tick re-dispatch would only pile up duplicate runs
 # without getting the signal green any sooner.
+#
+# Cross-repo dispatch mutex (2026-08-06 fix — sit_validated_tree_treadmill_blocks_breaking_
+# promotes_2026_07_20.md + live incident strategy_service_ldr_qg_infra_flake_and_promotion_
+# deadlock_2026_08_06.md "Lessons/traps"): process_repo below runs each repo in a PARALLEL
+# background subshell (`process_repo "$REPO" ... &`), so the SIT_INFLIGHT check above — a
+# snapshot taken ONCE at tick-start — does NOT stop a SIBLING repo's subshell from ALSO
+# dispatching later in the SAME tick once it independently hits its own BREAKING-delta block.
+# Live-measured 2026-08-06: 3 full-workspace-sit dispatches landed within ~10s of each other,
+# each cancelling the PREVIOUSLY-QUEUED (not yet started) run via GitHub's own
+# `concurrency: group=${{ github.workflow }}, cancel-in-progress: false` semantics — so SIT
+# runs got queued-then-cancelled in a loop forever, keeping `sit-gate/fleet-green` permanently
+# RED and blocking EVERY ldr_main promotion fleet-wide, not just the repo that "caused" it.
+# `mkdir` is atomic on a POSIX filesystem: the first caller this TICK wins (creates the dir);
+# every other caller (this tick, this process tree — auto-retrigger above OR any process_repo
+# subshell below) sees `mkdir` fail and skips its own dispatch, trusting the winner's fresh run.
+SIT_DISPATCH_LOCK="$(mktemp -u)_sit_dispatch_lock_$$"
+_claim_sit_dispatch() { mkdir "$SIT_DISPATCH_LOCK" 2>/dev/null; }
+
 sit_fleet_green_auto_retrigger() {
   if [ "$SIT_FLEET_STATE" != "failure" ]; then
     return 0
@@ -147,6 +165,10 @@ print(sum(1 for r in runs if r.get("status") != "completed"))
   fi
   if [ "$DRY_RUN" = "true" ]; then
     echo "  DRY-RUN: would dispatch full-workspace-sit (sit-gate/fleet-green auto-retrigger, no run in flight)"
+    return 0
+  fi
+  if ! _claim_sit_dispatch; then
+    echo "  sit-gate/fleet-green auto-retrigger: RED, but a process_repo BREAKING-delta dispatch already claimed this tick's SIT dispatch — not piling on"
     return 0
   fi
   echo "  sit-gate/fleet-green auto-retrigger: RED and no full-workspace-sit run in flight — dispatching a fresh run"
@@ -383,6 +405,24 @@ provenance_check_ok() {
         '' \
         '**Do NOT hand-arm auto-merge to "unblock" this** — that promotes the bypassed code AND moves the provenance baseline past it, so the violation is laundered and never flagged again (happened 2026-07-16).')"
       gh pr comment "$_PR_ID" --repo "$OWNER/$REPO" --body "$_PROV_BODY" 2>/dev/null || true
+      # ao_done_categorization_display_and_quickmerge_gate_2026_08_06 Track D: hand this
+      # to a worker instead of leaving it Slack-only (promotion_lag_monitor.py's hourly
+      # alert was the only signal before this — easy to miss, and this exact condition
+      # sat blocked ~23h before 2026-07-16's mishandling). $_PROV_OUT already names the
+      # violating commit(s) (%h %s per check_strict_quickmerge.py) — pass it straight
+      # through as context rather than making the worker re-derive it. Dedup is
+      # downstream (server/escalation.py's DB-backed find_open_escalation_id on
+      # (repo, pr_number, wall_type)) — same posture as every other repository_dispatch
+      # fired from this fleet (e.g. ci_failure_watcher.py's _dispatch_escalation): a
+      # repeat tick while the block persists re-fires the dispatch, the orchestrator
+      # no-ops the duplicate spawn. Best-effort: a dispatch failure must never block the
+      # provenance gate itself from doing its job (the `|| true`/`2>/dev/null` below).
+      _PROV_CTX="$(printf 'Promotion PR %s#%s (live-defi-rollout->main) is BLOCKED by the provenance gate — auto-merge NOT (re-)armed.\n\n%s\n\nDetermine the remedy per violating commit: if it is the live-defi-rollout branch tip, re-ship via `quickmerge --agent --files '"'"'<paths>'"'"'`; if a later commit already landed on top, re-shipping cannot clear it — run `scripts/cicd/reprovenance_bypass.sh <sha> --push` instead (after confirming the range still fails the dep-alignment gate it runs). Do NOT hand-arm auto-merge on the promote PR — that launders the violation past the provenance baseline (2026-07-16 incident).\n' "$OWNER/$REPO" "$_PR_ID" "$_PROV_OUT")"
+      _PROV_PAYLOAD="$(jq -n --arg ctx "$_PROV_CTX" --arg pr "$_PR_ID" --arg repo "$REPO" \
+        '{event_type:"escalate-to-orchestrator",client_payload:{repo:$repo,pr_number:$pr,wall_type:"provenance_blocked",context:$ctx,authoring_slot:"ldr-to-main-promote-fleet"}}')"
+      printf '%s' "$_PROV_PAYLOAD" | GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/unified-trading-pm/dispatches" --input - >/dev/null 2>&1 \
+        && echo "  -> dispatched provenance_blocked escalation for $REPO#$_PR_ID" \
+        || echo "  WARN: provenance_blocked escalation dispatch failed for $REPO#$_PR_ID (non-fatal — Slack alert via promotion_lag_monitor.py still fires)"
       rm -rf "$_PROV_TMP"
       return 1
     elif [ "${_PROV_RC:-0}" -ne 0 ]; then
@@ -659,11 +699,22 @@ process_repo() {
     else
       echo "SIT GATE BLOCK $REPO: ${BREAKING}-delta not SIT-validated on this tree (live ci_status='${SIT_STATUS:-unset}', sit_validated_tree='${SIT_TREE:-unset}', LDR tree='${LDR_TREE}') — fail-CLOSED. Dispatching SIT-on-LDR; a later tick promotes once SIT validates this exact tree."
       if [ "$DRY_RUN" != "true" ]; then
-        curl -s -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-          "https://api.github.com/repos/$OWNER/system-integration-tests/dispatches" \
-          -d "{\"event_type\": \"full-workspace-sit\", \"client_payload\": {\"reason\": \"ldr-main-breaking-gate\", \"repo\": \"${REPO}\"}}" \
-          && echo "  dispatched full-workspace-sit (SIT-on-LDR)" \
-          || echo "  WARN: SIT dispatch failed (nightly full-workspace-sit cron is the fallback)"
+        if ! _claim_sit_dispatch; then
+          echo "  another SIT dispatch already claimed this tick (auto-retrigger or a sibling repo's own BREAKING-delta block) — not piling on; a later tick re-checks"
+        else
+          # SHA pin (2026-08-06, sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md):
+          # the payload used to carry only `repo`, so full-workspace-sit.yml cloned "whatever LDR is
+          # NOW" at its own dispatch-triggered start, not the exact $LDR_TREE this gate just computed
+          # and is about to compare against — a moving-tree race under fleet churn. Passing `sha` lets
+          # full-workspace-sit pin its own checkout to this exact commit when present (falls back to
+          # the live branch tip for untouched trigger paths, e.g. the nightly cron / manual dispatch
+          # with no sha in payload — see full-workspace-sit.yml's own checkout step).
+          curl -s -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/system-integration-tests/dispatches" \
+            -d "{\"event_type\": \"full-workspace-sit\", \"client_payload\": {\"reason\": \"ldr-main-breaking-gate\", \"repo\": \"${REPO}\", \"sha\": \"${LDR_SHA}\"}}" \
+            && echo "  dispatched full-workspace-sit (SIT-on-LDR, pinned to ${LDR_SHA:0:12})" \
+            || echo "  WARN: SIT dispatch failed (nightly full-workspace-sit cron is the fallback)"
+        fi
       fi
       _done BLOCKED; return 0
     fi

@@ -127,6 +127,9 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — primary incident resolved; sole follow-on
+  (uv-cache prune cron + cross-slot .venv dedup) is operator-scheduling/design work.
+
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo's first
   sub-action is explicitly operator-gated (cron install blocked on sandboxed-slot permissions, confirmed via a prior
   session's own Permission denied result).
@@ -141,3 +144,4 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
   skill's apply set (and would grow the NA todo count against the ratchet) — recorded instead as a targeted-extraction
   candidate for a future infra batch.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — verified all still resolve).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

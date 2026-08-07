@@ -486,3 +486,6 @@ assembles a ci satellite batch once this doc's Progress Log stabilizes.
   `$AUTHORING_SLOT` was the literal sentinel `ci` (not a numbered slot) — skipped the authoring-slot ping per
   `cicd.md`'s rule (no real originator to notify; the dispatch-time Slack alert already covered the FYI). Slot left
   clean on `live-defi-rollout` (only this doc touched).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — evolving incident log, OPERATOR OOM-dmesg, design tradeoff

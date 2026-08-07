@@ -580,3 +580,6 @@ Two genuine hits in this plan:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the IS catalogue-build + expected-universe
   scripts B0/B1 target; body's own `path_to_100pct_backfill_mtds_is_2026_06_17.md` cite is now archived, not active.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): genuine mix of
+  credential/cost-gated backfill scope (B0), an operator-sequenced B0→B1→B2 dependency chain (2026-06-18 ruling), and
+  several independently-bounded items; whole doc stays NA.

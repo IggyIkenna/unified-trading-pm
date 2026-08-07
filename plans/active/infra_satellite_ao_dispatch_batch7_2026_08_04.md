@@ -18,7 +18,7 @@ summary: >-
   batch dispatches the former and leaves the latter gated. Re-verified all 3 still-open carried-forward `[OPERATOR]`-
   tagged findings from `ag_closeout_audit_infra_parked_2026_08_03.md` live before this triage (findings 6, 10, 11 — none
   resolved since yesterday); not re-drafted here, they remain operator-gated exactly as reported.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -38,7 +38,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -175,11 +175,13 @@ every other in-flight plan — safe to run concurrently (no `sequential: true`).
 
 ## Operator approval gate
 
-**This plan is `status: draft` — NOT ingested, NOT dispatched.** Flipping it (and its finalize twin, already
-`status: active` per the no-double-gate ruling) to `status: active` is the operator's call. All 3 todos above are
-read-only-investigation / narrowly-scoped-mechanical-fix with no `[OPERATOR]` tag needed on their own merits — the draft
-gate here is solely the standing "a skill-drafted AO batch needs explicit operator sign-off before dispatch" rule, not a
-signal any todo itself is risky.
+**This plan is `status: active` — operator-approved 2026-08-06, dispatching (its todos 1-2 duplicate work also tracked
+in `na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`; that source doc's own
+finalize twin will citation-close them, per the operator's explicit ruling — no separate action needed here).** Flipped
+from `draft` (its finalize twin, already `status: active` per the no-double-gate ruling) to `status: active` is the
+operator's call. All 3 todos above are read-only-investigation / narrowly-scoped-mechanical-fix with no `[OPERATOR]` tag
+needed on their own merits — the draft gate here is solely the standing "a skill-drafted AO batch needs explicit
+operator sign-off before dispatch" rule, not a signal any todo itself is risky.
 
 ## Codex SSOTs (read before touching a todo)
 

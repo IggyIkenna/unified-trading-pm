@@ -1,29 +1,29 @@
 ---
 doc_type: issue
 title: >-
-  CI VM I/O starvation — audit findings, root causes, and proposed solutions (shared repos + pre-built venvs +
-  worktree-based QG execution)
+  CI VM cost + I/O audit — verified findings, corrected root cause, and the path to downsizing the dedicated CI VM
 summary: >-
-  Interactive audit session 2026-08-05: verified all 25 self-hosted runner pools migrated to dedicated CI VM
-  (i-042a6332509482556, ci-escalation-runner-vm-1). The migration is complete (zero runners on the old planning VM), but
-  the new VM is under severe I/O starvation — 92.9% iowait, load 171-245 on 16 vCPUs, CI effectively stalled. Root
-  causes: (1) volume provisioned at default 6,000 IOPS instead of needed 16,000, (2) shared-VM resource caps
-  (CPUQuota=400%, MemoryMax=8G) never removed after migration to dedicated box, (3) no fleet-wide concurrency cap — 25
-  repos' QG-v2 runs all fire simultaneously during promotion events, (4) each QG run does a fresh git clone + uv sync
-  writing ~1.7 GB to disk. Proposed solutions: bump volume to 16,000 IOPS (done), remove shared-VM resource caps (done),
-  add host-level concurrency cap, replace actions/checkout + uv sync with git worktrees from shared bare repos +
-  pre-built shared venvs (external deps only — internal deps are already editable installs). Also documents remaining
-  GitHub billing sources (PM's own workflow copies still on ubuntu-latest) and stale codex docs.
+  Interactive audit 2026-08-05, independently re-verified and CORRECTED 2026-08-06 (3 confirmed, 5 corrected, 6
+  falsified — see Part 0). The runner migration to the dedicated CI VM (i-042a6332509482556) is complete. The I/O
+  incident was real but MIS-DIAGNOSED: the binding constraint was gp3 THROUGHPUT pinned at 124.x MB/s against a 125 MB/s
+  ceiling for 9 straight hours, not IOPS; the claimed 16,000 IOPS bump NEVER HAPPENED (live: 6,000/500). The proposed
+  shared-venv optimisation rests on a false premise — `uv` already hardlinks 86.5% of every venv — and its `cp -al`
+  "copy-on-write" isolation argument is invalid on ext4. Reframed for the REAL goal (shrink the VM from 16 vCPU/32 GB):
+  CPU fits 8 vCPU, but RAM must NOT be halved — observed slice peak 29.7 GB with 6 OOM kills, against admission
+  baselines 3-7 weeks stale and wrong by 3.6-5.5x. Raises a NEW P0 security exposure — unified-trading-pm is now a
+  PUBLIC repo with 8 self-hosted runners — which inverts two existing "flip to self-hosted" todos.
 status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
-tags: [ci-cd, self-hosted-runners, i-o-starvation, capacity, performance, optimization, concurrency, git-worktree]
+tags: [ci-cd, self-hosted-runners, i-o-starvation, capacity, performance, optimization, concurrency, cost, security]
 related:
   [
+    /plans/active/ci_vm_exposure_remediation_2026_08_06.md,
     /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
     /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
@@ -40,332 +40,620 @@ estimate_class: infra
 depends_on: []
 parent_epic: infrastructure_master
 resolved_by:
-source: ["interactive audit session 2026-08-05 — CI runner migration verification + I/O starvation diagnosis"]
+source:
+  [
+    "interactive audit session 2026-08-05 — CI runner migration verification + I/O starvation diagnosis",
+    "independent verification + cost/downsizing re-frame 2026-08-06 (AWS API, CloudWatch, SSM, cgroup v2, GitHub API)",
+  ]
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/ci_vm_exposure_remediation_2026_08_06.md,
+    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    /codex/07-security/self-hosted-runner-security-posture.md,
+    scripts/quality-gates-base/qg-host-governor.sh,
+    scripts/dev/qg_resource_baseline.json,
+  ]
 ---
 
-# CI VM I/O Starvation — Audit Findings, Root Causes, and Proposed Solutions
+# CI VM Cost + I/O Audit — Verified Findings and the Path to Downsizing
 
-> **Session date:** 2026-08-05. Interactive audit of the dedicated CI VM after the runner-fleet migration. All findings
-> are live-verified via SSM, CloudWatch, and GitHub API. No estimates.
+> **2026-08-05** interactive audit (original). **2026-08-06** independent re-verification against live AWS API,
+> CloudWatch, SSM, cgroup v2, and the GitHub API. Sections are marked **✅ CONFIRMED**, **⚠️ CORRECTED**, or **❌
+> FALSIFIED**. The 08-05 conclusions are preserved where they held and rewritten where they did not.
+>
+> **Sibling plan:** `/plans/active/ci_vm_exposure_remediation_2026_08_06.md` (slot-4, same day) shipped swap +
+> resource-history parity and investigated the concurrency cap. Its findings are referenced, not duplicated.
 
----
-
-## Part 1 — Migration Verification (PASS)
-
-All 25 self-hosted runner pools are running exclusively on the dedicated CI VM. Zero runners remain on the old planning
-VM.
-
-| Check | Source | Result | | ------------------------------------ |
-
-| ----------------------------------------------------------------------------- |
-| ----------------------------------------------------------------------------- |
-| ----------------------------------------                                      |                                              | GitHub API — runner registrations    |
-| `gh api repos/IggyIkenna/<repo>/actions/runners` across all 25 repos          | All runners are `ip-172-31-3-59-*` (new VM). |
-| **Zero** `ip-172-31-5-118-*` (old VM).                                        |                                              | Old VM — active runner service units |
-| `systemctl list-units "github-glue-runner*@*.service" --state=active` via SSM | **0 units**                                  |                                      | Old VM — Runner.Listener     |
-| processes                                                                     | `ps aux                                      | grep Runner.Listener` via            |
-| SSM                                                                           | **0 processes**                              |                                      | Old VM — orchestrator health | `systemctl is-active orchestrator.service` via SSM | `active`, |
-| 19 slot workers, load ~6.5                                                    |                                              | New VM — runner service units active |
-| `systemctl list-units "github-glue-runner*@*.service" --state=active` via SSM | **34 active units** (all 25 pools)           |                                      |
-| New VM — Runner.Listener processes                                            |
-| `ps aux                                                                       | grep Runner.Listener` via SSM                | **34                                 |
-| processes** (56 total runner procs)                                           |
+> **The real objective (operator, 2026-08-06):** GitHub-hosted CI was ~$1,200/mo (peaks ~$80/day). Runners moved to
+> self-hosted → planning VM → dedicated VM. The dedicated VM now costs as much as the GitHub bill it replaced. **The
+> goal is to shrink it — target ~8 vCPU and materially less RAM.** Every item below is prioritised against that goal,
+> not against wall-clock latency.
 
 ---
 
-## Part 2 — New VM Health (FAIL — I/O Starvation)
+## Part 0 — Verification verdict at a glance
 
-### Finding 1: Volume provisioned at default IOPS, not the needed spec
-
-|                | New CI VM (actual)                  | Old VM (runners' prior home)        |
-| -------------- | ----------------------------------- | ----------------------------------- |
-| **Instance**   | `i-042a6332509482556`               | `i-0c9b283b31d6b5ca7`               |
-| **Type**       | `c8i.4xlarge` (16 vCPU / 32 GB)     | `m8i.4xlarge` (16 vCPU / 64 GB)     |
-| **Volume**     | `vol-03880fe9bf1ea805b`, 300 GB gp3 | `vol-0b4f0237fa0f5cd0f`, 700 GB gp3 |
-| **IOPS**       | **6,000** (AWS 300GB default)       | **16,000** (bumped 2026-07-28)      |
-| **Throughput** | **500 MB/s** (default)              | **1,000 MB/s** (bumped 2026-07-28)  |
-
-The migration plan specified "300GB gp3" but never explicitly bumped IOPS/throughput. AWS gp3 defaults: 3,000 IOPS
-base + free tier up to 6,000 for 300GB. The runners were migrated FROM a 16,000 IOPS volume TO a 6,000 IOPS volume.
-
-### Finding 2: Current snapshot (11:00 UTC, live via SSM `top`/`iostat`)
-
-| Metric              | Value                 | Healthy?                                       |
-| ------------------- | --------------------- | ---------------------------------------------- |
-| CPU iowait          | **92.9%**             | 🔴 Normal <10%                                 |
-| CPU idle            | **0.0%**              | 🔴 Normal >30%                                 |
-| CPU real (us+sy+ni) | ~7%                   | 🟢 Minimal compute                             |
-| Load (1/5/15 min)   | **171 / 230 / 245**   | 🔴 10–15× vCPU count                           |
-| Memory              | 19.6 / 31.5 GB (62%)  | 🟢                                             |
-| Swap                | 0 MB                  | ⚠️ No safety valve                             |
-| Disk avg queue      | 2.4 (hourly avg)      | 🟡 CloudWatch won't alarm but burst saturation |
-| Disk util (nvme0n1) | 71.3% at 52 MB/s read | 🔴                                             |
-
-### Finding 3: 24h EBS trend — sustained, not a spike
-
-| Metric                 | 24h ago → Now           | Trend                              |
-| ---------------------- | ----------------------- | ---------------------------------- |
-| VolumeReadOps (avg/s)  | 67k → **156k**          | Climbing as pools migrated         |
-| VolumeWriteOps (avg/s) | 47k → **1.5k**          | **99% collapse** — writers starved |
-| VolumeReadBytes        | 2.6 GB/h → **8.9 GB/h** | 3.4× increase                      |
-
-### Finding 4: Impact — CI is stalled
-
-- **`ci-status-update`**: 5 consecutive runs queued, none picked up (all 3 PM writers offline)
-- **PM `quality-gates-v2`**: 5 consecutive LDR→main promotion runs FAILED
-- **`ldr-to-main-promote-fleet`**: 10 of last 20 runs CANCELLED (the promote workflow itself couldn't complete its 37s
-  sweep on the I/O-starved VM)
-- **9 of 25 repos**: Runners offline (can't maintain GitHub registration handshake)
-- **`alerting-service`**: Only repo with 1 online runner
-
-### Finding 5: Root cause #1 — shared-VM resource caps never removed
-
-The `github-glue-runner.slice` on the new VM still had the resource limits designed for the OLD shared topology where
-runners and AO shared a box:
-
-| Limit      | Before (shared-VM design)   | After (dedicated VM fix) |
-| ---------- | --------------------------- | ------------------------ |
-| CPUQuota   | `400%` (4 of 16 vCPUs)      | `infinity`               |
-| CPUWeight  | `50` (loses CPU contention) | `100` (default)          |
-| MemoryHigh | `18 GB` (soft throttle)     | `infinity`               |
-| MemoryMax  | `20 GB` (hard kill)         | `infinity`               |
-
-The slice's own comment: _"Purpose: a CI burst must NEVER starve the agent-orchestrator sharing this VM."_ On the
-dedicated CI VM, there is no orchestrator to protect. The fleet was running at 18 GB — right at the MemoryHigh soft cap.
-And only 4 of 16 vCPUs were usable.
-
-**Fixed 2026-08-05**: Caps removed live via `systemctl set-property` + persisted via drop-in at
-`/etc/systemd/system/github-glue-runner.slice.d/override-dedicated-vm.conf`. CPU and memory are now wide open.
-
-### Finding 6: Root cause #2 — no fleet-wide concurrency cap
-
-The `ldr-to-main-promote-fleet` workflow fires on schedule `*/5 * * * *` (declared every 5 min for over-declaration
-reasons — GitHub silently drops most ticks, delivering ~every 15 min effectively). Each successful run opens promotion
-PRs across all repos with changes, triggering `quality-gates-v2` on all 25 repos simultaneously.
-
-`quality-gates-v2.yml` concurrency:
-
-```yaml
-concurrency:
-  group: quality-gates-v2-${{ github.ref }}
-  cancel-in-progress: true
-```
-
-- **Same repo, same ref**: Cancels in-progress run → starts new one (correct, saves minutes)
-- **Different repos**: **Runs concurrently** — no cross-repo queuing. `github.ref` is per-repo.
-- **Result**: Fleet-wide promotion → 25 independent QG runs → 25 concurrent git clones + venv builds
-
-There is no fleet-wide concurrency limit. The QG governor (`qg-host-governor.sh`) limits concurrent heavy phases within
-a SINGLE QG run (K = `max(2, floor(16/4))` = 4), not across repos.
+| 08-05 claim                                   | Verdict      | Reality (measured 2026-08-06)                                 |
+| --------------------------------------------- | ------------ | ------------------------------------------------------------- |
+| Migration complete, 25 pools on dedicated VM  | ✅ CONFIRMED | 25 pool templates; 17 live runners                            |
+| Shared-VM resource caps removed               | ✅ CONFIRMED | `CPUQuota/MemoryHigh/MemoryMax=infinity`, `CPUWeight=100`     |
+| Volume was at "6,000 IOPS / 500 MB/s default" | ❌ FALSIFIED | Pre-fix was **3,000 / 125** (the real gp3 default)            |
+| Volume bumped to 16,000 IOPS / 1,000 MB/s     | ❌ FALSIFIED | **Never happened.** Live: 6,000 / 500                         |
+| Root cause = IOPS starvation                  | ⚠️ CORRECTED | **Throughput** pinned at 124.x MB/s vs 125 ceiling, 9 h       |
+| "VolumeReadOps 67k → 156k avg/s"              | ❌ FALSIFIED | Units error — these are per-60s samples (÷60)                 |
+| `uv sync` writes ~1 GB per run                | ❌ FALSIFIED | 86.5% of venv files are hardlinks; near-zero data written     |
+| `cp -al` is safe via "copy-on-write"          | ❌ FALSIFIED | Root fs is **ext4** — no COW; writes go through shared inodes |
+| "No fleet-wide concurrency limit exists"      | ⚠️ CORRECTED | Reservation-mode governor IS a live cross-repo admission gate |
+| Token governor `K = floor(16/4) = 4`          | ⚠️ CORRECTED | Code uses **physical** cores → `floor(8/4)` = **2**           |
+| "0 MB swap — no safety valve"                 | ✅ CLOSED    | True on 08-05; 16 GB `/swapfile` shipped 08-06 by slot-4      |
+| QG-v2 failures caused by I/O                  | ❌ FALSIFIED | Content failures — 6 plan-hygiene ratchets, run takes 2m44s   |
+| "9 of 25 repos runners offline"               | ⚠️ CORRECTED | Explained by the 08-05 public-repo migration, not I/O         |
 
 ---
 
-## Part 3 — Per-Run I/O Cost Analysis
+## Part 1 — Migration verification (✅ CONFIRMED, table repaired)
 
-### What one QG-v2 run actually writes to disk (MTDS example, live measurement)
+The original Part 1 table was structurally broken markdown (cells spilled across ~12 lines) — replaced by this summary.
+Verified via GitHub API + SSM: every registration is `ip-172-31-3-59-*` with **zero** `ip-172-31-5-118-*`; the old VM
+has 0 runner units and 0 `Runner.Listener` processes, with `orchestrator.service` still `active` (19 slot workers); the
+new VM carries 25 pool templates and **17 live runners** (was 34 on 08-05).
 
-| Step                                   | What happens                                           | Disk writes             | Cached?                                                    |
-| -------------------------------------- | ------------------------------------------------------ | ----------------------- | ---------------------------------------------------------- |
-| `actions/checkout@v4`                  | `git clone --depth=2` from GitHub                      | 200–500 MB              | **No** — fresh clone per run                               |
-| Sibling repos clone                    | `git clone --depth=1` for UAC, UTL, etc.               | 50–200 MB each          | **No** — fresh clone per run                               |
-| `uv sync --frozen` — **external deps** | Install numpy, pandas, fastapi… from `~/.cache/uv`     | **~1 GB** into `.venv/` | `~/.cache/uv` is persistent (43 GB), but `.venv/` is fresh |
-| `uv sync --frozen` — **internal deps** | `editable = true`, `path = "../..."` → creates pointer | **Near-zero**           | Already just pointer updates                               |
-| `pytest` + coverage                    | Test execution                                         | 10–50 MB                | No                                                         |
-| **Total per run**                      |                                                        | **~1.7 GB**             |                                                            |
-| **25 concurrent**                      |                                                        | **~42 GB**              |                                                            |
-
-At 6,000 IOPS (~96 MB/s throughput): 42 GB ÷ 96 MB/s = **7+ minutes of pure write time, zero reads.** Reads (git clone
-source, uv cache, source files) compete for the same disk. Hence 92.9% iowait.
-
-### Key insight: internal deps are already efficient
-
-Internal deps are declared as `editable = true` with `path = "../unified-trading-library"` in `pyproject.toml`:
-
-```toml
-[tool.uv.sources.unified-trading-library]
-path = "../unified-trading-library"
-editable = true
-```
-
-This means `uv sync` doesn't copy internal dep code into the venv — it just creates a pointer (`.pth` file). When
-internal dep code changes (every commit), re-running `uv sync` just updates the pointer. **Near-zero I/O.**
-
-External deps (numpy, pandas, fastapi, etc.) are the problem — they rarely change between runs (same lockfile), but
-`uv sync` reinstalls them into a fresh `.venv/` every run (~1 GB written each time).
+**Live runner distribution (2026-08-06):** `unified-trading-pm` 8 · `agent-orchestrator` 3 · `e2e-testing`,
+`execution-service`, `features-service`, `market-tick-data-service`, `ml-service`, `strategy-service` 1 each = **17**.
+The 8 `dead` systemd units are `github-glue-token-refresh-*` helpers — **disabled by design, not a fault**.
 
 ---
 
-## Part 4 — Proposed Solution: Shared Repos + Pre-Built External Venvs + Worktrees
+## Part 2 — Root cause (⚠️ CORRECTED: throughput, not IOPS)
 
-### Architecture
+### Finding 1 (CORRECTED) — the pre-fix volume spec was 3,000 IOPS / 125 MB/s
+
+`aws ec2 describe-volumes-modifications --volume-ids vol-03880fe9bf1ea805b` returns exactly **one** modification in the
+volume's entire history:
 
 ```
-/opt/repos/                          ← bare repos, git fetch every 5 min (reuse existing slot-refresh timers)
-  unified-trading-library.git/
-  market-tick-data-service.git/
-  ... (25 repos)
-
-/opt/venvs/                          ← pre-built venvs, EXTERNAL DEPS ONLY
-  market-tick-data-service/          ← rebuilt ONLY when uv.lock changes (rare)
-  instruments-service/
-  ...
-
-/tmp/qg-<run-id>/                    ← per-run worktree, deleted after job
-  market-tick-data-service/          ← git worktree add from bare repo
-  unified-trading-library/           ← sibling: worktree from bare repo
-  unified-api-contracts/             ← sibling: worktree from bare repo
-  .venv/                             ← cp -al from shared venv
+OriginalIops: 3000,  OriginalThroughput: 125   →   TargetIops: 6000,  TargetThroughput: 500
+StartTime 2026-08-05T10:59:26Z   EndTime 2026-08-05T11:29:48Z   ModificationState: completed
 ```
 
-### Per QG run — 3 steps instead of clone + sync
+gp3 defaults are 3,000 IOPS / 125 MB/s at **any** volume size (gp2 scales with size; gp3 does not). The 08-05 doc
+recorded 6,000/500 as the "actual/default" pre-fix state — that was the value it had just set, read back mid-modify.
+**The true pre-incident throughput was 4x worse than documented**, which is why the correct root cause was missed.
 
-```bash
-# Step 1: Worktrees (instant — shared object DB, zero clone)
-git -C /opt/repos/market-tick-data-service.git worktree add --detach \
-  /tmp/qg-30893378880/market-tick-data-service <sha>
-git -C /opt/repos/unified-trading-library.git worktree add --detach \
-  /tmp/qg-30893378880/unified-trading-library <pinned-sha>
+### Finding 2 (CORRECTED) — the volume was THROUGHPUT-saturated, not IOPS-saturated
 
-# Step 2: Shared venv (instant — hardlink copy, external deps only)
-cp -al /opt/venvs/market-tick-data-service/.venv \
-  /tmp/qg-30893378880/market-tick-data-service/.venv
+CloudWatch, 2026-08-05, hourly, `vol-03880fe9bf1ea805b`:
 
-# Step 3: Repoint internal deps (instant — editable is just pointer updates)
-cd /tmp/qg-30893378880/market-tick-data-service
-uv sync --frozen --no-install-project
-# External deps: unchanged → skip. Internal deps: editable → update .pth pointer.
+| Hour (UTC) | read MB/s | write MB/s | **total MB/s** | total IOPS | ceiling          |
+| ---------- | --------- | ---------- | -------------- | ---------- | ---------------- |
+| 02:00      | 55.6      | 69.1       | **124.7**      | 2,163      | 125 MB/s         |
+| 04:00      | 76.4      | 44.3       | **120.7**      | 2,901      | 125 MB/s         |
+| 06:00      | 84.2      | 39.7       | **123.9**      | 2,754      | 125 MB/s         |
+| 08:00      | 52.1      | 72.8       | **124.9**      | 2,204      | 125 MB/s         |
+| 10:00      | 123.4     | 0.9        | **124.4**      | 2,260      | 125 MB/s         |
+| **11:00**  | 273.8     | 104.0      | **377.9**      | **6,719**  | 500 (bump lands) |
+| 12:00      | 121.0     | 247.4      | **368.4**      | 5,814      | 500 MB/s         |
+
+**Nine consecutive hours pinned at 124.x MB/s against a 125 MB/s ceiling** — textbook throughput saturation. IOPS in
+those hours ran 2,163–2,901 of 3,000: close, but the hard pin was bandwidth. Demand tripled the instant the ceiling
+lifted, proving suppressed demand.
+
+**The 6,000/500 bump was the correct and effective fix.** Post-bump the binding constraint moved to IOPS (6,719
+measured > 6,000 provisioned).
+
+### Finding 3 (❌ FALSIFIED) — the 24h EBS trend table is a units error
+
+CloudWatch `Volume*Ops` are **Counts per 60-second sample**, not per second. "67k → 156k avg/s" is ~1,100 → ~2,600 IOPS.
+Likewise "VolumeWriteOps 47k → 1.5k = 99% collapse — writers starved" is over-read: write ops oscillate 6.6k–71k per
+sample across the day with no monotonic collapse. Separately, `%util` (71.3%) is not a saturation signal on NVMe/EBS —
+the meaningful figure is `r_await`, currently **0.91 ms** at 154 MB/s.
+
+### Finding 4 (❌ FALSIFIED) — CI failures were not caused by I/O
+
+Two of three symptoms self-recovered: `ldr-to-main-promote-fleet` last 10 runs all **success**; `ci-status-update` last
+6 all **success**. But **PM `quality-gates-v2` is red on all of the last 10 runs and it is not I/O** — the `checks`
+slice fails in **2m44s** (tests passes in 1m44s) on six plan-hygiene ratchets:
+
+```
+❌ FAIL [hard] Reference path convention (/plans, /codex — ratchet)
+❌ FAIL [hard] AG-closeout linkage (ratchet)
+❌ FAIL [hard] Terminal-status-archived (ratchet)
+❌ FAIL [hard] assigned_vm:NA corpus size (ratchet)
+❌ FAIL [hard] Silent-default-effort plans (ratchet)
+❌ FAIL [hard] Archive candidates (ratchet)
 ```
 
-### I/O comparison
+**PM's LDR→main promotion is blocked**, re-firing and failing every ~15 min.
 
-|                                | Current (clone fresh)         | Proposed (worktree + shared venv) |
-| ------------------------------ | ----------------------------- | --------------------------------- |
-| Git objects (main + siblings)  | Clone 100-400 MB from network | Already in bare repos — zero      |
-| Working tree (main + siblings) | Write 250-700 MB              | Write 250-700 MB (unchanged)      |
-| External deps (venv)           | **Write ~1 GB every run**     | **Hardlink copy — ~zero**         |
-| Internal deps (editable)       | Near-zero (pointer)           | Near-zero (pointer — unchanged)   |
-| **Total per run**              | **~1.7 GB**                   | **~250-700 MB**                   |
-| **25 concurrent**              | **~42 GB**                    | **~6-18 GB**                      |
-| **At 16,000 IOPS (256 MB/s)**  | ~2.7 min pure write           | ~23-70 sec pure write             |
+### Finding 5 (✅ CONFIRMED) — shared-VM caps removed and persisted
 
-### Isolation model
+`systemctl show github-glue-runner.slice`: `CPUQuotaPerSecUSec=infinity`, `CPUWeight=100`, `MemoryHigh=infinity`,
+`MemoryMax=infinity`, via `/etc/systemd/system/github-glue-runner.slice.d/override-dedicated-vm.conf`. Correct fix.
 
-Each run gets its own worktree at `/tmp/qg-<run-id>/`. Bare repos are read-only during checkout. Git handles concurrent
-`worktree add` safely. The shared venv is copied via hardlinks (`cp -al`), so each run's `.venv/` is a separate inode
-tree — modifying it doesn't affect other runs or the shared source. Each run's working tree is its own filesystem tree.
-Per-job cleanup: `git worktree remove` + `rm -rf`.
+### Finding 6 (⚠️ CORRECTED) — a cross-repo admission gate already exists
 
-### Why `cp -al` works for the venv
+The 08-05 claim "there is no fleet-wide concurrency limit … the governor limits within a SINGLE QG run" describes the
+legacy **token** mode. Self-hosted runs use **reservation** mode —
+`QG_GOVERNOR_MODE: ${{ inputs.self_hosted_runner_labels != '' && 'reservation' || 'token' }}` in
+`.github/workflows/quality-gates-v2.yml`.
 
-Hardlinks share the same data blocks on disk. When a run modifies a file in its `.venv/`, the filesystem copies the
-block (copy-on-write at the filesystem level). Since QG runs don't modify installed packages (they install and read
-them), this effectively means zero additional block writes beyond the directory entries.
+Reservation mode **is** a host-wide, cross-repo RAM+CPU admission gate with a flock-protected ledger deliberately
+collapsed to one shared dir `/opt/.qg-governor-glue-shared` so every repo's pool coordinates
+(`scripts/quality-gates-base/qg-host-governor.sh`). Verified live — the ledger holds real reservation rows.
 
-### When the shared venv rebuilds
+**The actual gap is sharper and still valid:** `qg_governor_acquire` fires at the start of the **heavy phase**
+(`base-service.sh:798`). The setup phase — checkout + N sibling `git clone`s + `uv venv` + `uv sync` — runs **before
+admission, unthrottled, on every job simultaneously**. That is the burst.
 
-Only when `uv.lock` changes. A lockfile change means external deps changed — the shared venv is rebuilt once, then all
-subsequent runs get the updated venv via fresh hardlink copy. Lockfile changes are rare (dependency bumps, version
-updates).
+This is exactly why slot-4's recommended `ACTIONS_RUNNER_HOOK_JOB_STARTED` wrapper
+(`/plans/active/ci_vm_exposure_remediation_2026_08_06.md` todo 3) is the right mechanism: a job-started hook gates
+**before setup**, which in-gate `qg_governor_acquire` structurally cannot. One amendment to that plan: wrap
+**reservation** mode, not token mode — reservation carries the per-repo RAM baselines, which is what the OOM evidence in
+Part 5 says actually binds.
 
----
-
-## Part 5 — Remaining GitHub Billing
-
-All fleet repos have their CI workflows on `[self-hosted, glue]`. But several workflow copies in PM itself were never
-flipped.
-
-### PM workflows still on `ubuntu-latest` (billing GitHub minutes)
-
-**Never flipped (candidates for migration to self-hosted):**
-
-| Workflow                       | Aug 4 runs           | Why still hosted                                |
-| ------------------------------ | -------------------- | ----------------------------------------------- |
-| `semver-agent.yml`             | Not in PM Aug 4 runs | Never flipped — fleet repos already self-hosted |
-| `publish-package.yml`          | Not in PM Aug 4 runs | Never flipped                                   |
-| `major-bump-issue-handler.yml` | Not in PM Aug 4 runs | Never flipped                                   |
-| `request-major-bump.yml`       | Not in PM Aug 4 runs | Never flipped                                   |
-| `main-backmerge-to-ldr.yml`    | 1 run                | Never flipped                                   |
-| `build-smoke-all-repos.yml`    | Not in Aug 4 runs    | Never flipped                                   |
-
-**Deliberately hosted (failure independence — must work when self-hosted VM is down):**
-
-| Workflow                          | Aug 4 runs |
-| --------------------------------- | ---------- |
-| `ci-health.yml`                   | 4 runs     |
-| `cloud-build-failure-watcher.yml` | 1 run      |
-| `ldr-ci-monitor.yml`              | 1 run      |
-| `notify-slack.yml`                | As needed  |
-
-### Other repos with GitHub-hosted workflows
-
-| Repo                        | Workflow                     | Runs on                              |
-| --------------------------- | ---------------------------- | ------------------------------------ |
-| `deployment-ui`             | `ui-quality-gates-v2.yml`    | `ubuntu-latest` — full UI build/test |
-| `unified-trading-system-ui` | `ui-quality-gates-v2.yml`    | `ubuntu-latest` — full UI build/test |
-| `deployment-service`        | `sync-vm-scripts-to-gcs.yml` | `ubuntu-latest`                      |
+Two supporting corrections: `K = max(2, floor(cores/4))` uses **physical** cores — `lscpu` reports 16 CPUs / 2
+threads-per-core / **8 cores**, so `K = 2`, not 4. And **`TasksMax` (option B) is the wrong tool** — independently
+confirmed by slot-4 with measured numbers (`TasksCurrent` 274–326 idle, ~46 tasks per active run) and rejected. It
+counts every task/thread in the cgroup (currently 8192), so hitting it makes `fork()` fail mid-job rather than queueing.
 
 ---
 
-## Part 6 — Stale Docs (not fixed — audit only)
+## Part 3 — Per-run I/O cost (❌ FALSIFIED: `uv` already hardlinks)
 
-| Doc                                                              | Issue                                                                                                                                                                             |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` | Entire runbook describes reinstalling glue runners on the **planning VM**. Runners no longer live there — they're on `ci-escalation-runner-vm-1`. Needs full rewrite or archival. |
-| `codex/07-security/self-hosted-runner-security-posture.md`       | Summary still says runner pools are "on the orchestrator VM." Body describes pre-migration state as current. Mitigation ladder step 3 ("dedicated VM") is now the actual state.   |
-| `codex/05-infrastructure/agent-orchestrator-deploy.md`           | Already has the new "CI-runner fleet — split off to a dedicated VM" section ✅. But still says AO is at `m8i.4xlarge` (downsize pending per the migration plan).                  |
+Measured on the live CI VM against `strategy-service`'s venv:
+
+```
+total_files=41046    hardlinked_files=35503        →  86.5% of the venv is hardlinks
+nlink distribution:  9351 files @2,  7036 @3,  3 @1
+every sampled pyarrow/*.so: nlink=3
+```
+
+`uv` 0.12.1 defaults to `link-mode=hardlink` when cache and target share a filesystem. Everything here is one ext4
+`/dev/nvme0n1p1` (`/tmp` is **not** a separate mount), so hardlinking always applies. The venv shares inodes with the 43
+GB `~/.cache/uv`.
+
+Corroborated by this repo's own measurement, quoted in `python-quality-gates-v2.yml`: cold cache **2m07s**, warm cache
+**9s**. 1 GB cannot be written in 9 seconds on this volume.
+
+**Consequence:** the "~1 GB into `.venv/` per run" line is wrong, and every figure derived from it (1.7 GB/run, 42 GB at
+25 concurrent) is void. Real per-run writes are the **working trees** (~250–700 MB) — which the 08-05 I/O comparison
+table itself lists as _unchanged_ under the proposal.
+
+The venv cost that IS real is **metadata**: ~35,500 inode/dentry creations per venv is small random journal I/O.
+`cp -al` creates exactly the same number of links, so it does not reduce this either.
 
 ---
 
-## Part 7 — Prioritized Action Items
+## Part 3a — The actual dominant cost: `actions/cache` on `~/.cache/uv` (FIXED 2026-08-06)
 
-- [x] ✅ [INFRA] P0. **Remove shared-VM resource caps from `github-glue-runner.slice` on the dedicated CI VM.** Done
-      2026-08-05 via SSM: CPUQuota=infinity, CPUWeight=100, MemoryMax=infinity, MemoryHigh=infinity. Persisted via
-      drop-in at `/etc/systemd/system/github-glue-runner.slice.d/override-dedicated-vm.conf`. Evidence: live
-      `systemctl show` confirms all four properties at `infinity`/`100`.
+The clone/checkout is **not** the expensive step — a suspicion worth killing early. Real step timings, self-hosted:
 
-- [x] ✅ [INFRA] P0. **Bump the CI VM volume to 16,000 IOPS / 1,000 MB/s.** Done 2026-08-05 via
-      `aws ec2 modify-volume --volume-id vol-03880fe9bf1ea805b --iops 16000 --throughput 1000`. Live, non-disruptive
-      operation — same procedure done safely on the old VM during the July 28 incident. Evidence:
-      `aws ec2 describe-volumes` confirms the new IOPS/throughput values.
+| Step                              | features-service | execution-service | MTDS     | unified-trading-pm |
+| --------------------------------- | ---------------- | ----------------- | -------- | ------------------ |
+| `Checkout`                        | 1s               | 1s                | 2s       | 6–9s               |
+| **`Cache uv package cache`**      | **450s**         | 22s               | **335s** | 13–22s             |
+| `Clone …pm and dependencies`      | 11s              | 8s                | 10s      | 2–3s               |
+| `Install dependencies` (uv sync)  | 5s               | 2s                | 2s       | 3–5s               |
+| `Run quality gates`               | 271s             | 107s              | 167s     | 48–69s             |
+| **`Post Cache uv package cache`** | 0s               | **894s**          | 0s       | 0s                 |
 
-- [ ] [INFRA] P1. **Add host-level concurrency cap on the CI VM.** Without a fleet-wide limit, promotion events trigger
-      25 concurrent QG runs which will still stress the disk even at 16,000 IOPS. Options: (A) lower `GLUE_COUNT` per
-      pool to 1 with a global systemd task limit, (B) add a systemd-level `TasksMax` on the parent slice to cap total
-      concurrent Runner.Worker processes. GitHub queues jobs when no runner is available — no data loss. Target: 4–8
-      concurrent QG runs max.
+`Checkout` is 1–2s because `_work` persists and `.git` survives between jobs (`features-service/.git` = 3.7 MB under
+`fetch-depth: 2`) — `actions/checkout` does an incremental fetch, not a clone.
 
-- [ ] [INFRA] P1. **Flip PM's remaining workflow copies to self-hosted.** `semver-agent.yml`, `publish-package.yml`,
-      `major-bump-issue-handler.yml`, `request-major-bump.yml`, `main-backmerge-to-ldr.yml` in PM's `.github/workflows/`
-      are still on `ubuntu-latest`. Every other repo's copies are already on `[self-hosted, glue]`. PM is the straggler.
+**Why the cache step was so expensive.** `actions/cache` never checks whether files are already on disk. On every run it
+downloads the archive and extracts it over `~/.cache/uv` regardless — features-service logged `Cache hit` 0.6s in, then
+spent 450s transferring and extracting. **The save cannot succeed by construction**: `~/.cache/uv` is ONE shared 43 GB
+directory used by every repo concurrently, while `actions/cache` treats it as private. execution-service's teardown:
 
-- [ ] [INFRA] P1. **Implement shared bare repos + pre-built external venvs + worktree-based QG execution.** Replace
-      `actions/checkout@v4` + `uv sync` in the self-hosted execution path with: (1) `git worktree add` from shared bare
-      repos at `/opt/repos/`, (2) `cp -al` of shared pre-built venvs at `/opt/venvs/` (external deps only), (3)
-      `uv sync --frozen --no-install-project` to repoint editable internal deps. Estimated I/O reduction: ~1 GB per run
-      (eliminating the external-dep venv rebuild). See Part 4 for full design. The `content-gate` cache-hit fast-path
-      (skip QG entirely when the same tree already passed) is preserved and unaffected.
+```
+23:32:42  /usr/bin/tar --posix -cf cache.tzst … --use-compress-program zstdmt
+23:47:22  tar: …/home/ubuntu/.cache/uv/archive-v0: file changed as we read it
+23:47:36  ##[warning]Failed to save: "/usr/bin/tar" failed with exit code 1
+```
 
-- [ ] [INFRA] P2. **Migrate `ui-quality-gates-v2` for `deployment-ui` and `unified-trading-system-ui` to self-hosted.**
-      These run full UI build/test suites on `ubuntu-latest` — billing GitHub for every PR/push.
+894 s tarring 43 GB, then failing and saving nothing — the same shared-cache race the `uv sync` retry loop documents. A
+failed save means the next run misses and re-tars forever. execution-service cache usage had reached **8.5 of GitHub's
+10 GB cap** (one 5.6 GB entry), so evictions were compounding it.
 
-- [ ] [INFRA] P2. **Add swap to the CI VM.** Currently 0 MB swap — no safety valve if memory pressure spikes with the
-      caps removed. A modest swap (8–16 GB) provides a buffer while alerts fire.
+**Why it existed:** the step was deliberately left unconditional on the stated assumption that "GH-side cache
+restore/save costs only a few seconds". That was true on `ubuntu-latest` with a small cache; it was never re-measured
+after the self-hosted migration.
 
-- [ ] [DOC] P2. **Update stale codex docs.** `central-vm-relaunch-glue-runner-reinstall.md` needs full rewrite (runners
-      no longer on planning VM). `self-hosted-runner-security-posture.md` needs summary/body updated (runners now on
-      dedicated VM). `agent-orchestrator-deploy.md` needs the downsize reflected once todo 8 of the migration plan
-      resolves.
+**Likely the original incident.** Tarring 43 GB sustains ~50 MB/s read per job; two or three concurrently is 100–150
+MB/s — matching the 124.x MB/s pin that held for 9 h against the old 125 MB/s ceiling (Finding 2). Strong inference, not
+proof.
 
-- [ ] [INFRA] P3. **Complete AO box downsize.** `i-0c9b283b31d6b5ca7` is still at `m8i.4xlarge` — per the migration
-      plan, downsize to `m8i.2xlarge` once operator confirms. Currently on hold.
+**FIXED** — `unified-trading-pm@9b39f6a05`: the step is now gated on `inputs.self_hosted_runner_labels == ''`, so it
+runs only for GitHub-hosted repos where it genuinely pays (2m07s cold vs 9s warm). **Verified live**, PM run
+`31081212407` (post-push), both slices:
+
+```
+skipped   Cache uv package cache          ← was 13–22s on PM
+success   Install dependencies      3-4s  ← uv sync still fast = local cache intact
+(Post Cache uv package cache — absent: no main step ⇒ no injected post phase)
+```
+
+The `Install dependencies` line is the safety proof: `uv` resolved everything from the local cache with no GitHub
+restore. The tools cache is **deliberately untouched** — its four install steps are gated on
+`steps.tools-cache.outputs.cache-hit`, so gating it would make them all run every time.
+
+---
+
+## Part 4 — Shared repos + pre-built venvs + worktrees (⚠️ RESCOPED)
+
+### What was wrong
+
+1. **The I/O saving is ~zero** (Part 3). `cp -al` from `/opt/venvs/` creates the same ~35,500 hardlinks as `uv` does
+   from `~/.cache/uv`, just from a different source.
+2. **"Copy-on-write at the filesystem level" is false on ext4.** ext4 has no COW. A write to a hardlinked file writes
+   **through the shared inode** — silently corrupting the `/opt/venvs/` master, **the 43 GB uv cache** (uv already
+   hardlinked those same inodes), and every concurrent run. Real COW needs `cp --reflink` on XFS/Btrfs.
+3. **This failure class has already fired in production.** `python-quality-gates-v2.yml`'s `uv sync` retry loop
+   documents it: _"A concurrent uv write/GC in ANOTHER job can evict/rewrite a `cache/archive-v0` entry between this
+   job's cache-index read and its extraction"_ — root-caused 2026-08-03, agent-orchestrator PR#766, escalation
+   agt-5467b9. Adding `/opt/venvs/` as a **second** shared hardlink source with no GC/refcount discipline reproduces it
+   on a surface with no retry wrapper.
+4. **No bare-repo GC contract.** With a 5-min fetch loop into `/opt/repos/`, a crashed job leaves a stale worktree
+   registration pinning objects forever. Needs `git worktree prune` on a timer plus `gc.auto=0`.
+5. **`/tmp/qg-<run-id>` buys nothing** — `/tmp` is on the same ext4 root volume, not tmpfs. Same journal, same
+   contention. The workflow already documents that glue runners _persist_ `/tmp` across jobs.
+
+### What survives, and why it now matters more
+
+The **clone** half of the design is right, and the operator independently identified it. The 08-05 doc targets the venv
+(already free) and explicitly leaves the working tree (the actual cost) unchanged. Invert that emphasis:
+
+- `Checkout` is **already incremental** (7s; `actions/checkout` reuses the persistent `_work` — hence
+  `strategy-service/_work` at 11 GB).
+- The **sibling-dep clones are not**: a fresh `git clone --depth=1` of every dep, every run, never cached. That is the
+  concrete target — shared bare repos + `git worktree` + `--filter=blob:none`.
+
+Credit it with eliminating **object transfer and pack writes**, not 1 GB of venv. The real reason it matters: **EBS
+baseline scales with instance size** (Part 5) — cutting I/O is what makes a smaller instance viable.
+
+---
+
+## Part 5 — Downsizing analysis (NEW — the actual objective)
+
+### EBS ceilings by candidate instance
+
+| Type          | baseline IOPS | baseline MB/s | vCPU | RAM   |
+| ------------- | ------------- | ------------- | ---- | ----- |
+| `c8i.4xlarge` | 20,000        | **625**       | 16   | 32 GB |
+| `c8i.2xlarge` | 12,000        | **312.5**     | 8    | 16 GB |
+| `c8i.xlarge`  | 6,000         | **156.25**    | 4    | 8 GB  |
+| `m8i.2xlarge` | 12,000        | **312.5**     | 8    | 32 GB |
+
+Measured post-bump peak demand was **378 MB/s**. **A 2xlarge's 312.5 MB/s baseline is below current demand** —
+downsizing without first cutting I/O reproduces the starvation incident at 312 MB/s instead of 125.
+
+**This reverses the 16,000 IOPS action item**: on a 2xlarge, sustained is capped at 12,000 IOPS / 312 MB/s, so
+provisioning 16,000 buys headroom the target instance cannot use.
+
+### CPU — 8 vCPU fits
+
+One full-fleet wave = **3,809 cpu-seconds** (sum of per-repo `cpu_s`, measured single-core-pinned, so this is the
+serial-work metric). On 8 vCPU that is ~476 s ≈ **8 min** against a ~15 min effective wave interval. It fits.
+
+### RAM — do NOT halve it (this is the blocking finding)
+
+Live cgroup v2 `memory.peak` under `/sys/fs/cgroup/github.slice/github-glue.slice/github-glue-runner.slice`, covering
+uptime since 2026-08-03 15:50:
+
+```
+slice total memory.peak = 31,842,299,904 B = 29.7 GB      (on a 32 GB box)
+```
+
+Per-pool observed peaks vs the baseline the admission governor actually reads:
+
+| Repo                       | `qg_resource_baseline.json` | **observed `memory.peak`** | ratio    |
+| -------------------------- | --------------------------- | -------------------------- | -------- |
+| `agent-orchestrator`       | **absent from the file**    | **18,433 MB**              | n/a      |
+| `market-tick-data-service` | 1,271 MB                    | **6,678 MB**               | **5.3x** |
+| `unified-api-contracts`    | 1,117 MB                    | **6,146 MB**               | **5.5x** |
+| `ml-service`               | 1,345 MB                    | **6,146 MB**               | **4.6x** |
+| `features-service`         | 1,727 MB                    | **6,146 MB**               | **3.6x** |
+| `instruments-service`      | 3,657 MB                    | **6,146 MB**               | 1.7x     |
+
+And the box **has been OOM-killing** — 6 events since boot, e.g.
+
+```
+Aug 04 09:33:34 oom-kill: oom_memcg=/github.slice/github-glue.slice/github-glue-runner.slice
+  task_memcg=.../github-glue-runner-market-tick-data-service@glue-1.service
+  Killed process 790850 (python) anon-rss:6029360kB      ← 5.75 GB, vs a 1,271 MB baseline
+```
+
+**Conclusions:**
+
+1. **The governor is admitting on numbers 3.6–5.5x too low** — a direct cause of the OOM kills: it over-admits because
+   it believes repos are far smaller than they are.
+2. **`agent-orchestrator` is not in the baseline file at all**, yet peaked at 18 GB.
+3. **Cutting RAM to 16 GB would be actively dangerous** — the slice already peaks at 29.7 GB on a 32 GB box.
+4. Several repos sit at exactly 6,146 MB, which looks like a per-pool sub-slice cap rather than a natural peak — true
+   demand for those may be higher still.
+
+**Target `m8i.2xlarge` (8 vCPU / 32 GB), not `c8i.2xlarge`** — take the CPU halving (the dominant cost line), keep the
+RAM. Re-baselining may later justify going lower; today's data does not.
+
+### Baseline staleness (why the cgroup numbers are the trustworthy ones)
+
+| Source        | Date           | Age     | Coverage            |
+| ------------- | -------------- | ------- | ------------------- |
+| `local` peaks | **2026-06-17** | 7 weeks | 22 of 24 repos      |
+| `vm` peaks    | **2026-07-14** | 3 weeks | 21 of 24 (2 absent) |
+| recalibrated  | 2026-08-05     | 1 day   | 1 repo              |
+
+45 of 48 rows were measured at `measured_concurrency: 1`, single-core pinned. Two rows are implausible on their face:
+`unified-trading-system-ui` at **22 MB** peak RSS (413 cpu_s) and `deployment-ui` at 541 MB / 10 cpu_s — both are
+vite/tsc/vitest builds that realistically use GBs. Those are exactly the two repos the 08-05 doc proposed migrating to
+self-hosted.
+
+### The largest cost lever: the box is idle between bursts
+
+Current load is 3.23 / 3.13 / 3.28 on 16 vCPU with iowait 5.28% — roughly 20% utilisation. The promote fleet fires a
+synchronised burst every ~15 min, then idles. 3,809 cpu-s spread evenly over 15 min needs **4.2 cores**; fired as one
+burst it needs 16. **Staggering the fan-out is a pure-software change with zero capacity cost and is the single biggest
+downsizing enabler.**
+
+---
+
+## Part 6 — Public-repo migration (NEW, 2026-08-05/06) — cost win and a P0 security exposure
+
+18 of 25 repos are now **public**; 7 remain private. Public repos get unlimited free GitHub-hosted Actions minutes on
+standard runners, so their CI need not touch the VM at all. This **explains the "9 of 25 runners offline" finding** —
+those pools are public repos, not I/O casualties.
+
+### 🔴 P0 SECURITY — `unified-trading-pm` is PUBLIC with 8 self-hosted runners attached
+
+| Repo                 | Visibility | Registered runners             |
+| -------------------- | ---------- | ------------------------------ |
+| `unified-trading-pm` | **public** | **8** (5 glue + 3 glue-writer) |
+| `deployment-api`     | **public** | API errored — recheck          |
+
+GitHub's explicit guidance is **not** to use self-hosted runners with public repositories: a fork pull request can
+execute arbitrary code on the runner. This host carries the 43 GB `~/.cache/uv`, `/opt/.qg-governor-glue-shared`,
+persistent `/tmp` across jobs, and an instance IAM role reachable via IMDS. Current posture is permissive — org actions
+policy is `allowed_actions: all`, `sha_pinning_required: false` (`default_workflow_permissions: read` is the one
+mitigating setting). The fork-PR approval requirement must be verified and hardened, or PM's CI moved off self-hosted.
+
+`/codex/07-security/self-hosted-runner-security-posture.md` is not merely stale — it documents a different threat model
+than the one now in force.
+
+### ⚠️ This inverts two existing todos
+
+`unified-trading-pm`, `deployment-ui` and `unified-trading-system-ui` are all **public**. The 08-05 todos "flip PM's
+remaining workflow copies to self-hosted" and "migrate `ui-quality-gates-v2` to self-hosted" would therefore **forgo
+free minutes AND widen the security exposure**. Both are re-pointed in Part 8.
+
+### The migration is half-done and inconsistent
+
+| Repo                             | Visibility | `self_hosted_runner_labels`   | Runners | Recent runs    |
+| -------------------------------- | ---------- | ----------------------------- | ------- | -------------- |
+| `unified-api-contracts`          | public     | `""` → ubuntu-latest          | 0       | success ✅     |
+| `unified-trading-library`        | public     | `""` (other jobs self-hosted) | 0       | success        |
+| `instruments-service`            | public     | `["self-hosted","glue"]`      | **0**   | **failure ×3** |
+| `market-data-processing-service` | public     | `["self-hosted","glue"]`      | **0**   | —              |
+
+Public repos still targeting `[self-hosted, glue]` with zero runners cannot dispatch. Completing this migration (public
+→ `ubuntu-latest`, remove their pools) simultaneously **fixes the breakage, harvests free minutes, removes the security
+exposure, and shrinks the VM's workload to the 7 private repos** — a far larger cost win than any I/O optimisation.
+
+Private repos remaining on self-hosted: `agent-orchestrator`, `e2e-testing`, `execution-service`, `features-service`,
+`market-tick-data-service`, `ml-service`, `strategy-service` — ~1,388 of 3,809 cpu-s (**36%** of fleet load).
+
+### Actions-minute economics (measured 2026-08-06)
+
+**Public repos have NO minute limit — GitHub Actions is free and unlimited on standard hosted runners.** Caveats:
+GitHub's _larger_ runners are billed even on public repos (stay on standard `ubuntu-latest`), and the 10 GB per-repo
+cache cap still applies. Private (personal account): 2,000 min/mo included, then ~$0.008/min Linux 2-core.
+
+Measured job-minutes, 24 h window ending 2026-08-06T07:00Z, via `scripts/cicd/measure-ci-job-minutes.sh` (GitHub's
+billing REST API returns 403 for a PAT on a User account, so this measures from run/job timestamps instead — **volume,
+not cost**):
+
+| repo (all private)         | runs | jobs      | **min/24h** |
+| -------------------------- | ---- | --------- | ----------- |
+| `market-tick-data-service` | 49   | 256       | **1,649**   |
+| `agent-orchestrator`       | 97   | 361       | **1,519**   |
+| `features-service`         | 18   | 148       | 988         |
+| `ml-service`               | 33   | 196       | 698         |
+| `execution-service`        | 48   | 94        | 561         |
+| `strategy-service`         | 13   | 74        | 301         |
+| `e2e-testing`              | 25   | 124       | 159         |
+| **total**                  |      | **1,253** | **5,875**   |
+
+~5,875 min/day → ~~176,000 min/mo → **~~$1,410/mo if GitHub-hosted**, i.e. MORE than the VM costs. **For the private
+set, the self-hosted VM is genuinely the cheaper option** — it is earning its keep, and its sizing is set by these 7
+repos alone.
+
+> ⚠️ **These numbers are PRE-cache-fix and heavily inflated by it.** MTDS ran 256 jobs at ~335s cache restore each —
+> ~1,430 of its 1,649 minutes. Across 1,253 jobs, roughly a third to two-thirds of the 5,875 min was `actions/cache`
+> doing nothing useful (Part 3a). **Do not size anything on this number — re-measure after 2026-08-06.**
+
+The 18 public repos' volume is **not yet measurable**: 16 of them have zero runners and cannot dispatch, so there is no
+traffic to count until the migration is finished. What is certain is that their cost is $0 at any volume.
+
+---
+
+## Part 7 — Other verified findings
+
+- **`content-gate` still runs on `ubuntu-latest`** (`python-quality-gates-v2.yml:115`, hardcoded) on every v2 invocation
+  for every repo; GitHub bills a full minute for an 11-second job. Absent from the 08-05 Part 5 list. It is also the
+  failure-independence path when the VM is down — a deliberate trade, not an automatic flip.
+- **Governor marker-file leak**: `/opt/.qg-governor-glue-shared/.benchmarks/qg-governor/` holds **345 files, 344 of them
+  `running.<pid>`**, oldest 2026-08-03 — ~115/day, unbounded. The sweep only prunes dead-PID rows inside `reservations`;
+  nothing reaps the markers.
+- **Scale arithmetic**: the matrix is `slice: [tests, checks]` — two jobs per repo per run, so a full fleet wave is 50
+  jobs, not 25 (in ≥2 passes, since most repos have one runner).
+- **Stale codex docs** (unchanged from 08-05): `central-vm-relaunch-glue-runner-reinstall.md` still describes the
+  planning VM; `self-hosted-runner-security-posture.md` predates both the dedicated VM and the public migration;
+  `agent-orchestrator-deploy.md` still records AO at `m8i.4xlarge`.
+
+---
+
+## Part 8 — Action items (re-prioritised against the downsizing goal)
+
+> Sequencing matters: the load-reducing items must land before the load-increasing ones, or the measurements lie.
+
+- [x] ✅ [INFRA] P0. **Remove shared-VM resource caps from `github-glue-runner.slice`.** Done 2026-08-05 via SSM;
+      persisted at `/etc/systemd/system/github-glue-runner.slice.d/override-dedicated-vm.conf`. **Re-verified
+      2026-08-06**: `systemctl show` confirms `CPUQuotaPerSecUSec=infinity`, `CPUWeight=100`, `MemoryHigh=infinity`,
+      `MemoryMax=infinity`.
+
+- [x] ✅ [INFRA] P0. **Bump the CI volume off the gp3 default.** Done 2026-08-05: `3,000 → 6,000` IOPS, `125 → 500`
+      MB/s. Evidence: `describe-volumes-modifications` shows `completed`, StartTime `2026-08-05T10:59:26Z`. This
+      resolved the true root cause (9 h pinned at 124.x MB/s). **NOTE: the original todo claimed 16,000 / 1,000 — that
+      never happened; corrected here 2026-08-06.**
+
+- [x] ✅ [INFRA] P2. **Add swap to the CI VM — done 2026-08-06 (slot-4).** 16 GB `/swapfile`
+      (`fallocate`+`mkswap`+`swapon`), persisted via `/etc/fstab`, live-verified. Independently re-confirmed 2026-08-06
+      via SSM (`swapon --show`). Detail: `/plans/active/ci_vm_exposure_remediation_2026_08_06.md` todo 1. Same session
+      also shipped the durable resource-history-sampler + S3-mirrored backup parity with the AO box (todo 2), fixing a
+      real latent `PrivateTmp=yes` bug in the checked-in `agent-orchestrator` SSOT.
+
+- [x] ✅ [INFRA] P0. **Gate the uv cache restore/save off self-hosted runners.** Shipped 2026-08-06,
+      `unified-trading-pm@9b39f6a05`. Was costing 335–894s/job for zero benefit (packages already local); the save could
+      never succeed (shared 43 GB dir, `tar` exit 1). Evidence: PM run `31081212407` post-push shows
+      `skipped Cache uv package cache` on both slices with `Install dependencies` still 3–4s (local cache intact) and
+      the post phase absent. Full analysis: Part 3a.
+
+- [ ] [INFRA] P0. **Re-measure fleet job-minutes 24 h after the cache fix.** Run
+      `bash scripts/cicd/measure-ci-job-minutes.sh` and record the delta against the 5,875 min/24h pre-fix baseline in
+      Part 6. Every sizing decision below is gated on this number — the pre-fix figure is inflated by the very step that
+      was just removed, so sizing on it would be sizing on a bug.
+
+- [ ] [INFRA] P1. **Investigate CI run VOLUME on the two heaviest repos.** `agent-orchestrator` fires 97 runs / 361 jobs
+      per day and `market-tick-data-service` 49 runs / 256 jobs. Together that is ~54% of all fleet job-minutes. Cutting
+      redundant triggers beats any instance-size choice, and no downsizing fixes it.
+
+- [ ] [OPERATOR] P0. **RULED 2026-08-06, option (a): require approval for all outside-contributor fork PRs + restrict
+      `allowed_actions`.** Keep `unified-trading-pm` public and self-hosted; close the fork-PR code-execution hole
+      instead of moving CI or making the repo private. **Two sub-parts, different mechanisms:** (1) `allowed_actions` —
+      checked live 2026-08-06, currently `"all"` (any marketplace/third-party action can run); tightening to `selected`
+      (an explicit allow-list) is agent-executable via
+      `gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions` — **not yet done**, needs the actual
+      allow-list enumerated from the workflows currently in use before applying (an incomplete list would break CI). (2)
+      **"Require approval for all outside collaborators" on fork-PR workflow runs** — checked live 2026-08-06: this
+      setting has **no documented public REST endpoint** (`actions/permissions`, `actions/permissions/workflow`, and
+      `actions/required-workflows` were all checked; none expose it). It lives only under the repo's web UI: **Settings
+      → Actions → General → "Fork pull request workflows from outside collaborators" → select "Require approval for all
+      outside collaborators."** This is the higher-priority half (it's the actual code-execution gate; the
+      `allowed_actions` restriction is defense-in-depth) — **flagging for the operator to click through directly**
+      rather than risk a wrong/undocumented API call against a live security boundary. `deployment-api`'s visibility
+      recheck (mentioned in the original finding) also still needs doing.
+
+- [ ] [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every ~15
+      min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4.
+
+- [ ] [INFRA] P0. **Re-baseline `scripts/dev/qg_resource_baseline.json` before any sizing decision.** Live cgroup peaks
+      are 3.6–5.5x the recorded values and `agent-orchestrator` is absent entirely; the admission governor over-admits
+      on these numbers, a direct cause of the 6 OOM kills. Include both UI repos (22 MB / 541 MB — implausible) and
+      re-measure under realistic concurrency, not `measured_concurrency: 1`.
+
+- [ ] [INFRA] P1. **Complete the public-repo migration.** Flip every public repo's workflows to `ubuntu-latest` and
+      remove their glue pools. Fixes `instruments-service` / `market-data-processing-service` (targeting self-hosted
+      with zero runners), harvests free minutes, removes the security exposure, and cuts the VM's workload to the 7
+      private repos (~36% of fleet cpu-s). **Supersedes** the 08-05 "flip PM's remaining workflow copies to self-hosted"
+      todo — PM is public, so that flip is now the wrong direction.
+
+- [ ] [INFRA] P1. **Stagger the `ldr-to-main-promote-fleet` fan-out.** The synchronised burst is what sizes the box:
+      3,809 cpu-s over 15 min needs 4.2 cores; as one burst it needs 16. Pure software, zero capacity cost, largest
+      single downsizing enabler.
+
+- [ ] [INFRA] P1. **Fleet-wide CI concurrency cap.** Plain `TasksMax` (option B) investigated 2026-08-06 with real
+      measurements (`TasksCurrent` 274–326 idle, ~46 tasks/active run) and **REJECTED as unsafe** — it makes `fork()`
+      fail mid-job rather than queueing. Recommended mechanism: an `ACTIONS_RUNNER_HOOK_JOB_STARTED` wrapper around
+      `qg-host-governor.sh`. Full detail: `/plans/active/ci_vm_exposure_remediation_2026_08_06.md` todo 3. **Amendment
+      (2026-08-06):** wrap **reservation** mode, not token mode — reservation carries the per-repo RAM baselines, and
+      the OOM evidence in Part 5 shows RAM is what binds. The hook also closes the Finding-6 gap by gating **before**
+      setup, which in-gate `qg_governor_acquire` structurally cannot.
+
+- [ ] [INFRA] P1. **Cut sibling-clone I/O**: shared bare repos + `git worktree` + `--filter=blob:none` for dep repos.
+      Required to get peak throughput under the 312.5 MB/s baseline a 2xlarge imposes. Must ship with a stated venv
+      immutability contract, `git worktree prune` on a timer, and `gc.auto=0` — see Part 4. **Do NOT** implement the
+      `cp -al` shared-venv half: no I/O saving, and unsafe on ext4. **Supersedes** the 08-05 "shared bare repos +
+      pre-built external venvs + worktree-based QG execution" todo.
+
+- [ ] [OPERATOR] P2. **Downsize the CI VM to `m8i.2xlarge` (8 vCPU / 32 GB)** once the items above land and a fresh wave
+      is measured. **Keep 32 GB** — 29.7 GB observed slice peak plus 6 OOM kills rule out 16 GB today. Re-provision the
+      volume to the 2xlarge's sustainable ceiling (12,000 IOPS / 312 MB/s), **not** 16,000/1,000.
+
+- [ ] [INFRA] P2. **Reap the governor marker-file leak** — 344 stale `running.<pid>` files accumulating ~115/day in the
+      shared coordination dir any new concurrency work would build on.
+
+- [ ] [INFRA] P2. **Decide `content-gate`'s runner.** Hardcoded `ubuntu-latest`, one billed minute per 11-second job,
+      every repo, every run — against its value as the failure-independence path when the VM is down.
+
+- [ ] [INFRA] P3. **Re-point the UI QG todo.** `deployment-ui` and `unified-trading-system-ui` are both **public**, so
+      the 08-05 "migrate `ui-quality-gates-v2` to self-hosted" todo is now backwards — public repos should stay on
+      GitHub-hosted (free). If they are ever made private, re-baseline them first: recorded peaks (22 MB / 541 MB) would
+      let the governor admit two unmeasured multi-GB builds as nearly free.
+
+- [ ] [DOC] P2. **Update stale codex docs.** `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no
+      longer on the planning VM); `self-hosted-runner-security-posture.md` (dedicated VM **and** the public-repo threat
+      model); `agent-orchestrator-deploy.md` (AO instance size once the downsize resolves).
+
+- [ ] [OPERATOR] P3. **Complete the AO box downsize.** `i-0c9b283b31d6b5ca7` still `m8i.4xlarge`; migration plan targets
+      `m8i.2xlarge`. On hold pending operator confirmation.
+
+---
+
+## Deferred work after 2026-08-06
+
+| Item                                              | State                  | Blocked on                                                      |
+| ------------------------------------------------- | ---------------------- | --------------------------------------------------------------- |
+| Re-measure job-minutes post-cache-fix             | **Cannot be done yet** | ~24 h of elapsed traffic. Gates every sizing decision.          |
+| Re-baseline `qg_resource_baseline.json`           | **Not done**           | Nobody — real work, and the governor over-admits until it lands |
+| Complete public-repo → `ubuntu-latest` migration  | **Not done**           | Nobody (but see the operator row — same decision surface)       |
+| Harden/remove self-hosted runners on public repos | **Operator-owned**     | Repo visibility + org actions policy; not agent-changeable      |
+| Downsize CI VM / planning VM                      | **Operator-owned**     | Gated on the re-measure above landing first                     |
+| Could any of the 7 private repos go public?       | **Operator-owned**     | Business call on repo contents; would zero their CI cost        |
+| Fix the 6 plan-hygiene ratchets                   | **Not done**           | Nobody — PM's LDR→main promotion stays blocked until fixed      |
+| Sibling-clone I/O (bare repos + worktree)         | **Not done**           | Low priority — 8–11s/job, dwarfed by what was just removed      |
+
+**Recommended NEXT item: fix the 6 plan-hygiene ratchets.** It is the only P0 that is neither operator-gated nor waiting
+on elapsed time, and PM's promotion pipeline re-fails every ~15 min until it is done. The re-measure runs itself in the
+background of that work.
 
 ---
 
 ## Progress Log
 
+- **2026-08-06 (cache-cost session, cont.)** — Traced the "clone is expensive" hypothesis and **falsified it**:
+  `Checkout` is 1–2s (persistent `_work`, `.git` survives, `fetch-depth: 2`). The real cost was `actions/cache` on
+  `~/.cache/uv` — 335–894s/job, with a save that could never succeed against a shared 43 GB dir. Gated it off
+  self-hosted (`9b39f6a05`) and verified live. Measured fleet job-minutes (5,875/24h across the 7 private repos) and
+  established the Actions-minute economics: public = free/unlimited, and the VM is genuinely cheaper than GitHub for the
+  private set (~$1,410/mo equivalent). Promoted `scripts/cicd/measure-ci-job-minutes.sh` out of the scratchpad.
+  **Corrections to my own earlier claims in this session, recorded so they don't survive as folklore:** (a) I asserted
+  "RAM must not be halved / target 32 GB" from the 29.7 GB observed peak — the operator correctly pointed out that peak
+  is a consequence of UNGATED concurrency, not a requirement; queue the runs and the ceiling becomes the largest single
+  job (~6 GB), so 16 GB is plausible and the 32 GB recommendation was over-cautious. (b) I projected "features-service
+  756s → 290s" — that is arithmetic from step timings, NOT an observation; only PM has been measured post-fix. (c) The
+  `cpu_s`-per-wave figure (3,809) still rests on the 3–7 week stale baseline and should not be trusted until the
+  re-baseline lands.
+- **2026-08-06 (independent verification + cost re-frame)** — Re-verified every 08-05 claim against live AWS API,
+  CloudWatch, SSM, cgroup v2, and the GitHub API. Results: 3 confirmed, 5 corrected, 6 falsified (Part 0). Key
+  reversals: root cause is **throughput** (9 h pinned at 124.x MB/s vs a 125 MB/s ceiling), not IOPS; the 16,000 IOPS
+  bump **never happened**; `uv` already hardlinks 86.5% of every venv so the shared-venv proposal's saving is ~zero and
+  its `cp -al` COW argument is invalid on ext4; a cross-repo admission governor already exists (the real gap is that it
+  gates the heavy phase, not setup). Re-framed against the operator's actual goal (shrink the VM): CPU fits 8 vCPU
+  (3,809 cpu-s/wave), but **RAM must not be halved** — observed slice peak 29.7 GB with 6 OOM kills, and the baselines
+  driving admission are 3–7 weeks stale and wrong by 3.6–5.5x. Discovered the 08-05 public-repo migration is half-done,
+  and that **`unified-trading-pm` is public with 8 self-hosted runners** (P0 security) — which inverts two existing
+  "flip to self-hosted" todos. Action items re-prioritised and re-sequenced; the false `[x]` corrected in place.
+- **2026-08-06 (interactive session, human-driven)** — Closed the swap gap + shipped resource-history-sampler parity
+  with the AO box (both live-verified, real bug found+fixed in the shared SSOT along the way). Investigated the
+  concurrency-cap todo with real measurements (real `TasksCurrent` baseline + a live dispatch's measured task cost) and
+  rejected plain `TasksMax` as unsafe once sized against those numbers — left open with a concrete safer next step
+  identified rather than shipped half-verified. Full detail: `/plans/active/ci_vm_exposure_remediation_2026_08_06.md`.
 - **2026-08-05 (interactive audit)** — Verified migration completion (25/25 pools on dedicated VM, zero on planning VM).
   Diagnosed I/O starvation: volume at default 6,000 IOPS, shared-VM resource caps still active, no concurrency cap.
   Removed resource caps live. Bumped volume to 16,000 IOPS. Documented proposed worktree + shared-venv architecture.
   Identified remaining GitHub billing sources. Flagged stale codex docs.
+- **context-scout 2026-08-05**: populated context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — actively-evolving incident audit, OPERATOR security items

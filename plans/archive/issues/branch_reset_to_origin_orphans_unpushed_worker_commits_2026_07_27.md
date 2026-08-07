@@ -46,7 +46,7 @@ tags:
 related:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/active/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md,
+    /plans/archive/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md,
   ]
 created: 2026-07-27
 last_updated: 2026-07-30

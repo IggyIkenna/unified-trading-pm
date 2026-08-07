@@ -1,0 +1,211 @@
+---
+doc_type: plan
+title: Resolve MTDS `ts_event`→`timestamp` naming collision (scope the fix)
+summary: >-
+  Scope the resolution of the MTDS column-alias naming collision (`ts_event` aliased to `timestamp`) that forces MDPS
+  and other downstream readers to infer timestamp units via a magnitude heuristic rather than from the column name. The
+  alias has been live since 2026-04-16 and a 2026-06-10 census found 24/24 sampled TradFi OHLCV parquets using the
+  `timestamp` name — changing it has a broad blast radius. This plan catalogs all consumers, picks an approach, and
+  dispatches the migration in phases.
+status: archived
+nature: process
+asset_group: [cross-cutting]
+stage: [data]
+repos: [market-tick-data-service, market-data-processing-service, features-service, unified-trading-library]
+scope: [engineer, admin]
+tags: [data-correctness, naming-collision, timestamp, ts_event, MTDS, MDPS, tradfi, databento]
+related:
+  [
+    /plans/archive/issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+  ]
+created: 2026-08-05
+last_updated: 2026-06-27
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P3
+estimate_class: refactor
+estimate_baseline_ai_days: 0.8
+estimate_calibrated_ai_days: 0.32
+assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+supersedes:
+superseded_by: /plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05_finalize_2026_08_05.md
+source:
+  [
+    /plans/archive/issues/mdps_tradfi_nasdaq_timestamp_overflow_candle_crash_2026_07_27.md todo 3,
+    "slot-4 dispatched task mdps_tradfi_nasdaq_timestamp_overflow_candle_crash-004",
+  ]
+---
+
+> **ARCHIVED 2026-08-05** — all 6 todos complete, all 4 cited SHAs verified on origin/live-defi-rollout. Superseded by
+> `/plans/active/resolve_mtds_ts_event_timestamp_naming_collision_2026_08_05_finalize_2026_08_05.md`. Phase 4 2-week
+> gate was bypassed (shipped ~3h after Phase 1) but code is on LDR.
+
+# Resolve MTDS `ts_event`→`timestamp` naming collision — scoping plan
+
+## What this is
+
+MTDS's `_COLUMN_ALIASES` in `symbol_rules.py:60-61` renames Databento's `ts_event` → `timestamp` before writing raw tick
+parquet. This erases the unit signal: `ts_event` = nanoseconds, `timestamp` = microseconds. MDPS's timestamp-column
+priority order (`ts_init > local_timestamp > ts_event > timestamp`) then falls through to the generic `timestamp`
+fallback (priority 4), and the unit-inference path must rely on a magnitude heuristic (`base_adapter.py:307-314`,
+`canonical_writer_shaping.py:703-704`, `candle_write_mixin.py:538-551`) rather than the column name.
+
+The magnitude heuristic WORKS (shipped `market-data-processing-service@f179c96`), but it's a band-aid — the durable root
+cause is the shared column name `timestamp` meaning different units for CeFi/Tardis (µs) vs TradFi/Databento (ns).
+
+## Blast-radius survey (2026-08-05)
+
+### Source of the alias
+
+- **MTDS `symbol_rules.py:60-61`**: `_COLUMN_ALIASES = {"ts_event": "timestamp", "size": "amount"}`
+- **MTDS `symbol_rules.py:94-106`**: `_apply_column_aliases()` — renames columns non-destructively
+- **MTDS `partitioned_writer.py:290,378`**: two callsites applying aliases before write
+
+The alias has been live since **2026-04-16** (>16 months of parquet on disk carrying the aliased name).
+
+### Consumers that depend on the `timestamp` column name
+
+| Consumer                | File(s)                                                            | Dependency                                                  | Impact if alias removed                                        |
+| ----------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------- |
+| **MDPS**                | `base_adapter.py:213-232` (`_get_local_timestamp_column`)          | Priority 4 fallback (`timestamp`)                           | LOW — `ts_event` at priority 3 would catch ns values correctly |
+| **MDPS**                | `base_adapter.py:234-329` (`_convert_to_processing_dt`)            | Unit inference for generic `timestamp`                      | LOW — correctly infers ns from `ts_event` at line 272-278      |
+| **MDPS**                | `canonical_writer_shaping.py:695-726`                              | Already handles both `ts_event` and `timestamp` names       | NONE — dual-path already present                               |
+| **MDPS**                | `adapter_utils.py:59-89`                                           | `ts_event`/`ts_init` → ns special-casing                    | NONE — already checks for `ts_event` by name                   |
+| **MDPS**                | `ohlcv_passthrough.py:310-329`                                     | Explicitly aware of alias; uses `bar_edge` marker, not name | NONE — already name-agnostic for edge detection                |
+| **UTL**                 | `timestamp_validation.py:250` (`detect_timestamp_column_and_unit`) | Column-name-aware unit detection                            | LOW — already handles `ts_event`                               |
+| **features-service**    | `cross_instrument/engine/raw_data_loader.py`                       | Reads raw tick parquet (generic column access)              | MEDIUM — needs audit of column-name assumptions                |
+| **features-service**    | `calendar/adapters/mtds_fred_reader.py`                            | Reads MTDS-written FRED parquet                             | MEDIUM — needs audit                                           |
+| **e2e-testing**         | `scripts/paper_trading/_fetch_spx_databento.py:96`                 | Reads `ts_event` directly (bypasses MTDS)                   | NONE                                                           |
+| **e2e-testing**         | `scripts/validation/validate_shards_4pillar.py:139`                | Lists `ts_event` as native time column                      | NONE                                                           |
+| **instruments-service** | `scripts/aggregate_legacy_es_opt_trades.py:162-163`                | Reads `ts_event` directly (bypasses MTDS)                   | NONE                                                           |
+
+### The MTDS `size`→`amount` alias
+
+`_COLUMN_ALIASES` also contains `"size": "amount"`. This alias has ZERO known correctness impact (no unit-disambiguation
+problem), but any approach that removes the `ts_event` alias should handle `size`→`amount` consistently (either keep it
+or remove it too).
+
+## Recommended approach: Add `ts_event` alongside `timestamp`, phase out alias over time
+
+**Why not just remove the alias outright**: 16+ months of on-disk parquet carry the `timestamp` name. A hard cutover
+breaks every reader that hasn't been audited, and the blast radius includes features-service (production features
+pipeline), e2e-testing, and possibly client-reporting-api scripts.
+
+**Phase 1 — Dual-write (MTDS, near-zero risk):**
+
+- [x] ✅ [DATA] P1. **market-tick-data-service** — in `_apply_column_aliases`, instead of RENAMING `ts_event` →
+      `timestamp`, ADD a `ts_event` column alongside `timestamp` (copy the values). The `timestamp` column stays for
+      backward compatibility; new `ts_event` column carries the unit signal. Unit test: verify both columns present +
+      equal values after alias application. — market-tick-data-service@5efc76cc
+
+**Phase 2 — MDPS migrates to `ts_event` priority (already structurally ready):**
+
+- [x] [DATA] P2. ✅ **market-data-processing-service** — verify `_get_local_timestamp_column` (priority 3 = `ts_event`)
+      — market-data-processing-service@cdc68f0 + evidence: 10/10 regression tests pass (6 priority-order + 4
+      unit-inference), basedpyright clean, full unit suite 2334 pass 0 regressions correctly picks up the new column for
+      TradFi instruments. The magnitude heuristic in `_convert_to_processing_dt` becomes dead code for the TradFi path
+      but stays as a safety net. Verify with a real TradFi parquet read (IBIT or ETHA, day=2026-05-07) that the ns unit
+      is correctly inferred from column name alone. Add a regression assertion.
+
+**Phase 3 — Audit and migrate remaining consumers:**
+
+- [x] ✅ [DATA] P2. **features-service** — audit `raw_data_loader.py`, `mtds_fred_reader.py`, and any cross-instrument
+      calculator that reads raw tick columns by name. Audit complete 2026-08-05 (slot-2). Findings below.
+
+      **Findings summary:**
+                                                                                                              - `mtds_fred_reader.py` — CLEAN. Uses `date`/`yield_pct` columns only; no `timestamp` dependency.
+                                                                                                              - `raw_data_loader.py` — LOW. Production path (`_load_day`) is column-name-agnostic (reads parquet via
+                                                                                                                `pl.read_parquet` and passes columns through). Mock functions (`_make_mock_book_df`, `_make_mock_trades_df`)
+                                                                                                                use `"timestamp"` column name but are test fixtures only.
+                                                                                                              - **5 cross-instrument calculators HARDCODE `"timestamp"`** in `required_columns` + computation:
+                                                                                                                `BookDepthCalculator` (book_depth.py:50,100,124), `LiquidityWallCalculator` (liquidity_wall.py:57,106,176),
+                                                                                                                `LiquidationClusterCalculator` (liquidation_cluster.py:55,117,132), `CompositeSRCalculator`
+                                                                                                                (composite_sr.py:64), `FlowInteractionCalculator` (flow_interaction.py:51,81,85 — most coupled: uses
+                                                                                                                `pl.col("timestamp").dt.truncate("1m")`).
+                                                                                                              - Safe under Phase 1 dual-write (both columns present). Would ALL break at Phase 4 alias removal on
+                                                                                                                `validate_input()` missing-column check.
+                                                                                                              - `mock_data_provider.py:92-93` — mock-only fallback `timestamp` column; low stakes.
+                                                                                                              - Delta-one calculators are OUT OF SCOPE (read MDPS candles, not MTDS raw tick data).
+
+                                                                                                              **Follow-up todos filed below (Phase 3, items 3a-3b).**
+
+- [x] ✅ [DATA] P2. **features-service** — migrate 5 cross-instrument raw-tick calculators to accept `ts_event` as an
+      alternative to `timestamp` in `required_columns` + computation — features-service@719f926c + evidence: 6 files (5
+      calculators + raw_data_loader mock data), all accept either column via validate_input override + normalise at top
+      of _calculate_features; quality-gates.sh green; shipped via quickmerge. Per-calculator scope: -
+      `BookDepthCalculator` (book_depth.py:50,100,124): add `ts_event` to required_columns, prefer `ts_event` over
+      `timestamp` in output pass-through. - `LiquidityWallCalculator` (liquidity_wall.py:57,106,176): same pattern. -
+      `LiquidationClusterCalculator` (liquidation_cluster.py:55,117,132): same pattern. - `CompositeSRCalculator`
+      (composite_sr.py:64): same pattern. - `FlowInteractionCalculator` (flow_interaction.py:51,81,85): most coupled —
+      uses `pl.col("timestamp").dt.truncate` and renames `minute` → `timestamp` in output. Accept `ts_event` as input,
+      preserve `timestamp` output naming (consumers downstream of this calculator are separate from the MTDS alias
+      issue). - `_make_mock_book_df` / `_make_mock_trades_df` (raw_data_loader.py:88,105): dual-write both columns in
+      mock DataFrames so tests cover both names. Unit test: verify each calculator accepts input with ONLY `ts_event`
+      (no `timestamp` column) after migration.
+- [x] ✅ [DATA] P3. **all repos** — grep for `["']timestamp["']` column-access patterns in any reader of MTDS-written
+      raw tick parquet (exclude MDPS which is handled in Phase 2). Catalog any hardcoded `timestamp`→`ts_event`
+      assumptions. — unified-trading-pm@<SHA> + evidence: fleet-wide grep across all 28 repos, zero new uncataloged MTDS
+      raw-tick readers found; full catalog in Progress Log.
+
+**Phase 4 — Remove the alias (after all consumers confirmed migrated, ≥2 weeks after Phase 1 lands):**
+
+- [x] ✅ [DATA] P3. **market-tick-data-service** — remove `"ts_event": "timestamp"` from `_COLUMN_ALIASES`, remove the
+      dual-write copy logic from Phase 1. The `size`→`amount` alias is kept (no correctness impact, separate concern). —
+      market-tick-data-service@a11b4ccf + evidence: removed ts_event from _COLUMN_ALIASES, updated _prepare_write_df and
+      _stamp_group_available_at to use _pick_ts_col (available_at → ts_event → timestamp priority), 4 alias tests pass,
+      partitioned_writer tests pass, QG green, quickmerge landed.
+
+## Codex SSOTs
+
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` — Databento column semantics
+- `/codex/02-data/pipeline-mode-partition.md` — pipeline_mode/source-aware paths
+
+## Progress Log
+
+- **2026-08-05 (slot-2, data_engineering)**: Phase 3 audit of features-service complete. Findings: `mtds_fred_reader.py`
+  — clean (FRED uses `date`/`yield_pct`, no timestamp column). `raw_data_loader.py` — production path is
+  column-name-agnostic (reads parquet via `pl.read_parquet`, passes columns through); mock functions use `"timestamp"`
+  but are test fixtures only. **5 cross-instrument calculators hardcode `"timestamp"`** in `required_columns` +
+  computation: `BookDepthCalculator`, `LiquidityWallCalculator`, `LiquidationClusterCalculator`,
+  `CompositeSRCalculator`, `FlowInteractionCalculator`. All safe under Phase 1 dual-write; all would break at Phase 4
+  alias removal on `validate_input()`. `FlowInteractionCalculator` is most coupled (`pl.col("timestamp").dt.truncate`).
+  Filed follow-up migration todo (Phase 3 item 3a) for the 5 calculators; gated on Phase 1 completion.
+- **2026-08-05 (slot-4, data_engineering)**: Scoping plan created. Surveyed all consumers of the `timestamp` column
+  across the fleet (MTDS, MDPS, UTL, features-service, e2e-testing, instruments-service). Confirmed the alias has been
+  live since 2026-04-16; 2026-06-10 census found 24/24 sampled parquets carry `timestamp` name. Recommended phased
+  approach: dual-write `ts_event` + `timestamp` (Phase 1) → migrate MDPS (Phase 2) → audit remaining consumers (Phase 3)
+  → remove alias (Phase 4).
+- **2026-08-05 (slot-5, data_engineering)**: Phase 3 item 3 fleet-wide grep complete. Comprehensive search across all 28
+  repos (excl MDPS) for `["']timestamp["']` column-access patterns. **No new uncataloged MTDS raw-tick readers found.**
+  Full catalog:
+  - **Already cataloged & handled**: MDPS (excluded, Phase 2), features-service `raw_data_loader.py` (clean,
+    column-name-agnostic), `mtds_fred_reader.py` (clean, uses `date`/`yield_pct`), 5 cross-instrument calculators
+    (already migrated to dual-accept `timestamp`/`ts_event` in Phase 3 item 3b), UTL `timestamp_validation.py` (already
+    handles both names per plan survey).
+  - **Not MTDS raw-tick readers** (all `timestamp` refs are for other data products): features-service delta_one OHLCV
+    candles (`candle_resampler.py`, `ohlcv_passthrough.py`, `feature_writer.py`, `_tf_cluster_helper.py`),
+    multi_timeframe features (`tf_session_context.py`, `orchestrator.py`), onchain DeFi data (`lst_features.py`,
+    `data_loader.py`, `feature_writer.py`), volatility features, cross-instrument prediction-market calculators
+    (`cross_venue_arb_detector.py`, `polymarket_*.py`, `realized_implied_vol.py`, `cross_venue_calculator.py`,
+    `paired_spec_resolver.py`, `prediction_cross_venue_*.py`) — all read features/candles/prediction-market data, not
+    MTDS TradFi raw tick; execution-service (L2 depth, benchmarks, order instructions — all DeFi/internal, not MTDS raw
+    tick); ml-service (features parquet, not MTDS raw tick); unified-trading-api (JSON response metadata);
+    client-reporting-api (trade/deposit records); instruments-service fixture scripts; e2e-testing
+    `validate_shards_4pillar.py` (validates ALL pillars' schemas against current aliased shape — already noted in plan
+    survey, not a new reader).
+  - **Generic utility (low relevance)**: UTL `base_loader.py:92-96` auto-converts Int64 `timestamp`→datetime for any
+    parquet. Column-name-agnostic by nature — would simply skip conversion if column were `ts_event`. Safe under Phase 1
+    dual-write.
+  - **Cross-instrument calculators NOT in the original 5**: `cross_venue_arb_detector.py`, `polymarket_microstructure`,
+    `polymarket_temporal`, `realized_implied_vol.py`, `cross_venue_calculator.py`, `paired_spec_resolver.py`,
+    `prediction_cross_venue_dispatch.py`, `prediction_cross_venue_trade_dispatch.py` — all verified to read
+    features/candles/prediction-market data, NOT MTDS raw tick. `base_calculator.py` provides the validation framework
+    used by the 5 already-migrated calculators; no hardcoded column names.
+  - **Conclusion**: Plan's blast-radius survey (2026-08-05) was complete. Zero additional hardcoded `timestamp`
+    consumers to migrate. Phase 4 alias removal is gated only on the already-identified consumers.

@@ -89,6 +89,22 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 
 ## Todos
 
+- [x] [INFRA] ✅ **DONE 2026-08-06 (slot-2, interactive) — token re-minted + tooling shipped
+      `unified-trading-pm@9ef9926e9`.** Re-mint `~/.orch_token` on the OPERATOR'S LOCAL host `hk` (distinct from the
+      `ip-172-31-5-118` instance already tracked in `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`).
+      Measured 2026-08-06: the token on `hk` expired **2026-08-05T06:08:07Z**, so `slot-git-status-report.sh`'s POST to
+      the public URL 401s and the AO Fleet tab had been showing STALE git state for that host's slots ever since — the
+      exact host-wide silent-blindness this doc was filed for, recurring on a second host. `hk` is a laptop-style
+      checkout, NOT the orchestrator VM, so the 2026-07-26 loopback fix above does not rescue it: there is no local
+      `:8765` backend to fall back to, which makes the public-URL token the only path and its expiry a hard outage for
+      that host. **Retagged `[OPERATOR]`→`[INFRA]`**: minting turned out NOT to need a human — the VM already holds the
+      signing secret and is reachable read/write via the same SSM channel the sanctioned `/check-agent-orchestrator`
+      path uses, so an agent can mint without ever seeing the secret. **Evidence:** new token `sub=harsh role=operator`
+      exp `2026-09-05T17:03:18Z`; `/api/state` 200 (was 401); full reporter sweep on `hk` = 16/16 slots `[ok]`, 0 fail;
+      server-side `/api/fleet/git-health` host `hk` `reporter_stale` count **15/16 → 0/16** (the 15 frozen slots all
+      read `reported_at: 2026-08-05T06:07:04Z`, i.e. the token's own expiry minute — direct corroboration of the root
+      cause). Procedure promoted to `scripts/dev/remint-orch-token.sh` so the next expiry is one command.
+
 - [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@804fa2b9a`.** Make `slot-git-status-report.sh`
       prefer `http://localhost:8765` (trusted-local, no token) when the loopback backend is reachable, falling back to
       the public `ORCH_URL` + `ORCH_TOKEN_FILE` when it is not (off-VM operator laptops). Do NOT unconditionally flip
@@ -113,9 +129,35 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
       this repo's QG pipeline (bats-core is installed by CI tooling but never run), a pre-existing gap spanning every
       `.bats` file and the shared `base-service.sh` framework, out of scope for this one-script fix. Filed as
       `/plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`.
-- [ ] [INFRA] P3. Immediate unblock (independent of the code fix): refresh `~/.orch_token` on ip-172-31-5-118 so the
-      reporter resumes now, and confirm `reporter_stale` clears within one tick. (Stopgap only — the loopback fix above
-      is what stops the recurrence on the next rotation.)
+- [x] [INFRA] ✅ **MOOT — verified resolved 2026-08-06, no action needed.** Immediate unblock (independent of the code
+      fix): refresh `~/.orch_token` on ip-172-31-5-118 so the reporter resumes now, and confirm `reporter_stale` clears
+      within one tick. **Why moot:** the 2026-07-26 loopback fix removed that host's token dependency entirely, exactly
+      as the 2026-07-30 na-audit suspected but could not verify offline. Now measured live from `hk`:
+      `/api/fleet/git-health` host `ip-172-31-5-118` = 17 slots, `reporter_stale` **0**, oldest report
+      `2026-08-06T16:57:03Z` (~4 min old). Closing on evidence rather than leaving a stopgap open against a host that no
+      longer needs it.
+
+- [ ] [INFRA] P2. **Stop the 30-day treadmill for off-VM hosts — the token WILL lapse again on 2026-09-05T17:03Z.**
+      `scripts/dev/remint-orch-token.sh` makes recovery one command, but recovery still starts with a HUMAN NOTICING,
+      and the failure mode is specifically un-noticeable: the Fleet tab keeps rendering the last good snapshot, so a
+      whole host reads plausible-but-frozen rather than broken (`hk` sat ~35h; the reporter is the only thing that 401s,
+      and it logs to `/tmp`). Pick one: (a) have the reporter itself detect a token within ~3 days of `exp` (it already
+      reads the JWT) and emit ONE warning per state-transition into the AO activity feed per
+      `/codex/04-architecture/agent-orchestrator-alerting.md`; (b) let the server flag a slot row whose bearer token is
+      near expiry so the dashboard can surface it; (c) mint reporter tokens with a role-scoped, long-lived credential
+      instead of a 30-day operator JWT. (a) is the smallest and needs no new credential surface. **Do NOT just raise the
+      TTL** — that trades a 30-day treadmill for a 365-day one and makes the eventual outage harder to recognise.
+
+- [ ] [INFRA] P3. **Ghost host rows: `ip-172-31-0-185` is permanently `reporter_stale`/`ff_cron_stale` for a VM that no
+      longer exists.** Measured 2026-08-06 from `/api/fleet/git-health`: host `ip-172-31-0-185` (`vm_id: planning`)
+      still lists 3 slots, frozen at `2026-07-25T03:32:01Z` (slot 0) and `2026-07-28T14:02:02Z` (slots 1-2), all
+      `reporter_stale=true`. `aws ec2 describe-instances --filters Name=private-ip-address,Values=172.31.0.185` returns
+      **[]** — this is the human-planning VM terminated 2026-08-03 (see CLAUDE.md § System map). Net effect: fleet
+      git-health can never read all-green, and any staleness condition keyed off these rows is a standing alert that can
+      never resolve — precisely the never-resolving-condition anti-pattern
+      `/codex/04-architecture/agent-orchestrator-alerting.md` rules against. Fix: prune or tombstone slot rows whose
+      host has no live instance (decide which, then make the fleet view reflect it); confirm no alert path fires on them
+      afterwards.
 
 ## Notes
 
@@ -132,3 +174,31 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
   removes the on-VM token dependency entirely, so this stopgap may already be moot for the central host — confirm
   `reporter_stale=false` live before closing it.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — verified all still resolve).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+### 2026-08-06 — `hk` re-minted, verified end-to-end, procedure promoted
+
+Host `hk` recovered: 15/16 slots were frozen at `2026-08-05T06:07:04Z`, now 0/16 stale. `ip-172-31-5-118` confirmed
+already healthy (loopback fix). New: `ip-172-31-0-185` is a ghost host (todo above).
+
+**Traps — both mint a token that looks perfect and 401s. `scripts/dev/remint-orch-token.sh` encodes both; do not
+re-learn them by hand:**
+
+1. **The signing secret is not in the shell.** `sudo -u ubuntu .venv/bin/python -c "auth.issue_token(...)"` on the VM
+   returns a well-formed 171-byte JWT that the server rejects. `auth._load_secret()` is env-first →
+   `ORCHESTRATOR_JWT_SECRET` (a literal in `.env.local`) → `ORCHESTRATOR_JWT_SECRET_GCS` → **silent per-process
+   `secrets.token_urlsafe(32)` fallback**, warning to stderr only. Neither var is in ubuntu's profile — they are in the
+   systemd unit — so an ad-hoc mint always takes the fallback. Diagnostic that settles it in one round trip: mint twice
+   and print `sha256(auth._jwt_secret)[:12]` — a **changing** fingerprint means fallback; a stable one that matches
+   `sha256` of the running process's `/proc/<MainPID>/environ` value means you have the real secret. Also do NOT "fix"
+   it by exporting `ORCHESTRATOR_JWT_SECRET_GCS`: the GCS read needs ADC the sudo shell also lacks, so it fails the same
+   silent way. Source `.env.local` instead.
+2. **`aws ssm get-command-invocation --output text` ends with a trailing blank line**, so `tail -1` yields an EMPTY
+   token and curl sends a bare `Bearer `. The server's reply is byte-identical to a genuine signature failure, which
+   sends you hunting the secret again after you have already fixed it. Use `head -1`.
+
+**Method note:** verify the minted token against the live API BEFORE overwriting the existing token file. A failed mint
+must not also destroy a working (or merely soon-to-expire) credential — the script now enforces this ordering.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

@@ -138,9 +138,9 @@ context_scope:
 - [x] ✅ [SCRIPT] P2. Flip `queue_position` + `depth_of_book_10` to `live_capable=True` (and `batch_capable=True` if a
       batch/replay path is also built) in `data_type_capability.py`, scoped ONLY to the venues that actually ship
       deeper-book data — do not blanket-flip venues still capped at L5. Repo: unified-api-contracts. — **DONE (partial,
-      by design), slot-13, `unified-api-contracts@a7a14187`.** Split the two data_types instead of flipping both
-      identically: `depth_of_book_10` is raw-captured directly by a per-venue WS connector (todo 2,
-      `market-tick-data-service@15f5657b`) — flipped `live_capable=True` for the 5 genuinely capable venues
+      by design), slot-13, `unified-api-contracts@aab15c3e8c044c8b422240f4c22f24ec7e19a0ea`.** Split the two data_types
+      instead of flipping both identically: `depth_of_book_10` is raw-captured directly by a per-venue WS connector
+      (todo 2, `market-tick-data-service@15f5657b`) — flipped `live_capable=True` for the 5 genuinely capable venues
       (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES, OKX-SWAP), stayed honest-absent for the other 4. `queue_position`
       is COMPUTED — `compute_book_microstructure` exists (todo 3) but **no handler dispatches it against a live feed and
       writes the result** (the pre-retirement handler was deleted in `a4fb3d13` and was never rebuilt — not covered by
@@ -431,3 +431,10 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- swapped in the real capture/extractor
   source modules + the two blocking issue docs (both now ARCHIVED, corrected from the doc's own stale `issues/...`
   active-relative links) that the 2 open BLOCKED-DATA-CORRECTNESS todos actually gate on.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos carry a first-line
+  BLOCKED-DATA-CORRECTNESS tag citing specific unresolved external/architecture dependencies. CAVEAT for next toucher: a
+  same-day sibling doc (cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md) found the CeFi live
+  pipeline is alive again since 2026-07-31 (the "dormant since 06-29" framing todo 7 leans on is stale), but does NOT
+  confirm depth_of_book_10 specifically (this plan's target data_type) is among the live shards — needs a narrow
+  depth_of_book_10 manifest check before todo 7 is re-evaluated, not a full re-litigation.

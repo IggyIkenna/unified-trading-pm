@@ -36,14 +36,13 @@
 ## Model tier
 
 Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes (ground
-truth: `agent-orchestrator/server/model_tier.py`, 2026-07). **`opus-required` = main orchestrator role ONLY**
-(2026-08-04: cross-repo/trading judgment retired as opus triggers → sonnet-5 instead; 2026-07-23: never size).
-**`sonnet_variant: light|default` (2026-08-04) picks sonnet-4.6 vs sonnet-5** — light is the default (target ≥80% of AO
-dispatch); default is for harder work + escalation + CI, always. Every `assigned_vm: planning` plan defaults to
-`effort: max`. **Effort default (2026-07-22)**: no declared tier → todo-count-derived (`xhigh`/`max` past
-`LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check
-every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
-`/codex/06-coding-standards/model-tier-selection.md`.
+truth: `agent-orchestrator/server/model_tier.py`). **`opus-required` = main orchestrator role ONLY** (cross-repo/trading
+judgment + sizing dropped as opus triggers → sonnet-5; 2026-07-23/08-04). **`sonnet_variant: light|default` (2026-08-04)
+picks sonnet-4.6 vs sonnet-5** — light is the default (target ≥80% of AO dispatch); default is for harder work +
+escalation + CI, always. Every `assigned_vm: planning` plan defaults to `effort: max`. **Effort default (2026-07-22)**:
+no declared tier → todo-count-derived (`xhigh`/`max` past `LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent
+`Agent` calls MUST set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch
+→ HARD STOP. SSOT: `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
 
@@ -72,12 +71,12 @@ UAC-internal.
 - **Quality gates BEFORE COMMIT — the commit is the per-repo quality boundary (HARD RULE)**: commit only from a
   `quality-gates.sh`-green tree (not just prek). **QG-sweep batching** — gate once over a batch → per-unit commits;
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →
-  ship mode; pure doc/plan-flip → prek only. Shared-host ≤2 full QGs at once (`max(2, floor(cores/4))`); never bulk-kill
-  another slot's `pytest`/QG.
+  ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index).
+  Shared-host ≤2 full QGs at once (`max(2, floor(cores/4))`); never bulk-kill another slot's `pytest`/QG.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
-  `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH, 2026-07-09);
-  audit/stamp a host via `scripts/dev/check-slot-commit-identity.sh [--fix]`.
+  `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a
+  host via `scripts/dev/check-slot-commit-identity.sh [--fix]`.
 - **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging DORMANT** (per-repo
   `promotion_model: ldr_main` toggle; standing `ldr-to-main-promote-fleet.yml` + PM's `ldr-to-main-promote.yml`, `*/15`,
   auto-merge). **The LDR→main gate set is exactly THREE**: `sit-gate/fleet-green` (fleet-shared SIT signal, REQUIRED
@@ -85,9 +84,8 @@ UAC-internal.
   dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT but the toggle is REVERSIBLE (major/breaking bump or
   operator decision routes THROUGH staging; gates unchanged). **LDR never runs server QG**; `main` = reconciled
   projection back-merged to LDR (`main-backmerge-to-ldr`). `--hotfix` needs `[hotfix]`. **Release**: semver-agent on
-  `push:[main]` (retargeted off `staging` 2026-07-25) → git-tag mint + `publish-package` wheel to AR; label-check
-  ADVISORY, major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not minter.
-  `unified-trading-codex` ARCHIVED (SSOT = PM's `codex/`).
+  `push:[main]` → git-tag mint + `publish-package` wheel to AR; major/1.0.0 via human staging;
+  `reconcile_release_tags.py` = stall detector, not minter. `unified-trading-codex` ARCHIVED (SSOT = PM's `codex/`).
 - **Behind-remote / tag conflict**: `git pull --rebase --autostash` (quickmerge STAGE 0.4 auto-reconciles); genuine
   same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED` exit, recover per the autostash recipe, never
   blind-overwrite; tag clobber → `git fetch origin --tags --force` + `git pull --ff-only`. **NEVER force-push a shared
@@ -106,9 +104,10 @@ BODY**, even when only describing it — triggers it, so write `skip-ci`; recove
 (`ci-failure-watcher --auto-recover`), do NOT escalate. **Force-push** (relax→do→RE-ENABLE) is initial-clean-slate only.
 A scheduled/`push` workflow fires ONLY from the DEFAULT branch. **Never hand-edit a per-repo workflow copy** — edit the
 template + `rollout-workflow-templates.sh` (rollout done only when every copy is committed + pushed); **bumping a GHA
-action version: VERIFY the ref RESOLVES** (`setup-uv` has no `@v8`). **Breaking-detection is CONTENT-based** (AST differ
+action version: VERIFY the ref RESOLVES**. **Breaking-detection is CONTENT-based** (AST differ
 `scripts/cicd/detect_breaking_change.py`; a 0.x-minor/docstring/refactor is NOT breaking; `feat!:` is the human
-override). On fail: `gh run view --log-failed`, fix root cause in real time. **`ci_status` is Firestore-SSOT** (WS-A
+override). On fail: `gh run view --log-failed`, fix root cause in real time. **Green deploy ≠ live traffic**: a stray
+Cloud Run revision pin can freeze deploys at 0% — verify `status.traffic`. **`ci_status` is Firestore-SSOT** (WS-A
 Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_stale_write` ordering) — NEVER re-add a
 per-transition manifest commit, the `manifest-update` concurrency group, or the retired `ci-status-reconciler`; the
 hourly `ci-status-consolidator` owns the manifest-cache projection (manifest stays a fallback cache, read Firestore for
@@ -126,16 +125,16 @@ checkbox in the SAME turn**: `N. ✅ [item] — <repo>@<sha> + evidence`, commit
 
 ## Multi-agent safety (per-slot worktrees)
 
-Each slot = a `git clone --reference` with its OWN `.git` on `live-defi-rollout` (the `tab/<op>/N` model is RETIRED —
-any such instruction is STALE); stay current `git pull --ff-only origin live-defi-rollout`; one invariant = HEAD
-ancestor-or-equal of `origin/live-defi-rollout` (`slot_drift_check.py`). **Never** edit
-unfamiliar/untracked/recently-pushed files, `git checkout origin/<b> -- .` / `… HEAD -- <file>` a dirty file you don't
-own, verify against `FETCH_HEAD` (use `git merge-base --is-ancestor`), or force-push a shared branch. LDR push rejected
-→ ahead=0 ff-only-only; ahead>0 `--rebase --autostash`+`restore --staged .` pre-add; conflict `rebase --abort` + stash
-by name (never `git stash drop` foreign WIP). Inherited-dirty-WIP is **LIVENESS-gated** (dead claim → inherit + commit;
-live claim / mtime <120s → PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker anti-pattern;
-`slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`
-(`Troubleshooting`: stale sibling `.venv`s → `uv sync`).
+Each slot = a `git clone --reference` with its OWN `.git` on `live-defi-rollout` (`tab/<op>/N` RETIRED — ignore stale
+refs to it); stay current `git pull --ff-only origin live-defi-rollout`; one invariant = HEAD ancestor-or-equal of
+`origin/live-defi-rollout` (`slot_drift_check.py`). **Never** edit unfamiliar/untracked/recently-pushed files,
+`git checkout origin/<b> -- .` / `… HEAD -- <file>` a dirty file you don't own, verify against `FETCH_HEAD` (use
+`git merge-base --is-ancestor`), or force-push a shared branch. LDR push rejected → ahead=0 ff-only-only; ahead>0
+`--rebase --autostash`+`restore --staged .` pre-add — same after a failed commit: restore-staged first, else a peer
+session absorbs it; conflict `rebase --abort` + stash by name (never `git stash drop` foreign WIP). Inherited-dirty-WIP
+is **LIVENESS-gated** (dead claim → inherit + commit; live claim / mtime <120s → PROTECT). An interactive session IS
+slot N (long uncommitted WIP = stale-worker anti-pattern; `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5
+min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Agent behavior
 
@@ -201,7 +200,7 @@ architecture (L0–L4)".
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
   `assigned_vm` values = `{planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes by
-  `assigned_role` (skill-based), not VM. (legacy alias `human-planning` == `planning`, still accepted.)
+  `assigned_role` (skill-based), not VM.
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
   `/codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
@@ -211,7 +210,6 @@ architecture (L0–L4)".
   `supersedes/superseded_by`, `source`. **`assigned_vm` ∈ `{planning, NA}` only**: `planning` = orchestrator VM
   executes; `NA` = not dispatched. **`status: draft`** = WIP → NOT ingested; flip to `active` to dispatch.
   **`depends_on`** documents task ordering + gates archival (does NOT affect dispatch). SSOTs: `plans/PLAN_FORMAT.md`,
-  `/codex/11-project-management/doc-frontmatter-schema.md`,
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
@@ -410,7 +408,7 @@ refs in docs) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui`
 `user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single
 deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM (id `planning`, EIP
 13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27).
-Human-planning VM (`i-0dd9812a96cdda5dc`, interactive only) for operator work. Workspace configs canonical in
+**`planning` is the ONLY VM** (human-planning TERMINATED 2026-08-03). Workspace configs canonical in
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
 Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
 `cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →

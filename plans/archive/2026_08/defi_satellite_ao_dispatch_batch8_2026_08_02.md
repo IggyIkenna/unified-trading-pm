@@ -22,7 +22,7 @@ tags: [defi, ao-dispatch, na-eligibility-audit, reclassification, batch-8, satel
 related:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02_finalize.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -98,7 +98,7 @@ running `/na-eligibility-audit defi`. The single todo below cleared the shared c
       worker-session teardown killing a long-running check
       ([`/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`](/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md)),
       and a missing env flag producing a `-test-` bucket 403
-      ([`/plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`](/plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md)).
+      ([`/plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`](/plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md)).
       Do not report a stall as a failure without checking these three first.
 
 ## Deferred — classified but NOT extracted (no operator ruling needed; each is unambiguous)

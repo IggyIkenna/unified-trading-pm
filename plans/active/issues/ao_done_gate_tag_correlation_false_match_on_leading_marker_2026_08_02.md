@@ -182,3 +182,4 @@ false-positive surface). Recommend, in order:
   condition `auto_unpark__…-002`) to stop the duplication — within main's authority (RULES.md §4). Did NOT land
   `3080fec` (code — main never pushes code); filed the landing as the tracked `[INFRA]` todo above for a worker to pick
   up.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

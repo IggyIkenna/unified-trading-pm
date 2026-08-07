@@ -110,11 +110,13 @@ Internal-only schemas (e.g. risk, VaR, stress testing) belong in `unified_api_co
   not even in tests. `test_ac_uic_alignment.py` (which imports from `unified_api_contracts.internal` inside the UAC
   external test suite) is a **known CIRCULAR violation** and must be moved to `unified_api_contracts/internal/tests/`.
   **Successor plan (per CLAUDE.md "Temporary state must have a named successor plan" rule + codex audit D-11
-  2026-05-12)**: tracked as a sub-task under
-  [`plans/active/uac_citadel_architecture_2026_05_07.md`](../../plans/active/uac_citadel_architecture_2026_05_07.md)
-  (UAC import-surface enforcement workstream). Until that move lands, the file is permitted under the existing
-  `internal → canonical` cross-surface exception; no new circular-violating test files may be added (QG step
-  `unified-trading-pm/scripts/quality_gates/check_uac_internal_imports.py` enforces).
+  2026-05-12)**: was tracked as a sub-task under `uac_citadel_architecture_2026_05_07.md` (UAC import-surface
+  enforcement workstream) — that plan file no longer exists; `plans/archive/INDEX.md`'s citadel section records the
+  topic as "superseded by completed execution plan," with no successor filename findable on disk (2026-08-05
+  docs-reconcile). Whether the described move (`test_ac_uic_alignment.py` → `unified_api_contracts/internal/tests/`) has
+  actually landed in the `unified-api-contracts` repo is unverified by this note — until confirmed, the file is
+  permitted under the existing `internal → canonical` cross-surface exception; no new circular-violating test files may
+  be added (QG step `check_uac_internal_imports.py` enforces).
 - **unified_api_contracts.internal**: stdlib + pydantic + **permitted to import from `unified_api_contracts.canonical`**
   (normalization canonicals re-used in messaging). No cloud SDKs. `internal` → `canonical` is the **only** permitted
   cross-surface import direction within UAC.
@@ -488,22 +490,32 @@ Databento as a second TradFi feed.
 
 ### Closed-set values
 
-Values mirror the `SOURCE_PRIORITY` source strings defined in `unified_api_contracts`:
+Values mirror the `SOURCE_PRIORITY` source strings defined in `unified_api_contracts` (§7 above shows the full
+`("tradfi", "ohlcv_15m")` cell with all 4 current values):
 
-| Value         | Provider                      | Notes                                                                        |
-| ------------- | ----------------------------- | ---------------------------------------------------------------------------- |
-| `"databento"` | Databento                     | All pre-Phase-3 TradFi data. Stamped by Phase 5 backfill script.             |
-| `"massive"`   | Massive (formerly Polygon.io) | New feed added by this plan. `MassiveTradfiRestConnector` stamps this value. |
+| Value         | Provider                      | Notes                                                                                                                                                                                                                                                              |
+| ------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `"databento"` | Databento                     | All pre-Phase-3 TradFi data. Stamped by Phase 5 backfill script.                                                                                                                                                                                                   |
+| `"massive"`   | Massive (formerly Polygon.io) | New feed added by this plan. `MassiveTradfiRestConnector` stamps this value.                                                                                                                                                                                       |
+| `"yahoo"`     | Yahoo Finance                 | VIX 15m rolling fallback; confirmed live-stamped (`unified-trading-library` `test_manifest_writer_source.py`).                                                                                                                                                     |
+| `"barchart"`  | Barchart                      | VIX 15m rolling fallback per `SOURCE_PRIORITY` — CLAUDE.md's TradFi/Databento sourcing rules note Barchart RETIRED; this row's current live-vs-retired status needs re-verification against `/codex/02-data/tradfi-databento-sourcing-ssot.md`, not asserted here. |
 
-The set is intentionally closed. Adding a new TradFi source requires: (1) a new `SOURCE_PRIORITY` entry in UAC, (2) an
-explicit string constant in the adapter (`MASSIVE_SOURCE`, `DATABENTO_SOURCE`, etc.), and (3) a `source=` kwarg at every
-`record_captured` callsite for that category.
+This table previously listed only `databento`/`massive` and called the set "intentionally closed" at that size — that
+undercounted the doc's own `SOURCE_PRIORITY` code block 2 sections above, which already showed 4 values for the
+`ohlcv_15m` cell. Adding a genuinely new TradFi source (beyond the 4 above) requires: (1) a new `SOURCE_PRIORITY` entry
+in UAC, (2) an explicit string constant in the adapter (`MASSIVE_SOURCE`, `DATABENTO_SOURCE`, etc.), and (3) a `source=`
+kwarg at every `record_captured` callsite for that category.
 
 ### Enforcement
 
 `MissingSourceError` (UTL `manifest_writer.py`) is raised when `record_captured(category="tradfi", ...)` is called
-without a non-empty `source=` kwarg. Non-TradFi categories (`cefi`, `defi`, `onchain`, etc.) are unaffected — `source`
-defaults to `""` for those cells.
+without a non-empty `source=` kwarg. At the time this section was written (2026-05-30), non-TradFi categories (`cefi`,
+`defi`, `onchain`, etc.) were unaffected — `source` defaulted to `""` for those cells.
+
+> **Superseded by the 2026-06-01 generalization above** (§ "Generalised beyond TradFi"): `MissingSourceError` now also
+> fires for any **multi-source** cell in ANY asset group, not just TradFi — e.g. defi `oracle_prices`/
+> `native_staking_rates`, sports `FIXTURES`. A non-TradFi category is only "unaffected" when it has a single external
+> source (`default_source()` auto-stamps it) or no external source at all.
 
 QG STEP 5.64 (`check_tradfi_source_explicit_at_record_captured.py`, wired into
 `unified-trading-library/scripts/quality-gates.sh`) performs a static AST walk to catch new `record_captured` callsites

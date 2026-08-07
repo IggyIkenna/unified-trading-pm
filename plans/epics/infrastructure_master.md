@@ -43,7 +43,7 @@ related_plans:
   - ../active/data_pipeline_check_mdps_features_2026_07_20.md
   - ../archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md
   - ../active/lst_rate_honest_coverage_2026_07_21.md
-  - ../active/mtds_retry_safe_default_audit_2026_07_14.md
+  - ../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
   - ../active/stash_pile_workspace_cleanup_2026_06_03.md
@@ -592,7 +592,7 @@ cache warm so only changed code rebuilds
 
 ## P3 — backlog; revisit quarterly
 
-### [`mtds_retry_safe_default_audit_2026_07_14`](../active/mtds_retry_safe_default_audit_2026_07_14.md)
+### [`mtds_retry_safe_default_audit_2026_07_14`](../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
 

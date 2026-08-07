@@ -469,3 +469,6 @@ due for its own pre-authorized next action independent of this audit.
   bugs (cross-linked into `pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md`). Net: first real, if
   modest, positive evidence point (0/5 genuine divergences) — updated the fleet-wide evidence-sufficiency todo above
   accordingly. The other 3 backtested repos remain at 0 usable sample; re-run again once contention drops further.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator-directed human plan, sequential judgment-gated items

@@ -358,3 +358,6 @@ worker-determinable. Independently corroborated by archived `ci_satellite_ao_dis
 batch1 D3(3), and batch4-draft D4-12. No RECLASSIFY, no ARCHIVE.
 
 - **context-scout 2026-08-03**: re-verified context_scope, still accurate (5 entries) — no changes.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — root-cause hunt with 14+ occurrences, mechanism not identified

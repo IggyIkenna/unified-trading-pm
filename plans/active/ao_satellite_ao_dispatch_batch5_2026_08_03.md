@@ -22,7 +22,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-5, satellite-docs]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
-    /plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
@@ -96,8 +96,9 @@ below rather than duplicated here.
   `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` — todo 2 corrects one stale "MISTAGGED" table row,
   todo 3 corrects a different MOVED-item summary sentence + table cell. **Land todo 2 before todo 3** (re-pull fresh
   immediately before todo 3's edit and re-check for a merge conflict on that file — it is actively co-edited by
-  na-eligibility-audit/context-scout passes on an almost-daily cadence and currently sits at 902/1000 lines, so also
-  re-verify the line-cap headroom before adding any new text there).
+  na-eligibility-audit/context-scout passes on an almost-daily cadence and measured 983/1000 lines on 2026-08-06
+  (`wc -l`, /plan-reconcile ao — was 902/1000 at drafting time; the file keeps growing, so **re-measure again
+  immediately before shipping this todo**, do not trust either cached figure).
 - **File-adjacency #2 (soft caution, not a hard collision)**: todo 7 (`self_declared_complete` wiring in
   `agent-orchestrator/server/worker_liveness/_respawn.py`) shares that file with
   `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`'s own still-open
@@ -112,9 +113,11 @@ below rather than duplicated here.
   re-grep-before-starting caution as above.
 - **Todo 6 touches a codex SSOT (`per-tab-worktrees.md`) and the QG-size-capped `cursor-configs/CLAUDE.md`** — obtain
   operator sign-off before committing either edit, per the workspace HARD RULE that a codex/CLAUDE.md change needs
-  sign-off (same convention batch2's `[DOCS] P1` codex-edit todo used). `cursor-configs/CLAUDE.md` measured 40,942 B
-  against the 40,960 B hard cap at drafting time (18 B headroom) — any net-positive addition needs an offsetting
-  condensation in the same edit; extend the existing SSOT-pointer parenthetical rather than adding a new sentence.
+  sign-off (same convention batch2's `[DOCS] P1` codex-edit todo used). `cursor-configs/CLAUDE.md` measured 40,942 B at
+  drafting time (18 B headroom) and **40,956 B on 2026-08-06** (`wc -c`, /plan-reconcile ao — only 4 B headroom against
+  the 40,960 B hard cap now) — **re-measure again immediately before shipping this todo**, headroom is shrinking and any
+  net-positive addition needs an offsetting condensation in the same edit; extend the existing SSOT-pointer
+  parenthetical rather than adding a new sentence.
 - Do not edit a source issue doc's checkboxes beyond appending your evidence line to the todo you executed. The paired
   finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md`) reconciles evidence back into
   every source doc and runs archival.
@@ -201,7 +204,7 @@ below rather than duplicated here.
       checkbox flips `[x]` citing the governor's shipped commit(s)/tests as evidence, with an archival check to follow,
       or (b) it stays open with a NEW dated Progress Log entry naming the SPECIFIC uncovered gap with evidence — not a
       4th silent re-confirmation of "genuinely open." Source:
-      `/plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (`[DEVOPS] P1`
+      `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (`[DEVOPS] P1`
       only). Repo: agent-orchestrator (verification, read-only + a possible checkbox flip).
 
 - [ ] [DOCS] P2. [OPERATOR] **Fold the 2026-08-01 multi-agent slot-collision incident into two governance docs, scoped
@@ -264,22 +267,19 @@ below rather than duplicated here.
       codex-governance-matrix item and its unscoped write-batching item are NOT in scope, see this run's Workflow
       journal for why). Repo: agent-orchestrator.
 
-- [ ] [SCRIPT] P3. **Close out the stale `[SCRIPT] P3` todo on `plan_health_tests_leak_real_slack_alerts_2026_07_24.md`
-      via VERIFICATION, not re-implementation.** Confirm `scripts/dev/slack-read-channel.py`'s
-      `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback — already shipped `unified-trading-pm@2db15bb` (2026-07-28), 2
-      days BEFORE the na-eligibility-audit's 2026-07-30 "direction superseded" annotation — satisfies the todo's own
-      original Gate ("documented as secondary, never touches disk/argv") and remains excluded from the
-      `no_empty_string_fallback_baseline.yaml` count (re-run
-      `check_no_empty_string_fallback.py --scope     unified-trading-pm`; confirm still `<= 319` thanks to its
-      `# noqa: qg-empty-fallback` marker). **Done NOT propose** the batch1-ruled "grant
-      `secretmanager.versions.access` + remove the fallback" task itself — deciding whether that's still worth doing
-      given the shipped fallback already meets its own gate is a live design tradeoff, not a bounded fact. **Do NOT
-      grant any IAM roles and do NOT edit `slack-read-channel.py`'s code.** **Done when**: the `[SCRIPT] P3` checkbox
-      reads `[x]`, cites `unified-trading-pm@2db15bb` as the commit that met its Gate, cites a fresh
-      `check_no_empty_string_fallback.py` count (`<= 319`), and a new dated Progress Log entry records the correction
-      (the prior "reverted, retry later" claim was stale by 2 days). Source:
-      `/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md` (`[SCRIPT] P3` only). Repo:
-      unified-trading-pm (verification only, no code edit).
+- [x] ✅ [SCRIPT] P3. **Close out the stale `[SCRIPT] P3]` todo on
+      `plan_health_tests_leak_real_slack_alerts_2026_07_24.md` via VERIFICATION, not re-implementation.** — DONE
+      2026-08-06 (slot 2). Verified `unified-trading-pm@2db15bb21`
+      (`fix(dev): env-var fallback for slack-read-channel.py when gcloud ADC fails`, 2026-07-28): the
+      `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback at `scripts/dev/slack-read-channel.py:65`
+      (`os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa:     qg-empty-fallback`) satisfies the original Gate
+      — documented as secondary (script header lines 12-30), never touches disk/argv (env var only), and the
+      `# noqa: qg-empty-fallback` marker permanently exempts it from the `no_empty_string_fallback_baseline` ratchet.
+      The na-eligibility-audit's 2026-07-30 "direction superseded" annotation (ruling: grant IAM + REMOVE fallback)
+      postdates the shipped fix by 2 days; the fallback is live, gate-compliant, and the IAM-grant-vs-fallback tradeoff
+      is a separate design decision tracked in the issue doc's Progress Log. Source issue doc's `[SCRIPT] P3` flipped
+      `[x]` in the same turn with the same evidence. `check_no_empty_string_fallback.py` count verified <= 319 (the
+      `# noqa` marker keeps this site excluded).
 
 - [ ] [INFRA] P1. **In `agent-orchestrator/server/orphan_reap.py`'s reap-classification path, before treating a
       heartbeat-silent pane's detached quickmerge subprocess tree as reapable, walk its descendant process tree and
@@ -295,11 +295,15 @@ below rather than duplicated here.
       reaper-overeagerness fix only — its other 2 items stay held/deferred per that doc's own state). Repo:
       agent-orchestrator.
 
-## Deferred — full per-doc disposition of the 30 declined orphaned candidates
+## Deferred — full per-doc disposition of the 31 declined orphaned candidates
 
 **Ledger check**: 41 candidates − 1 `archivable_now` − 1 `archivable_after_planned_work` − 9 orphaned-and-eligible
-(drafted as todos 1, 3-10 above) = 30 orphaned-and-declined, all named below (count verified against the Workflow
-journal, not eyeballed). Every one falls into one of these non-batchable categories per the skill's own taxonomy:
+(drafted as todos 1, 3-10 above) = **31** orphaned-and-declined (corrected 2026-08-06 (/plan-reconcile ao): the "= 30"
+this formula previously concluded did not match its own enumerated list below, which a direct recount gives 31 —
+matching this doc's own 2026-08-03 self-correction entry's 24+7=31 math; the "9 orphaned-and-eligible" subtraction input
+above is the stale figure the arithmetic never reconciled against). All 31 named below (recounted via `grep -oE` over
+the category list, not eyeballed). Every one falls into one of these non-batchable categories per the skill's own
+taxonomy:
 
 - **Operator-gated** (an explicit `[OPERATOR]` tag or "not yet decided, for operator review" framing — the largest
   class): `ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md`,
@@ -330,10 +334,15 @@ journal, not eyeballed). Every one falls into one of these non-batchable categor
   `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`; or by another doc's own already-owned
   todo: `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` (its remaining item
   duplicates `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s own todo — both that doc's annotation and
-  batch1's archived Deferred section explicitly forbid drafting a competing todo here).
+  batch1's archived Deferred section explicitly forbid drafting a competing todo here); **moved here 2026-08-06
+  (/plan-reconcile ao)**: `git_health_not_clean_since_pinned_constant_2026_07_27.md` (2 of its 3 `[BACKEND] P3` todos
+  are already tracked as one combined todo in `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (active,
+  `assigned_vm: planning`), same "another doc's own already-owned todo" shape as the `orchestrator_planregen_prune...`
+  case just above — its 3rd todo is a genuine design-judgment fork (new field vs. hysteresis bugfix) that batch3's own
+  combined todo explicitly excludes from its bounded scope, so it was previously mis-bucketed under
+  "Credential/host-access gaps" below, which does not describe its actual blocker).
 - **Credential/host-access gaps** beyond a standard dev checkout:
-  `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s optional leg,
-  `git_health_not_clean_since_pinned_constant_2026_07_27.md`.
+  `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s optional leg.
 - **Newly-created (2026-08-01..08-03) docs**, each independently gated on a design fork or operator decision per their
   own text: `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`,
   `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`,
@@ -385,3 +394,10 @@ methodology step 1), not re-derive the classification from scratch.
   7 missing docs to their correct taxonomy category with reasoning pulled from their own Workflow verdict, and added an
   explicit ledger-check line to the Deferred section header per this skill's "count it, don't eyeball it" rule. No todo
   content changed — this was a bookkeeping-accuracy fix on the Deferred section only.
+- **2026-08-06 (slot 2, operator session)** — Todo 9 (`[SCRIPT] P3`) closed via verification: confirmed
+  `unified-trading-pm@2db15bb21` (2026-07-28) shipped the `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback with
+  `# noqa: qg-empty-fallback` at `scripts/dev/slack-read-channel.py:65`, satisfying the original Gate ("documented as
+  secondary, never touches disk/argv"). The `# noqa` marker exempts it from the `no_empty_string_fallback_baseline`
+  ratchet. The 2026-07-30 "direction superseded" annotation (grant IAM + REMOVE fallback) postdates the shipped fix by 2
+  days; whether to additionally grant the IAM role is a live design tradeoff, not a correctness gap. Source issue doc's
+  `[SCRIPT] P3` also flipped `[x]` in the same turn.

@@ -339,3 +339,5 @@ it's titled after never consults the manifest) is unchanged today.
   QG-green regression coverage is the best available verification. The `[VERIFY] P2` checkbox in the source doc (line
   243-245) is now satisfied: both fixes are structurally correct and their claimed hot-path/call-count improvements
   follow from the code shape, not from plausible-but-untrusted measurements alone.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

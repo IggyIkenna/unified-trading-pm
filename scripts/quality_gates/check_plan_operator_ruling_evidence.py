@@ -1,0 +1,316 @@
+#!/usr/bin/env python3
+# Epic: agent_operating_framework_master
+# Lifecycle: permanent
+# Delete-when: NA
+"""Plan operator-ruling evidence gate — a checked todo or resolved_by: claiming completion via
+an "operator ruling" must cite a traceable source within 300 chars of the ruling phrase.
+
+Two incidents, 4 days apart, different roles:
+  1. plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
+     (SHA fabrication — the sibling check_plan_commit_sha_evidence.py gate was shipped for that).
+  2. plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md
+     (slot-9 closed an [OPERATOR]-tagged decision citing "DECIDED 2026-08-03 (operator ruling)"
+     with no traceable source; a corpus-wide grep for its subject returned zero other docs).
+
+The SHA checker structurally cannot catch shape (2) — there is no SHA to resolve. A fabricated
+ruling yields an authority bypass: an [OPERATOR]-gated decision, the one class this workspace
+reserves for a human, silently closed by a worker.
+
+The counter-example that passes: Finding I-2 in the same audit doc cites
+"operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`" — a real,
+checkable pointer, exactly the standard E-1 conspicuously did not meet.
+
+What counts as a "traceable source" (any ONE, within ±300 chars of the ruling phrase):
+  - A /plans/… or /codex/… path substring, OR
+  - Any .md filename reference (e.g., plan_reconcile_parked_operator_decisions_2026_08_02.md).
+
+Detected "operator ruling" phrases (case-insensitive):
+  - "operator ruling"       — direct form, e.g., "DECIDED 2026-08-03 (operator ruling)"
+  - "operator, interactive" — interactive-session form, e.g., "(operator, interactive)"
+
+Scope: checked `- [x]` todo blocks and resolved_by: frontmatter in plans/active/*.md and
+plans/active/issues/*.md.
+
+Baselined ratchet (same shape as check_plan_commit_sha_evidence.py): the corpus may already
+carry pre-existing unsourced closures — those are grandfathered at first rollout; only new
+regressions (fresh unsourced rulings that push the count above the baseline) fail. Re-baseline
+with --baseline-write ONLY after confirming the flagged violation is pre-existing, non-fabricated
+drift, not a new authority bypass.
+
+Exit codes: 0 = at/below baseline; 1 = regression; 2 = arg/IO error.
+"""
+
+from __future__ import annotations
+
+import argparse
+import io
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import cast
+
+import yaml
+
+DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_operator_ruling_evidence_baseline.yaml"
+
+_FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?\n)---\s*\n", re.DOTALL)
+_CHECKED_RE = re.compile(r"^\s*-\s*\[[xX]\]\s")
+_UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[[ xX]\]\s")
+
+# Phrases that indicate an operator ruling is being CLAIMED as completion justification.
+# Matches (case-insensitive):
+#   "operator ruling"       — direct form, e.g., "DECIDED (operator ruling)"
+#   "operator, interactive" — interactive-session form, e.g., "(operator, interactive)"
+_OPERATOR_RULING_RE = re.compile(
+    r"\boperator\s+ruling\b|\boperator,\s*interactive\b",
+    re.IGNORECASE,
+)
+
+# A traceable source for the ruling: /plans/ or /codex/ path, or any .md filename reference.
+# Requires at least 2 chars before ".md" to avoid degenerate matches.
+_TRACEABLE_SOURCE_RE = re.compile(
+    r"/plans/|/codex/|\b[\w][\w\-]+\.md\b",
+)
+
+# Characters after the ruling-phrase start to search for a traceable source.
+# Small lookback (50) for rare cases where the source appears just before the phrase.
+_RULING_WINDOW_AFTER = 300
+_RULING_WINDOW_BEFORE = 50
+
+
+@dataclass(frozen=True)
+class RulingCitation:
+    path: Path
+    line_no: int
+    phrase: str  # the matched operator-ruling phrase
+    source: str  # "frontmatter:resolved_by" | "todo"
+    context: str  # ~160-char snippet for the printed diagnostic
+
+
+@dataclass(frozen=True)
+class RulingViolation:
+    citation: RulingCitation
+
+    def __str__(self) -> str:
+        return (
+            f"{self.citation.path}:{self.citation.line_no}: "
+            f"[{self.citation.source}] completion cites '{self.citation.phrase}' "
+            f"with no traceable source (/plans/…, /codex/…, or .md doc) "
+            f"within {_RULING_WINDOW_AFTER} chars — {self.citation.context}"
+        )
+
+
+def _has_traceable_source(text: str, match_start: int) -> bool:
+    """True iff a /plans/, /codex/, or .md filename appears within the search window around
+    the operator-ruling phrase start in `text`."""
+    window = text[max(0, match_start - _RULING_WINDOW_BEFORE) : match_start + _RULING_WINDOW_AFTER]
+    return bool(_TRACEABLE_SOURCE_RE.search(window))
+
+
+def _iter_frontmatter_ruling_citations(text: str, path: Path) -> list[RulingCitation]:
+    m = _FRONTMATTER_RE.match(text)
+    if not m:
+        return []
+    fm_text = m.group(1)
+    try:
+        fm = cast(object, yaml.safe_load(io.StringIO(fm_text)))
+    except yaml.YAMLError:
+        return []
+    if not isinstance(fm, dict):
+        return []
+    fm_dict = cast(dict[str, object], fm)
+    raw = fm_dict.get("resolved_by")
+    if not raw:
+        return []
+    resolved_by_str = raw if isinstance(raw, str) else str(raw)
+
+    line_no = 1
+    for i, line in enumerate(text.splitlines(), start=1):
+        if line.strip().startswith("resolved_by:"):
+            line_no = i
+            break
+
+    out: list[RulingCitation] = []
+    for rm in _OPERATOR_RULING_RE.finditer(resolved_by_str):
+        if not _has_traceable_source(resolved_by_str, rm.start()):
+            out.append(
+                RulingCitation(
+                    path=path,
+                    line_no=line_no,
+                    phrase=rm.group(0),
+                    source="frontmatter:resolved_by",
+                    context=resolved_by_str.strip()[:160],
+                )
+            )
+    return out
+
+
+def _iter_todo_ruling_citations(text: str, path: Path) -> list[RulingCitation]:
+    out: list[RulingCitation] = []
+    lines = text.splitlines()
+    n = len(lines)
+    i = 0
+    while i < n:
+        line = lines[i]
+        if _CHECKED_RE.match(line):
+            buf = [line]
+            j = i + 1
+            while j < n:
+                nxt = lines[j]
+                if _UNCHECKED_OR_CHECKED_RE.match(nxt) or not nxt.strip():
+                    break
+                buf.append(nxt)
+                j += 1
+            block_text = "\n".join(buf)
+            for rm in _OPERATOR_RULING_RE.finditer(block_text):
+                if not _has_traceable_source(block_text, rm.start()):
+                    out.append(
+                        RulingCitation(
+                            path=path,
+                            line_no=i + 1,
+                            phrase=rm.group(0),
+                            source="todo",
+                            context=buf[0].strip()[:160],
+                        )
+                    )
+                    # One violation per block is enough; stop on first unsourced match.
+                    break
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def _load_baseline(baseline_path: Path) -> int:
+    if not baseline_path.exists():
+        return 0
+    try:
+        loaded = cast(object, yaml.safe_load(baseline_path.read_text(encoding="utf-8")))
+    except yaml.YAMLError:
+        return 0
+    if isinstance(loaded, dict):
+        count = cast(dict[str, object], loaded).get("unsourced_ruling_baseline")
+        if isinstance(count, int):
+            return count
+    return 0
+
+
+def _write_baseline(baseline_path: Path, violations: list[RulingViolation]) -> None:
+    payload: dict[str, object] = {
+        "unsourced_ruling_baseline": len(violations),
+        "rule": "plan-operator-ruling-evidence (ratchet)",
+        "source": "plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md",
+        "baseline_violations": [
+            {
+                "path": str(v.citation.path),
+                "line": v.citation.line_no,
+                "phrase": v.citation.phrase,
+                "context": v.citation.context[:80],
+            }
+            for v in violations
+        ],
+    }
+    baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Plan operator-ruling evidence check: checked todos claiming completion via "
+            "an 'operator ruling' must cite a traceable source (/plans/…, /codex/…, or .md doc)."
+        )
+    )
+    parser.add_argument(
+        "--workspace-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[2].parent,
+    )
+    parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
+    parser.add_argument("--baseline-write", action="store_true")
+    return parser.parse_args()
+
+
+def main() -> int:
+    ns = _parse_args()
+    workspace_root: Path = cast(Path, ns.workspace_root).resolve()
+    baseline_path: Path = cast(Path, ns.baseline_path)
+    baseline_write: bool = cast(bool, ns.baseline_write)
+
+    active_dir = workspace_root / "unified-trading-pm" / "plans" / "active"
+    if not active_dir.is_dir():
+        print(f"ERROR: plans/active not found at {active_dir}", file=sys.stderr)
+        return 2
+
+    plan_files = sorted(active_dir.glob("*.md"))
+    issues_dir = active_dir / "issues"
+    if issues_dir.is_dir():
+        plan_files.extend(sorted(issues_dir.glob("*.md")))
+
+    all_violations: list[RulingViolation] = []
+    for p in plan_files:
+        try:
+            text = p.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for citation in _iter_frontmatter_ruling_citations(text, p):
+            all_violations.append(RulingViolation(citation=citation))
+        for citation in _iter_todo_ruling_citations(text, p):
+            all_violations.append(RulingViolation(citation=citation))
+
+    # De-dupe by (path, line_no) — a single block can generate at most one violation.
+    seen: set[tuple[Path, int]] = set()
+    deduped: list[RulingViolation] = []
+    for v in all_violations:
+        key = (v.citation.path, v.citation.line_no)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(v)
+    violations = deduped
+
+    print(
+        f"Scanned {len(plan_files)} plan(s) — "
+        f"{len(violations)} checked todo(s)/resolved_by: value(s) citing 'operator ruling' "
+        f"without a traceable source (/plans/…, /codex/…, or .md doc within "
+        f"{_RULING_WINDOW_AFTER} chars)."
+    )
+
+    if baseline_write:
+        _write_baseline(baseline_path, violations)
+        print(f"✅ Wrote baseline ({len(violations)}) to {baseline_path}")
+        return 0
+
+    baseline = _load_baseline(baseline_path)
+    regression = len(violations) > baseline
+    if violations:
+        print(f"\nUnsourced operator-ruling citations: {len(violations)} (baseline {baseline}).")
+        for v in violations[:20]:
+            try:
+                rel = v.citation.path.relative_to(workspace_root)
+            except ValueError:
+                rel = v.citation.path
+            print(f"  - {rel}:{v.citation.line_no}: [{v.citation.source}] {v.citation.phrase!r}")
+        if len(violations) > 20:
+            print(f"  ... + {len(violations) - 20} more")
+
+    if regression:
+        print(
+            f"\n❌ Plan-operator-ruling-evidence regression: {len(violations)} > baseline {baseline}. "
+            "A checked todo or resolved_by: field claims an 'operator ruling' with no traceable "
+            f"source (/plans/…, /codex/…, or .md doc within {_RULING_WINDOW_AFTER} chars of the "
+            "ruling phrase). Add a specific doc/path reference to the ruling citation — see "
+            "plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md "
+            "§ 'Done when' for the standard. Or re-baseline with --baseline-write after "
+            "confirming the violation is pre-existing, non-fabricated drift."
+        )
+        return 1
+
+    if violations and len(violations) < baseline:
+        print(f"\n⚠️  Improvement: {len(violations)} < baseline {baseline}. Re-baseline to codify.")
+    print("\n✅ Plan-operator-ruling-evidence: at/below baseline.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

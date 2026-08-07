@@ -38,7 +38,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
+    /plans/archive/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /plans/archive/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
     /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
   ]

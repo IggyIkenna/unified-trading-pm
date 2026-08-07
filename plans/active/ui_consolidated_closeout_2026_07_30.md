@@ -32,7 +32,7 @@ related:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-07"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -84,7 +84,7 @@ context_scope:
 **Sources**:
 [data_status_tab_and_downloads_remediation_2026_06_16.md](/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md)
 (data-status tab UI bugs + instruments CSV download regressions, gated on v9 manifest migration) ·
-[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
 (honest-coverage fix shipped + P2-P8 UX/canonicalisation follow-ups) ·
 [data_status_catalogue_true_source_phase2_2026_07_24.md](/plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md)
 (Phase 2 true-catalogue/expected-universe source for the catalogue explorer) ·
@@ -146,7 +146,7 @@ via `playwright.config.ts` `workers: 1`, gate now 424/0 green, archived) ·
 (8 pre-existing smoke failures — Daily Costs page, mobile nav hamburger, nav-menu-dedup; **retagged here from
 `infrastructure` 2026-07-30 — was previously cited in `infra_consolidated_closeout_2026_07_25.md` Track 4, now this
 tranche's home instead**) ·
-[issues/deployment_api_live_mock_parity_2026_07_17.md](/plans/active/issues/deployment_api_live_mock_parity_2026_07_17.md)
+[issues/deployment_api_live_mock_parity_2026_07_17.md](/plans/archive/issues/deployment_api_live_mock_parity_2026_07_17.md)
 (mock mode has drifted from live on 12 of 111 endpoints, incl. an empty coverage-summary — directly relevant to this
 session's own local-dev live-vs-mock confusion) ·
 [issues/deployment_api_sigabrt_crash_loop_2026_07_24.md](/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md)
@@ -178,12 +178,18 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
       pass (repos:-grep + content spot-check), not an exhaustive sweep. Mirror
       `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s methodology: grep the full corpus for
       `infrastructure`/`cross-cutting`/`meta`-tagged docs whose real content is deployment-ui/deployment-api/
-      unified-trading-system-ui-primary (candidates already spotted but deliberately deferred this session:
+      unified-trading-system-ui-primary (candidates already spotted but deliberately deferred:
       `monitoring_control_plane_master_2026_06_10.md` and `ui_build_warm_cache_2026_06_17.md` — both currently `ci`,
-      genuinely borderline CI-vs-UI scope, need a real per-doc read before retagging either way), retag with the same
-      evidence-cited convention, and re-run `check_ag_closeout_linkage.py` + `check_frontmatter_schema.py` after. Done
-      when: `/ag-closeout-audit ui`'s own Phase 0.3 discovery count stops changing between two consecutive runs a week
-      apart.
+      genuinely borderline CI-vs-UI scope; PLUS 2 more found 2026-08-07 by the `ag_closeout_auditor` run —
+      `issues/deployment_api_prod_disable_auth_true_2026_08_06.md` (currently `cross-cutting`; content read in full, is
+      100% deployment-api-specific, ownership only ambiguous because it also touches the shared
+      `unified-trading-library` config surface) and
+      `issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` (currently `defi`, corroborated by the
+      `defi`-tranche's own 2026-08-07 audit finding, not independently re-verified here) — all 4 need a real per-doc
+      read before retagging either way, see `issues/ag_closeout_audit_ui_parked_2026_08_07.md` for the 2 newest
+      candidates' evidence), retag with the same evidence-cited convention, and re-run `check_ag_closeout_linkage.py` +
+      `check_frontmatter_schema.py` after. Done when: `/ag-closeout-audit ui`'s own Phase 0.3 discovery count stops
+      changing between two consecutive runs a week apart.
 - [ ] [INFRA] P2. First `/ag-closeout-audit ui` + `/plan-reconcile ui` runs, scoped to this tranche — establishes the
       real orphan-projection baseline (this tracker's own todos above are a manual first pass, not a substitute for the
       skill's per-doc Phase 1 judgment) and drafts `ui_satellite_ao_dispatch_batch1_<date>.md` if warranted.
@@ -218,3 +224,32 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries, all resolving, matches the doc's own "Codex SSOTs"
   list + epic + skill) — coordination-index doc, legitimately code-free; no changes needed.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-2cd17a)**: KEEP-NA, valid — this is the tranche's own
+  consolidated-closeout coordinator; its 5 open `[REVIEW]` todos are explicitly self-declared verification-only / "not
+  itself AO-eligible" (same convention as the sibling `infra_consolidated_closeout` doc), matching the bounded-outcome
+  bar this skill applies. No reclassification warranted.
+- **ag_closeout_auditor 2026-08-06 (ui tranche, dispatch agt-8d6508)**: first-ever `/ag-closeout-audit ui` run — the
+  `/ag-closeout-audit` half of the P2 todo above (`/plan-reconcile ui` has NOT run yet, so that todo stays unchecked).
+  Phase 1 (12-agent Workflow) classified all 12 tranche-primary docs: 1 `archivable_now`
+  (`issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` — fully done, but stuck at a stale
+  `status: open` + a `locked_by` timestamp that predates its own `created` date by 2 months; flagged, not fixed here), 2
+  `archivable_after_planned_work` (`deployment_registry_firestore_migration_2026_07_14.md`, self-covered by its own
+  named P3/P5 phase docs; `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md`, self-dispatched), 9
+  `orphaned_never_touched`, 0 partial-coverage, 0 mistags (Orthogonality HARD CHECK clean — all 12 candidates cleanly
+  single-tagged `[ui]`). Drafted `ui_satellite_ao_dispatch_batch1_2026_08_06.md` (status: draft, 3 conflict-cleared
+  todos) + gated `_finalize`, `unified-trading-pm@a9a85a1cc` — pending operator approval to dispatch. Also found: the
+  Track 3/Track 4 close-out criteria above are now partly stale (both still describe already-resolved sub-items — alerts
+  N+1, mock/live parity — as open; a future edit should trim them) and the P2 corpus-wide-retag-audit todo above remains
+  genuinely untouched (`monitoring_control_plane_master`, `ui_build_warm_cache` still un-triaged). Full reasoning per
+  doc: see the batch plan's own Deferred/Findings sections.
+- **ag_closeout_auditor 2026-08-07 (ui tranche, dispatch agt-eb521b)**: second `/ag-closeout-audit ui` run. Candidate
+  set unchanged (12 docs). Orphan count unchanged at 9 of 12, but composition shifted:
+  `data_status_cell_grid_rearchitecture_2026_07_18.md` and `artifact_pipeline_observability_2026_07_17.md` moved
+  `orphaned_never_touched` → `orphaned_partial_coverage` (batch1 didn't exist at 2026-08-06's discovery time; today it
+  does, and its 3 Todos cite specific items in both — expected drift, not a regression). Corrected a stale todo directly
+  in `ui_satellite_ao_dispatch_batch1_2026_08_06.md` (still draft, unshipped — its Todo 2 would have filed a duplicate
+  issue doc; redirected to reconciling the source doc's already-stale checkbox instead). 2 more plausible `ui`-mistag
+  candidates found (folded into the same corpus-wide-retag todo above, not retagged yet). No batch2 drafted — zero of
+  batch1's 11 Deferred items cleared in the 1 day since (verified via git log on all 12 candidate docs); recommend
+  approving + dispatching batch1 next, which is still `status: draft` awaiting operator sign-off. Full write-up:
+  `issues/ag_closeout_audit_ui_parked_2026_08_07.md`.

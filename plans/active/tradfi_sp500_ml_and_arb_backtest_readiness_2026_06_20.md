@@ -34,6 +34,7 @@ superseded_by:
 depends_on:
 source:
 assigned_role: data_engineering
+effort: high
 drift_direction: advance-code
 context_scope:
   [

@@ -78,7 +78,7 @@ counts: 2 `archivable_now`, 12 `archivable_after_planned_work`, 7 `orphaned_part
 `orphaned_never_touched` (50 orphaned total). Of those 50, 5 cleared the AO-dispatch-scope eligibility bar — this batch
 extracts those 5, plus 5 more found by a separate corpus-wide Orthogonality sweep (8 genuine `ao` mistags retagged
 on-sight from bare `meta`/`cross-cutting`, of which 5 carry their own eligible bounded work; see that sweep's citation
-in `ao_consolidated_closeout_2026_07_25.md`'s Sources digest). The remaining 45 declined-orphan docs stay exactly where
+in `ao_consolidated_closeout_2026_07_25.md`'s Sources digest). The remaining 44 declined-orphan docs stay exactly where
 they are: operator-gated (25, the largest class), too-large-or-risky-for-a-batch-todo (10), genuinely-human-only (5), or
 conflict-gated against another doc's own claim (5). Full per-doc reasoning for all 64 Phase-1 verdicts lives in this
 run's own Workflow journal, cited in the Progress Log below rather than duplicated here.
@@ -147,7 +147,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       it's reusable as the worker-callable primitive before building a parallel one. **Done when**: both halves land; a
       promote-gated task parks after the FIRST worker detects the gate and does NOT re-dispatch to a fresh worker every
       tick, resuming only when the gate clears; a test simulates "ref not yet on main." Source:
-      `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (its sole
+      `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (its sole
       remaining item — GATED-prefix cleared 2026-08-03, see that doc's own inline note). Repo: agent-orchestrator.
 
 - [ ] [BACKEND] P3. **On re-dispatch, clear/invalidate the prior owner's slot-side `current_task`** (and log a warning
@@ -200,7 +200,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
 
 - [x] [INFRA] P3. **MOOT 2026-08-05 — do not dispatch.** The source doc's host (`i-0dd9812a96cdda5dc`/`ip-172-31-0-185`)
       was terminated 2026-08-03 (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) — there is no host left to
-      allowlist. See `/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (now
+      allowlist. See `/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (now
       `status: resolved`) for the full resolution.
 
 - [ ] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** In
@@ -236,7 +236,9 @@ evidence-backed, zero-risk housekeeping action, not new work.
 `wf_8c217203-b49`, not eyeballed) — plus 5 more items from the 8-doc orthogonality sweep (5 drafted as todos 5-10 above,
 3 conditionally deferred below).
 
-- **Operator-gated** (largest class, 25): `ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md`*,
+- **Operator-gated** (largest class, 24 — corrected 2026-08-06 (/plan-reconcile ao): was 25,
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` removed below, RESOLVED 2026-08-06 — see
+  annotation): `ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md`*,
   `ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`,
   `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`,
   `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`, `ao_orphan_audit_followup_triage_2026_07_30.md`,
@@ -244,7 +246,11 @@ evidence-backed, zero-risk housekeeping action, not new work.
   `blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`,
   `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`,
   `context_scope_consumption_enforcement_2026_07_30.md`,
-  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`, `long_lived_vm_logs_not_backed_up_2026_07_02.md`,
+  ~~`dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`~~ **RESOLVED 2026-08-06** (its own Progress Log:
+  "Option A operator-confirmed + implemented; both todos closed" — removed from this count, corrected 2026-08-06
+  (/plan-reconcile ao)), `long_lived_vm_logs_not_backed_up_2026_07_02.md` (checked 2026-08-06, still genuinely
+  operator-gated — 3 open todos, explicit 2026-07-02 operator decision "not needed right now... revive by scheduling
+  these todos" — correctly stays here),
   `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27.md`,
   `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`,
   `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`,

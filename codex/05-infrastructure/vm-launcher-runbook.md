@@ -21,7 +21,7 @@ related:
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /codex/06-coding-standards/quality-gates-memory-governance.md,
     /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
-    /plans/active/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
+    /plans/archive/issues/features_cross_instrument_smoke_verify_unbounded_memory_second_ao_outage_2026_08_01.md,
   ]
 created: 2026-05-15
 authoritative_for:
@@ -128,7 +128,7 @@ IAM lockdown, `uts-prd-sa`'s `storage.objectAdmin` grant is IAM-Condition-scoped
 unmodified driver 403s on every force/skip leg against a `-test-` bucket. Fixed 2026-08-01 in all 4 existing drivers
 (`features-service`, `instruments-service`, `market-data-processing-service`, `market-tick-data-service`); any NEW
 `pipeline_e2e_check.py`-family driver must carry the same `--env staging` fix from the start. Full incident + fix
-details: `/plans/active/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`.
+details: `/plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md`.
 
 ## Heavy COMPUTE/MEMORY on the shared planning-vm (HARD RULE, added 2026-07-27)
 

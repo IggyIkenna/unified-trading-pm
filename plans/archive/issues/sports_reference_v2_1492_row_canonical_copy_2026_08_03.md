@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [sports, delete-safety, canonical-copy, data-migration]
 related:
   [
-    /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
+    /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -46,7 +46,7 @@ superseded_by:
 source: "Operator ruling on plan_reconcile_parked_operator_decisions_2026_08_02.md § 1b, option B, 2026-08-03."
 context_scope:
   [
-    /plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md,
+    /plans/archive/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
@@ -56,7 +56,7 @@ context_scope:
 > **🟢 ARCHIVED 2026-08-03** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Todo 5 (root-cause the `pipeline_mode`-tagged duplicate writer) migrated to
-> `/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md` todo 6 per the todos-not-prose rule. Moved by a
+> `/plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md` todo 6 per the todos-not-prose rule. Moved by a
 > `cicd` escalation (agt-5c37f6) triaging the `check_terminal_status_archived` hard gate failure. No content was
 > rewritten.
 
@@ -95,8 +95,8 @@ pending exactly this migration.
       764-row sole-surviving-copy carve-out that blocked them is resolved (wiped, not orphaned), so both revert toward
       self-justified. Full cull of the REMAINING 16 post-floor day dirs still needs its own reader-check first (not
       executed here — different, broader scope than this doc's 764-cell carve-out) — see those docs' updated todo text.
-- [x] ✅ [DATA] P3. **Migrated to `/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md` todo 6 on archival
-      (2026-08-03)**, per this workspace's todos-not-prose rule. Root-cause and retire whatever wrote the 764
+- [x] ✅ [DATA] P3. **Migrated to `/plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md` todo 6 on
+      archival (2026-08-03)**, per this workspace's todos-not-prose rule. Root-cause and retire whatever wrote the 764
       `pipeline_mode=batch_api_football`-tagged duplicate copies INTO `sports_reference_v2/by_date/` (still the legacy
       tree, not canonical `sports_reference/by_date/`) around 2026-06-24 — see Progress Log finding below. Low urgency
       (byte-identical duplicates, no correctness impact, all mtimes cluster at a single past date so it does not look
@@ -153,7 +153,7 @@ pending exactly this migration.
   4,735 objects). The original 2026-07-22 triage doc (`sports_legacy_duplicate_triage_2026_07_22.md` §2/§7)
   independently recommended folding these 1,492 rows into that same wipe (delete), not copying them forward — a
   recommendation that appears to have been lost between then and the § 1b conflict-resolution framing. Filed
-  `/plans/active/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` (full evidence + recommendation)
+  `/plans/archive/issues/sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` (full evidence + recommendation)
   and a `/blocked` question rather than executing the copy. No GCS object read or written; no code changed for this
   todo. Todo 1 (re-run the census) also not executed — pending the disposition ruling, since a fresh census only matters
   if the copy path is confirmed as correct.

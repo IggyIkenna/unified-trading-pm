@@ -71,7 +71,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-02"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -487,7 +487,10 @@ per-site verification across ~12 DeFi handlers — not a mass edit, needs care) 
 `_CANONICAL_CACHE` per bucket — is undone, touches the LIVE cefi/sports/tradfi manifest path, validate carefully) +
 `issues/manifest_reprocessing_ generic_utility_2026_07_07.md` (fully open, 4 todos — design → implement
 `select_shards_for_reprocess()` → wire as an IS CLI subcommand → optionally retire 13 near-identical one-off scripts;
-concrete design already specified).
+concrete design already specified) +
+[issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md](/plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md)
+(self-dispatched, `assigned_vm: planning` — `vm-exec-with-gcs-tee.sh`'s `STALL_PROGRESS_REGEX=checkpoint` self-kills any
+real backfill VM across all 20 launchers using that wrapper; regex fix identified, VM relaunch/verify in flight).
 
 **Close-out criterion**: the CF-manifest-audit job green for all 5 AGs with cited evidence; the smoke-sweep residuals
 re-verified (not re-fixed if already resolved elsewhere); the DeFi concurrency refactor shipped; the manifest-OOM bound
@@ -543,7 +546,7 @@ historical-snapshot banner.
 **Sources**:
 [asset_class_to_asset_group_rename_2026_07_21.md](/plans/active/asset_class_to_asset_group_rename_2026_07_21.md) (UAC
 domain-level `AssetClass`→`AssetGroup` enum rename across all 5 AGs + 7 repos) ·
-[issues/catalogue_census_equivalents_inventory_2026_07_24.md](/plans/active/issues/catalogue_census_equivalents_inventory_2026_07_24.md)
+[issues/catalogue_census_equivalents_inventory_2026_07_24.md](/plans/archive/issues/catalogue_census_equivalents_inventory_2026_07_24.md)
 (manifest/catalogue distinct-values census gaps across strategy/features/fixtures/UAC registries) ·
 [issues/cli_shard_split_flag_coverage_audit_2026_07_24.md](/plans/archive/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md)
 (shard-key CLI convention coverage audit across instruments-service/MDPS/features-service — RESOLVED 2026-07-28,
@@ -617,7 +620,7 @@ end-to-end for all 5 AGs.
 (Phase-2 true-catalogue/expected-universe source via instruments-service) ·
 [data_status_cell_grid_rearchitecture_2026_07_18.md](/plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md)
 (bound/stream/precompute cell-grid rewrite to kill a deployment-api OOM reading the whole manifest) ·
-[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
 (honest-coverage fix + P1-P8 UX/canonicalisation: instrument-type canonicalisation, catalogue explorer, cefi chain-axis
 drift, sports league-drilldown) ·
 [data_status_tab_and_downloads_remediation_2026_06_16.md](/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md)
@@ -711,6 +714,30 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-08-07** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
+  dispatch `agt-a2b8a4`, slot 5). Phase 0: 83 tranche members, 6 covering docs, 11 never-cited (net -3 vs 2026-08-06's
+  86, matching that run's 2 retags-out + 1 archival). Iterative-drain re-check of batch1/1b/3's Deferred sections: no
+  new clearances. Orthogonality HARD CHECK: 0 new dual-tag mistags (the 1 pre-existing hit,
+  `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`, unchanged). Phase 1 (`Workflow`, 7 agents, one per
+  genuinely-new candidate): **all 7 verdicted `exclude_cross_cutting`** (real owners: ci ×5, ui ×1, infrastructure ×1 —
+  the same same-day-issue-doc-cluster mistag pattern as 2026-08-06) — reported, not retagged, per the
+  concurrent-sharded-worker owning-tranche rule; full evidence in
+  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md).
+  **Zero genuine new orphans found — no Phase 3 batch draft this run.** Confirmed
+  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` is now `status: active` (operator-approved since
+  2026-08-06), 7/8 todos done via a governance-sweep activation-readiness check, 1 genuinely open and already
+  dispatched. Bonus: re-measured the corpus-wide `check_ag_closeout_linkage.py` ratchet regression (87→72→71, still +2
+  over the 69 baseline) in `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` — see that doc for detail.
+- **2026-08-06** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
+  dispatch `agt-681f2d`, slot 6). Phase 0: 86 tranche members, 6 covering docs, 6 never-cited. Orthogonality HARD CHECK
+  (corpus-wide): found + fixed 2 genuine mistags directly (drop-cross-cutting-keep-sibling-tag cases), found 1 more
+  mistag-on-both-axes parked (`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`). Phase 1 (`Workflow`, 6
+  agents): all 6 verdicted `exclude_cross_cutting` — 2 fixed directly, 4 parked. **Zero genuine new orphans — no Phase 3
+  batch draft.** A same-day na-eligibility-audit follow-up independently retagged + archived one of the 4 parked targets
+  (`resource_watchdog_host_guardian_2026_08_05.md`, singly-tagged cross-cutting so genuinely this tranche's own to act
+  on). Full evidence in
+  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md)
+  — **backfilled here 2026-08-07** since this entry was missed at the time.
 - **2026-08-05** — **Membership-scope gap recorded (batch2 finalize finding 1).** The 2026-07-26 audit's own Progress
   Log entry documented this but it wasn't actioned as a durable process change. **The tranche-membership derivation for
   cross-cutting MUST use
@@ -877,3 +904,6 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit dated operator gate (2026-07-25): do not flip to
   planning until operator personally runs /ag-closeout-audit + /plan-reconcile for this AG; sole open item is a
   meta-note about untracked digest items, not dispatchable work itself.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): explicit 2026-07-25 operator
+  gate blocks flipping assigned_vm until the operator personally runs /ag-closeout-audit + /plan-reconcile for this AG.

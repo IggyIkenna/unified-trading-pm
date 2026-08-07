@@ -101,11 +101,13 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
       fixed, even without waiting out a live 24h cefi cycle to watch it directly. Genuinely unverified until real time
       passes: whether a RESOLVED/green bookend actually posts when the sports/tradfi/cefi conditions clear (that
       requires the underlying condition to actually clear first, which is a data-fix problem, not an alerting one).
-- [ ] [DOCS] P0. Tradfi mbp_10: correct
-      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to reflect that the UAC
-      registry restriction is a confirmed-still-intentional operator scope decision, not an open gap — and check whether
-      the `DP_RUN_MOSTLY_EMPTY` detector/alert for this specific cell should be suppressed/reclassified as expected
-      rather than continuing to page as if it's an active problem.
+- [x] ✅ [DOCS] P0. Tradfi mbp_10: corrected
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to add a prominent top-of-doc
+      resolution banner reflecting that the UAC registry restriction is a confirmed-still-intentional operator scope
+      decision, not an open gap — and added `("tradfi", "mbp_10")` to `KNOWN_DEAD_CELLS` in `deployment-service`'s
+      `known_dead_cells_registry.py` (`deployment-service@ba40e4a`), suppressing `DP_RUN_MOSTLY_EMPTY` for this cell
+      following the same `ohlcv_15m`/CBOE precedent. 2 new unit tests. Framing correction committed to
+      `unified-trading-pm`.
 - [x] [DATA] P1. Cefi blank-`data_type` phantom-audit hardening + 9,757-row orphan delete — CLOSED. Tool hardened
       (`instruments-service@dd6b4e826`); the delete survived 2 resurrection reversions before a durable legacy-seed
       exclusion fix (`unified-trading-library@{f14b13ae,8e783d70}`) made it hold across 3 independent production cycles.
@@ -129,3 +131,4 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 - **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — the only change since 2026-07-30 is a frontmatter `asset_group`
   retag ([meta] -> [cross-cutting], 2026-07-31, confirmed a genuine mistag correction with no todo/content change).
   Explicit operator instruction to run locally/autonomously still governs; both remaining open todos unchanged.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

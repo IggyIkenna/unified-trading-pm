@@ -151,3 +151,7 @@ candidate for that tranche's next pass, not just a retag-only finding.
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
   to dispatch — not flipped by this run per the "ASK BEFORE CREATING"/never-auto-flip HARD RULE).
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02/08-03 (unchanged): the retag sub-part is
+  done, but the fold-in/dispatch of the target doc is still not done — a genuine parked-findings handoff owned by the
+  `ao` tranche's own audit, not this doc's write.

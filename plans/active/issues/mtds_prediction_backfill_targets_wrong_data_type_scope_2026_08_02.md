@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [data-correctness, manifest-consolidator, available_at, prediction, fill-rate]
 related:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/12-agent-workflow/pre-task-plan-conflict-check.md,
   ]
@@ -48,7 +48,7 @@ depends_on: []
 last_updated: 2026-08-02
 context_scope:
   [
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     market-tick-data-service/market_tick_data_service/scripts/_rebuild_prediction_emit.py,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py,
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -191,3 +191,8 @@ whoever wants to close the loop.
   here; batch7 is the correct, already-vetted path to dispatch, pending only an operator/main-agent flip from `draft` to
   `active` (outside this audit's own mandate to perform). Doc stays NA (not because the work isn't AO-eligible — it is —
   but because a parallel, already-conflict-checked vehicle already owns it).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: re-verified the 2026-08-04 finding — sole open
+  P3 todo is still KEEP-NA-STALE-DUPLICATE, confirmed still verbatim-present in
+  `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` (`status: draft`, `assigned_vm: planning`, Source-cited). Doc
+  stays NA, no change from the 08-04 verdict.

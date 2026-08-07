@@ -17,7 +17,7 @@ summary: >-
   plan (which explicitly defers the question here rather than claiming it). `status: draft` — a skill-drafted AO batch
   is never auto-shipped; flipping to `active` to dispatch is an operator decision (CLAUDE.md "Plan destination — ASK
   BEFORE CREATING").
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -28,12 +28,12 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
-    /plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -67,10 +67,10 @@ context_scope:
 
 # Prediction satellite AO batch 7 — trades/book_snapshot_5 `available_at` consumer check
 
-> **Status: draft — NOT dispatched.** This batch was drafted autonomously by the `/ag-closeout-audit prediction`
-> scheduled run (2026-08-04). Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE and the
-> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped: flipping
-> `status: draft` → `active` to actually dispatch this todo is an operator decision.
+> **Status: active — operator-approved 2026-08-06, dispatching.** This batch was drafted autonomously by the
+> `/ag-closeout-audit prediction` scheduled run (2026-08-04). Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING"
+> HARD RULE and the ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped:
+> flipping `status: draft` → `active` to actually dispatch this todo is an operator decision.
 
 ## Why this batch exists
 

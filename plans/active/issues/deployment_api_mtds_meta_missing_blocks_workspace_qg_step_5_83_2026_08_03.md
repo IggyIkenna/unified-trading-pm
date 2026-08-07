@@ -194,3 +194,7 @@ design call). No ARCHIVE.
 
 - **context-scout 2026-08-03**: populated context_scope (4 entries) — added the actual `mtds_meta.py` target file and
   dropped the redundant `unified-trading-pm/` repo prefix on the baseline-yaml entry (this doc's own repo).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — undecided architecture tradeoff, not worker-determinable

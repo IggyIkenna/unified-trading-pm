@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [iam, terraform, opentofu, gcp, state-hygiene, drift, pubsub]
 related:
   [
-    /plans/active/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
+    /plans/archive/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
     /codex/05-infrastructure/deployment-service-gcp-tofu-state.md,
   ]
 created: "2026-08-03"

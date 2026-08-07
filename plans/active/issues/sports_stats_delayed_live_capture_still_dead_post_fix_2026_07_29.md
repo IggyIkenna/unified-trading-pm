@@ -456,25 +456,25 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       Repo: deployment-service.
 
       **DONE 2026-07-30 — deployment-service@a172915.** `FirstSuccessPoller` (`sports_latency_observation.py`) now
-                                                              accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
-                                                              promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
-                                                              persists after every real mutation in `register_from_event()` (only when at least one entity was actually
-                                                              registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
-                                                              from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
-                                                              transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
-                                                              wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
-                                                              fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
-                                                              exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
-                                                              discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
-                                                              contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
-                                                              malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
-                                                              `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
-                                                              the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
-                                                              `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
-                                                              SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
-                                                              path actually persisted real content there; now scoped to a per-test-unique bucket
-                                                              (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
-                                                              `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
+                                                                                          accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
+                                                                                          promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
+                                                                                          persists after every real mutation in `register_from_event()` (only when at least one entity was actually
+                                                                                          registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
+                                                                                          from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
+                                                                                          transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
+                                                                                          wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
+                                                                                          fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
+                                                                                          exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
+                                                                                          discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
+                                                                                          contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
+                                                                                          malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
+                                                                                          `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
+                                                                                          the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
+                                                                                          `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
+                                                                                          SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
+                                                                                          path actually persisted real content there; now scoped to a per-test-unique bucket
+                                                                                          (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
+                                                                                          `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
 
 - [ ] [VERIFY] P2. **New, opened 2026-07-31 by the VERIFY P1 todo above.** Both structural fixes (venue-adapter-key
       registry sentinels + `active_venues` enrichment-provider exclusion) are confirmed deployed and working (zero
@@ -594,8 +594,43 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       open) should have been skip #4 inside that same un-reset 24h window and should already have auto-parked before
       reaching a worker at all — worth a fresh look at why `auto_park.py` hasn't tripped despite 3+ prior GATED skips
       accumulating within one window (same gap the 17:31Z check flagged, still unresolved). Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`. — **Checked 2026-08-06T03:15Z (slot 5, data_engineering): still
+      gated, no change, bare filtered check only
+      (`read_availability_index(columns=[...], filters=[("data_type","==","FIXTURES")])` + sampled
+      `latency_observations` GCS reads, column-pruned, no full-corpus load).** FIXTURES rows for the 5 covered leagues:
+      lookahead ceiling still `2026-08-01` (unchanged since every check since 2026-07-31T06:18Z), all 5 leagues at
+      `instrument_count=0` through that date with `status=attempted_failed`. Last nonzero-`instrument_count` row per
+      league still `2026-05-24..2026-05-29` (prior season), unchanged from all prior checks. `latency_observations`
+      sampled across `day=2026-08-03..2026-08-06`: zero `stats_delayed` fires for any of the 5 covered `league_id`s. The
+      2026-27 European season has not yet begun for BUNDESLIGA/EPL/LA_LIGA/LIGUE_1/SERIE_A. This is now ~7 days since
+      the first post-fix verdict (2026-07-31T06:18Z) and the situation is structurally unchanged — the task has
+      accumulated 19+ GATED skips across its lifetime. **The auto_park mechanism should have tripped after
+      2026-08-02T17:31Z (skip #3 within one 24h window) per multiple prior checks' own diagnosis, yet the task continues
+      to be re-dispatched ~3 days later — the `auto_park.py` gap flagged by the 17:31Z and 09:45Z checks remains
+      unresolved and is now the dominant source of dispatch waste on this task.** Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`. — **Checked 2026-08-06 (slot 8, data_engineering): still gated, no
+      change, bare filtered check only**
+      (`read_availability_index(columns=[...], filters=[("data_type","==","FIXTURES")])` + day-partitioned
+      `latency_observations` GCS reads, sampled 150 files/day, column-pruned, no full-corpus load, both under
+      `run-bounded-analysis.sh`). FIXTURES rows for the 5 covered leagues: lookahead ceiling still `2026-08-01`, zero
+      nonzero-`instrument_count` rows through it (last nonzero row per league still `2026-05-24..2026-05-29`, prior
+      season) — unchanged from every check since 2026-07-31T06:18Z. `stats_delayed` fires sampled across
+      `day=2026-07-30..2026-08-06` (8 partitions): 10 fires total in the sample, **zero** for any of the 5 covered
+      `league_id`s. The 2026-27 European season has not yet begun for BUNDESLIGA/EPL/LA_LIGA/LIGUE_1/SERIE_A; no
+      covered-league fixture exists to fire the trigger. Situation structurally unchanged. Releasing via
       `/skip-current-task {"reason_code": "GATED"}`.
 
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **Checked 2026-08-06 (slot 16, worker): still gated, no change, bare filtered check only (read_availability_index
+  FIXTURES columns + sampled latency_observations parquet reads, column-pruned).** FIXTURES rows for the 5 covered
+  leagues: lookahead ceiling still `2026-08-01`, zero nonzero-`instrument_count` rows through it; last nonzero row per
+  league still `2026-05-24..2026-05-29` (prior season) — unchanged from every check since 2026-07-31T06:18Z.
+  `latency_observations` sampled across `day=2026-08-03..2026-08-06`: 5 files read with pandas (no column-pruned path
+  used — verified the `strings`-based grep matches were false positives from league names appearing in non-`league_id`
+  fields), zero `stats_delayed` fires for any of the 5 covered `league_id`s. The 2026-27 European season has not yet
+  begun for BUNDESLIGA/EPL/LA_LIGA/LIGUE_1/SERIE_A. This is now ~7 days since the first post-fix verdict
+  (2026-07-31T06:18Z) with the situation structurally unchanged across 20+ checks. Releasing via
+  `/skip-current-task {"reason_code": "GATED"}`.

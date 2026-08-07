@@ -169,3 +169,4 @@ by this doc, just applying the documented method to a genuinely-real finding).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added the parent track2 checkpoint plan +
   process_fetch.py (where the actual pre-launch-venue classifier fix landed), swapped out venue_mapping.py.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

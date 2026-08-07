@@ -22,7 +22,7 @@ tags: [agent-orchestrator, blocked-questions, escalation, ux, dashboard, dead-ag
 related:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
+    /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
   ]
 created: 2026-07-24
 author: unknown
@@ -40,7 +40,7 @@ depends_on: []
 context_scope:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
-    /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
+    /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
     agent-orchestrator/server/transcript_log.py,
     agent-orchestrator/server/orm.py,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
@@ -141,9 +141,13 @@ exists" section together before scoping the workstream.
   archiving this doc or auto-picking a direction on its `[DESIGN]` todo below (an open-ended scoping call, correctly
   staying a human decision per this doc's own frontmatter) — flagging the renewed operator pain as a signal it may be
   worth un-deferring, not deciding that myself.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 
 ## Todos
 
 - [ ] [DESIGN] P2. **Scope the blocked-question UX redesign** — capture `claude_session_id` on `BlockedRow` at creation
       time, wire a transcript-jump affordance into the resolution UI, and address cross-question dedup/similarity;
       explicitly deferred by the operator 2026-07-24, not yet scoped or actioned.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

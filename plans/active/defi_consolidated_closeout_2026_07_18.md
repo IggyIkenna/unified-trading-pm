@@ -61,8 +61,8 @@ related:
     /plans/archive/2026_07/defi_gmx_venue_removal_finalize_2026_07_25.md,
     /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md,
-    /plans/archive/2026_07//plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/archive/2026_07//plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25_finalize.md,
+    /plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/archive/2026_07/defi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/data_completion_defi_2026_07_15.md,
@@ -70,7 +70,7 @@ related:
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/mtds_defi_dex_zero_capture_protocols_2026_07_14.md,
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md,
     /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
@@ -91,7 +91,7 @@ related:
     /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
     archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md,
-    issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
+    /plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
     archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md,
     issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
     archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
@@ -99,7 +99,7 @@ related:
     issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
     issues/instrument_id_format_canonicalization_2026_07_08.md,
-    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
     issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
@@ -720,20 +720,20 @@ file, not here.
       re-run it to confirm these clusters clear per the two plans' own done-when criteria, before any `--apply`.
 
       **UPDATE 2026-08-02 (finalize task `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`, slot-13
-                                                                                                                                                                                                                                                                                              review craft): all 5 todos of `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
-                                                                                                                                                                                                                                                                                              re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
-                                                                                                                                                                                                                                                                                              of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
-                                                                                                                                                                                                                                                                                              `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
-                                                                                                                                                                                                                                                                                              DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
-                                                                                                                                                                                                                                                                                              RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
-                                                                                                                                                                                                                                                                                              confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
-                                                                                                                                                                                                                                                                                              each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
-                                                                                                                                                                                                                                                                                              address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
-                                                                                                                                                                                                                                                                                              FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
-                                                                                                                                                                                                                                                                                              match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
-                                                                                                                                                                                                                                                                                              log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
-                                                                                                                                                                                                                                                                                              `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
-                                                                                                                                                                                                                                                                                              resolved` accordingly in this same commit.
+                                                                                                                                                                                                                                                                                                                                                              review craft): all 5 todos of `/plans/archive/2026_08/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` SHIPPED and independently
+                                                                                                                                                                                                                                                                                                                                                              re-verified — no longer forward-looking.** Query fix: `market-tick-data-service@63199601` (verified an ancestor
+                                                                                                                                                                                                                                                                                                                                                              of `origin/live-defi-rollout`; live-tested against all 4 real subgraphs, all returned populated
+                                                                                                                                                                                                                                                                                                                                                              `inputTokens`/`fees`). Live-test recoverability: `market-tick-data-service@0f40a69f` (curve/OPTIMISM confirmed
+                                                                                                                                                                                                                                                                                                                                                              DEINDEXED; curve/ETHEREUM+AVALANCHE, sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE, velodrome_v2/OPTIMISM all
+                                                                                                                                                                                                                                                                                                                                                              RECOVERABLE). Backfill: `mtds-dex-pools-symbolfix-batch1c`/`batch2` completed cleanly across the full
+                                                                                                                                                                                                                                                                                                                                                              confirmed-recoverable range, manifest spot-checked (symbol-named leaves, creation-timestamp-verified against
+                                                                                                                                                                                                                                                                                                                                                              each VM's run window). Purge (both categories — lst_rates `_migrated_*` markers AND the old dex_pool_state
+                                                                                                                                                                                                                                                                                                                                                              address-keyed leaves): independently re-verified complete, zero SAFE markers remain (only the irreducible
+                                                                                                                                                                                                                                                                                                                                                              FLAGGED floor — `FLAGGED_ROWCOUNT_SHORTFALL: 1287` + `FLAGGED_NO_SIBLINGS_NO_BACKUP: 977`, ZERO SAFE, an exact
+                                                                                                                                                                                                                                                                                                                                                              match to the corpus's known FLAGGED ceiling). Full evidence trail (VM names, spot-checks, preemption-recovery
+                                                                                                                                                                                                                                                                                                                                                              log) lives in that plan's own Progress Log — not duplicated here. Sibling issue doc
+                                                                                                                                                                                                                                                                                                                                                              `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` flipped `status: open` → `status:
+                                                                                                                                                                                                                                                                                                                                                              resolved` accordingly in this same commit.
 
 - [x] ✅ [DATA] P2. **19 glued-id rows (was 21) — ALL CONFIRMED PHANTOM 2026-08-01, folds into the `:401` P0 purge, NOT
       fixable by retry/rebuild.** Writer fix SHIPPED (`market-tick-data-service@f2e3ad41`/`70b9a81a`). The 9 ORCA/SOLANA
@@ -923,7 +923,7 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
 - **2026-07-30 (cicd worker, slot 16)**: this doc's `last_updated:` frontmatter field had been silently corrupted into a
   multi-date runaway YAML plain-scalar (root cause: `fix_frontmatter.py`'s `last_updated` auto-fill never stripped stale
   multiline-folded continuation lines — fixed in the same push, see
-  `plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`). Recovering the buried
+  `plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`). Recovering the buried
   note text here verbatim before the frontmatter cleanup, since it isn't duplicated elsewhere in this doc:
   _"AO-readiness pass: related: reachability (6 new docs), 2 stale line-number cross-refs -> content refs, defi.2
   resume-crons split (operator ruling, task_template.md finding P), write_defi_rows DoD, Split-notice table +2 rows, 2nd
@@ -951,3 +951,6 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   RECLASSIFY-eligible items; no stale-done items. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- swapped in the `build_canonical_instrument_id`
   source path (`canonical_id_builder.py`), the actual id-grammar target this doc's Canonical target section defines.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — 13 open items judgment/gated, re-verified live; no
+  new extractable work beyond batch7's prior extraction.

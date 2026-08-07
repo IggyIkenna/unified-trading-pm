@@ -58,7 +58,7 @@ related:
     /plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
     /plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
     /plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-28
@@ -84,10 +84,10 @@ source: >-
 context_scope:
   [
     /plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     market-tick-data-service/market_tick_data_service/scripts/_rebuild_tradfi_cf11.py,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
   ]
 ---
 
@@ -232,16 +232,17 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 ## Todos
 
 > **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** Todos 1 + 2 below are
-> already claimed VERBATIM as one combined todo in `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
-> ("Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden the script against
-> recurrence", whose `Source:` cites this doc by name). That batch doc is `assigned_vm: planning` but
-> **`status: draft`** — NOT ingested, NOT dispatched today. Flipping this doc's `assigned_vm` would dispatch a
-> duplicate, so the shared conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`
-> § 3) verdict is CONFLICT → citation fix only. Independently of that, todo 1 is a ~198K-row destructive manifest
-> mutation whose directly-analogous sibling (the 50,520-row retire-phase `--apply` in
-> `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop —
-> so this doc would stay NA on that ground even if the batch5 overlap did not exist. Live blocker = batch5's draft
-> status (operator item 5 in `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+> already claimed VERBATIM as one combined todo in
+> `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Migration/purge pass for CME+CBOE
+> `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden the script against recurrence", whose `Source:` cites
+> this doc by name). That batch doc is `assigned_vm: planning` but **`status: draft`** — NOT ingested, NOT dispatched
+> today. Flipping this doc's `assigned_vm` would dispatch a duplicate, so the shared conflict-check
+> (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
+> only. Independently of that, todo 1 is a ~198K-row destructive manifest mutation whose directly-analogous sibling (the
+> 50,520-row retire-phase `--apply` in `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a
+> standing operator-review hard stop — so this doc would stay NA on that ground even if the batch5 overlap did not
+> exist. Live blocker = batch5's draft status (operator item 5 in
+> `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
 >
 > **CITATION UPDATE (na-eligibility-audit 2026-08-02, tradfi tranche)**:
 > `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` has since flipped `status: draft` → `status: active` and its
@@ -285,9 +286,9 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
   unchanged.** Two independent reasons, either sufficient: (1) the shared conflict-check returned CONFLICT —
-  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts todos 1+2 verbatim as one combined
-  todo citing this doc as its `Source:`; (2) todo 1 is a destructive manifest mutation over up to ~198K CME + 2,489 CBOE
-  rows, and its directly-analogous sibling (the 50,520-row retire-phase `--apply` in
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts todos 1+2 verbatim as one
+  combined todo citing this doc as its `Source:`; (2) todo 1 is a destructive manifest mutation over up to ~198K CME +
+  2,489 CBOE rows, and its directly-analogous sibling (the 50,520-row retire-phase `--apply` in
   `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop.
   See the note added above the todos.
 
@@ -346,4 +347,10 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   unchanged.** All 3 open todos re-read end-to-end; count reconciled (3/3). Todo 1 stays operator-gated per the
   2026-07-30/07-31/08-01 entries above (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo 3
   remains conditionally-scoped ("if it is found to cause..."); todo 4 stays sequenced after todo 1. No content drift
+  since 2026-08-02 — only a context-scout `context_scope` touch since. Nothing to reclassify.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA, valid — re-verified, unchanged
+  (5th consecutive pass).** All 3 open todos re-read end-to-end; count reconciled (3/3). Todo 1 stays operator-gated per
+  the 2026-07-30/07-31/08-01/08-04 entries (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo
+  3 remains conditionally-scoped ("if it is found to cause..."); todo 4 stays sequenced after todo 1. No content drift
   since 2026-08-02 — only a context-scout `context_scope` touch since. Nothing to reclassify.

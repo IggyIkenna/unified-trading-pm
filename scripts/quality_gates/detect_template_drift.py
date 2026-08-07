@@ -28,11 +28,14 @@ quality-gates.sh checks:
 
 workflow-template parity checks (--workflows flag — runs ONLY this check, not the qg/prek ones):
 10. For every FLAT `.yml` template in scripts/workflow-templates/ (NOT `.yml.tmpl`, which is
-    substituted per-repo so can't byte-compare), each repo's `.github/workflows/<name>` must
-    byte-match the SSOT template. A present-but-different copy is an ERROR (someone hand-edited
-    a per-repo copy, or it rotted after a template change without re-rollout — the SSOT hole
-    that flat-copied workflows otherwise have NO guard for). A missing copy is a WARN (needs
-    `rollout-workflow-templates.sh`). A repo not checked out (CI, where siblings are absent) is
+    substituted per-repo so can't byte-compare — a handful of these `.yml`-named templates ALSO
+    carry a `{{RUNS_ON}}` placeholder for allowlist-driven runner selection, 2026-08-05; those
+    are detected by content, not extension, and skip byte-compare the same way), each repo's
+    `.github/workflows/<name>` must byte-match the SSOT template. A present-but-different copy is
+    an ERROR (someone hand-edited a per-repo copy, or it rotted after a template change without
+    re-rollout — the SSOT hole that flat-copied workflows otherwise have NO guard for). A missing
+    copy is a WARN (needs `rollout-workflow-templates.sh`). A repo not checked out (CI, where
+    siblings are absent) is
     a WARN — so the guard is a no-op in CI and a hard gate locally / on a full-workspace host.
 
 UI repos and repos without quality-gates.sh are skipped for QG checks. Workflow parity does NOT
@@ -149,6 +152,7 @@ def _repo_has_staging(repo_dir: Path) -> bool:
         return result.returncode == 0
     except (OSError, subprocess.SubprocessError):
         return False
+
 
 # Baselined ratchet (mirrors check_credential_ask_orphans.py): the workspace already carries
 # pre-existing workflow drift (templates that rotted before this guard existed). Block only NEW
@@ -428,8 +432,22 @@ def _check_workflows(
         return report
 
     repo_dir = workspace_root / repo_name
+    # 2026-08-05 (self_hosted_runner_public_repo_revert_2026_08_05.md): 7 previously-flat
+    # templates (main-backmerge-to-ldr, major-bump-issue-handler, request-major-bump,
+    # staging-backmerge-to-ldr, staging-lock-check, update-dependency-version,
+    # version-registry-notify) gained a {{RUNS_ON}} placeholder so runner placement can be
+    # allowlist-driven like quality-gates-v2/semver-agent already were — WITHOUT renaming
+    # them to `.yml.tmpl` (that would silently drop them from the *.yml glob below,
+    # including CRITICAL_PROMOTE_TEMPLATES' Gap-6 missing-copy check for
+    # main-backmerge-to-ldr.yml/staging-backmerge-to-ldr.yml, a real safety regression on
+    # the documented Tier-C runaway-promote guard). Detect substitution by content instead
+    # of extension: a template containing the placeholder can never byte-match any repo's
+    # rendered copy, so skip ONLY the byte-compare for those, while every other check
+    # (missing-copy, criticality) still applies exactly as before.
     for template in sorted(WORKFLOW_TEMPLATE_DIR.glob("*.yml")):
         name = template.name
+        template_bytes = template.read_bytes()
+        is_substituted = b"{{RUNS_ON}}" in template_bytes
         copy = gh_dir / name
         if not copy.exists():
             # Gap 6: a missing PROMOTE-LOOP-CRITICAL template on a drain-set repo is an ERROR, not
@@ -447,7 +465,9 @@ def _check_workflows(
                 detail += " (PROMOTE-LOOP-CRITICAL — its absence is the documented Tier-C runaway cause)"
             report.items.append(DriftItem(severity, f"workflow-missing-{name}", detail))
             continue
-        if copy.read_bytes() != template.read_bytes():
+        if is_substituted:
+            continue
+        if copy.read_bytes() != template_bytes:
             report.items.append(
                 DriftItem(
                     "error",

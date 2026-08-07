@@ -40,6 +40,12 @@ substitutions:
   _SERVICE_NAME: "REPLACE_ME"
   _REGISTRY_REPO: "REPLACE_ME"
   _PKG_NAME: "REPLACE_ME"
+  # Whether to actually run the in-image quality-gates step. Default false: QG is
+  # already enforced at quickmerge + the quality-gates-v2 promotion gate, and the
+  # in-image harness (unified-trading-pm/base-service.sh) is absent from the image,
+  # so re-running it inside the build is redundant+impossible (exit 127). Deploy
+  # triggers may set _RUN_INIMAGE_QG=true to keep the gate on feature/LDR builds.
+  _RUN_INIMAGE_QG: "false"
 
 steps:
   # ── Auth pre-check: fail fast if SA lacks AR access (before expensive build) ─
@@ -53,6 +59,9 @@ steps:
         echo "=== Auth pre-check ==="
         TOKEN=$$(gcloud auth print-access-token) || { echo "FAIL: No GCP token"; exit 1; }
         echo "GCP token OK"
+        # Persisted for the "build" step's gar_token BuildKit secret (that step's own image,
+        # gcr.io/cloud-builders/docker, has no gcloud CLI to mint its own token).
+        echo "$$TOKEN" > /workspace/.gar_token
         STATUS=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $$TOKEN" "https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/" || echo "000")
         if [ "$$STATUS" != "200" ] && [ "$$STATUS" != "404" ]; then
           echo "FAIL: Python AR HTTP $$STATUS"; exit 1
@@ -103,6 +112,30 @@ steps:
         echo "$$VERSION" > /workspace/VERSION
         echo "Building version $$VERSION (source: git-tag > pyproject > 0.0.0.dev0)"
     waitFor: ["-"]
+
+  # ── Fetch tags into /workspace for setuptools-scm (wheel step) ─────────────
+  # Unshallow so tagged commits are reachable for setuptools-scm (a plain tag-ref
+  # fetch on a shallow clone leaves git describe unable to compute the version).
+  # No-op on non-trigger builds (no /workspace/.git) — the wheel step reports any
+  # real error. Forward-ported 2026-08-06 from the fleet's per-repo copies.
+  - name: "gcr.io/cloud-builders/git"
+    id: "fetch-tags"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        if [ ! -d /workspace/.git ]; then
+          echo "fetch-tags: /workspace/.git absent (non-trigger build) — skipping (wheel step reports any real error)"
+          exit 0
+        fi
+        GH_PAT=$$(gcloud secrets versions access latest --secret=GH_PAT --project=$PROJECT_ID 2>/dev/null || echo "")
+        REMOTE="https://github.com/IggyIkenna/$REPO_NAME.git"
+        [ -n "$$GH_PAT" ] && REMOTE="https://$$GH_PAT@github.com/IggyIkenna/$REPO_NAME.git"
+        git -C /workspace fetch --unshallow --tags --force "$$REMOTE" "+refs/tags/*:refs/tags/*" 2>/dev/null \
+          || git -C /workspace fetch --tags --force "$$REMOTE" "+refs/tags/*:refs/tags/*"
+        echo "fetch-tags: $$(git -C /workspace tag --list 'v*' | wc -l | tr -d ' ') v* tags present"
+    waitFor: ["extract-version"]
 
   # ── STEP 1: Configure Docker authentication ───────────────────────────────
   - name: "gcr.io/cloud-builders/gcloud"
@@ -213,6 +246,15 @@ steps:
       - "-c"
       - |
         set -e
+        # _RUN_INIMAGE_QG default false (declared in substitutions): QG is already
+        # enforced at quickmerge + the quality-gates-v2 promotion gate, and the
+        # in-image harness (unified-trading-pm/base-service.sh) is absent from the
+        # image, so re-running it here is redundant+impossible (exit 127). Deploy
+        # triggers set _RUN_INIMAGE_QG=true to keep the gate on feature/LDR builds.
+        if [ "${_RUN_INIMAGE_QG}" != "true" ]; then
+          echo "quality-gates: skipped (_RUN_INIMAGE_QG=${_RUN_INIMAGE_QG}) — QG already enforced at quickmerge + promotion v2"
+          exit 0
+        fi
         VERSION=$(cat /workspace/VERSION 2>/dev/null || echo "$SHORT_SHA")
         echo "Running quality gates inside ${_SERVICE_NAME} image..."
         docker run --rm \
@@ -341,6 +383,12 @@ steps:
         echo "[global]
         extra-index-url = https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/" \
           > /root/.config/pip/pip.conf
+        # fetch-tags-fix: git for setuptools-scm
+        command -v git >/dev/null 2>&1 || { apt-get update -qq && apt-get install -y --no-install-recommends git; }
+        git config --global --add safe.directory /workspace || true
+        # hatch-vcs (source = "vcs"): pin the version extract-version resolved so the wheel
+        # build never depends on git describe inside this slim image.
+        export SETUPTOOLS_SCM_PRETEND_VERSION=$(cat /workspace/VERSION 2>/dev/null || echo "0.0.0.dev0")
         python -m build --wheel --outdir dist/
         python -m twine upload \
           --repository-url https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/ \

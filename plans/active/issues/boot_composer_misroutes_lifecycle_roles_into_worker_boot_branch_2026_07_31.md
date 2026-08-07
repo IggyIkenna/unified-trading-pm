@@ -54,8 +54,8 @@ context_scope:
     agent-orchestrator/server/prompts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/routes/slots_worker.py,
-    /agents/review.md,
     /agents/ag_closeout_auditor.md,
+    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
   ]
 ---
 
@@ -177,9 +177,18 @@ it. Reported by review, verified + corrected by main.
       composer fix. Pair with the existing `/api/backlog/{id}/reopen` correction path and the `no_plan_flip` hardening
       referenced in its docstring. Add a regression test: `/done` with empty sha on a task whose plan checkbox is
       unchecked must leave it `queued`.
-- [ ] [SCRIPT] P1. Extend the composer-guard fix (todo above) so its role classification covers **one-shot
+- [x] ✅ [SCRIPT] P1. Extend the composer-guard fix (todo above) so its role classification covers **one-shot
       lifecycle/audit roles** (`ag_closeout_auditor` and siblings), not just `{review, main, monitor}` — otherwise the
-      auditor data-loss variant persists after the review/main/monitor guard lands.
+      auditor data-loss variant persists after the review/main/monitor guard lands. — **SHIPPED
+      `agent-orchestrator@0a8ed16`** ("fix(prompts): plan_health-family one-shot dispatches skip generic /boot",
+      2026-08-02, ancestor-verified on `origin/live-defi-rollout`): `server/prompts.py:70-84`
+      `_ONE_SHOT_ESCALATION_ROLES` now contains `ag_closeout_auditor`, `na_eligibility_auditor`,
+      `context_scout_auditor`, `plan_reconciler`, `docs_reconciler`, `plan_health`, and `_compose()`'s one-shot branch
+      (`:194`) precedes the worker-`/boot` `elif` (`:214`). Landed via the sibling doc
+      `/plans/archive/issues/persistent_slot_tmux_session_hijacked_by_transient_plan_health_dispatch_2026_08_01.md`'s
+      todo 5, which is why this doc's own checkbox was never flipped — found by `/plan-reconcile ao` 2026-08-06. The
+      other two todos in this doc are confirmed genuinely still open (no `_REGISTER_POLL_ROLES` symbol exists;
+      `mark_done()` still has no empty-`sha` guard).
 
 # 2026-08-01 (ag_closeout_auditor, slot 12, dispatch agt-dd7b76, tranche=defi) — third occurrence, still unfixed, data-loss avoided this time
 
@@ -236,3 +245,9 @@ cefi-specific** — same defect now reproduced on a second tranche.
   as todo 6; the `/done` empty-sha data-integrity fix as todo 7) — same tranche-standing-NA convention as
   `fleet_git_health_ip_185...`'s marker today. `asset_group` now correctly `[ao]` (retagged 2026-08-04, no longer the
   flagged mistag).
+- **context-scout 2026-08-05**: re-scouted; swapped `/agents/review.md` for
+  `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md` (now the doc actually tracking the remaining 2 open
+  todos per the 2026-08-04 na-eligibility-audit marker above), 5 entries.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

@@ -104,7 +104,7 @@ isolation fixed on self-hosted runners.
 (digest-drift-sweep GHA workflow never dispatches → fleet Cloud Builds red) ·
 [issues/aws_codebuild_terraform_import_pending_2026_07_22.md](/plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md)
 (terraform import owed for AWS CodeBuild projects/webhooks) ·
-[issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md](/plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md)
+[issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md](/plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md)
 (`rollout-cloudbuild.py` template drift would regress fleet Cloud Build fixes) ·
 [archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md](/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md)
 (Cloud Build re-stamps mutable git-sha image tags on rebuild) ·
@@ -126,7 +126,7 @@ closed; the deploy SA's Secret Manager access scoped down.
 ## Track 3 — SIT gate / promotion-pipeline correctness · P1
 
 **Sources**:
-[issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md](/plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
+[issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md](/plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md)
 (SIT gate compares against a moving LDR tip, can block breaking promotes indefinitely) ·
 [issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md](/plans/archive/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md)
 (promotion-lag alert masks the real quickmerge provenance-block root cause) ·

@@ -121,7 +121,11 @@ context_scope:
       `_CEFI_VENUE_QUOTE_EXTENSIONS`, no defined target yet); BITGET-FUTURES fix half disposition — the
       `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 1 (candidate 11) already rolled up the BITGET-FUTURES
       catalogue entry, so that half is closed via `unified-trading-pm@1ea317100`.
-- [ ] [DATA] P1. Add a LIGHTER-ZKSYNC market-index → symbol map so the ~11,283 numeric-stem objects resolve.
+- [x] ✅ [DATA] P1. Add a LIGHTER-ZKSYNC market-index → symbol map so the ~11,283 numeric-stem objects resolve. **CLOSED
+      2026-08-06 (na-eligibility-audit)**: done 2026-07-28 per this doc's own Deferred-work table row 6 — the dry-run +
+      apply completed via the existing migration script, `already_canonical=12,908, would_rename=0,     would_merge=0`.
+      Code: `market-tick-data-service@feeb8a6e` (dtype fix in `do_merge()`). Evidence was already recorded in this file
+      but never reflected back onto this checkbox.
 - [x] ✅ [DATA] P2. Design the COMBO-in-perp-partition move for DERIBIT. **CLOSED 2026-08-04 (na-eligibility-audit)**:
       the design doc `/plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` exists and is described
       as ready — this checkbox's ask was the DESIGN only; the actual partition-move APPLY (15,119 rows) is a separate,
@@ -863,3 +867,13 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   deribit_combo_perpetual_partition_move issue + the cross-cutting codex doc (superseded here by the CeFi-specific
   blueprint), added the verify_cefi_canonical_4surface_2026_07_20.py source path (the migration's central verification
   tool, cited throughout).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, stale items — flipped 1 of 3 open checkboxes
+  to `[x]` this run: the LIGHTER-ZKSYNC market-index map (done 2026-07-28 per `market-tick-data-service@feeb8a6e`,
+  evidence already recorded later in this doc's own Deferred-work table but never reflected back onto the checkbox).
+  Independently re-verified the chain-drop dry-run blind-spot item is only PARTIALLY done — the `_DRYRUN_COLS` sub-fix
+  is confirmed (`instruments-service@1284606a`) but this doc's own "Recommended next" text still calls for re-running
+  the investigation and deciding a remediation approach, so that checkbox stays open (correcting a first read that would
+  have over-closed it). Doc stays NA overall — PACIFICA-SOLANA quarantine registration and the doc's live
+  migration-execution character (operator sign-off gates, an SSOT contradiction referred to the operator) remain genuine
+  judgment work.

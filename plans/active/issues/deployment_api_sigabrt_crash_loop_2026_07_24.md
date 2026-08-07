@@ -39,7 +39,7 @@ depends_on: []
 locked_by:
 context_scope:
   [
-    /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
+    /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md,
     /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
     deployment-api/gunicorn.conf.py,
@@ -711,9 +711,17 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       below to read the next occurrence's `peak_rss_delta_kib` lines and decide steps (2)/(3) from real data. (repo:
       deployment-api)
 
-- [ ] [REVIEW] P2. **NEW, opened 2026-08-01 (slot 8, backend_engineer) — once `deployment-api@130c3a2` (todo above)
-      reaches a live Cloud Run deploy of `uts-shared-deployment-api`, read the next `Container terminated on signal 9`
-      occurrence's preceding logs for the new
+- [x] ✅ [REVIEW] P2. **COMPLETED 2026-08-06 (slot-8, infra) — guard shipped per this todo's own prescription.** The
+      `130c3a2` instrumentation is live now (revisions since the 08-04 cutover) and the next SIGKILLs DID surface the
+      `memory-profile` lines: `repo_ci.get_overview` peaks 0.36-2.9 GiB/call (several occurrences on `00430-dcr`),
+      `health_overview.get_health_overview` ~2.6 GiB (one on `00441-5mv`) — several heavy handlers summing with no
+      single exclusive offender, so per this todo's step (3) ONE shared semaphore across the cockpit cluster was
+      shipped: `deployment-api@59fc391` (`utils/cockpit_build_guard.py`, asyncio.Semaphore(1)/worker +
+      `_COCKPIT_MAX_INFLIGHT=3` inflight shed → 503 + Retry-After) wired into `repo_ci.get_overview` +
+      `health_overview.get_health_overview`. Monitor the next `Container terminated on signal 9` rate on the
+      guard-carrying revision to judge effect. **Original ask (opened 2026-08-01, slot 8, backend_engineer) — once
+      `deployment-api@130c3a2` (todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api`, read the
+      next `Container terminated on signal 9` occurrence's preceding logs for the new
       `memory-profile <handler>: peak_rss_delta_kib=... elapsed_s=... peak_rss_kib=...` lines (WARNING-level above a
       20MiB delta, DEBUG below) and attribute the spike to a specific handler.** Verify the deploy via direct image
       extraction (not ancestry, per this doc's own 2026-07-25 methodology correction). If ONE handler's delta clearly
@@ -730,17 +738,52 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       BEFORE `130c3a2`'s `09:09:02Z` commit, so it structurally cannot carry the profiling code) — every revision built
       from `130c3a2` (`00408-xd2` through `00412-rqj`, all `Ready=True`) has 0% traffic. This is not an oversight: the
       companion tracker
-      `/plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` (status:
-      open) is the reason — the operator/main deliberately held 100% traffic on the warm `00374-4pd` instance pending
-      that doc's durable-close bar, so no fresh revision (130c3a2-carrying or not) is meant to take real traffic yet.
-      Confirmed via two independent Cloud Logging queries: (1) exactly ONE `"Container terminated on signal 9"` in the
-      last 2 days, at `2026-08-01T07:47:39Z` on `00374-4pd` — this PREDATES the `130c3a2` commit by ~1h21m, so it's a
-      pre-fix-era SIGKILL, not evidence about the new instrumentation; (2) a targeted `textPayload:"memory-profile"` /
+      `/plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`
+      (status: open) is the reason — the operator/main deliberately held 100% traffic on the warm `00374-4pd` instance
+      pending that doc's durable-close bar, so no fresh revision (130c3a2-carrying or not) is meant to take real traffic
+      yet. Confirmed via two independent Cloud Logging queries: (1) exactly ONE `"Container terminated on signal 9"` in
+      the last 2 days, at `2026-08-01T07:47:39Z` on `00374-4pd` — this PREDATES the `130c3a2` commit by ~1h21m, so it's
+      a pre-fix-era SIGKILL, not evidence about the new instrumentation; (2) a targeted `textPayload:"memory-profile"` /
       `jsonPayload.message:"memory-profile"` sweep of the last 2 days returns **zero rows** — the instrumentation has
       never fired in production because its code has never received a real request. This todo's own literal ask (read
       the next SIGKILL's memory-profile lines) has no data to read, and won't until the coldstart doc's cutover clears —
       not a new/separate blocker, just this todo's dependency made explicit so the next investigator doesn't re-derive
       it. No code shipped (pure verification). Leaving unchecked. (repo: deployment-api)
+
+- [x] ✅ [BACKEND] P2. **NEW, opened 2026-08-06 (slot-8, infra, on flip of the `[REVIEW] P2` above) — reduce the
+      single-call memory footprint of the cockpit rollup handlers, not just bound their concurrency.** The shared
+      cockpit-build guard (`deployment-api@59fc391`) prevents multi-GiB builds from STACKING, but a lone
+      `repo_ci.get_overview` still peaks 0.36-2.9 GiB and `health_overview.get_health_overview` ~2.6 GiB per call, and
+      per-worker RSS is monotonic (freed memory isn't returned to the OS until gunicorn recycles the worker at
+      `max_requests=1000`), so the 16384 MiB ceiling stays chronically near. Investigate WHERE the peaks come from —
+      candidate: `_overview_row`/`latest_workflow_run_with_jobs` retaining full per-repo GitHub workflow-run + jobs
+      JSON, and `load_manifest_view` materializing the whole registry — and trim/stream so a single call stays well
+      under ~1 GiB. Done-when: a fresh `repo_ci.get_overview` memory-profile delta is < ~1 GiB on a live deployment, OR
+      the dominant allocation is identified + trimmed with evidence. (repo: deployment-api) — **2026-08-07 (slot 14,
+      backend_engineer): dominant allocation IDENTIFIED + TRIMMED with live byte-size evidence — flipping on the OR
+      done-when branch.** Measured the actual payloads the overview retains (live `gh api`): the workspace-manifest.json
+      is only 78 KB (registry-materialization REFUTED as the GiB source), the GCP/AWS build paths return small formatted
+      dicts, and the total per-call GitHub JSON is ~10 MB — but the largest SINGLE retained payloads are the compare
+      responses (full file patches: 1.3 MB unified-trading-pm / 1.1 MB agent-orchestrator) and the pulls list (219 KB
+      PM), held in the 90 s `_response_cache` across the burst while only 3-5 fields per response are read. Shipped
+      `deployment-api@0050de6`: an optional `project=` callable on `gh_get_json` reduces each payload BEFORE it is
+      returned AND cached — `_project_compare` (compare_branches + diverged_content_lag), `_project_pulls` (pulls list +
+      per-PR detail), `_project_workflow_runs` (head_check_rollup) — cutting the retained per-response shape from up to
+      1.3 MB to a few KiB, behavior-neutral (same URL always fetched with the same projector; the read slices are
+      unchanged). 4 new unit tests, QG green (93 s, sentinel matches HEAD), shipped + verified on origin. Filed a
+      `[REVIEW]` P2 below to measure the next memory-profile delta.
+
+- [ ] [REVIEW] P2. **NEW, opened 2026-08-07 (slot 14, backend_engineer) — once `deployment-api@0050de6` (the
+      response-projection trim, todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api`, read the
+      next `repo_ci.get_overview` `memory-profile` line (from `130c3a2`'s `log_rss_delta` instrumentation) and confirm
+      the peak_rss_delta drops below the pre-fix 0.36-2.9 GiB band — the parent todo flipped on its IDENTIFIED + TRIMMED
+      branch; this monitors the measured effect.** The projection cuts the RETAINED GitHub bodies (compare 1.3 MB → ~2
+      KiB, pulls 219 KB → ~5 KiB) but does NOT bound the transient aiohttp parse or the sync-tile allocations (fleet
+      Compute census / BigQuery cost / alert ledger) that the same cockpit burst drives — so the post-fix single-call
+      delta is expected to be dominated by those, not GitHub JSON. If the delta is not materially lower, the next-ranked
+      lever is the sync-handler allocations (profile + trim the fleet census / cost / alerts tiles), not another
+      concurrency guard — the guard + projection already cover the stacking + retention mechanisms. (repo:
+      deployment-api)
 
 ## Progress Log
 
@@ -807,7 +850,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   _durability_ was over-read on a single lucky 4-sample window. Instead: the bar for treating this cold-start P0 as
   **durably** closed is raised to **N-consecutive fresh cold-starts over a multi-hour window spanning quiet periods,
   zero exit(0) failures**. Ongoing tracking stays in the companion finding-6 doc
-  (`/plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`, P2,
+  (`/plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`, P2,
   `assigned_vm: planning`, open) — that is the live tracker; this doc's checkboxes stay flipped with this recurrence
   noted. **Downstream gate:** any live-traffic cutover to a fresh revision (e.g.
   `bucket_iam_write_protection_per_tier-018` P2.2e) MUST NOT proceed on a "resolved" reading of this doc — the
@@ -826,3 +869,34 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   shipped — pure verification, cites the companion doc as the actual blocker to watch.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-06 (slot-8, infra, dispatched `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover-003`)**
+  — Live-verified the current state and shipped the OOM attribution + guard the doc's `[REVIEW] P2` todo had been
+  waiting for. (1) SIGABRT `Uncaught signal: 6` + cold-start `exit(0)` are BOTH silent since
+  `00428-tbl@2026-08-04T09:27Z` (3+ days), with 200 fresh cold-start probe successes : 0 failures across 2026-08-05..06
+  — the crash-loop/cold-start family is gone (mechanism: likely the same memory-pressure/resource-contention family now
+  mitigated; not re-litigating the old platform-side framing — the doc's own `on_starting`-vs-`preload_app` ordering
+  note (arbiter.py calls `self.app.wsgi()` at line 117 BEFORE `on_starting` at 138) means the earlier "failure is
+  upstream of gunicorn/exec" conclusion actually pointed at the preload import window, consistent with slow-heavy-start
+  under contention). (2) The STILL-LIVE incident is OOM/SIGKILL: 19 `Container terminated on signal 9` in 2 days on
+  current revisions (`00430-dcr`, `00438-7nq`, `00440-b2s`, `00441-5mv`, `00448-r9w`, `00451-r8k`) at 16431-17007 MiB vs
+  the 16384 limit. (3) The `130c3a2` instrumentation finally delivered attribution: `repo_ci.get_overview` 0.36-2.9
+  GiB/call, `health_overview` ~2.6 GiB — the 08-06T16:49:08Z `repo_ci` profile (366884 kib) landed 21s before that
+  revision OOM-killed. Shipped `deployment-api@59fc391` (shared cockpit-build guard, see flipped `[REVIEW] P2`) + filed
+  a fresh `[BACKEND] P2` follow-up for the single-call footprint reduction. No cloud-only guesses — all numbers from
+  live `gcloud logging read` / `revisions describe`. (repo: deployment-api)
+
+- **2026-08-07 (slot 14, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-030` (the `[BACKEND] P2`
+  cockpit-rollup single-call memory-footprint todo). Identified the dominant allocation with live byte-size evidence:
+  the workspace-manifest is only 78 KB (registry-materialization REFUTED as the GiB source), GCP/AWS build paths return
+  small formatted dicts, and the total per-call GitHub JSON is ~10 MB — but the compare responses (1.3 MB
+  unified-trading-pm / 1.1 MB agent-orchestrator, full file patches) and the pulls list (219 KB PM) dominate the
+  RETAINED payloads in the 90 s `_response_cache`, while each caller reads only 3-5 fields. Shipped
+  `deployment-api@0050de6` — an optional `project=` callable on `gh_get_json` that reduces each payload BEFORE it is
+  returned AND cached, wired into compare_branches / diverged_content_lag / pulls list+detail / head_check_rollup
+  (`_project_compare` / `_project_pulls` / `_project_workflow_runs`); 4 unit tests, QG green (93 s, sentinel matches
+  HEAD), SHA verified on origin via `merge-base --is-ancestor`. Flipped the checkbox on its OR done-when branch
+  (identified + trimmed with evidence) + filed a `[REVIEW]` P2 monitoring follow-up. **OOM directive ack**: ran no
+  un-bounded heavy processes on the shared host this session (QG is the standard bounded flow; host load ~3.0, no
+  concurrent QG) — no OOM event to record.

@@ -186,3 +186,7 @@ source:
 - **context-scout 2026-08-03**: re-verified (6 entries, unchanged) — all still resolve and cover the 3 open todos
   (escalation-route collision blocked on the now-active epic, the blocked-upstream-design UI item, and the l2_book
   re-test gate).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

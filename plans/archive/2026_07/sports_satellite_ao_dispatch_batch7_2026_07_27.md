@@ -178,7 +178,7 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       quality-gates.sh green; pre-existing `test_sports_bookmaker_league_coverage_exact.py` (6 cases) unaffected.
 
 - [x] ✅ [DIAG] P2. **DONE 2026-08-04 — `unified-trading-pm@09ce04535`** (issue doc:
-      `/plans/active/issues/sports_decision16_anomalies_investigation_2026_08_04.md`). Both anomalies root-caused
+      `/plans/archive/issues/sports_decision16_anomalies_investigation_2026_08_04.md`). Both anomalies root-caused
       (manifest + GCS + code-review evidence): Anomaly 1 (standings/teams day-partition scatter): the standings cache in
       `sports_reference_core.py` writes current-season data to every processing date (100% league+venue overlap between
       2020-06-06 and 2026-08-01, 383 identical pairs). Anomaly 2 (player_values cartesian-junk): the transfermarkt

@@ -34,7 +34,7 @@ on:
       wall_type:
         description:
           "merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure |
-          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap"
+          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked"
         required: true
         type: string
       context:
@@ -64,7 +64,7 @@ on:
       wall_type:
         description:
           "merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure |
-          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap"
+          main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked"
         required: true
         type: choice
         options:
@@ -79,6 +79,8 @@ on:
             plan_health,
             data_pipeline_failure,
             sit_retry_cap,
+            harness_lint,
+            provenance_blocked,
           ]
       context:
         description: "Free-text context for the worker"
@@ -147,9 +149,9 @@ jobs:
 
           # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
           case "$IN_WALL" in
-            merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint) ;;
+            merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked) ;;
             *)
-              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint)"
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | stuck_promotion_pr | ldr_qg_failure | ldr_main_qg_failure | main_ci_red | plan_health | data_pipeline_failure | sit_retry_cap | harness_lint | provenance_blocked)"
               exit 1
               ;;
           esac

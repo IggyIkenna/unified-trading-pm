@@ -485,6 +485,13 @@ cmd_install() {
   install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/glue-runner-run.sh"   "${RUNNER_BASE}/glue-runner-run.sh"
   install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/job-cleanup.sh"       "${RUNNER_BASE}/job-cleanup.sh"
   install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/refresh-slot-repo.sh" "${RUNNER_BASE}/refresh-slot-repo.sh"
+  # Consumed by python-quality-gates-v2.yml's qg-slices checkout step (repo-clone I/O
+  # reduction, ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — hardlink-copies the
+  # slot's own mirror (this same RUNNER_BASE/repo, refreshed by refresh-slot-repo.sh above)
+  # instead of a cold network clone. A caller whose runner doesn't have this file (not yet
+  # rolled out here, or a pool provisioned before this line existed) safely falls back to a
+  # plain clone, so this install is additive, never load-bearing for existing pools.
+  install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/fast-checkout.sh"     "${RUNNER_BASE}/fast-checkout.sh"
 
   # 5) env file (0600, root). On the SECRET path GH_TOKEN is deliberately ABSENT: the wrapper resolves
   # it per start via ADC, so this file holds a secret NAME and leaks nothing if it is copied, backed

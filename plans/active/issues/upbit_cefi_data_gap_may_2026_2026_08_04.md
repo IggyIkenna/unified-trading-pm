@@ -31,6 +31,13 @@ priority: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    deployment-service/deployment_service/calculators/shard_distribution.py,
+    deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
+    /codex/02-data/mvp-scope-canonical.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # UPBIT CeFi data gap — zero captured objects since 2026-05-25
@@ -109,16 +116,24 @@ Neither explains the May-25+ gap.
       Launcher config correctly includes UPBIT (`VENUES`, years 2022-2026, heavy group). **Verdict: code-level filter
       blocks all new VMs from scheduling UPBIT; the transition was a SPOT preemption of the last pre-filter VM.** —
       deployment-service@`3b635b9`, market-tick-data-service@N/A
-- [x] ✅ [DATA] P1. **Restore UPBIT backfill — operator-gated on Tardis full-access API key.** Tardis HAS the data
-      (confirmed via API by both slot-6 and slot-15), so restoration is the correct path (not descope). The fix is to
-      create the `tardis-api-key-full` secret in GCP Secret Manager (`central-element-323112`) with a Tardis full-access
-      API key. Once the secret exists, `_get_tardis_access_mode()` auto-detects `full_access` mode, and UPBIT (along
-      with BINANCE-SPOT, COINBASE-SPOT) is included in the next backfill VM launch — no code change needed.
-      **Alternative**: set the env/config override `TARDIS_ACCESS_MODE=full_access` to bypass the secret check. **Launch
-      scope** (slot-15):
+- [ ] [DATA][BLOCKED-CREDENTIALS] P1. **Restore UPBIT backfill — operator-gated on Tardis full-access API key.**
+      **REOPENED 2026-08-06** (BLK-0e7e0794, operator-answered): this was marked `[x]` while its own body is an
+      `[OPERATOR]` action plan, not a completion, and its evidence citation was the literal unfilled placeholder
+      `unified-trading-pm@<pending-commit>`. No Progress Log entry shows the secret being created or data resuming, and
+      UPBIT still has ZERO captured objects since 2026-05-25 (73 days) while being a codex-MVP venue. Per
+      `/codex/02-data/data-pipeline-correctness-hard-rule.md` a checked box must mean the work happened; per
+      `/codex/02-data/external-data-always-available-rule.md` this is a credential ask, NOT a descope. It stays open and
+      `BLOCKED-CREDENTIALS` until the secret exists and ≥3 recent days of UPBIT objects are verified in GCS. Original
+      body follows unchanged. Tardis HAS the data (confirmed via API by both slot-6 and slot-15), so restoration is the
+      correct path (not descope). The fix is to create the `tardis-api-key-full` secret in GCP Secret Manager
+      (`central-element-323112`) with a Tardis full-access API key. Once the secret exists, `_get_tardis_access_mode()`
+      auto-detects `full_access` mode, and UPBIT (along with BINANCE-SPOT, COINBASE-SPOT) is included in the next
+      backfill VM launch — no code change needed. **Alternative**: set the env/config override
+      `TARDIS_ACCESS_MODE=full_access` to bypass the secret check. **Launch scope** (slot-15):
       `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash     launch-cefi-sharded-backfill.sh`.
       **[OPERATOR] action**: obtain Tardis full-access API key and create the secret (or set override). After operator
-      action, relaunch and verify ≥3 recent days of objects in GCS. — unified-trading-pm@<pending-commit>
+      action, relaunch and verify ≥3 recent days of objects in GCS. (No evidence citation: the todo is OPEN — the
+      previous `unified-trading-pm@<pending-commit>` placeholder was removed with the 2026-08-06 reopen.)
 
 ## Progress Log
 
@@ -175,3 +190,5 @@ and complementary: slot-15 identified the transition trigger (SPOT preemption), 
 `tardis-api-key-full` secret** (or set `TARDIS_ACCESS_MODE=full_access` override), then relaunch:
 `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh`.
 **[OPERATOR] action**: obtain Tardis full-access API key and create the secret.
+
+- **context-scout 2026-08-06**: populated context_scope (4 entries).

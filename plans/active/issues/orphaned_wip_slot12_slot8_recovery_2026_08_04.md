@@ -41,6 +41,12 @@ source:
 drift_direction: advance-process
 estimate_class: refactor
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+  ]
 ---
 
 # Orphaned worktree WIP (slot-12 x3 + slot-8 bd0e231f) — mechanical worker rescue
@@ -86,7 +92,13 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       it MUST get a fresh `bash scripts/quality-gates.sh` green run against the reconciled commit (that IS the missing
       `.qg_last_passed_sha` sentinel), then quickmerge. Verify it's a real orphan first
       (`git merge-base --is-ancestor     bd0e231f origin/live-defi-rollout` → not-ancestor) before landing. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — **MOOT — already covered by `market-tick-data-service@b0909a5e`** (ancestor-verified
+      on `origin/live-defi-rollout`; `bd0e231f` confirmed NOT an ancestor). Both commits touch the IDENTICAL 2 files,
+      fix the IDENTICAL root cause in the same function (per-group manifest write loop), by the IDENTICAL technique
+      (mirror `_lst_rates_write._write_single_lst_group`'s per-instrument grain), and
+      `git show origin/live-defi-rollout:market_tick_data_service/cli/handlers/vault_share_price_handler.py` carries the
+      per-shard `instrument_id` fix citing the same issue doc. Same reasoning as this doc's already-closed todo 1
+      (`b411374c1`, ruled moot on outcome-defined done-when) — found by `/plan-reconcile ao` 2026-08-06.
 - [ ] [BACKEND] P3. Rescue slot-4's orphaned `market-data-processing-service` throttle fix `~036c568` (proactive GCS-429
       avoidance) — a small untracked improvement that never landed; only the earlier crash-prevention `db055ba` is on
       origin, so crash risk is already mitigated and this is genuinely low-priority (hence P3). Review agt-8fee2f
@@ -106,7 +118,10 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       SHA) is therefore already MET; slot-11's orphan `b411374c1` is a redundant duplicate, do NOT recover/rebase it.
       This is exactly why the todo was written outcome-defined rather than SHA-brittle. — Ensure slot-11's
       vault_share_price fix lands on `origin/live-defi-rollout`. Review saw it committed cleanly as
-      `market-tick-data-service@b411374c1` (Quickmerge trailer; real+tested fix for
+      `market-tick-data-service@b411374c1f302ac04bf2b05ccab8eadac5176b5e` (full sha — object verified present in the
+      local clone as a real commit, "fix(defi): vault_share_price manifest per-instrument grain with instrument_id", but
+      confirmed NOT an ancestor of `origin/live-defi-rollout` — this citation documents what slot-11 committed locally,
+      not a landed change; Quickmerge trailer; real+tested fix for
       `vault_share_price_handler_manifest_missing_instrument_id_2026_07_31` — per-instrument instrument_id now recorded
       per shard instead of one null-id aggregate call), but slot 11 died a 2nd time before Pass-1 QG finished and the
       Part-B 900s ahead-commit age guard correctly declined to auto-push the half-verified commit. As of main's check
@@ -153,3 +168,7 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   convention, batch6 itself stays `assigned_vm: NA` even for cleared-eligible content (see
   `fleet_git_health_ip_185...`'s marker today for the citation). Not reclassified — would create a competing/duplicate
   dispatch claim against batch6 once activated.
+- **context-scout 2026-08-06**: populated context_scope (3 entries).
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

@@ -109,6 +109,9 @@ specific to any one task.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — read-only audit first + ownership/purpose
+  investigation of unknown dirs before any cleanup; judgment/operator-gated.
+
 - 2026-07-26 (slot 2): discovered mid-task via a `git push` ENOSPC output-capture failure (the actual push succeeded,
   confirmed via `ahead=0`). Freed 159M of my own regenerable scratchpad content. Identified + liveness-verified 3 dead
   scratch dirs (~2.47GB). Recursive-delete attempt correctly blocked by `block_destructive_commands.py`; escalated via
@@ -348,3 +351,4 @@ specific to any one task.
   action needed.
 
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — still accurate).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

@@ -72,6 +72,13 @@ AGENT_LIFECYCLE = frozenset({"persistent", "one_shot", "scheduled"})
 # (sonnet-5) is for harder/judgment-heavy roles, escalation, and CI. Absent on a
 # sonnet role == "light". Meaningless (and left unvalidated) on opus/haiku/fable roles.
 AGENT_SONNET_VARIANT = frozenset({"light", "default"})
+# Plan-level reasoning-effort override — mirrors agent-orchestrator's
+# server/model_tier.py EFFORT_LADDER verbatim (ground truth per this workspace's
+# CLAUDE.md § Model tier). `thinking_tier` on a plan reuses AGENT_THINKING above —
+# same vocabulary as an agent-role's thinking field, and
+# regen_backlog_from_plan._parse_frontmatter_thinking_tier accepts exactly that set
+# (max/high/medium/mechanical/off/none) for a plan's `thinking_tier:` too.
+PLAN_EFFORT = frozenset({"low", "medium", "high", "xhigh", "max"})
 
 STATUS_BY_TYPE: dict[str, frozenset[str] | None] = {
     "plan": frozenset({"draft", "active", "blocked", "paused", "complete", "superseded", "cancelled"}),
@@ -143,6 +150,11 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("source", Req.O, "scalar"),
         FieldSpec("assigned_role", Req.E, "registry", registry="role"),
         FieldSpec("context_scope", Req.E, "free_list"),
+        # Reasoning-effort override (elective — most plans rely on assigned_role's
+        # derived tier, or the todo-count fallback, and declare neither of these).
+        # See PLAN_FORMAT.md's frontmatter block for the full derivation order.
+        FieldSpec("effort", Req.E, "enum", PLAN_EFFORT),
+        FieldSpec("thinking_tier", Req.E, "enum", AGENT_THINKING),
     ],
     "epic": [
         FieldSpec("name", Req.R, "scalar"),
@@ -403,7 +415,7 @@ def _validate_value(spec: FieldSpec, v: object, reg: Registries, doc_type: str) 
         # Full-string match, not a prefix check (2026-07-14, fix_2026_07_30_prek_patch_cache_docspec_date_gap):
         # the OLD prefix-only check (len>=10 + dash positions) only inspected the first 10 chars, so a
         # garbled runaway value like `2026-06-27 "2026-07-30"` — the exact corruption signature from
-        # plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md —
+        # plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md —
         # started with something date-shaped and sailed through undetected, landing corrupted content on
         # origin twice. A plain unquoted YAML date auto-parses to datetime.date, whose str() is always a
         # clean 10-char ISO date, so this tightening does not affect any legitimately-dated doc.

@@ -282,3 +282,16 @@ its own touched subset piecemeal.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped the honest-absence codex doc and the
   now-superseded dedup script (Finding 1 fully resolved), added the 2025-cell root-cause census script since the sole
   remaining open item (the P3 manifest-reconciliation todo) builds directly on it.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Execute the actual --apply-prod --confirm-prod-write pass of
+      scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py (market-tick-data-service@25c7a3f2) over
+      the 88 2025-era + ~1,210 2018-2020-era PLAYER_STATS captured-without-GCS cells (relabel captured->attempted_failed
+      with the recorded distinct error_reasons), then verify the manifest — decision made + script shipped, only the
+      prod apply remains.
+
+> **2026-08-06 archive-candidate audit**: Progress Log 2026-08-05 (slot-16): P3 reconciliation 'SCRIPT SHIPPED
+> (market-tick-data-service@25c7a3f2)... Actual `--apply-prod --confirm-prod-write` execution pending — the script is
+> ready' — the todo was flipped `[x]` while the actual prod manifest mutation is still unexecuted open work.

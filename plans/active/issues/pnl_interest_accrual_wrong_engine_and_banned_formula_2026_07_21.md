@@ -800,3 +800,14 @@ code.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
   `strategy-service/strategy_service/engine/backtest/benchmark_fills.py`, the file that computes and currently discards
   the entry-spot price the still-open Option B todo needs to persist for the true-native-return metric.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — re-confirmed independently,
+  no content change since 2026-08-03 (only a context-scout metadata touch). Corroborated by 3 independent sources total:
+  this doc's own 2026-08-01/08-03 audits PLUS an ACTIVE `assigned_vm: planning` plan
+  (`defi_satellite_ao_ dispatch_batch6_2026_07_30.md`) that explicitly names this exact doc+item under its own
+  non-batchable/human-only section (money-path, needs 3-lens review + explicit go-ahead before dispatch). Sole open
+  checkbox (Option B: FX-noise-isolated native-staking-return metric) remains judgment-sensitive HOW-to-build-safely
+  work on live client NAV — the WHAT is operator-ruled but the HOW still needs the same money-path review every prior
+  accrual-formula leg in this doc required. Incidental, not actioned: 2 untracked prose-only follow-on items (wire
+  `ShareClassFxMatrix` to a real rate feed; un-orphan `convert_settlement_to_share_class`) — would also land NA if
+  tracked given the same client-facing-NAV sensitivity. Doc stays `assigned_vm: NA`.

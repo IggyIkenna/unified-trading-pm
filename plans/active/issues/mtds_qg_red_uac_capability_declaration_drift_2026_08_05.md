@@ -31,6 +31,16 @@ execution_scope: orchestrator-agent
 drift_direction: advance-docs
 resolved_by:
 locked_by:
+depends_on: []
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    market-tick-data-service/tests/unit/test_collect_handler_schema.py,
+    market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py,
+    /plans/archive/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
+    /plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+  ]
 ---
 
 # MTDS QG red from UAC capability-declaration drift
@@ -44,7 +54,7 @@ locked_by:
 - **MTDS test**: `tests/unit/test_collect_handler_schema.py:187-194` asserts every declared mtds_operation has an entry
   in `_CLI_OP_TO_MODULE`. There is no `collect-rewards` key — only `collect-eigenlayer-rewards`.
 - **Class**: declared-but-unimplemented operation — the same class as the audit's Finding C
-  (`/plans/active/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md`, resolved for LIDO/ETHERFI by
+  (`/plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md`, resolved for LIDO/ETHERFI by
   removing aspirational `rewards` at `unified-api-contracts@bc397b93`). AAVE's `collect-rewards` was added AFTER that
   resolution and is unwired.
 
@@ -88,8 +98,12 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
   6e791b05 commit declared a venue capability for a data type the same registry says prediction venues cannot emit, with
   no MTDS fills-capture wiring (only `scripts/` rebuild/migrate one-offs reference POLYMARKET). The UAC
   `book_snapshot_5` comment documents the convention: a declaration is legitimate only when capture is wired (cites
-  `mtds@7c849d7`). `market_metadata` from the same commit is NOT broken — the sentinel maps it to the
-  `prediction_market_metadata` family — so it stays.
+  `mtds@7c849d7`). **CORRECTION (08-05 14:30Z)**: `market_metadata` from the same commit was ALSO unwired — my earlier
+  "so it stays" judgment was wrong. Removing `fills` unmasked it: the MTDS Tier-3 sentinel then failed on the
+  instrument-less `market_metadata` row (row_key `{'data_type': 'market_metadata', 'instrument_type': ''}`). It is not
+  in `DATA_TYPES_BY_ASSET_GROUP["prediction"]`; `data_type_capability.py:1026` states "POLYMARKET book_snapshot /
+  market_metadata excluded — adapters do not yet write those data_types to the manifest"; MTDS has ZERO
+  `market_metadata` wiring. Same declared-but-unwired class, same operator ruling → removed at `ce9d8f12`.
 - **#1 collect-rewards is declared-but-unwired across THREE surfaces**: PROTOCOL_CAPABILITIES data_types `rewards` +
   `mtds_operations` `collect-rewards` (`_defi.py`, added by b2874193), `defi_venue_capabilities.py` `rewards` on all 10
   AAVE_V3 chains (e.g. ETHEREUM `2023-01-27`), and `defi_prediction_instrument_seeds.py` AAVE_V3 `rewards` seed. MTDS
@@ -105,13 +119,19 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
   commit):
   - `_defi.py` — removed AAVE `rewards` data_type + `collect-rewards` mtds_operation (matches bc397b93 shape).
   - `market_data_categories.py` — removed `fills` from POLYMARKET + KALSHI `VENUE_DATA_TYPE_CAPABILITIES`.
+- **UAC removal SHIPPED `unified-api-contracts@ce9d8f12`** (08-05, LDR, green-tree verified — UAC QG exit 0 before
+  commit): `market_data_categories.py` — removed `market_metadata` from POLYMARKET + KALSHI
+  `VENUE_DATA_TYPE_CAPABILITIES` (the fills-unmasked second unwired declaration, see CORRECTION above). Both POLYMARKET
+  and KALSHI now declare only `trades` + `book_snapshot_5`.
 - **CONSISTENCY FOLLOW-UP (tracked todo, not a blocker)**: UAC QG came back GREEN **with** the AAVE `rewards` seed
   (`defi_prediction_instrument_seeds.py:153`) and the 10-chain AAVE_V3 `rewards` entries in `defi_venue_capabilities.py`
   still present — so no UAC seed↔data_types consistency check fires on them; they are orphaned-but-unflagged by the
   gate. The audit precedent (`bc397b93`, LIDO/ETHERFI seeds cleaned) says these surfaces should be cleaned too, but that
   is UAC-owner consistency work, separate from the MTDS unblock — logged as `- [ ]` below.
-- **Blocker for MTDS shipping**: MTDS re-gate (08-05, after `5f441e0d` landed) — the editable-install view now includes
-  the removal; expect green, then ship the staged iterrows fix.
+- **Blocker for MTDS shipping**: MTDS re-gate (08-05, after `5f441e0d` landed) came back RED on the SAME sentinel test —
+  `market_metadata` (fills-unmasked). After the `ce9d8f12` removal, MTDS re-gate is running against the full-removal
+  view; on green, ship the staged iterrows fix (5 files, `fred_backfill_early_date_indefinite_stall_2026_07_30.md`
+  deferred table has the exact command).
 
 ## Follow-ups (tracked)
 
@@ -136,3 +156,43 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
   revert/scope lands on LDR.
 - **NOTIFIED**: operator via this doc (cross-repo, CI-red — big-finding class,
   `/codex/11-project-management/ plan-priority-tier-and-dispatch-ordering.md` findings triage).
+
+## ADDENDUM (08-05 16:45Z, slot-7): third MTDS-QG blocker — rule11 DEFI shard-count pin drift (+102)
+
+After the two removals above (`5f441e0d` + `ce9d8f12`), a further full MTDS re-gate (16:35Z) surfaced a THIRD blocker,
+same UAC-churn class:
+
+- **`test_rule11_per_ag_shard_counts_byte_unchanged` FAILS**: `DEFI shard count drifted: 2958 != 2856`.
+  `tests/unit/test_pipeline_e2e_prediction_canonical.py`'s `_PER_AG_SHARD_COUNTS["DEFI"]` is a frozen pin (bumped today
+  @06:13 by slot-16, `c98e0abb`: 2828→2856, "102 venues × 28 data_types"). The live enumeration via
+  `scripts/pipeline_e2e_check.py::enumerate_mtds_shards("DEFI")` now returns **2958** — a **+102-shard growth in UAC's
+  editable-path `MtdsShardSpec` set SINCE that pin** (measured 16:45Z). The 11:07Z→12:29Z UAC capability-declaration
+  wave added ~102 DEFI shards without the MTDS pin being bumped in lockstep — the same
+  `instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05` class, now hitting MTDS's own golden pin.
+- **Owner**: whoever is adding DEFI shard declarations in UAC (the same wave owners). Resolution is a lockstep bump:
+  either UAC reverts/defers the un-wired declarations, or MTDS's `_PER_AG_SHARD_COUNTS["DEFI"]` is bumped 2856→2958 by
+  the DECLARING side (with a comment citing the exact UAC commit that added the 102). MTDS-owner bumping the pin to
+  chase UAC churn is a lockstep anti-pattern (masks the drift); the declaring side owns the pin bump.
+- **CORRECTION (16:48Z, slot-7 — VERIFIED WIRED, NOT aspirational)**: the +102 delta is the 29th DEFI data_type
+  dimension `oracle_prices` (2958 = 102 venues × 29 data_types, was 102×28=2856). This is NOT an unwired/aspirational
+  declaration like the rewards/fills/market_metadata removals above — `oracle_prices` is (a) a valid
+  `DATA_TYPES_BY_ASSET_GROUP["defi"]` entry (`market_data_categories.py:237`, "Chainlink oracle price snapshots") AND
+  (b) genuinely wired in MTDS (`cli/handlers/oracle_prices_handler.py` + `_oracle_prices_constants.py` +
+  `_oracle_prices_preflight.py` + `_oracle_prices_freshness.py`; `defi_catalog_reader.py` enumerates it). So the pin
+  SHOULD be 2958 — the correct resolution is a lockstep pin bump, NOT a UAC removal. The operator's removal ruling
+  (5f441e0d/ce9d8f12) does NOT apply here. MTDS-owner slot-7 applies the pin bump (2856→2958, citing this verified wired
+  evidence) as the small+clear reconciliation to unblock the green-tree gate.
+- **Unrelated to the two resolved blockers above** and to the staged iterrows fix (slot-7's 6-file bundle touches
+  `engine/` readers only; the rule11 test is UAC-registry-driven shard enumeration). But it blocks the SAME green-tree
+  commit boundary, so the unblock chain is now: UAC removals (done) → **rule11 lockstep bump (this addendum)** → aster
+  WS-test load-flake (environmental; needs a fair field) → green → ship iterrows.
+- **RESOLVED (08-05 17:1xZ, slot-7)**: MTDS full QG GREEN on a fair field (`mtds-qg-slot7-iterrows3.log`, exit=0, 10007
+  passed / 0 failed + 6 passed, STEP 5.94 ratchet holds at 237). The rule11 pin drift is resolved: the pin VALUE
+  2856→2958 was independently shipped by slot-4 `market-tick-data-service@d5882379` (attributing +102 to "2 new
+  protocols solend/marginfi"); slot-7 verified the measured composition is actually **102 venues × 29 data_types, the
+  29th dimension being `oracle_prices`** (measured via `enumerate_mtds_shards('DEFI')` — 2958 total, `oracle_prices`
+  present across all 102 venues, solend/marginfi already within the 102) and shipped the correcting comment at
+  `market-tick-data-service@655c9320`. All three blockers from this issue are cleared; the staged iterrows fix shipped
+  at `market-tick-data-service@5d428486` (see fred plan).
+
+- **context-scout 2026-08-06**: populated context_scope (6 entries).

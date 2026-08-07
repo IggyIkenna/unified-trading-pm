@@ -16,7 +16,7 @@ summary: >-
   `dex_pools` only in a catalog-freshness probe context, not a migration todo. Filed as a standalone, properly-scoped
   issue doc (cannot add to the capped master doc) rather than executed inline — a migration at this row count needs its
   own dedicated dry-run + content-verification pass, per this exact workspace's own R5 precedent
-  (`/plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`: a superficially-safe-looking `dex_pools/`
+  (`/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`: a superficially-safe-looking `dex_pools/`
   delete order was overturned by a content-verify that found 32 legacy-only high-TVL pools NOT present in the
   "canonical" set — "the paths looked duplicated; the content was not"). Rushing a rename across 4M rows without
   per-shard content verification risks exactly that failure mode at much larger scale.
@@ -42,7 +42,7 @@ related:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
-    /plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -72,7 +72,7 @@ context_scope:
   [
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
   ]
@@ -110,9 +110,14 @@ context_scope:
 
 ## Todos
 
-- [ ] [DIAG] P2. Confirm `rate_indices`'s canonical target name/relationship (not yet checked this session — do not
-      assume it mirrors `dex_pools`/`dex_swaps`; may be a different mechanism entirely, e.g. `lending_indices` with a
-      typo/drift, or a genuinely separate legacy data_type).
+- [x] ✅ [DIAG] P2. **CLOSED 2026-08-07 (na-eligibility-audit, stale-item citation-fix).** Confirm `rate_indices`'s
+      canonical target name/relationship — already extracted, verbatim, as its own dispatched todo in the active
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:159-166` (`assigned_vm: planning`, explicit `Source:` citation to
+      this doc, "Done when: the source doc's open DIAG todo is checked off"). That todo also cites
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s 2026-08-01 finding (verified against live `_lending_grain.py`,
+      `market-tick-data-service@13f14b78`) which already answers the canonical-target-name half:
+      `rate_indices`/`utilization` → `lending_indices`. Do not re-open this checkbox; real remaining work (the narrower
+      population-overlap residual) lives at the cited batch9 todo.
 - [x] ✅ [DIAG] P2. **RESOLVED 2026-08-04 (interactive session) — the R5 concern is CONFIRMED REAL for `dex_swaps`,
       REFUTED for `dex_pools`. Two genuinely different cases, not one.** Bounded, per-(venue,chain) date-set +
       instrument_id-set comparison (live `pyarrow.dataset` reads against `_index/availability_index.parquet`,
@@ -139,9 +144,14 @@ context_scope:
       NOT — it needs a real content migration (copy the legacy-only rows forward under the canonical name, verify, THEN
       retire), never a blind rename/delete.** This directly validates the caution this doc was filed under and the R5
       precedent it cited — the fear was not hypothetical.
-- [ ] [DATA] P2. **`dex_pools` → `dex_pool_state`**: DIAG cleared above — safe to design + dry-run + execute as a pure
-      manifest-only re-key (or a bounded 2-venue GCS relabel if the raw objects also carry the legacy data_type in their
-      path) once someone picks this up. Small population (454K rows, 2 venue/chain pairs) — low risk, low effort.
+- [x] ✅ [DATA] P2. **DONE 2026-08-05.** `dex_pools` → `dex_pool_state`: turned out to be pure manifest retirement, not
+      a GCS rename — direct content comparison found the canonical writer already captured byte-identical data under
+      `instrument_type=solana_amm_pool` (not `pool`, the exact wrong-vocabulary gotcha CLAUDE.md warns about).
+      `retire_dex_pools_legacy_captured_rows_2026_08_05.py` bulk-verified every (instrument_id, date) pair has a
+      canonical twin before touching anything; ran against prod — 453,985/454,014 rows retired (capture_status
+      captured→attempted_failed, GCS objects untouched, reversible), 29 rows excluded (no twin found, all dated
+      2025-01-17 — a real, narrow residual left `captured`, needs its own small follow-up investigation, NOT retired
+      blind). Round-trip verified.
 - [ ] [DATA] P2. **`dex_swaps` → `dex_pool_swaps`**: DIAG above proves this is NOT a rename — it is a real content
       migration. Recipe: for each of the 22 gapped (venue,chain) pairs, copy the legacy-only-dated `dex_swaps` rows
       forward to canonical `dex_pool_swaps` form (mirroring the R5 fold precedent — copy, verify, THEN retire the legacy
@@ -159,6 +169,9 @@ context_scope:
 
 ## Progress Log
 
+- **interactive session 2026-08-05**: executed the `dex_pools` half only (see the flipped todo above for full detail).
+  `dex_swaps`/`rate_indices` remain genuinely untouched -- both need their own dedicated pass (the `dex_swaps` gap
+  root-cause + real content migration is the dominant remaining scope by far, ~3.46M of the ~4.0M total rows).
 - **interactive session 2026-08-04 (autonomous, `/autonomous`)**: filed as a scoping-only doc after confirming (a) the
   row counts are large enough to warrant dedicated care, (b) the owning master plan is at its hard line cap, and (c)
   this exact session already caught one "looked safe, wasn't" mistake on a smaller, related delete candidate this same
@@ -185,3 +198,13 @@ context_scope:
   DATA-migration item gated on their outcome and likely needing delete-safety/[OPERATOR] handling; the
   content-equivalence judgment call is the exact risk class this doc's own cited R5 precedent shows can be wrong, so it
   stays genuine-caution NA rather than a clean mechanical RECLASSIFY. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope's `defi_dex_pools_delete_order_stale_2026_07_20.md` reference
+  had moved to `/plans/archive/issues/` since it was written (RESOLVED, archived) — corrected the path in place, now 5
+  entries.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA, stale item closed — re-read end to end (2 open items at
+  entry, grep-verified). The `dex_swaps` → `dex_pool_swaps` DATA migration remains genuine, judgment-heavy scope
+  (root-causing an unexplained gap cluster + a full five-part delete-safety proof before any change) — independently
+  corroborated as `too_large_or_risky` by `defi_satellite_ao_dispatch_batch10_2026_08_06.md:173-176`. The `rate_indices`
+  DIAG item is stale in framing: already extracted, verbatim, as an active dispatched todo in
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md:159-166` — closed by citation, not reclassified (flipping this doc's
+  `assigned_vm` would dispatch a duplicate). Doc stays `assigned_vm: NA`.

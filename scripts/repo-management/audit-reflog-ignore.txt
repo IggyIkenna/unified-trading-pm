@@ -104,3 +104,12 @@ deployment-ui:6903b90
 #     market-data-tick-prediction kind). No unrecoverable work discarded.
 agent-orchestrator:cc89557
 e2e-testing:53bbd95
+
+# Intentional operator-run reset to origin/live-defi-rollout — instruments-service checkout repair
+# 2026-08-06. The local clone's live-defi-rollout branch had been fully rebased at some earlier
+# point (every one of ~3699 commits got a new hash), leaving zero common ancestor with origin
+# (git merge-base found none). Nothing unique was discarded — the rewritten local commits were the
+# same logical history already present on origin under different hashes; the only real local diff
+# was a trivial one-line pipeline_e2e_check.py edit, reapplied and shipped separately after the
+# reset (instruments-service@23c04a9b).
+instruments-service:5634045a

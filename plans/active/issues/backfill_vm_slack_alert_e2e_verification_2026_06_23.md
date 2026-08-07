@@ -275,3 +275,4 @@ for these messages to close the verification loop.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries — corrects the 2026-08-01 marker's stale count, the
   list itself already carried 6) — all still resolve; both remaining open todos (VERIFY spot-check + DEPLOY
   render-verification) are operator-only with no live occurrence to inspect yet, per the doc's own progress log.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.

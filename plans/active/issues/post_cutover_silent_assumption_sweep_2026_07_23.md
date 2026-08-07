@@ -482,7 +482,7 @@ codex, or a future staging re-entry gets a dead pipeline.
       the writer (`update-repo-version.yml`) is healthy and `main`'s cache is current. Full dated table + evidence:
       [/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md](/plans/archive/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md)
       § "Fleet version/tag-state census (2026-08-02)". New P1 filed for the backmerge outage:
-      [/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/active/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
+      [/plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md](/plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md).
       This todo itself stays unchecked — the census is done, but the 11 still-stalled repos and the new backmerge P1 are
       open follow-up work, not this todo's own completion.
 - [x] ✅ [INFRA] P1. **`publish-package.yml`'s per-repo DISPATCHER was never actually installed on the two frozen
@@ -587,7 +587,24 @@ codex, or a future staging re-entry gets a dead pipeline.
       dispatches, and the 24 repos' `semver-agent.yml` `schema-changed` dispatch. For each: either add the missing
       listener in the target repo, or stop claiming success when the dispatch has no subscriber. Use
       `check_dispatch_listeners.py --show` to enumerate the current live set before starting, and re-baseline
-      (`--baseline-write`) as each is fixed so the ratchet only ever shrinks.
+      (`--baseline-write`) as each is fixed so the ratchet only ever shrinks. -
+      **`service-deployed → deployment-service` SLICE: DONE 2026-08-06** (operator-approved same-day fix, not just
+      documented). Added `deployment-service/.github/workflows/service-deployed-listener.yml`
+      (`on: repository_dispatch: types: [service-deployed]`) + `scripts/cicd/handle_service_deployed_dispatch.py` + an
+      explicit-allowlist `deployment_service/auto_deploy_allowlist.py` (default-deny — operator ruling 2026-08-06,
+      pre-live-cutover: only genuinely-live, pinned-tag, long-lived Cloud Run **Services** not already covered by their
+      own dedicated `-main-deploy` trigger are eligible; today that's exactly `alerting-service` →
+      `dp-alerting-subscriber`). Reuses deployment-api's existing `POST /api/deployments/{service}/deploy`
+      (`deploy_build()`) via a new backward-compatible `cloud_run_service_name` override (added because
+      alerting-service's image name and its live Cloud Run service name diverge — a real gap this work surfaced).
+      `cascade-qg-ordering.yml`, `sit-gate.yml` (`game-day-sit`/`synthetic-smokes`), and the 24-repo `semver-agent.yml`
+      `schema-changed` slice are **explicitly OUT of scope for this fix and remain open** — different event types/target
+      repos/owners, not touched. Shipped `deployment-service@5599bda8`, `deployment-api@7110d2d`. Re-baselined
+      `check_dispatch_listeners_baseline.yaml` 63→38 (the drop is larger than one event_type because ~11 services'
+      `cloudbuild.yaml`+`buildspec.aws.yaml` all dispatched the same `service-deployed → deployment-service` pair, now
+      resolved as one listener). Full verification (real Cloud Run revision timestamp change on
+      `dp-alerting-subscriber`) + a separate flagged finding (`DISABLE_AUTH=true` currently live on prod
+      `uts-shared-deployment-api`) are in the Progress Log below.
 - [ ] [INFRA] P2. Disable or fix the F4 vacuous crons (`sit-debounce-trigger`, `freeze-deferred-build-replay`,
       `fix-approval-timeout`, `supersede-stale-dep-update-prs`); diagnose `digest-drift-sweep`'s non-convergence (it
       costs real money via `ubuntu-latest` fan-out); ~~make `workspace-quickmerge-validation` fail when it logs a
@@ -643,3 +660,35 @@ active batch — flagged again as the standing carve-out candidate. Doc stays NA
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
   `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`, the active plan repeatedly cited throughout the
   Resolution checklist as the doc actually tracking completion of most of this doc's shipped/remaining sub-items.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — SUPERSEDED banners on 6 items, time-gated kill-switch, extraction
+candidates exist
+
+- **sub-agent 2026-08-06 — `service-deployed → deployment-service` slice shipped, live E2E verification IN PROGRESS (not
+  yet closed)**: full build + ship summary is inline at the todo above; this entry tracks verification status. Shipped
+  `deployment-service@5599bda8` (listener + allowlist + tests) → promoted to `main`, then found a REAL bug on the first
+  live test fire (a manually-simulated `service-deployed` dispatch for `alerting-service` v0.60.0): the workflow's
+  `pip install --quiet -e .` step failed in CI
+  (`ERROR: Could not find a version that satisfies the requirement unified-api-contracts<1.0.0,>=0.96.0` — no
+  GAR-authenticated Python index configured on a bare `ubuntu-latest` runner). Root cause:
+  `from deployment_service.auto_deploy_allowlist import ...` forces execution of `deployment_service/__init__.py`, which
+  pulls the package's full heavy dependency tree even though `auto_deploy_allowlist.py` itself has zero external
+  imports. Fixed by loading the file directly via `sys.path` (importing it as a bare top-level module, never touching
+  the package `__init__.py`) and dropping the now-unneeded pip-install step entirely — `deployment-service@4a69f9d0`.
+  Re-ran `quality-gates.sh --no-fix` against this exact commit post-fix (coordinator-requested sentinel check) —
+  confirmed `.qg_last_passed_sha` matches HEAD `4a69f9d0`, genuinely green, not just "looked fine." Also confirmed live
+  (before firing any dispatch) that `uts-shared-deployment-api`'s own separate `_DEPLOY=true` main-deploy Cloud Build
+  trigger had already redeployed my `deployment-api@d3ea7ac` (the `cloud_run_service_name`-override commit) to prod — so
+  the deploy target the listener calls already carries the fix. **Still open**: the bugfixed
+  `deployment-service@4a69f9d0` is on LDR, promotion to `main` is pending — blocked (not by anything in this fix) on the
+  unrelated SIT-stamping bug documented in `issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md` (now
+  fixed live at `system-integration-tests@0dc3ff1`, per that doc). Once `4a69f9d0` reaches `main`, the remaining step
+  is: re-fire
+  `gh api repos/IggyIkenna/deployment-service/dispatches -f event_type=service-deployed -F 'client_payload[service_name]=alerting-service' -F 'client_payload[version]=0.60.0' -F 'client_payload[image]=asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/alerting-service:0.60.0'`
+  and confirm `dp-alerting-subscriber`'s Cloud Run revision moves off `dp-alerting-subscriber-00015-lcn` (created
+  `2026-07-28T06:17:13Z`, image `alerting-service:diag-62b850c`) to a fresh revision on `alerting-service:0.60.0`. A
+  first fire attempt (pre-bugfix, run `31114870431`) correctly left `dp-alerting-subscriber` untouched on failure — no
+  partial/bad state, confirmed live. This is a genuinely different scope than the todo's remaining sub-items
+  (`cascade-qg-ordering.yml`, `sit-gate.yml`, the 24-repo `schema-changed` dispatch) — do not close those from this
+  entry.

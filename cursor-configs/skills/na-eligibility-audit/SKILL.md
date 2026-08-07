@@ -9,14 +9,14 @@ description: >-
   **RECLASSIFY** (bounded, deterministic-outcome work simply defaulted to NA and never assessed — flip to `assigned_vm:
   planning` after the shared conflict-check clears it), or **ARCHIVE** (fully resolved/moot). Promotes the one-off
   `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` plan's proven methodology into a repeatable,
-  tranche-parameterized skill (same 9 tranches `/ag-closeout-audit` uses) with an incremental mode (skip docs already
-  verdicted since their last edit — a daily full re-read of ~390 docs is not the design) and a standing size-ratchet
-  report (`check_na_corpus_ratchet.py`) so the backlog is visibly shrinking-or-flat, never silently growing.
-  **Explicitly does NOT hunt orphaned docs** (no active plan covers them at all — that's `/ag-closeout-audit`'s corpus)
-  and does NOT run the corpus-wide contradiction/ false-unchecked sweep (that's `/plan-reconcile`'s corpus) — this
-  skill's population is already-owned NA docs specifically. Trigger on `/na-eligibility-audit [<tranche>]`, "audit the
-  NA docs", "check if this NA plan can be reclassified", "fold NA work into AO dispatch", "is the NA backlog growing",
-  "which NA docs are actually AO-eligible".
+  tranche-parameterized skill (same 10 tranches `/ag-closeout-audit` uses, `ui` included) with an incremental mode (skip
+  docs already verdicted since their last edit — a daily full re-read of ~390 docs is not the design) and a standing
+  size-ratchet report (`check_na_corpus_ratchet.py`) so the backlog is visibly shrinking-or-flat, never silently
+  growing. **Explicitly does NOT hunt orphaned docs** (no active plan covers them at all — that's `/ag-closeout-audit`'s
+  corpus) and does NOT run the corpus-wide contradiction/ false-unchecked sweep (that's `/plan-reconcile`'s corpus) —
+  this skill's population is already-owned NA docs specifically. Trigger on `/na-eligibility-audit [<tranche>]`, "audit
+  the NA docs", "check if this NA plan can be reclassified", "fold NA work into AO dispatch", "is the NA backlog
+  growing", "which NA docs are actually AO-eligible".
 ---
 
 # /na-eligibility-audit — assigned_vm:NA validity + reclassification audit
@@ -99,7 +99,7 @@ Report the Phase-0 split up front: total in-tranche docs, already-verdicted-and-
 
 **The problem, measured**: the 10-way tranche split does not partition this corpus cleanly. On 2026-07-30 one doc
 appeared in the candidate set of **6 of 9** tranches, and in the worst tranche **up to 47%** of its docs also appeared
-in at least one other. Because the scheduled shape is 9 CONCURRENT workers (one dispatch per tranche —
+in at least one other. Because the scheduled shape is one CONCURRENT worker per tranche (one dispatch each —
 `na-eligibility-auditor.timer`), every one of those shared docs had N workers all trying to write the SAME
 incremental-skip verdict marker into the SAME file at the same time. The result was an N-way merge-conflict storm, and
 markers that frequently never landed at all — which silently defeats Phase 0's whole incremental design (a doc with no
@@ -199,6 +199,13 @@ candidates held back there over exactly this check).
 - **KEEP-NA valid/stale-items**: write the dated Progress Log verdict marker (Phase 0's incremental-skip anchor) even
   when nothing else changes — an audited-and-confirmed doc needs that marker or every future run re-reads it from
   scratch.
+- **Long one-line markers get auto-wrapped by the autostage formatter on commit (2026-08-06)**: a multi-sentence marker
+  line comes back from the pre-commit hook prettier pass re-wrapped across several lines, leaving the worktree ahead of
+  the staged index — the commit attempt aborts with a staged-vs-worktree mismatch (`MM` status). Fix: `git add` the
+  reformatted files and re-commit; no content is lost. Also: the PM pre-commit branch-drift hook refuses to commit while
+  behind origin — under concurrent sharded waves (sibling workers pushing marker commits) expect mid-run `git fetch` +
+  overlap check + `git pull --ff-only`, and if a sibling also edited one of your files, restore that ONE file from
+  origin first and re-apply your marker (never `git stash` — shared LIFO, banned for sharded workers).
 
 ## Phase 4 — apply + commit
 
@@ -226,11 +233,12 @@ Runs automatically in autonomous mode via `na-eligibility-auditor.timer` on the 
 `agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh` installs it. **Cadence as of 2026-07-30: every 2
 hours, on ODD hours at :30 UTC** (a per-tranche idempotency guard makes every fire after that tranche's first success of
 the day a cheap no-op, so this is retry-until-capacity, not 12 audits a day). The ODD-hour phase is deliberately 1 hour
-offset from `ag-closeout-auditor.timer` (:30 on EVEN hours): both jobs fan out to 9 concurrent slots, so a same-hour
-overlap would be 18 slots of instantaneous demand. The other two scheduled jobs sit on their own phases —
+offset from `ag-closeout-auditor.timer` (:30 on EVEN hours): both jobs fan out one dispatch per tranche, so a same-hour
+overlap would double the instantaneous slot demand. The other two scheduled jobs sit on their own phases —
 `docs-reconciler.timer` :15 hourly, `plan-reconciler.timer` :00 on EVEN hours. Sharded the same way `ag_closeout` is:
-one dispatch per tranche, up to 9 concurrent, each its own free slot — which is exactly why the primary-owner and
-no-`git stash` rules in Phase 0 above are HARD. Still directly invocable interactively any time.
+one dispatch per tranche, fired in batches (each installer carries its own concurrency cap), each its own free slot —
+which is exactly why the primary-owner and no-`git stash` rules in Phase 0 above are HARD. Still directly invocable
+interactively any time.
 
 ## Codex SSOTs
 

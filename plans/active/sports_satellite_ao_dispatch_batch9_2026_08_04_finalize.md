@@ -82,3 +82,7 @@ context_scope:
 ## Codex SSOTs
 
 None new — see the parent batch's own Codex SSOTs section.
+
+## Progress Log
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

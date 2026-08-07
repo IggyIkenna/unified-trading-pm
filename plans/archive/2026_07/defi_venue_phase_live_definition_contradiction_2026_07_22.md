@@ -63,7 +63,7 @@ source:
 > before/after the flip: 44.1% → 44.1%, delta=0 — root-caused (not silently accepted) to a THIRD,
 > previously-undocumented gate (`PROTOCOL_CAPABILITIES`) that the phase flip alone doesn't satisfy; tracked as its own
 > follow-up, not folded into this resolution:
-> `/plans/active/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`. Archived per
+> `/plans/archive/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`. Archived per
 > `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual.
 
 ## Upgrade note (2026-07-22, same day)
@@ -442,7 +442,7 @@ unresolved operator decision.
   original investigation (above) didn't know about, beyond `DEFI_VENUE_PHASE`/`VENUES_BY_ASSET_GROUP`. None of the 6
   protocols have an entry there yet, so the phase flip alone contributes zero EXPECTED tuples — tracked as its own
   followup, not fixed inline:
-  `/plans/active/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`. This means **this doc's
+  `/plans/archive/issues/defi_six_lst_vault_venues_missing_protocol_capabilities_2026_07_31.md`. This means **this doc's
   own core question is answered (definition #1, data-availability, was chosen and fully shipped for these 6 venues) but
   the honest-coverage number these venues were originally investigated to move has not yet visibly moved** — the
   `PROTOCOL_CAPABILITIES` follow-up is what will actually move it.

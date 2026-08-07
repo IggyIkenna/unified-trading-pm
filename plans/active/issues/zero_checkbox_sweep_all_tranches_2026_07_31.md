@@ -64,12 +64,12 @@ context_scope:
 
 ## Standing owner + cadence (this is the part the predecessor lacked)
 
-| Field             | Value                                                                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Owner**         | `/plan-reconcile` (the `plan-reconciler.timer` scheduled job) — it already owns the corpus-wide contradiction / false-unchecked sweep, and this is the same class of defect. |
-| **Cadence**       | Monthly, folded into the first `/plan-reconcile` full-corpus run of each month (it already walks every active doc, so the marginal cost is one extra predicate).             |
-| **Verifier**      | `grep -LE '^[[:space:]]*- \[[ xX]\]' plans/active/*.md plans/active/issues/**/*.md` — the count of non-exempt hits must be 0, or every hit must be classified in this doc.   |
-| **Last executed** | 2026-08-02 (`/plan-reconcile` whole-corpus run — see § "Re-run 2026-08-02"). Prior: 2026-07-31 (authoring run).                                                              |
+| Field             | Value                                                                                                                                                                                                                                                                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Owner**         | `/plan-reconcile` (the `plan-reconciler.timer` scheduled job) — it already owns the corpus-wide contradiction / false-unchecked sweep, and this is the same class of defect.                                                                                                                                                                      |
+| **Cadence**       | Monthly, folded into the first `/plan-reconcile` full-corpus run of each month (it already walks every active doc, so the marginal cost is one extra predicate).                                                                                                                                                                                  |
+| **Verifier**      | `grep -LE '^[[:space:]]*- \[[ xX]\]' plans/active/*.md plans/active/issues/**/*.md` — the count of non-exempt hits must be 0, or every hit must be classified in this doc.                                                                                                                                                                        |
+| **Last executed** | 2026-08-02 (`/plan-reconcile` whole-corpus run — see § "Re-run 2026-08-02"). Prior: 2026-07-31 (authoring run). **The monthly full-corpus pass for 2026-08 is still OUTSTANDING** — the 2026-08-06 `/plan-reconcile ao` run measured the verifier corpus-wide but only had authority to convert its own tranche (see § "Measurement 2026-08-06"). |
 
 **Why it kept going stale**: the class has twice been "owned" by a one-off dated sweep doc that then archived on
 completion, taking the ownership with it. A dated doc cannot own a recurring class. The owner above is a standing job,
@@ -127,6 +127,27 @@ and this doc is the register it writes to.
 > **Standing instruction for the next run**: "zero checkboxes" is NOT automatically a defect. Three of the eleven hits
 > above are correct as they are, and one of those three is actively load-bearing. Always read the doc before adding a
 > todo to it.
+
+## Measurement 2026-08-06 — `/plan-reconcile ao` (TOPIC-SCOPED run — NOT the monthly full pass)
+
+Verifier re-run exactly as specified in the table: **12 hits, up from 8 on 2026-08-02.** The population is GROWING, so
+this register is doing its job of making that visible.
+
+| Doc                                                                                                                                                                                                                 | Class                              | Disposition                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| `_agent_pings.md` · `INDEX.md` · `task_template.md`                                                                                                                                                                 | structurally exempt (3, unchanged) | no action — correct as-is                                                                   |
+| `ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md`                                                                                                                                                             | **`ao` tranche — genuine work**    | CONVERTED this run: its 3 "Open questions for whoever picks this up" became canonical todos |
+| `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` · `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`                                                                        | defi                               | **NEW since 2026-08-02** — not this run's tranche, unclassified                             |
+| `client_reporting_api_promote_wedge_backmerge_dead_2026_08_06.md`                                                                                                                                                   | cross-cutting/ci                   | **NEW** — unclassified                                                                      |
+| `instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md`                                                                                                                                            | sports/instruments                 | **NEW** — unclassified                                                                      |
+| `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` · `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` · `mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md` | mtds/cefi                          | **NEW** — unclassified                                                                      |
+| `sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md`                                                                                                                              | sports                             | **NEW** — unclassified                                                                      |
+
+**8 non-exempt hits remain unclassified**, all outside the `ao` tranche. A topic-scoped run has no authority to convert
+another tranche's docs, so they are recorded here rather than silently skipped — the 2026-08 monthly full-corpus pass
+must pick them up. Note the shape of the growth: 6 of the 8 are `mtds`/`defi`/`sports` incident write-ups filed in the
+last 4 days, i.e. the class regenerates fastest in fresh incident docs, exactly where prose-only "open questions" get
+written under time pressure.
 
 ## Re-run 2026-08-02 — `/plan-reconcile` whole-corpus (unscoped) run
 
@@ -194,3 +215,4 @@ them as a finding; the population definition is deliberately left unchanged.
   the naming half landed `unified-trading-pm@d872efb3a`, hours after the 2026-08-02 note below was written). Doc stays
   open and NA: it is a deliberately-permanent standing register (own todo 2 / P3: "NOT archive-on-complete — archiving
   is what orphaned this class twice already"), owned by the `/plan-reconcile` scheduled job, not AO dispatch.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

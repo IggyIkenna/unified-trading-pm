@@ -61,10 +61,9 @@ resolved_by:
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_cme_converter.py,
-    execution-service/execution_service/trade_execution/adapters/ibkr_tradfi.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_opra_converter.py,
+    market-tick-data-service/docs/tradfi-venue-coverage-matrix.md,
   ]
 ---
 
@@ -351,11 +350,17 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       `factory.py:149`'s stale `# TradFi (9 venues)` comment to the actual registered count of 7. Repo:
       market-tick-data-service@7db75b1a.
 
-- [ ] [OPERATOR] P2. **DECISION — 2 unused MTDS converter classes** (Finding M-3): `databento_cme_converter.py`'s
+- [x] ✅ [DOCS] P2. **DEFAULT-RULED 2026-08-06: document as intentionally unused**, matching the `databento_equity.py`
+      scaffold-status precedent already used for other findings in this same audit. `[DOCS]` tag (was `[OPERATOR]`) —
+      consistency with the audit's own established treatment beats introducing a new disposition for one finding.
+      **DECISION — 2 unused MTDS converter classes** (Finding M-3): `databento_cme_converter.py`'s
       `DatabentoCmeConverter` and `databento_opra_converter.py`'s `DatabentoOpraConverter` produce an orphaned
       `CanonicalOptionQuote` type used only in tests. Decide: wire into the live `databento_enrichment.py` path, delete,
       or document as intentionally unused. Correct the stale credit at `docs/tradfi-venue-coverage-matrix.md:26`
-      regardless of direction. Repo: market-tick-data-service.
+      regardless of direction. Repo: market-tick-data-service. — market-tick-data-service@30c95098: added STATUS notes
+      to both module docstrings (matching baker_hughes/etc. M-2 precedent, cross-referencing Finding M-3 + operator
+      ruling); corrected stale credits in the CME/CBOE options_chain rows of docs/tradfi-venue-coverage-matrix.md. QG
+      green, verified on origin.
 
 - [x] [BACKEND] P3. ✅ **3 unlogged silent-fallback catch blocks in instruments-service** (Finding I-1):
       `reference_data/adapters/tradfi/databento/adapter.py::_parse_tick_and_lot` (lines 715-729),
@@ -397,6 +402,15 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       immediately above the `"tardis": ("tradfi", TardisAdapter)` line. Shipped via `quickmerge.sh --agent` in the same
       commit as the M-5 fix.
 
+- [ ] [BACKEND] P3. **Cross-asset-group fate of the generic `BaseTradfiAdapter` fetch interface** (Finding M-4):
+      `databento_fetch.py`'s `download_batch`/`download_market_data`/`fetch_trades` and `tardis_csv_transport.py`'s
+      `download_market_data`/`fetch_trades` have zero production callers in tradfi (confirmed live paths are exclusively
+      `download_batch_df`/`download_batch` via `umi_tick_provider.py`); `market_interface/api.py`, the interface's only
+      other would-be caller, is itself unreached in production. Check whether other asset groups' adapters actually use
+      this generic interface before deciding delete vs. keep-documented; if genuinely dead everywhere, delete it (repo:
+      market-tick-data-service). Done when: cross-asset-group usage is checked and a delete/keep decision is made +
+      applied.
+
 ## Reconciliation
 
 Once this doc lands, `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo 4 checkbox
@@ -432,3 +446,5 @@ doc directly — per that plan's own stated reconciliation pattern.
   `market-tick-data-service@7db75b1a` (`quality-gates.sh` full green, shipped via `quickmerge.sh --agent`, verified
   ancestor of origin). Checkbox flipped above.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries).
+- **context-scout 2026-08-06**: refreshed context_scope (4 entries) — every other todo is now DONE, so narrowed to the
+  one remaining open `[OPERATOR] P2` item (Finding M-3, the 2 unused MTDS converter classes + the stale doc credit).

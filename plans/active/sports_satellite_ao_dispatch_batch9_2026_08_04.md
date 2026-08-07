@@ -16,7 +16,7 @@ summary: >-
   directly during Phase 0 (shipped `unified-trading-pm@5051ba2ed`, outside this batch). A second corpus-hygiene fix
   (adding missing `prediction`/`defi` tags to `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, whose
   residual open work is genuinely those tranches' scope, not sports') shipped alongside this batch's own commit.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -41,16 +41,16 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/active/issues/instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md,
-    /plans/active/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
+    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
-    /plans/active/issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md,
-    /plans/active/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
+    /plans/archive/issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md,
+    /plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
     /plans/active/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
-    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
-    /plans/active/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
+    /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/archive/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
     /plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
-    /plans/active/issues/sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md,
+    /plans/archive/issues/sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md,
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
     /plans/active/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
@@ -58,7 +58,7 @@ related:
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -89,12 +89,16 @@ context_scope:
 
 # Sports satellite AO batch 9 — `/ag-closeout-audit` orphan extraction (2026-08-04)
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 30 todos below are same-priority-independent and touch distinct files/repos (verified
-> individually per todo during Phase 3's conflict-check; the one internally-sequential exception,
+> **Status: active** — operator-approved 2026-08-06, dispatching. This draft sat unreviewed for 2 days with zero
+> Progress Log entries; a governance-sweep activation-readiness check spot-checked 3 code-citing todos and found 2
+> already shipped (now struck below, citing the landing commits) — the odds-coverage-filter todo and the
+> SPOT-provisioning-flag todo. **The remaining 28 todos were NOT individually re-verified in that pass** (only
+> spot-checked, per the check's own scope) — if a dispatched worker finds one already done, strike it with a citation
+> the same way rather than treating this banner as a guarantee every other todo is still current. All 30 todos are
+> same-priority-independent and touch distinct files/repos (verified individually per todo during Phase 3's
+> conflict-check; the one internally-sequential exception,
 > `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`'s 3 combined todos, is called out inline) so
-> they are safe to dispatch concurrently once activated.
+> they are safe to dispatch concurrently.
 
 ## Methodology
 
@@ -111,7 +115,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Run the shipped ramp-to-429 rate-limit calibration harness
+- [x] ✅ [SCRIPT] P1. Run the shipped ramp-to-429 rate-limit calibration harness
       (`instruments-service/scripts/calibrate_source_rate_limit.py`) from a throwaway ephemeral VM IP for understat /
       transfermarkt / open_meteo / soccer_football_info / polymarket_clob / polymarket_gamma_api (never a prod IP), then
       transcribe each measured `safe_rate_rpm` + `recovery_seconds` into `launch_budget_registry.py`
@@ -119,7 +123,8 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `calibrated=True`, and drop the `# TODO: empirically calibrate` markers. Source:
       `data_completion_sports_2026_07_24.md`. Done when: the probe has run to completion for all 6 sources,
       `launch_budget_registry.py` carries measured safe_rate_rpm/recovery_seconds with `calibrated=True` for each, and
-      the measured table is recorded in the plan's Progress Log.
+      the measured table is recorded in the plan's Progress Log. — deployment-service@0eb9c36 + instruments-service
+      secret-fix quickmerged (rapidapi-key → soccer-football-info-api-key). See Progress Log below.
 - [ ] [DATA] P2. Re-launch the instruments-service Transfermarkt PLAYER_VALUES backfill scoped to the golden window
       (2025-09-01..2025-11-30) with skip-fresh enabled so only the 256 `attempted_failed` cells (as of the 2026-06-24
       measurement) are re-attempted, then re-measure coverage. Source: `data_completion_sports_2026_07_24.md`. Done
@@ -139,26 +144,27 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `instruments-service@aaa0866c` already recognizes + maps both to the canonical trailing-key target). Run a fresh
       `migrate_instrument_availability_hive_2026_08_03.py --asset-group prediction` dry-run to confirm current counts,
       then `--apply-prod --confirm-prod-write` to copy-and-verify (never delete source, mirrors the already-proven
-      cefi/defi/tradfi apply pattern), and update `codex/02-data/canonical-cutover-register.md` §6b's prediction
+      cefi/defi/tradfi apply pattern), and update `/codex/02-data/canonical-cutover-register.md` §6b's prediction
       residual row to reflect the applied state. Source:
       `instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md`. Done when: fresh dry-run +
       apply-prod run completes with 0 failed, prediction's `unrecognized` count for these two specific shapes (excluding
       the still-pending third `market=` shape gated on the sibling doc's todo 8) drops to 0, and
       `canonical-cutover-register.md` §6b is updated with the result.
-- [ ] [DIAG] P1. Root-cause the sports-prd manifest consolidator's frozen canonical rows_out (bit-for-bit identical at
-      9,239,513 across 35+ successful merges, 2026-08-04T08:06:48Z-13:08:48Z, despite shards=3-15 and
-      dedup_dropped=187-2,000,000 varying per cycle) by reading
-      `unified-trading-library/unified_trading_library/manifest_consolidator.py`'s incremental anti-join/UNION ALL merge
-      and dedup-key logic (SSOT `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Incremental cycle (steady
-      state)", `_stale_drop_predicate` and dedup-key computation are the flagged starting points) to identify why
-      genuinely-new per-VM shard rows are being classified as duplicates of existing canonical rows. Read-only
-      investigation — no production code change or deploy. Source:
-      `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md`. Done when: a specific root-cause is
-      documented with a code citation (file+line/function) explaining why the exact `dedup_dropped = rows_in - rows_out`
-      arithmetic holds every cycle while shards/rows_in/dedup_dropped vary, cross-checked by re-running the doc's own
-      reproduction command to confirm current rows_out state before concluding. This blocks
-      `sports_af_full_entity_completion_2026_08_03.md`'s convergence declaration and several other docs' verification
-      steps — prioritize accordingly.
+- [x] ✅ [DIAG] P1. Root-cause the sports-prd manifest consolidator's frozen canonical rows_out — FALSE ALARM, confirmed
+      2026-08-06 (slot 5). **Root cause**: `dedup_dropped` is DERIVED arithmetic, not an independent measurement —
+      `manifest_consolidator.py:1028` (`dedup_dropped=rows_in - rows_out`). When all incoming shard rows match existing
+      canonical rows on their dedup key (`_resolve_dedup_cols`, line 2127: `(date, venue, data_type, service_name)` +
+      optional dims), the merge UPDATEs them in place via `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` with
+      last-write-wins — row COUNT is conserved, `dedup_dropped` rises in lockstep with the shard purely because the
+      shard is growing. This is the EXPECTED signature of idempotent re-capture, documented as SSOT "Diagnostic caveat
+      #2" (`/codex/05-infrastructure/manifest-consolidator-ssot.md` lines 267-285). The 2026-08-04 freeze was transient:
+      the source issue doc (`manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md`, archived 2026-08-05,
+      status=false-positive) already self-identified as likely false alarm citing the identical prior investigation in
+      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`. **Reproduction confirmation**
+      (2026-08-06T18:15-19:58Z): `rows_out` is now actively growing — 10,377,663 → 10,432,192 (+54,529 rows across 10
+      cycles, ~5-7k per cycle). No code change needed. The upstream backfill skip-logic fix (`check_shard_freshness`
+      source/data_type blindness) identified in the 07-29 doc is the actual defect; the consolidator itself is working
+      correctly.
 - [ ] [DATA] P3. Re-run `ManifestWriter.lookup()` for exactly 2025-09-04 and 2025-11-13 against the completed VM run
       `mdps-sports-bucket-20260803-134154` (use a pyarrow/polars venv via `run-bounded-analysis.sh`, one lookup call per
       date, memory-bounded per the existing recipe in this doc), record the authoritative per-date manifest status
@@ -176,7 +182,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       decision). Source: `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`. Done when: a SPORTS
       honest-absence candle timeframe produces a real manifest row (not a WARNING log with zero rows written), proven on
       one re-run day in `market-data-processing-service`.
-- [ ] [DIAG] P1. Investigate the MDPS SPORTS `~50/N "Unknown error"` crash (findings 3+4 of
+- [x] ✅ [DIAG] P1. Investigate the MDPS SPORTS `~50/N "Unknown error"` crash (findings 3+4 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`, combined into one sequential pass per
       the skill's same-source-doc rule) in `market-data-processing-service`: (1) grep the failing VM's `run.log` (e.g.
       `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`) for `❌ Exception processing` to locate the
@@ -189,7 +195,20 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       2025-12-24/2025-12-18 until this investigation's conclusion lands. Source:
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`. Done when: the raising frame/exception
       is named (via whichever step first identifies it) and documented in the doc's Progress Log, or all 3 steps are
-      exhausted with a documented "raise-free, cause still unknown" conclusion.
+      exhausted with a documented "raise-free, cause still unknown" conclusion. — **RESOLVED 2026-08-06 (slot-4). Root
+      cause: findings 3+4 = same bug as finding 1, fixed by `market-data-processing-service@33b323c`/`8358b9f` (already
+      shipped 2026-08-01).** The 50 `ticks_migrated_*.parquet` files (eager path) are 100% honest-absence (all rows
+      outside the pre-match horizon) → `processed_timeframes=[]`, `errors=[]` → the PRE-fix formula
+      `success = len(errors)==0 and len(processed_timeframes)==len(valid_tfs)` yields `success=False` with
+      `error_message=None` → `process_handler.py:468` prints "Unknown error". No exception is ever raised (0 hits in
+      `134301` run.log for `❌ Exception processing` / `❌ Error processing` / `classify_and_emit_error` /
+      `falling back to eager` / `⚠️ Error in` / `Traceback`). The 588 `ticks.parquet` files (streaming path,
+      `success=error_count==0` correct since `1cdf3ecf`) succeeded — 50+588=638 exactly matches the summary. The
+      finding-3/4 VMs ran a floating (unpinned) MDPS tarball lacking the fix (TARBALL_PINS.mdps floating; the doc's
+      "HEAD=`0fc0448`" reference is a `_backmerge` commit not on LDR). Local repro (slot-4) on current LDR HEAD: the
+      exact failing file → `success=True`; concurrent `_process_files_parallel(max_workers=4)` over all 50
+      `ticks_migrated` files → `failed=0`. No code change needed — fix already shipped. The `[SCRIPT]` no-relaunch STOP
+      in the source doc is now cleared. See source doc Progress Log 2026-08-06.
 - [ ] [CODE] P2. Investigate-then-fix finding 5 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` in `market-data-processing-service`:
       first grep findings-3/4's VM `run.log`s (e.g. `mdps-backfill-sports-pcskip-20260801-130846-2bf067` /
@@ -248,8 +267,9 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       Source: `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`. Done when: `pipeline_e2e_check.py`'s
       SPORTS/ODDS_API enumeration no longer yields an `odds_horizon_bucket` cell, and a quality-gates-green commit lands
       in `market-tick-data-service`.
-- [ ] [DOCS] P3. Archive `plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` per
-      the 6-step archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): `git mv` it to
+- [x] ✅ [DOCS] P3. Archive
+      `plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` per the 6-step
+      archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): `git mv` it to
       `plans/archive/2026_08/`, add an archived/superseded banner citing the archive date and reason (all todos done,
       doc unlocked), then fix every corpus referrer that still points at the old active path (the doc's own 2026-08-03
       note enumerates 10). Source: `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`. Done when:
@@ -287,20 +307,20 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: a fresh manifest query result
       for `venue=FOOTBALL attempted_failed` is recorded in the doc's Progress Log, either confirming 0 rows or
       documenting the specific root cause of any remaining failures.
-- [ ] [INFRA] P3. Add a `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
-      `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`'s `gcloud compute instances create` call (currently
-      hardcoded on-demand at launch-sports-is-gap-fill.sh:125-136), matching the pattern other backfill launchers
-      already use. Source: `sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md`. Done when: the
-      launcher accepts `--provisioning-model` (defaulting to `SPOT`) and `--on-demand` opt-out, a test/dry-run launch
-      confirms the flag is threaded into the `gcloud compute instances create` invocation, and the change is committed
-      to deployment-service.
-- [ ] [CODE] P2. Add a league odds-coverage filter to deployment-service's
-      `deployment_service/sports_trigger_evaluation.py::evaluate_pre_match_triggers` (lines 46-96) so it does not fire a
-      `market-tick-data-service` odds-fetch trigger event for fixtures whose league has no odds_api coverage (gate on
-      `data_sources.get("odds_api")` truthy, or membership in UAC's `LEAGUE_CLASSIFICATION_DATA`). Source:
-      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`. Done when: a new/updated unit test on
-      `evaluate_pre_match_triggers` confirms a no-odds-coverage fixture does NOT produce a `market-tick-data-service`
-      trigger event, and `quality-gates.sh` is green.
+- [x] ✅ [INFRA] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped:
+      `deployment-service@dfbb8c39` ("fix(vm): add SPOT provisioning to launch-sports-is-gap-fill.sh") + `d683f80b`
+      ("feat(vm): add --on-demand CLI flag..."), both 2026-08-05. Verified live — `launch-sports-is-gap-fill.sh` has
+      SPOT-default `PROVISIONING_FLAGS` logic (line 122-124) and the `--on-demand` opt-out (line 48). Source doc's own
+      checkbox already `[x]` citing `d683f80`. No action needed. Original text preserved below for record. **Add a
+      `--provisioning-model` flag (default `SPOT`, `--on-demand` opt-out) to
+      `deployment-service/scripts/vm/launch-sports-is-gap-fill.sh`'s `gcloud compute instances create` call.**
+- [x] ✅ [CODE] P2. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped:
+      `deployment-service@1c1e445` ("feat(sports): filter market-tick-data-service from pre-match triggers for non-odds
+      leagues") + follow-ups `dce296a9`/`f78531e7`, 2026-08-05. Verified live — `_league_has_odds_coverage()` present
+      (line 25) and wired into `evaluate_pre_match_triggers` (line 126), plus a full regression suite
+      (`tests/unit/test_sports_trigger_odds_coverage_filter.py`, 8 unit tests). Source doc's own checkbox already `[x]`
+      citing `f78531e`. No action needed. Original text preserved below for record. **Add a league odds-coverage filter
+      to deployment-service's `evaluate_pre_match_triggers`.**
 - [ ] [DIAG] P2. Run a scoped blast-radius check on `uts-prod-market-tick-data-service-fast-t1-recon` to determine
       whether PREDICTION and/or DEFI dispatches through the same shared Cloud Run Job carry the same OOM risk class as
       the confirmed SPORTS-specific unscoped-multi-league-fetch bug, using the same method as
@@ -349,14 +369,13 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       manifest query only. Source: `sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done
       when: a per-data_type verdict (genuine-expansion / seeding-artifact / mixed) is reached and documented for each of
       the 3 outlier data_types.
-- [ ] [SCRIPT] P1. Extend UAC `EXPECTED_BOOKMAKER_MARKET_SETS` / `LEAGUE_ID_TO_TIER`
+- [x] ✅ [SCRIPT] P1. Extend UAC `EXPECTED_BOOKMAKER_MARKET_SETS` / `LEAGUE_ID_TO_TIER`
       (`unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py`) to cover the 28 currently-unmapped
-      league_ids (A-LEAGUE, ALLSVENSKAN, EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP, and
-      19 more listed in the source doc), using the same static `sports_bookmaker_league_coverage.json`-derived
-      ALL-PRESENT-bookmaker-set methodology already used for the 23 mapped leagues. Source:
-      `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`. Done when: all 28 listed league_ids resolve via
-      `LEAGUE_ID_TO_TIER` to either a populated `EXPECTED_BOOKMAKER_MARKET_SETS` entry or the explicit no-expectation
-      tier, and `bash scripts/quality-gates.sh` is green on unified-api-contracts.
+      league_ids — unified-api-contracts@6d72669b. All 28 league_ids mapped: 6 to tier_1_domestic (ALLSVENSKAN,
+      ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS + SOCCER_* aliases), 2 to tier_2_domestic (EKSTRAKLASA,
+      SUPER_LIG + SOCCER_POLAND_EKSTRAKLASA), 13 to no_expectation (zero observed coverage). QG green, 4 new regression
+      tests pass. LEAGUE_ID_TO_TIER now exported from honest_coverage facade. Source:
+      `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`.
 - [ ] [DOC] P3. Reconcile the sports live-wiring sequencing cross-reference between
       `sports_odds_feature_naming_canonicalization_2026_07_21.md` and
       `sports_predictions_live_mode_activation_readiness_2026_07_21.md` — the readiness plan's "Prerequisites already
@@ -585,7 +604,7 @@ re-triage. Too-large-or-risky entries need their own dedicated plan.
 - **ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md** — [ML] P2 — retrain 3 CLV model variants
   (doc's own checkbox still unflipped; underlying work completed via a sibling doc): Verified the underlying work is
   fully DONE: the sibling doc
-  plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md's own [ML] P2 todo…
+  plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md's own [ML] P2 todo…
 - **mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md** — [OPERATOR] P2 the-odds-api.com
   credential/quota-exhaustion ask (checkbox unflipped): Verified in the live doc: the unchecked `[OPERATOR] P2` item at
   lines 182-187 asks for a credential check + quota top-up/key rotation for the `the-odds-api.com`…
@@ -680,6 +699,49 @@ re-triage. Too-large-or-risky entries need their own dedicated plan.
 - **sports_track_h_denominator_prereqs_2026_07_28.md** — batch_footystats copy+swap — data complete/verified, code ship
   blocked (RB-166e706f): Read the live doc's todo 2 (lines 118-132) and the full 2026-07-28 (slot-14) Progress Log entry
   (lines 143-201) describing a real, detailed 16,970-object PROD copy+swap:…
+
+## Progress Log
+
+### 2026-08-06 — P1 ramp-to-429 calibration (slot 7)
+
+Two-pass probe via ephemeral VM (never prod IP 13.113.200.22):
+
+- **Pass 1** VM `uts-rate-calibration-probe-20260806-195143`: probed open_meteo, polymarket_clob, polymarket_gamma_api.
+  Crashed at soccer_football_info due to wrong GCP secret name (`rapidapi-key` → corrected to
+  `soccer-football-info-api-key`; fix quickmerged to instruments-service).
+- **Pass 2** VM `uts-rate-calibration-probe2-20260806-195923`: probed soccer_football_info, transfermarkt, understat
+  with the corrected script.
+
+| source               | break_rpm     | last_ok_rpm | safe_rpm     | recovery_s   | probe_vm                                    | probed_at_utc        |
+| -------------------- | ------------- | ----------- | ------------ | ------------ | ------------------------------------------- | -------------------- |
+| open_meteo           | 600           | 540         | 480          | 1.24         | uts-rate-calibration-probe-20260806-195143  | 2026-08-06T19:54:30Z |
+| polymarket_clob      | null (>=3600) | 3600        | 2880 (floor) | null         | uts-rate-calibration-probe-20260806-195143  | 2026-08-06T19:55:43Z |
+| polymarket_gamma_api | 2040          | 1980        | 1632         | 1.01         | uts-rate-calibration-probe-20260806-195143  | 2026-08-06T19:56:18Z |
+| soccer_football_info | 240           | 180         | 192          | null (>120s) | uts-rate-calibration-probe2-20260806-195923 | 2026-08-06T20:04:19Z |
+| transfermarkt        | null (>=3600) | 3600        | 2880 (floor) | null         | uts-rate-calibration-probe2-20260806-195923 | 2026-08-06T20:05:38Z |
+| understat            | null (>=3600) | 3600        | 2880 (floor) | null         | uts-rate-calibration-probe2-20260806-195923 | 2026-08-06T20:07:31Z |
+
+Notes: `null (>=3600)` = probe hit max_rpm=3600 with no reject; safe floor = 0.8x 3600 = 2880. `soccer_football_info`
+recovery > 120s (probe limit); `polymarket_clob` recovery null (no break observed). GCS artifacts:
+`gs://deployment-scripts-central-element-323112/vm-logs/uts-rate-calibration-probe*/`.
+
+Both probe VMs self-deleted. Registry updated: deployment-service@0eb9c36.
+
+### 2026-08-06 — findings-3+4 MDPS "Unknown error" crash root-caused (slot-4)
+
+Closed the `[DIAG] P1` todo (findings 3+4 of `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`)
+— **the crash is the SAME bug as finding 1, already fixed by `market-data-processing-service@33b323c`/`8358b9f`**. The
+50 `ticks_migrated_*.parquet` files (eager path; 100% honest-absence — every row dropped by the pre-match-horizon
+filter) produced `processed_timeframes=[]`, `errors=[]`, so the PRE-fix formula
+`success = len(errors)==0 and len(processed_timeframes)==len(valid_tfs)` gave `success=False` with `error_message=None`
+→ `process_handler.py:468`'s `or "Unknown error"`. No exception is ever raised (null greps for `❌ Exception processing`
+/ `❌ Error processing` / `classify_and_emit_error` / `falling back to eager` / `⚠️ Error in` / `Traceback` in
+`134301`'s run.log). The 588 `ticks.parquet` files (streaming, `success=error_count==0` correct since `1cdf3ecf`)
+succeeded — 588+50=638 matches the summary exactly. The finding-3/4 VMs ran a floating MDPS tarball lacking the fix
+(TARBALL_PINS.mdps unpinned; the doc's "HEAD=`0fc0448`" claim is a `_backmerge` commit not on LDR). Local repro on
+current LDR HEAD (slot-4): the exact failing file → `success=True`; concurrent `_process_files_parallel(max_workers=4)`
+over all 50 `ticks_migrated` files → `failed=0`. **No code change needed** — the fix is already shipped; the source
+doc's `[SCRIPT]` P3 no-relaunch STOP is cleared.
 
 ## Codex SSOTs
 

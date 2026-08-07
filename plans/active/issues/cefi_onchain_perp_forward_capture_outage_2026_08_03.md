@@ -35,7 +35,7 @@ tags:
 related:
   [
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
-    /plans/active/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md,
+    /plans/archive/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md,
   ]
 created: 2026-08-03
 author: unknown
@@ -209,3 +209,4 @@ finding, just not caught by any existing gate because no gate watches this speci
   book_snapshot_5. Full 5-day backfill expected to complete within ~1-2 hours. VM investigation for todo 3: both
   2024/2025 HL VMs confirmed ALIVE and making legitimate progress (multi-year S3 backfills, NOT hung) — detailed
   findings inline in todo 3.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (7 entries), unchanged.

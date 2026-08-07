@@ -161,3 +161,6 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
   genesis-to-present multi-year production capture backfill against live GCS with no VM-launch gating on the todo — a
   real data-capture operation left for whoever schedules the run, not a worker-determinable mechanical task. Doc stays
   `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item remains a genuine multi-year prod
+  backfill against live GCS, no [OPERATOR]/safe-idempotent justification stated on the todo itself.

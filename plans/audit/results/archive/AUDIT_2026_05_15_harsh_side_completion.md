@@ -96,7 +96,7 @@ commits within the same agent turn.
 
 ### Slot 2 — Deployment infra & lint sweep
 
-**SHIPPED (20 items, all SHA-verified)** — see [pings/slot_2.md](../../harsh_orchestrator/pings/slot_2.md):
+**SHIPPED (20 items, all SHA-verified)** — see `pings/slot_2.md` (deleted 2026-06-24, commit 890ef4b86 — no successor):
 
 - VM watchdog blindspot audit — [deployment-service@97298f3](../../deployment-service)
 - Codex audit — [unified-trading-pm@0f52f0da](../../unified-trading-pm)
@@ -233,8 +233,8 @@ workspace-wide unused-import audit.
 
 ### Slot 5 — Risk + execution alpha + kill-switch
 
-**SHIPPED (22 items, all SHA-verified)** — see [pings/slot_5.md](../../harsh_orchestrator/pings/slot_5.md). Headline
-SHAs: [execution-service@69d02cb0](../../execution-service) (DefiErrorCode 30 codes) +
+**SHIPPED (22 items, all SHA-verified)** — see `pings/slot_5.md` (deleted 2026-06-24, commit 890ef4b86 — no successor).
+Headline SHAs: [execution-service@69d02cb0](../../execution-service) (DefiErrorCode 30 codes) +
 [@310d9629](../../execution-service) (carry paper smoke) + [@59eac3a5](../../execution-service) (hedge-leg sim) +
 [@097823ca](../../execution-service) (order_book recon) + [@372a31d6](../../execution-service) (kill-switch chain) +
 [@f7db1d0b](../../execution-service) (Phase 9 cost models 100% coverage + ReconGate ext) +
@@ -263,8 +263,8 @@ end-of-day rollup tests.
 
 ### Slot 6 — Custody + signing + UTL + codex
 
-**SHIPPED (22 items, all SHA-verified)** — see [pings/slot_6.md](../../harsh_orchestrator/pings/slot_6.md). Headline
-SHAs: [unified-trading-pm@f1429168](../../unified-trading-pm) (codex 13→30 DefiErrorCode) +
+**SHIPPED (22 items, all SHA-verified)** — see `pings/slot_6.md` (deleted 2026-06-24, commit 890ef4b86 — no successor).
+Headline SHAs: [unified-trading-pm@f1429168](../../unified-trading-pm) (codex 13→30 DefiErrorCode) +
 [@dd502602](../../unified-trading-pm) (honest-coverage Phase 8) + [@1051d3b6](../../unified-trading-pm)
 (MASTER*READINESS A-G refresh); [unified-api-contracts@d981502](../../unified-api-contracts) (Oracle errors export) +
 [@a6a0f09](../../unified-api-contracts) (wallet provisioning round-trip);
@@ -293,8 +293,8 @@ drift cleanup, QG_MEM_CAP smoke tests, UAC size violation 1-file, codex/06 SSOT 
 
 ### Slot 7 — Deployment API + UI + Phase 4 cron
 
-**SHIPPED (18 items, all SHA-verified)** — see [pings/slot_7.md](../../harsh_orchestrator/pings/slot_7.md). Headline
-SHAs: [unified-api-contracts@1f80129](../../unified-api-contracts) (QG_SNAPSHOT_STALE);
+**SHIPPED (18 items, all SHA-verified)** — see `pings/slot_7.md` (deleted 2026-06-24, commit 890ef4b86 — no successor).
+Headline SHAs: [unified-api-contracts@1f80129](../../unified-api-contracts) (QG_SNAPSHOT_STALE);
 [unified-trading-pm@94f61350](../../unified-trading-pm) (check_snapshot_staleness.py);
 [alerting-service@cc3cdb8](../../alerting-service) (Phase 4.A integration tests);
 [deployment-api@e373860](../../deployment-api) (last_snapshot_date) + [@8b62cb6](../../deployment-api) (honest-coverage
@@ -321,8 +321,9 @@ estimate endpoint) + [@604b625](../../deployment-api) (Phase 11 backend); [deplo
 
 ### Slot 8 — UTL coverage + QG ratchet rollout + meta-QG
 
-**SHIPPED (17 items, all SHA-verified)** — see [pings/slot_8.md](../../harsh_orchestrator/pings/slot_8.md). Headline
-SHAs: B-014 Phase 3 SSOT path rollout to 6 service repos: [ml-inference-service@8116b23](../../ml-inference-service) +
+**SHIPPED (17 items, all SHA-verified)** — see `pings/slot_8.md` (deleted 2026-06-24, commit 890ef4b86 — no successor).
+Headline SHAs: B-014 Phase 3 SSOT path rollout to 6 service repos:
+[ml-inference-service@8116b23](../../ml-inference-service) +
 [market-data-processing-service@2ff9258](../../market-data-processing-service) +
 [ml-training-service@00a97aa](../../ml-training-service) + [alerting-service@4795ccf](../../alerting-service) +
 [market-tick-data-service@acec41d](../../market-tick-data-service) +
@@ -349,10 +350,11 @@ dispatch.
 
 ### Slot 9 — MTDS + PBM + DeFi carry backtest
 
-**SHIPPED (17 items, all SHA-verified)** — see [pings/slot_9.md](../../harsh_orchestrator/pings/slot_9.md). Headline
-SHAs: All 4 DeFi handlers eigenlayer-hardened [market-tick-data-service@f657431](../../market-tick-data-service)
-(lst_rates) + [@3bca360](../../market-tick-data-service) (evm_defi/gas_fee/solana_defi); MTDS UAC facade audit + Helius
-RPC tests [@8693c57](../../market-tick-data-service); structural phantom risk issue doc
+**SHIPPED (17 items, all SHA-verified)** — see `pings/slot_9.md` (deleted 2026-06-24, commit 890ef4b86 — no successor).
+Headline SHAs: All 4 DeFi handlers eigenlayer-hardened
+[market-tick-data-service@f657431](../../market-tick-data-service) (lst_rates) +
+[@3bca360](../../market-tick-data-service) (evm_defi/gas_fee/solana_defi); MTDS UAC facade audit + Helius RPC tests
+[@8693c57](../../market-tick-data-service); structural phantom risk issue doc
 [unified-trading-pm@9c666020](../../unified-trading-pm); PACIFICA + LIGHTER perp funding tests
 [market-tick-data-service@0c40d02](../../market-tick-data-service); 5 DeFi handler retry-and-backoff tests
 [@dcd6f5f](../../market-tick-data-service); Pyth oracle integration tests [@d63fda5](../../market-tick-data-service);

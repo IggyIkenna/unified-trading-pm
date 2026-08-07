@@ -30,11 +30,28 @@ from __future__ import annotations
 
 import re
 import sys
+import urllib.request
 from pathlib import Path
 
 PM_ROOT = Path(__file__).resolve().parents[2]
 BASE_SERVICE = PM_ROOT / "scripts" / "quality-gates-base" / "base-service.sh"
-CI_WORKFLOW = PM_ROOT / ".github" / "workflows" / "python-quality-gates-v2.yml"
+# The reusable python-quality-gates-v2.yml moved to unified-trading-ci on 2026-08-06
+# (shared_ci_workflow_repo_extraction_2026_08_06.md) — PM no longer hosts a local copy.
+# Prefer the sibling checkout (fast, no network, what every local slot has); fall back to
+# a live GitHub fetch of the public repo's main branch for environments without the
+# sibling cloned (e.g. a GHA runner that only checks out the calling repo + dep_repos).
+CI_WORKFLOW_SIBLING = PM_ROOT.parent / "unified-trading-ci" / ".github" / "workflows" / "python-quality-gates-v2.yml"
+CI_WORKFLOW_RAW_URL = (
+    "https://raw.githubusercontent.com/IggyIkenna/unified-trading-ci/main/.github/workflows/python-quality-gates-v2.yml"
+)
+
+
+def read_ci_workflow() -> str:
+    if CI_WORKFLOW_SIBLING.is_file():
+        return CI_WORKFLOW_SIBLING.read_text(encoding="utf-8")
+    with urllib.request.urlopen(CI_WORKFLOW_RAW_URL, timeout=15) as resp:  # nosec B310 — hardcoded raw.githubusercontent.com https URL, not user input
+        return resp.read().decode("utf-8")
+
 
 EXPECTED_SLICES = {"tests", "typecheck", "lint-codex"}
 # flag name -> the value that means "this phase RUNS"
@@ -98,7 +115,7 @@ def main() -> int:
     #   (c) the workflow's checks leg literally invokes BOTH non-tests selectors — verified
     #       against the SELECTORS line so a selector dropped from the merged leg fails HERE
     #       instead of silently losing typecheck or lint-codex coverage fleet-wide.
-    ci_text = CI_WORKFLOW.read_text(encoding="utf-8")
+    ci_text = read_ci_workflow()
     ci_slices = parse_ci_matrix(ci_text)
     expected_ci = {"tests", "checks"}
     if ci_slices != expected_ci:

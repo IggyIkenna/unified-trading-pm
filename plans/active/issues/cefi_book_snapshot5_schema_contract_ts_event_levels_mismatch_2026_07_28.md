@@ -68,7 +68,7 @@ tags:
 related:
   [
     /plans/archive/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -106,9 +106,9 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/archive/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 ---
@@ -813,3 +813,7 @@ against the reproduction script.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-02 verdict;
   both remaining open todos are still explicit design/maintainer-judgment calls (features-service reader design gap;
   error-truncation observability design question), neither worker-determinable.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — all 3 root-cause code fixes are
+  shipped/merged and re-verified as still-ancestor across 21+ subsequent escalation re-dispatches (a duplicate-dispatch
+  storm tracked separately); remaining items are design decisions, not bounded execution.

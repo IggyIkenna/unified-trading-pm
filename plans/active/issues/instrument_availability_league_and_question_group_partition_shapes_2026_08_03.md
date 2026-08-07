@@ -150,7 +150,18 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
 
 ## Todos
 
-- [ ] 1. [OPERATOR] P1. **Sports half RESOLVED 2026-08-03 — narrowed to prediction only.** This todo duplicated
+- [x] ✅ 1. [OPERATOR] P1. **Prediction half RESOLVED 2026-08-06 (independently, via completed migration work — no
+      operator ruling paragraph needed).**
+      `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` todo 3
+      (`instruments-service@eca688ac6`) investigated the identical `canonical_question_group={G}/day={D}/venue={V}/...`
+      shape, confirmed historical-only (last write 2026-07-22, same `a9be6ce9` writer-fix cutover as sports), and
+      migrated it directly into the already-ruled base `instrument_availability` template (no
+      `canonical_question_group=` trailing key) rather than adding one — now reflected in
+      `/codex/02-data/cross-asset-canonical-target-ssot.md` §8's prediction banner. This answers the "rule on the
+      canonical position" question in the negative (it collapses into the base shape) via completed migration rather
+      than a separate ruling. **Todos 2/5's prediction-half scope is now moot for the same reason — not independently
+      re-verified/flipped here (out of this bonus finding's scope), flagged for a future pass.** Original text preserved
+      below for record. **Sports half RESOLVED 2026-08-03 — narrowed to prediction only.** This todo duplicated
       `/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`
       todo 1 (same underlying decision, filed independently same day by a different slot): the operator ruled on that
       doc's todo 1 — option (a), `league=` is a legitimate sports trailing key
@@ -161,19 +172,36 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
       `canonical_question_group=` key alone (confirm or revise the "Recommended decision" above for prediction), write
       that ruling into `cross-asset-canonical-target-ssot.md` §8. Still blocks todos 3-5 below for the prediction half;
       todo 3's sports half can now proceed against the already-ruled shape without waiting further.
-- [ ] 2. [DATA] P1. Re-verify prediction's `canonical_question_group=` shape is genuinely historical-only (sample all 78
-      top-level prefixes, not just 3 — bounded per-prefix listing, not a corpus walk; confirm zero objects on any day
-      after ~2026-07-22) OR find it is still being written and escalate to the SAME urgency as sports below if so. Does
-      not depend on todo 1.
-- [ ] 3. [DATA] P1. Locate the sports writer codepath that emits `day=/league=/venue=/instruments.parquet` (distinct
+- [x] ✅ 2. [DATA] P1. Re-verify prediction's `canonical_question_group=` shape is genuinely historical-only (sample all
+      78 top-level prefixes, not just 3 — bounded per-prefix listing, not a corpus walk; confirm zero objects on any day
+      after ~2026-07-22) — **CONFIRMED HISTORICAL-ONLY 2026-08-06**: all 78 `canonical_question_group=` prefixes sampled
+      via bounded GCS per-prefix listing (16-thread parallel, `instruments-store-pred-prd-central-element-323112`);
+      latest day=2026-07-22 across all groups (the `a9be6ce9` writer-fix cutover), 0 still-live writes, 0 exceptions. No
+      escalation needed. — unified-trading-pm@b53a0a1e6 (investigation only, no code change). Does not depend on todo 1.
+- [x] ✅ 3. [DATA] P1. Locate the sports writer codepath that emits `day=/league=/venue=/instruments.parquet` (distinct
       from `_write_venue`/`_instrument_availability_sink_for` — likely in `sports.py`, `footystats.py`, or a per-league
       team/fixture/standings catalog writer in `process_enrichment.py`) and fix it to the ruled canonical shape from
       todo 1, following the SAME sink-PREFIX-not-partition-dict pattern as `_instrument_availability_sink_for`
-      (alphabetical-sort trap). Depends on todo 1.
-- [ ] 4. [DATA] P1. Historical migration: copy the ~172,592 (at investigation time, growing) sports `league=` objects to
-      the ruled full-hive target — mirrors this doc's own `migrate_instrument_availability_hive_2026_08_03.py` pattern
-      (copy-if-missing + metadata-verify, VM-scoped, never deletes the source). Depends on todo 1 + todo 3 (writer fixed
-      first, so no new non-compliant objects land during/after the historical copy).
+      (alphabetical-sort trap). — **ALREADY DONE 2026-08-03 by sibling doc**
+      (`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` todo 2): codepath
+      located in `_write_sports_fixture_venue` (`process_write.py:247`, NOT in
+      `sports.py`/`footystats.py`/`process_enrichment.py` as originally speculated). Fixed to use
+      `_instrument_availability_sink_for(bucket, ...)` with `league=` trailing after `venue=` (original
+      `instruments-service@ba87cc32`, current LDR equivalent `4e25aae1`). Migration tool extended with
+      `_SPORTS_LEAGUE_FLAT_RE` to recognize + migrate the legacy shape. Writer fix surviving on LDR confirmed 2026-08-06
+      via code inspection (slot 8). Depends on todo 1.
+- [x] ✅ 4. [DATA] P1. **EXECUTED 2026-08-06 (slot 6, data_engineering craft).** Historical migration of sports
+      `league=` objects via
+      `migrate_instrument_availability_hive_2026_08_03.py --asset-group sports --apply-prod     --confirm-prod-write`
+      (PROD, `instruments-store-sports-prd-central-element-323112`). Results: **172,348 copied**, **247
+      content_mismatch** (all `day=2026-08-02`, writer-fix cutover day — resolved via `--resolve-content-mismatch`: 8
+      flat_wins, 7 hive_wins, 230 tie_flat_bytes, **2 disjoint** flagged for manual review), **0 failed**.
+      Post-migration dry-run confirms **188,680 total hive objects** (reconciles: 16,332 pre-existing + 172,348 copied =
+      188,680 ✓). Flat sources preserved (copy-only, never deletes). 2 disjoint pairs carried forward:
+      `KUWAIT_DIVISION_1/day=2026-08-02` (flat=4 hive=4, neither superset) and `ROMANIA_LIGA_I/day=2026-08-09` (flat=2
+      hive=2, neither superset) — same instrument-churn class as the sibling doc's 14 disjoint pairs, not
+      migration-blocking. — instruments-service (migration execution, no code change — script already shipped by todo
+      3/sibling doc todo 2).
 - [ ] 5. [DATA] P2. IF todo 2 finds prediction's `canonical_question_group=` shape still live: fix that writer too (same
       pattern as todo 3) and migrate its historical objects (same pattern as todo 4). IF todo 2 confirms
       historical-only: just run the historical migration (no writer fix needed). Depends on todo 1 + todo 2.
@@ -181,3 +209,8 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Note: the sibling doc
+  `instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md` already reports the
+  sports `league=` writer fix shipped (`instruments-service@ba87cc32`) — this doc's todos 1/3/4 (sports half) may be
+  stale/duplicative; not verified further, flagged for the next content pass, not resolved here (out of this skill's
+  scope).

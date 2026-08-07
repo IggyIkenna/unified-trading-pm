@@ -113,8 +113,8 @@ todos of its own**. The plans that actually work these docs' open items:
   [boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31](/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md),
   [orphaned_wip_slot12_slot8_recovery_2026_08_04](/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md),
   [backlog_regen_reverted_p1_2_park_2026_08_01](/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md),
-  [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/active/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
-  [fleet_git_health_ip_185_known_human_planning_vm_2026_08_03](/plans/active/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md),
+  [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
+  [fleet_git_health_ip_185_known_human_planning_vm_2026_08_03](/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md),
   [na_and_ag_closeout_audit_population_overlap_2026_07_31](/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md),
   [na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30](/plans/active/issues/na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30.md).
   None yet covered by a dispatched batch — see this run's own report (`ag_closeout_audit_ao_parked_2026_08_04.md` / the
@@ -132,11 +132,11 @@ todos of its own**. The plans that actually work these docs' open items:
 (same backlog task dispatched to two slots simultaneously) ·
 [issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md](/plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md)
 (ready P1 task undispatched, no matching worker, autospawn gap) ·
-[issues/dispatch_sequential_gate_fix_2026_07_24.md](/plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md)
+[issues/dispatch_sequential_gate_fix_2026_07_24.md](/plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md)
 (`_claim_plan_for_slot` pinned all tasks to one slot, defeating intra-plan concurrency) ·
 [issues/gated_skip_park_no_slack_page_2026_07_25.md](/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md)
 (GATED skip-task auto-park path never pages Slack) ·
-[issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md](/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md)
+[issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md](/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md)
 (redispatch churn when a task is gated on an external CI promote, no durable park) ·
 [issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md](/plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md)
 (escalation-dispatch vs backlog-dispatch repo-collision blind spot) ·
@@ -206,7 +206,7 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 (complete, archived 2026-07-27 — AO alerts Slack channel dedup/lifecycle-churn/BLOCKED-schema redesign) ·
 [ao_fleet_observability_kpis_2026_07_20.md](/plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md)
 (dispatch-completion/escalator-efficacy/account-burn observability KPIs, archived 2026-07-31) ·
-[issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
+[issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md](/plans/archive/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md)
 (`plan_health` test suite firing real Slack posts to the AO alerts channel) ·
 [issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md](/plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md)
 (repo-docs cleanup deleted files still referenced in shipped AO server code) ·

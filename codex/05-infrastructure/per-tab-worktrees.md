@@ -635,6 +635,30 @@ turning a cosmetic problem into real data loss (force-pushing a shared branch is
 correct response to a sweep that already happened: leave it, tell the operator, and let the owning agent carry on (their
 tree simply shows those files as already-committed after their next pull).
 
+### Failed-commit staging hazard — a rejected hook leaves files vulnerable to a peer session's bare commit (2026-08-06)
+
+A different TRIGGER for the same underlying fact as the autostash-pop hazard above ("`git commit` takes the WHOLE index,
+not just what you just staged") — no `--autostash` involved this time. A commit attempt that fails a pre-commit hook
+(e.g. the Conventional Commits format check) aborts the commit but does NOT unstage the attempted files — they sit
+staged indefinitely while you diagnose/fix the failure. If a DIFFERENT session shares this exact index — commit
+attribution is path-derived (slot number + host), not session-derived, so two interactive Claude Code tabs/windows on
+the same machine, both pointed at the same slot directory, resolve to the IDENTICAL git identity — that session's own
+unrelated `git add <its files>` + bare `git commit` commits the whole index, silently absorbing your leftover staged
+files into its commit.
+
+**Measured 2026-08-06**: `agent-orchestrator@e430623`, committed as
+`fix(infra): add PrivateTmp=yes to resource- history-sampler.service...` (9 real lines), silently carried 460 lines of
+an unrelated wallet-reconciliation feature's frontend/test files that had been sitting staged from a prior commit
+attempt that failed the Conventional Commits check two minutes earlier. Not data loss — both commits landed and
+`git merge-base --is-ancestor` confirms both are ancestors of the eventual HEAD — but the same mis-attribution class the
+autostash-pop hazard causes, via a completely different trigger.
+
+**Mitigation**: the instant a commit attempt fails validation (hook rejection, format error),
+`git restore --staged <the same file list>` before doing anything else — fixing the message, re-diagnosing, whatever
+comes next. Don't let files sit staged while you work on the fix; only re-stage right before the retry. This is the SAME
+discipline the reconciliation list's `ahead>0` step already applies before a pull's `--autostash` pop — this hazard is
+the reminder that it applies equally after a failed commit, pull or no pull.
+
 ### Autostash conflict recovery on rebase
 
 When `git pull --rebase --autostash` (or `git rebase`) reports `Applying autostash resulted in conflicts`, the autostash
@@ -880,8 +904,8 @@ load-bearing:
   that's how a gate-red issue doc reached LDR despite the check existing. prek REFUSES on a set `core.hooksPath`; 10
   clones carried a stale absolute post-`/active`-migration path there (disabling ALL hooks) — clear with
   `git config --unset-all --local core.hooksPath` only when the target dir is provably gone.
-- **`pre-push` = the strict-quickmerge guard** (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`, copied — **prek must
-  NEVER manage pre-push**). 24 main-ws clones lacked it too (the slot setup script never covers main-ws).
+- **`pre-push` = the strict-quickmerge guard** (`scripts/hooks/pre-push`, installed — **prek must NEVER manage
+  pre-push**). 24 main-ws clones lacked it too (the slot setup script never covers main-ws).
 
 **Provisioning is now three-layered**: `setup-tab-worktrees.sh` installs BOTH at clone time for every repo
 (`install_strict_quickmerge_hook` + `install_prek_precommit_hook`); the 5-min `slot-cron-ff-pull.sh` self-heal loop

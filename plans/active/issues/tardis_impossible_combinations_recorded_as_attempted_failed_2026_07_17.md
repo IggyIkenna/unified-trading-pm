@@ -187,6 +187,10 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the P1 sizing/purge half is
   explicitly operator-gated and snapshot-first; the vendor-catalog gate must coordinate with in-flight
   `coverage_exclusions` work in UAC.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict. The
+  P0 vendor-catalog-gate is still entangled with the unresolved canonical-enum-vs-coverage_exclusions taxonomy decision
+  the script explicitly declines to make; the P1 `--apply` purge half is still operator-gated + snapshot- first (counts
+  drift). No duplicate-claim risk found (grepped all active cefi_master planning docs — no overlap).
 
 ## Progress Log
 
@@ -194,3 +198,4 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in
   `unified-api-contracts/.../coverage_exclusions.py` (the in-flight UAC work the open `[CODE] P0` vendor-catalog-gate
   todo must coordinate with) for the generic `cefi_master.md` epic pointer.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

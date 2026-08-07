@@ -268,3 +268,5 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   2026-07-31 corpus sweep); added 2 real source paths (`bucket_naming.py`'s `_KIND_ALIASES`, the AWS `main.tf`
   `group_b_buckets` for_each), dropped the manifest-consolidator/pipeline-mode SSOTs + the now-resolved split-brain
   issue doc tied to the DONE cutover phases.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): governed by the 2026-07-17
+  operator ruling that all 5 bucket folds are HUMAN plans; residual AWS-leg/IAM/alias-sunset items not re-litigated.

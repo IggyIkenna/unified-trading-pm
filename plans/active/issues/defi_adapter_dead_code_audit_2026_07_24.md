@@ -70,7 +70,7 @@ last_reviewed:
 context_scope:
   [
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
-    /plans/active/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
+    /plans/archive/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/live/governance_params_event_poller.py,
     instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py,
     instruments-service/instruments_service/reference_data/factory.py,
@@ -482,3 +482,7 @@ files.
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
   re-read end to end, all 4 open items unchanged: wire-in-or-delete/consolidation product decisions with named
   registry/billing/cross-repo blast radius, none worker-determinable. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — all 4 open items remain scoped
+  product/architecture disposition decisions (jupiter.py venue registration, governance-params poller OPERATOR-NOTIFY,
+  +2 more), none worker-determinable.

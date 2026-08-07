@@ -14,7 +14,7 @@ summary: >-
   and against each other (zero file collisions); 7 cleared into todos below, 3 parked in Deferred with their blocking
   class named (one genuine cross-tranche conflict, one operator-gated step, one too-large/risky-for-a-batch-todo bundle
   needing delete-safety verification this run could not complete).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -38,7 +38,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-08-02"
+last_updated: "2026-08-07"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -64,10 +64,10 @@ drift_direction: advance-code
 
 # CeFi satellite AO batch 4 — iterative-drain extraction
 
-> **Status: draft — NOT dispatched.** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit skill's
-> autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was a scheduled
-> autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review. Flip this
-> frontmatter's `status` to `active` only after that review.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Per CLAUDE.md's plan-destination HARD RULE and the
+> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This
+> run was a scheduled autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review.
+> Flip this frontmatter's `status` to `active` only after that review.
 
 > **Cross-todo file-collision check: PASS.** The 7 todos touch, respectively: (1) a market-tick-data-service audit
 > script + `market-data-processing-service` verification scope; (2) a `gcloud storage ls` check (read-only) + checkbox
@@ -83,41 +83,67 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Migrated
-      2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (batch1's one undone todo out of 33,
-      folded back into the source doc rather than left to evaporate in the archived batch). Run the row-level diff of
-      `bare_flat`/`bundled_flat` objects vs their hive counterparts across every day classified
-      `bare_flat_only`/`bundled_flat_only`/`mixed` in the Phase-1 scope-audit parquet (the archived predecessor plan
-      only sampled 5 days). Read-only verification, no writes. Source:
-      `issues/bybit_futures_chain_write_shape_2026_07_13.md`. **Done when**: the full-scope diff completes, results are
-      recorded in the source doc, and its open P1 todo is flipped citing this run.
+- [x] ✅ [SCRIPT] P1. **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope — DONE
+      `market-tick-data-service@1a32b6e7`.** Full-scope audit run 2026-08-06 (slot 13) across all 546 scope days
+      (2023-04-05 → 2025-09-23), 1,114 flat objects. Results: 490 duplicate (44%), 290 not_duplicate (26%), 334
+      no_counterpart (30%). Audit parquet:
+      `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet`. Source doc
+      `issues/bybit_futures_chain_write_shape_2026_07_13.md` P1 flipped, Progress Log updated. The 5-day sample's "all
+      duplicates" was a sampling artifact; 56% of shape-2 objects carry unique/orphan data.
 
-- [ ] [DATA] P2. **Re-check ASTER + spot-check 2 other venues for post-relaunch live data landing.** Run the cited
+- [x] ✅ [DATA] P2. **Re-check ASTER + spot-check 2 other venues for post-relaunch live data landing.** Run the cited
       `gcloud storage ls gs://market-data-tick-cefi-prd-central-element-323112/pipeline_mode=live_aster/...` check for
       day=2026-07-30 (well past the 13:30Z UTC threshold as of today). If rows landed: flip
       `infra_capture_and_devops_leftovers_2026_07_06.md`'s verification-half checkbox and archive
       `issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`, both citing this check. If rows did NOT
       land: file a fresh investigation, do not silently re-park. Then spot-check HYPERLIQUID and BINANCE-FUTURES the
       same way (read-only `gcloud storage ls`, no writes/deletes). Source:
-      `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`. **Done when**: all 3 venues checked,
-      dependent-doc checkboxes flipped or a new bug filed, with the exact `gcloud` output cited as evidence.
+      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`. **Done when**: all 3
+      venues checked, dependent-doc checkboxes flipped or a new bug filed, with the exact `gcloud` output cited as
+      evidence. — **DONE 2026-08-07 (slot 12)**: all 3 venues checked with exact output — ASTER (`live_aster`),
+      HYPERLIQUID (`live_hyperliquid`), BINANCE-FUTURES (`live_binance`) all return **zero objects** at the cited
+      `raw_tick_data/.../pipeline_mode=live_*` path for day=2026-07-30 + 08-05 + 08-06
+      (`ERROR: ... matched no objects`), and zero `live_*` anywhere in the tick bucket (only `batch_*` modes). **Rows
+      did NOT land → fresh investigation filed (not re-parked)**:
+      `plans/active/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`. Root cause:
+      capture + event-log WARM tier are healthy (30,486 cefi warm objects flowing to
+      `central-element-323112-events/live-events/warm/cefi/*`); the cited `raw_tick_data/live_*` path is a retired
+      legacy surface; the real bug is the **cold-tier `live-event-log-compactor` OOM** (512Mi, killed on the
+      `(cefi,     book_snapshot_5)` shard with 1,497 warm files, failing daily since 2026-08-01 →
+      `live-events/cold/cefi/**` empty). Source-doc todos 1-2 flipped citing this run (infra plan's ASTER checkbox
+      intentionally NOT flipped — its "live_aster rows landing daily" gate now reads against the warm/cold event-log
+      surface per the new issue doc's P2 todo). New bug has 3 actionable todos (compactor OOM fix, cold backfill,
+      legacy-path doc retiement).
 
-- [ ] [BACKEND] P2. **Widen `DeploymentsRegistry.get()`'s except clause + investigate the false `vm_not_running` reap.**
-      In `unified-trading-library`, degrade-to-None on real `google.api_core` `NotFound`/`Forbidden`/404 (mirroring the
-      already-shipped `_read_true_exit_code` idiom), with a regression test. Separately, investigate why
+- [x] ✅ [BACKEND] P2. **Widen `DeploymentsRegistry.get()`'s except clause + investigate the false `vm_not_running`
+      reap.** In `unified-trading-library`, degrade-to-None on real `google.api_core` `NotFound`/`Forbidden`/404
+      (mirroring the already-shipped `_read_true_exit_code` idiom), with a regression test. Separately, investigate why
       `deployment-service`'s `reap_stale()` sweep excluded a genuinely-RUNNING VM from `running_vm_names` at
       2026-07-31T05:46:53Z (Finding 3) — fix + test, or confirm unreproducible one-off with cited evidence. Source:
       `issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md`. **Done when**:
       both fixes ship with regression tests and QG green, or the reap finding is confirmed unreproducible with cited
-      evidence and the source doc's checkboxes are flipped accordingly.
+      evidence and the source doc's checkboxes are flipped accordingly. — **SHIPPED**:
+      `unified-trading-library@89eabac2` (widen `get()` to real-GCS `NotFound`/`Forbidden`/404 via `exc_name`
+      string-match idiom + regression test `test_get_falls_through_to_archive_on_real_gcs_not_found` with a
+      `google.api_core.exceptions.NotFound`-raising storage fake) + `deployment-service@4ee514e` (root cause:
+      `_list_running_vms()` collapsed a GCE list-API failure/timeout into `[]` → `reap_stale(running_vm_names={})` read
+      as "no VMs running" → every stale-heartbeat active entry reaped `vm_not_running`; fix returns `None` on
+      census-unavailable → caller passes `running_vm_names=None` → heartbeat-age-only fallback; regression tests
+      `test_list_running_vms_returns_none_on_timeout` +
+      `test_main_exit_code_mode_census_unavailable_no_false_vm_not_running_reap`). Both QG green (UTL Pass-1 verified
+      `89eabac2`; deployment-service Pass-1 GREEN 220s, sentinel `4ee514e`), both verified on
+      `origin/live-defi-rollout`. Source-doc items 1-2 flipped. Sibling finding (deployment-api's two `reap_stale()`
+      callers share the empty-set bug) filed `issues/deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md`.
 
-- [ ] [BACKEND] P2. **Widen `unified-trading-library`'s `_GCS_RETRY` predicate for connection-level transient errors.**
-      In `providers/gcp.py:66-75`, also retry `ConnectionError`/`SSLError`/`ProtocolError` (currently only retries a
-      narrower set), and add `timeout=600` to `list_blobs()` (`gcp.py:315-329`). Include a regression test. This closes
-      the still-open half of a shard-13 content-migration investigation whose other half (the checkpoint-resume actuator
-      bug) already shipped `deployment-service@b34e85a`. Source:
-      `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`. **Done when**: both
-      changes ship, QG is green, and the regression test covers the widened retry predicate.
+- [x] ✅ [BACKEND] P2. **Widen `unified-trading-library`'s `_GCS_RETRY` predicate for connection-level transient errors
+      — DONE unified-trading-library@f135d4fd8.** `_GCS_RETRY` now uses the GCS SDK's `DEFAULT_RETRY` predicate
+      (429/503/5xx + ConnectionError/SSLError/ProtocolError/timeouts) via `DEFAULT_RETRY.with_deadline(600.0)` — the
+      prior 429/503-only predicate dropped exactly the connection errors behind shard 13's SSL-EOF/connection-reset
+      death; `GCSStorageClient.list_blobs()` gained `timeout=600` for defense-in-depth. Regression tests assert
+      ConnectionResetError / urllib3 SSLError / ProtocolError are retried and a non-retryable ValueError propagates
+      immediately. QG green (sentinel `f135d4fd8`), 35/35 cloud_interface unit tests pass. Source doc
+      `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md` checkbox flipped
+      citing this run.
 
 - [ ] [DATA] P2. **Legacy-bucket 3-part reconciliation bundle.** (a) Update
       `issues/legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 to reflect that cefi's legacy bucket is

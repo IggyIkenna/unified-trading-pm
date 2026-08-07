@@ -106,6 +106,15 @@ estimate_calibrated_ai_days: <N> # baseline × class multiplier
 assigned_role: backend-engineer | data-pipeline-engineer | ui-developer | infra-engineer | monitor | review
 drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap
 
+# Plan-specific — reasoning-effort override (elective; model-tier-selection.md is the SSOT).
+# Absent on BOTH → derived from assigned_role's thinking tier, else (no role either) from open
+# todo-count (LARGE_PLAN_TODO_THRESHOLD split: xhigh at/below it, max above) — NEVER a silent
+# "medium" default (2026-07-22 ruling). `effort:` wins over `thinking_tier:` when both are set.
+effort: low | medium | high | xhigh | max # optional — direct override of the spawn `--effort` flag
+thinking_tier: max | high | medium | mechanical | off | none # optional — extended-thinking level;
+# max/high also imply effort=max/high unless `effort:` is explicit above; mechanical/off/none is the
+# only way to turn thinking OFF (truly rote tasks — rename sweeps, config flips)
+
 # Plan-specific optional
 last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout | NA

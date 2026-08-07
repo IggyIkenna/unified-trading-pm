@@ -41,8 +41,8 @@ context_scope:
   [
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
-    /plans/active/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md,
+    /plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
+    /plans/archive/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md,
   ]
 source:
   [
@@ -133,10 +133,30 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Rule on §1** — confirm the 26-doc exclusion list, or name which should be pulled back into the ao
-      tranche. **Gate**: an explicit yes/no per contested doc, or a blanket confirmation.
-- [ ] [OPERATOR] P2. **Rule on §2** — approve (or defer) the 23-doc `asset_group` retagging pass. **Gate**: go/no-go +
-      who does it (this session vs. folded into normal issue-doc work as each one is touched).
+- [x] ✅ [OPERATOR] P2. **Rule on §1** — confirm the 26-doc exclusion list, or name which should be pulled back into the
+      ao tranche. **RULED 2026-08-06 (operator, interactive): BLANKET CONFIRMATION — all 26 exclusions stand, none
+      pulled back.** The gate offered "an explicit yes/no per contested doc, or a blanket confirmation"; the operator
+      chose blanket. Basis: the audit read all 88 candidates individually rather than trusting the filter, and each of
+      the 26 carries a stated reason grouped into four coherent categories (4 broad multi-repo audits, 9 PM/audit-
+      tooling bugs whose defect lives in the audit skill or plan-hygiene machinery rather than agent-orchestrator's
+      runtime, 7 incidentally-matched unrelated docs, 5-6 shared-host/CI-tranche infra items). The distinction being
+      drawn — is agent-orchestrator the SUBJECT of the doc, or merely one of several repos it touches? — is the right
+      one. **This changes no work, only tracker ownership**: as §1 itself states, these are exclusions from the ao
+      tranche's tracker, not a claim the underlying work does not matter.
+- [x] ✅ [OPERATOR] P2. **Rule on §2** — approve (or defer) the 23-doc `asset_group` retagging pass. **RULED 2026-08-06
+      (operator, interactive): APPROVED, folded into normal issue-doc work — NOT a bulk pass.** Both halves of the gate
+      are answered: go/no-go = GO; who does it = whichever agent next touches each doc for an unrelated reason.
+      Rationale for opportunistic over bulk: the retag is genuinely worth doing (mistagging is what forced this audit in
+      the first place, and every tranche-scoped audit keeps re-inheriting the noise), but a 23-file bulk edit landing
+      against ~15 concurrent slots is a collision magnet for zero urgency. Opportunistic folding reaches the same end
+      state with near-zero contention risk. Standing instruction captured as its own todo below so it survives as
+      tracked work rather than as a decision buried in a Progress Log.
+- [ ] [DOC] P3. **Standing (no deadline): when you touch any of §2's 23 mistagged docs for any other reason, correct its
+      `asset_group` to include `ao` in the same commit.** The authoritative list is §2 of this doc — read it there, do
+      not re-derive it. Do NOT open a doc solely to retag it, and do NOT batch these: the 2026-08-06 operator ruling
+      chose opportunistic folding precisely to avoid a 23-file bulk edit under concurrent-slot contention. **Done
+      when**: §2's list is exhausted, at which point this doc's remaining §3/§4 items decide its archival. Until then
+      this todo is expected to sit open for a long time — that is the intended shape, not staleness.
 - [ ] [SCRIPT] P2. **§3 — read both duplicate docs in full, decide the survivor, merge/supersede the other.** Source:
       this doc §3. **Gate**: one doc `status: resolved` + `superseded_by:` pointing at the survivor, or both kept with
       an explicit reason why they're not actually duplicates.
@@ -162,3 +182,7 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   4 open todos: §1/§2 are explicit `[OPERATOR]` rulings, §3 self-states it needs a human read, §4 is the lone mechanical
   item but the doc stays whole-NA since `assigned_vm` is doc-granular). Cross-validated: the same-day sibling
   `/ag-closeout-audit ao` batch6 run also declined this doc as operator-gated.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

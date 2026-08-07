@@ -30,7 +30,7 @@ scope: [engineer]
 tags: [defi, features-service, oom, manifest, per-vm-shards, backfill, vm-sizing]
 related:
   - /plans/archive/issues/defi_manifest_per_vm_shard_fallback_bloat_2026_07_23.md
-  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-26"
 parent_epic: defi_master
 assigned_vm: NA

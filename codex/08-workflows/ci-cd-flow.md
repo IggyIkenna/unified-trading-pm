@@ -811,10 +811,10 @@ early-exits "nothing to commit" on a clean tree — silently piles commits on LD
 Everything else is HARD-blocked. **Enforcement — the machine guard is LIVE**: quickmerge stamps a
 `Quickmerge: agent|human` lineage trailer on every commit it ships; `scripts/cicd/check_strict_quickmerge.py` flags a
 CODE-source commit (`*.py`/`*.ts` outside scripts/tests/.github) reaching the integration branch without that trailer
-that is not a carve-out. It runs as a `pre-push` hook (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`, installed in
-all Path-B clones + wired into `setup-tab-worktrees.sh`); **BLOCKS by default** (operator policy 2026-06-26 — every code
-push goes via quickmerge, no direct-push bypass), bypassable only with `git push --no-verify`; the promote-PR
-`quality-gates-v2` is the server backstop (LDR has no remote CI).
+that is not a carve-out. It runs as a `pre-push` hook (`scripts/hooks/pre-push`, installed in all Path-B clones + wired
+into `setup-tab-worktrees.sh`); **BLOCKS by default** (operator policy 2026-06-26 — every code push goes via quickmerge,
+no direct-push bypass), bypassable only with `git push --no-verify`; the promote-PR `quality-gates-v2` is the server
+backstop (LDR has no remote CI).
 
 ## Local ↔ CI QG parity matrix (the confidence model; codified 2026-06-08)
 
@@ -1006,10 +1006,32 @@ A code fix landing on `main` does **not** propagate to a running container by it
    `repositoryEventConfig { push: { branch: "^main$" } }` to fire on a branch push.
 4. **The cloud-build-router must not swallow `PERMISSION_DENIED`** — it now exits with a DISTINCT status + alerts on
    `PERMISSION_DENIED` (vs genuinely-unconfigured) so a permissions regression is loud, not a silent no-deploy.
+5. **Cloud Run SERVICES (not jobs) can have live traffic PINNED BY REVISION NAME, silently defeating every future
+   auto-deploy (incident: `deployment-api`, discovered 2026-08-05)** — a Cloud Run _service_'s traffic config is either
+   `latestRevision: true` (tracks whatever the newest Ready revision is — the healthy default) or an explicit
+   `{revisionName: <name>, percent: 100}` pin. Once ANYTHING sets an explicit by-name pin — a manual
+   `gcloud run services update-traffic --to-revisions=<name>=100`, the Console "manage traffic" action, or
+   `deployment-service/scripts/cloud-run/canary-deploy.sh`'s rollback path (canary-deploy.sh:279-296, which correctly
+   pins `PREV_REVISION=100` on a failed health check but has **no companion step that ever restores `--to-latest`**) —
+   the service is stuck in named-pin mode **indefinitely**. Every subsequent CI build+deploy
+   (`deployment-api-main-deploy` et al., no `--no-traffic` flag) still runs, still reports `SUCCESS`, still creates a
+   fresh healthy `Ready=True` revision — but **traffic never moves off the pinned name**, with zero alert anywhere in
+   the pipeline. Measured 2026-08-05: 5 consecutive green CI deploys over ~24h, all silently trafficless, while a
+   revision from _before_ a shipped fix kept serving 100% of production traffic. Diagnose via
+   `gcloud run services describe <svc> --format='value(status.traffic)'` — if the 100%-entry has an explicit
+   `revisionName` instead of tracking latest, or its revision predates your last merge, traffic is pinned. **A
+   deliberate pin (precutover freeze, canary hold) is fine — but it MUST be scoped like a plan `locked_by:`: a stated
+   reason + an explicit named owner + an explicit un-pin step, never left implicit.** Applies to any Cloud Run _service_
+   with a `-main-deploy`-style auto-deploy trigger — currently `deployment-api`, `deployment-ui`, and
+   `unified-trading-system-ui`'s UAT deploy (`odum-portal-staging`; PROD is manual-only by design, see
+   `deploy-uat-on-merge.yml`, so a pin there doesn't defeat an _expected_ auto-deploy the same way). Does **NOT** apply
+   to `agent-orchestrator` — its dashboard deploys to Firebase Hosting and its API deploys via EC2/systemd
+   (`ao-self-pull.sh`), neither of which has Cloud Run revision-traffic semantics.
 
 **Rule:** after a fix merges, confirm the deployed artefact actually changed — check the running image digest
 (`gcloud run jobs describe … --format='value(spec.template.spec.template.spec.containers[0].image)'`) and the build that
-produced it, not just the merge.
+produced it, not just the merge. **For Cloud Run _services_, also confirm traffic actually moved** — check
+`status.traffic` resolves to the revision your fix built, not just that the build/deploy step reported SUCCESS.
 
 ---
 
@@ -1119,10 +1141,21 @@ basedpyright ran (fleet-wide false-green; fixed PM@71a2e103b). Detail: `quality-
 require the derived context `Quality Gates (<repo>) / quality-gates-v2`. The v1 callers (`quality-gates.yml`,
 `workspace-qg.yml`) are RETIRED + deleted fleet-wide (2026-05-30) — the legacy names no longer exist as workflows.
 
-| Repo type    | Caller                                   | Callee                                                                                          |
-| ------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| PM           | `.github/workflows/quality-gates-v2.yml` | `.github/workflows/python-quality-gates-v2.yml` (local ref — PM calls itself)                   |
-| Service repo | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` |
+| Repo type             | Caller                                   | Callee                                                                             |
+| --------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| Every repo (incl. PM) | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-ci/.github/workflows/python-quality-gates-v2.yml@main` |
+
+**Host moved to `unified-trading-ci` (2026-08-06).** The reusable `python-quality-gates-v2.yml` +
+`image-build-validate.yml` (+ the two `setup-python-tools`/`setup-agent-tools` composite actions) used to live in PM —
+which meant flipping PM's own GitHub visibility (private↔public) broke every repo's CI fleet-wide the moment a public
+caller couldn't resolve a reusable workflow hosted in a private repo (`main_ci_red` incident, 2026-08-06). Extracted to
+a small, always-public, single-branch (`main`-only) repo dedicated to hosting these files, so PM's own visibility can
+never again take down the fleet's CI. PM is now just another caller — the old chicken-and-egg self-reference special
+case (PM calling its own local copy since it couldn't reference itself remotely) no longer applies. `notify-slack.yml`
+did NOT move: every repo (PM included) keeps its own local copy (`uses: ./.github/workflows/notify-slack.yml`) since it
+was never referenced cross-repo. Full incident + migration history:
+`plans/archive/shared_ci_workflow_repo_extraction_2026_08_06.md` (once archived) or
+`plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`.
 
 **SSOT template**: `scripts/workflow-templates/quality-gates-v2.yml.tmpl`. **Roll-forward** a workflow change: (1) edit
 the template; (2) `rollout-workflow-templates.sh --template <tmpl>`; (3) commit + push the rendered file to each repo's

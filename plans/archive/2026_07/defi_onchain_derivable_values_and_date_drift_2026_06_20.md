@@ -44,7 +44,7 @@ drift_direction: advance-code
 > Hermes/jitoSOL residual (`unified-api-contracts@4a29261e`) and the Latent Bug-class-3 local-fallback sweep
 > (`instruments-service@8b02b647`), both independently re-confirmed real via `git log`/`git show` on 2026-07-27. Broader
 > local-fallback sweep beyond this doc's concrete precedent is a separate, already-filed follow-up:
-> [`/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`](/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md).
+> [`/plans/archive/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`](/plans/archive/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md).
 > Companion finalize plan (also archived):
 > [`/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20_finalize_2026_07_27.md`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20_finalize_2026_07_27.md).
 
@@ -211,7 +211,7 @@ that workstream.
       explicit resolve-via-UAC tests for every formerly-local-only protocol. QG green, shipped via quickmerge. Broader
       "any local fallback" sweep beyond this concrete precedent (token decimals / chain genesis / factory addresses)
       filed as its own scoped follow-up:
-      `unified-trading-pm/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`
+      `unified-trading-pm/plans/archive/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`
       (unified-trading-pm@8c3d335fd).
 
 ## Success criteria

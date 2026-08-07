@@ -249,6 +249,28 @@ list?) before executing autonomously — flagging for operator awareness rather 
       rows registered against prod, verified via direct per-VM-shard read). Full detail in batch6's Progress Log entry
       for this todo. The MTDS HL mark-price backfill script's writer-half was confirmed moot (dead target bucket, per
       fact #4 above) rather than forced — matches this doc's own established finding, not a new decision.
+- [x] ✅ [CODE] P2. **DONE 2026-08-04 (sub-agent, data_engineering).** This doc's source todo named BOTH
+      `perp_daily_ctx` AND `perp_mark_price` — the checkbox above only closed the `perp_daily_ctx` half.
+      `perp_mark_price` is a DISTINCT, separately-tagged data_type (confirmed via direct GCS content read, not name
+      inference — its rows carry only `mark_price`, no `day_ntl_vlm`/`open_interest`, unlike `perp_daily_ctx`), so it
+      needed its own registration + backfill, not a citation of the above. Registered `perp_mark_price` under
+      `DATA_TYPES_BY_ASSET_GROUP["defi"]` + new `DEFI_PERPETUAL_PERP_MARK_PRICE` SchemaContract (mirrors this doc's
+      established inertness argument — HYPERLIQUID/CeFi combos enumerate under the separate `"cefi"` key, so this
+      registration is a no-op for their `expected_unattempted` denominator, same as `perp_daily_ctx`'s). Confirmed this
+      data_type is fully DEAD (no writer AND no reader) — a stronger case than `perp_daily_ctx`'s: the MTDS HL
+      mark-price backfill script's target bucket is confirmed deleted (fact #4 above) AND its current code no longer
+      even produces this data_type (its `_DT` constant was renamed to `perp_daily_ctx` at some point after the
+      historical `perp_mark_price` rows were written — the script's own OUTPUT docstring is stale); no strategy-service
+      reader references it either (direct grep of `canonical_perp_funding_provider.py` +
+      `canonical_dex_pool_provider.py`, zero hits). Registered anyway per the honest-coverage rule established elsewhere
+      in this doc — real historical rows should not stay manifest-invisible just because both writer and reader are
+      dead. Backfilled manifest rows for the real historical objects: 316 (day, venue) shards, HYPERLIQUID, 22,690
+      objects, 2023-05-20..2025-06-01 — NON-contiguous (315 contiguous days + one isolated day 2025-06-01, 199 objects,
+      both segments sharing the same `available_at` timestamp cluster, i.e. one historical migration batch, not ongoing
+      production). Evidence: `unified-api-contracts@<pending-quickmerge-sha>`,
+      `unified-trading-pm/scripts/migration/register_perp_mark_price_manifest_backfill_2026_08_04.py` (316 manifest rows
+      registered against prod, verified via direct per-VM-shard read — all `capture_status=captured`, `row_count` sum
+      22,690, matching discovery exactly).
 - [ ] [OPERATOR-DECISION] P3. Whether/when to execute the ALREADY-GATED `[DESIGN] P1` todo in
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` (demote `perp_funding` to a derived
       view) — and, if so, whether `perp_daily_ctx`/mark-price should be folded into that same decision. This issue doc
@@ -261,6 +283,41 @@ This is a stop-and-document outcome per this task's explicit safety override, no
 above.
 
 ## Progress Log
+
+- **2026-08-04 (sub-agent, data_engineering — perp_mark_price sibling gap)**: Closed the second `[CODE] P2` todo above.
+  This doc's source todo (see "What the source todo asked for") named both `perp_daily_ctx` and `perp_mark_price`; the
+  earlier 2026-08-04 entry below only closed the `perp_daily_ctx` half (via batch6's todo -010). Re-verified from
+  scratch rather than trusting the name similarity: `perp_mark_price` is a genuinely DISTINCT data_type — a direct GCS
+  content read of the real historical objects (not the writer script's docstring, which is stale) showed rows carrying
+  only `mark_price`, no `day_ntl_vlm`/`open_interest`. Confirmed via a full bounded day-by-day prefix scan
+  (2023-05-20..2026-08-04, 1,173 days, one exact-prefix GCS list call per day — same single-walk-discipline method as
+  the `perp_daily_ctx` backfill) that the real corpus is 316 (day, venue) shards / 22,690 objects, HYPERLIQUID only,
+  spanning 2023-05-20..2025-06-01 but NON-contiguous (315 contiguous days 2023-05-20..2024-03-29 + one isolated day
+  2025-06-01 with 199 objects — an initial binary-search + spot-check pass suggested exactly this shape, but the full
+  scan was run anyway rather than trusting an assumption, per the workspace's data-correctness-is-the-heartbeat rule;
+  both segments share the same `available_at` timestamp cluster, confirming one single historical migration/backfill
+  batch wrote all of it, not ongoing production). This matches the "HL `perp_mark_price` (316 objs)" figure this plan's
+  own archived source (`/plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md` Progress Log
+  2026-07-13 entry (c)) already recorded — that "316" turns out to mean 316 DAYS/shards (not raw objects), the same
+  mislabeling this doc's earlier entry already found and corrected for `perp_daily_ctx`'s "1,109" figure. **Reader
+  check**: confirmed via direct grep of
+  `strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py` and
+  `canonical_dex_pool_provider.py` (the only two "Canonical*Provider" DeFi readers) that NEITHER references
+  `perp_mark_price` — zero hits workspace-wide outside the dead writer script and one test fixture
+  (`market-tick-data-service/tests/unit/scripts/test_migrate_defi_batch_to_per_instrument.py`). So unlike
+  `perp_daily_ctx` (which has a live reader), `perp_mark_price` has NEITHER a live writer NOR a live reader — pure
+  historical residue. Registered anyway per this doc's own established honest-coverage precedent (real captured rows
+  should not be structurally invisible to the manifest just because nothing currently reads or writes them).
+  **Shipped**: `unified-api-contracts` (`DATA_TYPES_BY_ASSET_GROUP["defi"]` + new `DEFI_PERPETUAL_PERP_MARK_PRICE`
+  SchemaContract, mirrors `DEFI_PERPETUAL_PERP_FUNDING`'s 4 common columns + `mark_price` only;
+  `NEEDS_CANDLE_PROCESSING["perp_mark_price"]=False`) via quickmerge. **Backfill**: new
+  `unified-trading-pm/scripts/migration/register_perp_mark_price_manifest_backfill_2026_08_04.py` (mirrors
+  `register_perp_daily_ctx_manifest_backfill_2026_08_04.py`'s structure, adapted for the non-contiguous shape — scans
+  the full candidate window day-by-day instead of assuming contiguity) — dry-run then `--apply` both run against prod
+  (`market-data-tick-defi-prd-central-element-323112`, `MANIFEST_PER_VM_SHARDS=true`): registered 316 manifest rows
+  covering 22,690 real objects, 0 failures. Verified via a direct per-VM-shard read
+  (`_index/per_vm/local-82973-c93a.parquet`): all 316 rows `capture_status=captured`, `row_count` sum 22,690 — matches
+  discovery exactly.
 
 - **2026-08-04 (data_engineering, executing `defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo -010)**: Shipped the
   [CODE] P2 safe-alternative in full.
@@ -380,3 +437,6 @@ instruments-service/unified-api-contracts/market-tick-data-service/features-serv
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — the only remaining open item
   is the `[OPERATOR-DECISION] P3` todo, gated on a still-open, separately-owned `[DESIGN] P1` decision in another doc;
   `[VERIFY]` and `[CODE]` are both already closed by citation. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item remains an [OPERATOR-DECISION] on a
+  linked canonicalisation design question; the other 3 items already closed with evidence.

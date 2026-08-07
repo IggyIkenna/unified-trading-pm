@@ -1,0 +1,38 @@
+{
+  "service": "data_pipeline_e2e_check_features",
+  "run_date": "2026-08-05",
+  "legs": ["benchmark"],
+  "started_at": "2026-08-06T02:43:13.094700+00:00",
+  "finished_at": "2026-08-06T02:53:26.701307+00:00",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "TRADFI:commodity",
+      "leg": "benchmark",
+      "status": "passed",
+      "reason": "window=2026-07-29..2026-08-05 (7d) wall_clock=273s ~39s/shard-day objects=2",
+      "vm_name": "features-e2e-tradfi-20260806-024854-e0321c",
+      "exit_status": 0,
+      "write_verified": true,
+      "parquet_count": 2,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-08-06T02:48:54.119629+00:00",
+      "duration_sec": 272.547007,
+      "parquet_bucket": "commodity-signals-batch-test-central-element-323112",
+      "manifest_bucket": "",
+      "parquet_uri": "gs://commodity-signals-batch-test-central-element-323112/cl/2026-08-05/signal.json",
+      "content_check": "not_checked",
+      "content_check_nan_ratio": null
+    }
+  ],
+  "orphaned_vms_still_running": []
+}

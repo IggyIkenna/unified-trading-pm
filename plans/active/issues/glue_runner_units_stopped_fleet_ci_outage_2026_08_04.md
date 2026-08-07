@@ -45,6 +45,13 @@ source: ["slot-11 agt-152447 blocked BLK-37a5da89 (2026-08-04); main agt-1756f6 
 drift_direction: advance-process
 estimate_class: infra
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/04-architecture/ci-alerting.md,
+    scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh,
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+  ]
 ---
 
 # Fleet CI outage: two stopped glue-runner units block UAC->main + 11 dependent repos
@@ -137,12 +144,36 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       explicit stop) evades detection — exactly this incident. Extend the watchdog (or add a sibling check) to alert
       when any expected `github-glue-runner-<repo>@glue-1.service` is `inactive`/`dead`/`failed` for > N minutes while
       peer runners are active, so a stopped runner pages instead of silently stalling promotion for an hour. Repo:
-      agent-orchestrator (deployment/monitoring). Cross-ref `/codex/05-infrastructure/deployment-observability.md`,
-      `/codex/04-architecture/ci-alerting.md`. **2026-08-05 addendum: a THIRD failure mode found (see Progress Log) —
-      "active" at the systemd level but hung mid-job for hours, then failing to re-register with GitHub even after
-      restart. The watchdog must catch this too, not just crash-loop and cleanly-inactive**, e.g. alert on a runner
-      whose `journalctl` shows "Running job" with no matching "completed" line for > N minutes, independent of systemd
-      `ACTIVE` state (which stays green throughout this failure mode).
+      **unified-trading-pm** (`scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh` — corrected 2026-08-06
+      (/plan-reconcile ao); previously mis-pointed at agent-orchestrator, see this doc's context-scout 2026-08-06 note
+      below). Cross-ref `/codex/05-infrastructure/deployment-observability.md`, `/codex/04-architecture/ci-alerting.md`.
+      **2026-08-05 addendum: a THIRD failure mode found (see Progress Log) — "active" at the systemd level but hung
+      mid-job for hours, then failing to re-register with GitHub even after restart. The watchdog must catch this too,
+      not just crash-loop and cleanly-inactive**, e.g. alert on a runner whose `journalctl` shows "Running job" with no
+      matching "completed" line for > N minutes, independent of systemd `ACTIVE` state (which stays green throughout
+      this failure mode). **Root-cause-of-the-original-stop investigation (2026-08-04/05, interactive session,
+      `/autonomous` continuation), operator-requested — inconclusive, documented so the next investigator doesn't
+      re-walk the same dead ends.** Confirmed via precise `journalctl` (`-o short-precise`, correctly time-windowed)
+      that all three units logged systemd's explicit `Stopping <unit> - <description>...` line within the same ~30s
+      window while each was mid-job — this is systemd's own signature for an EXPLICIT stop request, not a self-exit (the
+      JIT runner's own clean-exit path logs a distinct "Runner listener exit with 0 return code" message instead, and
+      that pattern fires constantly and harmlessly for every other repo's runner throughout the surrounding log — it is
+      NOT what happened here). Ruled out, each independently verified live on the host: (1) SSH — `last -F` shows no
+      login anywhere near the incident window (most recent prior login was 11 days earlier); (2) AWS SSM —
+      `list-commands` against the instance shows zero commands (successful OR failed) in the incident window, from any
+      identity; (3) cron/crontab — no job targets these units or fires near that time; (4) systemd self-inflicted
+      rate-limiting — ruled out directly, the unit file has `StartLimitIntervalSec=0` with an explicit comment ("Never
+      give up restarting — the glue-* pool exits after every single job by design"), so a restart-rate lockout is
+      structurally impossible for this unit; (5) the `github-glue-slot-refresh-*` timers — a DIFFERENT, unrelated
+      service (git-clone-refresh only, `Restart=no`, oneshot) that happened to run a few minutes later and is a dead
+      end; (6) GitHub's own audit log — unavailable via API for this account (`404`, audit-log is an org/enterprise-only
+      endpoint, this is a personal-account repo). No `auditd` installed on the host, so there is no OS-level record of
+      which process/session issued the stop. **Remaining candidate, unprovable from this host alone**: a GitHub-side
+      action (e.g. a runner removed/deregistered via the GitHub API or UI) that the runner's own wrapper script
+      propagates into a self-directed `systemctl stop` on clean deregistration — would explain an explicit-stop
+      signature with zero local trace, but confirming it needs GitHub's audit log (org/enterprise plan) or the
+      operator's own recollection of any action taken around 08:59:35–09:02:27 UTC on 2026-08-04, neither of which this
+      session has access to. Genuine root cause: NOT DETERMINED.
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-08-05 (same session, later).** `writer-1/2/3` on the SAME planning VM
       (`ip-172-31-3-59`, instance `i-042a6332509482556`, unified-trading-pm's own writer pool) — root cause was a
       **diagnostic miss, not a genuinely unfixable hang**: my earlier "root cause NOT found" checks
@@ -167,6 +198,108 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
       `ldr-to-main-promote-fleet.yml`'s two prior manual dispatches had each sat queued then been auto-cancelled after
       12-15min with no runner ever attaching — the run dispatched immediately after this fix stayed
       `pending`/progressing past that same window instead of being cancelled.
+- [x] ✅ [OPERATOR] P1. **RETRACTED — diagnosed against the WRONG box; closing as MOOT (corrected 2026-08-06
+      (/plan-reconcile ao), citing this doc's own `[DIAG] P1` correction entry below).** The correction re-verified via
+      read-only SSM on BOTH real instances: the "0 loaded units for every per-repo pool" / "ENTIRE glue/writer pool ...
+      is down" finding below was measured against `i-0c9b283b31d6b5ca7` — the OLD orchestrator VM, whose runner fleet
+      was CORRECTLY, deliberately migrated off per
+      `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (complete 2026-08-05) — not a real outage.
+      The actual dedicated runner VM (`i-042a6332509482556`) was healthy the entire time (17/17 units active, 0 failed):
+      there was nothing to `systemctl start` or reinstall. **No operator action remains from this todo** — its own
+      actual dispatch reason (unified-api-contracts main QG-v2 RED) was already independently fixed within this same
+      entry (see below), and that fix stands regardless of the wrong-box misdiagnosis. Original diagnosis + shipped fix
+      preserved verbatim below for the audit trail. **4th recurrence, 2026-08-06 (cicd slot-4, agt-80cfec, `main_ci_red`
+      for unified-api-contracts) — worse than every prior occurrence: the ENTIRE glue/writer pool on the planning VM
+      (`ip-172-31-5-118`) is down, not just 2-4 units.** `systemctl list-units 'github-glue-runner@*' --all` shows the
+      base unified-trading-pm pool (`glue-1..5`, `writer-1..3`) all `inactive (dead)`/`disabled`;
+      `github-glue-runner-<repo>@*` shows **0 loaded units for every per-repo pool** (unified-api-contracts included) —
+      not "stopped", never even registered/loaded on this box. `setup-glue-runners.sh status` independently confirms: 0
+      systemd units, only token/slot-refresh timers ticking. `glue-runner-crash-loop-watchdog` reports "0/0
+      crash-looping" every 5min (expected per the P2 todo above — it only catches an ACTIVE unit crash-looping, not a
+      fleet with nothing loaded at all, so it never paged). Same access wall as every prior entry: `sudo` blocked by
+      `no-new-privileges` in this slot's sandbox, no SSM identity available to this role. **Did not attempt the infra
+      fix** (operator-gated, same as always) — instead found + shipped a real, narrower, independently-useful fix for
+      the SPECIFIC symptom this escalation was dispatched for: main's copy of unified-api-contracts'
+      `.github/workflows/quality-gates-v2.yml` was stale, still requiring
+      `self_hosted_runner_labels: ["self-hosted","glue"]`, even though
+      `unified-trading-pm/scripts/workflow-templates/     self-hosted-qg-repos.txt` removed unified-api-contracts on
+      2026-08-05 (public repo, GitHub-hosted is unmetered) and `live-defi-rollout`'s copy already carries the correct
+      `ubuntu-latest` default — main just never got that specific promotion. Re-rolled main's copy directly (commit
+      `5acc9859`, `.github/**`-only carve-out) — confirmed GREEN afterward (run `31069093947`, all legs on
+      `ubuntu-latest`, no dependency on the dead pool at all). This is a **workaround for one repo's one symptom, not a
+      fix for the underlying outage** — every other repo still on `self-hosted-qg-repos.txt` (`agent-orchestrator`,
+      `unified-trading-pm`, `strategy-service`, `e2e-testing`, `features-service`, `market-tick-data-service`,
+      `execution-service`, `ml-service`) was believed still fully blocked at filing time; **per the correction, that
+      "still fully blocked" claim is ALSO wrong-box-derived and should not be trusted without a fresh per-repo check.**
+      ~~Needs the same operator/host-root action as every prior entry: SSH or SSM onto the planning VM and either
+      `systemctl start` the existing units or re-run `setup-glue-runners.sh install` per
+      `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` if this was a central-VM relaunch~~ —
+      **superseded by the correction: no such action is needed, the real runner VM was never down.**
+- [x] ✅ [DIAG] P1. **CORRECTION to the "4th recurrence" todo above, 2026-08-06 (interactive session) — the "0 loaded
+      units anywhere" finding was a diagnosis performed against the WRONG box, not a real fleet-wide outage.**
+      Independently re-verified via read-only SSM `systemctl list-units 'github-glue-runner*' --all` on BOTH real
+      instances: (1) the OLD orchestrator VM (`i-0c9b283b31d6b5ca7`, private IP `172.31.5.118` — confirmed via
+      `hostname -I`, matching this doc's "planning VM (ip-172-31-5-118)" references) genuinely shows 0 loaded
+      `@glue-N`/`@writer-N` job-runner units (only `.slice` cgroup caps and `@github-glue-token-refresh-*` oneshot
+      timers, both cosmetic/expected) — **but this is CORRECT and BY DESIGN**, not a fault: the entire runner fleet was
+      deliberately migrated off this box per `/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,
+      confirmed complete as of 2026-08-05. (2) The actual dedicated escalation-runner VM (`i-042a6332509482556`, private
+      IP `172.31.3.59`, the SAME instance this doc's own 2026-08-05 entry calls "writer-pool host" and separately warns
+      "the planning VM and this writer-pool host are DIFFERENT instances despite the similar naming") is **healthy right
+      now**: 17 active `@glue-N`/`@writer-N` units, 0 failed, covering `agent-orchestrator`, `unified-trading-pm`,
+      `market-tick-data-service`, `execution-service`, `features-service`, `ml-service`, `strategy-service`,
+      `e2e-testing`. Practical consequence: the live `main_ci_red` escalations at the time of writing (deployment-api,
+      deployment-service, ibkr-gateway-infra, market-tick-data-service) are almost certainly genuine app/test-level CI
+      failures, NOT infra — MTDS's own runner is confirmed healthy, and
+      deployment-api/deployment-service/ibkr-gateway-infra have no units registered on the new VM at all (consistent
+      with being on the GitHub-hosted `self_hosted_runner_public_repo_revert` list, so this outage class was never even
+      applicable to them). **Does not retract the unified-api-contracts fix in the entry below** (that one correctly
+      diagnosed a stuck/unclaimed run and the `ubuntu-latest` re-roll fixed it regardless of root-cause attribution) —
+      only the "ENTIRE glue/writer pool ... is down" / "0 loaded units for every per-repo pool" framing in the
+      `[OPERATOR] P1` todo above, which conflated the correctly-decommissioned old VM with a real outage.
+- [ ] [INFRA] P3. **Disambiguate "the planning VM" in monitoring/docs and any future investigation checklist.** This
+      doc's own history calls at least 3 different real EC2 instances "the planning VM" at different points
+      (`i-0c9b283b31d6b5ca7` orchestrator box, `i-042a6332509482556` dedicated CI-runner VM, `i-0dd9812a96cdda5dc`
+      human-planning VM) — the ambiguity directly caused the misdiagnosis corrected above (an agent checked the old,
+      correctly-empty box instead of the new dedicated runner VM). Fix: rename references in this doc + the P2
+      monitoring-gap todo above to always name the instance ID or a stable label (e.g. "ci-runner-vm" for
+      `i-042a6332509482556`), and point the P2 watchdog work explicitly at `i-042a6332509482556` (the box that actually
+      hosts the fleet now), not `i-0c9b283b31d6b5ca7`.
+- [x] ✅ [INFRA] P1. **RESOLVED 2026-08-06 (same session, shipped `879e3e109`).** A THIRD distinct monitoring-gap
+      dimension found 2026-08-06: the crash-loop watchdog was structurally false-positiving on every healthy `@glue-N`
+      unit, independent of the cleanly-inactive/wedged gaps above.** `is_crash_looping()` only checked
+      `SubState=auto-restart` + `NRestarts>=5`, but per `github-glue-runner@.service`'s own design comment ("glue-*: one
+      job per process, restart to re-register"), `Restart=always` fires on EVERY exit including a clean job-completion
+      (`Runner listener exit with 0 return code, stop the service, no retry needed`), and `NRestarts` is a lifetime
+      counter that never resets. A healthy glue-N unit crosses the threshold within its first few jobs, then sits above
+      it FOREVER — any 5-min poll landing in the ~5s restart window between two clean job cycles pages a false
+      `CRITICAL "runner process is DOWN"` alert on a unit that was never down. Live-caught in real time (see Progress
+      Log): this exact bug produced the operator-visible alert that opened the session
+      (`github-glue-runner@glue-2.service`, `NRestarts=968`) plus two more mid-session (`glue-3`/`glue-5`), each
+      independently confirmed via `journalctl` to be clean `Result=success` exits with zero actual failures — `glue-3`/
+      `glue-5` even self-"recovered" ~6 minutes later purely from poll-timing luck, the exact false-alert-then-bookend
+      flap this fix eliminates structurally rather than by chance. **Fix**: gate `is_crash_looping()` on
+      `Result !=     success` (systemd's verdict on the unit's last completed run) in addition to the existing checks —
+      the original 2026-07-28 GCP_PROJECT-missing incident this watchdog was built for exited non-zero every time, so
+      real crash-loop detection is unaffected. **Deployed live** to `i-042a6332509482556` (`/usr/local/sbin/`, plus the
+      `/opt/github-glue-runners/repo/` and `/opt/glue-deploy/unified-trading-pm/` mirrors — all three previously
+      divergent, now matching one hash) and verified via a manual trigger (`0/17 crash-looping`, empty `alerted-units`
+      state file) BEFORE the repo commit — host QG capacity was critical at diagnosis time (load avg ~168, ~60MB free
+      RAM, ~91% swap used, 8-9 concurrent `quality-gates.sh` runs from other slots) and quickmerge's full QG has no skip
+      path, so committing then risked tipping a shared, already memory-constrained host into an OOM cascade that could
+      kill other slots' legitimate runs (the exact class in
+      `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`). Host load dropped (~10
+      within the hour) and the fix shipped to `live-defi-rollout` as `879e3e109` (quickmerge's SHA-sentinel skipped a
+      redundant Pass-2 QG re-run, so this added no extra host load) — draining to `main` via `ldr-to-main-promote.yml`
+      on the normal ~15-30min SLA, not yet independently re-verified on `main`.
+- [ ] [INFRA] P3. **No automated deploy/sync exists for this watchdog script at all — found while fixing the item
+      above.** The live host's executed copy (`/usr/local/sbin/glue-runner-crash-loop-watchdog.sh`) was already stale
+      before today's fix, missing the 2026-08-05 unit-enumeration pattern-match fix documented in this same script's own
+      header comment (bare `grep glue` vs. the `github-glue-runner*` glob). No workflow, cron, or install script
+      references `/usr/local/sbin/glue-runner-crash-loop-watchdog.sh` (`setup-glue-runners.sh`, the closest candidate,
+      doesn't touch it) — every prior fix needed a manual SSM copy that evidently didn't happen consistently. Wire an
+      automated sync (e.g. a step in `setup-glue-runners.sh`, or a small `git pull`-and-diff timer) so a future repo fix
+      actually reaches the host instead of silently sitting uncommitted-to-production indefinitely.
 
 ## Progress Log
 
@@ -231,3 +364,62 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   or `find /etc/systemd/system -iname '*glue*'` FIRST — `actions.runner.*` is the wrong pattern fleet-wide here, and a
   `systemctl`/`journalctl` query against a non-existent unit name fails silently (empty output, not an error), which
   reads exactly like "nothing to report" instead of "you queried the wrong thing."
+- **context-scout 2026-08-06**: populated context_scope (4 entries). Note: the P2 todo's "Repo: agent-orchestrator
+  (deployment/monitoring)" pointer is STALE — the actual glue-runner-crash-loop-watchdog lives in THIS repo
+  (`scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh`), not agent-orchestrator; no such path exists there.
+- **2026-08-06 (cicd slot-4, agt-80cfec, `main_ci_red` escalation for unified-api-contracts)** — Dispatched to fix
+  `quality-gates-v2` RED on unified-api-contracts' main. Diagnosis: main's most recent push-triggered run had a `tests`
+  leg that sat 38min mid-run then got force-cancelled (`##[error]The operation was canceled.`) — not a code failure (the
+  `checks` leg had already passed clean). Re-triggering via `workflow_dispatch` reproduced worse: both `tests` and
+  `checks` legs sat `queued` with `runner_name: ""` for 20+ minutes, never claimed by anything. Traced to this doc's
+  exact outage class, but at full-fleet scale this time (see the new `[OPERATOR] P1` todo above for the systemctl/
+  setup-glue-runners.sh evidence — 0 loaded runner units anywhere, not just 2-4 stopped ones). Could not self-serve the
+  infra fix (same `no-new-privileges`/no-SSM wall as every prior entry in this doc). Shipped a scoped, independently-
+  correct workaround instead: main's `.github/workflows/quality-gates-v2.yml` was stale (still pinned to
+  `self_hosted_runner_labels: ["self-hosted","glue"]` from before unified-api-contracts was removed from
+  `self-hosted-qg-repos.txt` on 2026-08-05), so re-rolled it to match `live-defi-rollout`'s already-correct
+  `ubuntu-latest` copy (commit `5acc9859`, direct push to main under the `.github/**`-unblock-the-pipeline carve-out).
+  Confirmed GREEN: run `31069093947` completed successfully entirely on GitHub-hosted runners. Cancelled the
+  now-permanently-stuck `workflow_dispatch` run `31067911291` first so it didn't linger queued forever. This closes MY
+  wall (`quality-gates-v2` on unified-api-contracts main) but does **not** touch the underlying pool outage — added a
+  fresh `[OPERATOR] P1` todo above since this doc's `status: open` correctly reflects that the root cause is back again,
+  now at a larger blast radius than any prior entry.
+- **2026-08-06 (interactive session, operator-triggered CI audit)** — Operator asked why the "hundreds of AO
+  escalations" they were seeing didn't square with a 25-repo fleet; while investigating live `main_ci_red` escalations
+  (deployment-api, deployment-service, ibkr-gateway-infra, market-tick-data-service), re-checked this doc's "4th
+  recurrence" claim directly via SSM on both real instances rather than trusting the doc's prior framing. Found the "0
+  loaded units anywhere" evidence was gathered against `i-0c9b283b31d6b5ca7` — the OLD orchestrator VM, which is
+  SUPPOSED to be runner-free per the fleet-split plan — while the actual current runner VM (`i-042a6332509482556`) is
+  healthy (17/17 units active, 0 failed). Added the correction todo above rather than editing the original entry
+  (preserving the audit trail) plus a new P3 hardening todo to stop this recurring, since the "planning VM" naming
+  ambiguity has now caused at least one real misdiagnosis. Did not change `status` — the doc's other open items (P2
+  monitoring gap, P1 operator systemctl-start-or-reinstall action for the OLD claim, root-cause-of-original-stop) are
+  unaffected by this correction and stay open.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — sole [OPERATOR] P1 item (4th recurrence, whole runner pool down)
+  independently confirmed 6x since 2026-08-04 that AO-worker/main identities structurally lack the needed SSM reach;
+  whole doc stays NA despite 2 more-bounded-looking sibling items.
+- **2026-08-06 (interactive session, operator flagged a live CRITICAL alert: `github-glue-runner@glue-2.service`
+  crash-looping on `i-042a6332509482556`, `NRestarts=968`)** — Diagnosed via read-only SSM before touching anything:
+  `systemctl show` returned `Result=success`/`ExecMainStatus=0` and `journalctl` showed the unit's last exit was a clean
+  `Runner listener exit with 0 return code, stop the service, no retry needed` immediately following a completed job —
+  not a crash. Root-caused to a structural false-positive bug in `is_crash_looping()` affecting the entire `@glue-N`
+  pool (full mechanism + fix in the new `[INFRA] P1` todo above), confirmed live a second way when `glue-3`/`glue-5`
+  independently false-paged mid-session (journal 13:07:51Z) and self-"recovered" ~6 minutes later (13:13:11Z) purely
+  from poll-timing luck — the exact noisy flap this fix eliminates structurally. Fixed `is_crash_looping()` to require
+  `Result != success`, verified `shellcheck`-clean (exit 0) and `bash -n`-clean. While preparing to deploy, also found
+  the live host's executed copy (`/usr/local/sbin/glue-runner-crash-loop-watchdog.sh`) had a DIFFERENT hash than both
+  repo-tracked mirrors on the same host (`/opt/github-glue-runners/repo/`, `/opt/glue-deploy/unified-trading-pm/`) —
+  missing the 2026-08-05 unit-enumeration fix, because no automated deploy path exists for this file (new `[INFRA] P3`
+  todo above). Deployed the fully-current script to all three on-host locations via SSM (backed up the prior
+  `/usr/local/sbin/` copy first), then manually triggered `glue-runner-crash-loop-watchdog.service`: clean
+  `OK -- 0/17 glue-runner units crash-looping` reading, `alerted-units` state file empty afterward — confirmed fixed and
+  verified live. Held the repo commit initially — host QG capacity was in a critical state at diagnosis time (load avg
+  ~168 dropping to ~17 over ~10min, free RAM as low as ~60MB, swap ~91% used, 8-9 concurrent `quality-gates.sh --no-fix`
+  runs from other slots observed throughout) and quickmerge's full QG has no skip path.
+- **2026-08-06 (same session, operator asked to retry shipping)** — Rechecked host load: dropped to ~10 (1-min avg), 1
+  other QG running, still tight on swap (~93% used) but no longer in the acute range from the earlier reading. Shipped
+  `scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh` via quickmerge as `879e3e109` — landed on
+  `live-defi-rollout` (quickmerge's SHA-sentinel skipped a redundant Pass-2 QG re-run since Pass 1 had already verified
+  this exact tree, so the ship itself added no additional host load). Closed the `[INFRA] P1` todo above with the SHA.
+  Not yet independently re-verified on `main` (drains via `ldr-to-main-promote.yml`, ~15-30min SLA) — the live fix on
+  `i-042a6332509482556` predates and is independent of this commit landing anywhere.

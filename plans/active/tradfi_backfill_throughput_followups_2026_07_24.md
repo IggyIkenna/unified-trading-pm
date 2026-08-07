@@ -315,9 +315,9 @@ source:
       `mtds`. Regression-guard test `instruments-service@5104befc`. (repo: instruments-service, not mtds — corrected per
       the above)
 - [x] ✅ [INFRA] P1. **Bundle roots into fewer larger VMs — SHIPPED `deployment-service@60b9d37`** (2026-07-30, via
-      `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger VMs" todo,
-      which extracted this exact item verbatim per the NOTE below). `_tradfi-ohlcv-launcher-lib.sh` spawned one VM per
-      (venue,root,year); added `ohlcv_split_root_groups` (the SINGLE_VM_QUEUE-analog) + an
+      `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger
+      VMs" todo, which extracted this exact item verbatim per the NOTE below). `_tradfi-ohlcv-launcher-lib.sh` spawned
+      one VM per (venue,root,year); added `ohlcv_split_root_groups` (the SINGLE_VM_QUEUE-analog) + an
       `OHLCV_ROOT_GROUPS`/`--root-groups` knob (default 10) that accumulates multiple roots' symbol-sets into one VM's
       `VM_INSTRUMENT_IDS` per year-shard. `launch-tradfi-bf-cme-ohlcv-1m.sh` now loops (root-group x year-shard) —
       default groups collapse 406 VMs (58 roots x 7 years) to 70. Dry-run verified no root/symbol lost or duplicated
@@ -325,8 +325,8 @@ source:
       wired into `ohlcv_create_vm` (`ac5d1660`, 2026-07-18) — the CME launcher already calls it, so no separate disk
       change was needed (this item's "staged locally... never wired" framing was stale). (repo: deployment-service)
       **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche)**: this exact item was extracted VERBATIM as
-      `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger VMs" todo
-      (which cites this doc's own then-still-open item as its source, via
+      `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger
+      VMs" todo (which cites this doc's own then-still-open item as its source, via
       `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred
       re-check). batch5 was activated 2026-07-30 (`5a6bbefc3`) and its todo dispatched + shipped as above.
 - [x] ✅ [BACKEND] P1. **Real retry-on-429 in the Databento fetch path — SHIPPED mtds@73c286a2 (`databento_retry.py`).**
@@ -683,7 +683,7 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
 
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid + 1 stale citation fixed.** Both open todos
   read end-to-end. The "Bundle CME roots into fewer larger VMs" item is already extracted verbatim into
-  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` — citation added inline, not reclassified
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` — citation added inline, not reclassified
   (conflict-check CONFLICT). The other open item is an umbrella pointer bundling three separately-owned docs
   (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`, `tradfi_backfill_oom_remediation_2026_06_24`,
   `consolidator_throughput_backlog_monitor_2026_07_09`) rather than worker-determinable work of its own, so the doc
@@ -694,8 +694,9 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
 - **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, stale items — 1 citation corrected.** In scope this
   run (not incrementally skipped) because the 2026-07-30 marker was followed by a substantive content edit: the "Bundle
   CME roots into fewer larger VMs" todo was flipped `- [x]` (`deployment-service@60b9d37`, via
-  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`). Re-read the doc's remaining open work end to end;
-  exactly 1 open checkbox remains and the previous pass's own "citation is drifting" observation has now come true —
-  actioned above: the rc137 leg is archived/complete, struck with evidence. Doc **stays NA**: the surviving todo is an
-  umbrella pointer bundling two separately-owned, still-open docs rather than worker-determinable work of its own, so
-  flipping `assigned_vm` would dispatch a tracking pointer, not a bounded task.
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`). Re-read the doc's remaining open work end
+  to end; exactly 1 open checkbox remains and the previous pass's own "citation is drifting" observation has now come
+  true — actioned above: the rc137 leg is archived/complete, struck with evidence. Doc **stays NA**: the surviving todo
+  is an umbrella pointer bundling two separately-owned, still-open docs rather than worker-determinable work of its own,
+  so flipping `assigned_vm` would dispatch a tracking pointer, not a bounded task.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

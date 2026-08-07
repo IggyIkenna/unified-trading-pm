@@ -174,3 +174,4 @@ shipping):
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
   `scripts/manifest/check-pyrightconfig-extrapaths.py`, the tool whose fleet-wide-dead-audit finding and fix are this
   doc's most recent (2026-08-01) content.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

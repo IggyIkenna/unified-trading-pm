@@ -49,6 +49,8 @@ context_scope:
   [
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/launch-ml-training-vm.sh,
+    deployment-service/scripts/vm/launch-prediction-pipeline-vm.sh,
   ]
 supersedes:
 superseded_by:
@@ -133,3 +135,13 @@ splitting into a third parallel decision thread on the same theme adds coordinat
       `mdps_features_deadcode_consolidation_2026_07_20.md` and repoint/delete; if no (chunking logic has no consolidated
       equivalent), fix its embedded import-verify to use
       `features_service.cross_instrument`/`features_service.delta_one` in place. Repo: deployment-service.
+
+## Progress Log
+
+- **context-scout 2026-08-06**: populated context_scope (4 entries — added the doc's own two named launcher scripts,
+  `launch-ml-training-vm.sh` and `launch-prediction-pipeline-vm.sh`, alongside the pre-existing S1-a sibling issue and
+  the vm-launcher-runbook codex SSOT).
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid (first pass, no prior marker) — the
+  doc's own text states the correct fix needs a design call this P3 mechanical-deletion todo didn't scope; both open
+  items redirect to the same still-open A/B/C decision pending in `mdps_features_deadcode_consolidation_2026_07_20.md`
+  (independently verified: that doc is still `status: open`, unlocked, todos unchecked).

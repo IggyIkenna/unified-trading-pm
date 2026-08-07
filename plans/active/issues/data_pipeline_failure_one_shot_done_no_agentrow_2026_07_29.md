@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, one-shot-lifecycle, escalation, data_pipeline_failure, done-endpoint, agentrow]
 related:
   [
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-29
@@ -51,7 +51,7 @@ source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-790
 last_updated: 2026-07-29
 context_scope:
   [
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/routes/slots_worker.py,
@@ -248,3 +248,9 @@ still in flight.
   different mechanism. **Suggested next step for whoever revisits this**: the very next `one_shot_complete` 400 — call
   `claim-interactive` FIRST, then retry the SAME `/done` call before concluding it is still broken; that single retry is
   the missing data point every report so far (including this one) has left open.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, CONFLICT-PARKED — RECLASSIFY held — diagnostic half verbatim-claimed by
+  ao_satellite_ao_dispatch_batch5's open [DATA] P2 todo (same 5 agent ids, same done-when); code half gated on shared
+  /done-handler ground also claimed by batch6 Deferred. Parked as BLOCKED-OPERATOR-DECISION — batch5 owns the
+  diagnostic, batch6 gates the code fix.

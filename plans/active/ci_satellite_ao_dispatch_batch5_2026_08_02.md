@@ -14,7 +14,7 @@ summary: >-
   batch 5, and the F3 dispatch-success-reporting gap the 2026-08-01 `/na-eligibility-audit ci` re-flagged as "the one
   genuinely-uncovered bounded gap, still not yet extracted into any active batch". Two halves of F3 and batch4's D4-1
   are rationed into `## Deferred` on genuine same-file contention, not dropped.
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -46,7 +46,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-02"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -73,10 +73,8 @@ source: >-
 
 # CI satellite AO batch 5
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** The operator authorised DRAFTING this batch; flipping it to
-> `status: active` is still a separate, deliberate call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the
-> `/ag-closeout-audit` skill's autonomous-mode rule. Its finalize sibling needs no separate flip
-> (`gate_on_depends: true` holds it correctly either way). Nothing here has been shipped.
+> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Todo 5 was found already shipped
+> (`deployment-ui@7086565`) before dispatch — see its checkbox. The other 5 todos are unaffected.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (12/32 todos still open) and
 > `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (9/9 still open, still `draft`) both remain active — this is NOT a
@@ -117,11 +115,12 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 
 ## Todos
 
-- [ ] [DEVOPS] P2. **Roll the cloudbuild empty-tag guard out to the consumer repos — RE-SCOPED per operator ruling
-      (2026-07-30) into two explicit, ordered steps.** The original one-line todo assumed a clean
-      `rollout-cloudbuild.py --apply` sweep; the would-drop-content guard that shipped 2026-07-28
-      (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19 consumers, so the rollout mechanism it assumed
-      no longer exists. Do the steps in order — step 2 is not startable for a repo until step 1 has cleared that repo.
+- [x] ✅ [DEVOPS] P2. **Roll the cloudbuild empty-tag guard out to the consumer repos — RE-SCOPED per operator ruling
+      (2026-07-30, `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`) into two explicit,
+      ordered steps.** The original one-line todo assumed a clean `rollout-cloudbuild.py --apply` sweep; the
+      would-drop-content guard that shipped 2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the
+      19 consumers, so the rollout mechanism it assumed no longer exists. Do the steps in order — step 2 is not
+      startable for a repo until step 1 has cleared that repo.
   1. **Resolve the per-repo drift first.** Ground truth is
      `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` (seeded 2026-07-28): **15 of 19 consumers carry
      content their mapped template does not** — `deployment-api` (26), `strategy-service` (13), `features-service` (12),
@@ -183,8 +182,18 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `github_actions_operator_gated_followups_2026_07_17.md` (`[VERIFY] P2` + `[REVIEW] P2`). Batch4 **D4-2** /
     **D4-3**, both recorded there as "held for a cleaner batch-5 extraction".
 
-- [ ] [BACKEND] P3. **Fix the structural `authoring_slot="ci-reconcile"` ping mismatch.** Every bare-LDR (`pr_number=0`)
-      `ldr_qg_failure` escalation the scheduler raises passes the literal string `authoring_slot="ci-reconcile"`
+- [x] ✅ [BACKEND] P3. **DONE-ELSEWHERE 2026-08-06 (duplicate of batch1's completed item) + structural fix completed.**
+      The core fix shipped 2026-08-03 as `unified-trading-pm@41f193405` (flipped in batch1): Direction 1 — `cicd.md`'s
+      completion-ping step now guards on `[[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]`, skipping non-numeric sentinels
+      (`ci-reconcile`, empty string). Verified here (slot 14) by faithful simulation of the scheduler-raised bare-LDR
+      completion path: `AUTHORING_SLOT=ci-reconcile` emits no POST (no 400), a numeric slot still pings, and the server
+      4xxs any non-numeric slot path (`/api/slots/ci-reconcile/message` → 422) — confirming the bug the guard avoids.
+      Completed the structural fix this session by extending the same guard to `agents/conflict_resolver.md` +
+      `agents/data_pipeline_failure.md` (the identical unguarded completion-ping pattern on the other two
+      authoring-slot-pinging worker docs; `authoring_slot` is an unvalidated `str` at the escalate API, so the bug can
+      recur there). Both repos' `quality-gates.sh` green. Original text preserved below for record. **Fix the structural
+      `authoring_slot="ci-reconcile"` ping mismatch.** Every bare-LDR (`pr_number=0`) `ldr_qg_failure` escalation the
+      scheduler raises passes the literal string `authoring_slot="ci-reconcile"`
       (`agent-orchestrator/server/ci_reconcile.py:546`), not a numbered slot — so the mandated "ping the authoring slot
       on completion" step in `unified-trading-pm/agents/cicd.md` always 400s (`POST /api/slots/ci-reconcile/message` →
       `int_parsing`, the path expects an int; reproduced `agt-69e9e4`/slot 14, 2026-07-29). The server's own
@@ -215,20 +224,25 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     cleared **D4-19** gate as the todo above; batch4-finalize's own todo 3 pre-authorises exactly this triage ("note it
     is ready for a future batch's fresh triage of its 3 remaining bounded items").
 
-- [ ] [UI] P3. **Sync `deployment-ui/scripts/setup.sh` with the PM template's `[UI.5] PRE-WARM BUILD CACHE` step.** The
-      step was added to `unified-trading-pm/scripts/setup.sh` on 2026-07-29 and shipped to `unified-trading-system-ui`
-      (`unified-trading-system-ui@42439593`); `deployment-ui`'s copy could not ship at the time because its vitest
-      coverage gate was broadly red — that blocker was root-caused as an environment artefact and RESOLVED 2026-07-30
-      (`deployment-ui@3c7e2a8`, a `pnpm-workspace.yaml` missing `packages:`), so the gate is unblocked. The remaining
-      work is exactly what the source todo names: sync the template's pre-warm step into
-      `deployment-ui/scripts/setup.sh`, commit, ship. Re-diff the two files before copying — do not blind-`cp` a PM
-      script over a UI repo's copy if the UI copy has diverged for its own reasons. **Playwright-gate note**: this is a
-      shell script, not rendered UI, so `pw:L2` may legitimately not apply — if the `[UI]`-capable slot determines it is
-      out of `pw:L2` scope, **record that determination explicitly in the source doc**; do not skip the gate silently
-      (`/codex/06-coding-standards/ui-testing-layers.md`). **Done when**: `deployment-ui/scripts/setup.sh` carries the
-      pre-warm step, a cold clone of `deployment-ui` is observed running one real `pnpm run build` at setup time and a
-      warm clone is observed skipping it, `deployment-ui`'s own gate is green, and the source todo is flipped with the
-      commit cited.
+- [x] ✅ [UI] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Already shipped:
+      `deployment-ui@7086565` ("Sync setup.sh pre-warm build cache step from unified-trading-pm template", 2026-08-03,
+      `Quickmerge: agent`, confirmed a clean ancestor of current `live-defi-rollout` HEAD). Verified live
+      `diff deployment-ui/scripts/setup.sh unified-trading-pm/scripts/setup.sh` returns empty — byte-identical. The
+      source doc (`ui_build_warm_cache_2026_06_17.md`) already has this checked `[x]` at line 67. No action needed.
+      Original text preserved below for record. **Sync `deployment-ui/scripts/setup.sh` with the PM template's
+      `[UI.5] PRE-WARM BUILD CACHE` step.** The step was added to `unified-trading-pm/scripts/setup.sh` on 2026-07-29
+      and shipped to `unified-trading-system-ui` (`unified-trading-system-ui@42439593`); `deployment-ui`'s copy could
+      not ship at the time because its vitest coverage gate was broadly red — that blocker was root-caused as an
+      environment artefact and RESOLVED 2026-07-30 (`deployment-ui@3c7e2a8`, a `pnpm-workspace.yaml` missing
+      `packages:`), so the gate is unblocked. The remaining work is exactly what the source todo names: sync the
+      template's pre-warm step into `deployment-ui/scripts/setup.sh`, commit, ship. Re-diff the two files before copying
+      — do not blind-`cp` a PM script over a UI repo's copy if the UI copy has diverged for its own reasons.
+      **Playwright-gate note**: this is a shell script, not rendered UI, so `pw:L2` may legitimately not apply — if the
+      `[UI]`-capable slot determines it is out of `pw:L2` scope, **record that determination explicitly in the source
+      doc**; do not skip the gate silently (`/codex/06-coding-standards/ui-testing-layers.md`). **Done when**:
+      `deployment-ui/scripts/setup.sh` carries the pre-warm step, a cold clone of `deployment-ui` is observed running
+      one real `pnpm run build` at setup time and a warm clone is observed skipping it, `deployment-ui`'s own gate is
+      green, and the source todo is flipped with the commit cited.
   - Source: `ui_build_warm_cache_2026_06_17.md` (`[CODE] P2`). Batch4 `## Already covered` held this "for a
     `[UI]`-capable slot's judgment rather than assumed safe here — flagging for batch 5".
 
@@ -373,3 +387,47 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   `infra` tranches, and per the concurrent-sharded- worker safety rule a non-owning tranche must not write a retag to a
   doc it doesn't clearly own — left for a future corpus-wide retag pass (mirroring
   `asset_group_ao_ci_infra_schema_expansion_2026_07_27`) or the `infra` tranche's own audit to resolve.
+- **2026-08-06 (batch5 todo 1, slot 3 — cicd) — TODO 1 COMPLETE.** Slot-15's 5-repo quickmerge batch was already pushed
+  to `origin/live-defi-rollout` at pickup (all 8 guard repos ahead=0, guard commits verified on origin). The drift
+  checker is GREEN (EXIT 0) — all 19 consumers at or below baseline, residual counts = category-(b) intentional per-repo
+  divergence. Empty-tag guard verified present in all 17 image-building consumer `cloudbuild.yaml` files
+  (SAFE_SHA→VERSION fallback + FATAL diagnostic on double-empty). **End-to-end proof executed**: manual
+  `gcloud builds submit` (storageSource, `SHORT_SHA` empty) on execution-service → build
+  `4d265c51-5ca0-4349-b48f-80d4f7179430` recovered via `VERSION=0.0.0.dev0` fallback (extract-version wrote the
+  fallback, build step's `SAFE_SHA=$VERSION` resolved, docker build proceeding normally instead of dying with
+  `invalid reference format` / exit 125). Build still in progress at flip time — guard proof captured at the build step.
+  Source issue doc `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` follow-up checkbox also
+  flipped with the build id cited. Todo 1 done_definition met: (1) markers classified (a)/(b)/(c) in source doc Progress
+  Log; (2) guard present in every consumer; (3) end-to-end proof with build id; (4) drift checker green.
+  `check_cloudbuild_template_drift.py` EXIT 0.
+- **2026-08-06 (batch5 todo 3, slot 14 — backend_engineer) — TODO 3 COMPLETE (done-elsewhere + structural completion).**
+  This todo duplicated batch1's already-completed item: the source doc's 3 prevention todos migrated to batch1 on
+  2026-08-02, and batch1 flipped the `authoring_slot="ci-reconcile"` 400 item 2026-08-03 with the fix shipped as
+  `unified-trading-pm@41f193405` (Direction 1 — `cicd.md`'s completion-ping guards on
+  `[[ "$AUTHORING_SLOT" =~ ^[0-9]+$ ]]`). Verified (not code-read-alone): faithful simulation of the scheduler-raised
+  bare-LDR completion path with `AUTHORING_SLOT=ci-reconcile` emits no POST; numeric `14` still fires; the server 4xxs
+  `/api/slots/ci-reconcile/message` (422), confirming the 400 the guard prevents. Completed the STRUCTURAL fix by
+  extending the same guard to `agents/conflict_resolver.md` + `agents/data_pipeline_failure.md` (same unguarded ping;
+  `authoring_slot` is `str`-unvalidated at the escalate API). PM `quality-gates.sh` green; agent-orchestrator
+  `quality-gates.sh` green. Sibling guards + flip shipped in this session's commit.
+- **2026-08-07 — `/ag-closeout-audit ci` (autonomous, daily scheduled run, `ag_closeout_auditor` worker, slot 4,
+  `agt-d12c5d`) — IN PROGRESS, checkpointed by `/pre-compact`.** Re-checked this batch's own Deferred section first
+  (iterative-drain step 1): D5-1/D5-2/D5-3 unchanged (batch4's todos 1/2/4 still un-landed); D5-5/D5-6/D5-7 unchanged.
+  Fresh-candidate sweep via `generate_ag_closeout_audit_candidates.py --tranche ci`: **45 total members, 7
+  never-cited**. Dispatched a fresh full Phase 1 sweep as a 46-agent `Workflow` (45 real candidates + 1
+  `asset_group:[meta]` fold-in candidate per the skill's Phase 0.3 meta-sweep rule,
+  `quality_gates_quickmerge_timing_ baseline_2026_07_31.md`) — **run id `wf_1f04b9b2-680`, still executing when this
+  checkpoint was written; results pending, to be reconciled in a follow-up entry.** Phase-0-only findings already
+  written durably (not left in chat): see `/plans/active/issues/ag_closeout_audit_ci_parked_2026_08_07.md` — 6 docs
+  dual-tagged `[ci, infrastructure]` (content reads CI-specific in all 6, not retagged here per the same
+  non-owning-tranche-race caution the 2026-08-04 run applied to the first of these six), 1 doc dual-tagged
+  `[sports, ci]` (sports-owned, not retagged here), the `asset_group:[meta]` fold-in candidate noted above, and a
+  `check_ag_closeout_linkage.py` ratchet cross-check (71 vs baseline 69, corpus-wide — 7 of the 71 are
+  bare-`[ci]`-tagged; spot-verified `pm_bats_tests_never_invoked_by_quality_ gates_2026_07_26.md` is a gate
+  false-positive, already tracked at batch4 D4-10, since the gate's "closeout family" for `ci` is only the archived
+  digest doc, not this batch chain's own Deferred tables). Also observed (out of scope to chase here):
+  `check_reference_paths.py` corpus-wide ratchets are both currently red (format 83 vs baseline 81, existence 92 vs
+  baseline 86) — pre-existing, not caused by this run, not ci-specific; noted for whoever owns that ratchet. **Resume**:
+  re-invoke/inspect Workflow run `wf_1f04b9b2-680` (or its journal.jsonl in the transcript dir), synthesize Phase 2
+  (verdict counts + orphan list), run Phase 3's conflict-check, and append the final report + any batch6 decision to the
+  parked-findings doc above rather than creating a second one.

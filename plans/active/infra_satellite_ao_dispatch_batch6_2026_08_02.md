@@ -13,7 +13,7 @@ summary: >-
   and 2 are fully non-batchable (both already carry an explicit `/na-eligibility-audit` KEEP-NA verdict from 2026-07-30
   on their own sole todo). Both extracted todos touch different files and were checked for file-level collision against
   all 11 existing infra batch/finalize/closeout plans plus a corpus-wide grep — zero found.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -26,12 +26,12 @@ related:
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-03"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -49,7 +49,7 @@ context_scope:
     /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
   ]
 supersedes:
 superseded_by:
@@ -159,8 +159,8 @@ concurrently (no `sequential: true`).
 
 ## Operator approval gate
 
-**This plan is `status: draft` — NOT ingested, NOT dispatched.** Flipping it (and its finalize twin, already
-`status: active` per the no-double-gate ruling) to `status: active` is the operator's call. Both todos above are
+**This plan is `status: active` — operator-approved 2026-08-06, dispatching.** Flipped from `draft` (its finalize twin,
+already `status: active` per the no-double-gate ruling) to `status: active` is the operator's call. Both todos above are
 read-only/wording-only with no `[OPERATOR]` tag needed on their own merits (finding U: read-only investigation +
 mechanical wording fix never carry `[OPERATOR]`) — the draft gate here is solely the standing "a skill-drafted AO batch
 needs explicit operator sign-off before dispatch" rule, not a signal either todo itself is risky.

@@ -32,10 +32,11 @@ parent_epic: agent_operating_framework_master
 source:
   "mtds_empty_string_fallback_baseline_drift-001 (slot 6), 2026-07-30 — discovered while shipping the real fix for the
   same issue"
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-assigned_vm: NA
+assigned_vm: planning
 resolved_by: ""
 locked_by: ""
 context_scope:
@@ -102,13 +103,26 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. Review whether this is an isolated incident or part of a broader pattern from the `slot-7·planning`
-      role (or the `main`/plan-hygiene automation that produces bulk plan-flip commits) — if bulk flip commits are being
-      generated without per-item git verification, that process needs a checkpoint (e.g. requiring
-      `git cat-file -t <sha>` or `gh api .../commits/<sha>` to resolve before a flip commit citing it is allowed to
-      land). NOTIFY OPERATOR per CLAUDE.md's "big finding... SSOT contradiction" triage — this is exactly that class.
-      Repo: N/A (process/governance decision). **Done when**: operator has reviewed and either confirms
-      isolated-incident or directs a process fix.
+- [x] ✅ [OPERATOR] P1. Review whether this is an isolated incident or part of a broader pattern — **RULED 2026-08-06
+      (operator, interactive): PATTERN, not isolated.** Evidence presented at the ruling: a second, independent incident
+      of the same finding-class landed 4 days later from a different role and a different tranche —
+      `/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, in which slot-9
+      (`backend_engineer`) closed an `[OPERATOR] P1` architecture decision citing "DECIDED 2026-08-03 (operator ruling)"
+      with **no traceable source**, and a corpus-wide grep for its subject ("Finding E-1") returned zero other docs.
+      That doc names itself "the same finding-class as `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md` …
+      but for a decision citation rather than a commit SHA". Two incidents, 4 days apart, different roles, different
+      tranches = pattern. **Ruling: extend the gate to ruling citations** (todo below) rather than confining the fix to
+      SHA citations.
+- [x] ✅ [SCRIPT] P1. **Extend evidence verification to non-SHA citations — the shipped gate structurally cannot catch
+      the second shape.** Added `scripts/quality_gates/check_plan_operator_ruling_evidence.py` (new baselined-ratchet
+      gate, 59 pre-existing violations baselined) + wired into `scripts/quality-gates.sh` after the SHA evidence check —
+      `unified-trading-pm@939fd8ece`. A checked todo or `resolved_by:` citing "operator ruling" (or "operator,
+      interactive") must have a traceable source (/plans/…, /codex/…, or .md doc) within 300 chars of the ruling phrase.
+      Verified: E-1 (`tradfi_adapter_dead_code_fallback_audit_2026_07_25.md:317`, no source) flagged; I-2 (same doc:292,
+      cites `plan_reconcile_parked_operator_decisions_2026_08_02.md`) passes; the mtds issue P1 item
+      (`(operator, interactive)` +
+      `/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`) passes. Both checks
+      (SHA + ruling) now run as consecutive post-gates in `quality-gates.sh`. Repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. Added a QG post-gate check that any `resolved_by:` / `- [x] ... — <repo>@<sha>` citation resolves
       via `git cat-file -t <sha>` in the cited repo's sibling worktree (mirrors `check_evidence_backed_completion.py`'s
       Cloud Build SHA verification pattern, generalized to git commit citations) — `unified-trading-pm@62b0ec76c`:
@@ -163,3 +177,19 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
   not a substantive answer to the isolated-incident-vs-pattern question this todo asks. The open governance question
   remains genuinely unresolved; doc correctly stays NA.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass, later same day) — CORRECTS the marker
+  above.** RECLASSIFY, `assigned_vm: NA -> planning`. The KEEP-NA marker immediately above is generic boilerplate that
+  predates or missed this session's own resolution: the `[OPERATOR]` "isolated vs pattern" item is now checked done,
+  citing "RULED 2026-08-06 (operator, interactive): PATTERN, not isolated" with a concrete second-incident citation
+  (tradfi Finding E-1). The single remaining open todo (`[SCRIPT] P1`, extend evidence verification to non-SHA
+  operator-ruling citations) was rewritten as part of that same reconciliation into a bounded, single-script
+  implementation task mirroring the already-shipped `check_plan_commit_sha_evidence.py` pattern, with an explicit "Done
+  when" — worker-determinable, no further judgment call. No hard-rule veto (no redirect banner, no stated revert, empty
+  `depends_on`, single-file QG-script extension, not dispatch-critical-path machinery). Conflict-check cleared (no
+  overlapping claim in `parent_epic: agent_operating_framework_master`). `assigned_role` was unset; filled `infra`
+  (PM-repo QG-tooling scope).

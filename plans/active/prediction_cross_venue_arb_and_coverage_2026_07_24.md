@@ -430,13 +430,14 @@ exist"). **CONFIRMED — mislabeling.** Drill-down (`market-data-tick-pred-prd/_
 - **Impact**: honest coverage (POLYMARKET 95.54%) is over an inflated set including non-existent-market cells; manifest
   is full of meaningless empties rather than blanks-where-data-was-expected.
 
-- [ ] [SCRIPT] P0. **Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it (honest-
-      absence correctness)**: ~~(1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path) MUST set
-      `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from `endDate`/`closedTime`
-      (today both NULL → 0/25). (2) MTDS/UTL honest-absence — only emit a cell (captured/empty/failed) for dates WITHIN
-      `[available_from, available_to]`; outside the market's life = honest BLANK (absence) / `expected_unattempted`,
-      NEVER `empty_confirmed`. Reconsider whether `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` belong
-      in `EMPTY_CONFIRMED_REASONS` (UAC) — operator: "better to have the blanks where we expected data."~~ (3) Re-walk
+- [x] ✅ [SCRIPT] P0. **Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it
+      (honest- absence correctness)**: ~~(1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path)
+      MUST set `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from
+      `endDate`/`closedTime` (today both NULL → 0/25). (2) MTDS/UTL honest-absence — only emit a cell
+      (captured/empty/failed) for dates WITHIN `[available_from, available_to]`; outside the market's life = honest
+      BLANK (absence) / `expected_unattempted`, NEVER `empty_confirmed`. Reconsider whether
+      `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` belong in `EMPTY_CONFIRMED_REASONS` (UAC) —
+      operator: "better to have the blanks where we expected data."~~ (3) Re-walk
       (`rebuild_prediction_manifest --venue POLYMARKET`) to drop/reclassify the ~49.6k out-of-existence empties so
       honest coverage reflects the in-lifecycle universe; audit whether the 93,264 `SOURCE_RETURNED_ZERO` include
       out-of-lifecycle dates (same root cause). ~~**Same NULL-lifecycle check for KALSHI** (adapter sets
@@ -451,6 +452,8 @@ exist"). **CONFIRMED — mislabeling.** Drill-down (`market-data-tick-pred-prd/_
       numerator/denominator (operator ruling `autonomous_session_operator_decisions_2026_07_25.md` #13 — keep the enum
       members). **Remaining open scope = (3) the historical manifest re-walk only** — that batch4 todo's own text calls
       it "the SEPARATE `[OPERATOR]` walk in the Deferred section (gated on this todo landing)", not yet executed.
+      **Reconciled 2026-08-07 (finalize P1)** — flipped `[x] ✅` (batch4 P0 shipped `instruments-service@3617261f`);
+      struck legs DONE; (3) = the separate `[OPERATOR]` combined `_index` walk (hard-stop 2026-07-28).
 
 ### 2026-06-23 (autonomous) — Kalshi canonicalization EXPANDED to sports + EUR-FX collision fix (operator: "do proper kalshi / more crossover")
 
@@ -530,12 +533,16 @@ already on LDR.
       shared groups — both sides were wired. (c-code-gap-FIXED) Kalshi `KXHIGH*` temp tickers were absent from
       KALSHI_TICKER_PREFIX_TO_GROUP → fell to OTHER. Added `"KXHIGH": WEATHER_TEMP_DAILY`. Both venues now share the
       group at axis-1. 73 tests pass. Politics P2 gap remains (its own open todo). 2026-06-26.
-- [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
-      CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
-      CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
-      condition_id by teams+date / strike+expiry / release+date, with a same-settlement-time guard) lives in the
-      strategy/features arb layer, NOT the cqg classifier. Repo: strategy-service (arbitrage_price_dispersion) +
-      features-service. Provenance: operator 2026-06-23 — "so we can easily pair them up properly".
+- [x] ✅ [DESIGN] P2. **CLOSED — na-eligibility-audit 2026-08-06. Verified SHIPPED via direct code read (disagrees with
+      the 2026-07-30/08-02 audits, which kept this NA without checking the code).** Per-instrument same-game/
+      same-settlement arb PAIRING within a shared cqg group — pairing logic lives in the strategy/features arb layer,
+      NOT the cqg classifier. **Confirmed shipped end-to-end**: UAC `cross_venue_mapping.py::build_cross_venue_mapping`
+      joins Kalshi↔Polymarket by (underlying, bet_type, settlement_date, strike) / `SportsFixtureKey.pairing_key()` for
+      sports — exactly this todo's ask; consumed by features-service's `prediction_cross_venue_dispersion.py` (own
+      docstring: "the CANONICAL production home for cross-venue prediction ARB-FINDING"); wired into strategy-service's
+      `catalog_trading.py::build_arbitrage_price_dispersion` (inline comment: "build_cross_venue_mapping defines the
+      pairing the feature consumes"). Full chain verified live, not just grepped. Repo: strategy-service
+      (arbitrage_price_dispersion) + features-service. Provenance: operator 2026-06-23.
 
 ### 2026-06-23 (autonomous catalogue/aggregation session) — ITEM A: prediction instruments-catalogue daily aggregation DEPLOYED + honest 4-state denominator VERIFIED (99.73%)
 
@@ -609,11 +616,14 @@ Residual data-correctness items captured as todos below (lowercase-venue manifes
       manifest canonicalisation that maps lowercase `kalshi`→`KALSHI` + resolves blank/UNKNOWN venue, bundled into the
       next prediction single-walk (NOT a standalone whole-corpus walk — single-walk discipline). Repo:
       market-tick-data-service (manifest canonicalisation). **NICE-TO-HAVE** — ~313 of 194k rows (~0.16%), does not
-      materially move the 99.73% denominator.
+      materially move the 99.73% denominator. **Reconciled 2026-08-07 (finalize P1)** — stays `- [ ]`: leg (b) of the
+      `[OPERATOR]` combined `_index` walk (hard-stop 2026-07-28) — parked at batch4 Deferred.
 - [ ] [DATA] P3. **1,454 prediction `_index` rows still at schema v4** (vs 192,713 at v9; DISCOVERED 2026-06-23): the
       Kalshi-history tail not yet re-walked to v9 (the POLYMARKET v9 re-walk completed; Kalshi-bulk seed rode a later
       stack). v9-schema polish only (rows already captured); rides the next prediction canonicalisation walk. Repo:
-      market-tick-data-service. **NICE-TO-HAVE.**
+      market-tick-data-service. **NICE-TO-HAVE.** **Reconciled 2026-08-07 (finalize P1)** — stays `- [ ]`: leg (c) of
+      the `[OPERATOR]` combined `_index` walk (v9 re-walk DONE; only the Kalshi v4 tail rides it) — parked at batch4
+      Deferred.
 
 **Cross-cutting findings captured as todos:**
 
@@ -974,3 +984,17 @@ themselves required manual VM backfill triggers.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped in batch4/batch6 (sole executing owners
   of this doc's extracted cqg/fixture-pairing residuals) + rebuild_prediction_manifest.py (active `--apply` script).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: 7 real open items (strict top-level grep
+  undercounts at 6 — one is a 2-space-indented sub-bullet, the fixture-pairing residual). 5 remain KEEP-NA-valid
+  (tarball-race design call, POLYMARKET-lifecycle operator-gated re-walk, 2x NICE-TO-HAVE manifest-polish riding the
+  next single-walk, mid-gap historical backfill — all independently confirmed still-open/still-gated, several
+  cross-checked against `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s own Deferred section). 1
+  (fixture-pairing residual, nested) is KEEP-NA-STALE-DUPLICATE, already correctly cited to batch6's team-name-alias-
+  tables todo — no action needed. 1 (per-instrument arb-pairing, line 533) CLOSED as KEEP-NA-STALE — a same-run
+  classifier flagged this PLAUSIBLE-not-CONFIRMED; independently verified via direct code read (see checkbox) that the
+  shipped UAC `build_cross_venue_mapping` matcher is fully consumed end-to-end by features-service's
+  `prediction_cross_venue_dispersion` kernel and strategy-service's `build_arbitrage_price_dispersion` — genuinely
+  shipped, not a design call still open. Disagrees with the 2026-07-30/08-02 audits, which kept it NA without checking
+  the code; this is a fresh finding, not a re-litigation (no operator ruling/redirect-banner/documented-revert protected
+  it). 7 open todos -> 6.

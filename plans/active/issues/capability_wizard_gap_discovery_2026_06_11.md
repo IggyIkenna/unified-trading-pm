@@ -35,7 +35,7 @@ context_scope:
     /plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
     /plans/archive/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md,
     unified-api-contracts/unified_api_contracts/internal/architecture_v2,
-    unified-trading-pm/scripts/openapi,
+    scripts/openapi,
   ]
 ---
 
@@ -155,8 +155,9 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       `tests/unit/test_capability_manifest.py::test_sim_assumptions_registry_backfilled`, both assert
       `len(SIM_ASSUMPTIONS_REGISTRY) >= 16`) — no new test needed. Companion doc-drift also fixed:
       `capability-wizard-question-bank.md`'s Stage E rows for "simulation matching/fill assumptions" and "known
-      batch-live asymmetries" flipped `gap`→`registry` (`unified-trading-pm@6586b8a2e`); `capability-wizard.md`'s status
-      table already correctly cited `5e7d0685` for sim-assumptions (no fix needed there). No design work remaining.
+      batch-live asymmetries" flipped `gap`→`registry` (`unified-trading-pm@97833e7d42786002ad8bca76bdba52701016511f`);
+      `capability-wizard.md`'s status table already correctly cited `5e7d0685` for sim-assumptions (no fix needed
+      there). No design work remaining.
 - [x] ✅ [SPEC] P1. **Fund structures**: offerable pooled/SMA/prop structures with subscription/redemption + rebalance
       cadences (fund-administration state machines are runtime truth; nothing declares what is offerable). — **PUSH
       CONFIRMED LANDED 2026-07-27 (slot-13)**: `unified-api-contracts@8903683a` (docstring fix — the module's
@@ -859,3 +860,5 @@ fired.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
   resolve; the doc carries zero open `- [ ]` items (a fully-resolved running gap-pool, kept `status: open` by design per
   its own stated purpose), so the sibling findings doc + parent plan + source registries remain the right set.
+- **context-scout 2026-08-05**: re-scouted; fixed a broken `context_scope` path (`unified-trading-pm/scripts/openapi`
+  never resolves — same-repo paths are plain repo-relative; corrected to `scripts/openapi`), now 5 entries.

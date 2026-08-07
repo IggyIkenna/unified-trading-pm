@@ -56,11 +56,13 @@ related:
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -80,7 +82,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -99,6 +101,7 @@ context_scope:
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
   ]
 drift_direction: none
+archive_exempt: true
 locked_by:
 locked_since:
 supersedes:
@@ -280,6 +283,24 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **`/ag-closeout-audit tradfi` 2026-08-06 (slot 3, dispatch agt-7d91ed, sharded scheduled `ag_closeout_auditor` worker,
+  operator away)**: fresh full pass (Phase 0 via `generate_ag_closeout_audit_candidates.py`, extended with a direct dump
+  for the full member list). 54 real tradfi-primary candidates classified via a 54-agent Workflow against the 11-doc
+  covering set: 1 excluded (genuine mistag, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` is 100% defi/cefi),
+  15 archivable now, 2 archivable-after-planned-work, 36 orphaned (11 partial, 25 never-touched) — up from batch6's 12,
+  mostly newly-surfaced findings (2 issue docs postdate batch6's 2026-08-01 cutoff; several others' latest dated
+  Progress Log section moved since). Phase 3 re-verified batch6's own Deferred items first (batch5's MDPS
+  `continuous_future` re-test DID ship 2026-08-03, but the result — 20.8%, up from 18.9% — did NOT clear
+  `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s blocker, so it correctly stays deferred), then
+  conflict-checked the 36 orphans: 4 cleared (from 5 source docs — 2 combined into one todo touching the same file) and
+  are drafted as `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (+ gated finalize), `status: draft` pending
+  operator review — including `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s 0%-twin-coverage root-cause
+  investigation, which batch6_finalize's own todo 2 explicitly anticipated as "a batch7 todo." The other 32 orphans stay
+  deferred across 5 categories in batch7's own Deferred/Flagged sections (too-large-or-risky, operator-gated,
+  self-dispatched-already/stale-tag, already-drafted-elsewhere-pending-promotion, cross-tranche-owned) — see that plan
+  for the full per-doc accounting. **Standing-state note**: `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` has sat
+  `status: draft`, unreviewed, for 5 days as of this pass — flagging for operator attention, not re-drafting its
+  content.
 - **2026-08-04 (slot-16, review — `tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md` todo 2
   reconciliation)**: reconciled this closeout doc's own native content against the parent extraction's 9 completed todos
   (verified by slot-13, 2026-08-04, in the finalize plan's todo 1). Changes in this commit: (a) MVP-cell table — all 6
@@ -381,6 +402,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   sole native todo is correctly NA because the real dispatchable copy already lives on an active planning doc.
   `assigned_vm` stays unchanged.
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
+- **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: `archive_exempt: true` — this is an umbrella
+  coordination index (`nature: process`) serving as a standing reference hub for the TradFi consolidated close-out. All
+  2/2 native checkboxes are done, but the doc's "Aggregated source docs" section is actively maintained as the single
+  entry-point digest of ~50+ tradfi-touching plans/issues with live open-todo counts. It has 3 active child plans with
+  open work (`depends_on`). Archiving it would orphan the coordination index for the multi-phase tradfi close-out.
 
 ---
 
@@ -510,7 +536,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4)
   - [`plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md`](/plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md)
     (done) — 0 open todos (closed/archived/record-only)
-  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
+  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md)
     (9 open — capped)
     - **[DATA] P1.** Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string
     - **[DATA] P1.** Resolve the non-canonical TYPE-token question before retrofitting todo 1
@@ -546,8 +572,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       1,083 pre-v9 rows)
   - [`plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`](/plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`](/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
-    (9 open — capped)
+  - [`plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`](/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md)
+    (archived 2026-08-05, all 16 todos done)
     - **[OPERATOR] P0.** BLOCKED-OPERATOR-DECISION — coordinate a maintenance window for the prediction + tradfi
       consolidator crons before pausing either
     - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Snapshot the prediction canonical manifest index and pause its
@@ -665,7 +691,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DATA] P2.** Resolve the POLYMARKET mismatch (CLOB-launch vs first-actual-instrument)
     - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts + AAVE_V3 chain-axis question
     - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py` and `venue_mapping.py` keys
-  - [`plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md`](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+  - [`plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md`](/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
     - **[DATA] P3.** DECIDED (operator 2026-07-18) — `InstrumentRecord` silently swallows unknown kwargs,
       `extra='forbid'` fix
   - [`plans/archive/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`](/plans/archive/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md)
@@ -945,3 +971,13 @@ cross-cutting checker bugs but is not yet fully green, blocked on the chain-bund
 native-todo AO-eligibility extract (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) have
 since drafted AO-dispatchable candidates off this plan's satellite docs and native todos — all `status: draft`, pending
 operator activation.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA — 0 native open todos (sole
+  `[DATA] P2` MVP-cell-wiring checkbox flipped `[x]` 2026-08-04), coordination index disposition unchanged.** This doc
+  is the tranche's aggregated-reference umbrella + `check_ag_closeout_linkage.py` linkage anchor, and its archival
+  disposition is the still-pending operator decision (item 8 in
+  `tradfi_autonomous_session_operator_decisions_2026_07_25.md`, option B recommended: keep as the tranche coordination
+  index) — a folding/archival judgment call, never autonomous. `depends_on` 3 still-active children
+  (`tradfi_manifest_content_recovery_completion_2026_07_24`, `tradfi_backfill_throughput_followups_2026_07_24`,
+  `tradfi_phase_d_terminal_gate_2026_07_24`) gates archival per PLAN_FORMAT.md regardless. `assigned_vm` unchanged.

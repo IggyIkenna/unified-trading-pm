@@ -239,3 +239,6 @@ no reclassification. No stale items, not an archive candidate (1 substantive ope
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — dropped a literal duplicate entry, added the
   registry source file (`venue_constants.py`) since the sole open todo (P2 provider-promote fan-out policy) concerns the
   registry data-dicts directly.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — DESIGN operator question, parked as deferred E8

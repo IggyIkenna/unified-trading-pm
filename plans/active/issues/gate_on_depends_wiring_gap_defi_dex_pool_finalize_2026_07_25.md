@@ -348,6 +348,22 @@ distinct plan pair.
       **Done when**: a synthetic test plan pair with an intentionally-unwired gate is confirmed to NOT dispatch its
       finalize task, proving the check catches what `_wire_gate_on_depends_prereqs` currently misses. — ✅
       agent-orchestrator@c34b560
+- [ ] [BACKEND] P1. **Root-cause the "zero-derived-parent-row" third mechanism** — distinct from both shipped fixes
+      (`13a5dd8` in-process-cache staleness, `bd522d0` prose-masquerading-as-frontmatter). Confirmed via live
+      `/api/backlog` query on TWO independent plan pairs, both AFTER a post-fix server restart: the PARENT plan's own
+      task rows are entirely ABSENT from the backlog (not merely unwired) —
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25` (10th bounce, 2026-07-30) and
+      `defi_satellite_ao_dispatch_batch8_2026_08_02` (11th+ bounce, 2026-08-02) both show zero backlog rows for the
+      parent plan_ref while the finalize plan's own tasks exist normally — so `_wire_gate_on_depends_prereqs` has
+      nothing to attach as an unmet prerequisite and the gate reads satisfied by omission. Both repro cases share a
+      candidate trigger already flagged in the Progress Log: the parent's one remaining open todo has a `**bold**`
+      phrase immediately after the `P<n>.` tag (`- [ ] [DATA] P3. **Prove force +     skip...**`) — worth checking
+      whether `regen_backlog_from_plan.py`'s todo-derivation regex mishandles a bold span directly after the priority
+      tag, causing that specific todo to never derive into a backlog row at all. Repo: agent-orchestrator. **Done
+      when**: root cause identified and fixed, and a regression test reproduces one of the two recorded repro shapes (a
+      parent plan whose sole remaining open todo has `**bold**` immediately after its `P<n>.` tag) and confirms the todo
+      now derives a backlog row + the downstream `gate_on_depends` finalize task correctly reports the unmet
+      prerequisite instead of `"ready (no blockers)"`.
 
 ## 2026-07-30 todo 2 shipped (slot 9) — on-disk defense-in-depth check
 
@@ -717,3 +733,15 @@ note above already covers. Independently re-verified before declining:
   directive routing AO-machinery/dispatch-logic docs to `execution_scope: local-only`. Only change since the last marker
   is a mechanical `context_scope` path fix reflecting the quoted plan's archival — no substantive content changed.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — verified all still resolve).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-06 (AO issue-doc sweep, re-verification pass)**: this doc had been carried across multiple
+  na-eligibility-audit passes as "`## Todos` fully `[x]`, real open count 0" (per the 2026-08-02 Counting note) — but
+  that note only concerned the grep-false-positive fenced-code-block lines, not the genuine, still-unresolved
+  "zero-derived-parent-row" mechanism the Progress Log itself has documented twice (10th bounce 2026-07-30, 11th+ bounce
+  2026-08-02) as a confirmed live gap neither shipped fix addresses. That finding had never been captured as a real
+  `- [ ]` todo — a violation of the workspace's own "every follow-up is a todo, never prose" rule. Added the todo above
+  so it's dispatchable rather than perpetually re-discovered in prose across future bounces. Doc stays open, NOT
+  archived.

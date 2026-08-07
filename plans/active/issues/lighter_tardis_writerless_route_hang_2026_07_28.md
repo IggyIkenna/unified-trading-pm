@@ -28,9 +28,11 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py,
+    unified-trading-library/unified_trading_library/io/streaming_writer.py,
+    unified-trading-library/unified_trading_library/io/streaming_shard_finalizer.py,
+    unified-trading-library/unified_trading_library/events_interface/__init__.py,
     unified-trading-library/unified_trading_library/lifecycle/in_flight_registry.py,
-    unified-trading-library/unified_trading_library/streaming/event_facade.py,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 execution_scope: orchestrator-agent
@@ -158,3 +160,18 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
   first import of the orchestrator module (triggered by `finalise_rows_and_path` →
   `_validate_canonical_path_at_write_time` in `symbol_rules.py`). The "Stage-0 OBSERVE" notice (step 4) is
   `symbol_rules.py:420` logging non-canonical instrument-id forms.
+
+- **context-scout 2026-08-06**: re-scouted; the 2026-08-05 root-cause analysis pinpointed exact call-chain files
+  (`tardis_batch_download.py`, `streaming_writer.py`, `streaming_shard_finalizer.py`, `events_interface/__init__.py`)
+  more precise than the prior generic entries — swapped `umi_tick_provider.py`/`event_facade.py` for those, kept
+  `in_flight_registry.py` (still the evidence log source) and the source dispatch plan, now 6 entries.
+
+## Follow-ups
+
+- [ ] [CODE] P3. Implement one of the 3 recommended fixes for the Tardis writer=None/setup_events() hang
+      (asyncio.wait_for timeout at tardis_batch_download.py:709, configurable upload timeout in _upload_gcs_with_retry,
+      or graceful log_event RuntimeError degradation) - human design decision pending per Progress Log 2026-08-05
+
+> **2026-08-06 archive-candidate audit**: DIAG todo is [x] (root cause traced to the blocking run_in_executor await),
+> but the Progress Log's 'Recommended fix (human design decision - 3 options)' is never implemented - the hang is only
+> diagnosed, not fixed, and no follow-up todo tracks the fix

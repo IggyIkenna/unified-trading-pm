@@ -596,6 +596,28 @@ if [ -f "$PLAN_SHA_EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Plan operator-ruling evidence (sibling to commit-SHA gate) — baselined ratchet ──
+# A checked todo claiming completion via an "operator ruling" must cite a traceable source
+# (/plans/…, /codex/…, or .md doc) within 300 chars of the ruling phrase.
+# Failure class: an [OPERATOR]-gated decision silently closed by a worker with no traceable source
+# — an authority bypass that the SHA gate structurally cannot catch (no SHA to resolve).
+# Source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md § todo [SCRIPT] P1.
+# Two incidents (2026-07-30 SHA + 2026-08-03 ruling) confirmed this as a pattern.
+# Re-baseline with --baseline-write ONLY after confirming the violation is pre-existing drift,
+# not a new authority bypass.
+PLAN_RULING_EVIDENCE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_plan_operator_ruling_evidence.py"
+if [ -f "$PLAN_RULING_EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Plan operator-ruling evidence check (unsourced 'operator ruling' completions must cite a traceable doc)..."
+    if python3 "$PLAN_RULING_EVIDENCE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Plan operator-ruling evidence check passed (at/below baseline)"
+    else
+        echo "❌ Plan-operator-ruling-evidence regression — a checked todo cites 'operator ruling' with no" >&2
+        echo "   traceable source (/plans/…, /codex/…, or .md doc within 300 chars). Add the source doc" >&2
+        echo "   reference, or re-baseline: python3 ${PLAN_RULING_EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        _post_gate_fail "plan-operator-ruling-evidence"
+    fi
+fi
+
 # ── Post-gates: OpenAPI drift (Group D) — DISABLED 2026-05-16 per orchestrator audit finding ──
 # The check compared full-file hashes of two structurally-different files:
 #   unified-trading-api/openapi.json (61 paths — slim FastAPI facade)

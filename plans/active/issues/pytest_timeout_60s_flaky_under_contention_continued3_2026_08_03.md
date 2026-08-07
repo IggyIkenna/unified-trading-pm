@@ -89,13 +89,15 @@ here.
       unchanged from the parent doc-chain; still open per `continued2`'s own last check — a brief runner-idle window was
       observed once but did not hold). Once landed AND sustained (not a momentary idle blip), re-test whether
       `main_ci_red`/`ldr_qg_failure` re-fires across this whole doc-chain stop recurring.
-- [ ] 2. [OPERATOR] P2. Same operator-level gap flagged repeatedly across the whole doc-chain, now also observed for
-      `instruments-service`: no cooldown/state-transition dedup guard exists on the `main_ci_red`/`ldr_qg_failure`
-      escalation trigger, so an escalation can fire (and a worker be dispatched) for a state that self-resolved before
-      the worker even started investigating (this session's PR merged 2 seconds before its own escalating run began).
-      Recommend gating re-fire on either (a) a minimum cooldown since the last dispatch for the same repo with an
-      unchanged target-branch HEAD, or (b) checking PR merge/HEAD-advancement state at dispatch time, not just at
-      escalation-creation time. Operator decision, not something a one-shot wall-clearing session should self-implement.
+- [ ] 2. [SCRIPT] P2. **RESOLVED 2026-08-06 — same ruling as the parent doc-chain's decision, do not duplicate here.**
+      `[SCRIPT]` tag (was `[OPERATOR]`) — option (a), minimum cooldown since last dispatch with unchanged HEAD. Same
+      operator-level gap flagged repeatedly across the whole doc-chain, now also observed for `instruments-service`: no
+      cooldown/state-transition dedup guard exists on the `main_ci_red`/`ldr_qg_failure` escalation trigger, so an
+      escalation can fire (and a worker be dispatched) for a state that self-resolved before the worker even started
+      investigating (this session's PR merged 2 seconds before its own escalating run began). Recommend gating re-fire
+      on either (a) a minimum cooldown since the last dispatch for the same repo with an unchanged target-branch HEAD,
+      or (b) checking PR merge/HEAD-advancement state at dispatch time, not just at escalation-creation time. Operator
+      decision, not something a one-shot wall-clearing session should self-implement.
 - [ ] 3. [INFRA] P3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
       land and hold, re-check whether this entire doc-chain (4 docs now, 30+ occurrences across 8+ repos) self-resolves
       — if so, archive all four docs together rather than leaving them open indefinitely as "still waiting."
@@ -485,8 +487,8 @@ cap, not ones a marker would push over); flagged for a future pass rather than r
 
 - **2026-08-05 (interactive session) — 4 MORE test files confirmed hit by this exact class, found via an unrelated
   re-run of the test-impact-selector backtest**
-  (`/plans/active/issues/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`). Re-ran
-  `test_impact_backtest.py` against `features-service` now that the CI-runner fleet split
+  (`/plans/active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`). Re-ran `test_impact_backtest.py`
+  against `features-service` now that the CI-runner fleet split
   (`/plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`) has meaningfully reduced (not eliminated)
   fleet contention — got a usable sample for the first time (5, up from 0) and all 5 flagged as "selector divergences"
   (narrowed test set missed the actual failing test). Investigated each one's real CI log directly rather than trusting
@@ -500,3 +502,6 @@ cap, not ones a marker would push over); flagged for a future pass rather than r
   60/150s per-test timeout elapses, expanding the known blast radius. No new todo filed here (same root cause, same
   `[OPERATOR]`-gated capacity question already tracked) — noted for whoever next re-derives the residual-contention
   baseline.
+- **context-scout 2026-08-06**: populated context_scope (6 entries) — none previously recorded via a marker.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — OPERATOR dedup decision, incident log chain, prior verdict stands

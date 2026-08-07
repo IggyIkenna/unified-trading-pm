@@ -192,10 +192,10 @@ here — worth folding into whichever future pass touches `DataTypeCapability` f
         exclude, rather than a real MTDS capture defect. — ✅ CONFIRMED via UAC trace (Diagnosis §3): `SOURCE_PRIORITY`
         registers the ONLY source for `("sports", "ODDS_HORIZON_BUCKET")` as `mdps_odds_horizon_bucket` — no raw-vendor
         source is registered at all. Follow-up code fix:
-  - [ ] [DATA] P3. Exclude `odds_horizon_bucket` from `market-tick-data-service/scripts/pipeline_e2e_check.py`'s
+  - [x] ✅ [DATA] P3. Exclude `odds_horizon_bucket` from `market-tick-data-service/scripts/pipeline_e2e_check.py`'s
         SPORTS/ODDS_API raw-data_type enumeration (it is MDPS-derived per UAC `SOURCE_PRIORITY`, never an MTDS-native
         raw capture — MTDS force-fetching it directly against `the-odds-api.com` is conceptually wrong regardless of the
-        vendor-quota state above). (repo: market-tick-data-service)
+        vendor-quota state above). (repo: market-tick-data-service) — market-tick-data-service@bc269b51
 
 ## Progress Log
 
@@ -207,3 +207,4 @@ here — worth folding into whichever future pass touches `DataTypeCapability` f
   signature), confirmed to affect PROD identically (same credential); (3) `odds_horizon_bucket`'s MDPS ownership is
   confirmed via UAC `SOURCE_PRIORITY` — it should be excluded from MTDS's own force-fetch enumeration. Filed the
   vendor-credential ask as `[OPERATOR]` P2 and the enumeration-exclusion as a new `[DATA]` P3 code-fix todo.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

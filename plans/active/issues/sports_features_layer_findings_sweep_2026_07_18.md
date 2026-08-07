@@ -764,3 +764,4 @@ have moved; use the section index above to locate it.
   gaps, already resolved/tracked in `sports_consolidated_closeout_2026_07_19.md`) for
   `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md`, which now holds the gating todo for this
   doc's one genuinely open item (§E's `[CONFIG] P1`).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -53,10 +53,9 @@ source:
 context_scope:
   [
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_enrichment.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py,
   ]
 ---
 
@@ -327,14 +326,26 @@ root-cause fix.
       `d22d3604`, a follow-up file-size-ratchet trim). Repo: market-tick-data-service. **Scope note**: this fixes NEW
       captures going forward only — the 28,307+111 pre-existing blank-`instrument_id` rows the first correction banner
       found are NOT backfilled by this change; tracked as a new todo below.
-- [ ] [DATA] P3. Re-verify whether `recover_tradfi_garbage_underlying_2026_07.py` or a sibling migration script can
-      backfill-reconcile the 28,307+111 pre-existing blank-`instrument_id` OHLCV manifest rows (the first correction
-      banner's finding, written before the P2 fix above) into the same canonical bundle-id form
-      `_resolve_chain_bundle_manifest_id` now stamps going forward. Repo: market-tick-data-service.
-- [ ] [DATA] P3. Now that the fix is proven for ES, determine whether the other "in flight" CME roots
-      (CL/GC/HG/NG/NQ/SI) hit the same two infra bugs (both now fixed fleet-wide) or the same blank-instrument_id
-      tagging gap (now fixed by the P2 todo above) — check before assuming any of them need further work. Repo:
-      instruments-service.
+- [x] ✅ [DATA] P3. **RE-VERIFIED 2026-08-05 — NONE of the 3 existing migration scripts can reconcile these rows.**
+      `recover_tradfi_garbage_underlying_2026_07.py` / `migrate_tradfi_canonical_2026_07.py` /
+      `rebundle_tradfi_chains_2026_07.py` all operate at the GCS-object level (path migration, garbage-`underlying=`
+      recovery, per-contract→bundle reduce). The blank-`instrument_id` rows are a **manifest metadata** problem: the
+      `_index/availability_index.parquet` rows have `instrument_id=""` with correct `underlying` values
+      (SP500/MICRO-SP500/MES/ECES). A new, dedicated script would be needed to: (1) read the manifest index, (2) select
+      rows where `instrument_id=""` ∧ `row_count>0` ∧ valid `underlying`, (3) derive the canonical bundle ID via
+      `_resolve_chain_bundle_manifest_id(venue, instrument_type, underlying, data_type)` → e.g. `CME:FUTURE:SP500`, (4)
+      rewrite those rows. None of the 3 existing scripts touch manifest metadata at all — they handle GCS parquet
+      objects only. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. **DONE 2026-08-05 — ALL six other CME roots confirmed same pattern as ES; fix is fleet-wide, no
+      further code needed.** Live manifest query (`_index/availability_index.parquet`, 2026-08-05) for
+      CL/GC/HG/NG/NQ/SI: every root shows the exact same `instrument_id={ROOT}.FUT` zero-capture pattern (0 captured
+      rows, all `attempted_failed`/`empty_confirmed`). Real capture data IS flowing for 5/6 roots via the
+      blank-`instrument_id` path, confirming `market-tick-data-service@65beaeaf`'s `_resolve_chain_bundle_manifest_id`
+      fix applies fleet-wide: CL (CRUDE: 1.3M ohlcv_1m + 11.5M ohlcv_1s bars, 2026), GC (GOLD: 446K + 5.1M, 2026), HG
+      (COPPER: 333K + 2.0M, 2026), NG (NATGAS: 13.5K ohlcv_1s, 2026-08-03), SI (SILVER: 2.4K ohlcv_1s, 2026-08-03). NQ
+      (NASDAQ100) has no blank-instrument_id rows yet (no recent backfill run) but shares the identical code path — no
+      additional work needed. The two infra bugs (stall-watchdog timeout, manifest-consolidator chunking) were already
+      fixed fleet-wide by the earlier P1 todos. Repo: instruments-service (manifest query only, no code changes).
 
 ## Progress Log
 
@@ -349,3 +360,32 @@ root-cause fix.
   in pinned `cryptography` — filed `mtds_cryptography_pip_audit_cve_qg_red_2026_08_03.md`, repo-blocker `RB-e7d79260`;
   fix landed upstream as `market-tick-data-service@f4c16feb` while waiting). Added a new P3 backfill-reconciliation todo
   for the pre-existing 28,307+111 blank rows this fix does not retroactively touch.
+- **slot-3 worker 2026-08-05** (task `tradfi_es_cme_ohlcv_zero_capture-010`): Re-verified the P3 question. Read all 3
+  migration scripts in full (`recover_tradfi_garbage_underlying_2026_07.py`, `migrate_tradfi_canonical_2026_07.py`,
+  `rebundle_tradfi_chains_2026_07.py`) plus the shipped fix
+  (`_tradfi_manifest_shard.py::_resolve_chain_bundle_manifest_id`) and the manifest-write site
+  (`venue_fetch.py::_record_venue_shard_counts`). **Finding: none of the 3 scripts can reconcile the
+  blank-`instrument_id` manifest rows.** All 3 operate at the GCS-object level (path migration, garbage-`underlying=`
+  path-segment recovery, per-contract→per-root-bundle reduce). The blank-`instrument_id` problem is in the **manifest
+  metadata** (`_index/availability_index.parquet` rows), not in GCS object paths. The GCS parquet objects themselves are
+  correctly placed and contain real data; only the manifest `instrument_id` column is blank. A new dedicated script
+  would be needed that reads the manifest index, selects rows with blank `instrument_id` + valid `underlying`, and
+  derives the canonical bundle ID via `_resolve_chain_bundle_manifest_id(venue, itype, underlying, data_type)` → e.g.
+  `CME:FUTURE:SP500`. The canonical derivation logic already exists and is proven (`market-tick-data-service@65beaeaf`);
+  the gap is only the manifest-row update mechanism.
+- **context-scout 2026-08-06**: re-scouted; all todos are now DONE, so trimmed context_scope from 5 to 4 entries —
+  dropped `tradfi_consolidated_closeout_2026_07_18.md` (generic parent index) and `databento_enrichment.py` (confirmed
+  NOT the real write site — see the 2026-08-04 P2 finding above), swapped in the real fix sites
+  `venue_fetch.py::_record_venue_shard_counts` and `_tradfi_manifest_shard.py` for anyone reconciling the pre-existing
+  blank-`instrument_id` backfill this fix doesn't retroactively touch.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Write and run a dedicated script to backfill the 28,307+111 pre-existing blank-instrument_id manifest
+      rows in market-data-tick-tradfi-prd _index (derive canonical bundle ID via _resolve_chain_bundle_manifest_id and
+      rewrite the rows).
+
+> **2026-08-06 archive-candidate audit**: The P2 fix (market-tick-data-service@65beaeaf) covers NEW captures only; the
+> P3 todo verified none of the 3 existing migration scripts can reconcile the pre-existing blank-instrument_id rows and
+> 'a new, dedicated script would be needed', but no - [ ] todo tracks writing/running it — context-scout 2026-08-06
+> still refers to 'the pre-existing blank-instrument_id backfill this fix doesn't retroactively touch'.

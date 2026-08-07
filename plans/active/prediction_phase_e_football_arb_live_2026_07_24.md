@@ -175,3 +175,9 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the 2 real gate dependencies
   (phase_ab_residuals, phase_d) + E3's 2 named source files (features-service dispatch calculator, UAC cross-venue
   mapping).
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA, valid — automatic per
+  `depends_on`+`gate_on_depends: true` on `prediction_phase_ab_residuals_2026_07_24` (7 open) and
+  `prediction_phase_d_formal_smoke_and_backfill_2026_07_24` (5 open) — both confirmed still `status: active` today,
+  neither gate cleared. 3 open items independently re-verified as a bounded verification (E1) plus genuine
+  arb-engine-wiring/correctness-guard design work (E3) — informational only, the gate citation alone already decides the
+  verdict. Doc stays NA.

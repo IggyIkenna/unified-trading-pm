@@ -295,10 +295,11 @@ activity).
       KEEP), triaged into Tier A (21 low-risk dispatch/notify/schedule-only, safe for a quick batch flip) and Tier B (18
       core-pipeline/trading-safety-adjacent — `cloud-build-router.yml` foremost, plus the
       sit-gate/promote/conflict-resolution/hotfix/version-registry family — needing individual per-file review +
-      operator sign-off), authored as `/plans/active/pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md`.
-      Plan-destination `/blocked` question (BLK-7593bf4c) answered same-day by main-agent interim guidance:
-      `assigned_vm: NA` (human-driven), the CLAUDE.md default, given Tier B's trading-safety stakes — plan set to
-      `status: active`, `assigned_vm: NA`; Tier-B todos stay `[OPERATOR]`-gated; whether Tier A is later re-tiered to
+      operator sign-off), authored as
+      `/plans/archive/2026_07/pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md`. Plan-destination
+      `/blocked` question (BLK-7593bf4c) answered same-day by main-agent interim guidance: `assigned_vm: NA`
+      (human-driven), the CLAUDE.md default, given Tier B's trading-safety stakes — plan set to `status: active`,
+      `assigned_vm: NA`; Tier-B todos stay `[OPERATOR]`-gated; whether Tier A is later re-tiered to
       `assigned_vm: planning` is left open as a separate operator call — unified-trading-pm@(see next commit).
 
 ## Codex SSOTs

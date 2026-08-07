@@ -132,3 +132,6 @@ is the open question below.
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — both open todos are an
   explicit design/ownership decision (pick among 3 unnamed fix approaches) that the doc itself says must not be
   dispatched as a bare AO todo until an operator/design pass names the approach. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — both open todos remain unresolved design/judgment
+  decisions (no predetermined fix approach); todo 2 sequenced after todo 1.

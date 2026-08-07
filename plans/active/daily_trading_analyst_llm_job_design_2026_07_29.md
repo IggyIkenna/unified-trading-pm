@@ -325,9 +325,14 @@ job's per-category input adapters for the reconciliation-derived categories, per
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality
       is sonnet/hourly-retry per the 2026-07-28/29 rulings) — do this at the same time as adding this job's row (§1
       build recipe step 5), not as a separate pass. (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P2. **Decide the exact escalation-N** (§3, "N days recurring before severity escalates") and the
-      initial `assigned_vm` default for filed issue docs (planning vs NA) — both are policy calls, not code-derivable,
-      so this stays operator-gated and must NOT be guessed by a worker. (repo: `unified-trading-pm`)
+- [ ] [OPERATOR] P2. **STILL NEEDS YOUR INPUT — a business-risk-tolerance parameter, not something I should invent.**
+      Suggested starting point if useful: N=3 days recurring before severity escalates, initial severity = the
+      finding-type's own stated default if the design doc specifies one — but this is a real policy call about how fast
+      you want to be paged on a recurring, unremediated finding, and I don't have enough context on your tolerance for
+      false-urgency vs missed-escalation to pick it confidently. **Decide the exact escalation-N** (§3, "N days
+      recurring before severity escalates") and the initial `assigned_vm` default for filed issue docs (planning vs NA)
+      — both are policy calls, not code-derivable, so this stays operator-gated and must NOT be guessed by a worker.
+      (repo: `unified-trading-pm`)
 
 ## Codex SSOTs
 
@@ -350,3 +355,4 @@ job's per-category input adapters for the reconciliation-derived categories, per
   follow-ups into 6 real tracked checkboxes (content unchanged, format-only fix), so the open-todo count moved from 0 to
   6 since the last pass, but the doc's own §5 banner still explicitly frames all 6 as "build-phase — not yet scoped for
   AO dispatch; each needs its own sizing pass", and item 6 is explicitly `[OPERATOR]`-tagged. NA remains correct.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.

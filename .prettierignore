@@ -43,3 +43,14 @@ scripts/self-hosted-runners/hosted-baseline/*.yml
 # prettier emits the canonical form. It does not — verified by running prettier on a canonical copy
 # and re-checking. That false belief is why this hole stayed open. Fix the docstrings, not this rule.
 workspace-manifest.json
+
+# .code-workspace files hit the IDENTICAL failure mode as workspace-manifest.json above, discovered
+# 2026-08-06 while adding a new repo entry: VS Code's .code-workspace format is JSONC (trailing
+# commas allowed), and prettier's own JSONC formatting style ADDS a trailing comma after each
+# object's last property — valid for VS Code, but strict `json.load` (used by
+# check_workspace_code_workspace_drift.py and every hand-authoring script) rejects it outright
+# (`Expecting property name enclosed in double quotes`). Confirmed the prettier-autostage hook
+# reformatted ALL 9 files in one pass, including 3 the author never touched, corrupting them from
+# valid to invalid JSON — the exact same "author-verified-green tree gets silently mutated after
+# staging" class as the manifest bug above, just for a different file family.
+cursor-configs/*.code-workspace

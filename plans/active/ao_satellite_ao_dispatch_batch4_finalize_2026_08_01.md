@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-4, finalize]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -39,7 +39,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -54,18 +54,18 @@ source: >-
 
 # AO satellite AO batch 4 — finalize
 
-> **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`** (`depends_on` +
+> **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until that plan's sole todo is `done`. No separate `status` flip needed
 > either way (mirrors batch3_finalize's convention).
 
 ## Todos
 
 - [x] [REVIEW] P0. **Re-verify batch-4's done-claim against reality, not against its checkbox** — for the sole todo in
-      `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, re-run `git show --stat <sha>` for the cited commit
-      and re-run the specific named test(s) directly rather than trusting the claim, and re-run the todo's own stated
-      done-when check (the silent-but-alive-owner simulation test). **Done when**: verified, and if the evidence does
-      not hold up, re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated. — **Verified,
-      holds up.** `agent-orchestrator@7911083` — `git show --stat` confirms the cited commit exists on
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, re-run `git show --stat <sha>` for the
+      cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run the todo's
+      own stated done-when check (the silent-but-alive-owner simulation test). **Done when**: verified, and if the
+      evidence does not hold up, re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
+      — **Verified, holds up.** `agent-orchestrator@7911083` — `git show --stat` confirms the cited commit exists on
       `live-defi-rollout` HEAD (`3c93cf7`) touching exactly `server/worker_liveness_watchdog.py` (+42/-4) and
       `tests/test_worker_liveness_watchdog.py` (+138); diff-read confirms `_reconcile_unacked_dispatches` now requires
       `_pane_is_dead(sess)` (fail-closed on exception) before releasing, matching the commit message's claim. Re-ran the
@@ -121,8 +121,8 @@ source: >-
       `grep -rl orchestrator_failover_double_dispatch_duplicate_work_2026_07_25 plans/ codex/` — 13 referrer hits, all
       still pointing at the live `plans/active/issues/` path (no archived copy exists to repoint to).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, move the file to `plans/archive/2026_08/`, fix
-      every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, move the file to `plans/archive/2026_08/`,
+      fix every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
       `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py`. **Done when**: the batch plan is archived
       with a banner, the inventory regenerates with an orphan count of 0, and `check_finalize_plan_coverage.py` no
       longer names this pair.

@@ -102,7 +102,7 @@
       "codex_sections": [
         "03-observability"
       ],
-      "version": "0.46.0",
+      "version": "0.60.0",
       "version_source": "git-tag",
       "dependencies": [
         {
@@ -162,7 +162,7 @@
         "04-architecture",
         "06-coding-standards"
       ],
-      "version": "0.40.0",
+      "version": "0.49.0",
       "version_source": "git-tag",
       "status": "active",
       "cluster": "batch-services",
@@ -223,7 +223,7 @@
         "01-domain",
         "04-architecture"
       ],
-      "version": "0.22.0",
+      "version": "0.32.0",
       "version_source": "git-tag",
       "status": "active",
       "cluster": "api-services",
@@ -286,7 +286,7 @@
       "type": "api-service",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.42.0",
+      "version": "0.68.0",
       "description": "Deployment API — standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
       "dependencies": [
         {
@@ -353,7 +353,7 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.90.0",
+      "version": "0.116.0",
       "description": "Deployment orchestration service — Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         {
@@ -411,7 +411,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.37.0",
+      "version": "0.46.0",
       "version_source": "git-tag",
       "deployment_note": "Per-client deployment — holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
@@ -473,7 +473,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.58.0",
+      "version": "0.75.0",
       "version_source": "git-tag",
       "dependencies": [
         {
@@ -551,7 +551,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.9.21",
+      "version": "0.9.32",
       "version_source": "git-tag",
       "deployment_note": "IM Pooled subscription/redemption rail. Bridges Odum portal to fund administrator (POD) and qualified custodian (e.g. Copper). Does NOT serve SMA or DART clients.",
       "dependencies": [
@@ -610,7 +610,7 @@
       "codex_sections": [
         "04-architecture"
       ],
-      "version": "0.18.9",
+      "version": "0.18.13",
       "version_source": "git-tag",
       "dependencies": [
         {
@@ -671,7 +671,7 @@
       "codex_sections": [
         "05-infrastructure"
       ],
-      "version": "0.4.5",
+      "version": "0.0.74",
       "version_source": "git-tag",
       "dependencies": [
         {
@@ -721,7 +721,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.77.0",
+      "version": "0.1.0",
       "version_source": "git-tag",
       "dependencies": [
         {
@@ -781,7 +781,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.18.0",
+      "version": "0.1.0",
       "version_source": "git-tag",
       "dependencies": [
         {
@@ -843,7 +843,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.83.0",
+      "version": "0.103.0",
       "version_source": "git-tag",
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
       "dependencies": [
@@ -904,7 +904,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.38.0",
+      "version": "0.52.0",
       "version_source": "git-tag",
       "dependencies": [
         {
@@ -973,7 +973,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.46.0",
+      "version": "0.51.0",
       "version_source": "git-tag",
       "deployment_note": "One instance per client (separately managed accounts)",
       "dependencies": [
@@ -1031,7 +1031,7 @@
       "type": "test-harness",
       "arch_tier": "integration",
       "status": "scaffolded",
-      "version": "0.14.9",
+      "version": "0.15.0",
       "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports — HTTP/GCS/PubSub only.",
       "dependencies": [
         {
@@ -1129,7 +1129,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.12.1",
+      "version": "0.12.11",
       "version_source": "git-tag",
       "completion_path": "tradfi",
       "notes": "Autonomous 7-loop micro-loop trading agent supervisor for TradFi commodity options/futures. Subscribes to CommoditySignal, ranks strategies via StrategySpec catalog in ConfigStore, routes through PreTradeCheckEngine to execution-service. Blockers: ibkr-config-in-ucc (L3 end-to-end), risk-circuit-breaker (PnLMonitor hook).",
@@ -1191,7 +1191,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.66.0",
+      "version": "0.95.0",
       "version_source": "git-tag",
       "dependencies": [],
       "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
@@ -1237,7 +1237,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.48.0",
+      "version": "0.74.0",
       "version_source": "git-tag",
       "github_url": "https://github.com/IggyIkenna/unified-trading-library",
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
@@ -1284,7 +1284,7 @@
       "type": "devops",
       "arch_tier": "devops",
       "status": "active",
-      "version": "1.2.509",
+      "version": "1.2.724",
       "description": "Project management SSOT — workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
       "dependencies": [],
       "completion_path": "all",
@@ -1336,7 +1336,7 @@
         }
       ],
       "ci_status": "MAIN_GREEN",
-      "version": "0.2.12",
+      "version": "0.4.0",
       "version_source": "git-tag",
       "status": "active",
       "cluster": "api-services",
@@ -1439,7 +1439,7 @@
       "type": "test-harness",
       "arch_tier": "integration",
       "status": "active",
-      "version": "0.32.0",
+      "version": "0.41.0",
       "description": "End-to-end testing for DeFi + Sports + Prediction pipelines (instruments → market data → features → strategy). 3-layer architecture across asset_groups. Standalone repo; scripts/<asset_group>/ wired into primary-consumer service QGs per CLAUDE.md.",
       "dependencies": [
         {
@@ -1493,7 +1493,7 @@
       "breaking_scan_dir": "tests"
     },
     "agent-orchestrator": {
-      "promotion_model": "ldr_main",
+      "promotion_model": "ldr_terminal",
       "type": "tool",
       "tier": 0,
       "arch_tier": "external",
@@ -1502,10 +1502,10 @@
       "upstream_url": null,
       "integration_branch": "live-defi-rollout",
       "codex_sections": [],
-      "version": "0.71.0",
+      "version": "0.100.0",
       "version_source": "git-tag",
       "status": "active",
-      "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab→LDR→main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged — 2026-05-24 incident.",
+      "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart). promotion_model=ldr_terminal (2026-08-05): the live orchestrator.service and the dashboard SPA (deploy-dashboard.yml) BOTH deploy directly from live-defi-rollout — `main` is never consumed by anything for this repo, so it is deliberately EXCLUDED from LDR->main promotion (no quality-gates-v2 promote-PR spend, no risk of blocking behind a main merge conflict — see agent_orchestrator_ldr_terminal_promotion_2026_08_05 for the incident this fixes). `main` is a frozen historical ref; do not re-add ldr_main without also reverting the dashboard trigger. A `main` slot base reads as diverged — 2026-05-24 incident.",
       "ci_status": "MAIN_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
@@ -1532,6 +1532,32 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
+    },
+    "unified-trading-ci": {
+      "type": "infrastructure",
+      "arch_tier": "devops",
+      "status": "active",
+      "version_source": "none",
+      "description": "Shared reusable GitHub Actions workflows (python-quality-gates-v2.yml, image-build-validate.yml, notify-slack.yml, setup-python-tools, setup-agent-tools) that every other repo's quality-gates-v2.yml calls via uses:. Extracted from unified-trading-pm 2026-08-06 so that repo's visibility can never again break fleet-wide CI.",
+      "dependencies": [],
+      "completion_path": "all",
+      "notes": "Single-branch repo (main only) — no LDR/staging promotion tiers, nothing here is a Python package to version/publish. See shared_ci_workflow_repo_extraction_2026_08_06.md.",
+      "ci_status": null,
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": [],
+      "doc_standard": "infrastructure-canonical",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-ci",
+      "codex_sections": [],
+      "tier": 0,
+      "role": "infrastructure",
+      "tags": [
+        "ci-cd",
+        "github-actions",
+        "infrastructure",
+        "cross-domain"
+      ]
     }
   },
   "topologicalOrder": {
@@ -1539,9 +1565,10 @@
     "levels": [
       {
         "level": 0,
-        "description": "Project management — manifest, templates, scripts, cursor rules.",
+        "description": "Project management + shared CI workflow host — manifest, templates, scripts, cursor rules, reusable GitHub Actions workflows.",
         "repos": [
-          "unified-trading-pm"
+          "unified-trading-pm",
+          "unified-trading-ci"
         ]
       },
       {

@@ -38,6 +38,14 @@ locked_since:
 resolved_by:
 source: >-
   cefi_consolidated_native_ao_extract_2026_07_25.md Todo 7 (Track-7 candle bundle-collision fix)
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
+    deployment-service/scripts/vm/launch-mdps-backfill-vm.sh,
+  ]
 ---
 
 # CeFi Track-7 candle bundle regeneration — dedicated VM needed
@@ -115,3 +123,16 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
       2026-08-04T19:04:44Z). GCS logs:
       `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260804-190444/`. Post-completion
       audit todo below.
+
+## Progress Log
+
+- **context-scout 2026-08-05**: populated context_scope (5 entries).
+
+## Follow-ups
+
+- [ ] [DATA] P2. Post-completion bundle audit: confirm mdps-backfill-cefi-20260804-190444 exited 0 and all 112 cells are
+      OK (correct per-leg symbol counts)
+
+> **2026-08-06 archive-candidate audit**: The only todo's own done-when (VM exit 0 + post-backfill bundle audit shows
+> all 112 cells OK) is unmet — evidence cites only 'Launched... RUNNING as of 2026-08-04T19:04:44Z', and the promised
+> 'Post-completion audit todo below' was never actually created.

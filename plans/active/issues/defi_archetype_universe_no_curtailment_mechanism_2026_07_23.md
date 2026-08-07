@@ -852,3 +852,12 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md`,
   `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `archetype_leg_spec_seeds.py`, `factory.py`,
   `basis_perp.py`, the bare `target_universe/` dir).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — both open checkboxes (line
+  389 recursive-loop archetype design gap w/ 3 layered dated corrections, most recently 2026-07-24; line 687 MVP_SCOPE
+  catalog-identity precondition, explicit operator-scoping-decision gate) independently re-confirmed against the
+  2026-08-01/08-03 audit passes. Zero corpus traps found (no DECOMMISSIONED/RE-TRIAGE/revert markers). Incidental, not
+  actioned: 1 untracked prose-only item (CLI/operator plumbing to set already-shipped `PaperUniverseConfig` fields on
+  `run_paper`) and 1 stale "Recommendation" section (lines 236-244) whose 3 decisions were already made+shipped later in
+  this same doc — hygiene cleanup candidates for a future pass, not reclassification triggers. Doc stays
+  `assigned_vm: NA`.

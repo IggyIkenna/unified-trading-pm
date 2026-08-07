@@ -33,7 +33,7 @@ related:
     /plans/archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/sports_instrument_type_market_token_ssot_gap_2026_07_28.md,
-    /plans/active/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md,
+    /plans/archive/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
   ]
 created: "2026-07-20"
@@ -196,8 +196,8 @@ market-type suffixes (the composite IS the venue) and cefi matched 22/24.
       remaining writer half-fix (MTDS `liquidations_handler.py`'s lending `instrument_type` writer, disk+manifest stamp
       fixed `mtds@fec20de2`, historical rows still stamped `instrument_type="liquidation"` and not yet re-stamped) is
       now its own dedicated plan,
-      `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` (size-cap split
-      of this doc). No open work remains directly on this todo — see that plan for the re-stamp todos.
+      `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`
+      (size-cap split of this doc). No open work remains directly on this todo — see that plan for the re-stamp todos.
 - [x] [DATA] P1. ✅ Reconcile every drift cluster (category 1) to its owning in-flight plan; any cluster owned by NO
       plan → file an issue doc or add a P-todo to the right plan (no orphan drift). **DONE 2026-07-28** — a full re-run
       of the live `GET /distinct-values/{asset_group}` endpoint for all 5 asset_groups (not the 22-item 2026-07-20 JSON,
@@ -374,13 +374,13 @@ handler. → tracked as a P1 writer fix mirroring the IS pattern.
 ### 2026-07-30 — forked lending instrument_type re-stamp workstream closed out
 
 The MTDS lending `instrument_type` historical re-stamp forked out of this plan on 2026-07-24
-(`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) is now fully done
-and archived. Measured live scope was 0 the entire time it was open (five independent measurements across 2026-07-27 and
-2026-07-30) — the buggy `instrument_type="liquidation"` population had already fully cycled out via post-fix re-capture
-before the fork's todos were even executed. `--apply` was run against prod as a formality (confirmed no-op via direct
-source read: `try_once()` returns before any CAS write when `safe_idx` is empty), and the distinct-values panel's live
-nightly rollup (`source_date=2026-07-30`) confirms `liquidation` is absent from the defi `instrument_types` axis
-entirely, `non_canonical_count.instrument_types == 0`. See
+(`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) is now
+fully done and archived. Measured live scope was 0 the entire time it was open (five independent measurements across
+2026-07-27 and 2026-07-30) — the buggy `instrument_type="liquidation"` population had already fully cycled out via
+post-fix re-capture before the fork's todos were even executed. `--apply` was run against prod as a formality (confirmed
+no-op via direct source read: `try_once()` returns before any CAS write when `safe_idx` is empty), and the
+distinct-values panel's live nightly rollup (`source_date=2026-07-30`) confirms `liquidation` is absent from the defi
+`instrument_types` axis entirely, `non_canonical_count.instrument_types == 0`. See
 `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` for full
 detail.
 
@@ -533,8 +533,8 @@ the source plan and its finalize twin are archived as of this entry (see
       `resolve_lending_instrument_type(protocol)` call — no more manifest-vs-disk desync going forward. **FORKED
       2026-07-24**: the deferred historical-row re-stamp (rows still stamped `instrument_type="liquidation"`, the count
       the distinct-values census reads) is now tracked as its own plan,
-      `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` (size-cap split
-      of this doc) — not duplicated here.
+      `/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`
+      (size-cap split of this doc) — not duplicated here.
 - [x] [BACKEND] P3. ✅ instruments-service `writers.py::_LEGACY_INSTRUMENT_TYPE_ALIASES` — add
       `'options_chain': 'OPTION'` for parity with the existing `'futures_chain': 'FUTURE'`. **SHIPPED —
       instruments-service@981c5061.** Test extended

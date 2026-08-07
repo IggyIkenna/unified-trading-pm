@@ -1,0 +1,18 @@
+# Shrinking-ratchet baseline for the "silent-default effort" population
+# (check_effort_signal_ratchet.py) — living plans (status draft/active) that declare
+# assigned_role but neither effort: nor thinking_tier:, so their reasoning-effort tier
+# resolves to whatever the role's generic default is (often server/model_tier.py's
+# _DEFAULT_EFFORT = "medium") without anyone having deliberately chosen that for THIS
+# plan's actual complexity.
+#
+# This is a SHRINKING ratchet, same convention as na_corpus_baseline.yaml /
+# line_caps_baseline.yaml: a run that finds the CURRENT count bigger than this baseline
+# fails. The goal is not "drive this to zero" — role-generic default effort is often the
+# right call — the goal is that the population cannot grow unattended: review each
+# newly-flagged plan and either declare effort:/thinking_tier: explicitly, or accept the
+# role default deliberately (nothing to do — it just should not silently accumulate).
+#
+# NEVER hand-raise this number to silence a run that just found new silent-default
+# plans — only --update-baseline after actually reviewing them.
+max_silent_default_plans: 215
+last_updated: "2026-08-06"

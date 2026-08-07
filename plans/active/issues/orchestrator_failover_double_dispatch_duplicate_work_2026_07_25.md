@@ -118,9 +118,9 @@ task is already in-flight on another live slot.
       **Done when**: a worker that goes silent for a full QG run (>~4min) but is provably alive (PID up, forward
       progress in its pane/log) does NOT have its in-flight task re-dispatched, with a test simulating a
       silent-but-alive owner. — **Shipped `agent-orchestrator@7911083`** (dispatched + executed via
-      `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, full evidence there). Confirmed root cause:
-      `WorkerLivenessWatchdog._reconcile_unacked_dispatches` (`server/worker_liveness_watchdog.py:963`) released a
-      `dispatched` task past the 1800s ACK timeout back to `queued` on a SINGLE non-"working" pane-classify snapshot
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, full evidence there). Confirmed root
+      cause: `WorkerLivenessWatchdog._reconcile_unacked_dispatches` (`server/worker_liveness_watchdog.py:963`) released
+      a `dispatched` task past the 1800s ACK timeout back to `queued` on a SINGLE non-"working" pane-classify snapshot
       alone, with no real liveness check — then `dispatch.py`'s R5 `_target_slot_is_dead()` (600s ping-silence
       threshold, shorter than the 1800s that had just fired) let a DIFFERENT slot's `pick_next_task` claim the
       freshly-queued task moments later, while the true owner's pane was still alive. Fix requires `_pane_is_dead`
@@ -262,10 +262,11 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
 - **2026-08-01** (`ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 3): the watchdog-cluster ordering
   decision this `[BACKEND] P2` release-signal item was sequenced behind is ruled + shipped
   (`agent-orchestrator@64b5310`/`@77fc60a`). Re-checked for file-collision against the whole `plans/active` corpus —
-  zero hits on `server/failover.py` — and drafted into `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`
-  (renamed from a mistakenly-numbered "batch 2" 2026-08-01 — batches 2 and 3 already existed; `status: active`,
-  operator-approved). The `[BACKEND] P3` `/done`-idempotency sibling is NOT included — it remains file-collision-held
-  against `server/routes/slots_worker.py` (2 other active docs' open todos on the same file:
+  zero hits on `server/failover.py` — and drafted into
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md` (renamed from a mistakenly-numbered "batch 2"
+  2026-08-01 — batches 2 and 3 already existed; `status: active`, operator-approved). The `[BACKEND] P3`
+  `/done`-idempotency sibling is NOT included — it remains file-collision-held against `server/routes/slots_worker.py`
+  (2 other active docs' open todos on the same file:
   `cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md`,
   `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`).
 
@@ -276,8 +277,8 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   Fixed by requiring `_pane_is_dead` (reused, no new liveness logic) before release — `agent-orchestrator@7911083`.
   Proven by 3 tests replaying incident 1 (slots 2&8) and incident 2 (slots 4&11)'s shapes; the silent-but-alive test
   confirmed to fail against the pre-fix code with the exact recorded `"...requeued (pinned)"` warning. Full evidence +
-  test names in `/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md`'s own todo + Progress Log. `[BACKEND] P3`
-  (`/done` idempotency) is untouched, still file-collision-held as recorded above.
+  test names in `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`'s own todo + Progress Log.
+  `[BACKEND] P3` (`/done` idempotency) is untouched, still file-collision-held as recorded above.
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — of the 2
   remaining open items: the `/done`-idempotency item is genuinely still file-collision-held against
   `server/routes/slots_worker.py` (shared with 2 other active docs), a real current gate. The
@@ -304,3 +305,7 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   incidents) keeps this doc's dispatcher-dedup todos live: the backlog still occasionally hands one todo to two slots
   simultaneously — the earliest-wins ship gate is the working backstop, but the dispatch-side dedup remains the real
   fix.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

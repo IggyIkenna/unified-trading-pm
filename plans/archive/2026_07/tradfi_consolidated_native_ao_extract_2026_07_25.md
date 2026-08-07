@@ -37,7 +37,7 @@ related:
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
-    /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
+    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
   ]
 created: "2026-07-25"

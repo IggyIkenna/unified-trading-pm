@@ -276,3 +276,12 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   citation now so a future run/dispatcher doesn't treat it as independent unclaimed work. Left unchecked — the
   underlying verification genuinely hasn't happened (`BLOCKED-OPERATOR-DECISION` on the live-vs-demo-host question,
   unresolved as of today). Not reclassified — this is a citation fix, not a scope change. Doc stays NA.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA-STALE-DUPLICATE, re-verified — the
+  citation added 2026-08-04 to `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 is still current.
+  Independently re-traced both hops: this doc's checkbox <->
+  `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`'s `[DATA] P1` todo (states verbatim "this is the
+  ORIGINAL verification ... asked for") <-> batch6 todo 5 (still `assigned_vm: planning` / `status: active`, gated Todo
+  2 still open) — all three consistent, no drift. Left unchecked; not reclassified. Doc stays NA.

@@ -166,11 +166,15 @@ too large.
 > one live session and was **never codified** — `unified-trading-pm/agents/main.md` STEP 2A/2B still says "for each
 > message … POST your reply" for EVERY polled message regardless of `from_role`.
 
-- [ ] [BACKEND] P1. **Route `/reply` to the originating role when answering a peer.** When `req.in_reply_to` resolves to
-      a message whose `from_role != agent.role`, post `direction="to_agent"` to that `from_role` (plus the tmux nudge)
-      instead of `from_agent` on the replier's own thread. **Gate**: a regression test proves a cross-role reply lands
-      in the target role's next `/poll` (not merely its `/history`), and the existing same-role reply-ack tests stay
-      green.
+- [x] ✅ [BACKEND] P1. **Route `/reply` to the originating role when answering a peer.** When `req.in_reply_to` resolves
+      to a message whose `from_role != agent.role`, post `direction="to_agent"` to that `from_role` (plus the tmux
+      nudge) instead of `from_agent` on the replier's own thread. **Gate**: a regression test proves a cross-role reply
+      lands in the target role's next `/poll` (not merely its `/history`), and the existing same-role reply-ack tests
+      stay green. — **SHIPPED `agent-orchestrator@738b2d3`** ("fix(agents): route /reply to originating role for
+      cross-role peer answers", 2026-07-24, ancestor-verified on `origin/live-defi-rollout`):
+      `server/routes/agents.py:777-818` (`agent_reply()`) implements the cross-routing and its docstring cites this
+      doc's slug by name; `/agents/main.md` STEP 2B corroborates. Shipped 12 days before this flip and missed by 6 prior
+      audit passes — found by `/plan-reconcile ao` 2026-08-06.
 - [x] ✅ [DOCS] P2. **Codify the peer-vs-operator branch in `agents/main.md` STEP 2B** — `from_role == "operator"` →
       `/reply`; any other `from_role` → `POST /api/agents/by-role/<from_role>/message` with `from_agent_id`. Without
       this the procedural half stays folklore. **Gate**: the diff lands and the next live cross-role exchange shows a
@@ -213,3 +217,7 @@ too large.
   rather than silently dropping it. Doc-level disposition unchanged from the 2 prior passes; this refines the reason
   with a per-item read.
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

@@ -116,7 +116,7 @@ def test_last_touched_takes_max_even_when_git_walk_back_wins(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# _latest_marker
+# _latest_marker and _latest_marker_info
 # ---------------------------------------------------------------------------
 
 
@@ -127,6 +127,51 @@ def test_latest_marker_picks_the_max_dated_marker():
 
 def test_latest_marker_none_when_absent():
     assert MOD._latest_marker("no markers here") is None
+
+
+def test_latest_marker_info_returns_date_and_position():
+    body = "- **context-scout 2026-08-01**: populated.\n- **context-scout 2026-08-03**: re-scouted."
+    info = MOD._latest_marker_info(body)
+    assert info is not None
+    date, pos = info
+    assert date == "2026-08-03"
+    assert body[pos : pos + 25].startswith("context-scout 2026-08-03")
+
+
+def test_latest_marker_info_none_when_absent():
+    assert MOD._latest_marker_info("no markers here") is None
+
+
+def test_latest_marker_info_breaks_ties_by_taking_last_occurrence():
+    body = "- **context-scout 2026-08-03**: first.\n- **context-scout 2026-08-03**: second."
+    info = MOD._latest_marker_info(body)
+    assert info is not None
+    _, pos = info
+    # the second occurrence is later in the string
+    assert "second" in body[pos:]
+
+
+# ---------------------------------------------------------------------------
+# _marker_claimed_count
+# ---------------------------------------------------------------------------
+
+
+def test_marker_claimed_count_extracts_singular_entry():
+    body = "- **context-scout 2026-08-06**: populated/refreshed context_scope (1 entry).\n"
+    marker_pos = body.index("context-scout")
+    assert MOD._marker_claimed_count(body, marker_pos) == 1
+
+
+def test_marker_claimed_count_extracts_plural_entries():
+    body = "- **context-scout 2026-08-06**: populated/refreshed context_scope (4 entries).\n"
+    marker_pos = body.index("context-scout")
+    assert MOD._marker_claimed_count(body, marker_pos) == 4
+
+
+def test_marker_claimed_count_returns_none_when_no_parenthetical():
+    body = "- **context-scout 2026-08-06**: populated context_scope with the SSOT doc.\n"
+    marker_pos = body.index("context-scout")
+    assert MOD._marker_claimed_count(body, marker_pos) is None
 
 
 # ---------------------------------------------------------------------------
@@ -198,3 +243,174 @@ def test_end_to_end_stale_last_updated_no_longer_masks_a_real_later_edit(tmp_pat
     records = _run_json()
     assert len(records) == 1
     assert records[0]["verdict"] == "STALE"
+
+
+# Fixture for COUNT_MISMATCH tests: 3 actual context_scope entries, marker claims 4.
+# Reproduces the confirmed entry-drop shape from context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md
+# (e.g. perp_funding_data_semantics_and_cadence_2026_06_16.md: marker 2026-08-03 claimed 4, frontmatter had 3).
+_COUNT_MISMATCH_DOC = """\
+---
+doc_type: issue
+title: count-mismatch fixture
+summary: test fixture for COUNT_MISMATCH verdict
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer]
+tags: []
+related: []
+created: "2026-08-06"
+parent_epic: agent_operating_framework_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.1
+estimate_calibrated_ai_days: 0.1
+assigned_role: infra
+drift_direction: none
+depends_on: []
+resolved_by:
+locked_by:
+context_scope:
+  - /codex/02-data/honest-coverage-model.md
+  - /plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md
+  - /cursor-configs/skills/context-scout/SKILL.md
+---
+
+# count-mismatch fixture
+
+Fixture body.
+
+## Progress Log
+
+- **context-scout 2026-08-06**: populated/refreshed context_scope (4 entries).
+"""
+
+
+def test_count_mismatch_verdict_when_marker_claims_more_than_actual(tmp_path, monkeypatch):
+    """A date-fresh marker that claims 4 entries while only 3 are in the frontmatter must
+    produce COUNT_MISMATCH, not UP_TO_DATE — reproducing the confirmed entry-drop shape
+    (e.g. perp_funding_data_semantics_and_cadence_2026_06_16.md, marker 2026-08-03 claimed 4,
+    frontmatter had 3 after a subsequent batch removed an entry without updating the marker)."""
+    plans_dir = tmp_path / "plans" / "active" / "issues"
+    plans_dir.mkdir(parents=True)
+    doc = plans_dir / "fixture_count_mismatch_entry_drop_2026_08_06.md"
+    doc.write_text(_COUNT_MISMATCH_DOC, encoding="utf-8")
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    # Marker date 2026-08-06 >= git date 2026-08-05: date-fresh, so only COUNT_MISMATCH fires.
+    monkeypatch.setattr(MOD, "_git_last_commit_date_cheap", lambda path: "2026-08-05")
+    monkeypatch.setattr(MOD, "_git_last_commit_date_accurate", lambda path: "2026-08-05")
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "COUNT_MISMATCH"
+    assert records[0]["context_scope_count"] == 3
+
+
+def test_count_mismatch_verdict_when_marker_claims_fewer_than_actual(tmp_path, monkeypatch):
+    """A date-fresh marker that claims 3 entries while 5 are in the frontmatter must also
+    produce COUNT_MISMATCH — this covers the write-time miscount shape confirmed by the
+    corpus-wide sweep (e.g. tradfi_satellite_ao_dispatch_batch2_2026_07_25.md: wrote '6 entries'
+    onto an already-8-entry list)."""
+    plans_dir = tmp_path / "plans" / "active" / "issues"
+    plans_dir.mkdir(parents=True)
+    doc = plans_dir / "fixture_count_mismatch_write_time_2026_08_06.md"
+    doc.write_text(
+        """\
+---
+doc_type: issue
+title: write-time miscount fixture
+summary: test
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer]
+tags: []
+related: []
+created: "2026-08-06"
+parent_epic: agent_operating_framework_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.1
+estimate_calibrated_ai_days: 0.1
+assigned_role: infra
+drift_direction: none
+depends_on: []
+resolved_by:
+locked_by:
+context_scope:
+  - /codex/02-data/honest-coverage-model.md
+  - /codex/02-data/pipeline-mode-partition.md
+  - /codex/04-architecture/tier-and-import-architecture.md
+  - /plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md
+  - /cursor-configs/skills/context-scout/SKILL.md
+---
+
+# write-time miscount fixture
+
+Fixture body.
+
+## Progress Log
+
+- **context-scout 2026-08-06**: populated/refreshed context_scope (3 entries).
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    monkeypatch.setattr(MOD, "_git_last_commit_date_cheap", lambda path: "2026-08-05")
+    monkeypatch.setattr(MOD, "_git_last_commit_date_accurate", lambda path: "2026-08-05")
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "COUNT_MISMATCH"
+    assert records[0]["context_scope_count"] == 5
+
+
+def test_up_to_date_when_marker_has_no_count_claim(tmp_path, monkeypatch):
+    """A date-fresh marker without a parenthetical count claim must produce UP_TO_DATE —
+    the absent count is not treated as a mismatch (prose-form markers are outside the
+    mechanical check's scope and verified via manual glance in the sweep tool)."""
+    plans_dir = tmp_path / "plans" / "active" / "issues"
+    plans_dir.mkdir(parents=True)
+    doc = plans_dir / "fixture_no_count_claim_2026_08_06.md"
+    doc.write_text(
+        FRONTMATTER_TMPL.format(
+            title="no-count-claim fixture",
+            last_updated="2026-08-01",
+            marker_line="- **context-scout 2026-08-06**: populated context_scope with the SSOT doc.",
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    monkeypatch.setattr(MOD, "_git_last_commit_date_cheap", lambda path: "2026-08-05")
+    monkeypatch.setattr(MOD, "_git_last_commit_date_accurate", lambda path: "2026-08-05")
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "UP_TO_DATE"
+
+
+def test_up_to_date_when_marker_count_matches_actual(tmp_path, monkeypatch):
+    """A date-fresh marker whose claimed count exactly matches the live frontmatter list must
+    produce UP_TO_DATE — no false COUNT_MISMATCH on a correctly-written marker."""
+    plans_dir = tmp_path / "plans" / "active" / "issues"
+    plans_dir.mkdir(parents=True)
+    doc = plans_dir / "fixture_count_matches_2026_08_06.md"
+    doc.write_text(
+        FRONTMATTER_TMPL.format(
+            title="count-matches fixture",
+            last_updated="2026-08-01",
+            marker_line="- **context-scout 2026-08-06**: populated/refreshed context_scope (1 entries).",
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    monkeypatch.setattr(MOD, "_git_last_commit_date_cheap", lambda path: "2026-08-05")
+    monkeypatch.setattr(MOD, "_git_last_commit_date_accurate", lambda path: "2026-08-05")
+    records = _run_json()
+    assert len(records) == 1
+    assert records[0]["verdict"] == "UP_TO_DATE"

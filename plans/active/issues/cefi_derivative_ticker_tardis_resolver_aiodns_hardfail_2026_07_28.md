@@ -39,7 +39,7 @@ scope: [engineer, admin]
 tags: [data-correctness, attempted-failed, cefi, tardis, dns, aiodns, resolver, dp-fetch-009]
 related:
   [
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     /plans/archive/issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md,
     /plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
@@ -69,8 +69,8 @@ last_updated: 2026-08-03
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/_http_resolver.py,
     /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
     deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
@@ -347,14 +347,26 @@ and the residual-KeyError defense-in-depth path.
 - [x] ✅ [DOCS] P3. **DONE 2026-07-29 (data_pipeline_failure escalation, agt-0df274) — `unified-trading-pm` (this
       commit).** Appended the missing `DP-FETCH-009` row to `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
       and `.md` so the SSOT matches what both prior escalations already shipped/referenced.
-- [ ] [OPERATOR] P1. **New finding (agt-829d55, 2026-08-03, slot-9): the numerator IS genuinely moving again — NOT the
-      static backlog every prior dispatch found — and traces to a specific, currently-RUNNING live VM stuck on pre-fix
-      code, not a new code bug.** A fresh, bounded, column-projected `read_availability_index` read
-      (`data_type=derivative_ticker`, `capture_status=attempted_failed`) found 158,815 total rows (vs the 158,475-static
-      reading every dispatch since agt-40f31f on 2026-07-30 confirmed) — the FIRST numerator movement in 4 days.
-      Filtering to `written_at` within the last 24h found 1,821 fresh rows, 1,730 of them `venue=HYPERLIQUID`
-      (`pipeline_mode=batch_hyperliquid`) with `error_reason` EXACTLY matching the two signatures this doc's
-      `market-tick-data-service@6c6fab03` fix already root-caused and fixed: 1,696 rows
+- [x] ✅ [INFRA] P1. **DONE 2026-08-06 (slot-9, backend_engineer, task
+      cefi_derivative_ticker_tardis_resolver_aiodns_hardfail-006) — VM cycle already executed by another session before
+      this dispatch arrived; verified complete.** New VM `mtds-live-cefi-consolidated-20260806-163414` (RUNNING, 17 MVP
+      shards healthy per `ps aux`, `=== VM SETUP COMPLETE ===` at 2026-08-06T16:36:48Z); tarball SHA `55d88025` uploaded
+      2026-08-06T16:31:19Z; `git merge-base --is-ancestor 6a067cf1 55d88025` = true AND
+      `git merge-base --is-ancestor 6c6fab03 55d88025` = true (both fix commits confirmed ancestors of the deployed
+      tarball). Old VM `mtds-live-cefi-consolidated-20260802-142543` DELETED (absent from
+      `gcloud compute instances list`). No code change needed (all fixes already shipped). **RULED 2026-08-06
+      (operator): approved, AO-dispatchable.** `[INFRA]` tag (was `[OPERATOR]`) — the diagnosis is not in question
+      (root-caused, fix already shipped and correct); the gate was self-service SSH/delete access, not judgment. The
+      additive-then-subtractive design (new VM up + verified healthy BEFORE the old one is deleted, shard-isolated
+      writes so no corruption risk from briefly running both) is itself the safety mechanism — dispatch to a
+      worker/session with `unified-trading-sa`-class access. **New finding (agt-829d55, 2026-08-03, slot-9): the
+      numerator IS genuinely moving again — NOT the static backlog every prior dispatch found — and traces to a
+      specific, currently-RUNNING live VM stuck on pre-fix code, not a new code bug.** A fresh, bounded,
+      column-projected `read_availability_index` read (`data_type=derivative_ticker`, `capture_status=attempted_failed`)
+      found 158,815 total rows (vs the 158,475-static reading every dispatch since agt-40f31f on 2026-07-30 confirmed) —
+      the FIRST numerator movement in 4 days. Filtering to `written_at` within the last 24h found 1,821 fresh rows,
+      1,730 of them `venue=HYPERLIQUID` (`pipeline_mode=batch_hyperliquid`) with `error_reason` EXACTLY matching the two
+      signatures this doc's `market-tick-data-service@6c6fab03` fix already root-caused and fixed: 1,696 rows
       `"(429, None, 'null', None, {'Content-Type'..."` (Root cause #2) + 28 rows `'KBONK'`/`'KLUNC'`/`'KSHIB'`/
       `'KNEIRO'`/`'KFLOKI'`/`'KPEPE'` bare `KeyError` (Root cause #3), plus 31 `Tardis HTTP 403 code=274` (BYBIT,
       unrelated pre-existing 403-family) and 10 `UNCLASSIFIED:404`. Verified `6c6fab03` IS an ancestor of
@@ -394,7 +406,7 @@ and the residual-KeyError defense-in-depth path.
       whether an OPEN, already-diagnosed issue doc already covers the exact `(asset_group, data_type, event)` tuple
       before the escalation fast path (`repository_dispatch escalate-to-orchestrator`) spawns another full
       `data_pipeline_failure` worker. Filed
-      `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` to track a real fix
+      `/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` to track a real fix
       (agent-orchestrator/deployment-service, out of this doc's `market-tick-data-service` scope) — not fixed here.
       **Flipped 2026-08-05 (slot-15):** finding documented + tracked; implementation blocked on unresolved DESIGN
       decision (Option A/B/C) in the referenced issue doc — code fix lives there, not here.
@@ -587,3 +599,29 @@ and the residual-KeyError defense-in-depth path.
   sweeps. The 10 residual rows are likely from the stuck `mtds-live-cefi-consolidated-20260802-142543` VM (see
   `[OPERATOR]` P1 above) running pre-fix code. **No code change needed** (current code handles 404 correctly; historical
   rows will be retried by the next natural cefi backfill sweep, same disposition as the other P3 retry todos).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-06 (backend_engineer, slot-9, task cefi_derivative_ticker_tardis_resolver_aiodns_hardfail-006) — VM cycle
+  confirmed COMPLETE (done by another session before this dispatch arrived); [INFRA] P1 checkbox flipped.** Arrived to
+  find the VM cycle already executed: `gcloud compute instances list` shows
+  `mtds-live-cefi-consolidated-20260806-163414` RUNNING in `asia-northeast1-c` (created 2026-08-06T16:34:xx), 17 MVP
+  shards healthy per serial console `ps aux` output, `=== VM SETUP COMPLETE ===` at 16:36:48Z. Old VM
+  `mtds-live-cefi-consolidated-20260802-142543` absent from `gcloud compute instances list` (DELETED). Tarball
+  freshness: `gs://deployment-scripts-central-element-323112/code/mtds-code@55d88025.tar.gz` uploaded at
+  2026-08-06T16:31:19Z (immediately pre-launch). Verified both fix commits are ancestors of the deployed tarball SHA
+  `55d88025`: `git merge-base --is-ancestor 6a067cf1 55d88025` = true; `git merge-base --is-ancestor 6c6fab03 55d88025`
+  = true. No code change this session (all fixes already shipped in prior sessions). Plan checkbox flipped; all todos
+  now `[x]`.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Chase the flagged-but-unconfirmed fetch_l2_book / book_snapshot_5 case-sensitivity hypothesis — the
+      doc's own Open Questions section states the same uppercased K*-symbol coin feeds
+      HyperliquidS3Downloader.fetch_l2_book's S3 object key (l2Book/KPEPE.lz4 vs kPEPE.lz4), which would 404 on every
+      hour for the 6 k-prefixed symbols as a SILENT absence, 'flagged as a plausible follow-up, not chased... not
+      confirmed against the live manifest'.
+
+> **2026-08-06 archive-candidate audit**: All 9 todos are [x] and the three root causes + VM cycle are fixed/verified
+> (aiodns @6a067cf1, HYPERLIQUID @6c6fab03, VM cycled 2026-08-06, tarball ancestors verified). But the Open Questions
+> section explicitly leaves a plausible follow-up 'flagged... not chased, not confirmed' for a different data_type
+> (book_snapshot_5) — a prose-only open question/follow-up, never a tracked todo. Conservative bias -> NEEDS_TODO (the
+> untraced catalogue uppercasing source is out-of-repo and noted as non-blocking).

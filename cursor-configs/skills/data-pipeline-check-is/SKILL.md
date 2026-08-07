@@ -70,6 +70,28 @@ never silently guessed at or skipped either way.
   then run this workflow on the self-paced loop — see step 6. The no-pause / no-`DEFERRED` completion contract applies:
   don't stop mid-matrix to ask "should I continue?"
 
+## 1a. Run the driver on its own VM — DEFAULT, do not run inline on the shared host
+
+Live evidence 2026-08-06 (measured on the sibling features/MTDS drivers, same shared engine): the driver process itself
+(not the per-shard VMs it launches) can reach double-digit-GB RSS on a full-matrix run and get OOM-killed by the AO
+host's resource-watchdog after competing with every other slot for the shared host's fixed memory pool. Every invocation
+in §3 below — run via `deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh` instead of a bare
+`cd instruments-service && python3 ...`: swap the command's head, keep every flag below it identical.
+
+```bash
+bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
+  --service is --day <DAY> --legs force,skip --require-captured --auto-day \
+  --project central-element-323112
+```
+
+Prints `vm_name=...` immediately, then returns — async (the driver VM self-deletes on completion). Poll
+`gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/{run.log,EXIT_STATUS}`, or via
+`unified_trading_library.pipeline_e2e_check.launcher.launch_vm_and_wait()`. The report mirrors to
+`gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_is/<run_date>/` in
+addition to the local `plans/audit/results/...md` path in §5 — the local copy doesn't survive the driver VM's
+self-delete. The raw `pipeline_e2e_check.py` command shown inline in §3 (for reference) is fine for a quick dev-local
+dry-run against a tiny scope only — never for a real sweep.
+
 ## 2. Phase 0 — provisioning gate (a real check, not an assumption)
 
 `get_write_bucket_name()` rewrites to `-test-{pid}` on `IS_TEST_RUN=true` but does **not create** the bucket — the
@@ -119,6 +141,8 @@ gcloud storage buckets create "gs://instruments-store-${ag}-test-${PROJECT_ID}" 
 For each MVP `(asset_group, venue)` cell for `--day` (MVP scope from
 `unified_api_contracts.canonical.crosscutting.mvp_scope.is_mvp()`):
 
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
+
 ```bash
 cd instruments-service && python3 scripts/pipeline_e2e_check.py \
   --asset-group <AG> --venue <VENUE> --day <DAY> --legs force,skip
@@ -149,6 +173,8 @@ across **every** tradfi shard before any real MVP backfill runs.
 **IS's tradfi shard atom is just `(venue, day)`** — all 7 tradfi venues (`NASDAQ`, `NYSE`, `CME`, `ICE`, `CBOE`, `KRX`,
 `FX`), no `data_type` axis (IS has none). Run one shard per venue for the same `--day`:
 
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
+
 ```bash
 cd instruments-service && python3 scripts/pipeline_e2e_check.py \
   --asset-group TRADFI --day <DAY> --legs force,skip
@@ -174,6 +200,8 @@ manifest + the IS catalogue is covered by the plan's separate Phase B catalogue-
 checker), that is what "tradfi is code-complete, migrated, honestly-covered, and verified" means.
 
 ## 4. Phase 2 — live leg (MVP-scoped)
+
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
 
 ```bash
 cd instruments-service && python3 scripts/pipeline_e2e_check.py \

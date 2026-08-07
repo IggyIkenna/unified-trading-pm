@@ -18,7 +18,7 @@ related:
   [
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-30"
@@ -47,7 +47,7 @@ context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -119,3 +119,4 @@ context_scope:
   `defi_perp_daily_ctx_manifest_gap_reader_risk` (todo 13 already cites batch-6). **Not annotated (not batch-6
   covered):** `defi_expected_unattempted_backlog_1m` (line 345 — explicitly deferred by batch-6 as operator-gated).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

@@ -23,7 +23,7 @@ related:
   [
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
     issues/instrument_id_format_canonicalization_2026_07_08.md,
-    /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-08
@@ -192,16 +192,30 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`) and migrated all 3 TradFi combo-leg call
       sites (`instruments-service@de870864`) to it, deleting the local `_build_leg_key()` helper. Full detail:
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo.
-- [ ] [OPERATOR] P2. **Re-apply the historical catalog canonicalization scripts**
-      (`canonicalize_cboe_vx_combo_catalog_2026_07_08.py`, `canonicalize_dbeq_stock_class_catalog_2026_07_08.py`)
-      against the residual 91-CBOE + 312-DBEQ rows re-introduced by `prod/catalog.parquet`'s self-refreshing roll-up
-      (see the "Scope migration mechanics" todo above) — a small, safe, sub-5-second single-file `--apply` (403 of
-      1,096,472 total rows), pending operator go-ahead per this plan's rollout methodology. Not durable on its own;
-      needs re-running after every rollup cycle until the upstream `by_date` corpus is migrated
-      (`tradfi_canonical_path_migration_design_2026_07_19.md`).
+- [ ] [DATA] P2. **RULED 2026-08-06 (operator): go-ahead to run --apply.** `[DATA]` tag (was `[OPERATOR]`),
+      AO-dispatchable — 403 of 1,096,472 rows, dry-run-verified, sub-5-second. Note this is not durable long-term; needs
+      re-running after every rollup cycle until the upstream by_date corpus migration lands. **Re-apply the historical
+      catalog canonicalization scripts** (`canonicalize_cboe_vx_combo_catalog_2026_07_08.py`,
+      `canonicalize_dbeq_stock_class_catalog_2026_07_08.py`) against the residual 91-CBOE + 312-DBEQ rows re-introduced
+      by `prod/catalog.parquet`'s self-refreshing roll-up (see the "Scope migration mechanics" todo above) — a small,
+      safe, sub-5-second single-file `--apply` (403 of 1,096,472 total rows), pending operator go-ahead per this plan's
+      rollout methodology. Not durable on its own; needs re-running after every rollup cycle until the upstream
+      `by_date` corpus is migrated (`tradfi_canonical_path_migration_design_2026_07_19.md`).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07** (tradfi tranche, dispatch agt-aca83b): **KEEP-NA — do NOT trust this doc's own
+  "RULED 2026-08-06 (operator): go-ahead to run --apply" todo text at face value; do NOT reclassify.** That text (added
+  `unified-trading-pm@13f80f797`, 2026-08-06T17:14:59Z) directly contradicts
+  `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s "Deferred — operator-gated ... NOT re-asked if already asked"
+  framing of the SAME residual-91-CBOE+312-DBEQ `--apply` item — batch7 was last touched 2026-08-06T14:04:44Z, ~3h
+  before the "RULED" text landed here, so the contradiction is most likely just batch7 going stale rather than a
+  competing ruling, but that is NOT independently confirmed by this pass. This exact contradiction is already filed as
+  item 1/6 ("genuine same-day factual contradiction, highest priority of the 6") in
+  `/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`'s conflict-check list. Resolving which side
+  is current is plan_reconciler/operator territory, not this skill's (my `does_not` scope excludes corpus-wide
+  contradiction reconciliation) — staying NA until that already-filed conflict resolves, not re-deriving or re-filing a
+  duplicate ruling here.
 - **na-eligibility-audit 2026-08-03** (tradfi tranche, dispatch agt-06b4c6): **KEEP-NA, valid — re-verified, disposition
   unchanged.** The 2026-08-02 plan-hygiene sweep (`17b53df1`) converted this doc's prose-only remaining action into a
   real `- [ ] [OPERATOR] P2` checkbox ("Re-apply the historical catalog canonicalization scripts") — a formatting

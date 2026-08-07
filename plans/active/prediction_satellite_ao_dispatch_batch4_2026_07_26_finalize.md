@@ -59,7 +59,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P1. **Reconcile the 2 sibling source docs' checkboxes to batch4's outcomes.** For each batch4 dispatched
+- [x] ✅ [DATA] P1. **Reconcile the 2 sibling source docs' checkboxes to batch4's outcomes.** For each batch4 dispatched
       todo that shipped, flip the corresponding `- [ ]` in its `Source:` doc to `- [x] ✅ — <repo>@<sha>` with evidence:
       the P0 lifecycle item + (if its gate opened) the manifest-canonicalisation walk in
       `prediction_cross_venue_arb_and_coverage_2026_07_24.md`; the MDPS depth-history retention verify + (if run) the
@@ -94,3 +94,19 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped the generic epic ref for the
   archival-ritual codex SSOT (todo 3's target, finalize gate has no source-code target).
+- **2026-08-07 (slot-16, data_engineering, task `…finalize-001`) — P1 reconcile DONE.** Flipped the source-doc
+  checkboxes for every batch4 dispatched todo that shipped, in one commit `unified-trading-pm@bb48fc09e`:
+  - `prediction_cross_venue_arb_and_coverage_2026_07_24.md` P0 lifecycle item → `[x] ✅` (batch4 P0 shipped
+    `instruments-service@3617261f`; its struck legs (1)/(2)/KALSHI/taxonomy confirmed DONE; remaining leg (3) = the
+    separate `[OPERATOR]` combined `_index` canonicalisation walk, permanent operator hard-stop 2026-07-28, NOT part of
+    this checkbox). Its two NICE-TO-HAVE residual items (lowercase/blank/UNKNOWN venue rows + 1,454 v4→v9 rows) stay
+    `- [ ]` with a dated note — they ride that operator-held walk.
+  - `prediction_live_clob_depth_capture_2026_07_24.md` DEFERRED-CROSS-DEP `book_snapshot_5` re-backfill item → stays
+    `- [ ]` with a dated note — NOT run: batch4's Deferred re-enum+backfill is still parked there (P0 gate has now
+    cleared with the `instruments-service@3617261f` ship, but the item itself has NOT been dispatched/run). Recommended
+    re-opening it as a ready `[DATA]` candidate in a future batch now that its P0 dependency has landed.
+  - The MDPS depth-history retention verify (live_clob_depth doc) and the cqg recent-window re-enumeration (cross_venue
+    doc) were ALREADY `[x] ✅` (flipped by the 2026-08-04 slot-5/slot-6 ships) — no change needed; confirmed in place.
+  - Not-touched: the archived trades issue doc (`prediction_polymarket_legacy_dual_write_trees_metadata_loss_…`) — all
+    its checkboxes were already `[x]`. Tree clean (rev-list 0), P1 checkbox flipped same commit. P2 (re-check the 2
+    gated `[OPERATOR]` deferrals) + P3 (archival) remain for the follow-on dispatches.

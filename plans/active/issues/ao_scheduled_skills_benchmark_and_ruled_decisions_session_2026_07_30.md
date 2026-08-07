@@ -122,9 +122,10 @@ items.
       shipped 2026-07-30, is narrowly scoped to ODDS_API per its own design (no fleet-wide blast radius), includes a
       403-line test file, and is already merged past two subsequent promote/backmerge commits.
 
-## Failed mid-run on a real network outage (API ENOTFOUND / FailedToOpenSocket across MULTIPLE independent agents in
+## Failed mid-run on a real network outage (API ENOTFOUND / FailedToOpenSocket across MULTIPLE independent agents in the same window) — NOT logic bugs, safe and correct to retry as-is once connectivity is confirmed stable
 
-the same window) — NOT logic bugs, safe and correct to retry as-is once connectivity is confirmed stable
+— fixed 2026-08-06 (/plan-reconcile ao): heading previously broke mid-parenthetical across a line-wrap, orphaning the
+closing paren on the next paragraph's first word; merged onto one line, text preserved exactly.
 
 The retry script already exists and is untouched (branch-name collisions checked clean — no leftover
 `ao-fix-*`/`ao-fresh-*` branches or worktrees from the failed attempts):
@@ -346,3 +347,7 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - **context-scout 2026-08-03 (re-pass, updated methodology)**: re-verified, unchanged (5 entries) — still the right
   minimal set for the remaining open items (benchmark re-runs, the PM-checkout-staleness follow-up, the benchmark-
   artifact update).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-03 (unchanged): remaining items are
+  soft/low-value benchmark re-run asks or gated on those landing first plus a broad synthesis call; none independently
+  worker-executable.

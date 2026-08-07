@@ -26,6 +26,8 @@ Environment=RW_SWAP_LIMIT_GB=4
 Environment=RW_MIN_PROCESS_AGE_SEC=30
 Environment=RW_MAX_KILLS_PER_MIN=1
 Environment=RW_ORCHESTRATOR_URL=http://localhost:8765
+Environment=RW_DEPLOYMENT_API_URL=https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app
+Environment=RW_VM_NAME=ip-172-31-5-118
 Environment=RW_MARKER_DIR=/dev/shm/resource-watchdog/kills
 Environment=RW_STATUS_FILE=/dev/shm/resource-watchdog/status.json
 Environment=RW_LOG_FILE=/var/log/resource-watchdog.log

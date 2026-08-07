@@ -45,6 +45,8 @@ context_scope:
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/epics/sports_master.md,
+    market-tick-data-service/scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 ---
 
@@ -238,3 +240,16 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   `instruments-store-sports-prd-central-element-323112`); a follow-up dispatch must run the dry-run and produce the
   per-entity/per-pipeline_mode report before any `--apply-prod`. Flipped the issue doc's build+dry-run sub-todo
   checkbox; the plan-level P2 checkbox stays open (gated on the full migration, not just the script).
+- **context-scout 2026-08-06**: re-scouted; the migration script shipped 2026-08-04 is now the concrete apply-todo
+  target, added source path + the delete-safety protocol SSOT, now 5 entries.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — re-assessed given real progress since
+  2026-08-01 (root cause fixed, todo split, delete-safety gate cleared, migration script shipped); the remaining
+  `[DATA] P2` apply todo now reads as bounded on its own text (no `[OPERATOR]` step required, clear done-when). Ran the
+  conflict-check (`ao-dispatch-batch-naming-and-conflict-check.md` §3) before reclassifying and found a CONFLICT: the
+  active `assigned_vm: planning` plan `sports_closeout_track_x_hygiene_2026_07_25.md` (same
+  `parent_epic: sports_master`) already carries the verbatim-identical open todo ("Migrate the 9,733 legacy-contaminated
+  `instruments-store-sports-prd` objects... Done when: a fresh census... returns 0 objects...", line 138) and explicitly
+  names this issue doc as its own "Detail:"/"Full detail:" reference — i.e. dispatch for this exact work already happens
+  through the sibling planning doc. Reclassifying this doc's `assigned_vm` would create a duplicate AO dispatch for
+  identical work, so it stays NA (not a stale-checkbox case either — the work genuinely isn't done anywhere yet, just
+  correctly co-tracked in two docs by design). No edit made beyond this marker.

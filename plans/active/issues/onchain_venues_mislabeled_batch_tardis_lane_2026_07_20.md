@@ -43,7 +43,7 @@ context_scope:
     /codex/04-architecture/solana-defi-coverage.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py,
+    unified-trading-library/unified_trading_library/pipeline_mode_resolver.py,
   ]
 locked_since:
 assigned_vm: NA
@@ -191,6 +191,12 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - 3 of 4 todos are prod GCS
   pipeline_mode re-partitions requiring de-dup MERGE semantics against a live split-brain; delete/move-safety gated.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged — still accurate).
+- **context-scout 2026-08-06**: re-scouted; swapped the resolver-migration script for the UTL
+  `pipeline_mode_resolver.py` (`_VENUE_OVERRIDES` map — the writer named in the last open todo), still 5 entries.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; 3
   of 4 closure actions are still prod GCS pipeline_mode re-partition/merges against a live split-brain needing
   delete/move-safety gating, and the 4th (find+fix the writer) sequences before them, so the doc stays NA as a unit.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict; 3
+  of 4 closure actions are still prod GCS `pipeline_mode` re-partition/merges against a live split-brain needing
+  delete/move-safety gating, and the 4th (find+fix the writer) sequences before them via batch4 (still draft), so the
+  doc stays NA as a unit.

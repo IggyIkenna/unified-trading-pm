@@ -39,7 +39,7 @@ related:
     ../canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     ../canonical_id_p0_strategy_reconciliation_2026_07_08.md,
     ../prediction_canonical_identity_migration_2026_07_08.md,
-    /plans/active/issues/defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03.md,
+    /plans/archive/issues/defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03.md,
   ]
 created: 2026-07-08
 parent_epic: instruments_master

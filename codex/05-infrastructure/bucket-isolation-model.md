@@ -1,8 +1,8 @@
 ---
 doc_type: codex-ssot
-title: Bucket Isolation Model — Four-Tier Architecture
+title: Bucket Isolation Model — Five-Tier Architecture
 summary:
-  Four-tier GCS/S3 bucket isolation (mock / dev / stg / prd / test) resolved by UTL resolve_bucket_name(); Group A raw
+  Five-tier GCS/S3 bucket isolation (mock / dev / stg / prd / test) resolved by UTL resolve_bucket_name(); Group A raw
   data (env-tiered) vs Group B derived data naming, mock-tier scenario/grid routing, prod-tier IAM write-protection, and
   GCS lifecycle expiry rules.
 status: current
@@ -16,7 +16,7 @@ related: [/codex/05-infrastructure/cloud-agnostic-script-pattern.md, /codex/02-d
 created: 2026-03-27
 authoritative_for:
   [
-    four-tier bucket isolation model (mock/dev/stg/prd/test),
+    five-tier bucket isolation model (mock/dev/stg/prd/test),
     Group A vs Group B bucket classification,
     mock-tier scenario/grid prefix routing,
     bucket-name resolution authority (resolve_bucket_name vs UTL PATH_REGISTRY),
@@ -41,7 +41,7 @@ code_refs:
   ]
 ---
 
-# Bucket Isolation Model — Four-Tier Architecture
+# Bucket Isolation Model — Five-Tier Architecture
 
 SSOT: `unified-trading-library` `resolve_bucket_name()` (`unified_trading_library.cloud_interface.bucket_naming`) and
 `deployment-service/configs/cloud-providers.yaml`.
@@ -68,9 +68,11 @@ SSOT: `unified-trading-library` `resolve_bucket_name()` (`unified_trading_librar
 
 ---
 
-## 1. Four-Tier Isolation
+## 1. Five-Tier Isolation
 
-All GCS/S3 buckets resolve to one of four tiers based on runtime environment and mode:
+All GCS/S3 buckets resolve to one of five tiers based on runtime environment and mode (a separate `ci` short-form is
+also recognized by the env-to-tier mapping in § 4 below but is not broken out as its own row here — unresolved which of
+these two sections needs to change, flagged for follow-up):
 
 | Tier   | Short form | Condition                                | Purpose                                           |
 | ------ | ---------- | ---------------------------------------- | ------------------------------------------------- |
@@ -282,11 +284,13 @@ Each manifest records what data was written, when, and to which bucket/path.
 
 ---
 
-## 8. Prod Bucket IAM Write-Protection (ENFORCED)
+## 8. Prod Bucket IAM Write-Protection (PARTIALLY ENFORCED — new SAs scoped, god-SA still unconditioned)
 
-Prod buckets (`-prd-`) have IAM policies that restrict write access **at the credential level** — the code-level
-name-resolver safety net (§ 1) is now backed by live GCP IAM conditions. Terraform SSOT:
-`deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Rollout plan:
+Prod buckets (`-prd-`) have IAM policies that restrict write access **at the credential level** for callers already
+migrated to the new per-tier service accounts (§ 8.1) — the code-level name-resolver safety net (§ 1) is now backed by
+live GCP IAM conditions for those callers. This is additive, not yet exhaustive: the original `unified-trading-sa` still
+holds unconditioned project-wide `storage.objectAdmin` alongside the new bindings (§ 8.5) until every write path is
+confirmed migrated off it. Terraform SSOT: `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Rollout plan:
 `/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md`.
 
 ### 8.1 Per-Tier Service Accounts

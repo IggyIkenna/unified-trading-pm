@@ -101,3 +101,4 @@ identity and not a legitimate cross-reference to a sibling key before changing i
   `check_finalize_plan_coverage.py` globs only `plans/active/*.md` (verified by direct code read, lines 117/141), so
   issue docs are structurally exempt from that gate.
 - **context-scout 2026-08-03**: populated context_scope (2 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.

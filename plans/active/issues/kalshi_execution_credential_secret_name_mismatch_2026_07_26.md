@@ -133,10 +133,16 @@ Two directions, both viable, not adjudicated by this doc:
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, verified live, updated that codex doc's
       grants list. `routing.py`/`sports_factory.py` left unchanged (Option A requires no code change — confirmed by
       reading both files first). (repo: execution-service config only, + GCP Secret Manager; no code shipped)
-- [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
-      todo 5 for the full question + options — filed there, not duplicated here). Once the credential wiring is fixed,
-      place a real Kalshi paper order through execution-service end-to-end (order submit → fill/ack → position update)
-      against the elections-subdomain host and capture logs/commit evidence it works — this is the ORIGINAL verification
+- [ ] [DATA] P1. **RULED 2026-08-06 (operator): NO — do not touch the live exchange.** The 2026-07-28 ruling's scope
+      limit stands; placing a real order on `api.elections.kalshi.com` remains unauthorized. The original verification
+      ask (`kalshi_live_capture_regression_and_drift_2026_07_13.md`) stays unfulfillable as literally worded — find a
+      non-live verification path (e.g. a sandbox/testnet host if Kalshi offers one, or verify the
+      order-submit/fill/ack/position-update code path via mocked responses instead of a real venue call) rather than
+      re-asking this question. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 for the full question + options — filed there, not
+      duplicated here). Once the credential wiring is fixed, place a real Kalshi paper order through execution-service
+      end-to-end (order submit → fill/ack → position update) against the elections-subdomain host and capture
+      logs/commit evidence it works — this is the ORIGINAL verification
       `kalshi_live_capture_regression_and_drift_2026_07_13.md` asked for, gated on the todo above (now unblocked —
       credentials exist). **Not attempted**: `KalshiAdapter` defaults to Kalshi's LIVE production host
       (`api.elections.kalshi.com`, which literally matches this todo's "elections-subdomain host" text) — this
@@ -168,3 +174,14 @@ Two directions, both viable, not adjudicated by this doc:
   correctly `BLOCKED-OPERATOR-DECISION` and duplicate-tracked at `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
   todo 5 (still open there, unresolved live/demo-host question) — flipping this doc would dispatch a duplicate against
   real credential/exchange material. Doc stays NA.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA, valid — re-verified, 1 open, unchanged
+  since the 2026-08-04 marker. The sole `[DATA] P1` item is `BLOCKED-OPERATOR-DECISION` and explicitly redirects
+  execution to the ACTIVE `assigned_vm: planning` `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 ("filed
+  there, not duplicated here") — a redirect-banner citation, automatic KEEP-NA regardless of how bounded the text reads;
+  flipping this doc would create a competing dispatch surface against real credential material. Flagged (not a defect in
+  this doc): the doc's own 2026-08-06 operator ruling text ("NO — do not touch the live exchange... find a non-live
+  verification path") is not yet mirrored into batch6 todo 5, which as of its own last update still shows the
+  pre-ruling, unresolved question — a sync gap for whichever pass next touches batch6. Doc stays NA.

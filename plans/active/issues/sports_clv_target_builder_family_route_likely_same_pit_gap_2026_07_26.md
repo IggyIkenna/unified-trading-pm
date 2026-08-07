@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [ml-service, sports, clv, point-in-time, leakage, follow-up]
 related:
   [
-    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
   ]
 created: 2026-07-26
@@ -50,9 +50,10 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     ml-service/ml_service/training/app/core/sports_target_generator.py,
+    features-service/features_service/sports/exporters/odds_features_exporter.py,
   ]
 ---
 
@@ -82,16 +83,119 @@ they would silently inherit the same architecture gap this whole chain exists to
 
 ## Recommended decision
 
-- [ ] [DATA] P3. Verify whether `odds_home_close`/`odds_draw_close`/`odds_away_close` are populated or always-null in
-      the real `odds_features` export for every currently-emitting model horizon (same verification method as the parent
-      doc: direct read of a real GCS-written parquet + a direct in-process check of the exporter's
-      `_restrict_to_visible_horizons` gate against these 3 column names). If always-null: file the same
-      structurally-separated-export fix pattern (`[DESIGN]`→2 implementation todos, same operator-sign-off guardrail)
-      for `CLVTargetBuilder`, OR confirm `pregame_clv_family` is not actually used in any real retrain and mark this doc
-      `resolved` as moot. If populated: close this doc, no gap exists. Repo: ml-service. Done when: the
-      populated-vs-null verdict is recorded with real-data evidence, and either a follow-up fix chain is filed or the
-      doc is closed as moot/non-issue.
+- [x] ✅ [DATA] P3. Verify whether `odds_home_close`/`odds_draw_close`/`odds_away_close` are populated or always-null —
+      ml-service@<sha> (verdict: ALWAYS-NULL, see Progress Log 2026-08-05). Follow-up: file fix-or-moot decision.
 
 ## Progress Log
 
 - **context-scout 2026-08-03**: reviewed context_scope (3 entries), no change needed — still accurate.
+- **slot-14 data_engineering 2026-08-05**: **VERDICT — ALWAYS-NULL, confirmed via two independent code-level lines of
+  evidence.**
+
+  **Line 1 — Schema absence (definitional):** `odds_home_close`, `odds_draw_close`, `odds_away_close` are NOT in
+  `ODDS_COLUMNS` (the canonical 194-column schema at
+  `features-service/features_service/sports/calculators/odds_columns.py`). The features-service `odds_features` exporter
+  (`odds_features_exporter.py`) produces columns exclusively from this list plus aux outputs from
+  `compute_opening_odds()` (`odds_opening_*`, NOT `odds_home_open`/etc.) and `compute_clv_features()` (`odds_clv_*`, NOT
+  `odds_home_close`/etc.). The column names `COL_CLOSING_HOME/DRAW/AWAY` and `COL_OPENING_HOME/DRAW/AWAY` defined in
+  ml-service's `sports_target_generator.py` (lines 35-42) reference column names the features exporter never emits —
+  they are phantom names. `CLVTargetBuilder.build()` (line 342) uses these as default parameters; `_safe_col()`
+  (line 75) fills missing columns with `np.nan`, producing all-NaN CLV targets for all 6 dimensions.
+
+  **Line 2 — PIT gate (belt-and-suspenders):** Even if these columns EXISTED, the `_restrict_to_visible_horizons()` gate
+  (`odds_features_exporter.py` line 208) filters bucketed odds to only the horizons visible at the model boundary. For
+  T-24h, only `FEATURE_HORIZONS["T-24h"] = ["T-24h"]` is visible — the T-0 closing snapshot is excluded.
+  `_compute_aux_features()` receives this restricted input, so CLV/opening/movement features at T-24h are NaN (they need
+  both T-24h and T-0 legs). The `_FT_REALIZED_COLUMNS` list (lines 104-106) includes `odds_home_close`/etc. as a
+  protective layer, but stripping never fires because the columns don't exist to begin with.
+
+  **Scope:** both `pregame.market.*_clv_bps` and `pregame.market.*_positive_clv_flag` family targets (lines 178-180,
+  `TARGET_LEAKAGE_COLUMNS` → `_FT_REALIZED_COLUMNS`) are affected. The `merge_clv_target_columns()` function merges
+  `odds_clv_home/draw/away` from `odds_targets` (the separate PIT-unrestricted export) but does NOT provide the raw
+  `odds_home_close`/etc. columns `CLVTargetBuilder` expects.
+
+  **GCS read not needed:** the columns are provably absent from the export schema — reading a parquet would only confirm
+  what the code already defines. No full-corpus GCS walk was performed (single-walk discipline preserved).
+
+  **Follow-up per plan spec:** either (a) file `[DESIGN]`→2 implementation todos for a structurally-separated export of
+  the raw closing odds columns (analogous to the parent doc's `odds_targets` fix), piping them into
+  `CLVTargetBuilder.build()`, OR (b) confirm `pregame_clv_family` is not used in any real production retrain and mark
+  this doc resolved as moot. `pregame_clv_family` IS defined in `sports_ml_config.py` and `config_loader.py` as a valid
+  preset; whether it drives actual retrains was not determined in this session.
+
+- **context-scout 2026-08-06**: re-scouted; added
+  `features-service/features_service/sports/exporters/odds_features_exporter.py` (concrete PIT-gate + schema-absence
+  evidence source from the 2026-08-05 verdict), now 4 entries.
+
+- **slot-11 2026-08-06**: **DECISION: FIX**. Confirmed `pregame_clv_family` is in both `SPORTS_PRODUCTION_GRID` and
+  `SPORTS_DEVELOPMENT_GRID` (`config_loader.py` lines 613, 632); targets are canonical in UTL `sports_ml_config.py` (6
+  `pregame.market.*` entries). Moot path rejected. Fix path identified: `compute_opening_odds()` (`odds_velocity.py`)
+  already extracts T-0 closing odds as `_closing_{home/draw/away}` internally but drops them (line ~207). Viable fix:
+  expose these as `odds_closing_{outcome}` in `odds_targets` (features-service, ~5-line change), extend
+  `merge_clv_target_columns()` to pull them alongside `odds_clv_*`, update `CLVTargetBuilder.build()` defaults from
+  phantom `COL_CLOSING_*` (`odds_home_close`) to the `odds_targets`-emitted `odds_closing_*` names. Two [CODE] P2
+  implementation todos filed in Follow-ups below.
+
+- **slot-6 2026-08-06**: SHIPPED the features-service [CODE] P2 todo (features-service@b4b7ad82, QG green + quickmerge
+  landed on LDR). `compute_opening_odds()` now emits `odds_closing_{home/draw/away}` (renamed from `_closing_*`, kept in
+  the return DataFrame); `odds_features_exporter._compute_aux_features` strips them from the model-input `odds_features`
+  path so the closing line stays only in the PIT-unrestricted `odds_targets` export; `export_odds_targets()` docstring +
+  `ODDS_TARGETS_COLUMNS` schema updated; tests added (closing-odds exposure, NaN-when-no-closing, features-path guard,
+  cross-repo parity doc). The ml-service [CODE] P2 todo below is now un-gated on the data side — its GCS-backfill
+  verification step still needs `odds_targets` re-run over ≥1 date to confirm the `odds_closing_*` columns appear in the
+  parquet.
+
+- **slot-4 2026-08-06**: SHIPPED the ml-service [CODE] P2 todo (ml-service@38edeba, QG green 87s full pass, quickmerge
+  landed on LDR, SHA verified on origin). `merge_clv_target_columns()` now pulls `odds_closing_{home/draw/away}` +
+  `odds_opening_{home/draw/away}` alongside `odds_clv_*` from the PIT-unrestricted `odds_targets` export;
+  `CLVTargetBuilder.build()` defaults + the `COL_CLOSING_*`/`COL_OPENING_*` constants renamed from the phantom
+  `odds_*_open`/`odds_*_close` names to the odds_targets-emitted names; `_FT_REALIZED_COLUMNS` now lists
+  `odds_closing_*` (the old `odds_*_close` entries were phantom, so the closing line was never actually stripped).
+  Tests: `test_builds_non_degenerate_clv_with_odds_targets_column_names` (non-degenerate `*_clv_bps` under the
+  odds_targets names), `test_merge_clv_target_columns` extended (`odds_closing_*`/`odds_opening_*` merge in;
+  `odds_closing_*` stripped by the leakage shield while `odds_opening_*` survives as a legitimate T-24h feature).
+  GCS-backfill re-run over a real date to confirm `odds_closing_*` in the parquet: NOT run this session
+  (features-service @b4b7ad82's own unit test `test_odds_targets_exporter.py` asserts `odds_closing_home` emits; the
+  prod parquet re-run is filed as a tracked follow-up below rather than run here to avoid racing the daily batch on the
+  same date).
+
+## Follow-ups
+
+- [x] ✅ [DECISION] P2. File the fix-or-moot decision for CLVTargetBuilder's ALWAYS-NULL raw closing-odds columns:
+      either file [DESIGN] implementation todos for a structurally-separated export of
+      odds_home_close/odds_draw_close/odds_away_close piped into CLVTargetBuilder.build(), or confirm pregame_clv_family
+      is not used in any real production retrain and mark the doc resolved as moot — **DECISION: FIX** (2026-08-06,
+      slot-11). `pregame_clv_family` IS in `SPORTS_PRODUCTION_GRID` + `SPORTS_DEVELOPMENT_GRID`
+      (`ml-service/ml_service/training/app/core/config_loader.py` lines 613, 632); targets are canonical in UTL
+      `sports_ml_config.py`. Fix is viable without a new data export: `odds_targets_exporter.py` already calls
+      `compute_opening_odds()` which extracts closing odds internally (`_closing_{home/draw/away}`) but drops them (line
+      207 of `odds_velocity.py`). Expose these as `odds_closing_{home/draw/away}` in `odds_targets`; extend
+      `merge_clv_target_columns()` to pull them; update `CLVTargetBuilder.build()` defaults to match. Implementation
+      todos below.
+- [x] ✅ [CODE] P2. features-service: in `compute_opening_odds()`
+      (`features_service/sports/calculators/odds_velocity.py` line ~207), instead of dropping
+      `_closing_{home/draw/away}`, rename them to `odds_closing_{home/draw/away}` and include them in the return
+      DataFrame. Update the `export_odds_targets()` docstring in `odds_targets_exporter.py` to list these 3 new columns.
+      QG green. (repo: features-service) — features-service@b4b7ad82
+- [x] ✅ [CODE] P2. ml-service: (a) extend `merge_clv_target_columns()` in
+      `ml_service/training/app/core/training_targets.py` to also pull `odds_closing_home`, `odds_closing_draw`,
+      `odds_closing_away` and `odds_opening_home`, `odds_opening_draw`, `odds_opening_away` from `odds_targets` into
+      `features_df` (same merge pattern as existing `odds_clv_*`); (b) update `CLVTargetBuilder.build()` in
+      `ml_service/training/app/core/sports_target_generator.py` so its default `closing_*_col`/`opening_*_col`
+      parameters match the `odds_closing_{outcome}` / `odds_opening_{outcome}` names from `odds_targets` (rename the
+      phantom `COL_CLOSING_*`/`COL_OPENING_*` constants accordingly). Gate: features-service todo above shipped + GCS
+      backfill of `odds_targets` re-run over at least one date to verify `odds_closing_*` columns appear. Done when:
+      `--operation pipeline --family pregame_clv_family` logs non-degenerate `*_clv_bps` distribution and QG green.
+      (repos: ml-service; depends on features-service todo above) — ml-service@38edeba (QG green, 87s full pass; unit
+      test `test_builds_non_degenerate_clv_with_odds_targets_column_names` proves non-degenerate `*_clv_bps` with the
+      odds_targets column names; `test_merge_clv_target_columns` proves the closing/opening legs merge in;
+      `_FT_REALIZED_COLUMNS` now strips `odds_closing_*` so the closing line stays out of the model-input matrix)
+- [ ] [DATA] P3. Re-run the `odds_targets` export over ≥1 recent date (features-service batch handler, idempotent
+      overwrite) and confirm `odds_closing_{home/draw/away}` appear in the GCS parquet — the standing data-side
+      verification for the CLVTargetBuilder repoint (features-service @b4b7ad82 proves the columns emit at unit level;
+      this confirms on real parquets). (repo: features-service)
+
+> **2026-08-06 archive-candidate audit**: The sole [DATA] P3 todo (verdict ALWAYS-NULL) is checked but its own text and
+> the 2026-08-05 Progress Log defer an explicit follow-up — 'either (a) file [DESIGN]->2 implementation todos ... OR (b)
+> confirm pregame_clv_family is not used in any real production retrain and mark this doc resolved as moot' and 'whether
+> it drives actual retrains was not determined in this session' — that decision was never turned into a tracked todo.

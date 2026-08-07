@@ -153,10 +153,24 @@ is not complete until the counterpart's files build again, not just until your o
 
 ## Todos
 
-- [ ] [INFRA] P2. **Hunk-scope `quickmerge.sh --files` staging** — switch `--files` from a whole-file `git add` to
+- [x] ✅ [INFRA] P2. **Hunk-scope `quickmerge.sh --files` staging** — switch `--files` from a whole-file `git add` to
       hunk-level staging (`git add -p` / a restricted `git diff <path> | git apply --cached`) so shipping a hot shared
       file no longer silently sweeps a concurrent agent's uncommitted WIP into the commit; not attempted in this doc
-      ("outside this plan's scope and risks its own regressions under contention").
+      ("outside this plan's scope and risks its own regressions under contention"). — **RULED 2026-08-06 (operator,
+      interactive): DO NOT hunk-scope. Closed as decided-against, not as done.** Whole-file staging stays. Reasoning
+      recorded so this is not re-proposed every time the foreign-WIP-sweep class recurs: hunk-level staging in the
+      fleet's single most critical shipping path trades a **visible** failure for an **invisible** one. Sweeping in an
+      extra file produces a commit that is wrong but obvious — it shows up in `git show --stat` and in review. A
+      mis-applied hunk produces a commit that is silently **PARTIAL**: it compiles, it reviews clean, and it breaks
+      `git bisect` because the tree at that commit never existed as anyone's working state. That is a strictly worse
+      failure mode, and it lands in the path every repo ships through. **The class is being addressed where it actually
+      belongs**: (a) `scripts/dev/safe-doc-push.sh`'s defensive unstage-by-name already isolates foreign staged content
+      on the doc path (mandated fleet-wide 2026-08-06, `unified-trading-pm@73bfdbeda`), and (b) the `.agent-claim`
+      liveness heartbeat + session-start collision warning tracked in
+      `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` attack the
+      **collision rate** rather than the staging granularity. Reduce how often two agents share a checkout; do not make
+      the commit itself lossy. **If this is ever revisited**, the bar is a mechanism that cannot produce a partial
+      commit — not a more careful hunk selector.
 
 ## Progress Log
 
@@ -170,3 +184,18 @@ is not complete until the counterpart's files build again, not just until your o
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — marker was stale (claimed 2, held 5, missing
   epic-vs-source balance); dropped the generic `cefi_master` epic pointer, kept the named `quickmerge.sh` source file.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+## Follow-ups
+
+- [ ] [OPERATOR] P2. Decide the each-slot-ONE-agent / explicit file-ownership policy (operator-gated design call) —
+      na-eligibility-audit 2026-08-06 marks this as remaining open.
+
+> **2026-08-06 archive-candidate audit**: The sole hunk-scope todo was RULED decided-against 2026-08-06, but the
+> na-eligibility-audit 2026-08-06 marker explicitly says 'Operator-gated, design-judgment, or standing-corpus-ruling
+> work remains open' and the doc's core ask (each-slot-ONE-agent / explicit file ownership) is an unresolved operator
+> policy call the doc itself declines to close, with the collision-class mitigation still tracked in a separate live
+> issue doc — genuinely ambiguous, so kept open. [KEEP_OPEN todo synthesized from justification by archive sweep]

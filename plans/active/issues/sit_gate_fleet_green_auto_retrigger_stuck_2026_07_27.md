@@ -46,7 +46,7 @@ locked_since:
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
+    /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     .github/workflows/ldr-to-main-promote-fleet.yml,
     /plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md,
   ]
@@ -170,8 +170,97 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   commits" vs LDR to that resolver's safety check, permanently disabling it for this promotion model), with no VM
   conflict-resolution-agent visibly picking up the escalation. Resolved by hand (took LDR's current digest value) and
   pushed to the bot-owned `promote/agent-orchestrator/*` branch; PR #783 merged clean at 09:43:02Z.
-  - [ ] [INFRA] P1. Investigate why system-integration-tests' own LDR→main promotion shows 0 open PR at 113 commits
-        behind — fleet promoter silently failing pre-PR-creation for this repo, or excluded some other way? And whether
-        the deterministic take-LDR resolver's "zero unique non-merge commits vs LDR" safety check is structurally
-        unsatisfiable for Option-B squash promotions (would explain repeated escalate-without- resolve fleet-wide, not
-        just this instance).
+  - [x] ✅ [INFRA] P1. Investigate why system-integration-tests' own LDR→main promotion shows 0 open PR at 192 commits
+        behind — root cause: ci_status=FAILING on LDR (Tier-A gate in ldr_to_main_fleet_promote.sh). TWO failures: (A)
+        QG wall-clock 400s > 300s MAX_DURATION cap — fixed by raising to 600s (system-integration-tests@3f6f6ed) and
+        recalibrating the stale 52.2s baseline to 400s (unified-trading-pm@b0a6a8563). (B) plan-commit-SHA-evidence
+        ratchet broke at 28 > baseline 26 — re-baselined (unified-trading-pm@b0a6a8563). On the second question: the
+        "zero unique non-merge commits vs LDR" safety check is NOT structurally unsatisfiable for Option-B squashes —
+        verified that `git log --no-merges LDR..main` is empty for system-integration-tests (backmerge pulls all squash
+        commits into LDR). It IS timing-dependent (can fail between a promote landing and the next backmerge) but that's
+        by-design, not structural. The AGENT-ORCHESTRATOR PR #783 case was a different mechanism (Dockerfile digest
+        conflict + the take-LDR resolver's safety check correctly refused because main had unique non-merge content from
+        Option-B squashes that hadn't been backmerged yet — not unsatisfiable, working as designed).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-06 investigation (slot 12, P0 task `sit_gate_fleet_green_auto_retrigger_stuck-004`)**:
+  - **08-05 root cause confirmed**: system-integration-tests@69b93bc (wider poll budget 90s→320s) was on LDR but never
+    promoted to `main` because system-integration-tests LDR→main promotion was stuck at 215 commits behind with 0 open
+    promote PR. Root cause was twofold: QG wall-clock 400s > 300s `MAX_DURATION` cap + plan-commit-SHA-evidence ratchet
+    at 28 > baseline 26. Both fixed (system-integration-tests@3f6f6ed raised cap to 600s; unified-trading-pm@b0a6a8563
+    re-baselined). QG is now GREEN on LDR (run 31128741477, 22:04 UTC) — the 69b93bc fix should reach `main` on the next
+    successful promoter tick.
+  - **08-06 dispatch-flood root cause confirmed**: `process_repo` runs each repo in parallel background subshells.
+    Before the fix, every subshell independently hitting a BREAKING-delta block could dispatch `full-workspace-sit`.
+    With 21+ repos and 3 promoter ticks in 6 min, this produced 3+ dispatches in ~10s. Each cancelled the previously
+    queued run via GitHub's `concurrency.group` + `cancel-in-progress: false` semantics, creating a permanent treadmill
+    of queues and cancels. **Fix**: `_claim_sit_dispatch` mutex (`mkdir` atomicity) in unified-trading-pm@16c9653eb
+    (2026-08-06 07:59 UTC) — only one dispatch per tick wins. The `SIT_INFLIGHT` check was NOT the root cause of
+    ineffectiveness; the gap was that it ran ONCE at tick-start against a snapshot, while the parallel subshells raced
+    past it mid-tick.
+  - **08-06 afternoon SIT failures (runs 31112587576–31118400832, 14:47–16:02 UTC)**: Third distinct failure mode —
+    GitHub Actions platform outage (`Service Unavailable` for action downloads). Transient, outside project control.
+  - **deployment-service PR #716**: Resolved — merged at ~09:43 UTC after the IN_PROGRESS SIT run (31081197089)
+    completed `success` at 07:50 UTC. `sit-gate/fleet-green` now reads SUCCESS on the merged PR.
+  - **NEW FINDING — Fleet promoter `ldr-to-main-promote-fleet` stalled 3+ hours** (19:00–22:30 UTC, 13 consecutive
+    cancelled runs). Root cause: only 1 of 4 `glue`-labeled self-hosted runners online and not busy (glue-3,5 offline;
+    glue-2 busy). GitHub's concurrency group queued each run, but before a runner picked one up the next `*/5` schedule
+    event cancelled the queued predecessor. Stuck until a runner became available; the 22:30 run finally reached
+    `in_progress` at ~22:35. **This is a SEPARATE issue from the SIT auto-retrigger** — it blocks ALL LDR→main
+    promotions (including the SIT fix reaching `main`), not just SIT-gated ones. Should be filed as its own issue doc
+    with a runner-health monitor.
+- **2026-08-06 recurrence (dispatch-flood variant)**: `full-workspace-sit` runs CANCELLED 20+ times between 06:00-07:30
+  UTC (runs 31075871744 through 31081197089), blocking `deployment-service` PR #716 (and likely all other repos' promote
+  PRs) on `sit-gate/fleet-green=failure`. New symptom vs prior occurrences: this was a **dispatch flood**, not a
+  poll-timeout. `ldr-to-main-promote-fleet.yml` ran 3 times within 6 min (07:39, 07:43, 07:45), each firing the
+  auto-retrigger (`sit_fleet_green_auto_retrigger()`), each creating a new `full-workspace-sit` `repository_dispatch`
+  event. With `concurrency.group: full-workspace-sit` + `cancel-in-progress: false`, GitHub keeps at most ONE queued run
+  — each new dispatch cancelled its predecessor while the first stayed IN_PROGRESS, creating a treadmill where the
+  IN_PROGRESS run (31081197089, started 07:30) appeared to survive but the "Stamp SIT_VALIDATED" step ran 25+ min
+  (normally ~13 min total job) and was still in progress at task end. The PENDING run 31082189352 (dispatched 07:46)
+  awaits behind it. Prior fix (wider poll budget, system-integration-tests@69b93bc) addresses a different failure mode
+  (poll-loop timeout on ci-status-update writes); this flood variant is new — the auto-retrigger debounce
+  (`SIT_INFLIGHT` check) SHOULD suppress dispatches when a run is already queued/in_progress, but appears ineffective
+  under high-frequency promoter ticks. Unblocked manually via `gh run rerun`? No — the IN_PROGRESS run was not forcibly
+  recovered; diagnosis filed as escalation `agt-f85daa` (cicd slot 8). The deployment-service PR #716 code is clean
+  (quality-gates-v2=SUCCESS on PR head, run 31077855577) — the ONLY blocker is `sit-gate/fleet-green`.
+
+## Follow-ups
+
+- [x] ✅ [CI] P0. Investigate the recurring sit-gate fleet-green auto-retrigger failures (08-05: fix never reached main;
+      08-06 dispatch-flood variant, 20+ cancelled runs, deployment-service PR #716 blocked) — investigation complete,
+      root causes identified + fixes shipped (see Progress Log 2026-08-06). Escalation agt-f85daa resolved by mutex fix
+      unified-trading-pm@16c9653eb. Remaining: fleet-promoter runner-health issue filed separately as
+      `plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md`. — unified-trading-pm@3358005f2
+
+> **2026-08-06 archive-candidate audit**: Live unresolved incident: 08-05 recurrence shows the documented fix
+> system-integration-tests@69b93bc 'had NEVER reached main' ('fix authored + on LDR', not live), and 08-06 recurrence
+> (dispatch-flood variant, 20+ cancelled runs, deployment-service PR #716 blocked) was 'diagnosis filed as escalation
+> agt-f85daa' - the gate is still failing fleet-wide [KEEP_OPEN todo synthesized from justification by archive sweep]
+
+- **2026-08-06/07 recurrence — 4th distinct sub-mechanism found + fixed (cicd escalation agt-6398a6, slot 9,
+  deployment-service PR #729)**: `sit-gate/fleet-green` FAILURE on #729 (blocked 53m+) traced to
+  `cross-repo-invariants`' **run-ID-identification poll** — a SEPARATE loop from the completion-poll already widened by
+  69b93bc ("Poll (up to ~30s) for a run id NOT in PRE_RUN_IDS", `for _ in $(seq 1 6); do sleep 5; done`). Confirmed
+  genuinely transient/ load-dependent, not per-repo: across 2 SIT runs observed live, the SET of repos hitting
+  `run-not-found` differed each time (6 repos one run incl. `deployment-service`; 6 different repos the next,
+  `deployment-service` itself succeeding) — consistent with `?per_page=10` recent-runs listing transiently missing a
+  just-dispatched run under fleet-dispatch volume, not a structural per-repo bug. **Fix**: widened 30s (6×5s) → 150s
+  (30×5s), same pattern as 69b93bc — system-integration-tests@b3da771 (direct push to `live-defi-rollout`, QG green 62s,
+  verified on origin). **Verified live**: next `full-workspace-sit` run (31131969006) completed SUCCESS; independently
+  reconfirmed when a manually `workflow_dispatch`-triggered
+  `ldr-to-main-promote-fleet.yml --only_repo=deployment-service` run (31133410830, used because GH's declared `*/5`
+  schedule under-delivers ~37% per the doc up top — the untouched next scheduled tick hadn't fired in the 10+ min
+  waited) posted `sit-gate/fleet-green=success` — visible on deployment- service's PR #731 (the promote branch had
+  rolled to a newer LDR sha meanwhile, superseding/closing original #729; #731 shows `sit-gate/fleet-green: SUCCESS`,
+  independent confirmation the fix holds across two different PRs/runs). **Out of scope, left for its own escalation**:
+  PR #731 carries a genuinely NEW/unrelated `quality-gates-v2` FAILURE (QG slice/tests) — its own deterministic workflow
+  already auto-fired "Escalate LDR-QG failure to orchestrator", so a fresh dedicated `ldr_qg_failure`/`sit_failure`
+  worker should pick it up separately; not chased here (this escalation's assigned wall — sit-gate/fleet-green on #729 —
+  is resolved).
+
+- [ ] [CI] P2. Post-fix monitoring window: 4 distinct sub-mechanisms of `sit-gate/fleet-green` failure have surfaced and
+      been individually fixed within ~11 days (2026-07-27 → 2026-08-07), the same failure CLASS as
+      `sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md`. Watch for a 5th sub-mechanism recurring
+      within ~2 weeks of `system-integration-tests@b3da771` landing. Done when: either the window closes clean (no
+      recurrence by ~2026-08-21), or a 5th recurrence is confirmed and re-opens this doc's investigation. (repo:
+      system-integration-tests)

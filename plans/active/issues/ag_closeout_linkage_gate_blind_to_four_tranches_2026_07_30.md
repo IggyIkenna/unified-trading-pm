@@ -33,8 +33,8 @@ created: 2026-07-30
 author: unknown
 last_updated: 2026-07-30
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -187,16 +187,18 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       measures **29** `cross-cutting` orphans, matching this doc's manually-enumerated 29-doc list below by name to a
       very high degree (spot-checked). No third blind spot found — the graph-BFS + body-text-mention signal converges
       with the manual investigation's result.
-- [ ] [OPERATOR] P2. **Rule the A/B/C retag question in this doc's own `## BLOCKED-OPERATOR-DECISION` section below** —
-      ~20 of the 28 never-cited cross-cutting docs are `ci`/`ao` content carrying a habitual
-      `asset_group:     [cross-cutting]` tag. Options A (one scoped retag pass BETWEEN scheduled auditor cycles) [WORKER
-      REC] / B (opportunistic per-tranche retag) / C (accept cross-cutting as the de-facto home and widen its closeout
-      Sources) are stated in full there with the trade-offs. **Filed as a checkbox 2026-08-02
-      (`/na-eligibility-audit     cross-cutting`)**: the decision was prose-only, so this doc read as 4-of-4-todos-done
-      to every open-todo count and to `check_archive_candidates` — i.e. it looked archivable while carrying a live,
-      unanswered operator question. Converting it per the workspace HARD RULE "every follow-up is a `- [ ] ` todo, never
-      prose". Done-when: an option is picked and the retag pass it implies is either executed or filed as its own
-      tracked plan. (repo: `unified-trading-pm`)
+- [ ] [DOCS] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: one scoped retag pass between scheduled auditor
+      cycles.** `[DOCS]` tag (was `[OPERATOR]`), AO-dispatchable — reuse the 2026-07-27 pass's mechanism, paired with
+      widening `check_ag_closeout_linkage.py`'s coverage per the doc's own recommendation. **Rule the A/B/C retag
+      question in this doc's own `## BLOCKED-OPERATOR-DECISION` section below** — ~20 of the 28 never-cited
+      cross-cutting docs are `ci`/`ao` content carrying a habitual `asset_group:     [cross-cutting]` tag. Options A
+      (one scoped retag pass BETWEEN scheduled auditor cycles) [WORKER REC] / B (opportunistic per-tranche retag) / C
+      (accept cross-cutting as the de-facto home and widen its closeout Sources) are stated in full there with the
+      trade-offs. **Filed as a checkbox 2026-08-02 (`/na-eligibility-audit     cross-cutting`)**: the decision was
+      prose-only, so this doc read as 4-of-4-todos-done to every open-todo count and to `check_archive_candidates` —
+      i.e. it looked archivable while carrying a live, unanswered operator question. Converting it per the workspace
+      HARD RULE "every follow-up is a `- [ ] ` todo, never prose". Done-when: an option is picked and the retag pass it
+      implies is either executed or filed as its own tracked plan. (repo: `unified-trading-pm`)
 - [x] [DOC] P3. Correct `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s classification-mechanism section, which
       currently tells the reader `check_ag_closeout_linkage.py` "remains the safety net" for tag/Sources disagreements —
       true only for the 5 real AGs today. **DONE 2026-07-30** (operator ruling this session authorised the SKILL.md
@@ -327,3 +329,9 @@ not a bounded worker todo). No new batch drafted; concurs with the conclusion ab
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped an accidental repeat entry, dropped 2
   weakly-relevant codex/plan links, kept the source script + the doc where the actual shipped fix landed.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. The sole open todo's `[OPERATOR]` A/B/C decision was resolved this same session ("RULED
+  2026-08-06 (operator), option A [WORKER REC]", retagged `[OPERATOR] -> [DOCS]`) — the retag mechanism (2026-07-27
+  precedent, partially pre-scoped by name in this doc's own Progress Log) is worker-determinable with no further
+  judgment call. Conflict-check cleared (no overlapping claim in `parent_epic: plan_hygiene_master`).

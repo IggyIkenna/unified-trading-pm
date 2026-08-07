@@ -28,7 +28,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, incident, cgroup, memory-cap, systemd, api-outage, instance-resize, bootstrap_vm]
-related: [/plans/active/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md]
+related: [/plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md]
 created: "2026-07-30"
 author: unknown
 last_updated: "2026-07-30"
@@ -52,7 +52,7 @@ context_scope:
   [
     agent-orchestrator/scripts/rescale-memory-cap.sh,
     agent-orchestrator/scripts/bootstrap_vm.sh,
-    /plans/active/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
+    /plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 locked_since:
@@ -164,3 +164,7 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
   open `[REVIEW] P3` remains an open design/judgment call (new cgroup-v2 memory-stat reader + a new deployment-ui
   dashboard tile), correctly left NA/unbuilt per the 2026-07-30 self-assessment. No change.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

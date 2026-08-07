@@ -29,8 +29,9 @@ created: 2026-08-03
 author: unknown
 parent_epic: agent_operating_framework_master
 priority: P3
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 resolved_by:
 locked_by:
 source:
@@ -83,7 +84,10 @@ not a code defect.
 
 ## Todos
 
-- [ ] [OPERATOR] P3. Rule on whether to extend the §8b evidence-backing contract to prod DATA-mutation completions:
+- [ ] [SCRIPT] P3. **RULED 2026-08-06: YES, extend it.** `[SCRIPT]` tag (was `[OPERATOR]`) — directly supports the
+      existing data-pipeline-correctness HARD RULE; prod data mutations deserve the same evidence rigor builds already
+      get. Add the artifact convention + the `check_evidence_backed_completion.py` prod-mutation branch.
+      AO-dispatchable. Rule on whether to extend the §8b evidence-backing contract to prod DATA-mutation completions:
       require restamp/backfill/rename/delete/tofu-state scripts to emit a verifiable summary artifact (a manifest-delta
       row, a `vm-logs/<unit>/RESULT.json`, a GCS operation id, or a before/after `state list`) that a `- [x]` must cite,
       the same way builds cite `cloudbuild=<id>` — and whether `check_evidence_backed_completion.py` should grow a
@@ -104,3 +108,16 @@ not a code defect.
   tagged, a standards/scope-change ruling request (whether to extend PLAN_FORMAT.md §8b evidence-backing to prod
   data-mutation completions) consolidating 3 independent review-flagged instances — a genuine policy decision, not a
   worker-determinable fact.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): sole todo is an [OPERATOR]
+  policy-scope-change ruling request (extend PLAN_FORMAT.md §8b), not a worker-determinable fact.
+
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass, later same day) — CORRECTS the marker
+  above.** RECLASSIFY, `assigned_vm: NA -> planning`. The stale audit-log entries above predate this session's own
+  ruling: "RULED 2026-08-06: YES, extend it" with an `[OPERATOR] -> [SCRIPT]` retag resolves the operator policy
+  question. The remaining work — add the artifact-convention section to `PLAN_FORMAT.md` and a prod-mutation branch to
+  `check_evidence_backed_completion.py` — is a bounded, precedented QG-script extension following the existing
+  §8b/cloudbuild pattern, not open-ended judgment. No hard-rule veto (no redirect banner, no revert, no `depends_on`
+  gate, scoped single-script change, not dispatch-critical-path machinery). Conflict-check cleared (no overlapping claim
+  in `parent_epic: agent_operating_framework_master`). `assigned_role` was unset; filled `infra` (PM-repo QG-tooling
+  scope).

@@ -96,7 +96,9 @@ stash-pile audit/cleanup runbook) ·
 [issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
 (9 services' Dockerfiles inconsistent vs the clean base-image pattern) ·
 [issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
-(ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked).
+(ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked) ·
+[issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md](/plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md)
+(28 shared QG checker scripts lack a `.claude` worktree-exclusion pattern, retagged in from `cross-cutting` 2026-08-07).
 
 **Close-out criterion**: all CVE remediations land (aiohttp/vcrpy, setuptools PYSEC-2026-3447, execution-service
 aioresponses migration); the codex-violation ratchet stays green; scripts/ governance sweep complete; uv pin re-synced
@@ -116,7 +118,10 @@ staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §
 (ARCHIVED 2026-08-03, RESOLVED — deployment-service@db67173 + deployment-api@95a7a19; generic VM/Cloud-Run launcher
 "managed-by" label convention adopted, deployment-api echoes it as `managed_by`) ·
 [issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md](/plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md)
-(fleet-wide VM-launcher billing-waste audit + pre-flight gate design).
+(fleet-wide VM-launcher billing-waste audit + pre-flight gate design) ·
+[issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md](/plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md)
+(3rd occurrence of green-CI-stale-traffic; drift check + canary-deploy alert shipped, Slack routing open — added
+2026-08-06 closeout-linkage fix).
 
 **Close-out criterion**: ~~org migration fully verified fleet-wide (no stale `IggyIkenna` refs)~~ — **DROPPED
 2026-07-27**, org migration cancelled by operator ruling, `IggyIkenna` refs are now the permanent correct state, not
@@ -159,7 +164,9 @@ resolved the P3 decision the same session, `june_2026_vintage_audit_findings_202
 INDEX.md; `scripts/plans/regenerate_active_plan_index.py` built + wired into `run_hygiene_sweep.sh` + regenerated live
 263 plans/10 domains; both findings resolved, doc archived) ·
 [issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md](/plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md)
-(generic UI e2e test-helper `?persona=` bug, unrelated to any AG/AO/CI concern).
+(generic UI e2e test-helper `?persona=` bug, unrelated to any AG/AO/CI concern) ·
+[issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md](/plans/archive/issues/smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md)
+(stale SSOT citations in 7 domain smoke_matrix.py files — doc-hygiene; added 2026-08-06 closeout-linkage fix).
 
 **Close-out criterion**: each tooling doc's own open todos closed; the zero-checkbox sweep's findings triaged; the
 reference-path convention rollout complete corpus-wide.
@@ -211,6 +218,17 @@ not data-pipeline).
       measurement anymore; not double-counted as done here.
 
 ## Progress Log
+
+- **ag-closeout-audit 2026-08-06 (infra tranche)**: linkage fix — added
+  `cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md` (Track 2) +
+  `smoke_matrix_stale_ssot_citations_remaining_7_domains_2026_08_04.md` (Track 3) to Sources;
+  `check_ag_closeout_linkage.py` infra orphans 2→0 (the corpus-wide 87-vs-69 regression is tracked in
+  `issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`, per-tranche triage). Parked findings for this
+  run: `issues/ag_closeout_audit_infra_parked_2026_08_06.md`.
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — unchanged; 3 [REVIEW] roll-up todos exist by
+  resolved operator decision #38 (issues/autonomous_session_operator_decisions_2026_07_25.md,
+  unified-trading-pm@2c61a8dc4); confirmed on citation, not re-derived.
 
 - **2026-07-25** — Doc authored from the same corpus-wide classification pass as
   `ao_consolidated_closeout_2026_07_25.md` and `ci_consolidated_closeout_2026_07_25.md` — the third and last of the 3
@@ -359,7 +377,7 @@ not data-pipeline).
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B) — confirmed shipped today
   (`deployment-ui@727298b`, 2026-08-01 01:42 UTC) and the file confirmed genuinely quiet corpus-wide (no other active
   plan holds an unshipped claim on it). Drafted
-  [infra_satellite_ao_dispatch_batch5_2026_08_01.md](/plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md)
+  [infra_satellite_ao_dispatch_batch5_2026_08_01.md](/plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md)
   (single todo, no finalize twin per the single-todo carve-out, `status: draft` — operator flip required). G1/G2
   (`base-service.sh`/`base-library.sh` serialization) remain gated, unchanged. G4 (`PYTEST_UNIT_DIR`) reconfirmed
   already resolved elsewhere (shipped 2026-07-31). G5's MTDS >900-line-tail sub-item reconfirmed already resolved
@@ -502,3 +520,4 @@ not data-pipeline).
   shipped `unified-trading-pm@ebc2075b9` same day — correctly excluded from this run's Phase-1 candidate set by the
   generator's own `EXCLUDED_STATUS` filter, but still linkage-unlinked). Named here per the established discoverability
   remedy.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

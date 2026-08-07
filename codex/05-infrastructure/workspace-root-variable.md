@@ -340,18 +340,17 @@ cd "${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-pm"
 ### Step 3: Verify
 
 ```bash
-# Run updated script
-bash unified-trading-pm/scripts/sync-workspace.sh
-
-# Should work without errors
+# Run your updated script — it should resolve paths via ${UNIFIED_TRADING_WORKSPACE_ROOT} without errors.
+# (scripts/sync-workspace.sh, this section's original example, is DELETED — see the ⛔ table above; pick
+# any script you migrated in Step 2, or smoke-test with `bash unified-trading-pm/scripts/setup-workspace-from-manifest.sh`.)
 ```
 
 ---
 
 ## Related Documents
 
-| Document                                       | Description                            |
-| ---------------------------------------------- | -------------------------------------- |
-| [new-repo-setup.md](new-repo-setup.md)         | Complete repo setup workflow           |
-| [workspace-setup.md](workspace-setup.md)       | Initial workspace configuration        |
-| [ci-cd-flow.md](../08-workflows/ci-cd-flow.md) | CI/CD setup (uses repo-relative paths) |
+| Document                                           | Description                            |
+| -------------------------------------------------- | -------------------------------------- |
+| [new-repo-setup.md](new-repo-setup.md)             | Complete repo setup workflow           |
+| [workspace-setup.md](workspace-setup.md)           | Initial workspace configuration        |
+| [ci-cd-flow.md](/codex/08-workflows/ci-cd-flow.md) | CI/CD setup (uses repo-relative paths) |

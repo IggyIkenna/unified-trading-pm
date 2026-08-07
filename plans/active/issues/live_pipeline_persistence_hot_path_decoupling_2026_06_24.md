@@ -239,3 +239,5 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
   (`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`, which now carries the remaining compaction-job
   build work) and the better-matching codex SSOT (`/codex/02-data/live-data-persistence-and-event-log.md`) in place of
   the now-superseded vintage-audit-findings pointer and a less-specific pipeline-mode codex doc.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

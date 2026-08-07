@@ -318,3 +318,10 @@ build-MTDS-collectors → recompute), not a new one.
   collectors from scratch needs a human sizing/scoping pass (which on-chain source per protocol/field) before any
   worker-determinable todo exists, not a bare mechanical build. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — third consecutive
+  confirmation (07-30 STALE correction, 08-03 corrected back to valid, 08-06 re-confirmed). Independently re-verified
+  both supporting citations (archived sibling's final Progress Log disclaiming ownership;
+  `defi_satellite_ao_dispatch_ batch3_2026_07_26.md`'s Deferred/non-batchable list) against their live source files
+  rather than trusting the prior audit's word — both still accurate. Only change since the 2026-08-03 marker was a
+  context-scout metadata-only touch. Doc stays `assigned_vm: NA`.

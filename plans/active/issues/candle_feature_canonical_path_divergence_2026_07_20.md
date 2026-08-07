@@ -35,15 +35,15 @@ related:
   ]
 created: 2026-07-20
 author: unknown
-last_updated: 2026-07-25
+last_updated: 2026-08-07
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-assigned_role: data
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -606,3 +606,19 @@ remain genuinely open content-level work, distinct from the path-migration infra
   resolve; the two codex layout docs, the completed migration-execution plan, the still-open manifest-coverage-gap issue
   doc, and the migration script remain the right minimal set for the genuinely open items (todo 3's TradFi quarantine
   ruling, todo 9's split-brain count).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): **RECLASSIFY, conflict-cleared —
+  `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`,
+  `assigned_role: data → data_engineering` (corrected an invalid near-miss value against the live registry).** Todo 3
+  (the TradFi ~7.1M-object quarantine operator ruling that kept this doc NA through 4 prior passes) is now `[x]` DONE
+  (verified 2026-08-04, `tradfi_manifest_content_recovery_completion-004`); todos 15/16/19 are also now closed. Only
+  todos 9 (quantify the corpus-wide `pipeline_mode=`-less split-brain count — its own gating blocker cleared 2026-08-03)
+  and 13 (`ProvisionalTargetIndex` bucket-key precision fix) remain, both worker-determinable with a stated deliverable,
+  no design/judgment call. Conflict-check (`ao-dispatch-batch-naming-and-conflict-check.md` §3): grepped every active
+  `assigned_vm: planning` doc — `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` explicitly reconciliation-ledgers
+  these exact two todos as "cross-AG scope, not tradfi-primary" (a declination, not a claim — confirms unclaimed, not
+  conflicted); the only other hits (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+  `tradfi_consolidated_closeout_2026_07_18.md`) are both `assigned_vm: NA` bold-digest citations, not dispatch vehicles.
+  Clear — no conflict found. No finalize plan authored: this is `doc_type: issue`, structurally exempt per
+  `task_template.md`'s finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`,
+  not the `issues/` subdirectory).

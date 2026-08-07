@@ -39,8 +39,9 @@ context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     instruments-service/scripts/cleanup_legacy_twins.py,
+    /plans/archive/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
+    /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
   ]
 drift_direction: advance-code
 depends_on:
@@ -76,10 +77,12 @@ source: >-
 
 The prerequisite this todo needs (orphan-sweep `orphan_class_E=0` + a byte-verify) was met and evidenced in
 `/plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`'s own task 2 (🎯 GATE MET 2026-07-10 17:17:22 UTC —
-`A_canonical_manifested=2,594,017 · B_legacy_duplicate=995 · C_manifest_infra=38 · C2_non_data=7,884,651 · D_junk=105,207 · E_orphan_real=0`,
-over 10,584,946 objects). The report itself lives at
-`gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` — 995 actionable rows
-(0 orphan-E + 995 legacy-B), which is this plan's verified-delete candidate set. Read that task's full entry for the
+`A_canonical_manifested=2,594,017 · B_legacy_duplicate=995 · C_manifest_infra=38 · C2_non_data=7,884,651 · D_junk=105,207 · E_orphan_real=0`
+[note: the 2026-07-30 re-sweep updated B_legacy_duplicate from 995→900 — see
+`/plans/archive/issues/tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md`], over 10,584,946
+objects). The report itself lives at
+`gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` — 900 actionable rows
+(0 orphan-E + 900 legacy-B), which is this plan's verified-delete candidate set. Read that task's full entry for the
 complete diagnosis trail (taxonomy fixes, the 585-orphan backfill-and-close, the fresh full re-sweep) — it is not
 restated here.
 
@@ -104,7 +107,7 @@ restated here.
       the delete todo — not a reason to keep this dry-run todo open. Original text and its now-superseded note follow.
       **Run the dry-run (not the delete) as the safe next step**:
       `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run`
-      against the 995 legacy-B candidate rows (see "Where the dry-run evidence already lives" above). This is NOT the
+      against the 900 legacy-B candidate rows (see "Where the dry-run evidence already lives" above). This is NOT the
       operator-gated delete — `--apply` stays hard-stopped on Ikenna's sign-off per the banner above; this todo only
       produces the verified-delete candidate list + byte-verify evidence the BLOCKED todo below needs to post.
       Definition-of-done: dry-run output cited (report path + row count), ready for the sign-off ask. **NOTE
@@ -129,7 +132,7 @@ restated here.
       `market-data-tick-pred-prd-central-element-323112`) and cite the actual returned values — do not reuse the
       2026-07-27 cited numbers below as the fresh check; (3) if BOTH clear (Part 5 = 100%, retention ≥604800s on all
       three), execute the delete via the sanctioned UTL helpers (`gcs_delete_object` / `gcs_conditional_delete` — never
-      subprocess `gcloud`/`gsutil`), scoped to the 995 tradfi legacy-B candidate rows (+ the equivalent defi/pred
+      subprocess `gcloud`/`gsutil`), scoped to the 900 tradfi legacy-B candidate rows (+ the equivalent defi/pred
       candidate sets) only, never sports. If either check fails, this stays gated — fall back to §3a's approve-executes
       flow (stage the command, open a structured BLOCKED question, single-session execute on a FINAL operator answer)
       rather than assuming clearance. Cite both fresh check results + the extended §3a section in this plan when done.
@@ -146,7 +149,7 @@ restated here.
 
   **Note (2026-07-24, forked from `tradfi_v9_stage1_finish_2026_07_06.md`, now archived)**: the task's own literal
   prerequisite (task 2's orphan-sweep) IS now met — see "Where the dry-run evidence already lives" above. The
-  `--dry-run` re-run against the fresh report (995 legacy-B candidate rows) is the safe next step for whoever picks this
+  `--dry-run` re-run against the fresh report (900 legacy-B candidate rows) is the safe next step for whoever picks this
   up; `--apply` stays gated on Ikenna's sign-off regardless.
 
   **Note (2026-07-27, sub-agent operator-gate review — left GATED, NOT downgraded, genuinely uncertain which category
@@ -240,3 +243,6 @@ restated here.
   `tradfi_consolidated_closeout_2026_07_18.md` in the same pass, leaving the parent with 0 open todos — it was archived
   to `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`.
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still accurate, no changes needed.
+- **context-scout 2026-08-06**: re-scouted; fixed a wrong repo-relative path (script lives in instruments-service, not
+  unified-trading-pm) and added the new `tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md`
+  issue doc the body now cites; now 5 entries.

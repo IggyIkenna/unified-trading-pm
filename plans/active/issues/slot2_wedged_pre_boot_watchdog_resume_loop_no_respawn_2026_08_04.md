@@ -44,6 +44,13 @@ source:
 drift_direction: advance-process
 estimate_class: infra
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/worker_liveness_watchdog.py,
+    agent-orchestrator/server/worker_liveness/__init__.py,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
 ---
 
 # Slot 2 wedged in a watchdog resume-loop — needs kill+respawn (immediate) + a watchdog-escalation fix (durable)
@@ -117,3 +124,7 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
   tagged live-infra actions (kill+respawn) that main cannot perform, and the 3rd (`[BACKEND]` watchdog-escalation fix)
   is live dispatch-critical-path machinery — the exact mechanism that routes tasks to every AO worker — not a
   worker-determinable bounded fix to dispatch through the same fleet it would be modifying.
+- **context-scout 2026-08-06**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): todos 1/3 are
+  [OPERATOR]-tagged kill+respawn/judgment actions main cannot self-serve; todo 2 touches live dispatch-critical watchdog
+  machinery already under active sequenced modification elsewhere (batch5).

@@ -111,9 +111,13 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
       git-tracked — a 94% reduction from the 1.2 GB source directory). **Done when** criteria met: bundle verifies, path
       is cited here (above), all 10 stash SHAs confirmed present by direct unbundle-and-cat-file test (not just
       `bundle verify`).
-- [ ] [OPERATOR] P2. **Done-when NO LONGER SATISFIABLE AS WRITTEN — see 2026-08-03 Progress Log entries before acting.**
-      Original text: delete `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` now that its 10 stash entries are
-      durably bundled + verified above. **This step cannot be done by an agent**: the workspace's own
+- [ ] [OPERATOR] P2. **NOT independently resolvable — depends on the sibling stash-bundle investigation this same
+      governance sweep already flagged** (`ag_closeout_audit_infra_parked_2026_08_03.md` finding-11, "Investigate the
+      missing stash-backup bundle" — needs your own direct knowledge/backup check, not delegable). Do not duplicate that
+      investigation here; once it resolves, this todo's done-when re-evaluates automatically. **Done-when NO LONGER
+      SATISFIABLE AS WRITTEN — see 2026-08-03 Progress Log entries before acting.** Original text: delete
+      `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` now that its 10 stash entries are durably bundled +
+      verified above. **This step cannot be done by an agent**: the workspace's own
       `agent-orchestrator/scripts/hooks/block_destructive_commands.py` PreToolUse guardrail unconditionally blocks any
       `rm -rf`/recursive delete for autonomous workers (by design, with no override — its own docstring says not to
       circumvent it), and this is exactly the "filesystem command, no SDK equivalent" case its own block message names
@@ -125,6 +129,10 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
       the 10 stash entries) resolves — flipping now would silently certify a done-when that isn't actually met.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — [OPERATOR] P2, done-when no longer satisfiable
+  as written (backup bundle absent on real host); operator investigation required (relocated durably vs unrecovered
+  loss).
 
 - **na-eligibility-audit 2026-07-31**: KEEP-NA, valid (infra tranche, dispatch agt-676f1e) — sole remaining open todo is
   explicitly `[OPERATOR]`-tagged and its own text states the guardrail (`block_destructive_commands.py`) unconditionally
@@ -157,3 +165,4 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
   anticipated, just not the specific gap it originally named. Verdict stays KEEP-NA (if anything, more clearly
   operator-gated now, not less) — this is a content-accuracy update, not a reclassification.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

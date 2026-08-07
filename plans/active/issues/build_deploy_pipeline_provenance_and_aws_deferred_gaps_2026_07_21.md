@@ -29,7 +29,7 @@ related:
   [
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
     /plans/archive/issues/change_freeze_calendar_protects_nothing_for_much_of_the_year_2026_07_20.md,
-    /plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
+    /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
   ]
 created: 2026-07-21
 author: unknown
@@ -170,3 +170,7 @@ verified via diff — one line added to the `context_scope` list, zero content m
 the same top-of-doc operator ruling and file-ownership coordination gates; cross-checked against
 `ci_satellite_ao_dispatch_batch1_2026_07_26.md` D26 (verbatim match, all 4 items, consistent un-dispatched status). No
 RECLASSIFY, no ARCHIVE.
+
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator ruling Page-first, AWS-lane gated on credits

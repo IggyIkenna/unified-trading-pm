@@ -140,23 +140,34 @@ findings 3 and 4 have concrete bounded next steps, tracked as todos below.
       (2026-06-22 operator decision). Done-when: a SPORTS honest-absence candle timeframe produces a real manifest row
       (not a `WARNING` + zero rows), proven on one re-run day. UNBLOCKED — ruling above resolved the A-vs-B gate. (repo:
       `market-data-processing-service`)
-- [ ] [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
-      crash.** Grep a failing VM's `run.log` for `❌ Exception processing` (specifically — the generic
-      `Traceback|Exception` search already came back null twice) to catch the file-level exception
-      `batch_workers.py:513` should log before the summary. Done-when: either that grep locates the raising frame, or it
-      is null and `_process_instrument_file`'s full body + `_submit_instrument_file_tasks` have been read to find the
-      raise whose `str(e)` is `""`. (repo: `market-data-processing-service`)
-- [ ] [DIAG] P2. **Local repro against the known-bad instrument_ids** — e.g.
+- [x] ✅ [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
+      crash.** **RESOLVED 2026-08-06 (slot-4, batch9 findings-3+4 pass) — `_collect_future_result` lead DISCONFIRMED,
+      findings 3+4 = same root cause as finding 1.** Grepped the failing VM's `run.log` (`134301`, date `2025-12-18`)
+      for `❌ Exception processing` → 0 hits, and also 0 hits for `❌ Error processing`, the `classify_and_emit_error`
+      structured log, `falling back to eager`, `⚠️ Error in`, and `Traceback` — no exception handler at
+      `_collect_future_result` or `_process_instrument_file` level ever fired (13 total ERROR lines = 10 "Unknown error"
+      summary lines + 3 shutdown lines). The "Unknown error" is NOT an exception at all — it is a success-formula
+      misclassification. Full root cause in the Progress Log entry below. (repo: `market-data-processing-service`)
+- [x] ✅ [DIAG] P2. **Local repro against the known-bad instrument_ids** — e.g.
       `FOOTBALL:bovada:h2h:soccer_argentina_primera_division:2025/2026:Racing Club-Estudiantes::AWAY` for `2025-12-18`
-      (finding 4) and `2025-12-24` (finding 3). Confirmed deterministic across ≥3 runs per date and reproducing on two
-      independent dates, so a single local run settles it without more log archaeology. Done-when: the crash is
-      reproduced locally and the raising frame is named. (repo: `market-data-processing-service`)
-- [ ] [DIAG] P3. **Read `_streaming_filter_slice` / `_streaming_resolve_inst_info` line-by-line** (finding 3's residual)
-      for a raise that stringifies to `""`; these two calls inside `_process_chain_bundle_streaming`'s per-symbol loop
-      (`live_workers_streaming.py:777-823`) are NOT individually try/excepted, unlike
-      `_streaming_process_slice_timeframes`. Done-when: either a candidate raise is named or both are confirmed
-      raise-free. NOTE: finding 4 already DISCONFIRMED the "falling back to eager" half of this hypothesis (zero hits
-      for that log string), so this is now the narrow residual, not the leading theory. (repo:
+      (finding 4) and `2025-12-24` (finding 3). **RESOLVED 2026-08-06 (slot-4) — crash does NOT reproduce on current LDR
+      HEAD.** Ran a bounded local repro (`_process_instrument_file` on
+      `league=soccer_argentina_primera_division/ticks_migrated_20260505T202321Z.parquet`, day=`2025-12-18`) →
+      `success=True`, `error_message=None` (the exact file+instrument that the `134301` VM logged as `Unknown error`).
+      Concurrent `_process_files_parallel(max_workers=4)` over all 50 `ticks_migrated` files → `results=50 failed=0`.
+      The fix `8358b9f`/`33b323c` (`success = len(errors) == 0`) resolves it; the VM ran a floating (unpinned) MDPS
+      tarball that evidently lacked the fix. (repo: `market-data-processing-service`)
+- [x] ✅ [DIAG] P3. **Read `_streaming_filter_slice` / `_streaming_resolve_inst_info` line-by-line** (finding 3's
+      residual) for a raise that stringifies to `""`; these two calls inside `_process_chain_bundle_streaming`'s
+      per-symbol loop (`live_workers_streaming.py:777-823`) are NOT individually try/excepted, unlike
+      `_streaming_process_slice_timeframes`. **RESOLVED 2026-08-06 (slot-4) — both confirmed raise-free for the
+      empty-message failure.** Line-by-line read of both functions found only plain pandas column ops; any 5-tuple
+      exception (KeyError/TypeError/ValueError) would propagate out of `_process_chain_bundle_streaming` → be swallowed
+      by `_maybe_dispatch_chain_streaming`'s broad `except (OSError, ValueError, RuntimeError, KeyError, TypeError)` →
+      log "falling back to eager" → 0 hits in `134301`'s run.log. And `_process_chain_bundle_streaming`'s result builder
+      uses `error_message="; ".join(errors) if errors else None` with non-empty f-string error entries, so it can never
+      emit an empty `error_message`. The streaming path is not involved in the crash — the 588 `ticks.parquet` files
+      (streaming) all succeeded; only the 50 `ticks_migrated` files (eager) failed. (repo:
       `market-data-processing-service`)
 - [ ] [SCRIPT] P3. **Do NOT relaunch `mdps-backfill-sports-` for `2025-12-24` / `2025-12-18` until the above lands** —
       the prefix has already failed 6x in one day against `rb_infra_relaunch.md`'s `≤2/(vm-prefix,day)` bound, and the
@@ -410,3 +421,51 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries — added `candle_write_mixin.py` (Finding 5's
   root-cause file, open `[CODE] P2` todo) and `batch_workers.py` (Findings 3/4's `_collect_future_result` crash-hunt,
   open `[DIAG]` todos); the original 4 entries (Finding 2's FetchEvidence-gate call sites) remain accurate and kept.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — re-verified, no substantive change since
+  2026-08-03 (only the 2026-08-06 context-scout touch, content-neutral). Same reasoning holds across all 7 open todos:
+  the now-unblocked `[DATA] P2` implementation todo (route `SOURCE_RETURNED_ZERO` fallback to `record_failed_for_shard`)
+  is bounded, but this doc remains an ACTIVE incident-tracking surface for a live multi-escalation DP-VM-001 chain (5
+  escalations now, per Finding 5's 2026-08-03 addition) still accumulating new findings, with an existing faster-than-AO
+  direct-escalation channel already covering dispatch — not stable backlog work. The 3 `[DIAG]` crash-hunt todos remain
+  open-ended root-cause investigation; the `[SCRIPT]` no-relaunch item is a standing STOP; Finding 5's 2 todos (bounded
+  fix + grep check) don't independently justify splitting this doc while it's still mid-incident.
+
+- **2026-08-06 (slot-4, data_engineering — `sports_satellite_ao_dispatch_batch9-008`, the batch9 findings-3+4 [DIAG] P1
+  pass): ROOT CAUSE NAMED — findings 3+4 are the SAME bug as finding 1, and `8358b9f`/`33b323c` (already shipped
+  2026-08-01) fixes them.** All three DIAG todos (P1/P2/P3 above) flipped in this pass; the `[SCRIPT]` P3 no-relaunch
+  STOP is now cleared (a relaunch would succeed on current LDR HEAD).
+
+  **Mechanism (no exception is ever raised — the "Unknown error" is a pure success-formula misclassification).** The 50
+  `ticks_migrated_20260505T202321Z.parquet` files under `league=<slug>/` (the eager-path family — they do NOT end in
+  `/ticks.parquet`, so `_chain_bundle_likely_from_path` returns False) are 100% honest-absence for `2025-12-18`: every
+  row is dropped by the adapter's pre-match-horizon filter (`bucket_assignment_adapter.process_to_candles` Path B, "All
+  N rows outside every pre-match horizon — recording as empty_confirmed"), so `_process_all_timeframes` returns
+  `processed_timeframes=[]`, `errors=[]` for both valid tfs (15m/1h). Under the PRE-fix `_run_adapter_and_write` formula
+  `success = len(errors)==0 and len(processed_timeframes)==len(valid_tfs)`, `0==2` → `success=False` with
+  `error_message=None`, and `process_handler.py:468`'s `result.error_message or "Unknown error"` prints the literal
+  `"Unknown error"`. The 588 `ticks.parquet` files went the STREAMING path (`_process_chain_bundle_streaming`, whose
+  `success=error_count==0` formula has been correct since `1cdf3ecf`) and succeeded — so the run summary shows exactly
+  588 success / 50 failed, matching the file split 588+50=638. This is why finding 3's streaming hypothesis and finding
+  4's `_collect_future_result` lead both dead-ended: there was no raise anywhere (0 hits in `134301`'s run.log for
+  `❌ Exception processing`, `❌ Error processing`, the `classify_and_emit_error` structured log,
+  `falling back to eager`, `⚠️ Error in`, and `Traceback`; 13 total ERROR lines = 10 summary "Unknown error" lines + 3
+  shutdown lines).
+
+  **Why the finding-3/4 VMs crashed despite the fix being "landed".** `TARBALL_PINS.json` shows `MDPS_TARBALL_SHA`
+  FLOATING (unpinned), so the VM ran whatever MDPS tarball the deployment built at launch; the doc's earlier claim that
+  "origin HEAD at completion = `0fc0448` carries no further `live_workers_streaming.py` changes past that fix" is
+  invalid — `0fc0448` is a `_backmerge`-branch commit NOT on `origin/live-defi-rollout`, so it cannot be used to
+  conclude the tarball contained `33b323c`. The crash signature (50/638 on 2025-12-18, 52/594 on 2025-12-24) is exactly
+  the pre-fix formula's output; post-fix it cannot recur.
+
+  **Verification (repro, slot-4, current LDR HEAD).** Bounded local run of `_process_instrument_file` on
+  `league=soccer_argentina_primera_division/ticks_migrated_*.parquet` (day `2025-12-18`, the exact file the `134301` VM
+  logged as `FOOTBALL:bovada:...:Racing Club-Estudiantes::AWAY` "Unknown error") → `success=True`, `error_message=None`
+  (FetchEvidence warnings still fire — that is finding 2's separate open bug — but the instrument is now correctly
+  SUCCESS). Concurrent `_process_files_parallel(max_workers=4)` over all 50 `ticks_migrated` files →
+  `results=50 failed=0`. Both match the post-fix expectation. No code change needed in this pass — the fix was already
+  shipped (`market-data-processing-service@33b323c`); this pass closes the findings-3+4 investigation the batch9 [DIAG]
+  P1 todo tracked.

@@ -15,6 +15,9 @@
 # scripts/pyproject-templates/canonical-tool-sections.toml ([tool.ruff.lint]).
 note: Seeded 2026-06-10 — harden_grepable_rules_into_ci_gates Phase 3 (QG STEP 5.95).
 repos:
+  .:
+    dtz: 236
+    tid251: 262
   agent-orchestrator:
     dtz: 8
     tid251: 3

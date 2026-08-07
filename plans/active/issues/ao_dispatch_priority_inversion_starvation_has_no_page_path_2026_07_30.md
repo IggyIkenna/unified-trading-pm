@@ -51,7 +51,7 @@ related:
   [
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /plans/archive/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -186,3 +186,7 @@ this, each time invisible until someone reads the backlog by hand.
   still names this doc in its `[REVIEW] P0` archival todo). Not archived independently, per the established ruling.
   Cross-validated: today's same-day sibling `/ag-closeout-audit ao` batch6 run reached the identical conclusion
   independently ("already the named archival target of batch3_finalize's own gated todos").
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

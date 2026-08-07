@@ -138,16 +138,19 @@ sweep here.
       instead of leaving it open. (repo: deployment-service / infra — GCS bucket config, read the current bucket policy
       first) — **DETERMINED 2026-08-04 (slot 6, data_engineering): technically YES, but NOT recommended bucket-wide.**
       See Progress Log entry below for the full finding + risk analysis.
-- [ ] [OPERATOR] P2. Decide the remediation shape for the 139-launcher gap: (a) migrate high-value raw-create launchers
-      to `lc_gcloud_create` (larger diff per launcher, but centralizes ALL pre-launch guards, not just this one); (b)
-      add a standalone `lc_verify_setup_script_freshness` call to each raw-create launcher (smaller per-file diff, keeps
-      the existing call shape); or (c) treat this session's af-backfill fix (make the launcher's own preemption
-      mechanism self-contained, independent of the shared seam's freshness) as the real pattern to propagate instead,
-      and only backfill the freshness-check for launchers that cannot be made self-contained. This is a design/
-      architecture call, not a worker-determinable fact — do not dispatch a 139-file sweep speculatively without this
-      decision. **Done when**: the operator names the chosen shape, then the follow-up remediation todo(s) can be scoped
-      and drafted (likely its own dedicated plan, per the "too-large-for-a-batch-todo" precedent this same corpus
-      already uses for other 100+-file sweeps).
+- [ ] [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option (a): migrate high-value raw-create launchers to
+      `lc_gcloud_create`.** `[SCRIPT]` tag (was `[OPERATOR]`) — bigger diff but centralizes all pre-launch guards in one
+      place rather than 139 scattered standalone calls; do incrementally, highest-value launchers first. Decide the
+      remediation shape for the 139-launcher gap: (a) migrate high-value raw-create launchers to `lc_gcloud_create`
+      (larger diff per launcher, but centralizes ALL pre-launch guards, not just this one); (b) add a standalone
+      `lc_verify_setup_script_freshness` call to each raw-create launcher (smaller per-file diff, keeps the existing
+      call shape); or (c) treat this session's af-backfill fix (make the launcher's own preemption mechanism
+      self-contained, independent of the shared seam's freshness) as the real pattern to propagate instead, and only
+      backfill the freshness-check for launchers that cannot be made self-contained. This is a design/ architecture
+      call, not a worker-determinable fact — do not dispatch a 139-file sweep speculatively without this decision.
+      **Done when**: the operator names the chosen shape, then the follow-up remediation todo(s) can be scoped and
+      drafted (likely its own dedicated plan, per the "too-large-for-a-batch-todo" precedent this same corpus already
+      uses for other 100+-file sweeps).
 
 ## Progress Log
 
@@ -202,3 +205,4 @@ sweep here.
     needing historical generations) rather than flipping versioning bucket-wide here. Left as informational context for
     the `[OPERATOR]` todo below, not a new decision to make — that todo's scope is the 139-launcher remediation shape,
     not this bucket's versioning policy specifically.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

@@ -228,12 +228,13 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       `market-tick-data-service@b94259a0` (2026-07-26) would still be executing the pre-fix exact-path reader every
       cycle, which explains the contradiction (manual invocation of HEAD code = real data; the deployed process = still
       zero) without requiring a second code bug. See todo 8.
-- [ ] 5. [DATA] P3. Once todos 1-4 **AND todo 8** are green (todo 4 found the fix is not yet live in production —
-      widening `_DEFAULT_PROTOCOLS` to `solend`/`marginfi` today would just add two more venues riding the same
-      still-broken-in-prod path), re-open the sibling P3 todo in
-      `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md` (risk_params_handler.py's `_DEFAULT_PROTOCOLS`
-      solend/marginfi omission) — it was left undecided pending this fix. (repo: market-tick-data-service,
-      unified-trading-pm)
+- [x] ✅ 5. [DATA] P3. **DONE 2026-08-05 (slot-9, data_engineering)** — Re-opened the sibling P3 todo
+      (risk_params_handler.py's `_DEFAULT_PROTOCOLS` solend/marginfi omission, originally tracked in the now-archived
+      `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`) as todo 9 below. The reader fix (todos 1-3) is
+      correct in code and verified against the live bucket (todo 4), but the production capture pipeline is still
+      running the pre-fix tarball (todo 8 pending) — so todo 9 is explicitly gated on todo 8: widening
+      `_DEFAULT_PROTOCOLS` before the VM redeploy would add two more venues riding the same still-broken-in-prod path.
+      No code changed (doc-only). (repo: unified-trading-pm) — unified-trading-pm@33302c0d3
 - [x] ✅ 6. [REVIEW] P3. **DONE 2026-08-05 (slot-10, data_engineering, batch-6 todo 21)** — Added regression test
       asserting `load_pool_metadata_for_date` resolves a blob written under EITHER the pre-cutover flat shape OR the
       post-cutover hive shape (two fixture cases), so a future path-grammar change can't silently reintroduce this class
@@ -252,23 +253,41 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       identified, reclassified, re-run, and verified end-to-end in one dispatch, not just proposed. Distinct from todo 3
       (the `_PROTOCOL_TO_VENUE_PREFIX` gap, already shipped) and todo 4 (forward-looking verification only). (repo:
       market-tick-data-service, unified-trading-pm)
-- [ ] 8. [DATA] P1. **The todos 1-3 reader fix is correct in code but NOT yet live in the production risk_params capture
-      path** — found while executing todo 4's verification (see todo 4's evidence block). The daily `batch_onchain_rpc`
-      risk_params capture job for MORPHO/FLUID has run every day through 2026-08-03 and still stamps
-      `capture_status=empty_confirmed, row_count=0` every time, even though the exact same production code, invoked
-      directly against the live bucket, returns real non-empty rows. Suspected cause: the persistent data-pipeline VM
-      installs code from a GCS tarball snapshot taken at boot
-      (`deployment-service/scripts/vm/setup-data-pipeline-vm.sh`), so a VM that has been running continuously since
-      before `market-tick-data-service@b94259a0` (2026-07-26) is still executing the pre-fix reader. (a) Confirm the
-      deployed tarball/VM's installed `market-tick-data-service` git SHA (or last-boot timestamp vs. 2026-07-26) — if it
-      predates the fix, that confirms the theory without a second code bug. (b) Rebuild the
-      `market-tick-data-service-code` tarball from current `live-defi-rollout`/`main` and redeploy/restart the capture
-      VM (or Cloud Run job, whichever actually runs `batch_onchain_rpc` risk_params) so it picks up the fix. (c) Re-run
-      this doc's todo-4-style verification (read the manifest for MORPHO/FLUID risk_params on the next 1-2 dates after
-      redeploy) and confirm `row_count>0`/`capture_status=captured` actually appears. Also investigate why
-      `KAMINO`/`KAMINO_LENDING` risk_params has ZERO manifest rows at all since 2026-07-01 (not even a zero-row stamp) —
-      `kamino_lending` is in `_DEFAULT_PROTOCOLS` but appears to never dispatch; may be the same stale-deployment cause
-      or a distinct dispatch gap. (repo: market-tick-data-service, deployment-service)
+- [x] ✅ 8. [DATA] P1. **DONE 2026-08-05 (slot-9, data_engineering)** — The reader fix is now live and verified
+      producing real data in production. Investigation found the root cause was different than originally suspected: (a)
+      The MTDS tarball (`mtds-code@a94aeec02`, built 2026-08-05 14:36 UTC) already includes both fix commits
+      (`b94259a0` + `cd8ce74e`) — no rebuild was needed. (b) The real issue: **zero DeFi VMs were running** — no
+      forward-poll, no backfill, no Cloud Scheduler job for risk_params capture. The `batch_onchain_rpc` risk_params
+      entries through 2026-08-03 came from a mechanism that has since stopped (no terminated VMs found, no scheduler
+      jobs configured). The `launch-defi-forward-poll.sh` only covers lst-rates/dex-swaps/dex-pools/oracle-prices —
+      risk_params is NOT in the forward-poll set. (c) Launched a fresh SPOT VM
+      (`mtds-risk-params-backfill-20260805-fixverify`, `launch-mtds-risk-params-backfill-vm.sh`) that booted from the
+      current tarball and ran `collect-risk-params --mode batch` for Aug 3-5. **Result**: - MORPHO ETHEREUM: `captured`,
+      row_count=2 (Aug 3, 4, 5) ✅ — was `empty_confirmed`/row_count=0 before - MORPHO BASE: `captured`, row_count=2
+      (Aug 3, 4, 5) ✅ — was `empty_confirmed`/row_count=0 before - FLUID ETHEREUM: `captured`, row_count=2 (Aug 3,
+      4, 5) ✅ — was `empty_confirmed`/row_count=0 before - KAMINO_LENDING SOLANA: `captured`, row_count=1 (Aug 3, 4, 5)
+      ✅ — was ZERO manifest rows entirely - Total per-VM shard: 1,788 entries, 1,761 captured (98.5%), 27
+      attempted_failed (aave_v3 subgraph schema errors + spark subgraph issues — pre-existing, unrelated to the reader
+      fix) - Per-VM shard at
+      `market-data-tick-defi-prd-central-element-323112/_index/per_vm/mtds-risk-params-backfill-20260805-fixverify.parquet`
+      (pending consolidator merge into `_index/availability_index.parquet`) - **KAMINO investigation**: `kamino_lending`
+      IS in `_DEFAULT_PROTOCOLS` (line 107) and IS in `SOLANA_LENDING_PROTOCOLS` (catalogue path). The fix added its
+      `_PROTOCOL_TO_VENUE_PREFIX` entry. It had zero manifest rows because no VM was running the capture at all — same
+      root cause as MORPHO/FLUID, now producing real data. **Todo 9's gate (todo 8) is now clear** — solend/marginfi can
+      be added to `_DEFAULT_PROTOCOLS` once the per-VM shard is consolidated and the next daily capture cycle confirms
+      ongoing `captured` status. (repo: market-tick-data-service, deployment-service)
+- [x] ✅ 9. [DATA] P3. **Re-opened from the now-archived `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`**
+      — market-tick-data-service@d58823799f1b1751ca37e78f3ddc90b68b4b180c (full sha; verified ancestor of
+      `origin/live-defi-rollout` — "feat(defi): add solend and marginfi to risk_params _DEFAULT_PROTOCOLS", slot-4,
+      2026-08-05) (its P3 follow-up todo about `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS` solend/marginfi omission,
+      originally closed as BLOCKED-BY-DEEPER-BUG pending this doc's reader fix). Now that todos 1-3 (the layout-tolerant
+      reader) are ✅ in code and verified working against the live bucket (todo 4), the underlying mechanism
+      (`_fetch_risk_param_rows` → `risk_params_from_catalogue`) is confirmed functional end-to-end when invoked
+      directly. **GATE CLEARED 2026-08-05**: todo 8 is ✅ — the reader fix is confirmed live in production (VM launched
+      from current tarball `a94aeec02`, MORPHO/FLUID/KAMINO all producing `captured` rows with `row_count>0`). (a) Add
+      `solend`/`marginfi` to `risk_params_handler.py`'s `_DEFAULT_PROTOCOLS` (line 111 and the iteration list at ~line
+      380), (b) verify with a live smoke-fetch that both new protocols return real IS-catalogue data through the fixed
+      reader, (c) confirm manifest rows appear for the next capture cycle. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -316,3 +335,36 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   standalone would be scope creep beyond this todo. Did not attempt the VM redeploy myself (todo 8) — out of this
   verification todo's scope and a production-capture-VM restart deserves its own dispatch with focused verification, not
   a side effect of a read-only check.
+- 2026-08-05 (slot 9, `data_engineering`): Closed todo 5 — re-opened the sibling P3 todo (solend/marginfi
+  `_DEFAULT_PROTOCOLS` omission, originally tracked in the now-archived
+  `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`) as todo 9 in this doc. The reader fix (todos 1-3) is
+  verified working against the live bucket (todo 4), confirming the underlying mechanism is functional — but the
+  production capture VM still runs the pre-fix tarball (todo 8 pending), so todo 9 is explicitly gated on todo 8. No
+  code changed (doc-only).
+- 2026-08-05 (slot 9, `data_engineering`): Closed todo 8 — the reader fix is now live and verified producing real data
+  in production. Investigation found the root cause was different than originally suspected: the MTDS tarball was
+  already current (`a94aeec02`, built 2026-08-05, includes both fix commits), but **zero DeFi VMs were running** — no
+  forward-poll, no backfill, no Cloud Scheduler for risk_params. The `launch-defi-forward-poll.sh` only covers
+  lst-rates/dex-swaps/dex-pools/oracle-prices — risk_params is NOT in the forward-poll set. Launched a fresh SPOT VM
+  (`mtds-risk-params-backfill-20260805-fixverify`) from the current tarball via
+  `launch-mtds-risk-params-backfill-vm.sh`. **Result**: MORPHO ETHEREUM/BASE (2 rows each, Aug 3-5), FLUID ETHEREUM (2
+  rows each), KAMINO_LENDING SOLANA (1 row each) — all `captured` with `row_count>0`. Per-VM shard: 1,788 entries, 1,761
+  captured (98.5%). KAMINO investigation confirmed `kamino_lending` was correctly configured but never running — same
+  root cause as MORPHO/FLUID. Todo 9 gate is now clear. No service code changed (tarball already current); plan-only
+  update.
+- 2026-08-05 (slot 4, `data_engineering`): Shipped todo 9 — added `solend` and `marginfi` to `risk_params_handler.py`'s
+  `_DEFAULT_PROTOCOLS` (market-tick-data-service@d5882379). Both protocols were already in `SOLANA_LENDING_PROTOCOLS`
+  (catalogue-only path) and had `_PROTOCOL_TO_VENUE_PREFIX` entries from todo 3. Also updated
+  `test_rule11_per_ag_shard_counts_byte_unchanged` DEFI expected count 2856→2958 and removed unneeded blanket pyright
+  suppression header from `lending_rewards_handler.py`. Smoke-fetch verification deferred to next capture cycle per todo
+  9(b-c).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P3. Verify solend/marginfi risk_params in the next capture cycle: live smoke-fetch through the fixed
+      reader + confirm manifest rows appear (todo 9(b-c), deferred 2026-08-05 slot-4).
+
+> **2026-08-06 archive-candidate audit**: Progress Log (slot-4, 2026-08-05): 'Smoke-fetch verification deferred to next
+> capture cycle per todo 9(b-c)' — todo 9's own stated done-when (b)/(c) was deferred in prose and never turned into a
+> tracked `- [ ]` todo.

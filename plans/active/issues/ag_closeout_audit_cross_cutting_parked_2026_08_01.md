@@ -253,3 +253,4 @@ member, not just a retag.
   asset_group retags of docs owned by OTHER tranches (ao/infrastructure/tradfi), each explicitly scoped "leave to the
   owning tranche's own audit" per the 2026-07-30 concurrent-sharded-worker rule cited in this doc's own `related`/
   `source` — a redirect-banner case, not bounded AO-dispatchable work for this tranche.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

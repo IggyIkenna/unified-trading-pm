@@ -366,3 +366,6 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
   Found stale dead-end pointers in this doc's own "Related execution plans"/Phase-2 prose
   (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` and `sports_fixture_completeness_oracle_2026_06_24.md`
   are both archived, not left in context_scope) — flagged for `/plan-reconcile`, not rewritten here.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): gated umbrella requiring
+  per-AG operator G-gate sign-off; genuine mix of redirect/partially-AO-covered/under-specified items, none clear the
+  whole-doc RECLASSIFY bar (assigned_vm flips per-doc, not per-item).

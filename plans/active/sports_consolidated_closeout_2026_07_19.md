@@ -47,6 +47,8 @@ related:
     /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
     /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+    /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
   ]
 created: "2026-07-19"
 last_updated: "2026-07-25"
@@ -594,7 +596,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       Both anomalies root-caused: standings cache writes current data to every processing date; transfermarkt writer
       emits Cartesian product of season×trigger-dates; phantom-audit STANDINGS/TEAMS shares the same cause
       (path-template mismatch). Issue doc + 3 follow-up todos:
-      `/plans/active/issues/sports_decision16_anomalies_investigation_2026_08_04.md`.
+      `/plans/archive/issues/sports_decision16_anomalies_investigation_2026_08_04.md`.
 - [ ] [DATA] P1. **Prune the 7,295 phantom `league_id=soccer_*` lowercase twin-delete manifest rows** (NEW 2026-07-24,
       folded in from archived `sports_master_closeout_2026_07_21.md`). The already-deleted 6,110-object subset is now
       PHANTOM (drift, not a coverage gap — the real data is still covered by the `SOCCER_*` uppercase twins). Clean via
@@ -993,3 +995,4 @@ section above, which conflated answered and open items):
   finding.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the native-extract child plan + the Track C
   root-cause source file (canonical_writer_shaping.py).
+- **context-scout 2026-08-06**: restored both entries above (silently missing despite the 08-03 marker). 5 entries.

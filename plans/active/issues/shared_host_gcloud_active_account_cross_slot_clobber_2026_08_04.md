@@ -8,7 +8,7 @@ summary: >-
   over ~an hour+), `gcloud compute instances create` failed twice with `PERMISSION_DENIED` on `compute.instances.create`
   mid-run, even though the launcher script itself never changes the active gcloud account. Root cause:
   `~/.config/gcloud/` is DELIBERATELY shared per-host (not per-slot — explicitly excluded from the per-slot
-  on-demand-artifact purge in `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern", to avoid
+  on-demand-artifact purge in `/codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern", to avoid
   duplicating credentials across slots), so `core/account` is a SINGLE GLOBAL value. Any slot running `gcloud config set
   account <x>` (or a similar tool that mutates the active config) changes it for EVERY slot concurrently using bare
   `gcloud` on the same host — with no locking, no per-invocation account pinning, and no warning. Observed live
@@ -79,7 +79,7 @@ config at all) — the only explanation is a DIFFERENT process on the same share
 doing its own gcloud work) ran `gcloud config set account ...`, which mutates `~/.config/gcloud/active_config` / the
 named config's `core/account` property GLOBALLY, not per-invoking-process.
 
-This matches the documented design in `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern":
+This matches the documented design in `/codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern":
 `~/.config/gcloud/` is explicitly listed as one of the paths EXCLUDED from the per-slot on-demand-artifact purge — i.e.
 it is deliberately a single shared, per-host location, not duplicated per slot (presumably to avoid re-running
 credential setup per slot). That design choice is reasonable for the credential FILES themselves, but `gcloud`'s
@@ -127,7 +127,7 @@ Two independent fix directions, either or both:
       active-account pointer) are still shared/reused rather than re-authenticated per slot — the goal is isolating the
       MUTABLE selection, not duplicating the credentials themselves. (repo: unified-trading-pm, touches per-slot
       bootstrap tooling)
-- [ ] [INFRA] P3. Document the hazard explicitly in `codex/05-infrastructure/per-tab-worktrees.md` § "Multi-agent
+- [ ] [INFRA] P3. Document the hazard explicitly in `/codex/05-infrastructure/per-tab-worktrees.md` § "Multi-agent
       safety" (or a new subsection) regardless of which code fix above lands first: `gcloud config set account` is a
       HOST-WIDE mutation, not session-scoped — any worker that must switch identity should prefer a per-invocation
       `--account=`/`CLOUDSDK_CORE_ACCOUNT` override over `gcloud config set account` where the tooling allows it, and
@@ -164,3 +164,7 @@ Two independent fix directions, either or both:
   an explicit "Recommended decision" header framing two independent fix directions as an open choice; todo 2 modifies
   per-slot bootstrap tooling inherited by every slot at clone time, todo 1 modifies production VM-launcher scripts —
   both are shared-blast-radius infra changes needing a direction decision first, not worker-determinable alone.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): todos 1-2 modify
+  multi-agent-safety-critical shared bootstrap infra with an undecided architecture choice; todo 3 (document) alone
+  doesn't clear the whole-doc bar.

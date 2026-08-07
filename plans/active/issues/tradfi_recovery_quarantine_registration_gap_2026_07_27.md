@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [tradfi, manifest, recovery, registration-gap, data-correctness]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
   ]
 created: 2026-07-27
@@ -42,7 +42,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 context_scope:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/archive/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md,
     market-tick-data-service/market_tick_data_service/scripts/recover_tradfi_chain_manifest_registration_2026_07_22.py,
     market-tick-data-service/market_tick_data_service/scripts/register_tradfi_recovery_quarantine_manifest_2026_07_30.py,
@@ -213,3 +213,5 @@ wound), but should be tracked rather than silently absorbed.
   (`storage.objects.delete` on `_quarantine/raw_tick_data/` prefix, 2026-07-20 to 2026-07-27). The `_rel()` bug
   (stripping `_quarantine/` prefix on already-quarantined objects) should be filed as a separate preventative fix — it's
   a latent correctness issue even though it doesn't cause this specific problem.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

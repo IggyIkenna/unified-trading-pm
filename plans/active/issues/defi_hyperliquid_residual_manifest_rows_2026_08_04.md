@@ -359,3 +359,58 @@ gap**, not a delete-safety question:
   (`instruments-service@141bb384`) for future manifest-row purge operations (incremental ParquetWriter pattern for
   memory-bounded large-manifest processing) — not applied (already clean). All 5 todos now done; plan is
   archive-eligible (no lock).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **worker slot 10, 2026-08-06 (dispatched for the P1 follow-up — operator/design decision on ownership)**: **Producer
+  stoppage ROOT-CAUSED** (the "why it stopped" the 08-04 diagnostic couldn't determine): NOT venue-specific — the
+  `collect-lst-rates` Cloud Run job OOM-crashed (signal 9, "The configured memory limit was reached") on EVERY scheduled
+  run since 2026-08-02 at ~70% of its 2Gi cap (rss ~2040MiB) inside `ManifestFreshnessCache.bulk_load()`'s warmup thread
+  racing the handler's EVM/Solana RPC fetch work against the now ~42M-row defi index — full evidence in
+  `defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`. The scheduler entry
+  (`deployment-service/terraform/gcp/defi_collection_scheduler.tf` `"lst-rates"`, `0 1 * * *`) was NEVER removed. **OOM
+  FIXED + applied**: 2Gi→4Gi IaC bump `deployment-service@51f9fbe`, live update verified 2026-08-05 (manual execution
+  `-b5f4t` completed 2m53s, all 15 LST venues incl. SolBlaze written), targeted prod `tofu apply` synced the lst-rates
+  scheduler description 2026-08-06 (slot 11). **Canonical-name fix shipped on LDR**: `market-tick-data-service@2c451c33`
+  — the bSOL write path now emits `protocol="SOLBLAZE-SOLANA"` (freshness-check `venue="SOLBLAZE-SOLANA"`). **⚠️ DEPLOY
+  LAG (2026-08-06): the fix is NOT yet in the live Cloud Run image.** `market-tick-data-service:latest` is built from
+  `main` (`image-build-gate.yml` / `quality-gates-v2.yml`'s dispatch-cloud-build fire on `main`), and `main` is **1,091
+  commits behind LDR** (stalled LDR→main promote backlog — the same fleet-wide CI-capacity blocker noted for
+  KAMINO_LENDING in `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`). The LIVE job therefore still runs
+  pre-fix code and writes `venue=BLAZESTAKE` on every successful daily run (execution `-zzptg`, 2026-08-06 01:00 →
+  01:02, Completed True at 4Gi); its fresh SolBlaze rows land under the legacy name and get retired/relabeled only by
+  the next one-off migration. **Historical corpus consolidated by the parallel dispatch**
+  (`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`): the 1,406-object / 1,318-day legacy
+  `venue=BLAZESTAKE` corpus relabeled + retired to canonical (`relabel_retire_blazestake_venue_2026_08_06.py --apply`,
+  prod 2026-08-06). **Live-state verification (bounded filter-pushdown index read, 2026-08-06)**: `SOLBLAZE-SOLANA`
+  captured=1,319 (2022-12-14→2026-08-05; `written_at` up to 2026-08-06T01:58 UTC is the migration's re-registration, NOT
+  a fresh canonical write from the producer), `BLAZESTAKE` captured=0 (`attempted_failed`=1,404 — reflects the
+  migration's retirement, not post-fix producer behaviour). **Closing the residual therefore depends on the LDR→main
+  promote clearing (so `2c451c33` reaches the deployed image), not on shipping more code.** **Decision escalated to
+  operator via /blocked (BLK-db79e592)**: recommend **Option A** (formalize the legacy `collect-lst-rates` job as the
+  owner — already wired + proven) over Option B (canonical `SolblazeAdapter` would change the data product from
+  `lst_rates` exchange-rate to `oracle_prices` USD price and is single-source DeFiLlama). **Residual**: 3-day data gap
+  2026-08-01..08-03 (the OOM window) → bounded backfill candidate, scoped as a follow-up.
+- **worker slot 10, 2026-08-06 (operator decision received)**: **Option A CONFIRMED** — operator directive "proceed now"
+  via interactive session. The legacy `collect-lst-rates` Cloud Run job is now the **formal, declared canonical owner**
+  of SOLBLAZE-SOLANA `lst_rates` production. Rationale: already wired + proven (2.5 years production data, 4-tier
+  fallback), OOM fixed (2Gi→4Gi `deployment-service@51f9fbe`), canonical-name fix on LDR
+  (`market-tick-data-service@2c451c33`). The only remaining deployment gap is the LDR→main promote (1,091 commits behind
+  — infra, not code) so `2c451c33` reaches the live Cloud Run image; until then, daily runs still write
+  `venue=BLAZESTAKE` which the migration script handles. **P1 residual RESOLVED** — the venue now has a declared,
+  operating producer. P2 backfill (2026-08-01..08-03 OOM window) remains as follow-up.
+
+## Follow-ups
+
+- [x] ✅ [DATA] P1. Resolve the BLAZESTAKE/SOLBLAZE-SOLANA zero-live-producer residual: operator/design decision
+      (Options A/B/C) on adapter ownership, then wire the producer — **DONE 2026-08-06 (slot 10). Option A confirmed:
+      legacy `collect-lst-rates` Cloud Run job formalized as canonical SOLBLAZE-SOLANA owner; code shipped
+      `market-tick-data-service@2c451c33` (canonical venue name) + `deployment-service@51f9fbe` (OOM fix). Producer
+      operating at 4Gi; LDR→main promote lag tracked as infra, not code.**
+- [ ] [DATA] P2. Backfill the 2026-08-01..08-03 `lst_rates` gap for `SOLBLAZE-SOLANA` (the OOM window — those dates are
+      absent from the canonical captured set). Mechanism per the chosen ownership option: Option A → re-run the legacy
+      `collect-lst-rates` path for those dates (after `2c451c33` deploys); Option B → adapter-based backfill. Repo:
+      market-tick-data-service. Note: if the LDR→main promote stays stalled past 2026-08-07, pre-deploy daily runs keep
+      re-creating `venue=BLAZESTAKE` rows that need the same relabel+retire re-run.
+
+> **2026-08-06 archive-candidate audit**: Summary says 'RESOLVED for 3 of 4 venues, 1 remaining live-data-gap finding' —
+> BLAZESTAKE/SOLBLAZE-SOLANA has zero live producer, explicitly 'NOT fixed in this dispatch', operator/design decision
+> on adapter ownership (Options A/B/C) still pending. [KEEP_OPEN todo synthesized from justification by archive sweep]

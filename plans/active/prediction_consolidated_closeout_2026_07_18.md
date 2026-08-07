@@ -363,7 +363,7 @@ fixture-linked before MVP backfill.
     — **added to this index 2026-07-31** (`/ag-closeout-audit prediction` Finding 3 fix). 2 open, covered by
     `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6 (secret reshape DONE 2026-07-31; live paper-order
     verify BLOCKED-OPERATOR-DECISION, same gate as the item above).
-  - [`plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`](/plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md)
+  - [`plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`](/plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md)
     — **added to this index 2026-07-31** (Finding 3 fix). 3 open, covered by
     `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 7 (recurrence check + reclassification + contingent
     fix, not yet dispatched).
@@ -397,6 +397,18 @@ fixture-linked before MVP backfill.
     `polymarket_clob`/`polymarket_gamma_api`, spanning dates back to 2018; NOT the already-fixed captured-row defect).
     The doc's own bundle-atom root-cause remediation (items 1-6) and its combined residual close-out (a/b/c/d) are all
     done/superseded — only this one residual todo remains open.
+  - [`plans/active/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md`](/plans/archive/issues/mtds_prediction_rebuild_instrument_type_mismatch_2026_08_01.md)
+    — **added to this index 2026-08-06** (`/ag-closeout-audit prediction`, closing a `check_ag_closeout_linkage.py`
+    graph-disconnection gap — see
+    [`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)).
+    Self-dispatched (`assigned_vm: planning`, `status: open`), so not orphaned in the ag-closeout-audit sense — but was
+    graph-disconnected from this closeout family (no `related:`/mention link), which is now fixed by this citation. Code
+    fix (writer `instrument_type` stale-literal) + root-cause fix + prod deploy all DONE 2026-08-01/03 per the doc's own
+    todos 1 and 3; **[OPERATOR] P2** (todo 2) — decide whether to lift
+    `canonicalize_prediction_manifest_2026_07_18.py`'s HELD prod-run status — reads `[ ]` at the top level but its own
+    body text describes steps 2-6 (dry-run + 2 full apply/verify rounds) as DONE 2026-08-03; not independently
+    re-verified or flipped by this run (self-dispatched doc, outside this audit's remit to edit) — flagging the apparent
+    stale-checkbox for whoever next touches this doc or a future `/na-eligibility-audit`/`/plan-reconcile` pass.
   - [`plans/archive/issues/phantom_captures_prediction_2026_06_28.md`](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md)
     — 0 open todos (writer-fix done; final re-fetch/backfill todo SUPERSEDED 2026-07-29 into Phase-D MVP-backfill gate +
     data_completion_prediction; archived)
@@ -762,3 +774,9 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   confirmed-absent note to the Distinct Values section (a `prediction_phase_ab_residuals` todo-4 partial-slice
   side-effect) — non-substantive to this doc's own classification. Still the live index for its 4 Phase A-E children
   (all still open); not archived. Doc stays NA.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (prediction tranche, autonomous)**: KEEP-NA, valid — 0 native open checkboxes
+  (coordination hub by design, `archive_exempt: true`, 4 Phase A-E children still open under it), agrees with the
+  07-30/07-31/08-04 markers. The 6-bullet prose-only "Deferred work after 2026-07-18" section (confirmed-trap checked —
+  no `- [ ]` markup, so it doesn't surface in the grep count) is genuine operator/shared-file-gated work, correctly
+  KEEP-NA, not stale. Doc stays NA, not archive-eligible.

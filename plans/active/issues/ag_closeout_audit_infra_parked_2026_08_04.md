@@ -30,7 +30,7 @@ related:
   [
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
     /plans/active/infra_satellite_ao_dispatch_batch4_2026_07_31.md,
-    /plans/active/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
     /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
@@ -166,10 +166,12 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
       to a durable location before `.tabs/3/stash-bundles/` disappeared, or represents an unrecovered loss of 10 real
       stash entries. Update `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the
       outcome either way.
-- [ ] [OPERATOR] P2. **Review + approve/decline the 4 backlogged drafted infra batches** (finding 14) —
-      `infra_satellite_ao_dispatch_batch4_2026_07_31.md`, `batch5_2026_08_01.md`, `batch6_2026_08_02.md` (1 of 2 todos
-      already resolved-elsewhere), and this run's `batch7_2026_08_04.md` (3 todos). None is individually large or
-      `[OPERATOR]`-tagged on its own merits; a single review pass would likely clear most or all to `active`.
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-06 (governance sweep, commit `unified-trading-pm@de1d795de1`).** All 4
+      batches (batch4/5/6/7) reviewed and flipped `status: active` — batch4/5/6 activated as-drafted after verification;
+      batch7's 2 duplicate-dispatch todos activated per operator ruling (finalize twin will citation-close the
+      overlapping source doc). Original text preserved below for record. **Review + approve/decline the 4 backlogged
+      drafted infra batches** (finding 14) — `infra_satellite_ao_dispatch_batch4_2026_07_31.md`, `batch5_2026_08_01.md`,
+      `batch6_2026_08_02.md` (1 of 2 todos already resolved-elsewhere), and this run's `batch7_2026_08_04.md` (3 todos).
 - [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
       (finding 12, carried). Design/tooling-priority call, not urgent.
 - [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch7-era candidates** (finding 13, carried: `CITE_RE`
@@ -177,6 +179,10 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
       neither is ready to batch as-is; unrelated to this run's actual `batch7`, which drew from different material.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — findings 10/11/14 [OPERATOR]-gated (incl. the 4
+  backlogged draft infra batches awaiting operator review) + 12/13 carried tooling design items; no bounded worker-only
+  item.
 
 - **2026-08-04** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 10). Re-derived the
   candidate set (13 covering docs, unchanged; 50 members, up from 45 on 2026-08-03; 3 never-cited). Re-checked all 3
@@ -186,3 +192,4 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
   `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + finalize twin (3 todos, both `status: draft`). **Ledger**: 1 new
   parked finding + 3 re-verified carry-forwards (all still open) + 3 net-new docs classified, 1 entry written above —
   balanced.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

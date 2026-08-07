@@ -236,9 +236,13 @@ scope on every run. Fix belongs with Finding 3's script todo.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Rule on Finding 4 (A / A2 / B / C / D) — where the incremental-skip verdict marker lives for a doc
-      pinned at the 1000L hard cap. **Done when**: the ruling is recorded here and, for A/A2/B, the marker mechanism is
-      implemented in `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` + named in
+- [ ] [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option A+A2: frontmatter scalar (`na_audit_verdict: KEEP-NA <date>`),
+      paired with excluding frontmatter lines from the line-cap count entirely.** `[SCRIPT]` tag (was `[OPERATOR]`) —
+      lowest-friction, consistent with how markers already work elsewhere in this corpus; the line-cap exclusion avoids
+      the marker itself contributing to over-cap pressure. Rule on Finding 4 (A / A2 / B / C / D) — where the
+      incremental-skip verdict marker lives for a doc pinned at the 1000L hard cap. **Done when**: the ruling is
+      recorded here and, for A/A2/B, the marker mechanism is implemented in
+      `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` + named in
       `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 0, and the three docs in the table above carry a
       readable verdict. (repo: unified-trading-pm)
 - [x] ✅ [OPERATOR] P1. Rule on Finding 1 (A / B / C / D) — how concurrent per-tranche audits arbitrate ownership of a
@@ -256,7 +260,8 @@ scope on every run. Fix belongs with Finding 3's script todo.
       dispatched by another named route, and this todo cites the resulting SHA. -- CLOSED (na-eligibility-audit
       2026-08-03): Option A executed. Directly confirmed live: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
       is `status: active` + `assigned_vm: planning`; its todo 1 shows
-      `[x] ✅ [CODE] P0. DONE 2026-07-30 —     instruments-service@e0f7aaad` (the CQG mis-bucketing fix); the
+      `[x] ✅ [CODE] P0. DONE 2026-07-30 —     instruments-service@94f3ee11` (repointed 2026-08-06 — original sha
+      orphaned by the 2026-08-05 history rewrite; content verified identical) (the CQG mis-bucketing fix); the
       batch4/batch6 duplicate (todo 7) was resolved via that doc's own
       `## Deferred — duplicate extraction, sole owner is batch4 todo 3` section, citing an explicit 2026-07-30 operator
       ruling. (repo: unified-trading-pm, instruments-service)
@@ -300,3 +305,4 @@ scope on every run. Fix belongs with Finding 3's script todo.
   (Finding 3's marker-format script + `task_template.md` exclusion, Finding 4's line-cap gate) since Findings 1 and 2
   are now closed; added the two concrete script targets (`generate_na_doc_tranche_inventory.py`, `check_line_caps.sh`)
   and `task_template.md` that were previously named in prose but not cited.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

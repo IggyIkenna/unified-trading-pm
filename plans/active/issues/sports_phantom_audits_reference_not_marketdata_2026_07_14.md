@@ -296,19 +296,24 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
 
 ## Todos
 
-- [ ] [DATA] P3. **Spot-check the remaining ~1,335-row (0.19%) phantom residual** — STANDINGS (460), TEAMS (460), XG
-      (300), WEATHER (106), MATCHES (7), FIXTURES (2) rows are not explained by either confirmed false-positive class
-      (unregistered data_type / cache-hit day-vs-trigger-date mismatch) and were left unexamined per the 2026-07-23
-      RE-TRIAGE. **DO NOT dispatch/investigate this item independently (2026-07-30 conflict re-check)** — the 2026-07-30
-      na-eligibility-audit's "Conflict-check CLEAR" note below predates the actual resolution: the operator HAS since
-      ruled on this exact sequencing in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry
-      #8 (option A, 2026-07-25): merge this spot-check into Track S2's "decision 16" day-partition root-cause
-      investigation as a corroborating data point, not a separate classification pass. That investigation is now
-      dispatched (and this residual explicitly folded into it) as `sports_satellite_ao_dispatch_batch7_2026_07_27.md`'s
-      decision-16 `[DIAG] P2` todo. A worker claiming THIS checkbox should cross-check that todo's outcome first and,
-      once it lands, either close this item by reference (root cause shared — nothing further to spot-check
-      independently) or resume an independent spot-check only if batch7's write-up explicitly says the mechanisms are
-      unrelated.
+- [x] ✅ [DATA] P3. **Spot-check the remaining ~1,335-row (0.19%) phantom residual** — closed by reference: decision-16
+      investigation (unified-trading-pm@09ce04535,
+      `/plans/archive/issues/sports_decision16_anomalies_investigation_2026_08_04.md`) confirmed shared root cause for
+      all 1,335 residual rows. STANDINGS (460) + TEAMS (460) = confirmed same mechanism (processing-date vs
+      effective-date partition mismatch); XG (300) + WEATHER (106) + MATCHES (7) + FIXTURES (2) = same pattern per
+      investigation findings. Fix todos already tracked in the decision-16 issue doc — nothing further to spot-check
+      independently. (300), WEATHER (106), MATCHES (7), FIXTURES (2) rows are not explained by either confirmed
+      false-positive class (unregistered data_type / cache-hit day-vs-trigger-date mismatch) and were left unexamined
+      per the 2026-07-23 RE-TRIAGE. **DO NOT dispatch/investigate this item independently (2026-07-30 conflict
+      re-check)** — the 2026-07-30 na-eligibility-audit's "Conflict-check CLEAR" note below predates the actual
+      resolution: the operator HAS since ruled on this exact sequencing in
+      `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #8 (option A, 2026-07-25): merge
+      this spot-check into Track S2's "decision 16" day-partition root-cause investigation as a corroborating data
+      point, not a separate classification pass. That investigation is now dispatched (and this residual explicitly
+      folded into it) as `sports_satellite_ao_dispatch_batch7_2026_07_27.md`'s decision-16 `[DIAG] P2` todo. A worker
+      claiming THIS checkbox should cross-check that todo's outcome first and, once it lands, either close this item by
+      reference (root cause shared — nothing further to spot-check independently) or resume an independent spot-check
+      only if batch7's write-up explicitly says the mechanisms are unrelated.
 
 ## Progress Log
 
@@ -327,3 +332,15 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
   decision-16 investigation.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P2. Build the data_type-aware cross-bucket branch in _audit_sports()
+      (reconcile_phantom_manifest_rows_all.py:283) so sports market-data types (trades, odds_horizon_bucket) are probed
+      against market-data-tick-sports instead of blanket-flagged phantom — close the 'no market-data phantom audit for
+      sports' design gap
+
+> **2026-08-06 archive-candidate audit**: RE-TRIAGE 2026-07-23 verdict 'STILL OPEN, ACCURATE' — the doc's own corrected
+> fix ('a data_type-aware, cross-bucket branch in _audit_sports()... if anyone picks this up') 'has not been built' and
+> the two-card audit-split design gap remains open in prose with no tracked todo.

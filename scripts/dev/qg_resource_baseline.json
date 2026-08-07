@@ -374,24 +374,24 @@
   },
   "system-integration-tests": {
     "local": {
-      "cpu_s": 52.2,
+      "cpu_s": 400,
       "exit_code": 0,
-      "measured_at_utc": "2026-06-17T15:36:46Z",
+      "measured_at_utc": "2026-08-05T15:30:00Z",
       "measured_concurrency": 1,
-      "measured_via": "reprofile_2026_06_17 (QG_PROFILE full-no-skip, single-core pinned)",
+      "measured_via": "slot-9 investigation (ci_status=FAILING deadlock \u2014 QG wall 400s on shared planning VM, governor-wait=0s)",
       "peak_rss_mb": 680,
       "quick": false,
-      "wall_s": 52.2
+      "wall_s": 400
     },
     "vm": {
       "complete": true,
-      "exit_code": 1,
-      "measured_at_utc": "2026-07-14T07:38:42Z",
+      "exit_code": 0,
+      "measured_at_utc": "2026-08-05T15:30:00Z",
       "measured_concurrency": 1,
-      "measured_sha": "36d7654",
-      "measured_via": "vm_reprofile (2026-07-14T07:38:42Z) QG_PROFILE tree-RSS, single-core pinned, governor-disabled, root clones",
+      "measured_sha": "eefd177",
+      "measured_via": "slot-9 recalibration (shared-host measurement; CI glue-runner may differ)",
       "peak_rss_mb": 700,
-      "wall_s": 55.6
+      "wall_s": 400
     }
   },
   "trading-agent-service": {

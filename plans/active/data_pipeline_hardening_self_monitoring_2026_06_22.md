@@ -579,3 +579,6 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries) -- swapped the ag-residual
   sibling for the `/vm-preemption-billing-waste-audit` skill, the doc's own text names as the execution mechanism for
   its sole open P0 todo.
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms the 2026-07-30 park: sole todo's execution mechanism
+  was deliberately routed to /vm-preemption-billing-waste-audit by batch2, not folded into a batch todo — routed-away ≠
+  unowned; this doc retains the todo, not re-litigating that routing.

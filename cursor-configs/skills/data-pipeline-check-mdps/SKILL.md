@@ -58,6 +58,28 @@ never silently guessed at or skipped either way.
   `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`, then run this workflow on the self-paced loop (step 7). The no-pause /
   no-`DEFERRED` contract applies — don't stop mid-matrix to ask "should I continue?".
 
+## 1a. Run the driver on its own VM — DEFAULT, do not run inline on the shared host
+
+Live evidence 2026-08-06 (measured on the sibling features/MTDS drivers, same shared engine): the driver process itself
+(not the per-shard VMs it launches) can reach double-digit-GB RSS on a full-matrix or benchmark run and get OOM-killed
+by the AO host's resource-watchdog after competing with every other slot for the shared host's fixed memory pool. Every
+invocation in §3/§5 below — run via `deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh` instead of a
+bare `cd market-data-processing-service && python3 ...`: swap the command's head, keep every flag below it identical.
+
+```bash
+bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
+  --service mdps --day <DAY> --legs force,skip --require-captured --auto-day \
+  --project central-element-323112
+```
+
+Prints `vm_name=...` immediately, then returns — async (the driver VM self-deletes on completion). Poll
+`gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/{run.log,EXIT_STATUS}`, or via
+`unified_trading_library.pipeline_e2e_check.launcher.launch_vm_and_wait()`. The report mirrors to
+`gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mdps/<run_date>/` in
+addition to the local `plans/audit/results/...md` path in §6 — the local copy doesn't survive the driver VM's
+self-delete. The raw `pipeline_e2e_check.py` command shown inline in §3/§5 (for reference) is fine for a quick dev-local
+dry-run against a tiny scope only — never for a real sweep.
+
 ## 2. Phase 0 — provisioning gate (a real check, not an assumption)
 
 MDPS candles are **co-located in the MTDS tick bucket** (`market-data-tick-{ag}-{env}-{pid}`) under a different object
@@ -112,6 +134,8 @@ the skill-layer fail-closed guard the launcher itself does not provide. There is
 of scope for `/data-pipeline-check-mdps` entirely, so this assertion never has a legitimate reason to fail open.
 
 ## 3. Phase 1 — force + skip matrix
+
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
 
 ```bash
 cd market-data-processing-service && python3 scripts/pipeline_e2e_check.py \
@@ -186,6 +210,8 @@ reason** — it is never made to pass by broadening the matcher (that would hide
 There is **no legacy `category=` hive-key fallback** in this driver (the MTDS reference has one; it is deliberately
 dropped here). Run the canonical leg explicitly:
 
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
+
 ```bash
 cd market-data-processing-service && python3 scripts/pipeline_e2e_check.py \
   --day <DAY> --legs force,canonical --require-captured --auto-day --asset-group <AG>
@@ -245,6 +271,8 @@ proven until that dispatcher branch exists.
 > **A single smoke force-leg CANNOT measure throughput — it is boot-dominated** (~155 s of VM boot vs seconds of actual
 > compute). Never quote a force-leg duration as a pipeline rate. The benchmark leg exists precisely because the smoke
 > leg's timings are not a planning number.
+
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
 
 ```bash
 cd market-data-processing-service && python3 scripts/pipeline_e2e_check.py \

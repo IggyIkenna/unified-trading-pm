@@ -536,3 +536,4 @@ Two secondary findings:
   of 3 open P3 todos, 1 (HYPERLIQUID k-prefix coin-case) is still deferred pending a genuine canonical-vs-native
   coin-case design decision; the other 2 are operator-ruled/AO-ready but since not ALL remaining work qualifies, the doc
   stays NA as a whole per the mixed-eligibility rule. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

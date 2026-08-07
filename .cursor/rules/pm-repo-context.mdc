@@ -25,8 +25,10 @@ This is `unified-trading-pm` — Level 0 (root) in the workspace topology.
 - **Cursor rule source** — `.cursor/rules/` is the canonical, git-tracked rule tree; symlinked out to sibling repos
   via `scripts/workspace/setup-cursor-rules-symlink.sh` ("no sync scripts needed" per its own header). **Corrected
   2026-08-02 (docs-reconcile)**: this bullet previously claimed `cursor-rules/` (a separate, smaller, 25-file tree)
-  syncs to `.cursor/rules/` (150 files) — that sync does not exist; the two trees have 0 file overlap. What
-  `cursor-rules/` is for today is unresolved — flagged for operator review.
+  syncs to `.cursor/rules/` (150 files) — that sync does not exist; the two trees have 0 file overlap. **Update
+  2026-08-06**: `cursor-rules/` no longer exists at the PM root — it was archived verbatim to
+  `plans/archive/cursor-rules_2026_08_02/` on 2026-08-02. The operator-facing question of what (if anything) should
+  replace it going forward is still open, tracked in `plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md`.
 - **`cursor-configs/`** — VS Code workspace profiles (unrelated to the rule-source question above)
 - **Plans and coordination** (`plans/`) — phase execution plans
 

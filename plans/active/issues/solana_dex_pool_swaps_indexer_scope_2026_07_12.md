@@ -19,14 +19,14 @@ scope: [engineer]
 tags: [defi, solana, dex-pool-swaps, new-capability, scoping, orca, raydium]
 related:
   [
-    plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
   ]
 created: 2026-07-12
 author: unknown
 parent_epic: mtds_mdps_master
 priority: P2
-source: [plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md G1.6, slot-2 2026-07-12]
+source: [plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md G1.6, slot-2 2026-07-12]
 assigned_vm: NA
 execution_scope: local-only
 assigned_role: data_engineering
@@ -36,7 +36,7 @@ last_updated: 2026-07-12
 locked_by:
 context_scope:
   [
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
@@ -131,3 +131,4 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdict re-affirmed) —
   sole open item ("author a dedicated implementation plan when this becomes a priority") remains a plan-authoring
   timing/prioritization call, an operator judgment, not a bounded task. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

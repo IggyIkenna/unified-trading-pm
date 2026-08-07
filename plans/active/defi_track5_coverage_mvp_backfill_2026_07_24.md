@@ -19,7 +19,7 @@ tags: [defi, close-out, coverage, backfill, mvp, canonicalisation]
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
@@ -49,7 +49,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
     /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
@@ -166,3 +166,6 @@ the parent plan's Track 7 culled-venue ruling.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — fixed a duplicated entry (the same optimization
   issue doc was listed twice) and swapped in the real `dex_pools_handler.py` fan-out target named in the doc's own
   Track-5 async-fan-out todo.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — gate_on_depends on
+  defi_consolidated_closeout_2026_07_18 re-verified still open (13 todos) today; genuine prerequisite, not stale.

@@ -373,8 +373,9 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
      directly would dispatch DUPLICATE AO todos for work already queued or done — explicitly NOT done this pass.
      **Follow-up needed** (not yet executed): a stale-checkbox correction sweep citing the extracting batch doc, tranche
      by tranche. Docs in this bucket (source doc → extracting batch, non-exhaustive, see sub-agent transcripts for full
-     evidence): `mtds_retry_safe_default_audit_2026_07_14` → batch1b; `l0_doc_index_generator_2026_06_24` → infra
-     batch1; `agent_orchestrator_alert_channel_cleanup_2026_07_13` → infra batch1;
+     evidence): `mtds_retry_safe_default_audit_2026_07_14` (archived →
+     `../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md`) → batch1b; `l0_doc_index_generator_2026_06_24` →
+     infra batch1; `agent_orchestrator_alert_channel_cleanup_2026_07_13` → infra batch1;
      `data_feed_sla_registry_and_active_self_healing_2026_06_19` → batch2; `instruments_completion_tracker_2026_07_06` /
      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24` /
      `instruments_store_cf_canonicalization_single_walk_2026_07_24` / `data_source_provenance_enforcement_2026_07_24` /
@@ -719,3 +720,7 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   remain in this specific population at this corpus snapshot. Also flagged (not fixed):
   `cefi_consolidated_native_ao_extract_2026_07_25.md` has `status: active` in frontmatter but its own body text says
   "Status: draft... never auto-shipped to active" — a self-contradiction worth a maintainer's look.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (incremental-skip) — Skipped per incremental diff — unchanged
+  since 2026-08-03 marker. Still the live origin plan for this skill; 13 open todos, all genuinely
+  operator-gated/judgment.

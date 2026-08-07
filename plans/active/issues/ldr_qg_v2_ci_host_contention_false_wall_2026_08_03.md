@@ -135,6 +135,35 @@ green one).
    `ldr_main` repos per CLAUDE.md, this merge should not have been possible — worth confirming branch-protection is
    actually wired the way the SSOT describes for this repo.
 
+## Todos
+
+- [ ] [INFRA] P2. **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the `qg-host-governor`
+      reservation ledger with interactive agent-orchestrator slots.** Trace whether the glue-runner's QG invocation
+      calls `qg_governor_acquire()` (`scripts/quality-gates-base/qg-host-governor.sh`) the same way an interactive slot
+      does, or bypasses the ledger entirely — this doc's finding 4 above observed `0s     governor queue-wait` on a CI
+      leg despite the host being severely loaded (`uptime` 26-32 on 8 cores), suggesting a bypass. Done-when: a stated
+      YES/NO on whether the glue-runner participates in the same reservation ledger, with the code path cited
+      (function + file); if NO, file a follow-up todo to wire it in.
+- [ ] [INFRA] P2. **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and the
+      per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** Measure physical
+      core count + typical interactive-slot heavy-QG-phase concurrency + glue-runner concurrency during a representative
+      busy period (`uptime`, `qg-host-governor.sh --status`, `ps aux | grep glue`), and compare against
+      `qg_resource_baseline.json`'s assumed baseline. Done-when: a stated verdict (undersized / adequate) with the
+      measured numbers cited; if undersized, file a follow-up todo recommending either more headroom or a hard cap on
+      concurrent heavy-QG slots while glue-runner CI is active on the same host.
+- [ ] [REVIEW] P1. **Confirm whether `quality-gates-v2` is actually enforced as a REQUIRED branch-protection check on
+      `deployment-service`'s `ldr_main` promotion path**, given PR#678 merged to `main` with zero successful
+      `quality-gates-v2` runs against its head SHA (one timeout-failed, one cancelled) — per CLAUDE.md,
+      `quality-gates-v2` is supposed to be a required check on `ldr_main` repos. Check `deployment-service`'s branch
+      protection (ruleset + classic settings, `gh api repos/IggyIkenna/deployment-service/branches/main/protection` or
+      the ruleset equivalent) for whether `quality-gates-v2` is actually listed as required. Done-when: a stated YES/NO
+      on whether branch protection is correctly wired for this repo; if NO, file a follow-up todo to fix it.
+
+— converted 2026-08-06 (/plan-reconcile ao): the 3 "Open questions for whoever picks this up" above were prose-only,
+invisible to every todo-counting gate in the corpus (`grep -cE '^- \[ \]'` was 0 across 211 lines). Converted to
+canonical `- [ ]` todos per `task_template.md` §3 — prose kept verbatim above, content/investigative scope unchanged,
+`assigned_vm: NA` unchanged (still operator/judgment-gated work, not a mechanical fix).
+
 ## What I did NOT do
 
 Did not touch any deployment-service code or tests (nothing was wrong with either). Did not force-resolve, did not lower
@@ -203,3 +232,14 @@ and just burn more contended compute.
   promotion attempts from even being opened, independent of whether any specific promotion PR's checks would pass. If
   the CI-glue-runner/governor integration gap (open question #1) is the root fix, this is now a second data point that
   it is actively costing real promotion cadence, not just visibility.
+
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **fixed 2026-08-06 (/plan-reconcile ao)**: this doc carried zero `- [ ]`/`- [x]` checkboxes across 211 lines despite
+  the live "Open questions for whoever picks this up" section (still 3 genuine unresolved questions, reconfirmed by the
+  2026-08-04 `cicd` re-dispatch entry above on a second, different repo). Converted the 3 questions into canonical
+  `- [ ]` todos under a new `## Todos` heading (per `task_template.md` §3), prose kept verbatim. The 2026-08-04
+  na-eligibility-audit entry above correctly recorded `grep -cE '^- \[ \]'` = 0 as of that date — left unedited as an
+  accurate point-in-time record; it is now stale (3 open todos exist) as of this fix.

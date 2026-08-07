@@ -23,7 +23,7 @@ tags: [orphan, manifest-completeness, strategy, ml, dead-code, design-gap, opera
 related:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
+    /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
   ]
 created: "2026-08-03"
@@ -46,7 +46,7 @@ locked_since:
 context_scope:
   [
     /plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md,
-    /plans/active/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
+    /plans/archive/issues/ml_strategy_manifest_coverage_gap_2026_08_03.md,
     /codex/02-data/orphan-object-detection.md,
     strategy-service/strategy_service/engine/core/cloud_strategy_storage.py,
     strategy-service/strategy_service/engine/core/gcs_storage_service.py,
@@ -158,9 +158,10 @@ just (c).
       availability-manifest's scope. Repo: strategy-service.
 - [ ] 3. [OPERATOR] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
       manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service.
-- [ ] 4. [SCRIPT] P3. Once any of todos 1-3 resolves toward "wire it up", build the corresponding orphan-sweep extension
-      (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or backtest_results; `ml_orphan_sweep.py` for
-      models/metadata/training_artifacts) mirroring the A-E taxonomy pattern. Repo: strategy-service, ml-service.
+- [x] ✅ 4. [SCRIPT] P3. Once any of todos 1-3 resolves toward "wire it up", build the corresponding orphan-sweep
+      extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
+      backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.
+      Repo: strategy-service, ml-service.
 
 ## Progress Log
 
@@ -168,6 +169,11 @@ just (c).
   every write call site for all 3 deferred families rather than guessing at shape, per the parent doc's own discipline).
   Conclusion: none of the 3 is buildable as a mechanical sweep-tool port right now — each needs an operator-facing
   decision first (dead-code wire-up-or-delete for (a); a manifest-WRITE design pass for (b)/(c)).
+- **2026-08-05** (AO dispatch, slot 7) — Todo 4 shipped: strategy_orphan_sweep.py extended with strategy_data family
+  (orders/positions/pnl combined, keyed by (day, strategy_id), grain-tolerant blank-data_type manifest matching,
+  sibling-prefix exclusions with F_other_corpus). Operator answered BLK-75060009: (1) strategy_orders/positions/pnl →
+  wire up; (2) backtest_results → ephemeral, no sweep; (3) ml_models → ephemeral, no sweep. strategy-service@4733a7e7.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the sibling "todo 3b" doc (the real VM
   run gap (c) cites as prior evidence) and the orphan-detection codex SSOT, and swapped the ml-service writer in for the
   sweep-tool script since this doc's decision is about the 3 write-site gaps, not the future sweep extension.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

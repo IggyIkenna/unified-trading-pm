@@ -300,21 +300,16 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       slow-timing-OOM** (both still open per the P2 todo above and the 04:18Z Progress Log entry) — this fix only
       shortens recovery time for a genuine wedge/freeze, it doesn't change what causes one. Repo:
       market-tick-data-service. Full diagnosis + PROGRESS/T+10min verification in the Progress Log below.
-- [ ] [OPERATOR] P0. **Break the `-006`/`-002` dispatch deadlock.** Live-reverified 2026-07-30T16:35Z (backlog API +
-      `/api/state`, not relayed): `-002` (this doc's P2 corpus-wide re-verify+delete todo, monitoring-only) has held
-      slot 15 continuously since `2026-07-30T12:16:10Z` — **4h20m and counting**, `status=working` the whole time, no
-      code path forward (it is gated on the fleet reaching 44/44 complete, which cannot happen without a root-cause fix)
-      — while `-006` (this doc's P1 root-cause leak-investigation todo above, priority 20 = top of queue, `ready`, zero
-      blockers) has sat `queued` and never dispatched the entire time. Per this plan's own one-in-flight-slot dispatch
-      behavior, `-002` is structurally starving `-006` of the only slot the plan can use, so the migration cannot
-      converge: the fleet has decayed from the original 21 relaunched shards to **8 survivors** (13 dead since the
-      relaunch — freeze-class + OOM-class, see Progress Log above) with no fix in flight, and `-002`'s own worker is now
-      at **99% context used** (18 compactions) after 4+ hours producing only "fleet stable at N shards" status pings.
-      Resolve by EITHER (a) cancel/defer `-002` so the slot frees for `-006` to dispatch, OR (b) split `-006` into its
-      own plan per the partial-parallelism rule (CLAUDE.md § Plans — "parallel work in Plan A; the gated step in Plan B
-      via `depends_on` + `gate_on_depends: true`") so both can run concurrently. Neither review nor monitor role can
-      self-action this (backlog/plan-structure change + task-cancel is main/operator territory) — flagged per main
-      agent's (`agt-fd75de`) 2026-07-30T15:54Z ruling that this meets the data-completeness operator-escalation bar.
+- [x] ✅ [OPERATOR] P0. **RESOLVED-MOOT (governance-sweep stale-tag cleanup, 2026-08-06).** The deadlock this todo
+      describes (`-002` starving `-006` of the plan's one in-flight slot) no longer exists: `-006` (the P1 root-cause
+      leak-investigation todo above) completed and shipped `market-tick-data-service@9f4098b1` (see the already-`[x]`
+      "Shard 16 died a 3rd time" item above, and the "2026-07-30 root cause + fix shipped" Progress Log entry) — it was
+      never actually starved to death, it dispatched and finished. The sibling doc
+      (`cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`, § "worker, slot 12,
+      2026-07-31") independently confirms: "`-006` has since completed and shipped
+      (`market-tick-data-service@9f4098b1`)... and this session's `-002` dispatch completed in under an hour without
+      holding anyone up." No cancel/defer/split action was ever taken or needed — the condition self-resolved before an
+      operator acted on it. Checkbox was never flipped; closing now as a bookkeeping correction, not a live decision.
 
 ## Progress Log
 
@@ -680,3 +675,4 @@ accordingly.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped the progress-log-archive doc, added the
   actual migration script + launcher (this doc's own context_scope had zero source-code paths despite being the primary
   write-up of a code-driven fleet failure).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

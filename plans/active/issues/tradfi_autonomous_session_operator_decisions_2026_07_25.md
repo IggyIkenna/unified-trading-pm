@@ -42,7 +42,7 @@ context_scope:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md,
     /plans/epics/tradfi_master.md,
   ]
@@ -313,7 +313,7 @@ every day narrows or closes it permanently.
   `tradfi_manifest_writer_legacy_id_regression_2026_07_21`, `tradfi_distinct_values_net_new_clusters_2026_07_28`,
   `tradfi_yahoo_venue_vendor_conflation_2026_07_27` and
   `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28` are all extracted verbatim into
-  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, which is `assigned_vm: planning` but still
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, which is `assigned_vm: planning` but still
   `status: draft`, so none of that work is dispatched. Answering item 5 (extended to batch5) unblocks all four at once.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA, valid — re-verified, unchanged.** Both open todos
@@ -330,3 +330,9 @@ every day narrows or closes it permanently.
   (4th consecutive pass).** Both open todos re-read end-to-end; count reconciled (2/2). No content change since the
   2026-08-02 verdict — only two context-scout `context_scope` touches since. Still operator-gated by construction (10
   numbered decision items, all authority/design/blast-radius calls); nothing to reclassify.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA, valid — re-verified, unchanged
+  (5th consecutive pass).** Both open todos re-read end-to-end; count reconciled (2/2). All 10 numbered decision items
+  remain genuine operator escalations (authority/design/blast-radius calls), and the 2 open checkboxes are
+  meta-propagation todos explicitly gated on the operator answering them first — fails the bounded-outcome bar by
+  design. No content drift since 2026-08-04 — only context-scout `context_scope` touches since. Nothing to reclassify.

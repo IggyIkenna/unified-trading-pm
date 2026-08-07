@@ -19,7 +19,7 @@ tags: [data-status, deployment-api, cell-grid, oom, performance, precompute]
 related:
   [
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
-    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-18
@@ -43,7 +43,7 @@ context_scope:
     /codex/05-infrastructure/deployment-observability.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
     /plans/archive/2026_07/mtds_data_status_page_parity_2026_07_21.md,
     deployment-api/deployment_api/services/data_status/live_build_guard.py,
   ]
@@ -132,3 +132,6 @@ real fix is to never load the whole manifest per request.
 - **context-scout 2026-08-03 (full re-scout pass)**: refreshed context_scope (6 entries) -- dropped honest-coverage-
   model.md (tangential to the OOM/memory fix), added `live_build_guard.py`, the current stopgap mitigation this plan
   replaces.
+- **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; the first
+  real todo is an explicit DESIGN GATE (pick bound vs stream vs precompute) and every later todo depends on that unmade
+  choice.

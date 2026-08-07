@@ -133,3 +133,7 @@ risks papering over a real broken tool-chain reference with a cosmetically-consi
   did not fix this myself" section states this explicitly, independently corroborated by a different skill
   (`/ag-closeout-audit` infra, 2026-08-02). Only changes since the last marker are a mechanical `context_scope` backfill
   and an earlier asset_group retag, both content-neutral.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

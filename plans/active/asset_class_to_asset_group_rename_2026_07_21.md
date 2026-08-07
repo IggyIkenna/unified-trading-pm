@@ -160,3 +160,4 @@ trusting that).
 - **na-eligibility-audit 2026-08-04**: KEEP-NA, valid — re-confirms the 2026-08-02 pass; the explicit dated destination
   ruling (BLK-87fc93e4, 2026-07-21: "LOCAL/human by deliberate operator-protective default... do not do that
   unilaterally") still governs; open-todo count unchanged at 6.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

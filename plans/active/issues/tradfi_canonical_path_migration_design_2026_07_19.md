@@ -250,3 +250,4 @@ removal + casing normalization remain before backfill-resume.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (1 entries).
 - **context-scout 2026-08-03**: re-verified context_scope, unchanged (6 entries) — all todos closed, remaining work
   already cross-linked via the casing-redrift and delete-safety entries already listed.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.

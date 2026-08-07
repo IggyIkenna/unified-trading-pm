@@ -168,7 +168,7 @@ context_scope:
           to `processed_candles/`.
     - 16. **[DATA] P1.** Root-cause + close the candle object↔manifest disconnect so skip-if-fresh can be trusted
           post-migration.
-  - [`plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`](/plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md)
+  - [`plans/active/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`](/plans/archive/issues/mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md)
     — filed as a tracked follow-up to root-cause during the candle_canonical_path_migration_execution_2026_07_24.md work
     above (two consecutive `--force` writes for the identical CEFI:BINANCE-FUTURES shard landed at two different object
     paths — with vs. without the `instrument_type=` segment — despite byte-identical content).
@@ -201,7 +201,7 @@ context_scope:
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md`](/plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`](/plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md)
+  - [`plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`](/plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md)
     - **[OPS] P0.** Confirm status of this plan's Track-2 DERIBIT Wave-3 backfill; launch if not running (cap-1
       `tardis-concurrency-guard.sh`-gated).
     - **[REVIEW] P1.** Close `tardis_concurrent_ip_lockout_2026_07_12.md`'s open post-fix G4 re-measurement todo once
@@ -456,7 +456,7 @@ context_scope:
     — ✅ ARCHIVED 2026-07-27, all 14 todos done: Pyth Hermes/jitoSOL resolved as **clip**
     (`unified-api-contracts@4a29261e`), Latent Bug-class-3 local-fallback sweep shipped (`instruments-service@8b02b647`;
     broader sweep beyond that concrete precedent filed separately at
-    `/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
+    `/plans/archive/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
   - [`plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
     (status: active)
     - **[VERIFY] P0.** Phase-D gate — full Stage-4 historical carry tracer over 2022-01-01..today across all 7
@@ -513,7 +513,7 @@ context_scope:
 - **Newly discovered (completeness check, 2026-07-24)** — cefi-tagged docs (`asset_group: [..., cefi, ...]`) not
   previously named in this section; several are already discussed in Track 1-7 above with full detail, but are listed
   here too so this section alone stays a complete open-todo index:
-  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
+  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md)
     (status: active, 9 open — 3 P1 shown, 6 P2/P3 capped)
     - **[DATA] P1.** Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string to
       `build_canonical_instrument_id`.
@@ -788,6 +788,32 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
   a follow-up issue for 2 incidentally-found unrelated chronic findings (OKX-FUTURES trades gaps, POLYMARKET-PERP
   perp_funding).
 
+## Digest additions for cefi-tagged linkage orphans (added 2026-08-07, ag-closeout-audit cefi run)
+
+`check_ag_closeout_linkage.py` flagged these 6 cefi-tagged docs as having no graph/mention path to the cefi closeout
+family (all classified by the 2026-08-06 and 2026-08-07 ag-closeout-audit cefi runs; none were AO-eligible as-of-their
+classification except items extracted into batch9 — see the batch docs). Listed for discoverability only — being listed
+here is NOT dispatch, per this doc's own standing convention.
+
+- [`cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`](/plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md)
+  — 2 open items, both explicit design/redesign decisions for features-service's loader (classified 2026-08-06,
+  orphaned_never_touched, not AO-eligible).
+- [`cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`](/plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md)
+  — 9 of 10 todos done+verified; sole open `[DATA] P3` Follow-ups item (fetch_l2_book / book_snapshot_5 case-sensitivity
+  audit) extracted into `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 1 (classified 2026-08-07).
+- [`cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`](/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md)
+  — 2 open items, both blocked on an `[OPERATOR]` decision among 3 named options (classified 2026-08-06,
+  orphaned_never_touched, not AO-eligible).
+- [`features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`](/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md)
+  — `[SCRIPT] P2` done-when half-2 (real-VM-launch observation of `LC_TARBALL_FRESHNESS` auto-republish) extracted into
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 3 (classified 2026-08-07).
+- [`mtds_cefi_docker_image_stale_5mo_2026_07_30.md`](/plans/active/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md)
+  — both todos fully claimed by `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`'s open `[OPS] P2` todo
+  (archivable_after_planned_work, classified 2026-08-07).
+- [`mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`](/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md)
+  — sole remaining item is a standing observability tripwire, not actionable now (classified 2026-08-06,
+  orphaned_never_touched, not AO-eligible).
+
 ## Todos
 
 - [ ] [DOC] P2. **Keep this discoverability index synced as sibling docs close out** — this doc's own "Aggregated source
@@ -808,3 +834,11 @@ Listed for discoverability only — being listed here is NOT dispatch, per this 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-31 verdict; the
   sole open checkbox is the standing "keep this index synced" maintenance task, by design never terminal.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (2 entries), still accurate.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-04 verdict;
+  by-design non-checkbox discoverability index (bold-marker syntax throughout, deliberately un-ingestable), the sole
+  real checkbox is a standing "keep synced" maintenance task, never terminal.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — this doc is a
+  structurally-un-ingestable discoverability index by design (frontmatter states so); its one real checkbox is a
+  standing, non-terminal sync-maintenance duty, not bounded dispatchable work. Reaffirms 4 prior passes (2026-07-30,
+  07-31, 08-04, 08-06).

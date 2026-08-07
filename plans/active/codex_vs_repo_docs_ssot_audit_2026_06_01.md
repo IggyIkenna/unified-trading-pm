@@ -314,8 +314,11 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       CHANGELOGs 10) in **Appendix B** below; SUPERSEDES the stale `deployment-service (~52)` entry in Appendix A. Net:
       12 DELETE (dead Feb/Mar-2026 impl-plan dumps + the `audit/` trio, not codex-dups) · 14 REDIRECT (all 12 codex
       targets VERIFIED-EXIST — none need creating) · systemic FIX-STALE = archived-mirror `unified-trading-codex/`
-      links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. Redirect/delete APPLY stays Phase-3/4
-      (operator's FIX-STALE-only hold, line ~224).
+      links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. **REDIRECT half SHIPPED**
+      (`deployment-service@07ba33fc2`, verified ancestor of `origin/live-defi-rollout` 2026-08-06) — **DELETE half NOT
+      shipped** (`docs/{MASTER_ML_IMPLEMENTATION_PLAN,ML_IMPLEMENTATION,MASTER_IMPLEMENTATION_INDEX}.md` +
+      `docs/specs/PLANS_ALIGNMENT.md` still live on disk, re-verified 2026-08-06). The Phase-3/4 hold itself LIFTED
+      2026-07-28 (GATE-1 banner above) — corrected 2026-08-06 (/plan-reconcile ao).
 - [x] ✅ [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED +
       FIX-STALE APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
       `canonical/normalize/` + `schemas/` dirs are GONE (normalizers now `normalize_utils/{trades,orderbooks,…}.py`;
@@ -325,18 +328,22 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `unified-trading-codex/` refs → verified-live PM `/codex` (`vcr-cassette-ownership.md`,
       `contracts-scope-and-layout.md`, `contracts-integration.md`) in `docs/{README,MOCKS_AND_VCR,SCHEMA_GOVERNANCE}.md`
       — **unified-api-contracts@25085037**. Sonnet-scoped to the mechanical literal sweep (plan §"Execution model"
-      permits sonnet ONLY for FIX-STALE literal sweeps). Held to Phase-3/4 (operator FIX-STALE-only hold + opus-gated):
-      REDIRECT `PACKAGE_LAYOUT_AND_SCOPE`/ `BATCH_LIVE_SYMMETRY`/`canonical-instrument-ids`; DELETE the 4 `docs/` twins;
-      `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs with NO 1:1 live target (`SCHEMA_CHANGELOG`
-      L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 + `UAC_FULL_GAP…` L278 `batch-live-symmetry.md` →
-      pick live equivalent).
+      permits sonnet ONLY for FIX-STALE literal sweeps). **REDIRECT half SHIPPED** (`PACKAGE_LAYOUT_AND_SCOPE`/
+      `BATCH_LIVE_SYMMETRY`/`canonical-instrument-ids`, `unified-api-contracts@f952e17f`, verified ancestor of
+      `origin/live-defi-rollout` 2026-08-06) — **DELETE half + the rest not independently re-verified this pass**:
+      DELETE the 4 `docs/` twins; `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs with NO 1:1 live
+      target (`SCHEMA_CHANGELOG` L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 + `UAC_FULL_GAP…` L278
+      `batch-live-symmetry.md` → pick live equivalent). Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected
+      2026-08-06 (/plan-reconcile ao).
 - [x] ✅ [DOCS] P0. **market-data-processing-service** (22→25) — path/manifest/candle docs vs `codex/02-data`. **AUDIT
       REFRESHED 2026-07-27** (registry in **Appendix B**): Appendix-A largely HOLDS but drifted — `GCS_PATHS.md` is NO
       LONGER un-tiered (edited 2026-07-21, now `{env}`-carrying; residual staleness is only inline `gs://`/`gsutil` vs
       `resolve_bucket_name`), and the count was undercounted 22→25
       (+`CONFIGURATION`/`ERROR_HANDLING`/`SCHEMA_VALIDATION` carry retired `{category}` vocab; +`specs/README` DELETE;
       +root `README` archived-mirror FIX-STALE). 5 DELETE · 7 FIX-STALE · 3 REDIRECT (all codex targets VERIFIED-EXIST)
-      · no MIGRATE. Apply stays Phase-3/4.
+      · no MIGRATE. **REDIRECT half SHIPPED** (`market-data-processing-service@0e9656c`, verified ancestor of
+      `origin/live-defi-rollout` 2026-08-06) — DELETE/FIX-STALE halves not independently re-verified this pass;
+      Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao).
 - [x] ✅ [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`,
       `codex/02-venues`. **AUDIT VERIFIED + FIX-STALE APPLIED 2026-07-27** (Appendix-A `execution-service (20)` registry
       HOLDS, ground-truthed vs live code): pass-1 FIX-STALE already landed @`4b0ea42f` (ARCHITECTURE bucket literals
@@ -346,23 +353,27 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `08-workflows/t1-batch-dag.md` in `docs/GCS_PATHS.md` — both VERIFIED-EXIST) + 1 dangling deploy-spec ref (dead
       `docs/SHARDING_GUIDE.md`+`docs/SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` → live `docs/DEPLOYMENT_GUIDE.md`, in
       `docs/`+`specs/BACKTEST_DEPLOYMENT.md`) — **execution-service@`0c6a93e1`** (QG-green sentinel c4fbb495).
-      Sonnet-scoped mechanical sweep (plan §"Execution model" permits sonnet ONLY for FIX-STALE literal sweeps). Held to
-      Phase-3/4 (operator FIX-STALE-only hold + opus-gated): DELETE
+      Sonnet-scoped mechanical sweep (plan §"Execution model" permits sonnet ONLY for FIX-STALE literal sweeps).
+      **REDIRECT half SHIPPED** (`GCS_PATHS`/`ROUTING_MATRIX`/`CONFIGURATION`/`ERROR_HANDLING`/`DEPLOYMENT_GUIDE`,
+      `execution-service@2a59ca09`, verified ancestor of `origin/live-defi-rollout` 2026-08-06) — **DELETE half not
+      independently re-verified this pass**: DELETE
       `UNIFIED_BATCH_LIVE_ARCHITECTURE`/`CLEAN_ALGORITHM_INTERFACE_DESIGN`/`DEFI_INTEGRATION_TODO` (the 3 residual
       `batch-live-symmetry.md` mirror refs left in-place inside the slated-for-deletion
-      `UNIFIED_BATCH_LIVE_ARCHITECTURE` — live equiv is `/codex/04-architecture/batch-live-architecture.md`); REDIRECT
-      `GCS_PATHS`/`ROUTING_MATRIX`/`CONFIGURATION`/`ERROR_HANDLING`/`DEPLOYMENT_GUIDE`. no MIGRATE
+      `UNIFIED_BATCH_LIVE_ARCHITECTURE` — live equiv is `/codex/04-architecture/batch-live-architecture.md`). no MIGRATE
       (codex/04-architecture already holds the execution-arch SSOTs; codex/02-venues exists w/
-      venue-registry-reference).
+      venue-registry-reference). Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06
+      (/plan-reconcile ao).
 - [x] ✅ [DOCS] P0. **instruments-service** (19→13) — IS→MTDS contract/path docs vs `codex/04-architecture`,
       `codex/02-data`. **AUDIT REFRESHED 2026-07-27** (read-only via opus sub-agent; registry in **Appendix B** below,
       SUPERSEDES the stale Appendix-A `(19)` entry). Repo drifted hard from Appendix-A: `specs/` dir GONE (consolidated
       into `ADAPTER_ARCHITECTURE` + 5 asset docs), `POLYMARKET_PREDICTION`→`PREDICTION_INSTRUMENTS`,
       `instrument-catalogue` gone. Net: duplication vs codex LOW (asset catalogs + adapter arch legitimately
       service-local); 2 DELETE · 6 FIX-STALE (README dead-repo/CLI/mirror drift is the big one) · no REDIRECT strictly
-      required · no MIGRATE · no codex target needs creating. Apply stays Phase-3/4 (operator FIX-STALE-only hold). BIG
-      FINDING (determinable FIX-STALE, not operator-gated) captured in the registry: README front-door contradicts its
-      two newer authoritative docs on the dependency graph.
+      required (nothing to ship on that axis) · no MIGRATE · no codex target needs creating. **Phase-3/4 hold itself
+      LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao): "stays Phase-3/4" no longer describes a
+      live operator block; whether the DELETE (2 items) + FIX-STALE (6 items) apply has actually shipped for this repo
+      was not independently re-verified this pass.** BIG FINDING (determinable FIX-STALE, not operator-gated) captured
+      in the registry: README front-door contradicts its two newer authoritative docs on the dependency graph.
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
 - [x] ✅ [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs. **DONE 2026-07-29 (slot-9, opus
       sub-agent for editorial apply) — unified-trading-library@2737844b.** Ground-truth refresh REQUIRED and applied —
@@ -807,9 +818,13 @@ genuine-UI, out of scope.
 
 > Read-only re-audit of the highest-duplication repo via 2 parallel opus sub-agents (core docs +
 > infra/profiles/runbooks). 89 repo-owned docs (47 core + 42 infra/profiles/runbooks); OUT-OF-SCOPE: `docs/archive/*`
-> (13), vendored `terraform/**/.terraform/providers/*` provider CHANGELOGs (10). **Redirect/delete APPLY stays
-> Phase-3/4** under the operator's FIX-STALE-only hold; this entry is the classification the phases consume. All
-> REDIRECT targets VERIFIED-EXIST in current PM `/codex/` — none need creating.
+> (13), vendored `terraform/**/.terraform/providers/*` provider CHANGELOGs (10). **REDIRECT half SHIPPED**
+> (`deployment-service@07ba33fc2`, verified ancestor of `origin/live-defi-rollout` 2026-08-06; live `docs/GCS_PATHS.md`
+> etc. confirmed converted to S5.11 "Canonical SSOT:" redirect stubs) — **DELETE half NOT shipped**
+> (`docs/{MASTER_ML_IMPLEMENTATION_PLAN,ML_IMPLEMENTATION,MASTER_IMPLEMENTATION_INDEX}.md` +
+> `docs/specs/PLANS_ALIGNMENT.md` still live on disk, re-verified 2026-08-06); the Phase-3/4 hold itself LIFTED
+> 2026-07-28 (GATE-1 banner above) — corrected 2026-08-06 (/plan-reconcile ao). This entry is the classification the
+> phases consume. All REDIRECT targets VERIFIED-EXIST in current PM `/codex/` — none need creating.
 
 **deployment-service [core docs] (47)** — DELETE: `IMPLEMENTATION_MAX_WORKERS`, `MASTER_IMPLEMENTATION_INDEX`,
 `MAX_WORKERS_UNIFIED_IMPLEMENTATION_PLAN`, `MASTER_ML_IMPLEMENTATION_PLAN`, `ML_IMPLEMENTATION` (dead Feb-2026 "ready to
@@ -859,7 +874,10 @@ present).
 ### market-data-processing-service refreshed registry (2026-07-27) — supersedes the Appendix-A `(22)` entry
 
 > Read-only re-audit verifying the initial-pass classification against current repo docs + codex. Count corrected 22→25.
-> All REDIRECT targets VERIFIED-EXIST. Apply stays Phase-3/4 under the operator FIX-STALE-only hold.
+> All REDIRECT targets VERIFIED-EXIST. **REDIRECT half SHIPPED** (`market-data-processing-service@0e9656c`, verified
+> ancestor of `origin/live-defi-rollout` 2026-08-06; live `docs/TIMEFRAME_AGGREGATION_SPECIFICATION.md` confirmed
+> converted to an S5.11 "Canonical SSOT:" redirect stub) — DELETE/FIX-STALE halves not independently re-verified this
+> pass; the Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao).
 
 **market-data-processing-service (25)** — DELETE: `DEPLOYMENT_GUIDE.md` (stub → FEMI), `TESTING.md` (stub, `pytest`
 direct → TESTING_GUIDE), `REFACTORING_STANDARDS_COMPLIANCE.md` (one-off + archived-mirror refs),
@@ -886,7 +904,9 @@ convention (genuine duplication → REDIRECT, not FIX-STALE).
 > `instrument-catalogue`, and `POLYMARKET_PREDICTION` no longer exist (consolidated into `docs/ADAPTER_ARCHITECTURE.md`
 >
 > - the 5 per-asset-group `*_INSTRUMENTS.md` docs). All cited REDIRECT/repoint targets VERIFIED-EXIST — none need
->   creating. Apply (redirects/deletes/fixes) stays Phase-3/4 under the operator FIX-STALE-only hold.
+>   creating. **Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao): "stays
+>   Phase-3/4" no longer describes a live operator block; whether apply (deletes/fixes; no REDIRECT class exists for
+>   this repo) has shipped was not independently re-verified this pass.**
 
 **instruments-service (13)** — DELETE: `scripts/README.md` (documents ONLY a non-existent `run_quality_gates.py`; cites
 retired `../unified-cloud-services` monorepo + stale 65% coverage [actual 88] + `GH_PAT`-in-`.env` flow; zero index
@@ -972,3 +992,4 @@ MIGRATE-TO-CODEX; no codex target needs creating.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the superseded consolidation issue for
   the Phase-5 enforcement checker `check_repo_docs_ssot.py`, this plan's own real deliverable, since prior scope was
   codex/plan-only.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.

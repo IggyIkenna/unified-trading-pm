@@ -117,3 +117,4 @@ or their MTDS-related constants).
   context_scope) no longer exists on disk; its coverage was renamed/consolidated into
   `deployment-ui/tests/smoke/top-nav-bar.spec.ts` (confirmed via the live "the always-visible top bar carries all 16
   canonical entries" test). Swapped the entry to the real current file.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.

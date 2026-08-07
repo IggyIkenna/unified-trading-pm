@@ -47,6 +47,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 assigned_role: data_engineering
 drift_direction: none
+archive_exempt: true
 locked_by:
 locked_since:
 supersedes:
@@ -151,8 +152,16 @@ independently-startable item any session can pick up without waiting on the phas
   rewrite-vs-delete choice 'still needs an operator ruling' — that ruling landed 2026-07-29 (Option A). Citation
   corrected; doc stays NA (index/entry-point doc, nature: process, drift_direction: none)
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — archive_exempt standing reference hub, 0 open
+  checkboxes, re-confirmed unchanged.
 - **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA-STALE -> checkbox closed. The sole open todo
   (`LENDING_INTEREST` mismodeling correction for `carry_staked_basis`) was already shipped in the linked sibling doc
   (`issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `strategy-service@a90e85eb`) — this
   doc's own text had not been updated to reflect it. Flipped `[x]` with citation; doc has zero remaining open scope
   (index/entry-point doc, `assigned_vm` unchanged).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: `archive_exempt: true` — this is an
+  index/entry-point doc (`nature: process`) serving as a standing reference hub for the DeFi strategy/PnL/backtest
+  engine axis. All 1/1 native checkboxes are done; the doc's purpose is to aggregate pointers to the strategy-service
+  track's source docs, not to carry its own executable work. Archiving it would orphan the entry-point reference for the
+  strategy/PnL axis.

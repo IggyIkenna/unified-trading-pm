@@ -262,3 +262,6 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid (prior verdicts re-affirmed) —
   the sole remaining `[PM] P2` item is still gated on an operator plan-destination decision plus a PROD-bucket delete
   that is human-only unless reversibility-qualified. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item (author successor delete-plan)
+  still blocked on operator plan-destination ruling + underlying delete gate; neither worker-resolvable.

@@ -270,18 +270,18 @@ concurrent workers do not collide on this file.
       via `quickmerge --agent --files` — `unified-trading-pm@cb5e944f0`. Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3).
 - [x] ✅ [INFRA] P3. **`check_dispatch_listeners.py`'s dispatch-URL regex cannot resolve inline GHA `${{ }}`
-      expressions, silently excluding those dispatch sites from the scan.** — unified-trading-pm@cbd511a. **Fixed
-      2026-07-29.** `_DISPATCH_URL_RE` now accepts `${{ }}` expressions as an alternative to literal tokens within
-      owner/repo capture groups via `_GHA_EXPR_PAT`. `_resolve_token` returns GHA expressions as-is so the dispatch site
-      is tracked as unresolved rather than silently excluded. Added `_GHA_EXPR_RE` for token classification. 3 new test
-      cases: GHA expression capture, mixed GHA+literal, literal regression. Result: 350 sites scanned (was 344), 17
-      unresolved (was 13), orphans unchanged at 63 (at baseline). segment (either by resolving the GHA context
-      expression the same way `_OWNER_ALIASES` resolves shell vars, or by stripping `${{ ... }}` whitespace before
-      matching), a regression test proves both `agent-runner.yml` shapes are now scanned, and the baseline is
-      re-measured (expected to rise, since previously-invisible sites become visible — a one-time step up in the
-      ratchet, not a new orphan). Source: this plan's own todo 2 (`check_dispatch_listeners.py`, delivered
-      `unified-trading-pm@613f79960`) + `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3,
-      discovered while closing it).
+      expressions, silently excluding those dispatch sites from the scan.** —
+      unified-trading-pm@5913352467b7215e8cc7d58ae5a632c5aebd5658. **Fixed 2026-07-29.** `_DISPATCH_URL_RE` now accepts
+      `${{ }}` expressions as an alternative to literal tokens within owner/repo capture groups via `_GHA_EXPR_PAT`.
+      `_resolve_token` returns GHA expressions as-is so the dispatch site is tracked as unresolved rather than silently
+      excluded. Added `_GHA_EXPR_RE` for token classification. 3 new test cases: GHA expression capture, mixed
+      GHA+literal, literal regression. Result: 350 sites scanned (was 344), 17 unresolved (was 13), orphans unchanged at
+      63 (at baseline). segment (either by resolving the GHA context expression the same way `_OWNER_ALIASES` resolves
+      shell vars, or by stripping `${{ ... }}` whitespace before matching), a regression test proves both
+      `agent-runner.yml` shapes are now scanned, and the baseline is re-measured (expected to rise, since
+      previously-invisible sites become visible — a one-time step up in the ratchet, not a new orphan). Source: this
+      plan's own todo 2 (`check_dispatch_listeners.py`, delivered `unified-trading-pm@613f79960`) +
+      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3, discovered while closing it).
 - [x] [INFRA] P2. **F5 vacuous manifest readers render GREEN where they should render "unknown".** Fix the enumerated
       sites so a permanently-empty input renders as unknown/not-applicable, never as a pass — starting with the two the
       doc names first: `_repo_ci_manifest.py:285-289`'s `deployed_versions.get(repo)` shape mismatch (the writer at
@@ -324,15 +324,15 @@ concurrent workers do not collide on this file.
       `completed[0]`, which is also true for `conclusion=cancelled`; a run created after a real success but cancelled
       almost immediately could outrank it, exactly reproducing the cited 30158515857/30158518796 incident). Fixed both
       real instances of the same bug class, in scope per this plan's own repo list: (a1) `ldr-to-main-promote-fleet.yml`
-      — `unified-trading-pm@2f9646585` + `@466c7621e` (the actual edit landed in a companion commit after prek's
-      stash/restore dropped it from the first) — filters cancelled runs out of the informative candidate set before
-      selecting `[0]`. (a2) `full-workspace-sit.yml`'s own "Report SIT result to PM" step had the identical defect
-      (`job.status != success` → `sit-failed`, so a cancelled job dispatched a false failure to `sit-unlock`) —
-      `system-integration-tests@33cf6f0` — now no-ops on `job.status=cancelled`. (b) Corrected the
-      `full-workspace-sit.yml` header comment (same commit) so `SIT_VALIDATED` cannot be read as "the resolved
-      cross-repo combination was executed" — states plainly it's an API-surface check (installs only UAC, never collects
-      a dependent's tests; a value-only config change can pass while breaking a consumer at runtime). **Evidence**: both
-      fixes proven via regression tests extracting the REAL shipped code (not replicas) —
+      — `unified-trading-pm@ab22e725b6141e4ccd7b11018134e7e8bbb90961` + `@18a55dd49c12dbf71241696b1fbfd5e8aa2ee37d` (the
+      actual edit landed in a companion commit after prek's stash/restore dropped it from the first) — filters cancelled
+      runs out of the informative candidate set before selecting `[0]`. (a2) `full-workspace-sit.yml`'s own "Report SIT
+      result to PM" step had the identical defect (`job.status != success` → `sit-failed`, so a cancelled job dispatched
+      a false failure to `sit-unlock`) — `system-integration-tests@33cf6f0` — now no-ops on `job.status=cancelled`. (b)
+      Corrected the `full-workspace-sit.yml` header comment (same commit) so `SIT_VALIDATED` cannot be read as "the
+      resolved cross-repo combination was executed" — states plainly it's an API-surface check (installs only UAC, never
+      collects a dependent's tests; a value-only config change can pass while breaking a consumer at runtime).
+      **Evidence**: both fixes proven via regression tests extracting the REAL shipped code (not replicas) —
       `unified-trading-pm/scripts/quality-gates-base/tests/test-sit-fleet-green-cancelled-run-clobber.sh` (5/5 pass
       post-fix, 2/5 pass pre-fix — reproduces the exact incident JSON) and
       `system-integration-tests/tests/abbreviated/test_full_workspace_sit_cancelled_run_noop.py` (cancelled→no-op,
@@ -988,3 +988,4 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-03**: trimmed context_scope to 5 entries -- dispatch-batch coordinator doc, correctly
   code-free; dropped 4 narrower codex pointers not central to the surviving open item.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -428,3 +428,4 @@ code-fix task). A data_engineering slot with a full session budget should:
   (still true, not fixed this pass — out of this audit's scope): the in-checkbox un-block sequence text is stale ("only
   todo #6 remains" — #6 is `[x]`).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — verified all still resolve).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.

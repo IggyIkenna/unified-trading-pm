@@ -38,7 +38,7 @@ tags: [defi, features-service, delta-one, data-loader, pass-through, candle-load
 related:
   - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
   - /plans/archive/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md
-  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md
 created: "2026-07-30"
 source: [DP_VM_EXIT_NONZERO escalation for features-delta-one-defi-20260730-222034]
 parent_epic: defi_master
@@ -54,7 +54,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md,
-    /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     features-service/features_service/delta_one/app/core/data_loader.py,
     features-service/features_service/delta_one/app/core/_passthrough_loader.py,
     features-service/features_service/delta_one/cli/handlers/_tf_cluster_helper.py,
@@ -67,8 +67,8 @@ resolved_by: 2026-08-03 (all 4 todos closed in code/data; D1 flipped in defi_sat
 > `/codex/11-project-management/issue-doc-lifecycle.md`): pass-through read branch (`features-service@a5a5bf7d`),
 > per-output-TF failure isolation (`features-service@9769ded7`), the `[OPERATOR]` parking recommendation (moot once D1
 > flipped), and the `[DATA]` D1-resume verification (`features-delta-one-defi-20260803-055145`, 454/455 manifest shards
-> `captured`). D1's checkbox flipped in `/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`. See the
-> Progress Log below for full evidence.
+> `captured`). D1's checkbox flipped in `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`. See
+> the Progress Log below for full evidence.
 
 # What I found
 
@@ -150,8 +150,8 @@ sibling issue's enumeration -- `technical_indicators`, `moving_averages`, `oscil
 `momentum`, `candlestick_patterns`, `market_structure`, `round_numbers`, `streaks`, `temporal`, `economic_events`,
 `targets`) is structurally unable to complete via this candle-loading path, on any date, until it gains a pass-through
 read branch. This blocks the remainder of D1's delta_one leg
-(`/plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md`) entirely, and every VM launch attempt against it
-between now and the fix is guaranteed-wasted compute spend.
+(`/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`) entirely, and every VM launch attempt against
+it between now and the fix is guaranteed-wasted compute spend.
 
 # What I did NOT do
 

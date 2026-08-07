@@ -15,7 +15,7 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, fleet-health, memory-exhaustion, shared-host, recurring-incident]
-related: []
+related: [/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md]
 created: 2026-08-02
 author: unknown
 parent_epic: orchestrator_master
@@ -37,6 +37,7 @@ context_scope:
     /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md,
     scripts/dev/run-bounded-analysis.sh,
     features-service/features_service/cross_instrument,
+    /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md,
   ]
 ---
 
@@ -110,10 +111,37 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide the mechanical-enforcement approach for the heavy-compute-on-shared-host HARD RULE (see 4
-      options above) -- gates every fix below. (repo: unified-trading-pm, decision only)
-- [ ] [INFRA] P2. Once decided, implement the chosen enforcement mechanism (repo: agent-orchestrator and/or
-      unified-trading-pm scripts, exact target depends on the decision above).
+- [x] ✅ [OPERATOR] P1. Decide the mechanical-enforcement approach for the heavy-compute-on-shared-host HARD RULE (see 4
+      options above) -- gates every fix below. (repo: unified-trading-pm, decision only) — **RULED 2026-08-06 (operator,
+      interactive)**: none of the 4 options as written. The approach taken is a **host-level per-process reaper** —
+      `resource-watchdog` — which achieves option 1's intent (the bound no longer depends on the calling agent
+      remembering to wrap a heavy leg) without requiring every skill to be rewritten, and is root-cause-agnostic the way
+      option 2 is: it kills the offending process regardless of whether the cause is one bad script or aggregate
+      oversubscription. Shipped by `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md` (archived).
+      (Reconciled 2026-08-06: an independently-reached "combine 1+2+3" ruling from a concurrent session is superseded by
+      this one — the shipped reaper is already live evidence of what was actually chosen and built, not a still-open
+      combination of the original 3 options.)
+- [x] ✅ [INFRA] P2. Once decided, implement the chosen enforcement mechanism — **DONE 2026-08-05**,
+      `unified-trading-pm/scripts/infra/resource-watchdog/` (`resource-watchdog.sh` + systemd unit + `config.yaml` +
+      logrotate/tmpfiles retention), first shipped `unified-trading-pm@d1ffdf6b3`. **Verified LIVE on the planning VM
+      2026-08-06** via read-only SSM (`i-0c9b283b31d6b5ca7`, ap-northeast-1): `systemctl is-active`/`is-enabled` =
+      `active`/`enabled`, `ActiveEnterTimestamp=Wed 2026-08-05 14:38:40 UTC` (no restarts since), and the live unit's
+      thresholds match this repo's SSOT `config.yaml` exactly — `RW_RSS_LIMIT_NORMAL_GB=10`, `RW_RSS_LIMIT_HIGH_GB=4`
+      (at ≥80% cgroup MemoryMax), `RW_CPU_MAX_PCT=95` sustained `RW_CPU_WINDOW_MIN=10`, `RW_SWAP_LIMIT_GB=4`,
+      `RW_MAX_KILLS_PER_MIN=1`, `RW_MIN_PROCESS_AGE_SEC=30`, and critically **`RW_DRY_RUN=false`** (enforcing, not
+      merely observing). Log tail confirms a live poll loop (`tick=8215 pressure=normal cgroup_mem=17GB`). Documented in
+      codex at `/codex/05-infrastructure/agent-orchestrator-api-host.md` (full threshold table + allowlist + BQ
+      `watchdog_kill_events` schema) and `/codex/05-infrastructure/deployment-observability.md` — so the "if it isn't
+      documented, write it into codex" half of the 2026-08-06 ruling needed no action.
+- [ ] [OPERATOR] P2. **Close the one verified gap: the LIVE systemd unit is missing the kill-event dual-write env
+      vars.** The 2026-08-06 SSM check above enumerated the live unit's full `Environment=` set and neither
+      `RW_DEPLOYMENT_API_URL` nor `RW_VM_NAME` is present, though both are in this repo's unit file since
+      `unified-trading-pm@7f324271b`. Effect: the watchdog **enforces correctly but its kills are invisible** in
+      deployment-ui, because the dual-write to `watchdog_kill_events` never fires. Needs root
+      (`systemctl     daemon-reload && systemctl restart resource-watchdog`), which agent slots do not have. This is the
+      SAME action already tracked as the open `[OPERATOR] P2` in
+      `/plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md` — recorded here only because this pass
+      produced fresh live evidence that it is still genuinely open; do the work THERE, not twice.
 - [ ] [DIAG] P2. Best-effort: root-cause today's specific 49.3G/16G-swap peak more precisely if feasible (aggregate
       oversubscription vs. a specific process that had already exited/rotated out by ~14:40Z) -- would sharpen whether
       option 1 or 2 above is the better fix. Not gating.
@@ -312,3 +340,19 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
     `plans/active/issues/*.md`: no duplicate/superseding doc (only pre-existing related-but-distinct ones).
   - **Net**: active P1, 3rd calendar day, plateaued not trending toward resolution. Main is surfacing the
     elapsed-time-since-escalation gap to the operator for a ruling on the mechanical-enforcement approach.
+
+- **2026-08-05 (interactive session, cross-doc link fix)**: `resource_watchdog_host_guardian_2026_08_05.md` (a same-day,
+  `assigned_vm: NA` plan built "in-session, operator present," never previously cross-linked to this doc) shipped a
+  systemd-based per-process RSS/CPU/swap killer on this exact host — a live instance of this doc's recommended-decision
+  option 1, "bake the bound into the tooling." Concrete evidence it's working: an interactive RAM-spike investigation
+  the same day watched it catch and SIGTERM two ~40GB bare-`read_availability_index()` blowups from slot 15 within one
+  minute, no fleet-wide crash-loop. **Not asserting this formally resolves the `[OPERATOR] P1` todo below** — a systemd
+  RSS-killer is closer to option 1 than option 2/3 (still one shared ~54GiB ceiling, not per-slot reservations or
+  admission control), so it may reduce recurrence frequency without fully closing the question; that's still the
+  operator's call. Cross-linked both docs' `related:` so they're no longer siloed.
+- **context-scout 2026-08-06**: re-scouted; added `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`
+  (the 2026-08-05 systemd RSS-killer, a live instance of this doc's recommended option 1, cross-linked but not yet in
+  context_scope), now 6 entries.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

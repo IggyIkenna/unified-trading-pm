@@ -396,3 +396,4 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — doc's scope is fully resolved (all todos
   checked, folded into the closeout plan's phantom-row purge for the residual); list still accurately anchors the
   historical fix evidence.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.

@@ -76,12 +76,11 @@ source:
   agt-c6ccfb (WALL_TYPE=main_ci_red, REPO=features-service, slot 7) — merged, concurrent splits of the same parent doc"
 context_scope:
   [
+    /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md,
     /plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
-    deployment-service/scripts/quality-gates.sh,
-    features-service/scripts/quality-gates.sh,
   ]
 ---
 
@@ -101,15 +100,16 @@ repeated here.
       runner per repo is the structural bottleneck: both `deployment-service` and `features-service` confirmed to have
       exactly ONE online runner, `glue-ip-172-31-5-118-1`, serialising `main`+LDR verification runs). Once landed,
       re-test whether the `main_ci_red`/`ldr_qg_failure` re-fires in this doc-chain stop recurring.
-- [ ] 2. [OPERATOR] P2. **Corroborating data point for the parent doc's todo 3** (un-cooldowned escalation re-fire), now
-      observed across at least THREE repos: `deployment-service` (`agt-a46033`, 2 dispatches for the same state),
-      `execution-service` (`agt-956fe9`/`agt-bd0d27`/`agt-e718ef`, 3 re-fires, logged in the parent doc), and
-      `features-service` (~15 re-fires, logged across the parent doc and this one). No cooldown/state-transition dedup
-      guard exists on the `main_ci_red`/`ldr_qg_failure` escalation trigger — recommend gating re-fire on either (a) a
-      minimum cooldown since the last dispatch for the same repo with an unchanged target-branch HEAD, or (b)
-      suppressing re-dispatch while `ldr-to-main-promote-fleet`'s own GATE BLOCK reason is unchanged from the prior
-      escalation's, per `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition principle
-      (fire on change/RESOLVED, never every tick while nothing changed). Operator decision, not something a one-shot
+- [ ] 2. [SCRIPT] P2. **RULED 2026-08-06: option (a) cooldown, same as parent doc todo 3 — not duplicated here.**
+      **Corroborating data point for the parent doc's todo 3** (un-cooldowned escalation re-fire), now observed across
+      at least THREE repos: `deployment-service` (`agt-a46033`, 2 dispatches for the same state), `execution-service`
+      (`agt-956fe9`/`agt-bd0d27`/`agt-e718ef`, 3 re-fires, logged in the parent doc), and `features-service` (~15
+      re-fires, logged across the parent doc and this one). No cooldown/state-transition dedup guard exists on the
+      `main_ci_red`/`ldr_qg_failure` escalation trigger — recommend gating re-fire on either (a) a minimum cooldown
+      since the last dispatch for the same repo with an unchanged target-branch HEAD, or (b) suppressing re-dispatch
+      while `ldr-to-main-promote-fleet`'s own GATE BLOCK reason is unchanged from the prior escalation's, per
+      `/codex/04-architecture/agent-orchestrator-alerting.md`'s dedup-by-state-transition principle (fire on
+      change/RESOLVED, never every tick while nothing changed). Operator decision, not something a one-shot
       wall-clearing session should self-implement.
 - [ ] 3. [INFRA] P3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
       land, re-check whether this entire doc-chain (3 docs, ~30+ occurrences across 7+ repos) self-resolves — if the
@@ -390,6 +390,8 @@ repeated here.
   (`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`), which this doc's own body explicitly instructs readers to
   consult ("Read the parent (and its own parent, ...) for the full bug-class history; not repeated here") but which the
   prior context_scope omitted.
+- **context-scout 2026-08-06**: restored the grandparent doc + added `continued3` (this doc's own successor since 08-04)
+  -- both silently missing despite the 08-03 marker above. 5 entries.
 
 - **2026-08-03 ~16:46-17:05Z (`cicd` escalation `agt-7bcb7c`, slot 12, `deployment-service`, `wall_type=main_ci_red`,
   `pr_number=0`) — yet another same-day re-dispatch of this repo's identical wall (now the 4th deployment-service entry

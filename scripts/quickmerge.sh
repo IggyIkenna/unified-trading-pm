@@ -578,47 +578,80 @@ PYEOF
 
       # Switch to (or create) the branch.
       #
-      # GUARD (2026-07-22, quickmerge_silently_reset_unpushed_commit_2026_07_22 /
-      # utl_shared_clone_commits_repeatedly_reset_2026_07_22 — confirmed root cause):
+      # GUARD (2026-07-22 / 2026-07-28 / 2026-08-05, quickmerge_silently_reset_unpushed_commit_2026_07_22 /
+      # utl_shared_clone_commits_repeatedly_reset_2026_07_22 — confirmed root cause, TWICE reproduced live):
       # `checkout -B branch_name origin/branch_name` unconditionally RESETS
       # refs/heads/$branch_name to origin, discarding any local commits ahead of
       # origin — and this ancestor clone ($ancestor_path) is a SINGLE SHARED
       # directory, not a private per-slot worktree, so it can be a DIFFERENT
       # concurrent agent's committed-but-unpushed work sitting on this exact
-      # branch (branch_name is routinely the fleet's own integration branch). The
-      # reflog message this produces ("branch: Reset to origin/<branch>") plus
-      # "the commit survived only via reflog until gc" matches both incident docs
-      # exactly. Preserve any local-ahead commits to a named, content-addressed
-      # ref BEFORE resetting — this does not change behavior for the common case
-      # (no local-ahead commits, the vast majority of cascades) and turns the rare
-      # case from silent, reflog-only-recoverable data loss into a loud, durably
-      # recoverable one. Local-only (not pushed) — deliberately minimal; durability
-      # beyond this clone is a possible follow-up, not required to close the gap.
-      if git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
-        _cascade_ahead=$(git rev-list --count "origin/$branch_name..refs/heads/$branch_name" 2>/dev/null || echo 0)
-        if [ "${_cascade_ahead:-0}" -gt 0 ]; then
-          _cascade_preserve_sha=$(git rev-parse "refs/heads/$branch_name" 2>/dev/null || echo "")
-          if [ -n "$_cascade_preserve_sha" ]; then
-            _cascade_preserve_ref="refs/wip-preserve/cascade-${ancestor}-${_cascade_preserve_sha:0:12}"
-            git update-ref "$_cascade_preserve_ref" "$_cascade_preserve_sha" 2>/dev/null || true
-            echo "[cascade] ⚠️  $ancestor: refs/heads/$branch_name had ${_cascade_ahead} commit(s) ahead of origin/$branch_name — preserved at ${_cascade_preserve_ref} before realigning (local-only; NOT pushed). Recover: cd $ancestor_path && git checkout -B $branch_name $_cascade_preserve_ref"
-          fi
+      # branch (branch_name is routinely the fleet's own integration branch).
+      #
+      # NOTE this is a real, INTENTIONAL reset, not a bug to "skip" (operator
+      # ruling 2026-08-05, todo 8 superseded): Stage 1's dependency validation
+      # for THIS quickmerge run needs $ancestor_path to genuinely reflect
+      # origin/$branch_name — that's the whole point of the cascade. Skipping
+      # the reset when local is ahead would make "QG passed locally" mean
+      # nothing, because it would validate against a DIFFERENT concurrent
+      # agent's possibly-never-promoted local state instead of what will
+      # actually land on the integration branch. The fix is making the
+      # preserve-then-reset ATOMIC (closing the TOCTOU race root-caused in
+      # todo 7, reproduced live by injecting a delay between the old
+      # ahead-check and the checkout), not skipping the reset.
+      #
+      # Two-part fix:
+      #   1. flock this whole critical section (stash / preserve / checkout /
+      #      stash-pop) on a lock file inside the ancestor's OWN .git dir —
+      #      serializes concurrent cascades from DIFFERENT quickmerge.sh
+      #      invocations hitting the same ancestor (the actual observed
+      #      2026-07-22/07-28 trigger: many agents shipping concurrently, each
+      #      cascading through a shared ancestor). Degrades to unlocked
+      #      (best-effort, prior behavior) if flock(1) is unavailable.
+      #   2. Unconditional, no-branch preserve immediately adjacent to the
+      #      checkout — removes the old "count ahead over history, THEN decide
+      #      whether to preserve" gap (an O(history) git rev-list call was the
+      #      window todo 7's repro exploited); capturing the CURRENT tip and
+      #      resetting are now two back-to-back plumbing calls with no
+      #      variable-length computation between them. This narrows (does not
+      #      claim to fully eliminate) exposure to a totally unrelated,
+      #      lock-unaware `git commit` landing in that same host process's
+      #      shared directory at the exact instant between the two calls —
+      #      closing that residual sliver needs every writer to respect the
+      #      same lock, out of scope here. update-ref is a cheap no-op when the
+      #      preserved sha already equals origin's (the common case).
+      _cascade_lock_fd=221
+      _cascade_lock_file="$ancestor_path/.git/quickmerge-cascade.lock"
+      _cascade_realign_and_restore() {
+        _cascade_preserve_sha=$(git rev-parse --verify --quiet "refs/heads/$branch_name" 2>/dev/null || echo "")
+        if [ -n "$_cascade_preserve_sha" ]; then
+          _cascade_preserve_ref="refs/wip-preserve/cascade-${ancestor}-${_cascade_preserve_sha:0:12}"
+          git update-ref "$_cascade_preserve_ref" "$_cascade_preserve_sha" 2>/dev/null || true
         fi
-      fi
-      if git show-ref --verify --quiet "refs/remotes/origin/$branch_name" 2>/dev/null; then
-        git checkout -B "$branch_name" "origin/$branch_name" --quiet 2>/dev/null || \
-          git checkout "$branch_name" --quiet 2>/dev/null || \
+        if git show-ref --verify --quiet "refs/remotes/origin/$branch_name" 2>/dev/null; then
+          git checkout -B "$branch_name" "origin/$branch_name" --quiet 2>/dev/null || \
+            git checkout "$branch_name" --quiet 2>/dev/null || \
+            git checkout -b "$branch_name" origin/main --quiet
+        elif git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
+          git checkout "$branch_name" --quiet
+        else
           git checkout -b "$branch_name" origin/main --quiet
-      elif git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
-        git checkout "$branch_name" --quiet
+        fi
+        if [ -n "$_cascade_preserve_sha" ] && [ "$(git rev-parse "$branch_name" 2>/dev/null)" != "$_cascade_preserve_sha" ]; then
+          echo "[cascade] ⚠️  $ancestor: refs/heads/$branch_name was at ${_cascade_preserve_sha:0:12}, realigned to origin/$branch_name — prior tip preserved at ${_cascade_preserve_ref} (local-only; NOT pushed). Recover: cd $ancestor_path && git checkout -B $branch_name $_cascade_preserve_ref"
+        fi
+        if [ "$stashed" = 1 ] && git stash list 2>/dev/null | grep -q "cascade-$$-$branch_name"; then
+          git stash pop --quiet 2>/dev/null || \
+            echo "[cascade] ⚠️  $ancestor: stash pop had conflicts — resolve manually before committing"
+        fi
+      }
+      if command -v flock >/dev/null 2>&1 && eval "exec ${_cascade_lock_fd}>\"\$_cascade_lock_file\"" 2>/dev/null; then
+        flock "$_cascade_lock_fd"
+        _cascade_realign_and_restore
+        flock -u "$_cascade_lock_fd" 2>/dev/null || true
+        eval "exec ${_cascade_lock_fd}>&-" 2>/dev/null || true
       else
-        git checkout -b "$branch_name" origin/main --quiet
-      fi
-
-      # Restore stash on the new branch
-      if [ "$stashed" = 1 ] && git stash list 2>/dev/null | grep -q "cascade-$$-$branch_name"; then
-        git stash pop --quiet 2>/dev/null || \
-          echo "[cascade] ⚠️  $ancestor: stash pop had conflicts — resolve manually before committing"
+        echo "[cascade] ⚠️  $ancestor: flock(1) unavailable or lock file uncreatable — realigning WITHOUT the concurrent-cascade lock"
+        _cascade_realign_and_restore
       fi
     )
     echo "[cascade] ✅ $ancestor on branch '$branch_name'"
@@ -1807,32 +1840,35 @@ sleep 0.3
 if [ -n "$FILES_ARG" ]; then
   ADDED_ANY=0
   for f in $FILES_ARG; do
-    if [ -e "$f" ]; then
-      git add "$f"
+    if git diff --cached --name-only -- "$f" 2>/dev/null | grep -qFx "$f"; then
+      # Already staged (e.g. the caller ran `git rm`/`git rm --cached` before invoking
+      # quickmerge). Checked FIRST, before touching the filesystem at all: a staged
+      # deletion removes the path from `git ls-files` but the working-tree copy can
+      # still be sitting there (plain `git rm --cached` doesn't delete it) — if that
+      # copy is ALSO now gitignored (the normal case for dropping a build/run artifact
+      # from tracking in the same commit that adds the ignore rule), the `[ -e ]`-first
+      # ordering below would re-`git add` it and hit "The following paths are ignored
+      # ... hint: use -f", aborting STAGE 5 (schema_artifacts untrack across
+      # mtds/execution-service/PM, 2026-08-06; the omniroute-eval/results fix,
+      # 2026-08-04, only covered a path ABSENT from the worktree, not this present--
+      # but-ignored shape). Nothing further to do — the deletion is already staged.
       ADDED_ANY=1
+    elif [ -e "$f" ]; then
+      if git check-ignore -q -- "$f" 2>/dev/null; then
+        # Present on disk, untracked (not caught by the staged-diff check above), and
+        # gitignored — the caller named a path that was never tracked and is currently
+        # excluded. Nothing to stage; force-adding a caller-named ignored path silently
+        # would be surprising, so warn instead of aborting the whole run.
+        echo "[$REPO_NAME] ⚠️  Path is untracked and gitignored — skipping: $f"
+      else
+        git add "$f"
+        ADDED_ANY=1
+      fi
     elif git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
       # Tracked but absent from the worktree = a DELETION — stage it. The old
       # `[ -e ]`-only guard silently dropped deleted paths from scoped commits
       # (half-shipped removals, e.g. instruments-service polygon 2026-06-10).
-      #
-      # `git rm --cached`, NOT `git add`: when the path is ALSO gitignored --
-      # the normal case for dropping a now-ignored build/run artifact from
-      # tracking -- `git add` prints "The following paths are ignored by one of
-      # your .gitignore files" and exits 1 EVEN THOUGH it stages the deletion
-      # correctly, which aborted quickmerge at STAGE 5 and made such a removal
-      # unshippable through the sanctioned path (agent-orchestrator
-      # omniroute-eval/results, 2026-08-04). `git rm --cached` stages the same
-      # deletion and is ignore-agnostic.
       git rm --cached --quiet -- "$f"
-      ADDED_ANY=1
-    elif git diff --cached --name-only -- "$f" 2>/dev/null | grep -qFx "$f"; then
-      # Already staged as a deletion (e.g. the caller ran `git rm`/committed via a
-      # pre-existing index before invoking quickmerge). `git ls-files` no longer lists
-      # it — removing a path from the INDEX also removes it from ls-files' output, not
-      # just the worktree — so the check above alone misreads a legitimate, already-staged
-      # deletion as an untracked/invalid path. A --files argument consisting ENTIRELY of such
-      # paths (a pure-deletion diff) previously left ADDED_ANY=0 and hard-failed with
-      # "No valid paths from --files" despite there being a real, ready-to-commit deletion.
       ADDED_ANY=1
     else
       echo "[$REPO_NAME] ⚠️  Path not found (and not tracked): $f"
@@ -1962,7 +1998,7 @@ while true; do
     # Nothing staged and (--files paths | whole tree) clean — changes were already committed
     # in a previous quickmerge run (or by a worker that commits before calling quickmerge, per
     # the documented --agent flow). That pre-existing commit never passed through the trailer
-    # stamp above, so check_strict_quickmerge.py/pre-push-strict-quickmerge.sh will reject the
+    # stamp above, so check_strict_quickmerge.py/scripts/hooks/pre-push will reject the
     # push unless HEAD already carries a Quickmerge: trailer — amend it on now if missing.
     if git log -1 --format=%B | grep -q '^Quickmerge:'; then
       echo "[$REPO_NAME] ℹ️  Working tree clean (scoped to --files, if set) — changes already committed. Proceeding to push."
@@ -2064,7 +2100,7 @@ EOF
       echo "  - $_qm_path" >&2
       git restore --worktree -- "$_qm_path" 2>&2 || echo "    ❌ restore failed for $_qm_path — inspect manually before proceeding" >&2
     done
-    echo "[$REPO_NAME]     See plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
+    echo "[$REPO_NAME]     See plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
   fi
 fi
 
@@ -2117,8 +2153,21 @@ fi
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")
 
 # Determine PR base branch
-# Staging-first model: all human commits target staging; [skip ci] automation goes direct to main.
+# ao_kpi_done_vs_detail_mismatch_2026_08_05 follow-up: this used to default every non-PM,
+# non-[skip ci] repo to "staging" unconditionally — stale since staging went dead fleet-wide
+# 2026-06-27 and its CI automation was torn down 2026-07-23
+# (github_actions_staging_machinery_shutdown_2026_07_24.md). Stage 1.5 above already reads
+# $REPO_PMODEL from the manifest (and correctly skips the staging-lock check for ldr_main
+# hotfixes), but this decision point never consulted it, so quickmerge kept printing
+# "Staging-first" and — worse — a plain --hotfix on an ldr_main repo (100% of the fleet today)
+# would fall through to actually opening + auto-merging a PR against the dead staging branch.
+# ldr_main now gets its own branch, same shape as PM's Option B: land on LDR, let the fleet
+# bot promote it, and re-route --hotfix to the mechanism that actually reaches main
+# (--hotfix-to-main) instead of a doomed staging PR. re-entry to true staging-first for some
+# future repo just needs its manifest promotion_model flipped off "ldr_main" — this branch
+# order still falls through to the staging path in that case.
 PM_OPTION_B=false
+LDR_MAIN=false
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
@@ -2135,9 +2184,22 @@ elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
   PR_BASE="main"
   PM_OPTION_B=true
   echo "[$REPO_NAME] Option B: lands on LDR trunk; ldr-to-main-promote.yml drains to main (v2 on that PR is the gate)"
+elif [ "$REPO_PMODEL" = "ldr_main" ]; then
+  PR_BASE="main"
+  LDR_MAIN=true
+  echo "[$REPO_NAME] promotion_model=ldr_main: lands on LDR trunk; ldr-to-main-promote-fleet.yml drains to main (staging skipped — dead since 2026-06-27)"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"
+fi
+
+if [ "$LDR_MAIN" = true ] && [ "$HOTFIX" = true ] && [ "$HOTFIX_TO_MAIN" != true ]; then
+  # --hotfix-to-main takes precedence if both flags were somehow passed together — it's the
+  # mechanism that still works for ldr_main, so let its own block below handle that case.
+  echo "[$REPO_NAME] ⚠️  --hotfix targets staging, which is dead for promotion_model=ldr_main repos (staging automation shut down 2026-07-23) — it would open a PR nothing ever processes."
+  echo "[$REPO_NAME]    This commit already landed on $BRANCH (LDR trunk) and will promote via ldr-to-main-promote-fleet.yml (~15min SLA) same as a normal ship."
+  echo "[$REPO_NAME]    Need it on main RIGHT NOW instead of waiting? re-run with --hotfix-to-main (operator-gated fast-track; see --help)."
+  exit 0
 fi
 
 # ============================================================================
@@ -2155,7 +2217,11 @@ fi
 # onto a dedicated single-commit branch off origin/main and opening a PR → main (v2-on-main is the only
 # gate; no protection bypass, no whole-trunk promote). Done in a throwaway worktree so the LDR working
 # tree (and any peer agent) is undisturbed. Guards were validated at flag-parse time.
-if [ "$HOTFIX_TO_MAIN" = true ] && [ "$PR_BASE" = "staging" ]; then
+# Applies to PR_BASE="staging" (legacy staging-first repos, if any promotion_model flag ever
+# flips back) AND LDR_MAIN — for an ldr_main repo this is the ONLY hotfix mechanism that reaches
+# main immediately; plain --hotfix already redirected here above instead of opening a dead
+# staging PR (ao_kpi_done_vs_detail_mismatch_2026_08_05 follow-up).
+if [ "$HOTFIX_TO_MAIN" = true ] && { [ "$PR_BASE" = "staging" ] || [ "$LDR_MAIN" = true ]; }; then
   HOTFIX_SHA=$(git rev-parse HEAD)
   HOTFIX_SHORT=$(git rev-parse --short HEAD)
   HOTFIX_BRANCH="hotfix-main/${REPO_NAME}-${HOTFIX_SHORT}"
@@ -2197,6 +2263,15 @@ fi
 if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
   echo "[$REPO_NAME] ✅ Landed on $BRANCH. Tier-C drain (≤15min) promotes LDR→staging (v2-gated, dep-order-checked)."
   echo "[$REPO_NAME]    Need it on staging now? re-run with --hotfix (opens a staging PR; respects the staging lock)."
+  exit 0
+fi
+
+# LDR_MAIN normal ship: plain --hotfix already redirected above (staging is dead for this
+# promotion_model), and --hotfix-to-main already exited via its own block if requested — so
+# reaching here means neither was set. Same shape as the PM_OPTION_B exit below.
+if [ "$LDR_MAIN" = true ]; then
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). ldr-to-main-promote-fleet.yml drains to main (gates: sit-gate/fleet-green + quality-gates-v2 + quickmerge-provenance)."
+  echo "[$REPO_NAME]    Need it on main immediately? re-run with --hotfix-to-main (operator-gated fast-track; see --help)."
   exit 0
 fi
 

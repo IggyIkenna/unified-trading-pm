@@ -53,7 +53,7 @@ context_scope:
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
+    /plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
     plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv,
   ]
 ---
@@ -74,7 +74,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Delete the 149 stale legacy per-leg candle objects** (listed in
+- [x] ✅ [OPERATOR] P2. **Delete the 149 stale legacy per-leg candle objects** (listed in
       `plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv`) — Track 7's terminal step, ONLY after the
       regenerated bundles are verified complete (via `cefi_consolidated_native_ao_extract_2026_07_25.md`'s candidate-7
       todo, which this plan is gated on). Deleting before the bundles are verified complete causes permanent,
@@ -115,7 +115,7 @@ context_scope:
 > delete may proceed via the standard protocol (dry-run, canonical VM/migration script, soft-delete-retention pre-check,
 > apply, verify-against-expected). Same open question as the sibling E4-E8 orphan-sweep applies here too — whether this
 > specific hard-stop-#2 delete may be agent-executed once qualified, or needs literal human hands, is unresolved — see
-> `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (this doc was one of the 4
+> `/plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (this doc was one of the 4
 > deletes that issue's "Hard-stop review" banner covers). Treated conservatively pending that ruling: human-execution
 > kept.
 
@@ -146,3 +146,14 @@ No new durable contract is created by this plan.
   (generic, not this doc's specific action) and added the CSV manifest this doc's sole todo names as the definitive
   delete-target list (`cefi_todo19_149_residual_objects_2026_07_23.csv`) — the closest thing this operator-gated,
   script-free delete plan has to a "source" a worker needs before executing it.
+- **governance-sweep stale-tag cleanup, 2026-08-06**: flipped this todo `[x]` — the delete was already resolved
+  elsewhere, checkbox never flipped. `cefi_consolidated_native_ao_extract_2026_07_25.md` (this plan's gating
+  `depends_on` prerequisite) landed candidate-7's verify+backfill on 2026-08-04 and was itself ARCHIVED 2026-08-05: Part
+  (a) confirmed raw-tick presence for all 8 affected days; Part (b) sampled + `gsutil stat`-verified all 149 CSV-listed
+  objects return 404 — **all 149 stale objects are already gone**. That plan's own note: "The `[OPERATOR]`-gated delete
+  of the 149 stale objects is ACCOMPLISHED (all gone)." The bundle-integrity gap the same audit found (105/112 cells
+  incomplete — a separate, NOT-yet-closed issue) was correctly filed as its own follow-up,
+  `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`, and is out of scope for this plan (which only ever
+  covered the delete, not bundle regeneration). This plan's sole todo is now done; the gated finalize twin
+  (`cefi_track7_candle_namespace_residual_finalize_2026_07_25.md`) is unblocked to reconcile the parent closeout
+  checkbox + archive.

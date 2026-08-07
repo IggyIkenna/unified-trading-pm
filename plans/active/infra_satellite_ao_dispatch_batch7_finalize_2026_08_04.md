@@ -95,3 +95,4 @@ skill's no-double-gate mechanism).
 
 - **2026-08-04** — Authored alongside `infra_satellite_ao_dispatch_batch7_2026_08_04.md` by `/ag-closeout-audit infra`
   (autonomous mode, scheduled daily run, slot 10).
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (2 entries), still accurate.

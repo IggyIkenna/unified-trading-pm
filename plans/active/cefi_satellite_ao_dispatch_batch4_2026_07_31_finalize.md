@@ -18,7 +18,7 @@ related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
@@ -67,7 +67,7 @@ context_scope:
 
 - [ ] [REVIEW] P1. **Reconcile all 7 distinct source docs' checkboxes.** Batch 4's 7 todos draw from 7 source docs:
       `issues/bybit_futures_chain_write_shape_2026_07_13.md`,
-      `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`,
+      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`,
       `issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md`,
       `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`,
       `issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`,

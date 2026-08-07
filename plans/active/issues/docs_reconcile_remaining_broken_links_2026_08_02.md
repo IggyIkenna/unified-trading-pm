@@ -53,42 +53,50 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 
 ## Genuinely dead links — no successor found anywhere in the repo (verified via `find`, not just grep-0)
 
-- [ ] [DOCS] P2. `.cursor/rules/core/provider-api-version-manifest.mdc` cites the ARCHIVED `unified-trading-codex`
-      repo's `02-data/provider-api-version-manifest.md` (via `../../unified-trading-codex/`). The live content-of-record
-      for this topic is a YAML file, not a doc:
-      `unified-api-contracts/unified_api_contracts/config/provider_api_versions.yaml` (confirmed via the sibling rule
-      `.cursor/rules/config/provider-manifest-ssot.mdc`). Fix: either write the missing stub doc pointing at the YAML,
-      or drop the dead `CODEX:` pointer line.
-- [ ] [DOCS] P3. `/codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md` cites a transient `.cursor/plans/` artifact,
-      `phase_0_cod_service_specs_f0a0afbd.plan.md` — `.cursor/plans/` doesn't exist; the hash-suffixed filename is a
-      transient Cursor-generated artifact, never durable. Fix: delete the dead link.
+- [x] ✅ [DOCS] P2. `.cursor/rules/core/provider-api-version-manifest.mdc` cited the ARCHIVED `unified-trading-codex`
+      repo's `02-data/provider-api-version-manifest.md`. **Fixed 2026-08-05 (docs-reconcile, dispatch agt-d8ef73)**:
+      dropped the dead `CODEX:` pointer line — the rule's own body (frontmatter description + `## Rule summary`) is
+      already self-sufficient, and the live content-of-record is a YAML config, not a doc, so no new stub was invented.
+      `unified-trading-pm@72b0f5724`.
+- [x] ✅ [DOCS] P3. `/codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md` cited a transient `.cursor/plans/` artifact,
+      `phase_0_cod_service_specs_f0a0afbd.plan.md`. **Fixed 2026-08-05**: dropped the dead link, annotated
+      `_(transient Cursor-generated artifact, never durable — dead historical link)_` matching this same doc's own
+      established convention for the 2 sibling dead links 6 lines above (`PROJECT_STRUCTURE_REFERENCE.md`,
+      `COMPREHENSIVE_SUMMARY.md`). `unified-trading-pm@72b0f5724`.
 - [ ] [DOCS] P2. `/codex/04-architecture/README.md` (×4: `BATCH-LIVE-SYMMETRY.md`, `communication-patterns.md`,
       `compute.md`, `scaling.md`) + `/codex/04-architecture/batch-live-architecture.md` (`communication-patterns.md`) —
       the README's own ToC clearly intended these as sibling docs fanned out from it, but none were ever created; the
       content lives entirely inline in README.md instead (control-verified: `concurrency.md`, linked from the same
       table, DOES exist — so this is a real gap, not a resolution-logic bug). Fix: either extract the relevant README
-      sections into the 4 real files, or strip the dead ToC/inline links and note the content is inline.
+      sections into the 4 real files, or strip the dead ToC/inline links and note the content is inline. **Re-verified
+      2026-08-05 (docs-reconcile): still no confident successor, left open.**
 - [ ] [DOCS] P3. `/codex/06-coding-standards/README.md` (×3: `./PREK_MIGRATION_WALKTHROUGH.md`,
       `configuration-management.md`, `formatting-standards.md`) — same table already has a precedent fix (line 61: a
       broken `STANDARDS.md` link was redirected to `adapter-dead-code-and-fallback-ban.md` on 2026-07-24), but no
       confident redirect target was found for these 3 (checked `config-types.md` as a candidate for #2 — it's itself a
       redirect stub pointing back at this same README, so using it would create a cycle). Needs a human who knows what
-      these 3 were meant to cover.
+      these 3 were meant to cover. **Re-verified 2026-08-05 (docs-reconcile): still no confident successor, left open.**
 - [ ] [DOCS] P3. `/codex/06-coding-standards/ui-testing-layers.md` cites `../../../.claude/rules/workspace-workflow.md`
       — no `rules/` subdir under `cursor-configs/`, no file named `workspace-workflow.md` anywhere in the repo.
-- [ ] [DOCS] P3. `/codex/07-security/mev-protection.md` cites the retired `plans/questions/` dir's
-      `defi_readiness_catalogue_2026_05_08.md` — `plans/questions/` was wholesale retired 2026-05-20, but unlike the
-      sibling case already fixed in this sweep (`per-venue-paper-policy.md`, resolved via a concurrent process to the
-      plan it spawned), no spawned successor for THIS specific slug is discoverable anywhere in `plans/active/` or
-      `plans/archive/`.
+      **Re-verified 2026-08-05 (docs-reconcile): still absent everywhere, left open.**
+- [x] ✅ [DOCS] P3. `/codex/07-security/mev-protection.md` cited the retired `plans/questions/` dir's
+      `defi_readiness_catalogue_2026_05_08.md`. **Fixed 2026-08-05**: repointed to the retirement record
+      (`plans/archive/questions_README_retired_2026_05_20.md`), which names the 2 real successors
+      (`defi_catalogue_chain_primitives_2026_05_10.md`, `defi_simulation_realism_2026_05_10.md`) — used the retirement
+      record itself as the link target rather than either successor alone, since the original doc's content split across
+      both. `unified-trading-pm@72b0f5724`.
 - [ ] [DOCS] P3. `/codex/09-strategy/architecture-v2/README.md` cites `templates/archetype-doc.md` — no `templates/` dir
       exists under `architecture-v2/`; the real `archetypes/` dir holds ~19 fully-written archetype docs with no shared
-      template file ever created.
+      template file ever created. **Re-verified 2026-08-05 (docs-reconcile): still no confident successor, left open.**
 - [ ] [DOCS] P3. `/codex/15-runbooks/custody-onboarding-checklist.md` cites a `plans/active/` slug,
       `fireblocks_copper_client_integration_2026_06_01.md` — no plan under this or any similar slug exists anywhere.
       Plausibly this custody/wallet-adjacent plan was simply never authored.
 - [ ] [DOCS] P3. `codex/README.md` cites `.github/PRE_COMMIT_SETUP.md` — `.github/` contains only `actionlint.yaml`,
-      `actions/`, `workflows/`; no pre-commit doc under any name/case.
+      `actions/`, `workflows/`; no pre-commit doc under any name/case. **Re-verified 2026-08-05 (docs-reconcile): still
+      genuinely dead, no successor found anywhere (incl.
+      `plans/archive/pre_commit_to_gha_version_bump_2026_03_11.plan.md` — thematically close but a migration PLAN, not
+      the setup doc itself, so not used as a substitute target). Left open — this specific one needs prose written or
+      the link dropped, no evidence-backed target exists to repoint to.**
 - [x] ✅ [DOCS] P2. `cursor-rules/architecture/feature-producer-consumer-contract.mdc` cites codex `04-architecture`'s
       `feature-dictionary.md` — file does not exist anywhere in the repo, not a rename. **MOOT — the citing rule is no
       longer live.** `unified-trading-pm@b45eab084`/`@d4f7fab9d` (2026-08-02) archived the entire top-level
@@ -103,11 +111,12 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 
 ## New from 2026-08-03 sweep — genuinely dead links, no successor (verified via direct invocation of the live checkers, not re-implemented logic)
 
-- [ ] [DOCS] P2. `plans/audit/results/archive/AUDIT_2026_05_15_harsh_side_completion.md` cites 6 dead targets, all the
-      same shape: `../../harsh_orchestrator/pings/slot_{2,5,6,7,8,9}.md`. Git archaeology confirms all 6 were
+- [x] ✅ [DOCS] P2. `plans/audit/results/archive/AUDIT_2026_05_15_harsh_side_completion.md` cited 6 dead targets, all
+      the same shape: `../../harsh_orchestrator/pings/slot_{2,5,6,7,8,9}.md`. Git archaeology confirmed all 6 were
       **deliberately, permanently deleted** by commit `890ef4b86` (2026-06-24, "operator-deleted... no longer needed") —
-      not a rename, no successor exists or should be invented. Fix: delete the 6 dead links from the citing doc (it's
-      already an `archive/` doc itself, so this is pure link cleanup with no content implication).
+      not a rename, no successor exists. **Fixed 2026-08-05 (docs-reconcile)**: converted all 6 to plain-text
+      `pings/slot_N.md` citations with a deletion note, dropping the dead hyperlink syntax while preserving the
+      historical "where the evidence used to live" mention. `unified-trading-pm@72b0f5724`.
 - [ ] [DOCS] P3. `plans/epics/agent_operating_framework_master.md` (`related:` frontmatter) cites
       `../active/orchestrator_v07_multi_vm_topology_2026_05_21.md` — no file under this or any similar slug exists
       anywhere in the repo; multi-VM dispatch itself was deprecated 2026-06-27 in favor of the single-VM architecture,
@@ -124,12 +133,19 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       link check, not a broken link per se. Needs a human who can either refresh the matrix (retired repo names →
       current fleet) or determine there's no live consumer left and archive it with QUICK_REFERENCE.md repointed
       elsewhere.
-- [ ] [DOCS] P3. `/codex/02-data/contracts-scope-and-layout.md` cites the `plans/active/` slug
+- [x] ✅ [DOCS] P3. `/codex/02-data/contracts-scope-and-layout.md` cited the `plans/active/` slug
       `uac_citadel_architecture_2026_05_07.md` — `plans/archive/INDEX.md` (line 177) tracks this exact slug's
-      disposition as "Superseded by completed execution plan," naming `uac_citadel_implementation_execution` as the
-      successor ("Complete (79/79)") — but neither slug corresponds to any actual file on disk anywhere in `plans/`.
-      These read as pure status-table labels, not filenames. Whoever picks this up should start from
-      `plans/archive/INDEX.md`'s citadel section rather than guessing.
+      disposition as "Superseded by completed execution plan," but neither that slug nor
+      `uac_citadel_implementation_execution` (the row directly above) corresponds to any actual file on disk anywhere in
+      `plans/` — pure status-table labels, not filenames. **Fixed 2026-08-05 (docs-reconcile)**: rewrote the citing
+      prose to state the plan is gone + cite `plans/archive/INDEX.md`'s citadel section by fact rather than link, and
+      flagged (not resolved — genuinely out of this skill's scope) an adjacent open question this investigation
+      surfaced: whether the circular-import test file this paragraph gates (`test_ac_uic_alignment.py`) has actually
+      completed its prescribed move to `unified_api_contracts/internal/tests/` in the sibling `unified-api-contracts`
+      repo (found copies at BOTH `tests/internal/test_ac_uic_alignment.py` and
+      `tests/internal/unit/test_ac_uic_alignment.py` — didn't read either's actual imports to determine if the exception
+      this paragraph describes is now moot, since that's a cross-repo code-correctness question beyond retrieval-layer
+      doc health). `unified-trading-pm@72b0f5724`.
 - [ ] [DOCS] P3. `/codex/05-infrastructure/workspace-root-variable.md` cites `ci-cd.md` — two plausible readings: (a)
       the same never-created-sibling-doc pattern as the `04-architecture/README.md` cluster above (the citing doc's own
       body table lists `ci-cd.md` alongside two real siblings, `new-repo-setup.md` + `workspace-setup.md`, under "CI/CD
@@ -216,3 +232,24 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   partial split, matching this doc's own existing `assigned_role: infra`; not drafted by this audit (outside this
   skill's Phase 3 action set for MIXED). Doc-level disposition unchanged from the 2026-08-02 pass; this both closes 2
   genuinely moot items and refines the bounded-item count with fresh verification.
+- **docs-reconcile 2026-08-05** (dispatch agt-d8ef73): applied all 6 of the 2026-08-03 na-eligibility-audit's
+  BOUNDED_RECLASSIFY items — re-verified each fresh (not trusting the prior audit's claim blindly) then fixed: (1)
+  `provider-api-version-manifest.mdc` — dropped the dead `CODEX:` pointer line rather than writing a new stub, lowest-
+  risk option since the rule body is already self-sufficient; (2) `E2E_WORKFLOW_UNIFIED.md` — dropped the dead link,
+  annotated matching the doc's own established dead-link convention; (3) `mev-protection.md` — repointed to the
+  retirement record (had 2 successors, not 1, so linked the record rather than picking one arbitrarily); (4) the 6
+  `AUDIT_2026_05_15` slot-ping links — converted to plain-text citations with a deletion note; (5)
+  `agent_operating_framework_master.md`'s dead `related:` entry — found ALREADY ABSENT from the current `related:` list
+  (fixed sometime between 2026-08-03 and now, no action needed, doc_reference_baseline.yaml is correspondingly empty);
+  (6) `contracts-scope-and-layout.md`'s `uac_citadel_architecture` citation — rewrote factually per
+  `plans/archive/INDEX.md`, and surfaced (not resolved) an adjacent open question the investigation stumbled onto: the
+  paragraph gates a circular-import test exception "until that move lands," and the sibling `unified-api-contracts` repo
+  now has copies of `test_ac_uic_alignment.py` at BOTH `tests/internal/` and `tests/internal/unit/` — whether the move
+  actually completed (making the exception moot) needs someone to read the actual imports, which is a cross-repo
+  code-correctness check beyond this skill's retrieval-layer-doc-health charter. Re-verified all 10 VALID_JUDGMENT
+  survivors fresh (still no confident successor for any). `doc_body_link_baseline.yaml` ratcheted 21→11 via
+  `--update-baseline` (verified zero NEW breakage first). `unified-trading-pm@72b0f5724`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

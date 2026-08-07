@@ -42,6 +42,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md,
+    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
   ]
 created: 2026-07-29
 author: unknown
@@ -432,19 +433,26 @@ defi/prediction, where MDPS always writes its own candle rows under its own `ser
 cross-stamping. The `[OPERATOR]` P1 fix-approach ruling above (options A/B/C) therefore only needs to cover the sports
 `ODDS_API` path — no other asset_group needs the same row-scoping fix applied pre-emptively.
 
-- [ ] [DATA] P3. **Investigate KALSHI/polymarket_clob source-mislabel in the prediction-market manifest** — 58,013 rows
-      in `market-data-tick-pred-prd-central-element-323112` carry `venue=KALSHI, data_type=trades` but
-      `source=polymarket_clob` (writes span 2026-07-11 05:56–06:00 UTC, a narrow ~4-minute window — looks like a single
-      misconfigured backfill/replay run rather than an ongoing writer bug). Confirm whether these rows are genuine
-      KALSHI trades mis-stamped with the wrong `source`, or genuine POLYMARKET trades mis-stamped with the wrong `venue`
-      — either way `source=`/`venue=` disagree with each other for this slice. Done-when: root cause identified + (if
-      genuinely mislabeled) a restamp plan. Repo: market-tick-data-service.
-- [ ] [DATA] P3. **Close out the DeFi leg of the blast-radius audit with a live manifest census** — the P1 audit above
-      classified DeFi as structurally low-risk by naming-convention analysis only (its `market-data-tick-defi-prd`
-      manifest is 1.07 GB, judged disproportionate for this session's single-walk budget). Done-when: a single DuckDB
-      read of `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` confirms 0 rows have
-      `data_type` literally equal to any `ALL_DEFI_VENUES` token
-      (`unified-api-contracts/     unified_api_contracts/registry/defi_venues.py`). Repo: unified-trading-library.
+- [x] ✅ [DATA] P3. **Investigate KALSHI/polymarket_clob source-mislabel in the prediction-market manifest** — ROOT
+      CAUSE IDENTIFIED + DATA ALREADY RESTAMPED (slot 15, 2026-08-05). **Finding**: genuine KALSHI
+      trades/book_snapshot_5 rows mis-stamped with `source=polymarket_clob`. **Root cause**:
+      `_rebuild_prediction_cf11.py` CF-11 pass computed `bundle_pm`/`source` once for POLYMARKET outside the per-venue
+      loop, hardcoding `polymarket_clob` for every venue. Fix #1 (`3397e7ae`, Jul 10 16:52) fixed
+      `rebuild_prediction_manifest.py`; Fix #2 (`77065bd5`, Jul 11 07:16) fixed `_rebuild_prediction_cf11.py` — 58,013
+      rows written in the ~14h gap. **Current state**: all 370,426 KALSHI rows now correctly carry `source=kalshi` (0
+      rows with `source=polymarket_clob`). 306K rows restamped with Aug 2026 `written_at` by a subsequent manifest
+      rebuild. **No restamp plan needed** — data already corrected. Evidence: DuckDB query of
+      `gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet` (185 MB, 2026-08-05)
+      confirms 0 rows with `venue=KALSHI AND source=polymarket_clob`; all 370,426 KALSHI rows carry `source=kalshi`.
+      Repo: market-tick-data-service (no code change — investigation only).
+- [x] ✅ [DATA] P3. **Close out the DeFi leg of the blast-radius audit with a live manifest census** (slot 11,
+      2026-08-05). Single DuckDB read of
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (1.07 GB, queried via
+      GCS with column pruning): **0 rows have `data_type` literally equal to any `ALL_DEFI_VENUES` token** (168
+      `PROTOCOL-CHAIN` identifiers vs 33 manifest `data_type` values — all generic categories like `dex_swaps`,
+      `gas_fees`, `lending_indices`; zero overlap). **The sentinel-collision bug class is ABSENT from the DeFi
+      manifest** — the P1 blast-radius audit is now structurally closed (sports-only, confirmed across all 5
+      asset_groups). No code change shipped (read-only investigation).
 
 ## Codex SSOTs
 
@@ -455,3 +463,27 @@ any direct canonical intervention — § "Diagnostic caveats" now carries the st
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **2026-08-05**: a duplicate of this exact reasoning error was independently made and then self-corrected in
+  `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` (AF entity-completion campaign) — same symptom
+  (static `rows_out` + nonzero `dedup_dropped` over hours), same premise, downgraded to `likely-false-alarm` after
+  finding this doc's resolution. Cross-linked both directions. If this pattern recurs a third time, it may be worth a
+  codex callout (beyond the existing `manifest-consolidator-ssot.md` § "Diagnostic caveats" note) making the
+  `dedup_dropped = rows_in - rows_out` derivation more prominent/harder to miss on first read.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged. Fingerprint match:
+  `manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md` — matched literal: static `rows_out` + nonzero
+  `dedup_dropped` reasoning error (already cross-linked in this doc's own 2026-08-05 entry above, not a fresh find).
+
+## Follow-ups
+
+- [ ] [DATA] P3. Explain the 23 sentinel-free missing odds_api days (2020-06-06..2026-04-15 with neither an odds_api row
+      nor an ODDS_API sentinel row) not covered by the ODDS_API sentinel-collision mechanism — §4 states 'The 23
+      sentinel-free missing days are NOT yet explained' and the root-cause section says they 'need a separate look', but
+      no tracked todo carries them. (The separate 595-day canonical gap re-run is already a tracked P1 todo in
+      sports_odds_api_scattered_multiyear_gaps_2026_07_27.md.)
+
+> **2026-08-06 archive-candidate audit**: Consolidator is EXONERATED (banner: RESOLVED 2026-07-30, static rows_out is
+> in-place UPDATE) and the real root cause (check_shard_freshness ODDS_API-sentinel collision skipping 572/595 dates) is
+> diagnosed and fixed (market-tick-data-service@362e64e3). But the doc retains prose-only open items: the 23
+> sentinel-free missing days are 'NOT yet explained' (folded into the blast-radius todo whose DONE content only proves
+> sports-only, not their cause), and the P1 todo itself notes the 595-day canonical gap is still open (owned by the
+> sibling doc). Conservative bias -> NEEDS_TODO for the 23-day residual.

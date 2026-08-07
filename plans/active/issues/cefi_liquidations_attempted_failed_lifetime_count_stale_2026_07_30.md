@@ -34,18 +34,19 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
-    /plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
 created: 2026-07-30
 author: unknown
 parent_epic: observability_master
 priority: P2
 source: ["data_pipeline_failure escalation agt-029155, slot 5, 2026-07-30"]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-02
@@ -56,7 +57,7 @@ context_scope:
     deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
     deployment-service/deployment_service/data_pipeline_monitors/known_dead_cells_registry.py,
     deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
-    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
 ---
 
@@ -165,9 +166,11 @@ not lost if the bound expires unanswered.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide among options A/B/C above (or another approach) for how `DP-FETCH-009` should treat a cell
-      whose `attempted_failed` classification is dominated by already-fixed historical incidents. Repo:
-      deployment-service.
+- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`), AO-dispatchable —
+      change `check_high_attempted_failed` to compute thresholds over a trailing window (7-14 days) instead of the full
+      lifetime manifest, closing this alert class generally. Decide among options A/B/C above (or another approach) for
+      how `DP-FETCH-009` should treat a cell whose `attempted_failed` classification is dominated by already-fixed
+      historical incidents. Repo: deployment-service.
 - [ ] [DIAG] P3. If the operator wants the residual trickle root-caused before deciding: pull Cloud Logging /
       Tardis-side request logs for the exact process that produced the 2026-07-29 09:00 UTC
       `Tardis HTTP 403 code=274 concurrent-IP-lock` COINBASE-FUTURES rows (the VM-creation audit-log trace in this doc
@@ -187,13 +190,13 @@ not lost if the bound expires unanswered.
   of `44,422 / 749,121` — the `attempted_failed` numerator is byte-identical; only `attempted` (denominator) grew by 2,
   consistent with the boot context's own `attempted_failed_staleness` label "no new attempted_failed activity in 1d".
   Per the skip-condition this corpus has converged on (see
-  `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s 2026-07-30 entries — "no new
+  `/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s 2026-07-30 entries — "no new
   activity since the doc's last verified reading", not a fresh full manifest read every time), did a cheap git-ancestor
   check instead of re-deriving the diagnosis: `market-tick-data-service@6a067cf1` (aiodns fix) is still an ancestor of
   `origin/live-defi-rollout`, and `deployment-service/scripts/vm/tardis-concurrency-guard.sh` still caps
   `TARDIS_MAX_CONCURRENT_VMS=1`. Both root-cause fixes remain in place; no new failure class observed; the operator
   decision on lifetime-count-vs-trailing-window (options A/B/C above) is still open and unaffected by this re-fire. No
-  code changed. Also filed `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (if
+  code changed. Also filed `/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (if
   not already cross-linked) as the standing meta-issue this repeat dispatch itself is an instance of.
 - **na-eligibility-audit 2026-07-31** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos are explicitly
   `[OPERATOR]`/operator-conditional (decide among options A/B/C; the DIAG follow-up is gated on that decision). Not
@@ -204,7 +207,7 @@ not lost if the bound expires unanswered.
   `44,422 / 749,123` — `attempted_failed` grew by only 3 rows and `attempted` by 16 over the intervening period,
   matching the boot context's own `attempted_failed_staleness` label ("only 3 attempted_failed row(s) in the last 1d —
   below the 500-row materiality floor; a decaying trickle on already-tracked backlog, not a fresh regression"). Per the
-  established skip-condition (`/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`),
+  established skip-condition (`/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`),
   did a cheap verification instead of re-deriving the diagnosis: confirmed `market-tick-data-service@6a067cf1` (aiodns
   fix) is still an ancestor of `origin/live-defi-rollout`, and
   `deployment-service/scripts/vm/tardis-concurrency-guard.sh` still caps `TARDIS_MAX_CONCURRENT_VMS=1`. Both root-cause
@@ -217,3 +220,12 @@ not lost if the bound expires unanswered.
   gated on that choice. Neither is worker-determinable.
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — body unchanged since 2026-08-01, existing list
   still accurate.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. Todo 1's A/B/C policy choice was resolved this same session ("RULED 2026-08-06
+  (operator), option A: approved", retagged `[OPERATOR] -> [CODE]`) — the remaining work (trailing-window threshold
+  instead of lifetime count in `check_high_attempted_failed`,
+  `deployment-service/data_pipeline_monitors/meta_watchers.py`) is a bounded, single-file change; todo 2's `[DIAG]`
+  follow-up is a bounded log-pull conditional on the same decision. Conflict-check cleared (no overlapping claim in
+  `parent_epic: observability_master`). `assigned_role` was unset in this doc; filled `data_engineering` per the corpus
+  convention for `data_pipeline_monitors`-touching docs.

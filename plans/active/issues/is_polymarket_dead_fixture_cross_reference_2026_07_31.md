@@ -144,3 +144,8 @@ Not adjudicated here:
   `_cross_reference_fixture()` — is still present unchanged). The doc's own "Recommended decision" section still
   explicitly states "Not adjudicated here" before laying out the (A) delete vs (B) keep-and-document tradeoff — a
   genuine architecture call, not worker-determinable. Doc stays NA.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA, valid — re-verified, 1 open, unchanged
+  since the 2026-08-04 marker. The sole todo is still an explicit "Not adjudicated here" operator/plan-owner-gated (A)
+  vs (B) architecture decision (delete dead code vs. keep-and-document activation path) — a genuine judgment call, not a
+  worker-determinable fact. Third consecutive audit pass (07-31, 08-04, 08-07) reaching the same verdict. Doc stays NA.

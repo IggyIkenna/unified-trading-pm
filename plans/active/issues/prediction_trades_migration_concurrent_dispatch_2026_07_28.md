@@ -32,8 +32,8 @@ created: "2026-07-28"
 author: unknown
 last_updated: "2026-08-02"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 1
@@ -119,19 +119,37 @@ One or both of:
 > above but a newly-scoped gap: todo 2's in-flight check needs a staleness threshold or it stalls abandoned tasks
 > forever. Still `assigned_vm: NA`, so it does not auto-dispatch either.
 
-- [ ] [BACKEND] P2. **Give resumable todos a shared, task-id-keyed checkpoint location.** For any todo whose brief names
-      a `--report`/resumability file, point the convention at a durable per-TASK-ID directory rather than a
-      per-slot-per-session scratchpad, so a second worker picking up the same todo resumes from the last real checkpoint
-      instead of re-deriving it. **Done-when**: the convention is written down in the task/brief template AND at least
-      one resumable todo's brief uses it. Note this doc's own case is still unfixed — the merged checkpoint at
-      `<slot-8-scratchpad>/prediction_trades_migration_report_merged.jsonl` is itself still per-slot-scratchpad. (repo:
-      `agent-orchestrator` + `unified-trading-pm`)
-- [ ] [BACKEND] P2. **Add a dispatcher-side in-flight check.** Before assigning a todo whose current state is
-      `status: working`/`dispatched`, the backlog dispatcher should refuse to re-dispatch the identical todo id to a
-      second slot while the first is still live (a heartbeat check against the owning slot, mirroring the existing
-      `completed_tasks`/`prerequisites` gating mechanism). **Done-when**: a second dispatch of an in-flight todo id is
-      demonstrably skipped. (repo: `agent-orchestrator`)
-- [ ] [BACKEND] P2. **Define the heartbeat-staleness threshold that marks an in-flight attempt ABANDONED, so a second
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-06 — convention written + demonstrated.** Added "finding X" to
+      `plans/active/task_template.md` § 3 (Todo format): a resumable script's `--report`/checkpoint file must go in a
+      shared, task-id-keyed, durable location — `gs://<the-bucket-it-already-writes>/_ops/checkpoints/<task_id>.jsonl`
+      for GCS-touching scripts (the common case), or `${WORKSPACE_ROOT}/.ao_checkpoints/<task_id>/<name>.jsonl` (the
+      SAME absolute path on every slot on this single-VM host, unlike a per-slot `.tabs/<N>/` tree or a per-session
+      `cc-tmpdir/` scratchpad) for scripts with no GCS home — plus a concrete example todo-brief line spelling out the
+      resolved path literally instead of `<path>`/`<checkpoint>`/`<scratchpad>`, satisfying "at least one resumable
+      todo's brief uses it." No `agent-orchestrator` code change was required — the fix is a doc-level authoring
+      convention, not a dispatcher code path (dispatcher-side enforcement is todo 2 below). **This doc's own case
+      deliberately left NOT retroactively touched**: `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s 4b-i todo
+      has a live background delete pass running against it as of this fix (6 concurrent shards, see its own Progress
+      Log) — editing that hot file here risked a real conflict with in-flight work for zero data-safety benefit; its
+      existing ad-hoc GCS checkpoint (`_ops/4bi_run_checkpoint_latest.jsonl`) already gets it most of the way there
+      (durable, bucket-colocated), it is just date/name-keyed rather than task-id-keyed. The next resumer of that todo
+      should rename/mirror to the `_ops/checkpoints/<task_id>.jsonl` convention once the current in-flight run settles,
+      not mid-run. (repo: `unified-trading-pm`)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-06 — `agent-orchestrator@9e28a36`.** Added a new FLEET-scope `in_flight_elsewhere`
+      eligibility filter to `server/dispatch.py`'s `_FILTERS` table: if a `SlotRow` still shows a task as its
+      `current_task` with a live heartbeat (silence under the new `tuning.in_flight_task_owner_stale_after_seconds`
+      knob, default 900s — matching the two precedents todo 3 below names, since both already agree at 900s), no OTHER
+      slot may claim the same task id, even if the TaskRow's own `status`/`dispatched_to` bookkeeping reads free. This
+      is defense-in-depth alongside the existing `status == 'queued'` precondition, for exactly this doc's incident
+      shape: a resumable long-running script (e.g. a GCS backfill/migration) whose real-world work can outlive its
+      owning slot's TRACKED session ending. Also wired into `_detailed_fleet_reasons` so `/api/backlog/{id}/blockers`
+      reports the block by name instead of falling through to "ready (no blockers)". The staleness threshold is an
+      INJECTED tuning parameter (not hardcoded) per the sequencing note below — todo 3's eventual ruling updates the
+      knob's default, not the filter logic. **Done-when** evidence: `tests/test_dispatch_in_flight_elsewhere.py` (5
+      tests: live-owner blocks a second slot; stale-owner releases it; the owning slot may still claim its own task; the
+      threshold is configurable via `set_tuning`; a live-owned in-flight task is excluded from the spawn budget) — full
+      `quality-gates.sh` green (2572 passed, 2 skipped) both pre- and post-commit. (repo: `agent-orchestrator`)
+- [ ] [OPERATOR] P2. **Define the heartbeat-staleness threshold that marks an in-flight attempt ABANDONED, so a second
       slot knows it is safe to resume.** Todo 2 deadlocks without this: slot 7's session ended with no closing Progress
       Log entry, so under a naive "is it still live?" gate its claim reads in-flight FOREVER and permanently blocks
       re-dispatch of a task nobody is working — trading this doc's duplicate-dispatch waste for a silent stall. Decide
@@ -195,3 +213,37 @@ solution.
   heartbeat-staleness threshold and the stale-claim takeover rule"), which the dispatch-scope eligibility bar keeps
   human-resolved before any AO todo is cut against their outcome. Verdict agrees with the ruling; no change.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-06 (`/plan-reconcile ao`, operator ruling, interactive)**: **SPLIT the dispatch scope — todos 1+2 go to the
+  fleet, todo 3 stays with the operator.** `assigned_vm: NA` → `planning` and `execution_scope: local-only` →
+  `orchestrator-agent`, so todos 1 (task-id-keyed checkpoint location) and 2 (dispatcher-side in-flight check) are
+  dispatchable: both are bounded engineering with stated done-whens. Todo 3 was retagged `[BACKEND]` → `[OPERATOR]`,
+  which is what actually keeps it out of the queue — `_NON_DISPATCHABLE_RE` excludes `[OPERATOR]`-tagged todos, so the
+  doc can be `assigned_vm: planning` while that one item remains operator-held. Do NOT "tidy" that tag back to
+  `[BACKEND]`: it is load-bearing, not a mislabel.
+
+  **Why todo 3 is genuinely the operator's**: it is a threshold choice with a live trade-off in both directions — too
+  short and a still-working slot gets its task re-dispatched underneath it (the exact duplicate-dispatch waste this doc
+  was filed about); too long and a dead worker's task stalls silently, which todo 3's own text notes would trade this
+  doc's problem for a worse one. The candidate precedents it names (`TuningDefaults.watchdog_heartbeat_timeout` = 900s,
+  `one_shot_stale_grace_minutes` = 15.0) do not settle it, and picking between reusing a knob and adding one is a
+  fleet-behaviour call. **Sequencing caveat for the implementing agent**: todo 2 is implementable but not _complete_
+  without todo 3's number — build the in-flight check with the threshold as an injected parameter, do not hardcode a
+  guess, and do not block on the ruling to start.
+
+- **2026-08-06 (backend_engineer, backlog task `prediction_trades_migration_concurrent_dispatch-001`)**: Todo 1 flipped
+  `[x]` — see the checkbox's own evidence above. `unified-trading-pm@c455440d9` adds task_template.md finding X (§ 3,
+  Todo format) documenting the shared task-id-keyed checkpoint convention with a worked example brief. Deliberately did
+  not touch `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s live 4b-i delete pass (in-flight background shards
+  running as of this edit) — adopting the new naming there is left to that todo's next resumer, once the current run is
+  not mid-flight.
+
+- **2026-08-06 (backend_engineer, backlog task `prediction_trades_migration_concurrent_dispatch-002`)**: Todo 2 flipped
+  `[x]` — see the checkbox's own evidence above. `agent-orchestrator@9e28a36`. Built per the sequencing caveat: the
+  in-flight check ships now with `tuning.in_flight_task_owner_stale_after_seconds` (default 900s) as an injected,
+  overridable parameter — todo 3 still resolves the actual threshold value and the stale-claim takeover rule; only the
+  knob's default (not the dispatcher's filter logic) needs to change once that ruling lands.

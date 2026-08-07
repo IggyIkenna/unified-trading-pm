@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   notify-version-registry:
-    runs-on: [self-hosted, glue]
+    runs-on: { { RUNS_ON } }
     steps:
       - name: Forward release tag to the PM version registry
         env:

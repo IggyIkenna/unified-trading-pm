@@ -181,3 +181,9 @@ of a venue-day outage.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict;
   `nature: design`, remaining open work is closing 3 adversarially-confirmed architecture gaps before write-enforce, a
   judgment/design call not bounded worker-determinable work.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict;
+  `nature: design`, the enforcement design is APPROVED-IN-PRINCIPLE but not ready to implement pending 3
+  adversarially-confirmed architecture gaps. The closest-to-bounded residual item (Stage-0 classify-and-log) spans 3
+  repos and sits inside a design surface the doc's own author has twice declared not-ready — kept bundled under NA
+  rather than split out unilaterally.

@@ -31,7 +31,7 @@ depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]
 gate_on_depends: true
 locked_by:
 locked_since:
-supersedes:
+supersedes: live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31
 superseded_by:
 source: >-
   check_finalize_plan_coverage.py regression (1 > baseline 0) surfaced while shipping unrelated doc updates for
@@ -52,6 +52,18 @@ context_scope:
 > explicitly re-confirmed still-blocked.
 
 ## Todos
+
+- [ ] [REVIEW] P2. **Evidence-verify the parent's checkboxes before any archival.** (Ported 2026-08-06 from the
+      duplicate `..._finalize_2026_07_31.md` when that plan was superseded — BLK-5eeacb63; this check existed only
+      there, so a plain supersede would have dropped it.) Once every todo in
+      `/plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` is `[x]`, re-verify each
+      carries REAL evidence — the cited `terraform plan`/`apply` output, `gcloud pubsub subscriptions list` count,
+      `gcloud run jobs describe`/`executions list` output, epsilon=0 determinism report path — rather than a
+      false-progress claim. The parent is self-contained (not a batch extraction from other source docs), so there is no
+      separate source-doc checkbox set to reconcile. Also re-check the parent's two deliberately-deferred / time-gated
+      todos at close-out even if they were left open when the rest landed: "Cross-check whether any of the 52 combos
+      still show ZERO messages a week later" and "48h re-check the never-expire policy holds" — both have a real,
+      checkable gate (elapsed time / a fresh `gcloud` count) that may have cleared since the rest shipped.
 
 - [ ] [DOC] P2. **Reconcile + archive `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`.** Once
       every todo on the parent reads `[x]`: (1) verify no checkbox silently regressed (grep the doc for any remaining

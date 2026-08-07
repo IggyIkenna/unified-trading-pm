@@ -28,6 +28,7 @@ superseded_by:
 depends_on:
 source:
 assigned_role: backend_engineer
+effort: xhigh
 drift_direction: advance-code
 context_scope:
   [

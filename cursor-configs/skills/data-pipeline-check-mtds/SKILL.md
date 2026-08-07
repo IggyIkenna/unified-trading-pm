@@ -57,6 +57,29 @@ never silently guessed at or skipped either way.
   then run this workflow on the self-paced loop — see step 6. The no-pause / no-`DEFERRED` completion contract applies:
   don't stop mid-matrix to ask "should I continue?"
 
+## 1a. Run the driver on its own VM — DEFAULT, do not run inline on the shared host
+
+Live evidence 2026-08-06: the driver process itself (not the per-shard VMs it launches — those already ran on their own
+SPOT VMs) reached **21.9GB RSS** on a `--legs force,skip` run and got OOM-killed by the AO host's resource-watchdog
+after competing with every other slot for the shared host's fixed memory pool. Every invocation in §3/§4 below — run via
+`deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh` instead of a bare
+`cd market-tick-data-service && python3 ...`: swap the command's head, keep every flag below it identical.
+
+```bash
+bash deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh \
+  --service mtds --day <DAY> --legs force,skip --mvp-only --require-captured --auto-day \
+  --project central-element-323112
+```
+
+Prints `vm_name=...` immediately, then returns — async (the driver VM self-deletes on completion). Poll
+`gs://deployment-scripts-central-element-323112/vm-logs/<vm_name>/{run.log,EXIT_STATUS}`, or via
+`unified_trading_library.pipeline_e2e_check.launcher.launch_vm_and_wait()` (same contract every other launch-and-wait
+caller uses). The report mirrors to
+`gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/<run_date>/` in
+addition to the local `plans/audit/results/...md` path in §5 — the local copy doesn't survive the driver VM's
+self-delete. The raw `pipeline_e2e_check.py` command shown inline in §3/§4 (for reference) is fine for a quick dev-local
+dry-run against a tiny scope only — never for a real sweep.
+
 ## 2. Phase 0 — provisioning gate (a real check, not an assumption)
 
 `get_write_bucket_name()` rewrites to `-test-{pid}` on `IS_TEST_RUN=true` but does **not create** the bucket — the
@@ -161,6 +184,8 @@ Provenance: `backfill_smoke_write_path_canonical_audit_2026_07_20.md` §1a.
 For each MVP `(asset_group, venue, data_type)` cell for `--day` (MVP scope from
 `unified_api_contracts.canonical.crosscutting.mvp_scope.is_mvp()`; enumerate the Sports `league_id` axis as its own
 cells, never collapsed):
+
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
 
 ```bash
 cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
@@ -365,6 +390,8 @@ non-TRADFI shard records `skipped/canonical_shape_check_is_tradfi_only` — safe
 
 **MVP cells first, then every shard:**
 
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
+
 ```bash
 cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
   --day <DAY> --asset-group TRADFI --legs force,skip,canonical \
@@ -423,6 +450,8 @@ string carefully before assuming which bucket a new failure belongs to:
 
 ## 4. Phase 2 — live leg (MVP-scoped)
 
+**Run via the §1a driver-VM launcher, not inline.** Underlying command:
+
 ```bash
 cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
   --legs live --mvp-only --day <DAY>
@@ -453,7 +482,7 @@ cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
 > active backfill, monitor the backfill VM's `run.log` for 403s during the live VM's window — a zero count confirms no
 > contention this run, but does not structurally guarantee it for future connector changes.
 >
-> Full evidence: `/plans/active/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1/P2 closed NOT-A-BUG
+> Full evidence: `/plans/archive/issues/mtds_live_smoke_vm_not_tardis_guarded_2026_07_28.md` (P1/P2 closed NOT-A-BUG
 > 2026-08-02; P3 tracked here),
 > `/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`.
 

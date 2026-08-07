@@ -58,9 +58,10 @@ context_scope:
 > **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`.
 >
-> **`status: draft`** — stays undispatched until the batch itself is approved by the operator and substantially
-> underway, per the draft-gated phase-chain pattern in `/plans/active/task_template.md` §4. Flipping either doc to
-> `active` is the operator's call.
+> **`status: active`** — machine-gated (not draft-gated): `depends_on` + `gate_on_depends: true` already holds every
+> task of this finalize doc until batch2 finishes, so no separate draft flip is needed. **The gate is CURRENTLY CLOSED**
+> — `ao_satellite_ao_dispatch_batch2_2026_07_30.md` still has open todos — this doc will not dispatch until batch2
+> reaches 0 open todos.
 
 ## Todos
 
@@ -71,11 +72,11 @@ context_scope:
       reporter-staleness read, the JWT-secret token-survives-restart + healthz check, the 4 orphan-commit dispositions,
       the wip-preserve ref disposition). **Done when**: all 8 verified, and any claim whose evidence does not hold up is
       re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
-- [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox** — batch 2
-      was an extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the
-      specific todo in each of: `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4
-      todos), `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md` (both `[WORKER] P1` checkboxes,
-      with per-item MOOT-SUPERSEDED-or-recovered dispositions),
+- [ ] [REVIEW] P0. **Reconcile each todo's evidence into its TRUE source doc (8 docs, listed below)** — batch 2 was an
+      extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the specific
+      todo in each of: `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos),
+      `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md` (both `[WORKER] P1` checkboxes, with
+      per-item MOOT-SUPERSEDED-or-recovered dispositions),
       `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (both todos),
       `na_eligibility_auditor_timer_not_yet_installed_2026_07_27.md` (its SCRIPT P3 item only),
       `git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (its INFRA P3 item),
@@ -128,6 +129,9 @@ context_scope:
 - **2026-07-30** — Authored in the same turn as its batch by `/ag-closeout-audit ao` (autonomous mode).
   `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile → re-check gates →
   archive sources → archive self) and several touch the same files. Left `status: draft`.
+- **2026-08-06 (/plan-reconcile ao)**: corrected the stale body banner — frontmatter is `status: active` (machine-gated
+  via `depends_on`+`gate_on_depends: true`, not draft-gated; the 2026-07-30 entry above records the authoring-time state
+  only). Banner text fixed; no dispatch-readiness change — the gate itself is still closed (batch2 has open todos).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all paths resolve, still the correct archival
   SSOT + batch-sibling set; no change needed. Gated finalize doc, no source path.

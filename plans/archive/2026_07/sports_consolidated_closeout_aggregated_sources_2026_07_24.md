@@ -131,6 +131,8 @@ drift_direction: advance-code
     - **[DATA] P1.** Post-backfill relabel (after the 6 running backfill VMs finish)
     - **[SCRIPT] P2.** Relaunch features-sfi-progressive (code fix shipped, SPORTS re-run pending)
     - **[DATA] P2.** Enrichment completed clean at ~30-34% honest, ~70k unattempted/entity = API-Football daily-cap
+  - [`plans/archive/2026_07/data_completion_sports_history_2026_07_24.md`](/plans/archive/2026_07/data_completion_sports_history_2026_07_24.md)
+    — 0 open todos (shipped-history fork from `data_completion_sports_2026_07_24.md`; record-only, status: complete).
   - [`plans/active/sports_live_availability_and_source_latency_2026_07_24.md`](/plans/active/sports_live_availability_and_source_latency_2026_07_24.md)
     (2 open, added to this index 2026-07-24 — was missing): Live-ODDS quota/book-set decision
     (BLOCKED-OPERATOR-DECISION)
@@ -226,7 +228,7 @@ drift_direction: advance-code
     whether these are the same finding filed twice or genuinely distinct; flagging, not resolving.
   - [`plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`](/plans/archive/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md`](/plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md)
+  - [`plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md`](/plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md)
     (5 open):
     - **1. [OPERATOR] P1.** Rule on the 1,492 v2 pre-floor rows
     - **2. [DATA] P2.** Migrate-forward the 58 v2 post-floor rows (16 days) into canonical `entity=fixtures`

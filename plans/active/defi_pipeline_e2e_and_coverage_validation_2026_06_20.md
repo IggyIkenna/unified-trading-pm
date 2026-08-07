@@ -158,3 +158,4 @@ fixtures are real on-chain `Swap` events, not synthetic.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- added solidly_fork.py for the open P2 golden-swap
   todo, dropped a less-central archived plan ref.
+- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -35,9 +35,9 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
-    /plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
+    /plans/archive/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
+    /plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
     market-tick-data-service/market_tick_data_service/adapters/_umi_yahoo.py,
@@ -230,7 +230,7 @@ actively written into, not static. This is a separate, currently-uncharacterized
    stamps a VENDOR name (Yahoo) into the `venue` field instead of the registered venue token silently gets NO
    canonicalization, of either the itype or the id. This would explain both this finding and finding 2 (CBOE rows) in
    one root cause, and is structurally the SAME class of bug as a sibling finding that landed in this same corpus today:
-   `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` documents
+   `/plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` documents
    `market_tick_data_service/market_interface/adapters/tradfi/yahoo_finance_adapter.py::write_canonical_shard`
    unconditionally stamping `venue="YAHOO"` (a DIFFERENT Yahoo adapter than `_umi_yahoo.py`, note — two separate Yahoo
    code paths exist) for every row it writes. **Not confirmed as the same bug** (that doc explicitly did not trace the
@@ -253,11 +253,11 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 
 > **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** All four follow-up
 > todos below are already claimed VERBATIM as a single combined todo in
-> `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Root-cause + fix 3 populations of NULL/bare
-> `instrument_id` manifest writes, plus one doc-hygiene fix", whose `Source:` cites this doc by name; its items (1)-(4)
-> map 1:1 onto todos 1-4 here). That batch doc is `assigned_vm: planning` but **`status: draft`** — so it is NOT
-> ingested and NOT dispatched today. Flipping THIS doc's `assigned_vm` to `planning` would dispatch a duplicate of that
-> extraction, so the shared conflict-check
+> `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Root-cause + fix 3 populations of
+> NULL/bare `instrument_id` manifest writes, plus one doc-hygiene fix", whose `Source:` cites this doc by name; its
+> items (1)-(4) map 1:1 onto todos 1-4 here). That batch doc is `assigned_vm: planning` but **`status: draft`** — so it
+> is NOT ingested and NOT dispatched today. Flipping THIS doc's `assigned_vm` to `planning` would dispatch a duplicate
+> of that extraction, so the shared conflict-check
 > (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
 > only, `assigned_vm` unchanged. **The live blocker is batch5's draft status**, which is the same unanswered operator
 > question already queued as item 5 in
@@ -323,7 +323,7 @@ not a live regression), but real enough to need their own scoped root-cause-and-
       the accepted-exceptions list — **no code fix, no venue-registry change, and no further historical repair needed
       for this sub-finding** (unlike (a) and findings 1/2, these 6 rows don't pollute any live-scope denominator). This
       ALSO answers the sibling coordination question in
-      `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` and
+      `/plans/archive/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` and
       `tradfi_distinct_values_net_new_clusters_2026_07_28.md`'s todo item 2 (same YAHOO_FINANCE venue question) — cite
       this finding rather than re-deriving it. `yahoo_finance_adapter.py::write_canonical_shard`'s unconditional
       `venue="YAHOO"` stamp (the sibling doc's own finding) is confirmed DEAD CODE — grepped every call site in
@@ -407,10 +407,10 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
   unchanged.** All 4 follow-up todos (added by the 2026-07-27 post-drain re-measurement) are bounded root-cause-and- fix
   work with named repos and named entry points — the strongest RECLASSIFY candidate in this tranche on content alone.
-  The shared conflict-check returned CONFLICT: `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already
-  extracts items (1)-(4) verbatim as one combined todo citing this doc as its `Source:`, and encodes the cross-doc
-  "investigate the YAHOO_FINANCE axis once, cite from all three" sequencing that a whole-doc flip would break. See the
-  note added above the follow-up todos.
+  The shared conflict-check returned CONFLICT:
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts items (1)-(4) verbatim as
+  one combined todo citing this doc as its `Source:`, and encodes the cross-doc "investigate the YAHOO_FINANCE axis
+  once, cite from all three" sequencing that a whole-doc flip would break. See the note added above the follow-up todos.
 
 - **2026-07-31 (slot 3, data_engineering, `tradfi_satellite_ao_dispatch_batch5_2026_07_29` todo 4)** — worked all 4
   follow-up items end-to-end. Re-measured live (single-object manifest read, no GCS walk): all 4 populations are
@@ -462,3 +462,10 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   remains open-ended investigation, and the remediation is a live-manifest CAS-write lacking a stated safe-idempotent
   justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout `context_scope` touches
   since. Nothing to reclassify.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tradfi tranche, dispatch agt-e38653): **KEEP-NA, valid — re-verified, unchanged
+  (5th consecutive pass).** Sole open todo (the historical manifest repair) re-read end-to-end; count reconciled (1/1).
+  Same two independently-sufficient grounds as 2026-08-01/08-02/08-04 still hold: the registration/recovery script
+  identification step remains open-ended investigation, and the remediation is a live-manifest CAS-write lacking a
+  stated safe-idempotent justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout
+  `context_scope` touches since. Nothing to reclassify.

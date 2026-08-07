@@ -27,7 +27,7 @@ related:
   [
     /plans/archive/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
@@ -35,8 +35,8 @@ created: 2026-08-02
 author: unknown
 last_updated: "2026-08-02"
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 0.5
@@ -89,9 +89,9 @@ exception does not reach it. The consequences compound rather than sit still:
   every single run of a job that fires every 2 hours. It is the most expensive doc in the defi tranche to read (1001L)
   and the only one guaranteed to be re-read every time.
 - **Duplicate-extraction risk is real, not theoretical.** This run extracted its Phase-3 `-test-`-bucket force/skip todo
-  to `/plans/active/defi_satellite_ao_dispatch_batch8_2026_08_02.md` after a clean conflict-check, but could not
-  annotate the source checkbox to cite that extraction. A future run reads the same unannotated open checkbox and has
-  nothing in the doc telling it the work is already dispatched — the precise failure the KEEP-NA-STALE citation
+  to `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md` after a clean conflict-check, but could
+  not annotate the source checkbox to cite that extraction. A future run reads the same unannotated open checkbox and
+  has nothing in the doc telling it the work is already dispatched — the precise failure the KEEP-NA-STALE citation
   mechanism exists to prevent.
 - **It is not one doc.** Any `plans/active/*.md` over 1000L with ≥1 open todo has the same property. This is the third
   recorded instance of the over-cap-blocks-edit class after the two in
@@ -122,9 +122,12 @@ than acted on:
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **BLOCKED-OPERATOR-DECISION** — rule on A/B/C/D above. A is a change to a hard quality gate's
-      policy (`scripts/plan-hygiene/check_line_caps.sh` + its codex SSOT), which is not a worker-determinable outcome.
-      (repo: unified-trading-pm)
+- [ ] [SCRIPT] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception.** `[SCRIPT]` tag
+      (was `[OPERATOR]`), AO-dispatchable — allow a commit whose diff to an over-cap plan is confined to appending a
+      dated audit marker / `last_updated` bump (no checkbox lines touched, no net new content) through the line-cap
+      gate. **BLOCKED-OPERATOR-DECISION** — rule on A/B/C/D above. A is a change to a hard quality gate's policy
+      (`scripts/plan-hygiene/check_line_caps.sh` + its codex SSOT), which is not a worker-determinable outcome. (repo:
+      unified-trading-pm)
 - [ ] [SCRIPT] P2. Once ruled: if A, implement the marker-only carve-out in `scripts/plan-hygiene/check_line_caps.sh`
       (diff-shape check: no checkbox lines touched), update
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "The line-cap does NOT block archival of
@@ -173,3 +176,9 @@ than acted on:
   long-wall-clock launch, or independent judgment) is recorded in the audit's own commit message
   (`473cccf03`/`b381cbb11`) since it could not be persisted into the source doc; the doc's own content is unchanged from
   HEAD.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
+  `assigned_vm: NA -> planning`. The A/B/C/D policy call on `check_line_caps.sh`'s over-cap edit exception was resolved
+  this same session ("RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception", retagged
+  `[OPERATOR] -> [SCRIPT]"; a leftover "BLOCKED-OPERATOR-DECISION" body string in the same checkbox is stale prose, not a live re-block). All 3 remaining open todos are now worker-determinable: implement the diff-shape carve-out in `check_line_caps.sh`+ update the codex SSOT + a regression test, land the already-drafted deferred annotation, and a bounded corpus-wide report of over-cap live plans. Conflict-check cleared (no overlapping claim in`parent_epic:
+  plan_hygiene_master`).

@@ -28,7 +28,7 @@ summary: >-
   AO-eligible-looking items are deliberately NOT drafted (crypto_alpha_research's 3 bug fixes, no_active_paper_run's
   DIAG item) because a prior audit pass already considered and explicitly declined extracting them for reasons unrelated
   to boundedness (coupling risk; low standalone value) and no new evidence has emerged to revisit that call.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -54,7 +54,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-02"
-last_updated: "2026-08-02"
+last_updated: "2026-08-06"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -90,10 +90,10 @@ context_scope:
 
 # CeFi satellite AO batch 6 — iterative-drain extraction
 
-> **Status: draft — NOT dispatched.** Per CLAUDE.md's plan-destination HARD RULE and the ag-closeout-audit skill's
-> autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This run was a scheduled
-> autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review. Flip this
-> frontmatter's `status` to `active` only after that review.
+> **Status: active — operator-approved 2026-08-06, dispatching.** Per CLAUDE.md's plan-destination HARD RULE and the
+> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This
+> run was a scheduled autonomous dispatch (no operator present), so the flip is explicitly reserved for operator review.
+> Flip this frontmatter's `status` to `active` only after that review.
 
 > **Cross-todo file-collision check: PASS.** The 6 todos touch, respectively: (1) `strategy-service`'s
 > `scripts/run_2yr_config_grid_backtest.py` (extend `SUPPORTED_ARCHETYPES` + per-archetype dimension tables); (2) a
@@ -117,15 +117,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Extend `run_2yr_config_grid_backtest.py` with an `ML_DIRECTIONAL_CONTINUOUS` archetype entry.** In
-      `strategy-service/scripts/run_2yr_config_grid_backtest.py`, the script currently only supports
-      `StrategyArchetype.CARRY_STAKED_BASIS` and `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` (both DeFi archetypes)
-      in `SUPPORTED_ARCHETYPES` (line 136) and every per-archetype dispatch point (dimension tables ~line 227/234,
-      branch logic ~line 356/362/526/537/602/606). Mirror the existing pattern to add `ML_DIRECTIONAL_CONTINUOUS` with
-      grid dimensions `position_size_pct` / `confidence_threshold` / `stop_loss_bps` / `take_profit_bps` /
-      `model_family`. This is a pure code task — no live-capital or wallet-credential dependency, and is deliberately
-      separable from the actual 2-year VM-run + GCS-output-inspection half of the same source-doc gate, which 3
-      independent audit passes have consistently classified operator-scheduled (not drafted here). Source:
+- [x] ✅ [BACKEND] P2. **Extend `run_2yr_config_grid_backtest.py` with an `ML_DIRECTIONAL_CONTINUOUS` archetype entry —
+      strategy-service@dff5b2c0** In `strategy-service/scripts/run_2yr_config_grid_backtest.py`, the script currently
+      only supports `StrategyArchetype.CARRY_STAKED_BASIS` and `StrategyArchetype.ARBITRAGE_PRICE_DISPERSION` (both DeFi
+      archetypes) in `SUPPORTED_ARCHETYPES` (line 136) and every per-archetype dispatch point (dimension tables ~line
+      227/234, branch logic ~line 356/362/526/537/602/606). Mirror the existing pattern to add
+      `ML_DIRECTIONAL_CONTINUOUS` with grid dimensions `position_size_pct` / `confidence_threshold` / `stop_loss_bps` /
+      `take_profit_bps` / `model_family`. This is a pure code task — no live-capital or wallet-credential dependency,
+      and is deliberately separable from the actual 2-year VM-run + GCS-output-inspection half of the same source-doc
+      gate, which 3 independent audit passes have consistently classified operator-scheduled (not drafted here). Source:
       `cefi_ml_directional_continuous_live_2026_06_20.md` (the `[VERIFY] P0` todo's first sub-requirement only). **Done
       when**: `ML_DIRECTIONAL_CONTINUOUS` is added to `SUPPORTED_ARCHETYPES` with a working dimension table and branch
       coverage at every existing per-archetype dispatch point, QG is green, and a unit test proves the new archetype is
@@ -133,7 +133,7 @@ context_scope:
       test). Do NOT flip the source doc's `[VERIFY] P0` checkbox — that requires the still-operator-gated VM run + GCS
       inspection to actually complete.
 
-- [ ] [DATA] P2. **Corpus-wide GCS census of DERIBIT dated-option-shaped trades objects misclassified as
+- [x] ✅ [DATA] P2. **Corpus-wide GCS census of DERIBIT dated-option-shaped trades objects misclassified as
       `instrument_type=perpetual`.** Read-only enumeration of
       `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=*/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=perpetual/data_type=trades/**`
       matching the dated-option wire-symbol shape (`<BASE>_<QUOTE>-<EXPIRY>-<STRIKE>-<C|P>.parquet`) across 2019-present
@@ -143,7 +143,9 @@ context_scope:
       `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` ("What's NOT done" item 2 only).
       **Done when**: the census completes, total affected-day count + byte volume are recorded with the exact `gcloud`
       commands used as evidence, and the source doc's item 2 is checked off citing this run (items 1/3/4 stay open —
-      root-cause, backfill, and re-canonicalization are design/dependent work, not batched here).
+      root-cause, backfill, and re-canonicalization are design/dependent work, not batched here). —
+      **unified-trading-pm@4dbd6cdfe** | Results: 28,158 option-shaped objects / 497 days / ~988 GB / 2024-03-08 to
+      2026-05-01 / assets: AVAX_USDC MATIC_USDC TRX_USDC XRP_USDC.
 
 - [ ] [DATA] P2. **Fail-hard Stage 0 — classify-and-log at cefi manifest-write and read-path call sites.** In
       `market-tick-data-service`, the write-side observe-log already shipped (`enforce_structural_and_observe_id_form()`

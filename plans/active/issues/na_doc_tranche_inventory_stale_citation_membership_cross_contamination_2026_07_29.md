@@ -229,6 +229,7 @@ class in a third script.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the sibling script
   `generate_ag_closeout_audit_candidates.py`, the near-duplicate the doc's own "Fix direction" and remaining P3 todo
   (shared-helper extraction) name directly.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 ## Codex SSOTs
 
@@ -237,3 +238,6 @@ class in a third script.
 - `/cursor-configs/skills/na-eligibility-audit/SKILL.md` — Phase 0, which relies on this script's output
 - `/cursor-configs/skills/ag-closeout-audit/SKILL.md` — the 2026-07-27 schema-migration section both scripts are stale
   against
+
+- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
+  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

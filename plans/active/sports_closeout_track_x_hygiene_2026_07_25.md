@@ -53,7 +53,7 @@ context_scope:
     /plans/active/sports_closeout_track_x_hygiene_2026_07_25_finalize.md,
     /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
     /codex/02-data/sports-gcs-path-ssot.md,
-    market-tick-data-service/scripts/sports/league_id_relocation/,
+    market-tick-data-service/scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py,
   ]
 ---
 
@@ -185,3 +185,6 @@ review-blocking.
   quarantine conventions. Cross-entity resolution via `entity=fixtures` → `af_league_id` →
   `get_league_by_api_football_id()`. Flipped the issue doc's build-script sub-todo checkbox. Plan-level P2 checkbox
   stays open (gated on the full migration, per the issue doc's split sub-todos).
+- **context-scout 2026-08-06**: re-scouted; swapped the `league_id_relocation/` dir entry for the specific migration
+  script it now points to (`migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`, shipped 2026-08-04),
+  still 5 entries.

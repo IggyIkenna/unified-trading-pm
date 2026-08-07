@@ -84,11 +84,15 @@ Read the relevant entry before authoring or executing.
   context resets_ (deterministic `--session-id` + `--resume` supports multi-window plans). **Why:** big plans caused the
   regression; the fix is the epic/plan boundary, not a style preference. **Parallelism granularity = the plan, never
   sub-plan.** Intra-plan item order (`PARALLEL`/`SEQUENTIAL`) is a HINT to that one owning agent (where it may fan out
-  _internally_ via sub-agents) — not a cross-worker split; the backend enforces this with **plan-claiming** (a plan's
-  tasks pin to the first slot that claims one — `slots.py:_claim_plan_for_slot`). Cross-agent speed comes from **more
-  plans** (independent work → separate plans → parallel agents), gated by `prereqs`. Split axis = context-coupling: two
-  items doable by strangers who never talk → separate plans; items needing each other's output → same plan. SSOT:
-  `plans/PLAN_FORMAT.md` → "Parallelism — two levels".
+  _internally_ via sub-agents) — not a cross-worker split. **Intra-plan concurrency is the DEFAULT**: a plan's
+  independent same-priority todos fan out to N free slots. The backend pins a plan's siblings to one slot ONLY when the
+  plan opts into `sequential: true` — `slots.py:_claim_plan_for_slot` is gated on `task.sequential` and is a no-op
+  otherwise, leaving siblings `target_slot=None, affinity="none"` and freely routable (gate added 2026-07-24 by operator
+  ruling, `agent-orchestrator@867b1731e`; ordering for a sequential plan is enforced independently by
+  `_wire_sequential_prereqs`, the pin is only the same-agent/context-locality half). Cross-agent speed therefore comes
+  from BOTH more plans (independent work → separate plans) and intra-plan fan-out, gated by `prereqs`. Split axis =
+  context-coupling: two items doable by strangers who never talk → separate plans; items needing each other's output →
+  same plan. SSOT: `plans/PLAN_FORMAT.md` → "Parallelism — two levels".
 
 - **L4 — Role is a plan-level field (`assigned_role`); plans are role-homogeneous.** Cross-role work decomposes into
   _dependent plans_ at the epic level (a backend plan + a UI plan + a dependency edge), integrated by contract per the

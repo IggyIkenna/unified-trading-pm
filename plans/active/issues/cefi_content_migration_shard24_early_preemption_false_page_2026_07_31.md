@@ -189,3 +189,9 @@ someone checks.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict; the
   deploy-lag redeploy confirmation is still a genuine production-redeploy judgment call, with the relaunch todo gated on
   it.
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-04 verdict;
+  both open items are operator-gated (confirm/trigger a `deployment-api` redeploy; a relaunch decision contingent on
+  it). Partial-progress note for whoever next touches this doc: `batch4_2026_07_31.md`'s own 2026-08-02 deferred-section
+  check shows the deployed image postdates the fix commit, clearing half of item 1's done-when — the test-pass
+  confirmation half remains unverified.

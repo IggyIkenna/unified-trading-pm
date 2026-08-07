@@ -145,3 +145,9 @@ dangling inside a closed plan todo.
   RECLASSIFY was explicitly REVERTED back to NA by the integrator over a contested reading of the 2026-07-26 operator
   ruling's scope; per the never-re-litigate rule (citation class e) this is a standing revert ruling, not honored on a
   fresh independent re-derivation. Unchanged since.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — standing revert ruling stands (a
+  2026-07-30 na-eligibility-audit pass RECLASSIFIED this doc, the integrator reverted it over a contested reading of the
+  operator DEFERRED ruling's scope). Per the never-re-litigate rule (citation class e) this is not re-derived fresh,
+  despite a second independent signal today (tradfi tranche) suggesting the work is bounded — the operator must rule on
+  the reversion's scope first.

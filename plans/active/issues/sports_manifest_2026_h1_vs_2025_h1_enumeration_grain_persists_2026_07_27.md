@@ -210,7 +210,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       `launch-expected-universe-v2-vm.sh --apply-write` per chunk sequentially (waits for each chunk's VM to reach a
       terminal state before the next — respects the child launcher's own singleton lock, no `--force`), with
       `ENUM_START_DATE`/`ENUM_END_DATE` per chunk (env hooks the child launcher already supported). Sports defaults
-      `--floor-date` to `2020-06-06` (codex/02-data/sports-2020-06-data-floor.md); every other asset_group requires an
+      `--floor-date` to `2020-06-06` (/codex/02-data/sports-2020-06-data-floor.md); every other asset_group requires an
       explicit `--floor-date` (no codified floor yet — that's job (3) below). Rolling boundary is computed live
       (`today - 120d`, mirroring job (1)'s fix) so a re-run correctly narrows to only the still-uncovered range. Safe to
       re-run: the enumerator only ADDS `expected_unattempted` rows to cells with no existing capture_status row, and
@@ -237,15 +237,28 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       shards visible in `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/`, and a post-run
       cell-seeding ratio re-check (same method as this issue's own read-only measurement) shows the 2025-vs-2026 H1
       ratio has moved toward ~1x. (repo: deployment-service)
-- [ ] [DATA] P3. Re-measure the same static-default `expected_universe_start_date` pattern for
-      cefi/defi/tradfi/prediction (same `expected_universe_v2_asset_groups` map, same `.tf`) — NOT covered by this
-      sports-scoped issue; likely the same boundary artifact. Read-only measurement first; widen/backfill per the same
-      two-job model if confirmed. (repo: deployment-service)
-- [ ] [DATA] P3. Investigate the FIXTURES/FIXTURES_OUTCOMES/ODDS-specific distinct-`league_id` growth (88->924, 88->926,
-      51->384 respectively vs the ~4x baseline other sports data_types show, e.g. WEATHER 94->388, MATCHES 102->406) to
-      determine whether it is genuine coverage expansion (more leagues legitimately tracked in 2026) or a
-      duplicate/near-duplicate league_id seeding artifact isolated to those 3 data_types. Read-only classification; no
-      manifest write. (repo: instruments-service)
+- [x] ✅ [DATA] P3. Re-measure the same static-default `expected_universe_start_date` pattern for
+      cefi/defi/tradfi/prediction (same `expected_universe_v2_asset_groups` map, same `.tf`) —
+      instruments-service@94838ad5. **defi: BOUNDARY ARTIFACT CONFIRMED** (8 data_types, governance_events 425x,
+      flash_loan_events 36.7x, zero expected_unattempted in 2025 H1). **tradfi: BOUNDARY ARTIFACT CONFIRMED** (3
+      data_types, trades 140.6x, tbbo 34.0x, ohlcv_15m 9.4x). **cefi: ELEVATED (3.43x) but NOT boundary-artifact** —
+      expected_unattempted present in both years; book_snapshot_5 at 5.5x is genuine growth, not a denominator artifact.
+      **prediction: ELEVATED (34.04x) but NOT boundary-artifact** — trades grew 48.4x via captured/empty_confirmed, not
+      expected_unattempted (zero expected_unattempted in both 2025 AND 2026 H1). Measurement script shipped at
+      instruments-service/scripts/cross_ag_manifest_enumeration_grain_check_2026_08_05.py. Follow-up: defi and tradfi
+      need the same two-job model (rolling window + historical backfill) that sports already got; cefi/prediction have a
+      different root cause (genuine growth, not the static-default window) and need separate diagnosis. (repo:
+      instruments-service, deployment-service)
+- [x] ✅ [DATA] P3. Investigate the FIXTURES/FIXTURES_OUTCOMES/ODDS-specific distinct-`league_id` growth —
+      instruments-service@7fc96c90. **Verdict: GENUINE COVERAGE EXPANSION, not an artifact.** Original 88→924 figure was
+      manifest ROW COUNTS, not distinct league_ids. Actual distinct league_id growth: FIXTURES 88→438 (4.98x),
+      FIXTURES_OUTCOMES 88→439 (4.99x), ODDS 50→383 (7.66x) — consistent with control data_types WEATHER 94→384 (4.09x)
+      and MATCHES 94→383 (4.07x). 84-100% cross-data_type overlap confirms the same league_ids appear across data_types.
+      Zero case-insensitive duplicates found; all 83 near-duplicate candidates are false positives (different
+      countries/divisions with similar naming conventions). 70%+ of new leagues have actual captured data. One possible
+      real near-duplicate noted: KENYA_FKF_PREMIER_LEAGUE vs KENYA_PREMIER_LEAGUE. Script:
+      `scripts/sports_league_id_growth_investigation_2026_08_05.py` (+ report at
+      `/tmp/sports_league_id_growth_report_2026_08_05.json`).
 
 ## Progress Log
 
@@ -292,7 +305,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
 - **data_engineering worker (slot 14) 2026-08-04 (continued)**: found + fixed a 4th real bug and filed a 5th (separate
   issue doc, cross-cutting — not part of the numbered fix list since it's an environment issue, not a launcher-code
   bug): 4. **deployment-service@16e8de3 + @e7c9510** — the shared-host `gcloud` active identity (`~/.config/gcloud` is
-  HOST-WIDE, not per-slot — see `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern") got
+  HOST-WIDE, not per-slot — see `/codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern") got
   clobbered by a sibling slot's `gcloud config set account` call THREE separate times during this run, each time
   aborting the backfill with `PERMISSION_DENIED` on `compute.instances.create` (caught cleanly each time only because of
   fix 2 above — the error surfaced instead of dying silently). Both `launch-expected-universe-v2-vm.sh` and the
@@ -386,3 +399,24 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   with `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (idempotent — per-VM shards +
   manifest already hold real progress). Script PID this session: 2560979. Post-run cell-seeding ratio re-check (same
   method as this issue's original measurement) is the done-when gate.
+- **data_engineering worker (slot 9) 2026-08-05**: re-measured the static-default `expected_universe_start_date`
+  boundary artifact for cefi/defi/tradfi/prediction (P3 cross-AG measurement). Used a new generalized script
+  `cross_ag_manifest_enumeration_grain_check_2026_08_05.py` (instruments-service@94838ad5) that reads each AG's live
+  `_index/availability_index.parquet` once. Results: **defi** — BOUNDARY ARTIFACT CONFIRMED: 8 data_types,
+  governance_events 425x, flash_loan_events 36.7x, plus 6 more (74.4M-row manifest, overall 1.89x but heavy outliers).
+  **tradfi** — BOUNDARY ARTIFACT CONFIRMED: 3 data_types, trades 140.6x, tbbo 34.0x, ohlcv_15m 9.4x (6.4M rows, 1.57x).
+  **cefi** — ELEVATED (3.43x) but NOT boundary-artifact: `expected_unattempted` present in both years. **prediction** —
+  ELEVATED (34.04x) but NOT boundary-artifact: trades grew 48.4x via captured/empty_confirmed with zero
+  `expected_unattempted` in BOTH years. Follow-up: defi/tradfi need the same rolling-window fix + historical backfill;
+  cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
+  `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
+- **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+## Follow-ups
+
+- [ ] [DATA] P2. Complete remaining chunks 3-7 (2022..2026-04-04) of the job (2) historical expected_unattempted
+      backfill and run the post-run cell-seeding ratio re-check (done-when gate).
+
+> **2026-08-06 archive-candidate audit**: Todo 4 is flipped [x] but its own text says 'post-run ratio re-check
+> transferred to slot 8 entry (open todo)', and Progress Log (slot 8 + slot 6, 2026-08-04) confirms 'Chunks 3-7 not yet
+> reached' and the done-when ratio re-check never ran — false-completion on an incomplete multi-hour backfill.

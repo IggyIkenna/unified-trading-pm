@@ -16,6 +16,8 @@
 # Optional caller variables:
 #   PYTEST_WORKERS         — explicit worker count override; default is max(1, cpu_count // 4)
 #   PYTEST_TIMEOUT_SECONDS — per-test wall-clock timeout override; default 150
+#   PYTEST_TIMEOUT_RETRIES — retries on timeout-only pytest failures (xdist-contention flake
+#                            class; serial re-run); 0 disables; default 1
 #   LOCAL_DEPS             — array of sibling repo names to install locally
 #   MAX_DURATION           — duration limit in seconds (default: 300)
 #
@@ -458,6 +460,37 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     PYTEST_TIMEOUT_SECONDS="${PYTEST_TIMEOUT_SECONDS:-150}"
     PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT_SECONDS} -q -r a --tb=short --no-header --durations=25"
 
+    # ── Retry-once-on-timeout (xdist/scheduler-contention flake class) ──────────
+    # A fixed wall-clock per-test budget under xdist `-n auto` / a contended host can
+    # fire on a genuinely instant test (0.04-2s in isolation) that gets descheduled past
+    # the budget by sibling workers or co-resident jobs — the 60→150s raise (2026-07-29)
+    # reduced but did NOT close the class: at load avg 50+ even CPU-bound synchronous
+    # tests were starved 15+ min, so no fixed budget can ever beat the contention. SSOT:
+    # plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md.
+    # Retry-once-on-timeout targets the MECHANISM, not the threshold: when EVERY failure
+    # in a run is a pytest-timeout, re-run exactly those tests serially (minimal
+    # contention). A genuine hang times out AGAIN on the retry and still fails the gate;
+    # a scheduling-descheduled test passes clean. Disable: PYTEST_TIMEOUT_RETRIES=0.
+    # Only retries when every failed/errored test is a timeout — a real failure fails
+    # the gate outright (no masking of genuine failures).
+    PYTEST_TIMEOUT_RETRIES="${PYTEST_TIMEOUT_RETRIES:-1}"
+    _qg_pytest_timeout_retry() {
+        local _out="$1"
+        local _tids _nt _nf
+        _tids=$(printf '%s\n' "$_out" | grep -E '^FAILED [^ ]+ - Failed: Timeout' | sed -E 's/^FAILED ([^ ]+) - .*/\1/' | tr '\n' ' ' || true)
+        _nt=$(printf '%s' "$_tids" | wc -w | tr -d ' ')
+        [ "${_nt:-0}" -gt 0 ] || return 1
+        _nf=$(printf '%s\n' "$_out" | grep -cE '^(FAILED|ERROR) [^ ]+ - ' || true)
+        [ "${_nf:-0}" = "$_nt" ] || return 1
+        log_warn "pytest-timeout on ${_nt} test(s) — ALL failures are timeouts; serial re-run (retry-once-on-timeout for the xdist-contention flake class)"
+        # shellcheck disable=SC2086  # intentional word-split: _tids is a space-separated nodeid list
+        if $PYTHON_CMD -m pytest ${_tids} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket --timeout=${PYTEST_TIMEOUT_SECONDS} -q -r a --tb=short --no-header 2>&1; then
+            log_success "retry-on-timeout: the ${_nt} timed-out test(s) passed clean serially — scheduling contention, not a hang"
+            return 0
+        fi
+        return 1
+    }
+
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to add per-family unit test dirs (e.g. PYTEST_UNIT_DIR="tests/unit/ tests/events/unit/").
     PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
@@ -469,10 +502,10 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
 
     if [ "$_HAS_INTEGRATION" = true ]; then
         _pytest_out=$($PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} tests/integration/ --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
-            || { echo "$_pytest_out"; exit 1; }
+            || { if [ "${PYTEST_TIMEOUT_RETRIES:-1}" != "0" ] && _qg_pytest_timeout_retry "$_pytest_out"; then :; else echo "$_pytest_out"; exit 1; fi; }
     else
         _pytest_out=$($PYTHON_CMD -m pytest ${PYTEST_UNIT_DIR} --allow-hosts=127.0.0.1,::1,localhost --allow-unix-socket $PARGS $COV 2>&1) \
-            || { echo "$_pytest_out"; exit 1; }
+            || { if [ "${PYTEST_TIMEOUT_RETRIES:-1}" != "0" ] && _qg_pytest_timeout_retry "$_pytest_out"; then :; else echo "$_pytest_out"; exit 1; fi; }
     fi
     log_success "Tests PASSED"
 

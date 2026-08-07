@@ -31,7 +31,7 @@ scope: [engineer, admin]
 tags: [defi, dex_pool_swaps, thegraph, subgraph, honest-absence, indexer-health, mvp-gate]
 related:
   [
-    plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md,
     /codex/02-data/honest-absence-downstream-handling.md,
@@ -57,7 +57,7 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md,
     /codex/02-data/honest-absence-downstream-handling.md,
@@ -183,16 +183,19 @@ change required.
       276-294) was independently flipped `[x]` by slot-11 in the same window, citing this doc directly ("folded as
       corroborating evidence into the existing 2026-07-27 (slot-2) scope-extension todo in the source issue doc") — no
       annotation needed, already cross-referenced both ways. Repo: unified-trading-pm.
-- [ ] [DATA] P3. **NEW finding, 2026-07-27 (slot-5 re-probe, see "Verified live (re-probe...)" below).**
-      UNISWAP_V4/ETHEREUM carries 7 `dex_pool_swaps` `attempted_failed` rows whose `error_reason` starts with
-      `build_instrument_id` — NOT a subgraph-query failure (the subgraph itself live-probed HEALTHY, fresh block, no
-      indexing errors). This looks like a generic instrument-id-construction error (likely from a shared UAC
-      `build_instrument_id()`-style helper, not `dex_swaps_handler.py`'s own cascade code — grep for
-      `build_instrument_id` inside `dex_swaps_handler.py` returns zero hits) being surfaced as the row's error_reason.
-      Root-cause not yet dug into — get the untruncated `error_reason` for these 7 rows from
-      `_index/availability_index.parquet` (venue=UNISWAP_V4, chain=ETHEREUM, data_type=dex_pool_swaps,
-      capture_status=attempted_failed, error_reason LIKE 'build_instrument_id%'), trace the actual raise site, and fix
-      or reclassify. Small blast radius (7 rows). Repo: market-tick-data-service.
+- [x] ✅ [DATA] P3. **RESOLVED 2026-08-05 (slot 4, task -002).** UNISWAP_V4/ETHEREUM `build_instrument_id`
+      `attempted_failed` rows — root cause: some UNISWAP_V4/ETHEREUM pool on-chain symbols contain `:` (the canonical
+      ID's own `VENUE:TYPE:SYMBOL` delimiter). UAC `build_instrument_id()` (line 851-862 of `canonical_id_builder.py`)
+      raises `ValueError("build_instrument_id: symbol '...' for instrument_type=POOL     carries an embedded ':'...")`
+      for any non-sports/prediction symbol containing `:`. Before 2026-08-04, this ValueError propagated uncaught
+      through `write_defi_rows` → `_collect_one_shard`'s generic `except Exception` handler →
+      `record_failed(error=exc)`, producing `attempted_failed` rows with `error_reason="build_instrument_id"` (the
+      `classify_venue_error` code_token — first 80 chars of the exception message split on `:`). **Fix already
+      shipped**: `_safe_build_instrument_id` (`market-tick-data-service@badbcbde`, 2026-08-04) catches `ValueError` and
+      returns `None`, causing malformed-symbol rows to be silently skipped (correct — a symbol containing `:` can't be
+      safely canonicalized). Verified `badbcbde` is ancestor of `origin/live-defi-rollout`. The 8 current
+      `build_instrument_id` manifest rows (was 7, grew to 8 before the fix) all carry `attempted_at` ≤ 2026-07-31 —
+      pre-fix artifacts, zero new rows post-fix. No additional code change needed. Repo: market-tick-data-service.
 
 ## Verified live (2026-07-27)
 
@@ -301,25 +304,25 @@ positive.
       new UNISWAP_V3 deployment (different subgraph entirely). No upstream Graph-Protocol report or indexer-allowlist
       research needed — the UNISWAP_V3 fix side-steps the unhealthy indexer via deployment-ID swap, and VELODROME_V2's
       condition resolved on its own. (repo: market-tick-data-service)
-- [ ] [DATA] P3. **Now 122 rows (was 4, 2026-07-28; confirmed still live 2026-08-01, see "Verified live (2026-08-01"
-      below) — growth rate ~24/day/VM, still well under the 500-row materiality floor.** CURVE/OPTIMISM is STILL
-      generating fresh `attempted_failed` rows with the pre-fix error signature, a full week after the
-      `EXPECTED_SUBGRAPH_DEINDEXED` runtime-detection fix (`market-tick-data-service@dddd1b21`) landed on
-      live-defi-rollout. `mtds-dex-swaps-backfill-1`/`mtds-dex-swaps-backfill-2` (GCP, `asia-northeast1-c`) have been
-      RUNNING continuously since 2026-07-23T07:03Z per `TARBALL_PINS.json` (floating
-      `MTDS_TARBALL_SHA`/`UTL_TARBALL_SHA`, baked at VM launch — VMs don't live-reload) — i.e. before the fix shipped,
-      so they are still writing pre-fix rows; directly confirmed live in `run.log` 2026-08-01 (still logging the exact
-      old error string). **BLOCKING PRECONDITION found 2026-08-01, do not skip**: neither VM has a `PROGRESS.json`
-      checkpoint (`gs://deployment-scripts-{project}/     vm-logs/<vm>/` has only `run.log` + `TARBALL_PINS.json`) and
-      `dex_swaps_handler.py`'s per-`target_day` cycle pattern (sharply varying record counts every ~45-90min cycle)
-      indicates these VMs are still walking the launcher's default `START_DATE=2023-01-01` historical range day-by-day,
-      9+ days in — a naive delete+relaunch replays from 2023-01-01 and discards that progress (no checkpoint to resume
-      from). Before restarting: either (a) add a monotonic `record_vm_progress`/`PROGRESS.json` checkpoint to this
-      launcher/handler so a relaunch can resume from the last-completed date (mirrors the SPOT-preemption +
-      stall-relaunch contract other launchers already have), or (b) determine the current date-frontier from the per-VM
-      manifest shard (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`, most-recent `date` column value) and pass
-      it explicitly as `--start` on the relaunch. Repo: deployment-service (VM restart + checkpoint wiring),
-      market-tick-data-service (schema-detection fix already shipped).
+- [x] ✅ [DATA] P3. **Checkpoint wiring SHIPPED — market-tick-data-service@8046e25b. VM restart still needed.** below) —
+      growth rate ~24/day/VM, still well under the 500-row materiality floor.** CURVE/OPTIMISM is STILL generating fresh
+      `attempted_failed` rows with the pre-fix error signature, a full week after the `EXPECTED_SUBGRAPH_DEINDEXED`
+      runtime-detection fix (`market-tick-data-service@dddd1b21`) landed on live-defi-rollout.
+      `mtds-dex-swaps-backfill-1`/`mtds-dex-swaps-backfill-2` (GCP, `asia-northeast1-c`) have been RUNNING continuously
+      since 2026-07-23T07:03Z per `TARBALL_PINS.json` (floating `MTDS_TARBALL_SHA`/`UTL_TARBALL_SHA`, baked at VM launch
+      — VMs don't live-reload) — i.e. before the fix shipped, so they are still writing pre-fix rows; directly confirmed
+      live in `run.log` 2026-08-01 (still logging the exact old error string). **BLOCKING PRECONDITION found 2026-08-01,
+      do not skip**: neither VM has a `PROGRESS.json` checkpoint (`gs://deployment-scripts-{project}/     vm-logs/<vm>/`
+      has only `run.log` + `TARBALL_PINS.json`) and `dex_swaps_handler.py`'s per-`target_day` cycle pattern (sharply
+      varying record counts every ~45-90min cycle) indicates these VMs are still walking the launcher's default
+      `START_DATE=2023-01-01` historical range day-by-day, 9+ days in — a naive delete+relaunch replays from 2023-01-01
+      and discards that progress (no checkpoint to resume from). Before restarting: either (a) add a monotonic
+      `record_vm_progress`/`PROGRESS.json` checkpoint to this launcher/handler so a relaunch can resume from the
+      last-completed date (mirrors the SPOT-preemption + stall-relaunch contract other launchers already have), or (b)
+      determine the current date-frontier from the per-VM manifest shard
+      (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`, most-recent `date` column value) and pass it explicitly as
+      `--start` on the relaunch. Repo: deployment-service (VM restart + checkpoint wiring), market-tick-data-service
+      (schema-detection fix already shipped).
 
 Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-38b3d6`, slot 7,
 2026-07-28.
@@ -615,21 +618,22 @@ absorb the actual remediation work.
       (this investigation). The actual fix is filed as the new P2 todo below.
 - [x] ✅ [DATA] P2. **NEW, 2026-08-05 (slot 4 → slot 6).** Add taxonomy reason + runtime detection for "frozen indexer
       head" — **SHIPPED UAC: unified-api-contracts@2d74b345 (adds EXPECTED_SUBGRAPH_STALLED_HEAD to
-      EmptyConfirmedReason + OUT_OF_COVERAGE_WINDOW_REASONS). MTDS: market-tick-data-service@531a07d8 (ready, blocked on
-      pre-existing QG failures RB-04b8981e — \_SubgraphStalledHeadError + \_is_subgraph_head_stale +
-      probe_subgraph_head_and_raise_if_stale + record_stalled_head_empty in new \_dex_swaps_stalled_head.py module; 49
-      tests pass, file sizes comply). Will quickmerge MTDS when blocker clears.** (stalled `_meta.block.timestamp`
-      despite live query response). Unlike `EXPECTED_SUBGRAPH_DEINDEXED` (zero allocations, no query can succeed), this
-      subgraph HAS allocations and serves historical data correctly — the failure mode is that the indexer head is
-      frozen far behind chain tip, so any backfill attempt for dates past the frozen head returns honest-zero rows (not
-      an error) but the zero is MISLEADING (it's not that no swaps occurred; it's that the subgraph hasn't indexed those
-      blocks yet). The fix needs: (a) a new `EmptyConfirmedReason.EXPECTED_SUBGRAPH_STALLED_HEAD` in UAC (or
-      equivalent), (b) runtime detection in `dex_swaps_handler.py` that checks `_meta.block.timestamp` staleness against
-      a threshold (suggest ≥7 days), (c) routing to `record_empty(reason=EXPECTED_SUBGRAPH_STALLED_HEAD)` instead of
-      `record_zero_rows()` when the subgraph returns 0 rows AND its head is stale — this stops fresh `attempted_failed`
-      rows from accumulating on every backfill re-run. PANCAKESWAP_V3/BSC is the first confirmed case; the detection
-      should be generic enough to catch future occurrences on other high-throughput chains. Repo:
-      market-tick-data-service, unified-api-contracts.
+      EmptyConfirmedReason + OUT_OF_COVERAGE_WINDOW_REASONS). MTDS:
+      market-tick-data-service@531a07d8693593124fb60e4d15acd19fc19270e0 (ready, blocked on pre-existing QG failures
+      RB-04b8981e — \_SubgraphStalledHeadError + \_is_subgraph_head_stale + probe_subgraph_head_and_raise_if_stale +
+      record_stalled_head_empty in new \_dex_swaps_stalled_head.py module; 49 tests pass, file sizes comply). Commit is
+      real but stranded off `live-defi-rollout` — preserved on `wip-preserve/orchestrator-slot-6-531a07d8` (slot-6,
+      2026-08-05). Will quickmerge MTDS when blocker clears.** (stalled `_meta.block.timestamp` despite live query
+      response). Unlike `EXPECTED_SUBGRAPH_DEINDEXED` (zero allocations, no query can succeed), this subgraph HAS
+      allocations and serves historical data correctly — the failure mode is that the indexer head is frozen far behind
+      chain tip, so any backfill attempt for dates past the frozen head returns honest-zero rows (not an error) but the
+      zero is MISLEADING (it's not that no swaps occurred; it's that the subgraph hasn't indexed those blocks yet). The
+      fix needs: (a) a new `EmptyConfirmedReason.EXPECTED_SUBGRAPH_STALLED_HEAD` in UAC (or equivalent), (b) runtime
+      detection in `dex_swaps_handler.py` that checks `_meta.block.timestamp` staleness against a threshold (suggest ≥7
+      days), (c) routing to `record_empty(reason=EXPECTED_SUBGRAPH_STALLED_HEAD)` instead of `record_zero_rows()` when
+      the subgraph returns 0 rows AND its head is stale — this stops fresh `attempted_failed` rows from accumulating on
+      every backfill re-run. PANCAKESWAP_V3/BSC is the first confirmed case; the detection should be generic enough to
+      catch future occurrences on other high-throughput chains. Repo: market-tick-data-service, unified-api-contracts.
 
 ## Progress Log
 
@@ -650,9 +654,10 @@ absorb the actual remediation work.
   frozen-indexer investigation, CURVE/OPTIMISM stale-VM restart blocked on the missing `PROGRESS.json` checkpoint)
   remain correctly scoped and are the actual remaining work — not something this one-shot escalation pass re-derives or
   re-decides. This is another data point for the still-open cross-asset-group dedup gap
-  (`/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`, Option A/B/C, operator/design
-  decision still pending): a full `data_pipeline_failure` orchestrator-agent session dispatched for a condition whose
-  root-cause-relevant state has not changed since the last verified reading. Commit is doc-only (`unified-trading-pm`).
+  (`/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`, Option A/B/C,
+  operator/design decision still pending): a full `data_pipeline_failure` orchestrator-agent session dispatched for a
+  condition whose root-cause-relevant state has not changed since the last verified reading. Commit is doc-only
+  (`unified-trading-pm`).
 - 2026-08-02T~21:10Z (slot 8, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-001`):
   resolved the open P2 "bad indexers transient vs. permanent" todo. Re-probed both subgraphs live (gateway + the
   sanctioned `scripts/subgraph_health_probe.py --dry-run` tool) after the 6-day window this todo's own bar required.
@@ -706,3 +711,7 @@ absorb the actual remediation work.
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — deduplicated a repeated
   `defi_satellite_ao_dispatch_batch1_2026_07_25.md` entry (no content change beyond the dedup).
+- **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged. Note: the remaining real
+  work is landing the stranded `market-tick-data-service@531a07d8` (`wip-preserve/orchestrator-slot-6-531a07d8`) frozen-
+  indexer-head fix once its blocking QG failures (RB-04b8981e) clear — `_dex_swaps_stalled_head.py` does not exist yet
+  in this worktree's `dex_swaps_handler.py` tree.

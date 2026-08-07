@@ -54,6 +54,8 @@ SWAP_LIMIT_KB=$(( ${RW_SWAP_LIMIT_GB:-4} * 1024 * 1024 ))
 MIN_AGE_SEC="${RW_MIN_PROCESS_AGE_SEC:-30}"
 MAX_KILLS_PER_MIN="${RW_MAX_KILLS_PER_MIN:-1}"
 ORCHESTRATOR_URL="${RW_ORCHESTRATOR_URL:-http://localhost:8765}"
+DEPLOYMENT_API_URL="${RW_DEPLOYMENT_API_URL:-}"
+VM_NAME="${RW_VM_NAME:-$(hostname 2>/dev/null || echo 'planning-vm')}"
 MARKER_DIR="${RW_MARKER_DIR:-/dev/shm/resource-watchdog/kills}"
 LOG_FILE="${RW_LOG_FILE:-/var/log/resource-watchdog.log}"
 DRY_RUN="${RW_DRY_RUN:-false}"
@@ -252,6 +254,41 @@ EOF
     _rw_log_info "orchestrator notified: pid=$pid slot=$slot reason=$reason"
 }
 
+_rw_notify_deployment_api() {
+    local pid="$1" slot="$2" reason="$3" rss_kb="$4" limit_kb="$5" cmd="$6" killed="$7"
+
+    # Skip silently if no deployment-api URL is configured (opt-in).
+    if [[ -z "${DEPLOYMENT_API_URL:-}" ]]; then
+        return 0
+    fi
+
+    local rss_mb=$(( rss_kb / 1024 ))
+    local limit_mb=$(( limit_kb / 1024 ))
+    local pressure; pressure="$(_rw_pressure_level)"
+
+    local payload; payload="$(cat <<EOF
+{
+  "vm_name": "${VM_NAME}",
+  "pid": ${pid},
+  "slot_id": "${slot}",
+  "command": "$(echo "$cmd" | sed 's/"/\\"/g')",
+  "rss_mb": ${rss_mb},
+  "limit_mb": ${limit_mb},
+  "pressure_level": "${pressure}",
+  "reason": "${reason}",
+  "killed": ${killed}
+}
+EOF
+)"
+    # Fire-and-forget — don't block the watchdog loop on API calls
+    curl -s -X POST "${DEPLOYMENT_API_URL}/api/fleet/watchdog/kill-events" \
+        -H "Content-Type: application/json" \
+        -d "$payload" \
+        --connect-timeout 3 --max-time 5 \
+        >/dev/null 2>&1 || _rw_log_warn "deployment-api unreachable for kill notification (pid=$pid slot=$slot)"
+    _rw_log_info "deployment-api notified: pid=$pid slot=$slot reason=$reason killed=${killed}"
+}
+
 _rw_snapshot_process() {
     local pid="$1" reason="$2"
     local snap_dir; snap_dir="$(dirname "$LOG_FILE")/snapshots"
@@ -398,6 +435,9 @@ _rw_enforce_process() {
     if [[ "$DRY_RUN" == "true" ]]; then
         _rw_log_info "DRY-RUN: would kill pid=$pid slot=$slot ($reason)"
         _rw_rate_limit_record
+        # Notify deployment-api even in dry-run mode so the integration is testable
+        # without an actual kill (killed=false).
+        _rw_notify_deployment_api "$pid" "$slot" "$reason" "$rss_kb" "${limit_kb:-0}" "$cmd" "false"
         return 0
     fi
 
@@ -411,6 +451,8 @@ _rw_enforce_process() {
         _rw_rate_limit_record
         # Notify orchestrator (fire-and-forget)
         _rw_notify_orchestrator "$pid" "$slot" "$reason" "$rss_kb" "${limit_kb:-0}" "$cmd"
+        # Notify deployment-api (fire-and-forget — additive, dual-write)
+        _rw_notify_deployment_api "$pid" "$slot" "$reason" "$rss_kb" "${limit_kb:-0}" "$cmd" "true"
         _rw_log_info "KILL #${_RW_KILL_COUNT}: pid=$pid slot=$slot ($reason)"
     fi
 
@@ -425,6 +467,33 @@ _rw_enforce_process() {
 
 _rw_status_json_path() {
     echo "${RW_STATUS_FILE:-/dev/shm/resource-watchdog/status.json}"
+}
+
+_rw_probe_qg_governor() {
+    # Probe the QG host governor's token-concurrency state so the AO UI can show
+    # "2/4 tokens held" at a glance. Best-effort: -1 means "governor unreachable."
+    # Try the configured path, then the standard VM workspace path.
+    local gov_script=""
+    if [[ -n "${RW_QG_GOVERNOR_SCRIPT:-}" ]] && [[ -x "$RW_QG_GOVERNOR_SCRIPT" ]]; then
+        gov_script="$RW_QG_GOVERNOR_SCRIPT"
+    elif [[ -x "/home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh" ]]; then
+        gov_script="/home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh"
+    elif [[ -x "/active/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh" ]]; then
+        gov_script="/active/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh"
+    fi
+    _RW_QG_TOKENS_HELD=-1
+    _RW_QG_TOKENS_MAX=-1
+    if [[ -z "$gov_script" ]]; then return 0; fi
+    local status_output; status_output="$("$gov_script" --status 2>/dev/null || true)"
+    # Parse "tokens held now: X/Y" when there ARE active reservations
+    if [[ "$status_output" =~ tokens\ held\ now:\ ([0-9]+)/([0-9]+) ]]; then
+        _RW_QG_TOKENS_HELD="${BASH_REMATCH[1]}"
+        _RW_QG_TOKENS_MAX="${BASH_REMATCH[2]}"
+    elif [[ "$status_output" =~ K=([0-9]+) ]]; then
+        # Governor running but no tokens held (dir empty/absent) → 0/K
+        _RW_QG_TOKENS_HELD=0
+        _RW_QG_TOKENS_MAX="${BASH_REMATCH[1]}"
+    fi
 }
 
 _rw_write_status_file() {
@@ -462,7 +531,9 @@ _rw_write_status_file() {
   "last_kill_iso": ${last_kill_iso},
   "uptime_seconds": ${uptime_sec},
   "orchestrator_url": "${ORCHESTRATOR_URL}",
-  "marker_dir": "${MARKER_DIR}"
+  "marker_dir": "${MARKER_DIR}",
+  "qg_tokens_held": ${_RW_QG_TOKENS_HELD:--1},
+  "qg_tokens_max": ${_RW_QG_TOKENS_MAX:--1}
 }
 STATUS_EOF
 }
@@ -526,7 +597,8 @@ _rw_main_loop() {
             unset "CPU_PREV_UTIME[$spid]" "CPU_PREV_STIME[$spid]" "CPU_PREV_TIMESTAMP[$spid]" "CPU_OVER_THRESHOLD_SINCE[$spid]" 2>/dev/null || true
         done
 
-        # Write status snapshot for orchestrator / AO UI consumption
+        # Probe QG governor token state + write status snapshot for AO UI
+        _rw_probe_qg_governor
         _rw_write_status_file
 
         sleep "$POLL_INTERVAL"
