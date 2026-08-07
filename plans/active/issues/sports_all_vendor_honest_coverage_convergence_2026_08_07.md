@@ -503,3 +503,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   SUPER_LIG, GREEK_SUPER_LEAGUE, six DIFFERENT leagues each failing once and self-recovering, not a stuck repeat —
   consistent with the established tolerable pattern, watching but not intervening) and FIXTURE_STATS (chunk 6/26,
   2021-10-14) both remain healthy.
+- **2026-08-07T21:22Z — smallchunk2 odds STILL on chunk 18/451, now confirmed 10/18 leagues OOM'd (55%) — root-caused as
+  genuine per-league progress, not a stall (full detail + league list in
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`b90338bfd9`).** PROGRESS.json's `last_completed_date`
+  reading (`2020-08-29`, `updated=19:22:22Z`) looked 2h-stale at first glance — this is exactly the rule-1b check case,
+  so read the full `run.log` (not just PROGRESS.json) rather than concluding either way from the checkpoint alone:
+  confirmed 18 DISTINCT leagues attempted this chunk (EPL...BRASILEIRAO, zero repeats), EKSTRAKLASA fully completed, the
+  other 10 OOM'd once each and correctly advanced (self-recovery intact). Verdict: not a stall, PROGRESS.json simply
+  checkpoints at the whole-chunk boundary and this specific 2020-08-30→2020-09-03 range (a genuine European
+  season-opener window) is unusually failure-prone. FIXTURE_STATS re-checked same tick: `last_completed_date=2021-11-19`
+  (up from 2021-11-06), `updated=21:22:14Z` (fresh) — healthy, no action needed. No intervention on either VM this tick.
