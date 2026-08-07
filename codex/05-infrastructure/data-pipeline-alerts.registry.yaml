@@ -363,6 +363,34 @@ failure_modes:
         "resolved-bookend for DP_VM_PREEMPTED — the relaunch subprocess exited 0 and the preempted backfill is running
         again",
     }
+  - {
+      id: DP-VM-012,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_CLOUD_RUN_SERVICE_DOWN,
+      detector: cloud_run_service_liveness,
+      kind: terraform,
+      escalation: page_operator,
+      status: active,
+      fires:
+        "Cloud Run Service terminal_condition CONDITION_FAILED — covers market-data-query-service /
+        central-market-data-tardis-loader / uts-prod-data-status-rollup-svc (finding A,
+        infra_health_audit_alert_coverage_gaps_2026_08_07.md item 1)",
+    }
+  - {
+      id: DP-VM-013,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_CLOUD_RUN_JOB_EXEC_FAILED,
+      detector: cloud_run_job_failure_watcher,
+      kind: scriptable,
+      escalation: page_operator,
+      status: active,
+      fires:
+        "any Cloud Run Job in cloud_run_job_registry.CLOUD_RUN_JOBS whose latest execution has
+        failed_count > 0 (generic — covers all jobs, not just manifest-consolidator-{ag}).
+        infra_health_audit_alert_coverage_gaps_2026_08_07.md item 2 / DP-WATCHER-006",
+    }
 
   # --- DP-RATE (class C5) ---
   - {
