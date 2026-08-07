@@ -899,3 +899,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   fully landed** — re-census shows `expected_unattempted` completely gone (0) for both sources, `empty_confirmed` grew
   by exactly the retyped row counts. Both sources now hold only `captured`/`empty_confirmed`/a small already-diagnosed
   `attempted_failed` tail — genuinely at the operator's target state.)
+- **2026-08-07T21:17Z** — FIXTURE_STATS chunk 6/26 (2021-11-06). `mtds-backfill-odds-smallchunk2` has now spent ~2 hours
+  on chunk 18/451 alone (2020-08-30→2020-09-03), 9 OOM total but verified still 9 DISTINCT leagues (EPL through
+  ELITESERIEN) self-recovering each time, not a stuck repeat. Likely explanation: this exact 5-day window covers
+  multiple European leagues' season-openers simultaneously (high real fixture density across many leagues at once),
+  plausibly why this one chunk is taking disproportionately long among 451 total — not a new bug, self-recovery still
+  working correctly, no data loss. Watching; will note if it doesn't eventually move past chunk 18.
