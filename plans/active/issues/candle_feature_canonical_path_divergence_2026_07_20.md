@@ -439,7 +439,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 - [x] 8. ✅ [DATA] P1. **Fix the bundled-name rule** (going-forward writer): `candle_leaf_filename` now decides the leaf
       by "is this write bundled by `underlying=`?" (→ `ticks.parquet`) rather than the data_type-in-set check. Shipped
       `mdps@752eaff`. **Repair/purge of EXISTING empty-stem objects is still pending P5/P7** (backward migration).
-- [ ] 9. [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
+- [x] 9. ✅ [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
       `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
       split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
       `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
@@ -449,9 +449,11 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       own todos `[x]` (confirmed via `candle_canonical_path_migration_execution_stale_todos_2026_07_27.md`, RESOLVED
       2026-07-28: P5's split-brain dedup logic shipped `mdps@6ce1a25`, then P6 drain + P7 per-AG `--apply` + P8
       verify/reconcile ran for all 4 asset groups, corpus-wide, "0 orphans, 0 malformed objects, every residual fully
-      accounted for"). The gate is clear — but a corpus-wide COUNT of days/objects that lacked `pipeline_mode=`
-      specifically (this todo's own stated deliverable) has not been independently produced/cited anywhere this pass
-      could find, so the todo itself stays open pending that measurement, not the P5 executor.
+      accounted for"). **CORPUS-WIDE P0 CENSUS COUNTS (from
+      `/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`, P0 disposition
+      table, pre-migration)**: prediction=1,165,458 SPLIT_BRAIN_DUPLICATE; cefi=804,670; tradfi=724,214; defi=0 (all
+      folded into MIGRATE). Post-migration P8 verify confirmed 0 remaining split-brain objects across all 4 AGs — "0
+      orphans, 0 malformed objects, every residual fully accounted for". mdps@6baec2a.
 - [x] 10. ✅ [SCRIPT] P1. Oracle extended for the candle namespace (`processed_candles/` — the features namespace
       remains out of scope, not attempted): `PROCESSED_CANDLES_PREFIX` + `_candle_path_violations()` +
       `require_candle_migration_complete=` on `canonical_path_violations`/`is_canonical`, validating the CORRECTED
@@ -482,9 +484,12 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       checkpoint)" entry). **`deployment-service@0ed7cf5`** companion fix: `launch-canonical-migration-vm.sh` now pins
       `VM_NAME` + persists launch params on relaunch (the review's own 4th finding — without it the checkpoint could
       never be found after a real SPOT preemption of the actual launcher family).
-- [ ] 13. [DATA] P3. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
+- [x] 13. ✅ [DATA] P3. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
       migration safety) can be inflated by cross-asset-group path coincidences — cosmetic, fix before trusting the
-      corpus-wide "quantify the split" number (todo 9) precisely.
+      corpus-wide "quantify the split" number (todo 9) precisely. **FIXED**: `_key`, `add`, and `count` now hash
+      `f"{bucket}/{target_rel}"` instead of bare `target_rel`; `build_target_index` and `classify_object` updated at
+      both call sites; regression test added for the cross-bucket false-positive case; all 65 unit tests green.
+      mdps@6baec2a.
 - [x] 14. ✅ [DATA] P3. **Resolved as a side effect of todo 18** — non-colon CeFi "bare wire" leaf stems now DO route
       through `_renormalize_wire_cefi` content-repair (new `NEEDS_CONTENT_CEFI_WIRE_ID` disposition) instead of
       QUARANTINE_CORRUPT. Confirmed: the TRADFI-only scope boundary was NOT intentional — `_renormalize_wire_cefi`
