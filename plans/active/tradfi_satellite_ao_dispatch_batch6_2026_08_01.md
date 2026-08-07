@@ -418,6 +418,16 @@ pole (~3h from check time); if no new wave launches, count==0 likely ~07:00-09:0
 4. Poll for tradfi-bf-es-opt-* completion
 5. Download fresh manifest, run count query, update closeout plan, flip checkbox, commit+push, call /done
 
+### 2026-08-07T~05:51Z — slot 11, session 4 — watcher re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Watcher re-armed (harness task `bcumi0sad`).** Prior watcher (PID 957114,
+task `bff5b50zn`) died between sessions; checkbox NOT yet flipped. Fleet at re-arm: 2 VMs remaining
+(`tradfi-bf-cme-ohlcv-1m-g01-es-es-2020` at 2020-07-14, `tradfi-bf-cme-ohlcv-1m-g01-met-met-2023` at 2023-05-06 — both
+live/monotonic-progressing, not stale). Long pole: met-met-2023 (~6h remaining). Watcher polls every 300s; progress
+updates to server every 3rd poll. When count==0: launches ES_OPT → verifies → waits completion → downloads fresh
+manifest → runs count query → updates both plan files → commits + pushes → calls `/done`. Log at:
+`…/8e0e0b20-3e7a-42f5-a2dd-ef603f9b296e/scratchpad/es_opt_watcher.log`.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
