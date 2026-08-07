@@ -866,3 +866,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   exactly on time. SFI (2023-05-11→2023-11-17), `mtds-backfill-odds-smallchunk-20260807` (chunk 18/451, 5 OOM),
   `mtds-backfill-odds-401-retry` (23 OOM, CHILE_PRIMERA/LIGA_MX/K_LEAGUE_1) all confirmed healthy, consistent with
   established patterns — no new incidents.
+- **2026-08-07T17:48Z** — FIXTURE_STATS chunk 4/26 (2021-03-09), SFI 2024-09-26. Both healthy, genuine progress
+  confirmed via value-diffs. (Aside, sibling-doc scope: confirmed the stale-code fix from last tick is holding —
+  `mtds-backfill-odds-smallchunk2-20260807` is 0/5-chunks-clean OOM and, more importantly, odds_api's total
+  `attempted_failed` count has generated exactly **0 new rows** since the fixed VM launched at 17:18Z (26,934→26,937,
+  the +3 is noise) — the SOURCE_RETURNED_ZERO bug is genuinely not recurring anymore.)
