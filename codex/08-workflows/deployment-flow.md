@@ -224,14 +224,20 @@ bash e2e-testing/scripts/defi/run-live.sh --strategy carry_staked_basis --asset-
 
 ## Dependency Cascade Flow
 
+> **Target branch updated for the LDR-direct model**: this section predates the `ldr_main` promotion model above and
+> originally described the target as `staging`. Staging is now DORMANT (0 of 24 `ldr_main` repos route through it) — the
+> cascade's target is each downstream repo's `live-defi-rollout` branch today, per the same `promotion_model` toggle.
+> `/codex/08-workflows/dependency-cascade.md` (linked below) has not yet been re-verified against this update.
+
 When repo A is promoted and bumped:
 
 1. `semver-agent.yml` in repo A emits `repository_dispatch` to downstream repos B, C, D
-2. `update-dependency-version.yml` in B/C/D updates pyproject.toml minimum pin → staging commit
+2. `update-dependency-version.yml` in B/C/D updates pyproject.toml minimum pin → commit to the repo's active integration
+   branch (`live-defi-rollout` for `ldr_main` repos; `staging` only for a repo still on that dormant model)
 3. B/C/D CI runs → if green, their semver-agents trigger cascading to their own downstreams
 
-Minor/patch bumps: direct commit to staging with `[skip ci]` to avoid unbounded cascade. Major bumps: create branch + PR
-requiring human review (breaking change could need code changes).
+Minor/patch bumps: direct commit with `[skip ci]` to avoid unbounded cascade. Major bumps: create branch + PR requiring
+human review (breaking change could need code changes).
 
 See `/codex/08-workflows/dependency-cascade.md` for topology and cap rules.
 

@@ -340,10 +340,9 @@ cd "${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-pm"
 ### Step 3: Verify
 
 ```bash
-# Run updated script
-bash unified-trading-pm/scripts/sync-workspace.sh
-
-# Should work without errors
+# Run your updated script — it should resolve paths via ${UNIFIED_TRADING_WORKSPACE_ROOT} without errors.
+# (scripts/sync-workspace.sh, this section's original example, is DELETED — see the ⛔ table above; pick
+# any script you migrated in Step 2, or smoke-test with `bash unified-trading-pm/scripts/setup-workspace-from-manifest.sh`.)
 ```
 
 ---
