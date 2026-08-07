@@ -23,7 +23,7 @@ summary: >-
   (`routes/slots_worker.py:2196-2230`) sets `slot.status = "blocked"` unconditionally even when `can_continue=True`, so
   fleet-wide the slot still reads as idle/blocked regardless of whether the agent is actually still productive — and
   `continue_on` has no answer at all for a worker that's genuinely run out of continuable work while operator-gated.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 scope: [engineer, admin]
@@ -69,6 +69,13 @@ context_scope:
     /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-06** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. All 4 todos shipped: authority-field wiring (`agent-orchestrator@cc5961e`), the
+> differentiated timeout itself (`agent-orchestrator@9777c02`), and the main-agent active-nudge follow-up ruling
+> (`agent-orchestrator@42cba85`), all after the cross-delivery fix (`agent-orchestrator@365e18e`) per this doc's own
+> ordering requirement. `quality-gates.sh` green at every step (2598 tests passing after the final ship).
 
 # No differentiated kill/timeout policy exists for blocked slots
 
@@ -156,12 +163,15 @@ worker behind it in the first place; it has never been extended to a real, curre
       classification for both buckets, the full kill+requeue path, an operator-bucket row correctly left alone within
       budget, and the orphan guard. Shipped AFTER the cross-delivery fix per "Ordering" above (that fix shipped first,
       same session, `agent-orchestrator@365e18e`).
-- [ ] [INFRA] P3. **Give the main-agent a bounded first-answer window on `main_agent`-tagged questions** before that
-      bucket's kill timer fires — **NOT implemented**, deliberately deferred: the shipped timeout applies uniformly at
-      the 10-minute deadline with no dedicated "main-agent gets first crack" sub-mechanism (the main agent CAN still
-      answer via the normal `/answer` endpoint any time before the deadline, which loosely satisfies the spirit, but
-      nothing actively prompts/triages it to do so). The specific mechanism (a dedicated triage poll vs. reusing an
-      existing tick) is still an implementation detail for whoever picks this up.
+- [x] [INFRA] P3. **Give the main-agent a bounded first-answer window on `main_agent`-tagged questions** before that
+      bucket's kill timer fires — `agent-orchestrator@42cba85`. Operator ruling (follow-up, 2026-08-06): "orchestrator
+      main should try to answer" — yes. Resolved via an ACTIVE nudge rather than a separate triage poll: `add_blocked()`
+      now posts a `to_agent` message to the `"main"` role the moment a `main_agent`-tagged question is raised (same
+      `post_agent_message_by_role` primitive `answer_blocked_endpoint` already uses for the slot-0 answer path),
+      carrying the blocked_id, question, recommendation, the configured timeout budget, and the
+      `POST /api/blocked/{id}/answer` call to make. `operator`-tagged questions get no nudge (paging main for a
+      human-only question is noise). 3 regression tests (`tests/test_blocked_main_agent_nudge.py`): nudge fires for
+      `main_agent`, not for `operator`, and carries the configured budget.
 
 ## Progress Log
 
