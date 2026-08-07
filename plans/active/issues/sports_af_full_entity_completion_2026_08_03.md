@@ -910,3 +910,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   which looked 2h-stale) and confirmed 10/18 leagues OOM'd (55%) but each a genuinely distinct league, EKSTRAKLASA fully
   completed, no repeats — genuine progress, not a stall; PROGRESS.json just checkpoints at the whole-chunk boundary.
   Full root-cause writeup: `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`b90338bfd9`.
+- **2026-08-07T21:53Z** — FIXTURE_STATS jumped 89 days to `last_completed_date=2022-02-16` (fresh checkpoint,
+  `21:52:23Z`), accelerating nicely toward its 26-chunk end. `mtds-backfill-odds-smallchunk2` still on chunk 18/451
+  (~2h40m now) but confirmed still genuinely progressing — 22 distinct leagues attempted (up from 18), currently
+  `J1_LEAGUE`, RSS cycling normally, 12 total OOMs (up from 10, still zero repeats). Watching; would escalate if still
+  stuck on chunk 18 at the next tick. Full detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
