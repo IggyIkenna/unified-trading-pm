@@ -206,7 +206,7 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
       destroy** (grew from 26/17/2 due to additional IaC merges on LDR). Destroys include `client-reporting-batch` Cloud
       Run job + 2 batch-sa Secret IAM members. Full breakdown filed at
       `/plans/active/issues/deployment_service_prod_terraform_drift_2026_08_07.md` — `[OPERATOR]` todo gates the actual
-      apply. — unified-trading-pm@<sha> (this commit)
+      apply. — unified-trading-pm@4fa68875c
 
 ## Progress Log
 
