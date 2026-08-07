@@ -11,14 +11,20 @@
 # Target: <repo>/.github/workflows/<template-name>.yml
 #
 # Generic per-repo workflows (tier 1):
-#   - request-major-bump.yml        (canonical flat copy — creates a GitHub Issue +
-#                                     Slack alert directly; its only `uses:` is
-#                                     actions/checkout@v5, no reusable-workflow call)
-#   - major-bump-issue-handler.yml   (canonical flat copy)
 #   - staging-lock-check.yml         (canonical flat copy)
-#   - update-dependency-version.yml  (canonical flat copy)
 #   - quality-gates-v2.yml.tmpl      (the required CI check, DEP_REPOS substituted)
-#   - semver-agent.yml.tmpl          (per-repo semver-agent invocation)
+#
+# fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md todo 7 (2026-08-07):
+# request-major-bump.yml, major-bump-issue-handler.yml, update-dependency-version.yml,
+# semver-agent.yml.tmpl, main-backmerge-to-ldr.yml, staging-backmerge-to-ldr.yml, and
+# version-registry-notify.yml were all full-content flat-copy templates this script used to
+# propagate -- DELETED from this directory once every fleet repo was converted to a thin
+# `uses: unified-trading-ci/...` caller stub (see that plan for the migration + per-repo
+# verification). Their canonical source is now `unified-trading-ci/.github/workflows/`,
+# edited directly there -- this script no longer has anything to do with them.
+# staging-lock-check.yml stays a flat-copy template (excluded from that migration -- its
+# `check-staging-lock` job is a literal branch-protection required-status-check context on
+# 16 repos; converting it needs the ruleset contexts fixed first, tracked separately).
 #
 # RETIRED workflows (workspace-qg.yml / python-quality-gates.yml / version-bump.yml) are
 # guarded by _is_retired() below — even if a stale template reappears here, it is NEVER
@@ -38,7 +44,7 @@
 #   bash rollout-workflow-templates.sh --dry-run
 #   bash rollout-workflow-templates.sh --repo instruments-service
 #   bash rollout-workflow-templates.sh --template staging-lock-check.yml
-#   bash rollout-workflow-templates.sh --repo instruments-service --template request-major-bump.yml
+#   bash rollout-workflow-templates.sh --repo instruments-service --template staging-lock-check.yml
 #   bash rollout-workflow-templates.sh --repo unified-trading-system-ui  # UI templates only
 
 set -euo pipefail

@@ -40,7 +40,7 @@ related:
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/data_completion_sports_2026_07_24.md,
-    /plans/active/issues/instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md,
+    /plans/archive/2026_08/issues/instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md,
     /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
     /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,

@@ -219,16 +219,19 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       extends. Documents the 5-step procedure (per-source pivot, error_reason sub-classification, timestamp liveness
       check, never-trust-exit_code-alone, mid-run tarball-staleness check) with the concrete gotchas measured this
       session, cross-linked back to this doc's Progress Log for full worked examples.
-- [ ] [SCRIPT] P1. **Confirm the SFI + weather `expected_unattempted`→`empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`
-      reclassifications (410,665 rows combined, applied 2026-08-07T21:16Z as per-VM shards
-      `type-sfi-eu-1786133580.parquet` / `type-weather-eu-1786133699.parquet`) actually landed in the canonical index**
-      once the manifest consolidator's next cycle runs — re-census both sources, confirm `expected_unattempted` drops to
-      ~0 for both (modulo the small residual `attempted_failed` clusters, tracked separately).
-- [ ] [SCRIPT] P2. **Check whether `type_understat_eu_no_provider_coverage.py` and any equivalent for footystats/
-      transfermarkt/odds_api are needed** — the same "narrower current write-scope vs broader historically-seeded
-      `expected_unattempted`" pattern hit weather AND SFI independently; worth a quick dry-run sweep across the
-      remaining sources to check whether it's a systemic issue across more vendors than currently known, now that the
-      fix pattern + tooling are proven to work.
+- [x] ✅ [SCRIPT] P1. **Confirmed the SFI + weather reclassifications landed in the canonical index** —
+      2026-08-07T20:47Z re-census: `expected_unattempted` is completely gone (0 rows) for both sources,
+      `empty_confirmed` grew by exactly the retyped counts (SFI +205,447 ≈ 205,363 retyped; weather +205,302, an exact
+      match). Both sources now hold only `captured` + `empty_confirmed` + their small, already-diagnosed
+      `attempted_failed` tail.
+- [x] ✅ [SCRIPT] P2. **Checked `type_understat_eu_no_provider_coverage.py` — NOT the same pattern, no action needed.**
+      Dry-run (2026-08-07T22:18Z) confirms understat's 25 rows are `reason=EXPECTED_NO_FIXTURE`, dates 2026-08-05→
+      2026-08-07 (today/yesterday) — matches the earlier "slot 4" diagnosis exactly (self-resolving IS-cron artifact for
+      recent fixture shards not yet processed by the daily pass), not the weather/SFI structural bug
+      (`EXPECTED_NO_PROVIDER_COVERAGE`, historically-seeded, permanently unreachable by a narrower current writer).
+      footystats/transfermarkt/odds_api already repeatedly confirmed at `expected_unattempted=0` throughout this
+      session's census runs — no script needed, nothing to check. This closes the systemic-sweep question: only
+      weather + SFI had the structural bug, both now fixed.
 
 ## Progress Log
 
@@ -488,3 +491,53 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `expected_unattempted` count will still read the old figures until that merge completes; re-verify next tick. The 80
   new SFI `attempted_failed` rows and weather's pre-existing 16,241 (already root-caused + code-fixed earlier this
   session) are separate, smaller residuals, not touched by this reclassification.
+- **2026-08-07T20:47Z — CONFIRMED: the consolidator merge landed, both sources genuinely converged.** Re-census (rule
+  4a, live manifest re-read, not assumed): `soccer_football_info` — `empty_confirmed` 208,726→**414,173** (+205,447,
+  matching the retype), `expected_unattempted` **completely gone** (0 rows, was 205,363), `captured` 20,953,
+  `attempted_failed` unchanged at 80. `open_meteo` — `empty_confirmed` 215,865→**421,167** (+205,302, an EXACT match to
+  the retype count), `expected_unattempted` **completely gone** (0 rows, was 205,302), `captured` 28,698,
+  `attempted_failed` unchanged at 16,241 (the already-tracked, separately-fixed residual). Both sources are now down to
+  just `captured` + `empty_confirmed` + a small, already-diagnosed `attempted_failed` tail — this is genuinely,
+  verifiably the operator's original target state for these two vendors. `mtds-backfill-odds-smallchunk2-20260807`
+  (chunk 18/451, now 6 OOM total — checked the actual league list: EPL, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
+  SUPER_LIG, GREEK_SUPER_LEAGUE, six DIFFERENT leagues each failing once and self-recovering, not a stuck repeat —
+  consistent with the established tolerable pattern, watching but not intervening) and FIXTURE_STATS (chunk 6/26,
+  2021-10-14) both remain healthy.
+- **2026-08-07T21:22Z — smallchunk2 odds STILL on chunk 18/451, now confirmed 10/18 leagues OOM'd (55%) — root-caused as
+  genuine per-league progress, not a stall (full detail + league list in
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`b90338bfd9`).** PROGRESS.json's `last_completed_date`
+  reading (`2020-08-29`, `updated=19:22:22Z`) looked 2h-stale at first glance — this is exactly the rule-1b check case,
+  so read the full `run.log` (not just PROGRESS.json) rather than concluding either way from the checkpoint alone:
+  confirmed 18 DISTINCT leagues attempted this chunk (EPL...BRASILEIRAO, zero repeats), EKSTRAKLASA fully completed, the
+  other 10 OOM'd once each and correctly advanced (self-recovery intact). Verdict: not a stall, PROGRESS.json simply
+  checkpoints at the whole-chunk boundary and this specific 2020-08-30→2020-09-03 range (a genuine European
+  season-opener window) is unusually failure-prone. FIXTURE_STATS re-checked same tick: `last_completed_date=2021-11-19`
+  (up from 2021-11-06), `updated=21:22:14Z` (fresh) — healthy, no action needed. No intervention on either VM this tick.
+- **2026-08-07T21:53Z — FIXTURE_STATS jumped 89 days** (`last_completed_date=2022-02-16`, was `2021-11-19`,
+  `updated=21:52:23Z` fresh) — healthy, accelerating. **smallchunk2 odds STILL on chunk 18/451** (PROGRESS.json
+  checkpoint unchanged, `2020-08-29`/`19:22:22Z` — now 2.5h stale on the checkpoint alone), but `run.log` confirms
+  continued genuine progress: 22 distinct leagues attempted this chunk now (up from 18), currently on `J1_LEAGUE`,
+  actively running (RSS cycling 10-23GiB normally, no stuck/frozen process), 12 total OOMs (up from 10, still zero
+  repeats — each OOM'd league only failed once). This chunk has now run ~2h40m; not yet escalating — self-recovery
+  remains intact and every restart is still doing real, distinct work, but flagging for whoever next touches this: if
+  it's still on chunk 18 at the NEXT tick, that would be a genuine outlier worth deeper thought (e.g. whether the full
+  league roster for this chunk is unusually long, not just unusually OOM-prone).
+- **2026-08-07T22:21Z — followed up on the flagged outlier: STILL on chunk 18/451 (~3h now), but confirmed this is the
+  roster being genuinely large for this specific week, not malfunction.** FIXTURE_STATS:
+  `last_completed_date=2022-04-06` (up from 2022-02-16, +49 days), fresh checkpoint (`22:20:25Z`) — healthy, continuing
+  to accelerate, no action needed. odds smallchunk2: full `run.log` re-read (rule 1b) shows **25 distinct leagues
+  attempted this chunk now** (up from 22 last tick — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE,
+  PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG, SCOTTISH_PREMIERSHIP, GREEK_SUPER_LEAGUE, AUSTRIAN_BUNDESLIGA,
+  SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, EKSTRAKLASA, ALLSVENSKAN, BRASILEIRAO, ARGENTINA_PRIMERA, MLS,
+  J1_LEAGUE, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1, A_LEAGUE — spanning Europe, South America, Asia, North America,
+  Oceania), still **zero repeats**, 13 total OOMs (+1 since last tick, LIGA_MX). This spread (multiple continents' top
+  flights all represented) plus the fact the chunk is STILL not exhausted after 25 leagues strongly suggests the
+  Prediction-tier roster is simply large and this 2020-08-30→2020-09-03 week is the first chunk since the 2020-06-06
+  range start where essentially every league worldwide has a real season-opener fixture simultaneously — i.e. this may
+  be close to a full-roster real-fetch pass in one chunk, something later/earlier chunks in off-season weeks won't
+  repeat. Not a stall by rule 1b's own test (values keep climbing every tick); no intervention — self-recovery, zero
+  data loss, genuinely converging.
+- **2026-08-07T22:50Z** — FIXTURE_STATS +45 days (`last_completed_date=2022-05-21`, fresh `22:49:35Z`), steady. odds
+  smallchunk2 STILL chunk 18/451 (~3.5h) — lighter rule-1b diff (root cause already established, not re-litigating): 29
+  distinct leagues now (up from 25), 15 OOM (up from 13), still zero repeats, RSS cycling normally — continued genuine
+  movement, no intervention.

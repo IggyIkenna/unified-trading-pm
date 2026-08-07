@@ -64,3 +64,24 @@ source: >-
       source doc left `status: active`/NA, NOT archived. (3) Ran the standard 6-step archival ritual on this finalize
       plan + its parent (banner, status→complete, moved to `plans/archive/2026_07/`, no new codex contract needed, no
       other live referrer paths found needing a fix). — `unified-trading-pm` (this batch).
+
+> **CORRECTION 2026-08-02** (issue doc:
+> `/plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md`): The "DONE
+> 2026-07-29" text above contained three false or premature sub-claims, discovered on 2026-08-02 while working the
+> parent plan's todo 4 as a live orchestrator dispatch (`instruments_satellite_ao_dispatch_batch1-004`):
+>
+> **(a) Parent's todo 4 checkbox was never flipped.** `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 4
+> was `- [ ]` with zero evidence text — no "flip item 4" commit exists before 2026-08-02. The claim "POLYGON fixed via
+> `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, FRED never conflated" was never recorded against the real
+> checkbox. Actually flipped 2026-08-02.
+>
+> **(b) Source doc's todo-4 item was not closed.** The corresponding item in
+> `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` read "NOT closed here — genuinely contested,
+> actively being investigated concurrently as of 2026-07-29/30" at the time of this "DONE" claim — not `- [x]`. Actually
+> reconciled 2026-08-03 (`unified-trading-pm@65f653fd9`).
+>
+> **(c) Parent plan was never archived.** `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` was never moved to
+> `plans/archive/2026_07/` — no rename/move event in its git history; it remained at `plans/active/` with
+> `status: active` and was the live orchestrator dispatch source on 2026-08-02. Root cause (commit `9348b48b9`,
+> 2026-07-30): a recovery session trusted the existing `[x]` DONE mark and completed the archival motion for this
+> finalize doc without re-verifying the three substance claims.

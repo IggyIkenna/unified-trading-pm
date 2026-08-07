@@ -724,6 +724,68 @@ NASDAQ/NYSE/CME continuous-launch pattern where the last N shards are slow.
   SLOT_ID/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm
   `watcher/heartbeat.sh` same way. Fleet at 4 — may break loose soon or may keep replenishing.
 
+### 2026-08-07T20:51Z — slot 12 — watcher re-armed (be00zdpbw)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Fleet at boot: 2 VMs** (met-met-2023, met-met-2025 — draining from 4-VM
+stable of session 16). Prior watcher `brxkxvoh5` dead at boot (no task found). Operator keep-waiting decision unchanged.
+
+Re-armed: watcher `be00zdpbw` (run 1, 20:51Z, poll 1=2 VMs; killed 21:22Z after poll 7=38 VMs — new wave 21:06Z).
+Re-armed run 2: watcher `bw0ae2kf0` (21:23Z, poll 1=38 VMs), heartbeat `byjynq9jz`. Both `run_in_background:true`, NO
+`&` inside. Slot-12 copy at `<scratchpad>/watcher/es_opt_watcher_slot12.sh`.
+
+Fleet drain: 2→2→3→19→35→38→38 (polls 1-7, run 1). New wave at ~21:06Z added 35+ VMs; lock now multi-hour again.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bw0ae2kf0.output`
+  via TaskOutput non-blocking. (3) If watcher dead: re-arm from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) +
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way. Do NOT use
+  TaskList — always "No tasks found" for background Bash tasks.
+
+### 2026-08-07T21:38Z — slot 12 — rapid-kill loop run 12; fleet stable at 38 VMs; pre-compact
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Fleet at 38 VMs** — new campaign wave arrived at ~21:06Z (jumped 3→19→35→38),
+lock multi-hour. Harness rapid-kill pattern has been active throughout this session: each watcher re-arm (runs 1–12)
+killed after 1 poll (~seconds–minutes). Coverage maintained — each poll confirms 38 VMs. No draining observed since the
+new wave.
+
+**Session runs (all run_in_background:true, NO `&` inside):**
+
+- Runs 1–11: watcher killed after 1 poll each (be00zdpbw through bucm7h3tg). Fleet confirmed 38 each time.
+- Run 12: watcher `bba37joyr`, heartbeat `b6xpigmh5` (both armed 21:38Z).
+
+**Pre-compact ritual (2026-08-07T21:38Z, autonomous mode):**
+
+- Step 1: git clean, ahead=0; scratchpad: `es_opt_watcher_slot12.sh` + `heartbeat.sh` + `es_opt_watcher.log` +
+  `manifest_query.py` — all regenerable from committed `es-opt-backfill-watcher.sh`; no dangling refs from this
+  session's scratchpad in committed docs; no secrets.
+- Step 2: Nothing to promote — watcher SSOT is committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`.
+- Step 3: No new todos. Rapid-kill pattern documented in prior entries.
+- Step 4: Nothing to flip — todo #2 still `[ ]`.
+- Step 5: "Cannot be done yet" — fleet at 38 VMs, new campaign wave, singleton held.
+- Step 6: Fleet jumped 3→38 in one interval (~5 min) — the continuous-launch pattern can add 35+ VMs in a single cron
+  tick; do not extrapolate drain rate from a low count.
+- Step 7: This commit IS the update.
+- Step 8 verdict: **Safe to compact: YES.** Watcher run 12 active (`bba37joyr`). Heartbeat `b6xpigmh5`. Fleet at 38.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, immediately re-arm
+  watcher: sed-patch `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (SLOT_ID=12, SLOT_TABS=.tabs/12,
+  PYTHON=.tabs/12/market-tick-data-service/.venv/bin/python) → scratchpad, then `run_in_background:true` with NO `&`
+  inside. Re-arm heartbeat same way. Do NOT use TaskList.
+
+### 2026-08-07T22:26Z — slot 10 — watcher re-armed (bzfv850ih)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Prior watcher `bba37joyr` (slot 12, 21:38Z) dead at boot. Fleet at boot:
+**18 VMs** (draining from 38; last slot-12 wave at ~21:06Z). No ES_OPT VMs exist. Direct instruction edits for
+slot_recurring_wedge issue doc already applied by prior session — confirmed present in doc. Python binary:
+`.tabs/3/market-tick-data-service/.venv/bin/python` (slot 10 has no mtds venv). Watcher `bzfv850ih` launched
+`run_in_background:true`, NO `&` inside. Poll 1 (22:26:52Z): 18 VMs.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bzfv850ih.output`
+  via TaskOutput non-blocking. (3) If watcher dead: re-arm from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=10, SLOT_TABS=.tabs/10,
+  PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python) + `run_in_background:true`, NO `&` inside. Do NOT use
+  TaskList. Do NOT re-arm if alive.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,

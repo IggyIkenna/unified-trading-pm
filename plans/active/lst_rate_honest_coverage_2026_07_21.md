@@ -991,3 +991,8 @@ tarball once; always check the launcher's own freshness warning output, and if s
   `mtds_backfill_vm_memory_hang` issue this doc's Deferred table cites as what the remaining CEX-spot backfill item is
   blocked on. Doc now at 989/1000 lines — comfortable headroom restored after the recent trim-below-cap commit.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA valid (re-affirms 2026-08-03 ruling; marker-only, at line cap).
+- **na-eligibility-audit 2026-08-02 (deferred marker, persisted 2026-08-07)**: KEEP-NA valid, MIXED — 1 of 6 open items
+  (Phase 3 `-test-`-bucket force/skip proof) conflict-check-cleared and extracted to
+  `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md`; the other 5 stay KEEP-NA valid. Marker
+  deferred per `/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`; now persisted after
+  the marker-only carve-out was implemented (2026-08-07).

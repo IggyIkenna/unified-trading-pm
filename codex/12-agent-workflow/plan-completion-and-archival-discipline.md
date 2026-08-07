@@ -99,6 +99,32 @@ loophole:
   scoping, do not shrink a finished doc to appease it, and never delete content from a done plan just to get under a
   cap.
 
+### The line-cap does NOT block a small audit-marker append to a live over-cap doc (RULED 2026-08-02)
+
+**A commit whose diff to an already-over-cap `plans/active/*.md` is confined to appending a small dated audit verdict
+marker (and/or a `last_updated` bump) passes through SCOPED mode.** The carve-out is narrow — it cannot be used to add
+real content to an over-cap plan:
+
+- The file must **already** be over the hard cap before this commit (a doc newly crossing the cap is NOT covered — that
+  is a real regression, blocked as before).
+- **Zero deleted lines**: a marker-only append has `DELETED=0` in `git diff --numstat`. Any edit (modify, reformat,
+  remove) that produces deletions is treated as real content change and the cap applies normally.
+- **≤ 10 added lines**: a dated Progress Log / verdict marker fits in 3-8 lines; a 10+ line addition is not a marker.
+- **No added checkbox lines**: none of the added lines match `- [ ]` or `- [x]`. This ensures the carve-out cannot sneak
+  new tracked work onto an over-cap doc.
+
+**The failure this closes**: once a live plan with open todos crosses 1000 L, EVERY future commit to it — including a
+4-line `na-eligibility-audit` verdict marker with zero content change — was permanently blocked, forcing every future
+audit run to skip writing its incremental-skip anchor onto the largest, most expensive-to-re-read docs in the corpus.
+The 2026-07-30 zero-open-todo ruling did not reach this case because the live-plan exception is different: the doc is
+not archival-eligible, so blocking archival is moot, but blocking the audit marker still defeats incremental mode.
+
+**Caution: mandatory prettier reformatting can defeat this exception.** If the file carries pre-existing long-whitespace
+formatting debt, `prettier-autostage`'s unconditional `--write` pass (triggered by any staged touch) may reflow those
+regions as a side effect, adding deletions to an otherwise marker-only diff and pushing `DELETED` above zero. When this
+happens the exception correctly refuses (a reformatting diff is not a marker-only append) — the actual fix is to land a
+standalone formatting commit on the file first, bringing it to prettier-clean, before adding the marker.
+
 ## 2. Every follow-up is a canonical `- [ ]` todo — never prose
 
 A "next steps" paragraph, a Progress Log aside that only describes future work in prose, or a chat-summary bullet that

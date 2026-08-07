@@ -15,7 +15,7 @@ summary: >-
   first-pass sonnet classification of this specific doc under-read it (missed 8 of its 14 open items on the first read);
   a full direct re-read before authoring this batch caught the gap — see the source doc's own 2026-07-27 Progress Log
   entry for the full accounting.
-status: active
+status: complete
 nature: process
 asset_group: [cefi, defi, tradfi, prediction]
 stage: [meta]
@@ -40,7 +40,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
-archive_exempt: true # archival routed through plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md's reconciliation, not standalone (see Progress Log)
+resolved_by: instruments_satellite_batch1_finalize_false_completion_claim-004
 locked_by:
 locked_since:
 supersedes:
@@ -62,6 +62,11 @@ context_scope:
     instruments-service/instruments_service/engine/orchestrator/writers.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-07** — All 5 todos `[x]`, all genuine evidence (no phantom flips). Real archival ritual ran
+> today via `instruments_satellite_batch1_finalize_false_completion_claim-004` (plan_reconciler). No deferred items; no
+> new codex contracts established by this plan's work. Source doc reconciliation already shipped 2026-08-03
+> (`unified-trading-pm@65f653fd9`). Referrers updated. Moved to `plans/archive/2026_08/`.
 
 # Instruments satellite docs — AO dispatch batch 1 (na-eligibility-audit extraction)
 

@@ -18,7 +18,7 @@ summary: >-
   is anchored to a retired legacy direct-GCS live-tick surface — the active sink is the LiveEventFacadeSink (Pub/Sub),
   so the "no live_* rows in raw_tick_data" observation is expected under the event-log spine and should not be
   re-flagged as a fresh outage once the cold compactor is fixed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -57,6 +57,10 @@ context_scope:
     deployment-service/terraform/gcp/live_event_log/compaction_job.tf,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — all 4 todos done and verified: OOM fix deployed (4Gi/2CPU, deployment-service@5e23a7b),
+> NDJSON parsing fix shipped (deployment-service@d5f850f), cold tier backfilled (28 parquet files confirmed across 7
+> dates × 4 data_types), and retired legacy path documented (unified-trading-pm@5db5fedba).
 
 # CeFi live capture is alive (warm tier healthy) but the cold compactor OOMs — raw_tick_data/live_* is a retired path
 
@@ -173,15 +177,13 @@ surface that actually exists (warm + cold event-log tiers).
       row group written per envelope (streaming, peak memory bounded to one envelope's rows). Fix shipped via
       quickmerge: deployment-service@d5f850f (on live-defi-rollout; LDR→main auto-promote in flight). QG green before
       shipping. (repo: deployment-service)
-- [ ] [DATA] P0. **RE-OPENED 2026-08-07 — backfill never ran; cold tier still empty.**
-      `gcloud storage ls     gs://central-element-323112-events/live-events/cold/cefi/book_snapshot_5/` and
-      `.../trades/` (checked 2026-08-07 ~11:50 UTC) both return zero objects — `live-events/cold/cefi/**` is still
-      completely empty for 2026-08-01through today. The backfill trigger script
-      (`scripts/jobs/run-compactor-date-range-backfill.sh`, deployment-service@9e1ab49) exists but was never executed —
-      the prior note ("Run ... after next clean daily run") was a deferred instruction, not a completion. Blocked on the
-      todo above (needs the OOM actually fixed live first, or the backfill run will just repeat the same OOM). Done
-      when: cold parquet genuinely exists for each cefi data_type × each missed date 2026-08-01→2026-08-07, verified via
-      `gcloud storage ls`, not just "script exists". (repo: deployment-service)
+- [x] ✅ [DATA] P0. **DONE 2026-08-07 ~22:43 UTC (slot-2 worker).** Cold tier fully backfilled: 28 cold parquet files
+      confirmed via `gcloud storage ls 'gs://central-element-323112-events/live-events/cold/cefi/**'` — all 7 dates
+      (2026-08-01→2026-08-07) × 4 data types (book_snapshot_5, derivative_ticker, liquidations, trades). v6 parallel
+      backfill executions (tznqd/jskph/l9jxq/nwzrc/q8psv/45bvw/wfbbc) for 7 dates all completed successfully; last
+      execution q8psv (COMPACTION_DATE=2026-08-01) terminated at ~22:43 UTC writing trades/date=2026-08-01/data.parquet.
+      Code changes that enabled this: NDJSON fix (deployment-service@d5f850f), schema-drift fix (@5281cb0a0), memory
+      16Gi (@454cccd9c), per-file batching (@e57441c0f/@d304c0ba8), timeout 8h (@4648b5e). (repo: deployment-service)
 - [x] ✅ [DATA] P2. Confirm + document that `raw_tick_data/by_date/.../pipeline_mode=live_*` (cefi) is a retired legacy
       surface (grep confirms no production reader consumes it — the active sink is `LiveEventFacadeSink`); update the
       ASTER gate wording in `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` and the check path in
@@ -395,3 +397,10 @@ surface that actually exists (warm + cold event-log tiers).
   warning per file (not 1512), processing at ~4-5s/file — projected ~1.9h for book_snapshot_5, well within 3h timeout.
   CANCELLED 6 buggy prior executions (727pg already failed; 4rx69/wntl5/q9gbf/lfjlg/8j7sd/q28hw cancelled). DATA P0 todo
   awaiting all 7 executions to complete and cold GCS objects verified.
+- **2026-08-07 ~22:43 UTC (slot-2 worker, data_engineering, DATA P0 completion)**: All 7 v6 backfill executions
+  confirmed SUCCEEDED. q8psv (COMPACTION_DATE=2026-08-01) was last to complete (4h24min total from 18:19 UTC), writing
+  trades/date=2026-08-01/data.parquet at 22:43 UTC. Final GCS verification: 28 cold parquet files present —
+  `gcloud storage ls 'gs://central-element-323112-events/live-events/cold/cefi/**'` = 7 dates × 4 data_types
+  (book_snapshot_5, derivative_ticker, liquidations, trades) for dates 2026-08-01 through 2026-08-07. Done-definition
+  met: "cold parquet genuinely exists for each cefi data_type × each missed date 2026-08-01→2026-08-07, verified via
+  gcloud storage ls". DATA P0 checkbox flipped.

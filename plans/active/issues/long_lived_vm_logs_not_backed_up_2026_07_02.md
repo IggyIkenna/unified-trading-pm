@@ -84,11 +84,16 @@ minus the EXIT_STATUS/shutdown semantics (these VMs don't self-terminate). Small
 `scripts/vm/lib/launcher_common.sh` + `scripts/vm/lib/aws_ec2_launch_lib.sh`. When done, correct the coverage-guard
 EXEMPT reasons accordingly.
 
-- [ ] [SCRIPT] P2. Add a continuous (non-terminating) log-tail→GCS shipper helper to `launcher_common.sh`; wire into
-      `launch-planning-vm.sh`.
-- [ ] [SCRIPT] P2. AWS mirror in `aws_ec2_launch_lib.sh`; wire into `launch-central-brain-aws.sh`,
+- [x] ✅ [SCRIPT] P2. Add a continuous (non-terminating) log-tail→GCS shipper helper to `launcher_common.sh`; wire into
+      `launch-planning-vm.sh`. — deployment-service@52234197 (lc_log_upload_continuous_block added;
+      launch-planning-vm.sh sourced + wired; coverage guard EXEMPT entry removed, lc_log_upload_continuous_block added
+      to STREAMER_TOKENS)
+- [x] ✅ [SCRIPT] P2. AWS mirror in `aws_ec2_launch_lib.sh`; wire into `launch-central-brain-aws.sh`,
       `launch-orchestrator-worker-vm.sh`. (Was also `launch-epic-vm-aws.sh` — REMOVED 2026-07-24 with the rest of the
-      per-epic-VM code; `launch-central-brain-aws.sh` is the sole surviving central/planning launcher.)
+      per-epic-VM code; `launch-central-brain-aws.sh` is the sole surviving central/planning launcher.) —
+      deployment-service@cebb2425 (lc_aws_log_upload_continuous_block added to aws_ec2_launch_lib.sh;
+      launch-central-brain-aws.sh + launch-orchestrator-worker-vm.sh wired; launch-orchestrator-worker-vm.sh removed
+      from EXEMPT, lc_aws_log_upload_continuous_block added to STREAMER_TOKENS)
 - [ ] [SCRIPT] P3. Once shipped, replace the misleading Tier-3 EXEMPT reasons in `test_vm_launcher_scripts.py`
       (durable-log coverage guard) with the streamer wiring, or a correct "long-lived continuous-tail (not EXIT_STATUS)"
       rationale.

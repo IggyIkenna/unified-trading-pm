@@ -129,14 +129,15 @@ context_scope:
   >   `GroupBRunner` + `V2BatchHarness` → `V2EngineOrchestrator` (same orchestrator as live mode).
   >   `tests/unit/engine/backtest/test_runner.py::test_runner_produces_deterministic_pnl_for_ml_directional` PASSES (4/4
   >   tests, 6.7s): batch=live reproducibility invariant confirmed (same tick stream → identical fills).
-  > - ❌ **2-year config-grid run not yet executed**: `run_2yr_config_grid_backtest.py` only covers
-  >   `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (DeFi archetypes); no ML_DIRECTIONAL_CONTINUOUS entry in
-  >   `SUPPORTED_ARCHETYPES`; no GCS output at
-  >   `strategy-store-*/backtest_results/strategy_id=ML_DIRECTIONAL_CONTINUOUS/`. Requires: (1) extend
-  >   `run_2yr_config_grid_backtest.py` with ML_DIRECTIONAL_CONTINUOUS grid dimensions (position_size_pct /
-  >   confidence_threshold / stop_loss_bps / take_profit_bps / model_family); (2) operator-scheduled VM run (~8-12h,
-  >   same shape as DeFi grid runs); (3) GCS parquet output inspection. This grid run is an operator-only scheduling
-  >   action per the "Plans Run To Actual Completion" HARD RULE.
+  > - ⚠️ **2-year config-grid run partially complete — script extended, VM run still pending**: ✅ **(1) script
+  >   extended** — `run_2yr_config_grid_backtest.py` now includes `ML_DIRECTIONAL_CONTINUOUS` in `SUPPORTED_ARCHETYPES`
+  >   with dimension tables (position_size_pct / confidence_threshold / stop_loss_bps / take_profit_bps / model_family)
+  >   and branch coverage at every per-archetype dispatch point; unit test proves the new archetype accepted
+  >   (strategy-service @dff5b2c0, verified on origin/live-defi-rollout 2026-08-07,
+  >   `cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md` todo 1). Remaining: **(2) operator-scheduled VM run
+  >   (~8-12h, same shape as DeFi grid runs)**; **(3) GCS parquet output inspection** — no GCS output at
+  >   `strategy-store-*/backtest_results/strategy_id=ML_DIRECTIONAL_CONTINUOUS/` yet. This grid run is an operator-only
+  >   scheduling action per the "Plans Run To Actual Completion" HARD RULE.
 
 ## Model-improvement backlog (deferred — not blocking the live loop)
 

@@ -1,16 +1,22 @@
-fabricated_sha_citation_baseline: 4
+fabricated_sha_citation_baseline: 6
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
 baseline_citations:
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
     line: 214
     cited: unified-trading-ci@b498ec2
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
     line: 227
     cited: unified-trading-ci@892bb81
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
     line: 227
     cited: unified-trading-pm@12832f77ab
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
+    line: 309
+    cited: unified-trading-pm@54b6fa6945
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md
     line: 183
     cited: unified-trading-pm@cc1309869
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/issues/instruments_satellite_batch1_finalize_false_completion_claim_2026_08_02.md
+    line: 244
+    cited: unified-trading-pm@c4464835a

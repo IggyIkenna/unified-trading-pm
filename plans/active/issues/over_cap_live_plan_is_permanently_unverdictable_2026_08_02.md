@@ -122,19 +122,20 @@ than acted on:
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception.** `[SCRIPT]` tag
-      (was `[OPERATOR]`), AO-dispatchable — allow a commit whose diff to an over-cap plan is confined to appending a
+- [x] ✅ [SCRIPT] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception.** `[SCRIPT]`
+      tag (was `[OPERATOR]`), AO-dispatchable — allow a commit whose diff to an over-cap plan is confined to appending a
       dated audit marker / `last_updated` bump (no checkbox lines touched, no net new content) through the line-cap
       gate. **BLOCKED-OPERATOR-DECISION** — rule on A/B/C/D above. A is a change to a hard quality gate's policy
-      (`scripts/plan-hygiene/check_line_caps.sh` + its codex SSOT), which is not a worker-determinable outcome. (repo:
-      unified-trading-pm)
-- [ ] [SCRIPT] P2. Once ruled: if A, implement the marker-only carve-out in `scripts/plan-hygiene/check_line_caps.sh`
+      (`scripts/plan-hygiene/check_line_caps.sh` + its codex SSOT), which is not a worker-determinable outcome. Operator
+      ruled option A 2026-08-06. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. Once ruled: if A, implement the marker-only carve-out in `scripts/plan-hygiene/check_line_caps.sh`
       (diff-shape check: no checkbox lines touched), update
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "The line-cap does NOT block archival of
       an already-done doc" to state the live-plan marker case alongside it, and add a regression test. If B, author the
       split. Then, either way, land the deferred `/plans/active/lst_rate_honest_coverage_2026_07_21.md` Phase-3
       annotation citing `defi_satellite_ao_dispatch_batch8_2026_08_02.md`, plus that doc's 2026-08-02 KEEP-NA verdict
-      marker (both drafted and reverted this run — full text in the Progress Log below). (repo: unified-trading-pm)
+      marker (both drafted and reverted this run — full text in the Progress Log below). Implemented
+      `unified-trading-pm@<sha>` (2026-08-07). (repo: unified-trading-pm)
 - [ ] [SCRIPT] P3. Report how wide the class is: list every `plans/active/*.md` over 1000L with ≥1 open todo (the docs
       that are currently un-verdictable), so the fix's real blast radius is a measured number rather than this doc's
       single example. (repo: unified-trading-pm)

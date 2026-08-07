@@ -74,6 +74,12 @@ source: >-
 depends_on: []
 ---
 
+> **🟡 IN-FLIGHT 2026-08-07 — slot-15 backfill now running in tmux `orch-slot-15:backfill` (harness-kill-proof). Chunks
+> 1-2 re-seeded per restart (consolidator clears per-VM shards; each re-run seeds ~637K rows and exits rc=0). Chunk 2
+> needs multiple retries again after consolidator cleared 11M worth of prior-session shards. Chunks 3-7 not yet started.
+> Resume: `tmux attach -t orch-slot-15` → window `backfill`; or check
+> `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'`.**
+
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 
 ## What I found
@@ -411,6 +417,24 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
   `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **data_engineering worker (slot-15) 2026-08-07**: Full session history — Chunk 1/7 (VM `214049`) EXIT_STATUS=0
+  (638,521 rows). Chunk 2/7: retries 1-11 (VMs `214629`..`223801`) each EXIT_STATUS=5 (+1M rows/retry = ~11M seeded this
+  session from scratch; consolidator cleaned prior-session shards at start). Retry 12 (VM `224305`) EXIT_STATUS=0
+  (637,267 final rows) — chunk 2 complete first pass. **Consolidator behavior**: manifest consolidator deleted per-VM
+  shards between parent restarts; subsequent runs re-find the same rows as candidates (~637K for chunk 1, full chunk for
+  chunk 2) because expected_unattempted rows written to per-VM shards are only excluded while shards exist in GCS. After
+  consolidation, rows ARE in main manifest but `present=9974285` count appears stable (possibly the "present" set
+  reflects captured+expected_unattempted only for the non-date-filtered portion, not the window being enumerated). **Key
+  discovery**: both chunk 1 and chunk 2 re-seed on each parent restart (~637K rows each, rc=0) — convergence requires
+  per-VM shards to survive until the post-run ratio check. **Parent dying**: parent script (PID 1397101 then 3298329
+  then 3507556) kept dying during `sleep 60` in polling loop (SIGTERM from harness session reset). **Fix**: moved to
+  tmux `orch-slot-15:backfill` (`tmux new-window -t orch-slot-15 -n backfill bash`) which survives harness kills. Chunk
+  2 needs further retries in current tmux run (consolidator cleared ~11M of prior-session shards). Chunks 3-7 have never
+  been seeded — each will need multiple retries (similar to chunk 2). **Resume point**: check
+  `tmux capture-pane -t "orch-slot-15:backfill" -p -S -10` or `tail -f backfill-tmux.output` (path in tasks dir). If
+  tmux window gone, re-run: `tmux new-window -t orch-slot-15 -n backfill bash` then same launch command. All 7 chunks
+  must complete EXIT_STATUS=0 in a single parent run (no intervening restarts), then run post-run ratio re-check.
+  **Instruments-service tarball updated mid-session**: from `f4fce7cc27bb` → `27e29a914616`.
 
 ## Follow-ups
 

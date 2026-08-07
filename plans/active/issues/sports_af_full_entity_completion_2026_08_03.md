@@ -893,3 +893,34 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `expected_unattempted` to honest `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)` — safe, additive per-VM-shard
   writes, pending the next consolidator merge cycle. Full detail in
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
+- **2026-08-07T20:48Z** — FIXTURE_STATS chunk 6/26 (2021-10-14). `mtds-backfill-odds-smallchunk2` chunk 18/451, 6 OOM
+  total but verified as 6 DIFFERENT leagues each self-recovering once (not a stuck repeat) — consistent with the
+  established tolerable pattern. Both healthy. (Aside, sibling-doc scope: **CONFIRMED the weather+SFI reclassification
+  fully landed** — re-census shows `expected_unattempted` completely gone (0) for both sources, `empty_confirmed` grew
+  by exactly the retyped row counts. Both sources now hold only `captured`/`empty_confirmed`/a small already-diagnosed
+  `attempted_failed` tail — genuinely at the operator's target state.)
+- **2026-08-07T21:17Z** — FIXTURE_STATS chunk 6/26 (2021-11-06). `mtds-backfill-odds-smallchunk2` has now spent ~2 hours
+  on chunk 18/451 alone (2020-08-30→2020-09-03), 9 OOM total but verified still 9 DISTINCT leagues (EPL through
+  ELITESERIEN) self-recovering each time, not a stuck repeat. Likely explanation: this exact 5-day window covers
+  multiple European leagues' season-openers simultaneously (high real fixture density across many leagues at once),
+  plausibly why this one chunk is taking disproportionately long among 451 total — not a new bug, self-recovery still
+  working correctly, no data loss. Watching; will note if it doesn't eventually move past chunk 18.
+- **2026-08-07T21:22Z** — FIXTURE_STATS advanced chunk 6/26 to `2021-11-19` (fresh checkpoint, was `2021-11-06`),
+  healthy. `mtds-backfill-odds-smallchunk2` STILL on chunk 18/451 — read the full `run.log` (not just PROGRESS.json,
+  which looked 2h-stale) and confirmed 10/18 leagues OOM'd (55%) but each a genuinely distinct league, EKSTRAKLASA fully
+  completed, no repeats — genuine progress, not a stall; PROGRESS.json just checkpoints at the whole-chunk boundary.
+  Full root-cause writeup: `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`b90338bfd9`.
+- **2026-08-07T21:53Z** — FIXTURE_STATS jumped 89 days to `last_completed_date=2022-02-16` (fresh checkpoint,
+  `21:52:23Z`), accelerating nicely toward its 26-chunk end. `mtds-backfill-odds-smallchunk2` still on chunk 18/451
+  (~2h40m now) but confirmed still genuinely progressing — 22 distinct leagues attempted (up from 18), currently
+  `J1_LEAGUE`, RSS cycling normally, 12 total OOMs (up from 10, still zero repeats). Watching; would escalate if still
+  stuck on chunk 18 at the next tick. Full detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
+- **2026-08-07T22:21Z** — FIXTURE_STATS +49 days (`last_completed_date=2022-04-06`, fresh `22:20:25Z`), still
+  accelerating. odds smallchunk2 STILL on chunk 18/451 (~3h) — followed up on the flagged outlier: 25 distinct leagues
+  now attempted (up from 22, zero repeats, spanning Europe/S.America/Asia/N.America/Oceania), 13 OOMs (+1, LIGA_MX).
+  Concluded this is a genuinely large Prediction-tier roster hitting its first true global season-opener week
+  simultaneously (2020-08-30→2020-09-03), not malfunction — values keep climbing every tick (rule 1b), no intervention.
+  Full detail + league list: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`949f0c59bf`.
+- **2026-08-07T22:50Z** — FIXTURE_STATS +45 days (`last_completed_date=2022-05-21`, fresh `22:49:35Z`), steady. odds
+  smallchunk2 still chunk 18/451 (~3.5h) — 29 leagues (up from 25), 15 OOM (up from 13), zero repeats — continued
+  genuine progress, root cause already established, no further deep-dive needed each tick.

@@ -7,7 +7,7 @@ summary: >-
   source doc's checkboxes once its batch-6 todo lands, re-check batch6's own Deferred items (the transitively-gated
   Schema v10 item and the carried-forward estate_orphan_assessment cross-tranche conflict) for any whose gate has since
   cleared, then archive batch6 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-6, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -45,13 +45,16 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
 # CeFi satellite AO batch 6 — finalize
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos complete; moved to `plans/archive/2026_08/` alongside batch6 in the same
+> commit (slot 6, task `cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize-003`).
 
 > **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
 > every todo below until batch6's own 6 tasks are `done`, regardless of batch6's own `status` (draft or active) — see
@@ -64,7 +67,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 5 distinct source docs' checkboxes.** Batch 6's 6 todos draw from 5 source docs:
+- [x] ✅ [REVIEW] P1. **Reconcile all 5 distinct source docs' checkboxes.** Batch 6's 6 todos draw from 5 source docs:
       `cefi_ml_directional_continuous_live_2026_06_20.md` (1 sub-requirement of the `[VERIFY] P0` todo only — do NOT
       flip that todo's own checkbox, the VM-run half is still open),
       `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` (item 2 of 4 only),
@@ -79,25 +82,57 @@ context_scope:
       deliberately-excluded residual item: the VM-run half, items 1/3/4, Stage 1/2, [none for mtds_docker if both jobs
       resolve — check freshly], and the P1 convention-decision items respectively). **Done when**: every landed todo's
       source checkbox is flipped with a verified commit, and each source doc's remaining-open count is explicitly
-      re-stated rather than assumed.
+      re-stated rather than assumed. — **unified-trading-pm@f6f96e7b1 2026-08-07.** Per-doc reconciliation (all commits
+      verified on origin/live-defi-rollout): (1) `cefi_ml_directional_continuous_live_2026_06_20.md`: updated
+      `[VERIFY]     P0` sub-note — step (1) script extension marked done via strategy-service@dff5b2c0; `[VERIFY] P0`
+      checkbox NOT flipped (VM-run steps 2-3 still pending). Remaining open: 3 items ([AGENT] P0 7-day cutover, [VERIFY]
+      P0 steps 2-3, [RESEARCH] P2 deferred). (2)
+      `deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md`: "What's NOT done" item 2 already `✅`
+      (unified-trading-pm@4dbd6cdf, prior reconciliation). Remaining open: 1 checkbox ([DATA] P1 root-cause+fix), prose
+      items 1/3/4 open. (3) `fail_hard_canonical_enforcement_design_2026_07_20.md`: `[DATA] P2` Stage-0 checkbox already
+      `[x] ✅` (market-tick-data-service@4bd7e87e, prior reconciliation). Remaining open: 2 checkboxes ([DESIGN] P1
+      §5-gaps, [DATA] P3 Schema v10 Stage 2). (4) `mtds_cefi_docker_image_stale_5mo_2026_07_30.md`: both todos already
+      `[x] ✅`, `status: resolved`, archived at `plans/archive/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md` —
+      0 open items, archive confirmed correct. (5) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md`:
+      `[SCRIPT] P2` and `[RESEARCH] P2` already `[x] ✅` (market-tick-data-service@d964dce4 and slot-15 research).
+      Remaining open: 2 checkboxes ([SCRIPT] P1 nominal/both-sub-parts-resolved, [DATA] P1 xperp fix pending operator
+      decision). None of the 5 source docs reach zero open items — as anticipated.
 
-- [ ] [REVIEW] P1. **Re-check batch6's own Deferred items for cleared gates.** Walk each Deferred entry in
+- [x] ✅ [REVIEW] P1. **Re-check batch6's own Deferred items for cleared gates.** Walk each Deferred entry in
       `cefi_satellite_ao_dispatch_batch6_2026_08_02.md` and re-verify its specific blocking condition: (a) the
       transitively-gated Schema v10 item — has `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s
       `[DESIGN] P1` §5-gaps item closed and has Stage 1 (write-enforce) shipped? If so, record it as a `batch7`
       candidate — do NOT draft the todo here, this finalize plan's scope is reconciliation, not fresh drafting. (b) the
       carried-forward `estate_orphan_assessment_2026_07_21.md` todo-6 cross-tranche conflict — has the operator ruled
       which tranche's verdict wins? **Done when**: each Deferred entry carries either a "gate cleared → batch7
-      candidate" note or a dated re-verification that it is still blocked.
+      candidate" note or a dated re-verification that it is still blocked. — **Re-verified 2026-08-07**: (a)
+      `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` §5-gaps item is STILL OPEN (three
+      adversarially-confirmed gaps — derivative-bundle column gate; live-lane dual-resolver reconciliation; read marker
+      disposition — remain unresolved; Stage 1 write-enforce has NOT shipped). Schema v10 `[DATA] P3` Deferred item
+      **still transitively blocked — not a batch7 candidate**. (b) No operator ruling found on
+      `estate_orphan_assessment_2026_07_21.md` todo-6 boundedness; latest na-eligibility-audit (2026-08-07,
+      tranche=cefi) reaffirms the 2-1 KEEP-NA tally and explicitly states "Stays NA until the operator makes the
+      explicit boundedness ruling the doc itself asks for." estate_orphan_assessment todo-6 **still
+      BLOCKED-OPERATOR-DECISION — not a batch7 candidate**. Neither deferred entry has cleared its gate; both
+      re-confirmed blocked as of 2026-08-07.
 
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate every remaining Deferred item to a tracked todo elsewhere (todo 2 above
       should have resolved or re-confirmed each — verify none silently vanish) → add the archive banner → run the
       codex-alignment check (batch6 creates no new durable contract; confirm still true) → grep the corpus for every
       referrer of `cefi_satellite_ao_dispatch_batch6_2026_08_02` and repoint each to the archived path → clear
       `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus
       referrer resolves to the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside
-      it in the same commit.
+      it in the same commit. — **unified-trading-pm@b50fcc8b 2026-08-07.** Step 1: no deferred items to migrate (both
+      Deferred entries re-confirmed still-blocked by todo 2 above — Schema v10 transitive gate unchanged, estate_orphan
+      todo-6 operator ruling still absent). Step 2+6: archive banners + status: complete added to both plans; locked_by
+      already empty. Step 3: codex-alignment check — batch6's 6 todos (script extension, GCS census, fail-hard Stage 0,
+      Cloud Run job investigation, parity test, OKX live-verify) create no new durable contract; confirmed still true.
+      Step 4: no CLAUDE.md/codex updates needed. Step 5: referrer updates — repointed /plans/active/ →
+      /plans/archive/2026_08/ in INDEX.md (entries removed), deribit_dated_option_trades_perpetual_misclassification
+      (context_scope + prose ref), ag_closeout_audit_cefi_parked_2026_08_06, cefi_satellite_ao_dispatch_batch7
+      (related + context_scope), cefi_satellite_ao_dispatch_batch7_finalize (related). Both plans moved via git mv to
+      plans/archive/2026_08/ in the archival commit.
 
 ## Codex SSOTs
 

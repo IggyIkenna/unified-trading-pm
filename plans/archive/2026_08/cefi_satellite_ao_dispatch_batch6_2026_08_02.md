@@ -28,7 +28,7 @@ summary: >-
   AO-eligible-looking items are deliberately NOT drafted (crypto_alpha_research's 3 bug fixes, no_active_paper_run's
   DIAG item) because a prior audit pass already considered and explicitly declined extracting them for reasons unrelated
   to boundedness (coupling risk; low standalone value) and no new evidence has emerged to revisit that call.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -90,6 +90,9 @@ context_scope:
 ---
 
 # CeFi satellite AO batch 6 — iterative-drain extraction
+
+> **🟢 ARCHIVED 2026-08-07** — all 6 todos complete; moved to `plans/archive/2026_08/` via the standard 6-step ritual
+> (finalize plan `cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md`).
 
 > **Status: active — operator-approved 2026-08-06, dispatching.** Per CLAUDE.md's plan-destination HARD RULE and the
 > ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-flipped to `active`. This

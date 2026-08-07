@@ -21,7 +21,7 @@ summary:
   transfermarkt cache-hit design only writes on refresh-trigger days), with ZERO real data loss found — only a
   ~1,335-row (0.19%) residual left unexamined. The two-card audit-split design gap itself remains open. Operator
   decision 2026-07-14: leave code as-is, document only.'
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -71,6 +71,11 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — both todos closed: residual 1,335-row spot-check closed by reference to decision-16
+> investigation (unified-trading-pm@09ce04535); cross-bucket fix built and shipped (instruments-service@27e29a91).
+> Operator's "leave code as-is" ruling remains in effect; the design gap between the two cockpit cards is now documented
+> rather than fixed.
 
 # Sports phantom audit targets the reference manifest, not market-data
 
@@ -336,10 +341,10 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
 
 ## Follow-ups
 
-- [ ] [DATA] P2. Build the data_type-aware cross-bucket branch in _audit_sports()
+- [x] ✅ [DATA] P2. Build the data_type-aware cross-bucket branch in _audit_sports()
       (reconcile_phantom_manifest_rows_all.py:283) so sports market-data types (trades, odds_horizon_bucket) are probed
       against market-data-tick-sports instead of blanket-flagged phantom — close the 'no market-data phantom audit for
-      sports' design gap
+      sports' design gap — instruments-service@27e29a91
 
 > **2026-08-06 archive-candidate audit**: RE-TRIAGE 2026-07-23 verdict 'STILL OPEN, ACCURATE' — the doc's own corrected
 > fix ('a data_type-aware, cross-bucket branch in _audit_sports()... if anyone picks this up') 'has not been built' and

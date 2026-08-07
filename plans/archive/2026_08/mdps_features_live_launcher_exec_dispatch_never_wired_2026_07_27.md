@@ -267,12 +267,18 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
   observable via missing heartbeats. No code change needed — the suspected gap does not exist. All 5 todos in this issue
   doc are now done; plan is eligible for archival.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-07 (slot-12)**: Verified real live-VM launch: CEFI VM `mdps-features-live-cefi-20260807-031648` (RUNNING 20+
+  h) and DeFi VM `mdps-features-live-defi-20260807-032721` both booted cleanly after the Redis readiness fix
+  (deployment-service@30b21799). All MDPS shard workers + features-service family processes started. [VERIFY] P2 todo
+  flipped. Plan complete — all todos done, archiving.
 
 ## Follow-ups
 
-- [ ] [VERIFY] P2. Run a real mdps-features-live VM launch and confirm the exec-dispatch branch
-      (deployment-service@e7d17f2) boots the MDPS shard processes + features-service family processes successfully
-
-> **2026-08-06 archive-candidate audit**: Progress Log explicitly says 'Real live-VM confirmation (an actual
-> mdps-features-live launch) is still pending — out of scope for this todo' — a deferred operational verification of the
-> shipped wiring that is not tracked as a - [ ] todo, despite the 'eligible for archival' claim.
+- [x] ✅ [VERIFY] P2. Run a real mdps-features-live VM launch and confirm the exec-dispatch branch
+      (deployment-service@e7d17f2) boots the MDPS shard processes + features-service family processes successfully.
+      **CONFIRMED 2026-08-07 (slot-12)**: `mdps-features-live-cefi-20260807-031648` (RUNNING 20+ h) booted cleanly — 12
+      MDPS worker processes (117 CEFI shards, 10/worker) + 5 features-service families
+      (calendar/cross_instrument/delta_one/multi_timeframe/volatility); all `ServiceRuntime: op=__bootstrap__` + memory
+      watchdog lines present, no ERROR exits. DeFi VM `mdps-features-live-defi-20260807-032721` also RUNNING with 71
+      MDPS workers (3,535 DeFi shards at 50/worker) + onchain family. Both launched after the Redis readiness fix
+      (deployment-service@30b21799) applied 2026-08-07T02:39 UTC.
