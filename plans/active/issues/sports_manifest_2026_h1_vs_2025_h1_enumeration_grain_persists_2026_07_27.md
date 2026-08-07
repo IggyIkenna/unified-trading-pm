@@ -74,11 +74,13 @@ source: >-
 depends_on: []
 ---
 
-> **🟡 IN-FLIGHT 2026-08-07 — slot-15 backfill now running in tmux `orch-slot-15:backfill` (harness-kill-proof). Chunks
-> 1-2 re-seeded per restart (consolidator clears per-VM shards; each re-run seeds ~637K rows and exits rc=0). Chunk 2
-> needs multiple retries again after consolidator cleared 11M worth of prior-session shards. Chunks 3-7 not yet started.
-> Resume: `tmux attach -t orch-slot-15` → window `backfill`; or check
-> `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'`.**
+> **🟡 IN-FLIGHT 2026-08-07 ~23:31 UTC — slot-15 fresh parent run in tmux `orch-slot-15:backfill` (harness-kill-proof).
+> Rolling boundary 2026-04-09 (7 chunks: 2020-06-06..2026-04-08). Chunk 1/7 ✅ EXIT_STATUS=0 (VM
+> `expected-universe-v2-sports-20260807-233155`, ~4 min, fast because previously consolidated). Chunk 2/7 VM
+> `expected-universe-v2-sports-20260807-233626` RUNNING as of 23:36 UTC. Chunks 3-7 not yet started (first-ever seed —
+> each will need multiple EXIT_STATUS=5 retries). Resume: `tmux capture-pane -t "orch-slot-15:backfill" -p -S -20` or
+> `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'`. If tmux window gone: re-run
+> `tmux new-window -t orch-slot-15 -n backfill && tmux send-keys -t orch-slot-15:backfill "cd /home/ubuntu/unified-trading-system-repos/.tabs/15/deployment-service && bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports 2>&1 | tee /tmp/backfill-slot15.log" Enter`.**
 
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 
@@ -417,6 +419,12 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
   `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **data_engineering worker (slot-15) 2026-08-07 (second pass, context compacted)**: Fresh parent run started ~23:31 UTC
+  in tmux `orch-slot-15:backfill`. Chunk 1/7 (2020-06-06..2020-12-31) VM `expected-universe-v2-sports-20260807-233155`
+  EXIT_STATUS=0 in ~4 min (fast — rows already consolidated into main manifest; enumerator found no new candidate
+  cells). Chunk 2/7 (2021-01-01..2021-12-31) VM `expected-universe-v2-sports-20260807-233626` RUNNING as of 23:36 UTC.
+  Chunks 3-7 not started (first-ever seed). Background watchdog `bvflynvzt` (20-min) and state-change watcher
+  `b6fbst7gj` armed. Compacting to preserve context; backfill continues in tmux.
 - **data_engineering worker (slot-15) 2026-08-07**: Full session history — Chunk 1/7 (VM `214049`) EXIT_STATUS=0
   (638,521 rows). Chunk 2/7: retries 1-11 (VMs `214629`..`223801`) each EXIT_STATUS=5 (+1M rows/retry = ~11M seeded this
   session from scratch; consolidator cleaned prior-session shards at start). Retry 12 (VM `224305`) EXIT_STATUS=0
