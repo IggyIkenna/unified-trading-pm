@@ -227,6 +227,13 @@ grace window (or, for task_template.md, is a corpus-wide normative-ref fix argua
       (`prediction_perps_kalshi_polymarket_parked_2026_07_24.md`) is already archived. Harmless (a future worker will
       discover this in seconds during normal execution of that todo), just a minor scope-count staleness. **Done when**:
       the todo's prose says "2 of 3 still active" or is corrected when todo 3 actually executes.
+- [ ] [DOC] P3. **`unified-trading-pm/agents/plan_reconciler.md` STEP 6(b)** instructs appending a pointer line to
+      `ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`. Both files carry their own explicit
+      "RETIRED 2026-07-04 — do NOT append pings here" notice (decommissioned in favor of the agent-orchestrator HTTP
+      server / dashboard chat) — this run skipped that step for that reason, using `POST /api/slots/9/blocked` instead
+      (STEP 6(a)'s own modern mechanism), which already achieves the intended visibility. `agents/` is outside
+      `plans/**`, so out of this run's edit mandate — filing here for whoever next touches that role file. **Done
+      when**: STEP 6(b) either points at the modern mechanism only, or is removed as redundant with 6(a).
 
 ## Archive candidates (operator review)
 
