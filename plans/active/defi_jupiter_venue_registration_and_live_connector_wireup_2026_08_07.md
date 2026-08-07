@@ -174,7 +174,7 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       TestJupiterRegistry::test_jupiter_solana_registered_after_register_all PASSED confirming JUPITER-SOLANA in
       WS_FEED_CONNECTOR_FACTORIES after register_all(); 27/27 Jupiter-specific tests passed.
 
-- [ ] [BACKEND] P2. **execution-service: wire the already-built `JupiterConnector` into `DeFiAdapter`.** In
+- [x] ✅ [BACKEND] P2. **execution-service: wire the already-built `JupiterConnector` into `DeFiAdapter`.** In
       `execution_service/defi_execution/__init__.py`, add `JupiterConnector` to the existing
       `from .protocols import (...)` block and its `__all__` (it is already exported one level down, from
       `execution_service/defi_execution/protocols/__init__.py` — this file just never re-exports it). In
@@ -189,7 +189,8 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       `_execute_with_retries`/`_dispatch_defi_operation` path, unchanged). Done-when: a new unit test (mirroring the
       existing `test_execute_swap` shape in `tests/unit/test_defi_adapter.py`) confirms `execute_instruction()` with
       venue `"JUPITER-SOLANA"` dispatches to `JupiterConnector.execute_swap()`, and `execution-service`
-      `quality-gates.sh` is green.
+      `quality-gates.sh` is green. — execution-service@507093de QG green; test_execute_swap_jupiter PASSED confirming
+      JUPITER-SOLANA routes to JupiterConnector.execute_swap()
 
 - [ ] [BACKEND] P2. **market-tick-data-service: wire `OnChainEventPoller`'s Aave-liquidation path into a real live
       connector — Uniswap-Swap-topic half deliberately excluded.** Create
