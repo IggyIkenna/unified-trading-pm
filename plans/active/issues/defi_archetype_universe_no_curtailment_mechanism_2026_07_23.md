@@ -853,6 +853,9 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `archetype_leg_spec_seeds.py`, `factory.py`,
   `basis_perp.py`, the bare `target_universe/` dir).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged — all 6 still resolve and
+  still map directly onto the 2 genuinely-open, operator-design-gated todos (recursive-loop archetype gap; MVP_SCOPE
+  catalog-identity precondition).
 - **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — both open checkboxes (line
   389 recursive-loop archetype design gap w/ 3 layered dated corrections, most recently 2026-07-24; line 687 MVP_SCOPE
   catalog-identity precondition, explicit operator-scoping-decision gate) independently re-confirmed against the

@@ -49,12 +49,12 @@ drift_direction: advance-code
 source: "slot 2, cicd escalation agt-80c470 (wall_type=main_ci_red, repo=unified-trading-pm, 2026-08-06)"
 context_scope:
   [
-    unified-trading-pm/.github/workflows/quality-gates-v2.yml,
     unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
+    unified-trading-ci/.github/workflows/python-quality-gates-v2.yml,
+    /plans/archive/issues/archive_candidates_content_verification_backlog_2026_08_06.md,
     unified-trading-pm/scripts/plan-hygiene/check_archive_candidates.sh,
-    unified-trading-pm/scripts/plan-hygiene/check_ag_closeout_linkage.py,
-    unified-trading-pm/scripts/plan-hygiene/check_na_corpus_ratchet.py,
     agent-orchestrator/server/ci_reconcile.py,
+    unified-trading-pm/.github/workflows/quality-gates-v2.yml,
   ]
 ---
 
@@ -177,3 +177,4 @@ requested rather than autonomously starting it.
   CodeBuild webhook noise, other repos' promote PRs — all unrelated). Last live PR checked: #2435 (created 04:16:09Z),
   still `BLOCKED` at that snapshot — predates this audit's final push, so the dispatched worker should re-check the
   CURRENT promote PR fresh rather than trust this timestamp.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).

@@ -53,7 +53,7 @@ context_scope:
   [
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md,
     instruments-service/instruments_service/reference_data/adapters/tradfi/databento/symbology.py,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
@@ -263,3 +263,10 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the databento
   symbology.py source path and all entries still resolve.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — swapped the now-superseded
+  `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md` pointer (its cited todo is long `[x]` done) for
+  `/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`, which is actively tracking the same-day
+  contradiction the 2026-08-07 na-eligibility-audit entry above flags on this doc's sole open todo (the "RULED
+  2026-08-06: go-ahead to run --apply" text vs. `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s
+  still-operator-gated framing of the identical residual-91-CBOE+312-DBEQ item) — a worker picking up that todo needs
+  this pointer before running `--apply`.

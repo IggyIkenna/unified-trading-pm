@@ -277,3 +277,4 @@ Two reasons, mirroring the UTL-34-bypass precedent
   own root-cause fix is COMPLETE and fully verified**; the one open thread (instruments-service/UTL/MDPS's genuine
   19/N-commit foreign-bypass backlogs) remains the documented, intentionally-not-auto-fixed follow-up per the "Tactical
   unblock in parallel" option above.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries).

@@ -28,7 +28,7 @@ scope: [engineer, admin]
 tags: [findings-triage, false-progress, evidence-integrity, operator-gating, agent-trust, tradfi]
 related:
   [
-    /plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md,
+    /plans/archive/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md,
     /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -56,7 +56,7 @@ source:
   — Finding E-1 had been flipped by slot-9 minutes before this check, unsourced."
 context_scope:
   [
-    /plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md,
+    /plans/archive/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md,
     /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,

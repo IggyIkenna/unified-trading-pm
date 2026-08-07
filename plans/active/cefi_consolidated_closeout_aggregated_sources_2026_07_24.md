@@ -589,7 +589,7 @@ context_scope:
     — 0 open todos (resolved/archived 2026-07-26: count self-recovered to 150, well below the 06-22 baseline; see doc's
     Progress Log for the full evidence trail).
     - **[SCRIPT] P2.** Once root-caused: re-run recovery or diagnose a new adapter break.
-  - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
+  - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
     (exactly 8 open — all listed)
     - 2. **[DATA] P1.** Corpus-wide count of zero-length-stem candle objects; purge or repair.
     - 3. **[DATA] P1.** Canonicalise TradFi candle leaf ids (`E1AF0_*_migrated_*` → `VENUE:TYPE:SYMBOL`) — 93% of the
@@ -842,3 +842,7 @@ here is NOT dispatch, per this doc's own standing convention.
   structurally-un-ingestable discoverability index by design (frontmatter states so); its one real checkbox is a
   standing, non-terminal sync-maintenance duty, not bounded dispatchable work. Reaffirms 4 prior passes (2026-07-30,
   07-31, 08-04, 08-06).
+- **context-scout 2026-08-07**: re-confirmed context_scope (2 entries) unchanged — the 2026-08-07 "Digest additions"
+  section (6 new cefi-tagged linkage-orphan docs) doesn't change this: those docs are the index's OWN new content
+  (already linked in the body), not reading-list prerequisites for touching this doc itself. Parent closeout plan + the
+  line-cap-remediation source doc remain the right minimal set; still genuinely code-free (discoverability-index doc).

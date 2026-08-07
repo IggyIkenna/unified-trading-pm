@@ -72,7 +72,7 @@ context_scope:
     strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
     /plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
-    /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md,
   ]
 ---
 
@@ -437,6 +437,11 @@ instruments-service/unified-api-contracts/market-tick-data-service/features-serv
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — the only remaining open item
   is the `[OPERATOR-DECISION] P3` todo, gated on a still-open, separately-owned `[DESIGN] P1` decision in another doc;
   `[VERIFY]` and `[CODE]` are both already closed by citation. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — both `[CODE] P2` halves (perp_daily_ctx +
+  perp_mark_price) are now DONE, so swapped the now-historical `defi_satellite_ao_dispatch_batch6_2026_07_30.md` pointer
+  for `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` — a sibling open issue on the same live reader
+  (`CanonicalPerpFundingProvider`) discovered during this doc's own backfill work, more relevant to a future worker than
+  the completed dispatch batch.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item remains an [OPERATOR-DECISION] on a
   linked canonicalisation design question; the other 3 items already closed with evidence.

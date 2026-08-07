@@ -9,8 +9,8 @@ summary: >-
   combined into one ordering-safe todo as candidate 7 of cefi_consolidated_native_ao_extract_2026_07_25.md. This plan
   machine-gates the delete on that plan's completion instead, preserving the original verify->backfill->delete ordering
   constraint via a cross-plan gate rather than intra-plan sequencing.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [cefi]
 stage: [data]
 repos: [market-data-processing-service]
@@ -20,7 +20,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
@@ -50,8 +50,9 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
+    /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md,
     plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv,
@@ -59,6 +60,12 @@ context_scope:
 ---
 
 # CeFi Track-7 candle-namespace residual — gated delete
+
+> **✅ ARCHIVED 2026-08-07 — sole todo ([OPERATOR]-gated delete of 149 stale objects) complete; all 149 objects
+> confirmed deleted per `cefi_consolidated_native_ao_extract_2026_07_25.md` candidate-7 (governance-sweep stale-tag
+> cleanup, 2026-08-06). Reconciliation done via finalize twin
+> (`cefi_track7_candle_namespace_residual_finalize_2026_07_25.md` todo 1, 2026-08-06, slot-4). Archived per the 6-step
+> ritual.**
 
 > **Why this plan has only 1 todo (deliberate, not an oversight).** Track 7's original 3-step shape was verify(6
 > remaining days) → backfill(--force) → delete(149 objects). The first two steps are already drafted, combined into ONE
@@ -157,3 +164,6 @@ No new durable contract is created by this plan.
   covered the delete, not bundle regeneration). This plan's sole todo is now done; the gated finalize twin
   (`cefi_track7_candle_namespace_residual_finalize_2026_07_25.md`) is unblocked to reconcile the parent closeout
   checkbox + archive.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added the now-unblocked finalize twin
+  `cefi_track7_candle_namespace_residual_finalize_2026_07_25.md` (the actual next step now that this plan's sole todo is
+  done) at the front; kept the other 5 (still-accurate historical/evidence context) unchanged.

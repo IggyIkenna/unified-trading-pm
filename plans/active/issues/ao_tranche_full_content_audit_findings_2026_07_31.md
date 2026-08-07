@@ -39,6 +39,7 @@ locked_by:
 resolved_by:
 context_scope:
   [
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md,
@@ -186,3 +187,7 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — added
+  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (the tracker doc) as the first entry: §4's open
+  todo directly edits it (flip 6 MOVED items + fix a stale count), and the 2026-08-01 marker's reason for skipping it (a
+  since-passed instruction not to touch a file under concurrent edit) no longer applies.

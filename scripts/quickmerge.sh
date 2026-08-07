@@ -2149,6 +2149,29 @@ if [ "$_qm_push_ok" != 1 ]; then
   exit 1
 fi
 
+# Post-push ancestry gate (operator ruling 2026-08-06; SSOT:
+# plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md [SCRIPT] P1).
+# Re-fetch origin/$BRANCH and assert the just-pushed sha is still an ancestor.
+# sha-ancestry is the right oracle HERE specifically — we pushed that exact sha a moment
+# ago, so ancestry is exactly the claim being made. A warn-and-proceed is NOT acceptable:
+# a false SHIPPED line is worse than a hard error (the originating incident went undetected
+# because a stale log line survived a session-death boundary with no re-verification).
+# Note: do NOT generalise this check to aged refs — see the issue doc § "Trap" for why
+# sha-ancestry on an older ref will cry wolf (content may have been re-shipped under a
+# different sha). Only use it here, at the instant after a push of that exact sha.
+_QM_PUSHED_SHA=$(git rev-parse HEAD 2>/dev/null)
+if ! git fetch origin "$BRANCH" --quiet 2>/dev/null; then
+  echo "[$REPO_NAME] ❌ post-push fetch of origin/$BRANCH failed — cannot verify ancestry. Do NOT treat this as SHIPPED." >&2
+  exit 1
+fi
+if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null; then
+  echo "[$REPO_NAME] ❌ POST-PUSH ANCESTRY CHECK FAILED: ${REPO_NAME}@${_QM_PUSHED_SHA:0:9} is not an ancestor of origin/$BRANCH after push returned success." >&2
+  echo "[$REPO_NAME]    The remote branch was moved between the push and this verification (e.g. by a concurrent quarantine-reset)." >&2
+  echo "[$REPO_NAME]    Commit is reachable locally — do NOT mark this run as SHIPPED. Investigate before retrying." >&2
+  exit 1
+fi
+echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+
 # Extract issue references from commit message for PR body
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")
 

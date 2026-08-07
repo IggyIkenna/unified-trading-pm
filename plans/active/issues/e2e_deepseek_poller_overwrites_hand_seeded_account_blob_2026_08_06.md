@@ -53,6 +53,13 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/deepseek_usage_poller.py,
+    agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts,
+    agent-orchestrator/dashboard/tests/e2e/run-e2e-backend.sh,
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+  ]
 ---
 
 # e2e DeepSeekUsagePoller overwrites hand-seeded Accounts-panel fixture
@@ -84,3 +91,7 @@ depends_on: []
   "(operator call, not unilateral)" in its own text, and todo 3 (the actual fix) depends on todo 2's outcome. Todo 1
   (confirm blast radius) is independently bounded, but the doc's critical path runs through the operator-gated decision
   either way; not worth splitting into a separate plan for one investigative sub-step.
+- **context-scout 2026-08-07**: populated context_scope (4 entries) — the poller class implementing `_sweep_account`
+  (`deepseek_usage_poller.py`), the failing spec (`deepseek-per-turn-metrics.spec.ts`), the e2e-backend launcher named
+  as fix-direction (a) in todo 2 (`run-e2e-backend.sh`), and the sibling doc already in `related:` that hit the same
+  locator bug in the same session (`deepseek_flash_ab_routing_test_2026_08_05.md`).

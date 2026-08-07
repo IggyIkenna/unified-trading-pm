@@ -434,3 +434,5 @@ range never overlaps a still-in-flight per-market-only day).
   as KEEP-NA-STALE (FLAG-3 deployment-api, FLAG-2 DeFi `_BUCKET_CATEGORY_OVERRIDES`) — both stale copies of findings
   already resolved/closed in sibling AG docs (`data_completion_cefi_2026_07_15.md`, `data_completion_defi_2026_07_15.md`
   respectively) that never had their checkbox flipped here. 21 open todos -> 19, no tracked work dropped.
+- **context-scout 2026-08-07**: re-verified context_scope, no change needed (5 entries) -- M-1 coordinator, 3
+  pipeline/bucket/manifest codex SSOTs, and `rebuild_prediction_manifest.py` remain accurate.

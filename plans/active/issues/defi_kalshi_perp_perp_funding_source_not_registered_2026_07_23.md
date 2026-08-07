@@ -42,6 +42,7 @@ context_scope:
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py,
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
   ]
 ---
 
@@ -179,6 +180,9 @@ concrete, currently-failing symptom; the classification question is the census a
   carries an open todo (~line 306) claiming the identical 567-row re-emit, citing this same source doc — a genuine
   duplicate claim, not a reclassification opportunity (flipping this doc's `assigned_vm` would create a second dispatch
   path for the same fix). Added a duplicate-claim note inline on that checkbox. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added
+  `/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md`, the doc holding the blocked-prerequisite todo
+  (`-011`) the open `[DATA] P1` re-emit todo unblocks once shipped.
 
 ## Follow-ups
 

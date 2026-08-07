@@ -61,6 +61,8 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_parsers.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py,
     strategy-service/strategy_service/engine/core/canonical_dex_pool_provider.py,
+    /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 ---
 
@@ -150,3 +152,4 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
   a future pass extract item 4 into its own small `assigned_vm: planning` issue doc if capacity allows.
   KEEP-NA-STALE(duplicate) hypothesis checked and ruled out — no active planning doc claims this scope. Doc stays
   `assigned_vm: NA`.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries).

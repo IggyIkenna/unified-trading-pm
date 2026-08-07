@@ -505,3 +505,9 @@ cap, not ones a marker would push over); flagged for a future pass rather than r
 - **context-scout 2026-08-06**: populated context_scope (6 entries) — none previously recorded via a marker.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — OPERATOR dedup decision, incident log chain, prior verdict stands
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, valid — re-verified all 3 open
+items; prior verdict stands (2026-08-04 audit: "all 3 open todos fail the worker-determinable-outcome bar"). Todo 1
+still open per `continued2`'s own last check (a brief runner-idle window observed once, did not hold); todo 2 is the
+`[OPERATOR]`-tagged cooldown-guard item; todo 3 gated on todo 1. No RE-TRIAGE section, no prose-only work outside the 3
+checkboxes. No `assigned_vm` change.

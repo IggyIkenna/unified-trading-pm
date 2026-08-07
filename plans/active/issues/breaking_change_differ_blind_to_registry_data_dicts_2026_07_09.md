@@ -242,3 +242,6 @@ no reclassification. No stale items, not an archive candidate (1 substantive ope
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — DESIGN operator question, parked as deferred E8
+
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — all still resolve, the
+  sole open item (parked DESIGN P2 / Deferred E8) is unchanged.

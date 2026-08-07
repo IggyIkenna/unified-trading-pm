@@ -71,9 +71,9 @@ context_scope:
   [
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/active/repo_scripts_governance_audit_2026_06_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
@@ -319,3 +319,8 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
   (`infra_satellite_ao_dispatch_batch3_2026_07_30.md` for finding 10, the stale-agentwork-scratch-clone doc for
   finding 11) alongside the existing 3.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) -- dropped
+  `infra_satellite_ao_dispatch_batch3_2026_07_30.md` (finding 10's target; verified live `assigned_vm: planning` is now
+  set, resolved even though this doc's own todo 1 checkbox still reads open -- a stale-checkbox discrepancy noted for
+  `/plan-reconcile`, out of this skill's scope to fix), added `repo_scripts_governance_audit_2026_06_18.md` (the
+  still-open finding 13's other named target alongside the already-cited script).

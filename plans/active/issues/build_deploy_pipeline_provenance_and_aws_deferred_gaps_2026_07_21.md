@@ -54,8 +54,8 @@ resolved_by:
 context_scope:
   [
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
-    .github/workflows/freeze-deferred-build-replay.yml,
-    .github/workflows/cloud-build-router-aws.yml,
+    unified-trading-pm/.github/workflows/freeze-deferred-build-replay.yml,
+    unified-trading-pm/.github/workflows/cloud-build-router-aws.yml,
     deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh,
     deployment-service/scripts/vm/create-code-tarballs.sh,
   ]
@@ -174,3 +174,13 @@ RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator ruling Page-first, AWS-lane gated on credits
+
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — fixed the two `.github/workflows/*.yml` entries to
+  carry their real repo prefix (`unified-trading-pm/...`, not `deployment-service/...` — those workflow files actually
+  live in the PM repo; confirmed both are absent from `deployment-service/.github/workflows/`).
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, valid — re-verified all 4 open
+items. Only change since the last marker was a `related:` path fixup (one archived-doc reference corrected), zero
+content/todo change — confirmed via `git show 50b8643dc`. Dated operator ruling ("Page-first, do NOT fix here",
+2026-07-21) still governs #4/#7 (AWS-lane, credit-gated); #1/#3 remain explicit judgment calls in a CI area under active
+named-owner coordination. No `assigned_vm` change.

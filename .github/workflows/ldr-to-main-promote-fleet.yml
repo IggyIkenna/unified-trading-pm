@@ -101,6 +101,24 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
+      # Read workspace-manifest.json from live-defi-rollout, not main.
+      #
+      # WHY: this workflow is scheduled / workflow_dispatch and therefore runs in the context of
+      # the DEFAULT branch (main), so `actions/checkout` checks out the MAIN copy of PM.
+      # workspace-manifest.json on main may lag LDR when PM's own LDR→main promotion is stuck
+      # (e.g. behind a qg_red repo-blocker). That staleness window caused #804 and #816 —
+      # two spurious agent-orchestrator LDR→main PRs opened ~28 h after its manifest entry
+      # was already changed to `ldr_terminal` on LDR (2026-08-05→2026-08-07). Reading from
+      # LDR makes every promotion_model change effective on the next scheduled tick, independent
+      # of PM's own stuck promotion.
+      # fetch-depth: 0 above ensures full history is fetched; we still need an explicit fetch
+      # for the live-defi-rollout ref since checkout only checks out the default branch.
+      - name: Read workspace-manifest.json from live-defi-rollout (not main)
+        run: |
+          git fetch origin live-defi-rollout --depth=1 --quiet
+          git show origin/live-defi-rollout:workspace-manifest.json > workspace-manifest.json
+          echo "Manifest loaded from live-defi-rollout — promotion_model changes effective immediately, independent of PM promotion lag"
+
       - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
         id: gcp_auth
         continue-on-error: true

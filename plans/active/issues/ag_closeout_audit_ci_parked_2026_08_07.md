@@ -136,3 +136,11 @@ false-positive, not a real gap**: `pm_bats_tests_never_invoked_by_quality_gates_
 independent of Phase 1's per-doc verdicts. **0 of these 4 are genuine orphaned-AO-eligible-work findings** — all 4 are
 tag-correctness/gate-cross-check observations, not extractable batch todos. Phase 1's actual orphan/coverage verdicts
 (and any genuine new parked findings among the 46 candidates) will be appended here once the workflow completes.
+
+---
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, valid — this is a DIFFERENT
+skill's (`ag-closeout-audit`) own interim checkpoint doc, not orphaned/dispatchable content in its own right. 0
+checkbox-style todos (all 4 findings are prose/informational, explicitly "not extractable batch todos" per the doc's own
+reconciliation line above). `assigned_vm: NA` is correct for a findings-tracker awaiting its own Phase 1-3 completion —
+not this audit's to reclassify or archive. No edits to Phase 0-4 content; this note only.

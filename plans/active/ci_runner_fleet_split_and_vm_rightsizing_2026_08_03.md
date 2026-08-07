@@ -411,3 +411,4 @@ any VM is launched.
   mentioned in this doc's own body) for `ssm-run.sh` and `hosted-baseline.sh`, which the doc's own "Mechanics carried
   over" section explicitly flags as "read before touching either VM."
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.

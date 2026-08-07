@@ -50,6 +50,7 @@ context_scope:
     scripts/plan-hygiene/generate_context_scope_inventory.py,
     agent-orchestrator/server/prompts.py,
     cursor-configs/skills/context-scout/SKILL.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
   ]
 ---
 
@@ -192,3 +193,6 @@ choice (human-executed, not AO-dispatched).
 - **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — Sole open todo (context_scope corpus backfill + docspec.py
   FieldSpec flip) is the same item already tracked verbatim as todo 1 of ao_satellite_ao_dispatch_batch3 (assigned_vm:
   planning, real progress). Prior 2026-08-01 marker unchanged.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) -- added
+  `ao_satellite_ao_dispatch_batch3_2026_07_31.md`, the confirmed live-tracking home for this doc's sole remaining todo
+  (context_scope corpus backfill), per the 2026-08-01/08-06 na-eligibility-audit findings above.

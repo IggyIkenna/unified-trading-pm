@@ -31,6 +31,12 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
+    unified-trading-pm/.github/workflows/ldr-to-main-promote.yml,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # Promote ref orphaned on manual PR close
@@ -65,3 +71,7 @@ manual step for anyone who closes a promote PR outside the fleet bot.
 
 - [ ] [P3] fleet-bot orphan-ref sweep: delete `promote/<repo>/*` refs with no open PR (and not current PROMOTE_HEAD) in
       `ldr_to_main_fleet_promote.sh` — owner: LDR→main fleet bot maintainer (unified-trading-pm).
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated/refreshed context_scope (3 entries).

@@ -49,8 +49,9 @@ context_scope:
   [
     market-tick-data-service/scripts/one_offs/purge_gas_fees_legacy_venue_prefixes_2026_08_04.py,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+    deployment-service/scripts/vm/vm_zombie_watchdog.py,
+    deployment-service/scripts/vm/heartbeat_daemon.py,
     deployment-service/scripts/vm/lib/launcher_common.sh,
-    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
   ]
 ---
@@ -137,29 +138,53 @@ the highest-priority open question.
       crash point cleanly (`[attempt 1] index generation=...: 12425 TARGET-signature row(s) (of 75184124     total)` —
       the exact line that never printed before). Machine-size fix confirmed effective for the OOM specifically (see next
       todo for what happened after).
-- [ ] [DIAG] P1. **NEW BLOCKER found 2026-08-06, NOT YET ROOT-CAUSED — do not blind-retry a 4th time.** The
-      `e2-highmem-8` run above got past the OOM, logged `[attempt 1] index generation=...` at 15:31:08, then went SILENT
-      — no further log lines (no `filtered table ready`, no `Snapshotted...`, no `REWROTE index`) for the remainder of
-      its life. The VM itself vanished from `gcloud compute instances list` sometime before ~15:47 (confirmed via
-      `gcloud compute instances describe` returning "not found" — not a STOPPED/TERMINATED state, an actual delete,
-      consistent with `VM_SHUTDOWN_ON_COMPLETION=true` firing, but with NO corresponding `REWROTE index`/error/exit-code
-      log line ever uploaded). **Ground-truth check is decisive**: the canonical index blob's `Update time` is
-      `2026-08-06T15:09:30Z` — BEFORE this VM even started (15:30:08) — so the CAS write never happened; this was a
-      genuine failure, not a logging gap masking a real success. The VM's own heartbeat blob (`vm-heartbeat/<vm>.txt`)
-      showed content `"<epoch>\n-1\nstarting"` mid-run — the `-1`/`starting` fields look suspicious (a heartbeat that
-      never left "starting" state could cause a heartbeat-staleness-based zombie-watchdog to reap a process that was
-      still legitimately CPU/network-bound in the filter→snapshot-upload (2.4GB+)→CAS-write sequence, not actually
-      dead). Root-cause candidates, not yet distinguished: (a) the fleet zombie-watchdog's heartbeat-staleness threshold
-      is miscalibrated for this script's `heartbeat_daemon.py` integration (mirrors this exact session's OTHER finding
-      today: the DeFi consolidator's own stale-lock alert was miscalibrated for a 4200s override vs a 300s default —
-      same failure SHAPE, different subsystem); (b) a genuine hang/crash inside the filter/serialize/upload step itself
-      (less likely given `e2-highmem-8` should have ample CPU/RAM headroom for a 75M-row arrow filter, but not ruled
-      out). **Per this exact workspace's own established discipline for this failure class** (see
-      `mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md`'s own "do not attempt a 4th VM-launch-and-guess cycle"
-      lesson) — stopping further blind retries here. Consolidator cron RESUMED (paused for both of today's attempts, no
-      risk in resuming — manifest still unchanged).
-- [ ] [DATA] P1. Once the above is root-caused/fixed (or a bounded diagnostic run with e.g. `--verbose`/explicit
-      progress logging around the filter/upload/CAS steps confirms where exactly it stalls), relaunch
+- [x] ✅ [DIAG] P1. **ROOT-CAUSED + code-fixed 2026-08-06 by a separate (infra-craft) dispatch — CONFIRMED 2026-08-07,
+      but the fix is DORMANT.** Candidate (a) — zombie-watchdog heartbeat-staleness miscalibration — is the confirmed
+      cause, not (b). `deployment-service@0e94ceee1` (slot-4/planning, 2026-08-06T20:16:36Z) added
+      `"canonical-migration-": (90.0, 360.0)` to `vm_zombie_watchdog.py`'s `PREFIX_IDLE_THRESHOLDS` (was falling through
+      to the 15-min global default; the whole-index download+filter+serialize+upload+verify genuinely takes 30-60min)
+      AND `STALL_TIMEOUT_SEC=7200` on the internal stall-watchdog in `launch-canonical-migration-vm.sh` (was 1800s
+      default, and `STALL_PROGRESS_REGEX` never fires in full mode since `--skip-discovery-verified-empty` is always
+      set). Both fixes verified present in the current `live-defi-rollout` checkout. `-162248`'s specific death (16-17
+      min in) is inside the OLD 15-min-default window, so the external zombie-watchdog is the proximate killer for that
+      run; the internal stall-watchdog's 1800s default hadn't yet elapsed. `heartbeat_daemon.py` is NOT the failing
+      mechanism — correcting this doc's own framing: the purge script never calls it directly; it's an unrelated
+      background sidecar writing to UTL's `DeploymentsRegistry`, a different store than the `vm-heartbeat/{vm}.txt` blob
+      the zombie-watchdog actually reads (which is written by an untracked `vm_heartbeat_sidecar.sh`, not present in
+      this repo). **BUT — same exact "fix shipped, daemon not relaunched" gap this workspace has hit before on this
+      identical daemon** (`zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md` §"Incident 2 follow-up",
+      2026-07-18): `launch-vm-zombie-watchdog.sh` uploads `vm_zombie_watchdog.py` to GCS and downloads it into
+      `/tmp/watchdog.py` **once, at VM boot**, before entering its `while true` poll loop — confirmed via direct read of
+      the launcher script, never re-fetched mid-loop. The currently-running daemon
+      (`vm-zombie-watchdog-20260805-125558`, created 2026-08-05T07:26:02Z per `gcloud compute instances list`) booted
+      **more than a day before** the 2026-08-06T20:16:36Z fix commit — confirmed via serial-console tail
+      (`gcloud compute instances get-serial-port-output`) still actively polling every ~5min in real (non-dry-run) mode
+      as of 2026-08-07T05:07Z ("watchdog complete: killed 0/0 zombies" — real-mode, just hasn't hit a
+      `canonical-migration-` VM since booting). It is running the OLD `PREFIX_IDLE_THRESHOLDS` in memory — a fresh
+      relaunch of the purge VM TODAY would almost certainly be reaped again by the stale 15-min default, reproducing
+      this exact failure a 16th time. **Relaunching the watchdog daemon itself is explicitly OUT OF `data_engineering`
+      craft scope** (this doc's own precedent, "Incident 2 follow-up": "killing/relaunching vm-zombie-watchdog-\* is a
+      shared cross-cutting infra action (monitors the ENTIRE VM fleet, not just this task's backfill), outside
+      data_engineering craft scope"; also `agents/data_engineering.md` STEP 0.5 `does_not: infra/VM launches (→ infra)`)
+      — AND real-mode relaunches of this specific daemon have twice caused confirmed live-VM kills when done without
+      extreme care (9 VMs on 2026-06-23; 3 more on 2026-07-18 via a then-latent `_blob_age_minutes()` bug, escalated to
+      main at the time: "real-mode relaunch is a separate operator-gated decision, not part of this task"). **Not doing
+      the relaunch myself** — filing as the blocking dependency for the [DATA] P1 relaunch todo below, same pattern as
+      the 2026-07-18 precedent:
+  - [x] ✅ [INFRA] P0. Relaunch the `vm-zombie-watchdog` daemon VM (`bash scripts/vm/launch-vm-zombie-watchdog.sh`,
+        default real-mode; repo: deployment-service) so it picks up `deployment-service@0e94ceee1`'s
+        `canonical-migration-` threshold — **DONE 2026-08-07**: relaunched as `vm-zombie-watchdog-20260807-075242`
+        (created 2026-08-07T07:52:45Z, asia-northeast1-c), boot-clean; first real-mode poll at 08:02:58Z logged
+        "Watchdog summary: 26 alive / 0 zombie / 3 too_young" → "watchdog complete: killed 0/0 zombies" +
+        "terminated-reaper: reaped 0/0" — live fleet intact. Dry-run validated safe (2 clean cycles, zero reaps) BEFORE
+        cutover; stale daemon `vm-zombie-watchdog-20260805-125558` deleted. Operator authorized the relaunch to main at
+        2026-08-07T07:30Z; executed by main. Cited here + `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`
+        on close.
+- [ ] [DATA] P1. **UNBLOCKED as of 2026-08-07 — the `[INFRA] P0` daemon-relaunch todo directly above is DONE** (fresh
+      daemon `vm-zombie-watchdog-20260807-075242` is running `deployment-service@0e94ceee1`'s `canonical-migration-`
+      threshold; it no longer reaps `canonical-migration-defi-gas-fees-legacy-purge-*` VMs on the stale 15-min default).
+      The next worker on `defi_satellite_ao_dispatch_batch9-003` can proceed with this relaunch now. Once the watchdog
+      daemon is confirmed running fresh code, relaunch
       `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh defi-gas-fees-legacy-purge     <any-date> <any-date> full`
       (deployment-service; dates are cosmetic for this category; keep the highmem machine-type override, it's confirmed
       necessary). Before launching: (a) pause the consolidator cron again
@@ -204,3 +229,55 @@ the highest-priority open question.
 - **context-scout 2026-08-05**: populated context_scope (5 entries) — the purge script + the actual `gsutil`-hang
   suspect files (`launcher_common.sh`, `vm-exec-with-gcs-tee.sh`) the P1 root-cause todo targets, plus the sibling
   dispatch doc the P2 todo updates.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — the 2026-08-06 findings superseded the original
+  gsutil-hang theory (did not recur) with two NEW root causes (an in-script OOM, now fixed; an open
+  zombie-watchdog/heartbeat-staleness miscalibration theory) — swapped `vm-exec-with-gcs-tee.sh` out for
+  `vm_zombie_watchdog.py` + `heartbeat_daemon.py` (the current open [DIAG] P1's actual suspects), kept
+  `launcher_common.sh` as the still-live latent-risk file.
+- **AO dispatch 2026-08-07 (`data_engineering`, slot 12)**: dispatched to root-cause the open [DIAG] P1. Confirmed via a
+  read-only sub-agent investigation + independent spot-verification (commit read, `PREFIX_IDLE_THRESHOLDS`/
+  `STALL_TIMEOUT_SEC` grep, `gcloud compute instances list` + serial-console tail) that candidate (a) is correct and the
+  code fix already shipped same-session-adjacent (`deployment-service@0e94ceee1`, 2026-08-06T20:16:36Z, a different
+  slot-4/planning dispatch) — but is dormant: the live watchdog daemon (`vm-zombie-watchdog-20260805-125558`) booted
+  2026-08-05T07:26:02Z, over a day before the fix, and `launch-vm-zombie-watchdog.sh` only fetches
+  `vm_zombie_watchdog.py` once at boot (confirmed by direct script read), never mid-loop — an exact recurrence of this
+  same daemon's own documented 2026-07-18 "fix shipped, daemon not relaunched" gap
+  (`zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`). Also corrected this doc's own `heartbeat_daemon.py`
+  framing: the purge script never integrates with it directly; it's an unrelated sidecar. **Did NOT relaunch the
+  watchdog daemon** (out of `data_engineering` craft scope per this doc's own precedent + `agents/data_engineering.md`
+  STEP 0.5; two prior real-mode relaunches of this exact daemon caused confirmed live-VM kills, most recently escalated
+  to an explicit operator-gated ruling) and did **NOT** relaunch the purge VM either, since doing so before the daemon
+  is refreshed would very likely reproduce the exact same reap a 16th time — filed the daemon relaunch as a new blocking
+  `[INFRA] P0` todo above rather than force either action past this session's craft boundary. No GCS/VM/cron mutations
+  performed this session — read-only investigation only (git log/show,
+  `gcloud compute instances list`/`get-serial-port-output`, source reads).
+- **AO dispatch 2026-08-07 (`data_engineering`, slot 7)**: independent re-verification only — no code/GCS/VM/cron
+  mutations. Confirmed: (1) watchdog daemon `vm-zombie-watchdog-20260805-125558` STILL RUNNING as of 2026-08-07T05:37Z
+  (unchanged from slot 12 — `[INFRA] P0` daemon relaunch has NOT been done); (2) code fix CONFIRMED IN LDR —
+  `vm_zombie_watchdog.py` `PREFIX_IDLE_THRESHOLDS["canonical-migration-"] = (90.0, 360.0)` +
+  `launch-canonical-migration-vm.sh` `STALL_TIMEOUT_SEC=7200` (both in `deployment-service@0e94ceee1`); (3) GCS objects
+  spot-checked 0 for ETHEREUM + ARBITRUM at 2026-08-07T05:37Z (`gcloud storage ls` → "no objects found", consistent with
+  earlier verifications). Did NOT relaunch the daemon or purge VM. Posting /blocked to determine dispatch path for the
+  operator-gated `[INFRA] P0` daemon relaunch.
+- **AO re-dispatch 2026-08-07 (`data_engineering`, slot 7, third dispatch)**: Daemon confirmed STILL stale —
+  `vm-zombie-watchdog-20260805-125558` RUNNING (gcloud compute instances list). The `[INFRA] P0` remains in this doc
+  with `assigned_vm: NA`, so it is not being auto-dispatched. Posting /blocked with a concrete escalation path:
+  recommend operator create an `assigned_role: infra` dispatch plan to route the [INFRA] P0 into the AO backlog.
+- **AO re-dispatch 2026-08-07 (`data_engineering`, slot 7, fourth dispatch)**: same daemon, still stale, re-verified
+  once more. Instead of a fourth identical `/blocked` recommendation, created
+  `plans/archive/2026_08/infra_vm_zombie_watchdog_relaunch_2026_08_07.md` (created `status: draft`,
+  `assigned_role: infra`; archived 2026-08-07 once its one todo completed) — a single-todo plan that mirrors this doc's
+  own `[INFRA] P0` todo with an `assigned_vm: planning` home, so it can actually enter the AO backlog once the operator
+  flips it `active`. The `[INFRA] P0` todo below is unchanged (still the source of truth for the fix's intent); the new
+  plan is a dispatch-routing wrapper around it, not a duplicate decision. No VM/GCS/cron mutation performed this
+  session.
+- **2026-08-07 (main, operator-authorized relaunch)**: operator authorized the real-mode relaunch at 07:30Z; main drove
+  it via an infra sub-agent. Dry-run validated safe first (2 clean cycles, zero reaps), then cutover: stale
+  `vm-zombie-watchdog-20260805-125558` deleted, new instance `vm-zombie-watchdog-20260807-075242` created
+  2026-08-07T07:52:45Z (asia-northeast1-c), serial-console confirmed boot-clean, first real-mode poll at 08:02:58Z
+  logged "Watchdog summary: 26 alive / 0 zombie / 3 too_young" → "watchdog complete: killed 0/0 zombies" +
+  "terminated-reaper: reaped 0/0" — live fleet intact, `deployment-service@0e94ceee1`'s `canonical-migration-`
+  `PREFIX_IDLE_THRESHOLDS` fix now live. Flipped the `[INFRA] P0` todo `[x]` above with this evidence (mirrored in
+  `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`, now archived). The `[DATA] P1` relaunch-the-purge-VM todo directly
+  below is now UNBLOCKED — annotated it accordingly, left `[ ]` for the next worker on
+  `defi_satellite_ao_dispatch_batch9-003` to execute.

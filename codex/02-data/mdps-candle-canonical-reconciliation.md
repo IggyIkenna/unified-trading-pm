@@ -29,7 +29,7 @@ related:
     /codex/02-data/per-asset-group-bucket-layouts.md,
     /codex/02-data/chart-candle-delivery-flow.md,
     /codex/02-data/bar-boundary-candle-edge-convention.md,
-    ../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    ../../plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     ../../plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
   ]
 created: 2026-07-21
@@ -66,7 +66,7 @@ code_refs:
 > objects; sequenced **defi → prediction → cefi → tradfi**, tradfi LAST). NOTHING is migrated on disk yet, so the WHOLE
 > candle corpus is `migration_pending`. This doc's TARGET is the Option-A template; reconciliation treats un-migrated
 > shape as `migration_pending` (taxonomy AE-6), never a defect. Migration source of truth:
-> [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md).
+> [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](../../plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md).
 
 ## 1. The candle shard atom (differs from raw tick)
 
@@ -156,7 +156,7 @@ is (`/codex/02-data/sports-2020-06-data-floor.md`), not silently upsampled.
 `canonical_path_violations()` hardcodes `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"`
 (`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py:67`) and therefore returns a `structural`
 violation for EVERY `processed_candles/` path — canonical and orphan alike (verified 2026-07-20,
-[`candle_feature_canonical_path_divergence_2026_07_20.md`](../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
+[`candle_feature_canonical_path_divergence_2026_07_20.md`](../../plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
 finding iii-b). So the raw-tick §4 machine-oracle rule does not apply to candles. Candle canonicality is checked against
 the ratified Option-A **registry template** — a JUSTIFIED exception to "never re-implement the oracle" (the oracle does
 not cover this namespace, so this is not oracle-drift). The durable fix is extending the oracle to `processed_candles/`

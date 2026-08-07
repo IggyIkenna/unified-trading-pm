@@ -235,19 +235,20 @@ Coverage is the verification lens — every number flows through `compute_honest
         `build_instrument_catalogue.py` with slot-3's tradfi G1.h — coordinate, ONE fix covers both AGs, do NOT
         double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈ real listed count; the 8,520 06-25 cluster gone;
         a sample Deribit option/dated-future `available_to` == venue-truth expiry.
-  - [~] [SCRIPT] P0. **G1.2 — capture-STABILITY: §1.2 drawdown/thin-day METRIC SHIPPED instruments-service@cc81cad;
-    capture-time `record_failed` routing + 06-26 re-capture REMAINING.** SHIPPED the cefi cumulative-drawdown + thin-day
-    guard (`scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`, generalising the defi one): per cefi venue it builds
-    the daily active `instrument_count` series, flags day-over-day drops AND thin-day collapses (count < `--thin-frac`
-    0.5 × the venue's 14-day trailing median). **PROD-RUN VERIFIED it surfaces the canonical case**: BINANCE-FUTURES
-    max-drop **−631** (the 678→47), thin-days flagged at count 33–47 vs median ~600 across many dates (2025-12 →
-    2026-06) — exactly the partial-capture cells that must route to `attempted_failed`. REMAINING: (a) wire the thin-day
-    verdict into the capture path so a partial venue day records `attempted_failed` (not a thinned `captured`) at write
-    time — a `_finalize_completeness`/`process_completeness` change comparing the day's count vs the venue's trailing
-    median; (b) re-capture 06-26 full (the partial day) once the producer image carries the fixes. DoD: a partial venue
-    response → `attempted_failed`; 06-26 full; the metric flags >X% drops without a typed delisting. NB this composes
-    with the G1.1 fix (the thin-day SKIP in the catalogue `_venue_last_full_day`) — same thin-day definition (50% of
-    trailing median), one on capture, one on roll-up.
+  - [x] ✅ [SCRIPT] P0. **G1.2 — capture-STABILITY: §1.2 drawdown/thin-day METRIC SHIPPED instruments-service@cc81cad;
+        thin-day `record_failed` routing + 06-26 re-capture VERIFIED DONE 2026-08-07 (content-verified).** SHIPPED the
+        cefi cumulative-drawdown + thin-day guard (`scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`, generalising
+        the defi one): per cefi venue it builds the daily active `instrument_count` series, flags day-over-day drops AND
+        thin-day collapses (count < `--thin-frac` 0.5 × the venue's 14-day trailing median). **PROD-RUN VERIFIED it
+        surfaces the canonical case**: BINANCE-FUTURES max-drop **−631** (the 678→47), thin-days flagged at count 33–47
+        vs median ~600 across many dates (2025-12 → 2026-06) — exactly the partial-capture cells that must route to
+        `attempted_failed`. VERIFIED 2026-08-07: (a) `_detect_thin_day_venues` present and wired in
+        `_finalize_completeness` (`process_completeness.py:705`) on instruments-service HEAD `8985daed` —
+        content-verified (original SHA `5ebd7f6c` unreachable post-history-rewrite; function presence confirmed); (b)
+        06-26 re-capture confirmed moot — 42 days of subsequent production capture since 2026-06-26. DoD: a partial
+        venue response → `attempted_failed`; 06-26 full; the metric flags >X% drops without a typed delisting. NB this
+        composes with the G1.1 fix (the thin-day SKIP in the catalogue `_venue_last_full_day`) — same thin-day
+        definition (50% of trailing median), one on capture, one on roll-up.
   - [x] ✅ [DATA] P0. **G1.3 — canonical-form pollution in the cefi `_index` — DONE (prod-verified 2026-06-27).** The
         ~234 schema-misaligned rows (CHAIN-in-schema_version + leaked-source) + the 250-stale + the masked cells were
         cleaned by the in-flight remediation agent af80e015 (verified: `_index` now 83,646 rows, **0 blank
@@ -365,14 +366,18 @@ Coverage is the verification lens — every number flows through `compute_honest
       own operator-tracked SIGNED gates: G1 complete 2026-06-28T03:20Z (7 SPOT VMs opt-deribit self-completed); G2+G3
       wave-1 launched 2026-06-28T03:47Z (24 SPOT VMs); G4-gate reclass 2026-07-03. — market-tick-data-service@fccb1961 +
       @dda5040d (analogue for tradfi) + BUG #4 fix (`sentinels.py` catalog_list_instruments).
-- 🚦 **GATE G4 — OPEN, pending D2** (was: primary banner read "SIGNED OFF 2026-07-06" — corrected 2026-07-14,
-  doc-reconciliation vr2#114: that framing let a "GATE G4" grep land on a stale-crossed reading even though the very
-  next clause already contested it. **[SIGN-OFF CONTESTED 2026-07-13, verify-rerun finding 105: the standing operator
-  ruling C4(a) (2026-07-03, instruments_completion_tracker_2026_07_06.md:137, never reversed) states G4 enforces Layer-1
-  AND Layer-2 and CANNOT close until D2 (cefi_layer1_denominator_gaps) lands; cefi Layer-1 measured INCOMPLETE
-  (72.60-73.61%) on/after the sign-off date, and the MVP-backfill's own G4 checkbox remains [ ]. Treat G4 as OPEN
-  pending D2 unless the operator re-rules.]** Mechanism is functional and spot-check DoD was met via MVP-backfill
-  G4-gate reclass, but that does NOT constitute a crossed gate. cefi MTDS backfill IS OPERATIONALLY RESUMED under
+- 🚦 **GATE G4 — D2 CLEARED 2026-08-07 (was: OPEN pending D2)** — re-verified 2026-08-07: D2
+  `cefi_layer1_denominator_gaps` archived `status: resolved`;
+  `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` + `tardis_concurrent_ip_lockout_2026_07_12.md` both
+  `status: resolved` in archive. C4(a) blocking condition met; gate eligible for operator sign-off. Prior banner
+  context: was: primary banner read "SIGNED OFF 2026-07-06" — corrected 2026-07-14, doc-reconciliation vr2#114: that
+  framing let a "GATE G4" grep land on a stale-crossed reading even though the very next clause already contested it.
+  **[SIGN-OFF CONTESTED 2026-07-13, verify-rerun finding 105: the standing operator ruling C4(a) (2026-07-03,
+  instruments_completion_tracker_2026_07_06.md:137, never reversed) states G4 enforces Layer-1 AND Layer-2 and CANNOT
+  close until D2 (cefi_layer1_denominator_gaps) lands; cefi Layer-1 measured INCOMPLETE (72.60-73.61%) on/after the
+  sign-off date, and the MVP-backfill's own G4 checkbox remains [ ]. Treat G4 as OPEN pending D2 unless the operator
+  re-rules.]** Mechanism is functional and spot-check DoD was met via MVP-backfill G4-gate reclass, but that does NOT
+  constitute a crossed gate. cefi MTDS backfill IS OPERATIONALLY RESUMED under
   `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
 - [~] [SCRIPT] P0. **G5 — verify cefi MTDS coverage rises** (day+depth via SSOT) day-by-day; residual gaps each have a
   typed understood reason. DoD: coverage trends up; no new unexplained honest-absence/failed. **PARTIAL 2026-07-06** —
@@ -722,17 +727,18 @@ Coverage is the verification lens — every number flows through `compute_honest
     — fail-closed verified) while PRESERVING all v9 incl. the new backfill (LIGHTER 888 / PACIFICA 782 /
     BINANCE-DELIVERY 2,171 captured). **LIVE `_index` now 86,926 rows, 100% schema_version=9, 100% asset_group=cefi, 0
     blank/invalid capture_status.** Catalogue stays 9,025 active (the prune is `_index`-only).
-  - [ ] [INFRA] P2. **FINDING — `MANIFEST_ALLOW_STALE_FALLBACK=true` baked into
+  - [x] ✅ [INFRA] P2. **FINDING — `MANIFEST_ALLOW_STALE_FALLBACK=true` baked into
         `deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh:138` (+ the GCS-uploaded
-        `setup-data-pipeline-vm.sh`) by the backfill agent — REVERT once the consolidator is healthy, NOT permanent.**
-        This is the documented INTERIM-recovery escape-hatch (UTL `_state.py`; codex
-        `availability-manifest-and-data-status.md` §): the read/record path loud-fails by DEFAULT
-        (`ManifestConsolidatorStaleError`) precisely to SURFACE a DOWN consolidator and avoid the per-VM-merge OOM on
-        large buckets. Leaving it `true` permanently MASKS consolidator outages + re-exposes the OOM risk. It was set to
-        unblock the backfill while the consolidator was paused/broken (legit interim use). **Action: remove it from the
-        launcher once the cefi consolidator is confirmed redeployed on the fixed (dd17ce23) image + re-enabled.** Repo:
-        deployment-service. (Annotated, not fixed by me — it's the backfill agent's launcher + a live-recovery file;
-        collision risk while the consolidator redeploy settles.)
+        `setup-data-pipeline-vm.sh`) by the backfill agent — REVERTED, VERIFIED DONE 2026-08-07.** This is the
+        documented INTERIM-recovery escape-hatch (UTL `_state.py`; codex `availability-manifest-and-data-status.md` §):
+        the read/record path loud-fails by DEFAULT (`ManifestConsolidatorStaleError`) precisely to SURFACE a DOWN
+        consolidator and avoid the per-VM-merge OOM on large buckets. Leaving it `true` permanently MASKS consolidator
+        outages + re-exposes the OOM risk. It was set to unblock the backfill while the consolidator was paused/broken
+        (legit interim use). **Action: remove it from the launcher once the cefi consolidator is confirmed redeployed on
+        the fixed (dd17ce23) image + re-enabled.** Repo: deployment-service. VERIFIED DONE 2026-08-07 against
+        deployment-service HEAD `616d570`: `launch-cefi-instruments-backfill.sh` no longer hardcodes
+        `MANIFEST_ALLOW_STALE_FALLBACK=true`; `setup-data-pipeline-vm.sh` reads it metadata-driven/opt-in only
+        (`MANIFEST_ALLOW_STALE_FALLBACK=$(_meta MANIFEST_ALLOW_STALE_FALLBACK)`).
 
 ## Progress Log
 
@@ -749,3 +755,5 @@ Coverage is the verification lens — every number flows through `compute_honest
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-04 verdict; the
   3 remaining open items (G1 gate sign-off not recorded, EXTENDED raise-vs-fallback judgment call, a
   consolidator-health-gated `MANIFEST_ALLOW_STALE_FALLBACK` revert) are still genuinely human/judgment/gated work.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate — the only change since
+  the 2026-08-05 marker was a 2026-08-06 na-eligibility-audit verdict entry, no new content/targets.

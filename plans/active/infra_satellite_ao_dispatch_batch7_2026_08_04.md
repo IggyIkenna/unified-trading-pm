@@ -56,10 +56,12 @@ superseded_by:
 depends_on: []
 context_scope:
   [
+    /plans/active/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
+    /plans/active/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
+    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    deployment-service/terraform/gcp/live_event_log/main.tf,
     /plans/active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
   ]
 source: >-
   `/ag-closeout-audit infra` run 2026-08-04 (ag_closeout_auditor scheduled worker, slot 10). Phase 0 re-derived the
@@ -198,3 +200,7 @@ operator sign-off before dispatch" rule, not a signal any todo itself is risky.
   findings from `ag_closeout_audit_infra_parked_2026_08_03.md` live first (per the iterative-drain methodology's step 1)
   — all 3 still open, unchanged, not re-drafted. Paired with `infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md`
   in the same run per the finalize-plan-coverage rule.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — swapped the parked-findings pointer for the 3 open
+  todos' actual source docs and code targets (both `na_eligibility_incremental_diff_...` and
+  `deployment_service_live_event_log_...` source issue docs, `generate_na_doc_tranche_inventory.py`,
+  `na-eligibility-audit/SKILL.md`, and `live_event_log/main.tf`).

@@ -191,3 +191,4 @@ function.
   convention) and the 2026-08-06 na-eligibility-audit entry orphaned after the Todos checkbox, outside any heading.
   Reordered to `## Todos` then `## Progress Log`, and moved the orphaned entry into this log alongside its siblings. No
   content changed, only structure.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.

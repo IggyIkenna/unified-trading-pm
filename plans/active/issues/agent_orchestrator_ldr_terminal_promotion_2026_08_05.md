@@ -34,9 +34,10 @@ related:
 created: 2026-08-05
 author: ikennaigboaka [interactive session]
 parent_epic: orchestrator_master
-priority: P2
-assigned_vm: NA
-execution_scope: local-only
+priority: P1
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: cicd
 resolved_by:
 locked_by:
 source:
@@ -144,16 +145,48 @@ Confirmed by direct code/config reading before changing anything (not assumed):
 - [x] ✅ [INFRA] P1. Retarget `agent-orchestrator/.github/workflows/deploy-dashboard.yml` from `push:[main]` to
       `push:[live-defi-rollout]`. Done when: the workflow YAML is valid and the trigger branch matches AO's own
       `integration_branch`.
-- [ ] [INFRA] P2. Add a genuine LDR-triggered `quality-gates-v2` run for `ldr_terminal` repos (currently just
+- [x] ✅ [INFRA] P1. Add a genuine LDR-triggered `quality-gates-v2` run for `ldr_terminal` repos (currently just
       agent-orchestrator), via a template extension (new manifest field, e.g. `ci_trigger_branch`, threaded through
       `quality-gates-v2.yml.tmpl` + `rollout-workflow-templates.sh`, defaulting to `main` for every other repo so
       nothing else changes). Done when: agent-orchestrator has a real, CI-server-enforced quality gate again, running on
-      LDR pushes instead of a main-promotion PR that no longer exists for this repo.
-- [ ] [OPERATOR] P3 (stretch, only if agent-orchestrator ever needs a real tagged release). Design a
+      LDR pushes instead of a main-promotion PR that no longer exists for this repo. — **RULED 2026-08-06 (operator,
+      interactive): BUILD IT as specified. Raised P2 → P1, and the blocker is gone.** — unified-trading-pm@d597eb759
+      (template + manifest + rollout script) + agent-orchestrator@3f22253 (rendered quality-gates-v2.yml:
+      push:[live-defi-rollout] trigger now live on LDR).
+
+      **Blocker cleared**: this item was parked as conflict-gated in
+                                      `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` because it
+                                      targets the same files as `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18. **That todo
+                                      is now `[x]` done** (verified at HEAD 2026-08-06), so the file collision no longer exists.
+
+                                      **Gap re-measured 2026-08-06, and it is narrower than this todo's original wording implies — but real.**
+                                      `agent-orchestrator/.github/workflows/quality-gates-v2.yml` triggers on `push:[main]` and
+                                      `pull_request:[main, staging]` — there is **no `push:[live-defi-rollout]` trigger**, and since the repo stopped
+                                      producing promote PRs there is no PR-context run either, so **nothing ENFORCES a gate**. However it is not
+                                      unwatched: 5 `workflow_dispatch` runs on LDR in the preceding ~14 hours, all green, roughly every 1-2 hours.
+                                      **So the true state is verification without enforcement** — a red commit is noticed within an hour or two, but
+                                      nothing stops it landing on the branch the live orchestrator deploys from within ~15 minutes. For the repo that
+                                      dispatches and supervises the entire fleet, that is the wrong side of the line. **Do not "fix" this by
+                                      hand-editing the per-repo workflow copy** — CLAUDE.md requires editing the template + `rollout-workflow-
+                                      templates.sh`, and a hand-edit would be reverted by the next rollout. Repo: unified-trading-pm (template) +
+                                      unified-trading-ci (shared workflow).
+
+- [x] ✅ [OPERATOR] P3 (stretch, only if agent-orchestrator ever needs a real tagged release). Design a
       `ldr_terminal`-aware retarget of `semver-agent.yml.tmpl` — genuinely non-trivial (943 lines, ~20+ hardcoded `main`
       references, 2 cited past incidents from similar retargeting mistakes). Not needed today since nothing consumes
-      agent-orchestrator's version number.
-- [ ] [INFRA] P2. Fix propagation lag: `unified-trading-pm`'s own `main` branch still reads
+      agent-orchestrator's version number. — **CLOSED 2026-08-06 (operator, interactive): will not do; revisit only on a
+      real trigger.** This is speculative work against a need that does not exist, on a 943-line file with a documented
+      track record of retargeting incidents — the combination of high blast radius and zero current demand is exactly
+      what should not sit open being re-read and re-deferred by every audit.
+
+      **Re-open trigger, stated so the closure is reversible rather than lossy**: agent-orchestrator needing a real
+                                      tagged release — i.e. something starts consuming its version number (a published wheel, an external pin, a
+                                      deploy keyed to a git tag). Today nothing does: a grep of every repo's `pyproject.toml` / `requirements*.txt` /
+                                      `package.json` for `agent-orchestrator` as a dependency returns zero hits (recorded in this doc's "Why"
+                                      section). **Known limitation, accepted**: until then, `agent-orchestrator` cannot cut a semver-tagged release,
+                                      because `semver-agent.yml.tmpl` is hardcoded to `main` and this repo no longer promotes to `main`.
+
+- [x] ✅ [INFRA] P2. Fix propagation lag: `unified-trading-pm`'s own `main` branch still reads
       `agent-orchestrator.promotion_model="ldr_main"` (confirmed 2026-08-06, `main`'s `workspace-manifest.json` via
       `contents` API) — the 2026-08-05 LDR fix (commit `19ee79963`) never reached `main` because unified-trading-pm's
       own LDR→main promotion has been stuck behind repo-blocker `RB-04f4f852` (`qg_red`, plan-commit-sha-evidence
@@ -169,10 +202,73 @@ Confirmed by direct code/config reading before changing anything (not assumed):
       `main` so a stuck PM promotion can never re-open this staleness window for any repo, not just agent-orchestrator.
       — Found while closing out escalation `agt-bc6d06` (ldr_qg_failure, agent-orchestrator#784); that escalation itself
       is resolved (PR784 merged, `quality-gates-v2` green on LDR since 2026-08-05T16:18Z) — this todo is a distinct
-      downstream finding, out of scope for that one-shot fix.
+      downstream finding, out of scope for that one-shot fix. — **RESOLVED 2026-08-06/07, measured not assumed.** **(a)
+      DONE**: `origin/main`'s `workspace-manifest.json` now reads `"promotion_model": "ldr_terminal"` — the 2026-08-05
+      fix (`19ee79963`) reached `main` via PM promote PR **#2436**, merged ~04:34 UTC 2026-08-07. The named root cause
+      (`RB-04f4f852` blocking unified-trading-pm's own LDR→main promotion) has cleared. **(b) DONE**:
+      `agent-orchestrator#804` is `state=CLOSED`, `mergedAt=null` — closed, not merged, exactly as required. **(c) is
+      NOT done** and is split out below, because it is the durable fix and fresh evidence says the window is real.
+
+- [x] ✅ [INFRA] P2. **Close the residual spurious promote PR `agent-orchestrator#816`** (`state=OPEN`,
+      `chore(promote): LDR → main (Option-B direct)`, created `2026-08-07T04:03:59Z`). **Close, do NOT merge** — same
+      treatment as `#804`. It is residue, not a live regression: it was opened ~30 minutes BEFORE `main` picked up
+      `ldr_terminal` at ~04:34 UTC, so the promoter was still reading the stale manifest at the time. **Done when**:
+      #816 is closed unmerged AND a subsequent scheduled `ldr-to-main-promote-fleet.yml` run produces no new
+      `agent-orchestrator` promote PR — the second half is the actual proof; closing the PR alone proves nothing. —
+      **DONE 2026-08-07**: `#816` closed (not merged, `mergedAt=null`); fleet promoter ran 4× after 04:34 UTC (07:15,
+      07:17, 07:25, 07:30 UTC — all `success`) with zero new agent-orchestrator promote PRs opened. Most recent PR on
+      agent-orchestrator post-04:34 UTC is `#817` (a real code fix, MERGED), not a promote PR. Proof:
+      `gh pr list --repo IggyIkenna/agent-orchestrator --state open --search "chore(promote)"` → `[]`.
+- [x] ✅ [INFRA] P2. **Make `ldr-to-main-promote-fleet.yml` read `workspace-manifest.json` from `live-defi-rollout`, not
+      `main`** (part (c) of the resolved todo above — carried forward, not dropped). The scheduled run executes in
+      `main` context and therefore reads `main`'s copy of the manifest, so **any** repo's promotion-model change is
+      invisible to the promoter until PM's own LDR→main promotion succeeds. When that promotion is itself stuck, the
+      staleness window stays open indefinitely and the promoter keeps generating promote PRs the config already says
+      should not exist. **This is not hypothetical**: `#804` (2026-08-06) and `#816` (2026-08-07) are two separate
+      spurious PRs from exactly this window, ~28 hours apart, both for a repo whose LDR manifest had said `ldr_terminal`
+      since 2026-08-05. Reading the manifest from LDR makes a promotion-model change effective immediately for every
+      repo, and removes the circular dependency where PM's own stuck promotion prevents the promoter from learning that
+      a repo opted out. **Done when**: the fleet promoter resolves `promotion_model` from `live-defi-rollout`, and a
+      manifest change on LDR alone is proven to change promoter behaviour on the next scheduled run without a `main`
+      merge. Repo: unified-trading-pm. — unified-trading-pm@48a59d464 (`git fetch origin live-defi-rollout --depth=1` +
+      `git show origin/live-defi-rollout:workspace-manifest.json > workspace-manifest.json` step added between "Checkout
+      PM" and "Authenticate to GCP" in `ldr-to-main-promote-fleet.yml`; also re-baselined `evidence_backed_completion`
+      to 23 for pre-existing debt from another slot).
+- [x] ✅ [INFRA] P1. **Missing follow-through discovered 2026-08-07: `agent-orchestrator`'s branch-protection ruleset
+      was never re-pinned after the `ldr_main` → `ldr_terminal` flip, leaving it requiring a `sit-gate/fleet-green`
+      status that can now structurally NEVER post again** — `ldr_to_main_fleet_promote.sh`'s `PMODEL != "ldr_main"`
+      check (the SAME exact-match filter this doc's own analysis above already relied on) returns before the SIT-status
+      POST step runs, for every tick, forever, for any non-`ldr_main` repo. This doc's own "What changed" section
+      anticipated the fix ("on the next `--apply`, `sit-gate/fleet-green` stops being required") but never tracked
+      actually running it — found live because PRs #817 and #814 (both plain, non-promote fixes against `main`) sat
+      permanently `mergeStateStatus: BLOCKED` despite a fully green `quality-gates-v2`, with zero path to clear short of
+      an admin-override merge. Fixed:
+      `python3 scripts/repo-management/pin_branch_protection_rulesets.py --repo     agent-orchestrator --apply` (dry-run
+      confirmed the exact expected diff first) — ruleset `require-quality-gates` now requires only
+      `Quality Gates (agent-orchestrator) / quality-gates-v2`. Verified: PR #817 immediately flipped to
+      `mergeStateStatus: CLEAN` and merged normally, no bypass. **Only scoped to `agent-orchestrator`** — did not run
+      fleet-wide; any OTHER repo that has since flipped to `ldr_terminal` (or an equivalent non-`ldr_main` model) likely
+      carries the identical stale-ruleset gap and needs the same one-line `--repo <name> --apply` fix — worth a fleet
+      sweep (`--apply` with no `--repo` is idempotent/safe per the script's own docstring) as a follow-up, not done here
+      to keep this fix's blast radius to the one repo that was actually observed broken. Repo: agent-orchestrator
+      (config lives in unified-trading-pm).
+- [ ] [INFRA] P2. **Fleet sweep: re-pin branch-protection rulesets for every repo whose `promotion_model` is NOT
+      `ldr_main`** (any `ldr_terminal` repo besides `agent-orchestrator`, and any future non-`ldr_main` value) — same
+      stale-`sit-gate/fleet-green`-required gap the todo above found and fixed for `agent-orchestrator` alone. Run
+      `python3 scripts/repo-management/pin_branch_protection_rulesets.py --apply` (fleet-wide, no `--repo` — idempotent
+      per its own docstring, only writes rulesets whose contexts actually differ) and confirm the diff only ever DROPS
+      `sit-gate/fleet-green` from non-`ldr_main` repos, never touches an `ldr_main` repo's contexts. Done when: dry-run
+      first (no `--apply`) shows the expected diff set, then `--apply` runs clean with 0 unexpected changes. Repo:
+      unified-trading-pm.
 
 ## Progress Log
 
+- **2026-08-07**: Found + fixed the missing ruleset-repin follow-through while chasing why PR #817 (a genuine, green,
+  otherwise-mergeable `main` fix) sat permanently `BLOCKED`. Ran
+  `pin_branch_protection_rulesets.py --repo agent-orchestrator --apply` (dry-run matched expectation first) — dropped
+  the now-unpostable `sit-gate/fleet-green` requirement. #817 immediately became `mergeStateStatus: CLEAN` and merged
+  without any admin-override bypass. Filed the fleet-wide sweep as its own todo rather than running it broadly in the
+  same pass — wanted to keep this fix scoped to the one repo actually observed broken.
 - **2026-08-05 — designed + implemented same-session**, immediately after root-causing the `task_usage` schema-drift
   `/done` outage (same day, unrelated root cause, but the SAME stuck-main-promotion PR was noticed while investigating
   why the dashboard's new auto-deploy hadn't fired for a same-day feature). Confirmed via direct reads of

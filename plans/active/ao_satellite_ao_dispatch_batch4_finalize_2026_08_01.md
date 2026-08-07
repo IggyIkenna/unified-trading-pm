@@ -159,3 +159,5 @@ source: >-
 
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still the correct archival SSOT + batch pointer;
   no change needed. Gated finalize doc, no source path.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (4 entries), still accurate — sole open todo (5) is
+  the archival ritual itself, no source path applies.

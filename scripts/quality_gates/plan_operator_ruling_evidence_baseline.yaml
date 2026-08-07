@@ -1,285 +1,280 @@
-unsourced_ruling_baseline: 59
+unsourced_ruling_baseline: 58
 rule: plan-operator-ruling-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
 baseline_violations:
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
     line: 392
     phrase: Operator ruling
     context: "- [x] [ADMIN] P2. **Wire the mvp-defi unpark.** `defi_onchain_v10_universe_v2_se"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
     line: 408
     phrase: Operator ruling
     context: "- [x] [INFRA] P1. **State home = ONE in-repo source (`data/state/`); drop the tw"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md
     line: 347
     phrase: operator ruling
     context: "- [x] \u2705 [OPERATOR] P2.2a. **RESOLVED 2026-07-31** \u2014 operator\
       \ ruling on BLK-0c84c"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/cefi_consolidated_closeout_2026_07_18.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/cefi_consolidated_closeout_2026_07_18.md
     line: 225
     phrase: operator ruling
     context: "- [x] \u2705 [REVIEW] P0. **RULING (autonomous, within documented intent\
       \ \u2014 /autonomou"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
     line: 126
     phrase: operator ruling
     context: "- [x] \u2705 [SCRIPT] P0. For any genuine gap days found above, relaunch\
       \ the scoped b"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md
     line: 192
     phrase: operator ruling
     context: "- [x] [DOCS] P1. **Phase 3 \u2014 redirect + slim.** \u2705 CANCELLED\
       \ 2026-07-29 (main) \u2014 "
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md
     line: 204
     phrase: operator ruling
     context: "- [x] [DOCS] P1. **Phase 4 \u2014 delete pure-dups.** \u2705 CANCELLED\
       \ 2026-07-29 (main, B"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md
     line: 375
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P2. **Close 5 small bounded residuals from"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
     line: 180
     phrase: operator ruling
     context: "- [x] \u2705 [CODE] P2. **features-service \u2014 fix `odds_features_exporter.py`\
       \ velocity"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
     line: 208
     phrase: operator ruling
     context: "- [x] \u2705 [CODE] P2. **features-service \u2014 make `_make_session`'s\
       \ aiohttp resolver "
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
     line: 310
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P1. **Close out remaining perp-funding data-semantics/cadence\
       \ CeF"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
     line: 61
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P0. **\u2467 \u2014 IS cefi REFERENCE-UNIVERSE gap:\
       \ catalogue not \u2287 manifes"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
     line: 560
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P1. **VERIFY MDPS candle-manifest faithfulness \u2014\
       \ DONE 2026-07-27 "
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/data_completion_defi_2026_07_15.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/data_completion_defi_2026_07_15.md
     line: 217
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P0. D1 features-onchain-defi is near-empty (3 rows);\
       \ features-del"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md
     line: 282
     phrase: operator ruling
     context: "- [x] 20. \u2705 [BACKEND] [UI] P2. **DeepSeek Wallet Reconciliation \u2014\
       \ worker/orchest"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md
     line: 378
     phrase: operator ruling
     context: "- [x] 23. \u2705 [BACKEND] [UI] P2. **Task Token Usage role-group filter\
       \ \u2014 planning /"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
     line: 81
     phrase: operator ruling
     context: "- [x] [VERIFY] P0. **Phase-D gate \u2014 full Stage-4 historical carry\
       \ tracer** over "
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md
     line: 205
     phrase: operator ruling
     context: "- [x] \u2705 [ENGINEER] P1. Triage the 9 `unified-api-contracts/unified_api_contracts"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
-    line: 416
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
+    line: 454
     phrase: Operator ruling
     context: "- [x] \u2705 [DECISION] P2. **Bare `SUSHISWAP`/`UNISWAP` version (199,397\u2192\
       206,107 row"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/instruments_completion_tracker_2026_07_06.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/instruments_completion_tracker_2026_07_06.md
     line: 426
     phrase: operator ruling
     context: "- [x] [VERIFY] P0. Reconcile checkbox drift; take the formal **G2 \u2192\
       \ G5** sign-of"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/june_2026_vintage_audit_findings_2026_07_27.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/june_2026_vintage_audit_findings_2026_07_27.md
     line: 420
     phrase: operator ruling
     context: "- [x] \u2705 [PLAN] P2. `plans/active/issues/fleet_audit_triad_deferred_followups_202"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md
-    line: 251
-    phrase: "operator,\n      interactive"
-    context: "- [x] \u2705 [OPERATOR] P1. **Go/no-go on adopting OmniRoute for non-Claude\
-      \ routing**"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
     line: 236
     phrase: Operator ruling
     context: "- [x] \u2705 [INFRA] P0. **RESOLVED-BY-RULING \u2014 stale DEFERRED tag\
       \ cleaned 2026-07-28"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md
     line: 152
     phrase: OPERATOR RULING
     context: "- [x] [DATA] P1. \u2705 Decide, with the operator: does the \"could-exist\"\
       \ catalog / h"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md
     line: 170
     phrase: operator ruling
     context: "- [x] [DATA] P3. ~~If league-grain IS confirmed as the permanent, correct scope:"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
-    line: 720
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
+    line: 722
     phrase: operator ruling
     context: "- [x] [DIAG] P2. \u2705 **Conclusion: CONFIRMED EMPTY \u2014 zero real\
       \ consumers in either"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md
     line: 201
     phrase: "operator\n      ruling"
     context: "- [x] \u2705 [DATA] [CLEANUP] P2. **Track S \u2014 snapshot-then-cull\
       \ the dead `sports_ref"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md
     line: 115
     phrase: Operator ruling
     context: "- [x] [DATA] P1. \u2705 **RETAGGED 2026-07-28 (stale-tag audit \u2014\
       \ already decided, `[O"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md
     line: 249
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P3. **CORRECTED 2026-07-29 (code-verified, not an\
       \ operator ruling"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md
     line: 161
     phrase: operator ruling
     context: "- [x] \u2705 [BACKEND] P1. **Operator-ruled 2026-07-29 (interactive decision\
       \ session)"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md
     line: 220
     phrase: operator ruling
     context: "- [x] \u2705 [DOCS] P3. ~~Retag `plans/active/issues/workflow_template_drift_repeated"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md
     line: 199
     phrase: operator ruling
     context: "- [x] \u2705 [DOCS] P3. Retag `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_q"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/ao_blocked_slot_no_timeout_or_redispatch_policy_2026_08_06.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/agent_orchestrator_ldr_terminal_promotion_2026_08_05.md
+    line: 171
+    phrase: operator, interactive
+    context: "- [x] \u2705 [OPERATOR] P3 (stretch, only if agent-orchestrator ever needs\
+      \ a real tag"
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/ao_blocked_slot_no_timeout_or_redispatch_policy_2026_08_06.md
     line: 146
     phrase: Operator ruling
     context: "- [x] [OPERATOR] P2. **Rule on the design questions above** \u2014 see\
       \ \"Operator ruli"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md
     line: 136
     phrase: operator, interactive
     context: "- [x] \u2705 [OPERATOR] P2. **Rule on \xA71** \u2014 confirm the 26-doc\
       \ exclusion list, or na"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md
     line: 146
     phrase: operator, interactive
     context: "- [x] \u2705 [OPERATOR] P2. **Rule on \xA72** \u2014 approve (or defer)\
       \ the 23-doc `asset_gro"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md
     line: 246
     phrase: operator ruling
     context: "- [x] \u2705 [OPERATOR] P0. **RESOLVED 2026-07-31** \u2014 operator ruling\
       \ on BLK-0c84ceac"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md
     line: 307
     phrase: Operator ruling
     context: "- [x] 1. \u2705 [DATA] P1. **Operator ruling on A/B/C** for the candle\
       \ object-path sh"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md
     line: 317
     phrase: operator ruling
     context: "- [x] 3. [DATA] P1. **\u2705 VERIFIED 2026-08-04 (slot-11, `tradfi_manifest_content_r"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
     line: 256
     phrase: operator ruling
     context: "- [x] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/cefi_universe_capture_rule_2026_06_23.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/cefi_universe_capture_rule_2026_06_23.md
     line: 105
     phrase: operator ruling
     context: "- [x] \u2705 [MTDS] P2. **UAC selector contract shipped \u2014 `unified-api-contracts@cae9"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md
-    line: 117
-    phrase: operator ruling
-    context: "- [x] \u2705 [DEVOPS] P2. **DONE 2026-08-06 (batch5 todo 1, slot 4)**\
-      \ \u2014 re-scoped rol"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md
     line: 190
     phrase: "operator\n      ruling"
     context: "- [x] \u2705 [OPERATOR] P2. Authorize + launch a fresh, narrow post-fix\
       \ Pyth `oracle_"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md
     line: 264
     phrase: Operator ruling
     context: "- [x] \u2705 [SCRIPT] P2. **DONE 2026-08-06 (slot-8)** \u2014 `deployment-service@c1e0481`"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md
     line: 101
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P2. **Full tradfi processed_candles reprocess** (~712\
       \ days 2020\u21922"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/fleet_data_acquisition_health_2026_06_21.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/fleet_data_acquisition_health_2026_06_21.md
     line: 193
     phrase: operator ruling
     context: "- [x] [CODE] P2. **RESOLVED 2026-07-13 \u2014 operator ruling verbatim:\
       \ \"OPERATOR RUL"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md
     line: 200
     phrase: Operator ruling
     context: "- [x] \u2705 1. [OPERATOR] P1. **RULED 2026-08-03 \u2014 option (a): `league=`\
       \ is a legiti"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md
     line: 137
     phrase: operator, interactive
     context: "- [x] \u2705 [OPERATOR] P1. **Decide whether `safe-doc-push.sh` becomes\
       \ the CLAUDE.md"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30.md
     line: 258
     phrase: "operator\n      ruling"
     context: "- [x] \u2705 [OPERATOR] P0. Rule on Finding 2 (A / B / C) \u2014 how the\
       \ parked `predictio"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md
     line: 315
     phrase: operator ruling
     context: "- [x] [DECISION-history] P1. ~~PARTIALLY DECIDED + SSOT CONTRADICTION FLAGGED (2"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md
     line: 114
     phrase: "operator,\n      interactive"
     context: "- [x] \u2705 [OPERATOR] P1. Decide the mechanical-enforcement approach\
       \ for the heavy-"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md
     line: 172
     phrase: Operator ruling
     context: "- [x] [SCRIPT] P1. \u2705 **[HISTORICAL DETAIL for the DONE todo above\
       \ \u2014 not a separa"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md
     line: 97
     phrase: operator ruling
     context: "- [x] \u2705 [CICD] P1. **Recurring-ratchet trap RESOLVED \u2014 basedpyright\
       \ is WARN-ONLY"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md
     line: 111
     phrase: operator ruling
     context: "- [x] \u2705 [CICD] P1. **bumped per operator ruling 2026-07-12 (finding\
       \ 87)** (was: "
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md
     line: 84
     phrase: operator ruling
     context: "- [x] \u2705 [INFRA] P1. **MOOT as of 2026-07-27** \u2014 downgraded from\
       \ `[OPERATOR]`; th"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md
     line: 76
     phrase: operator ruling
     context: "- [x] [DATA] P1. Subclass (a) \u2014 143 PLAYER_STATS atoms: probe on-disk\
       \ objects (U"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md
     line: 275
     phrase: "operator\n      ruling"
     context: "- [x] \u2705 [DATA] P1. **ROOT-CAUSED + FIXED 2026-08-02 \u2014 `DERIBIT\
       \ derivative_ticker"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md
     line: 317
     phrase: operator ruling
     context: "- [x] \u2705 [BACKEND] P1. **DECIDED 2026-08-03 (operator ruling) \u2014\
       \ keep it gated; do"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md
     line: 345
     phrase: operator ruling
     context: "- [x] \u2705 [BACKEND] P2. **DECIDED 2026-08-03 (operator ruling) \u2014\
       \ document, don't r"
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/12/unified-trading-pm/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md
+  - path: /active/unified-trading-system-repos/unified-trading-pm/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md
     line: 156
     phrase: "operator,\n      interactive"
     context: "- [x] \u2705 [INFRA] P2. **Hunk-scope `quickmerge.sh --files` staging**\

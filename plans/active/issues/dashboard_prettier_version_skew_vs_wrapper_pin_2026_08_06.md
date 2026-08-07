@@ -47,6 +47,14 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
+    /codex/06-coding-standards/quality-gates.md,
+    scripts/hooks/prettier-autostage.sh,
+    agent-orchestrator/dashboard/package.json,
+    agent-orchestrator/scripts/quality-gates.sh,
+  ]
 ---
 
 # Dashboard prettier version skew vs the autostage wrapper's pin
@@ -81,3 +89,4 @@ and the gate passed, so nothing was blocked.
 - **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): KEEP-NA, valid — both todos are explicit "decide which
   side moves" judgment calls (todo 1 trades off adopting a version with a known documented proseWrap defect; todo 2 is
   gated behind todo 1). Not bounded/deterministic; genuine operator/engineer tradeoff call.
+- **context-scout 2026-08-07**: populated context_scope (5 entries).

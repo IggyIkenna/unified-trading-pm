@@ -61,7 +61,7 @@ context_scope:
     deployment-service/terraform/gcp/defi_collection_scheduler.tf,
     market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/_catalogue_filter.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
     /plans/active/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
   ]
 ---
@@ -264,3 +264,8 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
   `filters=` pushdown through `_read_parquet_columns_safe` (line 131); verified slim-read widening deferral (line
   966-978); verified `per_vm_shards=True` avoids legacy CAS path (`_defi_manifest.py:148-150`). No live dry-run (no GCP
   credentials; code analysis sufficient for root-cause determination).
+
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped `_catalogue_filter.py` (ruled OUT as the
+  primary memory driver, per the DIAG P1 finding above) for `unified_trading_library/manifest_writer/_read_index.py`,
+  the file confirmed as the actual dominant driver (full compressed availability-index download) and the target of the
+  DIAG's own longer-term-recommendation follow-up work.

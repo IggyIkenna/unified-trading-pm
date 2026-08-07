@@ -38,6 +38,8 @@ context_scope:
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 depends_on: [defi_satellite_ao_dispatch_batch9_2026_08_06]
 gate_on_depends: true
@@ -88,3 +90,4 @@ finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
 - 2026-08-06 (scheduled `ag_closeout_auditor`, tranche=defi, autonomous, slot 3): Drafted alongside batch9,
   `status: active`, gated on batch9's 17 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on
   batch9's operator-approval flip to `active` and subsequent dispatch.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries)

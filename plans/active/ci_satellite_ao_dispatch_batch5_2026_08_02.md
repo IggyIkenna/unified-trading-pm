@@ -57,6 +57,14 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: cicd
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
+    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    /plans/active/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 locked_by:
 locked_since:
 supersedes:
@@ -207,8 +215,21 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     Deferred **D4-19**, whose only stated gate was "re-triage once the doc's own Progress Log shows the incident
     resolved" — that doc is now `status: resolved` (P0 cleared 2026-07-31), so the gate is met.
 
-- [ ] [BACKEND] P3. **Make the `quality-gates-v2` CI-status dispatch outage-aware.** The workflow's "Record CI status"
-      step (`if: always()`) still dispatches a normal FAILING status when the run was a 0-job billing/outage kill
+- [x] ✅ [BACKEND] P3. **DONE-ELSEWHERE 2026-08-07 (slot-10,
+      `feat(ci): add billing-wall / startup_failure guard to     quality-gates-v2`).** Verification confirmed this
+      shipped before dispatch. `unified-trading-ci@0afd236` (2026-08-07 04:38Z, verified ancestor of
+      `origin/live-defi-rollout`): the "Record CI status" step in `python-quality-gates-v2.yml` now detects the
+      infrastructure-kill pattern (`CONTENT_GATE_RESULT=failure` AND `SLICES_RESULT=failure` → `BILLING_KILL=true`) and
+      skips the `ci-status-update` FAILING dispatch, emitting only a `::notice::` annotation. This is the suppression
+      the 2026-06-11 P1 asked for and the `D4-19`-gated batch5 triage was checking for. Verified the implementation is
+      byte-correct against the done-definition: a billing-wall run (both-failed) exits before the dispatch; a genuine
+      failing run (content-gate succeeds / slices fails) still dispatches `STATUS=FAILING`. The 2026-06-11 archived
+      doc's `[ ] [CICD] P1. Outage-aware v2 status dispatch` item is effectively delivered — the implementation lives in
+      `unified-trading-ci` rather than as a PM template edit (the reusable workflow was extracted to
+      `unified-trading-ci` per `shared_ci_workflow_repo_extraction_2026_08_06.md`, so the "edit
+      `quality-gates-v2.yml.tmpl` + rollout" instruction no longer applies; the single source file is the right place).
+      **Make the `quality-gates-v2` CI-status dispatch outage-aware.** The workflow's "Record CI status" step
+      (`if: always()`) still dispatches a normal FAILING status when the run was a 0-job billing/outage kill
       (`jobs: []`, `conclusion: startup_failure`) — so an account-level wall no worker can fix generates
       `ldr_qg_failure` escalation spam fleet-wide, burning escalation-worker dispatches. **Step 1 is a verification, not
       an assumption**: the source doc attributes this to a still-open P1 in the archived 2026-06-11 precedent doc —
@@ -246,8 +267,8 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `ui_build_warm_cache_2026_06_17.md` (`[CODE] P2`). Batch4 `## Already covered` held this "for a
     `[UI]`-capable slot's judgment rather than assumed safe here — flagging for batch 5".
 
-- [ ] [INFRA] P2. **Fix the unconditional `&& echo "...dispatched"` success reporting at the F3 orphan-dispatch sites —
-      PM-owned workflow files ONLY this round.** These sites claim a dispatch succeeded whether or not any listener
+- [x] ✅ [INFRA] P2. **Fix the unconditional `&& echo "...dispatched"` success reporting at the F3 orphan-dispatch sites
+      — PM-owned workflow files ONLY this round.** These sites claim a dispatch succeeded whether or not any listener
       exists. In scope: `.github/workflows/cascade-qg-ordering.yml` and `.github/workflows/sit-gate.yml` (the
       `game-day-sit` / `synthetic-smokes` dispatches are already `::warning::`-guarded per the source doc — **verify
       that claim rather than assuming it**, and fix only what is genuinely unguarded). For each site: either add the
@@ -431,3 +452,20 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   re-invoke/inspect Workflow run `wf_1f04b9b2-680` (or its journal.jsonl in the transcript dir), synthesize Phase 2
   (verdict counts + orphan list), run Phase 3's conflict-check, and append the final report + any batch6 decision to the
   parked-findings doc above rather than creating a second one.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the still-open todos' sources
+  (`github_actions_operator_gated_followups_2026_07_17.md` for todo 2, the now-archived+resolved
+  `github_actions_billing_wall_recurrence_2026_07_29.md` for todo 4,
+  `post_cutover_silent_assumption_sweep_2026_07_23.md` for todo 6), this batch's own gated finalize, and the umbrella
+  pipeline codex SSOT; dispatch-batch-coordinator shape.
+- **2026-08-07 (batch5 todo 6, slot 2 — infra) — TODO 6 COMPLETE.** Verified live state with
+  `check_dispatch_listeners.py --show` (baseline 38, current 38). **cascade-qg-ordering.yml**: the `quality-gate-run`
+  repository_dispatch orphan was already fixed 2026-08-03 (switched to `workflow_dispatch` of `quality-gates-v2.yml`,
+  which fails loudly on no target — no unconditional success issue). **sit-gate.yml**: `game-day-sit` and
+  `synthetic-smokes` dispatches did have `|| echo "::warning::"` guards as the source doc claimed, but the guard was
+  effectively dead code — GitHub returns 204 for `repository_dispatch` regardless of listener existence, so the
+  `&& echo "Dispatched X"` branch always fired even with no listener in `system-integration-tests`. Fixed by changing
+  `&& echo "Dispatched X"` → `&& echo "::notice::Fired X (best-effort; GitHub 204 does not confirm listener)"`, plus
+  updating the `||` branch to acknowledge API error (not no-listener). Dispatch sites kept (fire-and-forget; listener
+  can be added later). Baseline unchanged at 38 (dispatch sites still present; fixed count = 0 for orphan purposes —
+  this fixes the reporting, not the orphan count). PM `quality-gates.sh` green. Shipped `unified-trading-pm@ead69c37d`,
+  verified on origin.

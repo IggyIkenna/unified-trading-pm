@@ -46,7 +46,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
   ]
 supersedes:
 superseded_by:
@@ -521,3 +521,6 @@ not data-pipeline).
   generator's own `EXCLUDED_STATUS` filter, but still linkage-unlinked). Named here per the established discoverability
   remedy.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped the parked-findings pointer from
+  `ag_closeout_audit_infra_parked_2026_08_04.md` to the current `ag_closeout_audit_infra_parked_2026_08_07.md` (the
+  08-04 doc's findings are now resolved/superseded by later runs; 08-07 reflects this tranche's live unresolved state).

@@ -497,7 +497,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py:
     count: 6
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_fetch.py:
-    count: 9
+    count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_symbology.py:
     count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/eia_adapter.py:
@@ -517,7 +517,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py:
     count: 11
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py:
-    count: 9
+    count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py:
     count: 2
   market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_base_client.py:

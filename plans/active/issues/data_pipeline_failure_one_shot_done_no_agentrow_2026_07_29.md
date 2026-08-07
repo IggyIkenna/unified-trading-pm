@@ -51,8 +51,8 @@ source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-790
 last_updated: 2026-07-29
 context_scope:
   [
-    /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
+    /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/state_store/agents.py,
@@ -254,3 +254,7 @@ still in flight.
   ao_satellite_ao_dispatch_batch5's open [DATA] P2 todo (same 5 agent ids, same done-when); code half gated on shared
   /done-handler ground also claimed by batch6 Deferred. Parked as BLOCKED-OPERATOR-DECISION — batch5 owns the
   diagnostic, batch6 gates the code fix.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — both of this doc's own todos are now claimed
+  elsewhere (batch5's diagnostic todo, batch6's gated code-fix), so swapped the archived precedent-bug doc and the
+  general AO architecture SSOT for the 2 batch docs that actually own the work now; kept the 3 code files the original
+  trace named (escalation.py, slots_worker.py, agents.py) since the root-cause investigation still lives here.

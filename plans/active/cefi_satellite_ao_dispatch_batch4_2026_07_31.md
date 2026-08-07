@@ -60,6 +60,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # CeFi satellite AO batch 4 — iterative-drain extraction
@@ -145,16 +152,23 @@ drift_direction: advance-code
       `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md` checkbox flipped
       citing this run.
 
-- [ ] [DATA] P2. **Legacy-bucket 3-part reconciliation bundle.** (a) Update
+- [x] ✅ [DATA] P2. **Legacy-bucket 3-part reconciliation bundle.** (a) Update
       `issues/legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 to reflect that cefi's legacy bucket is
       already deleted (bounded doc edit). (b) Check for any additional cefi legacy backup beyond the ~136MB snapshot
       already found (bounded investigation, read-only). (c) Run a proper CF-11 normalization-aware comparison between
       the pre-migration snapshot manifest and the current `-prd` manifest in market-tick-data-service (the false-phantom
       bug that previously blocked this is confirmed fixed). Source:
-      `issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. **Done when**: all 3 sub-items complete, the
-      CF-11 comparison result is recorded, and the source doc's 3 open checkboxes are flipped citing this run.
+      `/plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. **Done when**: all 3 sub-items
+      complete, the CF-11 comparison result is recorded, and the source doc's 3 open checkboxes are flipped citing this
+      run. — **DONE 2026-08-07** (slot-8): unified-trading-pm@aa30fcaf2. (a) Decommission plan updated: L6 +
+      version-delete rows now cite `**cefi: ✅ BUCKET ALREADY DELETED 2026-07-14**`. (b) Backup check: 3 snapshot
+      prefixes in `central-element-323112-pre-migration-snapshot/`, all index-only; 2026-05-19 snapshot identical to
+      2026-05-16; no raw-tick backup exists. (c) CF-11 normalized cell comparison
+      (`market-tick-data-service/scripts/one_offs/compare_cefi_legacy_vs_prd_cf11_norm_2026_08_07.py`): 59,488/96,338
+      eligible unique cells absent from -prd — all pre-canonical-era or empty itype/dtype ghost rows, no unexpected
+      post-migration data loss. Source-doc status flipped resolved; all 3 source checkboxes flipped.
 
-- [ ] [DATA] P2. **CEFI-scoped items from the mtds backfill-VM memory-hang investigation.** Three of this doc's four
+- [x] ✅ [DATA] P2. **CEFI-scoped items from the mtds backfill-VM memory-hang investigation.** Three of this doc's four
       open items are cefi-scoped (the fourth, retained-memory root-cause in the sports `odds_api` download path, is
       explicitly SPORTS-scoped and excluded here — leave for the sports tranche): (i) wire real byte-budget admission
       control (`max_in_flight_bytes`/`estimated_bytes`) into the CEFI Tardis per-symbol runner in
@@ -162,7 +176,12 @@ drift_direction: advance-code
       the same `e2-standard-4` under-provisioned default; (iii) consider an adaptive/smaller default `--chunk-size` for
       recent-history chunks. Source: `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. **Done when**: all
       3 cefi-scoped items ship with QG green, and the source doc's corresponding checkboxes are flipped citing this run
-      (leave the sports-scoped 4th item untouched for its own tranche).
+      (leave the sports-scoped 4th item untouched for its own tranche). — **DONE 2026-08-07 (slot-6)**:
+      market-tick-data-service@878b750b (PerSymbolByteEstimator + estimated_bytes wiring + config knob + 6 unit tests;
+      gate defaults opt-in at 0, QG green); deployment-service@cca27b3 (launcher audit: dex-pools bumped to e2-highmem-4
+      — same ParallelPerSymbolRunner fan-out risk; others e2-standard-4 don't use that runner; adaptive chunk-size 250→5
+      for CEFI --end within 45d of today; QG green). Source-doc 3 CEFI checkboxes flipped; sports P1 BLOCKED-CREDENTIALS
+      item left untouched.
 
 - [ ] [DIAG] P2. **Find + fix the WRITER stamping `batch_tardis` on non-Tardis on-chain CeFi venues.** Root-cause and
       fix the writer-side bug in market-tick-data-service that stamps `pipeline_mode=batch_tardis` on
@@ -230,3 +249,10 @@ batch1/batch2/batch3 finalize pattern.
   this batch's Phase 3 ran before drafting.
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar the too-large-or-risky
   Deferred item above did not clear this run.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated context_scope (4 entries) — the companion finalize gate, the batch-naming +
+  dispatch-scope-eligibility codex SSOTs already cited in this doc's own "Codex SSOTs" section above, and the parent
+  cefi consolidated-closeout hub. Genuinely code-free per this skill's dispatch-batch-coordinator exemption — every open
+  todo already carries its own inline `Source:` pointer to the actual issue doc it targets.

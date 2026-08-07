@@ -44,6 +44,14 @@ depends_on: []
 resolved_by:
 source: >-
   slot-5 (data_engineering), 2026-08-06: post-VM log analysis for data_pipeline_check_mdps_features-056
+context_scope:
+  [
+    features-service/features_service/onchain/app/core/dependency_checker.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
+    /plans/active/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+  ]
 ---
 
 ## Finding summary
@@ -181,3 +189,4 @@ BLAZESTAKE still blocking — Option A still needed).
   conflict-clear reclassify today. Citations added on items 1-3 above. Doc stays `assigned_vm: NA`; a future audit pass
   should re-check batch10's approval status and, separately, whether item 3's live-availability- index re-check (per
   batch9's own recommendation) has been done.
+- **context-scout 2026-08-07**: populated context_scope (5 entries).

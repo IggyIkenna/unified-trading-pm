@@ -85,6 +85,7 @@ context_scope:
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md,
   ]
 ---
 
@@ -245,3 +246,11 @@ batch1 through batch5 finalize pattern.
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
   this batch's Phase 3 ran before drafting (§3), including the surface-(a) cefi_master-wide sweep beyond just the
   batch/track family.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries) — added the companion
+  `cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md` gate (was missing); kept the prior batch5 link + the 2 core
+  codex SSOTs. No prior context-scout marker existed on this doc despite the frontmatter already carrying 3 entries
+  (likely authored directly, not scouted) — dispatch-batch-coordinator shape, genuinely code-free (every open todo
+  carries its own inline `Source:` pointer).

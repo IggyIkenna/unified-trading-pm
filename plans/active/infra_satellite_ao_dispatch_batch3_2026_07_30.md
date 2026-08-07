@@ -151,7 +151,7 @@ checkboxes _without_ archiving — precisely the distinction `task_template.md` 
       (c) the printed output says "would update" rather than "Updated" in that mode; (d) a regression test under PM's
       `tests/unit/` proves the write path is not reached when `--dry-run` is set; (e) `bash scripts/quality-gates.sh` is
       green.
-- [ ] [BACKEND] P3. **Root-cause the fleet git-health `not_clean_since` pinned-constant and record a verdict** (the
+- [x] ✅ [BACKEND] P3. **Root-cause the fleet git-health `not_clean_since` pinned-constant and record a verdict** (the
       source doc's two diagnostic todos, combined: #2's answer depends on #1's, and both read the same
       reporter→route→aggregation data path). Three candidate mechanisms, named by the source doc itself — (i) the
       reporter posts a non-refreshing `reported_at` (`unified-trading-pm/scripts/dev/slot-git-status-report.sh` takes it

@@ -43,6 +43,11 @@ source: >-
 assigned_role: data_engineering
 sequential: true
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # Sports satellite AO batch 10 — finalize (reconcile source docs)
@@ -78,3 +83,13 @@ drift_direction: advance-code
 - /plans/active/task_template.md §4 — finalize-plan-coverage rule
 - /codex/12-agent-workflow/plan-completion-and-archival-discipline.md — the 6-step archival ritual
 - /cursor-configs/skills/ag-closeout-audit/SKILL.md — the no-double-gate finding (finalize ships active)
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated context_scope (2 entries) — `*_finalize` gate doc, genuinely code-free (every
+  todo is a checkbox-reconciliation against 4 named source docs or the archival ritual itself); the gating parent batch
+  plus the archival-discipline codex doc are the minimal set. Note: this doc's own citations of the archival-discipline
+  doc (line 79's `source:` field and the "Codex SSOTs" section above) both point at
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, which does not resolve — the real path is
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (used in context_scope above). Not fixed here
+  (out of this skill's scope, a prose correction for `/plan-reconcile`).

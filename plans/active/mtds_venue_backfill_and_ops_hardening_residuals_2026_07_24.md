@@ -583,3 +583,5 @@ Two genuine hits in this plan:
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): genuine mix of
   credential/cost-gated backfill scope (B0), an operator-sequenced B0→B1→B2 dependency chain (2026-06-18 ruling), and
   several independently-bounded items; whole doc stays NA.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — re-verified all 5 still resolve;
+  unchanged (still the right minimal set across this doc's many topics).

@@ -260,3 +260,5 @@ no drift:
   `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`) were in this run's candidate set and were read
   and verdicted, so the safety net held as designed.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (4 entries) -- the sole open todo (CITE_RE hardening
+  in generate_ag_closeout_audit_candidates.py) is still fully covered.

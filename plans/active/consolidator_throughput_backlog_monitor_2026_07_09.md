@@ -535,3 +535,4 @@ context_scope:
 - **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; LOCAL plan
   with both REVIEW gates explicitly deferred by a dated operator decision (2026-07-10, local-dev-only until all cockpit
   plans complete).
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.

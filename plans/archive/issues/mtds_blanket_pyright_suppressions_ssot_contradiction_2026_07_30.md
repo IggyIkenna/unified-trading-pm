@@ -22,7 +22,7 @@ summary: >-
   ("institutionalise the downgrade... net-new broad/blanket suppressions must be 0") and every suppression must be
   logged — so this repo's "basedpyright clean" QG signal currently proves far less than the codex implies, since real
   type errors could be silently masked under any of the 7 disabled checks across 237 files.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -58,6 +58,8 @@ estimate_calibrated_ai_days: 1.8
 assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by:
+  "unified-trading-pm@d2fc4bad (todo 3, DEFAULT-RULED 2026-08-06 option (b)); market-tick-data-service@409ee88f (todo
+  1), market-tick-data-service@d072b035 (todo 2)"
 locked_by:
 context_scope:
   [
@@ -75,6 +77,11 @@ source:
   finding — SSOT-vs-reality contradiction in a required compliance artifact' and directed this doc's filing +
   decomposition."
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. All 3 todos done: audit-doc correction, freeze-and-shrink ratchet, and the operator's
+> DEFAULT-RULED option (b) policy call — codex updated at `unified-trading-pm@d2fc4bad`; no open work remains.
 
 # market-tick-data-service's basedpyright-exceptions audit doc contradicts the actual codebase
 
@@ -153,7 +160,7 @@ and are correct under both outcomes; todo 3 sets the eventual target.
       it should" gap immediately regardless of the operator's todo-3 answer: even if vendor-glue suppressions get
       sanctioned, net-new UNSANCTIONED ones should still be gated to 0 per the codex's own existing rule. (repo:
       market-tick-data-service) — market-tick-data-service@d072b035.
-- [ ] [DOCS] P3. **DEFAULT-RULED 2026-08-06, option (b): formally accept blanket suppressions as sanctioned for
+- [x] ✅ [DOCS] P3. **DEFAULT-RULED 2026-08-06, option (b): formally accept blanket suppressions as sanctioned for
       loosely-typed vendor-response glue code, scoped narrowly.** `[DOCS]` tag (was `[OPERATOR]`) — a full drive-to-zero
       type-safety recovery across 54% of the repo is a large, likely-low-value project given the suppressed code is
       specifically vendor-glue; relax codex wording scoped to the `cli/handlers/` glob, not a workspace-wide relaxation.
@@ -203,3 +210,9 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   first evidence the freeze-and-shrink ratchet (todo 2) actively catches net-new suppressions even when the
   mirror-the-dominant-convention instinct produces one — relevant context for the operator's open todo-3 policy call.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-07 (backend_engineer, slot 13)**: Todo 3 shipped — DEFAULT-RULED option (b) — unified-trading-pm@d2fc4bad.
+  Updated `/codex/06-coding-standards/quality-gates.md` § "Restoring strict basedpyright" bullet 3 to add the sanctioned
+  carve-out for `market_tick_data_service/cli/handlers/*.py` (blanket file-level `# pyright: reportX=false` headers
+  explicitly accepted for vendor-response glue code; the STEP 5.94/5.95 ratchets contain it). Updated
+  `/codex/06-coding-standards/README.md` basedpyright policy paragraph to cross-reference the carve-out. All todos
+  complete; issue doc can be archived.

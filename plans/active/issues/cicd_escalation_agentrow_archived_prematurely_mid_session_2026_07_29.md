@@ -378,3 +378,6 @@ cleanly instead of ending on an issue-doc corroboration.
   true); working tree clean on `live-defi-rollout`. Nothing lost — deliverable durably on LDR. Standing down per the
   documented closing pattern (message `main` + this recurrence note, no further `/done` retries); the still-open
   `[BACKEND] P3` identity-matching fix remains the durable cure.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged -- the two new 2026-08-06
+  recurrence entries (restart-correlated, slots 9) reaffirm rather than change the finding; the 3 AO server modules + 3
+  precedent issue docs already cover it.

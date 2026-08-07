@@ -49,6 +49,14 @@ estimate_calibrated_ai_days: 2.9
 assigned_role: cicd
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 locked_by:
 locked_since:
 supersedes:
@@ -378,3 +386,7 @@ One question, quote/location/options/recommendation, not resolved autonomously:
   todo 2 scoped to avoid it; D4-1 deferred) and `github_actions_operator_gated_followups_2026_07_17.md` contended 5 ways
   by read-only measurement/design items (rationed to todo 9's 4-item sweep; D4-2/D4-3 deferred). 9 todos drafted, 20
   items deferred (D4-1 through D4-20), 1 escalated to the operator. Nothing shipped, nothing flipped to `active`.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the sole remaining open todo's source
+  (`github_actions_operator_gated_followups_2026_07_17.md`), the still-open sibling batch1, this batch's own gated
+  finalize, the umbrella pipeline codex SSOT, and the `/ag-closeout-audit` methodology this batch was produced by;
+  dispatch-batch-coordinator shape (each done todo already cites its own separate source doc inline).

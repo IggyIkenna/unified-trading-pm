@@ -617,3 +617,6 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   (does not duplicate) every open cefi plan/issue; of 15 open items, most sit under explicit redirect banners (the fleet
   docs are ground truth, not this roll-up) or are embedded judgment/design calls from a source plan per an operator
   sequencing ruling. Not a dispatchable unit.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries) — all 6 (2 codex SSOTs, the
+  aggregated-sources + migration-cutover-critical-path + execution-log children, and the noncanonical-enumeration audit
+  script) re-verified still resolving on disk.

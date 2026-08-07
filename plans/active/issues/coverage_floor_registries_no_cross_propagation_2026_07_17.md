@@ -66,11 +66,10 @@ assigned_vm: planning
 depends_on: []
 context_scope:
   [
+    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
     unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
-    unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py,
-    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
   ]
 ---
@@ -307,6 +306,10 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 - **slot-6 2026-08-05** (coverage_floor_registries_no_cross_propagation-008): BINANCE-DELIVERY investigation complete —
   conclusively dead/never-implemented. Annotated `venue_mapping.py` comment (unified-api-contracts@9241dc85).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — all 6 Todos are done; re-pointed at the sole open
+  Follow-up's real target (`manifest_writer/_read_index.py`, where `read_availability_index` lives) and kept the 2 core
+  registries + the falsifier + the sibling fold-in-target doc; dropped the now-fully-resolved sports `league_data.py`
+  and the closed `cefi_hl_aster_batch_data_gaps_2026_06_22.md` HYPERLIQUID item.
 
 ## Follow-ups
 

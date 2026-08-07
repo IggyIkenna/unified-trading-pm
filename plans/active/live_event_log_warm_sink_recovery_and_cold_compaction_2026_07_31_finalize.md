@@ -80,3 +80,5 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (3 entries) -- genuinely code-free finalize gate;
   added the archival-discipline codex SSOT the todo's "standard 6-step archival ritual" phrase implies.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (3 entries) -- re-verified all 3 paths still resolve;
+  no change (still-open finalize gate, parent plan not yet archived).

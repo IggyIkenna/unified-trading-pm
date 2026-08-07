@@ -221,3 +221,5 @@ too large.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries) -- still the right minimal set for the 2
+  remaining open todos (review sign-off gate, mirror the peer-vs-operator branch into `agents/review.md`).

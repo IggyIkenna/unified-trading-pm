@@ -49,8 +49,8 @@ context_scope:
   [
     /plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_onchain_perp_batch_symbols.py,
+    market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
-    deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 ---
@@ -175,3 +175,7 @@ This profiling run was strictly read-only: zero code changes, zero GCS/manifest 
   sole todo is still an unresolved architecture choice (range-loop rewrite vs. cross-process cache) touching the shared
   fleet-wide VM startup script. A 2026-08-04 cProfile finding narrows which option is correct but the doc explicitly
   declines to adopt/implement on that evidence alone.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped the interim-mitigation launcher (already
+  shipped, `SHARD_DAYS` sharding) for `engine/cefi_catalog_reader.py`, the file the 2026-08-04 cProfile finding
+  pinpoints as the actual bottleneck (`_build_has_perp_for_base`/`_yield_for_date`, 98.5% of wall time) and thus the
+  real target of the still-open "implement the proper fix" todo.

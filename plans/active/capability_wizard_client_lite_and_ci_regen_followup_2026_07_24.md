@@ -142,6 +142,9 @@ precondition named by the parent plan.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the openapi-regen
   script + questionnaire UI source paths and all entries still resolve.
+- **context-scout 2026-08-07**: re-verified context_scope (6 entries), unchanged — all 6 entries confirmed still
+  resolving on disk (codex doc, archived parent plan, both issue docs, the openapi-regen script under
+  `scripts/openapi/`, and the questionnaire UI dir).
 
 ## na-eligibility-audit verdict
 

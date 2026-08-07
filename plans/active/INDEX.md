@@ -86,13 +86,6 @@ by hand._
 - [`cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25`](./cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md)
   — Gated closeout for cefi_track2_coverage_backfill_checkpoints_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent…
-- [`cefi_track7_candle_namespace_residual_2026_07_25`](./cefi_track7_candle_namespace_residual_2026_07_25.md) — Track
-  7's terminal, `[OPERATOR]`-tagged step only — deleting the 149 stale legacy per-leg `processed_candles/` objects
-  (BYBIT futures_chain + DERIBIT options_chain bundle-collision residual). Forked from…
-- [`cefi_track7_candle_namespace_residual_finalize_2026_07_25`](./cefi_track7_candle_namespace_residual_finalize_2026_07_25.md)
-  — Gated closeout for cefi_track7_candle_namespace_residual_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until that plan's single delete todo is done. Reconciles the parent
-  (cefi_consolidated_closeout_2026_07_18.md)…
 - [`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20`](./cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md)
   — Add canonical universe coverage for crypto-venue single-stock perpetuals and tokenized stocks (Binance/OKX/Bybit),
   enabling equity basis/dispersion arb cross-venue.

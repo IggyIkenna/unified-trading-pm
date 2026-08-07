@@ -47,6 +47,7 @@ context_scope:
     /plans/active/issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
   ]
 ---
 
@@ -141,59 +142,59 @@ needs an explicit next relaunch round, and none is currently dispatched.
       relaunch on the new tarball.
 
       **Corroborating signal 2026-07-31 13:56Z (review agt-8ce066, gcloud-verified — a DIFFERENT shape than the
-                                                                                                                                                                                              same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
-                                                                                                                                                                                              were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
-                                                                                                                                                                                              (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
-                                                                                                                                                                                              `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
-                                                                                                                                                                                              running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
-                                                                                                                                                                                              shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
-                                                                                                                                                                                              one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
-                                                                                                                                                                                              (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
+                                                                                                                                                                                                                                                                                  same-shard-memory-death pattern above):** shards 43 + 44, freshly relaunched this round at 13:39:58Z / 13:40:22Z,
+                                                                                                                                                                                                                                                                                  were BOTH preempted at 13:51:37Z / 13:51:38Z — ~12 min after launch and only ~2 min after their own T+10 alive-check
+                                                                                                                                                                                                                                                                                  (13:49:30Z), confirmed via `gcloud compute operations list` `compute.instances.preempted` (ops
+                                                                                                                                                                                                                                                                                  `systemevent-1785505897347-…` / `systemevent-1785505907671-…`), not inference; 11/13 relaunched shards remain
+                                                                                                                                                                                                                                                                                  running. A FRESH launch dying fast points to SPOT-capacity pressure in `asia-northeast1-c` today (fleet-wide), NOT a
+                                                                                                                                                                                                                                                                                  shard-specific memory/data issue — so the operator decision should ALSO weigh (d) a zone/capacity check or a
+                                                                                                                                                                                                                                                                                  one-shot `--on-demand` fallback (env `ON_DEMAND=true`) for the next relaunch, not only the memory-ceiling options
+                                                                                                                                                                                                                                                                                  (a)/(b). Non-blocking: 43/44 are idempotent SPOT shards and should re-run cleanly on round-4.
 
-                                                                                                                                                                                  **Corroborating signal 2026-07-31 14:43Z (`data_pipeline_failure` escalation `agt-b58993`, slot 1,
-                                                                                                                                                                                  `DP_VM_EXIT_NONZERO`/DP-VM-001 for `canonical-migration-cefi-content-42-relaunch20260731-133929`):** shard 42 —
-                                                                                                                                                                                  one of round 3's 13 relaunched shards, confirmed healthy at both the 13:49Z and 14:19Z checks above
-                                                                                                                                                                                  (14,000/73,965 files, climbing) — has now ALSO died the identical way: `EXIT_STATUS=137`,
-                                                                                                                                                                                  `completed_at=2026-07-31T14:43:34Z` at 21,600/73,965 files (29%), confirmed via `DeploymentsRegistry` archive
-                                                                                                                                                                                  (`deployment_id=f8b972e6-e4c6-4e5c-af87-8c42448294c6`, `git_commit=89739b64931699798cc54920cc636e72948d2cc7` —
-                                                                                                                                                                                  the SAME commit this doc's own 13:35Z Progress Log entry cites, confirming `e2-standard-16` + both shipped fixes
-                                                                                                                                                                                  (`9f4098b1`, `55d051bd`) were genuinely live on this run, not a stale tarball). `host_metrics_window` shows the
-                                                                                                                                                                                  identical spike-then-death signature already diagnosed for 16/17/19/21/40/41: `mem_pct` plateaued ~75-85% across
-                                                                                                                                                                                  9 samples (14:33:58Z-14:42:06Z) then jumped to **95.3%** (`mem_slope=2.0`) in the final sample before the process
-                                                                                                                                                                                  was OOM-killed (`bash: ... Killed`) ~26s later — not a new failure mode, the 7th confirmed instance of the same
-                                                                                                                                                                                  ceiling. **Budget check** (`DeploymentsRegistry.list_recent_archive(days=1)`, filtered to `content-42`): exactly
-                                                                                                                                                                                  2 archived today (`-032606` failed `exit_code=137` at 04:34:48Z, `-133929` failed `exit_code=137` at 14:43:34Z) —
-                                                                                                                                                                                  shard 42 is now AT the `≤2/(vm-prefix,day)` cap, same posture as 16/21. **Not relaunching a 3rd time** — folding
-                                                                                                                                                                                  shard 42 into this todo instead, consistent with the existing posture for the other repeat-offender shards.
-                                                                                                                                                                                  **Updated shard list needing the operator decision: 13, 16, 17, 18, 19, 21, 23, 40, 41, 42 (10 shards)** — 19/40 were
-                                                                                                                                                                                  flagged in the Progress Log below but never folded into this todo's own text until now; 23 added
-                                                                                                                                                                                  2026-07-31T15:1xZ (see Progress Log — DP-VM-003 `agt-71ccbf`); 18 added 2026-07-31T15:5xZ (see Progress
-                                                                                                                                                                                  Log — DP-VM-001 `agt-95d7c6`); 13 added 2026-07-31T19:1xZ (see Progress Log — DP-VM-003 `agt-c14d58`). Ten independent shards hitting the
-                                                                                                                                                                                  identical ceiling on `e2-standard-16` increasingly points toward the sibling memory-freeze doc's leading
-                                                                                                                                                                                  theory (a data-content-driven spike, e.g. a single anomalously large/malformed file) rather than a per-shard
-                                                                                                                                                                                  sizing gap — since e2-standard-16 was expected to be adequate headroom and demonstrably isn't for these specific
-                                                                                                                                                                                  shards. Does not change the pending (a)/(b)/(c)/(d) decision options, just the shard count and urgency.
+                                                                                                                                                                                                                                                                      **Corroborating signal 2026-07-31 14:43Z (`data_pipeline_failure` escalation `agt-b58993`, slot 1,
+                                                                                                                                                                                                                                                                      `DP_VM_EXIT_NONZERO`/DP-VM-001 for `canonical-migration-cefi-content-42-relaunch20260731-133929`):** shard 42 —
+                                                                                                                                                                                                                                                                      one of round 3's 13 relaunched shards, confirmed healthy at both the 13:49Z and 14:19Z checks above
+                                                                                                                                                                                                                                                                      (14,000/73,965 files, climbing) — has now ALSO died the identical way: `EXIT_STATUS=137`,
+                                                                                                                                                                                                                                                                      `completed_at=2026-07-31T14:43:34Z` at 21,600/73,965 files (29%), confirmed via `DeploymentsRegistry` archive
+                                                                                                                                                                                                                                                                      (`deployment_id=f8b972e6-e4c6-4e5c-af87-8c42448294c6`, `git_commit=89739b64931699798cc54920cc636e72948d2cc7` —
+                                                                                                                                                                                                                                                                      the SAME commit this doc's own 13:35Z Progress Log entry cites, confirming `e2-standard-16` + both shipped fixes
+                                                                                                                                                                                                                                                                      (`9f4098b1`, `55d051bd`) were genuinely live on this run, not a stale tarball). `host_metrics_window` shows the
+                                                                                                                                                                                                                                                                      identical spike-then-death signature already diagnosed for 16/17/19/21/40/41: `mem_pct` plateaued ~75-85% across
+                                                                                                                                                                                                                                                                      9 samples (14:33:58Z-14:42:06Z) then jumped to **95.3%** (`mem_slope=2.0`) in the final sample before the process
+                                                                                                                                                                                                                                                                      was OOM-killed (`bash: ... Killed`) ~26s later — not a new failure mode, the 7th confirmed instance of the same
+                                                                                                                                                                                                                                                                      ceiling. **Budget check** (`DeploymentsRegistry.list_recent_archive(days=1)`, filtered to `content-42`): exactly
+                                                                                                                                                                                                                                                                      2 archived today (`-032606` failed `exit_code=137` at 04:34:48Z, `-133929` failed `exit_code=137` at 14:43:34Z) —
+                                                                                                                                                                                                                                                                      shard 42 is now AT the `≤2/(vm-prefix,day)` cap, same posture as 16/21. **Not relaunching a 3rd time** — folding
+                                                                                                                                                                                                                                                                      shard 42 into this todo instead, consistent with the existing posture for the other repeat-offender shards.
+                                                                                                                                                                                                                                                                      **Updated shard list needing the operator decision: 13, 16, 17, 18, 19, 21, 23, 40, 41, 42 (10 shards)** — 19/40 were
+                                                                                                                                                                                                                                                                      flagged in the Progress Log below but never folded into this todo's own text until now; 23 added
+                                                                                                                                                                                                                                                                      2026-07-31T15:1xZ (see Progress Log — DP-VM-003 `agt-71ccbf`); 18 added 2026-07-31T15:5xZ (see Progress
+                                                                                                                                                                                                                                                                      Log — DP-VM-001 `agt-95d7c6`); 13 added 2026-07-31T19:1xZ (see Progress Log — DP-VM-003 `agt-c14d58`). Ten independent shards hitting the
+                                                                                                                                                                                                                                                                      identical ceiling on `e2-standard-16` increasingly points toward the sibling memory-freeze doc's leading
+                                                                                                                                                                                                                                                                      theory (a data-content-driven spike, e.g. a single anomalously large/malformed file) rather than a per-shard
+                                                                                                                                                                                                                                                                      sizing gap — since e2-standard-16 was expected to be adequate headroom and demonstrably isn't for these specific
+                                                                                                                                                                                                                                                                      shards. Does not change the pending (a)/(b)/(c)/(d) decision options, just the shard count and urgency.
 
-                                                                                                                                                                                  **Corroborating signal 2026-07-31 19:1xZ (`data_pipeline_failure` escalation `agt-c14d58`, slot 7, DP-VM-003 for
-                                                                                                                                                                                  `canonical-migration-cefi-content-13-relaunch20260731-133503`, alert-fired at 36min heartbeat-stale):** shard 13 —
-                                                                                                                                                                                  one of round 3's 13 relaunched shards, resumed from its monotonic checkpoint (2026-01-18..2026-02-13) on
-                                                                                                                                                                                  `market-tick-data-service@89739b64` (both shipped fixes live) — has also died the identical way. `gcloud compute
-                                                                                                                                                                                  instances describe` found the instance already gone; `gcloud compute operations list` showed only `insert`
-                                                                                                                                                                                  (13:37:40Z) and a programmatic `delete` by `unified-trading-sa` completed `18:46:42Z` — NOT a
-                                                                                                                                                                                  `compute.instances.preempted` systemevent, i.e. a genuine reap of a wedged instance. `run.log` confirms: real
-                                                                                                                                                                                  progress to 169,000/292,434 files (10.8 files/sec) with the benign `WARNING No progress in the last poll window`
-                                                                                                                                                                                  lines present throughout, then goes completely silent after `18:00:36Z` — no further heartbeat, no `EXIT_STATUS`
-                                                                                                                                                                                  line — a genuine freeze, not a clean exit. `DeploymentsRegistry.list_recent_archive(days=1)` confirms the archived
-                                                                                                                                                                                  entry (`status=failed, exit_code=125, reap_reason=vm_not_running`)'s `host_metrics_window` shows `mem_pct` climbing
-                                                                                                                                                                                  65%→85% over its last 10 samples (17:51Z-18:00Z) before the silence — the same spike-then-freeze signature already
-                                                                                                                                                                                  diagnosed for 16/17/18/19/21/23/40/41/42. **Budget check**: exactly 2 archived today for `content-13`
-                                                                                                                                                                                  (`-032349` failed `exit_code=125` at 04:47:57Z — a DIFFERENT root cause, the shard-13-specific GCS SSL/connection-reset
-                                                                                                                                                                                  death already tracked in `cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`, not
-                                                                                                                                                                                  a memory freeze; `-133503` failed `exit_code=125` at 18:50:02Z — this memory-freeze death) — shard 13 is now AT the
-                                                                                                                                                                                  `RB-INFRA-RELAUNCH` `≤2/(vm-prefix,day)` cap. **Not relaunching a 3rd time** — folded shard 13 into this todo instead,
-                                                                                                                                                                                  consistent with the existing posture for the other repeat-offender shards. Note shard 13's two deaths today were via
-                                                                                                                                                                                  TWO DIFFERENT mechanisms (network/SSL death, then memory-freeze death) — both already-tracked failure classes, not a
-                                                                                                                                                                                  new one.
+                                                                                                                                                                                                                                                                      **Corroborating signal 2026-07-31 19:1xZ (`data_pipeline_failure` escalation `agt-c14d58`, slot 7, DP-VM-003 for
+                                                                                                                                                                                                                                                                      `canonical-migration-cefi-content-13-relaunch20260731-133503`, alert-fired at 36min heartbeat-stale):** shard 13 —
+                                                                                                                                                                                                                                                                      one of round 3's 13 relaunched shards, resumed from its monotonic checkpoint (2026-01-18..2026-02-13) on
+                                                                                                                                                                                                                                                                      `market-tick-data-service@89739b64` (both shipped fixes live) — has also died the identical way. `gcloud compute
+                                                                                                                                                                                                                                                                      instances describe` found the instance already gone; `gcloud compute operations list` showed only `insert`
+                                                                                                                                                                                                                                                                      (13:37:40Z) and a programmatic `delete` by `unified-trading-sa` completed `18:46:42Z` — NOT a
+                                                                                                                                                                                                                                                                      `compute.instances.preempted` systemevent, i.e. a genuine reap of a wedged instance. `run.log` confirms: real
+                                                                                                                                                                                                                                                                      progress to 169,000/292,434 files (10.8 files/sec) with the benign `WARNING No progress in the last poll window`
+                                                                                                                                                                                                                                                                      lines present throughout, then goes completely silent after `18:00:36Z` — no further heartbeat, no `EXIT_STATUS`
+                                                                                                                                                                                                                                                                      line — a genuine freeze, not a clean exit. `DeploymentsRegistry.list_recent_archive(days=1)` confirms the archived
+                                                                                                                                                                                                                                                                      entry (`status=failed, exit_code=125, reap_reason=vm_not_running`)'s `host_metrics_window` shows `mem_pct` climbing
+                                                                                                                                                                                                                                                                      65%→85% over its last 10 samples (17:51Z-18:00Z) before the silence — the same spike-then-freeze signature already
+                                                                                                                                                                                                                                                                      diagnosed for 16/17/18/19/21/23/40/41/42. **Budget check**: exactly 2 archived today for `content-13`
+                                                                                                                                                                                                                                                                      (`-032349` failed `exit_code=125` at 04:47:57Z — a DIFFERENT root cause, the shard-13-specific GCS SSL/connection-reset
+                                                                                                                                                                                                                                                                      death already tracked in `cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`, not
+                                                                                                                                                                                                                                                                      a memory freeze; `-133503` failed `exit_code=125` at 18:50:02Z — this memory-freeze death) — shard 13 is now AT the
+                                                                                                                                                                                                                                                                      `RB-INFRA-RELAUNCH` `≤2/(vm-prefix,day)` cap. **Not relaunching a 3rd time** — folded shard 13 into this todo instead,
+                                                                                                                                                                                                                                                                      consistent with the existing posture for the other repeat-offender shards. Note shard 13's two deaths today were via
+                                                                                                                                                                                                                                                                      TWO DIFFERENT mechanisms (network/SSL death, then memory-freeze death) — both already-tracked failure classes, not a
+                                                                                                                                                                                                                                                                      new one.
 
 - [x] ✅ [BACKEND] P1. **Land the orphaned decompression-bomb OOM preflight guard — candidate root cause for the
       `[OPERATOR] P1` shard-16/17/21/41 OOM blocker above** (orphan-ref audit rescue, 2026-08-03). The branch
@@ -425,6 +426,82 @@ needs an explicit next relaunch round, and none is currently dispatched.
   (`canonical-migration-cefi-content-<N>-round4-20260806-225835`). Corpus 'done when' (10× terminal
   `SCRIPT 1 CONTENT MIGRATION SUMMARY` banners) not yet reachable — multi-hour runs; T+10min PROGRESS check follows,
   corpus-level re-verify remains the parent doc's separate pass.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — added `launch-canonical-migration-vm.sh`, the
+  launcher this doc's own round-3 and round-4 relaunch entries both name repeatedly as the actual relaunch mechanism.
+- **2026-08-07T~06:28Z (worker, slot 12, task `-005`)**: verified all 9 round-5 VMs RUNNING via
+  `gcloud compute instances list` at T+~20min after launch (06:08Z). Checked each shard's `run.log` tail — no terminal
+  `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner found (expected: multi-hour runs). Progress at check time: shard
+  16=4800/159304 (stalling ~154328 outstanding, ~2min), 17=6800/155003, 18=5800/69880, 19=7000/136494, 21=6400/126492,
+  23=10200/202211, 40=5600/55777 (stuck at 50108 outstanding, ~3min stall), 41=8000/71684, 42=4600/73163 (stuck at 68408
+  outstanding, ~6min stall, PIPELINE_HEARTBEAT still firing). Shards 40 and 42 show pre-freeze stall pattern;
+  fleet-monitor handles OOM/reap. Re-verify follow-up todo added; VMs need more runtime.
+- **2026-08-07T~07:03Z (data_pipeline_failure escalation `agt-e61f85`, slot 4, DP-VM-001)**: shard 17's round-5 VM
+  (`canonical-migration-cefi-content-17-round5-20260807-060729`) OOM-killed (`exit_code=137`) at 07:02:44Z, only
+  ~19,600/155,003 files in (`PROGRESS.json`: `last_completed_date=2024-11-24, monotonic=false` — RelaunchPreemptedVm's
+  non-monotonic-checkpoint PAGE rule is why this escalated instead of auto-resuming). Fetched the archived
+  `DeploymentsRegistry` entry's `host_metrics_window`: `mem_pct` climbed 50.5%→90.5% over ~10min (06:52→06:58) while the
+  run.log's own periodic `pa.default_memory_pool().bytes_allocated()` reading stayed low/bounded (tens of KB– ~130MB) at
+  every checkpoint in that same window — i.e. the already-shipped pyarrow-pool-release fix (`9f4098b1`) is demonstrably
+  NOT the growth driver for this specific death, even though it's live in this run's tarball. A corrupted-file
+  poison-pill read (DERIBIT `XRP_USDC-29NOV24-1D7-C.parquet`, 6.4GB on-disk) was hit at 06:59:15 but AFTER the mem_pct
+  spike to 90.5% (06:58:48) and was correctly caught/skipped by the existing 2GiB-ceiling guard — not the cause. Shipped
+  a complementary fix (`market-tick-data-service@cc144bf4`): a separate, tighter `gc.collect()` cadence (every 50 files,
+  vs the existing 200-file pyarrow-release cadence) targeting the untested hypothesis that pandas DataFrame/BlockManager
+  reference cycles (not reclaimable by plain refcounting, only by the cyclic collector) accumulate faster than CPython's
+  generational gc keeps pace with at this per-file allocation rate — framed explicitly as an additional hypothesis, not
+  a confirmed fix (the prior e2-standard-16 bump was also called "confirmed a genuine fix" in the code and then died
+  again on shard 17 twice more, rounds 4 and 5, so no future relaunch attempt should over-claim confidence here without
+  a fresh clean run past this shard's historical death point). Republishing the mtds-code tarball next, then relaunching
+  round-6 for shard 17 ONLY (RB-INFRA-RELAUNCH budget: round-5 today 2026-08-07 is shard 17's only relaunch today, so
+  round-6 is its 2nd — within the ≤2/(vm-prefix,day) cap; also qualifies for the root-cause carve-out regardless, since
+  this is the first attempt with the new gc.collect() fix live). Scope is shard 17 only — shards 16,18,19,21,23,40,41,42
+  are a separate concurrent dispatch (see the T+20min check above); not touching those here to avoid colliding with that
+  in-flight work.
+- **2026-08-07T~07:51Z (same escalation, closing out)**: republished the mtds-code floating tarball
+  (`mtds-code.manifest.json` → `commit_sha=cc144bf4b3ed73114313d2b059ec65608bb195e3`, SHA-pinned copy verified present)
+  and launched round-6 (`canonical-migration-cefi-content-17-round6-20260807-073935`, same 2024-11-16..2025-01-09 range,
+  e2-standard-16, SPOT — `lc_verify_tarball_freshness` confirmed all 4 tarballs current, tarball pin `cc144bf4` logged).
+  Verified STARTED (RUNNING at T+60s) and PROGRESS (3,000/155,003 files at T+7.2min, 6.9 files/sec, steady).
+  **Encouraging early signal, not proof**: `host_metrics_window.mem_pct` for round-6's first 10 samples is 5.0–18.2%
+  (stable, no upward trend) at the ~7min mark, whereas round-5 was ALREADY past 50% and climbing steadily by a
+  comparable elapsed time. Deliberately not claiming this as confirmed — the same over-claim happened with the
+  e2-standard-16 bump, which read as fixed for a while and then died again twice. Round-6 needs to survive well past
+  file ~19,600 (round-5's death point) before this fix earns any real confidence; leaving that verification to the
+  existing corpus-wide re-verify todo below rather than holding this slot for the full multi-hour run. PAGE sent to
+  main-agent/operator with the full diagnosis (not blocking — informational per the carve-out's notification
+  requirement). Escalation `agt-e61f85` complete; signaling `/done`.
+- **2026-08-07T08:05Z (worker, slot 7, task `-006`, round-5 re-verify)**: verified `gcloud` active identity =
+  `unified-trading-sa` (not poisoned). Re-verified all 9 round-5 shards
+  (`canonical-migration-cefi-content-<N>-round5-20260807-060729`). **4 DEAD before terminal SUMMARY**: shards 16, 17,
+  19, 23 — absent from `gcloud compute instances list`, confirmed via `DeploymentsRegistry` archive grep (failed entries
+  in 2026-08-07 archive; no EXIT_STATUS in run.log — freeze/reap deaths). **5 RUNNING with forward progress**: 18
+  (37,600/69,880 files, 53.8%), 21 (32,800/126,492, 25.9%), 40 (43,600/55,777, 78.2%), 41 (47,400/71,684, 66.1%), 42
+  (29,600/73,163, 40.5%) — counters advancing, no terminal SUMMARY yet. Budget check via `DeploymentsRegistry`
+  2026-08-07 archive: shard 16 = 1/2 today (round4 archived 2026-08-06, round5 archived 2026-08-07) → headroom; shard 17
+  = 2/2 today (round4-20260806-225835 + round5-20260807-060729 both archived 2026-08-07), prior agent cited root-cause
+  carve-out (new `cc144bf4` gc.collect() fix) → round-6 already dispatched
+  (`canonical-migration-cefi-content-17-round6-20260807-073935`); shard 19 = 2/2 today (round4 + round5 both archived
+  2026-08-07) → AT CAP; shard 23 = 2/2 today (round4 + round5 both archived 2026-08-07) → AT CAP. Round-6 dispatched for
+  shard 16: `canonical-migration-cefi-content-16-round6-20260807-075919`, start=2024-08-26 (monotonic:
+  last_completed=2024-08-25+1 from round-5 PROGRESS.json), end=2024-11-13, SPOT, e2-standard-16, RUNNING at T+60s.
+  Resume frontiers for budget-capped shards from round-5 PROGRESS.json: 19 = last_completed=2025-02-15, monotonic=true →
+  round-6 start=2025-02-16, end=2025-03-17; 23 = last_completed=2025-09-19, monotonic=false → round-6 start=2025-09-07
+  (replay latest original start), end=2026-01-01. Follow-up todo added for running shards (18/21/40/41/42) +
+  budget-capped shards (19/23) round-6 on 2026-08-08.
+- **2026-08-07T~08:29Z (data_pipeline_failure escalation `agt-baf474`, slot 6, DP-VM-003)**: shard 21's round-5 VM
+  (`canonical-migration-cefi-content-21-round5-20260807-060729`) confirmed dead — absent from
+  `gcloud compute instances list`, `run.log` silent since 07:39:17Z (~50min stale, matches the DP-VM-003 heartbeat-stall
+  alert), no terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner, no OOM `exit_code=137` marker written — a freeze/reap
+  death (same class as shards 16/19/23/40's round-5 deaths), last progress 32,800/126,492 files (25.9%). Budget check:
+  round-5 was shard 21's only launch today (2026-08-07) → 1/2 used, headroom for round-6 (no carve-out needed). Resume
+  frontier from round-5's own `PROGRESS.json` (`last_completed_date=2025-05-26, monotonic=false`) → per the
+  non-monotonic rule, replayed round-5's own original start (`LAUNCH_PARAMS.json`: `2025-05-16`→`2025-06-26`) rather
+  than `last_completed_date`+1. Verified floating MTDS tarball (`d7e27e5a`, built 2026-08-07T08:25:47Z) descends from
+  the `cc144bf4` gc.collect() fix (`git merge-base --is-ancestor` confirmed) — no republish needed. Launched
+  `canonical-migration-cefi-content-21-round6-20260807-083239` (SPOT, e2-standard-16 default, all 4 tarballs fresh).
+  Verified STARTED (RUNNING) at T+60s and PROGRESS at T+~4min (1,200/126,492 files, 11.4 files/sec, steady). Scope is
+  shard 21 only, per this doc's established per-shard-escalation precedent — not touching 18/40/42 (separate concurrent
+  work). Escalation complete; signaling `/done`.
 
 ## Follow-ups
 
@@ -446,11 +523,71 @@ needs an explicit next relaunch round, and none is currently dispatched.
       pending — these are multi-hour runs; tracked by the parent doc's corpus-wide re-verify pass. T+10min PROGRESS
       check scheduled.
 
-- [ ] [DATA] P1. Corpus-wide re-verify of round-4's 10 shards (13,16,17,18,19,21,23,40,41,42, VMs
+- [x] ✅ [DATA] P1. Corpus-wide re-verify of round-4's 10 shards (13,16,17,18,19,21,23,40,41,42, VMs
       `canonical-migration-cefi-content-<N>-round4-20260806-225835`) — confirm each shard's `run.log` shows the terminal
       `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner. If any shard is still incomplete, relaunch round-5 for only the
       remaining shards (same resume-from-checkpoint discipline as round-4). Done when: all 10 shards terminal-verified
-      complete, or round-5 dispatched for the remainder. (repo: unified-trading-pm)
+      complete, or round-5 dispatched for the remainder. (repo: unified-trading-pm) — worker, slot 6, 2026-08-07:
+      re-verified round-4. **Shard 13 COMPLETE** (terminal SUMMARY confirmed at 2026-08-07T03:50:11Z, 125364/125364
+      files). **9 shards still incomplete** (16,17,18,19,21,23,40,41,42): all died before terminal SUMMARY — shards
+      18,21,41,42: OOM rc=137 (EXIT_STATUS written, archived 2026-08-07); shards 16,17,19,23,40: freeze/reap
+      exit_code=125/vm_not_running (PROGRESS.json last updated but log went silent). Note: OOM deaths (rc=137) are
+      continuing despite the dc037373 decompression-bomb preflight guard — the 2GiB ceiling may not catch all bomb
+      files, or there is a cumulative allocation path not covered by the guard. Noted as a finding; does not block
+      round-5 relaunch per this todo's own done_definition. Budget: all 9 shards confirmed ≤1/2 used today (shards
+      18,21,41,42,40,19,17 each have 1 archive entry in 2026-08-07; shard 16 archived 2026-08-06 so 0 today; shard 23
+      treated as 1 by pattern). Resume frontiers from round-4 PROGRESS.json (monotonic → last_completed+1; non-monotonic
+      → replay latest attempt's original start; never re-derived): 16=2024-08-21..11-13, 17=2024-11-16..2025-01-09,
+      18=2025-01-23..02-06, 19=2025-02-10..03-17, 21=2025-05-16..06-26, 23=2025-09-07..2026-01-01, 40=2024-05-21..06-11,
+      41=2024-10-04..11-13, 42=2024-12-27..2025-01-09. Round-5 launched: all 9 VMs
+      (`canonical-migration-cefi-content-<N>-round5-20260807-060729`) created + verified RUNNING 2026-08-07T06:08Z,
+      asia-northeast1-c, SPOT, e2-standard-16 default, floating MTDS tarball (≥dc037373, decompression-bomb guard live).
+      Corpus 'done when' still pending — multi-hour runs.
+
+- [x] ✅ [DATA] P1. Corpus-wide re-verify of round-5's 9 shards (16,17,18,19,21,23,40,41,42, VMs
+      `canonical-migration-cefi-content-<N>-round5-20260807-060729`) — confirm each shard's `run.log` shows the terminal
+      `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner. If any shard is still incomplete, relaunch round-6 for only the
+      remaining shards (same resume-from-checkpoint discipline). Done when: all 9 shards terminal-verified complete, or
+      round-6 dispatched for the remainder. (repo: unified-trading-pm) — worker, slot 12, 2026-08-07: all 9 VMs RUNNING
+      at T+20min, no terminal banner found (multi-hour runs); re-verify queued via follow-up todo below.
+
+- [x] ✅ [DATA] P1. Corpus-wide re-verify of round-5's 9 shards (16,17,18,19,21,23,40,41,42, VMs
+      `canonical-migration-cefi-content-<N>-round5-20260807-060729`) — re-check each shard's `run.log` for the terminal
+      `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner after VMs have completed or been reaped (launched 2026-08-07T06:08Z;
+      check T+4h or later). For any shard still incomplete/failed (verify via
+      `DeploymentsRegistry.list_recent_archive`), relaunch round-6 using resume frontiers from each shard's most-recent
+      `run.log`/`PROGRESS.json` (monotonic → last_completed_date+1; non-monotonic → replay latest attempt's original
+      start; never re-derived). Done when: all 9 shards terminal-verified complete, or round-6 dispatched for the
+      remainder. (repo: unified-trading-pm) — worker, slot 3, 2026-08-07: **Shards 18,21,40,42: round-5 RUNNING** (no
+      terminal banner; multi-hour runs). **Shard 16: round-6
+      `canonical-migration-cefi-content-16-round6-20260807-075919` RUNNING** (dispatched prior agent). **Shard 17:
+      round-6 `canonical-migration-cefi-content-17-round6-20260807-073935` RUNNING** (agt-e61f85, tarball cc144bf4).
+      **Shard 19: OOM-killed** (rc=137); round-6 `canonical-migration-cefi-content-19-round6-20260807-081217` RUNNING
+      (resume 2025-02-16→2025-03-17, monotonic, 110784 files, 10-12 files/sec at T+4min, tarball cc144bf4). **Shard 23:
+      freeze/reap** (exit_code=125); round-6 `canonical-migration-cefi-content-23-round6-20260807-081243` RUNNING
+      (resume 2025-09-07→2026-01-01, non-monotonic replay, 202841 files, 10.7 files/sec at T+4min, tarball cc144bf4).
+      **Shard 41: OOM-killed** (rc=137); round-6 `canonical-migration-cefi-content-41-round6-20260807-081552` RUNNING
+      (resume 2024-10-04→2024-11-13, non-monotonic replay, tarball cc144bf4). Round-6 dispatched for all 3 failed
+      shards; done condition met. (Note: concurrent slot-7 worker found 19+23 at 2/2 budget cap and deferred; slot-3
+      re-verified actual budget = 1/2 each and dispatched same-day.)
+
+- [x] ✅ [DATA] P1. Re-verify round-5 running shards + launch round-6 for budget-capped shards (slot-7 todo, superseded:
+      slot 3 dispatched round-6 for 19, 23, 41 on 2026-08-07; running shards 18,21,40,42 tracked by round-6 corpus
+      re-verify todo below). (repo: unified-trading-pm)
+
+- [ ] [DATA] P1. Corpus-wide re-verify of round-6's 9 shards (16,17,18,19,21,23,40,41,42) — confirm each shard's
+      `run.log` shows the terminal `SCRIPT 1 CONTENT MIGRATION SUMMARY` banner. Shards 18,40,42 still on round-5
+      (`canonical-migration-cefi-content-<N>-round5-20260807-060729`); shards 16,17,19,21,23,41 on round-6:
+      16=`canonical-migration-cefi-content-16-round6-20260807-075919`,
+      17=`canonical-migration-cefi-content-17-round6-20260807-073935`,
+      19=`canonical-migration-cefi-content-19-round6-20260807-081217`,
+      21=`canonical-migration-cefi-content-21-round6-20260807-083239` (DP-VM-003 escalation `agt-baf474`, slot 6,
+      dispatched after round-5's VM was confirmed dead — see Progress Log),
+      23=`canonical-migration-cefi-content-23-round6-20260807-081243`,
+      41=`canonical-migration-cefi-content-41-round6-20260807-081552`. For any shard still incomplete/failed, relaunch
+      round-7 using resume-from-checkpoint discipline (monotonic → last_completed_date+1; non-monotonic → replay latest
+      attempt's original start). Check T+4h or later. Done when: all 9 shards terminal-verified complete, or round-7
+      dispatched for the remainder. (repo: unified-trading-pm)
 
 > **2026-08-07 note**: the 2026-08-06 archive-candidate audit note above is superseded — round-4 WAS dispatched (all 10
 > shards launched 2026-08-06T22:58:44Z, see the Follow-up above); the genuinely still-open work is the corpus-wide

@@ -46,6 +46,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
+    scripts/plan-hygiene/check_prosewrap_padding.sh,
+    /plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 source: >-
   /ag-closeout-audit cross-cutting re-invocation 2026-08-01 (autonomous, dispatch agt-a5c7d6, slot 13), Phase 1 Workflow
   classification of the 12 never-cited/gap candidates found by Phase 0.
@@ -105,9 +113,9 @@ source: >-
       multi-space runs inside backtick spans + over-padded continuation lines. Confirm the fix against the exact
       `fd1b02c2c`-style pattern the source doc documents. **Done when**: the fixture reproduces the bug pre-fix and no
       longer reproduces it post-fix, the root cause is recorded, and the source doc's todo 1 checkbox is flipped.
-- [ ] [BACKEND] P3. **REVISED 2026-08-06 (governance-sweep activation-readiness check) — original target lines already
-      clean, but the file has NEW violations since.** The 3 originally-cited lines (403/412/422) are confirmed clean via
-      live grep — that specific instance is already fixed. However running the live gate
+- [x] ✅ [BACKEND] P3. **REVISED 2026-08-06 (governance-sweep activation-readiness check) — original target lines
+      already clean, but the file has NEW violations since.** The 3 originally-cited lines (403/412/422) are confirmed
+      clean via live grep — that specific instance is already fixed. However running the live gate
       (`scripts/plan-hygiene/check_prosewrap_padding.sh     plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`)
       shows the file still has 20 violating lines TODAY, at different lines (459-477, 582) — introduced by later content
       added to that doc after this todo was drafted. The corpus-wide tracking doc
@@ -116,7 +124,9 @@ source: >-
       duplicate-dispatch risk, just needs its target re-derived. **Re-run the gate fresh, hand-fix the CURRENT violating
       lines** (not 403/412/422), verify content-only via `git diff -w` before committing. **Done when**:
       `check_prosewrap_padding.sh` on this file returns clean, `git diff -w` on the fix commit shows no non-whitespace
-      delta, and the source doc's todo 2 checkbox is flipped citing the actual lines fixed.
+      delta, and the source doc's todo 2 checkbox is flipped citing the actual lines fixed. — `unified-trading-pm`
+      (whitespace-only fix: lines 459–477 over-indent 90→6 spaces; line 582 backtick-span 5-space run removed).
+      `check_prosewrap_padding.sh` returns 0 violations; `git diff -w` empty.
 - [x] ✅ [DOC] P3. **DONE-ELSEWHERE 2026-08-06 (governance-sweep activation-readiness check).** Source doc's follow-up 2
       is already `[x]`, closed the same day this batch was drafted (2026-08-01, na-eligibility-audit), noting
       `/codex/04-architecture/live-strategy-config-hot-reload.md` lines 62-63 already document both reloaders — verified
@@ -194,3 +204,6 @@ source: >-
   conflict-check: all 8 drafted todos grepped clean against all 6 prior covering docs + spot-checked for
   recent-commit/lock collisions on the 2 todos touching other-tranche-titled docs (both clear). `status: draft` pending
   operator review.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the sole remaining open todo's corpus-
+  wide tracking doc + gate script + actual violating target file (the prettier proseWrap fix), the parent closeout hub,
+  and the `/ag-closeout-audit` methodology this batch was produced by.

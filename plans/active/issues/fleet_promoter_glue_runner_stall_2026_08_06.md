@@ -32,6 +32,14 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    .github/workflows/ldr-to-main-promote-fleet.yml,
+    scripts/cicd/glue_runner_health_monitor.py,
+  ]
 ---
 
 # Fleet promoter stalled 3+ hours — glue runner pool depleted
@@ -74,3 +82,4 @@ of load or a single additional offline runner triggers a complete stall.
 
 - **2026-08-06 (slot 12)**: Filed after discovering promoter stall during sit-gate fleet-green investigation. Promoter
   self-recovered at ~22:35 UTC when a glue runner picked up the 22:30 run.
+- **context-scout 2026-08-07**: populated context_scope (5 entries).

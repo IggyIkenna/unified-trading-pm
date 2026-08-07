@@ -146,6 +146,9 @@ context_scope:
   delete — out of scope for this task. Evidence: manifest query (bounded column-projected read, features-service venv),
   Tardis API probe, code audit of venue_mapping.py, symbol_rules.py, mvp_scope.py v10, launch-cefi-sharded-backfill.sh.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged — all 3 open Follow-ups
+  (HYPERLIQUID row re-verify, DERIBIT 2019 dispatch, BINANCE-DELIVERY zombie cleanup) still map to this same 4-entry set
+  (parent doc + the 2 registry/orchestrator files + the sharded-backfill launcher).
 
 ## Follow-ups
 

@@ -43,6 +43,7 @@ context_scope:
     /plans/archive/2026_07/aster_cefi_data_defi_bucket_migration_2026_07_13.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/pipeline-mode-partition.md,
+    market-tick-data-service/scripts/migrate_hyperliquid_aster_defi_asset_group_2026_08_06.py,
   ]
 last_updated: 2026-08-06
 locked_by:
@@ -232,3 +233,7 @@ cites row-count estimates from its 2026-07-27 pass (HYPERLIQUID/HYPERLIQUID: 3.7
   `migrate_hyperliquid_aster_defi_asset_group_2026_08_06.py` written + dry-run-confirmed (7,599 planned copies). Added
   `defi-hl-aster-ag-relabel` category to `launch-canonical-migration-vm.sh` (`deployment-service@71d4908`, rebased to
   `aa51beb` under churn) to run it on a dedicated VM.
+- **context-scout 2026-08-07**: refreshed context_scope (5 -> 6 entries) — added
+  `market-tick-data-service/scripts/migrate_hyperliquid_aster_defi_asset_group_2026_08_06.py`, the shipped migration
+  script this plan's Phase 1-2 built and ran (source path was missing despite the doc naming it repeatedly). Other 5
+  entries re-verified and still resolve.

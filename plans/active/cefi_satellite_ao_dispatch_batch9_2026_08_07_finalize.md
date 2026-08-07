@@ -114,3 +114,7 @@ context_scope:
   `status: active` per the 2026-07-30 no-double-gate ruling, machine-held by `gate_on_depends: true` until batch9's
   todos are done. The two carried conflict-gated items were re-verified still-open for the fifth consecutive run at
   draft time (see batch9's Deferred — BLOCKED-OPERATOR-DECISION section).
+- **context-scout 2026-08-07**: re-confirmed context_scope (2 entries) unchanged — `*_finalize` gate doc, genuinely
+  code-free (every todo is a checkbox-reconciliation against named docs or the archival ritual itself). The paired
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` (full detail on all 3 reconciliation targets + the 2 carried
+  Deferred items) + the archival-discipline codex SSOT remain the right minimal set; both re-verified resolving.

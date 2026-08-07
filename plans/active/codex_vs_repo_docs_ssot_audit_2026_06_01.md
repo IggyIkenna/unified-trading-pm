@@ -993,3 +993,4 @@ MIGRATE-TO-CODEX; no codex target needs creating.
   the Phase-5 enforcement checker `check_repo_docs_ssot.py`, this plan's own real deliverable, since prior scope was
   codex/plan-only.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.

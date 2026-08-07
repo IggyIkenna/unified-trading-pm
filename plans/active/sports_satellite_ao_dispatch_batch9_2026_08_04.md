@@ -82,6 +82,7 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
@@ -742,6 +743,12 @@ succeeded — 588+50=638 matches the summary exactly. The finding-3/4 VMs ran a 
 current LDR HEAD (slot-4): the exact failing file → `success=True`; concurrent `_process_files_parallel(max_workers=4)`
 over all 50 `ticks_migrated` files → `failed=0`. **No code change needed** — the fix is already shipped; the source
 doc's `[SCRIPT]` P3 no-relaunch STOP is cleared.
+
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — added the conflict-check protocol codex doc
+  (`ao-dispatch-batch-naming-and-conflict-check.md`, Phase 3 of this batch's own methodology ran it) alongside the 4
+  pre-existing entries. `*_satellite_ao_dispatch_batchN_*` coordinator shape (30 todos spanning 8 repos, each with its
+  own inline `Source:` citation) — no single source path is appropriate per SKILL.md's dispatch-batch-coordinator
+  exemption.
 
 ## Codex SSOTs
 

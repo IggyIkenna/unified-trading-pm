@@ -245,3 +245,6 @@ depend on.
   sit under a redirect banner to batch4 (still draft), items 3-5 are annotated data points feeding the separate
   still-open `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` investigation, not standalone dispatchable
   todos.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — items 1-2 are now `[x]`
+  shipped (`unified-trading-library@89eabac2`, `deployment-service@4ee514e`), items 3-5 remain open corroborating data
+  points; existing list still accurate.

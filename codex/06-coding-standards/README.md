@@ -830,7 +830,11 @@ See `02-data/unified-unified-api-contracts-chain.md` for the full chain and inte
 - **basedpyright zero-baseline policy [ENFORCED 2026-03-10]:** `.basedpyright-baseline.json` must not exist in any repo.
   All basedpyright errors must be fixed — baseline suppression is not allowed. Presence of the file causes a hard CI
   failure at STEP 5.22 in quality-gates. See
-  `unified-trading-pm/plans/archive/zero_baseline_typecheck_2026_03_10.plan.md`.
+  `unified-trading-pm/plans/archive/zero_baseline_typecheck_2026_03_10.plan.md`. **Blanket file-level
+  `# pyright: reportX=false` suppressions** are banned workspace-wide with one DEFAULT-RULED exception (2026-08-06):
+  `market_tick_data_service/cli/handlers/*.py` (vendor-response glue code) — see
+  `/codex/06-coding-standards/quality-gates.md` § "Restoring strict basedpyright" bullet 3 for the full carve-out
+  wording and the freeze-and-shrink ratchets that contain it.
 - Focus on public APIs first, internal helpers second.
 
 ```python

@@ -54,7 +54,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -323,3 +323,19 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
   other rolled-out templates calling it locally) — flagged to the operator immediately, fixed same session via the
   sanctioned rollout script + a quickmerge per repo (`execution-service@d537b812e`, `e2e-testing@14bec17`,
   `market-data-processing-service@8c5430aa`). Todo 2 (request-major-bump.yml stale comment) is next.
+- **context-scout 2026-08-07**: re-verified context_scope (5 entries) -- all 5 still resolve (plan, codex SSOT, and 3
+  source paths already correctly scoped by the plan's author at creation); unchanged.
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid. This is a large (8 open todos), high-blast-radius
+  migration of fleet-wide GitHub Actions CI/CD machinery (26 repos, `workflow_call` reusable-workflow hosting + per-repo
+  caller-stub replacement + deletion of the now-redundant full copies) — exactly the class this skill's own guidance
+  flags for skepticism: "a multi-file, multi-day rewrite of live-dispatch-critical-path machinery" where
+  "bounded/bundled-into-one-todo is not the same test as small/low-risk." The predecessor plan in this same lineage
+  (`shared_ci_workflow_repo_extraction_2026_08_06.md`) already produced one real incident class (a visibility-flip
+  mistake breaking fleet CI) that this plan's own "Confirmed technical facts" section explicitly re-verifies against
+  before proceeding. Every todo completed so far (1-2) was executed via direct interactive operator sessions, not
+  AO-dispatch, and the plan's own "Wave order" design deliberately requires live-CI-run verification at each step before
+  fanning out — real judgment/operator-level work, not a worker-determinable outcome. Matches the established precedent
+  for sibling CI/infra plans in this same corpus (`ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s own 2026-08-06
+  na-eligibility-audit KEEP-NA ruling, cited in `ag_closeout_audit_infra_parked_2026_08_07.md` finding 20's
+  classification of this exact doc as active, currently-executing, operator-driven work). `assigned_vm: NA` is correct,
+  not a mis-default.

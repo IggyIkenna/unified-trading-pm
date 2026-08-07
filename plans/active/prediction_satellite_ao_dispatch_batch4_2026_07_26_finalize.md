@@ -110,3 +110,5 @@ context_scope:
   - Not-touched: the archived trades issue doc (`prediction_polymarket_legacy_dual_write_trees_metadata_loss_…`) — all
     its checkboxes were already `[x]`. Tree clean (rev-list 0), P1 checkbox flipped same commit. P2 (re-check the 2
     gated `[OPERATOR]` deferrals) + P3 (archival) remain for the follow-on dispatches.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged — genuinely code-free
+  finalize gate; the 4 plan/codex entries still cover the remaining P2/P3 work.

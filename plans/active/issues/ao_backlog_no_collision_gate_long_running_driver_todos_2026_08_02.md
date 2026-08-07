@@ -151,3 +151,5 @@ even if nobody revisits it.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries) -- still the right minimal set for both
+  open todos (dispatch cooldown design in `regen_backlog_from_plan.py`; surface Progress-Log status at `/boot`).

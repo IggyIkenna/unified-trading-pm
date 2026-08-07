@@ -54,10 +54,9 @@ depends_on: []
 context_scope:
   [
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
-    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/doc-frontmatter-schema.md,
+    /plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md,
     /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
@@ -219,7 +218,7 @@ and its day-2 sequel, `ldr_main_backmerge_silently_resurrects_reverted_commit_20
 `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`,
 `cicd_heartbeat_steals_slot_regression_immediate_dispatch_2026_07_29.md`,
 `repo_blocker_resolution_signal_false_positive_2026_07_28.md`, `wip_preserve_refs_silently_unrecovered_2026_07_29.md`
-(all `ao`).
+(**ARCHIVED 2026-08-07**, all 5 todos complete) (all `ao`).
 
 This run deliberately did **not** retag them. Two reasons: (a) ~20 per-doc content judgments is an authority call, not a
 mechanical fix, and several sit genuinely on the `ci`↔`ao` boundary (the CI-escalation-worker family); (b) retagging
@@ -330,6 +329,10 @@ not a bounded worker todo). No new batch drafted; concurs with the conclusion ab
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped an accidental repeat entry, dropped 2
   weakly-relevant codex/plan links, kept the source script + the doc where the actual shipped fix landed.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries) -- with 3 of 4 todos DONE, dropped the 2
+  general-background codex refs (`doc-frontmatter-schema.md`, `ao-dispatch-batch-naming-and-conflict-check.md`) and
+  added `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`, the precedent doc the sole remaining open todo
+  explicitly names as the mechanism to reuse for the retag pass.
 - **na-eligibility-audit 2026-08-06 (governance-sweep reclassification pass)**: RECLASSIFY,
   `assigned_vm: NA -> planning`. The sole open todo's `[OPERATOR]` A/B/C decision was resolved this same session ("RULED
   2026-08-06 (operator), option A [WORKER REC]", retagged `[OPERATOR] -> [DOCS]`) — the retag mechanism (2026-07-27

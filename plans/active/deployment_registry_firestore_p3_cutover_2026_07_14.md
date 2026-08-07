@@ -213,6 +213,8 @@ QG-green per repo.
 - **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; explicit
   dated operator HALT (2026-07-14) gated on a 4-item GO/NO-GO checklist not yet fully met; irreversible cutover steps
   stay blocked until the dual-write deploy precondition is satisfied and the full checklist clears.
+- **context-scout 2026-08-07**: re-verified context_scope (5 entries) -- all 5 still resolve; unchanged after the
+  2026-08-06 na-eligibility-audit reaffirmation (no new named artifacts).
 
 ## Codex SSOTs
 

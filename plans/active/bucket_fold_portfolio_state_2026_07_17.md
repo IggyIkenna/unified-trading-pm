@@ -194,3 +194,4 @@ per-domain path prefixes:
   pnl/config.py source paths (the real driver files) for bucket_iam_write_protection + pipeline-mode-partition.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): governed by the 2026-07-17
   operator ruling (HUMAN plans); live-trading-adjacent, IAM+lifecycle item still needs operator retention confirmation.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.

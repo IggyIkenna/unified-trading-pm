@@ -715,3 +715,6 @@ absorb the actual remediation work.
   work is landing the stranded `market-tick-data-service@531a07d8` (`wip-preserve/orchestrator-slot-6-531a07d8`) frozen-
   indexer-head fix once its blocking QG failures (RB-04b8981e) clear — `_dex_swaps_stalled_head.py` does not exist yet
   in this worktree's `dex_swaps_handler.py` tree.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged —
+  `_dex_swaps_stalled_head.py` still not landed in this worktree; only intervening commit was an unrelated referrer-path
+  fix from a sibling doc's archival.

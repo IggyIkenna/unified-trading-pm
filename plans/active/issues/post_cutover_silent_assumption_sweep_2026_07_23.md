@@ -604,7 +604,10 @@ codex, or a future staging re-entry gets a dead pipeline.
       `cloudbuild.yaml`+`buildspec.aws.yaml` all dispatched the same `service-deployed → deployment-service` pair, now
       resolved as one listener). Full verification (real Cloud Run revision timestamp change on
       `dp-alerting-subscriber`) + a separate flagged finding (`DISABLE_AUTH=true` currently live on prod
-      `uts-shared-deployment-api`) are in the Progress Log below.
+      `uts-shared-deployment-api`) are in the Progress Log below. **Citation added 2026-08-07 (na-eligibility-audit)**:
+      the remaining open scope (`cascade-qg-ordering.yml`, `sit-gate.yml`) is tracked in
+      `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (~line 249, `status: active`, `assigned_vm: planning`), which
+      explicitly cites this doc as Source — do not re-extract, batch5 already owns it.
 - [ ] [INFRA] P2. Disable or fix the F4 vacuous crons (`sit-debounce-trigger`, `freeze-deferred-build-replay`,
       `fix-approval-timeout`, `supersede-stale-dep-update-prs`); diagnose `digest-drift-sweep`'s non-convergence (it
       costs real money via `ubuntu-latest` fan-out); ~~make `workspace-quickmerge-validation` fail when it logs a
@@ -692,3 +695,10 @@ candidates exist
   partial/bad state, confirmed live. This is a genuinely different scope than the todo's remaining sub-items
   (`cascade-qg-ordering.yml`, `sit-gate.yml`, the 24-repo `schema-changed` dispatch) — do not close those from this
   entry.
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, stale citation fixed — re-read
+all 12 open items end-to-end. 11 remain genuinely operator-/design-gated (SUPERSEDED banners, time-gated kill-switch F1,
+fleet-wide tag-minting judgment call, unruled F4 cron disposition, unresolved `sit_validated_workspace_digest` design
+call). 1 (the F3 `cascade-qg-ordering.yml`/`sit-gate.yml` success-reporting remainder) was already extracted into
+`ci_satellite_ao_dispatch_batch5_2026_08_02.md` (status: active) but this doc's own checkbox carried no back-citation —
+added one. No `assigned_vm` change.

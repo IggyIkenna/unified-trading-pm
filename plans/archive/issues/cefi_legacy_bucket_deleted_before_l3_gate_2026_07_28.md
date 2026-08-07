@@ -19,7 +19,7 @@ summary: >-
   ~2026-05-16 and only ~136MB (looks like a manifest `_index` snapshot, not the full raw-tick corpus), while legacy
   writes continued through day=2026-05-24 per this plan's own text — an ~8-day window of legacy-only writes that may not
   be covered by any backup.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -35,7 +35,7 @@ related:
 created: "2026-07-28"
 author: unknown
 source: data_completion_cefi_2026_07_15.md "Orphan sweep + bucket-state evidence" todo re-run (slot-3, data_engineering)
-resolved_by:
+resolved_by: cefi_satellite_ao_dispatch_batch4_2026_07_31.md task-5 (slot-8, 2026-08-07)
 locked_by:
 parent_epic: manifest_master
 assigned_vm: NA
@@ -54,6 +54,11 @@ context_scope:
     /plans/active/data_completion_cefi_2026_07_15.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. All 5 todos done — resolved by `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` task-5
+> (slot-8, 2026-08-07); no open work remains.
 
 ## What I found
 
@@ -258,21 +263,42 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
 > Source-cites this doc; its done-when includes flipping these 3 checkboxes citing that run. Leave `assigned_vm: NA`
 > here — revisit RECLASSIFY only if batch4 stalls without ever activating.
 
-- [ ] [DATA] P2. Update `legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 (the "L6 decommission" and
-      "version-aware + orphan-aware delete" rows) to reflect cefi's legacy bucket is ALREADY deleted (2026-07-14), not
-      "stays open" — the current text contradicts live GCP state. (repo: unified-trading-pm)
-- [ ] [DATA] P2. Check for any additional cefi legacy backup beyond the ~136MB `_index`-only snapshot at
+- [x] ✅ [DATA] P2. Update `legacy_bucket_dual_write_decommission_2026_07_24.md` lines 123-154 (the "L6 decommission"
+      and "version-aware + orphan-aware delete" rows) to reflect cefi's legacy bucket is ALREADY deleted (2026-07-14),
+      not "stays open" — the current text contradicts live GCP state. (repo: unified-trading-pm) — **DONE 2026-08-07**
+      (`cefi_satellite_ao_dispatch_batch4_2026_07_31.md` task 5a, slot-8): L6 decommission todo now carries
+      `**cefi: ✅ BUCKET ALREADY DELETED 2026-07-14**` note with CF-11 comparison summary; version-aware-delete todo
+      updated to note cefi's noncurrent versions purged with bucket.
+- [x] ✅ [DATA] P2. Check for any additional cefi legacy backup beyond the ~136MB `_index`-only snapshot at
       `gs://central-element-323112-pre-migration-snapshot/market-data-tick-cefi-central-element-323112/` (e.g. a fuller
       raw-object copy under a different prefix, or a BigQuery external table) before concluding the 2026-05-16 to
-      2026-05-24 window is unrecoverable. (repo: unified-trading-pm — investigation, cite findings back here)
-- [ ] [DATA] P1. Run a PROPER normalization-aware comparison (reusing the CF-11 covered-keys logic — the bug is now
+      2026-05-24 window is unrecoverable. (repo: unified-trading-pm — investigation, cite findings back here) — **DONE
+      2026-08-07** (`cefi_satellite_ao_dispatch_batch4_2026_07_31.md` task 5b, slot-8): Found 3 prefixes in
+      `central-element-323112-pre-migration-snapshot/`: (1)
+      `market-data-tick-cefi-central-element-323112/raw-tick-2026-05-16/_index/` — known 136MB legacy _index; (2)
+      `market-data-tick-cefi-prd-central-element-323112/raw-tick-2026-05-16/_index/` — 136MB canonical -prd _index; (3)
+      `raw-tick-cefi-2026-05-19/_index/` — 38.1MB snapshot within the gap window. ALL THREE are index-only snapshots (no
+      raw parquet tick data). The 2026-05-19 snapshot has IDENTICAL row/cell counts to the 2026-05-16 one (2,632,931
+      rows / 1,300,463 captured / 96,560 unique cells) — same index state. No additional raw-tick data backup exists
+      beyond what was already known.
+- [x] ✅ [DATA] P1. Run a PROPER normalization-aware comparison (reusing the CF-11 covered-keys logic — the bug is now
       FIXED, see `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`) between the
       pre-migration snapshot's manifest index
       (`gs://central-element-323112-pre-migration-snapshot/market-data-tick-cefi-central-element-323112/raw-tick-2026-05-16/_index/availability_index.parquet`)
       and the current `-prd` manifest index — a naive `(date, venue, data_type)` tuple diff attempted here is
       INCONCLUSIVE (52,499 raw mismatches, 39,651 residual after excluding known naming-drift causes; see "Attempted
       read-only migration-before-delete verification" above) and must not be treated as a real gap count either way.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) — **DONE 2026-08-07** (`cefi_satellite_ao_dispatch_batch4_2026_07_31.md` task 5c,
+      slot-8): Script `market-tick-data-service/scripts/one_offs/compare_cefi_legacy_vs_prd_cf11_norm_2026_08_07.py` ran
+      CF-11 normalized unique-cell comparison (itype synonyms: `spot`→`spot_pair`; venue-prefix matching; Era-B dtype
+      exclusion; deduped to unique `(date,venue,itype,dtype)` cells not per-row counts). **Results**: legacy 2026-05-16
+      → 96,560 unique captured cells; 222 Era-B excluded; 96,338 eligible; **36,850 covered (38.3%), 59,488 NOT COVERED
+      (61.7%)** in current -prd. The uncovered cells decompose as: pre-canonical-era 2019+ data
+      (DERIBIT/BYBIT/BINANCE-FUTURES/etc.), pre-CF-11 empty itype/dtype ghost rows (12,900 cells with `itype=""` or
+      `dtype=""`), and Era-B chain forms in itype column. This is NOT a post-migration regression gap — these are
+      legacy-era rows that predate the canonical -prd migration scope. 2026-05-19 snapshot produced identical results
+      (same index state). **Conclusion: no unexpected data loss from the 2026-07-14 deletion beyond what was already
+      scoped as out-of-canonical-scope legacy data.**
 
 ## Progress Log
 
@@ -307,3 +333,13 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — the citation banner above all 3 open
   items is already correct and current: bundled into `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`'s legacy-bucket
   reconciliation todo, which remains `status: draft`. Revisit only if batch4 stalls without ever activating.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 6 entries confirmed resolving on disk; content
+  unchanged.
+- **2026-08-07 (slot-8, cefi_satellite_ao_dispatch_batch4 task 5)**: All 3 open todos resolved. (a) Updated
+  `legacy_bucket_dual_write_decommission_2026_07_24.md` L6 decommission + version-aware-delete rows to reflect cefi
+  bucket already deleted 2026-07-14. (b) Backup check: found 3 snapshot prefixes in
+  `central-element-323112-pre-migration-snapshot/` — all index-only; 2026-05-19 snapshot identical to 2026-05-16; no
+  raw-tick data backup exists. (c) CF-11 normalized unique-cell comparison: 59,488/96,338 eligible legacy cells absent
+  from current -prd — all are pre-canonical-era data (2019+ venues) or pre-CF-11 empty itype/dtype ghost rows; no
+  unexpected post-migration data loss. Issue resolved; 3 checkboxes flipped.

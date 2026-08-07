@@ -55,7 +55,11 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
-  [/plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md, /codex/08-workflows/ci-cd-flow.md]
+  [
+    /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
+    /plans/active/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # instruments-service PR #1084 provenance-blocked — fix stuck on LDR, not on main
@@ -176,3 +180,8 @@ real forward-looking risk window, unchanged from the original assessment.
   (`utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md`) says belong to an operator decision, not an
   autonomous sub-task fix. This issue's promotion-verification todo is therefore BLOCKED-OPERATOR pending that doc's
   resolution, not something this session could close out.
+- **context-scout 2026-08-07**: refreshed context_scope (3 entries) — added
+  `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`, which the still-open `[CI] P1` todo
+  names directly as carrying "Full finding + evidence + remedy options" for the actual current blocker (the marker-bug
+  fix already shipped fleet-wide, but instruments-service's real ~19-commit foreign range still needs that doc's own
+  remedy); the 2 pre-existing entries re-verified, still resolve.

@@ -656,6 +656,9 @@ blocked-model-variant MM engines + 2 sta...
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- dropped a duplicate codex-path entry and a now-
   archived precedent plan, added the live strategy-service `vol_trading/`+`market_making/` source dirs and
   `batch_harness.py` (the GroupBRunner backtest gate every remaining engine todo is blocked on).
+- **context-scout 2026-08-07**: re-verified context_scope (6 entries, unchanged) — the only commit since the last scout
+  (`b30fb5267b`) added `effort: xhigh` to frontmatter, no substantive content change; all 6 entries still resolve and
+  remain the correct minimal set.
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 

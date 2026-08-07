@@ -985,3 +985,4 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
   sole open item (finishing/re-verifying the mass NA→planning flip across asset-groups) remains operator-gated
   finalization work, not worker-determinable — the doc's own history documents a real safety incident from this exact
   class of action.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.

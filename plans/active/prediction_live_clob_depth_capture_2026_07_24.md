@@ -873,6 +873,9 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
   re-confirmed against batch4's live content (still `status: active` / `assigned_vm: planning`; the item is still parked
   there per its own "Reconciled 2026-08-07 (finalize P1)" note — a separate process, not this audit). No action needed.
   Doc stays NA.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — both remaining open items
+  (batch4-tracked DEFERRED-CROSS-DEP row-proof; the now-closed depth-retention design question) still map to the same
+  set.
 
 ## Deferred work — migrated to:
 

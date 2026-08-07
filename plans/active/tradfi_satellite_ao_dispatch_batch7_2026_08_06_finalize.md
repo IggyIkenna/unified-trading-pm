@@ -97,6 +97,12 @@ context_scope:
       `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and this finalize doc itself is archived
       alongside it in the same commit.
 
+## Progress Log
+
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries, unchanged) — `*_finalize` gate doc, genuinely
+  code-free (all 3 todos are checkbox-reconciliation/re-triage/archival, no code target); the gating parent batch, the
+  umbrella closeout, the audit methodology, and the archival-ritual codex doc remain the correct minimal set.
+
 ## Codex SSOTs
 
 No new durable contract is created by this plan. `/codex/11-project-management/` carries the archival ritual;

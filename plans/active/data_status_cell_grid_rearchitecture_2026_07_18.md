@@ -135,3 +135,4 @@ real fix is to never load the whole manifest per request.
 - **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; the first
   real todo is an explicit DESIGN GATE (pick bound vs stream vs precompute) and every later todo depends on that unmade
   choice.
+- **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries).

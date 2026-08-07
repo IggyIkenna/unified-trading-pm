@@ -67,7 +67,8 @@ context_scope:
   [
     /cursor-configs/skills/context-scout/SKILL.md,
     /scripts/plan-hygiene/generate_context_scope_inventory.py,
-    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /plans/active/data_completion_defi_2026_07_15.md,
+    scripts/plan-hygiene/check_line_caps.sh,
   ]
 ---
 
@@ -336,3 +337,12 @@ harness task #4 → ✅ CLOSE the `BLK-bea57103` and the new BLK bookends.
   test_marker_claimed_count_returns_none_when_no_parenthetical) + 4 end-to-end fixture cases (COUNT_MISMATCH entry-drop,
   COUNT_MISMATCH write-time miscount, UP_TO_DATE no-count-claim, UP_TO_DATE matching count). 1720 passed / 0 failed on
   PM QG.
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries, written and counted with extra care given this doc's
+  own subject matter) — swapped the now-fixed `lst_rate_honest_coverage_2026_07_21.md` (distinct, already-closed
+  cohort-5 bug, cited for contrast only) for the sole still-open `[OPERATOR]` todo's actual target,
+  `data_completion_defi_2026_07_15.md`, plus `check_line_caps.sh` (the gate that todo must clear). Live-checked
+  `data_completion_defi_2026_07_15.md` at write time: still 1000L, still carries the stale
+  `context-scout 2026-08-01 (5 entries)` marker, but its frontmatter now shows 3 entries with
+  `data_completion_to_100_all_ag_2026_06_21.md` ALREADY restored (only `migrate_defi_full_v9_canonical.py` remains
+  genuinely missing) — apparently a concurrent, unrelated edit in this shared working tree; that doc is outside this
+  batch's scope so left untouched, noted here only.

@@ -50,11 +50,11 @@ locked_since:
 context_scope:
   [
     /plans/active/ci_vm_exposure_remediation_2026_08_06.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /codex/07-security/self-hosted-runner-security-posture.md,
     scripts/quality-gates-base/qg-host-governor.sh,
     scripts/dev/qg_resource_baseline.json,
+    scripts/plan-hygiene/run_hygiene_sweep.sh,
   ]
 ---
 
@@ -545,8 +545,14 @@ traffic to count until the migration is finished. What is certain is that their 
       rather than risk a wrong/undocumented API call against a live security boundary. `deployment-api`'s visibility
       recheck (mentioned in the original finding) also still needs doing.
 
-- [ ] [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every ~15
-      min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4.
+- [x] ✅ [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every
+      ~15 min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4. **DONE — closed
+      2026-08-07 (na-eligibility-audit)**: fixed twice, once per recurrence — `unified-trading-pm@b30fb5267`
+      (2026-08-06, "resolve 5/6 quality-gates-v2 hygiene ratchet failures blocking LDR->main promote") and
+      `unified-trading-pm@50b8643dc` (2026-08-07, "fix all 5 plan-hygiene sweep hard failures blocking LDR->main
+      promote" — a second recurrence of the same failure class). The later commit's own message states "Verified:
+      `run_hygiene_sweep.sh --ci` EXIT 0 (0 hard failures, 1 pre-existing soft warning)"; confirmed `50b8643dc` is an
+      ancestor of current HEAD on `live-defi-rollout`.
 
 - [ ] [INFRA] P0. **Re-baseline `scripts/dev/qg_resource_baseline.json` before any sizing decision.** Live cgroup peaks
       are 3.6–5.5x the recorded values and `agent-orchestrator` is absent entirely; the admission governor over-admits
@@ -587,10 +593,14 @@ traffic to count until the migration is finished. What is certain is that their 
 - [ ] [INFRA] P2. **Decide `content-gate`'s runner.** Hardcoded `ubuntu-latest`, one billed minute per 11-second job,
       every repo, every run — against its value as the failure-independence path when the VM is down.
 
-- [ ] [INFRA] P3. **Re-point the UI QG todo.** `deployment-ui` and `unified-trading-system-ui` are both **public**, so
-      the 08-05 "migrate `ui-quality-gates-v2` to self-hosted" todo is now backwards — public repos should stay on
+- [x] ✅ [INFRA] P3. **Re-point the UI QG todo.** `deployment-ui` and `unified-trading-system-ui` are both **public**,
+      so the 08-05 "migrate `ui-quality-gates-v2` to self-hosted" todo is now backwards — public repos should stay on
       GitHub-hosted (free). If they are ever made private, re-baseline them first: recorded peaks (22 MB / 541 MB) would
-      let the governor admit two unmeasured multi-GB builds as nearly free.
+      let the governor admit two unmeasured multi-GB builds as nearly free. **Already true — closed 2026-08-07
+      (na-eligibility-audit)**: `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 19 confirms
+      `unified-trading-system-ui@6441e477` was reverted "EXCEPT `ui-quality-gates-v2.yml` (already correctly
+      `ubuntu-latest`)" — the state this todo asks for already holds; nothing actionable remains unless/until a future
+      repo-visibility change (the conditional "if ever made private" clause, which is not this checkbox's scope).
 
 - [ ] [DOC] P2. **Update stale codex docs.** `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no
       longer on the planning VM); `self-hosted-runner-security-posture.md` (dedicated VM **and** the public-repo threat
@@ -657,3 +667,17 @@ background of that work.
 - **context-scout 2026-08-05**: populated context_scope (6 entries).
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — actively-evolving incident audit, OPERATOR security items
+
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries, was 6) -- swapped
+  `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (cited only in frontmatter `related:`, never referenced in
+  the doc's own body) for `scripts/plan-hygiene/run_hygiene_sweep.sh` -- the script behind the "Recommended NEXT item"
+  (fix the 6 failing plan-hygiene ratchets, Part 8/Finding 4), the most actionable open item and the one currently
+  blocking PM's own LDR→main promotion.
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, 2 stale items closed — re-read
+all 15 open items end-to-end. Closed 2: "Fix the 6 failing plan-hygiene ratchets" (shipped twice,
+`unified-trading-pm@b30fb5267` + `@50b8643dc`, `run_hygiene_sweep.sh --ci` verified EXIT 0) and "Re-point the UI QG
+todo" (already true — `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 19 confirms `ui-quality-gates-v2.yml`
+was already correctly `ubuntu-latest` through the revert). 13 remain genuinely open — operator-gated, judgment-call, or
+duplicate-tracked-elsewhere-so-not-closable-here (item 6, "Complete public-repo migration," and item 9, "Cut
+sibling-clone I/O," are cross-referenced in sibling NA docs, not done). No `assigned_vm` change.

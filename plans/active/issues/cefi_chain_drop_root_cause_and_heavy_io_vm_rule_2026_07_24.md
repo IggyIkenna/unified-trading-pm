@@ -52,6 +52,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+    market-tick-data-service/scripts/verify_cefi_canonical_4surface_2026_07_20.py,
   ]
 ---
 
@@ -553,3 +554,6 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   sole open item (resume the paused prod-GCS-rename migration) wraps a manifest-consolidator pause/verify/apply/resume
   sequence lacking an `[OPERATOR]` tag or stated reversibility justification, and this doc's own history records 2
   near-misses from this exact class of action. Resuming is a judgment call, not worker-determinable.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added
+  `verify_cefi_canonical_4surface_2026_07_20.py`, the final done-state re-proof script the sole open todo names directly
+  as its last step before archival.

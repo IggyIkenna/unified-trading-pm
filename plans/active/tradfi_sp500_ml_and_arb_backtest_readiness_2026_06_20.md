@@ -250,3 +250,6 @@ here.
   plan refs (parent epic, resolved forks) for 3 real features-service source files (`feature_group_service.py`,
   `realized_vol_calculator.py`, `vix_calculator.py`) the open wiring todos name directly.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-07**: re-verified context_scope (6 entries, unchanged) — the only commit since the last scout
+  (`b30fb5267b`) added `effort: high` to frontmatter, no substantive content change; all 6 entries still resolve and
+  remain the correct minimal set.

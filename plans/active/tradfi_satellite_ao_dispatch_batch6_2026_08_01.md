@@ -73,6 +73,15 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
+    instruments-service/instruments_service/engine/urdi_reference_provider.py,
+  ]
 ---
 
 # TradFi satellite AO batch 6 — fresh audit extraction
@@ -363,10 +372,167 @@ real count==0 window appears or the operator re-scopes/overrides.
 market-tick-data-service `.venv` python (pyarrow 23.0.1) still present; baseline re-run clean (0 canonical ES_OPT rows
 pre-launch). Post-launch = re-download a FRESH manifest + run the phase-2 query above.
 
-- **NEXT ACTION (fresh session):** re-check
-  `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING' --zones=asia-northeast1-c`. When count
-  == 0, run the launch command; confirm VM(s) STARTED (<60s) + RUNNING at T+10min per async-wait-and-poll-discipline (no
-  fire-and-forget). When count >0, wait (operator-approved); do NOT `--force`.
+**SLOT-11 SESSION 3 (2026-08-07T04:46Z) — Watcher armed and running.** Fleet at session start: 7 VMs (2 completing
+imminently). At 04:55:52Z: watcher launched (harness task `bff5b50zn`), PID 957114. Poll 1 (04:55:52Z): 4 VMs. Poll 2
+(05:00:53Z): 4 VMs. Watcher is error-aware; will autonomously launch ES_OPT when count==0, verify T+30s/T+10min,
+download fresh manifest, run pyarrow count query (venue=CME × ohlcv_1m × options_chain × 11 roots), flip checkbox,
+commit `docs(plans):` push, call `/done`. Script at:
+`/home/ubuntu/.claude-configs/orch-slot-11/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-11/10b8b22e-b2b7-4746-a864-3fec64b52969/scratchpad/es_opt_watcher.sh`
+(and promoted to `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`). Log: `…/scratchpad/es_opt_watcher.log`.
+**Compaction safety:** bash process (PID 957114) and harness task survive compaction.
+
+- **NEXT ACTION (fresh session):** First check if watcher is still alive:
+  `kill -0 957114 2>/dev/null && echo ALIVE || echo DEAD`. If ALIVE: wait for harness notification (`bff5b50zn`) — the
+  watcher will complete autonomously. If DEAD: check if todo #2 checkbox is already flipped (done). If not done, re-arm:
+  update SCRATCHPAD var in `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` and re-launch with the Bash
+  run_in_background tool. Do NOT re-run if watcher is alive — singleton lock race risk.
+
+- **context-scout 2026-08-07**: populated context_scope (6 entries) — the 4 codex docs already named in this doc's own
+  "Codex SSOTs" section, plus the 2 highest-value per-todo source paths from the File-collision matrix
+  (`launch-tradfi-backfill-vm.sh` for the P0 ES_OPT todo, `urdi_reference_provider.py` for the CME
+  instrument-definitions todo).
+
+**SLOT-11 SESSION 4 (2026-08-07T05:58Z) — Watcher re-armed after session-3 instance died.** Original watcher (PID
+957114, harness task `bff5b50zn`) went silent after poll 10 (05:41:01Z, 3 VMs); confirmed DEAD via `kill -0` at 05:57Z
+(~17min gap, no poll 11 despite 300s cadence — process died, root cause not investigated, not needed). Todo #2 checkbox
+confirmed still `[ ]` (not a stale-DEAD false alarm). Live re-check at re-arm time: 2 tradfi-bf-* VMs running (down from
+3 — fleet still draining). Re-armed from the promoted script `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`
+into the SAME scratchpad dir (prior log renamed to `es_opt_watcher.log.run1` to avoid poll-number confusion with the new
+run). New instance: **PID 2186673**, PPID=1 (confirmed fully detached from the launching harness task — nohup + `&`
+reparented it to init, so it will NOT die when the launching Bash tool call's own background-task wrapper exits). Poll 1
+(05:58:35Z): 2 VMs. Same 6-phase autonomous script (poll → launch ES_OPT → verify T+30s/T+10min → poll completion →
+manifest query → flip+commit+push+`/done`).
+
+**SLOT-11 SESSION 5 (2026-08-07T06:07Z) — Watcher re-armed AGAIN; root-caused the death and fixed detachment.** PID
+2186673 (session 4) also died silently — between poll 2 (06:03:36Z, 10 VMs) and 06:05:53Z, mid-`sleep 300`, with **zero
+FATAL log entry**. A mid-sleep death with no error output rules out an internal script bug (nothing executes during
+`sleep`) — it means an external signal killed it. Diagnosis: `nohup cmd &` reparents the child to init on parent exit
+(confirmed PPID=1 both times) but does **NOT** put it in a new process group — under `bash -c "..."` (no job control /
+`set -m`), a `&`-backgrounded job stays in the **same PGID** as the invoking shell. If the launching Bash tool's
+tracked-task cleanup kills by process group (common sandbox pattern) rather than by direct-child tracking, a `nohup`'d
+grandchild with PPID=1 is still reachable via that shared PGID and dies anyway — PPID=1 alone is NOT sufficient proof of
+immunity. **Fix: `setsid nohup bash script.sh > log 2>&1 < /dev/null &` + `disown`** — `setsid` makes the process both
+session leader AND process-group leader of a brand-new group, genuinely unreachable via the launching shell's PGID/SID.
+**Gotcha hit while re-arming:** util-linux `setsid` without `-f` forks internally when it can't `setsid()` in-place, so
+`$!` in the launching shell captures the WRONG pid (the forked wrapper, which exits immediately) — the real long-lived
+process gets a **different** PID. Always resolve the real PID via
+`ps -ef | grep '<scratchpad>/es_opt_watcher.sh' | grep -v grep` after launch, never trust `$!` with plain (non-`-f`)
+`setsid`. New instance: **PID 2367038**, confirmed `PGID=SID=2367038` (own session AND own process group — the actual
+isolation bar, not just PPID=1). Poll 1 (06:07:21Z): 22 VMs (fleet is now large — NASDAQ/NYSE 2023 wave in full swing;
+does not change watcher behavior, still just waits for count==0).
+
+- **NEXT ACTION (fresh session, supersedes both PID-957114 and PID-2186673 instructions above):** First check if watcher
+  is still alive: `kill -0 2367038 2>/dev/null && echo ALIVE || echo DEAD`. If ALIVE: wait for autonomous completion —
+  poll the log at `<scratchpad>/es_opt_watcher.log` or check `plans/active/` for the checkbox flip (no harness task ID
+  tracks this instance; it was launched fully detached). If DEAD: check if todo #2 checkbox is already flipped (done).
+  If not done, re-arm AGAIN from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`: (1) update `SCRATCHPAD` to
+  a fresh writable dir, (2) launch with `setsid nohup bash script.sh > log 2>&1 < /dev/null & disown` — NOT plain
+  `nohup ... &` (insufficient — see above), (3) find the REAL pid via `ps -ef | grep script.sh | grep -v grep` (NOT `$!`
+  — `setsid` without `-f` forks, so `$!` is wrong), (4) verify with `ps -o pid,ppid,pgid,sid -p <pid>` that **PGID and
+  SID both equal the process's own PID** before trusting it survives — PPID=1 alone is insufficient. Do NOT re-run if
+  watcher is alive — singleton lock race risk.
+
+### 2026-08-07T~04:46Z — slot 11, task `tradfi_satellite_ao_dispatch_batch6-002` (todo #2) — fresh session
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Fleet draining (6 VMs remain from 03:00Z wave; operator decision to keep
+waiting unchanged).** Background watcher armed.
+
+**Fleet snapshot at ~04:46Z (slot 11 fresh session):**
+
+- `tradfi-bf-nyse-ohlcv-1m-2023-d01-20260807-030305` — COMPLETED (exit_code=0, self-deleting; verified via run.log)
+- `tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260807-030050` — RUNNING at chunk 19/53 (2020-05-18), ~3h remaining
+- `tradfi-bf-cme-ohlcv-1m-g01-mbt-mbt-2024-20260807-030438` — RUNNING at 2024-09-03, progressing
+- `tradfi-bf-cme-ohlcv-1m-g01-met-met-2023-20260807-030119` — RUNNING, just (re)initialized DatabentoAdapter
+- `tradfi-bf-nyse-ohlcv-1m-2024-d04-20260807-030741` — RUNNING, 2024 date range active
+- `tradfi-bf-nyse-ohlcv-1m-2024-d05-20260807-030801` — RUNNING at 2024-12-09 (near end), ~60min
+- `tradfi-bf-nyse-ohlcv-1m-2025-d04-20260807-031131` — RUNNING at 2025-10-10
+
+Count dropped from 28 (2026-08-06T18:10Z) → 6 (2026-08-07T04:46Z). Drain is progressing. ETA: es-es-2020 is the long
+pole (~3h from check time); if no new wave launches, count==0 likely ~07:00-09:00Z 2026-08-07.
+
+**Watcher armed:** background script `es_opt_watcher.sh` will:
+
+1. Poll every 300s for tradfi-bf-* count==0 (error-aware: rc!=0 = hold)
+2. Launch ES_OPT per phase-1 command when clear
+3. Verify T+30s started + T+10min RUNNING
+4. Poll for tradfi-bf-es-opt-* completion
+5. Download fresh manifest, run count query, update closeout plan, flip checkbox, commit+push, call /done
+
+### 2026-08-07T~05:51Z — slot 11, session 4 — watcher re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Watcher re-armed (harness task `bcumi0sad`).** Prior watcher (PID 957114,
+task `bff5b50zn`) died between sessions; checkbox NOT yet flipped. Fleet at re-arm: 2 VMs remaining
+(`tradfi-bf-cme-ohlcv-1m-g01-es-es-2020` at 2020-07-14, `tradfi-bf-cme-ohlcv-1m-g01-met-met-2023` at 2023-05-06 — both
+live/monotonic-progressing, not stale). Long pole: met-met-2023 (~6h remaining). Watcher polls every 300s; progress
+updates to server every 3rd poll. When count==0: launches ES_OPT → verifies → waits completion → downloads fresh
+manifest → runs count query → updates both plan files → commits + pushes → calls `/done`. Log at:
+`…/8e0e0b20-3e7a-42f5-a2dd-ef603f9b296e/scratchpad/es_opt_watcher.log`.
+
+### 2026-08-07T~06:14Z — slot 11, session 6 — watcher re-armed (run_in_background: true, per RULES.md)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Watcher PID 2367038 (session 5, setsid) DEAD at boot check.** Fleet at
+session-6 boot: **33 VMs** — new NASDAQ/NYSE 2023-2025 + CME wave launched ~06:00Z; lock held continuously per the
+operator-approved keep-waiting decision.
+
+**Root-cause diagnosis (sessions 3–5):** All three watcher approaches (harness task / nohup+& / setsid) died mid-sleep
+with zero FATAL log entries. Working hypothesis: the harness sandbox kills by process group on tracked-task teardown
+when the launching tool-call wrapper exits; `setsid` creates a new PGID but the sandbox may also send SIGKILL via PID
+directly (not just PGID) to children of exited tracked tasks. Confirmed solution: **use `run_in_background: true`** per
+RULES.md HARD RULE ("the harness's own backgrounding keeps the process correctly parented … and its exit is the tracked
+wake") — this registers the background job with the harness as an OWNED task, not an orphan-reapable process.
+
+**Session 6 re-arm: `run_in_background: true` (Bash tool, no `nohup`/`&` wrapper).** Watcher script:
+`deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (committed `deployment-service@cab7f2d`). Scratchpad:
+`/home/ubuntu/.claude-configs/orch-slot-11/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-11/de9e9cdd-eaf0-4210-a43e-575c4fe333fd/scratchpad`.
+
+**Harness task**: `b9iintlzz` (started 06:32:40Z, poll 1 = 33 VMs). Output file:
+`…/de9e9cdd-eaf0-4210-a43e-575c4fe333fd/tasks/b9iintlzz.output`. Watcher log:
+`…/de9e9cdd-eaf0-4210-a43e-575c4fe333fd/scratchpad/es_opt_watcher.log`.
+
+- **NEXT ACTION (post-compact or fresh session):** (1) Check if todo #2 checkbox is `[x]` already (watcher may have
+  auto-completed). (2) If `[ ]`, check `b9iintlzz.output` file for completion status. (3) If watcher still running
+  (harness will notify on completion): wait for notification, then verify checkbox flip in git log. (4) If watcher
+  failed or no harness notification arrives: re-arm with `run_in_background: true` (Bash tool, no `nohup`/`&`) from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — set `SCRATCHPAD` to a fresh writable dir first. (5) Do
+  NOT re-arm if watcher is running — singleton lock race risk.
+
+### 2026-08-07T06:57Z — slot 8, session 7 — watcher re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Watcher b9iintlzz (session 6, slot 11, `run_in_background:true`) died after
+poll 3 at 06:42Z** — confirmed dead (output file ends at poll 3; session-6 task output ends there). Root cause: when the
+slot-11 session ended, the harness killed its owned background task (b9iintlzz). This confirms `run_in_background:true`
+keeps the task alive only for the duration of the OWNING Claude Code session; it does NOT survive inter-session
+handoffs.
+
+**Pattern (sessions 3–7): watcher always dies when the Claude Code session ends.** Each fresh session re-arms. This is
+expected — the AO re-dispatches this task to a new slot each time, and the new session re-arms as NEXT ACTION.
+
+**Fleet at slot-8 boot (2026-08-07T06:57Z): 23 VMs running** (down from 27 at session-6 poll 3 → 23 at slot-8 boot).
+Fleet is still draining. Operator keep-waiting decision unchanged.
+
+**Session 7 re-arm:** Modified watcher copy for slot 8:
+`…/e72382bd-a3d1-416a-ae84-85656714dec1/scratchpad/watcher/es_opt_watcher_slot8.sh` (SLOT_ID=8, SLOT_TABS=.tabs/8,
+PYTHON=.tabs/8/market-tick-data-service/.venv/bin/python). Launched with `run_in_background:true`. Harness task:
+**`baz81km0n`** (started 06:57:36Z, poll 1 = 23 VMs at 06:57:37Z).
+
+**Post-compact status (2026-08-07T07:07Z — same session 7, context compacted):** baz81km0n survived context compaction.
+poll 3 = 19 VMs at 07:07:39Z (23→21→19, draining at ~2 VM/5min). Watcher confirmed alive. All repos ahead=0.
+
+**Pre-compact ritual (2026-08-07T07:12Z — /compact then /pre-compact within same session 7):** Step 1 audit: PM repo
+clean, ahead=0. Scratchpad has 3 files (`es_opt_watcher.log`, `es_opt_watcher_slot8.sh`, `manifest_query.py`) — all
+regenerable (watcher embeds manifest_query.py as a heredoc, slot-8 copy is a sed-patch of the committed
+`es-opt-backfill-watcher.sh`, log is re-created on first poll). No dangling committed-doc→scratchpad references (plan
+references are narrative-only, not functional). No secrets. No chat-only findings. No new todos. Nothing to promote.
+Watcher baz81km0n confirmed alive: poll 4 = 18 VMs at 07:12:40Z (drain rate ~1-2 VMs/5min). Lesson: `/compact` (context
+compaction) does NOT kill background harness tasks — baz81km0n survived two compactions. **Verdict: Safe to compact:
+YES. SHA = 7cb83ddcd, ahead=0. Nothing at risk.**
+
+- **NEXT ACTION (fresh session):** (1) Check if todo #2 checkbox is `[x]` (watcher auto-completed). (2) If `[ ]`, check
+  harness task output: `…/e72382bd-a3d1-416a-ae84-85656714dec1/tasks/baz81km0n.output`. (3) If watcher still running
+  (last known poll 4 = 18 VMs at 07:12:40Z), arm Monitor on watcher log and wait. (4) If watcher dead and task not done:
+  re-arm from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — create modified copy with SLOT_ID=<new-slot>,
+  SLOT_TABS=.tabs/<new-slot>, PYTHON=.tabs/<new-slot>/market-tick-data-service/.venv/bin/python — and launch with
+  `run_in_background:true`. Verify poll 1 in output before updating progress log. Do NOT re-arm if watcher running.
 
 ## Codex SSOTs
 

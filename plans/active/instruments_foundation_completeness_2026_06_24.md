@@ -369,3 +369,5 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): gated umbrella requiring
   per-AG operator G-gate sign-off; genuine mix of redirect/partially-AO-covered/under-specified items, none clear the
   whole-doc RECLASSIFY bar (assigned_vm flips per-doc, not per-item).
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate — the only change since
+  the 2026-08-03 marker was a 2026-08-06 na-eligibility-audit reaffirmation, no new content/targets.

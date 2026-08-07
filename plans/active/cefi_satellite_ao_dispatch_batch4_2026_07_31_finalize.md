@@ -70,7 +70,7 @@ context_scope:
       `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`,
       `issues/cefi_content_apply_memory_freeze_recurs_post_fix_and_registry_false_reap_2026_07_31.md`,
       `issues/cefi_content_migration_shard13_network_error_and_checkpoint_resume_bug_2026_07_31.md`,
-      `issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`,
+      `/plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`,
       `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (cefi-scoped checkboxes only — leave the
       sports-scoped item open), `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` (item 4 of 4 only —
       leave items 1-3 open, they were deliberately not batched). For each landed batch-4 todo, flip the corresponding

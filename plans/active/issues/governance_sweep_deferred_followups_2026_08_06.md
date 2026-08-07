@@ -52,7 +52,11 @@ source: >-
   backlog and the entire live [OPERATOR]-decision corpus, requested explicitly ("check for operator blocking stuff...
   let's pick these all up and use answers to unlock more on the 1.3k tasks sitting outside AO").
 context_scope:
-  [/cursor-configs/skills/na-eligibility-audit/SKILL.md, /scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
+  [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /scripts/plan-hygiene/check_na_corpus_ratchet.py,
+    /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+  ]
 ---
 
 # Governance sweep 2026-08-06 — deferred follow-ups
@@ -192,3 +196,14 @@ different task than writing the ruling:
 - **2026-08-06 (interactive governance sweep)**: filed at session end (context ~81%, /pre-compact checkpoint) to make
   sure the reclassification pass this sweep was explicitly building toward, plus the lower-priority bookkeeping and
   every genuinely operator-owned item, survive as tracked work rather than only existing in chat.
+- **context-scout 2026-08-07**: refreshed context_scope (3 entries) — todo 1 (the reclassification pass) is now DONE, so
+  re-pointed the list at what a worker touching the still-open items actually needs: kept the na-eligibility-audit
+  methodology, swapped the one-shot inventory generator for `check_na_corpus_ratchet.py` (the ratchet this doc's DONE
+  todo moved and any future NA work must keep green), and added
+  `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` (the open P2 conflict-check item's own text names it
+  "highest priority of the 6"). **Stale-candidate finding**: this doc's own `related:` frontmatter still cites
+  `/plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`, which no longer exists at that path —
+  it was archived to `/plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md` (`status: resolved`)
+  since this doc's own related-list was written; not added to context_scope (fully resolved, superseded by this doc's
+  own newer 2026-08-06 sweep) but the dead active-path citation is a `/plan-reconcile`-class fix this skill does not
+  make itself.

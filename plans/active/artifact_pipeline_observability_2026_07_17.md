@@ -951,3 +951,4 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
 - **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; remaining
   12 items are operator-paused (CPU-throttling test), explicitly-optional stretch items (Phase 6 P3s), or follow-on
   cleanup tied to the same operator-reviewed design track.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.

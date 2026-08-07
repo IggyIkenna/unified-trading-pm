@@ -132,6 +132,21 @@ print(repos.get('$repo', {}).get('version_source', 'pyproject.toml'))
 " 2>/dev/null || echo "pyproject.toml"
 }
 
+# Branch that triggers push: CI for this repo ({{CI_TRIGGER_BRANCH}} placeholder).
+# Default "main" for all ldr_main repos — no change to any existing rendered file.
+# Set to "live-defi-rollout" for ldr_terminal repos (manifest field `ci_trigger_branch`)
+# so their quality-gates-v2 gate fires on LDR pushes instead of a main-promotion PR
+# that no longer exists for those repos.
+get_ci_trigger_branch() {
+  local repo="$1"
+  MANIFEST_PATH="$MANIFEST" python3 -c "
+import json, os
+m = json.load(open(os.environ['MANIFEST_PATH']))
+repos = m.get('repositories', {})
+print(repos.get('$repo', {}).get('ci_trigger_branch', 'main'))
+" 2>/dev/null || echo "main"
+}
+
 # dep_repos per repo (space-separated dep names), as the TRANSITIVE EDITABLE CLOSURE.
 #
 # SOURCE OF TRUTH = each repo's pyproject `path = "../<repo>"` editable deps — NOT
@@ -319,14 +334,16 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
       fi
       repo_underscore="${repo//-/_}"
       version_source=$(get_version_source "$repo")
+      ci_trigger_branch=$(get_ci_trigger_branch "$repo")
       qg_runner_labels=$(get_qg_runner_labels "$repo")
       runs_on_value=$(get_runs_on_value "$repo")
       rendered=$(sed -e "s/{{DEP_REPOS}}/${dep_repos}/g" \
                      -e "s/__REPO_NAME__/${repo}/g" \
                      -e "s/__SOURCE_DIR__/${repo_underscore}/g" \
                      -e "s/__VERSION_SOURCE__/${version_source}/g" \
+                     -e "s/{{CI_TRIGGER_BRANCH}}/${ci_trigger_branch}/g" \
                      -e "s#{{QG_RUNNER_LABELS}}#${qg_runner_labels}#g" \
-                     -e "s#{{RUNS_ON}}#${runs_on_value}#g" \
+                     -e "s#__RUNS_ON__#${runs_on_value}#g" \
                      "$template")
       # Skip if target already matches rendered output
       if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then
@@ -340,13 +357,22 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
         echo "  [$([ -f "$target" ] && echo updated || echo created)-tmpl] $repo (dep_repos=${dep_repos})"
       fi
     else
-      # "Flat copy" templates still get the {{RUNS_ON}} substitution (2026-08-05,
+      # "Flat copy" templates still get the __RUNS_ON__ substitution (2026-08-05,
       # get_runs_on_value() above) — a no-op sed pass for any template that doesn't contain
       # the placeholder, so this stays byte-identical to a real `cp` for those. Compare
       # rendered content (not `diff` against the raw template) so the skip-if-unchanged check
       # is still correct for templates that DO substitute.
+      #
+      # __RUNS_ON__ (double-underscore, matching __REPO_NAME__/__SOURCE_DIR__), NOT
+      # {{RUNS_ON}} (2026-08-07 fix, cicd escalation agt-62ba62): prettier's YAML formatter
+      # deterministically reformats a bare `{{RUNS_ON}}` flow-mapping-lookalike into the
+      # broken `{ { RUNS_ON } }` (verified: nested flow-mapping used as an unhashable key —
+      # invalid YAML, GitHub silently stops scheduling the workflow) — and this repo's
+      # prettier-autostage pre-commit hook re-applies that mangling on every commit, so the
+      # `{{...}}` form can never survive a commit here. A bare `__RUNS_ON__` token is a plain
+      # YAML scalar prettier does not touch.
       runs_on_value=$(get_runs_on_value "$repo")
-      rendered=$(sed -e "s#{{RUNS_ON}}#${runs_on_value}#g" "$template")
+      rendered=$(sed -e "s#__RUNS_ON__#${runs_on_value}#g" "$template")
       if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then
         skipped=$((skipped + 1))
         continue

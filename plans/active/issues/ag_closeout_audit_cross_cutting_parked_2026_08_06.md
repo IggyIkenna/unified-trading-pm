@@ -82,10 +82,11 @@ source: >-
   never-cited). Phase 1 Workflow (6 agents) classified all 6 `exclude_cross_cutting`; 2 fixed directly, 4 parked here.
 context_scope:
   [
+    /plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md,
+    /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
+    /plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md,
+    /plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
   ]
 ---
 
@@ -276,3 +277,6 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
   findings 1/2/3's targets — genuinely IS this tranche's to act on, not a cross-tranche write). Executed: retagged +
   archived, todo #231 flipped `[x]`. Findings 1/2/3 remain correctly deferred (their targets are independently KEEP-NA
   per this run's own classification of them, so no analogous escalation applies).
+- **context-scout 2026-08-07**: populated context_scope (5 entries) — pointed at the 4 still-open findings' actual retag
+  targets (findings 1/2/3/5) plus SKILL.md for process context; dropped the generic conflict-check codex doc (no batch
+  drafted this run) and the hub/prior-sibling pointers (less load-bearing than the todos' own direct targets).

@@ -155,3 +155,5 @@ candidate for that tranche's next pass, not just a retag-only finding.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02/08-03 (unchanged): the retag sub-part is
   done, but the fold-in/dispatch of the target doc is still not done — a genuine parked-findings handoff owned by the
   `ao` tranche's own audit, not this doc's write.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (4 entries), still accurate — the only change since
+  the 2026-08-05 marker was a 2026-08-06 na-eligibility-audit reaffirmation, no new content/targets.

@@ -47,6 +47,7 @@ locked_by:
 resolved_by:
 context_scope:
   [
+    /scripts/plan-hygiene/check_create_only_archive_commits.py,
     /scripts/plan-hygiene/find_moved_doc_referrers.sh,
     /scripts/plan-hygiene/run_hygiene_sweep.sh,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -198,3 +199,7 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
 - 2026-08-06 (slot-6, review): the parent `prek_patch_cache...` doc was archived (all todos done, mechanism named) via
   `git mv` to `plans/archive/issues/` + `status: resolved` + ARCHIVED banner + corpus-wide referrer sweep (14 files).
   This doc's `related:` updated to the archive path; the archival P3 todo flipped.
+- **context-scout 2026-08-07**: populated context_scope (4 entries) — added
+  `scripts/plan-hygiene/check_create_only_archive_commits.py` (the shipped guard script itself, P1's actual deliverable,
+  not previously cited); the 3 pre-existing entries (the two referrer/hygiene scripts + the archival-discipline codex
+  doc the remaining open P3 todo targets) re-verified, still resolve.

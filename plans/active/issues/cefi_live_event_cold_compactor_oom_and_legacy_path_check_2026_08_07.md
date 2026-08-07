@@ -48,6 +48,14 @@ superseded_by:
 source: "cefi_satellite_ao_dispatch_batch4_2026_07_31.md todo 2 — rows-did-not-land branch"
 resolved_by:
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md,
+    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    deployment-service/deployment_service/jobs/live_event_log_compactor.py,
+    deployment-service/terraform/gcp/live_event_log/compaction_job.tf,
+  ]
 ---
 
 # CeFi live capture is alive (warm tier healthy) but the cold compactor OOMs — raw_tick_data/live_* is a retired path
@@ -184,3 +192,6 @@ surface that actually exists (warm + cold event-log tiers).
   `pyarrow.ParquetWriter` that writes one row group per warm file, bounding peak memory to one file's rows plus the
   accumulated cold parquet buffer. Also merged `CompactorConfig.compaction_date` (COMPACTION_DATE env var) from
   concurrent todo. QG green. deployment-service@5e23a7b.
+- **context-scout 2026-08-07**: populated context_scope (5 entries).
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 5 entries confirmed resolving on disk; content
+  unchanged.

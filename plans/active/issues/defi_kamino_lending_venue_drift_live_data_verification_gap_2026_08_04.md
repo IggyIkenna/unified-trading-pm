@@ -86,6 +86,15 @@ source:
     "sub-agent dispatch, 2026-08-04, item 7 of defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md
     (KAMINO_LENDING half)",
   ]
+context_scope:
+  [
+    /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_lending_grain.py,
+    market-tick-data-service/scripts/fold_legacy_composite_venue_objects_2026_07_31.py,
+    /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
+  ]
 ---
 
 # KAMINO_LENDING venue-naming-drift — code fixed, live-data remediation unverified
@@ -222,3 +231,4 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
     same doc independently reached a more cautious "may auto-resolve, mark for re-check" verdict — my read is the first
     to confirm concretely (via git) that the risk is real and unresolved, not just a stale process artifact. Doc stays
     `assigned_vm: NA`, `status: open`.
+- **context-scout 2026-08-07**: populated context_scope (6 entries).

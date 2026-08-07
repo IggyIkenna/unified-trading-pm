@@ -55,6 +55,7 @@ source: >-
 drift_direction: advance-code
 context_scope:
   [
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/task_template.md,
@@ -654,6 +655,10 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the tranche-inventory generator script the
   incremental audit runs are actually driven by.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) -- added
+  `/cursor-configs/skills/na-eligibility-audit/SKILL.md`, the formalized skill this LOCAL plan's own methodology was
+  generalized into (this doc's 2026-07-30 marker already calls itself "the LOCAL/human-driven origin plan for the very
+  skill this run executes under" in prose but never linked it); other 5 entries re-verified, still resolve, unchanged.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

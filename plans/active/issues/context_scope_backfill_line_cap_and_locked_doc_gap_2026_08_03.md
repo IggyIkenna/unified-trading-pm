@@ -36,10 +36,8 @@ locked_since:
 depends_on: []
 context_scope:
   [
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /cursor-configs/skills/context-scout/SKILL.md,
-    scripts/plan-hygiene/check_line_caps.sh,
+    /plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
   ]
@@ -333,11 +331,30 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   expanded `context_scope` from 2→5 pre-computed entries, and added a Progress Log marker. Result: 896L, well under the
   1000L hard cap — `check_line_caps.sh` passes. All 11 docs in this issue are now resolved; all checkboxes flipped.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries) — all numbered Plan todos are done, so dropped the
+  now-closed line-cap-remediation citations (`plan-completion-and-archival-discipline.md`, the archived
+  `plan_line_cap_remediation_2026_07_23.md` precedent, `check_line_caps.sh`) and re-pointed the list at the sole
+  remaining Follow-up's actual target, `fleet_audit_triad_deferred_followups_2026_06_01.md`. Note: that target doc's own
+  frontmatter now carries a real 4-entry `context_scope` (`plan-completion-and-archival-discipline.md`,
+  `gcs-and-manifest-delete-safety-protocol.md`, `vm_log_archival_cron.py`, `vm_log_archival_scheduler.tf`), not the
+  "stub" the Follow-up's own text still describes — surfaced as a stale-candidate finding, not corrected here (out of
+  this skill's scope).
 
 ## Follow-ups
 
 - [ ] [SCRIPT] P3. Complete the full context-scout for fleet_audit_triad_deferred_followups_2026_06_01.md (Phase-1
       analysis + a proper context_scope list; the applied entry is a stub).
+- [ ] [SCRIPT] P3. Trim/split 3 more docs newly confirmed sitting at the EXACT 1000-line hard cap during the 2026-08-07
+      corpus-wide context-scout run (same remediation pattern as this issue's own earlier 11-doc batch — extract the
+      oldest fully-closed Progress Log section(s) to an archive-bound history doc, leave a one-line pointer): (1)
+      `plans/active/data_pipeline_check_mdps_features_2026_07_20.md` — hunter left context_scope untouched (5 entries,
+      still accurate) and skipped the marker; (2) `plans/active/data_completion_defi_2026_07_15.md` — hunter did a
+      0-net-line-delta content swap (3→3 entries) but could not add the marker; (3)
+      `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` — hunter left context_scope untouched (5
+      entries) and skipped the marker; already independently tracked with a full extraction-plan writeup in
+      `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed same day by a concurrent
+      na-eligibility-audit pass) — that doc's plan applies here too, just needs an operator/committer to execute it. All
+      3 will keep reading STALE on every future Phase-0 run until trimmed.
 
 > **2026-08-06 archive-candidate audit**: The doc's locked-docs note explicitly says
 > 'fleet_audit_triad_deferred_followups_2026_06_01.md had no proposed list computed ... a future pass should do the full

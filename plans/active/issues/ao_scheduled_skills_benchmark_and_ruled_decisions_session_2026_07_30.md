@@ -351,3 +351,5 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-03 (unchanged): remaining items are
   soft/low-value benchmark re-run asks or gated on those landing first plus a broad synthesis call; none independently
   worker-executable.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate — the 2026-08-06 commit
+  touching this file was a structural/heading-defect fix only, no substantive content change.

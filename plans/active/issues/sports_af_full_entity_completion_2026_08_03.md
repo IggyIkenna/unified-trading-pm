@@ -47,10 +47,12 @@ source: ["sports_satellite_ao_dispatch_batch2, autonomous continuation, 2026-08-
 drift_direction: advance-code
 context_scope:
   [
-    /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
-    /codex/02-data/mvp-scope-canonical.md,
-    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
     instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py,
+    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
+    instruments-service/scripts/census_other_vendors_gap_2026_08_06.py,
+    /codex/02-data/mvp-scope-canonical.md,
+    /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
+    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
   ]
 ---
 
@@ -82,9 +84,9 @@ healthy, so even these may understate true progress).
 | ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FIXTURES         | all-383                      | **DONE** — confirmed complete `sports_fixture_events_refetch_progress_2026_07_25.md`                                                                                                                                                            |
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                                                                          |
-| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,325 expected (non-MVP), ~415,755 already resolved, **24,495 needed** — **QUEUED**: quota has reset (confirmed), resumable from `PROGRESS.json` checkpoint `2023-11-19`; queued behind PLAYER_STATS (af-backfill-* singleton lock), see below |
-| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                                                                                  |
-| **PLAYER_STATS** | **MVP-96**                   | 42,376 expected, 41,447 already resolved, **929 needed** — **ACTIVE**, chunk 2/26, genuinely backfilling via `af-backfill-20260807-013716`, see below                                                                                           |
+| FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,325 expected (non-MVP), ~416,042 already resolved, **24,462 needed** — **QUEUED**: quota has reset (confirmed), resumable from `PROGRESS.json` checkpoint `2023-11-19`; queued behind PLAYER_STATS (af-backfill-* singleton lock), see below |
+| FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,325 expected (non-MVP), 52,947 already resolved, **58,523 needed** (small background drift, no dedicated backfill)                                                                                                                           |
+| **PLAYER_STATS** | **MVP-96**                   | 42,376 expected, 41,863 already resolved, **513 needed** — **ACTIVE**, chunk 13/26, via `af-backfill-20260807-013716`, see below                                                                                                                |
 | **INJURIES**     | **all-383**                  | 108,701 expected, 45,992 already resolved, **62,709 needed** (unchanged — queued behind PLAYER_STATS/FIXTURE_STATS)                                                                                                                             |
 | **STANDINGS**    | **all-383**                  | 108,701 expected, 108,430 already resolved, **271 needed (99.75%)** — quota-tail residual; **QUEUED** for a small completion pass once af-backfill-* frees up, see below                                                                        |
 | **TEAMS**        | **all-383**                  | 108,701 expected, 108,605 already resolved, **96 needed (99.9%)** — quota-tail residual; **QUEUED** for a small completion pass once af-backfill-* frees up, see below                                                                          |
@@ -97,7 +99,7 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-07T02:58Z: 64,005 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+**Grand total needed, 2026-08-07T09:03Z: 63,589 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
 further ~67% drop — TEAMS/STANDINGS both essentially converged, see Progress Log) **+ 83,051 across
 FIXTURE_STATS+FIXTURE_LINEUPS** (24,495 + 58,556). **The API-Football daily quota exhaustion has RESET** — PLAYER_STATS
 is ACTIVE via `af-backfill-20260807-013716`, genuinely progressing through its chunk sweep; FIXTURE_STATS + the small
@@ -649,3 +651,61 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-07T02:58Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 2/26. PLAYER_STATS 973→929 (-44),
   steady real progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued, no switch
   needed. Grand total 64,005 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — added
+  `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` (the actual `af-backfill-*` singleton-lock launcher
+  driving this entire campaign, never named by filename in the doc's own prose despite dozens of VM-name mentions) and
+  `instruments-service/scripts/census_other_vendors_gap_2026_08_06.py` (the newer census script covering the doc's
+  2026-08-06 operator-directed scope expansion to the other 5 sports vendors); all 4 pre-existing entries re-verified to
+  resolve on disk and kept.
+- **2026-08-07T03:21Z** — Still RUNNING and healthy (0 rate-limit errors), accelerated sharply from chunk 2/26 to chunk
+  9/26 — skip-fast through a stretch of chunks with few/no remaining PLAYER_STATS gaps. PLAYER_STATS 929→702 (-227), the
+  biggest single-tick drop since the quota reset. Census scripts hit their 280s timeout on first attempt this tick
+  (transient, retried successfully — not a new failure mode). FIXTURE_STATS/TEAMS/STANDINGS/ FIXTURE_LINEUPS/INJURIES
+  unchanged — still queued, no switch needed. Grand total 63,778 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
+- **2026-08-07T03:39Z** — Still RUNNING and healthy (0 rate-limit errors), now chunk 10/26. PLAYER_STATS 702→643 (-59),
+  steady progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued, no switch needed.
+  Grand total 63,719 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged). (Aside: this tick also handled a genuine live
+  operator request off-loop, unrelated to this campaign — researched + reported the `footystats-api-key` GSM rotation
+  command (couldn't execute it myself, no session identity has Secret Manager access on central-element-323112) and
+  produced the FootyStats Prediction+Features 49-league checklist for the operator to check in FootyStats's own UI;
+  logged here only for continuity since it interleaved with this tick's cadence.)
+- **2026-08-07T03:53Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 10/26. PLAYER_STATS 643→604
+  (-39). FIXTURE_STATS/FIXTURE_LINEUPS both ticked down slightly on their own (-33 each: 24,495→24,462, 58,556→58,523)
+  despite no dedicated VM running for either — background manifest activity elsewhere, not from this campaign's own
+  lane; noted, not investigated further (harmless direction). TEAMS/STANDINGS/INJURIES unchanged — still queued, no
+  switch needed. Grand total 63,680 (core 4) + 82,985 (FIXTURE_STATS+LINEUPS). (Aside: this tick also answered a
+  follow-up from the operator's FootyStats request — confirmed there is no vendor API for setting/subscribing leagues,
+  it's a manual web-dashboard action only; unrelated to this campaign.)
+- **2026-08-07T04:09Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 10/26 (3rd consecutive tick on
+  this chunk — more real PLAYER_STATS gaps here than the earlier skip-fast stretch, but genuine forward progress each
+  tick, not stalled). PLAYER_STATS 604→592 (-12). FIXTURE_STATS/FIXTURE_LINEUPS flat this tick (no further background
+  drift). TEAMS/STANDINGS/INJURIES unchanged — still queued, no switch needed. Grand total 63,668 (core 4) + 82,985
+  (FIXTURE_STATS+LINEUPS, unchanged). (Aside: continued operator FootyStats follow-up — their UI confirmed the 47/50
+  save genuinely succeeded, with FootyStats' own documented ~30 min API-cache propagation delay; polled the API twice
+  ~60s apart showing no change yet, consistent with that delay; will re-check nearer the 30 min mark on a future tick;
+  unrelated to this campaign.)
+- **2026-08-07T04:25Z** — Still RUNNING and healthy (0 rate-limit errors), advanced to chunk 12/26. PLAYER_STATS 592→553
+  (-39), back to steady pace. FIXTURE_STATS/FIXTURE_LINEUPS/TEAMS/STANDINGS/INJURIES unchanged — still queued, no switch
+  needed. Grand total 63,629 (core 4) + 82,985 (FIXTURE_STATS+LINEUPS, unchanged). (Aside: the operator FootyStats
+  follow-up RESOLVED this tick — re-polled the API and it now shows **47/50 confirmed live** (cache delay cleared).
+  Diffed against the target 50-list: exactly 3 missing — **Norway Eliteserien**, **Norway
+  1. divisjon** (both Norway leagues entirely absent), and **Turkey 1. Lig** (Süper Lig present, only the 2nd tier
+     missing). All 4 newly-added Prediction leagues from the earlier "highest prio" swap — Argentina, Chile, Mexico,
+     South Korea — confirmed live. Reported to operator; this closes out the FootyStats side-task, no further follow-up
+     needed unless raised again; unrelated to this campaign.)
+- **2026-08-07T09:03Z** — Still RUNNING and healthy (0 rate-limit errors), advanced to chunk 13/26. PLAYER_STATS 553→513
+  (-40), steady pace. FIXTURE_STATS/FIXTURE_LINEUPS/TEAMS/STANDINGS/INJURIES unchanged — still queued, no switch needed.
+  Grand total 63,589 (core 4) + 82,985 (FIXTURE_STATS+LINEUPS, unchanged). (Aside: a large amount of off-loop work
+  landed this tick, unrelated to this campaign — (1) shipped the FootyStats 50-league subscription widening to UAC
+  (`unified-api-contracts@7810dad61` + `instruments-service@bbba584ef`, both QG-green): 4 Prediction leagues added
+  (Argentina/Chile/Mexico/K League 1), 2 Features leagues removed (China/Russia, no Prediction-tier sibling in-country),
+  tests updated + 1 genuinely-broken test fixed; (2) audited weather/SFI/Understat/Transfermarkt completion at the
+  operator's request — weather + Understat are 100% clean (0 attempted_failed); SFI had 89 attempted_failed (all
+  SFI_PROGRESSIVE_STATS, all JSONDecodeError, clustered 2026-07-20 — a single-day vendor-side outage pattern) and
+  Transfermarkt had 8 (all PLAYER_VALUES, ClientResponseError, clustered 2026-08-04, same pattern) — launched targeted
+  `--force` retries for both exact windows (`features-sfi-progressive-20260807-085632`, `tm-backfill-20260807-085636`,
+  both confirmed RUNNING); (3) investigated PLAYER_VALUES' ~90% empty_confirmed rate at the operator's challenge — found
+  the transfer-window explanation only accounts for 2.1% of it (`EXPECTED_OUTSIDE_TRANSFER_WINDOW`), the real driver is
+  `EXPECTED_NO_PROVIDER_COVERAGE` at 91.9% — a distinct, already-implemented "outside scope" reason-code, not a generic
+  empty; flagged a larger open ask from the operator (generalize this reason-level denominator hardening across all 5
+  vendors + a manifest purge + a new codex SSOT doc) as needing proper scoping before starting, not yet begun.)

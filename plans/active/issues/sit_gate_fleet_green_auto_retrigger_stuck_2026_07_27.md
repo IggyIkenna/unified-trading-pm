@@ -46,9 +46,11 @@ locked_since:
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
+    unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml,
+    system-integration-tests/.github/workflows/full-workspace-sit.yml,
+    unified-trading-pm/scripts/quality-gates-base/tests/test-sit-fleet-green-auto-retrigger.sh,
+    /plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
-    .github/workflows/ldr-to-main-promote-fleet.yml,
-    /plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md,
   ]
 assigned_vm: planning
 resolved_by:
@@ -264,3 +266,16 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
       within ~2 weeks of `system-integration-tests@b3da771` landing. Done when: either the window closes clean (no
       recurrence by ~2026-08-21), or a 5th recurrence is confirmed and re-opens this doc's investigation. (repo:
       system-integration-tests)
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — swapped out
+  `sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md` (the incidental PR #982 discovery trigger, only
+  mentioned in the opening summary, not touched by any of the 4 root-cause/fix sub-mechanisms since) for
+  `system-integration-tests/.github/workflows/full-workspace-sit.yml` (the SIT-side workflow the poll-timeout fixes
+  69b93bc/b3da771 actually land in), the `test-sit-fleet-green-auto-retrigger.sh` regression test, and the split-out
+  `fleet_promoter_glue_runner_stall_2026_08_06.md` follow-on issue; also added the missing `unified-trading-pm/` repo
+  prefix on the promote-fleet workflow path.
+- **2026-08-07 monitoring check-in (slot 10, task `sit_gate_fleet_green_auto_retrigger_stuck-005`)**: checked
+  `system-integration-tests` `full-workspace-sit.yml` runs since `b3da771` landed (verified-good run 31131969006,
+  2026-08-06T23:40:26Z) through now (run 31146220479, 2026-08-07T04:03:25Z) — 6 consecutive runs, ALL `success`, zero
+  `failure`/`cancelled` (`gh run list --workflow=full-workspace-sit.yml --limit 15`). No 5th recurrence yet (~4.5h clean
+  so far). Todo NOT closed — done-when is "no recurrence by ~2026-08-21", still 2 weeks out; leaving the checkbox open
+  for the window to run its course (re-check on next dispatch of this monitoring todo).

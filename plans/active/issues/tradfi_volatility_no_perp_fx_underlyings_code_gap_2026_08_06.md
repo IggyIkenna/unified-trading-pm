@@ -40,6 +40,13 @@ resolved_by:
 source: >-
   slot-5 (data_engineering), 2026-08-06: post-VM log analysis for data_pipeline_check_mdps_features-056,
   TRADFI:volatility 0/10 outcome
+context_scope:
+  [
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    features-service/features_service/volatility/core/data_loader.py,
+  ]
 ---
 
 ## Finding summary
@@ -139,3 +146,4 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   protocol (`ao-dispatch-batch-naming-and-conflict-check.md` § 3), this is a live CONFLICT, not a clear RECLASSIFY —
   staying NA until that already-filed conflict resolves (reclassify/dedupe/re-affirm), rather than re-filing a duplicate
   conflict record here.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries).

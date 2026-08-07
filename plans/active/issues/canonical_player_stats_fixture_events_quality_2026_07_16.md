@@ -52,7 +52,7 @@ context_scope:
     /plans/epics/sports_master.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/archive/issues/sports_legacy_canonical_row_gap_2026_07_16.md,
-    instruments-service/scripts/census_player_stats_2025_missing_2026_08_02.py,
+    market-tick-data-service/scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py,
   ]
 ---
 
@@ -283,6 +283,10 @@ its own touched subset piecemeal.
   now-superseded dedup script (Finding 1 fully resolved), added the 2025-cell root-cause census script since the sole
   remaining open item (the P3 manifest-reconciliation todo) builds directly on it.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped the now-superseded root-cause census
+  script (`census_player_stats_2025_missing_2026_08_02.py`, investigation closed) for the reconciliation script the sole
+  open Follow-up todo names directly (`reconcile_player_stats_missing_gcs_manifest_2026_08_05.py`, shipped but its
+  `--apply-prod` pass still pending).
 
 ## Follow-ups
 

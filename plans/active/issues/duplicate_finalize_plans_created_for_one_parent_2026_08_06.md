@@ -49,6 +49,13 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    scripts/quality_gates/check_finalize_plan_coverage.py,
+    scripts/plan-hygiene/run_hygiene_sweep.sh,
+  ]
 ---
 
 # Duplicate finalize plans for one parent — the remediation path is not idempotent
@@ -82,3 +89,5 @@ evidence (`terraform plan`/`apply` output, `gcloud pubsub subscriptions list` co
 epsilon=0 determinism report path) that the survivor lacked entirely; blindly superseding the "extra" plan would have
 silently dropped that check. That asymmetry is the reason todo 3 above insists on porting-before-superseding rather than
 just picking a winner by filename.
+
+- **context-scout 2026-08-07**: populated context_scope (4 entries).

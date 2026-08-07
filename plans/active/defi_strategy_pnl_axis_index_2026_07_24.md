@@ -65,6 +65,7 @@ context_scope:
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
     /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py,
   ]
 ---
 
@@ -165,3 +166,11 @@ independently-startable item any session can pick up without waiting on the phas
   engine axis. All 1/1 native checkboxes are done; the doc's purpose is to aggregate pointers to the strategy-service
   track's source docs, not to carry its own executable work. Archiving it would orphan the entry-point reference for the
   strategy/PnL axis.
+- **context-scout 2026-08-07**: refreshed context_scope (5 -> 6 entries) — all prior 5 re-verified and still resolve
+  (unchanged after the 2026-08-06 archive-exempt classification note); added
+  `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py`, the source file the
+  "Recommended next action" (orphaned-archetype build Phase 1) directly targets for generalization — this doc's own body
+  names it but no prior scout pass had added a source path (this is an index/pointer-hub doc, but its own "Recommended
+  next action" section points at real code, not just other docs). Note for the record: this doc's `repos:` frontmatter
+  list is missing `strategy-service` even though the doc's whole subject is the strategy-service axis — a pre-existing
+  frontmatter gap, not fixed here (out of this skill's scope, flagged for /plan-reconcile).

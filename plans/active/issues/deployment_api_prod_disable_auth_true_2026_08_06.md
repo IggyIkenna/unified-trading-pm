@@ -151,3 +151,10 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
       manual usage) for whether they already send a credential; fix any that don't before enforcing.
 - [ ] [BACKEND] P1. Flip the guard/env so `DISABLE_AUTH=true` is actually rejected in prod, verify the service still
       boots with the real key wired in, and confirm a request with no credential now gets 401.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated context_scope (4 entries) — the guard (`auth.py`), the sibling auth path
+  (`firebase_auth.py`), the router mount point naming every affected route family (`main.py`), and the config field the
+  guard actually reads vs. the one the Cloud Run env sets (`cloud_config.py`) — all four already named directly in the
+  doc's own body.

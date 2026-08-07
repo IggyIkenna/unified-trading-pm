@@ -161,3 +161,4 @@ not the dispatch-tooling gap). Suggested next steps:
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (3 entries), unchanged.

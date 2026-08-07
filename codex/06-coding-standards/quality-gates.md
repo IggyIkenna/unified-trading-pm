@@ -1849,6 +1849,12 @@ When a library's `reportUnknown*` strict rules surface a large residual (UTL: 96
    `Unknown` param types; GCP proto-generated methods) may take a single `# pyright: ignore[exactRule]  # <dep> reason`.
    **Banned:** blanket file-level `# pyright: reportX=false`, broad `# type: ignore` (no rule code), or a global
    pyproject `"none"` downgrade — these "institutionalise the downgrade." Net-new broad/blanket suppressions must be 0.
+   **Sanctioned exception (DEFAULT-RULED 2026-08-06, market-tick-data-service only):**
+   `market_tick_data_service/cli/handlers/*.py` — loosely-typed vendor-response glue code in the CLI stage-handler layer
+   where vendor SDKs return untyped dicts/Any. Blanket file-level `# pyright: reportX=false` headers are explicitly
+   accepted for this glob; the freeze-and-shrink ratchets (STEP 5.94/5.95 in
+   `market-tick-data-service/scripts/quality-gates.sh`) cap the baseline at the 2026-07-30 snapshot and prevent net-new
+   accumulation. This carve-out does NOT extend to any other glob or repo.
 
 ### Library SHA-sentinel gap (`quickmerge --agent` on a library) — RESOLVED 2026-06-10
 

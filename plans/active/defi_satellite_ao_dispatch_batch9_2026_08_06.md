@@ -121,7 +121,18 @@ over all pending draft batches) that independently spot-verified every todo belo
       `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (same underlying hang — merged
       into one todo, cite both on close). Done when: a fresh `_index/availability_index.parquet` read confirms 0 of the
       12,425 target gas_fees legacy rows remain, and the consolidator cron has completed >=4 clean post-resume
-      `--verify-only` cycles.
+      `--verify-only` cycles. **PARTIAL 2026-08-07 (data_engineering, slot 12) — root cause CONFIRMED, not yet
+      closeable.** This todo's own "gsutil hang" framing is stale — the source doc's 2026-08-06 findings already
+      superseded it (did not recur; real blocker was an in-script OOM, since fixed, then a zombie-watchdog
+      heartbeat-staleness miscalibration). This dispatch independently confirmed the miscalibration theory via commit
+      history (`deployment-service@0e94ceee1`, a different slot-4/planning dispatch, already added the fix) — but the
+      fix is DORMANT: the live watchdog daemon predates the commit by 1+ day and only loads its code once at VM boot.
+      Filed the daemon relaunch as a new blocking `[INFRA] P0` todo (out of `data_engineering` craft scope — real-mode
+      relaunches of this exact daemon have twice caused confirmed live-VM kills historically) in
+      `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` — full evidence there
+      (`unified-trading-pm@1da67407e`). Did not relaunch the purge VM (would likely reproduce the reap). Checkbox stays
+      open until an `infra`-scoped dispatch refreshes the daemon and the purge actually completes per this todo's own
+      done-when.
 - [x] ✅ [BACKEND] P2. **Add CLI flags** (`--archetypes`, `--venue-allowlist`, `--currency-allowlist`) to
       strategy-service's `run_paper` entrypoint (`service_entry.py`) to construct and pass the already-shipped
       `PaperUniverseConfig.{archetypes,venue_allowlist,base_currency_allowlist}` fields (today always `None`/unset, so
@@ -354,3 +365,43 @@ remaining items besides the over-cap-gated one above).
   (`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`) failed on an API
   stream stall; classified directly by the main run instead (verdict: `exclude_cross_cutting`, genuinely 5-AG-spanning
   content, sole remaining item is an `[OPERATOR]`-tagged cross-AG migration-tooling decision).
+- **context-scout 2026-08-07**: re-verified context_scope (4 entries) -- all 4 still resolve and remain the correct
+  minimal reading list (no single source path summarizes this batch's 8-repo, 17-todo spread; each todo already
+  self-documents its own target file inline); unchanged.
+- **2026-08-07 (AO dispatch, `data_engineering`, slot 7, todo 3 `[DIAG] P1`)**: independent re-verification of slot 12's
+  findings — no code/GCS/VM/cron mutations. Confirmed: (1) zombie-watchdog daemon `vm-zombie-watchdog-20260805-125558`
+  still running same stale instance as of 2026-08-07T05:37Z (INFRA P0 NOT yet done); (2) code fix in LDR —
+  `deployment-service@0e94ceee1` `PREFIX_IDLE_THRESHOLDS["canonical-migration-"] = (90.0, 360.0)` +
+  `STALL_TIMEOUT_SEC=7200` both confirmed present in current checkout; (3) GCS objects spot-checked 0 for ETHEREUM +
+  ARBITRUM. Posting /blocked for operator-gated daemon relaunch dispatch decision. Checkbox remains open per this todo's
+  own done-when until daemon is refreshed and purge VM completes. Evidence recorded in
+  `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log.
+- **2026-08-07 (AO re-dispatch #3, `data_engineering`, slot 7)**: Daemon `vm-zombie-watchdog-20260805-125558` confirmed
+  STILL RUNNING with stale code (no [INFRA] P0 action since last dispatch). No new findings. Posting /blocked with
+  specific escalation path: create an `assigned_role: infra` dispatch plan to route the [INFRA] P0 daemon relaunch into
+  the AO backlog, since the issue doc's `assigned_vm: NA` keeps it out of the queue.
+- **2026-08-07 (AO re-dispatch #4, `data_engineering`, slot 7)**: fourth consecutive dispatch of this same todo with the
+  daemon still unchanged (`vm-zombie-watchdog-20260805-125558`, re-verified RUNNING). Rather than re-post an identical
+  `/blocked` recommendation a third time from this slot, actually created the recommended routing fix:
+  `plans/active/infra_vm_zombie_watchdog_relaunch_2026_08_07.md` (`status: draft`, `assigned_role: infra`,
+  `assigned_vm: planning`), a single-`[OPERATOR][INFRA] P0`-todo plan that gives the daemon relaunch a proper
+  AO-dispatch home (the underlying todo previously lived only inside the issue doc, whose doc-level `assigned_vm: NA`
+  meant `regen_backlog_from_plan.py` never surfaced it). Drafted, not activated — flipping to `active` is the operator's
+  call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING". This todo's own checkbox stays open (no code shipped,
+  no daemon relaunched) — unchanged from prior dispatches; the new plan doc is the only new artifact this dispatch
+  produced. No VM/GCS/cron mutation performed.
+- **2026-08-07 (AO re-dispatch #5, `data_engineering`, slot 10)**: fifth consecutive dispatch; state entirely unchanged.
+  Daemon `vm-zombie-watchdog-20260805-125558` still RUNNING (confirmed via serial-console: last poll 06:58 UTC
+  2026-08-07, real-mode, 46 VMs, 0 zombies). Infra plan `infra_vm_zombie_watchdog_relaunch_2026_08_07.md` still
+  `status: draft`. Spot-checked GCS: ETHEREUM + GMX still 0 objects (data-delete phase confirmed still complete).
+  Confirmed both code fixes still in LDR (`vm_zombie_watchdog.py` line 248: `"canonical-migration-": (90.0, 360.0)`;
+  `launch-canonical-migration-vm.sh` line 2094: `STALL_TIMEOUT_SEC=7200`). No new findings. Posting /blocked with
+  specific ask: activate `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`. No VM/GCS/cron mutation performed.
+- **2026-08-07 (AO dispatch #6, `infra`, slot 4)**: daemon `vm-zombie-watchdog-20260807-075242` confirmed RUNNING with
+  fresh code (created 07:52:45Z per operator-authorized relaunch recorded in issue doc); GCS 0-object verified fresh
+  (all 10 TARGET_VENUES 0 objects); consolidator cron paused; launched
+  `canonical-migration-defi-gas-fees-legacy-purge-20260807-082535` (e2-highmem-8, ON_DEMAND). VM booted cleanly (no
+  gsutil hang — serial console shows "Task launched PID: 4991" / "=== VM setup complete ===" at 08:28:47Z); run.log
+  appeared at 08:30:15Z; Python task confirmed running: 12,425 rows found in 75,819,124-row index, consolidator PAUSED
+  confirmed, GCS soft-delete retention 604800s verified, 0/0 objects deleted (expected). In `_purge_manifest_rows()` CAS
+  operation now — manifiest purge in progress (30-60 min expected). Background monitor running for completion.
