@@ -35,9 +35,11 @@ summary: >-
   `agent-orchestrator`'s pool shows 3/3 online) — so the monitor now correctly reports "pool depleted: 0/0 online" the
   same fail-closed way it used to report "blind"; the Slack post for that specific run was itself deduped (same
   `glue-runner-pool-low` key, still inside the 60-min window from the last blind-page), which is correct dedup behavior,
-  not a bug. This depletion is left OPEN below — diagnosing/fixing it needs host access to the planning VM's systemd
-  units, which this session did not have.
-status: open
+  not a bug. **Follow-up correction (see "Still open")**: a fresh, non-comment-only grep confirmed zero live PM
+  workflows currently target `[self-hosted, glue]`, so the empty pool has no current consumer — a sibling session
+  shipped `95cce3aa46` disabling this monitor's schedule (kept `workflow_dispatch`), which is the right outcome on
+  balance, modulo one provenance nuance recorded below.
+status: resolved
 nature: issue
 asset_group: [cross-cutting, ci]
 stage: [meta]
@@ -107,17 +109,27 @@ below, not a re-occurrence of the auth bug.)
 
 ## Still open
 
-- [ ] [DEVOPS] P1. `unified-trading-pm`'s own self-hosted runner pool (`glue` + `glue-writer` labels) currently shows
-      `total_count: 0` via `GET /repos/IggyIkenna/unified-trading-pm/actions/runners` — every registered runner is gone,
-      not just offline (compare `agent-orchestrator`'s pool: 3/3 `online`). This is distinct from the 17-public-repo
-      deregistration in `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` (PM is private and
-      was explicitly NOT in scope of that revert) and distinct from the 2-stopped-units incident in
-      `glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md` (that was `unified-api-contracts`/`instruments-service`
-      units, not PM's own). Needs someone with host access to the planning VM to run
-      `scripts/self-hosted-runners/setup-glue-runners.sh status` (or
-      `sudo systemctl status     'github-glue-runner-unified-trading-pm@*'`) and re-register/restart whatever's down —
-      this session had no VM access to diagnose further. Until fixed, every PM workflow still declaring
-      `runs-on: [self-hosted, glue]` (the README says ~37 "MOVE" workflows) has no runner to claim it.
+- [x] [DEVOPS] P1. **CORRECTED, not a live blocker — verified after this doc's first version overclaimed it.**
+      `unified-trading-pm`'s own runner pool shows `total_count: 0` (confirmed), but a follow-up check — grepping every
+      `.github/workflows/*.yml`'s **live, non-comment** `runs-on:` line, not a substring match that also catches
+      historical comments — found **zero** PM workflows currently declare `[self-hosted, glue]` at all (the one hit,
+      `ldr-docs-gate.yml`, only mentions `glue` in a comment describing a PAST fix; its live directive is
+      `runs-on: ubuntu-latest`, and its recent `queued`/`failure` runs are a genuine content-gate failure — "Corpus
+      frontmatter check" — unrelated to runners). So the empty pool currently has nothing depending on it. A sibling
+      session (`slot-2·laptop`, same investigation thread) independently reached the same practical conclusion and
+      shipped `unified-trading-pm@95cce3aa46` disabling this monitor's `schedule:` trigger (kept `workflow_dispatch` for
+      manual checks) — **that fix is correct on the outcome**, though its commit message's cited provenance
+      ("permanently deregistered fleet-wide" per `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 21) does NOT
+      actually cover PM — that todo explicitly confirms PM's 8-unit pool was left ACTIVE/online at the time, and a later
+      plan (`ci_pipeline_speed_and_cost_redesign_2026_08_05.md`) deliberately sized it to 3 (not 0). So PM's pool going
+      to 0 was never a single fleet-wide decision — every individual PM workflow that used to target it was migrated to
+      `ubuntu-latest` independently over time (see the `ci-status-update.yml` drift below), leaving the pool orphaned
+      rather than formally retired. Net effect is the same either way (0 online, 0 consumers, safe to leave the schedule
+      off) — flagging the provenance mismatch only so a future reader doesn't cite todo 21 for a claim it doesn't
+      support, and doesn't assume PM's actual glue-writer/glue systemd units were ever explicitly decommissioned (nobody
+      has confirmed that on the VM — they may still exist crashed/stopped rather than deregistered; harmless either way
+      while 0 workflows target them, but worth closing out for real next time anyone has VM access, rather than leaving
+      stopped units lying around).
 - [ ] [DEVOPS] P3. `.github/workflows/ci-status-update.yml` lines 45-47 and 265-267 carry a stale comment ("Goes to the
       LONG-LIVED glue-writer pool, NOT the JIT glue pool") directly above `runs-on: ubuntu-latest` — the workflow was
       apparently already reverted to GitHub-hosted at some point but the comment wasn't updated to match. Low-priority
@@ -131,4 +143,13 @@ below, not a re-occurrence of the auth bug.)
   confirmed `GH_PAT` (this repo's existing runner-admin PAT, already required to carry `Administration:write` per
   `setup-glue-runners.sh`'s own registration-token probe) is the correct, already-precedented fix; shipped `f05e93d10a`;
   live-verified via triggered run `31177324373` — 403 gone, real `0/0 online` reading returned; opened the
-  pool-depletion finding above as follow-up (out of this session's tool reach — no VM access).
+  pool-depletion finding as a P1 follow-up (initial version of this doc).
+- **2026-08-07 ~12:15-12:30 UTC**: caught my own overclaim before shipping it as final — the initial P1 follow-up said
+  "every PM workflow still declaring `runs-on: [self-hosted, glue]` has no runner to claim it," sourced from a grep that
+  matched a comment line (`ldr-docs-gate.yml`'s changelog note), not a live directive. Re-ran the grep comment-filtered
+  across every workflow: zero live hits. Corrected the P1 item in place rather than leaving the wrong claim standing,
+  per the same findings-triage discipline this doc's summary is about not violating. Also found (independently, same
+  investigation thread) that a sibling session shipped `95cce3aa46` disabling this monitor's schedule for the same
+  reason, and reconciled its commit-message provenance (cites todo 21 of
+  `self_hosted_runner_public_repo_revert_2026_08_05.md`, which does not actually cover PM) without re-litigating its
+  correct practical outcome.
