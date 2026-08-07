@@ -104,14 +104,31 @@ whole fleet's shipping pipeline.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide the fix mechanism: (a) debounce — the workflow itself checks for an already-queued/
-      in-progress run of itself before accepting more dispatches (e.g. an early `gh run list --status queued` guard that
-      no-ops instead of piling on), (b) rate-limit ad-hoc verification — establish a convention that agents check
-      `promotion_lag_monitor.py`'s live output instead of manually dispatching this specific workflow to verify their
-      repo promoted, (c) split concurrency groups per triggering source so ad-hoc verification dispatches don't compete
-      with the schedule/heartbeat's own slot, or (d) something else.
-- [ ] [DEVOPS] P2. Once decided: implement + verify a real promotion completes end-to-end under normal multi-agent load,
-      not just in isolation.
+- [x] 1. ✅ [OPERATOR] P1. **Decided 2026-08-07 — ship (b) + (d)-lite now, defer (a).** Operator chose the convention
+      fix + schedule trim as the immediate action; the in-workflow self-debounce (option (a) below) is deferred, gated
+      on whether the problem recurs after these two land (observe via run history / live recheck, not built
+      preemptively). - **(b) rate-limit ad-hoc verification — DONE.** Added a HARD RULE against
+      `gh workflow run       ldr-to-main-promote-fleet.yml` used just to check promotion status, in TWO places (both
+      needed — see `codex/05-infrastructure/claude-code-settings-symlink.md` for why one alone doesn't cover both AO
+      workers and Task-tool sub-agents): `unified-trading-pm/cursor-configs/CLAUDE.md`'s
+      `## CI verification after every push` section (auto-loaded by every AO top-level worker + interactive session) and
+      `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`'s `## Async-wait / background work` section (pasted at every
+      Task/Agent-tool sub-agent spawn, which is what actually caused 3+ of today's confirmed triggers). Both point to
+      `promotion_lag_monitor.py`'s live output / `gh pr list --search "chore(promote)"` as the correct check. -
+      **(mechanical, folds into (d)) trim the redundant native schedule — DONE.** `*/5` → `*/15` in
+      `ldr-to-main-promote-fleet.yml`, matching `ldr-to-main-promote-heartbeat.timer`'s already-deterministic `*/15`
+      cadence — the native schedule was compensating for GHA's own unreliable delivery, a problem the heartbeat already
+      solves; cuts baseline trigger volume with no SLA regression (still ≤15 min worst case).
+- [ ] [OPERATOR] P1 (deferred, conditional). **(a) in-workflow self-debounce** — only build this if the livelock recurs
+      after the above two land. Check via: (i) run history — does `ldr-to-main-promote-fleet.yml` show a sustained run
+      of `conclusion=cancelled` + empty jobs list again on any later date, or (ii) live — if you're investigating a
+      fresh "no repo promoting" report, re-run this doc's own diagnostic steps first before assuming it's this same
+      issue again. If confirmed recurring, add a fast lightweight first job that checks "already-queued/in-progress?"
+      and exits immediately if so, keeping the concurrency-heavy job isolated from dispatch volume — needs care around
+      the existing `needs:`-chained notify/arm-failed jobs, a full QG pass, and live verification under real multi-agent
+      load before shipping.
+- [ ] [DEVOPS] P2. Once the above lands: verify a real promotion completes end-to-end under normal multi-agent load (not
+      just in isolation) — confirms both fixes actually cleared the livelock.
 - [ ] [DEVOPS] P2. Harden `promote-fleet-startup-failure-monitor.yml` to also catch "queued, never started for an
       extended period" as its own failure signature — it currently reports success throughout this entire incident (same
       class of coverage gap as `ci_failure_watcher.py`'s glue-starvation/escalation-label bugs found earlier
