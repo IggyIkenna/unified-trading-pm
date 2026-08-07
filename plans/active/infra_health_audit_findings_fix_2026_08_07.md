@@ -96,6 +96,21 @@ drift_direction: advance-code
       `gcloud run services delete market-data-query-service --region=asia-northeast1` (2026-08-07). Its `deployment-ui`
       references (`src/lib/mock-api.ts`, a smoke-test testid) run against a MOCK API, not the live service, so nothing
       else needed updating. Folded into the P3 dead-weight cluster rather than counted separately.
+- [x] ✅ [SCRIPT] P0. **Alert-coverage cross-reference** — DONE 2026-08-07. Checked all 11 non-excluded findings against
+      `#data-pipeline-alerts` (8-day + 8h `scripts/dev/slack-read-channel.py` pulls) and the DP-* registry +
+      `unified-api-contracts` `codes.py`/`rules.py`. **Zero of 11 fired a Slack alert.** `#uts-live-alerts` could not be
+      checked — reader bot returns `not_in_channel` (residual verification gap, noted not assumed-negative). Filed
+      `/plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md` with the full finding→status→evidence
+      table + 3 structural gap classes (Cloud Run Service/Job compute-failure blind spot; dp-alerting-subscriber's own
+      GCS-429 misrouting past an existing DP-VM-006 rule; zero AlertCode coverage for AWS IAM/STS) + 4 follow-up todos.
+      Findings 4 and 8 flagged as a distinct case (a conceptually-matching rule exists but apparently didn't fire —
+      needs live MissTracker state, not a Slack/code read) rather than filed as a gap. Cross-referenced 3 already-open
+      same-day docs to avoid duplicating in-flight root-cause work. (repo: unified-trading-pm)
+- [ ] [SCRIPT] P0. **Fix `market-data-query-service` crash-loop** — hardcoded `gs://market-data-candles` (doesn't exist)
+      in `_init_gcs_client()`; real buckets use `market-data-tick-{ag}-{prd|test}-central-element-323112`. Find the
+      correct bucket via `resolve_bucket_name(...)` (never hand-roll the string), fix, redeploy, verify the revision
+      actually stays healthy post-deploy (not just "Ready" — confirm an actual successful request/instance start in
+      logs).
 - [ ] [SCRIPT] P0. **Fix `client-reporting-batch` OOM** — 512Mi/1cpu limit, 100% failure for 30+ hours. Raise the Cloud
       Run job's memory limit to a sane value (check what it's actually trying to process to size correctly, don't just
       guess a number) and verify a subsequent execution completes successfully.
@@ -150,3 +165,5 @@ drift_direction: advance-code
 - 2026-08-07: Plan created following a 3-agent parallel infra health audit (Cloud Run Jobs, Cloud Run Services, GCE
   VMs). Excluding the DeFi manifest-consolidator finding per operator direction (already tracked as a known, intentional
   condition). Proceeding under `/autonomous`.
+- 2026-08-07: Todo 2 (alert-coverage cross-reference) DONE — see the todo's own entry for the full summary. Filed
+  `/plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md`.
