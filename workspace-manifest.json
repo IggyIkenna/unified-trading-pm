@@ -1501,6 +1501,7 @@
       "github_url": "https://github.com/IggyIkenna/agent-orchestrator",
       "upstream_url": null,
       "integration_branch": "live-defi-rollout",
+      "ci_trigger_branch": "live-defi-rollout",
       "codex_sections": [],
       "version": "0.100.0",
       "version_source": "git-tag",
