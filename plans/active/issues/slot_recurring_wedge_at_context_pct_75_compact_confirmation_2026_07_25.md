@@ -54,8 +54,8 @@ related:
   ]
 created: 2026-07-25
 author: unknown
-last_updated: 2026-07-25
-priority: P2
+last_updated: 2026-08-07
+priority: P1
 parent_epic: orchestrator_master
 source:
   "operator (agt-52bb99 msg 2023 + 2025) reported both wedge episodes; main (agt-52bb99) captured episode-1 pane
@@ -144,8 +144,12 @@ Filed by main (agt-52bb99) per the big-finding triage rule (recurring cross-cutt
 in under an hour on one slot, operator-flagged). Main diagnosed via a **read-only** episode-1 pane capture + read-only
 reads of the AO context-lifecycle/worker-liveness code, and is charter-barred from tmux send-keys to worker panes, from
 spawning/killing/respawning slots, and from editing AO runtime state — so the fixes are BACKEND/DEVOPS-owned. Severity
-**P2**: episode 2 self-recovered (bounded blast radius = one slot's throughput), but the pattern is confirmed +
-recurrence-prone and episode 1 needed manual intervention.
+**P1** (bumped 2026-08-07, was P2): two things changed since 07-25 that were not true then — (1) scope is fleet-wide now
+(8 distinct slots/hr, 4+ task_ids bouncing 2-3x each on 2026-08-07) not slot-4-isolated (2 episodes/hr); (2)
+account-ceiling pressure is no longer hypothetical — sub-a 96%/5h15 (over the 95% weekly ceiling), sub-b rate_limited
+100%/5h0, sub-c and sub-d both 99% weekly, only sub-e has real headroom (56%/5h35) and is the sole failover absorbing
+load. Every kill+respawn cycle re-burns context on whichever account it lands on, so this bug now directly compounds
+capacity risk, not just reliability — see Progress Log 2026-08-07.
 
 ## Progress Log
 
@@ -195,3 +199,22 @@ recurrence-prone and episode 1 needed manual intervention.
   respawn per this doc's own triage note). Slot 14 self-recovered via the existing watchdog before the fix even shipped
   (confirmed live pane capture: clean, working, checkpoint committed) — bounded blast radius, consistent with this doc's
   episode-2 pattern.
+
+- **2026-08-07 (review agent, fleet-wide recurrence + scope widening, ticks 74-77)**: Independently tracking a
+  fleet-wide context_wedge_recovered/tmux_session_lost rate spike, traced it to this doc before filing a separate one —
+  same mechanism (typed-but-unsubmitted /compact freeze near high context), now measured across 8 distinct slots/hr
+  (4,5,6,7,8,11,13,15/16 across the window) vs the original slot-4-only/2-per-hr report — a real widening, not a new
+  bug. 4+ task_ids each kill+respawned 2-3x today: infra_health_audit_alert_coverage_gaps-001 (2x, resolved), -002 (now
+  3x as of ~18:30Z, still tracked), defi_satellite_ao_dispatch_batch9-018 (2x, resolved clean on 3rd attempt —
+  underlying task itself succeeded, a legacy-data purge verification), sports_satellite_ao_dispatch_batch10-004 (1x,
+  resolved), defi_jupiter_venue_registration_and_live_connector_wireup-005 (3x, the single worst instance, hit
+  context_used_pct=100 on its 4th attempt). **Possible answer to this doc's own open question (why does it cluster on
+  certain slots)**: today's data suggests task SHAPE may be the real variable, not slot identity — 3 of 4 repeat
+  task_ids are exploration-heavy (VM launch-status polling/log-reading, or multi-file pattern-learning before writing
+  code) vs the fast single-file checkbox-flip tasks that never wedge in this dataset. Not confirmed — a single day's
+  sample, and the task-shape axis needs the bucketing this doc has not yet had capacity to run (would extend Hypothesis
+  section / could become a 4th todo: bucket wedge events by task shape vs backlog share). Priority bumped P2->P1 this
+  entry — see Triage note — because repeated respawns now compound real account-ceiling pressure (4 of 5 sub-accounts
+  at/over weekly limits), not just a bounded single-slot throughput nuisance. Existing 2 open [BACKEND] todos
+  (auto-submit the compact confirmation; force-kill-before-cap ordering) remain the right fix target — this entry is
+  additive evidence, not a new root cause.
