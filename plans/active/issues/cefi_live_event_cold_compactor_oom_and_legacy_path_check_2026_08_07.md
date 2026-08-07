@@ -297,3 +297,20 @@ surface that actually exists (warm + cold event-log tiers).
   envelopes parsed successfully and Parquet rows written. The old "CanonicalPersistEnvelope validation — skipping"
   finding (jhsb7, old code) was also caused by NDJSON mis-parsing; it does NOT apply to the new code. Background task
   `bvcozyjr5` (7 sequential date executions) in flight.
+- **2026-08-07 ~15:00–15:30 UTC (slot-11 worker, data_engineering, continuation after second context-compaction)**: (1)
+  PER-FILE BATCHING PERF BUG found: `6b5g7` (sequential backfill) was progressing at ~5× real-time for book_snapshot_5 —
+  at ~10s/file with schema drift, projected 4.6 hours for 2026-08-01 alone, well past the 3h timeout. Root cause: the
+  schema-drift loop from prior session created ONE `pd.DataFrame.from_records([1 row])` per NDJSON line (1512
+  calls/file) instead of one per file. Fix: accumulate all `file_rows` from all lines within a warm file, then build ONE
+  DataFrame and write ONE Parquet row group per file. Shipped: deployment-service@e57441c0f. (2) COLUMN ORDER BUG found
+  immediately after: `book_snapshot_5` warm files have `coin` in DIFFERENT POSITIONS across producers (end vs. position
+  1). The `extra or missing` membership check was empty (both schemas had `coin`), but PyArrow `cast` requires identical
+  name ORDER — ValueError raised on the `else` branch. Fix: check `target_names != batch_names` (list comparison is
+  order-sensitive) instead of set-membership. dict-reconstruction path now handles BOTH membership mismatches AND
+  ordering differences. Shipped: deployment-service@d304c0ba8. (3) Container rebuild triggered (build `db153df5`),
+  SUCCESS at 15:23:49 UTC. Job `live-event-log-compactor` updated with new image. (4) All 7 dates re-submitted as
+  PARALLEL executions (no --wait): 49bkk (2026-08-01), lx8bm (2026-08-02), 6tzt6 (2026-08-03), rbmth (2026-08-04), pfh6w
+  (2026-08-05), r457r (2026-08-06), 88pvb (2026-08-07). All running as of 15:30 UTC. Log confirms fix working: ONE
+  warning per file (not 1512), processing at ~4-5s/file — projected ~1.9h for book_snapshot_5, well within 3h timeout.
+  CANCELLED 6 buggy prior executions (727pg already failed; 4rx69/wntl5/q9gbf/lfjlg/8j7sd/q28hw cancelled). DATA P0 todo
+  awaiting all 7 executions to complete and cold GCS objects verified.
