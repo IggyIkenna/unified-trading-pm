@@ -963,7 +963,19 @@ process_repo() {
     # ── Provenance gate (D1): only quickmerge-provenanced content ──────────────
     # (shared provenance_check_ok() helper, defined above process_repo — also gates
     # every re-arm path below, closing the 2026-06-30 re-arm-leak finding.)
-    if ! provenance_check_ok "$PR_URL"; then
+    # Pass the bare PR NUMBER, not $PR_URL (bug found 2026-08-07,
+    # provenance_check_ok_pr_url_escalation_dispatch_break_2026_08_07): _PR_ID flows into
+    # the provenance_blocked escalation dispatch's `pr_number` client_payload field, which
+    # `escalate-to-orchestrator.yml` passes to `jq --argjson pr "..."` (requires a bare JSON
+    # number) and to `gh pr edit "$PR_NUMBER" --add-label` (requires a bare number, not a
+    # URL) — a full PR URL breaks both, so every provenance-block escalation from the
+    # PR-creation path silently failed to reach the orchestrator (`jq: invalid JSON text
+    # passed to --argjson`). The other two provenance_check_ok call sites (re-arm paths)
+    # already pass $PR_NUM correctly; this creation-path call was the only one still passing
+    # the URL. `gh pr comment` (the other consumer of _PR_ID inside the helper) accepts a
+    # bare number just as well as a URL, so this is a pure fix with no other behavior change.
+    _PR_NUM_FOR_PROVENANCE="${PR_URL##*/}"
+    if ! provenance_check_ok "$_PR_NUM_FOR_PROVENANCE"; then
       _done BLOCKED; return 0
     fi
 
