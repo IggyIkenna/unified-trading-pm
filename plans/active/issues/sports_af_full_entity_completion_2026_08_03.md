@@ -709,3 +709,29 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `EXPECTED_NO_PROVIDER_COVERAGE` at 91.9% — a distinct, already-implemented "outside scope" reason-code, not a generic
   empty; flagged a larger open ask from the operator (generalize this reason-level denominator hardening across all 5
   vendors + a manifest purge + a new codex SSOT doc) as needing proper scoping before starting, not yet begun.)
+- **2026-08-07T09:53Z** — PLAYER_STATS checkpoint climbing (last_completed_date 2023-12-26 as of 09:15Z, monotonic),
+  still healthy — no dedicated re-census this tick, deferred to let the following off-loop corrections land first.
+  (Aside, all unrelated to this campaign: (1) executed the operator-authorized China/Russia footystats manifest purge —
+  `instruments-service/scripts/footystats_purge_out_of_scope_leagues_2026_08_07.py`, confirmed 0 captured rows in the
+  drop set, 4,458 rows removed, verified 0 remaining canonical + per-VM, backup at
+  `_index/availability_index.20260807-085052.footystats_purge.bak.parquet`, shipped `instruments-service@8548182b5`; (2)
+  launched the footystats backfill VM scoped to the new 50-league registry — first launch used `--force`, which this
+  launcher's `VM_FORCE=true` metadata translates into a `--force` CLI flag on the actual `instruments_service`
+  invocation, i.e. a full redo-all across the whole `--start-date 2020-06-06` range (confirmed via serial console);
+  caught before meaningful cost (~2 min into execution, no existing `fs-backfill-*` VM was even running so the
+  lock-bypass half of `--force` was never needed), deleted `fs-backfill-20260807-095916` and relaunched clean as
+  `fs-backfill-20260807-100731` (no `--force`, skip-if-captured default); (3) went to verify the SFI retry VM launched
+  last tick (`features-sfi-progressive-20260807-085632`, exit_code=0) actually cleared the 89 attempted_failed rows — it
+  hadn't: **root cause was mis-scoping, not a persistent vendor failure**. The 89 rows are
+  `service_name=instruments-service, data_type=SFI_PROGRESSIVE_STATS` (raw ingestion, `soccer_football_info` adapter,
+  `sfi.py` orchestrator), but the retry ran `features-service`'s `compute_sfi_progressive_only`, which writes a
+  _different_ downstream data_type (`SFI_PROGRESSIVE_FEATURES`) — it never touched the failing rows at all (their
+  `attempted_at` timestamps are still 07-20/07-27/08-03, none from the retry's run). Relaunched correctly via
+  `deployment-service/scripts/vm/launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2026-07-20 2026-08-01` (no
+  `--force` needed, no existing `sfi-*` VM running; `sfi.py`'s per-league `record_failed` path — already fixed
+  2026-07-14 to mirror the footystats/weather per-league pattern per its own inline comment — means `attempted_failed`
+  is not in this orchestrator's skip set either, so this run should genuinely retry all 89 shards). Transfermarkt's
+  retry (`tm-backfill-20260807-085636`) was checked too and is correctly scoped (`instruments_service`,
+  `--sports-provider TRANSFERMARKT --sports-entity PLAYER_VALUES`, single day `2026-08-04`) — its `--force` is low-risk
+  since the date range is a single day, left running as-is. Both SFI (corrected) and TM retries pending confirmation
+  next tick.)
