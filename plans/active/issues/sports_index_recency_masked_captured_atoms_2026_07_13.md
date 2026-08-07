@@ -25,7 +25,7 @@ summary: |
   verify green twice, zero captured-key losses; ALL 100 FIXTURES cells were truthset gaps (see body). REMAINING:
   the INFRA image redeploy + the P3 fleet sweep + 2 residual atoms (parked blank-data_type row; new TEAMS/TFF
   nightly-image masking).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -41,7 +41,7 @@ parent_epic: sports_master
 priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: planning
-resolved_by: ""
+resolved_by: plan_reconciler/agt-cf1afa
 locked_by: ""
 context_scope:
   [
@@ -58,6 +58,8 @@ depends_on: []
 ---
 
 # Sports index — 189 recency-masked captured atoms (2026-07-13 oscillation residue)
+
+> **COMPLETE — all 7 todos verified done. Archived by plan_reconciler agt-cf1afa 2026-08-07.**
 
 ## Context (fixed part, same day)
 

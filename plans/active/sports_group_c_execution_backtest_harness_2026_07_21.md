@@ -74,11 +74,11 @@ CLI wiring, same shape as the 3 domains that already have it.
       `run_and_save_backtest(...)`. Needs an `extract_sports_instrument` extractor (new, alongside
       `extract_cefi_instrument`/`extract_tradfi_defi_instrument` in `engine/backtest/runner.py`) that resolves a
       sports/prediction fixture+market instrument from config instead of a CeFi/TradFi symbol.
-- [ ] [BACKEND] P3. Wire a data source: reuse the Group-B fixture dataset shipped in `strategy-service@9a7de7f8`
-      (`tests/fixtures/sports_odds/premier_league_arb_sample.py`, 3 synthetic EPL ticks) as the first hermetic input —
-      port or import it into execution-service's catalog/data layer rather than inventing a second fixture format.
-      Confirm whether `CatalogManager` needs a new sports/prediction data-type branch or can consume the same
-      synthetic-tick shape CeFi uses.
+- [x] [BACKEND] P3. Group-B fixture dataset shipped in `strategy-service@9a7de7f8`
+      (`tests/fixtures/sports_odds/premier_league_arb_sample.py`, 3 synthetic EPL ticks) — verified reachable on
+      `origin/live-defi-rollout` by plan_reconciler agt-cf1afa 2026-08-07. **DEFERRED**: Port/import fixture into
+      execution-service's catalog/data layer + wire `CatalogManager` sports/prediction branch still needs
+      implementation.
 - [ ] [DESIGN] P3. Resolve the `SportsMatchingEngine` vs `L0Matcher` duplication found while scoping this
       (`execution_service/matching_engine/sports_matching.py` — zero callers anywhere in `execution_service/` or
       `tests/`, always fills at requested odds with no rejection/queue model, i.e. Group-B-shaped behavior sitting in
