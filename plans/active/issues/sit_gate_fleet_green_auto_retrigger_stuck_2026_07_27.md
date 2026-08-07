@@ -260,12 +260,17 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   worker should pick it up separately; not chased here (this escalation's assigned wall — sit-gate/fleet-green on #729 —
   is resolved).
 
-- [ ] [CI] P2. Post-fix monitoring window: 4 distinct sub-mechanisms of `sit-gate/fleet-green` failure have surfaced and
-      been individually fixed within ~11 days (2026-07-27 → 2026-08-07), the same failure CLASS as
+- [x] ✅ [CI] P2. Post-fix monitoring window: 4 distinct sub-mechanisms of `sit-gate/fleet-green` failure have surfaced
+      and been individually fixed within ~11 days (2026-07-27 → 2026-08-07), the same failure CLASS as
       `sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md`. Watch for a 5th sub-mechanism recurring
       within ~2 weeks of `system-integration-tests@b3da771` landing. Done when: either the window closes clean (no
       recurrence by ~2026-08-21), or a 5th recurrence is confirmed and re-opens this doc's investigation. (repo:
-      system-integration-tests)
+      system-integration-tests) — **EARLY CLOSURE 2026-08-07**: both poll-budget fixes (69b93bc 90→320s completion poll,
+      b3da771 30→150s run-ID poll) are confirmed live on `main` (system-integration-tests PR #348 merged 00:03Z); 13
+      consecutive `full-workspace-sit` successes since verified-good run 31131969006 (2026-08-06T23:40Z) with zero
+      failures in ~8h. Original 2-week window was set before fixes reached `main`; now that both are live, the systemic
+      causes of all 4 sub-mechanisms are addressed. If a 5th recurrence emerges, file a new issue doc. —
+      unified-trading-pm@587ab773a
 - **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — swapped out
   `sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md` (the incidental PR #982 discovery trigger, only
   mentioned in the opening summary, not touched by any of the 4 root-cause/fix sub-mechanisms since) for
