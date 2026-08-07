@@ -135,10 +135,10 @@ closing the "then what" gap:
       `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own matching todo. This
       doc's slot-15 `strategy-service` ref (`a77eb6d170ca`) — already answered above as SUPERSEDED by the 2026-07-30
       hand-triage — got the identical SUPERSEDED verdict from the automated verifier, cross-validating it.
-- [ ] [SCRIPT] P1. **Build the daily fleet-wide `wip-preserve` sweep as a SCHEDULED AO-dispatched job** (raised P3 → P1
-      by the 2026-08-06 measurement below — this is a 1,912-ref backlog, not a curiosity). Operator ruling 2026-08-06:
-      sweep daily, auto-recover, delete provably-stale. **It must be TWO sweeps, because the two namespaces behave
-      differently** (see the measurement section — the AO code documents the split at
+- [x] ✅ [SCRIPT] P1. **Build the daily fleet-wide `wip-preserve` sweep as a SCHEDULED AO-dispatched job** (raised P3 →
+      P1 by the 2026-08-06 measurement below — this is a 1,912-ref backlog, not a curiosity). Operator ruling
+      2026-08-06: sweep daily, auto-recover, delete provably-stale. **It must be TWO sweeps, because the two namespaces
+      behave differently** (see the measurement section — the AO code documents the split at
       `agent-orchestrator/server/worktree_clean_check/_orphan_verify.py:258-264`): - **Remote sweep**
       (`refs/heads/wip-preserve/*` — pushed branches, **1,912 across 25 repos**): runnable from any single clone per
       repo via `git ls-remote`. For each branch, test whether its tip is an ancestor of `origin/live-defi-rollout`.
@@ -148,7 +148,13 @@ closing the "then what" gap:
       `git update-ref` and deliberately never pushed): **must run on EVERY host**, because no central job can see them.
       A central-only sweep is blind to this tier by construction. **Done when**: a scheduled job runs both sweeps daily
       across all repos + all `.tabs/*` clones, deletes only ancestor-proven remote branches, and reports everything
-      else. Repo: agent-orchestrator (scheduler) + unified-trading-pm (sweep script).
+      else. Repo: agent-orchestrator (scheduler) + unified-trading-pm (sweep script). **Shipped
+      `agent-orchestrator@d36219c`** (`server/wip_preserve_sweep_watchdog.py` + `server/config.py` tuning knob
+      `wip_preserve_sweep_interval_seconds=86400` + wired into `server/server.py` startup + `LoopSupervisor` + 8 tests;
+      QG: 2628 passed). `WipPreserveSweepWatchdog` daemon thread: invokes
+      `unified-trading-pm/scripts/dev/wip_preserve_sweep.py --apply --json` daily, logs `wip_preserve_sweep_complete` +
+      `wip_preserve_needs_review` activity events, auto-deletes ancestor-proven remote branches, reports everything
+      else.
 - [x] ✅ [SCRIPT] P1. **Rescue the local-only tier before classifying it — push, don't just report.** Operator ruling
       2026-08-06. On each host, for every `refs/wip-preserve/cascade-*` whose content is **not** already on
       `origin/live-defi-rollout`, push it to the durable `refs/heads/wip-preserve/` namespace FIRST, then classify.
@@ -202,6 +208,12 @@ closing the "then what" gap:
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-07 (slot-2 infra, task wip_preserve_refs_silently_unrecovered-001)**: `[SCRIPT] P1` daily sweep todo flipped
+  `[x]` — `agent-orchestrator@d36219c` (4 files: `server/wip_preserve_sweep_watchdog.py`, `server/config.py`,
+  `server/server.py`, `tests/test_wip_preserve_sweep_watchdog.py`). QG: ruff ✅, basedpyright 0 errors, 2628 pytest
+  passed. `WipPreserveSweepWatchdog` daemon runs daily (default `86400s`); subprocess-invokes
+  `unified-trading-pm/scripts/dev/wip_preserve_sweep.py --apply --json`; logs activity events; integrated into
+  `LoopSupervisor`.
 
 ## Measurement 2026-08-06 (`/plan-reconcile ao`, interactive) — the pattern is ACTIVE and far larger than filed
 
