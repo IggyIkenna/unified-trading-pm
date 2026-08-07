@@ -6,7 +6,9 @@ summary: >-
   todos land (`gate_on_depends: true`): flips the corresponding checkboxes back in the 2 sibling source docs
   (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`),
   re-checks the gated `[OPERATOR]` walk/backfill deferrals for whether their gate cleared, and archives any sibling doc
-  whose remaining work is fully closed. `status: draft` until batch4 itself is operator-approved and dispatched.
+  whose remaining work is fully closed. `status: active` (was `draft` until batch4 was operator-approved and dispatched,
+  per the mass-flip commit `unified-trading-pm@a73e34a66` 2026-07-26; stale summary text corrected 2026-08-07,
+  plan_reconciler agt-e7f024).
 status: active
 nature: process
 asset_group: [prediction]
@@ -53,9 +55,12 @@ context_scope:
 
 # Prediction satellite AO batch 4 — finalize
 
-> **Status: draft — NOT dispatched.** Gated (`gate_on_depends: true`) behind
-> `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. It will not dispatch until batch4 is flipped `active` by the
-> operator AND every batch4 dispatched todo is done. Do NOT flip this to `active` independently of batch4.
+> **Status: active** (corrected 2026-08-07, plan_reconciler agt-e7f024 — this banner said "draft — NOT dispatched" since
+> authoring, but batch4 was operator-approved + mass-flipped `active` 2026-07-26 and this doc's own frontmatter has
+> matched since; the stale banner text was never updated). Machine-gated (`gate_on_depends: true`) behind
+> `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` — will not actually dispatch until every batch4 todo is
+> `done`. **Note**: as of this same run, batch4 is NOT yet fully done — see that doc's Progress Log for an item (4b-iii)
+> written as prose without a `- [ ]` checkbox, so it may read "done" to a human without actually being so.
 
 ## Todos
 

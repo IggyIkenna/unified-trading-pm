@@ -3,9 +3,12 @@ doc_type: plan
 title: Prediction satellite AO batch 6 — finalize (reconcile source docs + re-check deferrals + archive)
 summary: >-
   Gated closeout for prediction_satellite_ao_dispatch_batch6_2026_07_29.md — machine-held via depends_on +
-  gate_on_depends: true until all 13 of that plan's todos are done. Mirrors the batch4-finalize pattern (reconcile each
-  of the 9 distinct source docs' checkboxes/Progress-Log entries independently, re-check the deferred/excluded
-  population for cleared gates, then archive). `status: draft` until batch6 itself is approved and dispatched.
+  gate_on_depends: true until all of that plan's todos are done (13 at drafting time; 19 today after legitimate
+  mid-flight splits — see that doc's own Progress Log). Mirrors the batch4-finalize pattern (reconcile each of the 9
+  distinct source docs' checkboxes/Progress-Log entries independently, re-check the deferred/excluded population for
+  cleared gates, then archive). `status: active` (corrected 2026-08-07, plan_reconciler agt-e7f024 — this summary said
+  "draft" until batch6 was approved and dispatched, but batch6 was mass-flipped `active` 2026-07-30 and this doc's own
+  frontmatter has matched since; the stale summary text was never updated).
 status: active
 nature: process
 asset_group: [prediction]
