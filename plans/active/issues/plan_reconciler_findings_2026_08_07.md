@@ -165,6 +165,70 @@ Writable P1 repoints to apply (old→new, all existence-verified):
   deployment_registry_firestore_p5_verify:88, pipeline_mode_source_batch_live_replay_standardisation:305) — no such doc;
   narrative pointer to a moved doc → filed, no safe target.
 
+## Topic contradictions (H8 result — routing classified)
+
+- **C1 P1 — instrument_id non-canonical share 16.67% vs ~44.3% on the same 11.19M manifest** (closeout:423-424 vs
+  aggregated_sources:732, child worklist sums ~43.7%). Both presented as live measurements; unresolvable from the record
+  without a re-measure → ROUTED (operator; aggregated_sources in grace).
+- **C2 P2 — Track-2 ETA ~1-2 days (closeout:14/222) vs measured ~30 days (track2 checkpoints:198)** — correction
+  documented in the fork; parent digest summary uncorrected → annotate closeout (writable).
+- **C3 P3 — deribit options_chain af=10,114 (blocker doc title) vs 112,727/113,615 family reads** — blocker doc in
+  GRACE; its own note (:104-108) flags the title as NOT durable → filed (post-grace).
+- **C4 P2 — LIGHTER-ZKSYNC "does NOT fetch from datasets.tardis.dev" (skill §3 + CLAUDE.md) vs "use the Tardis archive
+  (from 2026-04-17)" (onchain_venues:130-135)** — guard doc's own resolution (:108-110: removed from
+  TARDIS_CAP_EXEMPT_VENUES 2026-07-30) corroborates onchain_venues; the STALE sides are CLAUDE.md + the skill → ROUTED
+  (doc-drift, normative docs, operator).
+- **C5 P1 DATA-CORRECTNESS — track-7 delete gate "delete ONLY after bundles verified complete" (residual:77-80) vs
+  deletion confirmed while 96/112 cells MISSING (candle_bundle_regeneration_vm:62-64/136-138); the 2026-08-06 flip cited
+  404s not bundle-completeness verification** → ALERTED (P0-class, /blocked) + filed; both docs in grace.
+- **C6 P2 — UPBIT "VERDICT: FAIL … Tardis-only coverage" (closeout:533) vs "PIPELINE STOPPAGE (restorable), data IS
+  available" (upbit_cefi_data_gap_may:145-152)** — newer issue establishes root cause → annotate closeout:533 with
+  pointer (writable); verdict itself not reversed.
+- **C7 P3 — E4 orphan-sweep population ~1.2M (data_completion:427, aggregated_sources:570) vs measured 287,074
+  deleted-verified (e4_e8_execution:158-161)** — execution SSOT documents correction → annotate data_completion:427
+  (writable); aggregated_sources in grace.
+- Verified consistent (no action): DERIBIT misclassification census; track-2 preemption facts; 50.79% reversal chain; E6
+  CF-7 11.61% measurement; hyperliquid/aster migration 7,599 objects.
+
+## STEP-4 inline verification results
+
+- H4 flip evidence chain: instruments-service@97801b5d + @766549c7 ANCESTOR-OK; unified-api-contracts@989e9d16
+  ANCESTOR-OK; `_DRYRUN_COLS` includes "chain" (dedup script:219); quarantine.py has PACIFICA-SOLANA (10 hits) ✓.
+- mdps@6ce1a25 NOT resolvable on current origin (pre-2026-08-05 history-rewrite sha) — relevant only to
+  candle_feature:442 which stays open anyway (its own text: count deliverable not produced; "todo itself stays open
+  pending that measurement").
+- candle_feature:442 → NOT a flip (doc self-documents remaining deliverable). cefi_track2_finalize:69 → HARD (baselines
+  verified in archived extract doc:121-135, both `[x]` with run evidence).
+
+## Epic-cluster issues batch1 (H2 result — 19 candidates, none P0)
+
+Writable → apply in STEP 5:
+
+- **C2 P2** cefi_residual_followups_after_honest_done:171 — body "residual #3 (10,368-row eu-twin) still OPEN" STALE vs
+  todo :516-529 DONE 2026-07-27 (apply ran, 8,778,675 rows, 28,755 dropped, 0 residual) → annotate :171.
+- **C3 P2** instruments_remaining_work_audit:162-168 — §1 "12 open todos" vs headline 4 (:130-136) corrected "~2 of 13
+  remain" → align §.
+- **C7 P3** instruments_remaining_work_audit:50 — `related` cites missing active-path layer1 doc → repoint to
+  /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md (exists).
+- **C15 P3** cefi_onchain_perp_batch_venue_allowlist_gap — last_updated 2026-07-12 vs log 2026-08-05 → refresh.
+- **C16 P3** estate_orphan_assessment — last_updated 2026-07-21 vs log 2026-08-06 → refresh; **C6 P3** annotate
+  na-eligibility "6+8 remain genuinely NA" with todo-8 DONE 2026-07-30.
+- **C17 P3** honest_coverage_shard_dimension_model — vitest 21/21 vs 43-test claims (different runs; no re-run this
+  shard) → REPORTED, no fix; last_updated refresh.
+- **C19 P3** mtds_is_full_adapter_smoketest_findings:110-113 — §2 matrix rows unbannered vs resolved todos (huobi
+  RESOLVED 2026-07-12, polymarket fixed uac@42ce2de3/mtds@f4a118be) → add resolution banners; last_updated refresh.
+- **FALSE-UNCHECKED** estate_orphan_assessment todo 3 (:108, :545-548 — all 4 AG sweeps COMPLETED, apply converted
+  637,523 vs dry-run 637,724) → inline-verify + flip.
+- **C18 P3** mtds_backfill_vm_memory_hang_large_chunk — recurrence numbering gap + BLOCKED-CREDENTIALS restoration
+  unrecorded → REPORTED, filed (operator confirmation needed), no edit.
+
+Grace-set → filed (deferred): C1 phantom-SHA aaa0866c (instrument_availability_hive_migration, real sha eca688ac… — also
+todo-8 DEFAULT-RULED checkbox never flipped), C4/C5/C9/C10 (deribit_combo_perpetual_partition_move: todo carries
+ruling+awaiting-answer, resolved_by says open vs todos done, "all 7 done" vs unchecked, archived doc cited at active
+path), C8 (cefi_book_snapshot5 body cites predecessor at active dir), C11/C12 (defi_cefi_venue_chain: title
+not-root-caused vs ROOT-CAUSED; 35 vs 42 rows), C13/C14 (cefi_track2_backfill_vm_preempted: prose claims a non-existent
+[OPERATOR] todo; last_updated), C1-doc last_updated.
+
 ## Contradictions
 
 <!-- routed + filed -->
