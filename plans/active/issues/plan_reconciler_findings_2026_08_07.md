@@ -376,6 +376,127 @@ All `carry_staked_basis_funding_scan_experiment…` unless noted (PL `:405-531` 
   code-verified) — fix ALREADY tracked as open §5 todo `daily_trading_analyst…:324-327` (GRACE doc). No codex rewrite
   this run (operator ruling required); route via /blocked.
 
+**B_F (bucket batch: 5 fold docs + IAM + closeout + decommission + finalize) — 2026-08-07:**
+
+- F1 [P1] `legacy_bucket_dual_write_decommission…:167` "cefi/defi/tradfi/sports unaffected, this item stays open for
+  them" (L6 legacy flat-tick decommission) vs `bucket_estate_consolidation_closeout…:120-121` "Legacy flat
+  tick+instruments twins (−8) — **ALL 8 CONFIRMED DELETED**" (404 evidence through 07-17, updated 07-31). Decommission
+  L6 also covers tier-first/long-form shapes → partial-non-contradiction possible, but flat twins in BOTH scopes;
+  decommission `:181-182` version counts also stale if buckets deleted.
+- F2 [P1] `bucket_fold_ml…:154-157` open P0 treats `ml-models-store` delete as agent-executable ("This also closes the
+  parent plan's W2 flat-`ml-models-store` delete todo — flip it too") vs
+  `bucket_estate_consolidation_closeout… :166-177` "**NOT executed — this is a HARD STOP, not a judgment call**: 'Any
+  prod-bucket delete… Human executes; agent suggests'… Ready-to-run for the operator". Two ACTIVE docs disagree on
+  agent-vs-human authority for the same prod bucket → execution-authority ambiguity, ROUTE-worthy.
+- F3 [P2] `bucket_fold_portfolio_state…:151-152` "**ALL 5 FOLDS NOW COMPLETE**" while fold_ml delete `:154` open +
+  closeout `:143-147` ml legacy variants open.
+- F4 [P2, GRACE: IAM] decommission `:114-117` "⏸️ GATED on G4 applies — all 5 AG `--apply` still `[ ]` (2026-06-12)" vs
+  IAM `:159-161` "G4 🟢 all 5 AGs (updated 2026-07-12)".
+- F5 [P1] `bucket_iam_write_protection_per_tier_2026_06_09_finalize…:12` `status: active` vs `:58` "**STATUS: `draft` —
+  NOT dispatched**" — with `assigned_vm: planning` + `gate_on_depends: true` + parent holding 2 open todos (P1.3 :271,
+  P2.1b :297): frontmatter value risks AO dispatch of a self-declared-undispatched doc.
+- F6 [P2] `plans/epics/infrastructure_master.md:595-597` indexes archived-complete `mtds_retry_safe_default_audit` as
+  "**status**: active" under P3 backlog (dup of A1 third side — merge).
+- F7 [P2] `plans/epics/infrastructure_master.md:498` "19 active plans declare parent_epic" vs ACTUAL 45
+  (`rg -l '^parent_epic: infrastructure_master' plans/active/*.md`).
+- F8 [P2, GRACE] IAM `:7-8` summary "Group B phase blocked on the env-split rollout plan" vs body `:115-131` (env-split
+  archived/superseded 07-13; dev/stg retired).
+- F9 [P2, GRACE] IAM `:271-272` open P1.3 "Verify dev/stg workloads… IAM-denied a `-prd-` write" vs same-doc retirement
+  banner `:122-127` (dev/stg PERMANENTLY retired 07-13) — AO worker could pick it up against retired tiers.
+- F10 [P3] closeout `:121-128` −8 enumeration muddle: "6 of 8 (…)" + "instruments-store-cefi (the 7th/8th)" + "remaining
+  2 (sports pair)" = 9 items for an 8-bucket set.
+
+## Doc-drift
+
+**B_F (bucket batch):**
+
+- Non-canonical `[~]` todo markers (both done-work in disguise, P2): `bucket_fold_features…:95` (BUCKETS PROVISIONED —
+  content absorbed by `[x]` cutover UAC@cb951936/UTL@4f0bcc34), `bucket_fold_ml…:158` (TF-STATE RECONCILE — "DONE
+  2026-07-18", flip blocked by own BIG FINDING 32 IAM/scheduler destroys :164-172).
+- [P3, GRACE] IAM malformed todos: `:133` `- [x] ✅ **Tier set — RESOLVED**` (no `[TAG]`, no `P#`); `:146`
+  `- [x] ✅ P0.0.` (non-canonical priority).
+- [P3] NEAR-COMPLETE: IAM finalize 1 open todo.
+- [P3] Deprecated epic `assigned_vm`: `infrastructure_master:28` `vm-cross-cutting` · `mtds_mdps_master:71` `vm-ml`
+  (same class as D4).
+- `last_updated` behind body batch-wide (closeout 07-25 vs 07-31; decommission 07-24 vs 08-03; IAM 07-31 vs 08-06; 4
+  fold docs 07-17 vs 07-31/08-06; finalize 07-30 vs 08-03).
+- [P3, GRACE] IAM 725 lines > 500 soft; IAM `:18` `related:` cites `plans/active/cicd_contract_hardening_2026_06_01` —
+  verified ABSENT from active AND archive.
+- [P3] closeout `:99` placeholder sha `unified-trading-pm@<see plan-flip commit>`; execution_strategy `:74` 🟡
+  "MIGRATION IN FLIGHT" banner with 6/9 todos done.
+- ARCHIVE-CANDIDATES: none (every batch plan ≥2 open todos).
+
+## Near-miss flips (B_F — candidates with caveats)
+
+- M1 [P2] alias-sunset group (fold_ml `:238-241`, fold_features `:167-168`, execution_strategy `:179-180`,
+  portfolio_state `:163-164`): UTL half (UTL@055948e33) + yaml half (deployment-service@a91e520f) both LANDED per
+  closeout `:183-213` + features `:371-375`; residual = never-run live `tofu plan` verify — flip should follow that
+  final verify.
+- M2 [P2] fold_ml `:233-237` PM mirror re-sync — `ml-store` key ALREADY PRESENT at `configs/cloud-providers.yaml:70`
+  (with Fold-B comment) — deliverable present; gate evidently cleared.
+- M3 [P2] fold_features `:95-103` `[~]` Provision todo — content absorbed by the `[x]` atomic cutover `:113-116`.
+- M4 [P2] fold_ml `:158` `[~]` TF-STATE RECONCILE self-declared DONE — candidate-with-caveat (BIG FINDING 32 destroys
+  keeps it operator-aware).
+- NOT candidates (verified open): IAM P2.1b (`:297` — removal + post-removal P2.3 re-run not executed; RULED APPROVED
+  AO-dispatchable 08-06), IAM P1.3 (`:271`), AWS legs ×2, closeout recon-bucket (`:81`), closeout ml-models-store
+  (`:143` deliberately `- [ ]`).
+
+## Codex-drift candidates (B_F)
+
+- Clean: `/codex/05-infrastructure/bucket-isolation-model.md` reflects folded shapes (`:142-150`, SUPERSEDED banner
+  `:152-153`).
+- P3 `infrastructure_master:725` embedded codex-SSOT summary (2026-05-26 vintage) stale on consolidator estate shape vs
+  fold docs (consolidator retargeted single-root, legacy crons paused-not-removed) — note only;
+  `manifest-consolidator-ssot.md` itself not re-audited (out of shard scope).
+
+**I3 (CI/deploy issue batch, 12 docs) — 2026-08-07:**
+
+- IC1 [P2, GRACE] `prod_mutation_evidence_artifact_gap…:87` "**RULED 2026-08-06: YES, extend it**" vs same todo `:90-95`
+  "Rule on whether to extend the §8b evidence-backing contract…" — ruling declared both done and pending in one todo
+  (frontmatter already reclassified planning `:115-123`).
+- IC2 [P2, GRACE] `provenance_marker_broken_by_history_rewrite…:3-8` title+summary "…AND alerting-service are stuck" vs
+  PL correction `:238-249` (live-verified alerting marker `ancestor=True`, "never broken by this bug"; SIT-gate timing)
+  — title mis-routes alerting work to wrong doc.
+- IC3 [P3, GRACE] `provenance_marker…:167-168` "No parallel tactical unblock needed" vs `:171-175` "**Tactical unblock
+  in parallel**" — same todo asserts both (retag leftover).
+- IC4 [P3, GRACE] `gcp_service_accounts_registry_diverged…:116-122` "**DEFAULT-RULED 2026-08-06 … option (a)**" vs
+  "**Decide direction (a) vs (b)** … Blocks the rest" — decision both made and pending in one todo.
+- IC5 [P3, GRACE] `agent_orchestrator_stale_pm_workflow_ref…:23-28` claims promote PR #813 is the promotion path with
+  "real, large, multi-file conflict" — live: #813 closed; #815 (opened 08-06T23:41Z) is current promote PR; todo 3
+  ("Reconcile PR #813's conflict") targets a closed PR.
+- IC6 [P3, GRACE] `glue_runner_units_stopped…:336-337` PL "P2 still correctly scoped to agent-orchestrator" vs corrected
+  todo `:147-149` + context-scout `:367-369` (watchdog lives in unified-trading-pm; "no such path exists" in AO).
+
+## Flips verified
+
+- IF1 ✅ **CONFIRMED FLIP CANDIDATE (non-grace)** —
+  `deployment_api_artifact_pipeline_health_test_date_drift_flake _2026_07_29.md:90-101` open `- [ ] [CODE] P3` whose own
+  body documents "**SHIPPED deployment-api@cf55369**"; hunter ran
+  `git merge-base --is-ancestor cf55369 origin/live-defi-rollout` → **yes**; artifact live —
+  `tests/unit/api/test_artifact_pipeline.py:881` computes `two_days_ago = (datetime.now(UTC) - timedelta(days=2))`,
+  `:879-880` comment cites this exact bug. Needs `- [x]` + sha (also makes the doc a near-complete → archive candidate).
+
+## Near-miss flips (I3 — flag, not flip)
+
+- IF2 [GRACE] `glue_runner_units_stopped…:76-87`,`:311-318` `[x]` cites `instruments-service@96ea6c4b` "shipped to LDR
+  (verified ancestor)" — `git merge-base --is-ancestor 96ea6c4b origin/live-defi-rollout` → **NO** (lives on
+  `origin/wip-preserve/slot-5-…-20260805T111826Z`); identical-content `e324dff2` (diff-stat empty) IS ancestor —
+  post-08-05-rewrite re-stamp. Content on LDR under different SHA; cited evidence doesn't resolve as written.
+
+## Doc-drift
+
+**I3 (CI/deploy batch):**
+
+- `artifact_pipeline` doc: `last_updated: 2026-07-29` stale vs PL through 08-06; `author: unknown`; near-complete (1
+  open todo = IF1).
+- `promote_ref_orphaned…`: frontmatter missing `estimate_class`/`estimate_baseline_ai_days`/
+  `estimate_calibrated_ai_days`/`assigned_role` (PLAN_FORMAT-required); todo `- [ ] [P3]` no role tag; todo P3 vs
+  frontmatter `priority: P2` mismatch.
+- `gcp_service_accounts…`: PL 08-01 entry truncates mid-sentence ("…is stated…").
+- CLEARED: `deployment_api_events_global_state…` `status: open` + `resolved_by` set = intentional re-open per
+  `check_terminal_status_archived` (open P3 follow-up), NOT a defect.
+- Archive candidates: none (every doc ≥1 open). Line caps: max 425, no breach.
+
 ## Doc-drift
 
 **B_H (mtds/infra batch):**
