@@ -515,3 +515,22 @@ remaining items besides the over-cap-gated one above).
   (expected), streaming download started 13:47:09Z — the exact recovery point where dispatch #8's VM was killed by the
   (now-patched) `heartbeat_stall_watcher.py` at ~50min. Monitoring for survival past 45min to confirm the fix, then to
   terminal EXIT_STATUS.
+- **2026-08-07 14:12Z (AO dispatch #9 continued, `infra`, slot 8) — pre-compact checkpoint**: VM confirmed RUNNING at
+  T+25min (14:12Z), well past the halfway point of the expected 30-60min operation, no `EXIT_STATUS` yet. All repo
+  worktrees in this slot clean and pushed (`deployment-service`@`1424037` ahead=0, `unified-trading-pm`@`bcf8e00d1`
+  ahead=0; a `market-tick-data-service` `uv.lock` drift from an unrelated `scripts/setup.sh` invocation was discarded,
+  not committed — environment artifact, not task output). **Resume point**: poll
+  `gcloud compute instances describe canonical-migration-defi-gas-fees-legacy-purge-20260807-134308 --zone asia-northeast1-c`
+  for status +
+  `gcloud storage ls gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-gas-fees-legacy-purge-20260807-134308/`
+  for `EXIT_STATUS`. On `EXIT_STATUS=0`: (a) verify `_index/availability_index.parquet` 3-part TARGET-signature filter =
+  0 rows, (b)
+  `gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-defi-cron --location asia-northeast1`, (c)
+  await ≥4 clean `--verify-only` cycles in the cron's own run.log, (d) flip todo 3 (`[DIAG] P1`) and the `[INFRA] P0`
+  relaunch todo above with full evidence citing both this doc and the issue doc, (e) commit+push, (f) `/done` on
+  `defi_satellite_ao_dispatch_batch9-018`. **Lesson**: `ScheduleWakeup` `delaySeconds` does not track 1:1 with actual
+  elapsed wall-clock time when interleaved with frequent external `/heartbeat` triggers — always confirm elapsed time
+  via `date -u` against the operation's own logged start timestamp, not cumulative scheduled-delay arithmetic (caught a
+  "~30min" miscount that was actually ~10min this session). **Lesson**: the VM's GCS log directory is keyed by the FULL
+  VM name (`vm-logs/<full-vm-name>/`), not the bare timestamp suffix used as shorthand in prior Progress Log entries — a
+  `gcloud storage ls` on the shorthand path returns "no objects" even though logs exist.
