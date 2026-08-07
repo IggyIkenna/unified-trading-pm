@@ -297,6 +297,20 @@ surface that actually exists (warm + cold event-log tiers).
   envelopes parsed successfully and Parquet rows written. The old "CanonicalPersistEnvelope validation — skipping"
   finding (jhsb7, old code) was also caused by NDJSON mis-parsing; it does NOT apply to the new code. Background task
   `bvcozyjr5` (7 sequential date executions) in flight.
+- **2026-08-07 ~15:30–15:40 UTC (slot-11 worker, data_engineering, continuation after third context-compaction)**: (1)
+  TASK TIMEOUT BUG found: measured rate for the per-file-batching v3 executions (49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r)
+  was ~9.5x real-time for book_snapshot_5 (86400/9.5=9095s=2.53h) + trades(~46min) + derivative_ticker(~45min) +
+  liquidations(~7min) = ~4.2h total. The 10800s (3h) timeout would have killed all 7 before completion. (2) TIMEOUT FIX
+  shipped: extended to 21600s (6h) via `gcloud run jobs update --task-timeout=21600` (immediate live apply to job spec)
+  - Terraform change `timeout = "21600s"`. Confirmed: `Task Timeout: 6h` in `gcloud run jobs describe`. deployment-
+    service@e584b55 (TF). (3) v3 executions CANCELLED: 49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r cancelled (88pvb already not
+    running); all had old 3h timeout baked in. (4) PARALLEL v4 RESUBMIT: all 7 dates submitted simultaneously (no
+    --wait) with new 6h timeout + fully-fixed image (per-file batching + column-order fix): tnwlm(2026-08-01) /
+    fmrmt(2026-08-02) / kzqj8(2026-08-03) / vfs46(2026-08-04) / gclvs(2026-08-05) / jwzgr(2026-08-06) /
+    xlsqm(2026-08-07). All 7 started 15:37–15:39 UTC. Verified working: tnwlm logs show column-order drift path
+    (`extra_cols=[] missing_cols=[]` alignment warnings) without crash. Watchdog `bjhy42de5` armed (polls every 20 min).
+    DATA P0 awaiting all 7 SUCCEEDED
+  - cold GCS verification. Projected completion ~19:49 UTC.
 - **2026-08-07 ~15:00–15:30 UTC (slot-11 worker, data_engineering, continuation after second context-compaction)**: (1)
   PER-FILE BATCHING PERF BUG found: `6b5g7` (sequential backfill) was progressing at ~5× real-time for book_snapshot_5 —
   at ~10s/file with schema drift, projected 4.6 hours for 2026-08-01 alone, well past the 3h timeout. Root cause: the
