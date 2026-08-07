@@ -36,10 +36,10 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 sequential: true
-depends_on: []
+depends_on: [archive_candidates_content_verification_backlog_2026_08_06]
 locked_by:
 locked_since:
 supersedes:
@@ -162,3 +162,18 @@ requested rather than autonomously starting it.
     either way. Remedy (B) only matters if the failure is workflow-content, not corpus-state.
   - **`GET /api/agents?session=` is unreliable for one-off lookups** (returned unrelated agents this session) — query by
     the agent id directly (`GET /api/agents/<id>`), which is what confirmed agt-80c470 is absent (all-null).
+- **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): RECLASSIFY → `planning`. Re-measured live twice this
+  session, ~15 minutes apart, because a sibling worker's concurrent fix (`unified-trading-pm@50b8643dc`, "fix all 5
+  plan-hygiene sweep hard failures blocking LDR->main promote") landed mid-audit and changed the answer. First pass:
+  archive candidates 12>0 (still failing), AG-closeout orphans 67<69 (passing), NA-corpus todos 1315>1311 (failing) —
+  genuinely not yet actionable. Second pass, after the sibling's fix plus this audit's own doc3/doc4 work (which
+  directly shrank the NA-doc count 381→379, crossing under baseline 380): `check_archive_candidates.sh` **0** (baseline
+  0, PASS), `check_ag_closeout_linkage.py` **63** orphans (baseline 69, PASS), `check_na_corpus_ratchet.py` **379 docs /
+  1308 todos** (baseline 380/1315, PASS) — all three now clear. Also added the missing `depends_on` link (the doc's own
+  real precondition). The remaining `[REVIEW]` todo is now genuinely bounded and actionable: check the current LDR→main
+  promote PR's `quality-gates-v2` result, and either confirm green or identify a residual cause as a separate issue — a
+  checkable fact, not a judgment call. Conflict-check clear: grepped `infrastructure_master`-epic `assigned_vm:planning`
+  docs for "promote PR" — 4 hits, none claim THIS specific PR/backlog-clearing follow-up (MTDS auto-merge arming, AWS
+  CodeBuild webhook noise, other repos' promote PRs — all unrelated). Last live PR checked: #2435 (created 04:16:09Z),
+  still `BLOCKED` at that snapshot — predates this audit's final push, so the dispatched worker should re-check the
+  CURRENT promote PR fresh rather than trust this timestamp.
