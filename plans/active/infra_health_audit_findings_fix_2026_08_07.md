@@ -145,15 +145,47 @@ drift_direction: advance-code
       `routing_rules.yaml` writes (479 occurrences in one day, separate from the already-fixed `mirror_live` bug) —
       likely needs a write-coalescing/backoff fix rather than raw retry, since the write frequency itself looks like the
       problem (an object-mutation rate limit implies redundant writes of the same content).
-- [ ] [SCRIPT] P3. **Fix the AWS cost-snapshot IAM failure** (`sts:AssumeRoleWithWebIdentity` AccessDenied,
-      `uts-shared-deployment-api`, ~1x/day) — fix the OIDC role trust policy/permissions; low frequency but a real,
-      recurring failure.
-- [ ] [SCRIPT] P3. **Decommission dead-weight services** — the never-successfully-deployed stubs
-      (`batch-live-reconciliation-service`, `deployment-service` [stub, not the real one],
-      `fund-administration-service`, `trading-agent-service`, `odum-portal-staging`) and
-      `central-market-data-tardis-loader` (broken 19 months, `minScale=2` continuously retrying a container that has
-      never once started — pure waste). Confirm each is genuinely dead code (not an in-progress rollout) before
-      deleting; delete the Cloud Run resource, not just the symptom.
+- [x] [SCRIPT] P3. **Fix the AWS cost-snapshot IAM failure** ✅ — root cause: OIDC identity drift, not a permissions
+      bug. AWS IAM role `gcp-cloudrun-athena-cost-reader` (trust policy `Federated: accounts.google.com`, condition
+      `accounts.google.com:sub == 104881302737822972808`) was provisioned 2026-07-14 trusting
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`'s OIDC subject, but the LIVE
+      `uts-shared-deployment-api` Cloud Run revision actually runs as
+      `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` (uniqueId `108768985147151736276`, verified via
+      `gcloud run services describe ... spec.template.spec.serviceAccountName`) — a different SA, different `sub` claim,
+      hence the deployed service's minted OIDC token was never trusted by the role and every
+      `sts:AssumeRoleWithWebIdentity` in `deployment_api/scripts/cost_snapshot_worker.py`'s
+      `_load_cloud(CLOUD_AWS, ...)` → `aws_facts` → `get_athena_analytics_client` path (used by both the Cloud
+      Scheduler-driven `/api/costs/snapshot-run` endpoint AND the standalone worker entrypoint) hit AccessDenied. Fixed
+      by widening the AWS-side trust policy condition to
+      `StringEquals accounts.google.com:sub: [104881302737822972808,     108768985147151736276]`
+      (`aws iam update-assume-role-policy --role-name gcp-cloudrun-athena-cost-reader`) — trusts both the
+      originally-provisioned SA and the actual runtime SA, non-destructive. Verified end-to-end LIVE: minted a real OIDC
+      id-token as `uts-prd-sa`
+      (`gcloud auth print-identity-token --impersonate-service-account=uts-prd-sa@...     --audiences=arn:aws:iam::427895769566:role/gcp-cloudrun-athena-cost-reader`)
+      and called `aws sts assume-role-with-web-identity` with it — succeeded, returning
+      `arn:aws:sts::427895769566:assumed-role/gcp-cloudrun-athena-cost-reader/verify-fix-test3`. No GCP-side code/config
+      change needed — AWS IAM change only.
+- [x] [SCRIPT] P3. **Decommission dead-weight services** ✅ — verified each independently (not just trusting the
+      original audit) via
+      `gcloud run services describe <svc> --region=<r> --format="table(status.traffic,status.conditions)"` +
+      region-scoped Cloud Logging (`resource.labels.service_name=... AND resource.labels.location=...`) for any real
+      request traffic, then deleted via `gcloud run services delete <svc> --region=<r> --quiet`. All 6 confirmed: single
+      revision `00001` (or equivalent), `HealthCheckContainerError`, `status.traffic` empty/absent (never routed),
+      near-zero log volume (3 lines = just the startup-failure event; 0 httpRequest entries in 30-90d). Deleted:
+      `batch-live-reconciliation-service` (asia-northeast1, created 2026-07-22), `deployment-service` (asia-northeast1,
+      created 2026-07-22 — confirmed this is the STUB, image `.../unified-trading-system/deployment-service:latest`,
+      zero relation to the real, live `uts-shared-deployment-api` service which was independently confirmed still
+      serving post-delete), `fund-administration-service` (asia-northeast1, created 2026-07-22), `trading-agent-service`
+      (asia-northeast1, created 2026-07-22), `odum-portal-staging` (us-central1, created 2026-04-24, 0 logs/0 requests
+      in 90d region-scoped), `central-market-data-tardis-loader` (europe-west1, created 2024-06-29, broken since
+      2024-12-16, 0 logs in 7d; `minScale` annotation not actually present at delete-time, defaults to 0 — the
+      "continuously retrying" framing was stale, but dead-since-2024/zero-traffic independently confirmed regardless).
+      **Caught a near-miss**: an UN-region-scoped log query for `odum-portal-staging` initially returned 6173 log lines
+      incl. live 200-status `/health` + `/wizard` traffic — turned out to be a SEPARATE, live `odum-portal-staging`
+      service in **europe-west4** (183 revisions, 100% traffic, unrelated to the dead us-central1 stub the task named)
+      whose logs share the same `service_name` label; re-scoped the query with `resource.labels.location="us-central1"`
+      and got 0 logs/0 requests, confirming ONLY the us-central1 instance was dead. The europe-west4 live instance and
+      the real `uts-shared-deployment-api` were both verified untouched post-deletion.
 - [ ] [SCRIPT] P1. **Recheck `mdps-backfill-cefi-20260807-130321` preemption** — preempted 2026-08-07T14:49:27Z; the
       same launcher left a sibling VM un-relaunched for ~33h on 2026-08-04. Verify it actually got relaunched this time
       (per the PROGRESS-checkpoint contract) — if not, this is the exact class of bug the launcher-registry
