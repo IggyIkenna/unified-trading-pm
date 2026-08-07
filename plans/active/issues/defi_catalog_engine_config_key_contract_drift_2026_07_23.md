@@ -765,3 +765,4 @@ auto-generated section's own owner script, rather than hand-editing the table) â
   liquidation-feed integration), both independently spot-checked live and confirmed still real/unbuilt; 1 stale prose
   fragment (archetype_slots sweep already done 2026-07-27 via batch3, doc text not updated) â€” hygiene notes only. Doc
   stays `assigned_vm: NA`.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged.

@@ -54,10 +54,10 @@ locked_by:
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
     unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
-    /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
-    /codex/02-data/defi-data-types-catalog.md,
   ]
 locked_since:
 assigned_vm: planning
@@ -359,6 +359,11 @@ independent plans.
   calibrated AI days split across two phases. Full scoping in §7 above.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged. All §6 residual todos are
   now checked done — doc appears eligible for closeout review (not this skill's scope to act on).
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — the 2026-08-06 archive-candidate audit converted
+  §7's prose-only capability-completion scope into a tracked `[SERVICE] P2` Follow-up todo, so re-pointed the list at
+  that remaining work: swapped the resolved-finding docs (`defi_track01_...md`, `defi-data-types-catalog.md`) for the
+  `market_interface/adapters/defi` directory (the 11 existing IS adapters §7 names) and `lst_rates_handler.py` (the
+  exchange-rate-yield reference pattern §7 explicitly cites for the 3 AAVE-Oracle protocols).
 
 ## Follow-ups
 

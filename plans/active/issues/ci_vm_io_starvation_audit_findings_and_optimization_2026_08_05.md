@@ -50,11 +50,11 @@ locked_since:
 context_scope:
   [
     /plans/active/ci_vm_exposure_remediation_2026_08_06.md,
-    /plans/active/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /codex/07-security/self-hosted-runner-security-posture.md,
     scripts/quality-gates-base/qg-host-governor.sh,
     scripts/dev/qg_resource_baseline.json,
+    scripts/plan-hygiene/run_hygiene_sweep.sh,
   ]
 ---
 
@@ -657,3 +657,9 @@ background of that work.
 - **context-scout 2026-08-05**: populated context_scope (6 entries).
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — actively-evolving incident audit, OPERATOR security items
+
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries, was 6) -- swapped
+  `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` (cited only in frontmatter `related:`, never referenced in
+  the doc's own body) for `scripts/plan-hygiene/run_hygiene_sweep.sh` -- the script behind the "Recommended NEXT item"
+  (fix the 6 failing plan-hygiene ratchets, Part 8/Finding 4), the most actionable open item and the one currently
+  blocking PM's own LDR→main promotion.

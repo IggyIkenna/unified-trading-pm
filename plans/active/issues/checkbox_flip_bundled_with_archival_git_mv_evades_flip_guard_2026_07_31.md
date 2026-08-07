@@ -54,6 +54,7 @@ superseded_by:
 context_scope:
   [
     /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/archive/issues/ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26.md,
     agent-orchestrator/server/verify.py,
   ]
@@ -136,3 +137,7 @@ repeated per-incident coaching.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-01 (unchanged): sole todo requires an
   operator/plan-owner decision among 3 named options (A/B/C) before the implementation step is determinable.
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries, was 3) -- added
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (cited in `related:` but missing from
+  context_scope -- this doc is specifically about the archival-git-mv + checkbox-flip interaction, so the archival
+  discipline SSOT is as load-bearing as the commit-push-flip one already there).

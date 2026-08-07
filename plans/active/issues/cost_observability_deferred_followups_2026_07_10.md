@@ -110,3 +110,6 @@ context_scope:
 - **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-a6d668)**: KEEP-NA, valid — same as 2026-07-30; 2 items
   explicitly operator-gated (awaiting operator/Ikenna), 4 unscheduled P3 items in a deliberately-parked backlog, not a
   defaulted bucket.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — all 5 still resolve and
+  span both the operator-gated items (billing-cost-observability.md, the cost_observability service dir) and the
+  unscheduled UI/backend P3 enhancements (costs.py, CostObservability.tsx).

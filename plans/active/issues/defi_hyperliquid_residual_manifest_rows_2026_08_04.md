@@ -84,9 +84,9 @@ context_scope:
     /codex/02-data/defi-canonical-naming-ssot.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    instruments-service/scripts/enumerate_expected_universe.py,
     instruments-service/scripts/build_instrument_catalogue.py,
     strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
+    /plans/active/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
   ]
 ---
 
@@ -397,6 +397,9 @@ gap**, not a delete-safety question:
   — infra, not code) so `2c451c33` reaches the live Cloud Run image; until then, daily runs still write
   `venue=BLAZESTAKE` which the migration script handles. **P1 residual RESOLVED** — the venue now has a declared,
   operating producer. P2 backfill (2026-08-01..08-03 OOM window) remains as follow-up.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — swapped `enumerate_expected_universe.py` (the
+  now-closed EXTENDED/LIGHTER catalogue fix) for `defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md` (the root-cause
+  doc the sole remaining open todo, the SOLBLAZE-SOLANA backfill, actually depends on).
 
 ## Follow-ups
 

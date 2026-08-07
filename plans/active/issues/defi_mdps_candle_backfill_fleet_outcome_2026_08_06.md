@@ -35,6 +35,14 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
+    /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh,
+    market-data-processing-service/market_data_processing_service/cli/handlers/process_handler.py,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+  ]
 ---
 
 # DeFi MDPS candle backfill fleet — terminal verification (2026-08-06)
@@ -100,3 +108,7 @@ measured empirically.
       launcher-level watchdog was correctly set to 7200s, but the inner per-date timeout (hardcoded in MDPS
       `process_handler.py`) is 1800s. DeFi years with 10K+ instruments can legitimately exceed 30 min per date. Repo:
       market-data-processing-service.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated context_scope (5 entries).

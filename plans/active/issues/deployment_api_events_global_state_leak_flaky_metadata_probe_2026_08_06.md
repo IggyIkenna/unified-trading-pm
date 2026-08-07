@@ -59,11 +59,10 @@ depends_on:
 source: ["operator CI audit, 2026-08-06 — deployment-api PR #501, run 31087761957, job 92571271263"]
 context_scope:
   [
-    deployment-api/tests/unit/test_data_status_beta_rollup_and_cli_config.py,
-    deployment-api/deployment_api/routes/data_status/_rollup.py,
     unified-trading-library/unified_trading_library/events/__init__.py,
-    unified-trading-library/unified_trading_library/events/run_lifecycle.py,
     unified-trading-library/unified_trading_library/events_interface/__init__.py,
+    deployment-api/tests/conftest.py,
+    unified-trading-library/unified_trading_library/events/run_lifecycle.py,
   ]
 ---
 
@@ -178,3 +177,10 @@ executes the real lifecycle context manager at all).
   event-global-state footgun). A terminal `resolved` status on a doc with open work is a false-completion state per
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`; archiving it would silently drop the follow-up
   from active tracking. Kept in `plans/active/issues/` until the P3 todo lands or is moved to its own tracked issue.
+- **context-scout 2026-08-07**: populated context_scope (4 entries) — no prior marker despite an existing list (never
+  scouted by this skill before). Re-derived for the remaining open `[BACKEND] P3` scope only (the shipped fix already
+  removed `_rollup.py`/the test file's dependency on this chain): dropped both deployment-api call-site files, added
+  `deployment-api/tests/conftest.py` (the `_ensure_events_initialized` autouse fixture the P3 todo names directly).
+  Confirmed `/codex/02-data/live-data-persistence-and-event-log.md` does NOT cover this `unified_trading_library/events`
+  lifecycle-logging module (that codex doc is the market-data `EventTransport`/`streaming.event_facade` system — a
+  same-sounding but different module) — not added, would have been a false citation.

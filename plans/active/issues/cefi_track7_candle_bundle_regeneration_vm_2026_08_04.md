@@ -127,6 +127,9 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
 ## Progress Log
 
 - **context-scout 2026-08-05**: populated context_scope (5 entries).
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged -- the 2026-08-06
+  archive-candidate audit note (unmet done-when) doesn't change the reading list: the launcher + both codex VM SSOTs +
+  the closeout/source plans still cover it.
 
 ## Follow-ups
 

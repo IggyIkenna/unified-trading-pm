@@ -42,9 +42,9 @@ context_scope:
     /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md,
     /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
-    deployment-api/gunicorn.conf.py,
-    deployment-api/deployment_api/lifespan.py,
-    deployment-api/deployment_api/services/data_status/manifest.py,
+    deployment-api/deployment_api/routes/repo_ci.py,
+    deployment-api/deployment_api/routes/health_overview.py,
+    deployment-api/deployment_api/routes/_repo_ci_github.py,
   ]
 locked_since:
 assigned_vm: planning
@@ -871,6 +871,13 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — the still-open work has shifted entirely to the
+  cockpit-rollup memory-footprint monitoring todo (`repo_ci.get_overview`/`health_overview.get_health_overview`, fixed
+  via `deployment-api@0050de6`'s `gh_get_json` response projection in `_repo_ci_github.py`), while the
+  SIGABRT/cold-start gates it superseded have been silent 3+ days; swapped the now-superseded early theories
+  (`gunicorn.conf.py`'s `preload_app` hazard, `lifespan.py`'s cancellation timeout, `services/data_status/manifest.py`'s
+  OOM candidate — none of which turned out to be the confirmed culprit) for the 3 files the confirmed OOM attribution +
+  still-open `[REVIEW] P2` monitoring todo actually point at.
 - **2026-08-06 (slot-8, infra, dispatched `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover-003`)**
   — Live-verified the current state and shipped the OOM attribution + guard the doc's `[REVIEW] P2` todo had been
   waiting for. (1) SIGABRT `Uncaught signal: 6` + cold-start `exit(0)` are BOTH silent since

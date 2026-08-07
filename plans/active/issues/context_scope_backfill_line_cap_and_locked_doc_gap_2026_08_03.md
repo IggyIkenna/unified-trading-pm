@@ -36,10 +36,8 @@ locked_since:
 depends_on: []
 context_scope:
   [
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /cursor-configs/skills/context-scout/SKILL.md,
-    scripts/plan-hygiene/check_line_caps.sh,
+    /plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
   ]
@@ -333,6 +331,14 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
   expanded `context_scope` from 2→5 pre-computed entries, and added a Progress Log marker. Result: 896L, well under the
   1000L hard cap — `check_line_caps.sh` passes. All 11 docs in this issue are now resolved; all checkboxes flipped.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries) — all numbered Plan todos are done, so dropped the
+  now-closed line-cap-remediation citations (`plan-completion-and-archival-discipline.md`, the archived
+  `plan_line_cap_remediation_2026_07_23.md` precedent, `check_line_caps.sh`) and re-pointed the list at the sole
+  remaining Follow-up's actual target, `fleet_audit_triad_deferred_followups_2026_06_01.md`. Note: that target doc's own
+  frontmatter now carries a real 4-entry `context_scope` (`plan-completion-and-archival-discipline.md`,
+  `gcs-and-manifest-delete-safety-protocol.md`, `vm_log_archival_cron.py`, `vm_log_archival_scheduler.tf`), not the
+  "stub" the Follow-up's own text still describes — surfaced as a stale-candidate finding, not corrected here (out of
+  this skill's scope).
 
 ## Follow-ups
 

@@ -149,6 +149,8 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   call; todo 2 stays gated behind it. Independently cross-validated: the same-day sibling `/ag-closeout-audit ao` batch6
   run (`ao_satellite_ao_dispatch_batch6_2026_08_04.md`) also declined this doc as operator-gated. No content drift.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged — still exactly matches
+  this doc's own "Codex SSOTs" list; both todos remain operator-gated design/track calls, nothing new to cite.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.

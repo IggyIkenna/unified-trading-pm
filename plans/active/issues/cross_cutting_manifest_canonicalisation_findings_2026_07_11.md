@@ -57,12 +57,9 @@ source:
 resolved_by:
 context_scope:
   [
-    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
-    unified-trading-library/unified_trading_library/cf_manifest_audit.py,
-    plans/audit/results/cf_manifest_audit_2026_06_01.py,
-    market-tick-data-service/market_tick_data_service/scripts/populate_v9_index_columns_inplace.py,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    market-tick-data-service/scripts/one_offs/verify_legacy_bucket_decommission_precondition.py,
   ]
 ---
 
@@ -255,3 +252,12 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): sole open todo is a
   whole-bucket GCS delete for defi/tradfi/sports, explicitly "hard-stop, never-autonomous" per delete-safety protocol.
+- **context-scout 2026-08-07**: refreshed context_scope (3 entries) — the sole open todo is now purely the
+  defi/tradfi/sports legacy-bucket delete (cefi's half + the CF-audit adjudication are both done), so trimmed to the
+  delete-safety protocol, the master catalogue (per-AG gate tracking), and the standalone
+  `verify_legacy_bucket_decommission_precondition.py` tool built exactly for this precondition. Dropped the CF-audit
+  tooling (`cf_manifest_audit.py`, `populate_v9_index_columns_inplace.py`) — that work is closed — and
+  `cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`, which is not actually cited anywhere in this doc's body
+  text (the doc's own resolution note cites a _different_ doc,
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, for the same CF-audit-adjudication evidence — flagged as a
+  stale-candidate finding, not corrected here).

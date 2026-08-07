@@ -65,9 +65,10 @@ resolved_by:
 depends_on: []
 context_scope:
   [
+    deployment-service/scripts/cloud-run/setup-traffic-pin-alert.sh,
+    deployment-service/scripts/cloud-run/traffic-pin-to-slack-bridge.py,
     deployment-service/scripts/cloud-run/canary-deploy.sh,
-    deployment-service/scripts/cicd/cloud_run_traffic_drift_check.py,
-    deployment-api/cloudbuild.yaml,
+    /codex/04-architecture/ci-alerting.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 ---
@@ -197,6 +198,10 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   cold-start-failure case. Added cross-reference + Progress Log entry to the cold-start doc with this analysis; no
   duplication of investigation. Flipped this todo's checkbox. (repo: unified-trading-pm, doc-only)
 - **context-scout 2026-08-05**: populated context_scope (4 entries).
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped in the still-open follow-up's real targets
+  (`setup-traffic-pin-alert.sh`, `traffic-pin-to-slack-bridge.py`) and `ci-alerting.md` (the Slack-routing convention
+  the remaining webhook/Cloud-Run-deploy work depends on); dropped the now-closed drift-check todo's
+  `cloud_run_traffic_drift_check.py` and `deployment-api/cloudbuild.yaml` to stay minimal.
 
 ## Follow-ups
 
