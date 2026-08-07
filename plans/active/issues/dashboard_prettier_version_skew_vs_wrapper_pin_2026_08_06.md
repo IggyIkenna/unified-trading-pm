@@ -77,3 +77,7 @@ Found while shipping the context-bar staleness change: the sanctioned wrapper re
 running `npx -y prettier@3.9.5 --check` on the identical file set, which passed. No action taken on the skew itself
 during that session: the change being shipped was verified against the wrapper's pinned version (the sanctioned path)
 and the gate passed, so nothing was blocked.
+
+- **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): KEEP-NA, valid — both todos are explicit "decide which
+  side moves" judgment calls (todo 1 trades off adopting a version with a known documented proseWrap defect; todo 2 is
+  gated behind todo 1). Not bounded/deterministic; genuine operator/engineer tradeoff call.

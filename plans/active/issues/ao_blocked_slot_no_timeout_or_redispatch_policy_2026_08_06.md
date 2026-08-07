@@ -194,3 +194,8 @@ Note for whoever picks up the remaining todo: `blocked_reconcile.reconcile_once`
 WILL kill real workers on a timer — verify the two config knobs
 (`blocked_main_agent_timeout_minutes`/`blocked_operator_timeout_hours`) are behaving as expected in production before
 tuning them further.
+
+- **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): KEEP-NA, valid — checkboxes already accurate (verified
+  `cc5961e`/`9777c02` are real commits doing what's claimed). The one remaining todo (main-agent bounded first-answer
+  window) is genuinely still undecided in its own text ("still an implementation detail for whoever picks this up") —
+  P3, low priority, not bounded enough for RECLASSIFY without a stated done-when.

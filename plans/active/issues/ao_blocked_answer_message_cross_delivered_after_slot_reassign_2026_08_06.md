@@ -80,7 +80,7 @@ context with no way to know what question it refers to.
 
 ## Todos
 
-- [ ] [INFRA] P2. **Scope `SlotMessageRow` delivery to the dispatch it was raised for.** Add a `task_id` (or a
+- [x] ✅ [INFRA] P2. **Scope `SlotMessageRow` delivery to the dispatch it was raised for.** Add a `task_id` (or a
       dispatch-generation id, e.g. `slot.claude_session_id` at enqueue time) to `SlotMessageRow`. On write
       (`answer_blocked_endpoint`, `blocked_reconcile.py`'s auto-answer paths), stamp the id of the task/session the
       `BlockedRow` was raised against. On read (`take_pending_messages`, `state_store/activity.py:246-305`), only
@@ -88,7 +88,13 @@ context with no way to know what question it refers to.
       leave it undelivered and log it (`blocked_message_orphaned_by_reassign` or similar) rather than silently handing
       it to whoever polls next. Add a regression test reproducing the exact scenario: slot N blocked → force-reassign
       with `kill_worker=true` → new unrelated task dispatched to slot N → old `BlockedRow` answered → assert the new
-      task's next boot/heartbeat/progress response does NOT contain the stale message.
+      task's next boot/heartbeat/progress response does NOT contain the stale message. — **SHIPPED, checkbox was stale**
+      — `agent-orchestrator@365e18e` (same day, a different session working the companion doc) implements exactly this:
+      optional `task_id` column on `SlotMessageRow`, stamped at both call sites named above, `take_pending_messages`
+      orphans (never delivers, marks terminal, logs `blocked_message_orphaned_by_reassign`) a task-scoped message once
+      `slot.current_task` no longer matches. Regression test present: `tests/test_slot_message_task_scoped_delivery.py`
+      reproduces the exact scenario this todo specifies. Found via na-eligibility-audit 2026-08-07 cross-checking the
+      companion doc's Progress Log, which cites this same commit.
 
 - [ ] [INFRA] P3. **Resolve or flag orphaned `BlockedRow`s at reassign time.** When `reassign_slot`
       (`routes/slots_ops.py:620-719`) or `skip-current-task` (`routes/slots_ops.py:722-835`) moves a slot off a task
@@ -107,3 +113,11 @@ Traced end-to-end while answering the operator's question about slot-reuse-while
 (not just grep) that the tmux nudge is accidentally gated safe (`slot.status == "blocked"` check at answer time) but the
 underlying `SlotMessageRow` enqueue/delivery path has no equivalent scoping — `slot_id`-only on both write and read. Not
 yet reproduced against a live prod row; scenario is grounded in code reachability, not an observed incident.
+
+- **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): KEEP-NA, stale items — todo 1 was already shipped same
+  day by a parallel session (`agent-orchestrator@365e18e`, verified via direct commit/diff/test read, not just the
+  citation) while working the companion doc `ao_blocked_slot_no_timeout_or_redispatch_policy_2026_08_06.md`; closed with
+  evidence above. Todo 2 stays open and stays NA: it is a genuine `(a) or (b)` design choice (new `BlockedRow`
+  disposition vs. dashboard-only surfacing), P3, no stated done-when/acceptance test — not re-litigated here even though
+  todo 1 landing makes "(a)" the doc's own stated preference, since choosing and implementing a new retirement
+  disposition is still a real judgment call, not a mechanical follow-on.

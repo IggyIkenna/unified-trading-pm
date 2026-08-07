@@ -80,3 +80,7 @@ depends_on: []
 
 - **2026-08-06**: Filed. Confirmed via `git stash` this is 100% pre-existing and reproduces with zero changes from the
   session that discovered it — not a regression from that session's own work.
+- **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): KEEP-NA, valid — todo 2 is explicitly self-flagged
+  "(operator call, not unilateral)" in its own text, and todo 3 (the actual fix) depends on todo 2's outcome. Todo 1
+  (confirm blast radius) is independently bounded, but the doc's critical path runs through the operator-gated decision
+  either way; not worth splitting into a separate plan for one investigative sub-step.
