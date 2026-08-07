@@ -148,3 +148,13 @@ call's own `shards` list is genuinely empty before fallback. This also sidesteps
 collision bug (`data_pipeline_e2e_check_mtds_<day>.md`/`.json` gets silently overwritten by each subsequent invocation —
 see the 2026-08-02 report's provenance note) by giving each asset_group's invocation its own `--report-dir`, merged by
 hand into one combined report afterward.
+
+## Action Items
+
+- [ ] [DATA] P1. Fix `enumerate_mtds_shards()` so a combined `--mvp-only` sweep no longer silently drops CEFI/SPORTS:
+      implement remediation (b) — fire the `smoke_matrix.enumerate_cells()` fallback **per asset_group** that
+      contributed zero shards from the primary enumeration path, then also add `_CEFI_MVP_SHARDS` + SPORTS hand-list
+      overrides mirroring `_TRADFI_MVP_SHARDS` as remediation (a) (repo: market-tick-data-service, ref:
+      mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md).
+- [ ] [DATA] P2. Verify the fix: run `pipeline_e2e_check.py` unfiltered `--mvp-only` and confirm shards for all 5 asset
+      groups (CEFI/SPORTS no longer absent) (repo: market-tick-data-service).

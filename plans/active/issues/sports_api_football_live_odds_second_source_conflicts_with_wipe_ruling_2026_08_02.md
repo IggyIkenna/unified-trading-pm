@@ -153,6 +153,16 @@ history — the "free/no extra cost" framing that motivated the original todo is
 documented, twice-burned data-correctness risk, and the primary `odds_api` source already covers the
 LIVE_ODDS/odds_horizon_bucket gate this todo exists to close.
 
+## Action Items
+
+- [ ] [OPERATOR] P1. Rule on api_football `/odds` in-play as a second live MTDS sports-odds source: Option A (proceed —
+      build `api_football_odds_ws.py` as a NEW write path with its own `SOURCE_PRIORITY` entry +
+      `PipelineMode.LIVE_API_FOOTBALL`) vs Option B (decline — strike the api_football half from the sibling
+      `sports_live_availability` todo, keep `odds_api` only). [WORKER REC: B per the doc's own recommendation].
+- [ ] [DATA] P2. Execute the operator ruling: either build the api_football live connector with dedicated
+      `SOURCE_PRIORITY`, or correct the sibling plan's `[DATA]` P2 todo (strike api_football half + plan-hygiene note
+      referencing the wipe ruling) (repos: market-tick-data-service, unified-api-contracts, unified-trading-pm).
+
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
