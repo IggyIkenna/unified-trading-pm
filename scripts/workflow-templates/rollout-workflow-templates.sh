@@ -118,6 +118,37 @@ _is_retired() {
   return 1
 }
 
+# ── Size-sanity write guard (ao_local_mock_server_workflow_truncation_and_e2e_port_
+# collision_2026_08_07) ─────────────────────────────────────────────────────────────────────
+# This script is the ONLY known code path anywhere in the workspace that writes
+# `.github/workflows/*.yml` across multiple repos in one pass. 2026-08-07 incident: 5 of
+# the exact templates this script manages (main-backmerge-to-ldr.yml,
+# major-bump-issue-handler.yml, request-major-bump.yml, staging-backmerge-to-ldr.yml,
+# update-dependency-version.yml) were found truncated to ~13-15% of their real size in 22
+# repos simultaneously. ROOT-CAUSED 2026-08-07 (follow-up session): a concurrent
+# `git pull --rebase --autostash` from a DIFFERENT process sharing the same checkout (e.g.
+# another slot/session's `quickmerge.sh`) can silently discard uncommitted local edits to
+# files it never touches itself — empirically reproduced live (see
+# `plans/active/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md`
+# for the full evidence trail). This guard is defense-in-depth regardless of trigger:
+# refuses (does not write) when new content would shrink an EXISTING target to under half
+# its current size — a legitimate template edit changes a few substituted tokens or adds/
+# removes a job, never collapses the file by more than half. A brand-new target (nothing to
+# compare against) always writes normally.
+_write_target() {
+  local content="$1" target="$2" old_bytes new_bytes
+  if [ -f "$target" ]; then
+    old_bytes=$(wc -c < "$target" | tr -d ' ')
+    new_bytes=$(printf '%s' "$content" | wc -c | tr -d ' ')
+    if [ "$old_bytes" -gt 0 ] && [ "$new_bytes" -lt $((old_bytes / 2)) ]; then
+      echo "  [REFUSED — new content is ${new_bytes}B, existing $target is ${old_bytes}B (>50% shrink); not writing. Investigate before forcing." >&2
+      return 1
+    fi
+  fi
+  printf '%s\n' "$content" > "$target"
+  return 0
+}
+
 REPOS=$(python3 -c "import json; [print(r) for r in json.load(open('$MANIFEST')).get('repositories',{})]")
 
 # Phase-2 (D13): look up version_source per repo for __VERSION_SOURCE__ substitution.
@@ -275,6 +306,7 @@ get_runs_on_value() {
 updated=0
 skipped=0
 missing_dir=0
+refused=0
 
 # Process both direct .yml templates and .yml.tmpl templates (with substitution)
 for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
@@ -353,8 +385,13 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
       if [ "$DRY_RUN" = true ]; then
         echo "  [dry-$([ -f "$target" ] && echo update || echo create)-tmpl] $repo (dep_repos=${dep_repos})"
       else
-        echo "$rendered" > "$target"
-        echo "  [$([ -f "$target" ] && echo updated || echo created)-tmpl] $repo (dep_repos=${dep_repos})"
+        _existed=false; [ -f "$target" ] && _existed=true
+        if _write_target "$rendered" "$target"; then
+          echo "  [$([ "$_existed" = true ] && echo updated || echo created)-tmpl] $repo (dep_repos=${dep_repos})"
+        else
+          refused=$((refused + 1))
+          continue
+        fi
       fi
     else
       # "Flat copy" templates still get the __RUNS_ON__ substitution (2026-08-05,
@@ -380,8 +417,13 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
       if [ "$DRY_RUN" = true ]; then
         echo "  [dry-$([ -f "$target" ] && echo update || echo create)] $repo"
       else
-        echo "$rendered" > "$target"
-        echo "  [$([ -f "$target" ] && echo updated || echo created)] $repo"
+        _existed=false; [ -f "$target" ] && _existed=true
+        if _write_target "$rendered" "$target"; then
+          echo "  [$([ "$_existed" = true ] && echo updated || echo created)] $repo"
+        else
+          refused=$((refused + 1))
+          continue
+        fi
       fi
     fi
     updated=$((updated + 1))
@@ -415,8 +457,12 @@ if [ -d "$UI_TEMPLATE_DIR" ] && [ -z "$REPO_FILTER" -o "$REPO_FILTER" = "$UI_TAR
       if [ "$DRY_RUN" = true ]; then
         echo "  [dry-$([ -f "$target" ] && echo update || echo create)] $UI_TARGET_REPO"
       else
-        cp "$template" "$target"
-        echo "  [$([ -f "$target" ] && echo updated || echo created)] $UI_TARGET_REPO"
+        _existed=false; [ -f "$target" ] && _existed=true
+        if ! _write_target "$(cat "$template")" "$target"; then
+          refused=$((refused + 1))
+          continue
+        fi
+        echo "  [$([ "$_existed" = true ] && echo updated || echo created)] $UI_TARGET_REPO"
       fi
       updated=$((updated + 1))
     done
@@ -427,6 +473,13 @@ echo "Summary:"
 echo "  Updated/created: $updated"
 echo "  Already current: $skipped"
 echo "  No .github/workflows/: $missing_dir"
+echo "  Refused (would shrink an existing file >50%): $refused"
 if [ "$DRY_RUN" = true ]; then
   echo "  (dry-run mode -- no files were modified)"
+fi
+if [ "$refused" -gt 0 ]; then
+  echo "REFUSED $refused write(s) -- see [REFUSED -- ...] lines above. Investigate before re-running (a legitimate" >&2
+  echo "template change never shrinks a file by more than half; this is the size-sanity guard added after the" >&2
+  echo "2026-08-07 workflow-truncation incident)." >&2
+  exit 1
 fi
