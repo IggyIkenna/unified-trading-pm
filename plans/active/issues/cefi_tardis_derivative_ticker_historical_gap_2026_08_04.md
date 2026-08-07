@@ -91,6 +91,20 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-2 2026-08-07 ~10:10Z (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, pre-compact
+  checkpoint #17)**: VM `cefi-fwd-20260806-065837` **TERMINATED** (NOTFOUND status confirmed ~09:59Z via watchdog
+  b6sson3iw). Tardis fleet cleared (0 running cefi-fwd VMs). RC3 tarball
+  `mtds-code@b2cc274219acf0b25750a25a4ec4570a3e44d642` confirmed still in GCS. **DERIBIT-only backfill VM launched**:
+  `cefi-fwd-20260807-100050` (e2-standard-8, asia-northeast1-c, 2026-05-23→2026-08-05), VM metadata confirmed
+  `MTDS_TARBALL_SHA=b2cc274219acf0b25750a25a4ec4570a3e44d642` + `VM_VENUE=DERIBIT` + `VM_FORCE=true`. As of 10:09Z VM is
+  RUNNING (cpu=132%, rss=1894MiB), processing `options_chain` for day=2026-05-23 — `futures_chain` already done (47k
+  rows), `derivative_ticker` pending options_chain completion. Watchdog b54s5rj1b (60-sec cadence, 60-min cap) watching
+  for DERIBIT perpetual derivative_ticker GCS objects on day=2026-05-23. **COMPACTING — next session resumes here.**
+  **Next action**: when derivative_ticker objects appear in
+  `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-23/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=perpetual/data_type=derivative_ticker/`,
+  verify count ≥ 1 on day=2026-05-23 AND at least 1 more sampled day (e.g. 2026-07-01), flip P2 checkbox with evidence,
+  `docs(plans):` commit + push, then POST /done for `cefi_tardis_derivative_ticker_historical_gap-003`.
+
 - **slot-2 2026-08-07 ~09:40Z (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, checkpoint
   #16)**: VM `cefi-fwd-20260806-065837` still RUNNING. At 09:37Z log on day=2026-06-04 (~12/75 days done, 63 remaining).
   Pace ~2.27h/day → ETA ~2026-08-13. RC3 tarball (`mtds-code@b2cc274219acf0b25750a25a4ec4570a3e44d642`) confirmed
