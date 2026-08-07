@@ -79,11 +79,23 @@ drift_direction: advance-code
       a rule even EXISTS that should cover this failure class. Produce a table: finding → alert fired?
       (yes/no/no-rule-exists) → evidence. File gaps as their own todo/issue-doc entries — a real coverage gap is a
       finding in its own right, not just a footnote.
-- [ ] [SCRIPT] P0. **Fix `market-data-query-service` crash-loop** — hardcoded `gs://market-data-candles` (doesn't exist)
-      in `_init_gcs_client()`; real buckets use `market-data-tick-{ag}-{prd|test}-central-element-323112`. Find the
-      correct bucket via `resolve_bucket_name(...)` (never hand-roll the string), fix, redeploy, verify the revision
-      actually stays healthy post-deploy (not just "Ready" — confirm an actual successful request/instance start in
-      logs).
+- [x] [SCRIPT] P0. ✅ **`market-data-query-service` — DECOMMISSIONED, not patched.** Investigation before fixing found
+      this reclassifies from "fix the bucket" to "dead service": (1) zero real HTTP requests in 7 days (only the
+      internal startup probe, which fails) — `gcloud logging read` for `httpRequest.requestUrl!=""` returned nothing;
+      (2) its ONLY revision (`market-data-query-service-00002-g9r`) was created `2025-10-20T19:42:12Z` — not redeployed
+      in ~10 months; (3) `gs://market-data-candles` was deliberately RETIRED `2026-04-18` per
+      `unified-trading-pm:plans/archive/data_pipeline_completion_2026_04_18.plan.md` ("empty; co-location wins") —
+      candles now live co-located under `market-data-tick-{category}-{project}/processed_candles/`, so this service
+      predates a real architecture migration and was never updated; (4) its backing Artifact Registry repo
+      `market-data-handler` is now **0.000MB / empty** (an aggressive `delete-older-than-3d` cleanup policy has been
+      silently deleting its own images) — the source code for `market_data_query_service.py` could not even be located
+      anywhere in the GitHub org (`gh search code`, zero hits); (5)
+      `deployment-service/configs/     gcp_service_accounts.yaml`'s own audit comment groups it in the same "sampled
+      5/7" list as `batch-live-reconciliation-service`/`fund-administration-service`/`trading-agent-service` — 3 of
+      which are ALREADY confirmed dead-weight stubs in the P3 decommission todo below. Deleted via
+      `gcloud run services delete market-data-query-service --region=asia-northeast1` (2026-08-07). Its `deployment-ui`
+      references (`src/lib/mock-api.ts`, a smoke-test testid) run against a MOCK API, not the live service, so nothing
+      else needed updating. Folded into the P3 dead-weight cluster rather than counted separately.
 - [ ] [SCRIPT] P0. **Fix `client-reporting-batch` OOM** — 512Mi/1cpu limit, 100% failure for 30+ hours. Raise the Cloud
       Run job's memory limit to a sane value (check what it's actually trying to process to size correctly, don't just
       guess a number) and verify a subsequent execution completes successfully.
@@ -91,11 +103,13 @@ drift_direction: advance-code
       more headroom to add on this axis — investigate whether the rollup can be sharded/batched instead of raising the
       ceiling further, or if a genuine resource bump + `maxScale` increase is the right fix. Verify MTDS/
       instruments-service rollup timeouts stop recurring post-fix.
-- [ ] [SCRIPT] P1. **Kill the hung idle `mtds-dex-swaps-backfill-2` VM** — finished its work 7+ hours ago (per its own
-      manifest-shard-complete log line), never exited, burning non-preemptible on-demand billing idle. Confirm it's
-      genuinely done (re-check PROGRESS.json / manifest state is final) before terminating; this is a real
-      delete-adjacent action — cite reversibility per delete-safety-protocol before executing (a VM stop/delete on a
-      confirmed-finished worker is not the risky "prod bucket delete" class, but state the justification anyway).
+- [x] [SCRIPT] P1. ✅ **Killed the hung idle `mtds-dex-swaps-backfill-2` VM.** Re-confirmed before deleting: no
+      `PROGRESS.json` at its GCS log path (404), `run.log` tail (15:15-15:20Z) showed only RESOURCE_SAMPLE/
+      PIPELINE_HEARTBEAT lines at ~0-1.4% CPU, no processing activity since the `process_final=True` shard-complete line
+      at 07:50:33Z (7.5h idle). Deleted via
+      `gcloud compute instances delete mtds-dex-swaps-backfill-2     --zone=asia-northeast1-c` (2026-08-07T15:2xZ) —
+      justification: confirmed-finished worker VM, non-preemptible on-demand billing with zero further useful work
+      possible, not a data-delete (no GCS/manifest content touched).
 - [ ] [SCRIPT] P1. **Fix or decommission `vm-serial-capture-prd`** — dead 19 days (`ContainerMissing`, image deleted),
       Cloud Scheduler still firing 4x/day into the void. Determine whether serial-capture is still needed; if yes,
       rebuild+republish the image and verify a real execution succeeds; if no, pause/delete the scheduler + job rather
