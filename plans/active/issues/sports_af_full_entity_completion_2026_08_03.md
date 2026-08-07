@@ -795,3 +795,12 @@ are genuinely in scope for the operator's "no exceptions" directive.
   already-known 2026-08-06 quota exhaustion, self-resolving via this very campaign's active sweep). Full fleet as of
   this tick: 4 VMs RUNNING (this campaign's `af-backfill`, `fs-backfill`, plus `mtds-backfill-odds-1` and
   `weather-backfill` from the sibling doc) — no conflicts, no shared locks contended.)
+- **2026-08-07T12:12Z** — PLAYER_STATS climbing (2024-12-04 → 2025-03-08), footystats climbing (2022-10-13 →
+  2023-04-23). Both healthy. (Aside, sibling-doc scope: correction to last tick's optimistic odds_api VM read — it
+  turned out `mtds-backfill-odds-1` was OOM-crash-looping the whole time (10 leagues, 10 identical chunk-1 OOM kills,
+  zero real progress) and got killed; a relaunch attempt was correctly blocked by the concurrency guard because another
+  worker's `mtds-backfill-odds-401-retry` (a legitimate, `--allow-parallel`, guard-respecting parallel launch targeting
+  the 871-row 401 retry todo) is still running and healthy. Full detail + the pre-existing OOM bug this reproduces in
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` and
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. SFI backfill also confirmed healthy this tick (real writes,
+  21,742 rows for 2020-10-17). Not this campaign's scope, noted for completeness.)
