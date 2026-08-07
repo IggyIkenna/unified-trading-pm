@@ -61,7 +61,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-06
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -161,7 +161,7 @@ Two reasons, mirroring the UTL-34-bypass precedent
       commits now correctly exposed by the fixed range (a separate, distinct issue per this doc's own precedent, not
       re-opened here), and alerting-service turned out to be blocked by an unrelated SIT-gate timing condition, not this
       bug (see Progress Log for the distinction).
-- [ ] [DEVOPS] P2. **UPDATED 2026-08-06 (governance sweep) — largely superseded by the now-shipped root-cause fix above,
+- [x] [DEVOPS] P2. **UPDATED 2026-08-06 (governance sweep) — largely superseded by the now-shipped root-cause fix above,
       re-scoped to what's actually left.** `[DEVOPS]` tag (was `[OPERATOR]`), downgraded P1→P2 — per the root-cause
       todo's own DONE note (line 160-163), the range computation is now correct for all 4 originally- flagged repos; the
       3 that remain blocked are stuck on genuinely UNRELATED issues (foreign quickmerge-bypass commits now correctly
@@ -172,7 +172,12 @@ Two reasons, mirroring the UTL-34-bypass precedent
       stuck repos, get exactly one clean promote PR merged (admin-merge after a real diff review, or resolve the
       underlying 19/N-commit provenance list first via owning-agent re-ship / operator-authorized
       `reprovenance_bypass.sh` sweep per repo) — the repo then self-heals (new marker = valid post-rewrite SHA),
-      matching how execution-service and e2e-testing already recovered on their own.
+      matching how execution-service and e2e-testing already recovered on their own. **DONE 2026-08-07** — all 3
+      originally-stuck repos now have a clean promote PR merged per this doc's own done-when: `unified-trading-library`
+      (PR #763, operator-authorized 2-commit reprovenance sweep, morning session), `market-data-processing-service` (PR
+      #604, operator-authorized 7-commit sweep), `instruments-service` (PR #1098, operator-authorized 19-commit sweep) —
+      all via diff-reviewed `reprovenance_bypass.sh` sweeps per repo (not admin-merge), each self-healing going forward
+      (new marker = a valid post-rewrite SHA). See Progress Log for full per-repo evidence.
 - [ ] [DEVOPS] P2. Audit whether any OTHER repos have a `chore(promote)`-titled merge whose `mergedAt` predates
       2026-08-05T11:24:53Z but were not part of the 5-repo history-rewrite set — confirm this is genuinely scoped to
       exactly {instruments-service, unified-trading-library, market-data-processing-service} and not wider.
@@ -212,6 +217,49 @@ Two reasons, mirroring the UTL-34-bypass precedent
     got a `ldr_terminal` exemption when that promotion model was introduced 2026-08-05. Added `_ldr_terminal_repos()`
     (mirrors `_main_direct_repos()`'s pattern) and skip both main-facing directions for those repos. Shipped
     `unified-trading-pm@aeeffc00d`.
+- **2026-08-07 (instruments-service bypass sweep, operator-authorized)** — Operator explicitly authorized a bulk
+  reprovenance sweep for `instruments-service` (same authorization class as the MDPS sweep immediately above — a
+  structured operator decision, not an agent unilateral call). Fetched `origin main live-defi-rollout` fresh and re-ran
+  `check_strict_quickmerge.py --range origin/main..origin/live-defi-rollout --block` rather than trusting the `~10-11`
+  counts measured earlier the same day — found **19** real bypass commits (grown since the morning branch-health
+  session's count of 11; the range is genuinely live and moves), oldest-to-newest: `f5593c29` (transfermarkt
+  GCS-concurrency doc note), `8f31fdce` (sports record_empty explicit `source=` stamps), `53e86896` (sports per-league
+  shard isolation), `582b296e` (sports basedpyright unbound-var fix), `ae8b0ebc` (UTL retry-helper consolidation
+  refactor), `7b812d2e` (api_football root-cause fixes), `f80a366c` (api_football TEAMS/STANDINGS writer widening),
+  `9bc19bb2` (sports TEAMS/STANDINGS blank-league_id writer fix), `68e37986` (completeness VENUE/GROUP key fold),
+  `58222b09` (sports T+1 closing re-poll), `511c4f0a` (prediction per-venue market_lifecycle partition), `a8f6ae3a` +
+  `63f84060` (BITGET-FUTURES base/quote + margin-type fixes), `cf048ee3` (SFI first-half odds), `b95574f5` (defi
+  SPOT_ASSET siblings), `830e33ae` (DERIBIT instrument_id BASE-QUOTE fail-loud), `b225b720` (defi Option B on-chain
+  removal probe), `145c78bb` (sports function-size decomposition), `37c4dd20` (options_chain->OPTION legacy alias
+  parity). Read every commit's FULL diff as a safety screen (not just the message): grepped the full diff corpus for
+  secrets/credentials/private keys, destructive ops (DROP/DELETE/ TRUNCATE/`shell=True`/`eval`/`exec`), banned patterns
+  (`os.getenv`, `# type: ignore`, `except ImportError`), wallet/kill-switch/force-push mentions, and inline
+  `gs://`/direct `google.cloud`/`boto3` calls — zero hits (the only `api_key=` matches were `"test-key"` test fixtures;
+  the only `gs://` hits were log-message f-strings; the `f80a366c` diff itself FIXES a TID251
+  direct-`google.cloud.storage` violation, tightening not loosening). Read the `145c78bb` `quality-gates.sh` diff in
+  full: it REMOVES a stale `FUNCTION_SIZE_EXTRA_EXCLUDES` entry (gate gets stricter, not weaker) after genuinely
+  decomposing the 3 oversized functions. Read the `b225b720` DeFi removal-probe diff in full:
+  conservative-by-construction as its own commit message claims — records a removal only on a POSITIVE
+  `eth_getCode`-absent confirmation, any RPC error/uncertainty/non-EVM chain keeps the instrument live, matching Option
+  A's honest-absence contract. Every diff's changed-file list matched its own commit message's stated scope. All 19
+  passed the screen — none skipped. Reprovenanced all 19 via `scripts/cicd/reprovenance_bypass.sh <sha>` (no `--push`
+  per-call, newest-to-oldest per the tool's flagged order), confirmed
+  `check_strict_quickmerge.py --range origin/main..HEAD --block` was clean locally (881 commits in range, needed a >2min
+  timeout) before pushing once: `instruments-service@4acdedf477decd80c59dd86f9c031a7fdf04facb` (19 empty
+  `chore(provenance)` commits, verified zero file changes each). Verified live: manually triggered
+  `ldr-to-main-promote-fleet.yml` (`workflow_dispatch`, run `31169922335`, completed success) rather than waiting on the
+  cron — log shows
+  `promote-provenance-range[instruments-service→main]: mode=fallback marker=0247912d… ancestor=False → origin/main..origin/live-defi-rollout`
+  (the still-stale pre-rewrite marker, expected — this doc's root-cause fix correctly falls back) and
+  `Promoted (1): instruments-service`. The bot closed the superseded PR #1097 (head frozen at the pre-reprovenance tip
+  `06c6f2dd`) and opened/auto-merged PR #1098 (head `4acdedf477de`) — did NOT hand-arm auto-merge myself; the fleet
+  bot's own `provenance_check_ok` gate armed it after finding the corrected range clean, exactly the normal mechanism.
+  PR #1098 merged clean at `2026-08-07T10:25:30Z` with
+  `quality-gates-v2`/`sit-gate/fleet-green`/`semver-agent/label-check` all pass — main tip now
+  `51f4504939ac44d2efa1ea06a44ec9758cec14aa`. Re-ran `promotion_lag_monitor.py` fresh afterward:
+  `✅ promotion-lag: all branches in sync (LDR→main within 120m, backmerge/staging within 60m)` — instruments-service no
+  longer appears anywhere in the output. This doc's instruments-service thread is now fully resolved (provenance-clean,
+  promoted, self-healing marker going forward — matching MDPS's resolution above).
 
 - **2026-08-06** — Filed while re-shipping the DP-CATALOG-001 sports-catalogue fix for instruments-service (see
   `instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`). `497c4f5e` was found to already be
