@@ -291,4 +291,11 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   unless/until an operator or the next worker... picks (A) or (B)") — no operator action taken on either linked adapter
   dead-code doc since 2026-07-31, re-confirmed via direct read of both. Not reclassifiable: the doc's own text is the
   citation (redirect + explicit non-actionable framing). Doc stays NA.
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA, valid — re-verified, 1 open, unchanged
+  since the 2026-08-04 marker. Finding 1 remains a self-declared judgment call (delete vs keep-and-document on 2 linked
+  adapter dead-code docs, both still `assigned_vm: NA` with their own open decision todo, live-confirmed today). Finding
+  2 stays `[x]` DONE — independently re-verified live: `be7269449` is confirmed an ancestor of current HEAD via
+  `git merge-base --is-ancestor`, and the named regression test
+  `test_closeout_doc_depends_on_pulls_in_a_fork_with_no_finalize_pair` is confirmed present in
+  `tests/unit/test_generate_ag_closeout_audit_candidates.py`. Doc stays NA.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.

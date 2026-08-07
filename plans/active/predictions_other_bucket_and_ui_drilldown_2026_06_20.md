@@ -131,14 +131,21 @@ after each backfill VM run and recurring patterns promoted to first-class groups
 
 ## P1 — canonical-groups backfill remainder
 
-- [ ] [SCRIPT] P1. **Phase 5 — canonical-groups backfill (30+ groups beyond the initial 9)**. Full list in the archived
-      issue: CRUDE_OIL_UP_DOWN_DAILY, GOLD_UP_DOWN_DAILY, DOGE_UP_DOWN_DAILY, SOL_UP_DOWN_DAILY,
-      ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E (CME-linked), and ~24 others. Per-group: define in UAC `PREDICTION_GROUPS`;
-      backfill instruments-service catalog + MTDS CLOB tick history; cluster-validation expected counts populated.
-      **GATES `cme_polymarket_arb_2026_05_08` Phase 2 cross-link.** NOTE: the 7 CME-linked groups + classifier rules +
-      INTRADAY/5MIN/15MIN granularity + the IS/MTDS backfill VMs for those already SHIPPED per the epic body
-      (UAC@9c491bdd / 55d068f7 / 228c317a / bd570664 / e6ae5013; IS@d76b877f; MTDS@498148da). This P1 is the REMAINING
-      ~24 groups not yet defined/backfilled.
+- [x] ✅ [SCRIPT] P1. **CLOSED — na-eligibility-audit 2026-08-07 (prediction tranche), KEEP-NA-STALE-ITEMS.** Phase 5 —
+      canonical-groups backfill (30+ groups beyond the initial 9). Full list in the archived issue:
+      CRUDE_OIL_UP_DOWN_DAILY, GOLD_UP_DOWN_DAILY, DOGE_UP_DOWN_DAILY, SOL_UP_DOWN_DAILY, ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E
+      (CME-linked), and ~24 others. **GATES `cme_polymarket_arb_2026_05_08` Phase 2 cross-link.** The 7 CME-linked
+      groups + classifier rules + INTRADAY/5MIN/15MIN granularity + the IS/MTDS backfill VMs for those already SHIPPED
+      per the epic body (UAC@9c491bdd / 55d068f7 / 228c317a / bd570664 / e6ae5013; IS@d76b877f; MTDS@498148da). The
+      remaining ~24-group scope is superseded/substantially-executed by
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s active todo 11 (explicit `Source:` backlink naming this
+      exact item as its origin): of 17 explicitly-checked groups, 11 already had real captured data pre-existing, GOLD
+      was fixed+backfilled DONE 2026-08-05 (instruments-service@8f16345b, `_SERIES_CATEGORIES` discovery-path fix + live
+      cron capture verified via manifest), SUI was investigated and confirmed genuine honest-absence DONE 2026-08-05 (no
+      classifier gap), and the manifest-consolidator-staleness follow-up shipped DONE 2026-08-05. The sole remaining
+      residual (Football + per-event-recurring groups) is independently ruled non-AO-eligible open-ended design/scoping
+      work by that same active doc ("no worker can resolve alone per CLAUDE.md's dispatch-scope-eligibility rule") — not
+      reopenable here; batch6 remains the correct owner of any residual. Closed with citation, not reclassified.
 
 ## P2 — prediction sentinel fan-out
 
@@ -184,3 +191,12 @@ in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% r
   `./prediction_manifest_canonicalisation_2026_06_01.md`, which no longer resolves under `plans/active/` — it was
   archived to `plans/archive/2026_07/`; left out of context_scope, not flagged for a body rewrite (out of this skill's
   scope).
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA, stale item closed — the `[SCRIPT] P1`
+  Phase-5 canonical-groups-backfill checkbox (the 2026-07-30 marker's CONFLICT flag, never actioned until now) is
+  superseded/substantially-executed by `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s active todo 11: 11/17
+  explicitly-checked groups already had real captured data, GOLD + SUI + manifest-consolidator-staleness follow-ups all
+  shipped DONE 2026-08-05, and the sole remaining residual (Football/per-event-recurring groups) is independently ruled
+  non-AO-eligible design/scoping work by that same active doc — not reopenable here. Closed `[x]` with citation in place
+  (see checkbox above), not reclassified — batch6 remains the correct owner. The `[VERIFY][UI] P0` item (line 113)
+  remains genuinely `[BLOCKED-PLAYWRIGHT]` (env-gated, no UI-capable dev-server slot) — stays open. Doc stays NA
+  (`locked_by: live-defi-rollout` unaffected — this is a content edit, not archival).

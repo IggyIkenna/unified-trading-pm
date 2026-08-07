@@ -867,6 +867,12 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
   landing" section; reclassifying here would create a competing dispatch surface, so it stays NA. Conflict-check
   correction: an earlier classifier pass this run flagged this item RECLASSIFY without finding the existing batch4 claim
   — verified directly and downgraded before any `assigned_vm` flip.
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA-STALE-DUPLICATE, re-verified — the
+  DEFERRED-CROSS-DEP nested sub-item's citation (added 2026-08-06) to
+  `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s Deferred section is still current, independently
+  re-confirmed against batch4's live content (still `status: active` / `assigned_vm: planning`; the item is still parked
+  there per its own "Reconciled 2026-08-07 (finalize P1)" note — a separate process, not this audit). No action needed.
+  Doc stays NA.
 
 ## Deferred work — migrated to:
 

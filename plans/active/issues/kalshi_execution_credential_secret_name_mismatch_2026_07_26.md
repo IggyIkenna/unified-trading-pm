@@ -176,3 +176,12 @@ Two directions, both viable, not adjudicated by this doc:
   real credential/exchange material. Doc stays NA.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-07 (prediction tranche, autonomous)**: KEEP-NA, valid — re-verified, 1 open, unchanged
+  since the 2026-08-04 marker. The sole `[DATA] P1` item is `BLOCKED-OPERATOR-DECISION` and explicitly redirects
+  execution to the ACTIVE `assigned_vm: planning` `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 ("filed
+  there, not duplicated here") — a redirect-banner citation, automatic KEEP-NA regardless of how bounded the text reads;
+  flipping this doc would create a competing dispatch surface against real credential material. Flagged (not a defect in
+  this doc): the doc's own 2026-08-06 operator ruling text ("NO — do not touch the live exchange... find a non-live
+  verification path") is not yet mirrored into batch6 todo 5, which as of its own last update still shows the
+  pre-ruling, unresolved question — a sync gap for whichever pass next touches batch6. Doc stays NA.
