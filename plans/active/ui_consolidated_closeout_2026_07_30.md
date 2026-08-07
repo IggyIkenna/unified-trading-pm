@@ -257,3 +257,14 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   legitimately code-free; the 2 intervening `ag_closeout_auditor` Progress Log entries are audit-run records, not a
   substantive change to this doc's own reading list (the new satellite batch1/finalize + parked-issue docs they produced
   are the CHILD batch's own reading list, not this umbrella's).
+- **na-eligibility-audit 2026-08-07 (ui tranche, dispatch agt-61f967)**: KEEP-NA, valid — re-confirmed (in scope this
+  run because `last_updated` (2026-08-07) is newer than the prior 2026-08-06 marker, per the 2 same-day
+  `ag_closeout_auditor` Progress Log entries above). Todos 1-4 (Track close-out verification) remain self-declared
+  verification-only rollups against work tracked in other docs, not AO-eligible. Todo 5 (corpus-wide `ui` retag audit)
+  still requires genuine per-doc judgment, not mechanical retagging — the 2 candidates added 2026-08-07
+  (`deployment_api_prod_disable_auth_true_2026_08_06.md`,
+  `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`) both need a cross-tranche-ownership call
+  (shared-config-surface / same-day sibling-tranche corroboration) a mechanical worker can't resolve alone. Todo 6 is
+  accurately self-tracked as partially done (`/ag-closeout-audit ui` has now run twice, 08-06/08-07;
+  `/plan-reconcile ui` genuinely has not run yet) — correctly still unchecked, not stale. No reclassification, no
+  citation fix, no archival warranted.
