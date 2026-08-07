@@ -129,3 +129,13 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   instrument_id mapping convention); todo 2 is explicitly gated "once `_resolve_spot_perp` returns correct ..." on the
   operator's ruling. Fails the bounded-outcome bar by design — nothing a worker can determine alone. Nothing to
   reclassify.
+- **na-eligibility-audit 2026-08-07** (tradfi tranche, dispatch agt-aca83b): **KEEP-NA — reason updated, still NOT
+  reclassify-eligible.** The 2026-08-06 marker above is stale: the operator has since ruled on the fix approach same-day
+  (`unified-trading-pm@001112aaf`, option A approved, todo 1's tag flipped `[OPERATOR]`→`[CODE]`), so "operator-gated by
+  construction" no longer holds. But todo 1's CME `instrument_id`-format verification sub-task is a near-verbatim
+  duplicate of the `[DIAG] P2` todo already tracked in
+  `/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md` (that doc's own filed conflict-check item
+  5/6: "dispatching both risks two workers independently verifying the same thing"). Per the shared conflict-check
+  protocol (`ao-dispatch-batch-naming-and-conflict-check.md` § 3), this is a live CONFLICT, not a clear RECLASSIFY —
+  staying NA until that already-filed conflict resolves (reclassify/dedupe/re-affirm), rather than re-filing a duplicate
+  conflict record here.

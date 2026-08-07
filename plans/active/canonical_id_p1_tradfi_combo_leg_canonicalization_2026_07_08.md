@@ -204,6 +204,18 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07** (tradfi tranche, dispatch agt-aca83b): **KEEP-NA — do NOT trust this doc's own
+  "RULED 2026-08-06 (operator): go-ahead to run --apply" todo text at face value; do NOT reclassify.** That text (added
+  `unified-trading-pm@13f80f797`, 2026-08-06T17:14:59Z) directly contradicts
+  `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s "Deferred — operator-gated ... NOT re-asked if already asked"
+  framing of the SAME residual-91-CBOE+312-DBEQ `--apply` item — batch7 was last touched 2026-08-06T14:04:44Z, ~3h
+  before the "RULED" text landed here, so the contradiction is most likely just batch7 going stale rather than a
+  competing ruling, but that is NOT independently confirmed by this pass. This exact contradiction is already filed as
+  item 1/6 ("genuine same-day factual contradiction, highest priority of the 6") in
+  `/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`'s conflict-check list. Resolving which side
+  is current is plan_reconciler/operator territory, not this skill's (my `does_not` scope excludes corpus-wide
+  contradiction reconciliation) — staying NA until that already-filed conflict resolves, not re-deriving or re-filing a
+  duplicate ruling here.
 - **na-eligibility-audit 2026-08-03** (tradfi tranche, dispatch agt-06b4c6): **KEEP-NA, valid — re-verified, disposition
   unchanged.** The 2026-08-02 plan-hygiene sweep (`17b53df1`) converted this doc's prose-only remaining action into a
   real `- [ ] [OPERATOR] P2` checkbox ("Re-apply the historical catalog canonicalization scripts") — a formatting
