@@ -128,7 +128,7 @@ step.
 > | `/plans/active/data_completion_cefi_2026_07_15.md`                                        | **CITES.** Its E4 + "NEXT SESSION — execute the migration" todos are already `SUPERSEDED-BY` this plan (verified 2026-07-31); they execute nothing themselves.                                                    |
 > | `/plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`           | **GATES Phase C.** Owns the normalization-aware snapshot-vs-`-prd` comparison that decides whether Phase C is done-by-fait-accompli or needs a from-snapshot re-scope. Nothing here should pre-empt that verdict. |
 > | `/plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` | **GATES Phase B's framing** (the hard-stop carve-out question) — not the execution.                                                                                                                               |
-> | `/plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md`                       | **CITES** for sequencing only.                                                                                                                                                                                    |
+> | `/plans/archive/2026_07/cefi_track7_candle_namespace_residual_2026_07_25.md`              | **CITES** for sequencing only. (archived 2026-08-07)                                                                                                                                                              |
 >
 > Net: **only this plan's own todos execute.** Every other doc either gates a phase or cites it.
 

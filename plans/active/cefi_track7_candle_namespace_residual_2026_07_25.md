@@ -9,8 +9,8 @@ summary: >-
   combined into one ordering-safe todo as candidate 7 of cefi_consolidated_native_ao_extract_2026_07_25.md. This plan
   machine-gates the delete on that plan's completion instead, preserving the original verify->backfill->delete ordering
   constraint via a cross-plan gate rather than intra-plan sequencing.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [cefi]
 stage: [data]
 repos: [market-data-processing-service]
@@ -60,6 +60,12 @@ context_scope:
 ---
 
 # CeFi Track-7 candle-namespace residual — gated delete
+
+> **✅ ARCHIVED 2026-08-07 — sole todo ([OPERATOR]-gated delete of 149 stale objects) complete; all 149 objects
+> confirmed deleted per `cefi_consolidated_native_ao_extract_2026_07_25.md` candidate-7 (governance-sweep stale-tag
+> cleanup, 2026-08-06). Reconciliation done via finalize twin
+> (`cefi_track7_candle_namespace_residual_finalize_2026_07_25.md` todo 1, 2026-08-06, slot-4). Archived per the 6-step
+> ritual.**
 
 > **Why this plan has only 1 todo (deliberate, not an oversight).** Track 7's original 3-step shape was verify(6
 > remaining days) → backfill(--force) → delete(149 objects). The first two steps are already drafted, combined into ONE

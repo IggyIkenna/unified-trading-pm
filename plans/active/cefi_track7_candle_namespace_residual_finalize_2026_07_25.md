@@ -6,8 +6,8 @@ summary: >-
   gate_on_depends: true until that plan's single delete todo is done. Reconciles the parent
   (cefi_consolidated_closeout_2026_07_18.md) Track-7 checkbox and candle_feature_canonical_path_divergence_2026_07_20.md
   todo 19, then archives.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [cefi]
 stage: [data]
 repos: [unified-trading-pm]
@@ -52,6 +52,11 @@ context_scope:
 
 # CeFi Track-7 candle-namespace residual — finalize
 
+> **✅ ARCHIVED 2026-08-07 — both todos done: (1) Track-7 delete reconciled into
+> `cefi_consolidated_closeout_2026_07_18.md` + `candle_feature_canonical_path_divergence_2026_07_20.md` todo 19
+> (2026-08-06, slot-4); (2) parent plan archived via 6-step ritual (2026-08-07, slot-2). Archived per the 6-step
+> ritual.**
+
 > **Machine-gated on `cefi_track7_candle_namespace_residual_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until that plan's delete todo is `done`.
 
@@ -70,12 +75,17 @@ context_scope:
       todo 19 in `candle_feature_canonical_path_divergence_2026_07_20.md` is flipped `[x]` (na-eligibility-audit
       2026-08-03) with the `_copy_verify_delete()` retry-idempotency fix + CEFI mop-up evidence (0/149 legacy-path
       objects remain in GCS), referencing this track's resolution.
-- [ ] [DOC] P2. **Archive `cefi_track7_candle_namespace_residual_2026_07_25.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P2. **Archive `cefi_track7_candle_namespace_residual_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the archive banner → run the
       codex-alignment check → grep the corpus for every referrer of `cefi_track7_candle_namespace_residual_2026_07_25`
       and fix each path to point at the archived location → clear `locked_by` (already empty, confirm). **Done when**:
       the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize
-      doc itself gets archived alongside it in the same commit.
+      doc itself gets archived alongside it in the same commit. **DONE (slot-2, 2026-08-07)** — (1) no deferred items
+      (Progress Log prose quote of `- [ ]` is not an open todo); (2) archive banners added to both plans; (3) codex
+      check: plan confirmed "No new durable contract is created by this plan" — no codex updates needed; (4) no new
+      CLAUDE.md contract to document; (5) corpus referrers fixed: INDEX.md entries removed, cefi_e4_e8 path updated to
+      `/plans/archive/2026_07/` (bare-slug and prose refs left as-is per convention); (6) locked_by confirmed empty;
+      both plans git mv'd to `plans/archive/2026_07/` in a separate follow-up commit per RULES.md §2.
 
 ## Progress Log
 
@@ -85,3 +95,11 @@ context_scope:
 - **context-scout 2026-08-07**: re-confirmed context_scope (4 entries) unchanged — todo 1 (reconciliation) is now DONE
   (2026-08-06); todo 2 (archive the parent per the 6-step ritual) is the sole remaining step, and the target plan +
   archival-discipline codex SSOT already in this list are exactly what it needs. All 4 re-verified resolving.
+- **slot-2 2026-08-07**: executed 6-step archival ritual for `cefi_track7_candle_namespace_residual_2026_07_25.md`. Step
+  1: no deferred items (sole `- [ ]` hit in Progress Log is a quoted prose reference, not an open todo). Step 2: archive
+  banners added to both plans, frontmatter `status: complete` + `nature: record`. Step 3: codex check — plan confirms
+  "No new durable contract is created by this plan"; delete already reflected in parent closeout plan. Step 4: no
+  CLAUDE.md/codex update needed. Step 5: corpus referrers fixed — INDEX.md entries for both plans removed, cefi_e4_e8
+  line 131 path updated to `/plans/archive/2026_07/`; bare-slug refs (`depends_on`, prose mentions) left per convention.
+  Step 6: locked_by confirmed empty; todo 2 checkbox flipped in this commit; git mv to `plans/archive/2026_07/` in a
+  separate follow-up commit per RULES.md §2 (no checkbox-flip + git mv in same commit).
