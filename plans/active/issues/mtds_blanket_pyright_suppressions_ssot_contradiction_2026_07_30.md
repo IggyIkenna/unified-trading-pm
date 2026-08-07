@@ -153,7 +153,7 @@ and are correct under both outcomes; todo 3 sets the eventual target.
       it should" gap immediately regardless of the operator's todo-3 answer: even if vendor-glue suppressions get
       sanctioned, net-new UNSANCTIONED ones should still be gated to 0 per the codex's own existing rule. (repo:
       market-tick-data-service) — market-tick-data-service@d072b035.
-- [ ] [DOCS] P3. **DEFAULT-RULED 2026-08-06, option (b): formally accept blanket suppressions as sanctioned for
+- [x] ✅ [DOCS] P3. **DEFAULT-RULED 2026-08-06, option (b): formally accept blanket suppressions as sanctioned for
       loosely-typed vendor-response glue code, scoped narrowly.** `[DOCS]` tag (was `[OPERATOR]`) — a full drive-to-zero
       type-safety recovery across 54% of the repo is a large, likely-low-value project given the suppressed code is
       specifically vendor-glue; relax codex wording scoped to the `cli/handlers/` glob, not a workspace-wide relaxation.
@@ -203,3 +203,9 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   first evidence the freeze-and-shrink ratchet (todo 2) actively catches net-new suppressions even when the
   mirror-the-dominant-convention instinct produces one — relevant context for the operator's open todo-3 policy call.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-07 (backend_engineer, slot 13)**: Todo 3 shipped — DEFAULT-RULED option (b). Updated
+  `/codex/06-coding-standards/quality-gates.md` § "Restoring strict basedpyright" bullet 3 to add the sanctioned
+  carve-out for `market_tick_data_service/cli/handlers/*.py` (blanket file-level `# pyright: reportX=false` headers
+  explicitly accepted for vendor-response glue code; the STEP 5.94/5.95 ratchets contain it). Updated
+  `/codex/06-coding-standards/README.md` basedpyright policy paragraph to cross-reference the carve-out. All todos
+  complete; issue doc can be archived.
