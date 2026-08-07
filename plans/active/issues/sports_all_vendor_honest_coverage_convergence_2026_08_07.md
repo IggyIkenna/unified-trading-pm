@@ -541,3 +541,16 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   smallchunk2 STILL chunk 18/451 (~3.5h) — lighter rule-1b diff (root cause already established, not re-litigating): 29
   distinct leagues now (up from 25), 15 OOM (up from 13), still zero repeats, RSS cycling normally — continued genuine
   movement, no intervention.
+- **2026-08-07T23:17Z — CLOSED: chunk 18/451 finally cleared. FIXTURE_STATS +72 days.** FIXTURE_STATS:
+  `last_completed_date=2022-08-01` (fresh `23:16:40Z`), continuing to accelerate. odds smallchunk2: `run.log`'s own
+  `PROGRESS: chunk=18/451 ... time=2026-08-07T22:59:42Z` line confirms the chunk completed — total elapsed **3h38m**
+  (started 19:21:28Z per chunk 17's completion line), final tally **30 distinct leagues attempted, 16 OOM'd once each
+  (14 succeeded clean on first try)**, zero repeats throughout — closes out the season-opener-week investigation as
+  designed-behavior, not a bug. Chunk 19 (`2020-09-04→2020-09-08`) is already under way and moving fast — its first
+  league is skip-fasting through dates (`SKIP date=2020-09-04/05/06`), confirming the off-season-weeks-move-faster
+  hypothesis. **New finding for future ticks**: `PROGRESS.json` itself did NOT update at the chunk-18→19 transition — it
+  still read the stale `2020-08-29`/`19:22:22Z` value even ~18 minutes after chunk 18's own `run.log` completion line.
+  The true checkpoint state must be cross-checked against `run.log`'s own `PROGRESS: chunk=N` lines near a suspected
+  chunk boundary, not trusted from `PROGRESS.json` alone — worth a rule-1b/4a addendum if this recurs. Reverting to
+  lightweight per-tick `PROGRESS.json` checks per the standing instruction, since the outlier is now closed; will only
+  re-deep-dive if a future chunk shows the same multi-hour-stall signature.
