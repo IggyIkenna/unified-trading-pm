@@ -546,6 +546,25 @@ Long-pole from original batch: met-met-2023-030119 still running at ~6.5h. watch
   to /api/slots/8/heartbeat every ~5-10 polls to avoid watchdog timeout. (3) If watcher dies unexpectedly, re-arm slot-8
   copy from `es-opt-backfill-watcher.sh` with SLOT_ID=8. (4) Do NOT interfere with running VMs.
 
+**Session-crash recovery (2026-08-07T11:23Z, session 9):** Whole session died at some point after poll 6 (10:24:48Z, 11
+VMs) — all 4 background harness tasks (3 Monitors + the watcher itself, `bkittgj51`) failed together with exit 144,
+confirming `run_in_background:true` does NOT survive session death (only survives `/compact`; CLAUDE.md's existing note
+undersold this). Session auto-resumed via `/heartbeat` re-offering the same task. Gap: ~58min dead
+(10:24:48Z→11:22:40Z), fleet drained unattended from 11→5 VMs during the gap (no harm — watcher was only observing, not
+gating anything). PM repo confirmed clean/ahead=0 across the gap (both prior commits had already landed). No ES_OPT VMs
+existed yet (confirmed via `gcloud … name~'tradfi-bf-.*es-opt'` — empty). **Fix applied**: re-armed the watcher using
+the script's OWN documented survival method (its header comment, lines 32-38) instead of harness `run_in_background` —
+`setsid nohup bash es_opt_watcher_slot8.sh > log 2>&1 < /dev/null & disown`, found the real PID via `ps -ef | grep` (NOT
+`$!`), verified via `ps -o pid,ppid,pgid,sid -p <pid>` that PGID=SID=PID=457933 (genuine new session+process-group,
+confirmed isolated from this Claude Code session). PID recorded at `scratchpad/watcher/watcher.pid`. Poll 1 confirmed: 5
+VMs at 11:23:01Z. **Lesson for future watchers**: `setsid ... & disown` (not `run_in_background:true`) is required for
+any watcher that must outlive a session crash, not just a `/compact`.
+
+- **NEXT ACTION (fresh session):** (1) Check `scratchpad/watcher/watcher.pid` — `kill -0 <pid>` to check liveness
+  (PPID=1 process, independent of any Claude Code session). (2) Check watcher log tail for PHASE-2/completion/FATAL. (3)
+  If watcher dead and task not done: re-launch the SAME way (`setsid nohup … & disown`, verify real PID + PGID=SID=PID)
+  — never plain `run_in_background`, it does not survive session death. (4) Send heartbeat periodically.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
