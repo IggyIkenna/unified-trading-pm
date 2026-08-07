@@ -60,6 +60,13 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31_finalize.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # CeFi satellite AO batch 4 — iterative-drain extraction
@@ -230,3 +237,10 @@ batch1/batch2/batch3 finalize pattern.
   this batch's Phase 3 ran before drafting.
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a — the reversibility bar the too-large-or-risky
   Deferred item above did not clear this run.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated context_scope (4 entries) — the companion finalize gate, the batch-naming +
+  dispatch-scope-eligibility codex SSOTs already cited in this doc's own "Codex SSOTs" section above, and the parent
+  cefi consolidated-closeout hub. Genuinely code-free per this skill's dispatch-batch-coordinator exemption — every open
+  todo already carries its own inline `Source:` pointer to the actual issue doc it targets.

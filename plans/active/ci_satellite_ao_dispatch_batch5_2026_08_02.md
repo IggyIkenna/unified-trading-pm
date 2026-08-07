@@ -57,6 +57,14 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: cicd
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
+    /plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
+    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    /plans/active/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 locked_by:
 locked_since:
 supersedes:
@@ -431,3 +439,8 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   re-invoke/inspect Workflow run `wf_1f04b9b2-680` (or its journal.jsonl in the transcript dir), synthesize Phase 2
   (verdict counts + orphan list), run Phase 3's conflict-check, and append the final report + any batch6 decision to the
   parked-findings doc above rather than creating a second one.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the still-open todos' sources
+  (`github_actions_operator_gated_followups_2026_07_17.md` for todo 2, the now-archived+resolved
+  `github_actions_billing_wall_recurrence_2026_07_29.md` for todo 4,
+  `post_cutover_silent_assumption_sweep_2026_07_23.md` for todo 6), this batch's own gated finalize, and the umbrella
+  pipeline codex SSOT; dispatch-batch-coordinator shape.

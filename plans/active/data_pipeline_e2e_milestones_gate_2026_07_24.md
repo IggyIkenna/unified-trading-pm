@@ -517,3 +517,5 @@ is the single place to scan them all in one pass.
   -- real work lives in the cited target plans.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): `archive_exempt: true`,
   standing reference surface by operator ruling; 0 open todos is expected/by design, not an archival signal here.
+- **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries) -- still a standing
+  tracking/index surface, no source path applies.

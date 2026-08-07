@@ -132,3 +132,5 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   retag ([meta] -> [cross-cutting], 2026-07-31, confirmed a genuine mistag correction with no todo/content change).
   Explicit operator instruction to run locally/autonomously still governs; both remaining open todos unchanged.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-07**: re-verified context_scope, no change needed (5 entries) -- the 2026-08-06 commit only
+  flipped the mbp_10/CME docs-fix checkbox, no new reference target.

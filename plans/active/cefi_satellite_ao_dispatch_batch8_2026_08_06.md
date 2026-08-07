@@ -73,6 +73,8 @@ context_scope:
     /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
+    /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
   ]
 ---
 
@@ -228,3 +230,10 @@ batch1 through batch7 finalize pattern.
   bounded-vs-judgment-call test applied to every Phase-1/Phase-3 verdict above.
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
   this batch's Phase 3 ran before drafting.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated context_scope (5 entries) — the companion
+  `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md` gate, the prior batch7 link, the 2 core codex SSOTs, and
+  `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` — the actual target doc for the sole remaining open todo (todo
+  1, a doc-only checkbox/banner re-verify-and-flip against that exact file). Todos 2-3 are DONE.

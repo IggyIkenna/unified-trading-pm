@@ -117,3 +117,5 @@ source: >-
   dispatch). `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile → re-check
   the one deferred gate → archive sources → archive self) and several touch the same files. Ships `status: active` per
   the skill's 2026-07-30 finding (`gate_on_depends` already holds every task; no separate draft-gate needed).
+- **context-scout 2026-08-07**: re-verified context_scope (5 entries) — all paths resolve, matches the established
+  finalize-doc pattern (parent batch + the 4 archival-ritual codex SSOTs); genuine `*_finalize` gate, no source path.

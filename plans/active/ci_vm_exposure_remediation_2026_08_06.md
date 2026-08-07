@@ -149,6 +149,9 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
   identified for whoever picks this up next. The measurement dispatch on `e2e-testing` (run `31076459850`) was a real,
   harmless `quality-gates-v2` run — left to complete on its own, not managed further (not this plan's business once
   triggered for measurement purposes).
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the predecessor io-starvation audit
+  issue doc naming these 3 exposure items, the cgroup slice + runner setup script todo 3's investigation targets, and
+  the resource-history sampler service + installer todo 2 shipped a fix into.
 
 ## Codex SSOTs
 

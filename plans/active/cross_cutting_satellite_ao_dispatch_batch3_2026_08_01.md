@@ -46,6 +46,14 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
+    scripts/plan-hygiene/check_prosewrap_padding.sh,
+    /plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 source: >-
   /ag-closeout-audit cross-cutting re-invocation 2026-08-01 (autonomous, dispatch agt-a5c7d6, slot 13), Phase 1 Workflow
   classification of the 12 never-cited/gap candidates found by Phase 0.
@@ -194,3 +202,6 @@ source: >-
   conflict-check: all 8 drafted todos grepped clean against all 6 prior covering docs + spot-checked for
   recent-commit/lock collisions on the 2 todos touching other-tranche-titled docs (both clear). `status: draft` pending
   operator review.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — the sole remaining open todo's corpus-
+  wide tracking doc + gate script + actual violating target file (the prettier proseWrap fix), the parent closeout hub,
+  and the `/ag-closeout-audit` methodology this batch was produced by.

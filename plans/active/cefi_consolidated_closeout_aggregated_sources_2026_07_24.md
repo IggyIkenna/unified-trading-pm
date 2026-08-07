@@ -842,3 +842,7 @@ here is NOT dispatch, per this doc's own standing convention.
   structurally-un-ingestable discoverability index by design (frontmatter states so); its one real checkbox is a
   standing, non-terminal sync-maintenance duty, not bounded dispatchable work. Reaffirms 4 prior passes (2026-07-30,
   07-31, 08-04, 08-06).
+- **context-scout 2026-08-07**: re-confirmed context_scope (2 entries) unchanged — the 2026-08-07 "Digest additions"
+  section (6 new cefi-tagged linkage-orphan docs) doesn't change this: those docs are the index's OWN new content
+  (already linked in the body), not reading-list prerequisites for touching this doc itself. Parent closeout plan + the
+  line-cap-remediation source doc remain the right minimal set; still genuinely code-free (discoverability-index doc).

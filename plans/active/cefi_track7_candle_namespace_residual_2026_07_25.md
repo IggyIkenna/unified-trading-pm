@@ -50,6 +50,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
+    /plans/active/cefi_track7_candle_namespace_residual_finalize_2026_07_25.md,
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -157,3 +158,6 @@ No new durable contract is created by this plan.
   covered the delete, not bundle regeneration). This plan's sole todo is now done; the gated finalize twin
   (`cefi_track7_candle_namespace_residual_finalize_2026_07_25.md`) is unblocked to reconcile the parent closeout
   checkbox + archive.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added the now-unblocked finalize twin
+  `cefi_track7_candle_namespace_residual_finalize_2026_07_25.md` (the actual next step now that this plan's sole todo is
+  done) at the front; kept the other 5 (still-accurate historical/evidence context) unchanged.

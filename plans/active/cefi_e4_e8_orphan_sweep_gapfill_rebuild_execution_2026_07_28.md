@@ -313,3 +313,8 @@ todo's isolated wording. No reclassification.
   (gated on an unresolved normalization-verification investigation), Phases D/E are prod-scale manifest-rebuild/verify
   work on the data-correctness critical path with a track record of hidden production surprises; execution_scope:
   local-only by design. Reaffirms the 2026-08-04 pass.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries) — the only change since 2026-08-05 was a
+  referrer-path fix (the hard-stop-2 contradiction issue doc's path updated to reflect its own archival), which isn't
+  one of this doc's context_scope entries. All 6 (Phase C's gate doc, Phase D's `rebuild_cefi_manifest.py`, Phase E's
+  `cf_manifest_audit.py` + audit-instructions doc, the vm-launcher runbook, and the parent L3 plan) re-verified
+  resolving.

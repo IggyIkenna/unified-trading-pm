@@ -76,3 +76,5 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: re-confirmed context_scope (3 entries) unchanged -- gated finalize doc, correctly
   code-free (dispatch/archival coordination only), all entries still resolve.
+- **context-scout 2026-08-07**: re-confirmed context_scope (3 entries) unchanged -- still gated on the parent plan (3
+  open todos there), all entries still resolve.

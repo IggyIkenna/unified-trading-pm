@@ -582,3 +582,4 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms the 2026-07-30 park: sole todo's execution mechanism
   was deliberately routed to /vm-preemption-billing-waste-audit by batch2, not folded into a batch todo — routed-away ≠
   unowned; this doc retains the todo, not re-litigating that routing.
+- **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries).

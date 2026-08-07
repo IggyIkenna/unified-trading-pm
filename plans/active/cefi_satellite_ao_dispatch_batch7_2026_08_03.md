@@ -69,6 +69,7 @@ context_scope:
     /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md,
   ]
 ---
 
@@ -221,3 +222,11 @@ batch1 through batch6 finalize pattern.
 - `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3a — confirms todo 1 stays inside the safe-idempotent
   path (dry-run default, parity-checked skip, no delete of the `asset_group=defi` source); the actual permanent delete
   stays `[OPERATOR]`-gated in the source doc's own Phase 4, not drafted here.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries) — added the companion
+  `cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize.md` gate (was missing); kept the prior batch6 link + the 2 core
+  codex SSOTs. No prior context-scout marker existed despite the frontmatter already carrying 3 entries.
+  Dispatch-batch-coordinator shape, genuinely code-free — the sole remaining open todo (the DIAG paper-run re-check)
+  already names its exact source files inline (`paper_universe.py`, `catalog_trading.py`).

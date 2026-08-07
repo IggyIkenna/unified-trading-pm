@@ -67,8 +67,8 @@ context_scope:
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,
-    /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md,
     market-tick-data-service/scripts/verify_cefi_canonical_4surface_2026_07_20.py,
+    unified-api-contracts/unified_api_contracts/canonical/quarantine.py,
   ]
 ---
 
@@ -877,3 +877,8 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   have over-closed it). Doc stays NA overall — PACIFICA-SOLANA quarantine registration and the doc's live
   migration-execution character (operator sign-off gates, an SSOT contradiction referred to the operator) remain genuine
   judgment work.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — swapped out the superseded `history_part2` (07-21
+  PRE-COMPACT checkpoint, explicitly superseded by this file's own later "REVISED REMAINING QUEUE"/final deferred-work
+  table) for `unified-api-contracts/unified_api_contracts/canonical/quarantine.py` — the actual source module
+  (`is_quarantined_instrument_id`/`ResolutionEvidence` registry) behind the sole remaining open todo (PACIFICA-SOLANA
+  quarantine registration).

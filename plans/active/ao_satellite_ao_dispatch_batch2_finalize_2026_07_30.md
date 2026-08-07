@@ -135,3 +135,5 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) — all paths resolve, still the correct archival
   SSOT + batch-sibling set; no change needed. Gated finalize doc, no source path.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate — genuine `*_finalize`
+  gate, every todo points at other docs, no source path applies.

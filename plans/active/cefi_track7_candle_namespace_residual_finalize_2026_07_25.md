@@ -82,3 +82,6 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: re-confirmed context_scope (4 entries) unchanged -- gated finalize doc, correctly
   code-free (dispatch/archival coordination only), all entries still resolve.
+- **context-scout 2026-08-07**: re-confirmed context_scope (4 entries) unchanged — todo 1 (reconciliation) is now DONE
+  (2026-08-06); todo 2 (archive the parent per the 6-step ritual) is the sole remaining step, and the target plan +
+  archival-discipline codex SSOT already in this list are exactly what it needs. All 4 re-verified resolving.

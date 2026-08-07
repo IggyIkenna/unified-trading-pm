@@ -270,3 +270,4 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   issue doc tied to the DONE cutover phases.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): governed by the 2026-07-17
   operator ruling that all 5 bucket folds are HUMAN plans; residual AWS-leg/IAM/alias-sunset items not re-litigated.
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.

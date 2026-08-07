@@ -48,6 +48,7 @@ context_scope:
     /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/archive/issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md,
     deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf,
+    deployment-service/terraform/gcp/main.tf,
   ]
 ---
 
@@ -324,11 +325,11 @@ Two independent gates because Group A and Group B are at different stages:
       leave this tag stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                                                                                                                                                                                                                                                                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                                                                                                                                                                                                                                                                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                                                                                                                                                                                                                                                                          > (or any other role) without going through terraform at all. See
-                                                                                                                                                                                                                                                                                                                                                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                                                                                                                                                                                                                                                                          > actually complete until that doc's P1/P2 also land.
+                                                                                                                                                                                                                                                                                                                                                                  > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                                                                                                                                                                                                                                                                                  > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                                                                                                                                                                                                                                                                                  > (or any other role) without going through terraform at all. See
+                                                                                                                                                                                                                                                                                                                                                                  > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                                                                                                                                                                                                                                                                                  > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -723,3 +724,10 @@ Two independent gates because Group A and Group B are at different stages:
   quality-gates.sh green, SHA verified on origin). Left `RUN_INTEGRATION` and the CI-credential decision (option a)
   untouched, as scoped.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — dropped
+  `deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md` (dangling: archived since the
+  last scout pass, its P2.2e gate is now DONE per P2.1b's 2026-08-06 operator approval, so it's resolved history, not a
+  live blocker); added `deployment-service/terraform/gcp/main.tf` (the actual `unified_trading_storage_admin`
+  god-SA-grant resource at `main.tf:598`, P2.1b's real removal target — `bucket_iam_per_tier_sa.tf` alone only covers
+  the replacement per-tier bindings, not the grant being removed). Locked doc (`locked_by: live-defi-rollout`) — per
+  `plans/PLAN_FORMAT.md` a lock blocks archival only, not this additive frontmatter edit.

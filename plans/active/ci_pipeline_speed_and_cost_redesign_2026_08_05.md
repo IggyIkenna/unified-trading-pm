@@ -38,8 +38,8 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
-    scripts/workflow-templates/self-hosted-qg-repos.txt,
-    scripts/workflow-templates/update-dependency-version.yml,
+    scripts/self-hosted-runners/fast-checkout.sh,
+    scripts/self-hosted-runners/glue-runner-run.sh,
   ]
 source:
   [
@@ -332,3 +332,9 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
   runners) carries an explicit "Do NOT roll out until this is understood" constraint + 2 documented live incidents from
   touching this runner infra; deployed-but-no-op mystery needs on-VM diagnosis — operator/live-infra judgment, not
   worker-determinable.
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries) — swapped the 2 source paths that targeted now-DONE
+  todos (`self-hosted-qg-repos.txt`, `update-dependency-version.yml`) for `scripts/self-hosted-runners/fast-checkout.sh`
+  - `glue-runner-run.sh` — the actual mechanism + the file this doc's own text names as where the next diagnostic should
+    go, directly targeting the sole remaining open todo (the fast-checkout no-op mystery). Kept the ci-cd-flow codex
+    SSOT + the capacity-crisis source doc unchanged. (A stray context-scout marker from 2026-08-05 sits above under
+    "Codex SSOTs" — written before this doc had a Progress Log section; left as historical record, not relocated.)
