@@ -324,7 +324,7 @@ inconsistency is fixed (code, after the running backfill completes).
 > Practical dev-environment reference for spinning up DeFi adapters against testnets — separate from the
 > canonical/shard-atom tables above. **Currency note (2026-07-27):** `instadapp` and `defillama` below are NOT real UAC
 > venues (no adapter/testnet key) — they're data-source-only entries (`SourceCapability` / `venue_freshness_slas.py` for
-> Instadapp; base URL in `endpoints.py` for DefiLlama). The other 11 protocol names below have since been renamed to
+> Instadapp; base URL in `endpoints.py` for DefiLlama). The other 12 protocol names below have since been renamed to
 > canonical `PROTOCOL-CHAIN` form in UAC (e.g. `aave_v3` → `AAVE_V3-ETHEREUM`, `euler` →
 > `EULER_V2-ETHEREUM`/`EULER_V2-ARBITRUM`) — this table keeps the original short names since it's dev/testnet tooling,
 > not a canonical-id reference.

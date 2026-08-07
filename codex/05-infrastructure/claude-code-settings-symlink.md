@@ -51,10 +51,10 @@ Claude Code merges settings from (lowest → highest precedence): `~/.claude/set
 
 1. **TEAM (tracked, shared)** — `unified-trading-pm/cursor-configs/settings.json`. Holds ONLY team policy:
    `permissions.defaultMode: bypassPermissions` + the destructive-command `ask` denylist, `enabledPlugins`, `mcpServers`
-   (playwright), and the bypass-smoothing flags. **It contains NO `model`/`theme`/`effortLevel`/ `workspaces`** — those
-   are personal and must never be committed (a committed `model: opus` would silently force Opus on the whole fleet,
-   violating the Sonnet-default rule in `/codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this
-   file via a project-level symlink.
+   (playwright), the 2 registered `hooks` (`PreToolUse`/`UserPromptSubmit`, see below), and the bypass-smoothing flags.
+   **It contains NO `model`/`theme`/`effortLevel`/ `workspaces`** — those are personal and must never be committed (a
+   committed `model: opus` would silently force Opus on the whole fleet, violating the Sonnet-default rule in
+   `/codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this file via a project-level symlink.
 
 2. **PERSONAL (real file, NOT a symlink, never in git)** — your own `~/.claude/settings.json`. Holds your `model` /
    `theme` / `effortLevel` / trusted `workspaces`. Because it is user-scope (lowest precedence) it provides your
