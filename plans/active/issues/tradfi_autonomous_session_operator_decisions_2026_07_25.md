@@ -82,6 +82,14 @@ maps for the bare root. ICE is NOT in the tradfi MVP universe, so none of this b
   every canonical read/count for a venue that's a real (if non-MVP) part of the data estate.
 - Other: your call.
 
+**STALE — already shipped 2026-07-28, before this item was re-asked 2026-08-07.** Option A was implemented and shipped
+`unified-api-contracts@f2a86e1e` — see `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s P2 checkbox for
+full evidence (all 269,520 rows now canonicalize, 0 remaining quarantined). This doc's checkbox was never flipped to
+cite that ship, which is why this looked open again in the 2026-08-07 audit. **Operator 2026-08-07 answer (given without
+knowing the fix had already shipped) adds genuinely NEW scope**: since ICE is non-MVP and won't be used, delete the
+now-canonicalized rows from catalogue + manifest rather than keep them live — recorded as a new P2 todo in the
+completion doc, not yet executed.
+
 ## 2. Chain-manifest recovery — retire-phase 50,520-row `--apply` still needs your review
 
 **Pre-existing, unchanged since 2026-07-22/23** — `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s
@@ -97,6 +105,13 @@ deciding.
 
 **Options:** A: review + approve as-is once re-dry-run confirms the list is materially unchanged. B: review + request
 changes. C: defer further. Other.
+
+**STALE — already reviewed, re-dry-run, and applied 2026-07-26, before this item was re-asked 2026-08-07.** See
+`tradfi_manifest_content_recovery_completion_2026_07_24.md`'s P1-OPERATOR-REVIEW checkbox: a fresh dry-run found 65,628
+safe-to-retire rows (up from the 50,520 stale estimate this doc cites), operator gave go-ahead, applied — 65,628 rows
+dropped in place, pre-retire snapshot backed up first. This doc's checkbox was never flipped to cite that ship.
+Operator's 2026-08-07 answer ("agree, agent-executable — re-dry-run, apply if unchanged") independently matches what was
+already done; no further action needed.
 
 ## 3. Chain-bundle canonical-root → raw-Databento-symbol reverse translation — `EXCHANGE_CODE_TO_NAME` SSOT contradiction
 
@@ -261,21 +276,28 @@ what each sentence was going to say, and rewriting another session's just-commit
 
 - [ ] [PM] P2. Once you've answered items 1-3 above, record the decision inline in this doc (flip to resolved) and
       propagate into the relevant plan doc(s)' todos per the standing "plan references, doesn't duplicate" rule.
+- [x] ✅ [PM] P2. **Item 1 — CLOSED 2026-08-07, was already stale.** Shipped 2026-07-28
+      (`unified-api-contracts@f2a86e1e`), before this item was even re-asked — see the "STALE" note under item 1 above.
+      New incremental scope from the 2026-08-07 answer (delete the now-canonicalized rows since ICE is non-MVP) tracked
+      as its own P2 todo in `tradfi_manifest_content_recovery_completion_2026_07_24.md`, not yet executed.
+- [x] ✅ [PM] P2. **Item 2 — CLOSED 2026-08-07, was already stale.** Already reviewed, re-dry-run, and applied
+      2026-07-26 (65,628 rows retired) — see the "STALE" note under item 2 above. Operator's 2026-08-07 answer
+      independently matches what already shipped; nothing further to execute.
 - [ ] [PM] P2. **PARTIALLY RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — items 5, 7, 8
-      answered below; items 1-4, 6, 9 remain open, not asked this round.** - **Item 5 — RULED: Option A, flip all 8
-      draft tradfi AO plans to active** (not the worker-recommended narrower Option B). Operator's literal instruction
-      was unqualified "flip to active" — taking the plain reading (all 8), not the smaller-blast-radius subset.
-      **Flagging for visibility, not re-asking**: the worker's own caution was that this lands 49 todos on the fleet at
-      once alongside batch3's 9 — if that's not what was intended, say so and I'll narrow to just
-      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its finalize per Option B instead. Propagation not yet
-      executed (flip each of the 8 plans' `status: draft` → `active` frontmatter) — ready to execute. - **Item 7 —
-      RULED: Option A** (matches worker rec) — add the stated safe-idempotent justification to
-      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard launch sub-item (cite
-      `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns, name the launcher + a
-      shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed — ready to execute. -
-      **Item 8 — RULED, conditional: operator said fold/archive IF the doc's todos are mostly done — condition IS met**
-      (1 open todo, near-complete, per the doc's own item-8 analysis). **Important**: the worker's own Option-B
-      recommendation argued to KEEP it specifically because it's the tranche's aggregator/linkage anchor
+      answered below; items 1, 2 closed 2026-08-07 as stale-already-shipped (see their own todos above); items 3, 4, 6,
+      9 remain open, not asked this round.** - **Item 5 — RULED: Option A, flip all 8 draft tradfi AO plans to active**
+      (not the worker-recommended narrower Option B). Operator's literal instruction was unqualified "flip to active" —
+      taking the plain reading (all 8), not the smaller-blast-radius subset. **Flagging for visibility, not re-asking**:
+      the worker's own caution was that this lands 49 todos on the fleet at once alongside batch3's 9 — if that's not
+      what was intended, say so and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its
+      finalize per Option B instead. Propagation not yet executed (flip each of the 8 plans' `status: draft` → `active`
+      frontmatter) — ready to execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated
+      safe-idempotent justification to `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard
+      launch sub-item (cite `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns,
+      name the launcher + a shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed —
+      ready to execute. - **Item 8 — RULED, conditional: operator said fold/archive IF the doc's todos are mostly done —
+      condition IS met** (1 open todo, near-complete, per the doc's own item-8 analysis). **Important**: the worker's
+      own Option-B recommendation argued to KEEP it specifically because it's the tranche's aggregator/linkage anchor
       (`check_ag_closeout_linkage.py` resolves against its aggregated-source list) — archiving without re-homing that
       role would orphan the linkage. Applying the operator's literal instruction safely means **Option C**, not a bare
       archive: fold the remnant into `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` (where
@@ -353,3 +375,16 @@ every day narrows or closes it permanently.
   remain genuine operator escalations (authority/design/blast-radius calls), and the 2 open checkboxes are
   meta-propagation todos explicitly gated on the operator answering them first — fails the bounded-outcome bar by
   design. No content drift since 2026-08-04 — only context-scout `context_scope` touches since. Nothing to reclassify.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: items 1 and 2 were
+  re-asked and answered (item 1: Option A + also delete the now-canonicalized rows, non-MVP; item 2: agent-executable
+  re-dry-run-then-apply, agreed) — but cross-checking `tradfi_manifest_content_recovery_completion_2026_07_24.md` before
+  recording either answer found BOTH had already shipped days after originally being flagged (item 1:
+  `unified-api-contracts@f2a86e1e`, 2026-07-28; item 2: 65,628-row retire apply, 2026-07-26) — this doc's own checkbox
+  was simply never flipped to cite either ship. **Finding for the audit methodology, not just this doc**: five
+  consecutive `na-eligibility-audit` passes (2026-07-30 through 2026-08-06) re-verified this doc as "KEEP-NA, valid,
+  unchanged" without ever cross-checking whether the SAME decision had been resolved and shipped in a sibling doc — the
+  skill reads a doc's own text/checkboxes but doesn't check whether an external ship makes that text stale. Worth a
+  `/na-eligibility-audit` SKILL.md follow-up: when a decision-queue item cites a specific source plan/todo, check that
+  source for a more recent resolution before re-presenting it as open. Both items closed 2026-08-07 by citation (see
+  their own "STALE" notes above); item 1's new incremental scope (the delete, which is genuinely new work, not
+  duplicated) is tracked in the completion doc.

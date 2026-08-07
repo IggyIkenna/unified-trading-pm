@@ -22,9 +22,15 @@ name: glue-runner-health-monitor
 #          runners are online")
 
 on:
-  schedule:
-    - cron: "*/15 * * * *" # every 15 min — the fleet promoter runs every 5 min; a depleted pool
-      # should page well inside the hour, not after another multi-hour silent stall
+  # SCHEDULE DISABLED 2026-08-07: the `glue` self-hosted pool this monitor watches was permanently
+  # deregistered fleet-wide (plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md, todo
+  # #21, DONE — self-hosted runners retired for security reasons once these repos went public;
+  # nothing is ever coming back online for this pool). With the pool gone by design, "0 online"
+  # isn't a depleted-pool incident anymore, it's the permanent, correct end state — the fail-closed
+  # `min_online` check paged CRITICAL every hour, forever, on a condition that will never resolve.
+  # Re-enable the schedule only if the glue pool is ever deliberately re-established.
+  # schedule:
+  #   - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       min_online:
