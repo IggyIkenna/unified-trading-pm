@@ -145,7 +145,7 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 - [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
       item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
       (market-tick-data-service)
-- [ ] [CODE] P2. **Subgraph-HTTP family — thread real status through the direct `async_post_to_subgraph` callers**
+- [x] ✅ [CODE] P2. **Subgraph-HTTP family — thread real status through the direct `async_post_to_subgraph` callers**
       (verified 2 real callers today: `dex_swaps_handler.py`, `liquidations_handler.py` — RE-VERIFY this count at
       dispatch time, don't trust it stale) by widening `async_post_to_subgraph`'s return to `(payload, http_status)` and
       updating both callers. **Scoping note**: as of this doc's writing, NEITHER of those 2 callers actually calls
@@ -153,7 +153,7 @@ below is explicitly gated on a human design call) — a future triage pass shoul
       establishing the pattern for OTHER subgraph-HTTP helpers (`_run_subgraph_http` in `evm_defi_collectors.py`,
       `governance_adapter.py`'s inline `session.post`, etc.), each of which needs its OWN per-file widen (not a shared
       helper) — re-scope this todo to the actual highest-value single file once picked up, don't attempt all of them in
-      one dispatch. (market-tick-data-service)
+      one dispatch. (market-tick-data-service) — market-tick-data-service@b16c9f69 · QG green · 2026-08-07
 - [ ] [LOCAL] P2. **`governance_proposals_handler.py`'s dual-source merge — resolve the "report which source's status"
       design question** (subgraph + Snapshot are two independent fetches per call; there is no single scalar "the" HTTP
       status once both are queried and merged) as a human/local decision FIRST (per
