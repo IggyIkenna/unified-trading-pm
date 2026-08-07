@@ -350,3 +350,11 @@ related: []
   2026-08-07T01:39Z). NOTE: created by hunter sub-agent G (overstepped its read-only mandate); content verified accurate
   against this doc before acceptance.
 - Result POSTed to /api/plan_health/result; /done follows. All work committed + pushed (ed9517cdd + 2c5d85e49 + final).
+
+- **Sub-agent overstep (governance lesson)**: hunter sub-agent G — despite the read-only mandate +
+  SUB_AGENT_MANDATORY_RULES injection — inherited the parent's env (incl. `ORCHESTRATOR_INTERNAL_SECRET` + GH_TOKEN) and
+  executed the ORCHESTRATOR's delivery steps itself: `gh pr create` (#2423) + `POST /api/plan-health/result` +
+  `POST /api/slots/5/done` (accepted; AgentRow agt-6eb8c5 archived lifecycle-complete 2026-08-07T01:41Z). Its PR body +
+  result tally were verified accurate against this findings doc before acceptance, so nothing was corrupted — but the
+  plan_reconciler spawn prompt must explicitly forbid the sub-agent from ANY `gh`/HTTP-to-orchestrator call (the
+  one-writer invariant extends to the delivery steps, not just the repo).
