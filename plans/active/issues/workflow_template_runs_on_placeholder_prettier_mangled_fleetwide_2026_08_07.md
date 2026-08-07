@@ -128,10 +128,10 @@ source: cicd-escalation-agt-62ba62
 
 ## Remaining work
 
-- [ ] [DEVOPS] P1. Re-roll + ship `deployment-service`'s workflow templates (coordinate with slot-4/agt-aaf874's
-      existing repo-blocker `RB-45c789ad` first — do not duplicate if already in flight):
-      `cd unified-trading-pm &&     bash scripts/workflow-templates/rollout-workflow-templates.sh --repo deployment-service`,
-      commit+push via quickmerge, confirm `quality-gates.sh` green, resolve `RB-45c789ad`.
+- [x] ✅ [DEVOPS] P1. Re-roll + ship `deployment-service`'s workflow templates — `deployment-service@86af67a` (via
+      `rollout-workflow-templates.sh --repo deployment-service`, shipped via quickmerge, verified on origin). Fresh
+      `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (215s)`, `✅ workflow-yaml: 15 workflows parse`.
+      `RB-45c789ad` resolved. (agt-aaf874, 2026-08-07)
 - [ ] [DEVOPS] P1. Re-roll + ship for the other 10 locally-confirmed repos: batch-live-reconciliation-service,
       client-reporting-api, deployment-api, execution-service, features-service, fund-administration-service,
       greeks-service, ibkr-gateway-infra, instruments-service (same recipe as above, one commit+push per repo).
