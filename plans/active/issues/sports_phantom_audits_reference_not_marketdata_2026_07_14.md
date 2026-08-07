@@ -336,10 +336,10 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
 
 ## Follow-ups
 
-- [ ] [DATA] P2. Build the data_type-aware cross-bucket branch in _audit_sports()
+- [x] ✅ [DATA] P2. Build the data_type-aware cross-bucket branch in _audit_sports()
       (reconcile_phantom_manifest_rows_all.py:283) so sports market-data types (trades, odds_horizon_bucket) are probed
       against market-data-tick-sports instead of blanket-flagged phantom — close the 'no market-data phantom audit for
-      sports' design gap
+      sports' design gap — instruments-service@27e29a91
 
 > **2026-08-06 archive-candidate audit**: RE-TRIAGE 2026-07-23 verdict 'STILL OPEN, ACCURATE' — the doc's own corrected
 > fix ('a data_type-aware, cross-bucket branch in _audit_sports()... if anyone picks this up') 'has not been built' and
