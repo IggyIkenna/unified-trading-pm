@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, false-progress, ssot-contradiction, archival, finalize-twin, process-integrity, instruments]
 related:
   [
-    /plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
+    /plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
     /plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -44,7 +44,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
+    /plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md,
     /plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
@@ -244,9 +244,11 @@ No design call needed — every piece here is independently checkable, not a jud
 - [x] ✅ [PLAN_RECONCILER] P2. Append a dated CORRECTION 2026-08-02 block to the archived finalize doc
       (plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md) — correction appended
       2026-08-07; unified-trading-pm@c4464835a
-- [ ] [PLAN_RECONCILER] P1. Run the real 6-step archival ritual on
-      plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md (it is genuinely 5/5 [x])
+- [x] ✅ [PLAN_RECONCILER] P1. **DONE 2026-08-07 — unified-trading-pm@(see below).** Run the real 6-step archival ritual
+      on plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md (it is genuinely 5/5 [x]) — banner added,
+      status→complete, git mv to plans/archive/2026_08/, referrers updated (related:/context_scope: in this doc, stale
+      path in ag_closeout_audit_defi_parked_2026_08_06.md, INDEX.md regen'd). No deferred items; no codex updates
+      needed. Task: instruments_satellite_batch1_finalize_false_completion_claim-004.
 
-> **2026-08-06 archive-candidate audit**: Two [PLAN_RECONCILER]-routed items (correct the archived finalize doc's false
-> claims; run the real archival ritual on the parent plan) remain open as deliberately non-ingestable digest bullets —
-> pending work not tracked as standard - [ ] todos, so the doc must not be archived until plan_reconciler picks them up.
+> **2026-08-07**: Both Follow-ups now `[x]`. This issue doc is archival-eligible (all open todos done, no locked_by).
+> Archival of this doc NOT run in the same turn to avoid complication — plan_reconciler may pick it up on next pass.

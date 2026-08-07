@@ -149,8 +149,8 @@ operator ruling.
 - `defi_satellite_ao_dispatch_batch10_2026_08_06.md` — draft, 0 days old, 9 conflict-clear todos awaiting approval to
   flip `active` (the approval backlog is the gating factor for defi dispatch, same class the cefi run flagged today).
 - `defi_satellite_ao_dispatch_batch9_2026_08_06.md` — active, 15/17 open (drafted + operator-activated earlier today).
-- `plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md` — 0/5 open, archival candidate (instruments-
-  owned, out of defi scope; noted for completeness since it appears in defi's member set).
+- `plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md` — archived 2026-08-07 (instruments-
+  owned, out of defi scope; path updated from plans/active/ after archival ritual completed).
 - Linkage gate (`check_ag_closeout_linkage.py`) currently reports 76 orphans vs baseline 69 — a known, separately-filed
   regression (`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`); its 9 defi-tagged flags are all
   accounted above (7 deferred + 2 batch9-covered), i.e. zero genuine defi orphans there.
