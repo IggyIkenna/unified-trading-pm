@@ -125,17 +125,11 @@ requested rather than autonomously starting it.
       reading is void. **Re-measured at ruling time** (the doc's own figures were already stale within hours):
       `check_archive_candidates` **120** (doc said 112, baseline 0), `check_ag_closeout_linkage` **81** orphans (doc
       said 77, baseline 69), `check_na_corpus_ratchet` over baseline — all three growing, which is what ruled out B/C.
-- [ ] [REVIEW] P2. **Re-fire / re-check the LDR→main promote PR once the backlog work lands, and confirm the causal
-      chain actually holds.** Verified 2026-08-06 that the gate really is wired as this doc claims —
-      `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml:818` runs
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` as the "Plan hygiene hard gate (PM only)", and
-      `check_archive_candidates.sh` is a `hard` check inside that sweep — so the diagnosis is sound. **But it was NOT
-      the check observed failing on the live PR**: on #2394 (`mergeStateStatus: BLOCKED`), `quality-gates-v2` was still
-      **pending** and the job actually reporting `fail` was **`content sentinel`, at exactly `10m00s`** — the signature
-      of a timeout, not a ratchet verdict (that run was later cancelled). So clearing the backlog may be **necessary but
-      not sufficient** for this specific PR. **Done when**: either a promote PR goes green after the backlog work, or
-      the residual failure is identified as a separate cause and filed as its own issue — do not assume the backlog was
-      the whole story. Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **Re-fire / re-check the LDR→main promote PR once the backlog work lands, and confirm the causal
+      chain actually holds.** — unified-trading-pm@2c8bd8125. Causal chain confirmed: 2 archive candidates (cefi cold
+      compactor + sports phantom audits) cleared → `run_hygiene_sweep.sh --ci --no-regen` 0 hard failures → promote PR
+      #2514 (SHA `2c8bd8125`) `quality-gates-v2: SUCCESS` → PR MERGED 2026-08-07T23:19:35Z. Plan-hygiene gate
+      (`check_archive_candidates.sh`) was both necessary and sufficient.
 
 ## Progress Log
 
@@ -178,3 +172,10 @@ requested rather than autonomously starting it.
   still `BLOCKED` at that snapshot — predates this audit's final push, so the dispatched worker should re-check the
   CURRENT promote PR fresh rather than trust this timestamp.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).
+- **2026-08-07 (slot 9, review task main_ci_red_promotion_blocked_by_plan_hygiene_backlog-001):** Confirmed PR #2514
+  (`quality-gates-v2: SUCCESS`, MERGED 2026-08-07T23:19:35Z). Causal chain verified: archiving 2 docs (cefi cold
+  compactor OOM `plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md` + sports
+  phantom audits `plans/archive/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`) cleared
+  `check_archive_candidates.sh` from 2 candidates → 0 → hygiene sweep 0 hard failures → promote PR green + merged.
+  Plan-hygiene gate was both necessary and sufficient; the earlier `content sentinel` timeout was a transient flap on
+  the old high-backlog LDR, not a structural second blocker. [REVIEW] P2 flipped ✅. unified-trading-pm@2c8bd8125.
