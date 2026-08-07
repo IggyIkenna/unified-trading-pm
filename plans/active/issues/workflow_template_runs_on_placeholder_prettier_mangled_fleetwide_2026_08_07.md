@@ -132,9 +132,14 @@ source: cicd-escalation-agt-62ba62
       `rollout-workflow-templates.sh --repo deployment-service`, shipped via quickmerge, verified on origin). Fresh
       `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (215s)`, `✅ workflow-yaml: 15 workflows parse`.
       `RB-45c789ad` resolved. (agt-aaf874, 2026-08-07)
-- [ ] [DEVOPS] P1. Re-roll + ship for the other 10 locally-confirmed repos: batch-live-reconciliation-service,
+- [x] ✅ [DEVOPS] P1. Re-roll + ship `greeks-service`'s workflow templates — `greeks-service@f5a63a8` (via
+      `rollout-workflow-templates.sh --repo greeks-service`, shipped via quickmerge, verified on origin). Fresh
+      `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (24s)`; all 7 previously-unparseable workflows
+      now valid YAML; a direct `workflow_dispatch` of `quality-gates-v2` on `live-defi-rollout` (run 31157269647)
+      confirmed green. No open repo-blocker existed for this repo. (agt-5f8afe, cicd escalation, 2026-08-07)
+- [ ] [DEVOPS] P1. Re-roll + ship for the other 9 locally-confirmed repos: batch-live-reconciliation-service,
       client-reporting-api, deployment-api, execution-service, features-service, fund-administration-service,
-      greeks-service, ibkr-gateway-infra, instruments-service (same recipe as above, one commit+push per repo).
+      ibkr-gateway-infra, instruments-service (same recipe as above, one commit+push per repo).
 - [ ] [SCRIPT] P2. Sweep the remaining ~14 fleet repos not locally checked out here (full list in
       `workspace-manifest.json`) for the same broken `runs-on: { { RUNS_ON } }` pattern in their
       `.github/workflows/*.yml`, and re-roll any that are affected.
@@ -142,6 +147,19 @@ source: cicd-escalation-agt-62ba62
       lightweight pre-flight check in `rollout-workflow-templates.sh`) that `yaml.safe_load`s each flat-copy template
       after prettier would run on it, so a future prettier-mangled placeholder fails the ROLLOUT script's own pre-flight
       instead of silently propagating to 26 repos again.
+- [ ] [DEVOPS] P2. Investigate: after `greeks-service@f5a63a8` landed on LDR (content/TIER-A/SIT/LABEL-CHECK all PASS
+      per `scripts/cicd/ldr_to_main_fleet_promote.sh --repo greeks-service` re-runs 31156978197 + 31157072912), the
+      stale promotion PR #420 (head=`promote/greeks-service/49b92a1a7ca0`, the pre-fix SHA) was NOT superseded by a
+      fresh per-SHA ref/PR at `f5a63a8` — the run's own summary tallied `Promoted (0)`/`Blocked (0)`/`Conflicted (0)`/
+      `Auto-merge ARM FAILED (0)` for the single `ONLY_REPO=greeks-service` item despite every gate log-line reading
+      PASS, i.e. `process_repo` appears to have exited without ever reaching a `_done` call (same silent-drop SHAPE as
+      `ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`, but that doc's known trigger
+      — a bare `return 0` after a failed `gh pr create` with no open PR — is already hardened at
+      `ldr_to_main_fleet_promote.sh:1096-1105`, so this looks like a DIFFERENT gap, possibly `ONLY_REPO`-mode-specific
+      or a race in the frozen-head ref-creation/PR-create path). Not blocking — the repo's actual gate is fixed +
+      verified green directly (`quality-gates-v2` run 31157269647 on `live-defi-rollout`, and the un-scoped fleet cron
+      will eventually pick it up too) — but the promote-PR non-supersession itself may be a live bug worth its own
+      root-cause pass. (agt-5f8afe, cicd escalation, 2026-08-07)
 
 ## Codex SSOTs
 
