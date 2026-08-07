@@ -276,3 +276,17 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   Now 3h+ since initial failure at 10:17Z. Secret Manager access confirmed working (key len=50 chars); the 8
   `attempted_failed` PLAYER_VALUES rows remain unretried. Tagged todo `[BLOCKED-UPSTREAM-OUTAGE]` — do not relaunch
   blind; verify endpoint returns 200 before dispatching a retry VM.
+- **2026-08-07T12:38Z** — Applied the new codex rule 1b (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`,
+  added this tick) properly this time: verified all five running VMs by diffing actual progress VALUES against the prior
+  tick's readings, not just checking that log lines were still appearing. All genuinely healthy: AF campaign
+  PLAYER_STATS 2025-03-08→2025-05-31 (chunk 21/26), footystats 2022-10-13→2023-10-16, SFI 2020-10-17→2021-02-17..19
+  (distinct advancing dates), weather processing 2024-02-18..22, `mtds-backfill-odds-401-retry` 2026-02-23→2026-03-01
+  with **zero** `CHUNK_FAILED`/`OOM_KILLED` matches across its entire log (not just the tail) — genuinely clean, still
+  mid-chunk-1-of-2. Live-reverified odds-api credits: 14,463,684 remaining (only ~12,690 used since the ~11:35Z check,
+  very low burn rate). Since `401-retry` is EPL-only/2025-09→2026-05 (non-overlapping in practical terms with a
+  full-range/all-league relaunch — by the time a full sweep reaches that window, `401-retry`'s work will already be
+  captured and skip-fast) and credits are healthy, launched the full-range small-chunk backfill WITH `--allow-parallel`
+  rather than waiting further: `mtds-backfill-odds-smallchunk-20260807`
+  (`--chunk-size 5 --start 2020-06-06 --end 2026-08-07`, no `--force`). This is the mitigation
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` itself flags as imperfect (previously OOM'd 4/75 chunks) —
+  watching closely next tick for `CHUNK_FAILED`/`OOM_KILLED` recurrence, not treating this as fire-and-forget.
