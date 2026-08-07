@@ -95,6 +95,12 @@ Flagged (routed via STEP 6, not fixed — codex edits need an explicit operator 
    `defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`, currently in the 12h grace window), but the
    codex venue list was never updated to add them. NOT fixed here (codex edit requires operator ruling per HARD RULE).
    See Filed below.
+2. **`agents/plan_reconciler.md`'s own STEP 6(b) instruction is stale**: "append ONE line to BOTH
+   `ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`" — both files carry an explicit
+   `RETIRED 2026-07-04 — Do NOT append pings here` notice (superseded by the agent-orchestrator HTTP server, i.e. the
+   `/blocked` POST this run already used for the escalation above). Skipped per the live retirement notice; not fixed
+   here (role-file edit outside `plans/**`, and not this run's scope) — flagging for whoever next touches that role
+   file.
 
 ## Hygiene fixes
 
@@ -116,14 +122,15 @@ Flagged (routed via STEP 6, not fixed — codex edits need an explicit operator 
    tranche). Hit the SAME bug live in the deletion-gate hook while archiving
    `dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md` — worked around via a 2-commit split (content
    edit, then archive), documented in the issue doc so the next agent doesn't have to re-discover it. — `78ea4fe70`
-2. **Codex drift (KALSHI_PERP/POLYMARKET_PERP venue enumeration)** — see Doc-drift above. Routed via `/blocked` + this
-   filing (STEP 6); needs an operator ruling before any agent edits the codex SSOT.
+2. **Codex drift (KALSHI_PERP/POLYMARKET_PERP venue enumeration)** — see Doc-drift above. Routed via `/blocked`
+   (`BLK-02d1163f`, batched with items below) + this filing (STEP 6); needs an operator ruling before any agent edits
+   the codex SSOT.
 3. **`plans/epics/defi_master.md`'s 5-6 orphaned P3 backlog items** (AWS SNS/SQS mirroring, cross-cloud WIF, ltv-tuning,
    DeFi-data creds, Firebase SA JSON — CEFFU appears already resolved elsewhere) are named in the epic's own routing
    table prose as "kept as the thin epic's `## P3` list below" but that list is auto-generated (only lists real plan
    docs with matching `parent_epic` frontmatter) and is empty — these 5 items have no tracked form anywhere. NOT fixed
    here: where 5 speculative backlog items should live (a new plan doc? hand-added prose distinct from the
-   auto-generated block?) is a placement/authority call, not a provable fact. Routed via `/blocked`.
+   auto-generated block?) is a placement/authority call, not a provable fact. Routed via `/blocked` (`BLK-02d1163f`).
 4. **`defi_turbo_api_hides_real_captured_data_2026_07_07.md` is now a genuine archive candidate** (0 open todos post fix
    #3 above, unlocked) but carries ~20 corpus referrers (6 active non-grace, 3 active grace-protected, 11
    archive/historical). NOT archived this run — the referrer-sweep overhead exceeded this run's remaining budget;
@@ -131,13 +138,13 @@ Flagged (routed via STEP 6, not fixed — codex edits need an explicit operator 
 
 ## Archive candidates (operator review)
 
-| Plan                                                                       | Why ready                                                        | Locked?                                            | Archived this run?                                    |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------- |
-| `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md` | 0 checkboxes; question answered+executed elsewhere, verified sha | No                                                 | **Yes** — `21c9a8757`                                 |
-| `dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md`         | done=2/open=0, both HARD-verified                                | No (was masked by the `locked_by: ""` tooling bug) | **Yes** — `c6af75f0b`                                 |
-| `defi_turbo_api_hides_real_captured_data_2026_07_07.md`                    | done=10/open=0 after this run's fix                              | No                                                 | **No** — ~20 referrers, flagged for a dedicated sweep |
-| `defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md`                 | done=3/open=0                                                    | No                                                 | **No** — in 12h grace window                          |
-| `defi_code_codex_drift_2026_05_27.md`                                      | 13/13 todos `[x]`, D15 fully resolved                            | **Yes** (`locked_by: live-defi-rollout`)           | **No** — needs `[unlock-plan]`, routed via `/blocked` |
+| Plan                                                                       | Why ready                                                        | Locked?                                            | Archived this run?                                                     |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
+| `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md` | 0 checkboxes; question answered+executed elsewhere, verified sha | No                                                 | **Yes** — `21c9a8757`                                                  |
+| `dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md`         | done=2/open=0, both HARD-verified                                | No (was masked by the `locked_by: ""` tooling bug) | **Yes** — `c6af75f0b`                                                  |
+| `defi_turbo_api_hides_real_captured_data_2026_07_07.md`                    | done=10/open=0 after this run's fix                              | No                                                 | **No** — ~20 referrers, flagged for a dedicated sweep                  |
+| `defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md`                 | done=3/open=0                                                    | No                                                 | **No** — in 12h grace window                                           |
+| `defi_code_codex_drift_2026_05_27.md`                                      | 13/13 todos `[x]`, D15 fully resolved                            | **Yes** (`locked_by: live-defi-rollout`)           | **No** — needs `[unlock-plan]`, routed via `/blocked` (`BLK-02d1163f`) |
 
 ## Refuted (dropped by verify)
 
