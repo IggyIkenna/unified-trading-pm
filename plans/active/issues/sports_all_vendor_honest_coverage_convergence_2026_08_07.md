@@ -224,11 +224,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `empty_confirmed` grew by exactly the retyped counts (SFI +205,447 ≈ 205,363 retyped; weather +205,302, an exact
       match). Both sources now hold only `captured` + `empty_confirmed` + their small, already-diagnosed
       `attempted_failed` tail.
-- [ ] [SCRIPT] P2. **Check whether `type_understat_eu_no_provider_coverage.py` and any equivalent for footystats/
-      transfermarkt/odds_api are needed** — the same "narrower current write-scope vs broader historically-seeded
-      `expected_unattempted`" pattern hit weather AND SFI independently; worth a quick dry-run sweep across the
-      remaining sources to check whether it's a systemic issue across more vendors than currently known, now that the
-      fix pattern + tooling are proven to work.
+- [x] ✅ [SCRIPT] P2. **Checked `type_understat_eu_no_provider_coverage.py` — NOT the same pattern, no action needed.**
+      Dry-run (2026-08-07T22:18Z) confirms understat's 25 rows are `reason=EXPECTED_NO_FIXTURE`, dates 2026-08-05→
+      2026-08-07 (today/yesterday) — matches the earlier "slot 4" diagnosis exactly (self-resolving IS-cron artifact for
+      recent fixture shards not yet processed by the daily pass), not the weather/SFI structural bug
+      (`EXPECTED_NO_PROVIDER_COVERAGE`, historically-seeded, permanently unreachable by a narrower current writer).
+      footystats/transfermarkt/odds_api already repeatedly confirmed at `expected_unattempted=0` throughout this
+      session's census runs — no script needed, nothing to check. This closes the systemic-sweep question: only
+      weather + SFI had the structural bug, both now fixed.
 
 ## Progress Log
 
