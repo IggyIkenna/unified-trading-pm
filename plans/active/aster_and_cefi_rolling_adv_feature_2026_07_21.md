@@ -139,6 +139,10 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `book_depth.py` as a second source path (the
   Phase-3 stretch item's named target), since Phase 1's `adv.py` is now shipped and the remaining work is Phase 3
   (strategy-side wiring) + the book_depth stretch item.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — re-confirms the 2026-07-30 verdict
+  (content unchanged besides context-scout refreshes). Phase 1 fully shipped (features-service@8608ea5d); Phase 3's
+  strategy-side ADV consumption needs a design conversation on cap placement/% ceiling (doc's own text: "needs a design
+  conversation"), and the book_depth.py item is an explicit out-of-scope stretch.
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 

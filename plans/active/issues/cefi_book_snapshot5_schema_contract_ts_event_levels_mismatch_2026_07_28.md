@@ -814,3 +814,6 @@ against the reproduction script.
   both remaining open todos are still explicit design/maintainer-judgment calls (features-service reader design gap;
   error-truncation observability design question), neither worker-determinable.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — all 3 root-cause code fixes are
+  shipped/merged and re-verified as still-ancestor across 21+ subsequent escalation re-dispatches (a duplicate-dispatch
+  storm tracked separately); remaining items are design decisions, not bounded execution.

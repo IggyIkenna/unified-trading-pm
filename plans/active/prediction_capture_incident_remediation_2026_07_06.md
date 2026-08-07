@@ -489,3 +489,7 @@ orchestrator-dispatched).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- trimmed from 8 (dropped descoped-workstream-B
   codex refs), added the batch6 plan (explicitly named in prose as the Phase-6 fix's source) + the root incident issue
   doc.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — 7 of 8 open items are dispositively
+  [DESCOPED-NOT-MVP 2026-07-14] under a dated operator ruling (Kalshi/Polymarket perps); the 8th (Phase 6
+  backfill-assessment) is self-labelled "operator/architect call, not a mechanical todo". Reaffirms 2 prior 2026-07-30
+  passes.

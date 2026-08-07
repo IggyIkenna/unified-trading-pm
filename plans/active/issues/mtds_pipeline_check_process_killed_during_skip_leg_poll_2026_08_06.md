@@ -183,3 +183,10 @@ proven this run.
   argues against a whole-session teardown and toward a NAME/PATTERN-targeted kill instead, but is not conclusive.
 - If a cross-slot `pkill` is confirmed as the mechanism: get `install-pkill-guard-shell-env.sh` running host-wide (every
   slot's shell init, not opt-in per-session) so the guard actually protects against the failure mode it was built for.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — 0 markdown checkboxes but genuine
+  open prose investigation work (checked explicitly for the corpus's known prose-only trap): a reproducible-but-
+  unexplained process-kill, access-gated on root/kernel access this sandboxed session doesn't have. All 3 suggested
+  follow-ups need elevated access or an unmade root-cause call — none is worker-determinable today.

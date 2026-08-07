@@ -432,3 +432,9 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
   source modules + the two blocking issue docs (both now ARCHIVED, corrected from the doc's own stale `issues/...`
   active-relative links) that the 2 open BLOCKED-DATA-CORRECTNESS todos actually gate on.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos carry a first-line
+  BLOCKED-DATA-CORRECTNESS tag citing specific unresolved external/architecture dependencies. CAVEAT for next toucher: a
+  same-day sibling doc (cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md) found the CeFi live
+  pipeline is alive again since 2026-07-31 (the "dormant since 06-29" framing todo 7 leans on is stale), but does NOT
+  confirm depth_of_book_10 specifically (this plan's target data_type) is among the live shards — needs a narrow
+  depth_of_book_10 manifest check before todo 7 is re-evaluated, not a full re-litigation.

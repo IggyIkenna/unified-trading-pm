@@ -650,3 +650,7 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
 
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — still accurate against current content.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — sole open checkbox is open-ended
+  meta-tracking over dozens of prose findings spanning 5 asset groups, several explicitly §E operator-decision
+  territory; converting it to bounded AO todos itself needs human triage. Reaffirms 3 prior 2026-07-30 passes (cefi x2,
+  sports).

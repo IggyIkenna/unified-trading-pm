@@ -222,3 +222,7 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
   **2024-03-08 to 2026-05-01** — no option-shaped objects found before March 2024 despite "2019-present" range
   enumerated. Affected base assets: AVAX_USDC, MATIC_USDC, TRX_USDC, XRP_USDC. Items 1/3/4 remain open. Evidence: see §2
   above.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — execution_scope: human. Sole checkbox
+  bundles the untraced writer-side classification root-cause (adapter/code path not yet identified) with other
+  sub-items; the corpus-wide census sub-item is now done (2026-08-07, batch6 todo 2) but root-cause itself remains open
+  investigation.

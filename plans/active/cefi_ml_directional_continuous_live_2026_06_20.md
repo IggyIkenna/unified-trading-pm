@@ -202,3 +202,6 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   todos) and added the two source-code paths those open todos actually target: `run_2yr_config_grid_backtest.py` (needs
   an `ML_DIRECTIONAL_CONTINUOUS` grid entry per the backtest-fidelity todo) and
   `strategy_service/engine/strategies/v2/factory.py` (where the engine is wired, named in the shipped-todo evidence).
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — remaining items are a permanent
+  human-only ≥7-day live-capital cutover hard-stop (2026-07-28 operator gate) plus judgment-gated follow-ons; consistent
+  with 2 prior 2026-07-30 passes (cefi+defi tranches).

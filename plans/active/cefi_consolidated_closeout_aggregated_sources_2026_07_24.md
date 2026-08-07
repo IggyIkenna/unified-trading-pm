@@ -838,3 +838,7 @@ here is NOT dispatch, per this doc's own standing convention.
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-04 verdict;
   by-design non-checkbox discoverability index (bold-marker syntax throughout, deliberately un-ingestable), the sole
   real checkbox is a standing "keep synced" maintenance task, never terminal.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — this doc is a
+  structurally-un-ingestable discoverability index by design (frontmatter states so); its one real checkbox is a
+  standing, non-terminal sync-maintenance duty, not bounded dispatchable work. Reaffirms 4 prior passes (2026-07-30,
+  07-31, 08-04, 08-06).

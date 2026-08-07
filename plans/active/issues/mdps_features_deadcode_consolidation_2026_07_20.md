@@ -139,3 +139,6 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   launcher-deletion blast radius is exactly what the A/B/C ask covers
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries, unchanged — still accurate).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — all 4 remaining open todos are gated
+  on an unanswered operator keep/delete decision (options A/B/C for S1-a/b/c) plus an explicit S3-b operator/design
+  adjudication ("Do NOT silently delete"). Reaffirms 3 prior 2026-07-30 passes (cefi/defi/sports).

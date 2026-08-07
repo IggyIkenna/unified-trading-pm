@@ -612,3 +612,6 @@ longer has its own download button.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries — added `mtds.py`, the source target for the
   still-open `[CODE] P1` "move `market_metadata` off the MTDS daily axis" todo).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — all 8 open checkboxes are
+  judgment-call/operator-gated design items (mockup re-verification cadence, parquet resharding design gated on operator
+  sign-off, etc.), none a bounded worker-determinable fact-check.

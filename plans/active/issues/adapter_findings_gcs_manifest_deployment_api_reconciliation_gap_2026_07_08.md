@@ -339,3 +339,7 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped 2 archived plan links, added 3 real
   source-code targets (breakdowns_core.py, _distinct_values.py, canonical_id_builder.py) the doc's own findings name.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-01 verdict.
+  Sole open todo ([DECISION] P2) remains a portfolio-cost tradeoff (reconciliation cadence for the remaining 58
+  findings: full trace vs lighter spot-check) with no autonomous-determinable answer; content unchanged besides
+  context-scout refreshes.

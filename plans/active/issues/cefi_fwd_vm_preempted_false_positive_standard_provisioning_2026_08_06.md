@@ -201,3 +201,10 @@ exposed to this class before the veto shipped.
   recurring pattern, not a one-off, so upgraded that follow-up from P3 to P2 (still not fixed in this pass — a
   launcher-side TOCTOU fix is a separate, scoped piece of work). Status stays `open` pending the `deployment-api`
   redeploy confirmation ([OPERATOR] todo above) and the P2 launcher-race follow-up.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid (OVERRIDE of the classifier's
+  RECLASSIFY draft verdict, per this run's own Phase-2 conflict-check). The line-175 [SCRIPT] P2 TOCTOU-race item is
+  ALREADY claimed by cefi_satellite_ao_dispatch_batch9_2026_08_07.md todo 2 (status: draft, awaiting operator approval;
+  identical 13s/46s evidence, explicit "do not touch" note pointing at this exact doc/line) — reclassifying this doc
+  would create a duplicate-dispatch surface once batch9 is approved. Item 167 is [OPERATOR]-gated by nature; item 181 is
+  time-gated/opportunistic (also independently deferred by batch9's own cross-tranche review). Doc stays NA;
+  batch9-finalize is the designated mechanism to flip the line-175 checkbox once batch9 ships.

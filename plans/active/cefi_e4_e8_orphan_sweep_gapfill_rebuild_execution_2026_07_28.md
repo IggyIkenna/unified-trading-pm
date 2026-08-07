@@ -309,3 +309,7 @@ todo's isolated wording. No reclassification.
   Phase C stays blocked-investigation and Phases D/E remain real-production, VM-scale manifest rebuild+verify prod-write
   work despite Phase B's delete now completing. Not worker-determinable.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — Phase C is 🔴 CANNOT-RUN-AS-WRITTEN
+  (gated on an unresolved normalization-verification investigation), Phases D/E are prod-scale manifest-rebuild/verify
+  work on the data-correctness critical path with a track record of hidden production surprises; execution_scope:
+  local-only by design. Reaffirms the 2026-08-04 pass.
