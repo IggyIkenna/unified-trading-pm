@@ -573,10 +573,18 @@ slot-5 boot: **5 VMs running** (CME g01 wave: es-es-2020, mbt-mbt-2024, met-met-
 Re-armed with `run_in_background:true`. Harness task: **`bprxba91n`** (started 11:58:48Z, poll 1 = 5 VMs). Watcher:
 slot-5 copy at scratchpad watcher/es_opt_watcher_slot5.sh. Long-pole ETA: met-met-2023 ~14:00-17:00Z.
 
-- **NEXT ACTION (fresh session):** (1) Check if todo #2 checkbox is `[x]`. (2) If `[ ]`, check `bprxba91n.output`. (3)
-  If watcher dead and task not done: re-arm from slot-N copy (SLOT_ID=<new>, SLOT_TABS=.tabs/<new>,
-  PYTHON=.tabs/<new>/market-tick-data-service/.venv/bin/python), launch with `run_in_background:true`. Do NOT re-arm if
-  watcher alive — singleton lock race risk.
+### 2026-08-07T12:07Z — slot 5, session 11 — post-compact health check
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. `bprxba91n` survived `/compact` (TaskOutput: status=running confirmed).**
+Poll 2 (12:03:50Z): **12 VMs** (fleet grew 5→12 between polls — new wave launched). Heartbeat loop **`bip2gkahl`** armed
+(20-min intervals, harness-tracked, no `&` inside command). Lesson: `run_in_background:true` + `&` inside the command
+orphans the loop immediately — MUST launch WITHOUT `&` inside when using the harness.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bprxba91n.output`
+  (TaskOutput non-blocking). (3) If watcher dead: re-arm from committed
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` with `SLOT_ID=<new>` + `run_in_background:true`, NO `&`
+  inside. (4) Check `bip2gkahl.output` — if heartbeat dead, re-arm heartbeat.sh same way. Do NOT re-arm either if alive
+  — singleton lock race risk.
 
 ## Codex SSOTs
 
