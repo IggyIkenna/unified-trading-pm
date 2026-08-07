@@ -38,10 +38,10 @@ tags:
 related:
   [
     plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
-    plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
+    /plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
     /plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md,
-    plans/active/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md,
-    plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
+    /plans/archive/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md,
+    /plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
   ]
 created: "2026-07-22"
 author: unknown
@@ -132,8 +132,8 @@ Proposed fix: migrate both onto the `derivative_ticker` data_type/schema (`DEFI_
    `gcloud storage buckets describe gs://perp-funding-central-element-323112` → **404 not found.** The script's
    `PF_BUCKET = f"perp-funding-{PROJECT}"` (line 42) can no longer be written to — any `--apply` run today would error
    outright, not silently succeed. This is corroborated by
-   `plans/active/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md` ("3 funding diagnostic scripts
-   on the deleted `perp-funding-{pid}` bucket ... deleted 2026-07-10") and by
+   `/plans/archive/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md` ("3 funding diagnostic
+   scripts on the deleted `perp-funding-{pid}` bucket ... deleted 2026-07-10") and by
    `defi_dedicated_bucket_shared_migration_2026_07_13.md`'s P3 housekeeping todo (open when this was written; closed
    2026-07-31 per na-eligibility-audit — doc now archived at
    `/plans/archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md`), which explicitly names
@@ -158,13 +158,15 @@ Proposed fix: migrate both onto the `derivative_ticker` data_type/schema (`DEFI_
    authorize retiring `perp_funding`/`perp_daily_ctx` as the read/strategy-facing shape.**
    `plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` established
    `derivative_ticker` as the canonical RAW-funding capture home for ALL perp venues going forward (MTDS wiring, GMX
-   dual-write, etc) — this is a genuinely-shipped, separate change. But that SAME doc carries an explicitly gated,
-   still-open `[DESIGN] P1` todo: _"Decide: demote `perp_funding` from a captured raw type to a DERIVED interval view...
-   Scope of the decision (do NOT execute before the parity evidence exists)..."_ — unchecked (`[ ]`), and its own stated
-   scope is `perp_funding` only; it never even mentions `perp_daily_ctx`/mark-price. Executing the source todo's
-   requested migration (retire `perp_funding`/`perp_daily_ctx` on the STRATEGY READ side in favor of
-   `derivative_ticker`) would pre-empt this still-undecided, explicitly-gated design question — for a shape (mark price)
-   that design todo doesn't even cover yet.
+   dual-write, etc) — this is a genuinely-shipped, separate change. But that SAME doc carried an explicitly gated,
+   still-open `[DESIGN] P1` todo — **STALE premise as of 2026-07-28: the DESIGN gate CLOSED that day as KEEP BOTH
+   (parity failed for the one comparable venue) — archived doc's 🟢 RESOLVED banner + its `[x] ✅ [DESIGN] P1` "CLOSED
+   2026-07-28 — keep both" (annotation plan_reconciler agt-24f4b0 2026-08-06)**: _"Decide: demote `perp_funding` from a
+   captured raw type to a DERIVED interval view... Scope of the decision (do NOT execute before the parity evidence
+   exists)..."_ — unchecked (`[ ]`), and its own stated scope is `perp_funding` only; it never even mentions
+   `perp_daily_ctx`/mark-price. Executing the source todo's requested migration (retire `perp_funding`/`perp_daily_ctx`
+   on the STRATEGY READ side in favor of `derivative_ticker`) would pre-empt this still-undecided, explicitly-gated
+   design question — for a shape (mark price) that design todo doesn't even cover yet.
 
 ## Why the requested migration is declined (risk assessment)
 
@@ -271,7 +273,10 @@ list?) before executing autonomously — flagging for operator awareness rather 
       `unified-trading-pm/scripts/migration/register_perp_mark_price_manifest_backfill_2026_08_04.py` (316 manifest rows
       registered against prod, verified via direct per-VM-shard read — all `capture_status=captured`, `row_count` sum
       22,690, matching discovery exactly).
-- [ ] [OPERATOR-DECISION] P3. Whether/when to execute the ALREADY-GATED `[DESIGN] P1` todo in
+- [x] ✅ [OPERATOR-DECISION] P3. (RESOLVED by citation 2026-08-06 plan_reconciler agt-24f4b0 — the DESIGN gate closed
+      2026-07-28 as KEEP BOTH, so "whether to execute the demote" is answered NO and the perp_daily_ctx fold question is
+      moot; per the archived doc's RESOLVED banner + `[x] ✅ [DESIGN] P1` "CLOSED 2026-07-28 — keep both") Whether/when
+      to execute the ALREADY-GATED `[DESIGN] P1` todo in
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` (demote `perp_funding` to a derived
       view) — and, if so, whether `perp_daily_ctx`/mark-price should be folded into that same decision. This issue doc
       does not resolve that question; it only establishes that the source todo's migration should not be forced ahead of

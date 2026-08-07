@@ -163,15 +163,15 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 3 — Sample-download test on the `-test-` bucket (runtime verification, no prod write)
 
-- [ ] [MTDS] P3. **Retagged 2026-07-29: resolved-by-reference — live-verified this session
-      `gs://market-data-tick-defi-     test-central-element-323112` already exists (created 2025-11-12, actively used)
-      and `unified-trading-sa` already holds `roles/storage.admin` + `roles/storage.objectAdmin` (confirmed via
-      `gcloud`); the described blocker no longer holds.** Prove force + skip per surface — sample download for the AAVE
-      oracle (and DEX where endpoint available) against the `-test-` bucket: force-leg writes the canonical parquet +
-      manifest `captured`; skip-leg fires the freshness skip. Read the VM `run.log` as ground truth. This is the "tested
-      for sample data downloads" requirement. ~~**BLOCKED-CREDENTIALS (2026-07-22)**: bucket doesn't exist / SA lacks
-      access; needs operator bucket-create IAM or a fresh interactive gcloud login.~~ Not a data/day problem — operator
-      approved `--auto-day`.
+- [x] ✅ [MTDS] P3. **Retagged 2026-07-29 + SUPERSEDED (verified plan_reconciler agt-24f4b0 2026-08-06):
+      resolved-by-reference — live-verified this session `gs://market-data-tick-defi-     test-central-element-323112`
+      already exists (created 2025-11-12, actively used) and `unified-trading-sa` already holds `roles/storage.admin` +
+      `roles/storage.objectAdmin` (confirmed via `gcloud`); the described blocker no longer holds.** Prove force + skip
+      per surface — sample download for the AAVE oracle (and DEX where endpoint available) against the `-test-` bucket:
+      force-leg writes the canonical parquet + manifest `captured`; skip-leg fires the freshness skip. Read the VM
+      `run.log` as ground truth. This is the "tested for sample data downloads" requirement. ~~**BLOCKED-CREDENTIALS
+      (2026-07-22)**: bucket doesn't exist / SA lacks access; needs operator bucket-create IAM or a fresh interactive
+      gcloud login.~~ Not a data/day problem — operator approved `--auto-day`.
 
 ## Phase 4 — Daily-download / MVP gate
 
@@ -378,12 +378,13 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 6 — Interest PnL on honest data (the payoff; see pnl_interest_accrual doc)
 
-- [ ] [STRATEGY] P2. **A2 staking leg** — wire `carry_staked_basis` `STAKING_REWARD`/`CARRY` to the `lst_yields`
-      `exchange_rate/prev_rate` index ratio keyed off `cfg['lst_asset']`; explicit-zero the Aave-lending mismodel;
-      honest-absence visible; real passive-parity test; 3-lens money-path review; ship to LDR. Prod-NAV recompute stays
-      operator-gated.
-- [ ] [STRATEGY] P3. **Recursive-staking borrow leg** — unblocks once #3 Aave oracle (collateral) lands; wire the
-      `aave_borrow_index` cost leg + the archetype's drivability. Depends on Phase 5 #3.
+- [x] ✅ [STRATEGY] P2. **A2 staking leg** (DONE 2026-08-06 plan_reconciler agt-24f4b0 — strategy-service@e93902d8) —
+      wire `carry_staked_basis` `STAKING_REWARD`/`CARRY` to the `lst_yields` `exchange_rate/prev_rate` index ratio keyed
+      off `cfg['lst_asset']`; explicit-zero the Aave-lending mismodel; honest-absence visible; real passive-parity test;
+      3-lens money-path review; ship to LDR. Prod-NAV recompute stays operator-gated.
+- [x] ✅ [STRATEGY] P3. **Recursive-staking borrow leg** (DONE 2026-08-06 plan_reconciler agt-24f4b0 —
+      strategy-service@23bd8b76) — unblocks once #3 Aave oracle (collateral) lands; wire the `aave_borrow_index` cost
+      leg + the archetype's drivability. Depends on Phase 5 #3.
 - [x] [MTDS] P3. **Solana `lst_rates` `pipeline_mode` mislabels which tier actually supplied each row** — found
       2026-07-23 code-tracing the 4-rate audit for `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`.
       `solana_lst_archival.py`'s per-row `"method"` field (`alchemy_get_account_info` / `thegraph_subgraph` / `rest_api`
@@ -786,11 +787,10 @@ action (operator-approved). Otherwise, check the dex-swaps 3-VM fleet's progress
   for about 20 minutes of investigation. When "no error, no data, no explanation" — check the log LEVEL of the quiet
   path before assuming it's broken; it may be working exactly as designed.
 - **After shipping a fix intended for an already-running VM, its OWN tarball-freshness check may refuse to launch with
-stale code (warn-only by default)** — `launch-mtds-lst-rates-backfill-vm.sh` warned but still launched with a PRE-FIX
-tarball once; always check the launcher's own freshness warning output, and if stale, run
-`create-code-tarballs.sh --include <repo>...` and verify the GCS manifest SHA matches your fix commit before trusting a
-"launched successfully" message.
-</content>
+  stale code (warn-only by default)** — `launch-mtds-lst-rates-backfill-vm.sh` warned but still launched with a PRE-FIX
+  tarball once; always check the launcher's own freshness warning output, and if stale, run
+  `create-code-tarballs.sh --include <repo>...` and verify the GCS manifest SHA matches your fix commit before trusting
+  a "launched successfully" message.
 
 - **2026-07-22 19:35 UTC (Sanctum reconciliation ship — partially unblocked, one leg deferred)** — resumed shipping the
   staged-uncommitted Sanctum work from the earlier checkpoint. `instruments-service` quality-gates.sh ran GREEN

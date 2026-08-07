@@ -36,7 +36,7 @@ tags:
   ]
 related:
   [
-    ../instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
 created: 2026-07-07
@@ -217,10 +217,11 @@ Two secondary findings:
       historical dates — re-verify with a paid key or a first-of-month date before declaring this resolved in
       production. — market-tick-data-service@0c4000a02 fixes lighter exchange fallback slug + adds Tardis numeric
       market_id resolution + corrects data_type mapping to derivative_ticker. **Re-verify DONE 2026-07-30**
-      (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see defi_satellite_ao_dispatch_batch1_2026_07_25.md
-      todo 47 for full evidence — re-verified live against a real free-tier-compatible first-of-month historical date,
-      confirmed real `trades`/`book_snapshot_5`/`derivative_ticker` rows still return under current code; resolved in
-      production per this caveat's own bar.
+      (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
+      /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 47 for full evidence — re-verified
+      live against a real free-tier-compatible first-of-month historical date, confirmed real
+      `trades`/`book_snapshot_5`/`derivative_ticker` rows still return under current code; resolved in production per
+      this caveat's own bar.
 - [x] [FIX] P0. ✅ **LIGHTER-ZKSYNC: fix the separate native-trades `limit=500` bug** —
       `_fetch_lighter_trades_for_symbol` hardcodes `"limit": "500"` on `GET /recentTrades`; Lighter rejects this with
       `HTTP 400`. Confirmed live: `limit≤100` returns real trades immediately. This is independent of the Tardis-slug
@@ -490,15 +491,15 @@ Two secondary findings:
     - the `--force` re-stamp are DEFERRED (see the FIX todo) — the positive stamp needs a full new-source
       SourceCapability wiring (real endpoints) that hit the closed-set cascade and shouldn't be guessed unattended.
   - ✅ **HYPERLIQUID replay-prefix hardening — DONE 2026-07-30** (defi_satellite_ao_dispatch_batch1 finalize
-    reconciliation), see defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 45 for full evidence. The 1-line
-    `Mode.REPLAY` add to `possible_manifest._canonical_pipeline_mode_prefixes` (was previously deferred here — UAC tree
-    was foreign-contended at the time) shipped `unified-api-contracts@6456dd23`: `_canonical_pipeline_mode_prefixes` now
-    iterates `(Mode.BATCH, Mode.LIVE, Mode.REPLAY)`; the prefix-count guard was NOT quiescent (6 sources per AG are
-    REPLAY-capable), so `test_extra_live_probe_sources_do_not_leak_cross_ag`'s expected counts were updated with the
-    same explanatory-comment precedent as prior additions; `quality-gates.sh` green. The actual HYPERLIQUID 373/540
-    false-phantom was already covered by the existing `Mode.LIVE` prefix (live_hyperliquid); this closes the
-    future-proofing gap. The `--unphantom` reverse-pass heal remains a separate attended real-infra step, not addressed
-    by this fix.
+    reconciliation), see /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 45 for full
+    evidence. The 1-line `Mode.REPLAY` add to `possible_manifest._canonical_pipeline_mode_prefixes` (was previously
+    deferred here — UAC tree was foreign-contended at the time) shipped `unified-api-contracts@6456dd23`:
+    `_canonical_pipeline_mode_prefixes` now iterates `(Mode.BATCH, Mode.LIVE, Mode.REPLAY)`; the prefix-count guard was
+    NOT quiescent (6 sources per AG are REPLAY-capable), so `test_extra_live_probe_sources_do_not_leak_cross_ag`'s
+    expected counts were updated with the same explanatory-comment precedent as prior additions; `quality-gates.sh`
+    green. The actual HYPERLIQUID 373/540 false-phantom was already covered by the existing `Mode.LIVE` prefix
+    (live_hyperliquid); this closes the future-proofing gap. The `--unphantom` reverse-pass heal remains a separate
+    attended real-infra step, not addressed by this fix.
 
 - **2026-07-28 (slot-16) — EXTENDED-STARKNET `/trades` cursor investigation: CONFIRMED it structurally cannot walk back
   to historical dates.** Live-probed `https://api.starknet.extended.exchange/api/v1/info/markets/{symbol}/trades`

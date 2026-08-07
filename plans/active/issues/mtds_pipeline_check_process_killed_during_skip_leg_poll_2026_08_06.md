@@ -47,7 +47,7 @@ tags:
   [infra, process-killed, reproducible, pipeline-e2e-check, smoke-test, shared-host, silent-failure, observability-gap]
 related:
   [
-    plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
+    /plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]

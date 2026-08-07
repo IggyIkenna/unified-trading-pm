@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [honest-coverage, defi, turbo-api, data-correctness, read-path, aave, spark, euler, fluid]
 related:
   [
-    ../instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
 created: 2026-07-07
@@ -297,10 +297,10 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       `(HYPERLIQUID, HYPERLIQUID)`/`(ASTER, BSC)` pairs so their real captured rows stop being dropped by
       `_filter_to_canonical_defi_venues` — NOT a double-counting risk (this whitelist only gates DEFI-category bucket
       reads; CEFI's own coverage numbers come from a completely separate CEFI-category read), matching the
-      operator-confirmed hybrid architecture already on record (Update §3 below: CEFI holds instrument definitions, DEFI
-      holds chain-level settlement data — two distinct row sets). **Still open**: the durable fix — declaring
-      HYPERLIQUID/ASTER in UAC's own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — is out of scope for a
-      deployment-api/deployment-ui-only dispatch; this stopgap unblocks the dashboard today but the registry-level
+      operator-confirmed hybrid architecture already on record (this doc's Update sections: CEFI holds instrument
+      definitions, DEFI holds chain-level settlement data — two distinct row sets). **Still open**: the durable fix —
+      declaring HYPERLIQUID/ASTER in UAC's own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — is out of scope
+      for a deployment-api/deployment-ui-only dispatch; this stopgap unblocks the dashboard today but the registry-level
       declaration (and any UAC-side dual-counting axis decision it still needs) remains a real follow-up.
 - [x] [OPS] P1. **New 2026-07-10.** Restart/fix the `uts-prod-data-status-rollup` Cloud Run Job — Cloud Scheduler has
       been firing into `UNAVAILABLE` (gRPC code 14) since at least 2026-07-05T15:53Z (confirmed still broken 2026-07-10,

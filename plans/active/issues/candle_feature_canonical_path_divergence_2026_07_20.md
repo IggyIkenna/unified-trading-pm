@@ -308,12 +308,13 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
       RULING" above): ADD `instrument_type=` (amend codex + full migration) + KEEP SOURCE `data_type` on the path, align
       the manifest to match. LOCKED shape documented; codex `per-asset-group-bucket-layouts.md:166` amended
       (`mdps@752eaff`).
-- [x] 2. [DATA] P1. **[already covered by plans/active/candle_canonical_path_migration_execution_2026_07_24.md, see that
-      doc for execution]** Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge or
-      repair. These cannot be attributed to a shard. **P0 census counted them exactly 2026-07-22**: cefi
-      `EMPTY_STEM_WITH_UNDERLYING`=2,576 + `EMPTY_STEM_WITHOUT_UNDERLYING`=2,198; tradfi
-      `EMPTY_STEM_WITH_UNDERLYING`=428,792 (!) + `EMPTY_STEM_WITHOUT_UNDERLYING`=6,780; defi/prediction had none of this
-      class. Repair itself is still **pending P7 `--apply`** (content-repair gated).
+- [x] 2. [DATA] P1. **[already covered by
+      /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md, see that doc for execution]**
+      Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge or repair. These cannot be
+      attributed to a shard. **P0 census counted them exactly 2026-07-22**: cefi `EMPTY_STEM_WITH_UNDERLYING`=2,576 +
+      `EMPTY_STEM_WITHOUT_UNDERLYING`=2,198; tradfi `EMPTY_STEM_WITH_UNDERLYING`=428,792 (!) +
+      `EMPTY_STEM_WITHOUT_UNDERLYING`=6,780; defi/prediction had none of this class. Repair itself is still **pending P7
+      `--apply`** (content-repair gated).
 - [x] 3. [DATA] P1. **✅ VERIFIED 2026-08-04 (slot-11, `tradfi_manifest_content_recovery_completion-004`)** — covered by
       the now-archived `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` (all 20 todos
       `[x]`, 0 open, archived 2026-07-28). Canonicalise **TradFi candle leaf ids** (`E1AF0_C3200_migrated_*` →
@@ -439,7 +440,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 - [x] 8. ✅ [DATA] P1. **Fix the bundled-name rule** (going-forward writer): `candle_leaf_filename` now decides the leaf
       by "is this write bundled by `underlying=`?" (→ `ticks.parquet`) rather than the data_type-in-set check. Shipped
       `mdps@752eaff`. **Repair/purge of EXISTING empty-stem objects is still pending P5/P7** (backward migration).
-- [ ] 9. [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
+- [ ] [DATA] P1. 9. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
       `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
       split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
       `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
@@ -482,7 +483,7 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       checkpoint)" entry). **`deployment-service@0ed7cf5`** companion fix: `launch-canonical-migration-vm.sh` now pins
       `VM_NAME` + persists launch params on relaunch (the review's own 4th finding — without it the checkpoint could
       never be found after a real SPOT preemption of the actual launcher family).
-- [ ] 13. [DATA] P3. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
+- [ ] [DATA] P3. 13. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
       migration safety) can be inflated by cross-asset-group path coincidences — cosmetic, fix before trusting the
       corpus-wide "quantify the split" number (todo 9) precisely.
 - [x] 14. ✅ [DATA] P3. **Resolved as a side effect of todo 18** — non-colon CeFi "bare wire" leaf stems now DO route

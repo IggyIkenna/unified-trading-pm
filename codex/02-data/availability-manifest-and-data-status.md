@@ -171,6 +171,15 @@ data in the per-data_type buckets.
 **Bucket layout** (verified 2026-05-07 by listing every DeFi-named bucket in `gs://central-element-323112` + reading
 each `_index/availability_index.parquet`):
 
+> **⚠️ SUPERSEDED 2026-06-21; dedicated buckets DELETED 2026-07-13/14 (banner added 2026-08-06 plan_reconciler
+> agt-24f4b0)** — the dedicated per-data_type defi buckets in the table below (`lending-indices-*`, `dex-pools-*`,
+> `lst-rates-*`, `perp-funding-*`, `oracle-prices-*`, etc.) were consolidated into the single
+> `market-data-tick-defi-prd-{pid}` and then deleted (live-verified 404s, per
+> `defi_satellite_ao_dispatch_batch2_2026_07_26.md`); ALL defi handlers resolve
+> `get_write_bucket_name("market_data", "defi")` (see `/codex/02-data/defi-canonical-naming-ssot.md` bucket row,
+> CORRECTED 2026-06-21). History-only — do NOT read/write these buckets; the "read every bucket" recipe below applies to
+> the pre-consolidation era only.
+
 | Bucket pattern                                  | Carries data_types                                                                                                                                                                                                                                                                                                                                           | Phase | Chains observed                                                                                            |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------- |
 | `market-data-tick-defi-prd-{pid}` (asset-group) | `dex_pool_state`, `dex_pool_swaps`, `dex_pools`, `oracle_prices`, `lending_indices`, `utilization`, `risk_params`, `vault_share_price`, `rewards`, `eigenlayer_rewards` + Phase-2 event-typed handlers (`liquidation_events`, `flash_loan_events`, `staking_yields`, `position_data`, `token_transfers`, `bridge_events`, `governance_events`, `mev_events`) | 1+2   | ETHEREUM + SOLANA                                                                                          |

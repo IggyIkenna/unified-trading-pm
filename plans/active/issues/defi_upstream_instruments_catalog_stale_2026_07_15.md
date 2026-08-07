@@ -153,14 +153,17 @@ catalogue backfill was completing. So the gate was CORRECT at attempt time — i
 historical date yet" — and the IS DeFi historical catalogue backfill has SINCE caught up (confirmed: all 3 sampled dates
 now have full coverage).
 
-**This is NOT the same mechanism R5-fix-7 (`master_data_canonicalisation_migration_catalogue_2026_06_07.md:767`, dated
-2026-06-08, still unchecked `- [ ]`) was written against.** R5-fix-7 references "R4's catalog re-promote" — a smaller,
-earlier re-promote (defi 6,853 rows, `master_data_canonicalisation_migration_catalogue_2026_06_07.md:612`) that landed
-2026-06-08 and covered recent/live catalogue freshness, NOT the full 2018-2026 per-date historical snapshot backfill
-these 2,958 rows actually needed — that backfill evidently didn't finish until ~2026-06-29, three weeks after R5-fix-7
-was written and the exact window these MTDS attempts ran in. R5-fix-7's own "re-probe... then 1-day dry-run both to
-GREEN" was accurate advice — it just couldn't have succeeded yet at the time, because the historical catalogue it needed
-to re-probe against wasn't actually complete.
+**This is NOT the same mechanism R5-fix-7 (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` R5 ledger —
+extracted 2026-08-05 to
+`/plans/archive/2026_08/master_data_canonicalisation_migration_catalogue_r5_smoke_ledger_history_2026_08_05.md` where
+R5-fix-7 is `- [x] ✅ DONE (na-eligibility-audit 2026-08-04)`; "still unchecked" is STALE as of that extraction —
+annotated plan_reconciler agt-24f4b0 2026-08-06) was written against.** R5-fix-7 references "R4's catalog re-promote" —
+a smaller, earlier re-promote (defi 6,853 rows, `master_data_canonicalisation_migration_catalogue_2026_06_07.md:612`)
+that landed 2026-06-08 and covered recent/live catalogue freshness, NOT the full 2018-2026 per-date historical snapshot
+backfill these 2,958 rows actually needed — that backfill evidently didn't finish until ~2026-06-29, three weeks after
+R5-fix-7 was written and the exact window these MTDS attempts ran in. R5-fix-7's own "re-probe... then 1-day dry-run
+both to GREEN" was accurate advice — it just couldn't have succeeded yet at the time, because the historical catalogue
+it needed to re-probe against wasn't actually complete.
 
 ## Real code gap found + fixed (adjacent, not the cause of these specific rows)
 

@@ -18,9 +18,9 @@ scope: [engineer, admin]
 tags: [defi, pipeline, features, strategy, execution, verification, honest-coverage, backfill]
 related:
   [
-    ../epics/defi_master.md,
-    ./defi_manifest_canonicalisation_2026_06_01.md,
-    ../archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /plans/epics/defi_master.md,
+    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: "2026-06-12"
 parent_epic: defi_master
@@ -116,8 +116,10 @@ remaining lower-priority half.
       itself is done (bug found, fixed, re-run with a trustworthy result), NOT that the gate passes** — Success Criteria
       is still NOT MET; todo below re-opens this once the real backfill lands.
 - [ ] [SCRIPT] P1. Re-run scripts/phase_d_gate.py against real 2022→today data once the DeFi backfill reaches full
-      coverage; re-check the P0 above ONLY when ≥5/7 archetypes are non-empty on sampled days per Success Criteria
-      (~L99).
+      coverage (annotation 2026-08-06 plan_reconciler agt-24f4b0: the v10-architecture backfill archived GATE MET
+      2026-07-28 — the precondition may now hold; the phase-D re-run itself is separately tracked open in
+      `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`); re-check the P0 above ONLY when ≥5/7 archetypes
+      are non-empty on sampled days per Success Criteria (see the Success Criteria section above).
 - [x] ✅ [VERIFY] P0. **Final-state verification of the Lighter + Pacifica historical backfill VMs** —
       `cefi-lighter-zksync-ohlcv-20260507-024226` + `cefi-pacifica-solana-ohlcv-20260507-024226`. The manifest should
       show `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards. Verify via a `gcloud storage ls` count of

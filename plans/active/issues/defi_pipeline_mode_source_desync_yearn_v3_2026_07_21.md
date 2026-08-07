@@ -18,7 +18,12 @@ summary: >-
   `source=onchain_subgraph` — so the sampled row is most likely a STALE row from a prior collector generation that the
   current RPC-based handler has not reconciled, compounded by the current handler's own separate gap (never stamping
   `source=` explicitly, against the crosscutting "source= is required on record_captured" rule). Both need a
-  data-engineering pass; neither was fixed here (docs-hygiene-only task).
+  data-engineering pass; neither was fixed here (docs-hygiene-only task). **UPDATE 2026-08-06 (plan_reconciler
+  agt-24f4b0): the stale-row hypothesis was REFUTED by todo 1 (2026-07-28, slot-4) against the live manifest — the
+  desync rows' `attempted_at` run through 2026-07-28, postdating the current handler's introduction (`9475e66b`), so
+  they are written by the CURRENT RPC handler; structural root cause = `SOURCE_PRIORITY[('defi','vault_share_price')]`
+  lists only `onchain_subgraph`, so `default_source()` auto-stamps `source=onchain_subgraph` on EVERY write to this cell
+  — the `pipeline_mode`↔`source` combination is structural, not a stale-row artifact.**
 status: open
 nature: issue
 asset_group: [defi]
@@ -26,7 +31,7 @@ stage: [data]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [data-correctness, defi, pipeline-mode, manifest, source-desync, yearn-v3, honest-coverage, vault-share-price]
-related: [data_pipeline_reconciliation_defi_2026_07_20]
+related: [/plans/audit/results/data_pipeline_reconciliation_defi_2026_07_20.md]
 created: 2026-07-21
 author: unknown
 last_updated: 2026-07-21
@@ -155,7 +160,7 @@ vault-share-price collector) end-to-end:
       `pipeline_mode_for_source` — closing the crosscutting "`source=` required" gap for this handler (repo:
       market-tick-data-service). — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for
       execution).
-- [ ] 4. [DECISION] P2. **RE-SCOPED 2026-07-28 per todos 1+2's findings** — the original framing ("if todo 1 confirms
+- [ ] [DECISION] P2. 4. **RE-SCOPED 2026-07-28 per todos 1+2's findings** — the original framing ("if todo 1 confirms
       stale legacy rows, rule on remediation: accept-as-historical-artifact vs targeted-correction") no longer applies:
       todo 1 REFUTED the stale-row premise, so there is no distinguishing "wrong" row population to correct or annotate.
       The actual open decision is now: should UAC's `SOURCE_PRIORITY[('defi','vault_share_price')]` register a second
@@ -163,7 +168,7 @@ vault-share-price collector) end-to-end:
       forced single-source auto-stamp? That is a genuine operator/design call (adds a multi-source cell, requires
       `source_required()`→True for this pair, and a one-time backfill/no-op decision on the 7,476 existing rows) — not
       resolved here (repo: unified-api-contracts + market-tick-data-service, design decision).
-- [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
+- [ ] [DATA] P3. 5. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
       `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
 

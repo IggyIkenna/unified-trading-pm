@@ -35,7 +35,7 @@ scope: [engineer, admin]
 tags: [data-correctness, canonical, gcs-paths, test-isolation, smoke-check, skills, mtds, instruments-service]
 related:
   [
-    ../data_pipeline_reconciliation_skill_2026_07_20.md,
+    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /codex/02-data/non-canonical-path-inventory.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
@@ -276,14 +276,17 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `…/day={D}/pipeline_mode={m}/asset_group={ag}/venue={V}/instruments.parquet` using the sink **PREFIX** mechanism
       (`sports_fixtures.py:99-113` is the working reference), NOT the partition dict — the UTL sink sorts keys
       alphabetically (`protocol_impls.py:26`). Provenance: this audit § 3b/§ 3c.
-- [x] 2. [DATA] P1. **[already covered by plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md, see
+- [x] 2. [DATA] P1. **[already covered by /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md, see
       that doc for execution]** market-tick-data-service: rule on and fix the cefi chain tail —
       `partitioned_writer.py:291-293` populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare
       `underlying={U}/ticks.parquet` while W2 (`tardis_shared.py:861-870`) emits the canonical v6 tail. Include the
       `:198` vs `:201` casing divergence. Provenance: this audit § 3a.
-- [ ] 3. [DOCS] P2. instruments-service + market-tick-data-service: correct the three in-repo comments that assert the
-      IS live writer emits the hive layout (`instrument_availability_paths.py:1-23`, `DEFI_INSTRUMENTS.md:642`,
-      `repair_tradfi_instrument_type_counts_2026_07_17.py:21`). Provenance: this audit § 3b.
+- [x] ✅ 3. [DOCS] P2. (DONE 2026-08-06 plan_reconciler agt-24f4b0 — all three targets corrected in-tree:
+      `instrument_availability_paths.py:21` now reads "the tree was never fully 're-homed.'", `DEFI_INSTRUMENTS.md:642`
+      no longer documents the hive path as current, `repair_tradfi_instrument_type_counts_2026_07_17.py:21` frames the
+      legacy path as the stale partial) instruments-service + market-tick-data-service: correct the three in-repo
+      comments that assert the IS live writer emits the hive layout (`instrument_availability_paths.py:1-23`,
+      `DEFI_INSTRUMENTS.md:642`, `repair_tradfi_instrument_type_counts_2026_07_17.py:21`). Provenance: this audit § 3b.
 - [x] ✅ 4. [SCRIPT] P2. **[already covered by
       `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`, see that doc for execution]** —
       citation added 2026-07-30 (`/na-eligibility-audit` tranche=cefi). unified-trading-pm: add a Phase-0 `-test-`
@@ -299,7 +302,10 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `assigned_vm: planning` batch as a `[DOC] P3` todo citing
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a) as its own `Source:`. Tracked there, not
       here.
-- [ ] 6. [DATA] P3. instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`,
+- [x] ✅ 6. [DATA] P3. (DONE 2026-08-06 plan_reconciler agt-24f4b0 — decision made and both fixes shipped:
+      `futures_contracts` + `market_lifecycle` full-hive prefix fixes landed in
+      `instrument_availability_hive_canonicalisation_2026_07_21.md` todos 4-5, `instruments-service@a9be6ce9`,
+      inheriting todo 1's sink-PREFIX fix) instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`,
       `partition={"group","day","venue"}` → `group=/day=/venue=`) and `futures_contracts` (`writers.py:377-383`, flat
       `day=/venue=`) are in the canonical shard grammar's scope; if so they inherit todo 1's fix. Provenance: this audit
       § 2 rows 9-10.
