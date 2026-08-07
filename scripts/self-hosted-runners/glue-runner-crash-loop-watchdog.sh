@@ -32,6 +32,26 @@
 # take. Deliberately excludes `@writer-N` instances (long-lived by design, e.g. ci-status-update
 # -- a long ActiveEnterTimestamp there is normal, not a symptom).
 #
+# GITHUB-API BUSY CORROBORATION (2026-08-07): the local journal-based idle check below
+# (`is_idle_listening`) was STILL insufficient -- found live, same host, this same session:
+# `glue-runner-crash-loop-watchdog` paged CRITICAL "wedged" on 4 healthy runners across 4
+# DIFFERENT repos' pools (e2e-testing, strategy-service, market-tick-data-service, ml-service),
+# all on i-042a6332509482556. SSM-verified 3.3s total CPU across 3h+ of "active" runtime for all
+# 4, and GitHub's own runner API confirmed `status:online, busy:false` for every one -- healthy
+# idle runners during a fleet-wide low-throughput window, not hung processes. See
+# plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md.
+# `runner_busy_status()` below now asks GitHub directly (the same ground truth the live
+# investigation used to disprove the page) BEFORE falling back to the journal heuristic --
+# resolving OWNER/REPO from the unit's own `Description` property, which
+# `setup-glue-runners.sh`'s `render_unit()` ALWAYS stamps as `(OWNER/REPO)` (a same-value no-op
+# for PM's own base pool, a real value for any second POOL_TAG'd pool on this host), so this
+# works for every pool on the box with no new file and no new permission -- `systemctl show
+# -p Description` is exactly as world-readable as every other property this script already
+# reads. The token is the SAME `GH_PAT` identity this script already resolves for PM's own
+# alert dispatch: confirmed reused verbatim across pools (README.md's `POOL_TAG=ao
+# ... GH_TOKEN_SECRET=GH_PAT` example), and a token that can WRITE (register) a runner on a repo
+# can certainly READ (list) that repo's runners, so no new credential is needed either.
+#
 # State-transition dedup (not "page every tick while true"): tracks which units are CURRENTLY
 # alerted in a local state file; only pages on a NEW crash-loop/wedge detection and on RECOVERY,
 # matching the workspace's own standing-condition alerting convention. The two conditions share
@@ -133,14 +153,101 @@ unit_active_seconds() {
 # True iff <unit-name>'s own runner log shows it genuinely idle right now -- the LAST line
 # matching either marker is "Listening for Jobs" (not "Running job: ..."). Cheap, local,
 # no GitHub API call needed: Runner.Listener logs exactly one of these two lines per state
-# transition, so the most recent one is authoritative for current state. Empty/unreadable
-# journal -> NOT idle (fail toward the wedge check still applying, never toward silently
-# waiving it).
+# transition, so the most recent one is authoritative for current state.
+#
+# FALLBACK ONLY as of 2026-08-07 (see the top-of-file GITHUB-API BUSY CORROBORATION comment) --
+# is_wedged() now only reaches this when runner_busy_status() itself was inconclusive (API
+# unreachable / token unresolvable / Description unparseable).
+#
+# Empty/unreadable journal -> treat as IDLE (flipped 2026-08-07; was "NOT idle"). This direction
+# is the one that actually matches how journal retention/eviction behaves here: a genuinely idle
+# unit logs "Listening for Jobs" ONCE, at the start of its (possibly multi-hour) wait, then
+# nothing else -- that line is the OLDEST thing in its journal and the first to age out under
+# retention pressure. A genuinely wedged unit's "Running job: ..." line is logged LATER (after
+# "Listening for Jobs", once a job actually lands) and has been surviving right up to the
+# moment it hung, so it is the LAST thing to age out, not the first. An empty read is therefore
+# far more consistent with "the one-time idle line finally rotated away" than with "the
+# in-progress line rotated away" -- and empirically, the old "fail toward alerting" direction is
+# exactly what produced today's false CRITICAL page on 4 healthy idle runners (busy:false
+# confirmed independently via GitHub's own API for all 4). The residual risk of this flip is a
+# slower-to-detect (not undetected) genuine wedge on the rare tick where BOTH the GitHub API
+# above AND the local journal are simultaneously inconclusive -- the next 5-minute tick still
+# catches it.
 is_idle_listening() {
   local unit="$1" last_line
   last_line="$(journalctl -u "$unit" --no-pager -o cat 2>/dev/null \
     | grep -E 'Listening for Jobs|Running job:' | tail -1)"
-  [ -n "$last_line" ] && [[ "$last_line" == *"Listening for Jobs"* ]]
+  [ -z "$last_line" ] && return 0
+  [[ "$last_line" == *"Listening for Jobs"* ]]
+}
+
+# Resolve OWNER/REPO for <unit-name> from its own `Description` systemd property -- see the
+# top-of-file GITHUB-API BUSY CORROBORATION comment for why this is always populated and always
+# world-readable. Echoes "" on anything unparseable so callers degrade to the journal fallback
+# instead of constructing a bogus API URL.
+unit_owner_repo() {
+  local unit="$1" desc
+  desc="$(systemctl show "$unit" -p Description --value 2>/dev/null || echo "")"
+  if [[ "$desc" =~ \(([^/[:space:]()]+/[^/[:space:]()]+)\)[[:space:]]*$ ]]; then
+    echo "${BASH_REMATCH[1]}"
+  else
+    echo ""
+  fi
+}
+
+# Memoized wrapper around resolve_gh_token() (defined above, for PM's own alert-dispatch
+# identity) -- the busy-check below reuses that SAME identity for every pool on this host (see
+# top-of-file comment for why that is safe), and memoizing avoids a redundant Secret Manager
+# round-trip per wedge candidate within one tick.
+_glue_gh_token_cache=""
+cached_gh_token() {
+  if [ -z "${_glue_gh_token_cache}" ]; then
+    _glue_gh_token_cache="$(resolve_gh_token 2>/dev/null || echo "")"
+  fi
+  printf '%s' "${_glue_gh_token_cache}"
+}
+
+# GitHub's own authoritative answer to "does this runner actually have a job right now" for
+# <unit-name> -- see the top-of-file GITHUB-API BUSY CORROBORATION comment for the incident this
+# closes. Echoes exactly one of:
+#   idle    - GitHub confirms busy:false -- healthy, never wedged, no further check needed.
+#   busy    - GitHub confirms a job HAS been assigned this whole window -- genuinely stuck.
+#   absent  - GitHub has already stopped tracking this runner name -- the original 2026-08-05
+#             wedge signature (job stuck `queued`, runner deregistered out from under it).
+#   ""      - inconclusive (owner/repo unparseable, token unresolvable, or the API call itself
+#             failed) -- callers MUST fall back to is_idle_listening(), never treat "" as a
+#             verdict either way.
+runner_busy_status() {
+  local unit="$1" owner_repo owner repo inst pool idx host runner_name token resp
+  owner_repo="$(unit_owner_repo "$unit")"
+  [ -n "$owner_repo" ] || { echo ""; return; }
+  owner="${owner_repo%%/*}"
+  repo="${owner_repo#*/}"
+  inst="${unit#*@}"; inst="${inst%.service}"   # e.g. "github-glue-runner-mtds@glue-1.service" -> "glue-1"
+  pool="${inst%-*}"; idx="${inst##*-}"
+  host="$(hostname -s 2>/dev/null || echo "")"
+  [ -n "$host" ] || { echo ""; return; }
+  # Same construction as glue-runner-run.sh's RUNNER_NAME -- must match GitHub's registered name
+  # exactly or the lookup below silently finds nothing (falls through to "absent").
+  runner_name="${pool}-${host}-${idx}"
+  token="$(cached_gh_token)"
+  [ -n "$token" ] || { echo ""; return; }
+  resp="$(curl -sf -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/${owner}/${repo}/actions/runners?per_page=100" 2>/dev/null || echo "")"
+  [ -n "$resp" ] || { echo ""; return; }
+  printf '%s' "$resp" | python3 -c "
+import sys, json
+try:
+    runners = json.load(sys.stdin).get('runners', [])
+except Exception:
+    print('')
+    sys.exit(0)
+for r in runners:
+    if r.get('name') == '${runner_name}':
+        print('busy' if r.get('busy') else 'idle')
+        sys.exit(0)
+print('absent')
+" 2>/dev/null || echo ""
 }
 
 # <unit-name> is wedged if it's a JIT-ephemeral glue-* instance (never writer-*, those are
@@ -153,7 +260,7 @@ is_idle_listening() {
 # "Running job: ..." as its last log line, a genuinely different signature this now
 # distinguishes instead of conflating).
 is_wedged() {
-  local unit="$1" active_state
+  local unit="$1" active_state busy
   case "$unit" in
     *@glue-*) : ;;      # JIT-ephemeral pool -- eligible
     *) return 1 ;;      # writer-* or anything else -- long-lived by design, never wedged
@@ -161,6 +268,15 @@ is_wedged() {
   active_state="$(systemctl show "$unit" -p ActiveState --value 2>/dev/null || echo "")"
   [ "$active_state" = "active" ] || return 1   # crash-looping units are "activating", not "active"
   [ "$(unit_active_seconds "$unit")" -ge "$WEDGED_THRESHOLD_SEC" ] || return 1
+  # PRIMARY signal (2026-08-07): GitHub's own busy status, when resolvable -- see
+  # runner_busy_status()'s own comment for the false-positive class this closes.
+  busy="$(runner_busy_status "$unit")"
+  case "$busy" in
+    idle) return 1 ;;    # GitHub confirms no job assigned -- healthy, never wedged
+    busy) return 0 ;;    # GitHub confirms a job has been running this whole window -- wedged
+    absent) return 0 ;;  # GitHub already stopped tracking this runner -- the 2026-08-05 signature
+    *) ;;                # inconclusive ("") -- fall back to the local journal heuristic below
+  esac
   ! is_idle_listening "$unit"
 }
 
