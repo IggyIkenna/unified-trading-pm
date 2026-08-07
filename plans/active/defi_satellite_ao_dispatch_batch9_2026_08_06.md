@@ -380,3 +380,13 @@ remaining items besides the over-cap-gated one above).
   STILL RUNNING with stale code (no [INFRA] P0 action since last dispatch). No new findings. Posting /blocked with
   specific escalation path: create an `assigned_role: infra` dispatch plan to route the [INFRA] P0 daemon relaunch into
   the AO backlog, since the issue doc's `assigned_vm: NA` keeps it out of the queue.
+- **2026-08-07 (AO re-dispatch #4, `data_engineering`, slot 7)**: fourth consecutive dispatch of this same todo with the
+  daemon still unchanged (`vm-zombie-watchdog-20260805-125558`, re-verified RUNNING). Rather than re-post an identical
+  `/blocked` recommendation a third time from this slot, actually created the recommended routing fix:
+  `plans/active/infra_vm_zombie_watchdog_relaunch_2026_08_07.md` (`status: draft`, `assigned_role: infra`,
+  `assigned_vm: planning`), a single-`[OPERATOR][INFRA] P0`-todo plan that gives the daemon relaunch a proper
+  AO-dispatch home (the underlying todo previously lived only inside the issue doc, whose doc-level `assigned_vm: NA`
+  meant `regen_backlog_from_plan.py` never surfaced it). Drafted, not activated — flipping to `active` is the operator's
+  call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING". This todo's own checkbox stays open (no code shipped,
+  no daemon relaunched) — unchanged from prior dispatches; the new plan doc is the only new artifact this dispatch
+  produced. No VM/GCS/cron mutation performed.

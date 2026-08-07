@@ -259,3 +259,10 @@ the highest-priority open question.
   `vm-zombie-watchdog-20260805-125558` RUNNING (gcloud compute instances list). The `[INFRA] P0` remains in this doc
   with `assigned_vm: NA`, so it is not being auto-dispatched. Posting /blocked with a concrete escalation path:
   recommend operator create an `assigned_role: infra` dispatch plan to route the [INFRA] P0 into the AO backlog.
+- **AO re-dispatch 2026-08-07 (`data_engineering`, slot 7, fourth dispatch)**: same daemon, still stale, re-verified
+  once more. Instead of a fourth identical `/blocked` recommendation, created
+  `plans/active/infra_vm_zombie_watchdog_relaunch_2026_08_07.md` (`status: draft`, `assigned_role: infra`) — a
+  single-todo plan that mirrors this doc's own `[INFRA] P0` todo with an `assigned_vm: planning` home, so it can
+  actually enter the AO backlog once the operator flips it `active`. The `[INFRA] P0` todo below is unchanged (still the
+  source of truth for the fix's intent); the new plan is a dispatch-routing wrapper around it, not a duplicate decision.
+  No VM/GCS/cron mutation performed this session.
