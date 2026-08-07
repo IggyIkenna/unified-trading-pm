@@ -1,0 +1,63 @@
+---
+doc_type: issue
+title: kamino.py SOLANA_VAULT compound symbol ':' incompatible with build_instrument_id colon guard
+summary: >-
+  UAC canonical_id_builder.py (colon-guard added 2026-07-20) hard-rejects any non-sports symbol containing ':'.
+  kamino.py:199 builds its SOLANA_VAULT key with symbol '{sym_a}-{sym_b}:{address[:8]}' which embeds ':', blocking the
+  build_instrument_id passthrough retrofit prescribed by the 2026-07-08 checklist (which predates the guard). Format
+  change requires an operator ruling (changes instrument_key = GCS path segment; migration needed).
+status: open
+asset_group: [defi]
+stage: [data]
+repos: [instruments-service, unified-api-contracts]
+created: "2026-08-07"
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+assigned_role: data_engineering
+tags: [defi, canonical-id, kamino, blocker]
+related: [/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md]
+nature: issue
+scope: [engineer]
+parent_epic: defi_master
+source: >-
+  Discovered during defi_satellite_ao_dispatch_batch9_2026_08_06.md todo 1 (task defi_satellite_ao_dispatch_batch9-001,
+  slot 2, 2026-08-07) — UAC colon-guard (added 2026-07-20) post-dates the 2026-07-08 retrofit checklist.
+resolved_by: ""
+locked_by: ""
+---
+
+## Finding
+
+`canonical_id_builder.py` (UAC) hard-rejects any non-sports/prediction symbol containing `":"` (lines 851–862, added
+2026-07-20, per `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md §7` — prevents double-wrapped ids from raw
+wire symbols).
+
+`instruments_service/reference_data/adapters/defi/kamino.py:199` builds its `SOLANA_VAULT` instrument key as:
+
+```
+instrument_key = f"{venue_tag}:SOLANA_VAULT:{sym_a}-{sym_b}:{address[:8]}"
+```
+
+The compound symbol `{sym_a}-{sym_b}:{address[:8]}` (e.g. `SOL-USDC:AbCd1234`) contains an embedded `:`, which the colon
+guard hard-rejects with `ValueError` regardless of `passthrough=True`, because the colon check runs before the
+passthrough dispatch (line 851 check precedes line 879 passthrough call).
+
+The 2026-07-08 checklist prescribed
+`build_instrument_id(venue_tag, InstrumentType.SOLANA_VAULT, f"{sym_a}-{sym_b}:{address[:8]}", passthrough=True)`, but
+the colon guard was added 2026-07-20 — after the checklist was authored — making that call a runtime `ValueError`.
+
+## Current state
+
+f-string retained at `kamino.py:199`. Key format unchanged from prior commits; output is byte-identical to before this
+batch.
+
+## Options (operator ruling required — changing symbol changes GCS key)
+
+- **(a) Change separator**: replace `:` before the address prefix with `-` → `{sym_a}-{sym_b}-{address[:8]}`. Instrument
+  key changes (`SOLANA_VAULT:SOL-USDC:AbCd1234` → `SOLANA_VAULT:SOL-USDC-AbCd1234`). Requires manifest migration for
+  existing rows.
+- **(b) Use `@` as separator**: `{sym_a}-{sym_b}@{address[:8]}`. Same scope as (a).
+- **(c) Leave f-string as-is** (current state). No migration; kamino stays off the builder path.
+
+Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batch9-001, slot 2, 2026-08-07).

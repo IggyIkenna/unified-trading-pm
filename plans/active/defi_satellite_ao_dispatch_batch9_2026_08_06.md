@@ -89,7 +89,7 @@ over all pending draft batches) that independently spot-verified every todo belo
 
 ## Todos
 
-- [ ] [DATA] P2. **Retrofit the 8 remaining ad hoc `instrument_key` f-string sites** (`ankr.py:86`, `mantle.py:86`,
+- [x] ✅ [DATA] P2. **Retrofit the 8 remaining ad hoc `instrument_key` f-string sites** (`ankr.py:86`, `mantle.py:86`,
       `maker.py:101`, `stakewise.py:90`, `swell.py:86`, `stader.py:85` [all `:LST:`], `kamino.py:199`
       [`:SOLANA_VAULT:`], `pendle.py:274` [`:YIELD_BEARING:`]) to route through
       `build_instrument_id(...,     passthrough=True)` per the already-shipped todo-2 pattern (16 sites, byte-identical
@@ -97,7 +97,14 @@ over all pending draft batches) that independently spot-verified every todo belo
       the already-fixed P0 type-filter-empty bug. Repo: instruments-service. Source:
       `canonical_id_builder_retrofit_checklist_2026_07_08.md`. Done when: all 8 sites verified byte-identical
       post-retrofit with `quality-gates.sh` green, and the type-filter question is answered with cited evidence
-      (already-fixed, or a new scoped fix filed).
+      (already-fixed, or a new scoped fix filed). **SHIPPED 7/8 `instruments-service@9ad39d5b`** —
+      ankr/mantle/maker/stakewise/swell/stader/pendle retrofitted; kamino.py:199 retained as f-string (compound symbol
+      `{sym_a}-{sym_b}:{address[:8]}` carries embedded `:` that UAC builder's 2026-07-20 colon-guard hard-rejects for
+      non-sports types; checklist predates the guard; blocker filed at
+      `/plans/active/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`). Type-filter finding:
+      A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped — all adapters use canonical
+      `InstrumentType.X` enum constants (cited: `compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`,
+      `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh` green.
 - [ ] [DOC] P3. **Document the shipped collateral down-sizing contract** (USDC-collateral margin-buffer down-size branch
       in strategy-service's `staked_basis.py` + `margin_buffer_pct`) in `codex/04-architecture/` and the wizard
       param-schema (`param_schema.py`'s `PARAM_SCHEMA_REGISTRY`) in
@@ -405,3 +412,14 @@ remaining items besides the over-cap-gated one above).
   appeared at 08:30:15Z; Python task confirmed running: 12,425 rows found in 75,819,124-row index, consolidator PAUSED
   confirmed, GCS soft-delete retention 604800s verified, 0/0 objects deleted (expected). In `_purge_manifest_rows()` CAS
   operation now — manifiest purge in progress (30-60 min expected). Background monitor running for completion.
+- **2026-08-07 (AO dispatch, `data_engineering`, slot 2, task `defi_satellite_ao_dispatch_batch9-001`, todo 1
+  `[DATA] P2`)**: Retrofitted 7/8 `instrument_key` f-string sites in instruments-service to
+  `build_instrument_id(..., passthrough=True)`: ankr/mantle/maker/stakewise/swell/stader/pendle. kamino.py:199 retained
+  as f-string: compound symbol `{sym_a}-{sym_b}:{address[:8]}` embeds `:` which UAC builder's 2026-07-20 colon-guard
+  hard-rejects for non-sports types (colon-guard added after the 2026-07-08 checklist); format change requires operator
+  ruling (GCS key change + manifest migration); filed
+  `/plans/active/issues/kamino_instrument_key_colon_blocker_2026_08_07.md`. Type-filter finding (cited evidence):
+  A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped by P0 bug — all relevant adapters
+  already use canonical `InstrumentType.X` enum constants in `instrument_type not in (...)` guards
+  (`compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`, `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh`
+  green. Shipped: `instruments-service@9ad39d5b`.
