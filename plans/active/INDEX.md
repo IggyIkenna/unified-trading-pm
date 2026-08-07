@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 230 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 222 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (30)
+### cefi (24)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -57,9 +57,9 @@ by hand._
   — Gated closeout for cefi_satellite_ao_dispatch_batch6_2026_08_02.md — machine-held via depends_on + gate_on_depends:
   true until all 6 of that plan's todos are done. Mirrors the batch1 through batch5 finalize pattern: reconcile each
   source…
-- [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) **[draft]** —
-  Ninth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous
-  dispatch, tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
+- [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) — Ninth
+  AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous dispatch,
+  tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize`](./cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md)
   — Finalize twin for `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` (drafted 2026-08-07 by the /ag-closeout-audit
   skill, slot 4, dispatch agt-ed7b44). Reconciling 3 source docs' checkboxes once batch9's 3 todos land, re-checking the
@@ -149,8 +149,8 @@ by hand._
   — Gated closeout for defi_pipeline_e2e_and_coverage_validation_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its…
-- [`defi_satellite_ao_dispatch_batch10_2026_08_06`](./defi_satellite_ao_dispatch_batch10_2026_08_06.md) **[draft]** —
-  Tenth AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` running `/ag-closeout-audit defi`
+- [`defi_satellite_ao_dispatch_batch10_2026_08_06`](./defi_satellite_ao_dispatch_batch10_2026_08_06.md) — Tenth
+  AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` running `/ag-closeout-audit defi`
   (2026-08-06, slot 9). Phase 0 discovered 11 real covering docs via `generate_ag_closeout_audit_candidates.py
   --tranche…
 - [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize`](./defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
@@ -342,8 +342,8 @@ by hand._
   — Scopes the full MTDS/MDPS/FSS/strategy-service live-mode activation chain for asset_group=sports and
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
-- [`sports_satellite_ao_dispatch_batch10_2026_08_06`](./sports_satellite_ao_dispatch_batch10_2026_08_06.md) **[draft]**
-  — Tenth AO-dispatch batch for sports, produced by a fresh `/ag-closeout-audit sports` run (2026-08-06, scheduled
+- [`sports_satellite_ao_dispatch_batch10_2026_08_06`](./sports_satellite_ao_dispatch_batch10_2026_08_06.md) — Tenth
+  AO-dispatch batch for sports, produced by a fresh `/ag-closeout-audit sports` run (2026-08-06, scheduled
   tranche-sharded dispatch agt-7b0c34, slot-13): 82 sports AG-primary docs classified via a per-doc Workflow pass (Phase
   1, 82/82…
 - [`sports_satellite_ao_dispatch_batch10_2026_08_06_finalize`](./sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
@@ -773,7 +773,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (20)
+### infrastructure (17)
 
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
@@ -831,8 +831,11 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (1)
+### meta (2)
 
+- [`infra_health_audit_findings_fix_2026_08_07`](./infra_health_audit_findings_fix_2026_08_07.md) — A 2026-08-07 3-agent
+  parallel audit of Cloud Run Jobs, Cloud Run Services, and the GCE VM fleet in central-element-323112 found ~12 real,
+  currently-active issues (crash-loops, OOM, dead schedulers firing into voids, a hung idle VM burning…
 - [`quality_gates_quickmerge_timing_baseline_2026_07_31`](./quality_gates_quickmerge_timing_baseline_2026_07_31.md) —
   Measure wall-clock + per-phase timing of `quality-gates.sh` (across its mode/scope flags) and `quickmerge.sh` on
   unified-trading-pm — first a single-agent baseline on this host, then the same measurements on the planning-vm where
