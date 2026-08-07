@@ -64,7 +64,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 5 distinct source docs' checkboxes.** Batch 6's 6 todos draw from 5 source docs:
+- [x] ✅ [REVIEW] P1. **Reconcile all 5 distinct source docs' checkboxes.** Batch 6's 6 todos draw from 5 source docs:
       `cefi_ml_directional_continuous_live_2026_06_20.md` (1 sub-requirement of the `[VERIFY] P0` todo only — do NOT
       flip that todo's own checkbox, the VM-run half is still open),
       `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` (item 2 of 4 only),
@@ -79,7 +79,21 @@ context_scope:
       deliberately-excluded residual item: the VM-run half, items 1/3/4, Stage 1/2, [none for mtds_docker if both jobs
       resolve — check freshly], and the P1 convention-decision items respectively). **Done when**: every landed todo's
       source checkbox is flipped with a verified commit, and each source doc's remaining-open count is explicitly
-      re-stated rather than assumed.
+      re-stated rather than assumed. — **unified-trading-pm@<sha> 2026-08-07.** Per-doc reconciliation (all commits
+      verified on origin/live-defi-rollout): (1) `cefi_ml_directional_continuous_live_2026_06_20.md`: updated
+      `[VERIFY]     P0` sub-note — step (1) script extension marked done via strategy-service@dff5b2c0; `[VERIFY] P0`
+      checkbox NOT flipped (VM-run steps 2-3 still pending). Remaining open: 3 items ([AGENT] P0 7-day cutover, [VERIFY]
+      P0 steps 2-3, [RESEARCH] P2 deferred). (2)
+      `deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md`: "What's NOT done" item 2 already `✅`
+      (unified-trading-pm@4dbd6cdf, prior reconciliation). Remaining open: 1 checkbox ([DATA] P1 root-cause+fix), prose
+      items 1/3/4 open. (3) `fail_hard_canonical_enforcement_design_2026_07_20.md`: `[DATA] P2` Stage-0 checkbox already
+      `[x] ✅` (market-tick-data-service@4bd7e87e, prior reconciliation). Remaining open: 2 checkboxes ([DESIGN] P1
+      §5-gaps, [DATA] P3 Schema v10 Stage 2). (4) `mtds_cefi_docker_image_stale_5mo_2026_07_30.md`: both todos already
+      `[x] ✅`, `status: resolved`, archived at `plans/archive/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md` —
+      0 open items, archive confirmed correct. (5) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md`:
+      `[SCRIPT] P2` and `[RESEARCH] P2` already `[x] ✅` (market-tick-data-service@d964dce4 and slot-15 research).
+      Remaining open: 2 checkboxes ([SCRIPT] P1 nominal/both-sub-parts-resolved, [DATA] P1 xperp fix pending operator
+      decision). None of the 5 source docs reach zero open items — as anticipated.
 
 - [ ] [REVIEW] P1. **Re-check batch6's own Deferred items for cleared gates.** Walk each Deferred entry in
       `cefi_satellite_ao_dispatch_batch6_2026_08_02.md` and re-verify its specific blocking condition: (a) the
