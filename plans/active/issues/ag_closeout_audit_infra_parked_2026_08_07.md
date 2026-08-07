@@ -43,7 +43,7 @@ related:
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
     /plans/active/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
-    /plans/active/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md,
+    /plans/archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md,
     /plans/active/issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md,
     /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
@@ -135,6 +135,13 @@ Findings 12 (`self_dispatched_orphan_count` tooling suggestion) and 13 (`CITE_RE
 ## New findings this run
 
 ### 18. [WORKER REC] `ao_worker_context_thrash_no_recycle_escape_2026_08_06.md` — `asset_group` mistag, 2nd confirmed instance of finding 6's class
+
+> **MOOT as of 2026-08-07 (na-eligibility-audit, tranche=ao)**: this doc archived same-day
+> (`/plans/archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md`) — all 3 todos resolved by a
+> parallel session's fix to the same live incident (companion doc
+> `ao_worker_context_saturation_unrecoverable_2026_08_06.md`, already archived). No longer an orphan (archived docs
+> aren't in either audit's candidate population), so the mistag no longer needs a retag — it needs nothing. The
+> cross-finding recommendation below now has 2 live instances (6, 19), not 3.
 
 Tagged `asset_group: [infrastructure]`, but the content is squarely agent-orchestrator worker-lifecycle internals: a
 worker slot pinned at 100% context / `pressure=thrashing` for 3+ hours with force-compact submits that never reduce the

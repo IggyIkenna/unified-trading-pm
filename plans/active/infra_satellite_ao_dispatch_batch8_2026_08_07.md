@@ -15,7 +15,7 @@ summary: >-
   in a shared multi-slot checkout, a normal and expected state in this workspace's multi-agent model. The other 2 new
   candidates are NOT infra's to extract: `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` is ci-owned
   content (dual-tag `[ci, infrastructure]`, direct sequel to `shared_ci_workflow_repo_extraction_2026_08_06.md`);
-  `issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md` is a genuine `asset_group` mistag
+  `archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md` is a genuine `asset_group` mistag
   (agent-orchestrator worker-lifecycle content, `parent_epic: orchestrator_master`, tagged `infrastructure` instead of
   `ao`) — reported as a new finding in the parked-findings doc, not retagged here (owning-tranche-writes-only rule, same
   precedent as the still-open finding 6 mistag). Single-todo plan per `task_template.md` §4's carve-out
@@ -187,6 +187,9 @@ so the archival + source-checkbox-reconciliation work a finalize twin would norm
   (confirmed via first-commit timestamps, all after the 2026-08-06 run). Of the 3 new: this batch's one todo
   (conflict-clear, see above); `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (ci-owned, not
   drafted here); `ao_worker_context_thrash_no_recycle_escape_2026_08_06.md` (asset_group mistag, ao-owned content —
-  reported as a new finding, not retagged). Left `status: draft` deliberately; the flip to `active` is the operator's
-  call. Other findings from this run (carried-forward re-verifications, 2 resolved since 2026-08-06, 2 new mistag
-  findings) are recorded in `issues/ag_closeout_audit_infra_parked_2026_08_07.md`, not here.
+  reported as a new finding, not retagged; **archived 2026-08-07 by na-eligibility-audit ao tranche** — resolved by a
+  parallel session's fix to the same live incident, see
+  `/plans/archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md`, so the mistag finding is now moot).
+  Left `status: draft` deliberately; the flip to `active` is the operator's call. Other findings from this run
+  (carried-forward re-verifications, 2 resolved since 2026-08-06, 2 new mistag findings) are recorded in
+  `issues/ag_closeout_audit_infra_parked_2026_08_07.md`, not here.
