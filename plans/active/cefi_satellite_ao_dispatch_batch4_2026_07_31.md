@@ -14,7 +14,7 @@ summary: >-
   and against each other (zero file collisions); 7 cleared into todos below, 3 parked in Deferred with their blocking
   class named (one genuine cross-tranche conflict, one operator-gated step, one too-large/risky-for-a-batch-todo bundle
   needing delete-safety verification this run could not complete).
-status: active
+status: complete # (was: active) 2026-08-07 -- all 7 todos done, finalized + archived
 nature: process
 asset_group: [cefi]
 stage: [data]
