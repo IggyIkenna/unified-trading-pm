@@ -89,15 +89,25 @@ context_scope:
       item, strategy-desk ruling still awaited (unchanged). Todo 3 DIAG finding was NO → no
       `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` P1.2 update triggered.
 
-- [ ] [REVIEW] P1. **Re-check the two items carried forward from batch6's Deferred section for cleared gates.** (a) Has
-      `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" todo
+- [x] ✅ [REVIEW] P1. **Re-check the two items carried forward from batch6's Deferred section for cleared gates.** (a)
+      Has `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" todo
       closed, and has Stage 1 (write-enforce) shipped? If so, the Schema v10 `instrument_id_form` backfill becomes a
       normal batch8 candidate — record it, do NOT draft the todo here (this finalize plan's scope is reconciliation, not
       fresh drafting). (b) Has the operator ruled on `issues/estate_orphan_assessment_2026_07_21.md` todo 6's
       cross-tranche boundedness disagreement (cefi/sports KEEP-NA vs. defi RECLASSIFY)? If so, record the ruling and its
       consequence (a batch8 candidate if ruled AO-eligible; a closed non-issue otherwise). **Done when**: both items
       carry either a "gate cleared → batch8 candidate" note or a dated re-verification that they are still blocked,
-      exactly as batch7's own body already re-confirmed for this run.
+      exactly as batch7's own body already re-confirmed for this run. **Verified 2026-08-07 (slot 13):** (a)
+      `issues/fail_hard_canonical_enforcement_design_2026_07_20.md` `[DESIGN] P1` still open — three §5 gaps
+      (derivative-bundle column gate; live-lane dual-resolver reconciliation; read marker disposition) NOT closed; Stage
+      1 write-enforce NOT shipped; Schema v10 `instrument_id_form` backfill (the `[DATA] P3` todo) remains gated on
+      Stage 1. Most-recent na-eligibility-audit (2026-08-06, tranche=cefi) confirms KEEP-NA: "APPROVED-IN-PRINCIPLE but
+      not ready to implement pending 3 adversarially-confirmed architecture gaps." **Still blocked — NOT a batch8
+      candidate yet.** (b) `issues/estate_orphan_assessment_2026_07_21.md` todo 6 (`[CODE] P2` batched-incremental
+      `record_cells()` refactor): operator ruling on cross-tranche boundedness (cefi/sports KEEP-NA vs. defi RECLASSIFY)
+      still not recorded. The 2-1 KEEP-NA majority and the na-eligibility-audit on 2026-08-07 (tranche=cefi) both
+      confirm `assigned_vm: NA` preserved. No explicit operator adjudication is present in the doc as of 2026-08-07.
+      **Still blocked on operator ruling — NOT a batch8 candidate yet.**
 
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch7_2026_08_03.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes" and "Archival-hygiene housekeeping" sections
@@ -123,3 +133,9 @@ context_scope:
   no-active-paper-run doc `[DIAG] P2` ✅ (`unified-trading-pm@039fcbe72`, finding: NO, 1 `[OPERATOR]` item still open).
   No P1.2 ledger-pointer update needed (DIAG finding was NO). All cited commits verified reachable on
   `origin/live-defi-rollout`.
+- **2026-08-07 (slot 13 · `cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize-002`)**: 2. ✅ [REVIEW] P1 — re-checked
+  both batch6 deferred items: (a) `fail_hard_canonical_enforcement_design_2026_07_20.md` `[DESIGN] P1` STILL OPEN —
+  three §5 gaps not closed, Stage 1 write-enforce not shipped, Schema v10 backfill still gated; KEEP-NA confirmed by
+  na-eligibility-audit 2026-08-06 (tranche=cefi). Not a batch8 candidate. (b) `estate_orphan_assessment_2026_07_21.md`
+  todo 6 — operator ruling on boundedness still not recorded; integrator preserved `assigned_vm: NA` on the 2-1 KEEP-NA
+  verdict; na-eligibility-audit 2026-08-07 (tranche=cefi) reaffirms. Not a batch8 candidate.
