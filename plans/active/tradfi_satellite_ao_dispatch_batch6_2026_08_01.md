@@ -515,10 +515,13 @@ Fleet is still draining. Operator keep-waiting decision unchanged.
 PYTHON=.tabs/8/market-tick-data-service/.venv/bin/python). Launched with `run_in_background:true`. Harness task:
 **`baz81km0n`** (started 06:57:36Z, poll 1 = 23 VMs at 06:57:37Z).
 
+**Post-compact status (2026-08-07T07:07Z — same session 7, context compacted):** baz81km0n survived context compaction.
+poll 3 = 19 VMs at 07:07:39Z (23→21→19, draining at ~2 VM/5min). Watcher confirmed alive. All repos ahead=0.
+
 - **NEXT ACTION (fresh session):** (1) Check if todo #2 checkbox is `[x]` (watcher auto-completed). (2) If `[ ]`, check
-  harness task output: `…/e72382bd-a3d1-416a-ae84-85656714dec1/tasks/baz81km0n.output`. (3) If watcher still running,
-  wait for harness notification. (4) If watcher dead and task not done: re-arm from
-  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — create modified copy with SLOT_ID=<new-slot>,
+  harness task output: `…/e72382bd-a3d1-416a-ae84-85656714dec1/tasks/baz81km0n.output`. (3) If watcher still running
+  (last known poll 3 = 19 VMs at 07:07:39Z), wait for harness notification. (4) If watcher dead and task not done:
+  re-arm from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — create modified copy with SLOT_ID=<new-slot>,
   SLOT_TABS=.tabs/<new-slot>, PYTHON=.tabs/<new-slot>/market-tick-data-service/.venv/bin/python — and launch with
   `run_in_background:true`. Verify poll 1 in output before updating progress log. Do NOT re-arm if watcher running.
 
