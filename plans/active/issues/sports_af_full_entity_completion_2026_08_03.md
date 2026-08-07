@@ -824,3 +824,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   crash-loop. The independently-tracked SOURCE_RETURNED_ZERO cluster (13,045 rows) turned out to already be root-caused
   and fixed by another worker this session — one less open item. Full detail in
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
+- **2026-08-07T14:18Z** — PLAYER_STATS now **chunk 24/26** (was 22/26), only **2 chunks left** — should complete within
+  the next tick or two. footystats climbing (2024-09-22 → 2025-04-06). Both healthy, verified via date-value diffs.
+  Watching closely for chunk 26/26 + clean exit to launch FIXTURE_STATS immediately once the lock frees.
