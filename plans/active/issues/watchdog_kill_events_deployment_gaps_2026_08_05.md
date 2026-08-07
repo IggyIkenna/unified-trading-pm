@@ -124,13 +124,16 @@ session).
       and `Environment=RW_VM_NAME=ip-172-31-5-118` to
       `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.service` (repo unit file) so future
       installs/deploys enable the dual-write. (repo: unified-trading-pm) — unified-trading-pm@7f324271b
-- [ ] [INFRA] P2. **RULED 2026-08-06 (operator): approved, AO-dispatchable to a session/worker with root on the planning
-      VM.** `[INFRA]` tag (was `[OPERATOR]`) — apply the env-var change +
+- [x] ✅ [INFRA] P2. **RULED 2026-08-06 (operator): approved, AO-dispatchable to a session/worker with root on the
+      planning VM.** `[INFRA]` tag (was `[OPERATOR]`) — apply the env-var change +
       `systemctl daemon-reload && systemctl     restart resource-watchdog`. Update the LIVE unit
       `/etc/systemd/system/resource-watchdog.service` with the same two `Environment=` lines, then
       `systemctl daemon-reload && systemctl restart resource-watchdog`. Requires root (slot 16 has no sudo). After
       restart, a real kill must produce a `killed=true` row in `watchdog_kill_events` (verify via
-      `GET /api/watchdog/kill-events?vm_name=ip-172-31-5-118`). (repo: none — operator action on planning VM)
+      `GET /api/watchdog/kill-events?vm_name=ip-172-31-5-118`). (repo: none — operator action on planning VM) — applied
+      via SSM (slot-5, 2026-08-07): env vars added to live unit, live script updated from repo (08f6a9571),
+      daemon-reload+restart applied. E2E verified: kill row `{"vm_name":"ip-172-31-5-118","killed":true}` confirmed in
+      deployment-api (SSM command 4ac8363c / f3ae41f3; `GET /api/watchdog/kill-events?vm_name=ip-172-31-5-118`).
 - [x] ✅ [UI] P3. Make the AO host's kill events reachable in deployment-ui: either (a) extend the resource-history
       collector to also sample the orchestrator/AO host so it appears in `/api/vm-resources/rolling`, or (b) add an
       AO-host kill-events surface in `VmResourceComparison.tsx` (or the fleet view) that is not gated on
