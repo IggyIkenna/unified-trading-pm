@@ -39,7 +39,7 @@ related:
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /plans/archive/issues/mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md,
     /plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md,
-    /plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_06.md,
+    /plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

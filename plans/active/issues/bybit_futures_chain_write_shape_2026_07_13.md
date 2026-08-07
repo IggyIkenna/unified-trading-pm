@@ -184,8 +184,8 @@ workspace).
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — the citation banner above the sole
   open item is already correct and current: the work is extracted verbatim into
   `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1, which remains `status: draft` (unactivated 6+ days,
-  confirmed via today's `ag_closeout_audit_cefi_parked_2026_08_06.md`). Nothing to fix; revisit only if batch4 stalls
-  without ever activating.
+  confirmed via today's `/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`). Nothing to fix; revisit
+  only if batch4 stalls without ever activating.
 - **DONE 2026-08-06 (slot 13, `data_engineering`, `cefi_satellite_ao_dispatch_batch4-001`)** — full-scope duplicate
   verification completed. `market-tick-data-service/scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py`
   (`1a32b6e7`, already shipped) run across all 546 scope days (2023-04-05 → 2025-09-23), 1,114 flat objects. Results:

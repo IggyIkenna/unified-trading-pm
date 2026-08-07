@@ -27,7 +27,7 @@ scope: [engineer]
 tags: [cefi, live-data, cold-tier, compaction, oom, event-log, data-correctness, big-finding]
 related:
   [
-    /plans/active/issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md,
+    /plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md,
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/archive/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
@@ -54,8 +54,8 @@ drift_direction: advance-code
 
 ## What I found
 
-Re-ran the exact cited check from `cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` todo 1 as part of
-`cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 2 (2026-08-07, ~23:52 UTC):
+Re-ran the exact cited check from `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`
+todo 1 as part of `cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 2 (2026-08-07, ~23:52 UTC):
 
 1. The cited path has ZERO objects (confirmed for all 3 venues + all live_* modes):
 
@@ -166,7 +166,7 @@ surface that actually exists (warm + cold event-log tiers).
 - [ ] [DATA] P2. Confirm + document that `raw_tick_data/by_date/.../pipeline_mode=live_*` (cefi) is a retired legacy
       surface (grep confirms no production reader consumes it — the active sink is `LiveEventFacadeSink`); update the
       ASTER gate wording in `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` and the check path in
-      `/plans/active/issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` to point at the warm/cold
+      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` to point at the warm/cold
       event-log surface, so a future audit does not re-raise a false "no live data" alarm. (repo: unified-trading-pm)
 
 ## Progress Log

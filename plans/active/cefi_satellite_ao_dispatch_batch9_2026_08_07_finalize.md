@@ -19,7 +19,7 @@ related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
     /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
-    /plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_06.md,
+    /plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -88,10 +88,10 @@ context_scope:
       fifth consecutive re-check, flag explicitly for the operator as a standing item** (batch8-finalize's standing
       instruction — five no-change re-checks (batch4→5→6→7→8) is a strong signal this needs direct operator attention,
       not more automated re-triage): post the standing flag in the cefi parked-findings doc
-      (`issues/ag_closeout_audit_cefi_parked_2026_08_06.md` or its 2026-08-07 successor) AND surface it in this run's
-      report. **Done when**: both items carry either a "gate cleared → batch10 candidate" note or a dated fifth
-      re-verification that they are still blocked, AND — if still blocked — the explicit operator flag described above
-      is written to the parked-findings doc.
+      (`/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md` or its 2026-08-07 successor) AND surface it
+      in this run's report. **Done when**: both items carry either a "gate cleared → batch10 candidate" note or a dated
+      fifth re-verification that they are still blocked, AND — if still blocked — the explicit operator flag described
+      above is written to the parked-findings doc.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes", "Deferred — *", "Reconciliation" and "Linkage
       housekeeping" sections (informational, never batch todos) need no separate migration → add the archive banner →

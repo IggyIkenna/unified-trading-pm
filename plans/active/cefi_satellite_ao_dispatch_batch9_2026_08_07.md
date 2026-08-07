@@ -40,7 +40,7 @@ related:
     /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
-    /plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_06.md,
+    /plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -207,8 +207,8 @@ operator as a standing item rather than silently re-deferring"), this batch FLAG
   `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md` (3 `[HUMAN]` credential actions),
   `l2_book_microstructure_capture_2026_07_13.md` (2 `BLOCKED-DATA-CORRECTNESS` items). No new work landed on any of them
   since their classification (only hygiene/na-audit/context-scout touches, per git log).
-- **Parked-findings doc housekeeping**: `issues/ag_closeout_audit_cefi_parked_2026_08_06.md`'s open todo 2 ("add a
-  `related:`/digest mention for
+- **Parked-findings doc housekeeping**: `/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`'s open todo
+  2 ("add a `related:`/digest mention for
   `multi_timeframe_phantom_captured_manifest_rows_on_universal_write_failure_2026_08_03.md`") is now **MOOT** — that doc
   was archived 2026-08-06 in the 76-doc resolved-issues archive sweep (work resolved), so the linkage mention is void;
   todo flipped with a note in the same commit as this batch.

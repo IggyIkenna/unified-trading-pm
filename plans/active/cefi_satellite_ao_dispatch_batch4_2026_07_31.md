@@ -98,10 +98,10 @@ drift_direction: advance-code
       `issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`, both citing this check. If rows did NOT
       land: file a fresh investigation, do not silently re-park. Then spot-check HYPERLIQUID and BINANCE-FUTURES the
       same way (read-only `gcloud storage ls`, no writes/deletes). Source:
-      `issues/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`. **Done when**: all 3 venues checked,
-      dependent-doc checkboxes flipped or a new bug filed, with the exact `gcloud` output cited as evidence. — **DONE
-      2026-08-07 (slot 12)**: all 3 venues checked with exact output — ASTER (`live_aster`), HYPERLIQUID
-      (`live_hyperliquid`), BINANCE-FUTURES (`live_binance`) all return **zero objects** at the cited
+      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md`. **Done when**: all 3
+      venues checked, dependent-doc checkboxes flipped or a new bug filed, with the exact `gcloud` output cited as
+      evidence. — **DONE 2026-08-07 (slot 12)**: all 3 venues checked with exact output — ASTER (`live_aster`),
+      HYPERLIQUID (`live_hyperliquid`), BINANCE-FUTURES (`live_binance`) all return **zero objects** at the cited
       `raw_tick_data/.../pipeline_mode=live_*` path for day=2026-07-30 + 08-05 + 08-06
       (`ERROR: ... matched no objects`), and zero `live_*` anywhere in the tick bucket (only `batch_*` modes). **Rows
       did NOT land → fresh investigation filed (not re-parked)**:
