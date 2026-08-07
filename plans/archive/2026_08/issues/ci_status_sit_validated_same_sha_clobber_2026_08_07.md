@@ -60,6 +60,9 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by cicd wall-resolution
+> (`agt-6f2b99`) as part of the `check_terminal_status_archived` ratchet fix.
+
 # ci_status_store same-sha SIT_VALIDATED clobber
 
 ## The bug

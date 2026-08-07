@@ -68,14 +68,14 @@ source: >-
       doc's `vm_name` against 50 currently-`RUNNING` GCE instances
       (`gcloud compute instances list     --filter=status=RUNNING`, project `central-element-323112`) — **zero
       overlap**. Criterion 1 genuinely fails (same root cause as
-      `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`: the Cloud
-      Run dual-write flag only governs deployment-api's own process, not the VM-side heartbeat writer); criteria 2+4
-      stay untestable as a direct consequence; criterion 3's read-path plumbing was already verified passing by slot-12
-      (not re-verified — a code-path check, not a live-fleet-state check). (2) Added a Progress Log entry to
-      `deployment_registry_firestore_p3_cutover_2026_07_14.md` explicitly re-confirming the HALT precondition is NOT met
-      — the GCS-write-drop / snapshot-then-delete todos stay correctly BLOCKED; did not touch its `assigned_vm`. (3)
-      **Grepped the parent's remaining `- [ ]` items: zero** — but did NOT run the archival ritual on the parent,
-      because a literal zero-checkbox count is not the same as "the parent is done": reading
+      `/plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`:
+      the Cloud Run dual-write flag only governs deployment-api's own process, not the VM-side heartbeat writer);
+      criteria 2+4 stay untestable as a direct consequence; criterion 3's read-path plumbing was already verified
+      passing by slot-12 (not re-verified — a code-path check, not a live-fleet-state check). (2) Added a Progress Log
+      entry to `deployment_registry_firestore_p3_cutover_2026_07_14.md` explicitly re-confirming the HALT precondition
+      is NOT met — the GCS-write-drop / snapshot-then-delete todos stay correctly BLOCKED; did not touch its
+      `assigned_vm`. (3) **Grepped the parent's remaining `- [ ]` items: zero** — but did NOT run the archival ritual on
+      the parent, because a literal zero-checkbox count is not the same as "the parent is done": reading
       `deployment_registry_firestore_p5_verify_2026_07_14.md` (its own todo 5 + 2026-07-14 Progress Log) shows P5
       explicitly RESERVES "mark the master `deployment_registry_firestore_migration_2026_07_14.md` complete — run the
       archival ritual on the whole phase-chain" as its OWN gated action, blocked on P3 finishing ("P5 stays

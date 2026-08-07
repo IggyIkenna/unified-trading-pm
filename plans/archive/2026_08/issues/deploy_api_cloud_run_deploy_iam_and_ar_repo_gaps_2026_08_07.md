@@ -39,7 +39,7 @@ scope: [engineer, admin]
 tags: [ci-cd, deploy-chain, iam, artifact-registry, cloud-run, alerting-service, latent-bug]
 related:
   [
-    /plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
+    /plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
   ]
 created: 2026-08-07
@@ -60,8 +60,14 @@ resolved_by:
   first to unblock the in-flight deploy"
 locked_by:
 locked_since:
-context_scope: [/plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md]
+context_scope: [/plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md]
 ---
+
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (status: resolved, both bugs fixed + live-verified, unlocked). The two follow-up
+> audit/hardening todos were migrated forward to
+> `/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md` before archival (per the
+> 6-step ritual step 1). Archived by cicd wall-resolution (`agt-6f2b99`) as part of the `check_terminal_status_archived`
+> ratchet fix.
 
 # deployment-api deploy_build: IAM + AR-repo-mapping gaps
 
@@ -83,19 +89,9 @@ directly — `{"status": "deploying", ...}`, no error. Confirmed via `gcloud run
 
 ## Still open
 
-- [ ] [INFRA] P2. `_AR_REPO_OVERRIDES` is a hand-maintained allowlist that silently produces a
-      wrong-but-plausible-looking path when a service is missing (no fast-fail) — audit the remaining ~20+ services NOT
-      in the override dict to confirm each one's actual AR repo matches its own service name (the assumption the
-      fallback makes), the same way this issue confirmed `alerting-service` didn't. A quick sweep: for each repo,
-      compare its own `cloudbuild.yaml`'s `_REGISTRY_REPO` substitution against what `_get_ar_repo_name()` would compute
-      — any mismatch is a repo that will hit this exact bug the first time something calls `deploy_build` for it.
-- [ ] [INFRA] P3. Consider a startup/health-check-time IAM capability probe for deployment-api (analogous to
-      `alerting_service/notifiers/pagerduty.py`'s `lru_cache`-wrapped capability probe fixed earlier in this same
-      deploy-chain chase) that verifies `run.developer`-class permissions on its own runtime SA and surfaces a clear
-      error/alert BEFORE the first real deploy attempt discovers it via a live 502 — this exact class of "IAM migration
-      silently drops a needed role" has now recurred at least twice in one day (see the sibling
-      `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` finding, same root shape: a
-      migration/extraction event drops something a downstream consumer needed, undetected until first real use).
+Migrated forward 2026-08-07 (at archival time) into
+`/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md` — see that doc for the two open
+follow-up todos ([INFRA] P2 `_AR_REPO_OVERRIDES` audit, [INFRA] P3 startup-time IAM capability probe).
 
 ## Progress Log
 

@@ -50,7 +50,7 @@ context_scope:
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/gcs-object-operations.md,
     /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
-    /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
+    /plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
     deployment-api/deployment_api/routes/deployments_inventory/_registry_io.py,
   ]
 ---
@@ -151,10 +151,11 @@ heartbeat
       "on the fleet" was never actually achieved by this deploy alone. Filed as its own scoped finding + fix-todos
       (root-caused, two fix options given, NOT a same-turn fix — 137+ launcher scripts, no single safe choke point):
       `unified-trading-pm@157be4812f4253585cbb96aa365e64fc7d1fad9b`,
-      `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`. **P3's
-      HALT stays correctly in force** — per this todo's own instruction, re-opened to a human/tracked follow-up rather
-      than proceeding to any GCS-write-drop/delete step. stays `draft` behind it. **If any of the 4 measured criteria
-      fails, re-open to a human** — do not proceed to P3's drop-GCS-write / snapshot-then-delete todos regardless.
+      `/plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`.
+      **P3's HALT stays correctly in force** — per this todo's own instruction, re-opened to a human/tracked follow-up
+      rather than proceeding to any GCS-write-drop/delete step. stays `draft` behind it. **If any of the 4 measured
+      criteria fails, re-open to a human** — do not proceed to P3's drop-GCS-write / snapshot-then-delete todos
+      regardless.
 
 ## Migration invariants (hold across every phase)
 
@@ -210,10 +211,10 @@ heartbeat
   pagination + `gcloud compute instances list`): criterion 1 FAILS (0/192 Firestore docs have `status=running`; zero
   overlap with the 16 live GCE VMs) because the Cloud Run flag only reaches deployment-api's own process, not the
   VM-side heartbeat writer (which reads GCE instance metadata that no real launcher sets). Filed
-  `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md` with root
-  cause + two fix options + follow-up todos (deliberately NOT fixed inline — touches 137+ VM launcher scripts, no safe
-  single choke point, needs its own scoped + soaked change). Todo flipped done with this honest FAIL result; P3's HALT
-  is unaffected and stays correctly in force.
+  `/plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md` with
+  root cause + two fix options + follow-up todos (deliberately NOT fixed inline — touches 137+ VM launcher scripts, no
+  safe single choke point, needs its own scoped + soaked change). Todo flipped done with this honest FAIL result; P3's
+  HALT is unaffected and stays correctly in force.
 - **2026-07-30 (slot 7, infra)** — Worked the gated
   `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md` twin: independently re-measured GO/NO-GO
   criterion 1 with fresh live data (193 Firestore docs, 0 `status=running`, 0 overlap with 50 currently-live GCE VMs —

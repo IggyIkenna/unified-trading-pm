@@ -16,7 +16,7 @@ summary: >-
   auto-retrigger did not fire. Manually triggered `gh workflow run full-workspace-sit.yml` (workflow_dispatch, run
   30266902462) as an unblock; this is a sanctioned, low-risk action (no destructive/mutating side effects, fleet-wide
   benefit) but should not be the standing recovery path.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -55,6 +55,13 @@ context_scope:
 assigned_vm: planning
 resolved_by:
 ---
+
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos `[x]`, unlocked; status flipped from `open` to `resolved`). Content
+> verified before archiving, not just checkbox count: this doc recurred through 4 distinct sub-mechanisms over 11 days
+> and carries a prior 2026-08-06 KEEP_OPEN banner — re-checked live `full-workspace-sit` runs on 2026-08-07 (9
+> consecutive successes since the last fix, `system-integration-tests@b3da771`, confirmed live on `main`), consistent
+> with the doc's own "EARLY CLOSURE" evidence. Archived by cicd wall-resolution (`agt-6f2b99`) as part of the
+> `check_archive_candidates` ratchet fix.
 
 # sit-gate/fleet-green auto-retrigger did not fire across 2 promoter ticks after a red SIT run
 

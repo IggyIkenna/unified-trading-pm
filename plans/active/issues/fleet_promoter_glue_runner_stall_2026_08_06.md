@@ -18,7 +18,7 @@ tags: [ci-cd, fleet-promoter, self-hosted-runners, ldr-to-main]
 related:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    /plans/archive/2026_08/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-06
@@ -36,7 +36,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
+    /plans/archive/2026_08/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md,
     .github/workflows/ldr-to-main-promote-fleet.yml,
     scripts/cicd/glue_runner_health_monitor.py,
   ]

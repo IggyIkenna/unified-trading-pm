@@ -83,7 +83,7 @@ tags:
     ldr_qg_failure,
     rollout-workflow-templates,
   ]
-related: [workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md]
+related: [/plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md]
 created: 2026-08-07
 last_updated: "2026-08-07"
 parent_epic: infrastructure_master

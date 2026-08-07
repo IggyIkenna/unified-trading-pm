@@ -72,12 +72,17 @@ context_scope:
   ]
 ---
 
+<<<<<<<< HEAD:plans/archive/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md
 > **🗄️ ARCHIVED 2026-08-07** (interactive session, same-session archival) — filed and fully resolved in-session (all
 > `## Todos` `[x]`, `status: resolved` already set, no `locked_by`); archived immediately per the 6-step ritual —
 > `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — rather than left for a later sweep to catch
 > (this doc was itself one of 5 live `check_terminal_status_archived.py` violations, contributing to the very
 > `quality-gates-v2` hard-failure a freshly-dispatched `ldr_qg_failure` escalation worker was about to have to diagnose
 > on unified-trading-pm's behalf).
+========
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by cicd wall-resolution
+> (`agt-6f2b99`) as part of the `check_terminal_status_archived` ratchet fix.
+>>>>>>>> e7259bdc8 (docs(plans): fix plan-hygiene ratchet regressions blocking quality-gates-v2):plans/archive/2026_08/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md
 
 # Escalation watchdog retune: try harder before giving up, page later, and stop leaving `unresolved` rows stuck forever
 

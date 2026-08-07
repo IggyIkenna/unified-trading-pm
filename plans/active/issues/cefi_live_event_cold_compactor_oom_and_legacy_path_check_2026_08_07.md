@@ -157,20 +157,27 @@ surface that actually exists (warm + cold event-log tiers).
 
 ## Todos
 
-- [x] ✅ [BACKEND] P1. Fix `live-event-log-compactor` OOM: raise the container memory above 512Mi (e.g. 2-4Gi — the
-      `(cefi, book_snapshot_5)` shard with ~1,497 warm parquet files OOMs at 512Mi) AND/OR make the compaction streaming
-      / chunked so a single shard never materializes the full warm set in memory; verify a full daily run completes
-      end-to-end (all 52 shards, no `Out-of-memory`/`signal 9`). (repo: deployment-service —
-      `terraform/gcp/live_event_log/` job spec + compactor source) — deployment-service@5e23a7b: Terraform resources
-      block raised to 4Gi/2CPU; compactor refactored to streaming PyArrow ParquetWriter (per-file row groups, never
-      materialises full warm set). QG green.
-- [x] ✅ [DATA] P1. After the fix ships and one clean daily run completes, re-run compaction for the missed dates
-      (2026-08-01 → 2026-08-06) to backfill
-      `live-events/cold/cefi/{trades,book_snapshot_5,liquidations,derivative_ticker}/date=*/data.parquet`; done-when =
-      cold parquet exists for each cefi data_type × each missed date. (repo: deployment-service) —
-      deployment-service@9e1ab49 (merged into 5e23a7b): CompactorConfig + COMPACTION_DATE env var + backfill trigger
-      script `scripts/jobs/run-compactor-date-range-backfill.sh`. BACKEND fix (todo-1) now shipped at 5e23a7b. Run
-      `bash scripts/jobs/run-compactor-date-range-backfill.sh` after next clean daily run to complete backfill.
+- [ ] [BACKEND] P0. **RE-OPENED 2026-08-07 (cicd wall-resolution agt-6f2b99) — code shipped but NEVER DEPLOYED, bug is
+      still live.** deployment-service@5e23a7b raised the Terraform `resources.limits` block to `memory=4Gi, cpu=2` and
+      refactored the compactor to a streaming PyArrow `ParquetWriter`, but
+      `gcloud run jobs describe     live-event-log-compactor --region=asia-northeast1` (checked 2026-08-07 ~11:50 UTC)
+      shows the LIVE job still runs `memory=512Mi, cpu=1000m` — the Terraform change was never actually `tofu apply`'d
+      against the real job. Confirmed still broken: the 2026-08-07T02:00:01Z scheduled run
+      (`live-event-log-compactor-xpkg5`) OOM-killed on the identical shard `(cefi, book_snapshot_5) date=2026-08-06`
+      (`"The configured memory limit was reached"` / `Container terminated on signal 9` at 02:05:26-27Z) — same failure
+      signature as every prior run since 2026-08-01. Fix: apply the already-written Terraform change to the live job
+      (`cd deployment-service/terraform/gcp/live_event_log && tofu apply`, or the repo's sanctioned deploy path), then
+      verify the NEXT scheduled 02:05 UTC run (or a manual `gcloud run jobs execute`) completes with 52/52 shards and no
+      OOM before re-closing this todo. (repo: deployment-service)
+- [ ] [DATA] P0. **RE-OPENED 2026-08-07 — backfill never ran; cold tier still empty.**
+      `gcloud storage ls     gs://central-element-323112-events/live-events/cold/cefi/book_snapshot_5/` and
+      `.../trades/` (checked 2026-08-07 ~11:50 UTC) both return zero objects — `live-events/cold/cefi/**` is still
+      completely empty for 2026-08-01through today. The backfill trigger script
+      (`scripts/jobs/run-compactor-date-range-backfill.sh`, deployment-service@9e1ab49) exists but was never executed —
+      the prior note ("Run ... after next clean daily run") was a deferred instruction, not a completion. Blocked on the
+      todo above (needs the OOM actually fixed live first, or the backfill run will just repeat the same OOM). Done
+      when: cold parquet genuinely exists for each cefi data_type × each missed date 2026-08-01→2026-08-07, verified via
+      `gcloud storage ls`, not just "script exists". (repo: deployment-service)
 - [x] ✅ [DATA] P2. Confirm + document that `raw_tick_data/by_date/.../pipeline_mode=live_*` (cefi) is a retired legacy
       surface (grep confirms no production reader consumes it — the active sink is `LiveEventFacadeSink`); update the
       ASTER gate wording in `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` and the check path in
@@ -203,3 +210,14 @@ surface that actually exists (warm + cold event-log tiers).
 - **context-scout 2026-08-07**: populated context_scope (5 entries).
 - **context-scout 2026-08-07 (batch11 independent re-verify)**: all 5 entries confirmed resolving on disk; content
   unchanged.
+- **2026-08-07 ~11:50 UTC (cicd wall-resolution `agt-6f2b99`)**: this doc surfaced as a `check_archive_candidates.sh`
+  candidate (0 open todos) while fixing an unrelated `unified-trading-pm` `quality-gates-v2` wall. Per the
+  archive-candidates content-verification rubric, read the doc in full and live-verified the two checked-but-critical
+  todos before archiving — both were FALSE-COMPLETE: (1) `gcloud run jobs describe live-event-log-compactor` shows the
+  live job still runs `memory=512Mi` (the Terraform 4Gi change was written but never `tofu apply`'d); (2) the
+  2026-08-07T02:00:01Z scheduled run OOM-killed on the identical shard 3 hours before this check, confirming the bug is
+  still live; (3) `gcloud storage ls .../live-events/cold/cefi/{book_snapshot_5,trades}/` both return zero objects — the
+  backfill never ran. Re-opened both todos as P0 with the live evidence above; doc stays in `plans/active/issues/`
+  (correctly, since real work remains) rather than being archived on a false checkbox count. Tagged `big-finding`
+  already present in frontmatter; flagging to the operator/main agent as part of this escalation's completion ping since
+  this is a genuine data-correctness gap, not a CI/CD-wall matter.

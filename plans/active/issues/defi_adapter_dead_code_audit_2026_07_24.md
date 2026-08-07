@@ -433,7 +433,7 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
 - [ ] [SERVICE] P2. market-tick-data-service: consolidate `onchain/helius_solana.py::HeliusSolanaAdapter` and
       `cli/handlers/native_staking_handler.py`'s hand-rolled Helius calls onto one implementation. **2026-08-07 note**:
       the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE — `helius-api-key` was approved + provisioned 2026-05-15
-      (confirmed live in `codex/05-infrastructure/credentials-matrix.md`); this is not credential-blocked, it is a pure
+      (confirmed live in `/codex/05-infrastructure/credentials-matrix.md`); this is not credential-blocked, it is a pure
       consolidation decision (which of the two implementations becomes canonical) pending final operator sign-off.
 - [x] [SERVICE] P3. market-tick-data-service: land the corrected `onchain/__init__.py` docstring quoted in § 2.2 once
       the shared checkout is clean. — DONE 2026-07-30 (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
@@ -518,7 +518,7 @@ files.
   scoped plan. (2) `onchain_event_poller.py` + `defi_live/{alchemy_adapter,thegraph_ws_adapter}` — wire in via
   `live/connectors/register_all()`, not delete. Also corrected: the Helius consolidation item's `BLOCKED-CREDENTIALS`
   framing (§2.2) is stale — `helius-api-key` was approved + provisioned 2026-05-15
-  (`codex/05-infrastructure/credentials-matrix.md`), so that item is a pure consolidation call, not credential-gated.
+  (`/codex/05-infrastructure/credentials-matrix.md`), so that item is a pure consolidation call, not credential-gated.
   Governance-params poller re-verify (item 2 of 4) remains unruled. **Doc stays `assigned_vm: NA`** — the two ruled
   items are now real scoped engineering work that needs its own plan (dispatch destination TBD), not something this
   issue doc itself executes.

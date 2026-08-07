@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [vm-launchers, setup-script, dispatch-gap, batch-live-recon, chaos-drill]
 related:
   [
-    /plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
+    /plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
     /plans/archive/issues/batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md,
   ]
 created: 2026-07-30

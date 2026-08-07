@@ -52,7 +52,7 @@ related:
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
     /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
     /plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md,
-    /plans/active/issues/deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07.md,
+    /plans/archive/2026_08/issues/deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07.md,
   ]
 created: 2026-08-06
 last_updated: "2026-08-06"
@@ -80,6 +80,9 @@ context_scope:
     /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by cicd wall-resolution
+> (`agt-6f2b99`) as part of the `check_terminal_status_archived` ratchet fix.
 
 # alerting-service deploy chain — three layered CI/CD bugs found chasing one stuck deploy
 

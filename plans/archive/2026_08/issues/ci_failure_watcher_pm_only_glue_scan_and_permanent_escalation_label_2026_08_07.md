@@ -63,6 +63,9 @@ locked_since:
 context_scope: [/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by cicd wall-resolution
+> (`agt-6f2b99`) as part of the `check_terminal_status_archived` ratchet fix.
+
 # ci_failure_watcher.py: PM-only glue scan + permanent escalation label
 
 ## Fix applied
