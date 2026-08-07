@@ -376,3 +376,7 @@ remaining items besides the over-cap-gated one above).
   ARBITRUM. Posting /blocked for operator-gated daemon relaunch dispatch decision. Checkbox remains open per this todo's
   own done-when until daemon is refreshed and purge VM completes. Evidence recorded in
   `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log.
+- **2026-08-07 (AO re-dispatch #3, `data_engineering`, slot 7)**: Daemon `vm-zombie-watchdog-20260805-125558` confirmed
+  STILL RUNNING with stale code (no [INFRA] P0 action since last dispatch). No new findings. Posting /blocked with
+  specific escalation path: create an `assigned_role: infra` dispatch plan to route the [INFRA] P0 daemon relaunch into
+  the AO backlog, since the issue doc's `assigned_vm: NA` keeps it out of the queue.

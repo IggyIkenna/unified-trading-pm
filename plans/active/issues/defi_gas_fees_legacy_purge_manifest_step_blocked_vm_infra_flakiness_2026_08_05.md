@@ -255,3 +255,7 @@ the highest-priority open question.
   spot-checked 0 for ETHEREUM + ARBITRUM at 2026-08-07T05:37Z (`gcloud storage ls` → "no objects found", consistent with
   earlier verifications). Did NOT relaunch the daemon or purge VM. Posting /blocked to determine dispatch path for the
   operator-gated `[INFRA] P0` daemon relaunch.
+- **AO re-dispatch 2026-08-07 (`data_engineering`, slot 7, third dispatch)**: Daemon confirmed STILL stale —
+  `vm-zombie-watchdog-20260805-125558` RUNNING (gcloud compute instances list). The `[INFRA] P0` remains in this doc
+  with `assigned_vm: NA`, so it is not being auto-dispatched. Posting /blocked with a concrete escalation path:
+  recommend operator create an `assigned_role: infra` dispatch plan to route the [INFRA] P0 into the AO backlog.
