@@ -97,10 +97,20 @@ run already covers them under different instrument routing), not a mechanical da
 
 ## Todos
 
-- [ ] [DIAG] P2. Determine whether any currently-active paper/strategy deployment (VM-based or otherwise) already trades
-      BINANCE-FUTURES, ASTER, or OKX-FUTURES instruments — read strategy-service's active instrument-universe config,
-      not just VM naming conventions (a differently-named VM or an in-process/Cloud-Run paper deployment could still
-      cover this). Repo: strategy-service.
+- [x] ✅ [DIAG] P2. Determine whether any currently-active paper/strategy deployment (VM-based or otherwise) already
+      trades BINANCE-FUTURES, ASTER, or OKX-FUTURES instruments — read strategy-service's active instrument-universe
+      config, not just VM naming conventions (a differently-named VM or an in-process/Cloud-Run paper deployment could
+      still cover this). Repo: strategy-service. **Finding (slot 15, 2026-08-07): NO.** The catalog DOES wire all 3
+      venues — `catalog_carry.py` `_CARRY_BASIS_PERP_VENUE_BUNDLES` (lines 212-235) and `_FUNDING_DISPERSION_VENUES`
+      (lines 395-409) both include BINANCE-FUTURES/OKX-FUTURES/ASTER, and both archetypes are in
+      `E2E_UNIVERSE_ARCHETYPES`. However, the only active paper-related Cloud Run job is `paper-signal-engine` (4660
+      executions, last ran 2026-08-07T05:15Z) — a signal-processing engine that does NOT call `run_paper()` and does NOT
+      write to `client_ledger_root()` (`gs://{client-reports}/ledger/client_id=.../run_id=.../` per
+      `unified_trading_library/ledger/run_writer.py:210`). The `paper-trading-engine` (the job that calls `run_paper()`
+      and writes the ledger) last ran 2026-06-21 and is currently inactive. Zero GCE paper/colocated VMs (confirmed
+      2026-07-31 by two independent workers). `DailyDeterminismHandler` therefore remains `skipped: no_run_configured`.
+      P1.2 is permanently unsatisfiable until an active `paper-trading-engine` run is configured. The `[DECISION] P2`
+      `[OPERATOR]` item below remains open and correctly `[OPERATOR]`-gated.
 - [ ] [DECISION] P2. If no such run exists: strategy-desk decision on whether/when to start a paper run trading these 3
       venues so `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s P1.2 todo becomes satisfiable.
       `[OPERATOR]` — genuinely outside a worker's mechanical authority.
@@ -129,3 +139,9 @@ run already covers them under different instrument routing), not a mechanical da
   gating `[OPERATOR]` strategy-desk call (whether/when to start a paper run) still holds, so the companion `[DIAG]` item
   stays whole-doc-NA (it only serves the gated decision). The `[DIAG]` item was independently drafted into
   `cefi_satellite_ao_dispatch_batch7_2026_08_03.md` (still draft).
+- **2026-08-07** (slot 15 · `cefi_satellite_ao_dispatch_batch7-002`): `[DIAG] P2` CLOSED — **finding: NO.** Strategy
+  catalog includes all 3 venues in `CARRY_BASIS_PERP` + `CARRY_FUNDING_DISPERSION` (both E2E archetypes,
+  `catalog_carry.py` lines 212-235 / 395-409), but the only active Cloud Run paper job is `paper-signal-engine`
+  (signal-only, no `run_paper()`/ledger write; 4660 executions, last ran 2026-08-07T05:15Z). `paper-trading-engine`
+  (ledger writer) inactive since 2026-06-21; zero GCE paper VMs. P1.2 ledger-pointer update NOT triggered (NO finding).
+  `[DECISION] P2` `[OPERATOR]` item unchanged and remains open.

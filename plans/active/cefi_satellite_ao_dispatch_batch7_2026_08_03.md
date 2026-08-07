@@ -134,8 +134,16 @@ context_scope:
       path (only `plans/archive/issues/` remains); `regenerate_active_plan_inventory.py` /
       `check_terminal_status_archived` report the active-tree path no longer present. Repo: unified-trading-pm.
 
-- [ ] [DIAG] P2. **Re-check whether any active paper run trades BINANCE-FUTURES/ASTER/OKX-FUTURES, now that the sibling
-      P1.2 time-gate has cleared.** Two prior passes (na-eligibility-audit 2026-08-01, batch6 2026-08-02) each
+- [x] ✅ [DIAG] P2. **DONE 2026-08-07 (slot 15): finding is NO.** Catalog DOES wire all 3 venues —
+      `_CARRY_BASIS_PERP_VENUE_BUNDLES` (lines 212-235, `catalog_carry.py`) and `_FUNDING_DISPERSION_VENUES` (lines
+      395-409) include BINANCE-FUTURES/OKX-FUTURES/ASTER; both archetypes are in `E2E_UNIVERSE_ARCHETYPES`. But the only
+      active paper Cloud Run job is `paper-signal-engine` (4660 executions, last ran 2026-08-07T05:15Z) — a
+      signal-processing engine that does NOT call `run_paper()` or write `client_ledger_root()`. The
+      `paper-trading-engine` (the ledger writer, `paper_run_handler.py:3315` → `run_writer.py:210`) last ran 2026-06-21
+      and is currently inactive; zero GCE paper VMs. `DailyDeterminismHandler` stays `skipped: no_run_configured`. P1.2
+      ledger-pointer update NOT triggered (NO, not YES). Source doc `[DIAG] P2` checkbox flipped in same commit.
+      Original task: **Re-check whether any active paper run trades BINANCE-FUTURES/ASTER/OKX-FUTURES, now that the
+      sibling P1.2 time-gate has cleared.** Two prior passes (na-eligibility-audit 2026-08-01, batch6 2026-08-02) each
       considered and explicitly declined splitting this off, reasoning the answer "only serves the gated DECISION" and
       has "no standalone value" — correct at the time. **Materially new fact since**: the sibling
       `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` P1.2 todo's own 24h time-gate (since the
@@ -230,3 +238,7 @@ batch1 through batch6 finalize pattern.
   codex SSOTs. No prior context-scout marker existed despite the frontmatter already carrying 3 entries.
   Dispatch-batch-coordinator shape, genuinely code-free — the sole remaining open todo (the DIAG paper-run re-check)
   already names its exact source files inline (`paper_universe.py`, `catalog_trading.py`).
+- **2026-08-07** (slot 15 · `cefi_satellite_ao_dispatch_batch7-002`): 3. ✅ [DIAG] P2 — **finding: NO.** Catalog wires
+  all 3 venues in both E2E archetypes (`catalog_carry.py:212-235` + `395-409`); active Cloud Run job is
+  `paper-signal-engine` (signal-only, no ledger write); `paper-trading-engine` inactive since 2026-06-21; zero GCE paper
+  VMs. P1.2 ledger-pointer update NOT triggered. Source doc `[DIAG] P2` flipped in same commit.
