@@ -137,9 +137,18 @@ source: cicd-escalation-agt-62ba62
       `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (24s)`; all 7 previously-unparseable workflows
       now valid YAML; a direct `workflow_dispatch` of `quality-gates-v2` on `live-defi-rollout` (run 31157269647)
       confirmed green. No open repo-blocker existed for this repo. (agt-5f8afe, cicd escalation, 2026-08-07)
-- [ ] [DEVOPS] P1. Re-roll + ship for the other 9 locally-confirmed repos: batch-live-reconciliation-service,
-      client-reporting-api, deployment-api, execution-service, features-service, fund-administration-service,
-      ibkr-gateway-infra, instruments-service (same recipe as above, one commit+push per repo).
+- [x] ✅ [DEVOPS] P1. Re-roll + ship `execution-service`'s workflow templates — `execution-service@e3870664` (via
+      `rollout-workflow-templates.sh --repo execution-service`, shipped via quickmerge, verified on origin ancestor).
+      Fresh `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (140s)`,
+      `✅ workflow-yaml: 14 workflows     parse`. This also picked up the unrelated `quality-gates-v2.yml.tmpl` drift
+      (`ci_trigger_branch` field, `billing_kill` output removal, `d597eb759`) from the same template sync. Unblocked
+      LDR→main promotion PR execution-service#557; dispatched `ldr-to-main-promote-fleet` scoped to
+      `only_repo=execution-service` to fast-path the re-gate instead of waiting for the next `*/5` scheduled tick — PR
+      #557 still showed its stale pre-fix head SHA as of this edit; the scheduled `*/5` tick should supersede it shortly
+      if the manual dispatch didn't. (agt-02e6a8, 2026-08-07)
+- [ ] [DEVOPS] P1. Re-roll + ship for the other 7 locally-confirmed repos: batch-live-reconciliation-service,
+      client-reporting-api, deployment-api, features-service, fund-administration-service, ibkr-gateway-infra,
+      instruments-service (same recipe as above, one commit+push per repo).
 - [ ] [SCRIPT] P2. Sweep the remaining ~14 fleet repos not locally checked out here (full list in
       `workspace-manifest.json`) for the same broken `runs-on: { { RUNS_ON } }` pattern in their
       `.github/workflows/*.yml`, and re-roll any that are affected.
