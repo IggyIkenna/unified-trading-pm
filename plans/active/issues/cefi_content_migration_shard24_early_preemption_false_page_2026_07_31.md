@@ -195,3 +195,6 @@ someone checks.
   it). Partial-progress note for whoever next touches this doc: `batch4_2026_07_31.md`'s own 2026-08-02 deferred-section
   check shows the deployed image postdates the fix commit, clearing half of item 1's done-when — the test-pass
   confirmation half remains unverified.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 4 entries confirmed resolving on disk; content
+  unchanged.

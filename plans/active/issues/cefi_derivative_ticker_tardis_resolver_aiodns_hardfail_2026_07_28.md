@@ -71,9 +71,8 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py,
     market-tick-data-service/market_tick_data_service/_http_resolver.py,
-    /plans/archive/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
-    deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,
   ]
 ---
 
@@ -611,6 +610,13 @@ and the residual-KeyError defense-in-depth path.
   `55d88025`: `git merge-base --is-ancestor 6a067cf1 55d88025` = true; `git merge-base --is-ancestor 6c6fab03 55d88025`
   = true. No code change this session (all fixes already shipped in prior sessions). Plan checkbox flipped; all todos
   now `[x]`.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) -- swapped the now-completed VM-cycle launcher +
+  zombie-watchdog precedent doc (that [INFRA] P1 todo is done and verified) for
+  `market_tick_data_service/adapters/hyperliquid_s3.py`, the actual file carrying root causes #2/#3 (>80% of the fresh
+  rows this doc fixed) and the sole still-open Follow-ups item (fetch_l2_book/book_snapshot_5 case-sensitivity
+  hypothesis) -- this file was missing from context_scope despite being the doc's primary source-code target.
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 5 entries confirmed resolving on disk; content
+  unchanged.
 
 ## Follow-ups
 

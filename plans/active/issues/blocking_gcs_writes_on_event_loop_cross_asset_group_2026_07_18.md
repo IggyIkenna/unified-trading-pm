@@ -38,12 +38,12 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
-    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
-    unified-trading-library/unified_trading_library/service_framework/_adapter.py,
-    /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    unified-trading-library/unified_trading_library/streaming/live_aggregator.py,
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
   ]
 ---
 
@@ -179,3 +179,7 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   functions" — websocket_runner.py::_record_empty_window + live_aggregator.py::_handle_zero_tick_window) listed in the
   doc's own "Open" section but with zero checkbox tracking it anywhere in the corpus — added a tracked todo below per
   the workspace's "every follow-up is a checkbox, never prose" rule.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — swapped out `_adapter.py` (now described in-doc as
+  already-shipped/tuning-question, not missing code) and the archived disk-starvation background doc (context already
+  summarized in this doc's own "Why" section) for `live/websocket_runner.py` and `streaming/live_aggregator.py`, the two
+  sync-function sites the new P3 todo (added 2026-08-06) names directly.

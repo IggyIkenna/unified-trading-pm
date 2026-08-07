@@ -53,11 +53,12 @@ resolved_by:
 locked_by:
 context_scope:
   [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /plans/active/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_compute_ops.py,
-    deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     deployment-service/scripts/vm/launch-cefi-forward-poll.sh,
-    unified-trading-library/unified_trading_library/cloud_interface/providers/gcp_compute.py,
   ]
 ---
 
@@ -208,3 +209,11 @@ exposed to this class before the veto shipped.
   would create a duplicate-dispatch surface once batch9 is approved. Item 167 is [OPERATOR]-gated by nature; item 181 is
   time-gated/opportunistic (also independently deferred by batch9's own cross-tranche review). Doc stays NA;
   batch9-finalize is the designated mechanism to flip the line-175 checkbox once batch9 ships.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries, was 5) -- the prior list was 100% source paths with
+  zero codex/plan pointers despite `related:` naming 4 relevant docs; added the two directly-relevant codex SSOTs
+  (data-pipeline-alerts, spot-vms-for-backfill) and the shard24 false-page doc (shares the exact `preemption_op_checker`
+  mechanism this doc's root cause implicates), dropping `setup-data-pipeline-vm.sh` and `gcp_compute.py` (lower
+  forward-relevance -- the former only matters for the not-blocking P3 follow-up, the latter's additive change is
+  already shipped and verified) to stay within the 6-entry cap.
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 6 entries confirmed resolving on disk; content
+  unchanged.

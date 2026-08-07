@@ -45,6 +45,7 @@ context_scope:
     market-tick-data-service/docs/canonical-write-conventions.md,
     market-tick-data-service/docs/GCS_PATHS.md,
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    market-tick-data-service/scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py,
   ]
 ---
 
@@ -193,3 +194,6 @@ workspace).
   misleading — 56% of shape-2 objects have unique/orphan data. Audit parquet written to
   `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet`. P1 checkbox flipped above; the
   "sample-based, not exhaustive" caveat is closed.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added the audit script
+  (`audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py`) now that both tracked todos are `[x]` and the remaining
+  substantive work is the operator-gated cleanup decision over the 490 confirmed-duplicate objects it classified.

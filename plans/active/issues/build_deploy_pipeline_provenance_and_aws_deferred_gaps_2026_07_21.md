@@ -54,8 +54,8 @@ resolved_by:
 context_scope:
   [
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
-    .github/workflows/freeze-deferred-build-replay.yml,
-    .github/workflows/cloud-build-router-aws.yml,
+    unified-trading-pm/.github/workflows/freeze-deferred-build-replay.yml,
+    unified-trading-pm/.github/workflows/cloud-build-router-aws.yml,
     deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh,
     deployment-service/scripts/vm/create-code-tarballs.sh,
   ]
@@ -174,3 +174,7 @@ RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator ruling Page-first, AWS-lane gated on credits
+
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — fixed the two `.github/workflows/*.yml` entries to
+  carry their real repo prefix (`unified-trading-pm/...`, not `deployment-service/...` — those workflow files actually
+  live in the PM repo; confirmed both are absent from `deployment-service/.github/workflows/`).

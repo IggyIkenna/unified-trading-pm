@@ -34,6 +34,13 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/.github/workflows/main-backmerge-to-ldr.yml,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/issues/main_backmerge_to_ldr_silent_failure_2026_08_02.md,
+    /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
+  ]
 ---
 
 ## Context
@@ -98,33 +105,33 @@ but ran low on context before finishing. This doc is the handoff.
       already-CLOSED PR — #813 is still OPEN. This is a new finding.
 
       **Evidence chain:**
-          1. #813: `mergeStateStatus=DIRTY`, `mergeable=CONFLICTING`, `updatedAt` frozen at creation
-             (`2026-08-06T13:07:19Z`) — now 24h+ stale. `gh run list --branch promote/agent-orchestrator/dd259b30ccc8`
-             returns **zero** runs of any workflow, ever — `quality-gates-v2` never triggered, not merely failed. The legacy
-             commits-status API shows only `sit-gate/fleet-green` and `semver-agent/label-check` posted (both success,
-             both at PR-open time) — `quality-gates-v2` and `quickmerge-provenance` (2 of the 3 real required gates per
-             codex) never ran at all.
-          2. `gh api repos/.../compare/main...live-defi-rollout` → main is **5 commits ahead of what LDR has merged**, i.e.
-             main has moved past the tree #813's promote branch was built from — this IS the conflict.
-          3. Root cause: PR #791 ("[backmerge] main → live-defi-rollout (CONFLICT — needs resolution)"), the
-             `main-backmerge-to-ldr.yml`-opened auto-backmerge PR, has been **OPEN since 2026-08-05T16:42:19Z with ZERO
-             comments and no further activity** — over a day unaddressed. Until main's divergent commits land back on LDR
-             via #791, every fresh LDR→main promote PR (like #813) will keep conflicting against main's newer state.
-          4. `gh run list --workflow main-backmerge-to-ldr.yml` shows its last run was the exact one that opened #791
-             (2026-08-05T16:41:56Z, `conclusion=success` — opening the conflict-PR + escalating IS its designed success
-             path, confirmed by the archived `main_backmerge_to_ldr_silent_failure_2026_08_02.md` fix). **Zero runs since**,
-             despite main moving 5 commits further ahead — strongly suggesting the workflow short-circuits (skip re-opening)
-             once a conflict PR already exists, so main's drift is silently accumulating, not retriggering new attempts.
-          5. **Not confirmed**: whether that 2026-08-05 run's `escalate-to-orchestrator` dispatch (which per the archived
-             doc's fix should spawn an opus conflict_resolver worker) actually fired for #791 specifically — #791 has 0
-             comments, which is consistent with either "dispatch never fired" (a possible regression) or "it fired,
-             dispatched, and the resolution is simply still queued/in-progress elsewhere." Whoever picks this up next
-             should check the backlog/activity log for a conflict_resolver task tied to PR #791 or SHA `main` before
-             resolving the conflict by hand.
+                  1. #813: `mergeStateStatus=DIRTY`, `mergeable=CONFLICTING`, `updatedAt` frozen at creation
+                     (`2026-08-06T13:07:19Z`) — now 24h+ stale. `gh run list --branch promote/agent-orchestrator/dd259b30ccc8`
+                     returns **zero** runs of any workflow, ever — `quality-gates-v2` never triggered, not merely failed. The legacy
+                     commits-status API shows only `sit-gate/fleet-green` and `semver-agent/label-check` posted (both success,
+                     both at PR-open time) — `quality-gates-v2` and `quickmerge-provenance` (2 of the 3 real required gates per
+                     codex) never ran at all.
+                  2. `gh api repos/.../compare/main...live-defi-rollout` → main is **5 commits ahead of what LDR has merged**, i.e.
+                     main has moved past the tree #813's promote branch was built from — this IS the conflict.
+                  3. Root cause: PR #791 ("[backmerge] main → live-defi-rollout (CONFLICT — needs resolution)"), the
+                     `main-backmerge-to-ldr.yml`-opened auto-backmerge PR, has been **OPEN since 2026-08-05T16:42:19Z with ZERO
+                     comments and no further activity** — over a day unaddressed. Until main's divergent commits land back on LDR
+                     via #791, every fresh LDR→main promote PR (like #813) will keep conflicting against main's newer state.
+                  4. `gh run list --workflow main-backmerge-to-ldr.yml` shows its last run was the exact one that opened #791
+                     (2026-08-05T16:41:56Z, `conclusion=success` — opening the conflict-PR + escalating IS its designed success
+                     path, confirmed by the archived `main_backmerge_to_ldr_silent_failure_2026_08_02.md` fix). **Zero runs since**,
+                     despite main moving 5 commits further ahead — strongly suggesting the workflow short-circuits (skip re-opening)
+                     once a conflict PR already exists, so main's drift is silently accumulating, not retriggering new attempts.
+                  5. **Not confirmed**: whether that 2026-08-05 run's `escalate-to-orchestrator` dispatch (which per the archived
+                     doc's fix should spawn an opus conflict_resolver worker) actually fired for #791 specifically — #791 has 0
+                     comments, which is consistent with either "dispatch never fired" (a possible regression) or "it fired,
+                     dispatched, and the resolution is simply still queued/in-progress elsewhere." Whoever picks this up next
+                     should check the backlog/activity log for a conflict_resolver task tied to PR #791 or SHA `main` before
+                     resolving the conflict by hand.
 
-          **Next step**: resolve PR #791's actual conflict (main↔LDR divergence) — this is real judgment-heavy conflict
-          work, not something to blind-fix here. Once #791 merges, close/re-verify whether #813 auto-clears or needs a
-          fresh promote PR. (repo: agent-orchestrator)
+                  **Next step**: resolve PR #791's actual conflict (main↔LDR divergence) — this is real judgment-heavy conflict
+                  work, not something to blind-fix here. Once #791 merges, close/re-verify whether #813 auto-clears or needs a
+                  fresh promote PR. (repo: agent-orchestrator)
 
 - [ ] [INFRA] P1. **Resolve PR #791 ("[backmerge] main → live-defi-rollout (CONFLICT — needs resolution)",
       agent-orchestrator) — open since 2026-08-06T16:42:19Z with zero comments, currently blocking every LDR→main
@@ -140,30 +147,30 @@ but ran low on context before finishing. This doc is the handoff.
       pre-2026-08-06 behavior.** There are two distinct mechanisms:
 
       1. **`[OPERATOR]`-gated task (the synthetic `BLK-op-<task_id>` sentinel, no worker ever dispatched to it)**:
-             created directly as backlog `TaskRow.status="blocked"` (`routes/backlog.py:658`,
-             `new_status = "blocked" if new_task.operator_gated else "queued"`) — it never passes through queued/dispatched
-             first. Answering it with a structured ruling does NOT flip that same row's status at all: `regen`'s
-             `_materialize_operator_ruling_tasks` (`regen_backlog_from_plan.py:2662`) creates a brand-NEW, independent
-             sibling task `<task_id>--ruling` on the next tick, `operator_gated=False` → fresh `status="queued"` — an
-             ordinary dispatchable task ANY available worker can claim. The original task's own row just sits `"blocked"`
-             until the worker's plan-doc edit removes its brief, at which point both tasks become ordinary orphans
-             together (`_is_live_ruling_task`). **Agent/slot respawn is a non-issue here by construction** — the new task
-             was never tied to any specific slot or agent_id in the first place.
-          2. **A live worker's own in-flight blocked question** (`authority="operator"` on a REAL dispatched task, a
-             genuinely different code path — `answer_blocked_endpoint`, not the ruling path): the TASK stays
-             `"dispatched"` the whole time; it's the **SLOT** that flips `status: "blocked" → "working"` on answer
-             (`routes/backlog.py` — `if slot is not None and slot.status == "blocked": slot.status = "working"`), and the
-             answer is delivered as a queued `SlotMessageRow` keyed by `slot_id`. **Respawn DOES matter here, and there was
-             a real, just-fixed bug in exactly this spot**: `365e18e` (2026-08-06T18:37, THIS SAME DAY —
-             `ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06`) — if the slot got force-reassigned
-             to a genuinely different task between the question and the answer, the old session-scoping (protects only a
-             respawn of the SAME dispatch) did nothing, so the answer could silently deliver into the wrong, unrelated
-             task. Fix (shipped, live): `SlotMessageRow` now carries an optional `task_id` stamped from
-             `BlockedRow.task_id` at enqueue time; `take_pending_messages` now requires the slot's CURRENT task to still
-             match before delivering, and **orphans** (never delivers, logs `blocked_message_orphaned_by_reassign`) a
-             message whose task no longer matches, instead of misdelivering it. `c290bc5`/`18444f5` (last_ping stamp +
-             tmux nudge) and `cc5961e` (authority-field wiring) are orthogonal reliability/plumbing fixes in the same
-             area, not additional status-transition changes. (repo: agent-orchestrator)
+                     created directly as backlog `TaskRow.status="blocked"` (`routes/backlog.py:658`,
+                     `new_status = "blocked" if new_task.operator_gated else "queued"`) — it never passes through queued/dispatched
+                     first. Answering it with a structured ruling does NOT flip that same row's status at all: `regen`'s
+                     `_materialize_operator_ruling_tasks` (`regen_backlog_from_plan.py:2662`) creates a brand-NEW, independent
+                     sibling task `<task_id>--ruling` on the next tick, `operator_gated=False` → fresh `status="queued"` — an
+                     ordinary dispatchable task ANY available worker can claim. The original task's own row just sits `"blocked"`
+                     until the worker's plan-doc edit removes its brief, at which point both tasks become ordinary orphans
+                     together (`_is_live_ruling_task`). **Agent/slot respawn is a non-issue here by construction** — the new task
+                     was never tied to any specific slot or agent_id in the first place.
+                  2. **A live worker's own in-flight blocked question** (`authority="operator"` on a REAL dispatched task, a
+                     genuinely different code path — `answer_blocked_endpoint`, not the ruling path): the TASK stays
+                     `"dispatched"` the whole time; it's the **SLOT** that flips `status: "blocked" → "working"` on answer
+                     (`routes/backlog.py` — `if slot is not None and slot.status == "blocked": slot.status = "working"`), and the
+                     answer is delivered as a queued `SlotMessageRow` keyed by `slot_id`. **Respawn DOES matter here, and there was
+                     a real, just-fixed bug in exactly this spot**: `365e18e` (2026-08-06T18:37, THIS SAME DAY —
+                     `ao_blocked_answer_message_cross_delivered_after_slot_reassign_2026_08_06`) — if the slot got force-reassigned
+                     to a genuinely different task between the question and the answer, the old session-scoping (protects only a
+                     respawn of the SAME dispatch) did nothing, so the answer could silently deliver into the wrong, unrelated
+                     task. Fix (shipped, live): `SlotMessageRow` now carries an optional `task_id` stamped from
+                     `BlockedRow.task_id` at enqueue time; `take_pending_messages` now requires the slot's CURRENT task to still
+                     match before delivering, and **orphans** (never delivers, logs `blocked_message_orphaned_by_reassign`) a
+                     message whose task no longer matches, instead of misdelivering it. `c290bc5`/`18444f5` (last_ping stamp +
+                     tmux nudge) and `cc5961e` (authority-field wiring) are orthogonal reliability/plumbing fixes in the same
+                     area, not additional status-transition changes. (repo: agent-orchestrator)
 
 ## Already executed by a concurrent session (no action needed — recorded so this doc doesn't re-trigger it)
 
@@ -196,3 +203,12 @@ but ran low on context before finishing. This doc is the handoff.
   question flips SLOT status and delivers via a `SlotMessageRow`, where respawn previously WAS a real bug — `365e18e`,
   shipped the same day, now scopes delivery to the message's stamped `task_id` and orphans a stale cross-task message
   instead of misdelivering it).
+- **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) — the doc's fleet-health investigations
+  are all closed; the sole remaining open item (`[INFRA] P1`, resolve PR #791) is pure cross-repo CI/backmerge-conflict
+  work, so the list covers the workflow whose behavior is central, the CI/CD SSOT, and the archived doc describing the
+  `escalate-to-orchestrator` dispatch mechanism this todo says to check first. **Step-4a fingerprint match, confirmed**:
+  `agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md` (same date, same repo) independently
+  investigates the SAME `agent-orchestrator` PR #813 and finds it is ALSO blocked by a dangling PM-workflow reference
+  AND a genuine unrelated 7-file code conflict vs `live-defi-rollout` — complementary root-cause info neither doc
+  currently cross-references (this doc attributes the stall to PR #791/backmerge never landing; that doc shows #813 has
+  independent blockers on top). Added here; the reverse direction is being added to that doc's own `context_scope` too.

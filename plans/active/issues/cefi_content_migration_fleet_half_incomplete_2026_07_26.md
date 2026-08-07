@@ -676,3 +676,6 @@ accordingly.
   actual migration script + launcher (this doc's own context_scope had zero source-code paths despite being the primary
   write-up of a code-driven fleet failure).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 5 entries confirmed resolving on disk (2 sibling
+  issue docs, the rb_infra_relaunch runbook, the migration script, the launcher); content unchanged.

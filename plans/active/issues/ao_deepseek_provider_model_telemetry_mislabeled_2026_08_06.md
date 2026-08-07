@@ -53,7 +53,7 @@ context_scope:
   [
     agent-orchestrator/server/accounts.py,
     agent-orchestrator/server/routes/slots_worker.py,
-    agent-orchestrator/data/config/accounts.json,
+    agent-orchestrator/scripts/orchestrator/context_history_report.py,
     /codex/06-coding-standards/model-tier-selection.md,
   ]
 ---
@@ -128,3 +128,10 @@ and nothing on the server side catches the mismatch.
   handler, stated unit-test done-when) plus two worker-determinable follow-on todos. No operator gate, no
   design/judgment call, no hard-rule veto. Conflict-check cleared (no overlapping claim in
   `parent_epic: orchestrator_master`).
+
+- **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries). Dropped
+  `agent-orchestrator/data/config/accounts.json` — real on the live deployed server but gitignored, so it never resolves
+  in a fresh repo checkout (only `data/config/accounts.mock.json` is committed); `server/accounts.py` already covers the
+  same `AccountDef`/provider schema this doc's finding depends on. Added
+  `agent-orchestrator/scripts/orchestrator/context_history_report.py`, the exact consumer the open `[DOC] P3` todo names
+  (`--group-by model`).

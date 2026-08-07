@@ -697,3 +697,7 @@ gates promotion to `main`, not the fix's correctness.
   `data/state/state.db` — a stale `state.db` at the repo root will mislead a check), `_drain_scheduled_jobs` wired at
   2/tick. Restart caused no collateral: 2 genuine reaped-stale after vs 11 in the equivalent 2h window before, and 14
   clean `/done` completions since.
+
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged — all still resolve and
+  still cover the doc's core mechanisms (slot-level stale-flip, reclaimer, reserve/batch config, cgroup fix, installer
+  pattern, related one_shot-lifecycle issue).

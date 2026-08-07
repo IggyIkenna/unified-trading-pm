@@ -286,3 +286,5 @@ forces an operator/main manual DB patch outside the normal flow.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.

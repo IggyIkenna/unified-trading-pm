@@ -54,6 +54,8 @@ context_scope:
     agent-orchestrator/server/worker_liveness/__init__.py,
     agent-orchestrator/server/worker_liveness/_auth_failover.py,
     agent-orchestrator/server/autospawn.py,
+    /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
 
@@ -130,3 +132,8 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
   active plan/batch claims `spawn_retry_count` or this `_tick_once()` reorder). Extracted the 2 bounded items (spawn-
   retry-count reset, `_tick_once` reorder + stale-docstring fix) into `ao_satellite_ao_dispatch_batch7_2026_08_06.md`
   todos 2-3; the 3rd item ("worth an operator decision") stays here, operator-gated, not batch material.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — added
+  `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md` (where 2 of this doc's 3 todos are actually extracted +
+  tracked for dispatch, per the entry directly above — essential so a future toucher doesn't duplicate that work) and
+  `/codex/05-infrastructure/vm-launcher-runbook.md` (the "heavy compute on shared host" SSOT the open `[DOC] P3`
+  operator question names directly).

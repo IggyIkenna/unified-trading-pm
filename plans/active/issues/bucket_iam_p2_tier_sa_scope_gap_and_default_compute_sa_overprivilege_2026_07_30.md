@@ -295,6 +295,8 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
   P2.1b caller this doc's P0/P3.1/P3.2 findings directly gate).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate — all todos now `[x]`
   done, minimal set stays correct pending archival.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — the new prose-only
+  "Follow-ups" item (30 remaining unwired launchers) is already covered by the existing `launcher_common.sh` entry.
 
 ## Follow-ups
 

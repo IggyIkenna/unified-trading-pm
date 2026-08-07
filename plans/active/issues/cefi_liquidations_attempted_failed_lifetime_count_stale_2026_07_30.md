@@ -229,3 +229,6 @@ not lost if the bound expires unanswered.
   follow-up is a bounded log-pull conditional on the same decision. Conflict-check cleared (no overlapping claim in
   `parent_epic: observability_master`). `assigned_role` was unset in this doc; filled `data_engineering` per the corpus
   convention for `data_pipeline_monitors`-touching docs.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 5 entries confirmed resolving on disk; content
+  unchanged.

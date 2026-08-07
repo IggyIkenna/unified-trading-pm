@@ -307,3 +307,6 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
 - **na-eligibility-audit 2026-08-06** (tranche=cefi, autonomous): KEEP-NA, valid — the citation banner above all 3 open
   items is already correct and current: bundled into `cefi_satellite_ao_dispatch_batch4_2026_07_31.md`'s legacy-bucket
   reconciliation todo, which remains `status: draft`. Revisit only if batch4 stalls without ever activating.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-07 (batch11 independent re-verify)**: all 6 entries confirmed resolving on disk; content
+  unchanged.

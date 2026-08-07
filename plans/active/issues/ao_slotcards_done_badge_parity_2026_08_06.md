@@ -33,7 +33,7 @@ superseded_by:
 resolved_by:
 source: ["deferred from ao_done_categorization_display_and_quickmerge_gate_2026_08_06.md Track C todo 1, same session"]
 drift_direction: advance-code
-context_scope: [agent-orchestrator/dashboard/src/layout.tsx]
+context_scope: [agent-orchestrator/dashboard/src/layout.tsx, agent-orchestrator/dashboard/src/activity.test.ts]
 ---
 
 ## Todos
@@ -57,3 +57,6 @@ view. Pick up opportunistically, not urgent.
   (`deepseek_claude_blended_provider_routing_2026_07_28.md`, agent-orchestrator@12ae7c2) — no active claim on this exact
   fix. Also corrected `assigned_role` from `frontend` (not a real role — no `agents/frontend.md`) to `ui_developer` (the
   live registry's TS/React dashboard role) and `execution_scope` to `orchestrator-agent` to match the `planning` flip.
+- **context-scout 2026-08-07**: populated context_scope (2 entries) — `layout.tsx` (where `DoneBadge`, `SlotCards`, and
+  `latestDoneOutcomeBySlot` all live) plus `activity.test.ts` (the file carrying `latestDoneOutcomeBySlot`'s existing
+  test coverage, the closest analog to the "existing SlotTable badge test" this doc's todo references).

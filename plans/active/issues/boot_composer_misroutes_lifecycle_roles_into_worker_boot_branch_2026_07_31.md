@@ -54,6 +54,7 @@ context_scope:
     agent-orchestrator/server/prompts.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/state_store/tasks.py,
     /agents/ag_closeout_auditor.md,
     /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
   ]
@@ -251,3 +252,7 @@ cefi-specific** — same defect now reproduced on a second tranche.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added
+  `agent-orchestrator/server/state_store/tasks.py`, the file `mark_done()` actually lives in (the still-open P1 `/done`
+  empty-`sha` fix's real target, confirmed by grep — not previously cited despite the doc's own Progress Log naming
+  `mark_done()` directly).

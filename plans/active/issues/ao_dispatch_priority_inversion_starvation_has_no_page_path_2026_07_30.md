@@ -73,10 +73,10 @@ archive_exempt: true # archival routed through ao_satellite_ao_dispatch_batch3_f
 locked_by:
 context_scope:
   [
-    /codex/04-architecture/agent-orchestrator-alerting.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
     agent-orchestrator/server/dispatch_priority_inversion_watchdog.py,
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
   ]
 ---
 
@@ -190,3 +190,9 @@ this, each time invisible until someone reads the backlog by hand.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) — swapped the generic
+  `agent-orchestrator-single-vm-architecture.md` codex pointer for
+  `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`, the doc that actually explains why this
+  0-open-todo, `archive_exempt: true` doc still exists (its `[REVIEW] P0` todo is the one that will eventually archive
+  it) — the single most decision-relevant pointer for a future toucher, still not previously in the list.
