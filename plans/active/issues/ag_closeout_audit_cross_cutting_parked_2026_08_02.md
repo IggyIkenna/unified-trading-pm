@@ -36,7 +36,7 @@ tags: [cross-cutting, ag-closeout-audit, asset-group-mistag, parked-findings, or
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
     /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

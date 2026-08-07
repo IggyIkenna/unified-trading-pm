@@ -789,11 +789,11 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md).
   **6 verdicted `orphaned_never_touched`** (genuinely cross-cutting, zero coverage in any of the 6 covering docs) —
   drafted
-  [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)
+  [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)
   (8 conflict-cleared todos across 5 of the 6 docs) +
-  [its finalize](/plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md), **both `status`
-  correctly split per the 2026-07-30 no-double-gate finding — batch3 stays `draft` pending operator approval, the
-  finalize ships `active` immediately** (`gate_on_depends` alone already holds it). The 6th orphaned doc,
+  [its finalize](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md), **both
+  `status` correctly split per the 2026-07-30 no-double-gate finding — batch3 stays `draft` pending operator approval,
+  the finalize ships `active` immediately** (`gate_on_depends` alone already holds it). The 6th orphaned doc,
   `issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`, is 100% operator-gated (a 3-way OrderStatus
   enum-contract decision) — parked in batch3's own Deferred section, not drafted. **Side note for future runs**:
   `check_ag_closeout_linkage.py`'s `closeout_family_for("cross-cutting")` only resolves the ONE main

@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends: true until all 8 todos are done. Reconciles each named source doc's checkboxes independently, then
   re-checks batch 3's own Deferred items (2 operator-gated, 1 time-gated) for whether the gating ground has cleared, and
   archives the batch via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -40,7 +40,7 @@ depends_on: [cross_cutting_satellite_ao_dispatch_batch3_2026_08_01]
 gate_on_depends: true
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -53,13 +53,9 @@ source: >-
 
 # Cross-cutting satellite AO batch 3 — finalize
 
-> **Machine-gated on
-> [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)**
-> (`depends_on` + `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 8 of that plan's
-> todos are `done`. This plan itself ships `status: active` (not `draft`) per the 2026-07-30 no-double-gate finding —
-> `gate_on_depends` alone already covers both an active AND a still-draft upstream batch, so a second `status: draft`
-> rail here would just be a redundant manual flip nobody reliably remembers. `sequential: true` because todo 2 needs
-> todo 1's reconciliation finished, and todo 3 (archival) must run last.
+> **ARCHIVED (2026-08-07) — all 3 todos done.** Todo 1: source-doc checkboxes reconciled (2026-08-07, slot 10). Todo 2:
+> deferred items re-checked — 2 routed to batch 4, 1 still gated (2026-08-07, slot 13). Todo 3: archival ritual executed
+> — both docs moved to `plans/archive/2026_08/` (2026-08-07, slot 9).
 
 ## Todos
 

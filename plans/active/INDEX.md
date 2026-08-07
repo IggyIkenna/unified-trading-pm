@@ -527,13 +527,6 @@ by hand._
   — Second half of the cross-cutting tranche's first AO-dispatch batch — see
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` for the full Phase-1/Phase-3 audit summary, the Deferred
   conflict-gated/operator-gated/time-gated sections…
-- [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01`](./cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)
-  — Third AO-dispatch batch for the cross-cutting tranche, produced by re-invoking `/ag-closeout-audit cross-cutting`
-  (autonomous, scheduled `ag_closeout_auditor` dispatch `agt-a5c7d6`, slot 13). Phase 0 used…
-- [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize`](./cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md)
-  — Gated closeout for cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md — machine-held via depends_on +
-  gate_on_depends: true until all 8 todos are done. Reconciles each named source doc's checkboxes independently, then
-  re-checks batch…
 - [`cross_cutting_strategy_execution_determinism_2026_07_26`](./cross_cutting_strategy_execution_determinism_2026_07_26.md)
   — Extracted 2026-07-26 from `cross_cutting_consolidated_closeout_2026_07_25.md` Track 24 (resolved
   `autonomous_session_operator_decisions_2026_07_25.md` entry #19) — a genuinely different angle from that doc's other
