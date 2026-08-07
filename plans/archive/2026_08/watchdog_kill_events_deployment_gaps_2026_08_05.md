@@ -15,7 +15,7 @@ summary: >-
   still silently skips the deployment-api POST and real kills only reach AO; (2) the deployment-ui kill-events panel is
   a per-VM expandable row gated on /api/vm-resources/rolling, and the AO host (ip-172-31-5-118) has zero
   resource_samples rows, so its kill panel is not reachable through the UI.
-status: open
+status: archived
 nature: issue
 asset_group: [cross-cutting, meta]
 stage: [data]
