@@ -184,6 +184,28 @@ FOUR TIMES in one session, currently-live hazard regardless of whether it explai
       the existing (but non-covering) autostash-pop guidance, clearly distinguishing the two failure modes:
       mis-attribution (resolved 2026-08-02) vs. content loss (this doc).
 
+## Corroborating reproduction — safe-doc-push.sh's own false-success path (2026-08-07, na-eligibility-audit run)
+
+A separate `/na-eligibility-audit` run (~15 parallel sub-agents, same session type as this doc's own origin) hit a
+distinct, more specific instance of this same root cause: `safe-doc-push.sh`'s "nothing staged for the named files --
+checking if content already matches HEAD" branch (script lines ~186-192) reported
+`✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success` and exited 0,
+while **zero of the 12 target files' markers had actually been committed** (independently verified against the pushed
+tree). Mechanism: a `git pull --rebase --autostash` step's rebase succeeded but its autostash pop did not complete,
+leaving the caller's edits parked in an un-popped `stash@{0}` instead of restored to the working tree — so `git add`
+staged nothing, and the subsequent `git diff --quiet` (working tree vs. index, not vs. origin) was ALSO clean,
+satisfying the script's "already matches HEAD" heuristic on a false premise. This is worse than plain content loss (the
+earlier reproductions above) because the caller gets an explicit, confident SUCCESS message instead of silence — nothing
+prompts a verification check. At least 3 more of the ~15 sub-agents in that same run independently hit variants of this
+(some recovered via `git stash` inspection, most via an isolated `git worktree` once they gave up fighting the shared
+index). Directly implements candidate mitigation (c) above (an explicit `git stash list` sanity check after every
+autostash pop) as the concrete fix for `safe-doc-push.sh` specifically: compare stash count/top-entry before vs. after
+the pull; a remaining entry means the pop did not complete, so retry the pop or hard-fail (`exit 3`) rather than falling
+through to the "already matches HEAD" branch. Also reinforces mitigation (b) (commit-immediately-after-edit) as the most
+reliable practical mitigation available today — every successful recovery in that run either committed within one
+uninterrupted edit→add→commit sequence or fell back to an isolated worktree, which structurally removes the shared-index
+race entirely.
+
 ## Why this wasn't chased further this session
 
 Confirming the exact git-internals mechanism (why does an unrelated-path rebase disturb an uncommitted edit at all —
