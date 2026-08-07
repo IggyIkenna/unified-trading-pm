@@ -171,15 +171,20 @@ rather than re-launching (and re-spending) the same VMs a third time. For DEFI s
 protocol-appropriate cell (`--venue UNISWAP_V2-ETHEREUM --data-types dex_pool_swaps`) to at least get one real DEFI cell
 proven this run.
 
-## Suggested follow-up (not attempted this run — needs VM-level access this sandboxed session doesn't have)
+## Follow-up todos
 
-- Reproduce with `strace -f`/`py-spy dump` attached to the process, or run under `setsid` in a fully detached session
-  (rules out a controlling-terminal/session-group signal propagation) to capture the actual signal number instead of
-  inferring "silent death = SIGKILL-shaped."
-- Check whether this host has a systemd `user@.service`/`loginctl` `KillUserProcesses`/idle-session-reaper policy that
-  might tear down a user's whole cgroup slice after some minutes of... (needs root — I don't have it here). the calling
-  shell/session going quiet, independent of nohup/disown (both only protect against SIGHUP, not a cgroup-wide signal
-  sweep) — this session's own background watchdog (a plain `while` loop) survived the same window unaffected, which
-  argues against a whole-session teardown and toward a NAME/PATTERN-targeted kill instead, but is not conclusive.
-- If a cross-slot `pkill` is confirmed as the mechanism: get `install-pkill-guard-shell-env.sh` running host-wide (every
-  slot's shell init, not opt-in per-session) so the guard actually protects against the failure mode it was built for.
+- [ ] [INFRA] P1. **Reproduce with strace/py-spy to capture the actual kill signal** — run `pipeline_e2e_check.py` under
+      `strace -f` or with `py-spy dump` attached, or under `setsid` in a fully detached session (rules out
+      controlling-terminal/session-group signal propagation), to capture the actual signal number instead of inferring
+      "silent death = SIGKILL-shaped" — confirmed 3/3 reproducible at ~300-330s wall-clock offset across two different
+      code paths (force+skip AND live legs), so a targeted reproduction is feasible. Needs VM-level/sudo access this
+      sandboxed session didn't have.
+- [ ] [INFRA] P1. **Check for systemd/loginctl idle-session cgroup reaper policy** — verify whether this host has a
+      `user@.service`/`loginctl` `KillUserProcesses`/idle-session-reaper that tears down a user's cgroup slice after the
+      calling shell goes quiet for some minutes (needs root, not available in the sandboxed session that found this).
+      The originating session's own background watchdog (a plain `while` loop) survived the same window unaffected,
+      which argues against whole-session teardown and toward a name/pattern-targeted kill.
+- [ ] [INFRA] P1. **If cross-slot pkill confirmed: install `install-pkill-guard-shell-env.sh` host-wide** — wire it into
+      every slot's shell init (not opt-in per-session) so the guard (`/codex/05-infrastructure/per-tab-worktrees.md` §
+      "pkill/pgrep cross-slot-kill guard") actually protects against the failure mode it was built for. Currently the
+      guard was NOT active in the session that found this issue (`type pkill` resolved to raw `/usr/bin/pkill`).
