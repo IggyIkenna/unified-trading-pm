@@ -845,3 +845,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   from its own `PROGRESS.json` checkpoint at `2023-11-19` per the existing Todos section — confirming next tick). Note:
   this doc's own AO-parked condition (`auto_unpark__sports_af_full_entity_completion-003`) only blocks AO's own
   task-offering, not a direct manual VM launch, so no unpark action was needed to proceed.
+- **2026-08-07T16:19Z** — **FIXTURE_STATS confirmed launched and RUNNING**: `af-backfill-20260807-161736` (auto-
+  republished 2 stale tarballs — instruments-service, deployment-service — before create, then succeeded). Will confirm
+  actual date-progress + resume-from-checkpoint behavior next tick.
