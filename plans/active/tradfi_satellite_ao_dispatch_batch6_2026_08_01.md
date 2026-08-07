@@ -601,6 +601,23 @@ Trend: 30 (12:13Z) → 27 → 26 → 24 → 21 (killed) → 20 (re-arm poll). Dr
   `run_in_background:true`, NO `&` inside. (4) Check `bksv7kopi.output` — if heartbeat dead, re-arm
   `watcher/heartbeat.sh` same way.
 
+### 2026-08-07T13:15Z — slot 5, session 12 cont — repeated harness kills; re-armed third time
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Harness killing tasks every ~25-46 min (pattern: bprxba91n killed at 12:44Z →
+bfinzvap4 killed at ~13:14Z → bcrfqbh96 armed 13:15Z).** Fleet at bfinzvap4 poll 1 (12:48Z): **20 VMs**. Fleet at
+bfinzvap4 poll 6/kill (13:13Z): **12 VMs**. Direct check (13:15Z): **12 VMs**. Third re-arm: watcher=**`bcrfqbh96`**,
+heartbeat=**`bakt5sekk`**.
+
+Trend: 30→27→26→24→21→20→18→15→14→12. Steady drain ~2/poll (~10 VMs/25 min). **Pattern**: harness kills
+`run_in_background:true` tasks every 25-46 min (context compaction trigger suspected). Re-arm reactively on each kill
+notification. Watcher is idempotent — resumes from live fleet state on each re-arm.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bcrfqbh96.output`
+  (TaskOutput non-blocking). (3) If watcher dead: re-arm `watcher/es_opt_watcher_slot5.sh` with
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way. **Harness will
+  likely kill again — always re-arm on notification; never let watcher stay dead >5 min** (risk: fleet clears mid-kill,
+  watcher misses launch window and ES_OPT never gets dispatched).
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
