@@ -79,7 +79,7 @@ context_scope:
       deliberately-excluded residual item: the VM-run half, items 1/3/4, Stage 1/2, [none for mtds_docker if both jobs
       resolve — check freshly], and the P1 convention-decision items respectively). **Done when**: every landed todo's
       source checkbox is flipped with a verified commit, and each source doc's remaining-open count is explicitly
-      re-stated rather than assumed. — **unified-trading-pm@<sha> 2026-08-07.** Per-doc reconciliation (all commits
+      re-stated rather than assumed. — **unified-trading-pm@f6f96e7b1 2026-08-07.** Per-doc reconciliation (all commits
       verified on origin/live-defi-rollout): (1) `cefi_ml_directional_continuous_live_2026_06_20.md`: updated
       `[VERIFY]     P0` sub-note — step (1) script extension marked done via strategy-service@dff5b2c0; `[VERIFY] P0`
       checkbox NOT flipped (VM-run steps 2-3 still pending). Remaining open: 3 items ([AGENT] P0 7-day cutover, [VERIFY]
