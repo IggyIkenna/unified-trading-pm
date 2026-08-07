@@ -468,6 +468,27 @@ updates to server every 3rd poll. When count==0: launches ES_OPT → verifies �
 manifest → runs count query → updates both plan files → commits + pushes → calls `/done`. Log at:
 `…/8e0e0b20-3e7a-42f5-a2dd-ef603f9b296e/scratchpad/es_opt_watcher.log`.
 
+### 2026-08-07T~06:14Z — slot 11, session 6 — watcher re-armed (run_in_background: true, per RULES.md)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Watcher PID 2367038 (session 5, setsid) DEAD at boot check.** Fleet at
+session-6 boot: **33 VMs** — new NASDAQ/NYSE 2023-2025 + CME wave launched ~06:00Z; lock held continuously per the
+operator-approved keep-waiting decision.
+
+**Root-cause diagnosis (sessions 3–5):** All three watcher approaches (harness task / nohup+& / setsid) died mid-sleep
+with zero FATAL log entries. Working hypothesis: the harness sandbox kills by process group on tracked-task teardown
+when the launching tool-call wrapper exits; `setsid` creates a new PGID but the sandbox may also send SIGKILL via PID
+directly (not just PGID) to children of exited tracked tasks. Confirmed solution: **use `run_in_background: true`** per
+RULES.md HARD RULE ("the harness's own backgrounding keeps the process correctly parented … and its exit is the tracked
+wake") — this registers the background job with the harness as an OWNED task, not an orphan-reapable process.
+
+**Session 6 re-arm: `run_in_background: true` (Bash tool, no `nohup`/`&` wrapper).** Watcher script:
+`deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (committed `deployment-service@cab7f2d`). Scratchpad:
+`/home/ubuntu/.claude-configs/orch-slot-11/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-11/de9e9cdd-eaf0-4210-a43e-575c4fe333fd/scratchpad`.
+
+- **NEXT ACTION (fresh session):** Check todo #2 checkbox first (watcher may have completed autonomously). If still
+  `[ ]`, check `kill -0 <watcher-pid>` from the run_in_background harness tracking. If dead, re-arm again with
+  `run_in_background: true` from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
