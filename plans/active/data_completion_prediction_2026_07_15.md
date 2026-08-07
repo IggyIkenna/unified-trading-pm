@@ -436,3 +436,6 @@ range never overlaps a still-in-flight per-market-only day).
   respectively) that never had their checkbox flipped here. 21 open todos -> 19, no tracked work dropped.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (5 entries) -- M-1 coordinator, 3
   pipeline/bucket/manifest codex SSOTs, and `rebuild_prediction_manifest.py` remain accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 19 open items, matches the 2026-08-06 count; consistent with 3
+  prior audit passes and 4-5 `/ag-closeout-audit` "0 AO-eligible" rulings on the Phase-B CQG-bundle migration. No change
+  in substance.
