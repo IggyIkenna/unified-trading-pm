@@ -17,7 +17,7 @@ summary: >-
   backlog) and ~25,745 prediction objects (sampled canonical_question_group= prefixes all stop ~2026-07-17..22, i.e.
   appears HISTORICAL-ONLY, superseded around the same time as the 2026-07-21 writer fix — needs confirmation, not
   assumed).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, prediction]
 stage: [data]
@@ -73,6 +73,10 @@ source:
 depends_on: []
 sequential: true
 ---
+
+> **ARCHIVED 2026-08-07** — sports `league=` + prediction `canonical_question_group=` writer fixes shipped + confirmed,
+> both historical corpora migrated (172,348 + 13,280 objects copied, GCS-verified), all content_mismatch pairs resolved.
+> Original path: `plans/active/issues/instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md`.
 
 # instrument_availability carries two more non-compliant partition shapes (2026-08-03)
 

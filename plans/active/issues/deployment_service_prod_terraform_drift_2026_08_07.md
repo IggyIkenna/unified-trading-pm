@@ -16,7 +16,7 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [terraform, opentofu, prod, drift, cloud-run, iam, operator-review]
-related: [/plans/active/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md]
+related: [/plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md]
 created: 2026-08-07
 author: slot-3
 parent_epic: infrastructure_master
@@ -45,8 +45,8 @@ depends_on: []
 Slot-11 (2026-08-06) ran a TARGETED `tofu apply` against the `lst-rates` scheduler description only to avoid
 inadvertently applying the large unrelated pending drift in the prod terraform state
 (`deployment-service/terraform/gcp`, backend `terraform/state/prod`). That drift was filed as a P2 tracking todo in
-`/plans/active/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`. This issue doc files the full plan for
-operator review and gates the full apply on human sign-off.
+`/plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`. This issue doc files the full plan
+for operator review and gates the full apply on human sign-off.
 
 **Current state (re-run 2026-08-07, `ENV=prod bash tofu.sh plan`):** `Plan: 36 to add, 18 to change, 3 to destroy.`
 (Grew from the 26/17/2 slot-11 observed — additional IaC merges landed on LDR since then without prod apply.)

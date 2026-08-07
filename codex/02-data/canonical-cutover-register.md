@@ -417,7 +417,7 @@ the residual 12,463 is a THIRD, even older prediction shape (`day=/market=/venue
 `canonical_question_group` scheme, needs an operator ruling before it can be migrated, not a mechanical rename). Full
 writeup + todos (writer fix, target-shape ruling, tool extension, content_mismatch resolution policy, the residual
 `market=` shape):
-[`../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md).
+[`../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md).
 
 Full detail:
 [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)

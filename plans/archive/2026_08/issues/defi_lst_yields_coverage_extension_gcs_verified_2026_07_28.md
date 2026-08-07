@@ -19,7 +19,7 @@ summary: >-
   accepts an arbitrary `--start-date`/`--end-date` range and was evidently only ever invoked for this one 15-day window.
   Proposes the concrete backfill scope (owning repo, date range, mechanism) per its own `[DATA]` follow-up todo below;
   does NOT implement the backfill.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -61,6 +61,10 @@ context_scope:
     /codex/02-data/pipeline-mode-partition.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-07** — backfill confirm-to-completion GCS-verified: 1,815/1,815 computable lst_yields
+> day-partitions written (2021-08-17..2026-08-05), including the 4-day upstream-gap residual closed 2026-08-07. Original
+> path: `plans/active/issues/defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md`.
 
 # `lst_yields` coverage-extension follow-up — GCS-verified date ranges + proposed backfill scope
 
@@ -283,3 +287,8 @@ structural limitation.
 > **2026-08-06 archive-candidate audit**: Single [x] [DATA] P1 todo claims DONE but its own body says the backfill
 > stalled and only the RESUME was LAUNCHED for the ~980 missing days — completion of that range was never verified.
 > Prose-only in-flight work under a checked box; the original 'confirm-to-completion' done-when is not met.
+>
+> **2026-08-07 archive-candidates-audit (superseded)**: the 2026-08-06 finding is now stale — slot-14 (2026-08-06)
+> confirm-to-completion re-verified against real GCS listings (1,811/1,815 day-partitions) and slot-8 (2026-08-07)
+> closed the final 4-day upstream-gap residual (1,815/1,815). Both Follow-ups items above carry GCS-verified evidence,
+> not prose-only claims. Re-verdicted ARCHIVE.

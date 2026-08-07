@@ -76,7 +76,7 @@ recovery exists.
 
 ### Path 1 — Self-service IAM grant (preferred)
 
-Per `codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`:
+Per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`:
 
 ```bash
 # AWS: grant AssumeRoleWithWebIdentity on the reader role to the GCP SA's OIDC identity
@@ -148,7 +148,7 @@ File write-up within 24h for any HIGH true-positive:
 ## Cross-references
 
 - **AlertCode taxonomy:** [`alert-code-taxonomy.md`](./alert-code-taxonomy.md).
-- **Self-service IAM grants:** `codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
+- **Self-service IAM grants:** `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
 - **Operator playbook:** [`operator-playbook.md`](./operator-playbook.md).
 - **Implementing plan:** `/plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md`.
 - **UAC SSOT:** `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/`.

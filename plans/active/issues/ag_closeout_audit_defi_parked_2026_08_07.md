@@ -34,10 +34,10 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
     /plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md,
     /plans/active/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md,
-    /plans/active/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
     /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

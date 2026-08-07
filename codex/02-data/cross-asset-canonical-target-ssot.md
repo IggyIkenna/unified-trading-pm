@@ -414,7 +414,7 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   (todos 1-8, all closed) for the full cutover history.
 
   > **sports exception — `league=` is a legitimate trailing key (RULED 2026-08-03, operator ruling on todo 1 of
-  > [`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)).**
+  > [`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)).**
   > Sports's `instrument_availability` grain is per (day, pipeline_mode, asset_group, venue, **league**), not just (day,
   > pipeline_mode, asset_group, venue) — the operator ruled option (a) of that doc's todo 1: keep the per-league split
   > (no writer grain rollup) and add `league=` to the canonical key set as an additional TRAILING key, appended
@@ -543,7 +543,7 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
 ### 11c. Operator decisions log — 2026-08-03
 
 - **`league=` is a legitimate trailing key in sports's `instrument_availability` hive template.** Ruled on todo 1 of
-  [`../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/active/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)
+  [`../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md)
   — operator chose option (a) (add `league=` to the canonical key set) over option (b) (roll the sports writer up to
   drop the per-league split). Full statement + rationale: §8's sports-exception banner above. `migration_pending` — the
   sports writer still needs the shape fix + the migration tool needs a `league=`-aware shape extension (todo 2 of the

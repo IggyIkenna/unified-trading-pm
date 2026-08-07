@@ -75,6 +75,16 @@ of load or a single additional offline runner triggers a complete stall.
       manually kick off a promotion tick when the schedule is stuck (already exists — confirmed at line 53 of
       .github/workflows/ldr-to-main-promote-fleet.yml with dry_run + only_repo inputs; no code change needed).
 
+## Follow-ups
+
+- [ ] [INFRA] P1. **Live recurrence signal (2026-08-07, slots 2 + archive-candidates-audit):** the glue runner pool has
+      been observed at genuinely 0 registered runners twice on 2026-08-07 (13:34-13:38 UTC per slot 2's finding, and
+      re-confirmed via `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` returning `{"total_count": 0}` again
+      during this archive sweep) — worse than the original 08-06 incident's 25% pool and the 08-07 morning 100%-online
+      check. Determine whether this is the same JIT-restart-window false-positive class the 08-07 morning investigation
+      ruled out, or a genuine new pool-depletion/deregistration event; if genuine, escalate per the runner-health
+      monitor shipped in this doc's first todo (repo: unified-trading-pm).
+
 ## Codex SSOTs
 
 - `/codex/08-workflows/ci-cd-flow.md` — promoter gate set
@@ -108,3 +118,9 @@ of load or a single additional offline runner triggers a complete stall.
   already have the runbook). Impact: blocks LDR→main promotion fleet-wide, which in turn is delaying live-fire
   verification of 15 repos' semver-agent fix. Flagging as a live recurrence — worth a fresh look at whether this is the
   same JIT-restart-window false-positive class or a genuine new pool-depletion event.
+- **archive-candidates-audit 2026-08-07 (slot 3, cicd)**: KEEP_OPEN — re-checked
+  `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` while classifying this doc for the archive sweep: still
+  `{"total_count": 0}`, corroborating slot 2's same-day finding rather than a one-off blip. Out of scope for this
+  escalation to investigate further (unrelated to the QG wall dispatched here — the failing quality-gates-v2 slice runs
+  on GitHub-hosted runners, not `glue`). Synthesized a tracked Follow-up todo above; doc stays open pending that
+  investigation.

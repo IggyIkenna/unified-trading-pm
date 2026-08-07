@@ -21,7 +21,7 @@ summary:
   memory-profiling pass in market-tick-data-service — both outside this dispatch's assigned repo scope
   (market-tick-data-service / unified-api-contracts / unified-trading-pm / unified-trading-library only;
   deployment-service was read-only for this investigation).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -65,6 +65,10 @@ context_scope:
     /plans/active/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-07** — OOM fixed (2Gi→4Gi, later 8Gi/2CPU for backfill), root cause confirmed (compressed
+> availability-index full download), total-data-loss window backfilled + GCS-verified, terraform drift documented in a
+> separate follow-up doc. Original path: `plans/active/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`.
 
 # `uts-prod-mtds-collect-lst-rates` OOM-failing every run since 2026-08-02
 

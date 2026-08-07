@@ -49,7 +49,7 @@ context_scope:
     features-service/features_service/onchain/app/core/dependency_checker.py,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     deployment-service/deployment_service/data_pipeline_monitors/attempted_failed_staleness.py,
-    /plans/active/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 ---
