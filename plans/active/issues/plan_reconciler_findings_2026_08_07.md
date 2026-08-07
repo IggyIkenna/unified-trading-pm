@@ -77,6 +77,207 @@ resolved_by:
 - IA4 [P3, GRACE] `ao_fleet_health…:5-9` summary "shipped 4 fixes directly" vs PL `:177-179` "Shipped 3 fixes directly +
   ruling" — counting inconsistency.
 
+**I5c (misc-data issue batch, 6 docs) — 2026-08-07:**
+
+- C1 [P2] `live_pipeline_persistence_hot_path_decoupling…:218-220` open CODE todo premise "52 warm-sink-persist-*
+  subscriptions, confirmed live via gcloud list" vs same doc 🔴 CORRECTION 2026-07-31 `:57-67` "returns only **2** of
+  the 52" (GCP auto-expiry; fix = `expiration_policy { ttl = "" }` + terraform apply — neither in the todo's scope 1-4)
+  — stale premise mis-routes a worker toward compactor-only build when subscriptions are gone; work tracked in new
+  fleet-wide plan → ownership split, no superseded marker on the todo.
+- C2 [P2, GRACE] `defi_cefi_venue_chain_axis_contamination…:318-329` `[x]` P2 "scheduling/cron half shipped"
+  (deployment-service@8eff211) recorded "Gate: BLK-0ea70dac unanswered" in the ship entry, while the todo's own gate
+  text says "can ship any time post the raw-capture fix landing" and siblings (slot-13/5/9, 08-06) document gate still
+  NOT met (raw `derivative_ticker` ~0 objects at reader path; fix todo `- [ ]`) — flip executed against an unresolved
+  operator decision + unmet gate; no RESOLVED bookend for BLK-0ea70dac in the log.
+- C3 [P2] `honest_coverage_smoke_harness_4ag_verify…:183-206` -004 task text pins `prd/catalog.parquet` + park "operator
+  writes catalog to prd/ OR task amended" vs same doc `:193-194` + `:287` live: `prod/catalog.parquet` EXISTS
+  (10,561,159 bytes), `prd/` = 404, runner default env "prod" (`run_live_verify_tradfi.py:68`) — park blocker (d)
+  bypassable WITHOUT operator decision; BLOCKED-PREREQUISITES park (prereq landed + archived 07-24) still standing →
+  re-dispatch bounces into 404 path.
+- C4 [P3, GRACE] `defi_cefi…:330-359` open P1 "The **35** corrupted MANIFEST rows" vs same doc `:800-803` slot-9 08-04
+  live-found **42** ("not 35") + cleanup executed on all 42 (CAS rewrite 42,192,492→42,192,450) — todo step 2 never
+  updated; worker gating on "35" re-scans a clean population.
+- C5 [P3] `backfill_vm_slack_alert_e2e_verification…:3` title "three gaps found" vs body Gap 4 section (added 06-23).
+
+## Near-miss flips (I5c — flag, not flip)
+
+- `honest_coverage…` -004 tradfi re-run (open): 08-03 audit verified prereq fully landed (archived 07-24, 11/11 `[x]`),
+  catalog exists at `prod/`, NO re-run/publish recorded → substance (fresh execution + published matrix) never happened
+  → NOT a flip; park is over-parked (default-env run executable now). Missing for flip: actual
+  `run_live_verify_tradfi.py` execution + published matrix.
+- [x]-evidence flags (rewrite-orphaned shas, documented-rewrite class): doc4 `:151/:159/:173/:252/:259` cites
+  e2e-testing@1ca3672/@ceb09fd/@be37c75; doc3(GRACE) `:172/:406/:384` cites instruments-service@f651ff8b +
+  mtds@8016c7e4/@522185a6; doc3 `:951-957` UTL@7684a102 — ALL fail LDR ancestry (post-08-05 rewrite); content preserved
+  as rewrite equivalents (e3002c6/0daebe5/2254e13; 2ff3aa80/a8b64de3; 56d89c20/b566d77d/90525ab0), 3± lines/file; smoke
+  runners present in working tree. Substantively valid flips, citations fail strict bar as written → treat as documented
+  rewrite case, not fraud.
+
+## Doc-drift
+
+**I5c (misc-data batch):**
+
+- [GRACE] `defi_cefi_venue_chain…` = 1001-1002 lines — OVER the 1000 HARD cap; `check_line_caps.sh` glob
+  (`"$PM_DIR/plans/active"/*.md`, non-recursive) does NOT cover `issues/` so the gate doesn't trip — policy gap (doc
+  keeps growing, additive slot entries).
+- Stale `last_updated`: doc1 (07-27 vs PL 08-05) · doc4 (07-06 vs PL 08-06).
+- doc2 `:162-165` truncated PL entry (na-eligibility 08-01 ends mid-list). Near-complete: doc4 (sole -004 self-parked),
+  doc5 (sole CODE todo whose ownership moved to `live_event_log_warm_sink_recovery…` without superseded marker — see
+  C1). Archive candidates: none.
+
+## Codex-drift candidates (I5c — ROUTE: codex rewrite needs operator ruling)
+
+- P2 `live_pipeline_persistence…` vs `/codex/02-data/live-data-persistence-and-event-log.md:7-8`,`:111` — codex (status:
+  current, 07-29) asserts "52 Pub/Sub topics + warm-GCS subscriptions + daily compaction provisioned in Terraform" with
+  no known-gap section; live-verified 07-31 correction proves 50/52 expired + compactor never executed → SSOT should
+  carry the gap + pointer to the 2026-07-31 recovery plan. Reader trusting the SSOT believes the three-tier spine is
+  provisioned.
+- CLEARED: doc6 vs `/codex/05-infrastructure/per-tab-worktrees.md:930,949` consistent; doc4 vs
+  `/codex/02-data/honest-coverage-model.md` no drift; doc3 chain-axis claim verified against UAC SHARD_AXIS_MATRIX
+  - consolidator + events — no drift.
+
+**I6a (instruments/features/strategy issue batch, 7 docs) — 2026-08-07:**
+
+- F28 [P2] `capability_wizard_analysis_findings…:650` risk-table "**F28 … OPEN**" (self-preface :636-638 "current- truth
+  roll-up, trust this table") vs same doc `:671-683` `[x]` RESOLVED (execution-service@8a3c6ab7 06-15; twin @23d45535 on
+  branch; fix content live) — reader re-opens resolved work.
+- Margin-emitter [P2] `capability_wizard_analysis…:652` "transfer_purpose + COLLATERAL_POSTED/MARGIN_RELEASED … no
+  emitter (LOGIC-FREEZE)" + `:654` "margin_event_emitter.py:98 hardcodes venue_type=defi (LOGIC-FREEZE)" vs
+  `capability_wizard_gap_discovery…:386-392` "**DONE 2026-07-27 — strategy-service@3c14639d** … real `venue_type="cefi"`
+  path" — opposite states in two batch docs.
+- Auth-wired [P2] `capability_wizard_gap_discovery…:184-185` "binance/bybit/okx honest NOT_REGISTERED scaffolds —
+  NotImplementedError on place_order" vs same doc `:357-359` "…all `auth_wired=AVAILABLE` with live CCXT/REST citations"
+  — ground truth UAC `order_semantics.py:271/293/308` = AVAILABLE; one registry asserted both ways.
+- F46 [P2] `capability_wizard_analysis…:532-536`,`:717` premise stale: files renamed
+  `binance_ccxt.py`/`bybit_ccxt .py`/`okx_ccxt.py`, `place_order` → real `_place_order_live` (mode-gated) — todo
+  genuinely open (live credentials) but blocker text + file paths are phantom.
+- §3-P2#4 [P2] `instruments_remaining_work_audit…:506-509` "awaiting strategy-owner decision (add CEFI cells vs trim)"
+  vs same doc `:771-773` DONE UAC@7f20bdee (2→0 contradiction count, 17/17 tests) + live
+  `archetype_capability_manifest.json:1954` CEFI cell "Registry gap closed 2026-07-10" — snapshot banner mitigates,
+  entry still reads open.
+- Smoke title [P3] `features_smoke_matrix…:4` "6 of 8 families cannot PASS" vs `:13-14` + `:71` "7/8 families blocked"
+  (table 7 FAIL rows) — title contradicts own summary.
+- RULED-leftover [P2] BOTH 07-31 docs: `strategy_config_hot_reload…:97-100` + `order_state_machine…:102-107` "**RULED
+  2026-08-06 (operator), option A** …" followed by "Rule between A / B / C" — dispatched worker receives conflicting
+  directives (re-rule vs implement A); both ruled-A items verified unshipped (OrderStatus still 7-member enum; no
+  allow-list in config_reloaders.py).
+- F15/F9/F42 [P3] findings doc: F15 auto-appended warning unresolved vs registry CEFI cells closed 07-10; F9 "57
+  archetypes" vs gap doc "StrategyArchetype=60" (verified 07-27); F42 "Status: OPEN" (:463-465) vs risk-table FIXED
+  uac@f3440731 + `[x]` DONE.
+
+## Near-miss flips (I6a — ⚠️ FALSE-EVIDENCE + flags)
+
+- ⚠️ **FALSE-EVIDENCE [P2] — REVERSAL CANDIDATE**: `features_service_coverage_and_script_canon…:93-98` `[x]` cites
+  features-service@25932d23 ("`_make_session` made async, loop-safe") — merge-base FAILS (exists only on
+  `wip-preserve/orchestrator-slot-9-25932d23`, NEVER merged, no same-subject twin on branch); artifact ABSENT:
+  `features_service/onchain/app/core/data_loader.py:275` still sync `def _make_session` with eager ThreadedResolver
+  construction, called without await `:283`. The fix never reached the integration branch — the flip is FALSE evidence;
+  needs re-ship or explicit resolution, not a flip. Reversal `[x]`→`[ ]` + annotation.
+- Rewrite-twin awareness (evidence resolves via twins, no action): execution-service@8a3c6ab7≡23d45535 ·
+  @d0597237≡52fe0632 · e2e-testing@fbaa722≡8e8987b · @4b5a743≡f6d7a5c (sports/live.env only).
+- Genuinely open (no flip): F46 (BLOCKED-CREDENTIALS, premise stale), commodity `-test-` bucket `[OPERATOR]` (smoke
+  :207), instruments umbrella P0 (:825), order-state CODE+TEST (:102/:108), hot-reload CODE (:97).
+
+## Doc-drift
+
+**I6a (instr/features batch):**
+
+- Stale `last_updated`: instruments audit (07-12 vs PL 08-06) · smoke (08-05 vs 08-06). MISSING `last_updated`:
+  order_state_machine + strategy_config_hot_reload (PL has 08-06 entries).
+- Archive candidates: `capability_wizard_gap_discovery` (42/42 [x] but EXPLICIT keep-open-by-design :861-862 — NOT a
+  candidate) · `features_service_coverage_and_script_canon` (8/8 [x] but NOT clean: closed-not-done `:130` `[x] ⏸️` "NOT
+  ACTUALLY DONE — GATE NOT MET" + false-evidence flip 25932d23 — archival would launder unfinished work).
+- Placeholder sha: findings `:494` "pm@300" (PR number as sha). Line caps fine (max 864).
+
+**I2_GOV (governance/process issue batch, 13 docs) — 2026-08-07:**
+
+- G1 [P2] `ag_closeout_audit_cross_cutting_parked_2026_08_02.md:151-152` + `…_08_06.md:266-268` (identical): "batch3
+  remains `status: draft`, still awaiting operator approval" vs LIVE batch3 `status: active` (flipped 08-06, de1d795de
+  ON LDR) + `governance_sweep_deferred_followups…:8` "activated all 16 pending AO-dispatch draft batches" — 16h old, no
+  grace, no staleness marker → fresh reader re-parks/re-asks.
+- G2 [P3, GRACE] `over_cap_live_plan…:8-9`,`:66` "lst_rate_honest_coverage is 1001L — permanently un-verdictable" vs
+  LIVE 992L (trimmed 08-05, 4718f3532 ON LDR) — conclusion no longer holds for that doc; class persists via
+  `data_completion_defi` (live 1000L).
+- G3 [P3, GRACE] over_cap todo 1 `:125` "**RULED 2026-08-06 (operator), option A [WORKER REC]**" vs `:128`
+  "**BLOCKED-OPERATOR-DECISION** — rule on A/B/C/D" + `tags:` blocked-operator `:25` stale — mis-routes BLOCKED-tag
+  scanners.
+- G4 [P3, GRACE] zero_checkbox register "12 hits / 8 unclassified" (08-06) vs live 14 hits / 11 non-template (incl. this
+  findings doc + 9 others — 8 unregistered new docs) — register stale.
+
+## Near-miss flips (I2_GOV)
+
+- M1 [FLAG-not-flip] `parked_08_01…` todo 6 `:230-232` `[DOCS] P3` — retag half DONE (asset_group `[tradfi]` @e52433f41
+  ON LDR) but fold-into-closeout half NOT evidenced (tradfi closeout 0 hits for forexfactory) — partial; PL still treats
+  fully open without noting the retag.
+
+## Doc-drift
+
+**I2_GOV (governance batch):**
+
+- Archive-candidate verdicts (all 3 `locked_by:` empty, no keep-open banner): parked_08_01 NOT-READY (3/6) ·
+  parked_08_02 NOT-READY (1/1) · parked_08_06 NOT-READY (4/5).
+- Stale `last_updated`: parked_08_01, parked_08_02, autonomous_session (952L, soft-cap over). MISSING `last_updated`:
+  checkbox_flip (16h), prosewrap (24h), duplicate_finalize (GRACE).
+- Placeholder shas [GRACE]: governance_sweep todo 1 `@<pending — see this commit>` · context_scope todo 1
+  `@see-progress-log-2026-08-06`. Unresolvable PL shas [GRACE]: context_scope `92bd7b601/2af352ecf/dda85c8cc` · over_cap
+  `473cccf03` (sibling b381cbb11 resolves).
+- Near-complete: parked_08_02 (1), checkbox_flip (1). AG-closeout gate: re-run still RED (77 orphans vs baseline 69 —
+  matches Phase-0).
+- CLEARED: ui_block_list "already resolved" bonus claim verified at git-content level (codex block-list 11 ids = UI
+  origin/main 11).
+
+**I6b (MTDS/MDPS/misc-services issue batch, 9 docs) — 2026-08-07:**
+
+- E1 [P2, GRACE 6.3h] `mdps_features_live_launcher_exec_dispatch…:267-268` "All 5 todos done; plan is eligible for
+  archival" vs own `:273` open `- [ ] [VERIFY] P2` (real VM launch + exec-dispatch confirmation) — archive sweep would
+  flip a doc whose operational verification is pending (doc's own 08-06 audit :276-278 flags it).
+- E2 [P2, GRACE 7.7h] `mtds_blanket_pyright_suppressions…:184-185` "STEP 5.94 baseline=237 files" vs LIVE
+  `quality-gates.sh:471` `_MTDS_PYRIGHT_BLANKET_BASELINE=238` (raised 08-05 @eda8ad68) while live count = 237 — raised
+  ABOVE the count, violating the script's own "never raise it back up" rule; comment still "Baseline 237".
+- E3 [P2] `mtds_type_ignore_ratchet…:54` "frozen baseline: 658" vs LIVE `_MTDS_TYPE_IGNORE_BASELINE=660` (658→659
+  @840c816d "re-measure", 659→660 FOLDED INTO unrelated commit @1564a983 "remove dead file_name arg") — violates the
+  doc's own requirement (:92-95 raises need the ratchet owner's process, "likely NOT a silent self-service bump"); count
+  now 655 (< original baseline).
+- E4 [P1/P2, GRACE 41min] `mdps_features_live_streaming_aggregation…` todo 1 cites MDPS@213e133 + todo 4 cites
+  UTL@c50b3b89/@8a89005a — exist ONLY on `wip-preserve/orchestrator-slot-*` (never landed); todo 9 MDPS@2279a98
+  reachable from NO origin branch; equivalent fixes LIVE on LDR as @50376a3 (MDPS_SHARD_SPEC bridge) + @7a8a1872 (UTL
+  subscribe_once RetryError) — phantom SHAs mis-route `check_plan_commit_sha_evidence.py` + future workers.
+
+## Near-miss flips (I6b — flag, not flip)
+
+- `unified_trading_system_ui_block_list_parity…` todo 1 — evidence resolves (UI@3c2efb2c on LDR; `block-list.ts: 166`
+  BL-12; codex block-list 11 ids = code 11) but runtime verification (vitest) never run; disposition parked in
+  `ag_closeout_audit_cross_cutting_parked_2026_08_06` todo #3 (ui tranche owns) → flag only.
+- `mtds_type_ignore_ratchet…` todo 1 — raise happened (658→660), blocking condition gone (count 655), but NO Progress
+  Log entry, 659th occurrence never root-caused, raise bundled without owner sign-off → flag.
+- Genuinely open (verified not done): migrate_sports_league_id_casing checkpoint todo (0 `record_vm_progress` hits vs
+  sibling script's :74/:320) · type-ignore doc todo 3 (fatal no-fix inconsistency unresolved) · blanket doc todo 3
+  execution half (codex ban unchanged).
+
+## Doc-drift
+
+**I6b (MTDS/MDPS batch):**
+
+- Placeholder sha: `fleet_audit_triad…:133` `unified-trading-pm@(this commit)`. Ref-path: `:17` related missing leading
+  `/`; `:25-27` source refs point at plans archived 2026-06-01.
+- Archive candidates: `fleet_audit_triad` (8/8 [x], `locked_by: harsh-fleet-audit` — legit non-archive) ·
+  `batch_live_reconciliation_service_audit` (1/1 [x], `locked_by: live-defi-rollout`, 617L > 500 soft) ·
+  `archive_candidates_content_verification_backlog` itself (6 done, open, unlocked) [GRACE] · exec_dispatch +
+  streaming_aggregation (all [x] + open follow-up) [GRACE].
+- Malformed: `mtds_migrate_executor…:146-147` `- [x]` line inside Progress Log. Frontmatter omissions: docs 4 + 7 lack
+  `last_updated`; doc 4 lacks `author` + estimate fields. Stale `last_updated`: doc1 (07-30 vs 08-06), doc8 (07-28 vs
+  08-06).
+- LIVE ratchet: `check_archive_candidates.sh` = **11 candidates (baseline 0)** — re-accumulated 2 days after doc9's
+  "126→0"; includes `dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md` (status=resolved still in active —
+  terminal-status-archived class; name suggests defi tranche — verify ownership).
+
+## Codex-drift candidates (I6b)
+
+- P2 [GRACE] blanket-pyright ruling vs codex: `/codex/06-coding-standards/quality-gates.md:1850-1851` ban intact
+  ("Banned: blanket file-level… Net-new broad/blanket suppressions must be 0") — the DEFAULT-RULED 2026-08-06 option (b)
+  relaxation (cli/handlers glob) NOT applied to codex; codex bans what the ruling sanctions. ROUTE: codex update after
+  ruling implementation.
+- CLEARED: streaming doc vs live-data-persistence codex — no MDPS CLI-shape claims, no drift.
+
 **I4 (manifest/data-status issue batch, 8 docs) — 2026-08-07:**
 
 - M1-C1 [P2] cefi Era-B: `cf_manifest_audit_first_full_rollup…:267` "must NOT suppress cefi's genuine, still-live,
