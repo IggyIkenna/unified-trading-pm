@@ -86,7 +86,7 @@ healthy, so even these may understate true progress).
 | FIXTURE_EVENTS   | MVP-96                       | **DONE 2026-08-03** — pass-3 complete, 1,973 "degenerate" residual corrected as legacy dupes, same doc                                                                                                                                          |
 | FIXTURE_STATS    | all-383 (widened 2026-07-28) | 66,325 expected (non-MVP), ~415,755 already resolved, **24,495 needed** — **QUEUED**: quota has reset (confirmed), resumable from `PROGRESS.json` checkpoint `2023-11-19`; queued behind PLAYER_STATS (af-backfill-* singleton lock), see below |
 | FIXTURE_LINEUPS  | all-383 (widened 2026-07-28) | 66,292 expected (non-MVP), 52,659 already resolved, **58,523 needed** (flat this tick — no dedicated backfill)                                                                                                                                  |
-| **PLAYER_STATS** | **MVP-96**                   | 42,376 expected, 41,674 already resolved, **702 needed** — **ACTIVE**, chunk 9/26, accelerating through skip-fast chunks, via `af-backfill-20260807-013716`, see below                                                                          |
+| **PLAYER_STATS** | **MVP-96**                   | 42,376 expected, 41,733 already resolved, **643 needed** — **ACTIVE**, chunk 10/26, accelerating through skip-fast chunks, via `af-backfill-20260807-013716`, see below                                                                         |
 | **INJURIES**     | **all-383**                  | 108,701 expected, 45,992 already resolved, **62,709 needed** (unchanged — queued behind PLAYER_STATS/FIXTURE_STATS)                                                                                                                             |
 | **STANDINGS**    | **all-383**                  | 108,701 expected, 108,430 already resolved, **271 needed (99.75%)** — quota-tail residual; **QUEUED** for a small completion pass once af-backfill-* frees up, see below                                                                        |
 | **TEAMS**        | **all-383**                  | 108,701 expected, 108,605 already resolved, **96 needed (99.9%)** — quota-tail residual; **QUEUED** for a small completion pass once af-backfill-* frees up, see below                                                                          |
@@ -99,7 +99,7 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-07T03:21Z: 63,778 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
+**Grand total needed, 2026-08-07T03:39Z: 63,719 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
 further ~67% drop — TEAMS/STANDINGS both essentially converged, see Progress Log) **+ 83,051 across
 FIXTURE_STATS+FIXTURE_LINEUPS** (24,495 + 58,556). **The API-Football daily quota exhaustion has RESET** — PLAYER_STATS
 is ACTIVE via `af-backfill-20260807-013716`, genuinely progressing through its chunk sweep; FIXTURE_STATS + the small
@@ -662,3 +662,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   biggest single-tick drop since the quota reset. Census scripts hit their 280s timeout on first attempt this tick
   (transient, retried successfully — not a new failure mode). FIXTURE_STATS/TEAMS/STANDINGS/ FIXTURE_LINEUPS/INJURIES
   unchanged — still queued, no switch needed. Grand total 63,778 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
+- **2026-08-07T03:39Z** — Still RUNNING and healthy (0 rate-limit errors), now chunk 10/26. PLAYER_STATS 702→643 (-59),
+  steady progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued, no switch needed.
+  Grand total 63,719 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged). (Aside: this tick also handled a genuine live
+  operator request off-loop, unrelated to this campaign — researched + reported the `footystats-api-key` GSM rotation
+  command (couldn't execute it myself, no session identity has Secret Manager access on central-element-323112) and
+  produced the FootyStats Prediction+Features 49-league checklist for the operator to check in FootyStats's own UI;
+  logged here only for continuity since it interleaved with this tick's cadence.)
