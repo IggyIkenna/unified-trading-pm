@@ -164,7 +164,7 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
       (SPOT, e2-standard-8, asia-northeast1-c, RUNNING as of 2026-08-07T13:03:21Z). Verified concurrent trades VM
       (`mdps-backfill-cefi-20260802-140125`) is on different data_type (trades), no conflict. GCS logs:
       `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260807-130321/`. LAUNCH_PARAMS.json
-      confirmed written T+1min. unified-trading-pm@
+      confirmed written T+1min. unified-trading-pm@0273bc1e0
 
 - [ ] [DATA] P3. Investigate why 2025-11-01 and 2026-01-01 have no BYBIT futures_chain raw tick data in the cefi-prd GCS
       bucket (no `instrument_type=futures_chain` directory under `venue=BYBIT` for those 2 days in batch_tardis).
