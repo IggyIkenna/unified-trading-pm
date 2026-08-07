@@ -106,7 +106,7 @@ jobs:
           # On a scheduled tick we always replay; manual dispatch honours dry_run (default true).
           echo "dry_run=$DRY_RUN"
           ARTS=$(gh api --paginate "repos/${OWNER}/unified-trading-pm/actions/artifacts" \
-            --jq '.artifacts[] | select(.name | startswith("deferred-build-")) | select(.expired == false) | "\(.id)\t\(.name)"' 2>/dev/null || true)
+            --jq '.artifacts[] | select((.name | startswith("deferred-build-")) or (.name | startswith("deferred-aws-build-"))) | select(.expired == false) | "\(.id)\t\(.name)"' 2>/dev/null || true)
           if [ -z "$ARTS" ]; then
             echo "No deferred-build artifacts to replay."
             exit 0
@@ -183,7 +183,7 @@ jobs:
             AGE_H=$(( (NOW - C) / 3600 ))
             if [ "$AGE_H" -gt "$OLDEST_H" ]; then OLDEST_H=$AGE_H; OLDEST_NAME="$name"; fi
           done <<< "$(gh api --paginate "repos/${OWNER}/unified-trading-pm/actions/artifacts" \
-            --jq '.artifacts[] | select(.name | startswith("deferred-build-")) | select(.expired == false) | "\(.created_at)\t\(.name)"' 2>/dev/null || true)"
+            --jq '.artifacts[] | select((.name | startswith("deferred-build-")) or (.name | startswith("deferred-aws-build-"))) | select(.expired == false) | "\(.created_at)\t\(.name)"' 2>/dev/null || true)"
 
           echo "oldest deferred-build artifact: ${OLDEST_NAME:-<none>} (${OLDEST_H}h old; threshold ${STALE_HOURS}h)"
           if [ -n "$OLDEST_NAME" ] && [ "$OLDEST_H" -ge "$STALE_HOURS" ]; then
