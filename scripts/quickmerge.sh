@@ -2149,6 +2149,32 @@ if [ "$_qm_push_ok" != 1 ]; then
   exit 1
 fi
 
+# Post-push ancestry verification (wip_preserve_refs_silently_unrecovered_2026_07_29.md,
+# operator ruling 2026-08-06): a push that returns exit-0 is NOT sufficient evidence that
+# the pushed commit is still reachable from origin/<branch>. The orchestrator's branch-state-
+# quarantine mechanism (worktree_clean_check) can reset the local branch after a session-death
+# respawn, and a false SHIPPED log line is strictly worse than a hard failure — the originating
+# incident went unnoticed because quickmerge logged SHIPPED while reality had already diverged.
+# FAIL, not warn: a warning in a long quickmerge log gets scrolled past; a hard exit stops
+# every downstream caller (plan-flip, /done, PR creation) from treating the push as landed.
+# Note on oracle choice: sha-ancestry is correct HERE because this is an IMMEDIATE post-push
+# check — we pushed that exact sha seconds ago, so "is it an ancestor?" is exactly the claim
+# being made. For an AGED wip-preserve ref, content-identity is needed instead (the trap in
+# the issue doc's measurement section — a sha can be absent while the content was re-shipped
+# under a different sha, making an ancestry-only check cry wolf).
+_qm_post_push_sha=$(git rev-parse HEAD)
+_qm_post_push_short="${_qm_post_push_sha:0:9}"
+if ! git fetch --quiet origin "$BRANCH" 2>/dev/null; then
+  echo "[$REPO_NAME] ❌ POST-PUSH FETCH FAILED: cannot verify ${_qm_post_push_short} landed on origin/$BRANCH — treating as push failure." >&2
+  exit 1
+fi
+if ! git merge-base --is-ancestor "$_qm_post_push_sha" "origin/$BRANCH" 2>/dev/null; then
+  echo "[$REPO_NAME] ❌ POST-PUSH ANCESTRY FAILED: ${_qm_post_push_short} was pushed but is NOT an ancestor of origin/$BRANCH after re-fetch." >&2
+  echo "[$REPO_NAME]    The branch may have been force-moved or the quarantine mechanism reset the local branch." >&2
+  echo "[$REPO_NAME]    Recovery: check 'git reflog' and 'git for-each-ref refs/wip-preserve/**' before retrying." >&2
+  exit 1
+fi
+
 # Extract issue references from commit message for PR body
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")
 
