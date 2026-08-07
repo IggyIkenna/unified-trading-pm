@@ -143,6 +143,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 
 ## Todos
 
+- [ ] [SCRIPT] P2. **Retry EPL's odds_api tail gap** (`mtds-backfill-odds-401-retry`'s chunk 1/2 OOM'd 2026-08-07T13:31Z
+      after covering most of `2025-09-01→2026-05-08` — the last ~2 months before the crash are likely still unresolved)
+      — only launch this AFTER `mtds-backfill-odds-401-retry` finishes its full league sweep (the wrapping loop
+      auto-recovers per-league; premature action here would just be redone by the eventual full-range small-chunk VM
+      anyway). Re-census `source=odds_api, league_id=EPL, capture_status=attempted_failed` first to find the exact
+      residual date range before relaunching.
 - [x] ✅ [SCRIPT] P0. **Investigate + fix the odds_api SOURCE_RETURNED_ZERO cluster** (13,045 rows) — root-caused as
       genuine per-bookmaker vendor gap: v1 sentinel's `SOURCE_RETURNED_ZERO` branch lacked the
       `_is_bookmaker_league_covered_exact` gate that v2 already had. Fix: add per-bookmaker coverage gate; uncovered
@@ -301,3 +307,18 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   cumulative-growth pattern from two ticks ago. No action needed; continuing to watch since this VM's single chunk spans
   8+ months uninterrupted (no 5-day respawn safety net like the sibling VM has), so it remains the more theoretically
   exposed of the two, just not currently showing distress.
+- **2026-08-07T13:38Z — `mtds-backfill-odds-401-retry` finally OOM'd, but this is the GOOD failure mode, not a repeat of
+  the earlier bad one.**
+  `CHUNK_FAILED: chunk=1/2 league=EPL range=2025-09-01→2026-05-08 exit=137 reason=OOM_KILLED time=2026-08-07T13:31:29Z`
+  — EPL's single 8-month chunk finally hit the ceiling, but only after covering the overwhelming majority of the range
+  (Sept 2025 through ~March 2026 already confirmed captured in prior ticks' checks, written incrementally via
+  `ManifestWriter` per-date, not held in memory — that data is durable regardless of the crash). The wrapping
+  `mtds_chunk_loop.sh` correctly caught the failure and **auto-recovered by moving to the next league (LA_LIGA)** rather
+  than freezing — exactly the "fail-loud, self-recovering" design
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` documents working correctly for chunk-level failures. No
+  manual intervention taken; letting it continue through the remaining leagues. **Residual gap to track**: EPL's tail
+  (~2026-03 through 2026-05-08, the portion after the last confirmed-captured date) may still need a narrow follow-up
+  retry once this VM finishes its full league sweep — added as a todo below rather than acting now, since the sweep
+  isn't done yet and a premature narrow retry would just get re-covered by the eventual full-range small-chunk VM
+  anyway. `mtds-backfill-odds-smallchunk-20260807` remains fully clean: 0 `CHUNK_FAILED`/`OOM_KILLED` matches, now at
+  chunk 13/451 (`2020-08-05→2020-08-09`).
