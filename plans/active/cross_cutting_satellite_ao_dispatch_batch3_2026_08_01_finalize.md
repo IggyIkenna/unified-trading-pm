@@ -63,7 +63,7 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile every named source doc's checkboxes.** Batch 3's 8 todos cite 5 distinct source docs
+- [x] ✅ [REVIEW] P1. **Reconcile every named source doc's checkboxes.** Batch 3's 8 todos cite 5 distinct source docs
       (each todo's text ends with `Source:`). For each: flip the corresponding checkbox, citing the batch commit that
       shipped it — verify the commit actually exists before citing it. After flipping, re-check each source doc for 0
       remaining open items (checkbox AND prose-form) and only then consider flipping its `status` to `resolved`.
@@ -78,6 +78,16 @@ source: >-
       `data_pipeline_alerts_batch_remediation_2026_07_15.md` (only its second open item closes here — its first item is
       time-gated, stays open, do NOT flip this doc to resolved either). **Done when**: every cited source checkbox is
       flipped with verified evidence and no doc's `status` was advanced past what its remaining items actually support.
+      **VERIFIED 2026-08-07 (slot 10):** all 5 source docs confirmed — (1)
+      `feature_builder_registry_dag_dead_code_audit_2026_08_01.md` archived 2026-08-03, 6/6 todos `[x]`; (2)
+      `manifest_consolidator_cadence_cost_audit_2026_07_20.md` archived 2026-08-06 (`deployment-service@7b832cb` +
+      `unified-trading-pm@34a7f2dea`), 2/2 todos `[x]`; (3)
+      `prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md` archived 2026-08-03, 2/2 todos `[x]`; (4)
+      `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` follow-up 2 `[x]` (na-eligibility-audit 2026-08-01
+      `unified-trading-pm@0a23ac9b5`), follow-up 1 `[CODE] P2` open (option A ruled 2026-08-06, not yet implemented),
+      `status: open` correct; (5) `data_pipeline_alerts_batch_remediation_2026_07_15.md` second todo `[x]`
+      (`deployment-service@ba40e4a` + `unified-trading-pm@7a06bd8a5`, 2026-08-06), first todo `[REVIEW] P0` open
+      (time-gated), `status: active` correct. No doc's status advanced past its remaining items.
 - [ ] [REVIEW] P2. **Re-check batch 3's own Deferred items now that time has passed.** For the 2 operator-gated entries
       (`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`,
       `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` follow-up 1) and the 1 time-gated entry
