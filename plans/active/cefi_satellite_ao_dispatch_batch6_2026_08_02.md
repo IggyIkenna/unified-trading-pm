@@ -172,7 +172,7 @@ context_scope:
       per-job dead/alive verdict is recorded with cited evidence for all 7 jobs, the corresponding action (delete or
       rebuild) is taken, and the source doc's 2 todos are checked off citing this run.
 
-- [ ] [SCRIPT] P2. **Add a live-vs-batch OKX-FUTURES `instrument_id` parity test.** In
+- [x] ✅ [SCRIPT] P2. **Add a live-vs-batch OKX-FUTURES `instrument_id` parity test.** In
       `market-tick-data-service/tests/unit/`, add a new test mirroring the existing BINANCE-FUTURES/KRAKEN-FUTURES
       live-vs-batch instrument_id parity coverage, scoped to OKX-FUTURES, so a future drift between the live WS
       connector's id-derivation and the batch/reference-data builder's convention can't silently regress again
@@ -180,7 +180,7 @@ context_scope:
       `issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` (the `[SCRIPT] P2` parity-test todo only).
       **Done when**: the new test exists, passes against the currently-shipped convention
       (`market-tick-data-service@8a6bbc97`), and the source doc's `[SCRIPT] P2` checkbox is checked off citing the test
-      file + a passing QG run.
+      file + a passing QG run. — market-tick-data-service@d964dce4 + source-doc checkbox flipped; QG green 2026-08-07.
 
 - [ ] [RESEARCH] P2. **Live-verify whether AAPL-USD (and other equity-underlying) OKX-FUTURES dated-future universe
       entries are real, currently-listed OKX contracts.** Pull `/api/v5/public/instruments?instType=FUTURES` live (NOT

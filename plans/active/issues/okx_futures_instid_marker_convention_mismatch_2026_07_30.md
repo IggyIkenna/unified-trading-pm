@@ -141,9 +141,11 @@ reasoning above.
       Option-B revert will be performed. Checkbox left open per
       `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md` todo 1 (batch8 finalize reconciliation 2026-08-07).
       **Remaining open in this doc: `[SCRIPT] P1` (nominally — both sub-parts resolved/moot as noted above),
-      `[SCRIPT] P2` (parity test), `[RESEARCH] P2` (AAPL-USD live check)** — 3 items.
-- [ ] [SCRIPT] P2. Add a live-vs-batch OKX-FUTURES instrument_id parity test (mirroring the existing
+      `[RESEARCH] P2` (AAPL-USD live check)** — 2 items. `[SCRIPT] P2` closed below.
+- [x] ✅ [SCRIPT] P2. Add a live-vs-batch OKX-FUTURES instrument_id parity test (mirroring the existing
       BINANCE-FUTURES/KRAKEN-FUTURES parity tests) so this class of drift can't silently regress again.
+      `market-tick-data-service/tests/unit/test_okx_futures_live_batch_id_parity.py` —
+      market-tick-data-service@d964dce4; QG green 2026-08-07 (exit 0, 14 parity tests pass).
 - [ ] [RESEARCH] P2. Live-verify whether AAPL-USD (and any other equity-underlying) OKX-FUTURES dated-future universe
       entries correspond to real, currently-listed OKX contracts (option C above) -- confirm via
       /api/v5/public/instruments?instType=FUTURES, not ccxt's cached market list.
