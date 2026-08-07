@@ -772,6 +772,20 @@ new wave.
   PYTHON=.tabs/12/market-tick-data-service/.venv/bin/python) → scratchpad, then `run_in_background:true` with NO `&`
   inside. Re-arm heartbeat same way. Do NOT use TaskList.
 
+### 2026-08-07T22:26Z — slot 10 — watcher re-armed (bzfv850ih)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Prior watcher `bba37joyr` (slot 12, 21:38Z) dead at boot. Fleet at boot:
+**18 VMs** (draining from 38; last slot-12 wave at ~21:06Z). No ES_OPT VMs exist. Direct instruction edits for
+slot_recurring_wedge issue doc already applied by prior session — confirmed present in doc. Python binary:
+`.tabs/3/market-tick-data-service/.venv/bin/python` (slot 10 has no mtds venv). Watcher `bzfv850ih` launched
+`run_in_background:true`, NO `&` inside. Poll 1 (22:26:52Z): 18 VMs.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bzfv850ih.output`
+  via TaskOutput non-blocking. (3) If watcher dead: re-arm from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=10, SLOT_TABS=.tabs/10,
+  PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python) + `run_in_background:true`, NO `&` inside. Do NOT use
+  TaskList. Do NOT re-arm if alive.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
