@@ -494,15 +494,15 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) — not a functional bug (the function
       is value-agnostic), but could mislead a future maintainer into "fixing" the correct SOURCE-keyed callers. Update
       the docstring example to match the 2026-07-21 correction. **DONE (ao-dispatch batch2 2026-08-03)** — closed via
-      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:131: `unified-trading-library@5793d28b`, docstring
-      updated to SOURCE data_type with `derivative_ticker` example, same fix applied to adjacent `_candle_prefix()`
-      docstring, `quality-gates.sh` green, SHA verified on origin.
+      `plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:131: `unified-trading-library@5793d28b`,
+      docstring updated to SOURCE data_type with `derivative_ticker` example, same fix applied to adjacent
+      `_candle_prefix()` docstring, `quality-gates.sh` green, SHA verified on origin.
 - [x] ✅ 16. [SCRIPT] P3. Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg MEASURED classification shows
       `off_template=29` (timeframe mismatch against the raw `"24h"` token) while the canonical leg still passes it —
       confirm whether the object path already writes `timeframe=1d` (making §3A's "RAW token" docstring stale the same
       way the data_type one was) or whether this is a genuine separate defect. Non-blocking; found during the todo-6
       real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`. **DONE (ao-dispatch batch2
-      2026-08-03)** — closed via `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:135: **STALE
+      2026-08-03)** — closed via `plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`:135: **STALE
       DOCSTRING** (same pattern as todo 15). Root cause: `canonical_writer.py:255` calls
       `_normalise_timeframe(timeframe)` before building the GCS path, so all DERIBIT:trades:24h objects write with
       `timeframe=1d`. No data defect — `_measured_violations` compares normalized "1d" against raw "24h" token causing
@@ -520,13 +520,13 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       root-cause writeup in the history doc, part 2, "P7c: CEFI retry — another 3-shard SPOT preemption burst;
       ROOT-CAUSED..." entry
       (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`). **DONE
-      (na-eligibility-audit 2026-08-03)** — both halves shipped in `infra_satellite_ao_dispatch_batch2_2026_07_27.md`:
-      the code fix at that doc's line 138 (`market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e`,
-      retry-on-verification-failure + 6 new fixture tests, quality-gates.sh green) and the CEFI mop-up pass at that
-      doc's line 155 (fresh `cefi-candle-census` dry-run over the live 938,607-object CEFI corpus found exactly the
-      149-object baseline; targeted `--apply` converged 144/149 on the first run and the remaining 5 on an idempotent
-      retry; hard-verified 0/149 legacy-path objects remain in GCS — TRADFI confirmed needing no mop-up per the P7d
-      history entry).
+      (na-eligibility-audit 2026-08-03)** — both halves shipped in
+      `plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`: the code fix at that doc's line 138
+      (`market-data-processing-service@beb9fed663a042322717046e0432e4aac1e9273e`, retry-on-verification-failure + 6 new
+      fixture tests, quality-gates.sh green) and the CEFI mop-up pass at that doc's line 155 (fresh `cefi-candle-census`
+      dry-run over the live 938,607-object CEFI corpus found exactly the 149-object baseline; targeted `--apply`
+      converged 144/149 on the first run and the remaining 5 on an idempotent retry; hard-verified 0/149 legacy-path
+      objects remain in GCS — TRADFI confirmed needing no mop-up per the P7d history entry).
 
 ## Progress Log
 
@@ -600,8 +600,9 @@ remain genuinely open content-level work, distinct from the path-migration infra
   with evidence; todo 9 itself stays open pending its own stated deliverable (a corpus-wide split count), not the P5
   gate. No `assigned_vm` change.
 - **na-eligibility-audit 2026-08-04** (tranche=cefi, autonomous): KEEP-NA, stale items — reaffirms the 2026-08-03
-  verdict; todos 15/16 already carry the correct citation to `infra_satellite_ao_dispatch_batch2_2026_07_27.md`, todo 3
-  stays a genuine judgment call. No change since.
+  verdict; todos 15/16 already carry the correct citation to
+  `plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`, todo 3 stays a genuine judgment call. No
+  change since.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries, unchanged) — verified all still accurate and
   resolve; the two codex layout docs, the completed migration-execution plan, the still-open manifest-coverage-gap issue
   doc, and the migration script remain the right minimal set for the genuinely open items (todo 3's TradFi quarantine

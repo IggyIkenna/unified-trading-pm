@@ -606,7 +606,7 @@ its own checklist.
 ### P2/P3
 
 3. **DeFi — ~104K dead-storage duplicate objects (safe-to-delete candidate)**
-   `plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md` Only 2 of 2,353 day-partitions
+   `plans/archive/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md` Only 2 of 2,353 day-partitions
    spot-checked (byte-identical, unread by any real consumer); recommends a dedicated full-corpus SAFE-TO-DELETE audit
    before any deletion.
 

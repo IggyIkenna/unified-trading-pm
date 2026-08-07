@@ -48,7 +48,7 @@ related:
     instruments-service/docs/SPORTS_INSTRUMENTS.md,
     instruments-service/docs/TRADFI_INSTRUMENTS.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
-    plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
     plans/active/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md,

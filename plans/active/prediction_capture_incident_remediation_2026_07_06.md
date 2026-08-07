@@ -49,7 +49,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-07-14 # (was: 2026-07-10 -- bumped 2026-07-15, plan-reconcile: 2026-07-14 operator-ruling banner/descope edit + matching Progress Log entry postdated the recorded last_updated, same staleness class as the 2026-07-12 correction)
+last_updated: 2026-08-07 # 7 DESCOPED-NOT-MVP todos flipped with ruling evidence (plan_reconciler); (was: 2026-07-10 -- bumped 2026-07-15, plan-reconcile: 2026-07-14 operator-ruling banner/descope edit + matching Progress Log entry postdated the recorded last_updated, same staleness class as the 2026-07-12 correction)
 locked_by: live-defi-rollout
 locked_since: 2026-07-06
 depends_on: []
@@ -222,30 +222,39 @@ orchestrator-dispatched).
 
 ### Phase 1 — foundation: config-drive host + shared RSA-PSS auth (no access needed) — PARALLEL [DESCOPED-NOT-MVP 2026-07-14]
 
-- [ ] [CODE] P1. Make the perp base URL config-driven — `KALSHI_PERP_ENV=demo|prod` (via `UnifiedCloudConfig`, default
-      `demo`) resolving the host; delete the hardcoded `_KALSHI_BASE_URL` events-host const from the perp adapters.
-      Gate: unit test resolves demo vs prod host from config.
-- [ ] [CODE] P1. Extract the RSA-PSS signing that ALREADY EXISTS in `adapters/prediction/kalshi.py`
-      (`_signed_headers`/`_parse_kalshi_creds`/`_can_sign`) into a shared helper both perp adapters use; wire the demo
-      credential blob via the injection path (secret ref `kalshi-perp-demo`). Gate: signed-header unit test on the
-      shared helper.
+- [x] ✅ [CODE] P1. **DESCOPED-NOT-MVP 2026-07-14 (operator ruling — never dispatched; re-open only on explicit operator
+      announcement that perp access exists).** Make the perp base URL config-driven — `KALSHI_PERP_ENV=demo|prod` (via
+      `UnifiedCloudConfig`, default `demo`) resolving the host; delete the hardcoded `_KALSHI_BASE_URL` events-host
+      const from the perp adapters. Gate: unit test resolves demo vs prod host from config.
+- [x] ✅ [CODE] P1. **DESCOPED-NOT-MVP 2026-07-14 (operator ruling — never dispatched; re-open only on explicit operator
+      announcement that perp access exists).** Extract the RSA-PSS signing that ALREADY EXISTS in
+      `adapters/prediction/kalshi.py` (`_signed_headers`/`_parse_kalshi_creds`/`_can_sign`) into a shared helper both
+      perp adapters use; wire the demo credential blob via the injection path (secret ref `kalshi-perp-demo`). Gate:
+      signed-header unit test on the shared helper.
 
 ### Phase 2 — repoint kalshi_perp to the margin API (demo) — SEQUENTIAL after Phase 1 [DESCOPED-NOT-MVP 2026-07-14]
 
-- [ ] [CODE] P1. Rewrite `KalshiPerpReferenceDataAdapter.get_instruments` to hit `…/trade-api/v2/markets/margin` on the
-      demo host, parse `MarginMarket` → `InstrumentRecord(instrument_type=PERPETUAL)` (ticker; `underlying`→base_asset;
-      `contract_size`/`tick_size`; `is_active`→status; `expiry=None` — perps are continuous), status-filter active.
-      Gate: parses a captured demo `MarginMarket` fixture into a valid `InstrumentRecord`.
-- [ ] [VERIFY] P0. Demo dry-run: returned tickers are genuine perps (`BTC-PERPETUAL` shape, `contract_type` present),
-      **0 event contracts**. Capture into a NON-PROD / dry-run sink — demo data MUST NOT enter the prod cefi store.
-      Gate: demo run yields real perp instruments; a `KXMVE*` event ticker would be rejected.
+- [x] ✅ [CODE] P1. **DESCOPED-NOT-MVP 2026-07-14 (operator ruling — never dispatched; re-open only on explicit operator
+      announcement that perp access exists).** Rewrite `KalshiPerpReferenceDataAdapter.get_instruments` to hit
+      `…/trade-api/v2/markets/margin` on the demo host, parse `MarginMarket` →
+      `InstrumentRecord(instrument_type=PERPETUAL)` (ticker; `underlying`→base_asset; `contract_size`/`tick_size`;
+      `is_active`→status; `expiry=None` — perps are continuous), status-filter active. Gate: parses a captured demo
+      `MarginMarket` fixture into a valid `InstrumentRecord`.
+- [x] ✅ [VERIFY] P0. **DESCOPED-NOT-MVP 2026-07-14 (operator ruling — never dispatched; re-open only on explicit
+      operator announcement that perp access exists).** Demo dry-run: returned tickers are genuine perps
+      (`BTC-PERPETUAL` shape, `contract_type` present), **0 event contracts**. Capture into a NON-PROD / dry-run sink —
+      demo data MUST NOT enter the prod cefi store. Gate: demo run yields real perp instruments; a `KXMVE*` event ticker
+      would be rejected.
 
 ### Phase 3 — polymarket_perp repoint (demo) + prediction event-capture gap — SEQUENTIAL [perp-repoint items DESCOPED-NOT-MVP 2026-07-14; the event-capture-gap VERIFY stays ACTIVE]
 
-- [ ] [RESEARCH] P1. `docs.polymarket.com` perps API — find the markets-listing endpoint + auth (beta-gated; launched
-      2026-04-21). Gate: endpoint + auth documented in the issue doc's reference section.
-- [ ] [CODE] P1. Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if available) →
-      `InstrumentRecord(PERPETUAL)`. Gate: demo returns real Polymarket perps, 0 prediction-market rows.
+- [x] ✅ [RESEARCH] P1. **DESCOPED-NOT-MVP 2026-07-14 (operator ruling — never dispatched; re-open only on explicit
+      operator announcement that perp access exists).** `docs.polymarket.com` perps API — find the markets-listing
+      endpoint + auth (beta-gated; launched 2026-04-21). Gate: endpoint + auth documented in the issue doc's reference
+      section.
+- [x] ✅ [CODE] P1. **DESCOPED-NOT-MVP 2026-07-14 (operator ruling — never dispatched; re-open only on explicit operator
+      announcement that perp access exists).** Repoint `polymarket_perp` against Polymarket's perps API (demo/testnet if
+      available) → `InstrumentRecord(PERPETUAL)`. Gate: demo returns real Polymarket perps, 0 prediction-market rows.
 - [x] ✅ [VERIFY] P1. **Pin the prediction-store event-capture gap** (the real question the purge-vs-move decision
       surfaced): are the Kalshi/Polymarket EVENT markets (`KXMVESPORTSMULTIGAMEEXTENDED`, `KXMVECROSSCATEGORY`, …)
       captured CORRECTLY in the PREDICTION store? Evidence to resolve: the healed prediction enum wrote 0 records under
@@ -297,10 +306,11 @@ orchestrator-dispatched).
       (operator, chat): NO prod access — Kalshi/Polymarket perps are NOT part of MVP.** Polymarket perps beta-gated;
       Kalshi requires extra enrollment work. No prod secrets will be provided. Re-open only on an explicit operator
       announcement that access exists.
-- [ ] [INFRA] [DESCOPED-NOT-MVP 2026-07-14] P3. Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403
-      (enrollment live); **re-enumerate against prod** → prod cefi catalogue. Gate: prod perps land as genuine
-      `PERPETUAL` crypto perps; `KALSHI-PERP`/`POLYMARKET-PERP` catalogue rows are real (spot-check tickers);
-      `Evidence: cloudbuild=<id>`. (Parked behind the access ruling above — not dispatchable.)
+- [x] ✅ [INFRA] [DESCOPED-NOT-MVP 2026-07-14] P3. **Never dispatched — parked by the access ruling (flipped 2026-08-07,
+      plan_reconciler).** Flip `KALSHI_PERP_ENV=prod` + prod secret refs; confirm no 403 (enrollment live);
+      **re-enumerate against prod** → prod cefi catalogue. Gate: prod perps land as genuine `PERPETUAL` crypto perps;
+      `KALSHI-PERP`/`POLYMARKET-PERP` catalogue rows are real (spot-check tickers); `Evidence: cloudbuild=<id>`. (Parked
+      behind the access ruling above — not dispatchable.)
 
 ### Phase 5 — guardrail so this class can't recur
 
