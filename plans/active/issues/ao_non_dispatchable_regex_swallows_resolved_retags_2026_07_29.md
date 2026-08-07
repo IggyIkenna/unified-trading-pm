@@ -233,3 +233,8 @@ past tense rather than deleting it outright.
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — citation re-checked and real: the sole real open item (the other
+  2 grep hits are fenced-code excerpts, per the doc's own 2026-08-02 Counting note) was RECLASSIFY'd 2026-07-30 then
+  explicitly REVERTED by the dated `unified-trading-pm@14478ca26` operator directive, a standing ruling not
+  re-litigated.

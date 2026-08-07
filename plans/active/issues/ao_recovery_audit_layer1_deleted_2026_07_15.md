@@ -192,3 +192,7 @@ function.
   Reordered to `## Todos` then `## Progress Log`, and moved the orphaned entry into this log alongside its siblings. No
   content changed, only structure.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — explicit dated operator ruling 2026-07-16 (Option B, re-home the
+  producer, deliberately sequenced LAST after AO dispatch-correctness work) re-confirmed present and current; sole open
+  todo is that deferred rewire, not re-litigated.

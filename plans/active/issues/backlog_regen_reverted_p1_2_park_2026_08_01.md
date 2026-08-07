@@ -176,3 +176,7 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-affirmed. Sole open item ([SCRIPT] P2, standing park-drift
+  hygiene assertion) remains an unscoped design fork (repo ownership + mechanism both undecided), matching the
+  2026-08-04 verdict and batch6's independent same-day classification. No content drift since the last marker.

@@ -239,3 +239,8 @@ follows correctly — only the webhook config is missing).
   `ag_closeout_audit_infra_parked_2026_08_07.md` findings 6/18/19 for full cross-finding context — a 3rd instance
   (`ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md`) retagged in the same pass; the authoring-time
   default fix (Option C) tracked separately.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item ([OPERATOR] P2, set
+  `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local`) remains a host-level secret-configuration action
+  on a ROOT checkout, explicitly outside any slot worker's authorized scope per `agents/RULES.md` § 1. No evidence the
+  webhook has since been configured.

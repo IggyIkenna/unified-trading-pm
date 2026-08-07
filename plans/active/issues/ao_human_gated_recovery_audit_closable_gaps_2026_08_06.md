@@ -143,3 +143,9 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
   tracked for dispatch, per the entry directly above — essential so a future toucher doesn't duplicate that work) and
   `/codex/05-infrastructure/vm-launcher-runbook.md` (the "heavy compute on shared host" SSOT the open `[DOC] P3`
   operator question names directly).
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — verified `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (todos
+  2-3, real verbatim match on `spawn_retry_count` reset + `_tick_once()` reorder) is still `status: draft` /
+  `assigned_vm: NA`, not yet an ACTIVE `planning` doc, so the strict already-duplicated (verdict 3) criterion doesn't
+  apply — this doc stays the live tracking home until batch7 activates. Third item ([DOC] P3) is an explicit operator
+  question, unchanged.

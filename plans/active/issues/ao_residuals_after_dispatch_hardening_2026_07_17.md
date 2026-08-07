@@ -108,7 +108,13 @@ source:
       2026-07-28 (operator gated-decision closeout ruling, `status: paused → active`, full completion of all P1 todos
       committed). This item is no longer blocked by the pause, but the route-collision resolution itself has not been
       done — check the epic's own P1 todo list before duplicating work here. (The archived child-plan citation itself is
-      unrelated background — a design-detail pointer, not the actual blocker.)
+      unrelated background — a design-detail pointer, not the actual blocker.) **na-eligibility-audit 2026-08-07
+      (citation fix, KEEP-NA-STALE/already-duplicated)**: this exact ask is already tracked verbatim as
+      `escalation_and_disaster_recovery_master`'s own `## P1 — escalation pipeline MVP` § `[BACKEND] P0` "Prerequisite —
+      resolve the `/api/escalate` vs `/api/escalation/{id}` route-naming collision" todo (that epic is `status: active`,
+      `assigned_vm: planning`) — same gate, same two routes, same "land BEFORE the role-agnostic escalation record todo"
+      sequencing. Do not duplicate work here; the epic is the live tracking home. This checkbox stays open pending that
+      epic's own todo, not re-derived independently.
 - [x] [BACKEND] P2. ✅ **RESOLVED 2026-07-23 — the doc's own gate command was run on the live VM and PASSES.**
       `sudo -u ubuntu env -u ORCHESTRATOR_DB_PATH -u ORCHESTRATOR_STATE_JSON .venv/bin/python -c "from server     import config; print(config.db_path())"`
       → `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`, and that path holds the LIVE
