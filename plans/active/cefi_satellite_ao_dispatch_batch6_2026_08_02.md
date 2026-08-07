@@ -133,7 +133,7 @@ context_scope:
       test). Do NOT flip the source doc's `[VERIFY] P0` checkbox — that requires the still-operator-gated VM run + GCS
       inspection to actually complete.
 
-- [ ] [DATA] P2. **Corpus-wide GCS census of DERIBIT dated-option-shaped trades objects misclassified as
+- [x] ✅ [DATA] P2. **Corpus-wide GCS census of DERIBIT dated-option-shaped trades objects misclassified as
       `instrument_type=perpetual`.** Read-only enumeration of
       `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=*/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=perpetual/data_type=trades/**`
       matching the dated-option wire-symbol shape (`<BASE>_<QUOTE>-<EXPIRY>-<STRIKE>-<C|P>.parquet`) across 2019-present
@@ -143,7 +143,9 @@ context_scope:
       `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` ("What's NOT done" item 2 only).
       **Done when**: the census completes, total affected-day count + byte volume are recorded with the exact `gcloud`
       commands used as evidence, and the source doc's item 2 is checked off citing this run (items 1/3/4 stay open —
-      root-cause, backfill, and re-canonicalization are design/dependent work, not batched here).
+      root-cause, backfill, and re-canonicalization are design/dependent work, not batched here). —
+      **unified-trading-pm@4dbd6cdfe** | Results: 28,158 option-shaped objects / 497 days / ~988 GB / 2024-03-08 to
+      2026-05-01 / assets: AVAX_USDC MATIC_USDC TRX_USDC XRP_USDC.
 
 - [ ] [DATA] P2. **Fail-hard Stage 0 — classify-and-log at cefi manifest-write and read-path call sites.** In
       `market-tick-data-service`, the write-side observe-log already shipped (`enforce_structural_and_observe_id_form()`
