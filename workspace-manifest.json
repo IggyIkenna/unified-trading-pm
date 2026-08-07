@@ -68,11 +68,11 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.0",
-    "deployment-api": "0.69.0",
+    "deployment-api": "0.71.0",
     "deployment-service": "0.119.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.46.0",
-    "features-service": "0.75.0",
+    "features-service": "0.76.0",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
     "instruments-service": "0.1.0",
@@ -80,7 +80,7 @@
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.96.0",
     "unified-trading-library": "0.74.0",
-    "unified-trading-pm": "1.2.730",
+    "unified-trading-pm": "1.2.733",
     "market-data-processing-service": "0.1.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.100.0",
@@ -2042,7 +2042,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2227,8 +2227,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.96.1.dev5+g467179e16",
-      "published_at": "2026-08-06T15:06:58Z",
+      "version": "0.96.1.dev6+gb0fed3ab4",
+      "published_at": "2026-08-07T00:06:44Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
