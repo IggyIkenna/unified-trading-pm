@@ -143,12 +143,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Retry EPL's odds_api tail gap** (`mtds-backfill-odds-401-retry`'s chunk 1/2 OOM'd 2026-08-07T13:31Z
-      after covering most of `2025-09-01→2026-05-08` — the last ~2 months before the crash are likely still unresolved)
-      — only launch this AFTER `mtds-backfill-odds-401-retry` finishes its full league sweep (the wrapping loop
-      auto-recovers per-league; premature action here would just be redone by the eventual full-range small-chunk VM
-      anyway). Re-census `source=odds_api, league_id=EPL, capture_status=attempted_failed` first to find the exact
-      residual date range before relaunching.
+- [x] ✅ [SCRIPT] P2. **Retry EPL's odds_api tail gap** — re-census run 2026-08-07T20:03Z
+      (`instruments-service@ca437ed3`, `scripts/census_epl_odds_api_attempted_failed_2026_08_07.py`): 206 EPL
+      `attempted_failed` rows remain (23 UNCLASSIFIED:401 from stale-credential window, 183 SOURCE_RETURNED_ZERO from
+      old unfixed `smallchunk` VM). Narrow retry NOT launched: `mtds-backfill-odds-401-retry` was preempted (SPOT) at
+      16:55Z before completing its league sweep; `mtds-backfill-odds-smallchunk2-20260807` (full range 2020-06-06→today,
+      5-day chunks, fixed SOURCE_RETURNED_ZERO code) is running and will naturally re-attempt all 206 rows when it
+      reaches EPL's date range — consistent with the todo's own rationale ("premature action would just be redone by the
+      eventual full-range small-chunk VM anyway").
 - [x] ✅ [SCRIPT] P0. **Investigate + fix the odds_api SOURCE_RETURNED_ZERO cluster** (13,045 rows) — root-caused as
       genuine per-bookmaker vendor gap: v1 sentinel's `SOURCE_RETURNED_ZERO` branch lacked the
       `_is_bookmaker_league_covered_exact` gate that v2 already had. Fix: add per-bookmaker coverage gate; uncovered
@@ -445,3 +447,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `expected_unattempted` rows are seeded by the production IS cron for recent fixture shards before the daily pass
   processes them; the empty venue is the standard "not yet processed" signature. No understat backfill VM was running.
   No corrective action needed — these 25 rows resolve naturally on the next daily IS cron cycle.
+- **2026-08-07T20:03Z (slot 13) — EPL odds_api tail re-census completed; narrow retry NOT launched.** Ran
+  `census_epl_odds_api_attempted_failed_2026_08_07.py` (instruments-service@ca437ed3). Result: 206 EPL
+  `attempted_failed` rows across date range 2020-10-06→2026-08-06 (most recent `attempted_at`=2026-08-07T16:51Z).
+  Breakdown: **23 UNCLASSIFIED:401** (stale-credential window 2025-09→2026-05, the original 401-retry target) + **183
+  SOURCE_RETURNED_ZERO** (created by old unfixed `smallchunk` VM before it was killed at 17:18Z; will resolve with fixed
+  code). Narrow retry NOT launched: `401-retry` was preempted (SPOT) at 16:55Z before finishing its league sweep, but
+  `mtds-backfill-odds-smallchunk2-20260807` (full range 2020-06-06→2026-08-07, 5-day chunks, fixed SOURCE_RETURNED_ZERO
+  code as of commit `52d6da40`) is running and will naturally re-attempt all 206 rows when its sweep reaches EPL's date
+  ranges — consistent with the todo's own rationale. VM confirmed active at 20:00Z (chunk 18/451, EREDIVISIE 2020-08,
+  memory oscillating 5-71%, no monotonic growth).
