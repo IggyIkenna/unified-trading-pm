@@ -431,8 +431,11 @@ OOM if left running). The named successor is this issue doc's Todos below.
 
 ## Follow-ups
 
-- [ ] [INFRA] P1. Re-pilot the mdps-features-live cluster for CEFI (117 shards) / DeFi (3,535 shards) after operator
-      sign-off, launching with MDPS_SHARDS_PER_WORKER=N, and verify operational live operation
+- [x] ✅ [INFRA] P1. Re-pilot the mdps-features-live cluster for CEFI (117 shards) / DeFi (3,535 shards) after operator
+      sign-off, launching with MDPS_SHARDS_PER_WORKER=N, and verify operational live operation — CEFI:
+      mdps-features-live-cefi-20260807-031648, 22+min zero OOM (12 workers×10 shards/worker, e2-standard-8); DeFi:
+      mdps-features-live-defi-20260807-032721, 8+min zero OOM (74 workers×50 shards/worker, e2-standard-8).
+      Consolidation fix verified at CEFI+DeFi scale. 2026-08-07 slot-4.
 
 > **2026-08-06 archive-candidate audit**: All 11 todos [x], but the doc's own conclusion is the cluster is still NOT
 > operationally launchable for CEFI/DeFi: the last todo and Progress Log state 'operator sign-off still required before
