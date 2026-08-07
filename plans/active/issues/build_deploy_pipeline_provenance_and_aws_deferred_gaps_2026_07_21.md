@@ -29,7 +29,7 @@ related:
   [
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
     /plans/archive/issues/change_freeze_calendar_protects_nothing_for_much_of_the_year_2026_07_20.md,
-    /plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
+    /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
   ]
 created: 2026-07-21
 author: unknown

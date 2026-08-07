@@ -53,6 +53,10 @@ resolved_by:
 source: ["-015 backfill dispatch (sports_fast_t1_recon_oom_live_capture_outage), 2026-08-06 slot 3"]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos closed, unlocked; fix shipped `deployment-service@a0143b51`).
+> Archived by cicd wall-resolution (`agt-cfe24e`) as part of the `terminal-status-archived` ratchet fix for the LDR→main
+> promote gate.
+
 # MTDS sports backfill VM: unscoped 30-league odds fetch still OOMs (the --league fix never reached the VM path)
 
 ## What I found
@@ -87,7 +91,8 @@ backfill (e.g. the 03-28..07-26 catch-up this VM was attempting) will fail the s
 
 Fix the backfill VM path so a wide-window odds backfill cannot OOM, then (optionally) re-run the 03-28..07-26 catch-up.
 
-- [ ] [DATA] P2. Fix the backfill VM path's unscoped odds fetch: `launch-mtds-sports-odds-backfill-vm.sh` launches with
+- [x] ✅ [DATA] P2. DONE 2026-08-06 — see "## Resolution (2026-08-06)" below (`deployment-service@a0143b51`, option (a)
+      shipped). Fix the backfill VM path's unscoped odds fetch: `launch-mtds-sports-odds-backfill-vm.sh` launches with
       `LEAGUE=""` so a wide-window backfill runs the unscoped 30-league full-day fetch and OOMs (confirmed:
       `mtds-backfill-odds-catchup-20260806` exit=137 RSS→30.7GiB 2026-08-06 — same `all_rows` accumulation-OOM the
       `--league` fix at `deployment-service@4e0e03d` eliminated on the live dispatch but never mirrored to the VM path).

@@ -38,7 +38,7 @@ tags: [iam, terraform, gcp, security, sequencing-hazard, ssot-contradiction, buc
 related:
   [
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
     /plans/archive/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
@@ -69,7 +69,7 @@ context_scope:
     deployment-service/configs/gcp_service_accounts.yaml,
     deployment-service/scripts/vm/lib/launcher_common.sh,
     /codex/05-infrastructure/bucket-isolation-model.md,
-    /plans/active/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
   ]
 ---
 

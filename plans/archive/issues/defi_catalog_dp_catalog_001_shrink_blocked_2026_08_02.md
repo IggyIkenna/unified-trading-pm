@@ -75,6 +75,10 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos closed, unlocked; `CATALOGUE_SHRINK_BLOCKED` cleared and
+> lifecycle-catalogue-regen confirmed complete). Archived by cicd wall-resolution (`agt-cfe24e`) as part of the
+> `archive-candidates` ratchet fix for the LDR→main promote gate.
+
 # DP-CATALOG-001: defi catalogue stale — traced to the dead R3 migration VM gating 4 paused collectors
 
 ## Evidence trail (all verified live, this session — `gcloud` as `unified-trading-sa`)

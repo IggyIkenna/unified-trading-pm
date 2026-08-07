@@ -63,6 +63,10 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos closed, unlocked; full remediation arc verified via cited commit
+> SHAs). Archived by cicd wall-resolution (`agt-cfe24e`) as part of the `archive-candidates` ratchet fix for the
+> LDR→main promote gate.
+
 # check_archive_candidates.sh has a real, unbatchable backlog — needs per-doc content review
 
 ## What I found

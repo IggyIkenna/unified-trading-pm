@@ -37,7 +37,7 @@ context_scope:
   [
     /plans/archive/2026_08/defi_satellite_ao_dispatch_batch8_2026_08_02.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
+    /plans/archive/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 depends_on: [defi_satellite_ao_dispatch_batch8_2026_08_02]

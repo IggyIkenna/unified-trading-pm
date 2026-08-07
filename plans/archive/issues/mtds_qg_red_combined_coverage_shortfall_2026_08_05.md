@@ -58,6 +58,10 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos closed, unlocked; QG confirmed GREEN via full
+> `quality-gates.sh --no-fix` run). Archived by cicd wall-resolution (`agt-cfe24e`) as part of the `archive-candidates`
+> ratchet fix for the LDR→main promote gate.
+
 # market-tick-data-service QG RED at LDR HEAD (fleet-blocking)
 
 > **Filed by**: data_engineering slot-12, 2026-08-05, per worker.md §4b (blocked ON THE REPO, not my task). Slot-12's

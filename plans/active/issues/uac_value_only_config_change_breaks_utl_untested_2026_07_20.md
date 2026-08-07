@@ -49,7 +49,7 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     .github/workflows/python-quality-gates-v2.yml,
     scripts/cicd/detect_breaking_change.py,
-    /plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
+    /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/epics/infrastructure_master.md,
   ]

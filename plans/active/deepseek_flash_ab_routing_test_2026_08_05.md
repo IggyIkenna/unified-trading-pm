@@ -21,7 +21,7 @@ related:
   [
     /plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
-    /plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md,
+    /plans/archive/2026_08/omniroute_multi_provider_routing_evaluation_2026_08_03.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
     /plans/archive/2026_08/ao_fleet_cache_tokens_and_task_count_2026_08_05.md,
   ]

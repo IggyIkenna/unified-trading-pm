@@ -76,5 +76,5 @@ drift_direction: advance-code
 ## Codex SSOTs
 
 - /plans/active/task_template.md §4 — finalize-plan-coverage rule
-- /codex/11-project-management/plan-completion-and-archival-discipline.md — the 6-step archival ritual
+- /codex/12-agent-workflow/plan-completion-and-archival-discipline.md — the 6-step archival ritual
 - /cursor-configs/skills/ag-closeout-audit/SKILL.md — the no-double-gate finding (finalize ships active)

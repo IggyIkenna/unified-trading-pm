@@ -257,3 +257,10 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   already auto-fired "Escalate LDR-QG failure to orchestrator", so a fresh dedicated `ldr_qg_failure`/`sit_failure`
   worker should pick it up separately; not chased here (this escalation's assigned wall — sit-gate/fleet-green on #729 —
   is resolved).
+
+- [ ] [CI] P2. Post-fix monitoring window: 4 distinct sub-mechanisms of `sit-gate/fleet-green` failure have surfaced and
+      been individually fixed within ~11 days (2026-07-27 → 2026-08-07), the same failure CLASS as
+      `sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md`. Watch for a 5th sub-mechanism recurring
+      within ~2 weeks of `system-integration-tests@b3da771` landing. Done when: either the window closes clean (no
+      recurrence by ~2026-08-21), or a 5th recurrence is confirmed and re-opens this doc's investigation. (repo:
+      system-integration-tests)

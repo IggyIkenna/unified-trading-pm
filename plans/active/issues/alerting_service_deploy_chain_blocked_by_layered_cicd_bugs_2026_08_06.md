@@ -47,7 +47,7 @@ related:
   [
     /plans/archive/issues/alerting_pagerduty_secret_missing_no_email_fallback_2026_08_06.md,
     /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
-    /plans/active/issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md,
+    /plans/archive/issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
     /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
@@ -71,7 +71,7 @@ locked_since:
 context_scope:
   [
     /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
-    /plans/active/issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md,
+    /plans/archive/issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
   ]
 ---

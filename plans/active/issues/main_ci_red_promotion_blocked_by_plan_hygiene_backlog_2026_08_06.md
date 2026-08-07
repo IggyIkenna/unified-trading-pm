@@ -102,7 +102,7 @@ requested rather than autonomously starting it.
 
   > **⚠️ A's wording above is CORRECTED by the 2026-08-06 ruling — do not execute it literally.** "Archive the 112
   > done-but-unarchived docs" reads as a mechanical batch pass. It is not one, and running it as one is actively
-  > dangerous: `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` exists precisely to
+  > dangerous: `/plans/archive/issues/archive_candidates_content_verification_backlog_2026_08_06.md` exists precisely to
   > record that each candidate needs a per-doc content read, because "a doc can have every listed `- [ ]` checked while
   > its own summary/Progress Log still describes an open question", and that blind batch-flipping "would risk silently
   > mis-marking still-open work as resolved — **worse than staying blocked**." Proven live the same day: closing two
@@ -118,7 +118,7 @@ requested rather than autonomously starting it.
 - [x] ✅ [OPERATOR] P1. Decide BLK-46fa5703 (A/B/C). — **RULED 2026-08-06 (operator, interactive): A, RE-SCOPED as
       per-doc content verification.** Not B (leaves main red while all three gates grow), not C. Dispatch happened as a
       frontmatter change, not a verbal hand-off:
-      `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` flipped to
+      `/plans/archive/issues/archive_candidates_content_verification_backlog_2026_08_06.md` flipped to
       `assigned_vm: planning` / `execution_scope: orchestrator-agent` / `assigned_role: review`, so AO workers execute
       it — the operator was explicit this runs **on the orchestrator, not in an interactive session**. That doc's
       existing todos are the method of record; see the ⚠️ correction under option A above for why the batch-archive

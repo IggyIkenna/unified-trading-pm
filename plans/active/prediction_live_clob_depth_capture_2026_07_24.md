@@ -364,7 +364,7 @@ context_scope:
   flush still overwrites (finding #1, MTDS path); (b) processed live-mode output requires the `mdps-features-live`
   cluster to be operational AND `mdps_mvp_universe('prediction')` to be non-empty — both preconditions are currently
   false by deliberate decision, not by oversight. The 6 scoped follow-up todos in the successor issue
-  (`/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`) own the path
+  (`/plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`) own the path
   to making those preconditions true. This entry supersedes the 2026-08-04 FAIL entry above — the gap is now explained
   end-to-end; no new surprise was found.
 

@@ -71,6 +71,9 @@ source:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (no open todos, unlocked). Archived by cicd wall-resolution (`agt-cfe24e`) as
+> part of the `terminal-status-archived` ratchet fix for the LDR→main promote gate.
+
 # full-workspace-sit's SIT_VALIDATED stamping loop unconditionally skipped every pinned-detached-HEAD re-check
 
 ## Root cause

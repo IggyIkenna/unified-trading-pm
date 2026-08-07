@@ -491,7 +491,7 @@ are genuinely in scope for the operator's "no exceptions" directive.
     entity earlier this campaign.** The real gap was always 0; the VM I launched (`sfi-backfill-20260806-140815`)
     correctly did nothing new against a defunct entity — not wasteful (SPOT, ran ~1.5hrs, cheap), but based on a flawed
     premise. Fixed: (1) `census_other_vendors_gap_2026_08_06.py` excludes SFI_LEAGUES now, shipped
-    `instruments-service@d9a42d2e`; (2) `codex/02-data/sports-data-source-coverage-matrix.md`'s SFI table was missing
+    `instruments-service@d9a42d2e`; (2) `/codex/02-data/sports-data-source-coverage-matrix.md`'s SFI table was missing
     the RETIRED annotation that the TRANSFERMARKT_LEAGUES row (same commit) already had — fixed, committed `87a60d43f8`.
     Sanity-checked `SFI_PROGRESSIVE_STATS` for the same class of bug — genuinely healthy (20,851 real `captured` rows,
     legitimate `empty_confirmed` reasons, only 89 `attempted_failed` — a `JSONDecodeError`, tiny — 384 rows written

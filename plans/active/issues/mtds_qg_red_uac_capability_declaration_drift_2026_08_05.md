@@ -38,7 +38,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     market-tick-data-service/tests/unit/test_collect_handler_schema.py,
     market-tick-data-service/tests/unit/test_orchestrator_per_data_type_sentinel.py,
-    /plans/active/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
+    /plans/archive/issues/mtds_qg_red_combined_coverage_shortfall_2026_08_05.md,
     /plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
   ]
 ---

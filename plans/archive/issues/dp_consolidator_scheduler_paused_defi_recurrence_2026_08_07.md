@@ -47,6 +47,9 @@ depends_on: []
 last_updated: 2026-08-07
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (no open todos, unlocked). Archived by cicd wall-resolution (`agt-cfe24e`) as
+> part of the `terminal-status-archived` ratchet fix for the LDR→main promote gate.
+
 # DP_CONSOLIDATOR_SCHEDULER_PAUSED recurrence — defi cron (2026-08-07)
 
 ## What I found

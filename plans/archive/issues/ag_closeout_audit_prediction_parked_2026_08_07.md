@@ -69,6 +69,9 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (no open todos, unlocked; zero-orphan audit record). Archived by cicd
+> wall-resolution (`agt-cfe24e`) as part of the `terminal-status-archived` ratchet fix for the LDR→main promote gate.
+
 # Prediction closeout-audit findings, 2026-08-07
 
 > **Context.** Audit record of today's `/ag-closeout-audit prediction` pass. Written per the skill's "parked findings

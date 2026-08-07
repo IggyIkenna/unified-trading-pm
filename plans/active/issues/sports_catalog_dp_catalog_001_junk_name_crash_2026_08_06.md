@@ -45,7 +45,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
     /plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md,
-    /plans/active/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
+    /plans/archive/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
   ]
 created: 2026-08-06
 last_updated: "2026-08-06"

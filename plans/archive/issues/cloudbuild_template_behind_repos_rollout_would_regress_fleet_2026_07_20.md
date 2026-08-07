@@ -57,6 +57,10 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos closed, unlocked; end-to-end proof independently verified via
+> `ci_satellite_ao_dispatch_batch5_2026_08_02.md`'s TODO 1). Archived by cicd wall-resolution (`agt-cfe24e`) as part of
+> the `archive-candidates` ratchet fix for the LDR→main promote gate.
+
 # The rollout tool would have regressed the fleet
 
 ## What was measured
@@ -354,6 +358,6 @@ isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.
       `4d265c51-5ca0-4349-b48f-80d4f7179430` (execution-service, 2026-08-06 slot 3), recovered via `VERSION=0.0.0.dev0`
       fallback ✅.
 
-> **2026-08-06 archive-candidate audit**: Re-scoped rollout shipped + drift checker GREEN, but the todo's own step-2
-> done-when 'Prove at least ONE repo end-to-end' remains outstanding — 2026-08-06 Progress Log lists it as 'run on the
-> real infra, build id cited ... when complete'.
+> **2026-08-07 note**: the 2026-08-06 archive-candidate audit's caution above (step-2 done-when "remains outstanding")
+> was already stale at the time it was written — it predates the Follow-up checkbox directly above it, which closes that
+> exact done-when with the cited build `4d265c51-5ca0-4349-b48f-80d4f7179430`. Removed superseded note.

@@ -105,7 +105,7 @@ context_scope:
       green. Repo: unified-trading-pm. — unified-trading-pm@54ced60b1. — filled 2026-08-06 (/plan-reconcile ao):
       verified `54ced60b1` is an ancestor of `origin/live-defi-rollout` and its diff matches this todo
       (`scripts/docs/docspec.py` adds `FieldSpec("author", Req.E, "scalar")` at line 185;
-      `codex/11-project-management/doc-frontmatter-schema.md` adds the elective `author` row for `issue` docs).
+      `/codex/11-project-management/doc-frontmatter-schema.md` adds the elective `author` row for `issue` docs).
 - [x] ✅ [DOC] P3. **Backfill `author` on the 438 existing issue docs that lack it.** Only 6 of 444 issue docs carry
       `author` today (2026-08-04); the schema now recognizes it as elective (validated when present, no gate break when
       absent). worker.md §4.5 mandates it for new issue docs. Run a scripted backfill pass over

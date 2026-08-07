@@ -65,6 +65,10 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos closed, unlocked; god-SA removal decision resolved, runtime rewire
+> confirmed done in the sibling plan). Archived by cicd wall-resolution (`agt-cfe24e`) as part of the
+> `archive-candidates` ratchet fix for the LDR→main promote gate.
+
 # P2.1's literal "remove the god-SA objectAdmin" step would break every live/batch prod GCS write, fleet-wide
 
 ## What I found

@@ -66,7 +66,7 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/adapters/prediction/trades_adapter.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
-    /plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md,
+    /plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md,
   ]
 ---
 
@@ -77,7 +77,7 @@ context_scope:
 > operational-launch decision made (DECIDED NOT TO LAUNCH, evidenced by 2 failed pilots + structural
 > mdps_mvp_universe('prediction')=0 finding), book_snapshot_5 adapter registered (d0925d5), and all 6 scoped follow-ups
 > are filed as TRACKED todos in the named successor doc
-> /plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md. The
+> /plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md. The
 > zero-live-objects state is 'the expected consequence of that conscious operational decision.' No prose-only untracked
 > follow-up. Moved by the 2026-08-06 AO issue-doc archive sweep.
 
@@ -189,7 +189,7 @@ currently nothing at all.
       confirming failure (no reason to bill on confirmed-broken paths). Full evidence + 6 scoped follow-up todos (CLI
       env-var bridge, launcher invocation fix, live-vs-batch features bug, 2 smaller features bugs, an `[OPERATOR]`
       process-topology redesign decision for CEFI/DeFi scale, a re-pilot plan) filed as the named successor:
-      `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`.
+      `/plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`.
 - [x] ✅ [BACKEND] P1. **Register a `CandleAdapterRegistry` entry for
       `(MarketAssetGroup.PREDICTION, "book_snapshot_5")`, shipped `market-data-processing-service@d0925d5`.** Chose
       option (a): added `PredictionBookSnapshotAdapter` (mirrors `DefiBookSnapshotAdapter` — extends
@@ -201,10 +201,10 @@ currently nothing at all.
       in `orchestration_service.py:659` will no longer fire on the next live scan.
 
       > **⚠️ HEADS-UP (2026-08-05):** Even once this adapter ships, it will never be invoked by the
-                                              > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
-                                              > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
-                                              > `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
-                                              > before treating this adapter registration as a depth-history fix.
+                                                  > `mdps-features-live` launch path — `mdps_mvp_universe('prediction')` returns zero shards structurally
+                                                  > (2026-07-30 ruling, MDPS handles market-data AGs only). Read the "Structural finding" section of
+                                                  > `/plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`
+                                                  > before treating this adapter registration as a depth-history fix.
 
 - [x] ✅ [DATA] P2. **Re-verify multi-hour processed accumulation once todos 1-2 land.** Re-ran the same bounded
       GCS-timespan check (`processed_candles/by_date/day={D}/pipeline_mode=live_*` for 2026-08-01 through 2026-08-04).
@@ -301,10 +301,10 @@ currently nothing at all.
   follow-up todos (CLI env-var bridge, launcher invocation fix, live-vs-batch features bug, 2 smaller features bugs, an
   `[OPERATOR]` process-topology decision for CEFI/DeFi, a re-pilot plan starting with TradFi) filed as the named
   successor issue:
-  `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`. Flagged a note
-  on todo 4 (CandleAdapterRegistry for prediction book_snapshot_5) in that new doc: even once shipped, it will never be
-  invoked by this launch path since MDPS runs zero prediction shards structurally.
+  `/plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`. Flagged a
+  note on todo 4 (CandleAdapterRegistry for prediction book_snapshot_5) in that new doc: even once shipped, it will
+  never be invoked by this launch path since MDPS runs zero prediction shards structurally.
 
 - **context-scout 2026-08-06**: populated/refreshed context_scope (5 entries) — added
-  `/plans/active/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`, the named
+  `/plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`, the named
   successor doc this issue's Progress Log repeatedly cites as owning all further follow-up work.

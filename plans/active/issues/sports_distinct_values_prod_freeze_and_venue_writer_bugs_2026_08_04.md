@@ -60,7 +60,7 @@ tags:
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
+    /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /plans/archive/issues/honest_coverage_cron_run_job_sa_missing_actas_uts_prd_sa_2026_08_03.md,
@@ -91,7 +91,7 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
+    /plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md,
     deployment-api/deployment_api/routes/data_status/_distinct_values.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,

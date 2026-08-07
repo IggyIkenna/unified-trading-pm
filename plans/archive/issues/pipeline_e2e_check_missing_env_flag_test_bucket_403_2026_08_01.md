@@ -53,7 +53,7 @@ depends_on: []
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. All 6 todos [x]; every code fix shipped + live-verified (features@524b71ef, IS@f935a75e,
 > MDPS@b16d44c, MTDS@05a1e735 + 4a7b466), the runbook HARD RULE note is confirmed present in
-> codex/05-infrastructure/vm-launcher-runbook.md (lines 124-131) despite the '<pending>' SHA being cosmetic, and the
+> /codex/05-infrastructure/vm-launcher-runbook.md (lines 124-131) despite the '<pending>' SHA being cosmetic, and the
 > IS/MDPS blocker (Group A instruments-store IAM gap) was resolved in the archived sibling
 > bucket_iam_group_a...2026_08_01.md (status: resolved). Moved by the 2026-08-06 AO issue-doc archive sweep.
 

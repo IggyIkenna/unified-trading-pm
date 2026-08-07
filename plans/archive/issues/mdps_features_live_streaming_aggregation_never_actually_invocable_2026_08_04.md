@@ -92,6 +92,10 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos closed, unlocked; CEFI+DeFi production-scale VM proof cited, zero
+> OOM). Archived by cicd wall-resolution (`agt-cfe24e`) as part of the `archive-candidates` ratchet fix for the LDR→main
+> promote gate.
+
 # mdps-features-live cluster is not operationally launchable today (2026-08-04)
 
 ## What I found (2 real GCE pilot launches, both deleted after confirming failure)

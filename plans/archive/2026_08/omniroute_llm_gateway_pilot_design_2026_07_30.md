@@ -59,11 +59,11 @@ context_scope:
 
 > **🔴 ARCHIVED 2026-08-06 — SUPERSEDED BY THE OMNIROUTE NO-GO RULING.** The operator ruled OmniRoute **no-go for now**
 > on 2026-08-06 (interactive session), recorded in
-> `/plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision". Every one of this
-> plan's 6 remaining open todos presupposed ADOPTING OmniRoute (stand up the gateway, sign up for `omniroute.online`,
-> run a ~2-week pilot, confirm the routing-constraint mechanism, pick the curated model allowlist, wire a real
-> `accounts.json` entry) — each was checked individually at archival and none survives the ruling, so the plan is moot
-> rather than merely paused. **Nothing was migrated out**: there is no residual work to track.
+> `/plans/archive/2026_08/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision". Every one
+> of this plan's 6 remaining open todos presupposed ADOPTING OmniRoute (stand up the gateway, sign up for
+> `omniroute.online`, run a ~2-week pilot, confirm the routing-constraint mechanism, pick the curated model allowlist,
+> wire a real `accounts.json` entry) — each was checked individually at archival and none survives the ruling, so the
+> plan is moot rather than merely paused. **Nothing was migrated out**: there is no residual work to track.
 >
 > **The ruling is reversible** ("no-go for now", not "never"). If OmniRoute is revisited, start from the evaluation
 > plan's findings matrix plus a real provider-invoice reconciliation — which that plan records as never having been done

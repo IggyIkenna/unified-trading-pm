@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [governance-sweep, operator-decisions, na-eligibility, plan-hygiene, follow-up]
 related:
   [
-    /plans/active/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
+    /plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

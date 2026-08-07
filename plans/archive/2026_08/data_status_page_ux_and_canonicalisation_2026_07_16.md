@@ -623,9 +623,9 @@ safely-completable work. Terminal state:
 - **na-eligibility-audit 2026-08-06 (ui tranche, dispatch agt-2cd17a)**: KEEP-NA, valid — 0 open todos of its own (all
   P1-P10 shipped or forked to owning child plans, per this doc's own 2026-08-02 Todos entry). NOT archived here: its
   ARCHIVE-vs-`archive_exempt` disposition is the explicit open todo 3 of
-  `/plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md` (already `assigned_vm: planning`,
-  operator-ruled 2026-08-06 to run only via that plan's own AO workers, not an interactive/one-shot session) — deferring
-  to that plan rather than racing it.
+  `/plans/archive/issues/archive_candidates_content_verification_backlog_2026_08_06.md` (already
+  `assigned_vm: planning`, operator-ruled 2026-08-06 to run only via that plan's own AO workers, not an
+  interactive/one-shot session) — deferring to that plan rather than racing it.
 - **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: Archived per the standard 6-step ritual. All
   3/3 checkboxes were already done — every P1-P10 point shipped or deduped to other plans. `status: active → complete`,
   `last_updated: 2026-08-06`, all 16 corpus referrers (2 skills, 1 epic, 10 active plans, 3 issue docs) repointed to

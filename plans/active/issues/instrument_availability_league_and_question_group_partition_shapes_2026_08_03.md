@@ -157,7 +157,7 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
       shape, confirmed historical-only (last write 2026-07-22, same `a9be6ce9` writer-fix cutover as sports), and
       migrated it directly into the already-ruled base `instrument_availability` template (no
       `canonical_question_group=` trailing key) rather than adding one — now reflected in
-      `codex/02-data/cross-asset-canonical-target-ssot.md` §8's prediction banner. This answers the "rule on the
+      `/codex/02-data/cross-asset-canonical-target-ssot.md` §8's prediction banner. This answers the "rule on the
       canonical position" question in the negative (it collapses into the base shape) via completed migration rather
       than a separate ruling. **Todos 2/5's prediction-half scope is now moot for the same reason — not independently
       re-verified/flipped here (out of this bonus finding's scope), flagged for a future pass.** Original text preserved

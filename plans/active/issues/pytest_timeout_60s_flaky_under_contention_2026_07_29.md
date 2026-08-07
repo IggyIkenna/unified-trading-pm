@@ -684,10 +684,12 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       self-hosted under the reservation-mode governor. Full evidence + verification in the Progress Log (2026-08-06
       entry).
 
-> **2026-08-06 archive-candidate audit**: Live unresolved incident: the flake class is explicitly confirmed NOT closed
-> by the 60->150s raise (todo 3's verdict), recurrences continue across 10 repos (latest survey 2026-08-04 found related
-> xdist-contention failures; the class is 'confirmed NOT closed'), and todos 5/6 carry un-met 'Done when' conditions
-> (todo 5: 'Not yet root-caused'; todo 6: runner-contention capacity question genuinely open). This is the tracking SSOT
-> for an ongoing, recurring fleet-wide QG contention incident (tied to fleet_wide_qg_capacity_crisis). Archiving while
-> the class is confirmed open would lose the tracking record. No explicit DO-NOT-ARCHIVE guard but the live-incident
-> criterion applies. [KEEP_OPEN todo synthesized from justification by archive sweep]
+- [ ] [CI] P2. Post-fix monitoring window for `unified-trading-pm@52a85d6c7` (retry-once-on-timeout, shipped
+      2026-08-06): watch whether a genuinely-hung test ever slips through retry-once, and whether the flake class
+      resurfaces with a materially different signature (a "3rd sub-mechanism") within ~1-2 weeks of the fix landing.
+      Done when: either the monitoring window closes clean (no recurrence by ~2026-08-20), or a recurrence is confirmed
+      and re-opens this doc's investigation per its own re-open convention. (repo: unified-trading-pm)
+
+> **2026-08-07 note**: the 2026-08-06 archive-candidate audit note above is superseded by the fix shipped the same day
+> (todo directly above this note, `unified-trading-pm@52a85d6c7`) — the genuinely still-open work is the post-fix
+> monitoring window, now tracked as a real todo instead of prose.
