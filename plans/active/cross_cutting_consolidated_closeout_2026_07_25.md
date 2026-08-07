@@ -572,7 +572,7 @@ pointer, not duplicated, since Track 1 already references its `related:` graph i
 [issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md](/plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md)
 (MTDS/MDPS live-pipeline persistence/hot-path architecture, log-spine decoupling — applies to the whole live pipeline,
 not one AG) +
-[issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md](/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md)
+[issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md](/plans/archive/2026_08/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md)
 (added 2026-07-27, retagged out of a `[cefi, cross-cutting]` Orthogonality-HARD-CHECK mistag — the specific verification
 VM happened to be a CeFi run, but the bug itself, `setup-data-pipeline-vm.sh`'s exec-dispatch never wired for a compound
 `VM_SERVICE` + neither MDPS's nor features-service's CLI supporting the launcher's per-asset-group premise, is
@@ -917,6 +917,5 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): explicit dated 2026-07-25
   operator gate ("do NOT flip to `assigned_vm: planning` until they confirm they've personally run
-  `/ag-closeout-audit` + `/plan-reconcile` for this AG... on the planning VM") still governs; the sole open todo
-  (line ~708, a meta-note that Track open items aren't tracked as checkboxes in this digest) is not itself
-  dispatchable work.
+  `/ag-closeout-audit` + `/plan-reconcile` for this AG... on the planning VM") still governs; the sole open todo (line
+  ~708, a meta-note that Track open items aren't tracked as checkboxes in this digest) is not itself dispatchable work.
