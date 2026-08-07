@@ -101,6 +101,12 @@ Flagged (routed via STEP 6, not fixed — codex edits need an explicit operator 
    `/blocked` POST this run already used for the escalation above). Skipped per the live retirement notice; not fixed
    here (role-file edit outside `plans/**`, and not this run's scope) — flagging for whoever next touches that role
    file.
+3. **`agents/plan_reconciler.md`'s STEP 7 result-POST path is wrong**: it says `POST $SERVER_URL/api/plan_health/result`
+   (underscore) — the real endpoint is `/api/plan-health/result` (hyphen, matching the dispatch endpoint's own naming).
+   `curl` against the underscore path returns a bare `404 Not Found`; the hyphenated path + the `X-Orchestrator-Secret`
+   header (present in this session's env — the boot note's "may be EMPTY, that's fine" caveat did not apply here)
+   returned `200 {"ok":true,...}`. Not fixed here (role-file edit out of scope) — flagging for whoever next touches that
+   role file.
 
 ## Hygiene fixes
 
