@@ -247,3 +247,11 @@ the highest-priority open question.
   `[INFRA] P0` todo above rather than force either action past this session's craft boundary. No GCS/VM/cron mutations
   performed this session — read-only investigation only (git log/show,
   `gcloud compute instances list`/`get-serial-port-output`, source reads).
+- **AO dispatch 2026-08-07 (`data_engineering`, slot 7)**: independent re-verification only — no code/GCS/VM/cron
+  mutations. Confirmed: (1) watchdog daemon `vm-zombie-watchdog-20260805-125558` STILL RUNNING as of 2026-08-07T05:37Z
+  (unchanged from slot 12 — `[INFRA] P0` daemon relaunch has NOT been done); (2) code fix CONFIRMED IN LDR —
+  `vm_zombie_watchdog.py` `PREFIX_IDLE_THRESHOLDS["canonical-migration-"] = (90.0, 360.0)` +
+  `launch-canonical-migration-vm.sh` `STALL_TIMEOUT_SEC=7200` (both in `deployment-service@0e94ceee1`); (3) GCS objects
+  spot-checked 0 for ETHEREUM + ARBITRUM at 2026-08-07T05:37Z (`gcloud storage ls` → "no objects found", consistent with
+  earlier verifications). Did NOT relaunch the daemon or purge VM. Posting /blocked to determine dispatch path for the
+  operator-gated `[INFRA] P0` daemon relaunch.

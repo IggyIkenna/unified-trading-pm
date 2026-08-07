@@ -368,3 +368,11 @@ remaining items besides the over-cap-gated one above).
 - **context-scout 2026-08-07**: re-verified context_scope (4 entries) -- all 4 still resolve and remain the correct
   minimal reading list (no single source path summarizes this batch's 8-repo, 17-todo spread; each todo already
   self-documents its own target file inline); unchanged.
+- **2026-08-07 (AO dispatch, `data_engineering`, slot 7, todo 3 `[DIAG] P1`)**: independent re-verification of slot 12's
+  findings — no code/GCS/VM/cron mutations. Confirmed: (1) zombie-watchdog daemon `vm-zombie-watchdog-20260805-125558`
+  still running same stale instance as of 2026-08-07T05:37Z (INFRA P0 NOT yet done); (2) code fix in LDR —
+  `deployment-service@0e94ceee1` `PREFIX_IDLE_THRESHOLDS["canonical-migration-"] = (90.0, 360.0)` +
+  `STALL_TIMEOUT_SEC=7200` both confirmed present in current checkout; (3) GCS objects spot-checked 0 for ETHEREUM +
+  ARBITRUM. Posting /blocked for operator-gated daemon relaunch dispatch decision. Checkbox remains open per this todo's
+  own done-when until daemon is refreshed and purge VM completes. Evidence recorded in
+  `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` progress log.
