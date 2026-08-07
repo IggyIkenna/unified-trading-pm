@@ -18,7 +18,7 @@ summary: >-
   an issue doc with doc-level `assigned_vm: NA`, so the backlog regen never surfaced it for `infra`-craft dispatch in
   the first place — this plan gives it a proper `assigned_role: infra` / `assigned_vm: planning` home so it can reach an
   infra-craft worker (or an operator directly) for the authorization + relaunch itself.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure, defi]
 stage: [meta]
@@ -70,10 +70,11 @@ source: >-
 
 # Relaunch vm-zombie-watchdog — routing-gap fix
 
-> **Operator authorized the relaunch to main at 2026-08-07T07:30Z; flipped `status: draft` → `active` in the same edit
-> as the todo flip below** (the plan was never dispatched before the work completed — activated retroactively so the
-> record is consistent). This plan's one todo is DONE; it is eligible for archival per
-> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+> **🟢 ARCHIVED 2026-08-07.** Operator authorized the relaunch to main at 2026-08-07T07:30Z; the plan's one todo
+> completed (`vm-zombie-watchdog-20260807-075242`, boot-clean, first poll killed 0/0) — `status: draft` → `active` →
+> `complete` reflects it was never dispatched before the work finished (activated + closed retroactively so the record
+> is consistent). Source issue doc's mirrored todo flipped with the same evidence:
+> `/plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`.
 
 ## Why this plan exists — a dispatch-routing gap, not new investigation
 

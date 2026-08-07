@@ -265,11 +265,12 @@ the highest-priority open question.
   recommend operator create an `assigned_role: infra` dispatch plan to route the [INFRA] P0 into the AO backlog.
 - **AO re-dispatch 2026-08-07 (`data_engineering`, slot 7, fourth dispatch)**: same daemon, still stale, re-verified
   once more. Instead of a fourth identical `/blocked` recommendation, created
-  `plans/active/infra_vm_zombie_watchdog_relaunch_2026_08_07.md` (`status: draft`, `assigned_role: infra`) — a
-  single-todo plan that mirrors this doc's own `[INFRA] P0` todo with an `assigned_vm: planning` home, so it can
-  actually enter the AO backlog once the operator flips it `active`. The `[INFRA] P0` todo below is unchanged (still the
-  source of truth for the fix's intent); the new plan is a dispatch-routing wrapper around it, not a duplicate decision.
-  No VM/GCS/cron mutation performed this session.
+  `plans/archive/2026_08/infra_vm_zombie_watchdog_relaunch_2026_08_07.md` (created `status: draft`,
+  `assigned_role: infra`; archived 2026-08-07 once its one todo completed) — a single-todo plan that mirrors this doc's
+  own `[INFRA] P0` todo with an `assigned_vm: planning` home, so it can actually enter the AO backlog once the operator
+  flips it `active`. The `[INFRA] P0` todo below is unchanged (still the source of truth for the fix's intent); the new
+  plan is a dispatch-routing wrapper around it, not a duplicate decision. No VM/GCS/cron mutation performed this
+  session.
 - **2026-08-07 (main, operator-authorized relaunch)**: operator authorized the real-mode relaunch at 07:30Z; main drove
   it via an infra sub-agent. Dry-run validated safe first (2 clean cycles, zero reaps), then cutover: stale
   `vm-zombie-watchdog-20260805-125558` deleted, new instance `vm-zombie-watchdog-20260807-075242` created
