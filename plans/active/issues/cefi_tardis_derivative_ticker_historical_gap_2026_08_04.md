@@ -91,6 +91,23 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-7 2026-08-07 ~18:28Z (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, checkpoint #18
+  — RC4 root-cause + fix shipped + VM re-launched)**: VM `cefi-fwd-20260807-100050` (the slot-2 launch) **TERMINATED**
+  with 0 DERIBIT derivative_ticker objects. Root cause identified as **RC4**: DERIBIT `options_chain` bulk-download
+  exceeds `_BULK_CHAIN_DOWNLOAD_TIMEOUT_SEC=300.0` every day (DERIBIT OPTIONS dataset is 50-300MB, takes
+
+  > 5 min). Timeout fires before `derivative_ticker` can run, marking DERIBIT as failed for that day. RC3 IS-fallback IS
+  > working (`expected_instruments=50` in VM log sentinel) but `captured=0` because options_chain timeout pre-empts the
+  > whole venue. **Fix (RC4)**: added `--data-types` / `VM_DATA_TYPES` flag to `launch-cefi-forward-poll.sh` — maps to
+  > `--data-types ${VM_DATA_TYPES//[,;]/ }` in `setup-data-pipeline-vm.sh` (line 1725, which already supported it). QG
+  > green (3153 passed). Shipped: `deployment-service@2c0bcb3`. **New VM launched**: `cefi-fwd-20260807-182843`
+  > (e2-standard-8, asia-northeast1-c), metadata: `VM_VENUE=DERIBIT`, `VM_DATA_TYPES=derivative_ticker`,
+  > `VM_FORCE=true`, `MTDS_TARBALL_SHA=b2cc274219acf0b25750a25a4ec4570a3e44d642` (RC3 pinned tarball, confirmed in GCS).
+  > Launcher auto-republished stale tarballs (current MTDS HEAD `f265cf9fd5ad` differs from RC3 sha — VM will use RC3
+  > pinned tarball at `mtds-code@b2cc274219acf0b25750a25a4ec4570a3e44d642.tar.gz`). **Next action**: monitor
+  > `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-23/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=perpetual/data_type=derivative_ticker/`
+  > for count ≥ 1; verify day=2026-07-01 too; flip P2 checkbox; `docs(plans):` push; POST /done.
+
 - **slot-2 2026-08-07 ~10:10Z (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, pre-compact
   checkpoint #17)**: VM `cefi-fwd-20260806-065837` **TERMINATED** (NOTFOUND status confirmed ~09:59Z via watchdog
   b6sson3iw). Tardis fleet cleared (0 running cefi-fwd VMs). RC3 tarball
