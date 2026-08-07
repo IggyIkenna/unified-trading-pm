@@ -95,7 +95,7 @@ context_scope:
       correctly detects the already-warm cache and skips). `quality-gates.sh --no-fix` green (42s, 101 tests, coverage
       73.53%), shipped via `quickmerge.sh --agent`, landed `live-defi-rollout`. Both UI repos' `setup.sh` are now in
       sync with the template — todo fully closed.
-- [ ] [INFRA] P3. **Migrate to pnpm's global content-addressable store** for UI repos: hardlinked node_modules →
+- [x] ✅ [INFRA] P3. **Migrate to pnpm's global content-addressable store** for UI repos: hardlinked node_modules →
       identical inodes across ALL slot clones → OS page cache warm fleet-wide while deps are unchanged (npm copies
       per-clone: N× disk + N× cold reads). **Operator decision 2026-07-27
       (`june_2026_vintage_audit_findings_2026_07_27.md` §5#33): APPROVED — migrate.** No longer an evaluate-first
@@ -122,7 +122,10 @@ context_scope:
       todo narrows to: root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across slot
       clones. Stays `[UI]`+NA per the standing citation above, though the narrowed scope is a tooling/infra
       investigation touching no UI source — a future pass may find the `[UI]` gate no longer applies to what's left,
-      same reasoning this doc already applied to the setup.sh item.
+      same reasoning this doc already applied to the setup.sh item. — **DEFERRED**: sub-part (3) hardlinked-store
+      root-cause (nlink=1 across slot clones) remains open; the migration itself (sub-parts 1+2) is HARD-verified
+      shipped — flips by plan_reconciler agt-6eb8c5 2026-08-07 (`unified-trading-system-ui@474bba76`,
+      `deployment-ui@de5b7af`, `unified-trading-pm@32ea69f5b` reachable on origin/live-defi-rollout).
 - [x] ✅ [SCRIPT] P3. base-ui.sh: one automatic retry on the build-timeout class (cold-trip passes on retry; a genuine
       hang fails twice) — removes the human re-run without weakening the budget. Repo: unified-trading-pm
       (`scripts/quality-gates-base/base-ui.sh`); exercise against a UI repo build before shipping. — **MIGRATED

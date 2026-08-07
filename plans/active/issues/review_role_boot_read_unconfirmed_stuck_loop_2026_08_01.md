@@ -2,7 +2,8 @@
 doc_type: issue
 title:
   Review-role boot stuck in a 225+-rejection `boot_read_unconfirmed` loop since 2026-07-27 — docs fixed, live slot needs
-  attention
+  attention (slot 1 CONFIRMED CLEAN 2026-08-02 per body — open recurrence in other craft roles; title updated
+  2026-08-07, plan_reconciler agt-6eb8c5)
 summary: >-
   `agents/review.md`'s own "Boot — read the canonical files first" section named only `RULES.md` as the required
   pre-poll read — it never listed `worker.md`. But the live `/api/slots/<N>/boot` read-confirmation gate

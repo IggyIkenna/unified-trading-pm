@@ -276,16 +276,18 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 - [x] [INFRA] P1. ✅ PM@a6b5e24a5 — Per-repo cgroup cap — wrap each admitted run at `QG_MEM_CAP = 1.2 × baseline_peak`
       (existing base-service hook, currently 0/off) so a runaway/mis-measured run is OOM-killed in its OWN cgroup, not
       the host.
-- [x] [INFRA] P0. ✅ unified-trading-pm@<PENDING-SHA> — Global 80 % valve ✅ PM@a6b5e24a5 (admission side, SHIPPED);
-      runtime ABORT of an already-running >80 % job — SHIPPED (self-scoped v1, see Progress Log 2026-07-27 slot-5): if
-      live host used-RAM crosses `QG_HOST_RAM_ABORT_PCT` (default 80%) for `QG_WATCHDOG_CONSECUTIVE_HITS` (default 2)
-      consecutive polls, the ADMITTED run's own background watchdog SIGTERMs its own process tree + writes a loud marker
-      file + logs. Trades the "pick exactly one offender" refinement described here for a simpler, safer self-scoped
-      design (every admitted run monitors itself; a bug here can only ever hurt its own run, never another slot's) —
-      cross-process "kill the newest run" arbitration + Slack alerting remain open refinements (see the still-open
-      Phase-4 Slack-alerting todo below). Catches aggregate pressure per-repo caps miss (verified this matters
-      concretely: `systemd-run` is unavailable on the slot-5 host, so the per-repo cgroup cap is inactive there too —
-      this watchdog is now the ONLY live post-admission defense on that host).
+- [x] [INFRA] P0. ✅ unified-trading-pm@a6b5e24a5 — Global 80 % valve (placeholder `@<PENDING-SHA>` replaced by
+      plan_reconciler agt-6eb8c5 2026-08-07 with the sha cited on the next line, reachable on origin/live-defi-rollout);
+      ✅ PM@a6b5e24a5 (admission side, SHIPPED); runtime ABORT of an already-running >80 % job — SHIPPED (self-scoped
+      v1, see Progress Log 2026-07-27 slot-5): if live host used-RAM crosses `QG_HOST_RAM_ABORT_PCT` (default 80%) for
+      `QG_WATCHDOG_CONSECUTIVE_HITS` (default 2) consecutive polls, the ADMITTED run's own background watchdog SIGTERMs
+      its own process tree + writes a loud marker file + logs. Trades the "pick exactly one offender" refinement
+      described here for a simpler, safer self-scoped design (every admitted run monitors itself; a bug here can only
+      ever hurt its own run, never another slot's) — cross-process "kill the newest run" arbitration + Slack alerting
+      remain open refinements (see the still-open Phase-4 Slack-alerting todo below). Catches aggregate pressure
+      per-repo caps miss (verified this matters concretely: `systemd-run` is unavailable on the slot-5 host, so the
+      per-repo cgroup cap is inactive there too — this watchdog is now the ONLY live post-admission defense on that
+      host).
 - [x] [INFRA] P2. ✅ base-service.sh:610-617 acquire guard (shipped w/ the contention work) — Light-slice bypass — only
       TESTS + TYPE CHECK acquire; `QG_SLICE=lint-codex` acquires nothing.
 - [x] [INFRA] P3. ✅ PM@3de0ee74d (SOLO_ADMIT/SOLO_WAIT) — Oversize guard (defensive) — peak > `QG_RAM_BUDGET` waits for
@@ -382,12 +384,17 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 - [ ] [INFRA] P2. NEW FINDING (2026-08-03, from the glue-runner ledger fork's soak) — AO's own slot-worker QG runs (a
       separate `.tabs`-scoped ledger population on `agent-orchestrator-vm-1`, the SAME host that runs the glue-runner
       pools) are still NOT unified with the glue-runner pools' ledger (`/opt/.qg-governor-glue-shared`) even after the
-      cross-repo fix. Both populations correctly share ONE ledger internally, but the two populations don't share a
-      COMBINED budget view of each other — an AO slot-worker QG run and a glue-runner CI QG run can both admit
-      independently even though they compete for the same physical CPU/RAM. Not attempted in the fork (out of its scope:
-      cross-repo CI sharing, not cross-population sharing). Possible direction: extend `_qg_shared_root()` further so
-      BOTH the `.tabs` strip and the `/opt/github-glue-runners*` collapse resolve to the SAME final path when running on
-      this one host (they're currently two different literal constants). SSOT for the fix already shipped:
+      cross-repo fix. — **premise annotation 2026-08-07 (plan_reconciler agt-6eb8c5): the "SAME host that runs the
+      glue-runner pools" premise is dead since 2026-08-05 — `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`
+      confirms "zero active `github-glue-runner*.service` units remain on the old VM" (the pools moved to
+      `i-042a6332509482556`); the ledger-coordination concern now spans TWO hosts and the finding's scope needs
+      re-stating (which pair of populations competes for which host's CPU/RAM)**. — Both populations correctly share ONE
+      ledger internally, but the two populations don't share a COMBINED budget view of each other — an AO slot-worker QG
+      run and a glue-runner CI QG run can both admit independently even though they compete for the same physical
+      CPU/RAM. Not attempted in the fork (out of its scope: cross-repo CI sharing, not cross-population sharing).
+      Possible direction: extend `_qg_shared_root()` further so BOTH the `.tabs` strip and the
+      `/opt/github-glue-runners*` collapse resolve to the SAME final path when running on this one host (they're
+      currently two different literal constants). SSOT for the fix already shipped:
       `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
 - [x] [OPERATOR] P3. ~~Block ticket `BLK-7eedce54` ... needs its ticket-system status flipped~~ — 2026-08-04:
       **CORRECTED, nothing to do.** Queried `state.db`'s `blocked_queue` table directly (read-only, via SSM same-box

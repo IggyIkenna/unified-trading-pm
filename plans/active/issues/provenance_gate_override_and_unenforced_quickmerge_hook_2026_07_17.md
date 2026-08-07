@@ -159,9 +159,12 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
       bypassed code commits" (exit 0) rather than erroring. Found while testing the hook with a malformed sha. A typo'd
       range therefore reads as a pass. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
       (see that doc for execution).
-- [ ] [DEVOPS] P3. `scripts/dev/hooks/pre-push-strict-quickmerge.sh` is now redundant (all three installers point at
+- [x] ✅ [DEVOPS] P3. `scripts/dev/hooks/pre-push-strict-quickmerge.sh` is now redundant (all three installers point at
       `scripts/hooks/pre-push`). Still referenced by `migrate-slots-to-pathb.sh`, `quickmerge.sh` and two codex docs —
-      delete + repoint per "delete deprecated code (no shims)".
+      delete + repoint per "delete deprecated code (no shims)". — **FLIPPED 2026-08-07 (plan_reconciler agt-6eb8c5)**:
+      deleted + referrers repointed by `unified-trading-pm@b02ba28c7` (2026-08-06, reachable on
+      origin/live-defi-rollout); `scripts/dev/hooks/` no longer exists; remaining references are historical comments.
+      The delete also shipped as part of `ci_satellite_ao_dispatch_batch4`'s [x] todo 1.
 - [x] ✅ [DEVOPS] P3. The two husky UI repos (`deployment-ui`, `unified-trading-system-ui`) are skipped by the self-heal
       (`case "${_hooks_dir}" in */.husky/*) continue`), so they carry no strict guard. Wire it into husky's own
       pre-push. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in

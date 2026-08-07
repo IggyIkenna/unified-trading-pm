@@ -13,12 +13,12 @@ scope: [engineer, admin]
 tags: [monitoring, ci-dashboard, fleet-health, observability, coordinator, deployment-ui, orchestrator]
 related:
   [
-    plans/active/ci_dashboard_deployment_ui_2026_06_10.md,
-    plans/active/fleet_git_health_orchestrator_2026_06_10.md,
-    plans/active/ci_status_firestore_side_store_2026_06_10.md,
-    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/archive/2026_06/ci_dashboard_deployment_ui_2026_06_10.md,
+    plans/archive/2026_06/fleet_git_health_orchestrator_2026_06_10.md,
+    plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md,
+    plans/archive/2026_06/cicd_contract_hardening_2026_06_01.md,
     plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
-    plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: 2026-06-10
 parent_epic: observability_master
@@ -28,7 +28,7 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-24
+last_updated: 2026-08-06
 locked_by:
 locked_since:
 supersedes:
@@ -139,8 +139,9 @@ Harsh owns all three monitoring surfaces this cycle; Ikenna owns the Firestore m
 those). Harsh's three-surface charter (verbatim to Ikenna):
 
 - **Monitoring UI** — "see the whole fleet properly, all the aspects that we care about: all the branches, builds,
-  **last green sha and time**, current SIT run, and so on." (mostly shipped v1; remaining: G1 + the last-green-sha
-  refinement N2 below + the 2 creds.)
+  **last green sha and time**, current SIT run, and so on." (mostly shipped v1; G1 + N2 + GH_PAT residuals all RESOLVED
+  2026-06-11/12 — see below; ORCHESTRATOR_API_TOKEN minted + stored 2026-06-11 per sub-plan but its JWT expired
+  2026-07-01, re-probe pending.)
 - **ci-failures** — "failed alerts and fail-to-green alerts with **more proper info so we get the reason, not ad-hoc
   messages**." → NEW requirement N1 below (alert-body enrichment).
 - **Orchestrator side** — "make the agents **stable** and **picking up the failed PR and their fixes**." → the
@@ -209,6 +210,12 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
   live fleet-git proxy still degrades to `available=False`
   - AO deep-link. **Operator action: mint the orchestrator API token + store it in SM as `ORCHESTRATOR_API_TOKEN` (both
     clouds).**
+  - **RECONCILED 2026-08-07 (plan_reconciler agt-6eb8c5, per the archived sub-plan
+    `ci_dashboard_deployment_ui_2026_06_10.md:208-210`)**: the token WAS minted + stored same-day by an autonomous run —
+    JWT (role-scoped, exp **2026-07-01**) in GCP SM (central-element-323112 v1) + AWS SM (ap-northeast-1), live-verified
+    `available=true` (4 hosts / 10 slots / 250 repos). So the standing "BLOCKED-CREDENTIALS" state is stale in its
+    "never minted" reading; the live question is EXPIRY: the 2026-06-11 JWT expired 2026-07-01 — **re-probe SM now and
+    re-mint if absent/expired** (filed as a durable todo in the 2026-08-07 run-findings doc).
 
 ## Sub-plans (the execution units)
 
@@ -222,7 +229,9 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       (hosts/slots/repos + reporter_stale + ff_cron_stale + drift_violation + 14 pytest) + orchestrator `/fleet-git`
       page + cron-liveness reporter + deployment-ui `/fleet` single-pane tab + codex (agent-orchestrator@0ab7c84 + PM
       docs). Open remainder: live cross-host cycle VERIFY (gated on `ORCHESTRATOR_API_TOKEN` + a 2nd host) + a P3 vitest
-      harness — tracked in-sub-plan.
+      harness — tracked in-sub-plan. **⚠️ RECONCILED 2026-08-07 (agt-6eb8c5)**: the sub-plan is `status: superseded`
+      with NO `superseded_by`/banner and its lone open VERIFY todo therefore has no live owner — routed to the
+      run-findings doc as a durable follow-up.
 
 ## Smart extras (P2/P3 — tracked here so they are not chat-summary vapor; promote to sub-plans when picked up)
 
@@ -633,8 +642,8 @@ manual session because firing breaking/red/billing states on the live fleet jams
 | Failure-injection verification matrix (mock+pw + live obs; disruptive-live triggers scoped)                                                                                                                                                                                                                                                                                                                                                                 | this plan § matrix (outcomes table)                  | ✅ DONE (table filled)                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Fleet git-health page (sub-plan B — backend + dashboard + reporter + deployment-ui /fleet tab)                                                                                                                                                                                                                                                                                                                                                              | fleet_git_health_orchestrator_2026_06_10.md          | ✅ SHIPPED (live cross-host verify gated on token)                                                                                                                                                                                                                                                                                                                                                                       |
 | GH_PAT `Checks: read` permission (ungrantable on fine-grained PATs)                                                                                                                                                                                                                                                                                                                                                                                         | RESOLVED via Actions-API repoint (Ikenna 2026-06-11) | ✅ NO LONGER BLOCKED                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `ORCHESTRATOR_API_TOKEN` for the fleet-git-health proxy (live fleet data)                                                                                                                                                                                                                                                                                                                                                                                   | ci_dashboard + ikenna_orchestrator/pings/slot_3.md   | BLOCKED-CREDENTIALS                                                                                                                                                                                                                                                                                                                                                                                                      |
-| AWS/CodeBuild cloud-toggle parity for image signal                                                                                                                                                                                                                                                                                                                                                                                                          | ci_dashboard plan                                    | `- [ ]` P1                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `ORCHESTRATOR_API_TOKEN` for the fleet-git-health proxy (live fleet data)                                                                                                                                                                                                                                                                                                                                                                                   | ci_dashboard + ikenna_orchestrator/pings/slot_3.md   | ⚠️ RECONCILED 2026-08-07 — minted + stored 2026-06-11 per sub-plan (`ci_dashboard_deployment_ui` :208-210, live-verified `available=true`); JWT expired 2026-07-01 → re-probe/re-mint pending (durable todo, plan_reconciler agt-6eb8c5)                                                                                                                                                                                 |
+| AWS/CodeBuild cloud-toggle parity for image signal                                                                                                                                                                                                                                                                                                                                                                                                          | ci_dashboard plan                                    | ✅ DONE — parity shipped `deployment-api@15fc1e4` (PR #46, 2026-06-10); sub-plan complete (reconciled 2026-08-07, agt-6eb8c5)                                                                                                                                                                                                                                                                                            |
 | `restart-deployment-stack.sh` must export GCP_PROJECT_ID (live 500 root cause on stack)                                                                                                                                                                                                                                                                                                                                                                     | quality_gates_speed_and_config_ssot (filed below)    | `- [ ]` P2                                                                                                                                                                                                                                                                                                                                                                                                               |
 | sit-repo full-workspace-sit report-back is LDR-only (inert until its main promotion)                                                                                                                                                                                                                                                                                                                                                                        | cicd_contract_hardening conflict notes (archived)    | ✅ RE-VERIFIED 2026-07-31 — already promoted: system-integration-tests@main HEAD 4d0b0e7 (routine LDR→main drain) contains 6ee429a ("report sit-passed/sit-failed back to PM"); origin/main:.github/workflows/full-workspace-sit.yml carries the live sit-passed/sit-failed dispatch step. No action needed — the routine drain already resolved this; the archived source doc's open todo is stale relative to reality. |
 

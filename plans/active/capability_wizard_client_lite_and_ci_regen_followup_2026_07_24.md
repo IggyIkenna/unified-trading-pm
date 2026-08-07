@@ -29,7 +29,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.0
-last_updated: "2026-07-24"
+last_updated: "2026-08-06"
 assigned_role: backend_engineer
 drift_direction: advance-code
 locked_by:
@@ -39,8 +39,8 @@ superseded_by:
 depends_on: []
 source: >-
   Forked from `capability_wizard_and_manifest_2026_06_11.md` (archived 2026-07-24) per the operator-approved plan
-  line-cap remediation in `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` — that plan was 65/67 todos done
-  (97%) and locked (`locked_by: live-defi-rollout`); the operator approved archiving it outright once its 2
+  line-cap remediation in `plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` — that plan was 65/67 todos
+  done (97%) and locked (`locked_by: live-defi-rollout`); the operator approved archiving it outright once its 2
   genuinely-open residual items were forked into a small successor plan rather than attempting a real split.
 context_scope:
   [
@@ -135,7 +135,7 @@ precondition named by the parent plan.
 ## Progress Log (append-only)
 
 - 2026-07-24 — Plan created by forking the 2 residual items off `capability_wizard_and_manifest_2026_06_11.md` during
-  the operator-approved plan line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`). The
+  the operator-approved plan line-cap remediation (`plans/archive/issues/plan_line_cap_remediation_2026_07_23.md`). The
   parent plan archived to `plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md` in the same action
   (`superseded_by: capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`). No new work done yet — both items
   carried forward verbatim, unchanged in status (open/blocked, open/deferred).

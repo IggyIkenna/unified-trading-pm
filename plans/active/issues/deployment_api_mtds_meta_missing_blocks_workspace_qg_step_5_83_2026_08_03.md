@@ -30,7 +30,7 @@ related:
   ]
 created: 2026-08-03
 author: unknown
-last_updated: 2026-08-03
+last_updated: 2026-08-06
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

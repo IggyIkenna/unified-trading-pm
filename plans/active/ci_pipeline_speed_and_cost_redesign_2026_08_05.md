@@ -73,7 +73,11 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
   (`quality_gates_speed_and_config_ssot_2026_06_09.md` Phase 2 — "🔴 CLOSED — DO NOT BUILD THE FAST TIER"): the
   safely-scopable slice was measured at ~1.1% of gate wall-clock (tests are 67.4%, deliberately kept always-full because
   this codebase's dynamic-dispatch/factory-registry wiring makes test-impact-selection unreliable — a
-  deselected-but-actually-impacted test is a false green). Also: quickmerge's local Pass-1 QG run happens on each
+  deselected-but-actually-impacted test is a false green). — **reversal note 2026-08-07 (plan_reconciler agt-6eb8c5)**:
+  the 06-17 rejection was SUPERSEDED by the operator's 2026-08-03 approval + shipped implementation in
+  `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md` (Phase 2 todos 1-3 shipped
+  `unified-trading-pm@1452d5da1`, reachable; MDPS promoted to a real gate 2026-08-03; fleet-wide gating NOT adopted —
+  the "don't re-investigate" framing above predates that). Also: quickmerge's local Pass-1 QG run happens on each
   agent's own machine, not the shared CI VM, so scoping it wouldn't have addressed the capacity crisis regardless.
   Recorded here so it isn't re-investigated from scratch next time someone has the same instinct.
 - **CORRECTED 2026-08-05 (was wrong when this plan was opened)**: the interactive `gh` CLI session indeed lacks billing
@@ -212,7 +216,12 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       `rollout-workflow-templates.sh --repo <name> --template     quality-gates-v2.yml` (pre-flight action-pin check
       passed cleanly), shipped per-repo: `unified-trading-library@9f309cb0`, `e2e-testing@ccda667`. Both
       watched-not-guaranteed — this is the 2nd/3rd cycle for each repo, so if the same starvation/SIGALRM signature
-      recurs, revert per the same precedented per-repo playbook (not a new investigation).
+      recurs, revert per the same precedented per-repo playbook (not a new investigation). — **supersession note
+      2026-08-07 (plan_reconciler agt-6eb8c5)**: `unified-trading-library` was REMOVED again the same day by
+      `self_hosted_runner_public_repo_revert_2026_08_05.md` (its 17-repo deregistration sweep — the 8 surviving pools
+      list + `scripts/workflow-templates/self-hosted-qg-repos.txt` final state contain no UTL entry, which notes "15
+      PUBLIC repos REMOVED 2026-08-05 … unified-trading-library, unified-api-contracts, …"); `e2e-testing` persisted (it
+      is in the surviving-8 list).
 - [x] ✅ [INFRA] P2. **Check whether `glue-runner-crash-loop-watchdog.sh` actually paged — CONFIRMED IT DIDN'T, FOUND
       AND FIXED THE ROOT CAUSE, 2026-08-05.** `unified-trading-pm@6d1ae8463`, deployed live to
       `/usr/local/sbin/glue-runner-crash-loop-watchdog.sh` (MD5-verified). Confirmed on the live host: the

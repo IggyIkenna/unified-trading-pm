@@ -56,10 +56,12 @@ Gate 1/2/3 walkthrough sections describe promotion as: quickmerge → `gh pr cre
 `workspace-qg` GHA on the staging PR → semver-agent bumps on staging → `staging-to-main.yml` squash-merges to `main`.
 
 This is the **retired** model. Per CLAUDE.md § "Git discipline + shipping pipeline" (current) and
-`cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (the migration plan, `status: active`, already substantially shipped):
-**quickmerge lands on LDR directly; default promote is LDR→main DIRECT with staging DORMANT** (a reversible per-repo
-`promotion_model: ldr_main` toggle). The gate set is now exactly three checks (`sit-gate/fleet-green` +
-`quality-gates-v2` + quickmerge-provenance), not the staging-mediated chain this doc still walks through.
+`cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (the migration plan — **archived 2026-07-31 at 29/29 todos done, per
+`plans/archive/2026_07/`; path corrected 2026-08-07, plan_reconciler agt-6eb8c5**; it was `status: active`, already
+substantially shipped, at the time this issue was written): **quickmerge lands on LDR directly; default promote is
+LDR→main DIRECT with staging DORMANT** (a reversible per-repo `promotion_model: ldr_main` toggle). The gate set is now
+exactly three checks (`sit-gate/fleet-green` + `quality-gates-v2` + quickmerge-provenance), not the staging-mediated
+chain this doc still walks through.
 
 `ci-cd-flow.md` (the sibling "engineer view" doc, per both docs' own headers) was fully rewritten to the MVP model as
 that plan's Phase-3 P0 DOCS todo (`unified-trading-pm@b9d0b9209`) — but `deployment-flow.md` (the "operator view") was
@@ -83,15 +85,16 @@ codex sweep (that plan's own `## Codex SSOTs` section names only `ci-cd-flow.md`
 ## Recommended decision
 
 Fold this into `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (it's still `status: active` and already owns the
-ci-cd-flow.md rewrite precedent to follow) as a new todo, OR — if that plan is close to archival — dispatch it as its
-own small AO-eligible todo: rewrite `deployment-flow.md`'s pipeline diagram + Gate 1/2/3 sections to the current
+ci-cd-flow.md rewrite precedent to follow — **it has since been ARCHIVED, 29/29 todos done, so the fold option is moot;
+corrected 2026-08-07, plan_reconciler agt-6eb8c5**) as a new todo, OR — if that plan is close to archival — dispatch it
+as its own small AO-eligible todo: rewrite `deployment-flow.md`'s pipeline diagram + Gate 1/2/3 sections to the current
 LDR-direct-with-dormant-staging model, mirroring `ci-cd-flow.md`'s already-shipped rewrite (same source of truth, just
 the operator-facing framing). Bounded, deterministic outcome (diff the two docs' pipeline descriptions against
 CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up.
 
 ## Todos
 
-- [ ] [DOC] P2. Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
+- [x] ✅ [DOC] P2. Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
       1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model (mirror `ci-cd-flow.md`'s already-
       shipped rewrite, `unified-trading-pm@b9d0b9209`, for the target shape). Done when: the two sibling docs (engineer
       view / operator view) describe the SAME pipeline shape, and every staging-mediated-as-default claim in
@@ -99,7 +102,9 @@ CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up
       (na-eligibility-audit 2026-08-02):** the AO-dispatchable copy of this todo lives in
       `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (its `[DOC] P2` item, line ~169) — that plan is
       still `status: draft`, so no commit/sha exists to cite yet. This doc stays `assigned_vm: NA`; flip this checkbox
-      from batch4 when it ships.
+      from batch4 when it ships. — **FLIPPED 2026-08-07 (plan_reconciler agt-6eb8c5)**: batch4's copy shipped
+      `unified-trading-pm@445f02081` (2026-08-06, reachable on origin/live-defi-rollout); batch4 is `status: active`
+      since 2026-08-06 (its frontmatter + banner).
 
 ## na-eligibility-audit verdict
 
@@ -138,3 +143,8 @@ RECLASSIFY" trigger has not fired.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — doc rewrite todo extracted verbatim to
 ci_satellite_ao_dispatch_batch4_2026_07_31.md (still draft)
+
+**plan_reconciler 2026-08-07 (agt-6eb8c5) — holding condition RESOLVED**: batch4 flipped `status: active` 2026-08-06 and
+shipped this doc's `[DOC] P2` todo (`unified-trading-pm@445f02081`); the checkbox above is flipped with the sha
+evidence. The "re-open as RECLASSIFY" trigger is moot — the work shipped via batch4; this doc remains NA with nothing
+left to dispatch.
