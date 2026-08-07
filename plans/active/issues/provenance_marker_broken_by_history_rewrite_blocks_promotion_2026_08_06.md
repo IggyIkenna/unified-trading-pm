@@ -312,3 +312,34 @@ Two reasons, mirroring the UTL-34-bypass precedent
   19/N-commit foreign-bypass backlogs) remains the documented, intentionally-not-auto-fixed follow-up per the "Tactical
   unblock in parallel" option above.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries).
+- **2026-08-07 (market-data-processing-service bypass sweep, operator-authorized)** — Operator explicitly authorized a
+  bulk reprovenance sweep for `market-data-processing-service` (this doc's own documented "Tactical unblock in parallel"
+  option), distinct from the earlier autonomous-bulk-bless refusal: a structured operator decision, not an agent
+  unilateral call. Re-ran `check_strict_quickmerge.py --range origin/main..origin/live-defi-rollout --block` fresh
+  (fetched `origin main live-defi-rollout` first) rather than trusting the prior session's count — found **7** real
+  bypass commits (down from the 13 measured the same morning; some had already cleared), oldest-to-newest: `3d10014b`
+  (sports post-kickoff-odds lookahead-leak fix), `35592869` (cefi wire↔canonical id bridge, FIX D3), `ac0742f5`
+  (derivative_ticker candle schema fix + honest-absence semantics), `ca69f512` (optional manifest_index pass-through,
+  F3, default-None/behavior-neutral), `47bc6116` (P0 thread-safe per-call `SeedContext` fix + opt-in concurrent
+  date-subprocess dispatch, R1), `05feb25d` (redundant `to_pandas` collapse + vectorized `_scatter_series`,
+  byte-neutral), `947c7595` (vectorized whale-detection + tick-momentum, byte-identical). Read every commit's FULL diff
+  (not just the message) as a safety screen: none touch wallet keys/kill-switch/force-push/production credentials, no
+  hardcoded secrets, no destructive ops, no inline `gs://`/unregistered subprocess calls; the two commits with
+  data-correctness stakes this doc's own instructions flagged for extra scrutiny (`47bc6116` thread-safety, and the
+  vectorization pair `05feb25d`/`947c7595`) all carry explicit byte-identical/byte-neutral proofs (documented ULP
+  analysis on the momentum reduction, 87/87 adversarial-case equivalence tables) plus dedicated regression tests
+  (`test_seed_context_thread_safety.py` includes a deliberate "meta-guard" test that reproduces the pre-fix
+  shared-`self` race on the same harness to prove the passing test isn't a tautology). Every diff matched its own commit
+  message. All 7 passed the screen — none skipped. Reprovenanced all 7 in commit order via
+  `scripts/cicd/reprovenance_bypass.sh <sha>` (no `--push` per-call), confirmed
+  `check_strict_quickmerge.py --range origin/main..HEAD --block` was clean locally before pushing once:
+  `market-data-processing-service@73faf856c0bb`. Verified live: manually triggered `ldr-to-main-promote-fleet.yml`
+  (`workflow_dispatch`, run `31169426830`) rather than waiting on the `*/15` cron — log shows
+  `promote-provenance-range[market-data-processing-service→main]: mode=fallback … ancestor=False → origin/main..origin/live-defi-rollout`
+  (the still-stale pre-rewrite marker, expected — this doc's root-cause fix correctly falls back) and
+  `Promoted (1): market-data-processing-service`. PR
+  https://github.com/IggyIkenna/market-data-processing-service/pull/604 (`chore(promote): LDR → main (Option-B direct)`)
+  merged clean at `2026-08-07T10:18:06Z` with `quality-gates-v2` SUCCESS. Re-ran `promotion_lag_monitor.py` fresh
+  afterward: only `instruments-service` remains in the `promotion lag > 60m` list (a parallel agent's identical-pattern
+  sweep, tracked separately) — `market-data-processing-service` no longer appears anywhere in the output. This doc's
+  MDPS thread is now fully resolved (provenance-clean, promoted, self-healing marker going forward).
