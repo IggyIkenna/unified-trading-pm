@@ -203,3 +203,7 @@ is not complete until the counterpart's files build again, not just until your o
 > work remains open' and the doc's core ask (each-slot-ONE-agent / explicit file ownership) is an unresolved operator
 > policy call the doc itself declines to close, with the collision-class mitigation still tracked in a separate live
 > issue doc — genuinely ambiguous, so kept open. [KEEP_OPEN todo synthesized from justification by archive sweep]
+
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; sole open item
+  (`[OPERATOR] P2`, each-slot-ONE-agent / file-ownership policy) remains an unresolved operator policy decision the doc
+  itself declines to make. Unchanged since the 2026-08-06 marker.

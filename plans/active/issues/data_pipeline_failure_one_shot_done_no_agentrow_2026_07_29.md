@@ -258,3 +258,7 @@ still in flight.
   elsewhere (batch5's diagnostic todo, batch6's gated code-fix), so swapped the archived precedent-bug doc and the
   general AO architecture SSOT for the 2 batch docs that actually own the work now; kept the 3 code files the original
   trace named (escalation.py, slots_worker.py, agents.py) since the root-cause investigation still lives here.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, CONFLICT-PARKED, re-affirmed — verified both
+  `ao_satellite_ao_dispatch_batch5_2026_08_03.md` and `batch6_2026_08_04.md` still exist, still `status: draft`/
+  `assigned_vm: NA`, and still cite this doc's diagnostic ([DATA] P2) and gated code-fix ([CODE] P2) items by name — no
+  change to the parked status since the 2026-08-06 marker.

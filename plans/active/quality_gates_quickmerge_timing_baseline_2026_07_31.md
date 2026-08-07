@@ -458,3 +458,13 @@ solo work.
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-verified context_scope (6 entries), unchanged — still covers the 2 in-scrutiny
   scripts, the profiling tool, the 28%-of-runtime optimisation target, and the 2 codex SSOTs.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — doc stays NA overall (Phase 2's 3 items
+  remain genuinely `BLOCKED-OPERATOR-DECISION` on how to reach the planning-vm interactively). **Flagging 2 items as
+  RECLASSIFY candidates for the orchestrator's conflict-check, not reclassifying myself**: the
+  `check_pm_script_path_refs.py` optimization todo (line ~351, 28% of a from-scratch run, real measured done-when via
+  the existing profiler) and the `--skip-tests --skip-<X>` phase-delta measurement todo (line ~364, explicitly "now
+  unblocked", "ready to run" per the doc's own Deferred-work table) both read as bounded, worker-determinable
+  benchmarking/optimization tasks with no remaining judgment call — the 2026-08-02 marker already flagged the first of
+  these as "a targeted-extraction candidate for a future infra batch" and it was never acted on. The 4th Deferred-work
+  row (solo re-measurement of 5 flags) is explicitly deprioritized by the doc's own text ("check with the operator... or
+  consider it satisfied") — left as GENUINE_WORK, not flagged.

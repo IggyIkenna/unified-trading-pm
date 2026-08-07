@@ -154,3 +154,6 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; both open items remain
+  operator-gated: todo 1 needs an operator pick among 3 named consumption-mechanism design options plus the
+  ask-before-creating LOCAL-vs-AO track call, todo 2 stays gated behind it. Unchanged since the 2026-08-06 marker.

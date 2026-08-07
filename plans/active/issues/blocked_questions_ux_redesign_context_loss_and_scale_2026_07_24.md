@@ -152,3 +152,6 @@ exists" section together before scoping the workstream.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified end-to-end; sole open item
+  (`[DESIGN] P2`, blocked-question UX redesign) remains an open-ended scoping call explicitly deferred by the operator
+  2026-07-24, unchanged since the 2026-08-06 marker.

@@ -381,3 +381,8 @@ cleanly instead of ending on an issue-doc corroboration.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged -- the two new 2026-08-06
   recurrence entries (restart-correlated, slots 9) reaffirm rather than change the finding; the 3 AO server modules + 3
   precedent issue docs already cover it.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; sole open item
+  (`[BACKEND] P3`, idempotent-success-on-already-archived-own-row) remains the explicitly-declined-for-now
+  `/done`-endpoint identity-matching change (needs a `DoneRequest` schema addition + full slot-reuse-lifecycle tracing,
+  touching every worker's completion path fleet-wide) — unchanged since the 2026-08-06 marker, still `sequential: true`
+  behind no unresolved prerequisite.
