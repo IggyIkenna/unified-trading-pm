@@ -372,10 +372,20 @@ real count==0 window appears or the operator re-scopes/overrides.
 market-tick-data-service `.venv` python (pyarrow 23.0.1) still present; baseline re-run clean (0 canonical ES_OPT rows
 pre-launch). Post-launch = re-download a FRESH manifest + run the phase-2 query above.
 
-- **NEXT ACTION (fresh session):** re-check
-  `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING' --zones=asia-northeast1-c`. When count
-  == 0, run the launch command; confirm VM(s) STARTED (<60s) + RUNNING at T+10min per async-wait-and-poll-discipline (no
-  fire-and-forget). When count >0, wait (operator-approved); do NOT `--force`.
+**SLOT-11 SESSION 3 (2026-08-07T04:46Z) — Watcher armed and running.** Fleet at session start: 7 VMs (2 completing
+imminently). At 04:55:52Z: watcher launched (harness task `bff5b50zn`), PID 957114. Poll 1 (04:55:52Z): 4 VMs. Poll 2
+(05:00:53Z): 4 VMs. Watcher is error-aware; will autonomously launch ES_OPT when count==0, verify T+30s/T+10min,
+download fresh manifest, run pyarrow count query (venue=CME × ohlcv_1m × options_chain × 11 roots), flip checkbox,
+commit `docs(plans):` push, call `/done`. Script at:
+`/home/ubuntu/.claude-configs/orch-slot-11/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-11/10b8b22e-b2b7-4746-a864-3fec64b52969/scratchpad/es_opt_watcher.sh`
+(and promoted to `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`). Log: `…/scratchpad/es_opt_watcher.log`.
+**Compaction safety:** bash process (PID 957114) and harness task survive compaction.
+
+- **NEXT ACTION (fresh session):** First check if watcher is still alive:
+  `kill -0 957114 2>/dev/null && echo ALIVE || echo DEAD`. If ALIVE: wait for harness notification (`bff5b50zn`) — the
+  watcher will complete autonomously. If DEAD: check if todo #2 checkbox is already flipped (done). If not done, re-arm:
+  update SCRATCHPAD var in `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` and re-launch with the Bash
+  run_in_background tool. Do NOT re-run if watcher is alive — singleton lock race risk.
 
 - **context-scout 2026-08-07**: populated context_scope (6 entries) — the 4 codex docs already named in this doc's own
   "Codex SSOTs" section, plus the 2 highest-value per-todo source paths from the File-collision matrix
