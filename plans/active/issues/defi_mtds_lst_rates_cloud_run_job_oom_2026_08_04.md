@@ -197,12 +197,16 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
       safe-idempotent re-run required. ✅ deployment-service@46eddc9 (8Gi/2CPU bump, IaC sync). Cloud Run REST API
       override executions: f8m4d (2026-08-01 ✅ 1m52s), q9mkx (2026-08-02 ✅ 1m42s), vqg8n (2026-08-03 ✅ 1m55s). GCS
       verified: 1 SOLBLAZE-SOLANA lst_rates parquet per date. Historical OOM at 4Gi resolved.
-- [ ] [INFRA] P2. Prod terraform state holds 26 add / 17 change / 2 destroy of un-applied drift beyond this fix
+- [x] ✅ [INFRA] P2. Prod terraform state holds 26 add / 17 change / 2 destroy of un-applied drift beyond this fix
       (observed 2026-08-06 while syncing the lst-rates scheduler description): includes creation of the
       `liquidation-events` + `risk-params` Cloud Run jobs/crons (wired by deployment-service@b370df8, never applied) and
       removal of 2 t1-batch Secret IAM members. The next FULL prod `tofu apply` (`deployment-service/terraform/gcp`,
       backend prefix `terraform/state/prod`) needs human review before it runs — do NOT fold it into a memory-bump-style
-      dispatch.
+      dispatch. — **Drift documented**: re-ran `tofu plan` 2026-08-07; current state is **36 add / 18 change / 3
+      destroy** (grew from 26/17/2 due to additional IaC merges on LDR). Destroys include `client-reporting-batch` Cloud
+      Run job + 2 batch-sa Secret IAM members. Full breakdown filed at
+      `/plans/active/issues/deployment_service_prod_terraform_drift_2026_08_07.md` — `[OPERATOR]` todo gates the actual
+      apply. — unified-trading-pm@<sha> (this commit)
 
 ## Progress Log
 
@@ -312,3 +316,14 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
   extends the data-loss window to 3 days (08-01, 08-02, 08-03). Tracked as new P3 backfill todo above.
 
   **No code changes** — pure diagnostic investigation via GCS object listing and execution timing analysis.
+
+- **infra dispatch 2026-08-07 (slot 3)**: Todo 4 (P2) DONE. Re-ran `ENV=prod bash tofu.sh plan` from
+  `deployment-service/terraform/gcp` — current drift is **36 to add, 18 to change, 3 to destroy** (grew from the 26/17/2
+  slot-11 observed due to additional IaC merges landing on LDR since 2026-08-06). The 3 destroys are: (1)
+  `t1_batch_gh_pat_accessor` IAM member (batch-sa from `GH_PAT` secret); (2) `t1_batch_slack_webhook_accessor` IAM
+  member (batch-sa from `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` secret); (3)
+  `module.client_reporting_batch_job.google_cloud_run_v2_job.job` — the `client-reporting-batch` Cloud Run job (2890
+  prior executions). Key adds: `liquidation-events` + `risk-params` collect jobs, `defi_removal_probe` SA/job, 4 GCS
+  buckets, 9 project IAM members, 3 monitoring alert policies. Filed full breakdown at
+  `/plans/active/issues/deployment_service_prod_terraform_drift_2026_08_07.md` with an `[OPERATOR]` P1 todo gating the
+  actual `tofu apply`.
