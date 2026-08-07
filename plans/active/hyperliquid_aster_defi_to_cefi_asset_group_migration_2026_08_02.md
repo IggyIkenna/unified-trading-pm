@@ -6,7 +6,7 @@ summary:
   CEFI today), but a frozen historical corpus written before that cutover still sits under asset_group=defi in
   GCS/manifest. Migrate it to asset_group=cefi so data agrees with the code-level classification, mirroring the
   solana_defi_legacy_migration_2026_05_27 gate pattern.
-status: active
+status: complete # (was: active) 2026-08-07 archival: all 5 phases done, no locked_by
 nature: process
 asset_group: [cefi, defi]
 stage: [data]

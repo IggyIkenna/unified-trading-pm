@@ -109,10 +109,6 @@ by hand._
   — Gated closeout for defi_pipeline_e2e_and_coverage_validation_2026_06_20.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its…
-- [`hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02`](./hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md)
-  **[draft]** — HYPERLIQUID and ASTER were removed from ALL_DEFI_VENUES/DEFI_VENUE_PHASE on 2026-06-21 (both are
-  code-classified pure CEFI today), but a frozen historical corpus written before that cutover still sits under
-  asset_group=defi in…
 - [`instruments_cefi_g1_g5_gate_execution_2026_07_24`](./instruments_cefi_g1_g5_gate_execution_2026_07_24.md) — Split
   out of instruments_foundation_completeness_2026_06_24.md (2026-07-24 line-cap remediation, 4-way split, operator-
   approved). Owns cefi's gated G1→G5 rebuild — instrument-definition correctness (G1.1-G1.4 catalogue false-delisting /…
@@ -198,10 +194,6 @@ by hand._
 - [`defi_track5_coverage_mvp_backfill_2026_07_24`](./defi_track5_coverage_mvp_backfill_2026_07_24.md) — Forked verbatim
   from defi_consolidated_closeout_2026_07_18.md's "Track 5 — COVERAGE" section (2026-07-24, per task_template.md's
   "partial parallelism is NOT expressible inside one plan — SPLIT" rule and an operator ruling during the 5-AG…
-- [`hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02`](./hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md)
-  **[draft]** — HYPERLIQUID and ASTER were removed from ALL_DEFI_VENUES/DEFI_VENUE_PHASE on 2026-06-21 (both are
-  code-classified pure CEFI today), but a frozen historical corpus written before that cutover still sits under
-  asset_group=defi in…
 - [`instruments_satellite_ao_dispatch_batch1_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_2026_07_27.md) —
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
