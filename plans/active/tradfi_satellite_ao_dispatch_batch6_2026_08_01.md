@@ -534,6 +534,18 @@ YES. SHA = 7cb83ddcd, ahead=0. Nothing at risk.**
   SLOT_TABS=.tabs/<new-slot>, PYTHON=.tabs/<new-slot>/market-tick-data-service/.venv/bin/python — and launch with
   `run_in_background:true`. Verify poll 1 in output before updating progress log. Do NOT re-arm if watcher running.
 
+**Session-8 (context-8) fleet-surge update (2026-08-07T09:08Z):** Watcher baz81km0n still alive. Poll drain history
+(session 8): 23→21→19→18→15→15→14→14→12→12→12→10→7→7→6→6→6→6→6→6→3→3→3→**10→24** VMs (polls 1-27). Drain pattern:
+original batch (~23 VMs launched ~06:00Z) drained to 3 by poll 21 (~08:38Z). Then at ~09:01Z, AO dispatched a new wave:
+CBOE vx-2026, CME es/mbt/met 2023-2025, Nasdaq/NYSE ohlcv-1m 2023-2024 (25 VMs total, 1 STAGING at 09:08Z). New batch
+ETA: ~2-3h based on prior batch pace (~11:00-12:00Z). All confirmed gcloud STATUS=RUNNING. No preemptions detected.
+Long-pole from original batch: met-met-2023-030119 still running at ~6.5h. watcher.log latest: poll 27 = 24 VMs at
+09:08:03Z. Monitor byo75kl1a armed (persistent).
+
+- **NEXT ACTION (fresh session or next compact):** (1) Check watcher log for PHASE-2 or completion. (2) Send heartbeat
+  to /api/slots/8/heartbeat every ~5-10 polls to avoid watchdog timeout. (3) If watcher dies unexpectedly, re-arm slot-8
+  copy from `es-opt-backfill-watcher.sh` with SLOT_ID=8. (4) Do NOT interfere with running VMs.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
