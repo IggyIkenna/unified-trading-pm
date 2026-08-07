@@ -936,3 +936,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   9/26**. The `last_completed_date` values reported each tick were always accurate; only the chunk-number label was
   stale. Chunks 6-8 each cleared in under an hour once past the early quota-limited chunks. Using chunk 9/26 going
   forward.
+- **2026-08-07T23:47Z** — FIXTURE_STATS +30 days (`last_completed_date=2022-08-31`, fresh `23:46:43Z`). odds
+  smallchunk2: `PROGRESS.json` appears to have stopped uploading entirely after chunk 17 (unrelated to OOM — VM is
+  confirmed healthy) — cross-checked via `run.log`'s own `PROGRESS: chunk=N` lines instead: genuinely on **chunk
+  22/451** now (`2020-09-19`), chunks 19-21 each cleared in ~6 min, zero new OOMs since chunk 18 closed. Full detail:
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`7889dffd04`,
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`9422004062`.
