@@ -188,7 +188,7 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
       timeout window) before any EVM/Solana data collection or GCS writes can occur. `day=2026-08-04` already recovered
       by b5f4t ad-hoc run (2026-08-05T16:16:59Z). `day=2026-08-01` also newly confirmed missing (cron 74rqc at
       2026-08-02 01:00 UTC writing the prior day — extends scope beyond the stated 08-02/03/04). See Progress Log. —
-      unified-trading-pm@PENDING (GCS-object-listing-verified, no code changes)
+      unified-trading-pm@cc1309869 (GCS-object-listing-verified, no code changes)
 - [ ] [INFRA] P3. Backfill missing `lst_rates` data for `day=2026-08-01`, `day=2026-08-02`, and `day=2026-08-03` (3 days
       with zero GCS writes: failed cron executions 74rqc/lq977/c9qxr; `day=2026-08-04` already recovered by b5f4t).
       Trigger `uts-prod-mtds-collect-lst-rates` manually against each date (Cloud Run job supports
