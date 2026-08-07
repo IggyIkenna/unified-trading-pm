@@ -179,9 +179,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `expected_unattempted` barely moved 205,517→205,302; 16,241 new `attempted_failed` rows appeared) — split into the
       two follow-up todos below rather than reopening this one, since the LAUNCH itself succeeded; what's left is
       root-cause work.
-- [ ] [SCRIPT] P1. **Root-cause weather's 16,241 `ClientResponseError` rows** (400 Bad Request against
-      `customer-previous-runs-api.open-meteo.com`, spread across ~478 dates 2024-01-03→2026-08-07 — a genuine broad
-      vendor-contract issue, not a today-only edge case) before any retry.
+- [x] ✅ [SCRIPT] P1. **Root-cause weather's 16,241 `ClientResponseError` rows** — root cause: spurious `raise` inside
+      the inner `except` for the `customer-previous-runs-api.open-meteo.com` call aborted the entire fetch instead of
+      skipping forecasts and continuing to actual weather (the comment at line 136 already described the correct
+      behaviour). Fix: removed the `raise`; added regression test. `instruments-service@1fafbe23`, QG green. On next
+      backfill run the 16,241 `attempted_failed` shards will be re-touched and should resolve to `captured` or
+      `empty_confirmed`.
 - [ ] [SCRIPT] P1. **Explain why weather's `expected_unattempted` barely dropped** despite the backfill's date-loop
       reaching the full range end (`last_completed_date=2026-08-07`) — e.g. 350 untouched rows on 2026-07-28 alone.
       Likely a skip-condition false-positive or a per-venue sub-loop bug; find it before relaunching blind.
@@ -361,3 +364,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   "4/75 chunks" precedent for `--chunk-size 5`, not concerning. `401-retry`'s per-league OOM cadence holds steady at
   ~6-9 min (4 more failures: PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG, SCOTTISH_PREMIERSHIP; now on GREEK_SUPER_LEAGUE, 10
   total) — stable, not degrading further, no action needed.
+- **2026-08-07 (slot 4) — Root-caused and fixed weather's 16,241 `ClientResponseError` rows
+  (`instruments-service@1fafbe23`).** Root cause: inside `OpenMeteoAdapter.get_weather_match_window`, the inner `except`
+  block for the `customer-previous-runs-api.open-meteo.com` call (lines 154-162) had a spurious `raise` that propagated
+  the 400 Bad Request upward, aborting the entire fetch. The adapter's OWN comment at line 136 already stated the
+  correct intent ("if Previous Runs API is down, skip forecasts and still get actuals"), but the `raise` contradicted it
+  — so every date ≥ 2024-01-01 where the customer previous-runs endpoint returned 400 became an `attempted_failed` row
+  instead of getting actual weather from the archive/forecast endpoint. Fix: removed `raise`; added regression test
+  `test_prev_runs_400_falls_back_to_actuals` in `test_open_meteo_adapter_coverage.py` and updated
+  `test_previous_runs_api_exception_propagates` (renamed, docstring and `call_count` assertion corrected). QG green. On
+  the next weather backfill run, the 16,241 shards will be re-touched; they should resolve to `captured` (venues with
+  weather data) or `empty_confirmed` (venues with no data) rather than `attempted_failed`.
