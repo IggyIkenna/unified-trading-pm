@@ -893,3 +893,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `expected_unattempted` to honest `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)` — safe, additive per-VM-shard
   writes, pending the next consolidator merge cycle. Full detail in
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
+- **2026-08-07T20:48Z** — FIXTURE_STATS chunk 6/26 (2021-10-14). `mtds-backfill-odds-smallchunk2` chunk 18/451, 6 OOM
+  total but verified as 6 DIFFERENT leagues each self-recovering once (not a stuck repeat) — consistent with the
+  established tolerable pattern. Both healthy. (Aside, sibling-doc scope: **CONFIRMED the weather+SFI reclassification
+  fully landed** — re-census shows `expected_unattempted` completely gone (0) for both sources, `empty_confirmed` grew
+  by exactly the retyped row counts. Both sources now hold only `captured`/`empty_confirmed`/a small already-diagnosed
+  `attempted_failed` tail — genuinely at the operator's target state.)
