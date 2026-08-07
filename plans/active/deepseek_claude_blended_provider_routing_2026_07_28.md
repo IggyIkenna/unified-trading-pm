@@ -343,21 +343,51 @@ default from an external reference.
 - [ ] [DATA] P1. Ratio-check the account-count/cost assumptions against real `accounts.json` + `/usage` data (6 real
       Claude Max accounts as of 2026-07-30). Done when: a dated Progress Log entry states the real per-account tier/cost
       and a computed monthly total. Not locally doable — `accounts.json` is gitignored/per-VM.
-- [ ] [INFRA] P2. Generalize `AccountProvider` from `Literal["anthropic", "deepseek"]` to an open provider set
-      (openrouter/gemini/groq/sambanova), reusing `select_account_for_spawn()`'s existing design, not OmniRoute. Done
-      when: a second non-DeepSeek provider can be registered and routed under the same policy shape, proven via a real
-      isolated local pilot dispatch. **Partially done**: code+tests shipped (`agent-orchestrator@24bd611`) — pure no-op
-      in production until an operator provisions a real second-provider credential; the real-pilot-dispatch proof
-      remains credential-gated.
+- [x] ✅ [INFRA] P2. Generalize `AccountProvider` from `Literal["anthropic", "deepseek"]` to an open provider set
+      (openrouter/gemini/groq/sambanova), reusing `select_account_for_spawn()`'s existing design, not OmniRoute.
+      **Code+tests SHIPPED `agent-orchestrator@24bd611`** — a pure no-op in production until a real second-provider
+      credential exists. — **CLOSED 2026-08-06 (operator, interactive): buildable part done; the real-pilot-dispatch
+      proof is deliberately deferred to first real use.** Ruling source: the same 2026-08-06 `/plan-reconcile ao`
+      session that ruled the sibling provider-strategy decision recorded in
+      `/plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision" (OmniRoute no-go)
+      — one coherent call about which providers this workspace routes to, recorded in two docs.
+
+      **Why closed rather than left open**: the original done-when required proving the abstraction "via a real
+                  isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
+                  out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
+                  **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
+                  front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
+                  integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
+                  few hours".
+
+                  **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
+                  executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
+                  simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
+                  **The first real second-provider integration must treat this as unverified code**, not as a working feature to
+                  configure. Do not re-file this as a standing todo — re-open it at that moment instead.
+
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
       via simulated multi-provider-failover tests; all 34 pre-existing routing tests pass unmodified.
 - [x] [REVIEW] P2. ✅ Investigate grep/symbol-based code-context reduction for implementation-tier work, evaluated
       before any vector-embedding approach. — See Progress Log 2026-08-02: ~8-11x reduction on 2 real task classes; no
       evidence a vector-embedding layer is currently warranted.
-- [ ] [OPERATOR] P3 (stretch). Evaluate self-hosted open-weight models (Kimi, Qwen Coder, DeepSeek open-weights) as a
+- [x] ✅ [OPERATOR] P3 (stretch). Evaluate self-hosted open-weight models (Kimi, Qwen Coder, DeepSeek open-weights) as a
       further execution-cost layer once the multi-provider generalization above is proven — a GPU-hosting/infra-cost
-      business decision, not to build speculatively ahead of it.
+      business decision, not to build speculatively ahead of it. — **DONE / RULED 2026-08-06 (operator, interactive).**
+      Ruling source: the same 2026-08-06 `/plan-reconcile ao` session recorded in
+      `/plans/active/omniroute_multi_provider_routing_evaluation_2026_08_03.md` § "Phase 3 — decision", where the
+      companion OmniRoute no-go was ruled — both are the same provider-strategy call. The evaluation happened: **"all
+      these models were evaluated briefly on a few tasks."** **Outcome: Claude + DeepSeek only for now** — no
+      self-hosted open-weight layer, no GPU hosting. The gate this todo was waiting on (the multi-provider
+      generalization) is therefore moot for THIS decision; the operator answered the underlying business question
+      directly rather than waiting for the abstraction.
+
+      **Explicitly NOT a permanent no**, and the reason it needs no standing todo: per the operator, integrating a
+                  further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
+                  future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
+                  there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
+
 - [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (available-balance-only design — DeepSeek's
       API exposes no spend/usage-history endpoint). — New `DeepSeekBalancePoller` (30-min cadence) +
       `deepseek_balance.py`; `AccountUsageRow`/`AccountView` gained balance fields; dashboard renders a
@@ -374,10 +404,30 @@ default from an external reference.
       `deepseek_route_fraction` 0.8→0.9 — `agent-orchestrator@d18e6830cbabd402345fe6bacb071fe24bb2e01e`.
 - [x] [OPERATOR] P2. ✅ Top up the `deepseek-v4-pro` balance ($0.34 as of 2026-08-04T14:05Z). — Done: confirmed $4.84
       live via `/api/accounts` at 2026-08-04T14:33Z.
-- [ ] [OPERATOR] P3. Create/name the DeepSeek GSM secret and give it to an agent, then re-source
-      `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` from it (locally and on the planning VM) instead
-      of the current hardcoded local-PC key. Confirmed 2026-08-04: no `deepseek*` secret exists in GSM yet. Do not guess
-      a name; wait for the operator.
+- [ ] [OPERATOR] P2. **Create + NAME the DeepSeek GSM secret, then hand the exact name to an agent.** Raised P3 → P2:
+      this is a live API credential sitting in plaintext on two hosts, not housekeeping. **Ruled 2026-08-06 (operator,
+      interactive): split of duties confirmed — the operator creates and names the secret; an agent then wires the
+      re-sourcing** (next todo). Naming stays with the operator by this doc's original instruction ("do not guess a
+      name"), and independently because an agent session may not hold `secretmanager` create permission. **Done when**:
+      the secret exists and its exact resource name is recorded in this todo.
+- [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
+      VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. **BLOCKED on the operator
+      todo above** (needs the secret's exact name; do not guess one). **Verified still open 2026-08-06** by direct file
+      read: the env file contains no `gcloud secrets` / secret-manager indirection of any kind, i.e. the key is still
+      literal — this half is unambiguously undone regardless of whether a secret has since been created. **Done when**:
+      both hosts read the token via secret-manager indirection, a fresh spawn authenticates successfully, and the
+      literal key is removed from both files.
+
+      > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
+                  > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
+                  > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
+                  > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
+                  > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
+                  > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
+                  > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
+                  > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+                  > retention returned a confident zero that meant nothing.
+
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —
       `agent-orchestrator@b310c68`. Same-session follow-up: historical backfill script (dry-run default) +
       window-aggregated (1h/5h/24h/7d/lifetime) per-task-averaged dashboard view — `agent-orchestrator@5f6b20f`.

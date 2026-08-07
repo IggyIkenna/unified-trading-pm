@@ -106,9 +106,32 @@ described work was already done, complete, and separately documented.
 
 ## Todos
 
-- [ ] [BACKEND] P3. Consider whether `regen_backlog_from_plan.py` / the issue-doc-lifecycle sweep can catch an issue doc
-      whose own todo is stale-open while a `related:`-linked sibling doc (created later) already records the same work
-      done — a design question for whoever owns backlog-regen, not a prescribed fix. (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P3. Consider whether `regen_backlog_from_plan.py` / the issue-doc-lifecycle sweep can catch an issue
+      doc whose own todo is stale-open while a `related:`-linked sibling doc (created later) already records the same
+      work done — a design question for whoever owns backlog-regen, not a prescribed fix. (repo: unified-trading-pm) —
+      **RULED 2026-08-06 (operator, interactive): CLOSED — no mechanical detector. The codex rule is sufficient.** This
+      doc's own recommended fix #2 (the process habit) was codified into a codex HARD RULE the day after this incident:
+      `/codex/12-agent-workflow/pre-task-plan-conflict-check.md`, operator ruling 2026-07-28 — "any task started must be
+      checked against existing plans and issues such that we ensure our implementation is not a regression to previously
+      done work". That doc states the gap in exactly this incident's terms: the daily sweeps "converge the corpus over
+      time; they don't protect the next hour."
+
+      **Why no detector, stated so this is not re-proposed**: (a) the detector's core test — does a later sibling doc
+                  describe *the same work*? — is a semantic judgement a regex cannot make, and a dispatch-gating check with false
+                  positives is one that gets ignored; (b) the realised cost was low and bounded — the reprocess is `--force`
+                  idempotent on cheap SPOT, so the duplicate run corrupted nothing and in fact independently re-confirmed the
+                  original run's stability with an identical residual-failure signature; (c) one observed occurrence, with the
+                  preventing rule now in place. Weighed explicitly against the same-day precedent where an honor-system HARD RULE
+                  *was* replaced with a mechanical enforcer
+                  (`/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` → `resource-watchdog`):
+                  that one had 4 recurrences in a week and each was a fleet-wide outage. The cost/recurrence profiles are not
+                  comparable, and the proportionate answer differs.
+
+                  **Known residual, accepted**: the codex rule specifies *what* to check but not *when*. In this incident the
+                  worker did run the conflict check — but while writing its completion note, after the 4 VMs had already run. If
+                  this class recurs on an expensive or non-idempotent action, the fix to reach for first is tightening that timing
+                  for VM-launching / `--force` todos (a population `scripts/plan-hygiene/check_delete_vm_launch_gating.sh` already
+                  identifies), not building the semantic detector declined here.
 
 ## Progress Log
 
