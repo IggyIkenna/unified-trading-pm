@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import hashlib
 import json
 import os
 import subprocess
@@ -456,6 +457,58 @@ def detect_currently_failing(
     return failing
 
 
+# Rollup conclusions/states that mean "this check is not the problem" — anything else (a fail
+# conclusion, ACTION_REQUIRED, or no conclusion/state reported yet at all) counts as blocking for
+# `_blocking_check_names` below. Deliberately narrow (an allow-list of the clean states) so an
+# unrecognised/future GitHub conclusion value defaults to "blocking" rather than being silently
+# treated as fine.
+_SUCCESS_LIKE_CONCLUSIONS = {"SUCCESS", "NEUTRAL", "SKIPPED"}
+
+
+def _blocking_check_names(rollup: list) -> list[str]:
+    """Pure: names/contexts of the ``statusCheckRollup`` entries that are NOT a clean success —
+    i.e. the check(s) actually driving the PR's stuck ``mergeStateStatus`` (a failure,
+    ``action_required``, a pending commit status, or a check that has not reported a conclusion at
+    all yet — the never-draining-QUEUED-check symptom of glue-runner starvation). Feeds
+    ``_blocking_signature`` so escalation idempotency can be scoped to WHICH check(s) are blocking a
+    PR right now, not just "this PR was escalated at some point in its history" (see
+    ``_pr_escalation_suppressed``).
+    """
+    names: list[str] = []
+    for c in rollup:
+        if not isinstance(c, dict):
+            continue
+        name = str(c.get("name") or c.get("context") or "")
+        if not name:
+            continue
+        conclusion = str(c.get("conclusion") or "").upper()
+        state = str(c.get("state") or "").upper()
+        if conclusion:
+            if conclusion not in _SUCCESS_LIKE_CONCLUSIONS:
+                names.append(name)
+            continue
+        if state:
+            if state not in _SUCCESS_LIKE_CONCLUSIONS:
+                names.append(name)
+            continue
+        # CheckRun with neither a conclusion nor a state yet (still QUEUED/IN_PROGRESS) — a
+        # never-draining check blocks the merge exactly like a failure does.
+        names.append(name)
+    return sorted(set(names))
+
+
+def _blocking_signature(state: str, blocking_checks: list[str]) -> str:
+    """Pure: a short deterministic signature identifying the CURRENT reason a PR is stuck — its
+    ``mergeStateStatus`` plus which check(s) are actually blocking it. Two stuck-PR snapshots with
+    the same signature are "the same reason"; a changed signature means the PR is now blocked for
+    something new, and the ``escalation-dispatched`` label from an earlier, different reason must
+    not suppress it (see ``_pr_escalation_suppressed``). Not a security use of sha1 — a short,
+    stable dedup key over a small, low-cardinality input.
+    """
+    raw = f"{state}:{','.join(sorted(blocking_checks))}"
+    return hashlib.sha1(raw.encode(), usedforsecurity=False).hexdigest()[:10]
+
+
 def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[dict]:
     """Return open PRs into promotion bases that have been un-mergeable too long."""
     stuck: list[dict] = []
@@ -528,6 +581,8 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                 _last = commits[-1]
                 head_message = f"{_last.get('messageHeadline') or ''}\n{_last.get('messageBody') or ''}".strip()
                 head_oid = _last.get("oid") or ""
+            merge_state = pr.get("mergeStateStatus") or ""
+            blocking_checks = _blocking_check_names(rollup)
             stuck.append(
                 {
                     "repo": repo,
@@ -535,7 +590,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "number": pr["number"],
                     "title": pr.get("title") or "",
                     "head": pr.get("headRefName") or "",
-                    "state": pr.get("mergeStateStatus"),
+                    "state": merge_state,
                     "auto_merge": pr.get("autoMergeRequest") is not None,
                     "age_min": int(age_min),
                     "url": pr.get("url") or "",
@@ -551,6 +606,11 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     # head pushed before CI had a chance to attach. Always more severe than a
                     # mere "v2 absent" since the PR could auto-merge with zero validation.
                     "zero_checks": len(rollup) == 0,
+                    # Which check(s) are actually blocking THIS PR right now — the escalation
+                    # idempotency signature (2026-08-07: a permanent presence-only label check
+                    # silently suppressed re-paging when the blocking reason changed; see
+                    # _pr_escalation_suppressed).
+                    "blocking_signature": _blocking_signature(str(merge_state), blocking_checks),
                 }
             )
     return stuck
@@ -861,45 +921,61 @@ def _glue_runner_counts() -> dict[str, tuple[int, int]]:
     return counts
 
 
-def detect_glue_starvation(now: _dt.datetime, queued_minutes: int = GLUE_QUEUED_ALERT_MIN) -> dict | None:
+def detect_glue_starvation(
+    repos: list[str], now: _dt.datetime, queued_minutes: int = GLUE_QUEUED_ALERT_MIN
+) -> dict | None:
     """Detect self-hosted glue jobs QUEUED and not draining (the VM is down, or the pool is wedged).
 
     A single global condition (one alert, not one per job) — the whole pool shares one fate. Returns
-    None when nothing is starved, which is the overwhelmingly common case and costs exactly ONE gh
-    call: the per-run job lookups only happen once something is already queued past the threshold.
+    None when nothing is starved, which is the overwhelmingly common case and costs one gh `run list`
+    call PER FLEET REPO (the per-run job lookups only happen once something is already queued past
+    the threshold in some repo).
 
     Detects on QUEUED-AGE rather than "0 runners online" deliberately, so it also catches a WEDGED
     pool (runners online but not picking work) — a dead VM is only one of the ways this breaks. The
     runner counts go into the message so whoever gets paged can tell the two apart immediately.
 
-    Scoped to ``unified-trading-pm``: it is the only repo with glue runners (a personal account has
-    no org-level runners, so they are repo-scoped there). Jobs are confirmed by LABEL before paging —
-    a HOSTED job queueing on GitHub's own capacity is not our outage and must never page.
+    Scans every entry in ``repos`` (the fleet list) — NOT just ``unified-trading-pm``. That PM-only
+    scoping was correct while PM was the only repo whose OWN workflows referenced
+    ``runs-on: [self-hosted, glue]``, but ``image-build-validate.yml`` was extracted out of PM into
+    the public ``unified-trading-ci`` repo on 2026-08-06 and is now invoked BY every fleet repo's
+    promotion PRs via `workflow_call`. A reusable workflow's runner matching resolves against the
+    CALLING repo's own run queue (the run itself is created in the caller), not the reusable
+    workflow's host repo — so a glue-labelled job triggered from ANY fleet repo's promotion PR
+    surfaces in THAT repo's `run list`, never PM's. A PM-only scan would silently miss every one of
+    those repos' stuck jobs. SSOT: plans/active/issues/
+    image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md. Jobs are confirmed by
+    LABEL before paging — a HOSTED job queueing on GitHub's own capacity is not our outage and must
+    never page.
     """
-    runs = gh_json(
-        [
-            "run",
-            "list",
-            "--repo",
-            f"{ORG}/{_PM_DISPATCH_REPO}",
-            "--status",
-            "queued",
-            "--limit",
-            "50",
-            "--json",
-            "databaseId,createdAt,workflowName,url",
-        ]
-    )
-    if not isinstance(runs, list):
-        return None
     cutoff = now - _dt.timedelta(minutes=queued_minutes)
-    stale = [r for r in runs if isinstance(r, dict) and r.get("createdAt") and _parse_ts(r["createdAt"]) < cutoff]
+    stale: list[tuple[str, dict]] = []
+    for repo in repos:
+        runs = gh_json(
+            [
+                "run",
+                "list",
+                "--repo",
+                f"{ORG}/{repo}",
+                "--status",
+                "queued",
+                "--limit",
+                "50",
+                "--json",
+                "databaseId,createdAt,workflowName,url",
+            ]
+        )
+        if not isinstance(runs, list):
+            continue
+        for r in runs:
+            if isinstance(r, dict) and r.get("createdAt") and _parse_ts(r["createdAt"]) < cutoff:
+                stale.append((repo, r))
     if not stale:
         return None
 
     starved: list[dict] = []
-    for run in stale:
-        payload = gh_json(["api", f"/repos/{ORG}/{_PM_DISPATCH_REPO}/actions/runs/{run['databaseId']}/jobs"])
+    for repo, run in stale:
+        payload = gh_json(["api", f"/repos/{ORG}/{repo}/actions/runs/{run['databaseId']}/jobs"])
         if not isinstance(payload, dict):
             continue
         jobs = payload.get("jobs")
@@ -913,6 +989,7 @@ def detect_glue_starvation(now: _dt.datetime, queued_minutes: int = GLUE_QUEUED_
             if labels & _GLUE_LABELS:
                 starved.append(
                     {
+                        "repo": repo,
                         "workflow": run.get("workflowName") or "?",
                         "url": run.get("url") or "",
                         "age_min": int((now - _parse_ts(run["createdAt"])).total_seconds() // 60),
@@ -933,6 +1010,7 @@ def detect_glue_starvation(now: _dt.datetime, queued_minutes: int = GLUE_QUEUED_
         "oldest_min": max(s["age_min"] for s in starved),
         "url": next((s["url"] for s in starved if s["url"]), ""),
         "workflows": ", ".join(sorted({str(s["workflow"]) for s in starved})[:5]),
+        "repos": ", ".join(sorted({str(s["repo"]) for s in starved})[:5]),
         "runner_state": " · ".join(
             f"{label} {online} online/{idle} idle" for label, (online, idle) in sorted(counts.items())
         ),
@@ -1263,7 +1341,8 @@ def build_alert_items(
                 "url": glue_starvation.get("url") or "",
                 "message": (
                     f":rotating_light: *Self-hosted GLUE runners are NOT draining* — "
-                    f"{glue_starvation.get('count')} job(s) queued in `{_PM_DISPATCH_REPO}`, oldest "
+                    f"{glue_starvation.get('count')} job(s) queued in "
+                    f"`{glue_starvation.get('repos') or _PM_DISPATCH_REPO}`, oldest "
                     f"*{glue_starvation.get('oldest_min')}m*. {glue_starvation.get('diagnosis')} "
                     f"Runners: {glue_starvation.get('runner_state')}. "
                     f"Waiting: {glue_starvation.get('workflows')}. "
@@ -1332,15 +1411,90 @@ def blocked_failing_prs_to_escalate(stuck: list[dict], already_escalated: set[tu
     return out
 
 
-def _pr_has_escalation_label(repo: str, number: int) -> bool:
-    """True if the PR already carries ``_ESCALATION_LABEL`` (best-effort; False on error)."""
-    data = gh_json(["pr", "view", str(number), "--repo", f"{ORG}/{repo}", "--json", "labels"])
+# Hidden marker comment encoding the blocking-reason signature (`_blocking_signature`) an
+# escalation was dispatched for. Deliberately NOT a change to the `_ESCALATION_LABEL` string
+# itself — other consumers (agent-runner.yml, the conflict-resolution/dep-update-conflict flow)
+# key off that exact label for their OWN, unrelated, presence-only dedup and must not be affected.
+_ESCALATION_REASON_PREFIX = "<!-- ci-watcher:escalation-reason:"
+
+
+def _escalation_reason_marker(signature: str) -> str:
+    """The exact hidden marker comment text encoding one blocking-reason ``signature``."""
+    return f"{_ESCALATION_REASON_PREFIX}{signature} -->"
+
+
+def _pr_escalation_suppressed(repo: str, number: int, signature: str) -> bool:
+    """True if this stuck PR should stay suppressed — already handed off FOR ITS CURRENT
+    BLOCKING REASON (``signature``), not merely "carries the label at some point in its history".
+
+    The ``escalation-dispatched`` label is a coarse, PERMANENT marker (applied once, on confirmed
+    spawn, and never removed) — treating label presence alone as "already handled forever" means a
+    PR escalated+fixed for reason A silently stops paging/escalating when it later becomes blocked
+    for an UNRELATED reason B. Measured 2026-08-07:
+    ``batch-live-reconciliation-service#315`` was correctly escalated+labelled for a RUNS_ON
+    workflow-yaml bug, fixed — then became blocked again for an unrelated dead-glue-runner
+    stuck-QUEUED check, and the watcher stayed silent solely because the label was still present.
+
+    Fix: gate suppression on the label PLUS a reason-signature marker comment (posted by
+    ``_post_escalation_reason_marker`` at dispatch time) matching the CURRENT ``signature``.
+    Grandfathered: a labelled PR with NO reason-marker comment at all (escalated before this
+    per-reason tracking existed, or via the label-only ``agent-runner.yml`` path used for
+    non-CI-watcher wall types) stays suppressed unconditionally — so shipping this fix cannot
+    itself trigger a re-page/re-escalate storm across every PR that already carries the label.
+    Once a PR has gone through THIS mechanism at least once, a later signature MISMATCH re-arms
+    it. Best-effort: any gh/read error → False (a PR we can't read stays PAGEABLE /
+    re-escalatable — mirrors the label-presence check's prior fail-open convention).
+    """
+    data = gh_json(["pr", "view", str(number), "--repo", f"{ORG}/{repo}", "--json", "labels,comments"])
     if not isinstance(data, dict):
         return False
     labels = data.get("labels")
-    if not isinstance(labels, list):
+    has_label = isinstance(labels, list) and any(
+        isinstance(lbl, dict) and lbl.get("name") == _ESCALATION_LABEL for lbl in labels
+    )
+    if not has_label:
         return False
-    return any(isinstance(lbl, dict) and lbl.get("name") == _ESCALATION_LABEL for lbl in labels)
+    reason_bodies = [
+        str(c.get("body") or "")
+        for c in (data.get("comments") or [])
+        if isinstance(c, dict) and _ESCALATION_REASON_PREFIX in str(c.get("body") or "")
+    ]
+    if not reason_bodies:
+        return True  # grandfathered legacy/non-reason-tracked label — unchanged old behaviour
+    marker = _escalation_reason_marker(signature)
+    return any(marker in body for body in reason_bodies)
+
+
+def _post_escalation_reason_marker(repo: str, number: int, signature: str) -> None:
+    """Best-effort, DEDUPED: record ``signature`` as a hidden marker comment on this PR so a LATER
+    escalation for a DIFFERENT reason is not silently suppressed by the permanent, presence-only
+    ``_ESCALATION_LABEL`` — see ``_pr_escalation_suppressed``. Deduped against existing comments
+    (not one post per retry tick): a PR parked in the 503/no-headroom retry loop is a dispatch
+    candidate every ``*/15`` tick until a slot frees, and each retry reaches this same call.
+    """
+    marker = _escalation_reason_marker(signature)
+    data = gh_json(["pr", "view", str(number), "--repo", f"{ORG}/{repo}", "--json", "comments"])
+    if isinstance(data, dict):
+        for c in data.get("comments") or []:
+            if isinstance(c, dict) and marker in str(c.get("body") or ""):
+                return  # already recorded for this exact reason — don't re-comment every tick
+    subprocess.run(
+        [
+            "gh",
+            "pr",
+            "comment",
+            str(number),
+            "--repo",
+            f"{ORG}/{repo}",
+            "--body",
+            f"{marker}\n🔖 ci-failure-watcher: escalating for the CURRENT blocking reason "
+            "(mergeStateStatus + the failing/queued required check(s)). This marker scopes the "
+            "`escalation-dispatched` idempotency label to THIS reason — a later escalation for a "
+            "DIFFERENT reason will re-page/re-escalate instead of staying silently suppressed.",
+        ],
+        capture_output=True,
+        text=True,
+    )
 
 
 def stuck_prs_to_page(stuck: list[dict], already_escalated: set[tuple[str, int]]) -> list[dict]:
@@ -1357,16 +1511,18 @@ def stuck_prs_to_page(stuck: list[dict], already_escalated: set[tuple[str, int]]
 
 
 def _already_escalated_set(stuck: list[dict]) -> set[tuple[str, int]]:
-    """IO wrapper: read the escalation label per stuck PR → the already-handed-off identity set.
+    """IO wrapper: derive the identity set of stuck PRs still suppressed FOR THEIR CURRENT
+    blocking reason (see ``_pr_escalation_suppressed`` — label presence alone is no longer
+    sufficient; a PR whose blocking reason has changed since it was labelled is NOT in this set).
 
-    Best-effort (``_pr_has_escalation_label`` returns False on any error → a PR we can't read
-    stays PAGEABLE, never silently suppressed). Bounded: at most one ``gh`` call per stuck PR,
-    and the stuck list is already tiny (promotion PRs past the stuck threshold).
+    Bounded: at most one ``gh`` call per stuck PR, and the stuck list is already tiny (promotion
+    PRs past the stuck threshold).
     """
     out: set[tuple[str, int]] = set()
     for s in stuck:
         repo, number = str(s.get("repo") or ""), int(s.get("number", 0))
-        if repo and number and _pr_has_escalation_label(repo, number):
+        signature = str(s.get("blocking_signature") or "")
+        if repo and number and _pr_escalation_suppressed(repo, number, signature):
             out.add((repo, number))
     return out
 
@@ -1435,27 +1591,36 @@ def _dispatch_escalation(s: dict) -> bool:
     # re-dispatches (the "escalate after X minutes until a slot frees" behaviour). Labelling
     # here on dispatch-accepted was the no-retry bug: a 503 still suppressed all future ticks.
     # SSOT: cicd_contract_hardening_2026_06_01 § "Auto-remediation pipeline gaps".
+    #
+    # DO record the reason signature here (unlike the label, this is safe to write eagerly): it
+    # is additive bookkeeping consumed only by `_pr_escalation_suppressed`, deduped so a PR parked
+    # in the 503-retry loop gets exactly one marker comment, not one per tick (2026-08-07 fix).
+    signature = str(s.get("blocking_signature") or "")
+    if signature:
+        _post_escalation_reason_marker(repo, number, signature)
     print(f"  -> dispatched {repo}#{number} ({s.get('state')}) to orchestrator ({wall_type}); awaiting spawn-confirm")
     return True
 
 
 def escalate_stuck_prs(stuck: list[dict], *, dry_run: bool = True) -> list[dict]:
-    """Hand each conflict-stuck promotion PR to the orchestrator (idempotent via label).
+    """Hand each conflict-stuck promotion PR to the orchestrator (idempotent per blocking reason).
 
     Returns the PRs dispatched (in ``dry_run``, the PRs that WOULD be dispatched — used
-    by the report/tests). The label check happens per-candidate so a non-conflict stuck
+    by the report/tests). The suppression check happens per-candidate so a non-conflict stuck
     PR (e.g. BLOCKED) never triggers a ``gh`` call.
     """
     dispatched: list[dict] = []
     # Conflict-stuck (CONFLICTING/DIRTY) → merge_conflict; BLOCKED-with-failed-check → sit_failure.
-    # Both reuse the same per-PR label idempotency. _dispatch_escalation derives the wall_type from state.
+    # Both reuse the same per-PR reason-scoped idempotency. _dispatch_escalation derives the
+    # wall_type from state.
     candidates = conflict_prs_to_escalate(stuck, already_escalated=set()) + blocked_failing_prs_to_escalate(
         stuck, already_escalated=set()
     )
     for s in candidates:
         repo, number = s["repo"], int(s["number"])
-        if _pr_has_escalation_label(repo, number):
-            continue  # already handed off — don't re-dispatch
+        signature = str(s.get("blocking_signature") or "")
+        if _pr_escalation_suppressed(repo, number, signature):
+            continue  # already handled FOR THIS REASON — don't re-dispatch
         if not dry_run and not _dispatch_escalation(s):
             continue  # dispatch failed — don't claim it
         dispatched.append(s)
@@ -1915,10 +2080,14 @@ def main() -> int:
     # is surfaced as ONE alert above the per-workflow failures it would otherwise spam.
     billing = detect_billing_block(repos, now, args.fresh_hours)
     stale_quarantine = detect_stale_quarantine(now)
-    # Self-hosted glue pools (unified-trading-pm only). Costs ONE gh call when nothing is queued,
-    # which is the normal state. MUST stay in this hosted watcher: a check for "is the glue VM
-    # dead?" that itself ran on the glue VM would queue behind the very outage it exists to report.
-    glue_starvation = detect_glue_starvation(now, args.glue_queued_minutes)
+    # Self-hosted glue pools — scanned across the WHOLE FLEET (not just unified-trading-pm): a
+    # glue-labelled reusable-workflow job resolves its runner queue against the CALLING repo, so a
+    # starved job triggered from any fleet repo's promotion PR surfaces in THAT repo's run list, not
+    # PM's (2026-08-06 image-build-validate.yml extraction to unified-trading-ci). Costs one gh call
+    # per fleet repo when nothing is queued, which is the normal state. MUST stay in this hosted
+    # watcher: a check for "is the glue VM dead?" that itself ran on the glue VM would queue behind
+    # the very outage it exists to report.
+    glue_starvation = detect_glue_starvation(repos, now, args.glue_queued_minutes)
 
     transitions: list[dict] = []
     currently_failing: list[dict] = []
@@ -1959,12 +2128,15 @@ def main() -> int:
     enrich_failure_reasons(transitions)  # N1: failed job/step + log excerpt (consolidated log report)
     enrich_failure_reasons(currently_failing)  # same reason enrichment for the per-condition re-nag items
 
-    # Gate the stuck-PR Slack line on the escalation-dispatched label (alert_quality_audit_2026_06_18):
-    # PAGE only stuck PRs not yet handed off — a worker + the server (S4) own an escalated PR's
-    # lifecycle, so re-paging it every */15 tick is the operator's "stuck PR" repeat noise. The FULL
-    # `stuck` list still drives auto-recover + escalate below (those have their own per-PR idempotency).
-    # Skip the label lookups entirely on a diagnostic run (--repo/--now without the cron's escalate),
-    # so a hand-run never burns gh calls and the page shows everything.
+    # Gate the stuck-PR Slack line on the escalation-dispatched label + reason signature
+    # (alert_quality_audit_2026_06_18; reason-scoping added 2026-08-07): PAGE only stuck PRs not
+    # yet handed off FOR THEIR CURRENT BLOCKING REASON — a worker + the server (S4) own an escalated
+    # PR's lifecycle for that reason, so re-paging it every */15 tick is the operator's "stuck PR"
+    # repeat noise; but a PR blocked again for an UNRELATED reason after its label was applied must
+    # still page (see _pr_escalation_suppressed). The FULL `stuck` list still drives auto-recover +
+    # escalate below (those have their own per-PR idempotency). Skip the label/comment lookups
+    # entirely on a diagnostic run (--repo/--now without the cron's escalate), so a hand-run never
+    # burns gh calls and the page shows everything.
     stuck_to_page = stuck_prs_to_page(stuck, _already_escalated_set(stuck)) if (args.escalate and stuck) else stuck
     alert, severity, report = build_report(transitions, stuck_to_page, resolved, billing)
     print(report)
