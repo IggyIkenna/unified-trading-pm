@@ -290,3 +290,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (`--chunk-size 5 --start 2020-06-06 --end 2026-08-07`, no `--force`). This is the mitigation
   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` itself flags as imperfect (previously OOM'd 4/75 chunks) —
   watching closely next tick for `CHUNK_FAILED`/`OOM_KILLED` recurrence, not treating this as fire-and-forget.
+- **2026-08-07T13:08Z — both odds VMs confirmed genuinely healthy, zero OOM signatures.**
+  `mtds-backfill-odds-smallchunk-20260807`: 0 `CHUNK_FAILED`/`OOM_KILLED` matches across its full log, now at chunk
+  6/451 (`2020-07-01→2020-07-05`), skip-fasting + real-fetching correctly across ~30 leagues per chunk. Full-range,
+  5-day-chunked, so a fresh subprocess baseline every chunk — the mitigation appears to be holding.
+  `mtds-backfill-odds-401-retry`: also 0 `CHUNK_FAILED`/`OOM_KILLED`, still chunk 1/2 but genuinely progressing
+  (2026-03-01 → date not yet logged this check, prior tick's date confirmed superseded). Its memory (`RESOURCE_SAMPLE`
+  over the last 8 minutes: 50.8%→78.5%→50.4%→70.1%→39.3%→67.5%→10.5%→...→71.1%) is **oscillating, not monotonically
+  climbing** — this is the healthy per-date-cleanup signature, distinct from the broken default-chunk-size VM's
+  cumulative-growth pattern from two ticks ago. No action needed; continuing to watch since this VM's single chunk spans
+  8+ months uninterrupted (no 5-day respawn safety net like the sibling VM has), so it remains the more theoretically
+  exposed of the two, just not currently showing distress.
