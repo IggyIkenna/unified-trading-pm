@@ -170,6 +170,212 @@ resolved_by:
   `data_source_provenance_all_asset_groups_2026_06_01.md`" — archived; live owner is
   `data_source_provenance_enforcement_2026_07_24.md`.
 
+**B_E (data3 batch: standardisation / catalogue / partition_migration / warm-sink ×2) — 2026-08-07:**
+
+- E1 [P2] `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md:463` M8 "PARTIAL — REMAINING: cadence
+  column (UTL) + run_class + writer stamp" vs same-doc GATE-0 `:599`,`:605`,`:606-610` `[x]` (cadence column, deploy-
+  api slice, UI slice SHIPPED) — 3 of 4 "REMAINING" items are `[x]` in the same doc; genuine remainder = run_class +
+  writer stamp.
+- E2 [P2] `master_data_canonicalisation_migration_catalogue_2026_06_07.md:330` WAVE-5 open todo lists shipped items
+  (M3/M4/M7, `live_websocket`→`live_<source>`) as open scope vs standardisation `:597-598`,`:600-601`,`:611-616` `[x]`
+  (GATE-0 9/9, `live_websocket` rg=0 fleet-wide) — genuine remainder = G5 backfills→100%, M6/M7, M8 wiring.
+- E3 [P2] `plans/epics/batch_live_symmetry_master.md:68-69` "2 active plans" + `:77-78` P0 empty vs actual 5 active
+  (incl. P0 `live_event_log_warm_sink_recovery…:25`,`:28`) — no roster disclaimer banner; last_updated 07-12.
+- E4 [P2] `pipeline_mode_partition_migration_2026_06_01.md:87-92` rider table names 5 ARCHIVED plans as live riders +
+  "no canonicalisation plan yet" cell vs archived `instruments_manifest_canonicalisation` complete. Self-flagged banner
+  `:70-72` but table + Phase-1 todos un-updated.
+- E5 [P2] `master_data_canonicalisation_migration_catalogue…:117-121` "NO `--apply` until G0+G1+G2+G3 GREEN"
+  (unqualified) vs own Gate-State Board `:201-209` G4 `--apply` 🟢 applied 2026-06-29/07-06 while G2 🟡 — invariant
+  paragraph untouched at 07-12 board refresh.
+- E6 [P2, GRACE] `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md:63-66` counts two
+  time-gated parent todos; one flipped `[x]` 08-02 (52-subs hold, cron fired); `:38` "10 total todos" vs actual 11.
+
+## Doc-drift
+
+**B_E (data3 batch):**
+
+- Line caps: `master_data_canonicalisation_migration_catalogue` 900L · `pipeline_mode_source_batch_live_replay_std` 980L
+  — both >500 soft, standardisation **20 lines from the 1000 hard cap** (riskiest doc in batch; no remediation banner
+  unlike catalogue's 1289→953).
+- Stale `last_updated`: warm-sink `:24` (07-31 vs PL 08-02/03) · finalize `:19` (07-31 vs 08-06 body note) · catalogue
+  `:42` quoted-string `"2026-08-05"` (quote-style flag).
+- Catalogue registry rows `:605`,`:606`,`:615`,`:621` name archived-complete plans without archive notation (P2;
+  contrast G0 rows' "FOLDED→M-1, archived" style); `plans/epics/manifest_master.md:127` "16 active plans" vs 14 actual +
+  `related_plans` cites archived `migration_verification_orphan_safety` (same class as H1).
+- Huge-whitespace continuation lines in standardisation `~:796-826`,`:914-926` (6-space pasted blocks, P3).
+
+## Codex-drift candidates (B_E)
+
+- P2 `pipeline_mode_partition_migration…:114-115` flip-instruction targets
+  `/codex/02-data/pipeline-mode-and-batch- live-reconciliation.md` text that moved ("Phase 5 DEFERRED" note → "IN
+  PROGRESS riders", codex `:231-233`); codex per-bucket table `:236-245` mirrors the plan's stale table ("In L3 walk
+  plan" ×5) rather than archived/ landed reality.
+- P3 `/codex/02-data/pipeline-mode-partition.md:81` "Reader fallback removal (T+30d, ~2026-06-15) ⏸ deferred" — T+30d
+  passed; flag for re-verify.
+
+**B_A (closeout hub batch: hub / ag_closeout_audit_rollout / determinism child / asset_class rename / mvp) —
+2026-08-07:**
+
+- A1 [P0, GRACE] hub Track 9 `:352-355` `mtds_retry_safe_default_audit` "**NOT started**, 5 open / 0 done, AO- eligible"
+  vs `plans/archive/2026_08/…` `status: complete` 5/5 `[x]` (mtds@0041a8a6 + PM@4d3713ade). Criterion `:363` now MET.
+  Third side: `plans/epics/infrastructure_master.md:595-597` still lists it "**status**: active" (P2 — epic side
+  fixable, not grace).
+- A2 [P1, GRACE] hub Track 4 `:241`,`:248` models-MVP "BLOCKED-OPERATOR-DECISION / stays parked" vs ruling 2026-07-27
+  - P2b shipped 07-28 (mvp `:166-170`,`:176` UAC@0fb9821b; batch1b retagged 07-29).
+- A3 [P1, GRACE] hub Track 14 `:480` + open todo `:701-704` CF job "never successfully produced output, failing daily
+  since 07-04" vs first complete 10-bucket rollup 2026-07-26 (`cf_manifest_audit_first_full_rollup…:5-7`); also cites
+  daily-failure doc under ACTIVE path (`:480` — it's archived). Hub-internal discord `:178` disputes the framing yet
+  Track 14 retained it.
+- A4 [P2, GRACE] hub Track 14 `:493` vm_exec_stall "regex fix identified, VM relaunch/verify in flight" vs archived
+  `vm_exec_stall_watchdog_checkpoint_regex_mismatch` `status: resolved` 08-03 (postdates hub's own last_updated).
+- A5 [P2, GRACE] hub Track 10 `:370` e2e "stuck behind STALE hold banner… escalate" vs
+  `features_service_e2e_pipeline_test…:64` "✅ HOLD LIFTED (2026-07-27, operator decision)" — criterion `:373` met.
+- A6 [P2, GRACE] hub Track 12 `:419` `silent_wrong_answer_bucket_resolution_class…` cited at ACTIVE path — archived
+  `status: resolved` (own frontmatter `related:` :69 uses archive path).
+- A7 [P2/P3] `last_updated` lags Progress Log in all 5 batch docs (ag_closeout_audit_rollout worst: 07-25 vs log through
+  08-06, 12 days).
+- A8 [P3] "8 source docs" vs 10 listed — `cross_cutting_strategy_execution_determinism…:7`,`:9`,`:94` + hub Track 24
+  `:695` (self-aware via re-verify todo, cosmetic).
+- A9 [P3] `mvp_scope_catalogue_tagging…:172` "(draft)" descriptor stale vs batch1b `status: active` `:14`.
+
+## Doc-drift
+
+**B_A (closeout batch):**
+
+- Line caps: hub 885L · ag_closeout_audit_rollout 987L — both >500 soft, <1000 hard.
+- NEAR-COMPLETE: hub (1 open), ag_closeout (1 open), determinism child (1 open) — all GRACE docs.
+- Space-corrupted doc refs in hub (P3): `:352`,`:369`,`:370`,`:350`,`:178` (e.g.
+  "`features_service_e2e_pipeline_test_ 2026_05_26.md`").
+- `ag_closeout_audit_rollout:15` status comment `# was: complete (2026-07-25)` 13 days stale (P3, GRACE); hub PL
+  ordering 07-27 entry after 07-25/26 (P3).
+- P2 `plans/epics/infrastructure_master.md:595-597` P3 backlog marks archived mtds doc "status: active" (path repointed
+  :46, status not); BOTH cross-cutting children missing from infra_master inventory despite
+  `parent_epic: infrastructure_master` (grep 0 hits; contrast AOF/instruments_master which list children correctly).
+- Cleared: `execution_scope: orchestrator-agent` on mvp IS canonical (PLAN_FORMAT.md:99,143 — closed set of two).
+
+## Near-miss flips (B_A — flag, not flip)
+
+- `ag_closeout_audit_rollout…:114-118` (GRACE) open todo's first half evidence-complete in-doc (`:955-958` "all 34 open
+  entries resolved… 0 `**Status**: open`"); mass-flip half genuinely open (`:963-966` partially done) → re-scope
+  candidate.
+
+**B_G (instruments batch: tracker / foundation / phase0 / residuals / store_cf / is_catalogue / extra_forbid) —
+2026-08-07:**
+
+- G1 [P1] tracker `instruments_completion_tracker…:698-701` "na-eligibility-audit 2026-08-03: **Closed 1 checkbox**
+  (generic manifest-reprocessing utility)" vs `:556-560` checkbox still `- [ ]` "STILL OPEN (reconciled 2026-07-28) —
+  genuinely unbuilt"; supporting issue `plans/archive/issues/manifest_reprocessing_generic_utility…` `status: resolved`.
+  Progress Log vs body directly contradictory; flip candidate.
+- G2 [P2] tracker `:90-93` "STILL PENDING" banner (post-apply chain) vs own Stage-1 `[x]` `:210-216` (orphan-sweep E=0,
+  E5 rebuild, IS enumerate-seed, IS catalogue all done 07-06/09/10) — only "Ikenna's migration sign-off" genuinely
+  pending.
+- G3 [P2] `instruments_foundation_phase0_cross_cutting…:376-383` granularity-aware producer "STILL OPEN, unbuilt, no
+  evidence" vs same doc `:417-422` "Catalogues — ALL 5 AG regenerated + promoted (2026-06-26, monotonic ACCEPT)… builder
+  auto-handles league/cqg grain" (sports 1,608 + prediction 1,204,816 promoted on that producer).
+- G4 [P2] `instruments_foundation_completeness…:200-201`,`:347-348` "G4 OPEN pending D2" vs D2 LANDED (tracker
+  `:444-446`; `cefi_layer1_denominator_gaps…` archived resolved) — should read "pending re-verify"; open-ness itself
+  intentional (tracker :446-447).
+- G5 [P2] `instruments_foundation_completeness…:46-47`,`:214-215`,`:283-286`,`:350-353` cite ARCHIVED defi/sports plans
+  as live work homes (`defi_instrument_catalogue_and_capture_pipeline` [complete], `sports_fixture_completeness_oracle`
+  [complete]) — self-acknowledged `:366-368` "flagged for /plan-reconcile, not rewritten here" → THE fix candidate.
+- G6 [P2] `instruments_mtds_consistency_remediation_residuals…:9` summary "14 residuals remain open" vs actual 7 (own PL
+  `:926-929` "2 of 7 open items") — reader sees double the residual work.
+- G7 [P3] tracker Stage-6 `:528-533` "flip stale checkboxes" — 3 of 4 named targets already flipped (N9c RESOLVED,
+  migrate-first-4-AGs moot, incremental_rollup complete); only N5r/N6r open.
+- G8 [P3] foundation `:346` "11 items still `- [ ]`" vs phase0 doc 13 open.
+- G9 [P3] tracker Stage 0 `:198-200` both halves resolved (both docs archived complete; operator unlock DID happen) —
+  "operator unlock REQUIRED" premise no longer holds.
+
+## Doc-drift
+
+**B_G (instruments batch):**
+
+- Line caps: residuals 929L (71 from 1000 hard — watch/split next edit) · tracker 704L · phase0 619L — >500 soft.
+- Stale `last_updated` 6 of 7 docs (extra_forbid GRACE; foundation/phase0/residuals/store_cf/is_catalogue).
+- P3 `is_catalogue…:71-72` doc-purpose tension: "historical/audit record, not gating anything" while holding 3 open P0
+  todos. Mojibake `residuals:647` (`ðŸŸ¢ IN PROGRESS`). Sha truncation inconsistency foundation `:216` (`1407b7fd`) vs
+  tracker `:456` (`1407b7f`).
+- Cleared: no terminal-in-active, no superseded-while-active, no archive candidates; instruments_master epic lists all 6
+  children with matching estimates.
+
+## Near-miss flips (B_G — flag, not flip)
+
+- G-F1 [P1] = G1 (tracker utility checkbox; flippable with PL entry + archived issue).
+- G-F2 [P1] `residuals:643-654` F1 Kraken backfill — 7-week-old "🟢 IN PROGRESS… ETA ~1h" note frozen since 06-18;
+  08-01/08-06 audits reviewed without resolving → verify-complete-or-refresh candidate.
+- G-F3 [P2] `is_catalogue…:249-253` G1.code open though own banner `:80-86` records "CODE SHIPPED 2026-06-07"
+  (uac@97c26dbe + is@6ea46565, both QG green) — stale pre-ship text.
+- G-F4 [P2] `is_catalogue…:287-295` G1.run vs `:308-312` `[x]` G1.run-bounded (4 AG live-window seeds materialised
+  06-19) — same act described twice; reframe or flip bounded part.
+- G-F5 [P2] `instruments_store_cf…:211-218` bar-edge fix COMMITTED is@20a92886 (08-05) but BLOCKED on repo-blocker
+  RB-d3bb9020 (IS QG red, `test_sports_fixture_stamps_canonical_instrument_id`) — correctly open (commit ≠ shipped);
+  surface so the committed fix doesn't rot.
+- G-F6 [P3] `is_catalogue…:254-260` G1.dry-run — 2-3 of 5 AGs DONE in-body.
+- G-F7 [P3] tracker Stage-3 `:385-392` tradfi cert relocated to `tradfi_consolidated_closeout…` Phase C — flip-with-
+  pointer candidate.
+
+## Codex-drift candidates (B_G)
+
+- P2 instruments-service QG red (RB-d3bb9020) blocking committed is@20a92886 — code-health signal for daily runner (not
+  text drift). P3 G1-gap list check (TRADER_JOE_V2… vs UNISWAP_V4 cells migrated canonical — different axes).
+
+**B_I (strategy batch: carry_staked / ensemble / citadel / colocated / cross_venue / daily_analyst) — 2026-08-07:**
+
+- I1 [P1] `colocated_feature_pipeline_in_memory_handoff…:77-83` (1.3b) + `:93-103` (1.7e) open SUPERSEDED-BY-BATCH1 vs
+  batch1 `:152-153` `[x]` @features-service/3162d627 (QG 18261 passed) + `:155-156` `[x]` @43a2b56b — colocated's own
+  contract (:66-67 flip-both-copies-together) not honoured → flip candidates.
+- I2 [P2] citadel `:811-814` single 08-02 PL entry self-contradicts: "DELETED the duplicated P2.11.18 fragment (11→ 10)"
+  then "a literal duplicated `- [ ] [CODE] P2.11.18` line still inflates count" — grep: exactly ONE P2.11.18 (`:551`);
+  stale sentence.
+- I3 [P2] ensemble `:334-335` PL (08-02) calls `[HISTORICAL] P3` "stale open checkbox" vs `:132` `[x]` FLIPPED 07-31
+  (UAC@487b9a9 + strategy-service@6b285fad) — postdates the flip, wrong about doc's own state.
+- I4 [P2] rank-allocator fold tracked open in TWO active sibling plans: cross_venue `:173` (CarryStakedBasisRank-
+  Allocator) + ensemble `:118`/`:114`/`:145` (CarryFundingDispersionRankAllocator) — double-dispatch risk; split docs
+  disagree on ownership.
+- I5 [P2] epic counts both directions: batch_live_symmetry "2 active plans" vs 5; strategy_master "9 active" vs 8 (9th
+  related_plans entry `:47` is archived vol_dvol).
+- I6 [P2] carry_staked twin todos: `:274`/`:535` lending-indices legacy-bucket writer fix; `:203`/`:267` Aave- Ethereum
+  backfill — one item two checkboxes each (inflates 28-open count by 2).
+- I7 [P2] stale issue-path cites (active vs archive): carry_staked `:74`, citadel `:157`,`:138`, ensemble `:40`.
+
+## Doc-drift
+
+**B_I (strategy batch):**
+
+- Line caps: citadel 819L · carry_staked 770L · cross_venue 518L — >500 soft, <1000 hard.
+- Stale `last_updated` ALL 6 docs (carry_staked 07-24 vs PL 08-03; ensemble 07-24 vs 08-02/03; citadel 07-24 vs
+  08-02/03; cross_venue 07-24 vs 08-03; colocated 07-27 vs 08-05; daily 07-29 vs 08-04/05 — GRACE).
+- carry_staked **28/28 todos open** — zero completion signal despite PL journaling shipped `--live` work (see flips
+  below); highest open-count in tranche.
+- `daily_trading_analyst…:48` `source: [blrs_g3_g10_rescope_2026_07_28]` bare slug (GRACE, P3).
+- citadel register §D `:160` bullet carries no `[x]`/`[ ]` marker (noted for consistency, not an error).
+
+## Near-miss flips (B_I — verify candidates, strong in-doc evidence)
+
+All `carry_staked_basis_funding_scan_experiment…` unless noted (PL `:405-531` journals shipped; todos open):
+
+- I-F1 [P1] `:602-606` `--live` multi-venue snapshot mode vs PL `:409-412` shipped e2e-testing@6e2ffb8 (14 venues, 446
+  funding points, coins 30→40, cash-margin default — every spec element present).
+- I-F2 [P1] `:619-620` dYdX v4 + Vertex wire vs PL 06-17 + `:409` (both PUBLIC, wired at 6e2ffb8).
+- I-F3 [P2] `:633-634` live/paper history carve-out vs `:407` (operator 06-17 carve-out in shipped commit).
+- I-F4 [P2] `:651-652` liquidity snapshot constant backfill vs `:452`.
+- I-F5 [P2] `:667-668` HYPE HL-S3 history pull vs cross_venue `:154-155` `[x]` 100% coverage 2023-05-20→2026-06-09
+  (1117/1117 days, 0 gaps, mtds@98d12be) — HYPE listing window inside corpus.
+- I-F6 [P2] `:628-630` Drift creds/RPC — harness half shipped at 6e2ffb8; production MTDS remainder tracked `:622` →
+  partial-flip candidate.
+- I-F7 [P2] cross_venue `:423-424` capacity-book productionise — [floor,cap] rail shipped in ensemble
+  (e2e-testing@5eef20f); script extension specifically remains open (low confidence).
+- I-F8 [P1] colocated 1.3b/1.7e = I1 above.
+- Verification note: I-F1..F6 shas live in the e2e-testing repo — verify `git merge-base --is-ancestor` from that clone
+  in STEP 4.
+
+## Codex-drift candidates (B_I)
+
+- P2 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159` plan_reconciler scheduled-jobs table
+  "systemd timer, daily 01:00 UTC, opus/max" vs live reality "hourly-retry, sonnet-forced" (daily_analyst §1
+  code-verified) — fix ALREADY tracked as open §5 todo `daily_trading_analyst…:324-327` (GRACE doc). No codex rewrite
+  this run (operator ruling required); route via /blocked.
+
 ## Doc-drift
 
 **B_H (mtds/infra batch):**
