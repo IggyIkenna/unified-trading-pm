@@ -101,18 +101,13 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
       `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: a proposal doc exists (either
       a new `plans/active/issues/` doc or a named section folded into an existing infra doc, with the fold cited)
       carrying the recommendation + rationale.
-- [ ] [DATA] P1. Verify-then-fix the ODDS_API CAPTURE path's blank-`fixture_id` raw generation: the halftime doc's open
-      checkbox (line ~185) says the capture path still emits `fixture_id=""` alongside a populated `event_id`, while the
-      consolidated closeout's Track E `[x]` todo claims the mechanism fixed via `market-tick-data-service@3401c0ab`
-      (2026-07-24) — that fix targeted the odds_api BACKFILL path (`_build_fixture_rows()`); per the closeout's own note
-      it was never re-verified against a fresh live capture. First read the current ODDS_API capture writer to determine
-      whether it shares the fixed code path; if the capture path still writes blank `fixture_id`, fix it (populate
-      `fixture_id` at write time, or drop the column rather than writing blank-but-present —
-      `/codex/02-data/honest-absence-downstream-handling.md`); if it is already fixed, close the halftime doc's checkbox
-      with cited code+live evidence. Source: `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. Done when: either (a)
-      the fix ships via quickmerge and a fresh sample shows no blank `fixture_id` on the capture path, or (b) written
-      evidence (code read + live sample) proves the capture path already emits populated `fixture_id` and the halftime
-      doc's checkbox is flipped with that citation.
+- [x] ✅ [DATA] P1. Verify-then-fix the ODDS_API CAPTURE path's blank-`fixture_id` raw generation — VERIFIED ALREADY
+      FIXED via code read (option b, 2026-08-07): the capture path routes `_route_sports()` → `download_batch()` →
+      `_build_fixture_rows()` — the SAME function fixed by `market-tick-data-service@3401c0ab` (2026-07-25);
+      `odds_api_adapter.py:808` stamps `"fixture_id": str(af_fixture_id) if af_fixture_id is not None else ""`. Live WS
+      path also fixed by `market-tick-data-service@d6d539a8` (2026-07-29) via `odds_api_ws.py:196`
+      `"fixture_id": event_id`. Halftime doc checkbox flipped with code citations —
+      `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` [DATA] P1 now ✅.
 
 ## Deferred — non-batchable (30 orphaned docs with parked items + 1 fully extracted, taxonomy-tagged)
 
