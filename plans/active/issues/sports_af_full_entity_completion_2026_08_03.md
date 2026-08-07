@@ -873,3 +873,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   the +3 is noise) — the SOURCE_RETURNED_ZERO bug is genuinely not recurring anymore.)
 - **2026-08-07T18:17Z** — FIXTURE_STATS chunk 4/26 (2021-04-15), SFI (2025-01-31), `mtds-backfill-odds-smallchunk2`
   (chunk 10/451, still 0 OOM). All healthy, quiet tick — no new incidents.
+- **2026-08-07T19:21Z** — FIXTURE_STATS chunk 5/26 (2021-07-28), SFI (2025-11-23, closing in on the full-range end — ~8
+  months left), `mtds-backfill-odds-smallchunk2` (chunk 17/451, still 0 OOM). All healthy. Also this tick: shipped the
+  long-deferred daily-AO-skill request (sibling-doc scope) — baked the vendor-completion audit checks into
+  `cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` (`722fd6d4cf`), closing the last
+  unilaterally-actionable item from the operator's original asks; only the cross-vendor generalization scoping ask
+  (needs operator input) remains genuinely open.
