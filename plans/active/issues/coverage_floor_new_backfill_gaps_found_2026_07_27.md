@@ -159,6 +159,11 @@ context_scope:
   HYPERLIQUID 2023-04-15..2023-12-31: book_snapshot_5 (8,917 captured/6,170 empty_confirmed), derivative_ticker (9,194
   captured/5,885 empty_confirmed/8 attempted_failed), trades (15,087 empty_confirmed as expected per
   S3_TRADES_START=2025-03-22). 261 calendar days now carry capture_status=captured. Backfill VM completed successfully.
+- **slot-9 2026-08-07**: dispatched DERIBIT 2019 light backfill. Heavy VM `cefi-deribit-2019-heavy-20260807-123219`
+  confirmed gone from fleet (completed). Tardis slot free (0 VMs with VM_TARDIS_CONSUMER=1 metadata). Launched
+  `cefi-deribit-2019-light-20260807-194407` (`YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light VENUES=DERIBIT`); VM
+  RUNNING at 35.194.123.82 (asia-northeast1-c). Covers derivative_ticker;options_chain;futures_chain
+  2019-03-30..2019-12-31. Machine n2-highmem-16 (128GB, registry floor). All follow-up todos in this doc now closed.
 
 ## Follow-ups
 
@@ -173,8 +178,12 @@ context_scope:
       (asia-northeast1-c). Covers `trades;book_snapshot_5` 2019-03-30..2019-12-31. VM_TARDIS_CONSUMER=1 stamped; shuts
       down on completion. Follow-up: dispatch LAUNCH_GROUPS=light (derivative_ticker;options_chain;futures_chain) once
       heavy completes and frees the Tardis slot.
-- [ ] [DATA] P2. Dispatch DERIBIT 2019 light backfill (YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light
-      VENUES=DERIBIT) — once cefi-deribit-2019-heavy-20260807-123219 completes and frees the Tardis slot
+- [x] ✅ [DATA] P2. **DONE 2026-08-07 (slot-9)** — Dispatched DERIBIT 2019 light backfill. Heavy VM
+      `cefi-deribit-2019-heavy-20260807-123219` confirmed completed (no longer in fleet). Tardis slot free (0
+      Tardis-consuming VMs via metadata filter VM_TARDIS_CONSUMER=1). Launched `cefi-deribit-2019-light-20260807-194407`
+      with `YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light     VENUES=DERIBIT`; VM RUNNING at 35.194.123.82
+      (asia-northeast1-c). Covers `derivative_ticker;options_chain;futures_chain` 2019-03-30..2019-12-31. Machine
+      n2-highmem-16 (128GB, registry floor). VM_TARDIS_CONSUMER=1 stamped; shuts down on completion.
 - [ ] [INFRA] P3. Resolve the BINANCE-DELIVERY zombie venue (remove from VENUES_BY_ASSET_GROUP["cefi"] or operator
       re-adds to MVP scope) — 704 wasted attempted_failed rows/day continue
 
