@@ -149,6 +149,11 @@ context_scope:
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged — all 3 open Follow-ups
   (HYPERLIQUID row re-verify, DERIBIT 2019 dispatch, BINANCE-DELIVERY zombie cleanup) still map to this same 4-entry set
   (parent doc + the 2 registry/orchestrator files + the sharded-backfill launcher).
+- **slot-7 2026-08-07**: dispatched DERIBIT 2019 heavy backfill follow-up (this task). Tardis fleet clear (0 running VMs
+  via `tardis_running_vm_count`). Launched `cefi-deribit-2019-heavy-20260807-123219`
+  (`YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=heavy VENUES=DERIBIT`); VM RUNNING 34.146.248.9 zone
+  asia-northeast1-c; VM_TARDIS_CONSUMER=1; covers trades;book_snapshot_5 2019-03-30..2019-12-31. Added new follow-up for
+  LAUNCH_GROUPS=light dispatch once heavy finishes.
 - **slot-13 2026-08-07**: closed HYPERLIQUID re-verify P2 follow-up. Bounded column-projected manifest read of
   `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` confirms 45,261 rows for
   HYPERLIQUID 2023-04-15..2023-12-31: book_snapshot_5 (8,917 captured/6,170 empty_confirmed), derivative_ticker (9,194
@@ -162,8 +167,14 @@ context_scope:
       captured + 6,170 empty_confirmed), derivative_ticker (9,194 captured + 5,885 empty_confirmed + 8
       attempted_failed), trades (15,087 empty_confirmed — expected, S3_TRADES_START=2025-03-22). 261 distinct calendar
       days with capture_status=captured. Backfill confirmed complete.
-- [ ] [DATA] P2. Dispatch the DERIBIT 2019 historical backfill (YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=heavy,
-      then light once heavy frees the Tardis slot)
+- [x] ✅ [DATA] P2. **DONE 2026-08-07 (slot-7)** — Dispatched DERIBIT 2019 heavy backfill. Tardis fleet was clear (0
+      running VMs confirmed via concurrency guard). Launched `cefi-deribit-2019-heavy-20260807-123219` with
+      `YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=heavy VENUES=DERIBIT`; VM RUNNING at 34.146.248.9
+      (asia-northeast1-c). Covers `trades;book_snapshot_5` 2019-03-30..2019-12-31. VM_TARDIS_CONSUMER=1 stamped; shuts
+      down on completion. Follow-up: dispatch LAUNCH_GROUPS=light (derivative_ticker;options_chain;futures_chain) once
+      heavy completes and frees the Tardis slot.
+- [ ] [DATA] P2. Dispatch DERIBIT 2019 light backfill (YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light
+      VENUES=DERIBIT) — once cefi-deribit-2019-heavy-20260807-123219 completes and frees the Tardis slot
 - [ ] [INFRA] P3. Resolve the BINANCE-DELIVERY zombie venue (remove from VENUES_BY_ASSET_GROUP["cefi"] or operator
       re-adds to MVP scope) — 704 wasted attempted_failed rows/day continue
 
