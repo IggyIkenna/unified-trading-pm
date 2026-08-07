@@ -19,7 +19,7 @@ summary: >-
   concurrent threads → OOM), different mechanism (that one was `lookup()`'s unfiltered full-schema cache reload; this
   one is `add()`'s unprotected `self._records` mutation + per-VM-shard staging race) — filed separately because the fix
   and blast radius are distinct.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -33,7 +33,7 @@ related:
   ]
 created: "2026-08-06"
 author: unknown
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -65,6 +65,10 @@ context_scope:
 ---
 
 # `ManifestWriter` shared-across-threads race — dead `self._write_lock` (2026-08-06)
+
+> **ARCHIVED (2026-08-07) — both todos done.** Todo 1: caller-side lock mitigation shipped (batch10, slot 9). Todo 2:
+> library-level `RLock` fix shipped (`unified-trading-library@85bd0354`, batch10 todo 1, slot 9); regression test: 10
+> threads × 50 calls → 500 rows, no duplication.
 
 ## What happened
 
