@@ -98,12 +98,14 @@ measured empirically.
 
 ## Recommended decision
 
-- [ ] [DATA] P2. **Relaunch `mdps-defi-2025` and `mdps-defi-2026`** as SPOT VMs using the same launcher
+- [x] ✅ [DATA] P2. **Relaunch `mdps-defi-2025` and `mdps-defi-2026`** as SPOT VMs using the same launcher
       (`launch-mdps-sharded-backfill.sh defi --year 2025 2026 --env prod`), which are idempotent (skip-if-fresh). The
       existing 272+156 day partitions will be skipped; only the missing days will be computed. Consider setting
       `MDPS_MAX_WORKERS=4` to reduce per-date memory pressure on large-instrument dates (the 1800s timeouts suggest
       individual dates with 10K+ instruments may be hitting the subprocess timeout, not a code bug — fewer concurrent
-      instruments may keep each date under the 1800s cap by reducing contention). Repo: deployment-service.
+      instruments may keep each date under the 1800s cap by reducing contention). Repo: deployment-service. —
+      mdps-defi-2025-20260807-203541 + mdps-defi-2026-20260807-203541 RUNNING (SPOT, MAX_WORKERS=4,
+      run-ts=20260807-203541)
 - [ ] [DATA] P3. **Investigate raising the per-date subprocess timeout** from 1800s for DeFi — the `STALL_TIMEOUT_SEC`
       launcher-level watchdog was correctly set to 7200s, but the inner per-date timeout (hardcoded in MDPS
       `process_handler.py`) is 1800s. DeFi years with 10K+ instruments can legitimately exceed 30 min per date. Repo:
@@ -112,3 +114,5 @@ measured empirically.
 ## Progress Log
 
 - **context-scout 2026-08-07**: populated context_scope (5 entries).
+- **slot-6 2026-08-07**: P2 done — launched mdps-defi-2025-20260807-203541 and mdps-defi-2026-20260807-203541 as SPOT
+  VMs (e2-standard-8, MAX_WORKERS=4, zone=asia-northeast1-c). Both RUNNING verified via gcloud.
