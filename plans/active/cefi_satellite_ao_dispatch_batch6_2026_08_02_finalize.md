@@ -95,14 +95,23 @@ context_scope:
       Remaining open: 2 checkboxes ([SCRIPT] P1 nominal/both-sub-parts-resolved, [DATA] P1 xperp fix pending operator
       decision). None of the 5 source docs reach zero open items — as anticipated.
 
-- [ ] [REVIEW] P1. **Re-check batch6's own Deferred items for cleared gates.** Walk each Deferred entry in
+- [x] ✅ [REVIEW] P1. **Re-check batch6's own Deferred items for cleared gates.** Walk each Deferred entry in
       `cefi_satellite_ao_dispatch_batch6_2026_08_02.md` and re-verify its specific blocking condition: (a) the
       transitively-gated Schema v10 item — has `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s
       `[DESIGN] P1` §5-gaps item closed and has Stage 1 (write-enforce) shipped? If so, record it as a `batch7`
       candidate — do NOT draft the todo here, this finalize plan's scope is reconciliation, not fresh drafting. (b) the
       carried-forward `estate_orphan_assessment_2026_07_21.md` todo-6 cross-tranche conflict — has the operator ruled
       which tranche's verdict wins? **Done when**: each Deferred entry carries either a "gate cleared → batch7
-      candidate" note or a dated re-verification that it is still blocked.
+      candidate" note or a dated re-verification that it is still blocked. — **Re-verified 2026-08-07**: (a)
+      `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` §5-gaps item is STILL OPEN (three
+      adversarially-confirmed gaps — derivative-bundle column gate; live-lane dual-resolver reconciliation; read marker
+      disposition — remain unresolved; Stage 1 write-enforce has NOT shipped). Schema v10 `[DATA] P3` Deferred item
+      **still transitively blocked — not a batch7 candidate**. (b) No operator ruling found on
+      `estate_orphan_assessment_2026_07_21.md` todo-6 boundedness; latest na-eligibility-audit (2026-08-07,
+      tranche=cefi) reaffirms the 2-1 KEEP-NA tally and explicitly states "Stays NA until the operator makes the
+      explicit boundedness ruling the doc itself asks for." estate_orphan_assessment todo-6 **still
+      BLOCKED-OPERATOR-DECISION — not a batch7 candidate**. Neither deferred entry has cleared its gate; both
+      re-confirmed blocked as of 2026-08-07.
 
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate every remaining Deferred item to a tracked todo elsewhere (todo 2 above
