@@ -102,6 +102,67 @@ whole fleet's shipping pipeline.
 6. Contributing, unconfirmed — a same-day GitHub Actions incident (ARC runner pods stuck idle, job assignment failures)
    may add background flakiness but doesn't explain the isolation to one specific workflow.
 
+## ACTUAL root cause found 2026-08-07 ~17:42Z — corrects the trigger-volume theory above
+
+The trigger-volume-asymmetry theory (§ Evidence chain item 5) was **wrong as the primary cause** — the convention-rule
+
+- schedule-trim fix shipped against it (Todo 1) did NOT clear the livelock; re-checked ~3 hours after shipping,
+  `batch-live-reconciliation-service` was still 267 commits behind main, unchanged, and a fresh manually-triggered run
+  still showed `total_count:0` jobs.
+
+**The real mechanism**: `python3 scripts/cicd/glue_pool_starvation_monitor.py --repo IggyIkenna/unified-trading-pm` (the
+actual script behind the `glue-pool-starvation-monitor` Slack alert — read it, don't just trust the alert text) listed
+run `31176101874` ("promote-ldr-to-main", queued 344+ minutes) among 10 glue-starved jobs. Traced it directly:
+
+```
+gh api repos/IggyIkenna/unified-trading-pm/actions/runs/31176101874 →
+  {"name":"ldr-to-main-promote-fleet","path":".github/workflows/ldr-to-main-promote-fleet.yml",
+   "event":"schedule","head_branch":"main","created_at":"2026-08-07T11:56:22Z","status":"queued"}
+gh api .../31176101874/jobs → {"name":"promote-ldr-to-main","labels":["self-hosted","glue"],"status":"queued"}
+```
+
+**This is the chicken-and-egg bug**: a `schedule:`-triggered GitHub Actions run ALWAYS uses whatever version of the
+workflow file exists on the repo's DEFAULT branch (`main`) — never `live-defi-rollout`, regardless of what's on LDR
+(this is a documented GitHub Actions rule, already noted elsewhere in this repo's own CLAUDE.md: "A scheduled/`push`
+workflow fires ONLY from the DEFAULT branch"). The `runs-on: [self-hosted, glue] → ubuntu-latest` fix (`c8cd56251e`,
+11:23:30 UTC) landed on LDR, but **had not yet promoted to `main`** — because the very promoter that would carry it
+there was the thing broken. So the very next native schedule tick at 11:56:22Z fired against the STILL-OLD version of
+the workflow on `main`, declaring `runs-on: [self-hosted, glue]` — a pool with permanently ZERO runners (see
+`self_hosted_runner_public_repo_revert_2026_08_05.md`, todo 21 DONE). That job queued forever, waiting for a runner that
+will never appear.
+
+Because `concurrency.cancel-in-progress: false`, and GitHub Actions concurrency groups track exactly one "currently
+claiming the group" run, this permanently-unstartable zombie run appears to have been occupying that single slot — so
+every SUBSEQUENT trigger (even `workflow_dispatch` runs correctly using the FIXED ubuntu-latest spec from LDR) just
+queued behind it and got superseded by the next arrival, forever, never getting a turn. Verified: this was the ONLY
+currently-queued run of either promote workflow
+(`gh api .../actions/runs --jq 'select(.name=="ldr-to-main- promote-fleet" or .name=="ldr-to-main-promote") | select(.status=="queued" or .status=="in_progress")'`
+→ exactly this one run, nothing else).
+
+**Fix applied**: `gh run cancel 31176101874` at ~17:42Z. **Live-verified working**: triggered a fresh
+`gh workflow run ldr-to-main-promote-fleet.yml` immediately after — run `31203568988` reached `status: in_progress` (job
+`promote-ldr-to-main: in_progress`) at 17:44:23Z — **the first non-cancelled run of this workflow all day**.
+
+**Side finding, false-positive, filed separately below**: while investigating, found `glue-runner-crash-loop- watchdog`
+paging CRITICAL on 4 repos' (e2e-testing, strategy-service, market-tick-data-service, ml-service) dedicated self-hosted
+runners for "continuously active >3h, likely hung." Live SSM check (`systemctl status` + `ps`) on `i-042a6332509482556`
+showed **3.3s total CPU time** across 3h+ of "active" runtime for all 4, and GitHub's own runner API confirms
+`status:online, busy:false` for each — these are healthy IDLE runners, not hung processes; the watchdog's ">10800s
+active" heuristic doesn't check actual CPU/busy state, so it false-positives when overall job throughput craters (as it
+did fleet-wide during this incident) rather than when a runner is actually wedged. Did NOT restart these services —
+restarting a healthy runner achieves nothing and would just reset the false-positive's timer. Filed as its own
+coverage-gap todo below (same class as `ci_failure_watcher.py`'s bugs and `promote-fleet-startup-failure-monitor.yml`'s
+blind spot, all found 2026-08-07).
+
+**Still open**: confirm this stays clear — the operator's explicit instruction (2026-08-07) is to keep this
+`/ci-reconcile` session running until a full 60 consecutive minutes pass with zero new CI alerts, not to declare victory
+on one successful `in_progress` transition. If the SAME class of chicken-and-egg zombie recurs (any future workflow-file
+fix that changes `runs-on:` needs to reach `main` via a working promoter before the OLD spec stops being able to
+zombie-queue on the next native schedule tick — a structural risk any time this exact workflow's own `runs-on:` changes
+again), the mitigation is: after any fix to a `schedule:`-triggered workflow's `runs-on:`, check for and cancel any
+pre-existing queued run of that same workflow before/immediately after shipping, don't assume the fix alone is
+sufficient.
+
 ## Todos
 
 - [x] 1. ✅ [OPERATOR] P1. **Decided 2026-08-07 — ship (b) + (d)-lite now, defer (a).** Operator chose the convention
@@ -127,9 +188,22 @@ whole fleet's shipping pipeline.
       and exits immediately if so, keeping the concurrency-heavy job isolated from dispatch volume — needs care around
       the existing `needs:`-chained notify/arm-failed jobs, a full QG pass, and live verification under real multi-agent
       load before shipping.
-- [ ] [DEVOPS] P2. Once the above lands: verify a real promotion completes end-to-end under normal multi-agent load (not
-      just in isolation) — confirms both fixes actually cleared the livelock.
+- [x] 2. ✅ [DEVOPS] P1. **Real root cause found + fixed 2026-08-07 ~17:42Z — see section above.** Was a zombie queued
+      run (`31176101874`) from a `schedule` trigger that fired against `main` before the `runs-on:` fix had promoted
+      there, permanently occupying the workflow's one concurrency slot. Cancelled it; a fresh run immediately reached
+      `in_progress` (`31203568988`) for the first time all day. NOT the trigger-volume theory from Todo 1 — that fix was
+      still worth keeping (real, if secondary, load reduction) but did not by itself clear this.
+- [ ] [DEVOPS] P1. **In progress, not yet closed.** Confirm the fix HOLDS for a full 60 consecutive minutes with zero
+      new `ldr-to-main-promote-fleet` cancelled-with-zero-jobs runs, AND confirm at least one real repo promotion
+      completes end-to-end (a `chore(promote)` PR actually merges to `main`) AND the
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` fix mints a real, verifiable tag as the final
+      proof. Do not mark this doc `resolved` on the strength of one `in_progress` transition alone.
 - [ ] [DEVOPS] P2. Harden `promote-fleet-startup-failure-monitor.yml` to also catch "queued, never started for an
       extended period" as its own failure signature — it currently reports success throughout this entire incident (same
       class of coverage gap as `ci_failure_watcher.py`'s glue-starvation/escalation-label bugs found earlier
       2026-08-07).
+- [ ] [DEVOPS] P2. **New, 2026-08-07.** `glue-runner-crash-loop-watchdog`'s ">10800s active = probably hung" heuristic
+      false-positived on 4 healthy, idle, `busy:false` runners (e2e-testing, strategy-service, market-tick-data-service,
+      ml-service) during this incident's low-throughput window — add an actual CPU-time or GitHub-API `busy` check
+      before paging, not wall-clock active-duration alone. Do not restart these services; they were never actually
+      stuck.
