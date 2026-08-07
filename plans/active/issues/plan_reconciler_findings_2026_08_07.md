@@ -73,6 +73,24 @@ Adjudicated inline from the sweep report (2026-08-07 00:14 run) — cefi-tagged 
 
 <!-- appended as STEP 4/5 confirms -->
 
+## Zero-checkbox sweep (cefi, H6 result — pending STEP-4 verify)
+
+Zero-checkbox docs in writable cefi set: **2** (both prose-work; register already lists both as NEW/unclassified in its
+2026-08-06 measurement):
+
+1. `plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md` (assigned_vm:
+   planning, AO-eligible) — proposed conversion: 2× `[SCRIPT] P1` (CEFI/SPORTS override in `_venue_data_type_is_mvp()`
+   mirroring `_TRADFI_MVP_SHARDS`; per-asset_group fallback in the last-resort enumerate) + 1× `[REVIEW] P2` re-run of
+   the full-matrix invocation as done-when.
+2. `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` (assigned_vm: NA,
+   local-only) — proposed conversion: `[DATA] P1` reproduce with strace/py-spy to capture the signal, `[REVIEW] P1`
+   check systemd/loginctl idle-session-reaper policy (needs VM-level access), `[OPERATOR] P2` host-wide
+   install-pkill-guard-shell-env.sh if cross-slot pkill confirmed.
+
+Grace-set zero-checkbox docs: 0. finished-record / informational / ambiguous: 0 each. Verification + conversion
+application in STEP 4/5; the standing register (`zero_checkbox_sweep_all_tranches_2026_07_31.md`) gets its two
+NEW/unclassified rows classified at apply time.
+
 ## Contradictions
 
 <!-- routed + filed -->
