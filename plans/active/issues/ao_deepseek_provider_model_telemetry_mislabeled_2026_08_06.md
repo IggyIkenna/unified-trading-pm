@@ -101,14 +101,17 @@ and nothing on the server side catches the mismatch.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. In `routes/slots_worker.py`'s `/boot` handler, cross-check `req.model` against
+- [x] ✅ [SCRIPT] P2. In `routes/slots_worker.py`'s `/boot` handler, cross-check `req.model` against
       `provider_for_account_id(req.account_id)` (`accounts.py`) — for a non-`anthropic` provider, either (a) overwrite
       the stored `model` with the account's real `variant` (e.g. `deepseek-v4-flash` → `model: "deepseek-flash"`), or
       (b) reject a self-reported `model` that doesn't match the account's provider with a 4xx, forcing the boot script
       to report accurately. Pick whichever keeps `slot_boot` telemetry queryable without a join back to `accounts.json`
       — a human/agent reading `activity_log` alone should be able to tell the real model. Done when: a unit test boots a
       `deepseek-v4-flash` account and asserts the persisted `SlotRow.model` / `slot_boot.details_json.model` is NOT
-      `"sonnet"`.
+      `"sonnet"`. — agent-orchestrator@eb6a763: added `effective_model_for_telemetry()` (accounts.py), wired into
+      `boot_slot()`'s upsert_slot + slot_boot activity-log call (slots_worker.py); 7 new unit tests in
+      `tests/test_boot_deepseek_model_telemetry.py` cover deepseek-flash/pro/no-variant + anthropic-preserved +
+      unknown-account regression; full quality-gates.sh green (2614 passed).
 - [ ] [DOC] P3. Once fixed, backfill-correct the FleetView dashboard's badge rendering (and any other consumer of
       `SlotRow.model`, e.g. `context_history_report.py`'s `--group-by model`) to show the real value — check whether any
       of them special-case the string `"sonnet"` in a way that would break once this field starts reporting DeepSeek
