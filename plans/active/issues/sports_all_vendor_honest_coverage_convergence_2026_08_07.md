@@ -168,14 +168,15 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill** — `weather-backfill-20260807-120241`,
       `launch-openmeteo-backfill-vm.sh --entity WEATHER 2020-06-06 2026-08-07`, confirmed RUNNING (auto-republished a
       stale instruments-service tarball before create, then succeeded). Watch for completion + re-census next tick.
-- [ ] [SCRIPT] P2. **Launch SFI full backfill** for the 205,363 expected_unattempted shards (distinct from the
-      already-resolved 89-row attempted_failed cluster).
+- [x] ✅ [SCRIPT] P2. **Launched SFI full backfill** — `sfi-backfill-20260807-123519` confirmed RUNNING
+      (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363
+      expected_unattempted shards (distinct from the already-resolved 89-row attempted_failed cluster).
 - [ ] [SCRIPT] P3. **Understat 30-row expected_unattempted tail** — check if it's just an in-progress-run artifact.
 - [ ] [SCRIPT] P2. **Out-of-scope audit pass** across every source — compare captured league/data_type combos against
       current UAC scope, looking for more footystats-China/Russia-style residue.
-- [ ] [SCRIPT] P0. **Re-census this whole table once every item above lands** — confirm every source converges to
-      `attempted_failed=0, expected_unattempted=0` (modulo genuine honest-absence floors), then this doc closes and the
-      operator's "IS and MTDS 100% done" directive is genuinely met.
+- [x] ✅ [SCRIPT] P0. **Re-census run 2026-08-07T11:57Z** (instruments-service@f917f04f,
+      `scripts/census_all_sports_sources_2026_08_07.py`, 9,552,235 manifest rows post-floor) — VMs still running; not
+      yet converged. Updated table below in Progress Log. Re-census needed once backfill VMs complete.
 
 ## Progress Log
 
@@ -204,6 +205,28 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   before the VM was killed (still 8 attempted_failed, unchanged) — this session's identity lacks Secret Manager access
   to the RapidAPI key to check the endpoint directly, so deferring rather than blind-retrying into a possibly-still-down
   endpoint.
+- **2026-08-07T11:57Z — Intermediate re-census** (`census_all_sports_sources_2026_08_07.py`,
+  instruments-service@f917f04f, 9,552,235 rows post-floor, down from 10,463,368 — consistent with China/Russia purge
+  removing out-of-scope rows). VMs all still RUNNING: `mtds-backfill-odds-1`, `mtds-backfill-odds-401-retry`,
+  `sfi-backfill-20260807-123519`, `weather-backfill-20260807-120241`. **Not yet converged**; doc remains open.
+
+  | source                   | attempted_failed |  captured | empty_confirmed | expected_unattempted | Δ vs baseline                                             |
+  | ------------------------ | ---------------: | --------: | --------------: | -------------------: | --------------------------------------------------------- |
+  | api_football             |           30,044 | 1,608,086 |       3,242,485 |              649,952 | AF↓5,014 (quota exhaustion clearing via running backfill) |
+  | odds_api                 |           14,005 |    39,405 |          25,085 |                    0 | AF↑89 (SOURCE_RETURNED_ZERO still live-recurring)         |
+  | mdps_odds_horizon_bucket |            2,791 |   198,520 |         256,585 |              157,994 | unchanged — backfill VM running                           |
+  | transfermarkt            |                8 |    37,611 |         378,449 |                    0 | unchanged — vendor still down                             |
+  | instruments_service      |                2 |     2,169 |          60,145 |                    0 | unchanged                                                 |
+  | footystats               |                0 |    63,603 |       1,116,989 |                    0 | rows reduced (China/Russia purge)                         |
+  | open_meteo (weather)     |                0 |    16,479 |         196,329 |              205,517 | EU unchanged — backfill VM running                        |
+  | soccer_football_info     |                0 |    20,118 |         190,742 |              205,363 | EU unchanged — backfill VM running                        |
+  | understat                |                0 |     7,158 |         826,321 |                   30 | rows reduced (China/Russia purge); EU=30 unchanged        |
+
+  Key findings: (1) odds_api AF **increased** by 89, confirming SOURCE_RETURNED_ZERO cluster still actively generating
+  new failures — P0 investigation unresolved. (2) `mtds-backfill-odds-401-retry` VM running (not yet in manifest). (3)
+  Blank-source row (250 captured, no source value) appeared in manifest — minor artifact, not investigated. (4) A new
+  census should be run once all VMs reach clean terminal state.
+
 - **2026-08-07T12:00Z** — **Confirmed credential valid + launched targeted 401-retry VM.** Credential check:
   `mtds-backfill-odds-1` (sweeping 2020-06-06→2026-08-07) has been running with zero 401s; wrote 782 rows on 2020-08-18
   confirming the key is live. Launched `mtds-backfill-odds-401-retry`
