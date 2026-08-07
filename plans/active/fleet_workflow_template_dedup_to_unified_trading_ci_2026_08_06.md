@@ -211,13 +211,19 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       inside `request-major-bump.yml` itself — corrected to describe what the file actually does (a self-contained
       canonical flat copy; its only `uses:` is `actions/checkout@v5`, no reusable-workflow call).
       `unified-trading-pm@037e181559`.
-- [ ] 3. [INFRA] P0. **Convert ONE file end-to-end as the pattern-proof, including a live (non-local) CI run** — pick
-      the smallest, lowest-blast-radius flat-copy candidate (`version-registry-notify.yml`, 48 lines, likely the
-      simplest) as the canary: host it in `unified-trading-ci/.github/workflows/`, replace its copy in ONE low-churn
-      fleet repo with a thin caller stub, ship, and confirm via `gh run list`/`gh run view` that the ACTUAL GitHub
-      Actions run (not just local `quality-gates.sh`) resolves the cross-repo `uses:` and produces the same behavior as
-      the old flat copy. Done-when: a real GH Actions run ID cited, `conclusion: success` (or behavior-equivalent to the
-      pre-migration copy if the workflow doesn't run on every push).
+- [x] ✅ 3. [INFRA] P0. **Convert ONE file end-to-end as the pattern-proof — DONE 2026-08-07.**
+      `version-registry-notify.yml` hosted in `unified-trading-ci` (`unified-trading-ci@b498ec2`) with a
+      `self_hosted_runner_labels` input — **correction to this plan's own "Confirmed technical facts": the file is NOT
+      zero-customization, its `runs-on` uses the `__RUNS_ON__` double-underscore substitution
+      (`rollout-workflow-templates.sh`'s `get_runs_on_value()`), which the plan's `{{...}}`-only grep missed. Applies to
+      all 9 files, not just this one — re-check each for `__RUNS_ON__` before assuming "zero markers."** Canary:
+      `trading-agent-service` (lowest tag-count, public, non-CI-critical) — thin stub shipped
+      (`trading-agent-service@baed4337`). Live-verified via a real (non-3-part, guard-skipped by design so it can't
+      pollute the real Firestore version registry) tag push: `gh run view 31180100767` shows
+      `Uses: IggyIkenna/unified-trading-ci/.github/workflows/version-registry-notify.yml@refs/heads/main (b498ec28091a0f810fb9ab059e77b4b3c08d4b46)`,
+      `conclusion: success`, and the SAME "not plain 3-part X.Y.Z; not forwarding" guard message the original flat copy
+      would have produced — behavior-equivalent, cross-repo `uses:` resolution proven live. Test tag deleted after
+      verification (`v0.12.12-ci-canary-test`, both remote + local).
 - [ ] 4. [INFRA] P1. **Convert the remaining 6 straightforward flat-copy files** (`main-backmerge-to-ldr.yml`,
       `major-bump-issue-handler.yml`, `request-major-bump.yml`, `staging-backmerge-to-ldr.yml`,
       `staging-lock-check.yml`, `update-dependency-version.yml`) using the pattern proven in todo 3 — host each in
