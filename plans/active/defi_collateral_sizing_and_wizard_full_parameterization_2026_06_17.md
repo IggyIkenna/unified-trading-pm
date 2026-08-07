@@ -222,3 +222,8 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   genuine operator/design-judgment work (one explicitly cross-referenced elsewhere as an operator product-decision); the
   4th (P3 test-flake fix) is too small to justify splitting the doc. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
+  since the 2026-08-04 audit (context-scout metadata only, per git log). Of the 4 open items: wizard food-chain
+  parameterization + codex SSOT doc update are genuine design/build work; dual-deposit cross-exchange cost calibration
+  is explicitly flagged pending operator calibration; the P3 test-isolation flake remains too small to justify
+  splitting the doc. Doc stays `assigned_vm: NA`.

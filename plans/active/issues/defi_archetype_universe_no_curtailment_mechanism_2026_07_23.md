@@ -864,3 +864,7 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   `run_paper`) and 1 stale "Recommendation" section (lines 236-244) whose 3 decisions were already made+shipped later in
   this same doc — hygiene cleanup candidates for a future pass, not reclassification triggers. Doc stays
   `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
+  since the 2026-08-06 audit (context-scout metadata only, per git log). Both open checkboxes (recursive-loop
+  archetype design gap; MVP_SCOPE catalog-identity precondition) remain explicit operator-design-gated per their own
+  text. Doc stays `assigned_vm: NA`.

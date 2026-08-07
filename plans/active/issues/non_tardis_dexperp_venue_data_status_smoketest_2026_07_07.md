@@ -537,3 +537,10 @@ Two secondary findings:
   coin-case design decision; the other 2 are operator-ruled/AO-ready but since not ALL remaining work qualifies, the doc
   stays NA as a whole per the mixed-eligibility rule. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently. Content changed since
+  the 2026-08-04 audit (a 2026-08-05 "reconcile batch-6 source docs" pass annotated 2 of the 3 open todos as "Dispatched
+  to batch-6 todo 24 (still `[ ]` as of 2026-08-05)" — those 2 are operator-ruled/AO-shaped but already routed through
+  an in-flight batch-6 dispatch rather than orphaned, so not a fresh RECLASSIFY signal here). The 3rd open item
+  (HYPERLIQUID k-prefix coin-case, P3) still needs the canonical-vs-native coin-case convention resolved first
+  (shard-key-mismatch risk) — a genuine judgment call. Doc stays `assigned_vm: NA` as a whole (mixed-eligibility rule,
+  one genuine judgment item is enough).

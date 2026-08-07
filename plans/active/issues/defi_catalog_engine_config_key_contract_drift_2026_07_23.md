@@ -766,3 +766,7 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   fragment (archetype_slots sweep already done 2026-07-27 via batch3, doc text not updated) — hygiene notes only. Doc
   stays `assigned_vm: NA`.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
+  since the 2026-08-06 audit (context-scout metadata only, per git log). Sole open checkbox (P0 human design decision
+  for 5 broken archetypes, 66 rows, held `xfail(strict=True)`) remains a textbook trading-parameter/design-judgment
+  call, not a bounded worker task. Doc stays `assigned_vm: NA`.

@@ -114,3 +114,8 @@ this is inference from timing + the workspace's own documented operational contr
   `_assert_consolidator_paused()` pattern; confirmed VM is healthy and actively progressing (not stalled) with a
   realistic multi-day ETA; confirmed PagerDuty+email are both failing to deliver this alert (separate finding, not fixed
   here per operator's PagerDuty-deprecation decision the same day).
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — first audit pass, doc filed today. All 3 open
+  todos are genuinely non-worker-determinable right now: todo 1 needs the rebuild VM's actual operator to confirm
+  intent (OPERATOR_QUESTION); todo 2 is DEPENDENCY_BLOCKED on the rebuild VM's own multi-day (4-5+ day) completion,
+  not yet reached; todo 3 is an explicit open alert-routing design question ("not something to change unilaterally").
+  Doc stays `assigned_vm: NA`.

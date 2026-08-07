@@ -998,3 +998,8 @@ The index-stamp is the re-runnable interim mitigation.
       `record_captured`/add/`_records_to_dataframe`/`_V4_BACKFILL_COLUMNS`; 7-test suite green; QG pass 110s
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; only diff since the
+  2026-08-01 full re-read was context-scout metadata (no content change, per git log). All ~20 open items remain
+  C-GREEN-gated canonicalisation walks, DEPENDENCY_BLOCKED sub-steps of the same single-walk migration,
+  operator-launched wallet/promote/paper-trade steps (HUMAN-only per CLAUDE.md hard-stop list), or a market-condition
+  trigger (G8, TVL probe). No RECLASSIFY-eligible items found. Doc stays `assigned_vm: NA`.
