@@ -176,9 +176,15 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
       (20 sampled), same de-dup requirement. Leave `derivative_ticker` under `batch_tardis` ALONE — it is correct.
 - [ ] [DATA] P2. Quarantine PACIFICA-SOLANA (13 sampled, 265 census-wide): no valid lane, no catalogue rows, venue
       culled. Register in the quarantine set so fail-hard can be enabled around it.
-- [ ] [DATA] P1. Find the WRITER that stamped `batch_tardis` on a non-Tardis venue and fix the derivation at source,
+- [x] ✅ [DATA] P1. Find the WRITER that stamped `batch_tardis` on a non-Tardis venue and fix the derivation at source,
       before any re-partition — otherwise the next capture re-creates the mislabel. Start from the UTL
-      `_VENUE_OVERRIDES` map that `PipelineMode` cites for ASTER / HYPERLIQUID / EXTENDED-STARKNET.
+      `_VENUE_OVERRIDES` map that `PipelineMode` cites for ASTER / HYPERLIQUID / EXTENDED-STARKNET. **DONE
+      unified-trading-library@a4779c8b (2026-08-07, slot-11, batch4 todo P2)**. Root cause: the honest-absence guard for
+      LIGHTER-ZKSYNC/ohlcv_1m (returns None for source-blind calls) was correct, but
+      `_resolve_pipeline_mode_for_sentinel` in MTDS then fell through SOURCE_PRIORITY[("cefi","ohlcv_1m")] = "tardis" →
+      BATCH_TARDIS on every sentinel write. EXTENDED-STARKNET was already fixed 2026-07-18 (hyphenated key in
+      `_VENUE_OVERRIDES`). Fix: added `("LIGHTER_ZKSYNC","ohlcv_1m"): PipelineMode.BATCH_LIGHTER_API` to
+      `_VENUE_DT_OVERRIDES`; removed dead guard; updated regression test + stale comment. QG green.
 
 ## Codex SSOTs
 

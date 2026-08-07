@@ -183,15 +183,17 @@ context_scope:
       for CEFI --end within 45d of today; QG green). Source-doc 3 CEFI checkboxes flipped; sports P1 BLOCKED-CREDENTIALS
       item left untouched.
 
-- [ ] [DIAG] P2. **Find + fix the WRITER stamping `batch_tardis` on non-Tardis on-chain CeFi venues.** Root-cause and
-      fix the writer-side bug in market-tick-data-service that stamps `pipeline_mode=batch_tardis` on
-      EXTENDED-STARKNET/LIGHTER-ZKSYNC/PACIFICA-SOLANA objects that were never captured via Tardis. This is a code-only
-      investigation + fix — it does NOT include the 2 prod-GCS lane re-partitions or the quarantine registration from
-      the same source doc (both deferred below; the re-partitions need de-dup MERGE safety-verification this run could
-      not complete, and quarantine registration has already been twice-ruled human-only). Source:
-      `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` (partial — item 4 of 4 only). **Done when**:
-      the writer bug is root-caused, fixed, QG green, and the source doc's item 4 closure action is checked off citing
-      the fix (items 1-3 stay open, see that doc's own Deferred note here).
+- [x] ✅ [DIAG] P2. **Find + fix the WRITER stamping `batch_tardis` on non-Tardis on-chain CeFi venues. — DONE
+      unified-trading-library@a4779c8b.** Root cause: `_resolve_pipeline_mode_for_sentinel` in MTDS `preflight.py`
+      called `derive_pipeline_mode_for_row("LIGHTER-ZKSYNC", "cefi", "ohlcv_1m")` (source-blind) → `None`
+      (honest-absence guard), then fell through SOURCE_PRIORITY[("cefi","ohlcv_1m")] = "tardis" → BATCH_TARDIS,
+      fabricating Tardis provenance on every new sentinel write for a non-Tardis venue. EXTENDED-STARKNET was already
+      fixed 2026-07-18 (_VENUE_OVERRIDES key corrected from hyphenated form to EXTENDED_STARKNET). Fix: pinned
+      ("LIGHTER_ZKSYNC","ohlcv_1m") in `_VENUE_DT_OVERRIDES` → BATCH_LIGHTER_API so source-blind resolution returns the
+      only correct concrete mode (not None, not BATCH_TARDIS). Removed now-dead honest-absence guard; updated regression
+      test to assert BATCH_LIGHTER_API (not None); stale comment reference fixed. QG green (all tests pass, sentinel
+      `a4779c8b`). Source doc item 4 flipped. PACIFICA-SOLANA: venue culled (no valid mode); not addressed here per
+      deferred note. Source: `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` item 4.
 
 ## Deferred — BLOCKED-OPERATOR-DECISION (a genuine conflict, parked not guessed)
 
