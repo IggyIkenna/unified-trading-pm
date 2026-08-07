@@ -99,29 +99,29 @@ resolved_by:
   updated; worker gating on "35" re-scans a clean population.
 - C5 [P3] `backfill_vm_slack_alert_e2e_verification…:3` title "three gaps found" vs body Gap 4 section (added 06-23).
 
-## Flips verified (confirmed + applied)
+## Flips verified (confirmed + applied 2026-08-07, adversarial-verified; review branch 3b4bd3c79)
 
-- IF1 ✅ `deployment_api_artifact_pipeline_health_test_date_drift_flake_2026_07_29.md:90-101` — SHIPPED
-  deployment-api@cf55369 (ancestor ✓; `test_artifact_pipeline.py:881` two_days_ago fix live).
-- I1 ✅ `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md:77-83` (1.3b) + `:93-103` (1.7e) — SHIPPED via
-  batch1 features-service@3162d627 + @43a2b56b (ancestors ✓).
-- I-F1..F4 ✅ `carry_staked_basis_funding_scan_experiment_2026_06_16.md:602-606`,`:619-620`,`:633-634`,`:651-652` —
-  SHIPPED e2e-testing@326a345 (LDR re-stamp of 6e2ffb8; content diff env-only) — PL-cited sha resolves only on
-  origin/main (08-05 provenance rewrite), LDR carries the re-stamp.
-- I-F5 ✅ `carry_staked…:667-668` (HYPE HL-S3 pull) — SHIPPED market-tick-data-service@98d12be via cross_venue [x]
-  (1117/1117 days coverage) — IF ADVERSARIAL VERIFIER CONFIRMS SAME-AXIS.
-- G1 ✅ `instruments_completion_tracker_2026_07_06.md:556-560` (manifest-reprocessing utility) — PL 08-03 close + issue
-  archived `status: resolved`.
-- M2 ✅ `bucket_fold_ml_2026_07_17.md:233-237` (PM mirror re-sync) — `ml-store` key present at
-  `configs/cloud-providers.yaml:70` + `:232` (AWS).
-- M3 ✅ `bucket_fold_features_2026_07_17.md:95-103` `[~]`→`[x]` (BUCKETS PROVISIONED) — content absorbed by `[x]`
-  cutover UAC@cb951936 + UTL@4f0bcc34.
-- ⚠️ REVERSAL `features_service_coverage_and_script_canon_2026_06_10.md:93-98` `[x]`→`[ ]` — cited
-  features-service@25932d23 NEVER landed (wip-preserve only, no twin); artifact absent (data_loader.py:275 pre-fix
-  shape) — false evidence; needs re-ship.
-- Status fix F5: `bucket_iam_write_protection_per_tier_2026_06_09_finalize…:12` `status: active`→`draft` (body declares
-  NOT dispatched; parent gate unmet).
-- Banner fix S3: `batch1…:80` stale "Status: draft" banner removed (frontmatter active, 21/22 [x]).
+- IF1 ✅ `deployment_api_artifact_pipeline_health_test_date_drift_flake_2026_07_29.md:90-101` → `[x]` @cf55369 (ancestor
+  ✓; `test_artifact_pipeline.py:881` live).
+- I1 ✅ `colocated…:77-83` (1.3b) + `:93-103` (1.7e) → `[x]` @features-service/3162d627 + @43a2b56b (1.7e carries
+  batch1's ratchet caveat: ~1020 errors remain, ratchet REQUESTED).
+- I-F1..F4 ✅ `carry_staked…:602-606`,`:619-620`,`:633-634` → `[x]` @e2e-testing/326a345 (LDR re-stamp; env-only diff
+  verified); `:651-652` → `[x]` @2ac1a9d(+760d6ba) — NOT 326a345 (that commit has no liquidity code).
+- I-F5 ✅ `carry_staked…:667-668` → `[x]` @mtds/98d12be — same HyperliquidS3Downloader asset_ctxs axis, not Tardis
+  (refutation FAILED).
+- G1 ✅ `instruments_completion_tracker…:556-560` → `[x]` citing LDR re-stamps UTL@a1b08307/00d33d12 + IS@cbbad6ae
+  (PL-cited originals unresolvable; issue archived resolved).
+- M2 ✅ `bucket_fold_ml…:233-237` → `[x]` @PM/5f04b0702 (ml-store key live :70/:232).
+- M3 ✅ `bucket_fold_features…:95-103` `[~]`→`[x]` @UAC/cb951936 + UTL@16d35d05 (re-stamp of 4f0bcc34).
+- ⚠️ REVERSAL ✅ `features_service_coverage…:93-98` `[x]`→`[ ]` — @25932d23 never landed (wip-preserve only, no twin);
+  origin LDR data_loader.py:275-283 pre-fix shape — false evidence; mirror in batch1b:208-224 flagged (grace), NOT
+  reversed.
+- F5 CORRECTED: IAM finalize stays `status: active` per the 2026-07-30 no-double-gate finding (gate_on_depends holds it;
+  `draft` is machine-hostile) — body banner corrected instead (documents active-but-gated with parent's 2 open todos).
+- S3 ✅ `batch1…:80` stale Status-draft banner annotated STALE (active + 21/22 [x], retained for provenance).
+- F1 ANNOTATED: `residuals…:643-654` Kraken — verify-or-refresh note added (completion never recorded in corpus; sibling
+  docs still list open).
+- M4 KEPT-AS-IS: fold_ml `[~]` TF-STATE RECONCILE — 32-destroy apply-block + deferred imports keep it honest.
 
 ## Contradictions (consolidated — full detail in batch journal)
 
