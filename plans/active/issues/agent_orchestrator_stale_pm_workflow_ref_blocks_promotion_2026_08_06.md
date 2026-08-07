@@ -95,8 +95,18 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
       (`fix/repoint-main-ci-to-unified-trading-ci`, commit 781f31f). Its own `quality-gates-v2` run correctly picked up
       the fixed reference from the PR's own branch (same-repo PR, not a fork) and dispatched real QG-slice jobs instead
       of the instant "workflow file issue" 0s-fail — self-resolving as expected. (repo: agent-orchestrator)
-- [ ] [CICD] P2. Confirm PR #817 (todo 1) merges to `main` cleanly once its checks finish, then confirm PR #814
-      (notify-slack.yml-only, already open, harmless) can now pass `quality-gates-v2` and merges too.
+- [x] [CICD] P2. **Confirmed both merged — but only after a SECOND, independent gap: `agent-orchestrator`'s
+      branch-protection ruleset still required `sit-gate/fleet-green`, a status that structurally can never post again
+      after the repo's `promotion_model` flipped to `ldr_terminal` on 2026-08-05 (the fleet promoter's exact-match
+      filter skips posting it for any non-`ldr_main` repo, forever) — so #817 sat `mergeStateStatus: BLOCKED` even with
+      `quality-gates-v2` fully green. Root-caused + fixed via
+      `pin_branch_protection_rulesets.py --repo     agent-orchestrator --apply` (dry-run verified first); full detail
+      tracked in `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s own new todo (that doc owns the
+      `ldr_terminal` gap, not duplicated here). #817 then merged cleanly (`mergeStateStatus: CLEAN`, no admin bypass) at
+      2026-08-07T06:26:50Z. PR #814 needed one more step: its branch predated the #817 fix, so its own copy of the
+      workflow files was still stale — merged `main` into it (agent-orchestrator PR #814 branch @3d02462) to pick up the
+      fix, which triggered a fresh `quality-gates-v2` run that went fully green; merged 2026-08-07T06:38:37Z. (repo:
+      agent-orchestrator)
 - [x] [ENG] P2. Reconciled PR #813's real code conflict (`dashboard/src/layout.tsx`, `dashboard/src/types.ts`,
       `server/config.py`, `server/context_lifecycle.py`, `server/main_agent_keeper.py`, `server/models/agents.py`,
       `server/routes/agents.py`, test files) between `main` and `live-defi-rollout` — read both sides' actual diverged
@@ -119,6 +129,12 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
 
 ## Progress Log
 
+- **2026-08-07 (part 2)**: Closed todo 2. PR #817 hit a SECOND independent gap after its content check went green —
+  `agent-orchestrator`'s branch-protection ruleset still required `sit-gate/fleet-green`, which can now never post (root
+  cause + fix owned by `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`, not duplicated here). Fixed, #817
+  merged 06:26:50Z. PR #814's branch predated the #817 fix so needed `main` merged into it to pick up the corrected
+  workflow content before its own `quality-gates-v2` could go green; merged 06:38:37Z. Only todo 4 (rollout-process gap,
+  needs an operator decision) remains open.
 - **2026-08-07**: Closed todos 1 and 3 (Problem 1 dangling workflow ref + Problem 2 code conflict) — found while
   finishing `ao_fleet_health_investigation_followups_2026_08_06.md`'s PR #791 todo and following its cross-reference
   here. PR #817 opened for todo 1 (self-resolving fix — a same-repo PR picks up its own branch's corrected workflow
