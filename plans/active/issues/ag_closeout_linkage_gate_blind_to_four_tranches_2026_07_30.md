@@ -218,7 +218,7 @@ and its day-2 sequel, `ldr_main_backmerge_silently_resurrects_reverted_commit_20
 `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`,
 `cicd_heartbeat_steals_slot_regression_immediate_dispatch_2026_07_29.md`,
 `repo_blocker_resolution_signal_false_positive_2026_07_28.md`, `wip_preserve_refs_silently_unrecovered_2026_07_29.md`
-(all `ao`).
+(**ARCHIVED 2026-08-07**, all 5 todos complete) (all `ao`).
 
 This run deliberately did **not** retag them. Two reasons: (a) ~20 per-doc content judgments is an authority call, not a
 mechanical fix, and several sit genuinely on the `ci`↔`ao` boundary (the CI-escalation-worker family); (b) retagging

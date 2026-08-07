@@ -15,7 +15,7 @@ summary: >-
   ref (`refs/wip-preserve/cascade-strategy-service-a77eb6d170ca`, dated 2026-07-28, a `staging-lock-check.yml`
   self-hosted-runner-migration commit from a prior session/task) was also found sitting unrecovered — out of scope for
   this task to fix, but evidence the pattern isn't a one-off.
-status: open
+status: archived
 nature: issue
 asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [cross-cutting]; AO worktree_clean_check refs
 scope: [engineer]
