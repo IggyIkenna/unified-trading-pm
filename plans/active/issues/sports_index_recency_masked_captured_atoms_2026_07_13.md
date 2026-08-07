@@ -42,7 +42,7 @@ priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: planning
 resolved_by: plan_reconciler/agt-cf1afa
-locked_by: ""
+locked_by:
 context_scope:
   [
     /plans/archive/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md,
