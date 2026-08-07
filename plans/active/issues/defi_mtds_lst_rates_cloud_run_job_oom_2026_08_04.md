@@ -180,9 +180,21 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
       (already done) is the correct mitigation; a longer-term fix would avoid downloading the full compressed index for
       a single-date freshness check (e.g., using a per-date partition read or caching the slim-decoded result across
       runs).
-- [ ] [DIAG] P2. Once (a) is confirmed either way, check whether SOME venues in this job still got written on
-      08-02/08-03/08-04 before the crash (per-venue processing order in `lst_rates_handler.py` vs. which venues show
-      recent `written_at` in the manifest) — determines whether this is a total daily-data-loss event or a partial one.
+- [x] ✅ [DIAG] P2. Once (a) is confirmed either way, check whether SOME venues in this job still got written on
+      08-02/08-03/08-04 before the crash — **CONFIRMED TOTAL LOSS for all failed cron executions**. GCS evidence: zero
+      LST venue directories for `day=2026-08-01`, `day=2026-08-02`, and `day=2026-08-03` under
+      `pipeline_mode=batch_onchain_subgraph/asset_group=defi/` in `market-data-tick-defi-prd-central-element-323112`.
+      OOM kills process during `ManifestFreshnessCache.bulk_load()` (~85-97s per task attempt, within the 90s warmup
+      timeout window) before any EVM/Solana data collection or GCS writes can occur. `day=2026-08-04` already recovered
+      by b5f4t ad-hoc run (2026-08-05T16:16:59Z). `day=2026-08-01` also newly confirmed missing (cron 74rqc at
+      2026-08-02 01:00 UTC writing the prior day — extends scope beyond the stated 08-02/03/04). See Progress Log. —
+      unified-trading-pm@PENDING (GCS-object-listing-verified, no code changes)
+- [ ] [INFRA] P3. Backfill missing `lst_rates` data for `day=2026-08-01`, `day=2026-08-02`, and `day=2026-08-03` (3 days
+      with zero GCS writes: failed cron executions 74rqc/lq977/c9qxr; `day=2026-08-04` already recovered by b5f4t).
+      Trigger `uts-prod-mtds-collect-lst-rates` manually against each date (Cloud Run job supports
+      `--args "--date <YYYY-MM-DD"`-style override, or equivalent CLI flag) with the current 4Gi image. Verify all LST
+      venue directories appear in GCS post-run and manifest rows are written. [OPERATOR]-approved trigger or
+      safe-idempotent re-run required.
 - [ ] [INFRA] P2. Prod terraform state holds 26 add / 17 change / 2 destroy of un-applied drift beyond this fix
       (observed 2026-08-06 while syncing the lst-rates scheduler description): includes creation of the
       `liquidation-events` + `risk-params` Cloud Run jobs/crons (wired by deployment-service@b370df8, never applied) and
@@ -269,3 +281,32 @@ that doesn't actually resolve the OOM (as `d4408134` already demonstrated can ha
   primary memory driver, per the DIAG P1 finding above) for `unified_trading_library/manifest_writer/_read_index.py`,
   the file confirmed as the actual dominant driver (full compressed availability-index download) and the target of the
   DIAG's own longer-term-recommendation follow-up work.
+
+- **DIAG dispatch 2026-08-07 (slot 9)**: Todo 3 DONE. Partial-write check complete. **Verdict: TOTAL DATA LOSS for all
+  failed cron executions** — the OOM kills the container during `ManifestFreshnessCache.bulk_load()`, before any
+  EVM/Solana venue data collection or GCS writes can occur.
+
+  **GCS evidence** (via `gcloud storage ls` on `market-data-tick-defi-prd-central-element-323112` under
+  `raw_tick_data/by_date/day=<date>/pipeline_mode=batch_onchain_subgraph/asset_group=defi/`):
+  - `day=2026-08-01`: **ZERO** LST venue directories — cron 74rqc (2026-08-02 01:00 UTC) wrote this date and failed.
+  - `day=2026-08-02`: **ZERO** LST venue directories — cron lq977 (2026-08-03 01:00 UTC) wrote this date and failed.
+  - `day=2026-08-03`: **ZERO** LST venue directories — cron c9qxr (2026-08-04 01:00 UTC) wrote this date and failed.
+  - `day=2026-08-04`: **ALL 13 LST venues present** — NOT written by the failed cron mzgwm (2026-08-05 01:00 UTC);
+    written by b5f4t ad-hoc run at 2026-08-05T16:16:59Z (4Gi, recovered). Not part of the data-loss count.
+
+  **Timing analysis confirming pre-write OOM**:
+  - Each failed execution ran ~2m50s–3m14s TOTAL with `maxRetries=1` (2 task attempts per execution).
+  - Per task attempt: ~85–97 seconds.
+  - `_FRESHNESS_WARMUP_TIMEOUT_SEC = 90.0` — the `bulk_load()` timeout. Container OOMs during the compressed
+    availability-index download (~500 MB–1 GB+ for the 33M-row DeFi index) WITHIN this window, before the 90s timeout
+    can fire, before any `_collect_lst_for_date()` call, and before any GCS venue write.
+
+  **Cron date-writing pattern** (confirmed from GCS creation timestamps):
+  - zzptg (2026-08-06 01:00 UTC) → `day=2026-08-05` written at 2026-08-06T01:02:12Z ✓
+  - 4jv77 (2026-08-07 01:00 UTC) → `day=2026-08-06` written at 2026-08-07T01:01:45Z ✓
+  - Cron runs at 01:00 UTC and writes PREVIOUS day's data (UTC midnight boundary).
+
+  **New finding beyond task scope**: `day=2026-08-01` also absent (cron 74rqc was writing 08-01's data on 08-02);
+  extends the data-loss window to 3 days (08-01, 08-02, 08-03). Tracked as new P3 backfill todo above.
+
+  **No code changes** — pure diagnostic investigation via GCS object listing and execution timing analysis.
