@@ -567,3 +567,6 @@ start.**
   above: "This template is a LOCAL doc (not ingested)"), 0 tracked `- [ ]` todos. Structurally never AO-dispatchable and
   never archivable while it remains the live authoring SSOT every plan/agent cites.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirmed after the 2026-08-06 finding-X edit (shared
+  task-id-keyed checkpoint convention addition). Still the plan-authoring template/guide itself, still 0 tracked `- [ ]`
+  todos. Structurally never AO-dispatchable and never archivable while it remains the live authoring SSOT.
