@@ -244,14 +244,9 @@ these 5 cells.
       `attempted_failed`; DP-FETCH-009's no-recency-window count separately explains why they keep paging today. Both
       apply. No code changes shipped (read-only trace). Source: `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`
       todo 9.
-- [ ] [DESIGN] P2. Decide whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted (not just alert
-      silence). If yes: build a downstream-aggregation writer (reuse `features-service`'s already-tested exact-OHLC
-      `candle_resampler.py` engine rather than writing new resampling logic) that resamples CBOE's Databento
-      `ohlcv_1s`/`ohlcv_1m` into `ohlcv_15m` and writes it into the MTDS tick-manifest namespace — this is the ONLY
-      concrete unfed consumer found (`vix_features` in UAC `required_inputs.py` requires `(tradfi, ohlcv_15m)` for
-      `features-service`'s `vix_calculator.py`). If no: `vix_features`' required-input declaration should be corrected
-      to `ohlcv_1m` only (which IS real and flowing). See "Resolution" below — this is a real multi-service gap, not a
-      registry-narrowing fix like the CBOE item above.
+- [ ] [DESIGN] P2. **RULED 2026-08-07 — YES, build it, MDPS-owned** (not a features-service resampler on `vix_features`
+      alone): aggregate `ohlcv_1m` up to `ohlcv_15m`/`ohlcv_24h` once, upstream of every consumer. Delta-one groups need
+      `ohlcv_24h`; reuse `candle_resampler.py`'s logic if it fits; general-purpose.
 - [x] ✅ [DATA] P2. `"YAHOO_FINANCE"` is declared as a literal TradFi venue (`VENUES_BY_ASSET_GROUP["tradfi"]`,
       `unified_api_contracts/registry/market_data_categories.py:329`) with `NO_ADAPTER_YET`
       (`registry/venue_adapter_keys.py:137`) and is expected for `["ohlcv_15m","ohlcv_24h"]`
@@ -1002,4 +997,4 @@ UAC) — no separate deploy needed here.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid** — re-read after the 2026-07-31 CME
   billing-gating entry (audit-only, no finding); sole open todo is still the same `[DESIGN] P2` product-intent call.
-- **context-scout 2026-08-07**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-07**: context_scope refreshed. Operator RULED 2026-08-07 — see todo.

@@ -483,17 +483,18 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       sibling ICE/CME-futures-options and CME-futures-reference-gap bullets immediately below, which already track the
       credential/upstream blockers on the actual data recovery. Source:
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 3.
-- [ ] [DATA] P1. **FINDING — ICE futures ~~+ CME futures-options~~ not on Massive → BLOCKED-CREDENTIALS.** Ping filed:
-      `ikenna_orchestrator/pings/slot_5.md` (2026-07-27, slot-5, CREDENTIAL APPROVAL REQUEST). Massive covers CME-group
-      only, no options-on-futures product; old databento ~16-18K/day was CME ES futures-options. **Operator ask**: an
-      ICE-futures ~~+ CME-futures-options~~ reference source, or unblock Databento billing. Repo: instruments-service.
-      assigned_vm: vm-tradfi. (MIGRATED FROM: same.) **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference
-      — the struck CME-futures-options half is already covered by the existing GLBX.MDP3 Databento subscription
-      (`/codex/02-data/tradfi-databento-sourcing-ssot.md` line 80 lists "options-on-futures" under GLBX.MDP3); the
-      sibling replacement-path todo at `data_completion_tradfi_2026_07_15.md:426-433` already directs running IS
-      reference-data capture via `--source databento` for this — no new billing/credential needed, that was stale
-      Massive-era framing. The ICE-futures half remains genuinely open — a paid ICE/OPRA vendor subscription the
-      operator already declined once (2026-06-18 ruling, "requires an explicit ICE/OPRA subscription").**
+- [x] ✅ [DATA] P1. **CLOSED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — WON'T-FIX, moot.**
+      ICE/OPRA is out of tradfi MVP scope (confirmed elsewhere in this corpus: "ICE is NOT in the tradfi MVP universe"),
+      Databento-billing-blocked at the code layer (no canonical source, per
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`), and ICE is being actively PURGED from the catalogue entirely
+      via this same doc's G1 retirement (whole-venue, 16,158 rows, approved same session). The question of a paid
+      ICE/OPRA subscription is moot — nothing in the code path can fetch it even if approved, and nothing downstream
+      needs it. Operator's prior 2026-06-18 decline stands; not re-litigated, closed as accepted gap rather than left
+      open as a live ask. **Original finding, preserved for the record**: ICE futures not on Massive →
+      BLOCKED-CREDENTIALS (ping `ikenna_orchestrator/pings/slot_5.md`, 2026-07-27). Retagged 2026-07-29: the struck
+      CME-futures-options half was already resolved-by-reference (existing GLBX.MDP3 Databento subscription covers it,
+      per `data_completion_tradfi_2026_07_15.md:426-433` — no credential needed, stale Massive-era framing). Only the
+      ICE-futures half stayed open, now closed per this ruling.
 - [x] ✅ [DATA] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — Massive was removed entirely as
       a tradfi source (operator ruling 2026-07-19, `uac@a2beed46`), subscription terminated, `source='massive'` writes
       now hard-reject. The replacement path already exists at `data_completion_tradfi_2026_07_15.md:421-433` (run IS

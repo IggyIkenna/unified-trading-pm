@@ -251,14 +251,18 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 > prose; todo 1 here stays open/NA on the independently-sufficient operator-gate ground (below), unaffected by this
 > correction.
 
-- [ ] [DATA] P0. Migration/purge pass: for every CME + CBOE bundle-grain
+- [ ] [DATA] P0. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — GO AHEAD, agent-executable
+      ("approve yes agent can do it").** Migration/purge pass: for every CME + CBOE bundle-grain
       `attempted_failed(WithinBoundsTradfiSourceZero)` row keyed by the retired `instrument_id=<parent>.FUT`/`.OPT`
       grain, verify a real `captured` row exists at `(date, venue, data_type, instrument_type, underlying)` and retire
-      the stale row if so (snapshot-before-write, dry-run default). Repo: `market-tick-data-service`. **Script shipped +
-      dry-run executed 2026-07-30 (see Progress log) — measured counts recorded. `--apply` NOT run — this is a
-      destructive ~81K-row live-manifest mutation the script's own docstring gates on a recorded operator go-ahead
-      (mirrors the `tradfi_manifest_content_recovery_completion_2026_07_24.md` retire-phase hard-stop). Checkbox stays
-      open until the operator approves and `--apply` actually runs + self-verifies 0 remaining.**
+      the stale row if so (snapshot-before-write). Repo: `market-tick-data-service`. Script shipped + dry-run executed
+      2026-07-30 (see Progress log) — measured 114,318 candidates, 81,454 confirmed safe (real captured twin found),
+      CBOE 100% clean, CME's 32,864-row unresolved residual deliberately left untouched by design (not part of this
+      approval — only the 81,454 confirmed-safe rows). Operator go-ahead now recorded — ready to `--apply` + self-verify
+      0 remaining among the confirmed-safe population. **Live-dispatch note**: this exact todo is duplicated verbatim in
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (`status: active`, `assigned_vm: planning`, its own combined
+      extraction-todo already `[x]`) — that's the actual dispatch vehicle; this doc stays NA per the standing
+      KEEP-NA-STALE citation above, do not also flip this doc's `assigned_vm`.
 - [x] ✅ [SCRIPT] P1. Harden `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py::_handle_srz_tradfi_row` to check
       for an existing correctly-keyed captured shard before reclassifying a historical
       `empty_confirmed[SOURCE_RETURNED_ZERO]` row to `attempted_failed` — prevents this false-positive class recurring
@@ -354,3 +358,5 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   the 2026-07-30/07-31/08-01/08-04 entries (still awaiting the `--apply` go-ahead on the measured 81,454-row drop); todo
   3 remains conditionally-scoped ("if it is found to cause..."); todo 4 stays sequenced after todo 1. No content drift
   since 2026-08-02 — only a context-scout `context_scope` touch since. Nothing to reclassify.
+- **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: `--apply` GO AHEAD
+  approved, agent-executable. See todo 1 above for the full ruling + the batch5 live-dispatch-vehicle note.
