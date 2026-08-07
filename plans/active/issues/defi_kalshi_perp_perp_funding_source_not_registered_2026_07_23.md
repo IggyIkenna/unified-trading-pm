@@ -137,7 +137,11 @@ concrete, currently-failing symptom; the classification question is the census a
       This is `defi_satellite_ao_dispatch_batch2_2026_07_26.md` todo `-011`'s own blocked prerequisite
       (`defi_kalshi_perp_perp_funding_recovery_operator_decision`) — once this re-emit ships and is verified
       (`quality-gates.sh` green, manifest row count == 567 under `asset_group=cefi`), flip that prerequisite so `-011`
-      unparks. Repo: market-tick-data-service (manifest rebuild), unified-trading-pm (unpark).
+      unparks. Repo: market-tick-data-service (manifest rebuild), unified-trading-pm (unpark). **Duplicate-claim note
+      (2026-08-07): `defi_satellite_ao_dispatch_batch2_2026_07_26.md` line ~306 already carries an open `[DATA] P2` todo
+      for this exact re-emit (same 567-row scope, same source-doc citation, status: active). Do NOT reclassify this
+      checkbox independently — it would open a second dispatch path for the identical fix. Close both together once
+      either ships.**
 
 ## Codex SSOTs
 
@@ -167,13 +171,22 @@ concrete, currently-failing symptom; the classification question is the census a
   (a)/(b)/(c) operator-design decision on the 567 already-written manifest-absent objects remains genuine NA judgment
   work, unchanged. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA, stale item closed — re-read end to end (2 open items at
+  entry). The `[OPERATOR] P2` "Decide the (a)/(b)/(c) disposition" checkbox below is now stale: the operator RULED
+  2026-08-06 (option b, see line 111-114 above), and the corresponding `[DATA] P1` execution todo above already
+  operationalizes that ruling — closed by citation, not reclassified. Separately, conflict-checked the `[DATA] P1`
+  execution todo against the active corpus: `defi_satellite_ao_dispatch_batch2_2026_07_26.md` (status: active) already
+  carries an open todo (~line 306) claiming the identical 567-row re-emit, citing this same source doc — a genuine
+  duplicate claim, not a reclassification opportunity (flipping this doc's `assigned_vm` would create a second dispatch
+  path for the same fix). Added a duplicate-claim note inline on that checkbox. Doc stays `assigned_vm: NA`.
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Decide the (a)/(b)/(c) disposition of the 567 already-written, still-GCS-present,
-      still-manifest-absent 2026-05-29..2026-07-25 KALSHI_PERP defi perp_funding objects (backfill into DEFI manifest
-      as-is / migrate+re-emit under CEFI to match the shipped @2aa23de5 reroute / accept as a historical gap), then ship
-      the chosen fix and re-run affected-day manifest rebuilds to backfill the missing rows.
+- [x] ✅ [OPERATOR] P2. **CLOSED 2026-08-07 (na-eligibility-audit, stale — decision already made).** Decide the
+      (a)/(b)/(c) disposition of the 567 already-written, still-GCS-present, still-manifest-absent
+      2026-05-29..2026-07-25 KALSHI_PERP defi perp_funding objects — **RULED 2026-08-06 (operator, chat): option (b)**,
+      see line 111-114 above. Execution tracked in the `[DATA] P1` todo above (and duplicated in
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s own open todo, ~line 306).
 
 > **2026-08-06 archive-candidate audit**: Doc's central item is prose-only: 'Still open: whether the 567
 > already-written, still-GCS-present, still-manifest-absent 2026-05-29..2026-07-25 DEFI objects above should be (a)

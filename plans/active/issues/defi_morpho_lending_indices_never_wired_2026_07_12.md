@@ -954,3 +954,5 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
   `gate_on_depends` citation on `data_completion_defi_2026_07_15` (independently re-verified still `assigned_vm: NA`,
   status:active with open todos) — the gate has not cleared. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — gate_on_depends on data_completion_defi_2026_07_15
+  re-verified still open today.

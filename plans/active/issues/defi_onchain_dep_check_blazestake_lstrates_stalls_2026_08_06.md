@@ -109,12 +109,25 @@ BLAZESTAKE still blocking — Option A still needed).
 
 - [ ] [CODE] P1. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`), AO-dispatchable —
       add BLAZESTAKE to the known-outage exemption in `dependency_checker.py`'s `_KNOWN_OUTAGE_VENUES_BY_SVC`.
+      **Duplicate-claim note (2026-08-07): combined with item 2 below, already extracted verbatim into
+      `defi_satellite_ao_dispatch_batch10_2026_08_06.md:116-123` (status: draft, pending operator approval, explicit
+      `Source:` citation to "items 1-2" of this doc). Do NOT reclassify this doc while that claim stands — close both
+      items by citation once batch10's todo ships.**
 - [ ] [DATA] P1. **Implement chosen option and relaunch DEFI:onchain benchmark VM** — once dep check passes for any
       date, relaunch `launch-features-vm.sh FAMILY=onchain ASSET_GROUP=DEFI start_date=<clean_date>` and capture
       throughput numbers for -056. Target date: 2026-07-29 or 2026-07-30 (if Option A ships + lending_indices present
-      through 2026-07-31).
+      through 2026-07-31). **Same duplicate-claim note as item 1 above — batch10 combines both into one todo.**
 - [ ] [DATA] P2. **Investigate lending_indices capture stall (post-2026-07-31)** — diagnose why DEFI MTDS isn't writing
-      lending_indices rows for 2026-08-01+; may require a separate issue in MTDS.
+      lending_indices rows for 2026-08-01+; may require a separate issue in MTDS. **Conflict-park note (2026-08-07):
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (2026-08-06) ran this exact conflict-check and found
+      contradicting evidence — `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 (KAMINO captured a
+      row 2026-08-05) and the resolved `defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`
+      (`KAMINO-SOLANA captured=80`) both directly contradict this item's "no captured data since 2026-07-31" premise —
+      possibly a different manifest surface (per_vm shards vs live availability_index) or a partial/venue-scoped stall,
+      not resolvable from text alone. batch9 PARKED this exact item as BLOCKED-OPERATOR-DECISION rather than drafting a
+      from-scratch diagnosis todo, recommending a live per-venue `lending_indices` availability_index re-check FIRST.
+      This na-eligibility-audit pass respects that standing park — do not reclassify this item independently of that
+      ruling.**
 - [ ] [OPERATOR] P3. **Decide DP-FETCH-009 paging policy for permanent retirement-marker cells** — the 1404 BLAZESTAKE
       markers permanently keep `(defi, lst_rates)` over the `attempted_failed` abs threshold, so the alert re-pages as
       STATIC BACKLOG each re-nag cooldown forever. Suppression / paging-cadence policy for stale cells is explicitly
@@ -155,3 +168,16 @@ BLAZESTAKE still blocking — Option A still needed).
     DP-FETCH-009 cell as a regression without checking it first. (4) A cell's `max_attempted_at` near the daily 01:00
     UTC cron window is NOT new activity when the row carries a retirement reason — the retire script stamps reason
     without touching `attempted_at`.
+
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA-STALE (already-duplicated), OVERRIDES this run's own
+  Phase-1 classifier draft verdict of RECLASSIFY. The Phase-1 read correctly found items 1-2 bounded/AO-eligible and
+  item 4 safely `[OPERATOR]`-tagged, but did not cross-check the two defi satellite AO-dispatch batch docs before
+  recommending reclassification. Conflict-check against the active corpus found: items 1-2 already extracted verbatim
+  into `defi_satellite_ao_dispatch_batch10_2026_08_06.md:116-123` (status: draft, pending operator approval) —
+  reclassifying this doc now would open a second, redundant dispatch path the moment batch10 activates. Item 3 was
+  independently conflict-checked by `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (2026-08-06) and PARKED as
+  `BLOCKED-OPERATOR-DECISION` over contradicting live evidence (KAMINO counter-examples) — a standing ruling this pass
+  respects rather than re-litigates. Item 4 stays `[OPERATOR]`-tagged regardless. Net: nothing here is a clean,
+  conflict-clear reclassify today. Citations added on items 1-3 above. Doc stays `assigned_vm: NA`; a future audit pass
+  should re-check batch10's approval status and, separately, whether item 3's live-availability- index re-check (per
+  batch9's own recommendation) has been done.

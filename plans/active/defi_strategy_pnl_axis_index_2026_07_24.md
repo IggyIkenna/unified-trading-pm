@@ -152,6 +152,8 @@ independently-startable item any session can pick up without waiting on the phas
   rewrite-vs-delete choice 'still needs an operator ruling' — that ruling landed 2026-07-29 (Option A). Citation
   corrected; doc stays NA (index/entry-point doc, nature: process, drift_direction: none)
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — archive_exempt standing reference hub, 0 open
+  checkboxes, re-confirmed unchanged.
 - **na-eligibility-audit 2026-08-03 (reclassify pass)**: KEEP-NA-STALE -> checkbox closed. The sole open todo
   (`LENDING_INTEREST` mismodeling correction for `carry_staked_basis`) was already shipped in the linked sibling doc
   (`issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`, `strategy-service@a90e85eb`) — this

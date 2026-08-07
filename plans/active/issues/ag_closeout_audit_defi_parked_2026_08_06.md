@@ -161,3 +161,5 @@ operator ruling.
   cross-check (9 defi flags, all accounted) + Orthogonality HARD CHECK (1 known dual-tag hit, no new mistags, no retags
   — defi owns no write on any shared doc). Phase 3: no new batch (batch10 already covers all conflict-clear work;
   residual non-batchable). Parked findings written to this doc; ledger 2 == 2.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — 0 checkboxes (audit-report doc); Finding 1
+  (mtds_pipeline_check orphan) and Finding 2 (stale cross-tranche tags) both re-verified still open/unfixed.

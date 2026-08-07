@@ -110,9 +110,14 @@ context_scope:
 
 ## Todos
 
-- [ ] [DIAG] P2. Confirm `rate_indices`'s canonical target name/relationship (not yet checked this session — do not
-      assume it mirrors `dex_pools`/`dex_swaps`; may be a different mechanism entirely, e.g. `lending_indices` with a
-      typo/drift, or a genuinely separate legacy data_type).
+- [x] ✅ [DIAG] P2. **CLOSED 2026-08-07 (na-eligibility-audit, stale-item citation-fix).** Confirm `rate_indices`'s
+      canonical target name/relationship — already extracted, verbatim, as its own dispatched todo in the active
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:159-166` (`assigned_vm: planning`, explicit `Source:` citation to
+      this doc, "Done when: the source doc's open DIAG todo is checked off"). That todo also cites
+      `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s 2026-08-01 finding (verified against live `_lending_grain.py`,
+      `market-tick-data-service@13f14b78`) which already answers the canonical-target-name half:
+      `rate_indices`/`utilization` → `lending_indices`. Do not re-open this checkbox; real remaining work (the narrower
+      population-overlap residual) lives at the cited batch9 todo.
 - [x] ✅ [DIAG] P2. **RESOLVED 2026-08-04 (interactive session) — the R5 concern is CONFIRMED REAL for `dex_swaps`,
       REFUTED for `dex_pools`. Two genuinely different cases, not one.** Bounded, per-(venue,chain) date-set +
       instrument_id-set comparison (live `pyarrow.dataset` reads against `_index/availability_index.parquet`,
@@ -196,3 +201,10 @@ context_scope:
 - **context-scout 2026-08-05**: re-scouted; context_scope's `defi_dex_pools_delete_order_stale_2026_07_20.md` reference
   had moved to `/plans/archive/issues/` since it was written (RESOLVED, archived) — corrected the path in place, now 5
   entries.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA, stale item closed — re-read end to end (2 open items at
+  entry, grep-verified). The `dex_swaps` → `dex_pool_swaps` DATA migration remains genuine, judgment-heavy scope
+  (root-causing an unexplained gap cluster + a full five-part delete-safety proof before any change) — independently
+  corroborated as `too_large_or_risky` by `defi_satellite_ao_dispatch_batch10_2026_08_06.md:173-176`. The `rate_indices`
+  DIAG item is stale in framing: already extracted, verbatim, as an active dispatched todo in
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md:159-166` — closed by citation, not reclassified (flipping this doc's
+  `assigned_vm` would dispatch a duplicate). Doc stays `assigned_vm: NA`.

@@ -132,3 +132,5 @@ context_scope:
   out-of-scope carve-out. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: refreshed context_scope (3 entries) -- fixed a dead path (the
   `defi_venue_capabilities.py` entry was missing the `unified-api-contracts/` sibling-repo prefix, resolved to nothing).
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item (bare-SUSHISWAP alias) remains an
+  undecided data-semantics call; other 2 items closed 2026-07-26 with hard evidence.

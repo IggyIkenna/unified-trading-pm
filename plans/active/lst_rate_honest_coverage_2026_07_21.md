@@ -990,3 +990,4 @@ tarball once; always check the launcher's own freshness warning output, and if s
   issue doc (the doc's own Phase 5 ready-to-apply evidence lives there, not in this frozen-append-only doc) and the
   `mtds_backfill_vm_memory_hang` issue this doc's Deferred table cites as what the remaining CEX-spot backfill item is
   blocked on. Doc now at 989/1000 lines — comfortable headroom restored after the recent trim-below-cap commit.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA valid (re-affirms 2026-08-03 ruling; marker-only, at line cap).

@@ -186,3 +186,6 @@ below is explicitly gated on a human design call) — a future triage pass shoul
   items (Aave/Alchemy + Chainlink/Pyth research, subgraph-HTTP status threading, the governance dual-source design
   question).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — item 5 (governance dual-source merge) remains an
+  unresolved human design decision blocking whole-doc reclassify; items 2-3 partially duplicated in active batch9 (not
+  yet actioned there either).

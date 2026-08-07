@@ -167,3 +167,5 @@ the parent plan's Track 7 culled-venue ruling.
   issue doc was listed twice) and swapped in the real `dex_pools_handler.py` fan-out target named in the doc's own
   Track-5 async-fan-out todo.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — gate_on_depends on
+  defi_consolidated_closeout_2026_07_18 re-verified still open (13 todos) today; genuine prerequisite, not stale.

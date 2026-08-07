@@ -220,3 +220,6 @@ just needs to be applied here with the same twin-content verification discipline
   same commit. Added the Deferred-work table above; `dex_swaps`/`rate_indices` genuinely not started, and a
   sub-agent-built dex_pools/dex_swaps/rate_indices fold script shipped as code-only, NOT YET run against prod — do not
   run it against dex_swaps without the same per-venue divergence handling used for POOL/dex_pools.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — 0 checkboxes by design (status table); real
+  remaining work is prose-only (gas_fees purge blocked on VM infra, dex_swaps/rate_indices migration pending); archival
+  trigger (§4) unmet.

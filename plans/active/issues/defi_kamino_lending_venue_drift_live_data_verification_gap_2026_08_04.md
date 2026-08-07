@@ -65,7 +65,7 @@ related:
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-07"
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -162,6 +162,39 @@ If it returns zero rows: the code fix alone was sufficient (the panel's `KAMINO_
 manifest-only artifact from a recent zero-rows/catalog-unavailable run, self-healing once the fixed code's next run
 supersedes it) — close this doc.
 
+## UPDATE 2026-08-05 (interactive session) — historical fold executed, but see 2026-08-07 re-check below
+
+The live-data verification this doc called for DID happen, in a later session: the availability index read succeeded
+(565 rows, 80 GCS objects, 2026-08-01..08-05), `relabel_kamino_lending_venue_2026_08_05.py --apply` relabeled them to
+canonical `KAMINO-SOLANA`, then `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` retired all 565 legacy rows.
+Verified directly against the freshly-written index: **0 remaining captured `venue=KAMINO_LENDING` rows** as of
+2026-08-05. Full detail: `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7's Progress Log
+(2026-08-05 entry). The underlying code fix shipped as `market-tick-data-service@bd153821` (this doc's summary above
+still has the `<fill in at ship time>` placeholder — now filled in here).
+
+## UPDATE 2026-08-07 (na-eligibility-audit re-check) — code fix NOT yet deployed to `main`, gap may be re-accumulating
+
+Independently verified via `git merge-base --is-ancestor bd153821 origin/main` (market-tick-data-service): **`bd153821`
+is on `live-defi-rollout` but NOT yet on `main`** — the fix has not reached production. The 2026-08-05 session's own
+Progress Log entry already flagged this exact risk: _"every subsequent day will keep adding rows here until the deploy
+actually lands... if the backlog persists past 2026-08-06, another day's worth of rows will need the same retire script
+re-run."_ Today (2026-08-07) is past that checkpoint and the re-check was never done — this is the corpus's confirmed
+"prose-only remaining work, never checkbox-ified" trap. Converted to a tracked todo below rather than left as a Progress
+Log note only. Given the historical fold already shipped + the retire script already exists and is proven idempotent,
+this is a genuinely bounded, worker-determinable follow-up (not a design decision) — but it stays `assigned_vm: NA` for
+now since the doc otherwise reads as closed and a lone reclassified todo risks getting lost; a future audit pass should
+consider extracting it into an AO-dispatch batch once `bd153821` deploys.
+
+## Todos
+
+- [ ] [DATA] P2. Once `market-tick-data-service@bd153821` reaches `main`/production (verify via
+      `git merge-base --is-ancestor bd153821 origin/main`), re-run the bounded, column-pruned
+      `read_availability_index(..., filters=[("venue","==","kamino_lending")])` check for any `venue=KAMINO_LENDING`
+      rows captured between 2026-08-05 (the last retire run) and deploy day. If any exist, re-run
+      `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` (already-proven, idempotent) to retire them. Done when:
+      the check returns zero rows (either because none accumulated, or because the re-run retired them), with the row
+      count cited here.
+
 ## Codex SSOTs
 
 - `/codex/02-data/defi-canonical-naming-ssot.md` — venue canonicalisation conventions.
@@ -173,3 +206,19 @@ supersedes it) — close this doc.
 - **2026-08-04 (sub-agent dispatch)**: root-caused + code fix shipped (see summary). Live-data verification attempted,
   blocked by the documented heavy-index-read connection issue (see above) — filed as this doc rather than guess at a
   fold that could not be evidenced.
+- **2026-08-05 (interactive session)**: historical fold executed + verified (565 rows, 0 remaining after retire). See
+  "UPDATE 2026-08-05" section above.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA, valid (OVERRIDES this run's own Phase-1 classifier draft
+  verdict of ARCHIVE). The Phase-1 read found strong evidence the historical remediation completed (cited commit shas
+  - an explicit "0 remaining rows" verification + `defi_satellite_ao_dispatch_batch10_2026_08_06.md` bucketing this doc
+    as `archivable_now`) and recommended archival. Independent follow-up check before archiving:
+    `git merge-base --is-ancestor bd153821 origin/main` in market-tick-data-service — **the fix is NOT yet on `main`**,
+    only `live-defi-rollout`. The 2026-08-05 session's own Progress Log already named this exact re-check trigger ("if
+    the backlog persists past 2026-08-06...") and it was never re-run. This is a live, currently-unverified
+    data-correctness gap (new `venue=KAMINO_LENDING` rows may be accumulating daily in production until the deploy
+    lands), not a closed doc — archiving it now would hide real remaining work. Added "UPDATE 2026-08-07" section +
+    converted the prose-only re-check note into a tracked `[DATA] P2` todo above (the corpus's confirmed
+    prose-only-remaining-work trap). Also flagged: `ag_closeout_audit_defi_parked_2026_08_07.md`'s own Finding 6 on this
+    same doc independently reached a more cautious "may auto-resolve, mark for re-check" verdict — my read is the first
+    to confirm concretely (via git) that the risk is real and unresolved, not just a stale process artifact. Doc stays
+    `assigned_vm: NA`, `status: open`.

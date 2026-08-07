@@ -438,3 +438,5 @@ instruments-service/unified-api-contracts/market-tick-data-service/features-serv
   is the `[OPERATOR-DECISION] P3` todo, gated on a still-open, separately-owned `[DESIGN] P1` decision in another doc;
   `[VERIFY]` and `[CODE]` are both already closed by citation. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item remains an [OPERATOR-DECISION] on a
+  linked canonicalisation design question; the other 3 items already closed with evidence.

@@ -483,3 +483,6 @@ files.
   re-read end to end, all 4 open items unchanged: wire-in-or-delete/consolidation product decisions with named
   registry/billing/cross-repo blast radius, none worker-determinable. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — all 4 open items remain scoped
+  product/architecture disposition decisions (jupiter.py venue registration, governance-params poller OPERATOR-NOTIFY,
+  +2 more), none worker-determinable.

@@ -141,3 +141,12 @@ informational tag-finding. All 6 written to this doc. ✓
 
 **AO-eligible candidates for next batch (batch11)**: Findings 1/3/4-item-3/5 = ~5 extractable todos. Finding 6 may
 auto-resolve. Finding 2 is a tag correction, not a todo.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — 0 checkboxes (audit-report doc); all 6 findings
+  re-verified still open/unexecuted, no `batch11` drafted yet. Finding 6 (Kamino) independently re-investigated this
+  pass: `bd153821` (the actual venue-fix commit) confirmed NOT yet on `main` (only `live-defi-rollout`), so this doc's
+  "may auto-resolve" framing is optimistic — see
+  `issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`'s own new Progress Log entry for the
+  full re-check + the tracked follow-up todo added there.

@@ -221,3 +221,6 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   both remaining open items are self-flagged, undecided design forks (ManifestWriter safety-check warn-vs-refuse choice;
   per-slot RSS ceiling explicitly out of scope to design here). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — both remaining open items remain genuine design
+  forks (ManifestWriter safety-check branch choice; per-slot RSS ceiling explicitly out of scope), not
+  bounded/deterministic.

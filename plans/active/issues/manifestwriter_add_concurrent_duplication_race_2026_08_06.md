@@ -148,12 +148,17 @@ Two independently-shippable angles (do NOT bundle — mirrors the sibling doc's 
       (`migrate_legacy_gas_fees_venue_2026_07_30.py`, `fold_legacy_composite_venue_objects_2026_07_31.py`, and any
       others found via `grep -rl "ManifestWriter(" --include=*.py | xargs grep -l ThreadPoolExecutor`) for the same
       unprotected-shared-writer pattern; apply the same caller-side lock mitigation to each until item 2 below lands.
+      **Extracted into `defi_satellite_ao_dispatch_batch10_2026_08_06.md` (status: draft, pending operator approval) —
+      do not reclassify this doc while that duplicate claim stands; close this checkbox by citation once batch10's todo
+      ships.**
 - [ ] [INFRA] P1. Wire up `self._write_lock` (converted to `RLock`) around `add()`/`write()`/`close()`/`_drain()`'s
       critical sections in `unified_trading_library/manifest_writer/`, add a regression test that reproduces this race
       (N threads × M distinct `add()` calls on one shared instance, assert row count == N×M with no duplication —
       mirrors this doc's own verification), run full `quality-gates.sh`. Once landed, the per-script caller-side locks
       (item 1 + the fold script's own) become redundant but harmless (a caller-side lock plus an internal `RLock` do not
-      deadlock or conflict) — safe to remove opportunistically, not urgent to.
+      deadlock or conflict) — safe to remove opportunistically, not urgent to. **Extracted into
+      `defi_satellite_ao_dispatch_batch10_2026_08_06.md` (status: draft, pending operator approval) — same citation as
+      item 1 above.**
 
 ## Progress Log
 
@@ -162,3 +167,10 @@ Two independently-shippable angles (do NOT bundle — mirrors the sibling doc's 
   and naming. Not yet triaged into the library-level fix (item 2) — flagged, not executed, given the scope (touches a
   widely-shared library method set) warrants its own dedicated pass rather than a rushed edit under this session's
   immediate VM-relaunch pressure.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA-STALE (already-duplicated) — both open checkboxes are
+  extracted near-verbatim into `defi_satellite_ao_dispatch_batch10_2026_08_06.md:81-93` (explicit `Source:` citations
+  there), still `status: draft` pending operator approval. Per the conflict-check protocol, NOT reclassified — flipping
+  `assigned_vm` here would open a second, redundant dispatch path for the identical fix the moment batch10 activates.
+  Citations added inline on both checkboxes above. Recommend a future audit re-check batch10's approval status; if it
+  lapses without landing this content, re-run this doc through RECLASSIFY instead of leaving it stale-duplicated
+  indefinitely. Doc stays `assigned_vm: NA`.

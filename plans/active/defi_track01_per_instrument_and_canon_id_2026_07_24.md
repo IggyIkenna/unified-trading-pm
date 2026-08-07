@@ -825,17 +825,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                                                                                                                                                                                                                                                                          ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                                                                                                                                                                                                                                                                          `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                                                                                                                                                                                                                                                                          manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                                                                                                                                                                                                                                                                          rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                                                                                                                                                                                                                                                                          the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                                                                                                                                                                                                                                                                          docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                                                                                                                                                                                                                                                                          the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                                                                                                                                                                                                                                                                          supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                                                                                                                                                                                                                                                                          `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                                                                                                                                                                                                                                                                          (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                                                                                                                                                                                                                                                                          unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                                                                                                                                                                                                                                                                              ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                                                                                                                                                                                                                                                                              `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                                                                                                                                                                                                                                                                              manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                                                                                                                                                                                                                                                                              rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                                                                                                                                                                                                                                                                              the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                                                                                                                                                                                                                                                                              docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                                                                                                                                                                                                                                                                              the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                                                                                                                                                                                                                                                                              supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                                                                                                                                                                                                                                                                              `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                                                                                                                                                                                                                                                                              (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                                                                                                                                                                                                                                                                              unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
@@ -847,13 +847,13 @@ instruments in one `instruments.parquet` with `available_from/to`).
       matching the issue doc's cited final count. Pending-delete audit report
       (`_index/audit/dex_pools_fake_history_pending_delete.parquet`) confirmed present in GCS for the later human
       delete-review step. (repo: market-tick-data-service)
-- [ ] [DATA] P2. **File + fix the `staking_yields_handler.py` / `lst_rates_handler.py` gap found during the 2026-07-22
-      C2–C12 scoping pass** — `staking_yields_handler.py` hardcodes the legacy `_DATA_TYPE="staking_yields"` and is
-      registered in the CLI but has ZERO scheduled Cloud Scheduler jobs (appears dead in production); separately,
-      `lst_rates_handler.py` writes to a non-hive, non-canonical path
-      (`gs://{bucket}/lst_rates/date=.../lst_rates_{ts}.parquet`), bypassing `canonical_write.py`'s
-      `asset_group=`/`pipeline_mode=` layout entirely — a genuinely separate gap from C2/C9, flagged but never filed as
-      its own issue. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **CLOSED 2026-08-07 (na-eligibility-audit, stale-item citation-fix).** File + fix the
+      `staking_yields_handler.py` / `lst_rates_handler.py` gap found during the 2026-07-22 C2–C12 scoping pass —
+      verbatim-extracted into `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md` (status: open,
+      `assigned_vm: planning`), which re-verified both claims live: the `lst_rates_handler.py` "non-canonical path" half
+      is FALSE (docstring-only drift, already fixed there — the handler does write to the canonical hive path); the
+      `staking_yields`-dead-in-production half IS real and stays tracked in that doc's own open §6. Do not re-open this
+      checkbox; real remaining work lives at the cited doc. (repo: market-tick-data-service)
 - [x] ✅ [BACKEND] P2. **Cherry-pick the unshipped `is_defi_force_include_pool` wiring — SHIPPED 2026-07-24
       `instruments-service@4e97a82e`** ("wire is_defi_force_include_pool into DEX relevance filter + catalogue
       force_include"), confirmed ancestor of `origin/live-defi-rollout`. The UAC-side predicate is now wired into
@@ -874,6 +874,15 @@ instruments in one `instruments.parquet` with `available_from/to`).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA, stale item closed — re-read end to end (9 open items at
+  entry, grep-verified). 8/9 remain genuine judgment/operator-gated work (factory-address Option A/B, perp_funding
+  canonical-home ratification, physical zero-row-marker design decision, R3 full-corpus migration gating Half-B + Track
+  8 cron-resume — independently re-confirmed still `RUNNING` today via
+  `issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md`). 1/9 (the `staking_yields_handler.py`/
+  `lst_rates_handler.py` item) is stale — verbatim-extracted into the active
+  `issues/ defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`, which re-verified both claims live and found the
+  lst_rates half FALSE (docstring drift, already fixed) and the staking_yields half real but tracked there. Closed by
+  citation. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-03**: refreshed context_scope (4 -> 5 entries) — added
   `issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md`, since the R3 migration VM this doc tracks is now
   the traced root cause of that CRITICAL page.
