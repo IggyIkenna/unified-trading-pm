@@ -71,8 +71,9 @@ of load or a single additional offline runner triggers a complete stall.
       the count drops below a threshold (suggest 3). — unified-trading-pm@64c3fd63a + evidence
 - [x] ✅ [INFRA] P2. Investigate why glue-3 and glue-5 are offline — restart or replace (repo: unified-trading-pm). —
       unified-trading-pm@HEAD (investigation finding: no restart/replace needed — see Progress Log 2026-08-07)
-- [ ] [INFRA] P2. Hardening: add a `workflow_dispatch` trigger to `ldr-to-main-promote-fleet.yml` so an operator can
-      manually kick off a promotion tick when the schedule is stuck (already exists — documented here for awareness).
+- [x] ✅ [INFRA] P2. Hardening: add a `workflow_dispatch` trigger to `ldr-to-main-promote-fleet.yml` so an operator can
+      manually kick off a promotion tick when the schedule is stuck (already exists — confirmed at line 53 of
+      .github/workflows/ldr-to-main-promote-fleet.yml with dry_run + only_repo inputs; no code change needed).
 
 ## Codex SSOTs
 
