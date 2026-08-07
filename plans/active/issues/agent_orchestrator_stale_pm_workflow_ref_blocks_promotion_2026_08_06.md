@@ -62,7 +62,15 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md]
+context_scope:
+  [
+    /plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
+    /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
+    /plans/active/issues/ao_fleet_health_investigation_followups_2026_08_06.md,
+    agent-orchestrator/.github/workflows/,
+    agent-orchestrator/server/routes/agents.py,
+    /scripts/workflow-templates/rollout-workflow-templates.sh,
+  ]
 ---
 
 # agent-orchestrator: dangling PM workflow reference + genuine code conflict block promotion
@@ -116,3 +124,15 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
   `21a698c09`), converted here into tracked `- [ ]` todos per the workspace's "every deferral is a todo, never prose"
   rule. Not chased further in the main session — correctly out of scope for the notify-slack.yml fix itself, and
   `agent-orchestrator`'s own promotion isn't blocking the alerting-service deploy-chain goal.
+
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) -- was under-scoped at 1 entry for 4 open
+  todos spanning 2 repos. Added the parent tracking doc (this doc was filed as its "4th layer" per that doc's own todo
+  3), the two workflow files' directory (todo 1's repoint target), one representative conflicted file from PR #813's
+  7-file list (`server/routes/agents.py`, also independently a hotspot in a sibling agent-orchestrator issue), and the
+  rollout script named by todo 4.
+- **context-scout 2026-08-07 (fingerprint cross-reference, batch 8)**: confirmed step-4a match — this doc's PR #813
+  literal is the SAME `agent-orchestrator` PR independently tracked in
+  `/plans/active/issues/ao_fleet_health_investigation_followups_2026_08_06.md` (same date), which attributes #813's
+  stall to the still-unresolved main↔LDR backmerge PR #791. Complementary, not duplicate: that doc doesn't yet know
+  about this doc's Problem 1 (dangling PM-workflow ref) or Problem 2 (the genuine 7-file code conflict) blocking #813
+  independently of #791. Added to `context_scope` (now 6 entries); added the reverse pointer on that doc too.

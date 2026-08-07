@@ -73,6 +73,7 @@ context_scope:
     /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /plans/archive/issues/sit_stamp_skipped_on_detached_head_pinned_sha_2026_08_06.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
+    /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
   ]
 ---
 
@@ -150,3 +151,6 @@ together.
   chased here). Full detail in `strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md` § "Fleet-wide
   audit" (commit `21a698c09`). Still waiting on the GitHub Actions incident to clear before any of the 9 can actually
   merge.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) -- added
+  `agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`, the "4th layer" doc this doc's own todo 3
+  asked to be filed separately (already done + cross-linked both directions).

@@ -72,7 +72,7 @@ context_scope:
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/models/worker_api.py,
     agent-orchestrator/server/plan_health.py,
-    agents/worker.md,
+    unified-trading-pm/agents/worker.md,
     /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
   ]
 ---
@@ -182,3 +182,11 @@ Two independent, complementary fixes — either alone helps, both together close
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **context-scout 2026-08-07 (verification pass, correction)**: prior passes' "unchanged, still accurate" claim
+  (2026-08-03 re-pass through the entry directly above) was never actually disk-verified — `agents/worker.md` has been a
+  non-resolving bare path since the 2026-08-03 pass introduced it (every repo-relative entry elsewhere in this corpus
+  carries a `<repo-name>/` prefix, e.g. `agent-orchestrator/server/...`; a bare `agents/worker.md` doesn't resolve from
+  the workspace root, only from inside the PM repo itself). Fixed to `unified-trading-pm/agents/worker.md`, which
+  resolves. Still 6 entries, no other changes.

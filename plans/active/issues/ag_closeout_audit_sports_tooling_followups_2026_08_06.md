@@ -44,9 +44,10 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /scripts/plan-hygiene/check_ag_closeout_linkage.py,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /plans/active/issues/instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md,
     /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
-    /scripts/plan-hygiene/check_ag_closeout_linkage.py,
   ]
 ---
 
@@ -91,3 +92,6 @@ to re-derive them.
   workspace HARD RULE that findings become `- [ ]` todos. Both findings were surfaced in the batch10 Progress Log as
   prose; this doc makes them tracked work. Neither is blocking: the gate gap affects 1 doc (a superseded issue), and the
   truncated citations were re-verified live this run.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) -- added
+  `generate_ag_closeout_audit_candidates.py`, explicitly named in finding 1's own todo as the reference implementation
+  (`EXCLUDED_STATUS`) to mirror.

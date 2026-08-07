@@ -88,3 +88,4 @@ context_scope:
   plan, per the finalize-plan-coverage rule (`check_finalize_plan_coverage.py`). `status: active` from the start —
   `gate_on_depends: true` already fully holds both todos above until every phase of the source plan is `done`, so no
   second manual flip is needed later (2026-07-30 no-double-gate finding).
+- **context-scout 2026-08-07**: populated/refreshed context_scope (3 entries)

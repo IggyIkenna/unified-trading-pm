@@ -61,12 +61,10 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    agent-orchestrator/server/worker_liveness_watchdog.py,
-    agent-orchestrator/server/worker_liveness/_respawn.py,
     agent-orchestrator/server/blocked_reconcile.py,
-    agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/orm.py,
-    unified-trading-pm/agents/worker.md,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md,
   ]
@@ -198,4 +196,5 @@ tuning them further.
 - **na-eligibility-audit 2026-08-07** (tranche=ao, autonomous): KEEP-NA, valid — checkboxes already accurate (verified
   `cc5961e`/`9777c02` are real commits doing what's claimed). The one remaining todo (main-agent bounded first-answer
   window) is genuinely still undecided in its own text ("still an implementation detail for whoever picks this up") —
-  P3, low priority, not bounded enough for RECLASSIFY without a stated done-when.
+  P3, low priority, not bounded enough for RECLASSIFY without a stated done-when. **context-scout 2026-08-07**:
+  populated/refreshed context_scope (6 entries).

@@ -67,6 +67,7 @@ context_scope:
   [
     /plans/archive/issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md,
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
+    /plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
@@ -196,6 +197,9 @@ just needs to be applied here with the same twin-content verification discipline
 - **context-scout 2026-08-05**: refreshed context_scope (5 entries) -- swapped in the still-open big-finding regression
   issue doc + the blocked gas_fees manifest-purge issue doc, the two live operational threads this checkpoint doc most
   needs a resumer to read first.
+- **context-scout 2026-08-07**: refreshed context_scope (6 entries) -- added
+  `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`, the tracker for `dex_swaps`/`rate_indices`, the
+  doc's own "Recommended next item" and the largest remaining real-data gap in the Deferred-work table.
 - **interactive session 2026-08-05/06**: rows 2 (POOL casing), 6 (BLAZESTAKE), 7 (KAMINO_LENDING) driven to genuine
   completion, each verified directly against the canonical index rather than trusted from a script's own success log.
   Along the way, found and fixed a real cross-cutting infra bug unrelated to any single row: the DeFi bucket's manifest

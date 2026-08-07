@@ -354,3 +354,6 @@ remaining items besides the over-cap-gated one above).
   (`instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`) failed on an API
   stream stall; classified directly by the main run instead (verdict: `exclude_cross_cutting`, genuinely 5-AG-spanning
   content, sole remaining item is an `[OPERATOR]`-tagged cross-AG migration-tooling decision).
+- **context-scout 2026-08-07**: re-verified context_scope (4 entries) -- all 4 still resolve and remain the correct
+  minimal reading list (no single source path summarizes this batch's 8-repo, 17-todo spread; each todo already
+  self-documents its own target file inline); unchanged.

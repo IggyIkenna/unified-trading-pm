@@ -59,7 +59,7 @@ context_scope:
     agent-orchestrator/server/routes/backlog.py,
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/state_store/activity.py,
-    agent-orchestrator/server/orm.py,
+    agent-orchestrator/server/blocked_reconcile.py,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 ---
@@ -121,3 +121,9 @@ yet reproduced against a live prod row; scenario is grounded in code reachabilit
   disposition vs. dashboard-only surfacing), P3, no stated done-when/acceptance test — not re-litigated here even though
   todo 1 landing makes "(a)" the doc's own stated preference, since choosing and implementing a new retirement
   disposition is still a real judgment call, not a mechanical follow-on.
+
+### context-scout 2026-08-07
+
+Populated/refreshed context_scope (6 entries) — swapped `orm.py` (generic, never named in the doc's own body) for
+`blocked_reconcile.py`, which both open todos explicitly name by function (`auto-answer paths`,
+`classify_retirement()`).

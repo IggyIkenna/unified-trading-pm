@@ -323,3 +323,5 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
   other rolled-out templates calling it locally) — flagged to the operator immediately, fixed same session via the
   sanctioned rollout script + a quickmerge per repo (`execution-service@d537b812e`, `e2e-testing@14bec17`,
   `market-data-processing-service@8c5430aa`). Todo 2 (request-major-bump.yml stale comment) is next.
+- **context-scout 2026-08-07**: re-verified context_scope (5 entries) -- all 5 still resolve (plan, codex SSOT, and 3
+  source paths already correctly scoped by the plan's author at creation); unchanged.

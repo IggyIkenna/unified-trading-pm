@@ -54,6 +54,13 @@ sequential: false
 drift_direction: advance-code
 locked_by:
 locked_since:
+context_scope:
+  [
+    /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/06-coding-standards/quality-gates.md,
+    instruments-service/instruments_service/reference_data/adapters/defi/_solana_utils.py,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -153,3 +160,4 @@ finalize twin would normally do is folded directly into that todo's own "Done wh
   this batch's sole todo — is genuinely new, conflict-clear, and bounded. Left `status: draft` deliberately; the flip to
   `active` is the operator's call. Parked findings (the stale-checkbox discrepancies, the filesystem-vs-doc mismatch on
   the stash-clone deletion) are recorded in `issues/ag_closeout_audit_infra_parked_2026_07_31.md`, not here.
+- **context-scout 2026-08-07**: populated context_scope (4 entries).

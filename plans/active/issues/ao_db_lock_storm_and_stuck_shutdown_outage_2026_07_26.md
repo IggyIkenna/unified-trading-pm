@@ -46,12 +46,11 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /codex/05-infrastructure/agent-orchestrator-deploy.md,
-    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    agent-orchestrator/server/db.py,
+    agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/tmux_pruner.py,
-    agent-orchestrator/scripts/ao-self-pull.sh,
-    agent-orchestrator/scripts/install-orchestrator-service.sh,
     /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
 
@@ -260,19 +259,19 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       restarts is a real sample, not a quiet window.
 
       **Stated limitation — do not over-read this as a before/after comparison.** This VM's journald retention is only
-                                  ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
-                                  journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
-                                  silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
-                                  the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
-                                  terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
-                                  (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
-                                  `--since` older than retention produces a confident-looking zero that means nothing.
+                                          ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
+                                          journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
+                                          silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
+                                          the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
+                                          terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
+                                          (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
+                                          `--since` older than retention produces a confident-looking zero that means nothing.
 
-                                  **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
-                                  restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
-                                  glance against
-                                  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
-                                  Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
+                                          **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
+                                          restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
+                                          glance against
+                                          `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
+                                          Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
 
 - [x] ✅ [BACKEND] P2. **Second, independent contributing-latency finding + fix, 2026-07-30** (downstream of Problem 1
       above, NOT a duplicate of the `--reload`/`ee98ccb` finding two todos up — both are real, `ee98ccb` is the one that
@@ -415,6 +414,14 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   backlog requires a per-doc content read rather than a mechanical batch archive. **Before archiving**: confirm the
   lock-storm question is resolved (or re-opened as its own tracked todo/doc), not merely that the checkboxes are ticked.
   `status:` is deliberately left `open`.
+
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — re-pointed away from the
+  now-fully-shipped Problem 2 (`--reload` removal: dropped `agent-orchestrator-deploy.md`, `ao-self-pull.sh`,
+  `install-orchestrator-service.sh`) toward the sole remaining open item, the Follow-ups DO-NOT-ARCHIVE guard's Problem
+  1 (DB-lock storm): added `server/db.py` (`session_scope`, the mechanism at the heart of the contention) and
+  `server/autospawn.py` (`ensure_review_agents`, the already-fixed reference pattern a future fix should mirror); kept
+  `tmux_pruner.py` (the confirmed second instance of the same anti-pattern) and both the original fix's archived issue
+  doc and the background-loop architecture codex.
 
 ## Follow-ups
 

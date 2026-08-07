@@ -65,6 +65,7 @@ context_scope:
     /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
 source: >-
   `/ag-closeout-audit infra` run 2026-08-04 (ag_closeout_auditor scheduled worker, slot 10). Phase 0 re-derived the
@@ -193,3 +194,9 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
   parked finding + 3 re-verified carry-forwards (all still open) + 3 net-new docs classified, 1 entry written above —
   balanced.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) -- added `generate_ag_closeout_audit_candidates.py`
+  (explicitly named target of the still-open findings 12/13). Note: this doc's own todo for finding 10 (batch3
+  `assigned_vm` flip) still reads `- [ ]` open, but a direct live read confirms
+  `infra_satellite_ao_dispatch_batch3_2026_07_30.md` now has `assigned_vm: planning` set (fixed elsewhere, per that
+  doc's own 2026-08-06 governance-sweep note) -- a stale-checkbox discrepancy flagged for `/plan-reconcile`, not fixed
+  here (out of this skill's scope).

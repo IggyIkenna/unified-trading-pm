@@ -175,6 +175,8 @@ context_scope:
     prospectus reconciliation design decision still needed (batch6: operator-gated).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (5 entries) -- unchanged, already minimal.
+- **context-scout 2026-08-07**: re-verified context_scope (5 entries) -- all 5 entries still resolve and remain the
+  correct minimal reading list after the 2026-08-06 Todo 3/Todo 4 completions; unchanged.
 - **2026-08-06 (slot-4, data_engineering) — Todo 4 [DOC] P1 archive DONE**: 6-step ritual complete for
   `defi_satellite_ao_dispatch_batch3_2026_07_26.md`. All 13 todos verified `[x]`, locked_by empty. Deferred items
   confirmed by Todo 2 (none silently vanished). Codex-alignment: no new durable contracts. 34 path referrers updated

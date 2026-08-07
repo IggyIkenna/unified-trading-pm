@@ -66,6 +66,13 @@ source: >-
 locked_by:
 resolved_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md,
+    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
 ---
 
 # Parked findings — 2026-08-06 `/ag-closeout-audit defi` run (slot 12; second run of the day)
@@ -163,3 +170,6 @@ operator ruling.
   residual non-batchable). Parked findings written to this doc; ledger 2 == 2.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — 0 checkboxes (audit-report doc); Finding 1
   (mtds_pipeline_check orphan) and Finding 2 (stale cross-tranche tags) both re-verified still open/unfixed.
+- **context-scout 2026-08-07**: populated context_scope (4 entries) — both findings' actual target docs
+  (`mtds_pipeline_check_...`, `phantom_audit_estate_coverage_gap_...`), the `batch10` draft that already covers this
+  tranche's conflict-clear work, and SKILL.md for process context.

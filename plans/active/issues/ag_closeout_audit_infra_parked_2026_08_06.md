@@ -66,8 +66,10 @@ context_scope:
   [
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
     /plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md,
-    /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
+    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
 source: >-
   `/ag-closeout-audit infra` run 2026-08-06 (ag_closeout_auditor scheduled worker, slot 8, dispatch agt-42686f,
@@ -231,3 +233,10 @@ findings since each produced either a durable entry here or a shipped fix).
   Sources (Track 2: cloud_run_traffic_pin; Track 3: smoke_matrix) → `check_ag_closeout_linkage.py` infra orphans 2→0.
   **Ledger**: 3 new parked findings + 4 re-verified carry-forwards (all still open) + 6 net-new docs classified
   - 1 linkage fix, 3 entries written above — balanced.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) -- replaced the batch9/hub-only pair with
+  the two oldest still-open carried findings' direct targets (finding 11's stash-clone doc, finding 6's ao_self_pull
+  mistag doc), kept the predecessor doc + this run's own headline finding-15 target + the tranche hub.
+- **context-scout 2026-08-07 (batch 7 verification pass)**: added `generate_ag_closeout_audit_candidates.py` (now 6
+  entries) -- 2 of the doc's 5 open todos (findings 12/13: `self_dispatched_orphan_count` addition, `CITE_RE` hardening)
+  are specifically about hardening/extending that exact script, named explicitly in both findings' own text, and it was
+  missing from the prior pass's list.

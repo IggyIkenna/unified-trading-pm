@@ -46,10 +46,11 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
+    scripts/quality-gates-base/base-service.sh,
     /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
   ]
 supersedes:
 superseded_by:
@@ -184,3 +185,7 @@ needs explicit operator sign-off before dispatch" rule, not a signal either todo
   investigation) re-checked against `issues/host_root_disk_full_transient_2026_07_13.md`'s current state — still open,
   unchanged, still conflict-clear. This batch is still `status: draft`, still awaiting operator approval; only todo 2
   remains live if/when it is flipped to active.
+- **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped the archived 2026-08-02 parked-findings
+  doc for the sole remaining open todo's real targets: `host_root_disk_full_transient_2026_07_13.md` (where the
+  investigation's finding must be recorded) and `base-service.sh` (the `UV_LINK_MODE` config site named in the todo's
+  own text).
