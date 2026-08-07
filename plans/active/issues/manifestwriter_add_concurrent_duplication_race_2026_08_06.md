@@ -145,21 +145,20 @@ Two independently-shippable angles (do NOT bundle — mirrors the sibling doc's 
 
 ## Todos
 
-- [ ] [DIAG] P2. Audit other `ThreadPoolExecutor`-sharing-one-`ManifestWriter` scripts
+- [x] ✅ [DIAG] P2. Audit other `ThreadPoolExecutor`-sharing-one-`ManifestWriter` scripts
       (`migrate_legacy_gas_fees_venue_2026_07_30.py`, `fold_legacy_composite_venue_objects_2026_07_31.py`, and any
       others found via `grep -rl "ManifestWriter(" --include=*.py | xargs grep -l ThreadPoolExecutor`) for the same
       unprotected-shared-writer pattern; apply the same caller-side lock mitigation to each until item 2 below lands.
-      **Extracted into `defi_satellite_ao_dispatch_batch10_2026_08_06.md` (status: draft, pending operator approval) —
-      do not reclassify this doc while that duplicate claim stands; close this checkbox by citation once batch10's todo
-      ships.**
-- [ ] [INFRA] P1. Wire up `self._write_lock` (converted to `RLock`) around `add()`/`write()`/`close()`/`_drain()`'s
+      **Extracted into `defi_satellite_ao_dispatch_batch10_2026_08_06.md` — SHIPPED 2026-08-07 (slot-9): 12 scripts
+      audited, 0 needed mitigation (all confirmed safe — see batch10 plan's inline evidence for per-script reasons).**
+- [x] ✅ [INFRA] P1. Wire up `self._write_lock` (converted to `RLock`) around `add()`/`write()`/`close()`/`_drain()`'s
       critical sections in `unified_trading_library/manifest_writer/`, add a regression test that reproduces this race
       (N threads × M distinct `add()` calls on one shared instance, assert row count == N×M with no duplication —
       mirrors this doc's own verification), run full `quality-gates.sh`. Once landed, the per-script caller-side locks
       (item 1 + the fold script's own) become redundant but harmless (a caller-side lock plus an internal `RLock` do not
-      deadlock or conflict) — safe to remove opportunistically, not urgent to. **Extracted into
-      `defi_satellite_ao_dispatch_batch10_2026_08_06.md` (status: draft, pending operator approval) — same citation as
-      item 1 above.**
+      deadlock or conflict) — safe to remove opportunistically, not urgent to. **Shipped:
+      `unified-trading-library@85bd0354` (batch10 Todo 1, slot-9 earlier session). Regression test: 10 threads × 50
+      calls → 500 rows, no duplication.**
 
 ## Progress Log
 
@@ -176,3 +175,7 @@ Two independently-shippable angles (do NOT bundle — mirrors the sibling doc's 
   lapses without landing this content, re-run this doc through RECLASSIFY instead of leaving it stale-duplicated
   indefinitely. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).
+- **slot-9 2026-08-07** (batch10 DIAG P2): Full grep audit of market-tick-data-service scripts for
+  ThreadPoolExecutor+ManifestWriter sharing — 12 scripts checked (11 grep matches + 1 named script without TPE). All
+  confirmed safe, 0 needed caller-side lock mitigation (library fix @85bd0354 also already in). Both todos closed — this
+  issue is FULLY RESOLVED.

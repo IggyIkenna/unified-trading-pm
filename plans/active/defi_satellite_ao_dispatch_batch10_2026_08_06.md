@@ -86,13 +86,29 @@ same day) before being drafted here.
       the lock is wired around all 4 critical sections, the new regression test passes, and `quality-gates.sh` is green.
       — unified-trading-library@85bd0354 · QG green (174s) · regression test: 10 threads × 50 calls → 500 rows, no
       duplication
-- [ ] [DIAG] P2. **Audit every other `ThreadPoolExecutor`-sharing-one-`ManifestWriter` script** for the same race
+- [x] ✅ [DIAG] P2. **Audit every other `ThreadPoolExecutor`-sharing-one-`ManifestWriter` script** for the same race
       (`market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py`,
       `market-tick-data-service/scripts/fold_legacy_composite_venue_objects_2026_07_31.py`, plus a fresh grep for any
       others sharing the pattern), and apply the same caller-side lock mitigation to each until the library fix
       (previous todo) lands. Repo: market-tick-data-service. Source:
       `issues/manifestwriter_add_concurrent_duplication_race_2026_08_06.md`. Done when: every script found by the grep
-      either has the mitigation applied or is confirmed (with a one-line reason) not to need it.
+      either has the mitigation applied or is confirmed (with a one-line reason) not to need it. — Audit complete
+      (slot-9, 2026-08-07): `grep -rl "ManifestWriter" scripts/ | xargs grep -l "ThreadPoolExecutor"` found 11 matches +
+      named scripts checked. All 12 confirmed safe, 0 need caller-side locks: `fold_legacy_dex_pools...` (already fixed
+      @94e625c7; library fix @85bd0354 now supersedes); `fold_legacy_composite_venue_objects_2026_07_31.py` (each thread
+      creates its own DefiManifestRecorder inside `_fold_one_shard`, not shared);
+      `migrate_legacy_gas_fees_venue_2026_07_30.py` (no ThreadPoolExecutor at all — serial loop);
+      `restamp_lighter_ohlcv_batch_tardis_to_lighter_api_2026_07_18.py` (TPE for row-count reads only; `writer.add()`
+      serial main-thread — explicit comment); `reconcile_lighter_derivative_ticker_manifest_2026_07_30.py` (TPE for row
+      counts only; `manifest.add()` main-thread-only — explicit comment); `mtds_reconcile_partial_bundles.py`
+      (ManifestWriter created after TPE block exits; `record_failed()` serial);
+      `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` (no ManifestWriter.add() at all — only
+      `record_vm_progress`); `migrate_dex_pool_symbol_shape_2026_07_09.py` (same — no record_captured());
+      `migrate_aster_cefi_defi_bucket_2026_07_13.py` (GCS copy only, no manifest registration in workers);
+      `migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py` (no ManifestWriter class usage — direct parquet re-keying;
+      grep matched only a row-key constants comment); `migrate_cefi_dated_perps_margin_marker_2026_07_09.py` (no
+      record_captured()); `one_offs/gmx_pipeline_mode_migration_2026_07_21.py` (Phase A TPE = GCS ops only; Phase B
+      manifest phase = sequential .add() — explicitly documented). Issue doc DIAG+INFRA checkboxes closed.
 - [x] ✅ [DATA] P1. **Run the DeFi MVP backfill to 100%** on the canonical/migrated corpus (SPOT VMs; DRIFT/Velocity
       historical grind is CULL residue, dropped not filled), then flip
       `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` true on first real progress per the unpark note in the
