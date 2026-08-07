@@ -129,11 +129,31 @@ drift_direction: advance-code
       Cloud Scheduler still firing 4x/day into the void. Determine whether serial-capture is still needed; if yes,
       rebuild+republish the image and verify a real execution succeeds; if no, pause/delete the scheduler + job rather
       than leaving it firing forever.
-- [ ] [SCRIPT] P1. **Fix the 3 dead `europe-west1` jobs** (`tardis-data-loader`, `check-missing-cloud-storage`,
-      `gen-inst-defs`) — 100% failure for 50 days on a stale `gcr.io/...` path orphaned by the AR migration. Point each
-      at the correct Artifact Registry image path (grep how sibling jobs in the same region/service reference their
-      image post-migration) and verify a real execution succeeds, or decommission if genuinely obsolete — determine
-      which per what each job is actually supposed to do before deciding.
+- [x] [SCRIPT] P1. **Fix the 3 dead `europe-west1` jobs** (`tardis-data-loader`, `check-missing-cloud-storage`,
+      `gen-inst-defs`) — 100% failure for 50 days on a stale `gcr.io/...` path orphaned by the AR migration. ✅ All 3
+      verdicted OBSOLETE (superseded, not fixed) — zero references to any of the 3 job/image/pubsub-trigger names in any
+      of the ~30 current source repos (`rg` full-workspace + `_archived`/`archive`, 0 hits outside unified-trading-pm
+      planning docs); each already has a live current successor: `tardis-data-loader` → the VM-based sharded Tardis
+      backfill pipeline (`deployment-service/scripts/vm/tardis-concurrency-guard.sh` +
+      `mtds-backfill-cefi-*`/`cefi-queue-*` VMs, capped at 1 concurrent per
+      `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis Concurrent-VM Cap) — matches this doc's own May-2026
+      snapshot already flagging it "legacy 2024; likely zero traffic"
+      (`/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md:187`); `gen-inst-defs` →
+      instruments-service's live per-venue `reference_data/adapters/*` instrument-definition generation (IS is the
+      CLAUDE.md-declared SSOT for reference data); its trigger topic `gen-inst-defs-job-trigger` is independently
+      flagged "Legacy infrastructure (likely stale)" in `/codex/05-infrastructure/pubsub-topic-inventory.md:103`;
+      `check-missing-cloud-storage` → superseded by the current
+      manifest/availability-manifest/`data-pipeline-reconciliation` system, the present SSOT for "what's missing from
+      GCS." Action taken per the obsolete-path: paused all 3 Cloud Scheduler triggers rather than deleting
+      (`tardis-data-loader-scheduler`, `check-missing-cloud-storage-scheduler`, `gen-inst-defs-scheduler`, all
+      `europe-west1`) — verified `state: PAUSED` post-pause via `gcloud scheduler jobs list`. No code/config fix needed
+      (no repo owns these jobs). Flagging for a follow-up deletion todo (Cloud Run Job resources + schedulers) once
+      confirmed stable with the pause — same disposition as this doc's existing `central-market-data-tardis-loader`
+      decommission todo above. Evidence:
+      `gcloud run jobs executions list --job=<job> --region=europe-west1     --project=central-element-323112` showed
+      `Image '...' not found` on all 5 most-recent executions per job (2026-08-03 through 2026-08-07);
+      `gcloud scheduler jobs list --location=europe-west1 --project=central-element-323112` showed all 3 `state: PAUSED`
+      post-fix. (repo: unified-trading-pm, no code repo — infra-only)
 - [ ] [SCRIPT] P1. **Fix `live-event-log-compactor` daily OOM** — 4Gi limit, OOM every scheduled 02:00 UTC run for 7
       straight days despite an already-generous limit; data growth is outpacing capacity. Investigate whether this is
       unbounded growth (a leak / missing retention/compaction elsewhere) before just raising the limit again — raising
