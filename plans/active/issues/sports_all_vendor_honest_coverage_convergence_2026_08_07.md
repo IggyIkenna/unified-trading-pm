@@ -537,3 +537,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   be close to a full-roster real-fetch pass in one chunk, something later/earlier chunks in off-season weeks won't
   repeat. Not a stall by rule 1b's own test (values keep climbing every tick); no intervention — self-recovery, zero
   data loss, genuinely converging.
+- **2026-08-07T22:50Z** — FIXTURE_STATS +45 days (`last_completed_date=2022-05-21`, fresh `22:49:35Z`), steady. odds
+  smallchunk2 STILL chunk 18/451 (~3.5h) — lighter rule-1b diff (root cause already established, not re-litigating): 29
+  distinct leagues now (up from 25), 15 OOM (up from 13), still zero repeats, RSS cycling normally — continued genuine
+  movement, no intervention.
