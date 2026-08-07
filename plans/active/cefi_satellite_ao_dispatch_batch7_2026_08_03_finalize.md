@@ -109,7 +109,7 @@ context_scope:
       confirm `assigned_vm: NA` preserved. No explicit operator adjudication is present in the doc as of 2026-08-07.
       **Still blocked on operator ruling — NOT a batch8 candidate yet.**
 
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch7_2026_08_03.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch7_2026_08_03.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes" and "Archival-hygiene housekeeping" sections
       (informational, not gated AO items) need no separate migration since they were never batch todos → add the archive
       banner → run the codex-alignment check (batch7 creates no new durable contract; confirm still true) → grep the
@@ -139,3 +139,12 @@ context_scope:
   na-eligibility-audit 2026-08-06 (tranche=cefi). Not a batch8 candidate. (b) `estate_orphan_assessment_2026_07_21.md`
   todo 6 — operator ruling on boundedness still not recorded; integrator preserved `assigned_vm: NA` on the 2-1 KEEP-NA
   verdict; na-eligibility-audit 2026-08-07 (tranche=cefi) reaffirms. Not a batch8 candidate.
+- **2026-08-07 (slot 2 · `cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize-003`)**: 3. ✅ [DOC] P1 — 6-step
+  archival ritual for `cefi_satellite_ao_dispatch_batch7_2026_08_03.md` and this finalize doc. Step 1: no deferred items
+  to migrate (Cross-tranche notes + Archival-hygiene housekeeping are informational, never AO todos). Steps 2+6: archive
+  banner added to both plans; `locked_by` was already empty. Step 3: codex-alignment check — batch7 creates no new
+  durable contract; confirmed still true (all 3 todos were procedural/doc/diag work, no new rule or SSOT established).
+  Step 4: no CLAUDE.md/codex updates needed. Step 5: referrer updates — repointed `/plans/active/` →
+  `/plans/archive/2026_08/` in `cefi_satellite_ao_dispatch_batch8_2026_08_06.md`,
+  `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md`, `ag_closeout_audit_cefi_parked_2026_08_06.md`; removed
+  INDEX.md entries. Both plans moved via `git mv` to `plans/archive/2026_08/` in the archival commit.
