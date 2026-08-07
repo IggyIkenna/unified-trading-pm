@@ -827,3 +827,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-07T14:18Z** — PLAYER_STATS now **chunk 24/26** (was 22/26), only **2 chunks left** — should complete within
   the next tick or two. footystats climbing (2024-09-22 → 2025-04-06). Both healthy, verified via date-value diffs.
   Watching closely for chunk 26/26 + clean exit to launch FIXTURE_STATS immediately once the lock frees.
+- **2026-08-07T14:48Z** — PLAYER_STATS now **chunk 25/26 — only 1 chunk left, imminent.** footystats climbing
+  (2025-10-17), SFI climbing (2022-08-13). All healthy. (Aside, sibling-doc scope, important correction: the weather
+  backfill VM completed with `exit_code=0` but a re-census showed it did NOT actually resolve the honest-coverage gap —
+  `expected_unattempted` barely moved and 16,241 new genuine `attempted_failed` rows appeared. Caught this via a proper
+  post-completion re-census rather than trusting the clean exit code, per codex rule 4a. Full detail + follow-up todos
+  in `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`. Not this campaign's scope.)
