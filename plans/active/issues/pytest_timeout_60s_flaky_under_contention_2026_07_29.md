@@ -698,3 +698,17 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — added
   `scripts/quality-gates-base/base-service.sh` (the 2026-08-06 mechanism-level retry-once-on-timeout fix,
   unified-trading-pm@52a85d6c7, touched this file alongside the already-listed `base-library.sh`).
+- **slot-4 2026-08-07 ~23:30Z (post-fix monitoring, task `pytest_timeout_60s_flaky_under_contention-005`) — first 24h
+  window: CLEAN**: surveyed last 5 `quality-gates-v2` runs on each of the 10 primary repos tracked by this doc
+  (unified-api-contracts, instruments-service, features-service, market-data-processing-service, unified-trading-api,
+  deployment-service, ml-service, client-reporting-api, market-tick-data-service, unified-trading-pm). All service
+  repos: **50/50 runs `conclusion=success`** — zero pytest-timeout failures, zero `qg_red_reason=pytest` entries
+  anywhere in the tested slice. unified-trading-pm itself has unrelated `checks`-slice failures
+  (VERSION_SPLIT/ratchet-breach class, `tests`-slice green on all its runs), consistent with the plan's own
+  long-standing note on that separate class. Live host corroboration at investigation time was unavailable (these are GH
+  Actions CI runs, not shared-VM load) — but the uniform per-repo success rate across ~50 runs spanning 2026-08-07 is
+  the strongest single-day signal in this doc's history. **Monitoring window NOT yet closed** — done-when condition
+  requires no recurrence through ~2026-08-20 (1 day elapsed of ~14); releasing task via skip-current-task per this doc's
+  own slot-6/todo-8 precedent (the window's done-when condition is not yet met; the monitoring task will re-dispatch
+  closer to the 2026-08-20 window close). If a recurrence surfaces before then, re-open this doc's investigation per its
+  convention.
