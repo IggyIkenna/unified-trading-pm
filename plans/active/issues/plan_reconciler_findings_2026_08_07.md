@@ -285,3 +285,19 @@ entry).
 ## Plans not reached
 
 None — all 26 primary prediction-tranche docs were read in full by at least one hunter or by me directly.
+
+## PR merge state (STEP 7 note)
+
+The review PR (`plan_reconciler/agt-e7f024` → `live-defi-rollout`,
+[PR #2419](https://github.com/IggyIkenna/unified-trading-pm/pull/2419)) shows `CONFLICTING` —
+`git rebase origin/live-defi-rollout` hit a genuine content conflict in
+`prediction_cross_venue_arb_and_coverage_2026_07_24.md`. Root cause identified (not guessed):
+`origin/live-defi-rollout@bb48fc09e` ("reconcile prediction batch4 source-doc checkboxes to shipped outcomes") landed on
+the same file, concurrently, from another worker — almost certainly
+`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md` todo 1 executing live while this run was in progress.
+**Aborted the rebase immediately** rather than attempt an autonomous resolution (HARD RULE: genuine same-file conflict →
+`rebase --abort`, never blind-overwrite) — verified my review branch is still exactly what was pushed
+(`git diff origin/plan_reconciler/agt-e7f024 HEAD` empty, 0 ahead/0 behind). Left for the PR reviewer: my 2 flips + 1
+stale-note fix in that file may already be partially/fully superseded by the concurrent worker's commit — worth a fresh
+read of that file's CURRENT live-defi-rollout state before merging (not just trusting my branch's diff), rather than a
+naive rebase/force-resolve.
