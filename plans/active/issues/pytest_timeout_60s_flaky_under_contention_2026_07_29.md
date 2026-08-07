@@ -712,3 +712,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   own slot-6/todo-8 precedent (the window's done-when condition is not yet met; the monitoring task will re-dispatch
   closer to the 2026-08-20 window close). If a recurrence surfaces before then, re-open this doc's investigation per its
   convention.
+- **slot-15 2026-08-07 (second pass, same task)**: independent survey corroborates slot-4 — 45/45 `quality-gates-v2`
+  runs across 9 service repos all `conclusion=success` (5 runs each), unified-trading-pm `tests`-slice clean on all runs
+  (only `checks`-slice ratchet failures, unrelated). No pytest-timeout recurrence. Window NOT yet closed (day ~2 of
+  ~14); skipping per slot-4 precedent.
