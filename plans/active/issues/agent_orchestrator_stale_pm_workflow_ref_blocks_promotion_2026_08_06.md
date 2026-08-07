@@ -66,7 +66,7 @@ context_scope:
   [
     /plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
-    /plans/active/issues/ao_fleet_health_investigation_followups_2026_08_06.md,
+    /plans/archive/issues/ao_fleet_health_investigation_followups_2026_08_06.md,
     agent-orchestrator/.github/workflows/,
     agent-orchestrator/server/routes/agents.py,
     /scripts/workflow-templates/rollout-workflow-templates.sh,
@@ -84,25 +84,27 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
 
 ## Todos
 
-- [ ] [CICD] P2. Repoint `agent-orchestrator@main`'s `.github/workflows/quality-gates-v2.yml` and `image-build-gate.yml`
-      from
+- [x] [CICD] P2. Repointed `agent-orchestrator@main`'s `.github/workflows/quality-gates-v2.yml` and
+      `image-build-gate.yml` from
       `IggyIkenna/unified-trading-pm/.github/workflows/{python-quality-gates-v2,image-build-validate}.yml@live-defi-rollout`
-      to the new home in `unified-trading-ci` (confirm exact path/ref via how every other already-migrated repo's LDR
-      references it, e.g. `grep -r "unified-trading-ci/.github/workflows" */.github/workflows/*.yml` across the fleet
-      for the canonical form). Ship via the `.github/**`-must-reach-main carve-out — but NOTE finding below: a raw
-      direct push was fleet-wide REJECTED by branch protection (`GH013: 2 of 2 required status checks are expected`,
-      reproduced on 8 repos including a second independent attempt on `instruments-service`) — this needs the SAME
-      PR-through-required-checks path used for the notify-slack.yml fixes (a minimal PR off `main` touching only these
-      two workflow files), not a bare push attempt.
-- [ ] [CICD] P2. Once todo 1 lands and PR #814 (notify-slack.yml-only, already open, harmless) can pass
-      `quality-gates-v2`, confirm it merges to `main`.
-- [ ] [ENG] P2. Reconcile PR #813's real code conflict (`dashboard/src/layout.tsx`, `dashboard/src/types.ts`,
+      to `IggyIkenna/unified-trading-ci/.github/workflows/{python-quality-gates-v2,image-build-validate}.yml@main` —
+      exactly matching the form `live-defi-rollout` already carries for both files. Followed the doc's own
+      already-tested guidance: NOT a raw direct push (confirmed still rejected by the ruleset,
+      `required_status_checks: ["Quality Gates (agent-orchestrator) / quality-gates-v2", "sit-gate/fleet-green"]`) —
+      opened as a minimal PR off `main` touching only these two lines. Evidence: agent-orchestrator PR #817
+      (`fix/repoint-main-ci-to-unified-trading-ci`, commit 781f31f). Its own `quality-gates-v2` run correctly picked up
+      the fixed reference from the PR's own branch (same-repo PR, not a fork) and dispatched real QG-slice jobs instead
+      of the instant "workflow file issue" 0s-fail — self-resolving as expected. (repo: agent-orchestrator)
+- [ ] [CICD] P2. Confirm PR #817 (todo 1) merges to `main` cleanly once its checks finish, then confirm PR #814
+      (notify-slack.yml-only, already open, harmless) can now pass `quality-gates-v2` and merges too.
+- [x] [ENG] P2. Reconciled PR #813's real code conflict (`dashboard/src/layout.tsx`, `dashboard/src/types.ts`,
       `server/config.py`, `server/context_lifecycle.py`, `server/main_agent_keeper.py`, `server/models/agents.py`,
-      `server/routes/agents.py`, test files) between `main` and `live-defi-rollout` — needs an engineer/agent with
-      actual context on which side's changes are current-intent to resolve correctly; a scripted take-LDR or take-main
-      resolution risks silently dropping real work on whichever side loses. Read both sides' relevant commit history
-      first (`git log main..live-defi-rollout -- <file>` and the reverse) to understand what diverged before touching
-      anything.
+      `server/routes/agents.py`, test files) between `main` and `live-defi-rollout` — read both sides' actual diverged
+      history rather than a scripted take-one-side pass; full detail + the one real bug caught along the way (a
+      reintroduced `pick_headroom_account` fallback the auto-merge would have silently un-fixed) is in
+      `ao_fleet_health_investigation_followups_2026_08_06.md`'s own PR #791 todo (same underlying fix — this doc's
+      Problem 2 and that doc's #791 backmerge are the same conflict, closed together). Evidence:
+      agent-orchestrator@5872b3e5. (repo: agent-orchestrator)
 - [ ] [DEVOPS] P3. Rollout-process gap (flagged by the same audit, not `agent-orchestrator`-specific): today is the
       SECOND time in one day a shared-CI-repo-extraction/rollout event landed new/moved workflow files on
       `live-defi-rollout` without every affected repo's `main` (or even every repo's own LDR — see the 3-repo
@@ -117,6 +119,12 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
 
 ## Progress Log
 
+- **2026-08-07**: Closed todos 1 and 3 (Problem 1 dangling workflow ref + Problem 2 code conflict) — found while
+  finishing `ao_fleet_health_investigation_followups_2026_08_06.md`'s PR #791 todo and following its cross-reference
+  here. PR #817 opened for todo 1 (self-resolving fix — a same-repo PR picks up its own branch's corrected workflow
+  content); PR #813's underlying conflict resolved via a fresh main→LDR backmerge (agent-orchestrator@5872b3e5), PR #791
+  now `state: MERGED`. Todo 2 (confirm #817 + #814 actually merge) and todo 4 (rollout-process gap, operator decision)
+  remain open — this doc is NOT ready to archive yet.
 - **2026-08-06 ~17:20 UTC**: filed as its own dated issue doc per this session's `/autonomous` tracking-doc rule ("if a
   4th layered CI/CD blocker surfaces, file it as its own dated issue doc rather than growing this one indefinitely") —
   content sourced from the fleet-wide-audit sub-agent's findings (originally landed as prose in
