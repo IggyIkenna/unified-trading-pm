@@ -78,12 +78,14 @@ same day) before being drafted here.
 
 ## Todos
 
-- [ ] [INFRA] P1. **Wire `self._write_lock` (converted to `RLock`) around `ManifestWriter`'s
+- [x] ✅ [INFRA] P1. **Wire `self._write_lock` (converted to `RLock`) around `ManifestWriter`'s
       `add()`/`write()`/`close()`/`_drain()` critical sections** in `unified_trading_library/manifest_writer/`, to fix a
       confirmed concurrent-duplication race when multiple `ThreadPoolExecutor` workers share one `ManifestWriter`
       instance. Add a regression test (N threads x M distinct `add()` calls, assert no duplicated rows). Repo:
       unified-trading-library. Source: `issues/manifestwriter_add_concurrent_duplication_race_2026_08_06.md`. Done when:
       the lock is wired around all 4 critical sections, the new regression test passes, and `quality-gates.sh` is green.
+      — unified-trading-library@85bd0354 · QG green (174s) · regression test: 10 threads × 50 calls → 500 rows, no
+      duplication
 - [ ] [DIAG] P2. **Audit every other `ThreadPoolExecutor`-sharing-one-`ManifestWriter` script** for the same race
       (`market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py`,
       `market-tick-data-service/scripts/fold_legacy_composite_venue_objects_2026_07_31.py`, plus a fresh grep for any
