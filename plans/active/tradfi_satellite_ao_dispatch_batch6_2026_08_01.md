@@ -518,9 +518,18 @@ PYTHON=.tabs/8/market-tick-data-service/.venv/bin/python). Launched with `run_in
 **Post-compact status (2026-08-07T07:07Z — same session 7, context compacted):** baz81km0n survived context compaction.
 poll 3 = 19 VMs at 07:07:39Z (23→21→19, draining at ~2 VM/5min). Watcher confirmed alive. All repos ahead=0.
 
+**Pre-compact ritual (2026-08-07T07:12Z — /compact then /pre-compact within same session 7):** Step 1 audit: PM repo
+clean, ahead=0. Scratchpad has 3 files (`es_opt_watcher.log`, `es_opt_watcher_slot8.sh`, `manifest_query.py`) — all
+regenerable (watcher embeds manifest_query.py as a heredoc, slot-8 copy is a sed-patch of the committed
+`es-opt-backfill-watcher.sh`, log is re-created on first poll). No dangling committed-doc→scratchpad references (plan
+references are narrative-only, not functional). No secrets. No chat-only findings. No new todos. Nothing to promote.
+Watcher baz81km0n confirmed alive: poll 4 = 18 VMs at 07:12:40Z (drain rate ~1-2 VMs/5min). Lesson: `/compact` (context
+compaction) does NOT kill background harness tasks — baz81km0n survived two compactions. **Verdict: Safe to compact:
+YES. SHA = 7cb83ddcd, ahead=0. Nothing at risk.**
+
 - **NEXT ACTION (fresh session):** (1) Check if todo #2 checkbox is `[x]` (watcher auto-completed). (2) If `[ ]`, check
   harness task output: `…/e72382bd-a3d1-416a-ae84-85656714dec1/tasks/baz81km0n.output`. (3) If watcher still running
-  (last known poll 3 = 19 VMs at 07:07:39Z), wait for harness notification. (4) If watcher dead and task not done:
+  (last known poll 4 = 18 VMs at 07:12:40Z), arm Monitor on watcher log and wait. (4) If watcher dead and task not done:
   re-arm from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — create modified copy with SLOT_ID=<new-slot>,
   SLOT_TABS=.tabs/<new-slot>, PYTHON=.tabs/<new-slot>/market-tick-data-service/.venv/bin/python — and launch with
   `run_in_background:true`. Verify poll 1 in output before updating progress log. Do NOT re-arm if watcher running.
