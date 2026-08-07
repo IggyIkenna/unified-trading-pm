@@ -561,3 +561,19 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   21:25:10Z, chunk 7 @ 21:56:53Z, chunk 8 @ 22:51:26Z). No data-integrity issue — the underlying values were never
   wrong, only the derived chunk-number label I was echoing. At this clip (~3-9 chunks/hour once past quota-limited early
   chunks), 26/26 is plausibly within the next 1-3 hours. Using the verified chunk 9/26 going forward.
+- **2026-08-07T23:47Z — upgrading last tick's `PROGRESS.json` finding: it's not lag, the file appears to have STOPPED
+  updating entirely for odds smallchunk2.** FIXTURE_STATS: +30 days (`last_completed_date=2022-08-31`, fresh
+  `23:46:43Z`) — a bit slower than recent ticks but healthy. odds smallchunk2: `PROGRESS.json` still reads the exact
+  same stale value as 4.5 hours ago (`2020-08-29`/`19:22:22Z`, chunk 17's write), but `run.log`'s own
+  `PROGRESS: chunk=N` lines prove real progress has continued well past the last tick's finding: **chunk 19 @ 23:18:02Z,
+  chunk 20 @ 23:24:10Z, chunk 21 @ 23:30:17Z — each cleared in ~6 minutes**, currently on **chunk 22/451**
+  (`2020-09-19→2020-09-23`), zero new OOMs since chunk 18 closed (still 16 total). This confirms two things at once: (1)
+  the season-opener week really was the sole outlier — normal off-season chunks fly through in ~6 min once the league
+  roster is mostly skip-fast/cheap real-fetches, and (2) `PROGRESS.json`'s GCS upload for this VM has not written a
+  single new value since chunk 17 (19:22:22Z) despite 5 more chunks completing since — this is no longer "lag," it looks
+  like the upload step itself stopped functioning for this file specifically (the VM is otherwise clearly alive:
+  `run.log` keeps growing, manifest shards keep writing, heartbeats keep firing). **Not blocking** — `run.log`'s own
+  `PROGRESS: chunk=N` lines are a fully reliable substitute and this doc will use them as ground truth for this VM going
+  forward — but worth a note in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` for whoever next touches the
+  launcher, since a future session trusting `PROGRESS.json` alone on this specific VM would wrongly conclude it's been
+  stuck since 19:22Z.
