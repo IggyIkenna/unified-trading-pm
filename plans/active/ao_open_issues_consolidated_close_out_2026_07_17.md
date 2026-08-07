@@ -982,3 +982,9 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker (only context-scout touched it 2026-08-07). Of the 8 open items, 4 remain explicitly
+  operator-timing-gated (Layer-1 rewire, plan_reconciler retry hold, role-lifecycle timing, tmux_session_lost
+  sequencing); the 2 Phase-8 re-measure items remain independently extracted into
+  `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 per the 2026-08-04 marker (not a fresh finding); the
+  `ao_docs_reconciliation` close-out and archival-ritual items remain ongoing judgment-laden meta-work.

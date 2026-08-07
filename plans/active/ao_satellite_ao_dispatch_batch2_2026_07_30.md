@@ -357,3 +357,6 @@ never-cited set). This is the same scope boundary the 2026-07-26 and 2026-07-30 
   todo directly names; not a pure coordinator doc — the plan's largest (now-done) todo shipped real code
   (`server/verify.py` + several test files), so a source path belongs here despite the `_satellite_ao_dispatch_batchN_`
   naming pattern.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. Of the 4 open items, 3 need the specialized SSM/host/credential access this tranche consistently
+  uses interactive sessions for, and the 4th (`[DOCS] P1`) is explicitly `[OPERATOR]`-tagged.

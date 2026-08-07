@@ -139,3 +139,6 @@ operator glancing at the dashboard into suspecting stuck/idle workers that are n
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. `[UI] P2`/`[DATA] P3` pair remains non-parallelizable (dependent todos, cannot flip as one unit);
+  `[BACKEND] P3` remains not-actionable pending an upstream Claude Code CLI change.

@@ -196,3 +196,7 @@ choice (human-executed, not AO-dispatched).
 - **context-scout 2026-08-07**: refreshed context_scope (6 entries) -- added
   `ao_satellite_ao_dispatch_batch3_2026_07_31.md`, the confirmed live-tracking home for this doc's sole remaining todo
   (context_scope corpus backfill), per the 2026-08-01/08-06 na-eligibility-audit findings above.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA-STALE (already-duplicated) — re-verified: sole open todo (`[SCRIPT] P0`,
+  context_scope corpus backfill) remains the same item tracked verbatim as todo 1 of
+  `ao_satellite_ao_dispatch_batch3_2026_07_31.md` (still open there, `assigned_vm: planning`, real incremental
+  progress). Citation unchanged from the 2026-08-01/08-06 markers.

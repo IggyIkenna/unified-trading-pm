@@ -734,3 +734,8 @@ appetite for it.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. Note: todo 8's ~24h monitoring window (target check-in ~2026-08-06 20:41 UTC) has now elapsed as
+  of this audit date — todos 9-11 are time-gate-clear and ready to pick up directly, still correctly NA per this plan's
+  own frontmatter/Progress Log (a live production routing change the operator wants to review, not autonomous AO
+  dispatch).

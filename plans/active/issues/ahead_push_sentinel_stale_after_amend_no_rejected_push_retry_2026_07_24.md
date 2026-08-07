@@ -127,3 +127,6 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries) -- still the right minimal set for the
   sole open todo (rejected-push recovery design in `_ahead_push.py`).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. Sole open todo remains a real design decision on "the single riskiest automated code path in the
+  system" (doc's own words).

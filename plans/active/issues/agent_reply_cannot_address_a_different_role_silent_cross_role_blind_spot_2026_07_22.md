@@ -223,3 +223,10 @@ too large.
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries) -- still the right minimal set for the 2
   remaining open todos (review sign-off gate, mirror the peer-vs-operator branch into `agents/review.md`).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
+  2026-08-06 marker. `[REVIEW] P3` sign-off gate remains open — note the P1 routing change it gates already shipped
+  2026-07-24 (`agent-orchestrator@738b2d3`, discovered by `/plan-reconcile ao` 2026-08-06), so this is now a
+  retroactive-review ask rather than a pre-ship gate; flagged for operator attention, not resolved here. `[DOCS] P2`
+  (mirror the peer-vs-operator branch into `agents/review.md`) remains the 2026-08-03-flagged BOUNDED_RECLASSIFY
+  candidate — re-flagged in this run's report to the orchestrator; doc stays NA as a whole per the established MIXED
+  rule (flipping would also dispatch the still-gated `[REVIEW] P3` item).
