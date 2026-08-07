@@ -458,3 +458,11 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   baseline" skip) — needed to get market-tick-data-service's `quality-gates.sh` green again for ANY commit (not just the
   unrelated DeFi fix this session was doing), since the regression blocks the whole repo's test suite, not just tradfi
   work. Does NOT resolve the underlying SSOT/migration question — still open, still tracked above.
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA, valid -- re-verified.** All 3 open todos re-read
+  end-to-end; count reconciled (3/3). Todo 1 (CBOE VIX->VX mismatch) is DEPENDENCY_BLOCKED on the not-yet-built
+  reverse-translation code (the naming SSOT was ruled+shipped today, but the sampler's actual fetch-time reverse
+  translation is real code that does not exist yet, per this doc's own §4 text). Todo 2 (the GCS/manifest
+  measure-and-migrate pass) is a strong RECLASSIFY-shaped candidate -- operator sign-off already recorded for full agent
+  execution (measure/migrate/purge), heavy-I/O VM-scale work with a stated Done-when bar -- flagged as a RECLASSIFY
+  CANDIDATE in this pass's final report, not flipped here. Todo 3 (P2-OPERATOR-DECISION, the broken
+  canonicalize_raw_tradfi_id regression) remains a genuine design call. Doc stays NA for this pass.

@@ -253,3 +253,9 @@ here.
 - **context-scout 2026-08-07**: re-verified context_scope (6 entries, unchanged) — the only commit since the last scout
   (`b30fb5267b`) added `effort: high` to frontmatter, no substantive content change; all 6 entries still resolve and
   remain the correct minimal set.
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA, valid -- re-verified, unchanged.** All 7 open todos
+  re-read end-to-end; count reconciled (7/7, matching the 2026-07-31 tally). No content change since that pass -- only
+  the frontmatter `effort: high` addition. The 4 BLOCKED-UPSTREAM-turned-GENUINE_WORK items (delta-one full range,
+  features-volatility launch, realized_vol wiring, VIX sub-todo) and 3 P3 backtest items (gated on master Group-F
+  harness) remain genuinely open engineering/design-risk work, not mis-defaulted NA. `locked_by: live-defi-rollout`
+  blocks archival only, not reclassification -- noted, not acted on. Doc stays NA.

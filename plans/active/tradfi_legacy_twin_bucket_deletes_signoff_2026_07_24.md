@@ -246,3 +246,8 @@ restated here.
 - **context-scout 2026-08-06**: re-scouted; fixed a wrong repo-relative path (script lives in instruments-service, not
   unified-trading-pm) and added the new `tradfi_legacy_twin_candidate_set_995_to_900_unexplained_shrink_2026_08_05.md`
   issue doc the body now cites; now 5 entries.
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA, valid -- re-verified, unchanged.** Sole open todo
+  (the legacy-twin bucket DELETE) re-read end-to-end; count reconciled (1/1). The delete gate still correctly does not
+  clear -- twin-coverage was last measured at 0% (2026-07-30/31), not the 100% the 2026-07-28 §3a reversibility
+  carve-out requires, and no fresher re-run was found. Established ruling not re-litigated (4th consecutive
+  KEEP-NA-valid pass). Doc stays NA.

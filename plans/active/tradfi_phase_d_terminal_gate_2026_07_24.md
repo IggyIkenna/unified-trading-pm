@@ -527,3 +527,11 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
 `tradfi_consolidated_closeout_2026_07_18.md`.
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA, valid -- re-verified, unchanged.** Both open
+  checkboxes (P0 MVP-backfill-readiness gate; P1 post-full-backfill reconciliation checkpoint) re-read end-to-end; count
+  reconciled (2/2). The named blocker (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4) had its
+  `EXCHANGE_CODE_TO_NAME` SSOT contradiction RULED + SHIPPED earlier today (naming pick + micro-contract distinguishing
+  fix, uac@00b2de546) -- but that doc's own text is explicit the reverse-translation CODE the sampler needs to actually
+  fetch with (not just the registry naming) is real code that does not exist yet and is not yet scoped as its own todo.
+  So this gate's blocking condition is NOT yet cleared -- still correctly gated, just on a narrower remaining step than
+  before. Nothing to reclassify.

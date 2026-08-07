@@ -408,6 +408,12 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   entry-point digest of ~50+ tradfi-touching plans/issues with live open-todo counts. It has 3 active child plans with
   open work (`depends_on`). Archiving it would orphan the coordination index for the multi-phase tradfi close-out.
 
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA, valid -- re-verified, unchanged.** 0 real open
+  checkboxes (confirmed via literal-pattern grep: 12 `[x]`, 0 `- [ ]`; the 3 raw `[ ]` substring hits are prose
+  describing the pattern, not checkboxes). `archive_exempt: true` is set in frontmatter (2026-08-06 ruling) and
+  correctly NOT re-litigated here -- this doc is a standing coordination-index/reference hub for the tradfi close-out
+  with 3 active child plans depending on it, not an ARCHIVE candidate despite having 0 native open todos. Doc stays NA.
+
 ---
 
 ## Phase A2 (adapter/registry correctness) + Phase C (data-status/honest-coverage) — forked 2026-07-25

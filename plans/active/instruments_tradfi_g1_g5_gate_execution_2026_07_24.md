@@ -173,18 +173,21 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       (shared Databento quota protection, not ES-specific), so launching ES_OPT now would either be refused by the lock
       or require `--force`, which the script itself warns is for "legitimate parallel investigation" only — did not
       force past someone else's live job. **Re-attempt once `tradfi-bf-fred-full-*` completes** (re-check via the same
-      `gcloud compute instances list` filter). **CITATION (na-eligibility-audit 2026-08-02, tradfi tranche)**: this
-      item, combined with the manifest-verify item below, is already extracted verbatim as todo #2 in
-      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (`assigned_vm: planning`, `status: draft`, citing this doc by
-      name and live-reconfirming the singleton lock cleared as of 2026-08-01) — track there once that batch activates.
+      `gcloud compute instances list` filter). **CITATION (na-eligibility-audit 2026-08-02, tradfi tranche; UPDATED
+      2026-08-07)**: this item, combined with the manifest-verify item below, is extracted verbatim as todo #2 in
+      `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — that plan is now `status: active`
+      (`assigned_vm: planning`, activated 2026-08-06) with a live autonomous watcher session actively polling the
+      singleton lock and launching ES_OPT as of 2026-08-07T~04:46Z (see that plan's own Progress Log) — track there, the
+      "once that batch activates" condition is satisfied.
 - [ ] [DATA] P1. **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator
       ruling above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES
       futures (mirrors the NASDAQ/NYSE precedent, `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME ×
       root∈{ES,EW,EW1,EW2,EW4,E1A,E2A,E3A,E4A,E5A,EOM} × data_type=ohlcv_1m, and record the result as a line item in
       `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row — so the
       post-completion manifest-verify isn't missed. Done when: that row cites the live query + counts. **CITATION
-      (na-eligibility-audit 2026-08-02, tradfi tranche)**: combined with the ES_OPT launch item above into the same
-      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction — see that citation for detail.
+      (na-eligibility-audit 2026-08-02, tradfi tranche; UPDATED 2026-08-07)**: combined with the ES_OPT launch item
+      above into the same `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction — that
+      plan is now `status: active` with a live tracking session — see that citation for detail.
 - [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
       US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
       `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +
@@ -646,3 +649,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- swapped the umbrella + cefi-sibling plan links
   for the filed zero-capture issue doc + 2 real source-code targets (catalogue builder, ES_OPT VM launcher).
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): KEEP-NA-STALE (already-duplicated) -- citation fix, no
+  reclassification. 5 open todos read end-to-end; completeness-check count reconciled (5/5). Fixed 2 stale citations
+  (ES_OPT launch item + its manifest-verify sibling): both said "track there once that batch activates" pointing at
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`, which is now `status: active` (activated 2026-08-06) with a live
+  autonomous watcher session in progress -- updated wording + switched to the leading-slash `/plans/active/...` path
+  convention. No fresh RECLASSIFY/ARCHIVE candidates; doc remains genuinely operator-gated (G1 retirement
+  approved-but-unexecuted, GCS parquet cleanup approved-conditional).

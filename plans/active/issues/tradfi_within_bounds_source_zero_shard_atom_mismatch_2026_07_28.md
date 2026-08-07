@@ -360,3 +360,8 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   since 2026-08-02 — only a context-scout `context_scope` touch since. Nothing to reclassify.
 - **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: `--apply` GO AHEAD
   approved, agent-executable. See todo 1 above for the full ruling + the batch5 live-dispatch-vehicle note.
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA-STALE (already-duplicated) -- re-verified,
+  unchanged.** All 3 open todos read end-to-end; count reconciled (3/3). Todo 1's operator go-ahead (recorded same day
+  above) does NOT change the dispatch vehicle -- the todo's own text already correctly says the live dispatch is
+  `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (status: active, assigned_vm: planning); this doc stays NA per the
+  standing KEEP-NA-STALE citation, not flipped. Todos 3-4 remain genuinely open follow-on work. Nothing to reclassify.
