@@ -148,16 +148,35 @@ source: cicd-escalation-agt-62ba62
       if the manual dispatch didn't. (agt-02e6a8, 2026-08-07)
 - [x] ✅ [DEVOPS] P1. Re-roll + ship `batch-live-reconciliation-service`'s workflow templates —
       `batch-live-reconciliation-service@afcdd11` (via
-      `rollout-workflow-templates.sh --repo     batch-live-reconciliation-service`, shipped via quickmerge, verified on
+      `rollout-workflow-templates.sh --repo batch-live-reconciliation-service`, shipped via quickmerge, verified on
       origin ancestor). Fresh `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (33s)`; all 8
       previously-broken/drifted workflow files now parse (`yaml.safe_load` clean across all 12
       `.github/workflows/*.yml`). This was blocking promotion PR batch-live-reconciliation-service#315
       (`ci_status=FAILING` on LDR → fleet promoter GATE BLOCK → sit-gate/fleet-green never posted, mis-surfaced upstream
       as a stuck/"merge_conflict" promotion PR — no actual git conflict existed, `mergeable_state=blocked` not `dirty`).
-      (conflict_resolver agt-8289f1, 2026-08-07)
+      **Second-order finding**: `main-backmerge-to-ldr.yml` on this repo had ALSO been silently unschedulable since the
+      same 2026-08-05 break (its own copy carried the broken placeholder), so every LDR→main promotion since then never
+      backmerged into LDR — main and LDR diverged on `Dockerfile`'s `BASE_IMAGE_DIGEST` (LDR kept auto-refreshing via
+      `update-dependency-version.yml`, main never got backmerged the older value's supersession), producing a SECOND,
+      genuine merge conflict on the very next promote PR (#316) right after the first fix landed. Root-caused +
+      resolved: fixing the workflow YAML alone is NOT sufficient per affected repo — `main-backmerge-to-ldr.yml` must
+      also be manually re-dispatched (`gh workflow run main-backmerge-to-ldr.yml --ref live-defi-rollout`) to reconcile
+      any accumulated main/LDR drift BEFORE the next promote-PR gate re-check, or the fleet promoter will hit the same
+      "stuck_promotion_pr" class again on a fresh conflict. (Learned the hard way: my first attempt resolved the
+      conflict by pushing a merge commit directly onto the promoter's frozen per-SHA promote branch
+      `promote/<repo>/<sha>` — this breaks the frozen-head invariant since the ref's own name encodes the SHA it's
+      pinned to, so the promoter's `sit-gate/fleet-green` status post landed on the stale name-SHA instead of the new
+      tip and never satisfied the actual PR head's required check. Correct fix: resolve on `live-defi-rollout` itself
+      via the backmerge workflow, then let the next promoter tick mint a fresh, correctly-named frozen-head ref.)
+      Verified fully resolved: `batch-live-reconciliation-service` main and LDR are now tree-identical
+      (`427541269dd8...`), `quality-gates-v2` + `main-backmerge-to-ldr` both green on `main` (push run
+      31162503341/31162503702), zero open PRs. (conflict_resolver agt-8289f1, 2026-08-07)
 - [ ] [DEVOPS] P1. Re-roll + ship for the other 6 locally-confirmed repos: client-reporting-api, deployment-api,
       features-service, fund-administration-service, ibkr-gateway-infra, instruments-service (same recipe as above, one
-      commit+push per repo).
+      commit+push per repo). **Also check each for accumulated main/LDR drift from the second-order
+      `main-backmerge-to-ldr.yml` break above** — after the workflow-template re-roll, manually dispatch
+      `gh workflow run main-backmerge-to-ldr.yml --ref live-defi-rollout` for each repo BEFORE relying on the fleet
+      promoter's next tick, since any push-to-main backmerge since 2026-08-05 may have silently failed to schedule.
 - [ ] [SCRIPT] P2. Sweep the remaining ~14 fleet repos not locally checked out here (full list in
       `workspace-manifest.json`) for the same broken `runs-on: { { RUNS_ON } }` pattern in their
       `.github/workflows/*.yml`, and re-roll any that are affected.
