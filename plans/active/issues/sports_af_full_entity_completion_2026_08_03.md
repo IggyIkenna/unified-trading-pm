@@ -924,3 +924,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-07T22:50Z** — FIXTURE_STATS +45 days (`last_completed_date=2022-05-21`, fresh `22:49:35Z`), steady. odds
   smallchunk2 still chunk 18/451 (~3.5h) — 29 leagues (up from 25), 15 OOM (up from 13), zero repeats — continued
   genuine progress, root cause already established, no further deep-dive needed each tick.
+- **2026-08-07T23:17Z — CLOSED: chunk 18 cleared (3h38m total, 30 leagues, 16 OOM, 14 clean first-try).** FIXTURE_STATS
+  +72 days (`last_completed_date=2022-08-01`, fresh `23:16:40Z`), accelerating well. odds smallchunk2 now on chunk 19
+  (`2020-09-04→2020-09-08`), already moving fast (skip-fast dates), confirming off-season weeks are much cheaper as
+  hypothesized. Noted for future ticks: `PROGRESS.json` lagged the true `run.log` checkpoint by 18+ minutes at this
+  transition — cross-check `run.log`'s own `PROGRESS: chunk=N` line near a suspected boundary rather than trusting
+  `PROGRESS.json` alone. Full detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`8c34027029`.
+  Reverting to lightweight per-tick checks now that the outlier is resolved.
