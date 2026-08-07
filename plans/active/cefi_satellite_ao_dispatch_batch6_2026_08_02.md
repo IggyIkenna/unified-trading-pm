@@ -49,7 +49,7 @@ related:
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
