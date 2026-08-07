@@ -203,8 +203,8 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   first evidence the freeze-and-shrink ratchet (todo 2) actively catches net-new suppressions even when the
   mirror-the-dominant-convention instinct produces one — relevant context for the operator's open todo-3 policy call.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
-- **2026-08-07 (backend_engineer, slot 13)**: Todo 3 shipped — DEFAULT-RULED option (b). Updated
-  `/codex/06-coding-standards/quality-gates.md` § "Restoring strict basedpyright" bullet 3 to add the sanctioned
+- **2026-08-07 (backend_engineer, slot 13)**: Todo 3 shipped — DEFAULT-RULED option (b) — unified-trading-pm@d2fc4bad.
+  Updated `/codex/06-coding-standards/quality-gates.md` § "Restoring strict basedpyright" bullet 3 to add the sanctioned
   carve-out for `market_tick_data_service/cli/handlers/*.py` (blanket file-level `# pyright: reportX=false` headers
   explicitly accepted for vendor-response glue code; the STEP 5.94/5.95 ratchets contain it). Updated
   `/codex/06-coding-standards/README.md` basedpyright policy paragraph to cross-reference the carve-out. All todos
