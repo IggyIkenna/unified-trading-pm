@@ -513,3 +513,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   checkpoints at the whole-chunk boundary and this specific 2020-08-30→2020-09-03 range (a genuine European
   season-opener window) is unusually failure-prone. FIXTURE_STATS re-checked same tick: `last_completed_date=2021-11-19`
   (up from 2021-11-06), `updated=21:22:14Z` (fresh) — healthy, no action needed. No intervention on either VM this tick.
+- **2026-08-07T21:53Z — FIXTURE_STATS jumped 89 days** (`last_completed_date=2022-02-16`, was `2021-11-19`,
+  `updated=21:52:23Z` fresh) — healthy, accelerating. **smallchunk2 odds STILL on chunk 18/451** (PROGRESS.json
+  checkpoint unchanged, `2020-08-29`/`19:22:22Z` — now 2.5h stale on the checkpoint alone), but `run.log` confirms
+  continued genuine progress: 22 distinct leagues attempted this chunk now (up from 18), currently on `J1_LEAGUE`,
+  actively running (RSS cycling 10-23GiB normally, no stuck/frozen process), 12 total OOMs (up from 10, still zero
+  repeats — each OOM'd league only failed once). This chunk has now run ~2h40m; not yet escalating — self-recovery
+  remains intact and every restart is still doing real, distinct work, but flagging for whoever next touches this: if
+  it's still on chunk 18 at the NEXT tick, that would be a genuine outlier worth deeper thought (e.g. whether the full
+  league roster for this chunk is unusually long, not just unusually OOM-prone).
