@@ -225,7 +225,7 @@ outside within the 6-15 minute observation windows used before each VM was manua
 fix (part 2) helps if/when the box recovers, while the real fix for the freeze itself is removing the trigger (part 1:
 bigger machine, so the global OOM path is never entered at all).
 
-- [ ] [DATA] P2. **Wire real byte-budget admission control into the CEFI Tardis per-symbol runner** — populate
+- [x] [DATA] P2. **Wire real byte-budget admission control into the CEFI Tardis per-symbol runner** — populate
       `PerSymbolTask.estimated_bytes` (from a lightweight per-symbol/day volume estimate, if a cheap enough one exists —
       e.g. a rolling average of recently-observed row counts per symbol) so `_get_perp_runner()`'s `max_in_flight_bytes`
       gate (currently always `None`, a permanent no-op per `_await_capacity()`) becomes a real cap on
@@ -267,7 +267,7 @@ the original fix) is shared infrastructure and already worked correctly here —
 immediately instead of a silent short-fall. Relaunching the same range on the bumped machine type to close the remaining
 tail (chunk 9's unprocessed dates).
 
-- [ ] [DATA] P2. **Audit every OTHER `deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh` launcher for the same
+- [x] [DATA] P2. **Audit every OTHER `deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh` launcher for the same
       `e2-standard-4` default** — the CEFI fix and this sports fix were both reactive (applied only after an actual
       OOM-kill was observed). Given the shared `mtds_chunk_loop.sh` fan-out-with-no-byte-budget root cause is
       demonstrably NOT asset-group-specific, a proactive sweep of every sports/tradfi/defi MTDS backfill launcher's
@@ -368,7 +368,7 @@ it wasn't a reliable one for CEFI.
       consecutive real-fetch days would show whether it's an unbounded cache, an un-drained event-sink buffer, or
       accumulating asyncio/aiohttp session state. This is the durable fix; the small-chunk-size mitigation above is a
       workaround, not a repair. Repo: market-tick-data-service.
-- [ ] [DATA] P2. **Consider an adaptive/smaller default `--chunk-size` specifically for "recent history" chunks** (the
+- [x] [DATA] P2. **Consider an adaptive/smaller default `--chunk-size` specifically for "recent history" chunks** (the
       tail nearest the current date, where live-capture dormancy windows and scattered small gaps cluster densely) vs.
       the 250-day default that's proven safe for older, mostly-skip-dense history — either launcher-side (detect via a
       pre-flight gap count per chunk) or just a documented operator convention ("scope a small `--chunk-size` explicitly

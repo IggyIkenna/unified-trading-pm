@@ -168,7 +168,7 @@ context_scope:
       eligible unique cells absent from -prd — all pre-canonical-era or empty itype/dtype ghost rows, no unexpected
       post-migration data loss. Source-doc status flipped resolved; all 3 source checkboxes flipped.
 
-- [ ] [DATA] P2. **CEFI-scoped items from the mtds backfill-VM memory-hang investigation.** Three of this doc's four
+- [x] ✅ [DATA] P2. **CEFI-scoped items from the mtds backfill-VM memory-hang investigation.** Three of this doc's four
       open items are cefi-scoped (the fourth, retained-memory root-cause in the sports `odds_api` download path, is
       explicitly SPORTS-scoped and excluded here — leave for the sports tranche): (i) wire real byte-budget admission
       control (`max_in_flight_bytes`/`estimated_bytes`) into the CEFI Tardis per-symbol runner in
@@ -176,7 +176,12 @@ context_scope:
       the same `e2-standard-4` under-provisioned default; (iii) consider an adaptive/smaller default `--chunk-size` for
       recent-history chunks. Source: `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`. **Done when**: all
       3 cefi-scoped items ship with QG green, and the source doc's corresponding checkboxes are flipped citing this run
-      (leave the sports-scoped 4th item untouched for its own tranche).
+      (leave the sports-scoped 4th item untouched for its own tranche). — **DONE 2026-08-07 (slot-6)**:
+      market-tick-data-service@878b750b (PerSymbolByteEstimator + estimated_bytes wiring + config knob + 6 unit tests;
+      gate defaults opt-in at 0, QG green); deployment-service@cca27b3 (launcher audit: dex-pools bumped to e2-highmem-4
+      — same ParallelPerSymbolRunner fan-out risk; others e2-standard-4 don't use that runner; adaptive chunk-size 250→5
+      for CEFI --end within 45d of today; QG green). Source-doc 3 CEFI checkboxes flipped; sports P1 BLOCKED-CREDENTIALS
+      item left untouched.
 
 - [ ] [DIAG] P2. **Find + fix the WRITER stamping `batch_tardis` on non-Tardis on-chain CeFi venues.** Root-cause and
       fix the writer-side bug in market-tick-data-service that stamps `pipeline_mode=batch_tardis` on
