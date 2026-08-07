@@ -202,9 +202,18 @@ not a ruling — needs explicit operator sign-off before any writer/migration co
       hive=2, neither superset) — same instrument-churn class as the sibling doc's 14 disjoint pairs, not
       migration-blocking. — instruments-service (migration execution, no code change — script already shipped by todo
       3/sibling doc todo 2).
-- [ ] 5. [DATA] P2. IF todo 2 finds prediction's `canonical_question_group=` shape still live: fix that writer too (same
-      pattern as todo 3) and migrate its historical objects (same pattern as todo 4). IF todo 2 confirms
-      historical-only: just run the historical migration (no writer fix needed). Depends on todo 1 + todo 2.
+- [x] ✅ 5. [DATA] P2. **EXECUTED 2026-08-07 (slot 8, data_engineering).** Todo 2 confirmed historical-only → no writer
+      fix needed. Historical migration of prediction `canonical_question_group=` objects via
+      `migrate_instrument_availability_hive_2026_08_03.py --asset-group prediction --apply-prod --confirm-prod-write`
+      (PROD, `instruments-store-pred-prd-central-element-323112`). Results: **13,280 copied**, **2 content_mismatch**
+      (both `day=2026-07-21`, cutover day, venue=KALSHI) → resolved via `--resolve-content-mismatch`: **2 disjoint**
+      flagged for manual review (same instrument-churn class as sports todo 4's disjoint pairs, non-blocking):
+      `market_lifecycle/...day=2026-07-21/group=OTHER/venue=KALSHI` (flat=9190 vs hive=2083 ids) and
+      `instrument_availability/.../canonical_question_group=OTHER/day=2026-07-21/venue=KALSHI` (flat=2185 vs hive=196
+      ids). **0 failed.** Bug found+fixed in same turn: `_identity_column_for` used `raw_symbol` default for
+      `market_lifecycle.parquet` (no `raw_symbol` column — correct identity is `market_id`) — fixed + regression test
+      added — instruments-service@47a41699 (quickmerged to LDR). Flat sources preserved (copy-only, never deletes). —
+      instruments-service@47a41699. Depends on todo 1 + todo 2.
 
 ## Progress Log
 
