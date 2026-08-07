@@ -400,6 +400,18 @@ consolidation).
       **not attempting that design in this dispatch**: it is genuinely new engineering needing its own review, and the
       operator has separately and explicitly said stop pending a scheduled window regardless. No further production
       write made after the rollback. CF-8 remains RED on both surfaces, unchanged from the pre-session baseline.
+
+      **DESIGN DIRECTION CONFIRMED 2026-08-07 (operator: "i authorize")** — the per-service_name-scoped write-group
+          approach above (group target rows by their OWN original `service_name`, write each group through a
+          `ManifestWriter` constructed with THAT service_name, not the fixed per-surface value) is confirmed as the right
+          direction. **Design confirmed, NOT yet built/reviewed/executed** — this is still "new, unreviewed engineering"
+          per the finding above; confirming the direction doesn't skip the actual implementation + review step, nor the
+          maintenance-window coordination `sports_consolidated_closeout_2026_07_19.md`'s Track H todo above now
+          authorizes separately. Someone still needs to: (1) implement the per-service_name grouping in
+          `sports_captured_available_at_targeted_backfill_2026_07_14.py` (currently DO-NOT-RUN-AT-SCALE per its own
+          docstring), (2) get it reviewed given the 2 prior regressions in this area, (3) run it inside a coordinated
+          maintenance window with pre-snapshots, matching the 2026-07-14 attempt's own safe rollback pattern.
+
 - [x] ✅ [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
       `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
       contributes to the captured-row `available_at` gap above — flagged as a plausible mechanism (a high-row-count

@@ -741,7 +741,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       built + unit-tested, never run in production; CF-8 stays ~40-50% `available_at` fill until it does. Lift operator
       stop `BLK-d9137d48` and clear the still-false backlog parking-gate condition
       (`sports-cf8-maintenance-window-scheduled`) to run it. Detail:
-      `sports_cf8_available_at_backfill_regression_2026_07_13.md`.
+      `sports_cf8_available_at_backfill_regression_2026_07_13.md`. **AUTHORIZED 2026-08-07** — `BLK-d9137d48` lifted;
+      not executed this pass (prior regressions + a coordinate-first lesson mean real scheduling care), see that doc.
 
 ## Track V — COVERAGE: backfill to honest-100% · P1 (operator-gated where noted)
 

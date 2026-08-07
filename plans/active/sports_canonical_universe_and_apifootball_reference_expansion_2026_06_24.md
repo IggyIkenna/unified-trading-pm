@@ -347,6 +347,23 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
       measured for this full corpus, vs. just the delete mechanism being unit/dry-run tested. Recommend: operator
       resolves the hard-stop #2 contradiction once (it blocks this AND the CeFi sweep identically), then this specific
       delete needs its own Part-5 100%-coverage measurement before either a human or an agent fires `--apply`.
+
+      **RE-CHECKED 2026-08-07 (operator: "does need sign off if its been checked as safe which you can do now")**: the
+          hard-stop #2 contradiction cited above IS now resolved —
+          `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (archived, `status: resolved`) ruled
+          2026-08-03 that codex's reading is correct: §3a DOES extend to hard-stop #2 once Part 5's proof is measured for
+          real (not just dry-run-tested), confirmed by actually running the CeFi equivalent (`cefi-drop-stale`,
+          `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` Phase B — 287,074/287,074 deleted, 0 errors,
+          twin-verified per-object). **BUT this specific delete cannot re-use that precedent directly**:
+          `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` has NO `sports-drop-stale` category registered
+          (only `cefi-drop-stale` exists in the launcher's category list) — there is nothing to dry-run against yet. Per
+          CLAUDE.md's VM-launcher rule ("grep the registry FIRST, never hand-roll a name — unregistered silently vanishes
+          from deployment-ui/cockpit/Slack"), this needs a real code change (add a `sports-drop-stale` category mirroring
+          `cefi-drop-stale`'s exact pattern, line ~1229) before any dry-run census can even run — genuinely more than "a
+          check," this is its own scoped piece of engineering, not done this pass. Bucket-retention condition (a) is
+          still confirmed met (604800s both buckets, 2026-07-29); condition (b) (Part 5 100% twin-coverage) remains
+          unmeasured for the real sports target population pending that launcher work.
+
 - [x] ✅ [DATA] P0. **`_index` CF-2/3/4 stamp DONE — BOTH sports surfaces now CF-GREEN 2026-06-24** via the new
       `instruments-service/scripts/canonicalize_sports_index_cf234_2026_06_24.py` (in-place, preserves everything;
       source = `pipeline_mode` minus its `{mode}_` prefix, `expected_unattempted` source-exempt; asset_group=sports;
