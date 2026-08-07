@@ -251,6 +251,16 @@ surface that actually exists (warm + cold event-log tiers).
   `bash deployment-service/scripts/jobs/run-compactor-date-range-backfill.sh` for 2026-08-01..2026-08-07. Background
   driver `busop6lkg` stopped (was waiting for jhsb7 SUCCEEDED which won't happen). Heartbeat b042b84yx last fired at
   13:44 UTC.
+- **2026-08-07 ~12:40–13:53 UTC (slot-9 worker, backend_engineer, BACKEND P0 deploy + verification)**: (1) Lock file
+  chore fix shipped: removed stale `registry.terraform.io/hashicorp/google` v7.38.0 block from `.terraform.lock.hcl`,
+  added `registry.opentofu.org/hashicorp/google` v7.43.0 hashes — deployment-service@e958a8e. (2) Ran
+  `tofu init -reconfigure` + `tofu apply -target=google_cloud_run_v2_job.live_event_log_compactor` (scoped to avoid
+  52-BigQuery-table destroy) — job updated to 4Gi/2CPU at 2026-08-07T12:40:38Z. (3) Monitored
+  `live-event-log-compactor-jhsb7` (started 12:41 UTC) for 70+ min — no OOM (vs. <5-min kill on old 512Mi/1CPU); OOM fix
+  confirmed. jhsb7 cancelled at ~13:51 UTC by slot-11 (correct: old code would loop ~11h on NDJSON files). (4) Started
+  `live-event-log-compactor-qrvw8` at 13:53 UTC (async, no --wait); immediately cancelled at ~13:55 UTC on learning
+  d5f850f NDJSON fix not yet deployed in image — avoided ~3h of wasted compute on old code. BACKEND P0 checkbox flipped
+  by slot-11 (unified-trading-pm@05c9ed5c7).
 - **2026-08-07 ~13:13 UTC (slot-11 worker, data_engineering, second pre-compact checkpoint)**: jhsb7 STILL RUNNING
   (runningCount=1, no completion time, 31 min elapsed). OOM fix confirmed: previous runs died in ~5 min on 512Mi; jhsb7
   has been alive 31 min under 4Gi/2CPU. **NEW FINDING: all 1497 cefi/book_snapshot_5 warm files for 2026-08-06 fail
