@@ -294,3 +294,10 @@ should stay NA regardless of which option is picked.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator sign-off required, SUPERSEDED/DO-NOT items, adversarial
 verification
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, valid — re-verified all 5 open
+items. Only change since the last marker was a `context_scope` path fixup (one archived-doc reference corrected), zero
+content/todo change — confirmed via `git show 50b8643dc`. `locked_by: live-defi-rollout` (since 2026-05-21) + item [A]'s
+own "operator sign-off required, not an autonomous ship" text still govern; [B] stays blocked-on-[A]; the 2 struck items
+remain correctly ruled-out (not open work); the extracted/stale sub-clause still cites its done-elsewhere commits. No
+`assigned_vm` change.

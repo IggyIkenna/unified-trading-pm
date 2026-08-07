@@ -102,7 +102,7 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
 
 ## Todos
 
-- [ ] 1. [INFRA] P3. Once the fresh post-mitigation `quality-gates-v2` run (triggered this session) completes, record
+- [x] ✅ 1. [INFRA] P3. Once the fresh post-mitigation `quality-gates-v2` run (triggered this session) completes, record
       the outcome here. If GREEN: confirms a 300s repo-local budget clears this specific severity of contention for
       unified-trading-api; consider this the template for any OTHER repo that similarly fails to self-clear (i.e., a
       per-repo `PYTEST_TIMEOUT` override is preferable to indefinite blind retries once a repo shows sustained,
@@ -110,7 +110,14 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
       severity now exceeds what a 2x budget raise absorbs — escalate to the parent capacity-crisis doc
       (`/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`) rather than raising the
       timeout further in isolation (per that doc's own conclusion: repeatedly raising a deadline "moves the threshold,
-      does not close the class").
+      does not close the class"). **MOOT — closed 2026-08-07 (na-eligibility-audit)**: `unified-trading-api` run
+      `30773174599` itself was never individually re-checked (no follow-up entry for that repo), but the underlying
+      question this todo was gating — GREEN→template, RED→escalate — was answered live by other repos since: the "if
+      RED, escalate" branch fired for real on `features-service` (`agt-3bc731`) and
+      `market-data-processing-service`/`execution-service` (`agt-876d77`, `agt-e718ef`), and the capacity-side fix that
+      escalation pointed to (`qg_governor_glue_runner_ledger_coordination_2026_08_03.md`) has since landed, been
+      live-validated, and archived (see `_continued2` sibling doc's 2026-08-03 ~21:50Z entry). Re-checking this one
+      stale run today would not change anything downstream.
 - [ ] 2. [INFRA] P3. If todo 1 confirms the fix, consider whether other repos in the parent doc's `repos:` list with
       recurring (not just single) unified-trading-api-style sustained-red occurrences would benefit from the same
       repo-local `PYTEST_TIMEOUT` raise, rather than relying solely on retries. Not done proactively here — scope
@@ -943,3 +950,9 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — OPERATOR escalation dedup, event-driven observation follow-ups
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, `agt-cbbd1f`): KEEP-NA, 1 stale item closed — todo 1
+(unified-trading-api run 30773174599 outcome) is moot in substance (question answered live by other repos + the capacity
+fix landed/archived since); todos 2-3 remain genuinely open (design-scope + operator-ruled-but-unimplemented cooldown
+guard). Doc near the 1000L hard cap (952L) — keeping this entry minimal; next touch should consider splitting per the
+doc's own note.

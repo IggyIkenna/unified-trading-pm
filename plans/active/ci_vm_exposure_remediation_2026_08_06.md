@@ -138,7 +138,11 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
       by the pinned runner version (2.335.1) and behaves correctly for JIT-ephemeral (`glue-N`) runners specifically,
       (2) canary on ONE low-traffic pool before fleet-wide rollout (mirrors this exact codebase's own established canary
       discipline for the VM migration itself), (3) size K from real measured per-run resource cost, not a guess. Left as
-      an open todo, not falsely marked done.
+      an open todo, not falsely marked done. **Mechanism correction 2026-08-07 (na-eligibility-audit)**:
+      `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` Part 2 Finding 6 (dated 2026-08-06, i.e.
+      written after this recommendation) amends this to wrap **reservation** mode, not **token** mode — reservation
+      carries the per-repo RAM baselines, which is what that doc's own OOM evidence says actually binds. Whoever picks
+      this todo up should build against reservation mode, not token mode as literally written above.
 
 ## Progress Log
 
@@ -159,3 +163,9 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
   this VM's own on-disk state (swapfile, `.env.local`) — no codex doc claims authority over per-VM state.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator-driven human plan, concurrency cap investigation ongoing
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, valid — sole open todo (3,
+fleet-wide CI concurrency cap) remains a genuine judgment call: high-blast-radius host-hook rollout needing canary
+sizing from real measurements, not a checkable fact. Corrected a stale sub-detail: the todo's own recommended mechanism
+(`qg-host-governor.sh` TOKEN mode) is superseded by a later sibling-doc amendment (reservation mode) — added an inline
+correction so a future implementer doesn't build against the wrong mode. No `assigned_vm` change.

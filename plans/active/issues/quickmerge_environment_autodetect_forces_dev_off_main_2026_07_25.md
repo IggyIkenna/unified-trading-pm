@@ -172,11 +172,14 @@ change needs a caller audit across the repo before touching it — out of scope 
 
 ## Todos
 
-- [ ] [INFRA] P2. **Finish the quickmerge environment auto-detect follow-up** — steps 2-4 above (align
-      `UnifiedCloudServicesConfig.environment`'s alias precedence with `BaseConfig.environment`'s, then revisit whether
-      `scripts/quickmerge.sh`'s branch check should broaden to `live-defi-rollout`/`staging`, then grep the other ~20
-      repos for the same ambient-default-reliant test pattern) remain unstarted. (steps 2+4 tracked in
-      `ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 2, status: draft; step 3 tracked there as Deferred D4-1)
+- [ ] [INFRA] P2. **Finish the quickmerge environment auto-detect follow-up.** **Steps 2+4 are DONE, only step 3
+      remains** — corrected 2026-08-07 (na-eligibility-audit; the text below was stale, see marker below for why): step
+      3 (revisit whether `scripts/quickmerge.sh`'s branch check should broaden to `live-defi-rollout`/`staging`) is the
+      only genuinely open sub-item — tracked in `ci_satellite_ao_dispatch_batch4_2026_07_31.md` as Deferred **D4-1**
+      (`status: active`, but D4-1 itself sits in the Conflict-gated/Deferred section, not currently dispatched by any
+      active todo — gated on `scripts/quickmerge.sh` ownership contention with that batch's own todo 1). It is a
+      design/judgment call on the fleet-wide shipping-pipeline gate every repo depends on — appropriately stays NA even
+      with steps 2/4's risk reduced.
 
 ## na-eligibility-audit verdict
 
@@ -231,3 +234,11 @@ ci_satellite_ao_dispatch_batch4_2026_07_31.md todo 2 (draft)
     Result: **none found** — no other repo carries the risky pattern. All checked repos either use `model_construct`,
     `monkeypatch`/`setdefault` to set env explicitly, accept flexible multi-value assertions, or mock settings objects
     directly. Fleet is clean.
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, stale checkbox text fixed — the
+doc's own Progress Log already recorded steps 2+4 as done (`worker slot-15 2026-08-06`,
+`unified-trading-library@dc1dc7df`) but the todo checkbox itself still described all of steps 2-4 as "unstarted" and
+cited `ci_satellite_ao_dispatch_batch4_2026_07_31.md` as `status: draft` (it has been `status: active` since creation,
+same stale-wording class found elsewhere in this tranche today). Rewrote the checkbox to name step 3 as the sole
+remaining item. Step 3 itself (D4-1, `scripts/quickmerge.sh` branch-check broadening) stays a genuine design/judgment
+call — no `assigned_vm` change. `locked_by` anomaly (flagged 2026-08-01, still unactioned) unchanged.

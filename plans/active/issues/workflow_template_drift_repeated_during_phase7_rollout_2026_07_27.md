@@ -165,3 +165,9 @@ stand
   pre-push `check-strict-quickmerge` hook accepts `plans/**`-only commits, so the docs flip shipped directly without
   touching any workflow copy. Next recurrence with docs-only content: same carve-out. With CODE content: must wait for
   the rollout owner to re-baseline or coordinate per this doc.
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, valid — re-verified both open
+items. Item 1 is an open-ended design question ("consider whether... could roll out in one atomic pass"), no decided
+mechanism. Item 2 is a standing conditional runbook, not a pending action — confirmed still being actively exercised
+live (a 2026-08-06 tradfi-tranche auditor hit the same drift gate, followed this doc's own step-3 diagnostic, and
+correctly used the docs-only carve-out rather than fixing code). No `assigned_vm` change.

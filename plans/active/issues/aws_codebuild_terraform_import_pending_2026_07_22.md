@@ -229,4 +229,12 @@ correctly NA.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — DO-NOT-APPLY banner, operator rulings table, prior verdicts stand
 
+**na-eligibility-audit 2026-08-07** (tranche `ci`, autonomous, `agt-cbbd1f`): KEEP-NA, valid — re-verified. Doc's own
+top-of-doc 🟡 banner (2026-07-30) reclassified this NA and states the residual work is a per-attribute "is live right,
+or is the TF right?" judgment call, not AO-dispatchable. Checked the doc's most recent touching commit (`13f80f797`,
+2026-08-06, "rule on remaining P2 operator decisions from the governance sweep") — reworded the `[OPERATOR]` todo but
+explicitly declined to rule on D1-D4 ("weren't in scope of this governance pass"); cross-checked against
+`governance_sweep_deferred_followups_2026_08_06.md:143-145`, which independently still carries the same open
+`[OPERATOR]` todo. All 3 open items chained behind the single unruled D1-D4 gate. No `assigned_vm` change.
+
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged.
