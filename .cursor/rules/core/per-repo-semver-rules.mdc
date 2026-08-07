@@ -12,7 +12,7 @@ tags:
 # Per-Repo Semver Change Classification Rules
 
 SSOT: `unified-trading-pm/docs/per-repo-semver-rules.yaml`
-Semver hardening rule: `unified-trading-pm/cursor-rules/core/semver-v1-hardening.mdc`
+Semver hardening rule: `unified-trading-pm/.cursor/rules/core/semver-v1-hardening.mdc`
 
 ---
 

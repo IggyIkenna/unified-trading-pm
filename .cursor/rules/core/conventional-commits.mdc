@@ -81,4 +81,4 @@ version bump (e.g. `1.4.2` → `2.0.0`) in the CI.
 Consumers of that library MUST then update their `pyproject.toml` version constraint and fix
 call sites before their next merge to main.
 
-See full protocol: `cursor-rules/dependencies/breaking-change-major-version-protocol.mdc`
+See full protocol: `.cursor/rules/dependencies/breaking-change-major-version-protocol.mdc`
