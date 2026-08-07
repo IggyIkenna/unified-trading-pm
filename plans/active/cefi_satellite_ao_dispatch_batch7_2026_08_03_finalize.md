@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-03"
-last_updated: "2026-08-03"
+last_updated: "2026-08-07"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -64,7 +64,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** Batch 7's 3 todos draw from 3 source docs:
+- [x] ✅ [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** Batch 7's 3 todos draw from 3 source docs:
       `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (Phase 1, all 3 todos only — Phases 2-5 stay
       open, `[OPERATOR]`-gated per that doc's own hard-ordering),
       `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (this doc is DELETED by batch7's todo 2,
@@ -77,7 +77,17 @@ context_scope:
       `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s P1.2 was updated with the correct
       ledger-root pointer (per batch7 todo 3's own done-when). **Done when**: every landed todo's source checkbox is
       flipped with a verified commit (or, for the deleted doc, its removal is confirmed), and each source doc's
-      remaining-open count is explicitly re-stated rather than assumed.
+      remaining-open count is explicitly re-stated rather than assumed. **Verified 2026-08-07 (slot 11):** (1)
+      `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (archived at `/plans/archive/2026_08/`):
+      Phase 1 todos 1–3 all `[x] ✅` citing `market-tick-data-service@24f11df7` (verified reachable on
+      `origin/live-defi-rollout`). Entire plan now `status: complete` + archived — Phases 2–5 also done-elsewhere
+      post-batch7-draft. Remaining open: 0. (2) `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md`:
+      confirmed absent from `plans/active/issues/` — removed by `unified-trading-pm@82d6d6bf7` (verified reachable), an
+      unrelated hygiene sweep that landed before batch7 todo 2 could dispatch. No reconciliation needed; doc gone. (3)
+      `issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`: `[DIAG] P2` is `[x] ✅` (flipped in
+      `unified-trading-pm@039fcbe72`, verified reachable, slot 15). Remaining open: 1 — `[DECISION] P2` `[OPERATOR]`
+      item, strategy-desk ruling still awaited (unchanged). Todo 3 DIAG finding was NO → no
+      `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` P1.2 update triggered.
 
 - [ ] [REVIEW] P1. **Re-check the two items carried forward from batch6's Deferred section for cleared gates.** (a) Has
       `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" todo
@@ -107,3 +117,9 @@ context_scope:
 
 - **context-scout 2026-08-03**: re-confirmed context_scope (3 entries) unchanged — `_finalize` gate doc, no source-code
   paths added per the skip-source carve-out.
+- **2026-08-07 (slot 11 · `cefi_satellite_ao_dispatch_batch7_2026_08_03_finalize-001`)**: 1. ✅ [REVIEW] P1 — verified
+  all 3 source doc checkboxes: (1) migration doc Phase 1 todos 1–3 all ✅ (`market-tick-data-service@24f11df7`, plan
+  archived, 0 remaining open); (2) mdps candle issue doc confirmed deleted (`unified-trading-pm@82d6d6bf7`); (3)
+  no-active-paper-run doc `[DIAG] P2` ✅ (`unified-trading-pm@039fcbe72`, finding: NO, 1 `[OPERATOR]` item still open).
+  No P1.2 ledger-pointer update needed (DIAG finding was NO). All cited commits verified reachable on
+  `origin/live-defi-rollout`.
