@@ -363,6 +363,35 @@ failure_modes:
         "resolved-bookend for DP_VM_PREEMPTED — the relaunch subprocess exited 0 and the preempted backfill is running
         again",
     }
+  - {
+      id: DP-VM-012,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_CLOUD_RUN_SERVICE_DOWN,
+      detector: cloud_run_service_liveness_tf,
+      kind: terraform,
+      escalation: page_operator,
+      status: verbose,
+      fires:
+        "Cloud Run Service liveness policy fired (memory >85% / crash-loop 2+ restarts / 0 active instances >30m).
+        Covers market-data-query-service / central-market-data-tardis-loader / uts-prod-data-status-rollup-svc
+        (infra_health_audit_alert_coverage_gaps_2026_08_07.md finding A).",
+    }
+  - {
+      id: DP-VM-013,
+      category: VM,
+      severity: WARN,
+      event: DP_CLOUD_RUN_JOB_EXEC_FAILED,
+      detector: cloud_run_job_exec_watcher,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires:
+        "Most-recent completed Cloud Run Job execution has failed_count > 0 for any job in
+        cloud_run_job_registry.CLOUD_RUN_JOBS. Fleet-wide — generalises the consolidator-family
+        OOM detector (DP-WATCHER-005) to all registered jobs
+        (infra_health_audit_alert_coverage_gaps_2026_08_07.md todo 2).",
+    }
 
   # --- DP-RATE (class C5) ---
   - {
