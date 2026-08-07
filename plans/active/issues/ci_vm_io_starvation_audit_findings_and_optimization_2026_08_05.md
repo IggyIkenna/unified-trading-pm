@@ -559,11 +559,17 @@ traffic to count until the migration is finished. What is certain is that their 
       on these numbers, a direct cause of the 6 OOM kills. Include both UI repos (22 MB / 541 MB — implausible) and
       re-measure under realistic concurrency, not `measured_concurrency: 1`.
 
-- [ ] [INFRA] P1. **Complete the public-repo migration.** Flip every public repo's workflows to `ubuntu-latest` and
-      remove their glue pools. Fixes `instruments-service` / `market-data-processing-service` (targeting self-hosted
-      with zero runners), harvests free minutes, removes the security exposure, and cuts the VM's workload to the 7
-      private repos (~36% of fleet cpu-s). **Supersedes** the 08-05 "flip PM's remaining workflow copies to self-hosted"
-      todo — PM is public, so that flip is now the wrong direction.
+- [x] ✅ [INFRA] P1. **Complete the public-repo migration — DONE 2026-08-07.** `instruments-service` /
+      `market-data-processing-service` confirmed fixed (re-rendered templates, zero self-hosted refs, latest
+      `quality-gates-v2` runs green on `ubuntu-latest`). PM's own ~40 self-hosted-routed workflows fully reverted
+      (`unified-trading-pm@c8cd56251e`, `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24) — `runs-on`
+      flipped via `hosted-baseline.sh` + 5 hand-reviewed files (3 needed a restored `actions/setup-python` step the
+      tool's mechanical `restore` had silently dropped — a real gap in the tool, not caught by its own `verify`).
+      Live-verified: `QG slice (tests)` green on `ubuntu-latest` for the post-revert commit (run 31174345746); PM's 8
+      self-hosted runners (`glue-1..5`, `writer-1..3`) deregistered from GitHub + their systemd units stopped/disabled
+      on the CI VM (confirmed `inactive`, no re-registration); the other 7 private repos' pools confirmed untouched. VM
+      workload is now the 7 private repos only (~36% of original fleet cpu-s). **Supersedes** the 08-05 "flip PM's
+      remaining workflow copies to self-hosted" todo — PM is public, so that flip was always the wrong direction.
 
 - [ ] [INFRA] P1. **Stagger the `ldr-to-main-promote-fleet` fan-out.** The synchronised burst is what sizes the box:
       3,809 cpu-s over 15 min needs 4.2 cores; as one burst it needs 16. Pure software, zero capacity cost, largest
@@ -583,9 +589,26 @@ traffic to count until the migration is finished. What is certain is that their 
       `cp -al` shared-venv half: no I/O saving, and unsafe on ext4. **Supersedes** the 08-05 "shared bare repos +
       pre-built external venvs + worktree-based QG execution" todo.
 
-- [ ] [OPERATOR] P2. **Downsize the CI VM to `m8i.2xlarge` (8 vCPU / 32 GB)** once the items above land and a fresh wave
-      is measured. **Keep 32 GB** — 29.7 GB observed slice peak plus 6 OOM kills rule out 16 GB today. Re-provision the
-      volume to the 2xlarge's sustainable ceiling (12,000 IOPS / 312 MB/s), **not** 16,000/1,000.
+- [ ] [OPERATOR] P2. **Downsize the CI VM to `m8i.2xlarge` (8 vCPU / 32 GB)** once a fresh wave is measured against the
+      NOW-COMPLETE public-repo migration (the item above). **Keep 32 GB** — 29.7 GB observed slice peak plus 6 OOM kills
+      rule out 16 GB today. Re-provision the volume to the 2xlarge's sustainable ceiling (12,000 IOPS / 312 MB/s),
+      **not** 16,000/1,000. **24h usage-reduction tracking window opened 2026-08-07 (operator-set target check:
+      2026-08-08 11:00 UTC)** — before/after readings on `i-042a6332509482556` via SSM
+      (`aws ssm send-command ... uptime && free -h && systemctl list-units 'github-glue-runner@*'`):
+
+      | Reading | Before (2026-08-07 ~10:50 UTC, pre-PM-revert) | Immediately after PM revert (2026-08-07 ~11:39 UTC) |
+          | ------- | ---------------------------------------------- | ----------------------------------------------------- |
+          | Load avg (1/5/15m) | 0.39 / 0.90 / 1.06 | 0.02 / 0.15 / 0.36 |
+          | RAM used / total | 2.5Gi / 30Gi | 1.9Gi / 30Gi |
+          | Swap used | 507Mi / 15Gi | 326Mi / 15Gi |
+          | Registered runner units (fleet-wide) | 73 (`gh api` count) | 65 (73 − PM's 8; other 7 private repos confirmed unchanged) |
+
+          Both readings are quiet-moment snapshots, not load-average-under-a-real-wave — the actual downsize decision
+          needs a fresh wave measurement (per the P0 re-baseline item above) during real `ldr-to-main-promote-fleet`
+          traffic, not just this idle-vs-idle comparison. **At/after 2026-08-08 11:00 UTC**: re-run the same SSM readings,
+          compare against a live wave's cpu_s (not just idle load average), and if the picture holds, proceed with the
+          resize (stop → `aws ec2 modify-instance-attribute --instance-type m8i.2xlarge` → start → re-provision the EBS
+          volume → start).
 
 - [ ] [INFRA] P2. **Reap the governor marker-file leak** — 344 stale `running.<pid>` files accumulating ~115/day in the
       shared coordination dir any new concurrency work would build on.
@@ -613,16 +636,16 @@ traffic to count until the migration is finished. What is certain is that their 
 
 ## Deferred work after 2026-08-06
 
-| Item                                              | State                  | Blocked on                                                      |
-| ------------------------------------------------- | ---------------------- | --------------------------------------------------------------- |
-| Re-measure job-minutes post-cache-fix             | **Cannot be done yet** | ~24 h of elapsed traffic. Gates every sizing decision.          |
-| Re-baseline `qg_resource_baseline.json`           | **Not done**           | Nobody — real work, and the governor over-admits until it lands |
-| Complete public-repo → `ubuntu-latest` migration  | **Not done**           | Nobody (but see the operator row — same decision surface)       |
-| Harden/remove self-hosted runners on public repos | **Operator-owned**     | Repo visibility + org actions policy; not agent-changeable      |
-| Downsize CI VM / planning VM                      | **Operator-owned**     | Gated on the re-measure above landing first                     |
-| Could any of the 7 private repos go public?       | **Operator-owned**     | Business call on repo contents; would zero their CI cost        |
-| Fix the 6 plan-hygiene ratchets                   | **Not done**           | Nobody — PM's LDR→main promotion stays blocked until fixed      |
-| Sibling-clone I/O (bare repos + worktree)         | **Not done**           | Low priority — 8–11s/job, dwarfed by what was just removed      |
+| Item                                              | State                  | Blocked on                                                       |
+| ------------------------------------------------- | ---------------------- | ---------------------------------------------------------------- |
+| Re-measure job-minutes post-cache-fix             | **Cannot be done yet** | ~24 h of elapsed traffic. Gates every sizing decision.           |
+| Re-baseline `qg_resource_baseline.json`           | **Not done**           | Nobody — real work, and the governor over-admits until it lands  |
+| Complete public-repo → `ubuntu-latest` migration  | **DONE 2026-08-07**    | —                                                                |
+| Harden/remove self-hosted runners on public repos | **DONE 2026-08-07**    | PM's own revert closed the last public-repo self-hosted exposure |
+| Downsize CI VM / planning VM                      | **Operator-owned**     | 24h tracking window open, target check 2026-08-08 11:00 UTC      |
+| Could any of the 7 private repos go public?       | **Operator-owned**     | Business call on repo contents; would zero their CI cost         |
+| Fix the 6 plan-hygiene ratchets                   | **Not done**           | Nobody — PM's LDR→main promotion stays blocked until fixed       |
+| Sibling-clone I/O (bare repos + worktree)         | **Not done**           | Low priority — 8–11s/job, dwarfed by what was just removed       |
 
 **Recommended NEXT item: fix the 6 plan-hygiene ratchets.** It is the only P0 that is neither operator-gated nor waiting
 on elapsed time, and PM's promotion pipeline re-fails every ~15 min until it is done. The re-measure runs itself in the
@@ -631,6 +654,30 @@ background of that work.
 ---
 
 ## Progress Log
+
+- **2026-08-07 (interactive session)** — Closed the public-repo migration for real: fixed `instruments-service` /
+  `market-data-processing-service` (already resolved by concurrent work, confirmed via `gh run list` — both green on
+  `ubuntu-latest`) and shipped PM's own full revert (`unified-trading-pm@c8cd56251e`,
+  `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24) — ~40 workflows, `self-hosted-qg-repos.txt`, and the
+  `hosted-baseline.sh` snapshot/manifest. Found and fixed a real gap in `hosted-baseline.sh restore --all`: its
+  "mechanical flip" classifier only inspects the FIRST commit that introduced a self-hosted `runs-on` line, so 3 files
+  (`readiness-verifier.yml`, `ruleset-drift-alert.yml`, `reconcile-release-tags.yml`) whose `actions/setup-python` /
+  Firestore-SDK-install steps were removed in a LATER commit got silently restored to `ubuntu-latest` with those steps
+  still missing — caught via a fleet-wide grep for python/uv/gcloud usage without a matching setup step, fixed by hand
+  from each file's true first-flip-commit parent. Verified live: `QG slice (tests)` green on `ubuntu-latest` for the
+  post-revert commit (workflow_dispatch run 31174345746); the only failing leg (`QG slice (checks)`) is the
+  pre-existing, unrelated plan-hygiene ratchet failure (`check_reference_paths`/`check_terminal_status_archived`, from
+  other agents' concurrent commits, not this change). Deregistered PM's 8 self-hosted runners
+  (`glue-1..5`/`writer-1..3`) from GitHub and stopped+disabled their systemd units + PM's dedicated token/slot-refresh
+  timers on the CI VM (confirmed `inactive`, no re-registration after 15s+; the other 7 private repos' pools confirmed
+  untouched). Captured before/after quiet-moment CI-VM readings (load avg, RAM, swap, runner-unit count — table above)
+  and opened a 24h usage-reduction tracking window, operator-set target check 2026-08-08 11:00 UTC, for the CI-VM
+  downsize decision. **Process note**: two consecutive `quickmerge.sh --files` invocations hit the shared-clone
+  concurrent-commit race (`shared_clone_concurrent_commit_message_swap_2026_07_28.md`) — the "already committed, no diff
+  to stage" check raced against a DIFFERENT concurrent agent's commit and silently produced a no-op (verified via a
+  direct `git show origin/...` content check, not just trusting the tool's "✅ Landed" message). Recovered by committing
+  the exact file list directly (`git add -- <files>` + `git commit`) before re-invoking quickmerge, which then pushed
+  correctly — worth remembering as the standard recovery move if this recurs.
 
 - **2026-08-06 (cache-cost session, cont.)** — Traced the "clone is expensive" hypothesis and **falsified it**:
   `Checkout` is 1–2s (persistent `_work`, `.git` survives, `fetch-depth: 2`). The real cost was `actions/cache` on

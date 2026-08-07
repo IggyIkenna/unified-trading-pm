@@ -254,25 +254,34 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 - [x] 19. ✅ [INFRA] P1. **`unified-trading-system-ui` reverted** — `unified-trading-system-ui@6441e477`, every
       self-hosted workflow reverted EXCEPT `ui-quality-gates-v2.yml` (already correctly `ubuntu-latest`); full QG green
       (254s), landed.
-- [ ] 24. [INFRA] P1. **Revert `unified-trading-pm`'s own self-hosted workflows to `ubuntu-latest`, now that PM itself
-      is PUBLIC (flipped 2026-08-06, see Progress Log below).** PM is the one repo in the private-8 where
-      `hosted-baseline.sh` actually applies (its snapshot covers ~56 of PM's own workflow filenames — confirmed
-      PM-scoped-only by todo 2 above) — treat this with the SAME per-file mechanism-landscape care as the 17-repo
-      revert, not a blind find-replace: (a) remove `unified-trading-pm` from
-      `scripts/workflow-templates/self-hosted-qg-repos.txt` and re-run `rollout-workflow-templates.sh` for PM to
-      regenerate the ~9 `{{RUNS_ON}}`-templated files + the `quality-gates-v2.yml`/`semver-agent.yml` `.tmpl`-rendered
-      files (including PM's own copy of `python-quality-gates-v2.yml`'s `self_hosted_runner_labels` input — the
-      mechanism confirmed in todo 23 as what actually governs the heavy `qg-slices` job); (b) for PM-only bespoke files
-      not covered by any template (the ~39 MOVE-classified set from the now-superseded
-      `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md`, all already self-hosted per that plan's
-      Progress Log), triage each individually the same way that plan's Tier-A/Tier-B split did — Tier-B
-      trading-pipeline-adjacent files (`cloud-build-router.yml`, `sit-gate.yml`, `ldr-to-main-promote.yml`, etc.) get
-      one-at-a-time flip + a real triggered-run verification before moving to the next, never a batch commit; (c) leave
-      the 7 fleet-health-watchdog-class files (mirroring the reasoning already used for
-      `cloud-build-failure-watcher.yml` etc. in this plan's own Findings section) on `ubuntu-latest` regardless — they
-      need to detect an outage of the thing they'd be running on if self-hosted. Evidence: per-file commit SHA(s) +
-      `grep -rn 'runs-on:.*self-hosted' unified-trading-pm/.github/workflows/` showing only the deliberately-kept
-      watchdog files remain.
+- [x] ✅ 24. [INFRA] P1. **Revert `unified-trading-pm`'s own self-hosted workflows to `ubuntu-latest` — DONE
+      2026-08-07.** `unified-trading-pm@c8cd56251e`. (a) Removed `unified-trading-pm` from
+      `scripts/workflow-templates/self-hosted-qg-repos.txt`;
+      `rollout-workflow-templates.sh --dry-run --repo     unified-trading-pm` showed 0 diffs (PM's own
+      `quality-gates-v2.yml`/`python-quality-gates-v2.yml` are NOT template-rendered targets of that script — they're
+      hand-maintained locally, confirmed by the file's own comment "PM's local `uses: ./...` self-call fell outside that
+      script's scope"), so `self_hosted_runner_labels` was hand- edited to `""` instead. (b) ~40 bespoke files reverted
+      via `hosted-baseline.sh restore` (per-file, not `--all`, since 3 files' baselines were genuinely logic-stale) + 5
+      hand-reviewed exceptions requiring real archaeology: `ldr-docs-gate.yml` and `version-coherence-check.yml` (BORN
+      self-hosted, no hosted ancestor — the former needed a new `actions/setup-python` + `pip install pyyaml` step added
+      since it has no ambient venv to fall back on; the latter was already safe as-is, has its own auth +
+      self-installing Firestore SDK); `reconcile-staging-versions.yml` / `staging-to-main.yml` (mechanical flip, no
+      missing steps); `ldr-to-main-promote.yml` (already `ubuntu-latest` from an unrelated 2026-08-06 emergency revert —
+      just updated the stale "temporary, flip back" comment to record this is now permanent). (c) The 7ish
+      fleet-health-watchdog files were never touched — confirmed still `ubuntu-latest`. **Real gap found in
+      `hosted-baseline.sh`'s own `restore --all`**: its mechanical-flip classifier only inspects the FIRST commit that
+      ever introduced a self-hosted `runs-on` line — 3 files (`readiness-verifier.yml`, `ruleset-drift-alert.yml`,
+      `reconcile-release-tags.yml`) had their `actions/setup-     python` / Firestore-install steps deleted in a LATER
+      commit, so the tool's own `restore --all` silently produced a broken (Python/deps-less) `ubuntu-latest` workflow
+      for all 3 — caught via a fleet-wide grep for python/uv/ gcloud usage lacking any matching setup step, fixed by
+      hand from each file's true first-flip-commit parent (`git log --reverse -G'runs-on:\[self-hosted'`). Evidence:
+      `grep -rn 'runs-on:.*self-hosted'     unified-trading-pm/.github/workflows/` shows zero real routing lines left
+      (only historical comments); `QG slice     (tests)` green on `ubuntu-latest` for the post-revert commit
+      (`workflow_dispatch` run 31174345746 — the only failing leg, `QG slice (checks)`, is the pre-existing unrelated
+      plan-hygiene ratchet failure). PM's 8 self-hosted runners deregistered from GitHub + systemd units
+      stopped/disabled on the CI VM, confirmed `inactive` with no re-registration; other 7 private repos' pools
+      confirmed untouched. Full detail + 24h CI-VM usage tracking:
+      `/plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`.
 - [ ] 20. [INFRA] P2. **Re-measure GitHub Actions billing for the 17 reverted repos** (should read $0/unmetered,
       confirming the public-repo-unmetered premise held in practice) and the self-hosted VM's steady-state load average
       before vs. after (not a spot-check — matches `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own
@@ -333,6 +342,10 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       session's core revert was complete and correct for the main gate all along, not just the auxiliary jobs.
 
 ## Progress Log
+
+- **2026-08-07 (interactive session)** — Closed todo 24 (see the todo's own entry for full detail): PM's ~40
+  self-hosted-routed workflows reverted to `ubuntu-latest` (`unified-trading-pm@c8cd56251e`), live-verified green,
+  runners deregistered. Only todo 20 (billing re-measure, P2, timing-gated) remains open in this plan.
 
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — operator-directed local plan (Progress Log
   2026-08-05); todo 24 (PM's own revert) requires the same per-file mechanism-landscape care on live CI + todo 20 is
