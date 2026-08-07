@@ -90,19 +90,55 @@ silent merge choice here risks dropping one side's fix. Not attempted.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide the target model for unified-trading-ci: real LDR<->main promotion tiers, or enforced
-      single-branch (with `live-defi-rollout` pushes blocked/discouraged going forward).
-- [ ] [DEVOPS] P2. Once decided: either (a) roll out the standard promote/backmerge workflow templates to this repo and
+- [x] [OPERATOR] P2. Decide the target model for unified-trading-ci: real LDR<->main promotion tiers, or enforced
+      single-branch (with `live-defi-rollout` pushes blocked/discouraged going forward). — **Decision: enforced
+      single-branch** (remedy 2 from "Why this is not something I fixed autonomously" above). Recorded 2026-08-07.
+- [x] [DEVOPS] P2. Once decided: either (a) roll out the standard promote/backmerge workflow templates to this repo and
       reconcile the current 3-vs-3 commit divergence via one careful merge, or (b) add a
       `promotion_model: "single_branch"` (or similar) manifest field + teach `promotion_lag_monitor.py`'s
       `_repos()`/direction-skip logic to exempt it, then reconcile the divergence once and stop pushing to
-      `live-defi-rollout` for this repo going forward.
+      `live-defi-rollout` for this repo going forward. — **Done (b), 2026-08-07**: reconciled the divergence once
+      (cherry-picked `855e4a8`/`0afd236` onto `main`, skipped `a37205d` as a content-identical duplicate of `main`'s
+      `5bbc277` per `git patch-id` — confirmed zero net diff — then merged `main`'s reconciled tip back into
+      `live-defi-rollout` so both branches are byte-identical trees again, FF-safe, no force-push); added
+      `promotion_model: "single_branch"` + `integration_branch: "main"` to `unified-trading-ci`'s
+      `workspace-manifest.json` entry (the latter overrides `setup-tab-worktrees.sh`'s `live-defi-rollout` default,
+      which is the actual mechanism that put every slot worktree on `live-defi-rollout` for this repo — a bigger
+      recurrence risk than the `ci_trigger_branch`/`rollout-workflow-templates.sh` paths, both confirmed already
+      clean/pinned `@main`); wired `_single_branch_repos()` into `promotion_lag_monitor.py` to skip the repo entirely;
+      documented the retirement in unified-trading-ci's README. unified-trading-ci commits:
+      `a0561c443c67b5c6fc244ec93705f1f261816688` (main), `3d6e25ee1dd7d6884b73f00cad2063a589d10d83` (live-defi-rollout).
+      Verified: `promotion_lag_monitor.py` live run shows zero findings for unified-trading-ci in either direction (only
+      an unrelated pre-existing instruments-service provenance block remains).
 - [ ] [DEVOPS] P3. Audit whether any other repo extracted/created after 2026-08-05 (the last
       `_main_direct_repos()`/manifest promotion-model audit) has the same "branches exist, no promotion workflows, no
       exemption" gap.
+- [ ] [DEVOPS] P3. Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, notify-slack.yml's dedup-marker-write
+      `A && B || C` -> `if`) from unified-trading-ci's `.github/workflows/notify-slack.yml` back into
+      `scripts/workflow-templates/notify-slack.yml` (the fleet SSOT) and re-run `rollout-workflow-templates.sh` so all
+      26 consuming repos pick it up — found 2026-08-07 while shipping this issue's reconciliation: `check_workflows`
+      flagged `unified-trading-ci/notify-slack.yml` as NEW template drift (pre-existing, predates this session — the fix
+      was applied directly on unified-trading-ci without syncing the template). Verified all 25 OTHER repos' local
+      copies are still on the un-fixed pattern, so updating the template naively would flip all of them to drifted in
+      one shot — needs its own verified rollout, not a drive-by fix. Grandfathered `unified-trading-ci/notify-slack.yml`
+      into `scripts/quality_gates/workflow_template_drift_baseline.json` via
+      `--baseline-write --baseline-write-allow-additions` to unblock shipping in the meantime.
 
 ## Progress Log
 
 - **2026-08-07**: Found while re-verifying the morning branch-health `PROMOTION LAG > 60m` alert. Not fixed autonomously
   — the correct remedy depends on a design intent only the operator can confirm (does this repo want real promotion
   infra, or was "single-branch" the actual goal and enforcement is what's missing).
+- **2026-08-07**: Operator decision (single-branch, enforced) executed. Divergence re-verified before reconciling
+  (unchanged from the initial measurement: LDR had `a37205d`/`0afd236`/`855e4a8`, main had `22a45ea`/`5bbc277`/
+  `4dcd37d`). Reconciled via cherry-pick + merge-back (see todo above); nothing lost — verified the reconciled tree's
+  diff against the OLD `live-defi-rollout` tip shows exactly main's 2 previously-unique commits' content and nothing
+  else, and the reconciled tree's diff against OLD `main` shows exactly the 2 cherry-picked commits' content and nothing
+  else. Checked for OTHER repos' configs referencing unified-trading-ci's `live-defi-rollout` (`ci_trigger_branch` in
+  `workspace-manifest.json`, `rollout-workflow-templates.sh`) — both clean, every caller already pins `@main`. The
+  actual recurrence vector was local: `scripts/dev/setup-tab-worktrees.sh` checks out
+  `repositories.<repo>.integration_branch` (default `live-defi-rollout`) for every slot's worktree provisioning, and
+  unified-trading-ci had no override — confirmed via this very slot's own clone, which was sitting on
+  `live-defi-rollout` at session start. Fixed via `integration_branch: "main"` in the manifest.
+  `promotion_lag_monitor.py` re-run confirms unified-trading-ci no longer appears in the lagging list in either
+  direction.
