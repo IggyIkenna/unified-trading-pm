@@ -212,3 +212,25 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   completed (exit 0, PID 4903/4917), first log at 11:59:01Z with skip-fast through covered dates and real-fetching
   2026-02-22 (960 credits, no 401s). `check_shard_freshness(retry_failed=True)` will mark the 871 `attempted_failed`
   401-rows as stale and re-fetch them as the VM sweeps through their dates.
+- **2026-08-07T12:10Z — CORRECTION to the prior tick's optimistic `mtds-backfill-odds-1` assessment; it was wrong.**
+  What looked healthy at 11:35Z (skip-fasting correctly, one real write for 2020-08-18) was only the FIRST few minutes
+  of a repeating OOM-crash-loop I hadn't yet seen the full shape of. By 12:00Z the VM had OOM-killed
+  (`exit=137 reason=OOM_KILLED`) on chunk 1/10 (`2020-06-06→2021-02-10`, the default 250-day chunk) for **10 consecutive
+  leagues in ~50 minutes** — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
+  SUPER_LIG, SCOTTISH_PREMIERSHIP — every single one crashing identically, zero successful chunk completions across any
+  league, zero real forward progress despite ~50 minutes of GCE billing. This is the exact "cumulative, monotonic memory
+  growth across real-fetch days" signature already documented (and never fully root-caused) in
+  `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` — retagged that doc's own stale
+  `BLOCKED-CREDENTIALS` P1 too (same 2026-08-02→08-03 story) and recorded this fresh 2026-08-07 recurrence there. Killed
+  `mtds-backfill-odds-1`. Attempted to relaunch with `--chunk-size 5` (that doc's best-validated, if imperfect,
+  mitigation) but the concurrency guard correctly REFUSED (`mtds-backfill-odds-401-retry` already counts as 1 running,
+  cap 1 without `--allow-parallel`) — waiting for that VM to finish rather than overriding, since it's small and already
+  making genuine progress (real trades data confirmed writing, e.g. 786 rows for 2026-02-23, healthy memory ~40%).
+  **Lesson for next tick**: relaunch the full-range odds_api backfill with
+  `--vm-name <fresh> --chunk-size 5 --start 2020-06-06 --end <today>` (no `--force`) ONLY after confirming zero
+  `mtds-backfill-odds-*` VMs are running (or explicitly pass `--allow-parallel` if `401-retry` is still going and credit
+  budget is re-verified healthy first) — and even then, per the OOM doc's own "fifth recurrence" history,
+  `--chunk-size 5` has previously still OOM'd 4 times in 75 chunks (much better than 10/10, but not proven-clean) —
+  expect to babysit this, not launch and walk away. All other VMs healthy this tick: AF campaign PLAYER_STATS climbing
+  (2025-03-08), footystats climbing (2023-04-23), SFI climbing with real writes (21,742 rows for 2020-10-17), weather
+  confirmed still RUNNING (log read hit a transient 404, not treated as a failure signal on its own).
