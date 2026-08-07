@@ -18,7 +18,7 @@ summary: >-
   an issue doc with doc-level `assigned_vm: NA`, so the backlog regen never surfaced it for `infra`-craft dispatch in
   the first place — this plan gives it a proper `assigned_role: infra` / `assigned_vm: planning` home so it can reach an
   infra-craft worker (or an operator directly) for the authorization + relaunch itself.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure, defi]
 stage: [meta]
@@ -70,9 +70,10 @@ source: >-
 
 # Relaunch vm-zombie-watchdog — routing-gap fix
 
-> **Drafted `status: draft` per CLAUDE.md § "Plan destination — ASK BEFORE CREATING".** This plan performs no VM action
-> itself — it only gives an already-diagnosed, already-blocked `[INFRA] P0` todo a proper AO-dispatch home. Flipping to
-> `active` (and thereby making the todo dispatchable) is the operator's call.
+> **Operator authorized the relaunch to main at 2026-08-07T07:30Z; flipped `status: draft` → `active` in the same edit
+> as the todo flip below** (the plan was never dispatched before the work completed — activated retroactively so the
+> record is consistent). This plan's one todo is DONE; it is eligible for archival per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 ## Why this plan exists — a dispatch-routing gap, not new investigation
 
@@ -88,26 +89,18 @@ changing, because nothing was actually acting on their `/blocked` recommendation
 
 ## Todos
 
-- [ ] [OPERATOR] [INFRA] P0. **Relaunch the `vm-zombie-watchdog` daemon VM**
-      (`bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh`, default real-mode) so it picks up
-      `deployment-service@0e94ceee1`'s `canonical-migration-` `PREFIX_IDLE_THRESHOLDS` entry (currently dormant — the
-      live daemon `vm-zombie-watchdog-20260805-125558` booted 2026-08-05T07:26:02Z, over a day before the fix commit,
-      and `launch-vm-zombie-watchdog.sh` fetches `vm_zombie_watchdog.py` into `/tmp/watchdog.py` once at boot, never
-      mid-loop). **Requires explicit operator authorization before executing** — this exact daemon has caused two
-      confirmed live-VM-kill incidents from careless real-mode relaunches (2026-06-23: 9 VMs; 2026-07-18: 3 more via a
-      then-latent `_blob_age_minutes()` bug, both since fixed) and the daemon monitors the entire VM fleet, not just the
-      gas_fees purge task that surfaced this gap. Before relaunching: verify via serial-console tail that the fresh
-      daemon boots clean (past the 2026-07-18 `ModuleNotFoundError`/ UTL-wrapper-`.reload()` incidents) before trusting
-      it. After relaunching: confirm via `gcloud compute instances list --filter="name~vm-zombie-watchdog"` that a NEW
-      instance (created after this todo's execution time) is RUNNING, and that its watch loop is live (serial-console
-      tail shows periodic "watchdog complete" lines). Then unblock the downstream consumer: in
-      `issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`, flip this same todo's
-      `[ ]` to `[x]` citing the new instance name + boot-clean evidence, which un-blocks that doc's own `[DATA] P1`
-      relaunch-the-purge-VM todo directly beneath it. **Done when**: a fresh `vm-zombie-watchdog-*` instance (created
-      after this todo executes) is RUNNING with a confirmed-clean serial-console boot and at least one real-mode
-      "watchdog complete" poll cycle logged, and the source issue doc's todo is flipped with that evidence cited. Repo:
-      deployment-service (relaunch), unified-trading-pm (source-doc reconciliation + this plan's own archival once its
-      one todo is done). Source:
+- [x] ✅ [OPERATOR] [INFRA] P0. **Relaunch the `vm-zombie-watchdog` daemon VM** — `deployment-service@0e94ceee1`
+      relaunched as `vm-zombie-watchdog-20260807-075242` (created 2026-08-07T07:52:45Z, asia-northeast1-c), boot-clean;
+      first real-mode poll at 08:02:58Z logged "Watchdog summary: 26 alive / 0 zombie / 3 too_young" → "watchdog
+      complete: killed 0/0 zombies" + "terminated-reaper: reaped 0/0" — live fleet intact. Dry-run validated safe (2
+      clean cycles, zero reaps) BEFORE cutover; stale daemon `vm-zombie-watchdog-20260805-125558` deleted. Operator
+      authorized the relaunch to main at 2026-08-07T07:30Z; executed by main. Source issue doc's mirrored todo flipped
+      with the same evidence (see
+      `issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`). **Done when** (met):
+      a fresh `vm-zombie-watchdog-*` instance (created after this todo executed) is RUNNING with a confirmed-clean
+      serial-console boot and at least one real-mode "watchdog complete" poll cycle logged, and the source issue doc's
+      todo is flipped with that evidence cited. Repo: deployment-service (relaunch), unified-trading-pm (source-doc
+      reconciliation + this plan's own archival once its one todo is done). Source:
       `issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (the `[INFRA] P0` todo,
       verbatim intent).
 
@@ -127,3 +120,12 @@ changing, because nothing was actually acting on their `/blocked` recommendation
   `/blocked` postings from this same slot had already recommended exactly this fix (an `assigned_role: infra` dispatch
   plan) without anyone acting on it. Created `status: draft` (not `active`) per CLAUDE.md's plan-creation hard rule; no
   VM/GCS/cron mutation performed by this session. Read-only investigation only.
+- **2026-08-07 (main, operator-authorized relaunch)**: operator authorized the real-mode relaunch at 07:30Z; main drove
+  it via an infra sub-agent. Dry-run validated safe first (2 clean cycles, zero reaps), then cutover: stale
+  `vm-zombie-watchdog-20260805-125558` deleted, new instance `vm-zombie-watchdog-20260807-075242` created
+  2026-08-07T07:52:45Z (asia-northeast1-c), serial-console confirmed boot-clean, first real-mode poll at 08:02:58Z
+  logged "Watchdog summary: 26 alive / 0 zombie / 3 too_young" → "watchdog complete: killed 0/0 zombies" +
+  "terminated-reaper: reaped 0/0" — live fleet intact, `deployment-service@0e94ceee1`'s `canonical-migration-`
+  `PREFIX_IDLE_THRESHOLDS` fix now live. Flipped this plan's one todo `[x]` and `status: draft` → `active` in this edit;
+  mirrored the flip in `issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`. This
+  plan is now complete and eligible for archival (done as a separate follow-up commit).

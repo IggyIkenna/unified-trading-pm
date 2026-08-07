@@ -171,16 +171,20 @@ the highest-priority open question.
       main at the time: "real-mode relaunch is a separate operator-gated decision, not part of this task"). **Not doing
       the relaunch myself** — filing as the blocking dependency for the [DATA] P1 relaunch todo below, same pattern as
       the 2026-07-18 precedent:
-  - [ ] [INFRA] P0. Relaunch the `vm-zombie-watchdog` daemon VM (`bash scripts/vm/launch-vm-zombie-watchdog.sh`, default
-        real-mode; repo: deployment-service) so it picks up `deployment-service@0e94ceee1`'s `canonical-migration-`
-        threshold. Per the 2026-07-18 precedent, verify via serial-console tail that the fresh daemon boots clean (past
-        2026-07-18's `ModuleNotFoundError`/UTL-wrapper-`.reload()` incidents, both since fixed) before trusting it — and
-        per the same precedent's operator escalation, confirm this real-mode relaunch is authorized before executing
-        (fleet-wide blast radius, two prior confirmed live-VM-kill incidents on this exact action). Cite this doc +
-        `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md` on close.
-- [ ] [DATA] P1. **BLOCKED on the `[INFRA] P0` daemon-relaunch todo directly above — do not attempt this relaunch until
-      that's done, or it will very likely reproduce the exact same reap.** Once the watchdog daemon is confirmed running
-      fresh code, relaunch
+  - [x] ✅ [INFRA] P0. Relaunch the `vm-zombie-watchdog` daemon VM (`bash scripts/vm/launch-vm-zombie-watchdog.sh`,
+        default real-mode; repo: deployment-service) so it picks up `deployment-service@0e94ceee1`'s
+        `canonical-migration-` threshold — **DONE 2026-08-07**: relaunched as `vm-zombie-watchdog-20260807-075242`
+        (created 2026-08-07T07:52:45Z, asia-northeast1-c), boot-clean; first real-mode poll at 08:02:58Z logged
+        "Watchdog summary: 26 alive / 0 zombie / 3 too_young" → "watchdog complete: killed 0/0 zombies" +
+        "terminated-reaper: reaped 0/0" — live fleet intact. Dry-run validated safe (2 clean cycles, zero reaps) BEFORE
+        cutover; stale daemon `vm-zombie-watchdog-20260805-125558` deleted. Operator authorized the relaunch to main at
+        2026-08-07T07:30Z; executed by main. Cited here + `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`
+        on close.
+- [ ] [DATA] P1. **UNBLOCKED as of 2026-08-07 — the `[INFRA] P0` daemon-relaunch todo directly above is DONE** (fresh
+      daemon `vm-zombie-watchdog-20260807-075242` is running `deployment-service@0e94ceee1`'s `canonical-migration-`
+      threshold; it no longer reaps `canonical-migration-defi-gas-fees-legacy-purge-*` VMs on the stale 15-min default).
+      The next worker on `defi_satellite_ao_dispatch_batch9-003` can proceed with this relaunch now. Once the watchdog
+      daemon is confirmed running fresh code, relaunch
       `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh defi-gas-fees-legacy-purge     <any-date> <any-date> full`
       (deployment-service; dates are cosmetic for this category; keep the highmem machine-type override, it's confirmed
       necessary). Before launching: (a) pause the consolidator cron again
@@ -266,3 +270,13 @@ the highest-priority open question.
   actually enter the AO backlog once the operator flips it `active`. The `[INFRA] P0` todo below is unchanged (still the
   source of truth for the fix's intent); the new plan is a dispatch-routing wrapper around it, not a duplicate decision.
   No VM/GCS/cron mutation performed this session.
+- **2026-08-07 (main, operator-authorized relaunch)**: operator authorized the real-mode relaunch at 07:30Z; main drove
+  it via an infra sub-agent. Dry-run validated safe first (2 clean cycles, zero reaps), then cutover: stale
+  `vm-zombie-watchdog-20260805-125558` deleted, new instance `vm-zombie-watchdog-20260807-075242` created
+  2026-08-07T07:52:45Z (asia-northeast1-c), serial-console confirmed boot-clean, first real-mode poll at 08:02:58Z
+  logged "Watchdog summary: 26 alive / 0 zombie / 3 too_young" → "watchdog complete: killed 0/0 zombies" +
+  "terminated-reaper: reaped 0/0" — live fleet intact, `deployment-service@0e94ceee1`'s `canonical-migration-`
+  `PREFIX_IDLE_THRESHOLDS` fix now live. Flipped the `[INFRA] P0` todo `[x]` above with this evidence (mirrored in
+  `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`, now archived). The `[DATA] P1` relaunch-the-purge-VM todo directly
+  below is now UNBLOCKED — annotated it accordingly, left `[ ]` for the next worker on
+  `defi_satellite_ao_dispatch_batch9-003` to execute.
