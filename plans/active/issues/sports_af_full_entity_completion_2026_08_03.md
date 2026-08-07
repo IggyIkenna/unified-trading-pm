@@ -767,3 +767,22 @@ are genuinely in scope for the operator's "no exceptions" directive.
   retryable) so left running, but it means the vendor's `standings` endpoint is currently degraded, not transiently
   blipped; will re-check next tick and consider killing/deferring if it's still spinning identically (billing-waste
   judgment call, not yet warranted at ~1h of retries on a SPOT e2-standard-8).)
+- **2026-08-07T10:35Z** — PLAYER_STATS checkpoint climbing (2024-04-07 → 2024-08-14, +129 days). footystats backfill
+  climbing (2021-01-26 → 2021-10-09, +257 days). Both healthy. (Aside, all unrelated to this campaign — a big off-loop
+  tick: (1) killed `tm-backfill-20260807-085636` after confirming 2h17m of an identical HTTP-502 retry cycle against
+  `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` with zero forward progress — a
+  durably-down vendor endpoint, not a transient blip, so continuing to let it spin was confirmed billing waste; (2)
+  operator widened this session's mandate from "every AF entity" to "every sports vendor (incl. odds_api/MTDS) down to
+  captured + empty_confirmed only" — ran a full cross-vendor manifest census (10,463,368 rows) and found the real scope
+  is much larger than earlier believed: weather has 205,517 `expected_unattempted` shards and SFI 205,363 (both were
+  called "100% clean" earlier this session based only on `attempted_failed=0` — an incomplete check, corrected now), and
+  odds_api has by far the largest `attempted_failed` cluster (13,916 rows). Given the AF doc was already at 800/1000
+  lines and this is genuinely broader in kind, opened `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` as
+  the new tracking home (this doc's own off-campaign section trimmed to a pointer); (3) traced
+  `mdps_odds_horizon_bucket`'s gap to an ALREADY-FIXED freshness-check bug (shipped 2026-07-30) and found the actual
+  backfill is tracked in a pre-existing doc (`sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`) whose P1/P2 todos
+  were stuck `BLOCKED-CREDENTIALS` from the 2026-08-02 odds-api quota exhaustion — stale, since the operator's
+  10M-credit top-up landed 2026-08-03; retagged both after live-reverifying 14.4M credits available today. Deliberately
+  did NOT launch that backfill VM this tick — that doc's own history (5+ uncoordinated relaunches, preemptions, silent
+  freezes, one contributing to the original quota-exhaustion incident) argued for a dedicated, attentive next tick
+  rather than a rushed launch at the tail of an already-dense one.)
