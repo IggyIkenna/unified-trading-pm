@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 0,
         "large_file_count": 1,
-        "coverage_pct": 81.9
+        "coverage_pct": null,
+        "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -181,7 +181,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -208,10 +208,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
+        "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": "pytest",
-        "warn_file_count": 0
+        "coverage_pct": 87.6,
+        "qg_red_reason": null
       }
     },
     "client-reporting-api": {
@@ -343,9 +343,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
         "qg_red_reason": null,
-        "warn_file_count": 17,
         "large_file_count": 0,
-        "coverage_pct": 84.09
+        "coverage_pct": null,
+        "warn_file_count": 17
       }
     },
     "deployment-service": {
@@ -456,10 +456,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 22,
         "large_file_count": 0,
-        "coverage_pct": 84.19
+        "coverage_pct": null,
+        "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -531,9 +531,9 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
+        "qg_red_reason": null,
         "large_file_count": 2,
-        "coverage_pct": null,
-        "qg_red_reason": "pytest",
+        "coverage_pct": 86.65,
         "warn_file_count": 16
       },
       "ldr_ci_status": "GREEN",
@@ -594,10 +594,10 @@
         "subscription-redemption"
       ],
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": 83.9
+        "coverage_pct": null,
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
@@ -656,9 +656,9 @@
       ],
       "codebase_health": {
         "qg_red_reason": null,
-        "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": 86.35
+        "coverage_pct": null,
+        "warn_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
@@ -703,10 +703,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": 88.24
+        "coverage_pct": null,
+        "qg_red_reason": null
       },
       "breaking_scan_dir": "ibkr_gateway_client"
     },
@@ -735,7 +735,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -765,10 +765,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 11,
         "large_file_count": 8,
-        "coverage_pct": null,
-        "qg_red_reason": "pytest",
-        "warn_file_count": 11
+        "coverage_pct": 91.03,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -887,10 +887,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 47,
         "large_file_count": 0,
-        "coverage_pct": 83.52
+        "coverage_pct": null,
+        "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0"
     },
@@ -1224,8 +1224,8 @@
       "codebase_health": {
         "warn_file_count": 37,
         "large_file_count": 27,
-        "qg_red_reason": null,
-        "coverage_pct": 95.73
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "unified-trading-library": {
@@ -1310,10 +1310,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 0,
+        "qg_red_reason": "ruff",
         "large_file_count": 0,
-        "coverage_pct": null
+        "coverage_pct": 73.68,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
