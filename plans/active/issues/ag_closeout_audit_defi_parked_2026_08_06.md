@@ -65,6 +65,7 @@ source: >-
   cursor-configs/skills/ag-closeout-audit/SKILL.md.
 locked_by:
 resolved_by:
+depends_on: []
 ---
 
 # Parked findings — 2026-08-06 `/ag-closeout-audit defi` run (slot 12; second run of the day)

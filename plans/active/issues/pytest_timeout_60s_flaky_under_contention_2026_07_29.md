@@ -638,12 +638,51 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   OS-scheduler/xdist contention, not an absolute wall-clock threshold that any single raise can fix. Checkbox flipped
   with this entry. Slot left clean (0 commits ahead of `origin/live-defi-rollout` in every repo; only this doc touched).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **slot-11 2026-08-06 (this task, `pytest_timeout_60s_flaky_under_contention-002`) — ROOT-CAUSE of the P1 follow-up
+  - MECHANISM-LEVEL FIX SHIPPED**: dispatched to close the follow-up P1 (root-cause the class + resolve the
+    runner-contention capacity question). **Root-cause conclusion**: the class is a fixed wall-clock per-test budget
+    (pytest-timeout) applied under xdist `-n auto` scheduling; on ANY contended execution surface (self-hosted shared VM
+    OR a GH-hosted runner where `-n auto` fans out to every core), a genuinely instant test (0.04-2s in isolation —
+    every confirmed recurrence in this doc's history) can be OS-descheduled past the budget by sibling workers /
+    co-resident jobs. The 60→150s raise reduced probability but structurally cannot close the class: at load avg 30-54
+    on the shared 16-vCPU host, even purely CPU-bound synchronous pandas tests were starved 15+ min (todo 7/8 evidence)
+    — there is no fixed budget that beats unbounded contention. **Capacity question resolved**: the dominant contention
+    source (public repos' QG on the shared self-hosted VM) was removed by the 2026-08-05 operator-ruled public-repo
+    runner revert (`plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`: 15 public repos → GH-hosted
+    ubuntu-latest, unmetered for public repos) + the 2026-08-06 PM public flip; the remaining 8 private repos stay
+    self-hosted under the reservation-mode governor (`qg_host_adaptive_resource_governor_2026_07_14.md`, RAM+CPU
+    dual-gate admission), which prevents host-crashing oversubscription. Corroborated live this session:
+    instruments-service + unified-api-contracts tests slices are currently green (only a `checks`-slice runner-setup
+    failure today, not a pytest-timeout). **Fix shipped — unified-trading-pm@52a85d6c7**: retry-once-on-timeout in the
+    shared QG pytest slice of BOTH `scripts/quality-gates-base/base-library.sh` and `base-service.sh`. When EVERY
+    failure in a pytest run is a `pytest-timeout`, re-run exactly those nodeids serially (minimal contention) with the
+    same budget; a genuine hang times out AGAIN and still fails the gate, a scheduling-descheduled test passes clean.
+    Conservatively only retries when every `FAILED`/`ERROR` summary line is a timeout (a real failure fails the gate
+    outright — no masking). New env knob `PYTEST_TIMEOUT_RETRIES` (default 1; 0 disables). Verified: `bash -n` +
+    shellcheck-warning-clean (only pre-existing findings), extraction-logic tests on the doc's canonical output formats,
+    and E2E of the actual shipped helpers via a mock pytest (retry-pass → gate proceeds; genuine hang → gate still
+    fails; base-service zero-test-guard source intact). This targets the MECHANISM (transient scheduling noise) rather
+    than the threshold, consistent with the workspace's own ruling that adjusting the wall-clock guard is not weakening
+    the check — and goes further by distinguishing noise from a genuine hang instead of merely granting more wall-clock.
+    Watching: whether a genuinely-hung test ever slips through retry-once (deterministic hangs still fail 2/2; only
+    xdist-only hangs would be masked — none observed in this doc's history, where every recurrence re-ran fast in
+    isolation). If a 3rd-instance pattern re-appears post-fix with a materially different signature, re-open per this
+    doc's convention.
 
 ## Follow-ups
 
-- [ ] [CI] P1. Root-cause the xdist-contention flake class (confirmed NOT closed by the 60->150s raise; recurrences
+- [x] ✅ [CI] P1. Root-cause the xdist-contention flake class (confirmed NOT closed by the 60->150s raise; recurrences
       across 10 repos) + resolve the runner-contention capacity question — tracking SSOT for
-      fleet_wide_qg_capacity_crisis.
+      fleet_wide_qg_capacity_crisis. — **ROOT-CAUSED + FIX SHIPPED 2026-08-06 (slot 11) — unified-trading-pm@52a85d6c7**
+      (retry-once-on-timeout in `base-library.sh` + `base-service.sh`, `PYTEST_TIMEOUT_RETRIES` knob). Root cause: a
+      fixed wall-clock per-test budget under xdist `-n auto`/contended hosts can fire on a genuinely instant test
+      (0.04-2s in isolation) descheduled past the budget — no threshold can beat unbounded contention (load avg 50+
+      starved CPU-bound sync tests 15+ min), which is why the 60→150s raise only moved the class. The mechanism-level
+      fix re-runs timeout-only failures once, serially; a genuine hang times out again and still fails the gate.
+      Capacity question: the dominant source (public repos' QG on the shared VM) was resolved by the 2026-08-05
+      public-repo runner revert (15 repos → GH-hosted) + 2026-08-06 PM public flip; the remaining 8 private repos stay
+      self-hosted under the reservation-mode governor. Full evidence + verification in the Progress Log (2026-08-06
+      entry).
 
 > **2026-08-06 archive-candidate audit**: Live unresolved incident: the flake class is explicitly confirmed NOT closed
 > by the 60->150s raise (todo 3's verdict), recurrences continue across 10 repos (latest survey 2026-08-04 found related

@@ -30,6 +30,8 @@ execution_scope: orchestrator-agent
 assigned_vm: planning
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Fleet promoter stalled 3+ hours — glue runner pool depleted

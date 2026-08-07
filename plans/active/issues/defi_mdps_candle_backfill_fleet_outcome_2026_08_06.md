@@ -32,6 +32,9 @@ assigned_vm: planning
 assigned_role: data_engineering
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # DeFi MDPS candle backfill fleet — terminal verification (2026-08-06)
