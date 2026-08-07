@@ -198,8 +198,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363
       expected_unattempted shards (distinct from the already-resolved 89-row attempted_failed cluster).
 - [ ] [SCRIPT] P3. **Understat 30-row expected_unattempted tail** — check if it's just an in-progress-run artifact.
-- [ ] [SCRIPT] P2. **Out-of-scope audit pass** across every source — compare captured league/data_type combos against
-      current UAC scope, looking for more footystats-China/Russia-style residue.
+- [x] ✅ [SCRIPT] P2. **Out-of-scope audit pass** across every source — compare captured league/data_type combos against
+      current UAC scope, looking for more footystats-China/Russia-style residue. instruments-service@122e4571
+      (`scripts/audit_out_of_scope_sports_leagues_2026_08_07.py`, read-only, 7 sources, HIGH RISK / LOWER RISK
+      classification, exit 0=clean/1=residue).
 - [x] ✅ [SCRIPT] P0. **Re-census run 2026-08-07T11:57Z** (instruments-service@f917f04f,
       `scripts/census_all_sports_sources_2026_08_07.py`, 9,552,235 manifest rows post-floor) — VMs still running; not
       yet converged. Updated table below in Progress Log. Re-census needed once backfill VMs complete.
