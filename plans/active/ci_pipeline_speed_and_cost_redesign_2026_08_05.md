@@ -328,6 +328,10 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since the 2026-08-06 verdict (only a
+  context-scout scope refresh touched the doc since); sole open todo (warm git-object cache for JIT runners) still
+  carries the explicit "Do NOT roll out until this is understood" constraint pending on-VM diagnosis of the deployed-
+  but-no-op mystery — operator/live-infra judgment, not worker-determinable.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — sole open todo (warm git-object cache for JIT
   runners) carries an explicit "Do NOT roll out until this is understood" constraint + 2 documented live incidents from
   touching this runner infra; deployed-but-no-op mystery needs on-VM diagnosis — operator/live-infra judgment, not

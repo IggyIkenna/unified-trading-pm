@@ -914,3 +914,5 @@ overwrite.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (6 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — open-item count updated 4->3 (1 item shipped since 2026-08-03);
+  2 dependency-blocked, 1 operator question remain.

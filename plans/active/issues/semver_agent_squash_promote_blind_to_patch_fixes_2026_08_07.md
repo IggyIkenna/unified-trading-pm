@@ -281,3 +281,14 @@ cycle).
   glue-runner-pool depletion issue — see `fleet_promoter_glue_runner_stall_2026_08_06.md` Progress Log entry added the
   same session. Will update this doc's Progress Log once the fleet promoter recovers and the live tag-mint verification
   completes.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`): KEEP-NA, valid — brand-new (created today), all 3 open items are
+externally dependency-blocked on infra outside this doc's own scope: live tag-mint verification is blocked on the fleet
+promoter's glue-runner-pool depletion (tracked separately in `fleet_promoter_glue_runner_stall_2026_08_06.md`), the
+re-run-reconcile todo is gated on that same promotion landing, and the `market-tick-data-service` ship is gated on an
+unrelated pre-existing test failure tracked elsewhere. All fixes are already shipped to LDR. Not closing any checkbox on
+the strength of any fresh "fleet promotion is healthy again" corroboration that may exist elsewhere in this doc's
+Progress Log — this audit's evidence bar requires a real `reconcile_release_tags.py --dry-run` re-run or a minted tag,
+not an inference; still genuinely open, likely to clear soon.

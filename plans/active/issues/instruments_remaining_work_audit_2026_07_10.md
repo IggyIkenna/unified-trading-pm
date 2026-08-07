@@ -836,3 +836,6 @@ Script:
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged — the only changes since
   the last pass were a line-cap history extraction and a na-eligibility-audit re-affirmation, neither of which shifts
   what the sole remaining "6 Headline P0s" todo points at; all 6 entries still resolve.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged since 2026-07-30.
+  Sole todo is still the same umbrella 'close the 6 remaining Headline P0s' across independently-scoped items, several
+  themselves operator-gated; not a single determinable outcome.

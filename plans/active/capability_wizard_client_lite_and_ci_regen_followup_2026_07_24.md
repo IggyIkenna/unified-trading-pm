@@ -168,3 +168,12 @@ mandate forbids building new CI infrastructure to work around it. Residual 2 is 
 first step is authoring the build sub-plan — a human decision, not a bounded worker outcome.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator-gated: CI-runner provisioning + deferred design call
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`): KEEP-NA, valid — re-read fresh post the same-session RE-SCOPED
+2026-08-07 note under Residual 1; that note is real new information (the gate does NOT strictly require new CI infra,
+and the operator said "agent can do it"), but the todo's own step 4 ("check extraction count BEFORE committing — a
+broken venv silently extracts 0/32 and would empty the registry") is a genuine data-corruption risk the note itself says
+was deliberately deferred rather than rushed. Flagging Residual 1 as **worth a RECLASSIFY look** (bounded 4-step
+procedure, operator already blessed agent execution) for a future pass with room to execute carefully — not
+reclassifying here given the real risk of a rushed step 4 and this batch's docs-only scope. Residual 2 unchanged:
+deferred design call, its own stated first step is authoring a build sub-plan.

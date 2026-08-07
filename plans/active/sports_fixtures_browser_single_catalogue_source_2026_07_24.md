@@ -113,3 +113,4 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   already shipped) for `instruments-service/scripts/build_instrument_catalogue.py` (the actual rollup job the open
   todo's "confirm the regen cadence" asks about — previously uncited); kept `fixtures_browser.py` (the likely
   live-day-overlay implementation site if that option is chosen).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is an operator question.

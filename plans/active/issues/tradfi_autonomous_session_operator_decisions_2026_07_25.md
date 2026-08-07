@@ -330,8 +330,11 @@ matches what already happened — no further action needed.
 
 ## Open todo
 
-- [ ] [PM] P2. Once you've answered items 1-3 above, record the decision inline in this doc (flip to resolved) and
-      propagate into the relevant plan doc(s)' todos per the standing "plan references, doesn't duplicate" rule.
+- [x] ✅ [PM] P2. **CLOSED 2026-08-07 (na-eligibility-audit) -- superseded by the individual item checkboxes below.**
+      This generic "once you've answered items 1-3, record + propagate" meta-todo is fully satisfied by the per-item
+      checkboxes already below (items 1/2/3/4/6/9): each records its decision inline and propagates into the owning plan
+      doc (item 1 -> `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s new P2 delete todo; item 3 ->
+      `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`'s new P1/P2 todos). Nothing further to record.
 - [x] ✅ [PM] P2. **Item 1 — CLOSED 2026-08-07, was already stale.** Shipped 2026-07-28
       (`unified-api-contracts@f2a86e1e`), before this item was even re-asked — see the "STALE" note under item 1 above.
       New incremental scope from the 2026-08-07 answer (delete the now-canonicalized rows since ICE is non-MVP) tracked

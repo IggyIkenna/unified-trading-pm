@@ -185,3 +185,5 @@ real forward-looking risk window, unchanged from the original assessment.
   names directly as carrying "Full finding + evidence + remedy options" for the actual current blocker (the marker-bug
   fix already shipped fleet-wide, but instruments-service's real ~19-commit foreign range still needs that doc's own
   remedy); the 2 pre-existing entries re-verified, still resolve.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — the fleet-wide marker-bug fix already shipped;
+  instruments-service's own ~19-commit foreign range still needs this doc's own remedy, dependency-blocked.

@@ -807,7 +807,7 @@ here is NOT dispatch, per this doc's own standing convention.
 - [`features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`](/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md)
   — `[SCRIPT] P2` done-when half-2 (real-VM-launch observation of `LC_TARBALL_FRESHNESS` auto-republish) extracted into
   `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 3 (classified 2026-08-07).
-- [`mtds_cefi_docker_image_stale_5mo_2026_07_30.md`](/plans/active/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md)
+- [`mtds_cefi_docker_image_stale_5mo_2026_07_30.md`](/plans/archive/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md)
   — both todos fully claimed by `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`'s open `[OPS] P2` todo
   (archivable_after_planned_work, classified 2026-08-07).
 - [`mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`](/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md)

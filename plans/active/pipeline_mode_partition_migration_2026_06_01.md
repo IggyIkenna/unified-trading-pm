@@ -132,3 +132,9 @@ partition walk anywhere (single-walk discipline):
 - **context-scout 2026-08-03**: fixed context_scope -- the 2026-08-01 edit had left malformed YAML (a nested list + a
   stray `? context_scope` complex-mapping-key token) despite the marker claiming "2 entries"; rebuilt clean (5 entries),
   all verified on disk.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-07-30; both open todos are true riders
+  (single-walk discipline forbids a standalone partition walk) that close only when another plan's whole-corpus walk
+  completes. Secondary finding, not actioned: the doc's own "⚠️ NEEDS VERIFICATION 2026-07-21" banner recommends a live
+  `gcloud storage ls`/manifest spot-check per asset_group to confirm whether `pipeline_mode=` has already landed as a
+  side effect of other writer work — that check is prose-only, not a tracked todo, so it stays invisible to backlog
+  regen; worth converting to a real todo on a future pass.

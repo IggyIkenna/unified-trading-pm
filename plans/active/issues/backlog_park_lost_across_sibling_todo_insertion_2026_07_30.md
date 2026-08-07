@@ -162,3 +162,7 @@ not the dispatch-tooling gap). Suggested next steps:
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-affirmed. Sole open item ([BACKEND] P3, whether the park
+  mechanism should emit a warning/alert on id-change) remains an undecided design question, not a specified change; no
+  content drift since the last marker.

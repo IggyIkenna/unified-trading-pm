@@ -242,10 +242,54 @@ Added 2026-07-20 — the in-session distinct-value census (`/codex/02-data/recon
 - **Blank `pipeline_mode` / `source` are already dropped (AE-1, H3), never re-report** — the census drops blank
   sentinels before badging.
 
+## Per-vendor completion audit (Surface 3 / § 3b expansion) — operator-requested standing check
+
+Added 2026-08-07 — operator asked for the sports vendor-completion checks run ad hoc across a long session (SFI/
+footystats/weather/transfermarkt/odds_api) to become a **standing part of the daily reconciliation run**, not a one-off.
+This is the sports-specific procedure for SKILL.md § 3b's `capture_status` surface — run it per source whenever
+`--asset-group sports` is in scope.
+
+**Procedure** (one manifest read, predicate-pushdown per SKILL.md § 3b, never a fresh full-corpus walk):
+
+1. **Per-`source` pivot on `capture_status`** (`captured` / `empty_confirmed` / `attempted_failed` /
+   `expected_unattempted`). `attempted_failed=0` is NOT the same as done — check `expected_unattempted` too; it can be
+   large even when `attempted_failed` is zero (measured 2026-08-07: two "100% clean" sources each had 200K+
+   `expected_unattempted` rows nobody had checked).
+2. **Sub-classify every `attempted_failed` cluster by `error_reason`** before concluding anything — a single vendor's
+   `attempted_failed` count routinely decomposes into 3+ unrelated causes needing different fixes: a stale/rotated
+   credential (retryable, narrow date range), a live vendor outage (HTTP 5xx, wait and re-verify before retrying, do NOT
+   blind-retry into the same wall), a genuine code bug (mis-scoped retry target, wrong service/entity), or the
+   honest-coverage guard rail correctly REFUSING a false-empty
+   (`record_empty(...) rejected: catalog says X was ALIVE ... this is a real fetch failure, not honest absence` —
+   **never** silently reclassify these to `empty_confirmed`, the rejection is doing its job; root-cause the underlying
+   fetch/catalog mismatch instead).
+3. **Check `attempted_at` timestamps, not just counts** — a cluster's timing tells you whether it's a live/recurring
+   problem (`attempted_at` extending to yesterday/today) or a resolved historical blip (all `attempted_at` inside one
+   old, tight window with nothing since). Both need different responses.
+4. **A completed backfill VM's `exit_code=0` is NOT sufficient evidence of resolution** — re-census after every
+   completion claim. Measured 2026-08-07: a weather backfill exited cleanly but left `expected_unattempted` almost
+   unchanged and added 16,241 NEW `attempted_failed` rows (a real adapter bug, `raise` where the code's own comment said
+   to fall back). Confirm the actual manifest delta, not the process exit.
+5. **A long-running VM's tarball freshness is checked only at LAUNCH time** — if a relevant bugfix lands in the repo
+   mid-run (hours later), the VM keeps running stale code silently; no freshness re-check happens automatically.
+   Measured 2026-08-07: a VM ran ~5 hours past a bugfix's landing time, generating thousands of new misclassified
+   `attempted_failed` rows the whole time. For any VM running multiple hours, spot-check `git log --since=<launch time>`
+   on the relevant repo if its output looks off; verify a relaunch's tarball commit actually includes a fix via
+   `git merge-base --is-ancestor <fix-sha> <tarball-sha>`, don't just trust the launcher's "tarball fresh" line (that
+   line only proves the tarball matches HEAD at launch, not that HEAD included your fix at that moment).
+
+**Report format**: per source, `{captured, empty_confirmed, attempted_failed, expected_unattempted}` counts +
+`reachable_coverage` (§ 3b formula) + the `error_reason` breakdown for any non-trivial `attempted_failed` cluster +
+whether it's live/recurring or resolved. Don't purge or reclassify anything from this audit alone — it's diagnostic;
+fixes (credential rotation, code fixes, backfill relaunches) are separate, tracked actions per SKILL.md § 4b/4c's
+"suggestions only, five-part proof" discipline.
+
 ## Cross-links
 
 `SKILL.md` · [`reference-prediction.md`](reference-prediction.md) (H4 bleed) ·
 `/codex/02-data/four-surface-reconciliation-procedure.md` · `/codex/02-data/reconciliation-finding-taxonomy.md` ·
 `/codex/02-data/canonical-cutover-register.md` · `/codex/02-data/non-canonical-path-inventory.md` ·
 `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` · `/codex/02-data/orphan-object-detection.md` ·
-`/codex/02-data/service-shard-status-catalogue.md` · `/codex/05-infrastructure/bucket-isolation-model.md`
+`/codex/02-data/service-shard-status-catalogue.md` · `/codex/05-infrastructure/bucket-isolation-model.md` ·
+`plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md` (the session this procedure was
+extracted from — full worked examples for every gotcha above)

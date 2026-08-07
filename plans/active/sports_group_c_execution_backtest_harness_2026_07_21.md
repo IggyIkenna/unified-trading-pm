@@ -113,3 +113,4 @@ CLI wiring, same shape as the 3 domains that already have it.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the 3 execution-service source files this
   scope note names directly (`engine.py`, `sports_matching.py`, `backtest_domains.py`) and the decision issue.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 5 open items, all operator questions.

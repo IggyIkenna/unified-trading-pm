@@ -130,6 +130,13 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06 (the operator ran the
+  cron installer 2026-08-07, closing sub-item (a) inline in the same open checkbox, evidence already cited there).
+  Remaining sub-items (b)/(c) — investigate why `UV_LINK_MODE=hardlink` isn't deduping `.venv` across slots, and build a
+  liveness-aware per-slot prune if it can't — are bounded investigations, no longer permission-gated now that (a) is
+  done, but bundled into the same single checkbox as (a) rather than split out; per the standing note carried since
+  2026-08-02, splitting would be editorial authoring outside this skill's apply set. Flagging as a RECLASSIFY-candidate
+  worth a fresh look now that the blocking sub-item is closed (not actioned this run).
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — primary incident resolved; sole follow-on
   (uv-cache prune cron + cross-slot .venv dedup) is operator-scheduling/design work.
 

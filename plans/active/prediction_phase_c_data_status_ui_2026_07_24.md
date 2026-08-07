@@ -131,3 +131,7 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) -- swapped in the real gating dependency
   (phase_ab_residuals), todo 3's target doc, and 2 source paths (the existing catalogue-filter query + the honest-
   coverage script).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items;
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]`
+  - `gate_on_depends: true` re-confirmed live — the prerequisite still has 7 open todos and Phase-B `--apply` hasn't
+    started, so this doc's own dispatch gate isn't cleared yet.

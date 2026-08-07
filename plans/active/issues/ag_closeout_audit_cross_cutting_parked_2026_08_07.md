@@ -218,8 +218,8 @@ These 4 remain exactly as classified in
 1-3, day 6 for finding 4). Not re-triaged (no new evidence); listed here only for continuity/tracking. Full reasoning
 lives in the 2026-08-06 doc; the open todos there remain the single source of truth — not duplicated here.
 
-- **`plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`** — real owner `ui`
-  (+ `sports` sub-component). Still `asset_group: [cross-cutting]` today.
+- **`plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`** — real owner
+  `ui` (+ `sports` sub-component). Still `asset_group: [cross-cutting]` today.
 - **`plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`** — real owner
   `infrastructure`. Still `asset_group: [cross-cutting]` today. Remains KEEP-NA (operator-direction-gated) per the
   2026-08-04 na-eligibility-audit ruling.
@@ -298,3 +298,8 @@ spot per this skill's SKILL.md).
   37-doc share is dominated by the same same-day-mistag-cluster pattern this run's own findings show. **Ledger**: 7 new
   parked findings this run, 7 entries written above (1-7) — balanced. The 4 carry-forward items (findings continued from
   2026-08-06) are pre-existing, not counted in this run's new-findings ledger.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — fresh doc (filed today), same parked-findings-register class as
+  its siblings (2026-08-01/02/06): all 7 open todos are `[DOCS]` P3/P1 cross-tranche `asset_group` retags of docs owned
+  by OTHER tranches (ci x5, ui x1, infrastructure x1), each explicitly scoped "owning-tranche fix, leave to X tranche's
+  own audit, not this run" per the 2026-07-30 concurrent-sharded-worker rule. Cross-cutting cannot execute these retags
+  itself by construction.

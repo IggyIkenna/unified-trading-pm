@@ -122,3 +122,15 @@ for non-Prediction-tier leagues). This one is about what's _inside_ the rows tha
 No fix applied. Flagging per this workspace's big-finding triage rule (data-correctness, contradicts the entity's own
 name/manifest data_type) rather than picking an option unilaterally, since 1 vs 2 vs 3 changes storage cost, schema, and
 possibly a rename that ripples into UAC/manifest data_type naming.
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Pick a disposition for the PLAYER_VALUES silent-data-loss finding above** — persist per-player
+      values (option 1), persist team-level aggregate only (option 2), rename the entity to reflect what it actually is
+      today (option 3), or park with no change (option 4). Gates any code fix; this doc had no tracked todo for the
+      decision itself before this pass.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — genuine operator-gated schema/scope decision, no bounded
+  worker-determinable outcome. Added the `[OPERATOR] P1` todo above so the pending decision is tracked, not just prose.

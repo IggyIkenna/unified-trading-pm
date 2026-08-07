@@ -191,3 +191,9 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (the tracker doc) as the first entry: §4's open
   todo directly edits it (flip 6 MOVED items + fix a stale count), and the 2026-08-01 marker's reason for skipping it (a
   since-passed instruction not to touch a file under concurrent edit) no longer applies.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-affirmed, no content change. §1/§2's operator rulings both
+  now `[x]` (closed 2026-08-06); the standing §2 opportunistic-retag todo and §3's human-read-needed merge stay
+  genuinely open. §4 (flip 6 MOVED items + fix a stale count) is the one purely mechanical item, flagged separately
+  below as MISCLASSIFIED_LIKELY_AO_ELIGIBLE — consistent with this doc's own established reasoning that the whole doc
+  still correctly stays NA since `assigned_vm` is doc-granular and the other open items are judgment-gated.

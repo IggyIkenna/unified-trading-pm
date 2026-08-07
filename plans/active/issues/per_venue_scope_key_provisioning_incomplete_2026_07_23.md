@@ -177,3 +177,5 @@ All three are real design/priority calls, not something determinable from code o
   3 open todos remain explicitly `[HUMAN]`-tagged (one operator-only exchange-login credential creation, two stated
   design/priority calls). Independently reconfirmed by today's
   `/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 3 open items: 1 credential-blocked (Bybit key, operator's own
+  exchange login), 2 operator design/priority calls.

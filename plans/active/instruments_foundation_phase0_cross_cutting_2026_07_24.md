@@ -617,3 +617,7 @@ wrong).
 - **context-scout 2026-08-03**: re-scouted; refreshed context_scope (6 entries) — swapped the 2 sibling AG
   gate-execution plans for 3 real source paths (the honest-coverage v2 producer script + the 2 UAC crosscutting modules
   the still-open items 2/3/8/10 all cite live-grep evidence against).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-02/08-06 (unchanged): all 13 open items sit
+  behind GATE 0 (NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra with genuine DESIGN-judgment items
+  (expected-universe oracle venue-truth sourcing decision, canonical-form single-SoT whole-corpus migration sequencing)
+  that aren't cleanly bounded-outcome — consistent with the prior two passes' verdict, doc stays NA as a mixed set.

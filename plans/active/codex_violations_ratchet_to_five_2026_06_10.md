@@ -622,6 +622,16 @@ for a `batch2` on the next pass and rehome then.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07** (infra tranche): KEEP-NA, valid — unchanged since 2026-08-02; re-verified the 5
+  open items fresh. The UAC `defi_position.py` citation (line ~373) remains correctly cross-referenced into
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (no new citation needed — same conclusion as the 2026-07-30 audit).
+  Re-checked whether a newer infra batch (4/6/7, batch2/3/5 archived) now covers the pip-audit follow-ups or the
+  domain-client base-gate retarget: `grep -rlE 'domain-client base-gate|unified_domain_client'` and a pyarrow/twisted/
+  mako/ujson grep across `plans/active/` both still resolve only to `infra_satellite_ao_dispatch_batch1_2026_07_26.md`
+  (Deferred, unlanded) and `batch4_2026_07_31.md` (which itself states "the other 3 uncovered items... remain correctly
+  gated by batch1's own Deferred classification") — still genuinely unrehomed, consistent with the 07-30/08-02 finding.
+  The `_solana_utils.py` split and the Phase-3 schema-provenance item are unchanged (bounded-but-undone refactor /
+  design-judgment-call respectively). No stale items to close this pass.
 - **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA, stale-items — the 2 checkboxes
   already carrying a "MIGRATED 2026-07-27" citation (UAC `defi_position.py` reconcile; deployment-api codex-violations
   5→0) are confirmed correctly cross-referenced into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, no new citation

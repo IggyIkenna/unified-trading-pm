@@ -219,3 +219,13 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   the already-existing `_read_repo_dirty_ticks` (keyed by repo path, same result-file JSON) so
   `_propagate_not_clean_since`'s confirm-gate is keyed to the SAME repo it's clearing/preserving — this is the
   bugfix-the-existing-field branch of todo #3's field-design fork below, which stays out of this todo's scope.
+
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — doc stays NA overall (todos #1/#2 above
+  closed today with commit evidence, `unified-trading-pm@594aea342`). **Flagging for the orchestrator's own
+  conflict-check, not reclassifying myself**: the sole remaining open item (`[BACKEND] P3`, line ~117) no longer reads
+  as an unresolved design fork — today's own root-cause section resolves verdict (iii) as CONFIRMED with a specific,
+  bounded fix already named (swap `slot-git-status-report.sh`'s forwarded host-wide `dirty_consecutive_ticks` for the
+  already-existing per-repo `_read_repo_dirty_ticks` lookup, no schema/field addition needed) — this looks like it
+  crossed from "genuine judgment call between 2 design options" into "bounded, worker-determinable code fix with the
+  exact target lines already identified," i.e. a candidate for RECLASSIFY on a future pass. Not flipping `assigned_vm`
+  myself (needs the standing corpus conflict-check).

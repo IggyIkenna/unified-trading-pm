@@ -286,3 +286,6 @@ context_scope:
   actually starting, not because of a duplicate claim (none found, confirmed via `plans/`-wide grep for "3x
   cadence"/"cadence top-up") and not a design/judgment gate, just a genuinely-not-yet-timely bounded task. Re-check once
   `prediction_phase_ab_residuals_2026_07_24.md`'s P0 migration todo shows `--apply` in progress.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 5 open items; same dispatch gate re-confirmed live. Content
+  changed since 2026-08-06 (an operator `--day 2026-08-05` ruling was added 2026-08-07) but that doesn't clear this
+  doc's own gate.

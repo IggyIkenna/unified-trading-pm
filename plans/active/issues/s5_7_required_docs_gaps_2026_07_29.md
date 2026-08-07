@@ -111,6 +111,10 @@ the dispatch-scope-eligibility ruling):
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-07-30. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 3, matching. All 3 todos remain gated on the same operator/main scoping decision (should S5.1
+  tier its required-docs set by repo type) explicitly named in the doc's own text; only context-scout scope refreshes
+  have touched the doc since. No new evidence.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly
   self-classifies as a scoping judgment ('should S5.1 tier its required set by repo type?'), not a bounded worker todo,
   per the doc's own text citing the dispatch-scope-eligibility ruling.

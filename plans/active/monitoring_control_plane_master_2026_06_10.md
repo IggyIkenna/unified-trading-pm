@@ -720,3 +720,9 @@ separate citation trails across 3 audit passes all agree.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — UI-gated deployment-api/dashboard work, 3 prior KEEP-NA verdicts
 stand
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`): KEEP-NA, valid — confirms the established verdict, 5th consecutive
+pass, unchanged. Still 3/3 open items, still [UI]-role-mismatch (rollout-ratchet panels, E13) / needs-a-design-pass
+(runtime-level deploy signal v2, E14) / dependent-on-the-first-item (G4 ruleset drift, explicitly stated to fold into
+the rollout-ratchet panels as a third column). Same independently-corroborated citation chain as every prior pass; no
+RECLASSIFY candidates.

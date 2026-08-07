@@ -196,3 +196,7 @@ this, each time invisible until someone reads the backlog by hand.
   `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`, the doc that actually explains why this
   0-open-todo, `archive_exempt: true` doc still exists (its `[REVIEW] P0` todo is the one that will eventually archive
   it) — the single most decision-relevant pointer for a future toucher, still not previously in the list.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 0 open todos, `archive_exempt: true` re-confirmed accurate
+  (archival still routes through `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` todo, not
+  standalone); citation re-checked and real.

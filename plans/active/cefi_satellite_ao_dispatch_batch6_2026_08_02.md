@@ -148,19 +148,14 @@ context_scope:
       **unified-trading-pm@4dbd6cdfe** | Results: 28,158 option-shaped objects / 497 days / ~988 GB / 2024-03-08 to
       2026-05-01 / assets: AVAX_USDC MATIC_USDC TRX_USDC XRP_USDC.
 
-- [ ] [DATA] P2. **Fail-hard Stage 0 — classify-and-log at cefi manifest-write and read-path call sites.** In
-      `market-tick-data-service`, the write-side observe-log already shipped (`enforce_structural_and_observe_id_form()`
-      wired into `partitioned_writer.py`/`websocket_runner.py`/ `book_microstructure_handler.py` via
-      `market-tick-data-service@e49e1395`) — this todo covers the two remaining halves only: add the SAME id-form
-      classification (count + log only, **zero behaviour change**, per the source doc's own Stage-0 definition) at (a)
-      the manifest-recording call sites and (b) the read-path call sites for cefi instrument ids. Do NOT touch Stage 1
-      (write-enforce/raise) or Stage 2 (schema v10 + backfill) — both stay open, see Deferred below. Source:
-      `issues/fail_hard_canonical_enforcement_design_2026_07_20.md` (the `[DATA] P2` Stage 0 todo only). **Done when**:
-      manifest- and read-site classify-and-log land with zero behaviour change (a regression test proves no existing
-      write/read path changes outcome), QG is green, and the source doc's Stage-0 todo is checked off citing the
-      shipping commit.
+- [x] ✅ [DATA] P2. **Fail-hard Stage 0 — classify-and-log at cefi manifest-write and read-path call sites.** —
+      `market-tick-data-service@4bd7e87e`. Adds `_observe_cefi_id_form()` helper in `manifest_recorder.py` (called in
+      all 4 `record_*` methods for cefi), `classify_id_form` after `_sym` resolves in
+      `tardis_cefi_shards._emit_per_symbol_manifest`, and walrus-form classify in `reader._cefi_candidate_stems`.
+      Regression test `tests/unit/test_stage0_cefi_id_form_observe.py` (9 tests, all pass) proves zero behaviour change.
+      QG green. Source doc `[DATA] P2` Stage-0 todo flipped below.
 
-- [ ] [OPS] P2. **Determine dead-vs-alive for the 7 stale-image cefi Cloud Run jobs, then act on the finding.**
+- [x] ✅ [OPS] P2. **Determine dead-vs-alive for the 7 stale-image cefi Cloud Run jobs, then act on the finding.**
       Investigate whether `market-tick-cefi-binance-futures`/`-okx`/`-daily-download`/`-binance-spot`/`-bybit`/
       `-coinbase`/`-upbit` (all currently pinned to the same 5.5-month-stale `market-data-tick-handler:latest` image)
       are still-relevant or dead/superseded by the VM-based Tardis launcher path, using the SAME evidentiary method
@@ -177,7 +172,7 @@ context_scope:
       per-job dead/alive verdict is recorded with cited evidence for all 7 jobs, the corresponding action (delete or
       rebuild) is taken, and the source doc's 2 todos are checked off citing this run.
 
-- [ ] [SCRIPT] P2. **Add a live-vs-batch OKX-FUTURES `instrument_id` parity test.** In
+- [x] ✅ [SCRIPT] P2. **Add a live-vs-batch OKX-FUTURES `instrument_id` parity test.** In
       `market-tick-data-service/tests/unit/`, add a new test mirroring the existing BINANCE-FUTURES/KRAKEN-FUTURES
       live-vs-batch instrument_id parity coverage, scoped to OKX-FUTURES, so a future drift between the live WS
       connector's id-derivation and the batch/reference-data builder's convention can't silently regress again
@@ -185,7 +180,7 @@ context_scope:
       `issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` (the `[SCRIPT] P2` parity-test todo only).
       **Done when**: the new test exists, passes against the currently-shipped convention
       (`market-tick-data-service@8a6bbc97`), and the source doc's `[SCRIPT] P2` checkbox is checked off citing the test
-      file + a passing QG run.
+      file + a passing QG run. — market-tick-data-service@d964dce4 + source-doc checkbox flipped; QG green 2026-08-07.
 
 - [ ] [RESEARCH] P2. **Live-verify whether AAPL-USD (and other equity-underlying) OKX-FUTURES dated-future universe
       entries are real, currently-listed OKX contracts.** Pull `/api/v5/public/instruments?instType=FUTURES` live (NOT

@@ -787,3 +787,5 @@ into the same fix — carried forward here so it isn't lost with the archive:
   `data_completion_sports_2026_07_24.md` (owns §M's runtime re-division registry) and `sports_reference_core.py` (the
   actual file behind §O's open `emit_empty_gaps_for_entity` denominator finding).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 7 open items: 2 dependency-blocked, 2 lower-confidence
+  AO-eligible candidates not yet promoted, 1 genuine work, 2 operator questions.

@@ -200,3 +200,4 @@ honest-coverage denominator math, not a same-file fix.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `build_instrument_catalogue.py` (the
   root-cause builder every open fixture-grain todo extends) and `SPORTS_INSTRUMENTS.md` (the doc the codex-alignment
   todo would update).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items, all dependency-blocked.

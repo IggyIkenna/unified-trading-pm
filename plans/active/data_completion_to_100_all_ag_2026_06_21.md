@@ -816,3 +816,13 @@ disposition (re-audited 2026-07-21):
   `gcs-and-manifest-delete-safety-protocol.md`; the 2026-08-06 governance-sweep operator ruling (BYBIT `futures_chain`
   delete APPROVED, hard-stop #2 analysis) makes that codex doc's §3/§3a distinction directly load-bearing for a
   still-open `[OPERATOR]` todo, not just a passing citation.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-03 (14 open todos, unchanged since): a mix of
+  genuine bounded data work (GENUINE_WORK: EXTENDED-STARKNET backfill, IS-store/cross-data_type completeness steps,
+  live-capture continuity, DeFi MVP-filter/honest-absence/swallow-fixes narrowed residuals, the dex_swaps_handler.py
+  baseline restore, the manifest_consolidator CAST hardening), 2 items already cited (not closed) as tracked in
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (VM-launch gate-check, Step-4 credential asks —
+  CREDENTIAL_BLOCKED), 1 explicitly gated on defi reaching C-GREEN first (features-service category=defi ban,
+  DEPENDENCY_BLOCKED), and 2 genuine operator-gated items (CF-2/CF-3 cell-diff backfill needs scope/priority
+  confirmation; the BYBIT futures_chain delete is `RULED APPROVED` but still requires literal human execution per
+  delete-safety-protocol.md hard-stop #2 — both OPERATOR_QUESTION). No new stale-item evidence found this pass beyond
+  what 2026-08-03 already closed/narrowed.

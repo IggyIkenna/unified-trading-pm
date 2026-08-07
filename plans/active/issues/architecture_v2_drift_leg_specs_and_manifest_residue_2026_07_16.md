@@ -243,3 +243,8 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
   the sole todo still bundles a strategy-domain delete-vs-re-leg judgment call with an open-ended generator/UI
   structural-skew investigation the doc itself says likely needs its own plan. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
+  since the 2026-08-04 audit (context-scout metadata only, per git log). Sole open todo still bundles a
+  strategy-domain delete-vs-re-leg judgment call (`CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`) with an
+  open-ended UI/generator structural-skew investigation the doc's own "Secondary finding" says likely needs its own
+  plan. Doc stays `assigned_vm: NA`.

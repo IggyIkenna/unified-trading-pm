@@ -256,3 +256,9 @@ cefi-specific** — same defect now reproduced on a second tranche.
   `agent-orchestrator/server/state_store/tasks.py`, the file `mark_done()` actually lives in (the still-open P1 `/done`
   empty-`sha` fix's real target, confirmed by grep — not previously cited despite the doc's own Progress Log naming
   `mark_done()` directly).
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — code-verified both open items are
+  genuinely still unfixed: `grep -rn "_REGISTER_POLL_ROLES" agent-orchestrator/server/prompts.py` returns zero hits (the
+  `[SCRIPT] P2` register/poll-routing guard was never shipped), and `agent-orchestrator/server/state_store/tasks.py`'s
+  `mark_done()` (lines 55-71) still unconditionally sets `status="done"`/`done_sha=sha` with no empty-`sha` guard (the
+  `[SCRIPT] P1` data-integrity fix). Standing corpus ruling (AO dispatch/state machinery stays human-reviewed) still
+  applies.

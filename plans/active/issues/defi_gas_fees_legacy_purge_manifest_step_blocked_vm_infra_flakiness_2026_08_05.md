@@ -326,3 +326,7 @@ the highest-priority open question.
   `deployment-service@14240378194039fe5a2cfb5e2d86dbed6cffe8d8` — `quality-gates.sh` full run green (246s, 0 failures),
   landed on `live-defi-rollout` via `quickmerge.sh --agent`, post-push ancestry verified (ahead=0). Proceeding to the
   purge VM's 3rd relaunch attempt with fresh pre-flight re-verification.
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — both open todos ([DATA] P1 relaunch the purge VM
+  under the newly-shipped fix; [DATA] P2 update the sibling dispatch doc once it completes) are live, in-flight
+  operational work on an active incident with a fresh failure mode found and fixed within the last hour of this same
+  session — not worker-determinable ahead of the next relaunch's real outcome.

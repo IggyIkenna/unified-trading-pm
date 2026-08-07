@@ -757,3 +757,8 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   doc's real remaining scope (the 4 open Track-1 todos: staked-basis onchain e2e, CeFi MDPS top-up, deferred backfill,
   the yield-stub), dropping the archived predecessor plan and the long-since-shipped Phase-1 WRITE-blocker source path
   in favor of the `lst_yields` compute runner Phase A actually names.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms the 2026-08-01 full-doc audit (unchanged): the 4 open
+  Track-1 todos (staked-basis onchain e2e; CeFi MDPS top-up + delta_one funding_oi/realized_vol; deferred MDPS 1h
+  backfill; `usdc_idle_yield_apy_bps` stub disposition) each carry an explicit 2026-07-27 "re-check before dispatch"
+  gate confirming they aren't already superseded by concurrent work — real engineering-dispatch work, but not yet in a
+  clean re-verified-and-ready state.

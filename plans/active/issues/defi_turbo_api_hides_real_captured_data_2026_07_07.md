@@ -379,3 +379,7 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   dual-counting axis decision in a still-open sibling doc. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
+  since the 2026-08-04 audit (context-scout metadata only, per git log). Sole remaining todo (durable UAC registry
+  declaration for HYPERLIQUID/ASTER) is still gated on the open CEFI/DEFI dual-counting axis decision in a still-open
+  sibling doc. Doc stays `assigned_vm: NA`.

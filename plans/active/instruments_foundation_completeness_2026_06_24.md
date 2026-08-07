@@ -371,3 +371,8 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
   whole-doc RECLASSIFY bar (assigned_vm flips per-doc, not per-item).
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate — the only change since
   the 2026-08-03 marker was a 2026-08-06 na-eligibility-audit reaffirmation, no new content/targets.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): gated umbrella requiring
+  per-AG operator G-gate sign-off ("ask every time"); the 7 open items mix redirect-only header bullets (defi/sports
+  execution lives in delegated child plans), a partially-shipped DESIGN item (DeFi completeness oracle — schema landed,
+  probe implementation still pending), and genuine per-AG retirement/registry work — none clear the whole-doc RECLASSIFY
+  bar.

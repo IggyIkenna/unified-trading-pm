@@ -127,3 +127,7 @@ severities were weakened to `"none"`, masking 574 errors).
   citations verified still open in the active `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, and the 4th is
   genuinely gated. `locked_by: live-defi-rollout` still applies.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 3 open items): 1.3b/1.7e still
+  correctly cite SUPERSEDED-BY-BATCH1 (verified `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` still open
+  on both), 1.5b remains genuinely gated on `features_service_e2e_pipeline_test_2026_05_26.md` reaching a fully-closed
+  end-to-end-green state. `locked_by: live-defi-rollout` still applies.

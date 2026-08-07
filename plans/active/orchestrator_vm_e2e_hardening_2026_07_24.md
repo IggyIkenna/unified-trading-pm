@@ -472,3 +472,11 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) — re-verified all 4 still resolve and
   still map to the 3 open P0 items; unchanged.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified all 3 open items: 2 remain
+  genuinely credential-blocked (`ORCHESTRATOR_JWT_SECRET` SM alignment is permission-blocked by design for agents;
+  `harsh-worker`'s SSM IAM grant already has a filed CREDENTIAL APPROVAL REQUEST). **Lower-confidence flag, not
+  reclassifying**: the `[DESIGN] P0` dirty-worktree resolution item (line ~364) cites an already-operator-directed
+  4-step policy (Ikenna, Slack 2026-06-12) — the DESIGN itself reads as decided, with only "worker prompt template +
+  dispatch hook + plan todos per repo surface" left to build; worth a second look on a future pass to confirm whether
+  this is still a genuine open design call or has become bounded implementation work. Left untouched this pass — 3 prior
+  audits (07-30, 08-01, 08-06) all classified it the same way and I have no new evidence to override that.

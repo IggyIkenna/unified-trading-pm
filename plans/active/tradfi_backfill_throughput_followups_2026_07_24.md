@@ -421,6 +421,13 @@ source:
   `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`; now points at this doc). quality-gates.sh green in deployment-service.
   Both checkboxes above flipped in the same commit as this entry per the todo's own Done-when.
 
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA-STALE (already-duplicated) -- re-verified,
+  unchanged.** Sole open todo (the OOM rc137 cross-link) re-read end-to-end; count reconciled (1/1). Its two remaining
+  legs are still genuinely open in their own owning docs -- verified live:
+  `tradfi_backfill_oom_remediation_2026_06_24.md` is `status: open` (1 open todo) and
+  `consolidator_throughput_backlog_monitor_2026_07_09.md` is `status: active` (3 open todos). This doc's checkbox
+  correctly stays open as a cross-link, not independent work; nothing to reclassify.
+
 > **Moved verbatim from the parent's Progress Log (2026-07-24 line-cap split)** — this is the download/backfill-
 > throughput slice of the parent's single continuous autonomous-session narrative (ticks 14, 16, 22, the tick-26 ETA
 > re-analysis, the P0 T+1-job restore + P1 yfinance disposition, the Backfill-drive section, and the Databento-free-

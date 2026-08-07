@@ -986,3 +986,5 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
   finalization work, not worker-determinable — the doc's own history documents a real safety incident from this exact
   class of action.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is the mass-flip gated on the operator personally
+  running /ag-closeout-audit + /plan-reconcile.

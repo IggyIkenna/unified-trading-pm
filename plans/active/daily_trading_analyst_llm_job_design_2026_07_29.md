@@ -357,3 +357,12 @@ job's per-category input adapters for the reconciliation-derived categories, per
   AO dispatch; each needs its own sizing pass", and item 6 is explicitly `[OPERATOR]`-tagged. NA remains correct.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 6 open todos, all in §5):
+  items 1-5 stay explicitly framed as "build-phase — not yet scoped for AO dispatch"; item 6 is `[OPERATOR]`-tagged
+  (escalation-N + `assigned_vm` default for filed issue docs). Note for the record: this session was briefed that a
+  "SIT-red-escalation" design question on this doc was RULED YES (escalate to a background worker) earlier in the
+  parent session — grepped this doc + `plans/active/` + `plans/active/issues/` for "SIT-red" / "SIT red" and found no
+  matching content anywhere in the corpus; item 6's actual open question (the escalation-N day-count + default
+  `assigned_vm` for filed docs) shows no evidence of an operator ruling in this doc or its Progress Log. Treating item 6
+  as still genuinely open rather than assuming the cited ruling applies here — flagging the mismatch rather than
+  guessing.

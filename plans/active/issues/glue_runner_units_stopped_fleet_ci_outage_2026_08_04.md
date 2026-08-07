@@ -424,3 +424,10 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   this exact tree, so the ship itself added no additional host load). Closed the `[INFRA] P1` todo above with the SHA.
   Not yet independently re-verified on `main` (drains via `ldr-to-main-promote.yml`, ~15-30min SLA) — the live fix on
   `i-042a6332509482556` predates and is independent of this commit landing anywhere.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — CORRECTED rationale (the prior
+  2026-08-06 na-eligibility-audit marker cited the `[OPERATOR] P1` item as the sole reason to stay NA; that item is now
+  RESOLVED/MOOT per this doc's own later entries, so that rationale is stale). Fresh read of the 3 remaining open items:
+  the P2 monitoring-gap extension needs host-deploy access + judgment about alert conditions (same class of work the
+  shipped `is_crash_looping()` fix required); the 2 P3 items (VM-naming disambiguation, automated watchdog-script sync)
+  are lower-confidence AO-eligible candidates — flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` in this audit's report rather
+  than reclassified here, given this doc's history of misdiagnosis from ambiguous instance naming.

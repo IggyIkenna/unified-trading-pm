@@ -114,3 +114,6 @@ resolved_by: ""
   traced this to an UNRELATED, already-known fleet-wide LDR→main promotion stall (zero promotions landed across a 5-repo
   sample in 4+ hours), added confirmation to the existing tracking doc rather than duplicating it. Primary bug closed;
   this doc stays open only for the base-image-fix-reaches-main tail + the P3 dead-infra cleanup.
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — the sole open item (P3, delete the paused legacy
+  Job/scheduler outright) is deliberately time-gated ("once confirmed stable for a few days"), not blocked on anything
+  external; genuine unscheduled follow-up.

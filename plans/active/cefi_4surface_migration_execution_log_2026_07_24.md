@@ -882,3 +882,9 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   table) for `unified-api-contracts/unified_api_contracts/canonical/quarantine.py` — the actual source module
   (`is_quarantined_instrument_id`/`ResolutionEvidence` registry) behind the sole remaining open todo (PACIFICA-SOLANA
   quarantine registration).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items confirmed directly (PACIFICA-SOLANA quarantine
+  registration, genuine work; the `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` dry-run chain-drop
+  blind-spot fix, genuine work). Note: a same-run sibling audit pass reported this doc's dry-run chain-drop item as
+  already resolved (citing instruments-service@1284606a/@654d694f + Surface C v2 apply GATE GREEN) — that evidence does
+  not match this specific `_DRYRUN_COLS` script item on direct read, so left open rather than closed on an unverified
+  citation; worth a follow-up re-check.

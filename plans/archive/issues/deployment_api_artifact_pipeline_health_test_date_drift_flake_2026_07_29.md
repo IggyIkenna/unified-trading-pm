@@ -15,7 +15,7 @@ summary: >-
   `/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`); confirmed pre-existing/unrelated by
   re-running the same test against a `git stash`-clean HEAD (5d157d6) -- same failure, same StopIteration. Not fixed as
   part of that dispatch (out of its narrow scope); filed here per the outside-every-plan findings-triage rule.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +39,7 @@ source: >-
   Discovered incidentally while shipping small-1 (deployment-api sleep()-based test-waste fix) from
   /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md -- the full quality-gates.sh run
   surfaced this unrelated pre-existing failure, confirmed by reproducing it against a clean HEAD.
-resolved_by:
+resolved_by: "deployment-api@cf55369 (test made relative to now); ancestor-verified on origin/live-defi-rollout"
 locked_by:
 depends_on: []
 context_scope:
@@ -49,6 +49,9 @@ context_scope:
     /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — sole todo done: `deployment-api@cf55369` made the test date relative to `now()`, verified
+> ancestor of `origin/live-defi-rollout`.
 
 ## Problem
 
@@ -87,7 +90,7 @@ string. Low-risk, mechanical — no production behavior change, test-only.
 > re-run — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc's own Progress Log
 > had already self-nominated for exactly this conversion. Scope and fix shape are unchanged.
 
-- [ ] [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
+- [x] ✅ [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
       trailing-7-day health window deterministic under test: either parameterize `_resolve_window`'s "today"
       (`deployment_api/services/artifact_pipeline/service.py:79-92`) behind an injectable clock, or compute the
       `_fact(...)` fixture date relative to a frozen `datetime.now(UTC)` rather than the literal
@@ -117,3 +120,7 @@ mid-dispatch.
   `_resolve_window()`, and the discovery-context archive doc still resolve and remain the minimal correct set.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, stale items — closed the sole open checkbox
+  (already-shipped evidence was present inline but never flipped): `deployment-api@cf55369` re-confirmed
+  ancestor-of-`origin/live-defi-rollout` via `git merge-base --is-ancestor cf55369 origin/live-defi-rollout`. Doc now
+  has 0 open todos — flagged ARCHIVE CANDIDATE in this audit's report (not archived here).

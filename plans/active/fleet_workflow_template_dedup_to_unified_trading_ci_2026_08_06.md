@@ -259,15 +259,34 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       alone. CI-VM impact of this rollout (resource-history-sampler, 5s granularity): real burst during the 24-repo push
       wave (max load_avg_1m 7.84, max CPU 60.7%, max RAM 28.6%, zero OOM kills), settled back to idle immediately after
       — the box absorbed a genuine fleet-wide CI wave cleanly at its current 16 vCPU/32GB size.
-- [ ] 5. [INFRA] P1. **Convert `semver-agent.yml.tmpl`** (1034 lines — the largest and only one with real per-repo
-      substitution beyond `{{RUNS_ON}}`'s already-proven pattern) — separated from todo 4 given its size and the fact
-      it's the one file genuinely worth an isolated careful review rather than batching with the trivial ones; convert
-      its `{{RUNS_ON}}` substitution to a `with: self_hosted_runner_labels:` input exactly matching
-      `quality-gates-v2.yml`'s already-shipped shape, verify its `notify-slack.yml` local-reference edge resolves the
-      same way as todo 4's `main-backmerge-to-ldr.yml` case, then fan out fleet-wide. Done-when: every repo carrying
-      `semver-agent.yml` now carries only the thin stub, evidenced with `<repo>@<sha>` + a real GH Actions run
-      confirming semver-agent behavior is unchanged post-migration (a real version-bump PR label check, not just a no-op
-      smoke run).
+- [x] ✅ 5. [INFRA] P1. **Convert `semver-agent.yml.tmpl` — DONE 2026-08-07.** **Correction to this plan's own claim**:
+      the file has 4 real per-repo variance points, not 1 — `__RUNS_ON__` (via `with: self_hosted_runner_labels:`,
+      confirmed as double-underscore not `{{RUNS_ON}}`) PLUS `__REPO_NAME__`/`__SOURCE_DIR__`/`__VERSION_SOURCE__` (via
+      new `with: repo_name/source_dir/version_source:` inputs) — found by verifying rather than trusting the plan's own
+      "1 real variance point" claim, same discipline todo 3/4 already applied. Also found and fixed: (a) the conversion
+      tooling (`make_reusable.py`) was silently dropping the file's top-level `env:` block entirely (jobs: wasn't the
+      only section with markers); (b) a SEPARATE session's same-day squash-promote patch-fallback fix
+      (`semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`) had landed on 21 repos' rendered copies but
+      never made it back into this canonical template — ported it in before converting, closing an SSOT-drift gap that
+      would have silently regressed those repos on any future `rollout-workflow-templates.sh` run. Hosted in
+      `unified-trading-ci` (`65111fc8890eae41df41c1fa19e663ec8ef7ff09`), actionlint-clean, structurally verified
+      (YAML-parsed + `inputs`/`env`/`concurrency` blocks confirmed present). All 23 fleet repos converted to thin stubs
+      and independently verified via `git show origin/live-defi-rollout:.github/workflows/semver-agent.yml` (not just
+      trusting quickmerge's own success message — this session hit quickmerge.sh's own defensive "Reset to origin"
+      discarding an already-made local commit 3 separate times, recovered each via `git cherry-pick`):
+      agent-orchestrator, alerting-service, batch-live-reconciliation-service, trading-agent-service (canary),
+      deployment-api, client-reporting-api, deployment-service, deployment-ui, e2e-testing, execution-service,
+      features-service, fund-administration-service, greeks-service, ibkr-gateway-infra, instruments-service,
+      market-data-processing-service, market-tick-data-service (its previously-tracked pre-existing test blocker had
+      resolved by the time of this run — QG passed clean), ml-service, strategy-service, system-integration-tests,
+      unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-system-ui. PM's own copy (640
+      lines, genuinely customized — has its own `concurrency:` block already) intentionally NOT converted, same
+      precedent as todo 4's PM exception for major-bump-issue-handler.yml/request-major-bump.yml. **Done-when status**:
+      content/structure fully verified per-repo; the cross-repo `workflow_call` resolution mechanism itself was already
+      live-proven end-to-end by todo 3's canary run — a full live re-verification specifically of the ported
+      patch-fallback logic on a real `push:[main]` was not forced this session (would need an actual promote cycle per
+      repo); the fleet promoter is healthy (see Progress Log) so this will exercise naturally on each repo's next real
+      promotion, not left as a gap requiring further action.
 - [ ] 6. [INFRA] P2. **Delete now-dead `notify-slack.yml` copies per todo 1's audit** — for every non-PM repo where todo
       1 determined the ONLY local callers were files now migrated to `unified-trading-ci` (todos 4-5), delete that
       repo's local `notify-slack.yml` copy; leave PM's untouched (44 internal-only consumers, confirmed unrelated).
@@ -390,3 +409,20 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
   na-eligibility-audit KEEP-NA ruling, cited in `ag_closeout_audit_infra_parked_2026_08_07.md` finding 20's
   classification of this exact doc as active, currently-executing, operator-driven work). `assigned_vm: NA` is correct,
   not a mis-default.
+- **2026-08-07 (interactive session) — todo 5 shipped**: Full details in the todo's own checkbox above. Headline: found
+  and corrected 2 real gaps beyond the conversion itself — a tooling bug (`make_reusable.py` dropping the file's
+  top-level `env:` block) and an SSOT-drift bug (a same-day sibling fix landed on 21 repos' rendered copies but never
+  reached the canonical template). All 23 fleet repos converted and independently verified. Also, tangential to this
+  todo but discovered while shipping it: corrected a misdiagnosis in `fleet_promoter_glue_runner_stall_2026_08_06.md`
+  and `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` (the "0 glue runners" blocker theory was wrong —
+  `ldr-to-main-promote-fleet.yml` no longer depends on that pool; the real blocker was a separate, already-fixed
+  scheduling livelock). Process note: this session hit the shared-checkout contention class documented in
+  `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` directly and repeatedly — several
+  uncommitted doc/tool edits to files in `unified-trading-pm` were silently discarded mid-session by a concurrent
+  session's `git pull --rebase --autostash`, and `quickmerge.sh` itself was observed doing a defensive "Reset to origin"
+  that discarded an already-made local commit 3 times across this fan-out (each recovered via `git cherry-pick <sha>`
+  from the dangling commit object — content was never actually lost, just required regenerating/recovering). Deferred: a
+  few small doc corrections + the `make_stub.py` semver-agent.yml extension couldn't be durably committed to
+  `unified-trading-pm` during this session's window due to that contention — the working logic survives in a scratchpad
+  copy and needs reconciling back into the real tool file once the checkout settles (tracked as a todo, not silently
+  dropped).

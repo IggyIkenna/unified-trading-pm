@@ -144,3 +144,6 @@ mechanism for surfacing batch2 candidates — not another `/ag-closeout-audit` p
   Finding 3's rationale). Full per-doc classification evidence: Workflow run `wf_435a1f38-064`, journal at
   `subagents/workflows/wf_435a1f38-064/journal.jsonl` (session-local, not corpus-durable — this doc + batch1's own
   Progress Log are the durable record).
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — a point-in-time ag-closeout-audit findings record,
+  not a dispatchable work item; all 3 findings are already actioned (2 folded into the tracked corpus-wide `ui` retag
+  todo, 1 is this same day's result summary) and content is current as of today.

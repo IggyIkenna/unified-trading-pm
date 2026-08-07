@@ -557,3 +557,5 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
 - **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added
   `verify_cefi_canonical_4surface_2026_07_20.py`, the final done-state re-proof script the sole open todo names directly
   as its last step before archival.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is resuming the paused migration, a judgment
+  call, not worker-determinable.

@@ -74,3 +74,11 @@ as still gated by multiple competing base-service.sh/base-library.sh claims. As 
       option A) and G2 (move the 0.10.8 constant into `scripts/workspace/resolve-canonical-versions.py`, same entry) are
       now fully conflict-clear and extractable.** If clear: file a thin extraction plan (or add to an existing active
       infra batch). If still blocked by another claim, update the gate record here. (repo: unified-trading-pm)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — first verdict for this same-day doc. Read
+  end-to-end; `grep -cE '^- \[ \]'` = 1, matching. The sole todo is explicitly gated on
+  `infra_satellite_ao_dispatch_ batch6_2026_08_02.md`'s own `[INFRA] P3` UV_LINK_MODE todo shipping first (a still-open
+  dependency on the shared, serialized `base-service.sh`/`base-library.sh` resource) — dependency-blocked, not
+  worker-determinable today.

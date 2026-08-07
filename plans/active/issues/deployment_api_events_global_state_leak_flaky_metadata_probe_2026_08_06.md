@@ -184,3 +184,7 @@ executes the real lifecycle context manager at all).
   Confirmed `/codex/02-data/live-data-persistence-and-event-log.md` does NOT cover this `unified_trading_library/events`
   lifecycle-logging module (that codex doc is the market-data `EventTransport`/`streaming.event_facade` system — a
   same-sounding but different module) — not added, would have been a false citation.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — the sole open `[BACKEND] P3` todo
+  (investigate + reconcile the two independent `unified_trading_library` event-global-state stores, and why the
+  `conftest.py` autouse reset didn't prevent the CI-only leak) is genuine investigation/design work on a fleet-wide
+  shared dependency, not a mechanical fix.

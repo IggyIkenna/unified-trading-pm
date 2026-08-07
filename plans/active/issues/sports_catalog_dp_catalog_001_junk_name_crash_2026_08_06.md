@@ -185,3 +185,5 @@ observability hook whoever picks up the follow-up needs.
   dropped `defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md` (only cited contrastively — "a structurally
   different failure mode from" — not a resource this doc's own follow-up work needs) to stay minimal; the other 3
   pre-existing entries re-verified to resolve on disk and kept.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items: 1 dependency-blocked, 1 lower-confidence
+  AO-eligible candidate not yet promoted.

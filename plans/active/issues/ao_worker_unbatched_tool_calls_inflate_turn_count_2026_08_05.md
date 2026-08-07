@@ -113,3 +113,9 @@ them"), but the instruction is not being followed in practice, at least in this 
 - **context-scout 2026-08-07**: refreshed context_scope (5 entries) — added
   `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, which now carries this doc's items 1-2 as a combined
   todo (item 3 is the only one still open here).
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — verified `ao_satellite_ao_dispatch_batch7_2026_08_06.md` (todo
+  1, real verbatim match on the confirm-systemic + strengthen-prompt combined ask) is still `status: draft` /
+  `assigned_vm: NA`, not yet an ACTIVE `planning` doc, so verdict 3 (already-duplicated) doesn't strictly apply — this
+  doc stays the live tracking home until batch7 activates. Item 3 (soft turn-count circuit breaker) remains an unscoped
+  design fork.

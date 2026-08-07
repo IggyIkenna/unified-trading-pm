@@ -253,3 +253,6 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries) -- added the tarball-deployment codex SSOT
   (current BLOCKED-INFRA gate), the legacy-cron terraform target, and the bucket-resolver source module.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-07-30; all 10 open todos are gated behind the
+  BLOCKED-INFRA tarball-persistence 3-option operator decision, prod-bucket deletes (human-only hard stop), or per-AG L3
+  plans' own C-GREEN gates this plan only coordinates, not executes.

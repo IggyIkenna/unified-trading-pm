@@ -72,13 +72,12 @@ drift_direction: advance-code
       `uts-prod-alerting-paging` dual-consumer pattern from earlier today is the template for this class of bug), (c)
       any GCE VM with a heartbeat that stopped climbing days ago but the instance is still billably RUNNING. Report only
       genuinely-zombie findings, not restatement of the original audit.
-- [ ] [SCRIPT] P0. **Alert-coverage cross-reference** — for every finding below (excluding the DeFi consolidator), check
-      `#data-pipeline-alerts` and `#uts-live-alerts` (via `scripts/dev/slack-read-channel.py`,
-      `SSL_CERT_FILE=$(python3 -c "import certifi; print(certifi.where())")`) across the finding's actual active window
-      for a matching alert. Cross-check against `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` for whether
-      a rule even EXISTS that should cover this failure class. Produce a table: finding → alert fired?
-      (yes/no/no-rule-exists) → evidence. File gaps as their own todo/issue-doc entries — a real coverage gap is a
-      finding in its own right, not just a footnote.
+- [x] [SCRIPT] P0. ✅ **STALE DUPLICATE — already done, closing 2026-08-07 (na-eligibility-audit).** Alert-coverage
+      cross-reference — for every finding below (excluding the DeFi consolidator), check `#data-pipeline-alerts` and
+      `#uts-live-alerts` for a matching alert; cross-check against the DP-* registry; produce a finding→alert-fired
+      table; file gaps as their own todo/issue-doc entries. This is a literal duplicate of the checked twin todo below
+      ("✅ Alert-coverage cross-reference — DONE 2026-08-07"), which already did exactly this and filed
+      `/plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md`.
 - [x] [SCRIPT] P0. ✅ **`market-data-query-service` — DECOMMISSIONED, not patched.** Investigation before fixing found
       this reclassifies from "fix the bucket" to "dead service": (1) zero real HTTP requests in 7 days (only the
       internal startup probe, which fails) — `gcloud logging read` for `httpRequest.requestUrl!=""` returned nothing;
@@ -106,11 +105,11 @@ drift_direction: advance-code
       Findings 4 and 8 flagged as a distinct case (a conceptually-matching rule exists but apparently didn't fire —
       needs live MissTracker state, not a Slack/code read) rather than filed as a gap. Cross-referenced 3 already-open
       same-day docs to avoid duplicating in-flight root-cause work. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P0. **Fix `market-data-query-service` crash-loop** — hardcoded `gs://market-data-candles` (doesn't exist)
-      in `_init_gcs_client()`; real buckets use `market-data-tick-{ag}-{prd|test}-central-element-323112`. Find the
-      correct bucket via `resolve_bucket_name(...)` (never hand-roll the string), fix, redeploy, verify the revision
-      actually stays healthy post-deploy (not just "Ready" — confirm an actual successful request/instance start in
-      logs).
+- [x] [SCRIPT] P0. ✅ **MOOT — service decommissioned, closing 2026-08-07 (na-eligibility-audit).** Fix
+      `market-data-query-service` crash-loop (hardcoded `gs://market-data-candles`). This plan's own earlier todo above
+      ("`market-data-query-service` — DECOMMISSIONED, not patched") already deleted the service entirely
+      (`gcloud run services delete market-data-query-service --region=asia-northeast1`, 2026-08-07) after finding it
+      dead for ~10 months with zero real traffic — there is no longer a crash-loop to fix; the service doesn't exist.
 - [ ] [SCRIPT] P0. **Fix `client-reporting-batch` OOM** — 512Mi/1cpu limit, 100% failure for 30+ hours. Raise the Cloud
       Run job's memory limit to a sane value (check what it's actually trying to process to size correctly, don't just
       guess a number) and verify a subsequent execution completes successfully.
@@ -226,3 +225,8 @@ drift_direction: advance-code
   bulk-paused all 32, verified 38/38 now `PAUSED`; flagged 4 with an obvious live successor as repoint candidates (not
   auto-repointed). Filed `/plans/active/issues/asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md` with the
   full list + repoint candidates + a `[OPERATOR]` follow-up todo.
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale items closed (2) — a literal duplicate
+  "Alert-coverage cross-reference" todo (its checked twin already did the work) and a now-moot "fix
+  market-data-query-service crash-loop" todo (the service was deleted entirely by an earlier todo in this same doc).
+  Doc otherwise stays NA — genuinely live, currently-being-executed `/autonomous` infra remediation work created today
+  (P0), 8 remaining open items are real unblocked ops-fix work, not defaulted/unassessed.

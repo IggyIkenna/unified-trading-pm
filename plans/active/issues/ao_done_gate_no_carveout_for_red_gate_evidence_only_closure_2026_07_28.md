@@ -288,3 +288,9 @@ forces an operator/main manual DB patch outside the normal flow.
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — citation re-checked and real: the 2026-07-30 RECLASSIFY→
+  `planning` verdict was explicitly REVERTED by the dated operator directive `unified-trading-pm@14478ca26` (2026-07-31,
+  "work these interactively rather than queue behind AO's busy backlog"), a standing ruling per this skill's own
+  citation-class (b), not re-litigated. Sole open item (`[DOC] P3`, add the BLOCKED-marker convention to
+  `task_template.md`) is small, unblocked, genuine doc work.

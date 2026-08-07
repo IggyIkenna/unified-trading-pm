@@ -158,3 +158,10 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
   (`firebase_auth.py`), the router mount point naming every affected route family (`main.py`), and the config field the
   guard actually reads vs. the one the Cloud Run env sets (`cloud_config.py`) — all four already named directly in the
   doc's own body.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — all 4 open `[BACKEND] P1` todos gate on
+  a real architecture/blast-radius decision (fix shape (a) vs (b), then issue+wire a real API key, audit every current
+  caller, then flip the guard) that risks breaking any existing no-credential caller if done blind — genuine judgment +
+  staged-rollout work, not a mechanical fix. **NOTIFY-OPERATOR flagged**: this doc documents a LIVE prod Cloud Run
+  service (`uts-shared-deployment-api`) reachable with ZERO authentication right now (`DISABLE_AUTH=true` defeats the
+  guard via an `ENVIRONMENT`/`DEPLOYMENT_ENV` name mismatch) — re-flagged here since no Progress Log entry since
+  2026-08-06 shows this was fixed or operator-acknowledged.

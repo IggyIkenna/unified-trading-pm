@@ -649,8 +649,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 
 ### Phase 5 — codex + issue doc + notify
 
-- [ ] [REVIEW] P2. File `plans/active/issues/artifact_pipeline_metadata_gaps_<date>.md` with the 6 pipeline bugs above;
-      **notify the operator / Ikenna** (cross-repo, touches v2-gated CI in Ikenna's area). Verify bug #2 first.
+- [x] [REVIEW] P2. ✅ **STALE — already done under a different name, closing 2026-08-07 (na-eligibility-audit).**
+      File `plans/active/issues/artifact_pipeline_metadata_gaps_<date>.md` with the 6 pipeline bugs above; notify the
+      operator/Ikenna; verify bug #2 first. This plan's own "Pipeline bugs found" section (above) already states the
+      filing happened 2026-07-21 under `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`
+      (RE-VERIFIED 2026-07-21, most of the list resolved itself), and bug #2 (`REPO_NAME` vs `_REPO_NAME`) is already
+      verified "NOT A BUG — never reproduced" in that same section. Independently corroborated by
+      `issues/ag_closeout_audit_ui_parked_2026_08_07.md` Finding 3, which found this exact stale-read on the same day.
 - [ ] [REVIEW] P2. Fix the 5 `dual-cloud-image-builds.md` drifts (registry name, tag convention, trigger/project naming,
       canonical-trigger claim, empty-manifest provenance). Post-phase codex audit.
 
@@ -957,3 +962,8 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   `uts-shared-deployment-api`'s Cloud Run config, `cpu-throttling: false` already set; live-verified
   `/api/artifacts/images` returns full real data (39 repos, 0 empty) — symptom no longer reproducible, hypothesis
   confirmed correct, Phase 7's last open todo closed.
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale item closed — Phase 5's "file issue doc" todo was
+  stale (the filing + bug #2 verification already happened 2026-07-21 under a different-named doc, see the closed todo
+  above for the citation). Doc otherwise stays NA — human/local plan, dense operator sign-off history, remaining 10
+  open items are real follow-on/stretch work (1 sequencing-blocked on a net-new VM-launch deploy provider, 9
+  unblocked).

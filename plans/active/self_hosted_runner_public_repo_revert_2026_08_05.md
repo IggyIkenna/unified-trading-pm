@@ -343,6 +343,10 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 1, matching (todo 24, PM's own revert, was closed same day 2026-08-07, before this pass). The
+  sole remaining item (todo 20, billing/load re-measurement) is explicitly timing-gated — needs a few days of real
+  elapsed usage to be meaningful, not worker-determinable today.
 - **2026-08-07 (ci-reconcile sweep, follow-on finding)** — This plan's runner deregistration (todo 21, DONE) left
   `glue-runner-health-monitor.yml` (created 2026-08-06, after most of this plan's early phases) watching a pool that
   will never come back — it paged CRITICAL every hour on a permanent, will-never-clear "0 online" condition. Also found

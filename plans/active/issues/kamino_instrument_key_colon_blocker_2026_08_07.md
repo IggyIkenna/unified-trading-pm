@@ -63,3 +63,11 @@ batch.
 - **(c) Leave f-string as-is** (current state). No migration; kamino stays off the builder path.
 
 Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batch9-001, slot 2, 2026-08-07).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — first audit pass, doc filed today. The doc carries
+  no tracked checkboxes at all — it is a pure findings-plus-options write-up awaiting a real operator ruling on a
+  GCS-path-changing instrument-key format decision (options (a)/(b)/(c) above, each with different migration
+  implications for existing manifest rows) — a textbook OPERATOR_QUESTION, not a worker-determinable outcome. Doc
+  stays `assigned_vm: NA`.

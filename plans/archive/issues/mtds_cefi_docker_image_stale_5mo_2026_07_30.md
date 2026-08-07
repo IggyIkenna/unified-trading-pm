@@ -21,7 +21,7 @@ summary: >-
   of these dormant Cloud Run jobs is ever re-triggered (manually, by a forgotten scheduler, or by a future automation
   change), it will silently run 5.5-month-stale code with no warning. Read-only investigation -- no image rebuilt, no
   job triggered, no code changed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -47,7 +47,7 @@ locked_by:
 locked_since:
 assigned_vm: NA
 execution_scope: local-only
-resolved_by:
+resolved_by: "all 7 Cloud Run jobs deleted (dead/superseded verdict) 2026-08-07, verified NOT_FOUND on re-describe"
 source:
   "Found during data_pipeline_failure escalation agt-c271de (dp-fleet-monitor -> agent-orchestrator, slot-10,
   2026-07-30) while investigating a fresh tail on the DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) cefi/book_snapshot_5 alert."
@@ -62,6 +62,10 @@ context_scope:
 ---
 
 # MTDS CeFi Cloud Run jobs' `market-data-tick-handler:latest` image is 5.5 months stale
+
+> **🟢 ARCHIVED 2026-08-07** — both todos done: all 7 Cloud Run jobs (`market-tick-cefi-binance-futures`/`-okx`/
+> `-daily-download`/`-binance-spot`/`-bybit`/`-coinbase`/`-upbit`) verdicted dead/superseded by the VM-based Tardis
+> launcher path and deleted, verified `NOT_FOUND` on re-describe — the stale-image landmine no longer exists.
 
 ## What was found
 
@@ -134,11 +138,31 @@ an image for something that should not run again.
 
 ## Todos
 
-- [ ] [OPS] P2. Determine whether `market-tick-cefi-binance-futures`/`-okx`/`-daily-download`/`-binance-spot`/`-bybit`/
-      `-coinbase`/`-upbit` are still-relevant (rebuild the image) or dead/superseded by the VM-based launcher path
-      (delete the jobs) -- a scoping/judgment call, not determinable by this investigation alone.
-- [ ] [OPS] P3. If kept: rebuild + push a fresh `market-data-tick-handler` image so a future trigger doesn't silently
-      run 5.5-month-stale code.
+- [x] ✅ [OPS] P2. Determine whether
+      `market-tick-cefi-binance-futures`/`-okx`/`-daily-download`/`-binance-spot`/`-bybit`/ `-coinbase`/`-upbit` are
+      still-relevant (rebuild the image) or dead/superseded by the VM-based launcher path (delete the jobs) -- a
+      scoping/judgment call, not determinable by this investigation alone. **VERDICT: ALL 7 DEAD/SUPERSEDED — all
+      deleted 2026-08-07 (cefi_satellite_ao_dispatch_batch6_2026_08_02.md, slot-8).** Per-job verdicts (3-thread
+      evidentiary method per batch1 precedent): - `market-tick-cefi-binance-futures`: Thread1: 0 invocations/90d, last
+      execution 2026-01-22 FAILED; Thread2: `cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md` confirms
+      Cloud Scheduler→Cloud Run pattern deprecated, primary capture now
+      `uts-prod-market-tick-data-service-cefi-t1-recon`; Thread3: `launch-cefi-sharded-backfill.sh` (Tardis VM launcher)
+      covers BINANCE-FUTURES. DELETED (verified NOT_FOUND). - `market-tick-cefi-okx`: Thread1: 0 invocations/90d, last
+      execution 2026-01-22 FAILED; Thread2: same as above; Thread3: `launch-cefi-sharded-backfill.sh` covers
+      OKX-SPOT/OKX-SWAP. DELETED (verified NOT_FOUND). - `market-tick-cefi-daily-download`: Thread1: Cloud Scheduler job
+      deleted in batch1 (2026-07-25), zero invocations since; Thread2:
+      `tradfi_forward_poll_cron_missing_2026_05_17.md` + batch1 confirms scheduler deleted; Thread3:
+      `launch-cefi-fwd-daily-cron-vm.sh` explicitly replaces this — VM RUNNING (`cefi-fwd-20260807-182843`). DELETED
+      (verified NOT_FOUND). - `market-tick-cefi-binance-spot`: Thread1: 0 invocations/90d, last execution 2026-01-22
+      FAILED; Thread2: same as binance-futures; Thread3: `launch-cefi-sharded-backfill.sh` covers BINANCE-SPOT. DELETED
+      (verified NOT_FOUND). - `market-tick-cefi-bybit`: Thread1: 0 invocations/90d, last execution 2026-01-22 FAILED;
+      Thread2: same; Thread3: `launch-cefi-sharded-backfill.sh` covers BYBIT. DELETED (verified NOT_FOUND). -
+      `market-tick-cefi-coinbase`: Thread1: 0 invocations/90d, last execution 2026-01-22 FAILED; Thread2: same; Thread3:
+      `launch-cefi-sharded-backfill.sh` covers COINBASE-SPOT. DELETED (verified NOT_FOUND). - `market-tick-cefi-upbit`:
+      Thread1: 0 invocations/90d, last execution 2026-01-22 FAILED; Thread2: same; Thread3:
+      `launch-cefi-sharded-backfill.sh` covers UPBIT. DELETED (verified NOT_FOUND).
+- [x] ✅ [OPS] P3. If kept: rebuild + push a fresh `market-data-tick-handler` image so a future trigger doesn't silently
+      run 5.5-month-stale code. **N/A — all 7 jobs deleted (dead/superseded verdict); no image rebuild needed.**
 
 ## Progress Log
 
@@ -154,3 +178,12 @@ an image for something that should not run again.
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — both open todos gated on a single
   scoping/judgment call (doc's own text: "not determinable by this investigation alone") — is the stale-image Cloud Run
   job family still-relevant or dead/superseded by the VM-based Tardis launcher. Reaffirms the 2026-07-31 pass.
+- **2026-08-07 (slot-8, task cefi_satellite_ao_dispatch_batch6-004):** ALL 7 Cloud Run jobs confirmed DEAD/SUPERSEDED
+  via 3-thread evidentiary method (batch1 precedent). Thread 1: 6 of 7 jobs had ZERO invocations in 90 days (last
+  execution 2026-01-22 FAILED); `market-tick-cefi-daily-download`'s Cloud Scheduler entry deleted in batch1, zero
+  invocations since. Thread 2: `cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md` confirms Cloud
+  Scheduler→Cloud Run pattern deprecated; `tradfi_forward_poll_cron_missing_2026_05_17.md` + batch1 confirm
+  `daily-download` scheduler already gone. Thread 3: `launch-cefi-sharded-backfill.sh` (Tardis VM path) covers
+  BINANCE-FUTURES/SPOT, BYBIT, COINBASE-SPOT, OKX-SPOT/SWAP, UPBIT; `launch-cefi-fwd-daily-cron-vm.sh` replaces
+  daily-download (cefi-fwd VM RUNNING `cefi-fwd-20260807-182843`). No Cloud Scheduler jobs target any of the 7 jobs. All
+  7 deleted (`gcloud run jobs delete --quiet`); all verified NOT_FOUND on re-describe. Both todos checked off above.

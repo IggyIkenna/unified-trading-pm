@@ -472,3 +472,10 @@ due for its own pre-authorized next action independent of this audit.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator-directed human plan, sequential judgment-gated items
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`): KEEP-NA, valid — confirms the established verdict. Both open items
+unchanged: the `[SCRIPT] P2` divergence-analysis tool remains individually bounded-looking but stays correctly NA per
+the 2026-08-03 pass's own reasoning (`sequential: true` at the plan level + the doc's stated whole-plan
+`assigned_vm: planning` flip-trigger, not a partial dispatch) — not re-litigating that citation; the `[REVIEW] P2`
+fleet-wide evidence-sufficiency item remains an explicit human/reviewer judgment call. No new RECLASSIFY or ARCHIVE
+signal.

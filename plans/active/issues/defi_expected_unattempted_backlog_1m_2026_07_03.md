@@ -359,3 +359,7 @@ above are otherwise fully reproducible via the shipped CLI.
   calls this a genuine SSOT-contradiction call needing an explicit decision, not a bounded/mechanical task. Doc stays
   `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
+  since the 2026-08-04 audit (context-scout metadata only, per git log). Sole open checkbox (the indented star-bullet
+  `A_TOKEN`/`DEBT_TOKEN` alias-reconciliation item, confirmed via the full `^[[:space:]]*[-*] \[ \]` pattern) remains
+  a genuine SSOT-contradiction call needing an explicit decision. Doc stays `assigned_vm: NA`.

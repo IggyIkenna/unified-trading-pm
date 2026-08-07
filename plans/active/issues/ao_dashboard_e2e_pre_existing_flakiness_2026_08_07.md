@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [agent-orchestrator, e2e, playwright, flaky-tests, dashboard]
 related:
   [
-    plans/active/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md,
+    plans/archive/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-08-07"

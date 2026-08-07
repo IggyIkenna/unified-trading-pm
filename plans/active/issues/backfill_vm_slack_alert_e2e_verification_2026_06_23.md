@@ -276,3 +276,6 @@ for these messages to close the verification loop.
   list itself already carried 6) — all still resolve; both remaining open todos (VERIFY spot-check + DEPLOY
   render-verification) are operator-only with no live occurrence to inspect yet, per the doc's own progress log.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-07-30 (unchanged):
+  `locked_by: live-defi-rollout`; both remaining todos (VERIFY P2 Slack spot-check; DEPLOY P0 render-verification) are
+  explicitly operator-only / no-live-occurrence-to-inspect-yet by construction.

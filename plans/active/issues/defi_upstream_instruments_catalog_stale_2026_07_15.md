@@ -537,3 +537,7 @@ mode-threading residual and `[DESIGN] P3` completion-signal items remain genuine
   stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
+  since the 2026-08-04 audit (context-scout metadata only, per git log). Sole open item ([DESIGN] P3,
+  IS-catalogue-completion-signal retry-sweep) remains a lower-priority design task with no concrete done-when; every
+  other item already resolved with evidence. Doc stays `assigned_vm: NA`.

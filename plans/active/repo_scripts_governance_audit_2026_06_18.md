@@ -248,6 +248,13 @@ a verdict). Heaviest:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-02. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 8, matching. Mixed shape unchanged: 2 items operator-gated (cited in
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s BLOCKED-OPERATOR-DECISION section), the folded-in `[SCRIPT] P1`
+  still condition-blocked on an unmet fleet-wide precondition. Note: `ag_closeout_audit_infra_parked_2026_08_03.md`
+  finding 13 previously flagged the two ruff-lint items (add `scripts/` to the ruff pass; extend TID251/`os.getenv`
+  ratchets to `scripts/`) as "potentially bounded/mechanical" batch7 candidates but explicitly un-conflict-checked —
+  still un-scoped as of this run, re-flagging as RECLASSIFY-candidates worth a dedicated look, not actioned here.
 - **2026-06-18 — Phase 1 characterization DONE (read-only).** Fanned out 6 Opus sub-agents (one per repo-cluster) over
   all 21 service repos' `scripts/` (~820 `.py`+`.sh`; PM excluded). Results doc:
   `plans/audit/results/repo_scripts_characterization_2026_06_18.md`. Three headline findings: **(1)** the big DELETE

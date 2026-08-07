@@ -137,3 +137,6 @@ worse than just fixing the citation once the source is confirmed or the decision
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; both open items remain
+  operator-gated (item 1 needs a fact only the operator has; item 2 sequenced behind it). No indication of an operator
+  response yet. Unchanged since the 2026-08-06 marker.

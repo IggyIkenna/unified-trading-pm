@@ -402,15 +402,15 @@ consolidation).
       write made after the rollback. CF-8 remains RED on both surfaces, unchanged from the pre-session baseline.
 
       **DESIGN DIRECTION CONFIRMED 2026-08-07 (operator: "i authorize")** — the per-service_name-scoped write-group
-              approach above (group target rows by their OWN original `service_name`, write each group through a
-              `ManifestWriter` constructed with THAT service_name, not the fixed per-surface value) is confirmed as the right
-              direction. **Design confirmed, NOT yet built/reviewed/executed** — this is still "new, unreviewed engineering"
-              per the finding above; confirming the direction doesn't skip the actual implementation + review step, nor the
-              maintenance-window coordination `sports_consolidated_closeout_2026_07_19.md`'s Track H todo above now
-              authorizes separately. Someone still needs to: (1) implement the per-service_name grouping in
-              `sports_captured_available_at_targeted_backfill_2026_07_14.py` (currently DO-NOT-RUN-AT-SCALE per its own
-              docstring), (2) get it reviewed given the 2 prior regressions in this area, (3) run it inside a coordinated
-              maintenance window with pre-snapshots, matching the 2026-07-14 attempt's own safe rollback pattern.
+                      approach above (group target rows by their OWN original `service_name`, write each group through a
+                      `ManifestWriter` constructed with THAT service_name, not the fixed per-surface value) is confirmed as the right
+                      direction. **Design confirmed, NOT yet built/reviewed/executed** — this is still "new, unreviewed engineering"
+                      per the finding above; confirming the direction doesn't skip the actual implementation + review step, nor the
+                      maintenance-window coordination `sports_consolidated_closeout_2026_07_19.md`'s Track H todo above now
+                      authorizes separately. Someone still needs to: (1) implement the per-service_name grouping in
+                      `sports_captured_available_at_targeted_backfill_2026_07_14.py` (currently DO-NOT-RUN-AT-SCALE per its own
+                      docstring), (2) get it reviewed given the 2 prior regressions in this area, (3) run it inside a coordinated
+                      maintenance window with pre-snapshots, matching the 2026-07-14 attempt's own safe rollback pattern.
 
 - [ ] [INFRA] P1. **Implement + ship the per-service_name-scoped write-group fix, now design-confirmed but unbuilt**
       (see the 2026-08-07 note directly above). Concretely: (1) rewrite
@@ -957,3 +957,6 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
   this doc's own already-fixed `available_at` serializer bug. Filed separately (this doc is near its 1000-line cap):
   `defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items, both dependency-blocked. Flag: the newest todo
+  (added earlier today) may duplicate already-shipped work from this doc's own 2026-07-14 Progress Log
+  (market-tick-data-service@af627b5b) — worth re-verifying before rebuilding.

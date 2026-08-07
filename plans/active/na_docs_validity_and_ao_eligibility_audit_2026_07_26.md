@@ -729,3 +729,13 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (incremental-skip) — Skipped per incremental diff — unchanged
   since 2026-08-03 marker. Still the live origin plan for this skill; 13 open todos, all genuinely
   operator-gated/judgment.
+- **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — read end-to-end;
+  `grep -cE '^[[:space:]]*[-*] \[ \]'` = **13**, matching. Doc stays NA overall (this is the LOCAL/human-driven origin
+  plan for the very skill this run executes under). **Flagging 2 items for a future conflict-check pass, not
+  reclassifying myself**: the `[SCRIPT] P3` cross-cutting-membership-rule fix (line ~239) and the `[SCRIPT] P2`
+  staleness-script-cadence wiring (line ~246) both read as bounded, worker-determinable engineering tasks with named
+  targets — lower-confidence candidates than a clean RECLASSIFY given this whole plan's own explicit operator-ruled
+  LOCAL/human-track framing (2026-07-26), so left untouched. The other 11 open items (9 Phase-1 per-tranche audit
+  checkboxes deliberately left unflipped per the doc's own honest-accounting convention, the Phase-2 batch-consolidation
+  fork, and the `lst_rate_honest_coverage` line-cap-gated citation) remain genuine judgment/ongoing-incremental work,
+  unchanged since 2026-08-03.

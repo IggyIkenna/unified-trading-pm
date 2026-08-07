@@ -659,6 +659,14 @@ blocked-model-variant MM engines + 2 sta...
 - **context-scout 2026-08-07**: re-verified context_scope (6 entries, unchanged) — the only commit since the last scout
   (`b30fb5267b`) added `effort: xhigh` to frontmatter, no substantive content change; all 6 entries still resolve and
   remain the correct minimal set.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-08-01's KEEP-NA-STALE pass (13 items closed
+  then, none newly stale this run). The 23 remaining open items are genuinely Tier-2 (15 VOL_* + 2 MARKET_MAKING_*
+  backtest-pending, gated on the operator's explicit "do NOT run backfills yet" constraint — a real authorization gate
+  independent of the Tardis credential unblock recorded in `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED
+  #3) / Tier-2 (QUEUE_MICROSTRUCTURE, blocked-data, already split to `l2_book_microstructure_capture_2026_07_13.md`) /
+  Tier-3 (PREDICTION + ML_LEAN + 2 standalone training todos, blocked-model-variant, needing an operator-scheduled VM
+  run) / 1 contingent doc-update. None are bounded single-worker mechanical tasks the operator's backfill-authorization
+  gate doesn't cover.
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 

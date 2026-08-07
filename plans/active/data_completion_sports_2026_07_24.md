@@ -911,3 +911,5 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   did not flip `assigned_vm`. No conflict found for the 3 already-cleared candidates beyond what the 2026-08-02 entry
   already recorded. Doc stays NA; extraction of the 3 cleared candidates into a `planning` batch remains a
   plan-authoring call for the operator, not this pass's to execute.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items: 1 operator question, 3 dispatch-cleared but parked
+  pending plan-authoring (not this pass's to execute).

@@ -122,3 +122,8 @@ context_scope:
   after live verification found the doc's "cheap toggle" premise was wrong (legacy CUR can't backfill; CUR 2.0 needs a
   new export + AWS Support case + schema reconciliation) — the true cost no longer matches what made this worth a quick
   try, per the operator's own cost-conditioned fallback.
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — both prior operator-gated items are correctly
+  retagged to their resolved state (ruled-proceed / ruled-closed) in the same edit, no stale gate tags remain. The
+  business-context-enrichment item (now ruled+scoped) plus the 4 unscheduled P3 items are a plausible batched
+  RECLASSIFY candidate (bounded/deterministic, no remaining judgment call) — flagged for the orchestrator's
+  conflict-check, not actioned here per this audit's own verdict-4 protocol.

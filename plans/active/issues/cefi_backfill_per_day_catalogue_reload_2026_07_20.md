@@ -179,3 +179,5 @@ This profiling run was strictly read-only: zero code changes, zero GCS/manifest 
   shipped, `SHARD_DAYS` sharding) for `engine/cefi_catalog_reader.py`, the file the 2026-08-04 cProfile finding
   pinpoints as the actual bottleneck (`_build_has_perp_for_base`/`_yield_for_date`, 98.5% of wall time) and thus the
   real target of the still-open "implement the proper fix" todo.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is a range-loop-vs-cache architecture choice,
+  genuine judgment call.

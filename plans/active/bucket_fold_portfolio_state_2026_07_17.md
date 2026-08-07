@@ -195,3 +195,7 @@ per-domain path prefixes:
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): governed by the 2026-07-17
   operator ruling (HUMAN plans); live-trading-adjacent, IAM+lifecycle item still needs operator retention confirmation.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged, 3 open todos): 2026-07-17
+  operator ruling (HUMAN plans, this is the LAST/live-trading-adjacent fold) governs the AWS-leg/alias-sunset residuals;
+  IAM+lifecycle remains OPERATOR_QUESTION-gated (explicit "CONFIRM retention before COLDLINE... do not blanket-apply
+  without operator confirmation").

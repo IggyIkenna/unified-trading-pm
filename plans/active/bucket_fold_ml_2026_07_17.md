@@ -471,3 +471,9 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — added the artifact_store.py/model_registry.py
   prefix-collision source paths, dropped pipeline-mode-partition.md.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): governed by the 2026-07-17
+  operator ruling that all 5 bucket folds are HUMAN plans. The P0 "Delete sources + TF/yaml removal" item is a
+  prod-bucket delete (human-only hard stop) plus is blocked on the still-open TF-STATE RECONCILE big finding (32-item
+  IAM/scheduler drift, flagged operator-aware, not resolved this pass); IAM+lifecycle P1, deployment-api display
+  cutover P2, PM mirror re-sync P3, and alias sunset P3 are all named-blocker residuals (foreign uncommitted deps /
+  fleet ibkr crypto-pin drift / fallback-window timing), none newly resolved.

@@ -157,3 +157,6 @@ candidate for that tranche's next pass, not just a retag-only finding.
   `ao` tranche's own audit, not this doc's write.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (4 entries), still accurate — the only change since
   the 2026-08-05 marker was a 2026-08-06 na-eligibility-audit reaffirmation, no new content/targets.
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): verified the target doc's
+  frontmatter directly today — `asset_group: [ao]` (retag done), `assigned_vm: NA` (the RECLASSIFY → `planning` this
+  todo calls for is still not done) — the sole open todo's Done-when remains unmet.
