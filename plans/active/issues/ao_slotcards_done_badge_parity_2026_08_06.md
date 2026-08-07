@@ -36,8 +36,6 @@ drift_direction: advance-code
 context_scope: [agent-orchestrator/dashboard/src/layout.tsx, agent-orchestrator/dashboard/src/activity.test.ts]
 ---
 
-> **✅ RESOLVED / ARCHIVED 2026-08-07** — shipped `agent-orchestrator@777bd3e`. See Progress Log below.
-
 ## Todos
 
 - [x] 1. ✅ [UI] P3. Add the same `DoneBadge` (✓/✗ pill, hover reason) to `SlotCards` that `SlotTable` already carries,
