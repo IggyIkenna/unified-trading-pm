@@ -367,8 +367,17 @@ independent plans.
 
 ## Follow-ups
 
-- [ ] [SERVICE] P2. Implement staking-yields capability-completion for the 11 missing protocols (Phase 1: 8 DefiLlama
-      protocols ~2.5d; Phase 2: 3 AAVE Oracle protocols ~1.5d) — file as a new plan per §7
+- [x] ✅ [SERVICE] P2. Implement staking-yields capability-completion for the 11 missing protocols (Phase 1: 8 DefiLlama
+      protocols ~2.5d; Phase 2: 3 AAVE Oracle protocols ~1.5d) — file as a new plan per §7 — Phase 1 DONE
+      market-tick-data-service@c2bd2d53: `_DEFILLAMA_VENUES` tuple + `_fetch_defillama_yields_pools` +
+      `_extract_defillama_venue_rows` + `_make_defillama_venue_fetcher` added; unit tests in
+      `tests/unit/test_staking_yields_handler.py`; all 8 venues
+      (YEARN_V3/CONVEX/BEEFY/PENDLE/IDLE/SYMBIOTIC/KARAK/JITORESTAKING) batch-fetched from
+      `https://yields.llama.fi/pools` and fan-out per project slug. QG green. Phase 2 tracked in follow-up below.
+- [ ] [SERVICE] P3. Implement staking-yields Phase 2: 3 AAVE Oracle protocols (RENZO/KELPDAO/PUFFER ~1.5 AI days) — each
+      uses AAVE V3 Oracle `getAssetPrice()` + DefiLlama coins fallback; Alchemy key already in Secret Manager. Add fetch
+      functions to `staking_yields_handler.py`, add to `fixed_venues` list, add unit tests. See §7 for per-protocol
+      data-source details.
 
 > **2026-08-06 archive-candidate audit**: All 4 checkboxes are [x], but §7 describes ~30-32h of unimplemented work
 > ('File as a single plan with two sequential phases') — the capability-completion for
