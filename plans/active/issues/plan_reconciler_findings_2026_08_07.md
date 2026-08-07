@@ -115,6 +115,56 @@ NEW/unclassified rows classified at apply time.
 - Side-effect: H5's sanctioned inventory regen re-wrote
   `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` (dirty, regenerable; left uncommitted).
 
+## Moved-doc referrer hits (H9 result — existence-VERIFIED inline)
+
+48 cefi-tagged findings: **17 P1 live referrers** (13 writable — existence-verified: old path gone, archive path
+present; applied in STEP 5) + **4 P1 grace-set referrers** (deferred+filed: cefi_track7_candle_namespace_residual:138,
+cefi_book_snapshot5:239, mtds_qg_red_combined_coverage_shortfall:27/65) + **2 P2 display-text-only**
+(aggregated_sources:171/204, grace) + **29 P2 archived referrers** (gate-excluded by the 2026-08-02 ruling; filed as one
+class — full list parked in the hunter report; candidates for a corpus-wide sweep, not this shard). Zero dangling-ref
+candidates from cefi referrers. Adjacent (codex, meta): `codex/02-data/defi-data-pipeline.md` cites
+`/plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` — the doc never moved (still
+`plans/active/…`); wrong-path citation → ROUTED (codex edit, operator).
+
+Writable P1 repoints to apply (old→new, all existence-verified):
+
+- cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md:283 →
+  plans/archive/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md
+- data_completion_cefi_2026_07_15.md:474/541/733 → archive/issues/cefi_e6_cf7_relabel…,
+  archive/2026_08/mdps_candle_manifest_near_total_coverage_gap…,
+  archive/issues/cefi_instruments_store_blank_data_type_residual…
+- candle_feature_canonical_path_divergence_2026_07_20.md:497/505 →
+  archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md
+- instruments_docs_audit_outstanding_items_2026_07_08.md:51 →
+  archive/issues/instrument_id_format_canonicalization_2026_07_08.md
+- instruments_remaining_work_audit_2026_07_10.md:609 →
+  archive/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md
+- mdps_features_deadcode_consolidation_2026_07_20.md:90/96/104/110 →
+  archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md
+- plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_06.md:170 →
+  archive/issues/cefi_bare_okx_venue_removal_2026_08_04.md
+
+## Codex-alignment (H7 result — pending STEP-4/6 routing)
+
+- **P1 SSOT STALE**: `codex/02-data/cefi-capture-universe.md:208-220` carries the reversed 2026-07-17 "accept 50.79%"
+  verdict as live; closeout RULING 2026-07-18 reversed it and track2 backfill resumed (VM launched 2026-07-27). Codex is
+  the stale side → ROUTED (operator-ruled codex edit). Plan-side stale framing feeding it:
+  `issues/cefi_residual_followups_after_honest_done_2026_07_17.md:5` (writable) opens "CLOSED at honest-done … 50.79%"
+  with no reversal note → plan-side fix (reversal banner) in STEP 5.
+- **P1 SSOT STALE**: `codex/02-data/data-lineage-MTDS-features-ml.md:123-131` "on-chain-perp candle gap still open /
+  deliberately deferred" — plan documents DONE 2026-07-26 for 3/4 venues (aster_and_cefi_rolling_adv_feature:177-183;
+  ASTER residual = manifest-registration gap). → ROUTED (codex edit, operator).
+- **P2 codex↔codex**: cefi-capture-universe.md:139-142 (BINANCE-DELIVERY in MVP scope, 2026-06-24 status) vs
+  cross-asset-canonical-target-ssot.md:468 (descoped from MVP, kept registered, 2026-07-18) — stale half is
+  cefi-capture-universe → ROUTED.
+- **P2 PLAN WRONG**: cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md:116-137 Phase-2 todo mandates retired
+  EQUITY_PERP/TOKENIZED_EQUITY stamping vs SSOT (operator 2026-07-16: PERPETUAL only) AND the plan's own STATUS banner
+  (:143-149, fix DONE). Todo checkbox still `[ ]` — align todo text to the ruling; cross-check H4 missed-flip before
+  editing (same file).
+- **P2 unresolvable ref**: `codex/CLAUDE.md` cited at instruments_satellite_ao_dispatch_batch1_2026_07_27.md:220 (also
+  deployment_registry_firestore_p5_verify:88, pipeline_mode_source_batch_live_replay_standardisation:305) — no such doc;
+  narrative pointer to a moved doc → filed, no safe target.
+
 ## Contradictions
 
 <!-- routed + filed -->
