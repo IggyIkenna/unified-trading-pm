@@ -282,3 +282,42 @@ related: []
 - Working set: 31 non-grace ci docs read in full by a hunter; 18 grace docs read-only context; 0 unreached.
 - Verified: 8 flips applied, ~40 annotations/banner/status fixes, 4 parser-artifact adjudications (no doc edits), 1
   REAL-orphan linkage fix, 7 routed-filed todos, 0 refuted (all hunter candidates either applied or routed).
+
+## Deferred work after 2026-08-07
+
+| Item                                                            | State/why deferred                                                                                                         | Blocked on                                                            |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Hunter G (codex-alignment) findings                             | Not done — hunter still running at pre-compact                                                                             | its completion notification; process + apply/filed its drift findings |
+| STEP 7 final flush + PR (`gh pr create` into live-defi-rollout) | Cannot be done yet — must follow all hunter processing                                                                     | hunter G completion                                                   |
+| `POST /api/plan_health/result` + `/done`                        | Cannot be done yet — one-shot lifecycle contract                                                                           | STEP 7                                                                |
+| 8 filed `- [ ]` todos (see `## Filed` above)                    | Operator/worker-owned follow-ups                                                                                           | operator or next session                                              |
+| STEP 8 loop-and-wait for /blocked answers                       | Not started — no blocked-questions posted this run (all candidates resolved from the documented record or routed as todos) | n/a                                                                   |
+
+**Recommended next item**: process Hunter G's codex-alignment findings (the last unprocessed hunter), then STEP 7 flush
+→ PR → result POST → `/done`.
+
+## Lessons (carried for the next session)
+
+- **Slot-checkout recreation race (near-loss, caught by /pre-compact Step 1)**: this session's four local `git commit`
+  - `git push origin HEAD:plan_reconciler/<id>` calls printed `pushed-ok`, but an external slot-prep process re-created
+    the local branch between turns (reflog: `checkout -b` + FF-merge of origin/live-defi-rollout), leaving the local
+    branch pointer on the base commit while the WORK sat staged. The pushes HAD landed (origin branch tip `ed9517cdd`
+    holds all 27 session files), but the local branch was stale. **Invariant to adopt: after every checkpoint push,
+    capture your commit sha + verify `git merge-base --is-ancestor <sha> origin/<branch>` — never trust `pushed-ok`
+    alone; and before `/done`, re-fetch + `git rev-list --count origin/<branch>..HEAD` must be 0.** `git status` showing
+    staged-but-uncommitted after a "successful" push is the tell.
+- **One-way resolution citations (MTDS env-leak cluster)**: `mtds_flaky_is_test_run_pollution_2026_07_25.md` (resolved)
+  cites its two still-open sibling docs, but the siblings never cited IT back — their na-audit verdicts repeated
+  "mechanism genuinely open" through 2026-08-06, keeping a P0 contradiction alive for 12 days. A resolution doc must add
+  a `resolved_by`/related back-pointer into its open siblings (or the next reconciler pass keeps re-fixing the same
+  trio).
+- **`closeout_family_for()` glob blind spot**: `check_ag_closeout_linkage.py` only globs `ci_consolidated_*`; the ci
+  tranche's real family (`ci_satellite_ao_dispatch_batch*`) is invisible → 6/7 flagged ci orphans are parser artifacts
+  and the ratchet (77 vs 69) is inflated. Filed as a durable todo; anyone touching that checker should extend the glob.
+- **Placeholder-shas in flipped todos**: two docs carried `@<PENDING-SHA>` / `@<shipped in this commit>` evidence lines
+  (`qg_host_adaptive_resource_governor:279`, `quality_gates_v2_concurrency:264`); the real shas were recoverable via
+  `git log` on the file. A flipped checkbox with a placeholder evidence line cannot satisfy evidence-backed-completion —
+  always fill the sha at flip time.
+- **"Still `status: draft`" markers go stale fast**: 3 docs (deployment_flow, pm_bats) asserted batch4 draft through
+  2026-08-06 while batch4 flipped active 2026-08-06; the same stale-status class as the batch1 draft banner. When a
+  doc's holding condition is another plan's status, re-verify it at edit time, don't copy the prior verdict.
