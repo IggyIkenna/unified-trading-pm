@@ -61,7 +61,7 @@ context_scope:
   [
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     unified-trading-library/unified_trading_library/deployment_registry.py,
   ]

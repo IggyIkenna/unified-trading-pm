@@ -34,7 +34,7 @@ related:
     /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
-    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
@@ -64,7 +64,7 @@ context_scope:
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
     /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
-    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
 source: >-

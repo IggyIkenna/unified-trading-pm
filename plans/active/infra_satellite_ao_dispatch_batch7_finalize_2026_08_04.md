@@ -22,7 +22,7 @@ tags: [infra, ao-dispatch, ag-closeout-audit, finalize, batch-7, plan-hygiene]
 related:
   [
     /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
-    /plans/active/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
+    /plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
     /plans/active/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]

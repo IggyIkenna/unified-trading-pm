@@ -9,7 +9,7 @@ parent_reference: market_data_delivery_architecture_2026_04_27.md
 sibling_plan: price_chart_gcs_delivery_2026_04_29.plan.md
 codex_refs:
   - /codex/02-data/availability-manifest-and-data-status.md
-  - /codex/02-data/per-category-bucket-layouts.md
+  - /codex/02-data/per-asset-group-bucket-layouts.md
   - /codex/02-data/subscription-model.md
   - /codex/02-data/data-status-drilldown.md
 prior_audit: plans/ai/audit_instruments_gcs_2026_04_25.md

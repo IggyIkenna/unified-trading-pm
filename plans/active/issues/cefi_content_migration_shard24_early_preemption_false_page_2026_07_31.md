@@ -59,7 +59,7 @@ context_scope:
   [
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
   ]
 ---

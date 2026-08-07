@@ -126,6 +126,24 @@ question rather than 36 times.
   the same docs with a per-doc read.
 - Other.
 
+## Tracked follow-ups (2026-08-07 — the parked items above are real open work, not just decision-prose)
+
+Caught by `check_archive_candidates.sh`: this doc's only checkbox was the migrated-deferral todo below, so a
+0-open/1-done mechanical count misread it as fully done and archival-eligible. It is not — P2-B, P2-C, and P2-D above
+are still live, unanswered operator decisions. Per the todos-not-prose HARD RULE
+(`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2), tracking them as real `- [ ]` items instead
+of leaving them as prose-only parking (exactly the "prose-only trap" gap 3 above names).
+
+- [ ] [OPERATOR] P2. Decide P2-B: `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` is 29/29 done but
+      `locked_by:     live-defi-rollout` — `[unlock-plan]` + archive it, or confirm the lock is still doing real work.
+      See "Parked — operator ruling required" § P2-B above.
+- [ ] [OPERATOR] P3. Decide P2-C: near-complete-plan fold policy (~36 active docs at ≤1 open todo) — authorize
+      fold-by-default for the stated sub-case, keep every fold operator-gated, or route the population to
+      `/na-eligibility-audit`/`/ag-closeout-audit`. See § P2-C above.
+- [ ] [OPERATOR] P3. Decide P2-D: stale `instruments-service-agentwork-sports-2026-07-13/` scratch clone (unregistered,
+      failing the shared `repo-docs-ssot` gate) — delete it, move it out of the workspace root, or fix its 6 docs in
+      place. See § P2-D above.
+
 ## Migrated deferral (this is real tracked work, not a decision)
 
 - [x] ✅ [OPS] P3. **DONE 2026-08-07 — done-when met, see the table below for full evidence.** Audit every other fleet
@@ -145,25 +163,25 @@ question rather than 36 times.
       no host left "unknown".
 
       **Partial progress 2026-07-30 (satellite corpus-hygiene pass) — genuinely not completable this session, left
-                          open:**
+                              open:**
 
-                          | fleet host                        | `cleanup-stale-qg-tmp` | `cleanup-stale-claude-session-tmp` | note                                                                                                                                                                                                                          |
-                          | ---------------------------------- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-                          | this operator laptop (macOS)       | absent (confirmed)      | absent (confirmed)                   | Install BLOCKED: the sanctioned installer refuses `WORKSPACE_ROOT` inside a `.tabs/` slot worktree by design (bakes a slot-relative path into the cron line); the one non-`.tabs/` root PM clone found on this host (`~/Code/unified-trading-system-repos/unified-trading-pm`) is a DIRTY, STALE, foreign working tree (uncommitted changes present, missing recent scripts, not this session's to touch per multi-agent-safety) — not safe to `git pull`/write into. Needs either the operator running the installer personally from their own clean root clone, or a second, deliberately-provisioned clean root clone. |
-                          | AO orchestrator VM (`planning`, internal hostname `ip-172-31-5-118`, public EIP 13.113.200.22) | **present** | **present** | **CONFIRMED 2026-08-07** — operator ran the installer directly via `ssh agent-orchestrator-vm` (standing SSH access from the operator's laptop). Both `cleanup-stale-qg-tmp` (`*/60m`) and `cleanup-stale-claude-session-tmp` (`*/30m`) reported `[already-installed]` — i.e. this row IS the same host as the `ip-172-31-5-118` row below (internal AWS hostname vs. the label used elsewhere in this corpus), now directly confirmed rather than inferred from provenance. Also updated a stale `prune-uv-cache` entry on the same host (unrelated 3rd cron, tracked separately in `host_root_disk_full_transient_2026_07_13.md`). |
-                          | human-planning VM (`i-0dd9812a96cdda5dc`) | **N/A** | **N/A** | **RESOLVED 2026-08-07** — this VM does not exist in AWS at all (`aws ec2 describe-instances` returns nothing, every state checked, confirmed during a separate 2026-08-06 investigation, `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 7f). No longer "unknown" — moot. |
-                          | `ip-172-31-5-118`                  | present (per provenance, now directly re-confirmed 2026-08-07) | present (same) | Same machine as the AO orchestrator VM row above — see that row for the fresh confirmation. |
+                              | fleet host                        | `cleanup-stale-qg-tmp` | `cleanup-stale-claude-session-tmp` | note                                                                                                                                                                                                                          |
+                              | ---------------------------------- | ----------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+                              | this operator laptop (macOS)       | absent (confirmed)      | absent (confirmed)                   | Install BLOCKED: the sanctioned installer refuses `WORKSPACE_ROOT` inside a `.tabs/` slot worktree by design (bakes a slot-relative path into the cron line); the one non-`.tabs/` root PM clone found on this host (`~/Code/unified-trading-system-repos/unified-trading-pm`) is a DIRTY, STALE, foreign working tree (uncommitted changes present, missing recent scripts, not this session's to touch per multi-agent-safety) — not safe to `git pull`/write into. Needs either the operator running the installer personally from their own clean root clone, or a second, deliberately-provisioned clean root clone. |
+                              | AO orchestrator VM (`planning`, internal hostname `ip-172-31-5-118`, public EIP 13.113.200.22) | **present** | **present** | **CONFIRMED 2026-08-07** — operator ran the installer directly via `ssh agent-orchestrator-vm` (standing SSH access from the operator's laptop). Both `cleanup-stale-qg-tmp` (`*/60m`) and `cleanup-stale-claude-session-tmp` (`*/30m`) reported `[already-installed]` — i.e. this row IS the same host as the `ip-172-31-5-118` row below (internal AWS hostname vs. the label used elsewhere in this corpus), now directly confirmed rather than inferred from provenance. Also updated a stale `prune-uv-cache` entry on the same host (unrelated 3rd cron, tracked separately in `host_root_disk_full_transient_2026_07_13.md`). |
+                              | human-planning VM (`i-0dd9812a96cdda5dc`) | **N/A** | **N/A** | **RESOLVED 2026-08-07** — this VM does not exist in AWS at all (`aws ec2 describe-instances` returns nothing, every state checked, confirmed during a separate 2026-08-06 investigation, `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 7f). No longer "unknown" — moot. |
+                              | `ip-172-31-5-118`                  | present (per provenance, now directly re-confirmed 2026-08-07) | present (same) | Same machine as the AO orchestrator VM row above — see that row for the fresh confirmation. |
 
-                          **Done-when MET 2026-08-07**: 0 hosts remain "unknown" — laptop is a known, specifically-blocked
-                          state (not unknown), human-planning VM is confirmed N/A (doesn't exist), and the AO orchestrator
-                          VM is now directly confirmed rather than inferred. The laptop install remains genuinely blocked
-                          pending either the operator running it from their own clean root clone or a fresh clone being
-                          provisioned — that's real remaining work, tracked, not re-opening this todo's own done-when.
+                              **Done-when MET 2026-08-07**: 0 hosts remain "unknown" — laptop is a known, specifically-blocked
+                              state (not unknown), human-planning VM is confirmed N/A (doesn't exist), and the AO orchestrator
+                              VM is now directly confirmed rather than inferred. The laptop install remains genuinely blocked
+                              pending either the operator running it from their own clean root clone or a fresh clone being
+                              provisioned — that's real remaining work, tracked, not re-opening this todo's own done-when.
 
-                          — fixed 2026-08-06 (/plan-reconcile ao): the table above and its surrounding paragraphs had runaway leading
-                          whitespace (322 spaces/line) causing markdown code-block rendering; re-indented to the normal 6-space
-                          continuation indent, text/table content preserved exactly. The todo itself remains open (unrelated to this
-                          whitespace fix).
+                              — fixed 2026-08-06 (/plan-reconcile ao): the table above and its surrounding paragraphs had runaway leading
+                              whitespace (322 spaces/line) causing markdown code-block rendering; re-indented to the normal 6-space
+                              continuation indent, text/table content preserved exactly. The todo itself remains open (unrelated to this
+                              whitespace fix).
 
 ## Reported, not parked — coverage gaps this run is honest about
 

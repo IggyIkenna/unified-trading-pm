@@ -711,7 +711,7 @@ recon SSOT is `/codex/09-strategy/operational/paper-batch-live-reconciliation.md
 
 **system-integration-tests (4 living)** — FIX-STALE: `README.md` (KEEP content — SIT scope table/env/coverage-matrix — 3
 stale literals: "manifest v5 schema" [codex is v9 since 2026-05-30]; cites MISSING
-`/codex/02-data/per-category-bucket-layouts.md` [actual: `/codex/02-data/per-asset-group-bucket-layouts.md`];
+`/codex/02-data/per-asset-group-bucket-layouts.md` [actual: `/codex/02-data/per-asset-group-bucket-layouts.md`];
 archived-mirror operational-modes-matrix ref [actual:
 `/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`]), `docs/portable-backtest-criteria.md`
 (KEEP content — archived-mirror ref → `/codex/06-coding-standards/integration-testing-layers.md`; §3 overlaps
@@ -741,8 +741,8 @@ OUT-OF-SCOPE: `delta_one/docs/archive/*` (33). NO MIGRATE. Duplication vs codex 
 targets `/codex/POST_PLAN_REALITY_2026_05_06.md` which STILL EXISTS (not broken).
 
 **unified-trading-system-ui (data/path/contract subset: 1 actionable of ~292 non-vendored; 558 total)** — FIX-STALE:
-`docs/audits/dart-v2-audit-context.md` (§10.1 cites MISSING `/codex/02-data/per-category-bucket-layouts.md`; layout SSOT
-is `/codex/05-infrastructure/bucket-isolation-model.md` → repoint). KEEP:
+`docs/audits/dart-v2-audit-context.md` (§10.1 cites MISSING `/codex/02-data/per-asset-group-bucket-layouts.md`; layout
+SSOT is `/codex/05-infrastructure/bucket-isolation-model.md` → repoint). KEEP:
 `docs/audits/{backend-feature-requests,dart-v2-audit-context,global-filters-v2}.md`,
 `docs/trading/platform-review/tabs/03-positions.md`, strategy widget filter/color config,
 `widget-certification-deferred-questions.md`. NO DELETE/REDIRECT/MIGRATE. Scanned all 292 non-vendored; ~8 real

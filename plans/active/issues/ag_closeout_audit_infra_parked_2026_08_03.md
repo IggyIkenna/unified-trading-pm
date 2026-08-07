@@ -34,11 +34,11 @@ related:
   [
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
     /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
-    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -71,7 +71,7 @@ context_scope:
   [
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
-    /plans/active/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
+    /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

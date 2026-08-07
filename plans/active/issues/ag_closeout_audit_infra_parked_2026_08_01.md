@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, plan-reconcile, false-unchecked, parked-findings, tooling-gap]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
     /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -60,7 +60,7 @@ source: >-
   before fresh triage.
 context_scope:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,

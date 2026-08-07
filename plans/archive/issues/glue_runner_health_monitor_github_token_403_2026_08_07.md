@@ -87,6 +87,12 @@ context_scope:
   ]
 ---
 
+> ## ✅ RESOLVED 2026-08-07 — archived (ACKED-INTO-CODE)
+>
+> Root-cause fix shipped `unified-trading-pm@f05e93d10a` (GH_TOKEN → GH_PAT), live-verified via run `31177324373`.
+> Pool-depletion follow-up corrected in place (no PM workflow currently targets the glue pool). Final todo (stale
+> `ci-status-update.yml` comment) fixed directly in this same archival pass. All todos closed, no open work remains.
+
 # glue-runner-health-monitor 403: constant, not intermittent — GITHUB_TOKEN structurally cannot list self-hosted runners
 
 ## Fix applied (RESOLVED)
@@ -130,11 +136,9 @@ below, not a re-occurrence of the auth bug.)
       has confirmed that on the VM — they may still exist crashed/stopped rather than deregistered; harmless either way
       while 0 workflows target them, but worth closing out for real next time anyone has VM access, rather than leaving
       stopped units lying around).
-- [ ] [DEVOPS] P3. `.github/workflows/ci-status-update.yml` lines 45-47 and 265-267 carry a stale comment ("Goes to the
-      LONG-LIVED glue-writer pool, NOT the JIT glue pool") directly above `runs-on: ubuntu-latest` — the workflow was
-      apparently already reverted to GitHub-hosted at some point but the comment wasn't updated to match. Low-priority
-      doc-drift (confirmed NOT causing the queued jobs observed during this investigation — those cleared normally), but
-      worth a one-line comment fix next time that file is touched.
+- [x] ✅ [DEVOPS] P3. `.github/workflows/ci-status-update.yml` lines 45-47 and 265-267 carried a stale comment ("Goes to
+      the LONG-LIVED glue-writer pool, NOT the JIT glue pool") directly above `runs-on: ubuntu-latest` — corrected in
+      place to reflect the actual GitHub-hosted runner, both occurrences — `unified-trading-pm@6c7587c3b`.
 
 ## Progress Log
 

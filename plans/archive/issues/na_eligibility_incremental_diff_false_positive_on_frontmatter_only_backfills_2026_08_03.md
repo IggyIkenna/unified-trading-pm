@@ -20,7 +20,7 @@ summary: >-
   2-hour cadence across up to 9 concurrent tranches, this false-positive class recurs on EVERY future run for EVERY doc
   a metadata-only backfill has ever touched, compounding as more maintenance skills (context-scout, docs-reconciler,
   etc.) touch frontmatter fields unrelated to NA-eligibility content.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -58,7 +58,7 @@ estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.08
 assigned_role: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: "operator ruling 2026-08-07 — citation-closed into infra_satellite_ao_dispatch_batch7_2026_08_04.md"
 locked_by:
 locked_since:
 supersedes:
@@ -67,6 +67,13 @@ depends_on: []
 context_scope:
   [/cursor-configs/skills/na-eligibility-audit/SKILL.md, scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
 ---
+
+> ## ✅ RESOLVED 2026-08-07 — archived (ACKED-INTO-PLAN)
+>
+> Operator ruling 2026-08-07 ("less work and edits, still correct"): both todos citation-closed — the identical
+> content-hash/frontmatter-blind-diff fix is already tracked verbatim in
+> `plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md` (status: active). No work duplicated here; the parent
+> plan owns the fix from here.
 
 # na-eligibility-audit's incremental diff false-positives on frontmatter-only backfill commits
 

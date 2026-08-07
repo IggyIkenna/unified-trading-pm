@@ -2069,7 +2069,7 @@ used as format string in production adapter/service code; OR malformed format sp
 - **Semver rules:** `unified-trading-pm/plans/active/major_version_bump_approval_gate_2026_03_11.md`
 - **Readiness checklist:** `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
 - **Data freshness contracts:** `unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py`
-- **Batch-live symmetry:** `unified-trading-pm/codex/batch-live-symmetry.md`
+- **Batch-live symmetry:** `unified-trading-pm/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
 - **API key phases:** `unified-trading-pm/plans/active/api_keys_and_auth.md`
 - **Previous audit reports:** `system-integration-tests/reports/audit_<date>.json`
 - **Config architecture:** `unified-trading-pm/codex/06-coding-standards/configuration-management.md`

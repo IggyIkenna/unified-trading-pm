@@ -690,7 +690,7 @@ but not anchored to a real on-disk parquet today.
 
 ### Q2 — SPORTS Layer 1 schema [owner: sports / instruments-service]
 
-`/codex/02-data/per-category-bucket-layouts.md` documents that sports uses
+`/codex/02-data/per-asset-group-bucket-layouts.md` documents that sports uses
 `sports_reference/by_date/day=*/entity=*/{entity}.parquet` (entities: `fixtures`, `footystats_odds`, `sfi_leagues`,
 `progressive_stats`, `teams`, `standings`, `lineups`, `injuries`, `weather`) — fundamentally different shape from
 CEFI/TRADFI/PREDICTION's `instrument_availability/...` path.

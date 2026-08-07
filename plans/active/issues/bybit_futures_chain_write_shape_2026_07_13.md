@@ -44,7 +44,7 @@ context_scope:
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
     market-tick-data-service/docs/canonical-write-conventions.md,
     market-tick-data-service/docs/GCS_PATHS.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     market-tick-data-service/scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py,
   ]
 ---
@@ -122,7 +122,7 @@ workspace).
       updated.
 
 > **📤 THE OPEN P1 BELOW IS EXTRACTED — do NOT dispatch it from this doc (`/na-eligibility-audit` 2026-08-02,
-> tranche=cefi).** `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 `[SCRIPT] P1`
+> tranche=cefi).** `/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 `[SCRIPT] P1`
 > (`assigned_vm: planning`, `unified-trading-pm@2d5fb4b59`) carries it verbatim and Source-cites this doc; its done-when
 > is "the full-scope diff completes, results are recorded in the source doc, and its open P1 todo is flipped citing this
 > run". **Caveat — batch4 is still `status: draft`, so it is NOT ingested and this work has no live dispatch path**
