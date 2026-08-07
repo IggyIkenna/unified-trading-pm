@@ -114,7 +114,7 @@ verified, not flagged.
 
 **Confirmed, NOT fixed (codex-drift, P1 — big-finding-adjacent, routed to operator below):** the closeout's
 "Ground-truth verdict" table (`:187`) says cross-venue arb code is "two disconnected paths... neither keys on
-`af_fixture_id`", but `codex/04-architecture/cross-venue-prediction-arb-detection.md` (status: current,
+`af_fixture_id`", but `/codex/04-architecture/cross-venue-prediction-arb-detection.md` (status: current,
 `Status: SHIPPED (2026-07-20)`) describes an N-venue (Kalshi/Polymarket/Betfair) detector with `af_fixture_id` as the
 identity join key. Nuanced — the codex doc's `SPORTS_FIX::` match-key format may specifically cover the sports/Betfair
 leg rather than proving Kalshi/Polymarket football specifically is unblocked; needs a human read, not an autonomous
@@ -123,7 +123,7 @@ resolution. See "Filed" + the `/blocked` alert.
 ## Doc-drift
 
 **Codex-internal self-contradiction (routed to operator below, HARD GATE — never autonomous):**
-`codex/02-data/availability-manifest-and-data-status.md`'s own "Data Status Page Tree Hierarchy" table (`:989`, "MTDS
+`/codex/02-data/availability-manifest-and-data-status.md`'s own "Data Status Page Tree Hierarchy" table (`:989`, "MTDS
 PREDICTION | venue → data_type → dates") omits the `canonical_question_group` axis entirely, contradicting the SAME
 doc's own banner (`:57-58`, the shard-atom definition the closeout correctly cites) and the sibling doc
 `data-status-drilldown-hierarchy.md:55` ("venue → canonical_question_group → data_type → date"). Reads as a legacy table
