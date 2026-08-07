@@ -314,6 +314,15 @@ surface that actually exists (warm + cold event-log tiers).
   UTC with 8h timeout: f7qql (2026-08-01) / lvh4f (2026-08-02) / w5qnm (2026-08-03) / btvgl (2026-08-04) / rkf4f
   (2026-08-05) / 5s6x7 (2026-08-06) / fcwnn (2026-08-07). All running. Expected completion ~03:00-03:30 UTC 2026-08-08.
   DATA P0 awaiting all 7 SUCCEEDED + cold GCS verification.
+- **2026-08-07 ~17:04 UTC (slot-11 worker, data_engineering, TIMING CORRECTION — pre-compact audit)**: CORRECTION to the
+  "~21:00 UTC v5 relaunch" entry above: the entry timestamp is WRONG (written from a compacted summary with an erroneous
+  start time). Gcloud `metadata.creationTimestamp` confirms all 7 v5 executions started at 16:36 UTC (not 21:00 UTC):
+  f7qql=16:36:34Z / lvh4f=16:36:35Z / w5qnm=16:36:36Z / btvgl=16:36:37Z / rkf4f=16:36:38Z / 5s6x7=16:36:39Z /
+  fcwnn=16:36:40Z. Consequently "Expected completion ~03:00-03:30 UTC" is also wrong. Correct timeline: book_snapshot_5
+  (~6h from 16:36) cold file ~22:36 UTC; derivative_ticker (~41 min) ~23:17 UTC; trades (~61 min after
+  derivative_ticker) ~00:18 UTC 2026-08-08. 8h timeout fires at 00:36 UTC 2026-08-08. All 7 still running at 17:04 UTC
+  (28 min elapsed); GCS cold tier empty (expected — cold file only written after full shard loop). Next wakeup scheduled
+  18:05 UTC; chain hourly until completion.
 - **2026-08-07 ~15:30–15:40 UTC (slot-11 worker, data_engineering, continuation after third context-compaction)**: (1)
   TASK TIMEOUT BUG found: measured rate for the per-file-batching v3 executions (49bkk/lx8bm/6tzt6/rbmth/pfh6w/r457r)
   was ~9.5x real-time for book_snapshot_5 (86400/9.5=9095s=2.53h) + trades(~46min) + derivative_ticker(~45min) +
