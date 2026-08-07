@@ -74,10 +74,11 @@ source: >-
 depends_on: []
 ---
 
-> **🟡 IN-FLIGHT 2026-08-07 — slot-15 running `launch-expected-universe-v2-historical-backfill-vm.sh sports` (sequential
-> 7-chunk backfill, chunks 1-7 from 2020-06-06..2026-04-08). Chunk 1 EXIT_STATUS=0 (638,521 rows). Chunk 2/7
-> (2021-01-01..2021-12-31) on retry 3/50: retries 1-2 each hit EXIT_STATUS=5 (1M-row cap), seeded ~2M rows so far;
-> parent PID 1397101 alive, retry 3 launching. Chunks 3-7 not started. Monitoring in background.**
+> **🟡 IN-FLIGHT 2026-08-07 — slot-15 backfill now running in tmux `orch-slot-15:backfill` (harness-kill-proof). Chunks
+> 1-2 re-seeded per restart (consolidator clears per-VM shards; each re-run seeds ~637K rows and exits rc=0). Chunk 2
+> needs multiple retries again after consolidator cleared 11M worth of prior-session shards. Chunks 3-7 not yet started.
+> Resume: `tmux attach -t orch-slot-15` → window `backfill`; or check
+> `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'`.**
 
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 
@@ -416,24 +417,24 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   cefi/prediction have a different root cause and need separate diagnosis. Full JSON reports at
   `/tmp/{ag}_enum_grain_report_2026_08_05.json`.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
-- **data_engineering worker (slot-15) 2026-08-07**: Resumed 7-chunk sequential backfill via
-  `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (background task b87iwccgr, heartbeat
-  watchdog byb2en7p2). Confirmed no RUNNING VMs before launch (idempotent restart). **Chunk 1/7
-  (2020-06-06..2020-12-31)**: VM `expected-universe-v2-sports-20260807-214049` completed EXIT_STATUS=0, wrote 638,521
-  rows (~4 min — rows already in present-set, enumerated instantly). **Chunk 2/7 (2021-01-01..2021-12-31)**: retry 1 →
-  VM `expected-universe-v2-sports-20260807-214629` → EXIT_STATUS=5 (~999,635 rows, 4×250K minus minor remainder; per-VM
-  shards confirmed in GCS). Retry 2 → VM `expected-universe-v2-sports-20260807-215210` → EXIT_STATUS=5 (+1,000,000 rows,
-  exactly 4×250K; GCS log verified). Total chunk 2 rows seeded so far across all retries (prior sessions ~14M + retry 1
-  ~1M + retry 2 1M = ~16M). Parent script (PID 1397101) alive and auto-cycling (retry 3/50 launching at compaction
-  time). Chunks 3-7 not started. Lessons: (1) child launcher output is buffered — silence for several min is normal,
-  output appears after child exits; (2) chunk 1 re-ran idempotently and exited 0 quickly (rows already present); (3)
-  2021 full-year window is very large — likely ~3-4 more retries needed to exhaust remaining cells; (4) each retry
-  correctly excludes already-written per-VM shards (oscillation guard confirmed working). **Resume point**: parent PID
-  1397101 is running the loop autonomously; if session restarts, check
-  `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'` — if a VM is RUNNING, monitor its GCS
-  log; if no VM and no parent process, re-run
-  `bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports` (idempotent). All 7 chunks must
-  complete EXIT_STATUS=0, then run post-run ratio re-check.
+- **data_engineering worker (slot-15) 2026-08-07**: Full session history — Chunk 1/7 (VM `214049`) EXIT_STATUS=0
+  (638,521 rows). Chunk 2/7: retries 1-11 (VMs `214629`..`223801`) each EXIT_STATUS=5 (+1M rows/retry = ~11M seeded this
+  session from scratch; consolidator cleaned prior-session shards at start). Retry 12 (VM `224305`) EXIT_STATUS=0
+  (637,267 final rows) — chunk 2 complete first pass. **Consolidator behavior**: manifest consolidator deleted per-VM
+  shards between parent restarts; subsequent runs re-find the same rows as candidates (~637K for chunk 1, full chunk for
+  chunk 2) because expected_unattempted rows written to per-VM shards are only excluded while shards exist in GCS. After
+  consolidation, rows ARE in main manifest but `present=9974285` count appears stable (possibly the "present" set
+  reflects captured+expected_unattempted only for the non-date-filtered portion, not the window being enumerated). **Key
+  discovery**: both chunk 1 and chunk 2 re-seed on each parent restart (~637K rows each, rc=0) — convergence requires
+  per-VM shards to survive until the post-run ratio check. **Parent dying**: parent script (PID 1397101 then 3298329
+  then 3507556) kept dying during `sleep 60` in polling loop (SIGTERM from harness session reset). **Fix**: moved to
+  tmux `orch-slot-15:backfill` (`tmux new-window -t orch-slot-15 -n backfill bash`) which survives harness kills. Chunk
+  2 needs further retries in current tmux run (consolidator cleared ~11M of prior-session shards). Chunks 3-7 have never
+  been seeded — each will need multiple retries (similar to chunk 2). **Resume point**: check
+  `tmux capture-pane -t "orch-slot-15:backfill" -p -S -10` or `tail -f backfill-tmux.output` (path in tasks dir). If
+  tmux window gone, re-run: `tmux new-window -t orch-slot-15 -n backfill bash` then same launch command. All 7 chunks
+  must complete EXIT_STATUS=0 in a single parent run (no intervening restarts), then run post-run ratio re-check.
+  **Instruments-service tarball updated mid-session**: from `f4fce7cc27bb` → `27e29a914616`.
 
 ## Follow-ups
 
