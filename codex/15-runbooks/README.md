@@ -29,6 +29,9 @@ declared periodic-execution path so the runbook doesn't silently rot against an 
   parquet reconciliation). Includes the discrepancy-resolution flow.
 - **`smoke-testing-playbook.md`** — Pre-promotion smoke test procedure: which harnesses to run before promoting a build
   to staging or main, expected pass/fail signals, sign-off shape.
+- **`safe-service-restart-procedures.md`** — "A critical service looks idle/broken — what to check, in what order,
+  before restarting anything." One `##` section per service (Agent Orchestrator first); extend this doc for new
+  services, don't fork a second restart guide.
 - **`backfill-completion-playbook.md`** — Post-backfill sign-off procedure: manifest verification, sample parquet
   inspection, downstream dependency-check trigger, archival of the backfill VM's events stream.
 
