@@ -848,3 +848,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-07T16:19Z** — **FIXTURE_STATS confirmed launched and RUNNING**: `af-backfill-20260807-161736` (auto-
   republished 2 stale tarballs — instruments-service, deployment-service — before create, then succeeded). Will confirm
   actual date-progress + resume-from-checkpoint behavior next tick.
+- **2026-08-07T16:52Z — correction + a second genuine milestone.** FIXTURE_STATS is doing a full skip-fast sweep from
+  `2020-06-06` (chunk 1/26, per-fixture skip-logic already firing: "skipping 3 entities already in manifest", "39 pairs
+  already in existing per-league parquets"), NOT literally resuming from the `2023-11-19` checkpoint the doc's own text
+  suggested — same pattern PLAYER_STATS used successfully, just means real wall-clock time to skip-fast through ~3.5
+  already-covered years before reaching genuinely-new ground; not a bug, correcting my earlier expectation. Separately
+  (sibling-doc scope, but a real AF-adjacent win): **footystats' 50-league-widening backfill finished cleanly and was
+  VERIFIED via re-census (not just `exit_code=0`)** — 0 `attempted_failed`, 0 `expected_unattempted`, both before and
+  after; +2,383 captured / +8,088 empty_confirmed added for the 18 newly-added leagues. Genuinely, cleanly done, unlike
+  weather's messy outcome. SFI, `mtds-backfill-odds-smallchunk-20260807` (chunk 18/451, 4 OOM total, still
+  self-recovering), and `mtds-backfill-odds-401-retry` (18 OOM total, same ~6-9 min/league cadence) all confirmed
+  healthy via value-diffs.

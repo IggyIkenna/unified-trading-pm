@@ -397,3 +397,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   Resolution path: `instruments-service/scripts/type_weather_eu_no_provider_coverage_2026_06_27.py --apply`
   (reclassifies to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`) + consolidator pass — separate action, not this
   task.
+- **2026-08-07T16:53Z** — **footystats' 50-league backfill VERIFIED cleanly done** (re-census, not just `exit_code=0`):
+  0 `attempted_failed`, 0 `expected_unattempted` both before and after; +2,383 captured / +8,088 empty_confirmed for the
+  18 newly-widened leagues. First VM this session to converge with zero loose ends — the footystats line item in the
+  priority table above can be considered closed. FIXTURE_STATS (AF-doc scope, cross-referenced) is doing a full
+  skip-fast sweep from 2020-06-06 rather than literally resuming from a checkpoint — expected, not a bug, just slower
+  wall-clock. All other VMs (SFI, both odds VMs) confirmed healthy via value-diffs, consistent with established patterns
+  — no new incidents.
