@@ -52,7 +52,7 @@ context_scope:
     /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py,
-    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
   ]
 resolved_by:
 ---
@@ -228,6 +228,6 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
   sub-items; the corpus-wide census sub-item is now done (2026-08-07, batch6 todo 2) but root-cause itself remains open
   investigation.
 - **context-scout 2026-08-07**: refreshed context_scope (5 entries) — added
-  `/plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md`, the source of the 2026-08-07 corpus-wide census now
-  cited 3 times in this doc's own text (todo 2's completion note, Evidence §2, and the Progress Log entry above); the
-  prior 4 entries re-verified, still resolve, unchanged.
+  `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md`, the source of the 2026-08-07 corpus-wide
+  census now cited 3 times in this doc's own text (todo 2's completion note, Evidence §2, and the Progress Log entry
+  above); the prior 4 entries re-verified, still resolve, unchanged.

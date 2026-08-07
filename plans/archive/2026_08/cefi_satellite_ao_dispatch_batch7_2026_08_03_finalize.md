@@ -18,7 +18,7 @@ related:
   [
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-03"

@@ -28,7 +28,7 @@ tags: [cefi, ag-closeout-audit, parked-findings, batch-approval-backlog, dispatc
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,

@@ -7,7 +7,7 @@ summary: >-
   source doc's checkboxes once its batch-6 todo lands, re-check batch6's own Deferred items (the transitively-gated
   Schema v10 item and the carried-forward estate_orphan_assessment cross-tranche conflict) for any whose gate has since
   cleared, then archive batch6 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-6, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch5_2026_08_02_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -45,13 +45,16 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
 # CeFi satellite AO batch 6 — finalize
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos complete; moved to `plans/archive/2026_08/` alongside batch6 in the same
+> commit (slot 6, task `cefi_satellite_ao_dispatch_batch6_2026_08_02_finalize-003`).
 
 > **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
 > every todo below until batch6's own 6 tasks are `done`, regardless of batch6's own `status` (draft or active) — see
@@ -120,7 +123,7 @@ context_scope:
       referrer of `cefi_satellite_ao_dispatch_batch6_2026_08_02` and repoint each to the archived path → clear
       `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus
       referrer resolves to the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside
-      it in the same commit. — **unified-trading-pm@<SHA> 2026-08-07.** Step 1: no deferred items to migrate (both
+      it in the same commit. — **unified-trading-pm@b50fcc8b 2026-08-07.** Step 1: no deferred items to migrate (both
       Deferred entries re-confirmed still-blocked by todo 2 above — Schema v10 transitive gate unchanged, estate_orphan
       todo-6 operator ruling still absent). Step 2+6: archive banners + status: complete added to both plans; locked_by
       already empty. Step 3: codex-alignment check — batch6's 6 todos (script extension, GCS census, fail-hard Stage 0,
