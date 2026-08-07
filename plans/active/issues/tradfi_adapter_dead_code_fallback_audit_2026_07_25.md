@@ -402,14 +402,17 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       immediately above the `"tardis": ("tradfi", TardisAdapter)` line. Shipped via `quickmerge.sh --agent` in the same
       commit as the M-5 fix.
 
-- [ ] [BACKEND] P3. **Cross-asset-group fate of the generic `BaseTradfiAdapter` fetch interface** (Finding M-4):
+- [x] ✅ [BACKEND] P3. **Cross-asset-group fate of the generic `BaseTradfiAdapter` fetch interface** (Finding M-4):
       `databento_fetch.py`'s `download_batch`/`download_market_data`/`fetch_trades` and `tardis_csv_transport.py`'s
       `download_market_data`/`fetch_trades` have zero production callers in tradfi (confirmed live paths are exclusively
       `download_batch_df`/`download_batch` via `umi_tick_provider.py`); `market_interface/api.py`, the interface's only
       other would-be caller, is itself unreached in production. Check whether other asset groups' adapters actually use
       this generic interface before deciding delete vs. keep-documented; if genuinely dead everywhere, delete it (repo:
       market-tick-data-service). Done when: cross-asset-group usage is checked and a delete/keep decision is made +
-      applied.
+      applied. — market-tick-data-service@a897ef60 (6 dead fns removed: `download_batch`, `_run_batch_download`,
+      `_split_dbn_by_symbol`, `_emit_payg_spend`, `download_market_data`, `fetch_trades` from `databento_fetch.py` and
+      `download_market_data`, `fetch_trades` from `tardis_csv_transport.py`; DeFi/cefi/sports adapters all use their own
+      independently-defined methods with no dependency on the tradfi generic interface)
 
 ## Reconciliation
 
