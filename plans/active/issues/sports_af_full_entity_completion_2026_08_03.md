@@ -905,3 +905,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   multiple European leagues' season-openers simultaneously (high real fixture density across many leagues at once),
   plausibly why this one chunk is taking disproportionately long among 451 total — not a new bug, self-recovery still
   working correctly, no data loss. Watching; will note if it doesn't eventually move past chunk 18.
+- **2026-08-07T21:22Z** — FIXTURE_STATS advanced chunk 6/26 to `2021-11-19` (fresh checkpoint, was `2021-11-06`),
+  healthy. `mtds-backfill-odds-smallchunk2` STILL on chunk 18/451 — read the full `run.log` (not just PROGRESS.json,
+  which looked 2h-stale) and confirmed 10/18 leagues OOM'd (55%) but each a genuinely distinct league, EKSTRAKLASA fully
+  completed, no repeats — genuine progress, not a stall; PROGRESS.json just checkpoints at the whole-chunk boundary.
+  Full root-cause writeup: `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`b90338bfd9`.
