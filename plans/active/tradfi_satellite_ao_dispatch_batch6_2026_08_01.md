@@ -638,6 +638,38 @@ VMs** (15:12:15Z). Fleet growing. Heartbeat loop: **`bbe677smy`** (20-min interv
   `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm heartbeat loop same way. **Harness will likely
   kill again (~25-46 min) — always re-arm on notification; never let watcher stay dead >5 min.**
 
+### 2026-08-07T15:20Z — slot 3, session 15 — post-compact health check + false re-arm corrected
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. bscbuhfi3 confirmed ALIVE (TaskOutput status=running, poll 3 at 15:21Z, poll
+4 at 15:22Z).** Fleet: 36 VMs at 15:20Z (no change).
+
+**Root cause of confusion:** Task `bw62u9xn1` launched post-compact as a re-arm attempt, but immediately failed with
+`No such file or directory` — it used the wrong scratchpad path (`/scratchpad/es_opt_watcher_slot3.sh` missing
+`/watcher/` subdirectory). bscbuhfi3 was still running the whole time.
+
+**Critical lesson (session 15):** `TaskList` does NOT show harness background tasks (`run_in_background:true` Bash
+tasks). Use `TaskOutput <task_id>` with the KNOWN task ID (non-blocking) to check liveness — `TaskList` always returns
+"No tasks found" for background Bash tasks and is useless for watcher liveness checks.
+
+**False re-arm corrected:** bpkyhj1yr was launched unnecessarily while bscbuhfi3 was still alive — immediately stopped
+via TaskStop (dual-watcher race risk). Heartbeat b7ya1ojo7 kept (bscbuhfi3 does not send heartbeats).
+
+**Pre-compact ritual (2026-08-07T15:20Z, autonomous mode):**
+
+- Step 1: git clean, ahead=0; scratchpad watcher.sh exists; no dangling refs; no secrets.
+- Step 3: No new todos. Lesson above captured in this log.
+- Step 4: Nothing new to flip (checkbox still `[ ]`).
+- Step 7: This commit IS the update.
+- Step 8 verdict: **Safe to compact: YES.** bscbuhfi3 running (poll 3 @ 15:21Z). b7ya1ojo7 heartbeat running. Nothing
+  lost.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, use
+  `TaskOutput bscbuhfi3 --non-blocking` to check liveness. **Do NOT use TaskList — it will always show "No tasks found"
+  for background Bash tasks.** (3) If bscbuhfi3 dead: re-arm from committed
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=<new>/SLOT_TABS/PYTHON) +
+  `run_in_background:true`, NO `&` inside. (4) If heartbeat dead (check b7ya1ojo7 or equivalent via TaskOutput): re-arm
+  `scratchpad/watcher/heartbeat.sh` same way.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
