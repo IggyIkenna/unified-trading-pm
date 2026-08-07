@@ -770,6 +770,54 @@ Measurement script pattern: 3-col read (`date`, `data_type`, `capture_status`) f
 `instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, filter
 `data_type==PLAYER_VALUES AND date∈[START,END]`. Run via `run-bounded-analysis.sh` per memory-bounding rule.
 
+### 2026-08-07T23:50Z — second pre-compact (slot 14); VM still active
+
+**VM status at 23:50Z:** RUNNING — at attempt 4/10 (backoff 24.0s) for Transfermarkt 502 retries at 23:37Z; within
+normal 10-attempt retry envelope. Background 5-min poll armed (up to 90 min).
+
+**Resume steps (pick up from repo, zero session memory needed):**
+
+1. Check VM:
+   `gcloud compute instances list --filter="name=tm-backfill-20260807-233040" --zones=asia-northeast1-c --format='value(name,status)'`
+2. If gone:
+   `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260807-233040/run.log | tail -30`
+   and confirm `exit_code=0`.
+3. If exit_code=0: create `measure_pv_golden.py` with the snippet below, run via
+   `cd instruments-service && bash scripts/dev/run-bounded-analysis.sh python <path>/measure_pv_golden.py`.
+4. Flip P2 checkbox (`- [ ] → - [x] ✅`), commit `docs(plans):`, POST `/api/slots/14/done`
+   `{"task_id":"sports_satellite_ao_dispatch_batch9-002","sha":"<sha>","evidence":"<measurement output>"}`.
+
+**Measurement script (inline — scratchpad not durable):**
+
+```python
+#!/usr/bin/env python3
+"""Measure PLAYER_VALUES attempted_failed in golden window 2025-09-01..2025-11-30."""
+from __future__ import annotations
+import io
+from datetime import UTC, datetime
+import pandas as pd
+from unified_trading_library import get_storage_client
+
+BUCKET = "instruments-store-sports-prd-central-element-323112"
+START, END, TARGET = "2025-09-01", "2025-11-30", "PLAYER_VALUES"
+
+def main() -> int:
+    ts = datetime.now(UTC).strftime("%Y-%m-%dT%H:%MZ")
+    client = get_storage_client()
+    raw = client.download_bytes(BUCKET, "_index/availability_index.parquet")
+    manifest = pd.read_parquet(io.BytesIO(raw), columns=["date", "data_type", "capture_status"])
+    mask = (manifest["data_type"] == TARGET) & (manifest["date"] >= START) & (manifest["date"] <= END)
+    counts = manifest[mask]["capture_status"].value_counts().to_dict()
+    af = counts.get("attempted_failed", 0)
+    print(f"[{ts}] PLAYER_VALUES {START}..{END}: attempted_failed={af} (baseline=256); counts={counts}")
+    verdict = "PASS — dropped from 256" if af < 256 else "WARN — unchanged or higher"
+    print(f"VERDICT: {verdict}")
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
 ## Codex SSOTs
 
 - `/cursor-configs/skills/ag-closeout-audit/SKILL.md` — the full Phase 0-3 procedure this batch executes.
