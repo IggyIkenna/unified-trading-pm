@@ -144,6 +144,11 @@ flips-to-resolved-within-window, still-red-left-alone, past-window-skipped). All
 - [x] ✅ [DOCS] P2. Cross-referenced the superseded judgment in
       `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`.
 - [x] ✅ [DEVOPS] P1. Live-verification-caught follow-up bug fixed: `agent-orchestrator@37cd533` — see Progress Log.
+- [x] ✅ [DEVOPS] P1. One-time historical backfill run (operator-chosen scope: last 7 days) — 161 of 238 all-time
+      `unresolved` rows reconciled to `resolved` fleet-wide (77 remain, genuinely still-broken or outside the 7-day
+      window); confirmed both target rows individually: `agt-80c470` (main_ci_red) →
+      `resolved     (main_qg_v2_green_reconciled)`; `agt-ca03f6` (ldr_qg_failure) correctly stayed `unresolved` since
+      LDR is genuinely red again right now (a fresh, separate escalation `agt-6f2b99` is queued for it).
 
 ## Progress Log
 
@@ -161,3 +166,14 @@ flips-to-resolved-within-window, still-red-left-alone, past-window-skipped). All
   regression test (the existing MagicMock-based tests can't catch an ORDER BY bug). This is exactly the class of error
   the workspace's "runtime verification, never 'done' without running the code" rule exists to catch — the first ship
   was quality-gates-green and logically reviewed, but wrong in a way only live data could surface.
+- **2026-08-07 (same session, historical backfill)**: operator asked for a one-time backfill (chose "last 7 days" scope
+  over "just 24h" / "all-time") plus confirmation that reconciling a previously-paged wall pages a closing Slack bookend
+  (already true by construction — `_mark_resolved` fires `notify_escalation_resolved(..., paged=paged)` regardless of
+  call site). Ran `reconcile_stale_unresolved_escalations(limit=300, window_hours=24*7)` once, in-process on the live VM
+  via read-only-auth'd SSM (same `session_scope`/locking the live server already uses — no separate DB access path
+  invented). Result: 161 resolved fleet-wide (238 → 77 remaining all-time `unresolved`), spanning nearly every active
+  repo — most tagged `qg_v2_green_reconciled` or `pr_merged_reconciled`. 10 of the ~45 visible in the (truncated) SSM
+  log had `paged=True`, meaning each fired a Slack "closing the loop" bookend for a wall that had previously paged
+  CRITICAL and silently never got un-paged. The remaining 77 are either genuinely still-broken (like `agt-ca03f6`) or
+  older than the 7-day backfill window — left as historical record, not swept, per the operator's own scope choice
+  (avoids resurrecting long-dead incidents nobody remembers).
