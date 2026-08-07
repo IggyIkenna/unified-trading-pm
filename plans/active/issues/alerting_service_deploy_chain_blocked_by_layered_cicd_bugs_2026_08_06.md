@@ -51,6 +51,7 @@ related:
     /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
     /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
+    /plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md,
   ]
 created: 2026-08-06
 last_updated: "2026-08-06"
@@ -154,3 +155,17 @@ together.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) -- added
   `agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`, the "4th layer" doc this doc's own todo 3
   asked to be filed separately (already done + cross-linked both directions).
+- **2026-08-07 ~07:00-08:00 UTC**: GitHub Actions incident fully RESOLVED overnight (both `Actions`/`Pages` components
+  back to `operational`). Re-dispatched `full-workspace-sit` — went green. `alerting-service`'s promote PR got
+  superseded twice more by the fleet bot as LDR kept moving (#345→#346→#347, each requiring a fresh mechanical
+  Dockerfile-digest conflict resolution, same take-LDR pattern each time) — resolved each in turn. PR #347 then hit a
+  NEW, 4th layered bug: `validate / GCP Cloud Build` stuck `QUEUED` 50+ minutes even with everything else green.
+  Root-caused (NOT the GH incident, NOT the layer-3 dangling-reference bug — both directly ruled out) to
+  `image-build-validate.yml` (now hosted in the new `unified-trading-ci` repo) still hardcoding
+  `runs-on: [self-hosted, glue]`, whose runner pool had been cleanly deregistered fleet-wide by an unrelated,
+  already-completed plan (`self_hosted_runner_public_repo_revert_2026_08_05.md`) — leaving zero eligible runners
+  anywhere. This has been silently blocking EVERY public repo's promotion for 24+ hours (reproduced independently on
+  `greeks-service`, queued since 2026-08-06T07:40Z). Fixed + live-verified:
+  `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`
+  (`unified-trading-ci@a37205d97f`/`@5bbc277d9b`). PR #347 now green end-to-end; proceeding to merge + Cloud Build +
+  Cloud Run verification.
