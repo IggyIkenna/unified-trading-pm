@@ -315,7 +315,7 @@ new pool is confirmed green, (3) only then resize AO down.
       skipped. **Blocked from shipping**: quickmerge's re-gate hit 2 PRE-EXISTING, unrelated `deployment-api` test
       failures (confirmed via `git stash` — fail identically on the clean tree), which block ANY commit to
       `deployment-api` right now — filed as
-      `/plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (shipped). The
+      `/plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` (shipped). The
       fix + test sit locally uncommitted in this session's checkout until that issue clears.
 - [x] ✅ [OPERATOR] P2. **Done 2026-08-06 — operator ran the on-disk cleanup directly via `aws ssm send-command` (SSM
       Session Manager wasn't available locally — `session-manager-plugin` not installed — so used the `send-command`

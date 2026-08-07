@@ -1033,7 +1033,7 @@ Same failure CLASS as the pkill guard above, different surface:
   (`lsof -ti tcp:$PORT | xargs kill`) killed whichever process was ACTUALLY listening, with no ownership check —
   confirmed live: killed `.tabs/3`'s in-progress `switch-model.spec.ts`/`edit-agent-modal.spec.ts` run this way while a
   different slot debugged an unrelated port conflict. Incident + investigation:
-  `plans/active/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md`.
+  `plans/archive/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md`.
 
 **Fix**: `playwright.config.ts` derives `SLOT_OFFSET = slot_number * 10` from its own file path (same
 `…/.tabs/<N>/<repo>` regex as `scripts/hooks/slot-identity-lib.sh`, kept local rather than shelling out) and adds it to

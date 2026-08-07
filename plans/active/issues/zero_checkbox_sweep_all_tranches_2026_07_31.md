@@ -101,7 +101,7 @@ and this doc is the register it writes to.
 1. `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md` — §5 "Follow-up todos" was **6 prose bullets**
    (including an explicit `[OPERATOR]` policy call). Its own Progress Log already flagged this as a HARD-RULE violation
    ("every follow-up is a `- [ ]` todo, never prose"). Converted in place.
-2. `plans/active/issues/deployment_api_artifact_pipeline_health_test_date_drift_flake_2026_07_29.md` — "Fix direction
+2. `plans/archive/issues/deployment_api_artifact_pipeline_health_test_date_drift_flake_2026_07_29.md` — "Fix direction
    (not yet done)" prose; its Progress Log had already self-nominated for this sweep. Converted.
 3. `plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` — a parking register whose P0-A (a **dated**
    2026-08-15 `check_codex_doc_freshness.py` hard-gate cliff), P1-C, P1-D and P2-E findings were all prose, so a

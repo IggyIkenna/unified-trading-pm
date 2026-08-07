@@ -4,7 +4,7 @@ title: CEX-Tardis derivative_ticker historical gap (2026-05-22→2026-08-02) lef
 summary: >-
   Split off perp_funding_data_semantics_and_cadence_2026_06_16.md's 2026-08-04 forward-capture-outage fix, which only
   resumes NEW captures — the ~2-month historical hole the outage itself created is a separate, larger backfill.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -28,7 +28,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "cefi-fwd-20260807-182843 (DERIBIT backfill) + earlier venue backfills; all 3 todos verified done in GCS"
 source: ["perp_funding_data_semantics_and_cadence-014, slot 6, 2026-08-04"]
 drift_direction: advance-code
 context_scope:
@@ -41,6 +41,10 @@ context_scope:
 ---
 
 # CEX-Tardis derivative_ticker historical gap (2026-08-04)
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos done: derivative_ticker backfilled for all 8 CEX-Tardis venues across the
+> full gap window (2026-05-01/05-22→2026-08-02/08-05), including the DERIBIT-only follow-up (RC3/RC4), each verified in
+> GCS per the Progress Log.
 
 ## What I found
 

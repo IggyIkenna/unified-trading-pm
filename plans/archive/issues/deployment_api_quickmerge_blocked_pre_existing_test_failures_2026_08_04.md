@@ -6,7 +6,7 @@ summary: >-
   quickmerge's re-gate step fails on the current deployment-api tree due to 2 pre-existing, unrelated test failures —
   not caused by the classification change (confirmed via git stash — both fail identically on the clean tree). This
   blocks ANY commit to deployment-api via quickmerge right now, not just this one.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,6 +24,8 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: NA
 resolved_by:
+  "deployment-api@59f5cbe8 (both P1 fixes) + deployment-api@e4072fb (VM-classification re-ship); all ancestor-verified
+  on origin/live-defi-rollout"
 locked_by:
 locked_since:
 context_scope:
@@ -37,6 +39,10 @@ context_scope:
 ---
 
 # deployment-api quickmerge blocked by 2 pre-existing unrelated test failures
+
+> **🟢 ARCHIVED 2026-08-07** — all 3 todos done: both P1 fixes landed same-day (`deployment-api@59f5cbe8`), and the
+> deferred VM-classification re-ship landed independently (`deployment-api@e4072fb`) — fleet-wide quickmerge unblock
+> confirmed.
 
 ## What I found
 

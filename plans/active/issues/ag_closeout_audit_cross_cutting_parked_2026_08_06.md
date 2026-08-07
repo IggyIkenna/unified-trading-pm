@@ -82,7 +82,7 @@ source: >-
   never-cited). Phase 1 Workflow (6 agents) classified all 6 `exclude_cross_cutting`; 2 fixed directly, 4 parked here.
 context_scope:
   [
-    /plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md,
+    /plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md,
     /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
     /plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md,
     /plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md,
@@ -94,7 +94,7 @@ context_scope:
 
 ## New findings this run
 
-### 1. `plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` — likely real owner `ui` (+ `sports` sub-component)
+### 1. `plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` — likely real owner `ui` (+ `sports` sub-component)
 
 **Doc state**: `status: open`, `asset_group: [cross-cutting]`, `repos: [deployment-api]`, `priority: P1`. 3 open todos,
 none resolved.
@@ -216,7 +216,7 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
 ## Todos
 
 - [ ] [DOCS] P3. Retag
-      `plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`'s `asset_group`
+      `plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`'s `asset_group`
       `[cross-cutting]` → `[ui]` (finding 1) — owning-tranche fix, leave to the `ui` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ui_consolidated_closeout_2026_07_30.md`'s membership, and its 3
       AO-eligible items are considered for that tranche's next batch.

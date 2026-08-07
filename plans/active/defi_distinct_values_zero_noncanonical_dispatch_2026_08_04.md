@@ -279,12 +279,12 @@ now — it is genuinely waiting on external VM/infra state, not idle from neglec
     shipped by the other session actually works end-to-end, not just in its own unit test.
   - **Framework discovery — should have been read at task start (pre-task plan/issue conflict check gap, self-caught
     mid-session, not by the operator):** this exact class of work already has a governing framework this tracker hadn't
-    cross-referenced: `codex/02-data/reconciliation-finding-taxonomy.md` (21-type finding vocabulary — only
+    cross-referenced: `/codex/02-data/reconciliation-finding-taxonomy.md` (21-type finding vocabulary — only
     `legacy_duplicate` and `junk` are ever delete-eligible; a non-canonical value with no twin is MIGRATED/re-keyed,
-    never deleted), `codex/02-data/canonical-cutover-register.md` (per-axis, per-AG `effective_from` dates — DeFi has an
-    explicit 2026-07-24 operator carve-out for `instrument_type` casing: **per-value, least-migration-cost**, not the
+    never deleted), `/codex/02-data/canonical-cutover-register.md` (per-axis, per-AG `effective_from` dates — DeFi has
+    an explicit 2026-07-24 operator carve-out for `instrument_type` casing: **per-value, least-migration-cost**, not the
     cross-AG blanket-UPPERCASE ruling — confirms the earlier POOL→pool fold this session's predecessor did was
-    correctly-scoped, not a violation), and `codex/02-data/non-canonical-path-inventory.md` (the living register —
+    correctly-scoped, not a violation), and `/codex/02-data/non-canonical-path-inventory.md` (the living register —
     update it, don't re-derive from scratch). Added all three + the directly-relevant live plan
     `defi_track01_per_instrument_and_canon_id_2026_07_24.md` to this doc's `context_scope`/`related`. That plan's own
     "Manifest instrument_type case + venue-spelling unify" todo (resolved 2026-07-24) already found, via a fresh live

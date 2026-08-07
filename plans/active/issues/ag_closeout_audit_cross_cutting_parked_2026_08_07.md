@@ -218,8 +218,8 @@ These 4 remain exactly as classified in
 1-3, day 6 for finding 4). Not re-triaged (no new evidence); listed here only for continuity/tracking. Full reasoning
 lives in the 2026-08-06 doc; the open todos there remain the single source of truth — not duplicated here.
 
-- **`plans/active/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`** — real owner `ui`
-  (+ `sports` sub-component). Still `asset_group: [cross-cutting]` today.
+- **`plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`** — real owner
+  `ui` (+ `sports` sub-component). Still `asset_group: [cross-cutting]` today.
 - **`plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`** — real owner
   `infrastructure`. Still `asset_group: [cross-cutting]` today. Remains KEEP-NA (operator-direction-gated) per the
   2026-08-04 na-eligibility-audit ruling.

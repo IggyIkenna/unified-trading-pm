@@ -416,7 +416,7 @@ against the reproduction script.
   `market-data-tick-handler:latest` (asia-northeast1-docker.pkg.dev) was last pushed 2026-02-11T11:05:09Z — 5.5 months
   stale, missing every fix since including this doc's own 2026-07-28 schema-contract fix. Not confirmed as this tail's
   cause (those specific jobs are dormant, not the active source) but a real, independent staleness risk if any of them
-  is ever re-triggered — see `/plans/active/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md`. **Conclusion: no
+  is ever re-triggered — see `/plans/archive/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md`. **Conclusion: no
   code fix needed this session** — the root-cause fix continues to hold under production load; the ~300k
   `attempted_failed` total is still the same historical backlog requiring a normal idempotent re-attempt, and the one
   fresh signal found this session was itself already resolved by the second check. No GCS/manifest write, no VM launch,

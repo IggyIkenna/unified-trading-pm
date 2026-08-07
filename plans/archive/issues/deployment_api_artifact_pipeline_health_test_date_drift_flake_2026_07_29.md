@@ -15,7 +15,7 @@ summary: >-
   `/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`); confirmed pre-existing/unrelated by
   re-running the same test against a `git stash`-clean HEAD (5d157d6) -- same failure, same StopIteration. Not fixed as
   part of that dispatch (out of its narrow scope); filed here per the outside-every-plan findings-triage rule.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +39,7 @@ source: >-
   Discovered incidentally while shipping small-1 (deployment-api sleep()-based test-waste fix) from
   /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md -- the full quality-gates.sh run
   surfaced this unrelated pre-existing failure, confirmed by reproducing it against a clean HEAD.
-resolved_by:
+resolved_by: "deployment-api@cf55369 (test made relative to now); ancestor-verified on origin/live-defi-rollout"
 locked_by:
 depends_on: []
 context_scope:
@@ -49,6 +49,9 @@ context_scope:
     /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-07** — sole todo done: `deployment-api@cf55369` made the test date relative to `now()`, verified
+> ancestor of `origin/live-defi-rollout`.
 
 ## Problem
 

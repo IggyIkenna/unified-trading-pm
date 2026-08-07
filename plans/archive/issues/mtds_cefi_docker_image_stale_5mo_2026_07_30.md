@@ -21,7 +21,7 @@ summary: >-
   of these dormant Cloud Run jobs is ever re-triggered (manually, by a forgotten scheduler, or by a future automation
   change), it will silently run 5.5-month-stale code with no warning. Read-only investigation -- no image rebuilt, no
   job triggered, no code changed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -47,7 +47,7 @@ locked_by:
 locked_since:
 assigned_vm: NA
 execution_scope: local-only
-resolved_by:
+resolved_by: "all 7 Cloud Run jobs deleted (dead/superseded verdict) 2026-08-07, verified NOT_FOUND on re-describe"
 source:
   "Found during data_pipeline_failure escalation agt-c271de (dp-fleet-monitor -> agent-orchestrator, slot-10,
   2026-07-30) while investigating a fresh tail on the DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) cefi/book_snapshot_5 alert."
@@ -62,6 +62,10 @@ context_scope:
 ---
 
 # MTDS CeFi Cloud Run jobs' `market-data-tick-handler:latest` image is 5.5 months stale
+
+> **🟢 ARCHIVED 2026-08-07** — both todos done: all 7 Cloud Run jobs (`market-tick-cefi-binance-futures`/`-okx`/
+> `-daily-download`/`-binance-spot`/`-bybit`/`-coinbase`/`-upbit`) verdicted dead/superseded by the VM-based Tardis
+> launcher path and deleted, verified `NOT_FOUND` on re-describe — the stale-image landmine no longer exists.
 
 ## What was found
 
