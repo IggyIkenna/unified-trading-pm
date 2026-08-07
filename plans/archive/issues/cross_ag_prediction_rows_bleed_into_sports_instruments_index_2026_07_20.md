@@ -27,7 +27,12 @@ summary: >-
   `PreconditionFailed` ever raised (the existing "lost-update fix" retry path never triggers, because no conflict is
   ever detected). Fleet-wide blast radius (every asset_group's consolidator shares this write path), so the fix needs
   its own careful implementation + test + deploy cycle, not a same-session patch — BLOCKED-OPERATOR-DECISION on
-  scheduling that work. Do NOT re-attempt manifest remediation until it ships.
+  scheduling that work. Do NOT re-attempt manifest remediation until it ships. **STALE — refreshed 2026-08-07**: the
+  TOCTOU fix DID ship 2026-07-24 (`unified-trading-library@2f1582ee`, found on HEAD 2026-07-27), the remediation held
+  through Round 8's 15-minute hold-check, and a fresh independent re-verification 2026-08-07 (11 days later, read-only,
+  `read_availability_index_safe` against the live `instruments-store-sports-prd` index) confirms **0 prediction-bleed
+  rows** out of 10,507,688 total — the fix is holding durably, not just short-term. This paragraph was never refreshed
+  after the doc's own body resolved; `status: resolved` below was already correct, the prose above it was not.
 status: resolved
 nature: issue
 asset_group: [sports, prediction]
@@ -117,19 +122,19 @@ plus the recent, still-growing dates are the strongest lead.
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Pin the true full count and composition — read the `instruments-store-sports` index after a fresh
-      consolidation (not the stale per-VM fallback), grouped by `asset_group` × `venue` × `data_type` × `written_at`,
-      and also check the `market-data`(tick)/sports manifest for the same bleed (repo: instruments-service).
-- [ ] 2. [BACKEND] P1. Locate the writer — trace which job/uploader writes `asset_group=prediction` rows into the
-      `instruments-store-sports` index (grep the manifest-writer / per-VM-shard upload path for where the bucket/index
-      target is resolved vs the shard's asset_group; the KALSHI concentration and the 2026-07-16→ dates bound the
-      search) (repos: instruments-service, market-tick-data-service).
-- [ ] 3. [BACKEND] P1. Fix the misattribution at the writer so a prediction shard's manifest row lands only in the
-      prediction estate; add a regression/guard test that a prediction shard can never write into a sports index (repos:
-      instruments-service, market-tick-data-service, unified-api-contracts).
-- [ ] 4. [DATA] P2. Remediate the already-written bleed rows — decide whether to relocate them to the prediction index
-      or delete the mis-targeted rows (manifest-write, human-gated), and re-measure both estates' coverage denominators
-      after (repo: instruments-service).
+- [x] ✅ 1. [DATA] P1. **DONE — superseded by every later round's own live measurement** (Round 4: 11,727; Round 8: 0
+      post-remediation; 2026-08-07 fresh re-check: 0/10,507,688). Pin the true full count and composition — read the
+      `instruments-store-sports` index after a fresh consolidation.
+- [x] ✅ 2. [BACKEND] P1. **DONE 2026-07-24 — writer located: `VENUE_CATEGORY_MAP[KALSHI]`/`[POLYMARKET]` misclassified
+      `"sports"` instead of `"prediction"` in `unified_api_contracts/registry/venue_constants.py`** (a live SSOT
+      contradiction against `betting_sports.py`'s separate, correct venue catalog). Confirmed via git-blame.
+- [x] ✅ 3. [BACKEND] P1. **DONE 2026-07-24 — `unified-api-contracts@f8e0d8d8`** ("KALSHI/POLYMARKET asset_group
+      corrected sports->prediction — closes the live SSOT contradiction behind the cross_ag_prediction sports-index
+      bleed"). Regression/guard test coverage not independently re-verified here — check that repo's test suite if this
+      needs re-confirming.
+- [x] ✅ 4. [DATA] P2. **DONE 2026-07-27 (Round 8) — 11,727/11,727 bleed rows removed, snapshot-first, twin-verified.**
+      Held clean through a 15-minute/5-check poll then, and through an independent 2026-08-07 re-check 11 days later (0
+      rows). Coverage denominators re-measure not independently re-run here.
 
 ## RE-TRIAGE (2026-07-23)
 
