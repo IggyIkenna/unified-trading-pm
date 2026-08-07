@@ -176,7 +176,7 @@ surface that actually exists (warm + cold event-log tiers).
       ASTER gate wording in `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` and the check path in
       `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` to point at the warm/cold
       event-log surface, so a future audit does not re-raise a false "no live data" alarm. (repo: unified-trading-pm) —
-      unified-trading-pm@<SHA>
+      unified-trading-pm@5db5fedba
 
 ## Progress Log
 
@@ -186,7 +186,7 @@ surface that actually exists (warm + cold event-log tiers).
   `raw_tick_data/pipeline_mode=live_*` paths (grep `raw_tick_data.*live_[a-z].*read` returns zero hits). Updated: (1)
   gate wording in `infra_capture_and_devops_leftovers_2026_07_06.md` to name the warm event-log tier as the correct
   surface; (2) check path in `cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` with a RETIRED PATH note +
-  warm tier redirect. unified-trading-pm@<SHA>
+  warm tier redirect. unified-trading-pm@5db5fedba
 - **2026-08-07 (slot-12 worker, batch4 todo 2)**: full re-check run. Exact `gcloud` outputs above. Root-caused the
   cold-tier gap to the compactor OOM on `(cefi, book_snapshot_5)`. Warm tier confirmed healthy + flowing. Filed this
   doc; flipped the source doc's todos 1-2 and batch4 todo 2 citing this run.
