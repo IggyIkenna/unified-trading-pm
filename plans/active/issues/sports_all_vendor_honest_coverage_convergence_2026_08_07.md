@@ -162,9 +162,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `--force`), guard confirmed `0 running + 1 planned <= cap 1`, all 4 tarballs fresh. RUNNING as of the check right
       after launch — watching through to actual clean completion next tick (see
       `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the full history/context).
-- [ ] [SCRIPT] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** once
-      `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers (durably 502ing as of
-      2026-08-07T10:17Z) — check the endpoint before relaunching, don't blind-retry into the same wall.
+- [ ] [SCRIPT][BLOCKED-UPSTREAM-OUTAGE] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** once
+      `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers — confirmed still
+      returning HTTP 502 at 2026-08-07T12:21Z (3h+ after initial failure at 10:17Z; RapidAPI message: "API (not
+      working)"). Tagged BLOCKED-UPSTREAM-OUTAGE; do not relaunch without verifying the endpoint returns 200 first.
 - [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill** — `weather-backfill-20260807-120241`,
       `launch-openmeteo-backfill-vm.sh --entity WEATHER 2020-06-06 2026-08-07`, confirmed RUNNING (auto-republished a
       stale instruments-service tarball before create, then succeeded). Watch for completion + re-census next tick.
@@ -257,3 +258,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   expect to babysit this, not launch and walk away. All other VMs healthy this tick: AF campaign PLAYER_STATS climbing
   (2025-03-08), footystats climbing (2023-04-23), SFI climbing with real writes (21,742 rows for 2020-10-17), weather
   confirmed still RUNNING (log read hit a transient 404, not treated as a failure signal on its own).
+- **2026-08-07T12:21Z (slot 15)** — **Transfermarkt endpoint verification: still 502.** Confirmed
+  `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` returns HTTP 502 with RapidAPI message
+  `"The API is unreachable, please contact the API provider" / "Your Client (working) ---> Gateway (working) ---> API (not working)"`.
+  Now 3h+ since initial failure at 10:17Z. Secret Manager access confirmed working (key len=50 chars); the 8
+  `attempted_failed` PLAYER_VALUES rows remain unretried. Tagged todo `[BLOCKED-UPSTREAM-OUTAGE]` — do not relaunch
+  blind; verify endpoint returns 200 before dispatching a retry VM.
