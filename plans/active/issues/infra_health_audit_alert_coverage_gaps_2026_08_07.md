@@ -150,10 +150,13 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
 
 ## Todos
 
-- [ ] [INFRA] P1. Build a generic Cloud Run Service liveness/OOM registry + detector (item 1 above) covering at minimum
-      `market-data-query-service`, `central-market-data-tardis-loader`, `uts-prod-data-status-rollup-svc` — extend
-      `critical_service_uptime.tf`'s pattern or the DP-VM registry, whichever integrates cleaner with the existing
-      escalation spine. Repo: deployment-service.
+- [x] ✅ [INFRA] P1. Build a generic Cloud Run Service liveness/OOM registry + detector (item 1 above) covering at
+      minimum `market-data-query-service`, `central-market-data-tardis-loader`, `uts-prod-data-status-rollup-svc` —
+      extend `critical_service_uptime.tf`'s pattern or the DP-VM registry, whichever integrates cleaner with the
+      existing escalation spine. Repo: deployment-service. — deployment-service@fa07db64d —
+      `terraform/gcp/cloud_run_service_liveness.tf`: 3-service Terraform registry with memory-high (>85%/5m), crash-loop
+      (2+ restarts/15m), and instance-zero (EVALUATION_MISSING_DATA_ACTIVE) alert policies; QG green, quickmerge landed
+      on LDR.
 - [ ] [INFRA] P1. Build a generic Cloud Run Job per-execution failure detector (item 2 above) reading every
       `cloud_run_job_registry.py` entry's real execution history, not just `manifest-consolidator-{ag}`. Repo:
       deployment-service.
