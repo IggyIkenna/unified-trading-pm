@@ -273,3 +273,9 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
   69b93bc/b3da771 actually land in), the `test-sit-fleet-green-auto-retrigger.sh` regression test, and the split-out
   `fleet_promoter_glue_runner_stall_2026_08_06.md` follow-on issue; also added the missing `unified-trading-pm/` repo
   prefix on the promote-fleet workflow path.
+- **2026-08-07 monitoring check-in (slot 10, task `sit_gate_fleet_green_auto_retrigger_stuck-005`)**: checked
+  `system-integration-tests` `full-workspace-sit.yml` runs since `b3da771` landed (verified-good run 31131969006,
+  2026-08-06T23:40:26Z) through now (run 31146220479, 2026-08-07T04:03:25Z) — 6 consecutive runs, ALL `success`, zero
+  `failure`/`cancelled` (`gh run list --workflow=full-workspace-sit.yml --limit 15`). No 5th recurrence yet (~4.5h clean
+  so far). Todo NOT closed — done-when is "no recurrence by ~2026-08-21", still 2 weeks out; leaving the checkbox open
+  for the window to run its course (re-check on next dispatch of this monitoring todo).
