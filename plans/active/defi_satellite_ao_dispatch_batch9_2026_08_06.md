@@ -460,3 +460,22 @@ remaining items besides the over-cap-gated one above).
   already use canonical `InstrumentType.X` enum constants in `instrument_type not in (...)` guards
   (`compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`, `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh`
   green. Shipped: `instruments-service@9ad39d5b`.
+- **2026-08-07 (AO dispatch #8, `data_engineering`, slot 10, todo 3 `[DIAG] P1`)**: Found VM
+  `canonical-migration-defi-gas-fees-legacy-purge-20260807-100248` **already RUNNING** (launched by [INFRA] P0 worker
+  after BLK-4cd8f7bb was answered at 09:44Z). VM boot clean — `run.log` confirms: sanity-check 12,425 rows in
+  75,819,124-row index (correct), GCS soft-delete retention 604800s, 0/0 GCS objects deleted (expected), streaming
+  download started 10:05:51Z (`blob.download_as_bytes(timeout=900)` for 2,642,951,426 bytes = 2.46 GiB). **Heartbeat
+  daemon (vm-life-emitter) died at ~10:06:02Z** — likely SIGPIPE after the stdout tee pipe closed; Python main process
+  continued unaffected (EXIT_STATUS absent, VM RUNNING confirmed 10:15:33Z via `gcloud compute instances describe`). Log
+  uploader also dead (run.log frozen at 3,268 bytes since 10:06:14Z, no new content during blocking
+  `download_as_bytes()` call). Zombie watchdog `vm-zombie-watchdog-20260807-075242` RUNNING with 90-min idle threshold —
+  safe. No VM/GCS/cron mutation performed. **Lessons**: (1) heartbeat daemon dying is not a signal the Python process
+  died — check EXIT_STATUS file and VM `RUNNING` status independently; (2) log uploader and heartbeat daemon both run
+  inside the vm-exec process group; if the tee pipe closes (e.g., stdout buffer overflow or SIGPIPE), both die silently
+  while the Python script continues; (3) `blob.download_as_bytes(timeout=900)` produces zero stdout output during the
+  download — the log WILL be silent for many minutes during a 2.46 GiB download; this is expected, NOT a stall. **Resume
+  point**: poll `gs://deployment-scripts-central-element-323112/vm-logs/20260807-100248/EXIT_STATUS`; on EXIT_STATUS=0,
+  (a) verify `_index/availability_index.parquet` filtered to 3-part TARGET signature = 0 rows, (b)
+  `gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-defi-cron --location asia-northeast1`, (c)
+  await ≥4 clean `--verify-only` cycles in cron run.log, (d) flip todos 3+4 in this plan + [DATA] P1 in issue doc, (e)
+  push, (f) /done.
