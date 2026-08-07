@@ -96,7 +96,9 @@ stash-pile audit/cleanup runbook) ·
 [issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
 (9 services' Dockerfiles inconsistent vs the clean base-image pattern) ·
 [issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
-(ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked).
+(ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked) ·
+[issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md](/plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md)
+(28 shared QG checker scripts lack a `.claude` worktree-exclusion pattern, retagged in from `cross-cutting` 2026-08-07).
 
 **Close-out criterion**: all CVE remediations land (aiohttp/vcrpy, setuptools PYSEC-2026-3447, execution-service
 aioresponses migration); the codex-violation ratchet stays green; scripts/ governance sweep complete; uv pin re-synced

@@ -20,7 +20,11 @@ summary: >-
   positives.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [infrastructure] # corrected 2026-08-07 (ag-closeout-audit infra-tranche run) -- was [cross-cutting]. Real content is
+  # generic repo/script-governance QG-checker hygiene (28 checkers missing a `.claude` worktree-exclusion pattern),
+  # not data-pipeline correctness -- per the cross-cutting tranche's own 2026-08-07 audit finding 7, which deferred
+  # the retag to infra as the owning tranche.
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
