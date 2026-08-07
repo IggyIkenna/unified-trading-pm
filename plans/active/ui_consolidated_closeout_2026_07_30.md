@@ -253,3 +253,7 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   batch1's 11 Deferred items cleared in the 1 day since (verified via git log on all 12 candidate docs); recommend
   approving + dispatching batch1 next, which is still `status: draft` awaiting operator sign-off. Full write-up:
   `issues/ag_closeout_audit_ui_parked_2026_08_07.md`.
+- **context-scout 2026-08-07**: re-verified context_scope (6 entries, unchanged) — still a coordination-index doc,
+  legitimately code-free; the 2 intervening `ag_closeout_auditor` Progress Log entries are audit-run records, not a
+  substantive change to this doc's own reading list (the new satellite batch1/finalize + parked-issue docs they produced
+  are the CHILD batch's own reading list, not this umbrella's).

@@ -58,6 +58,7 @@ context_scope:
     scripts/validation/check_manifest_import_alignment.py,
     scripts/quality_gates/check_no_legacy_bucket_string_concat.py,
     deployment-service/tests/unit/test_event_logging.py,
+    /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 ---
 
@@ -148,3 +149,7 @@ unrelated VM-launch-pattern deliverable) per the "every deferral is a tracked to
       `scripts/workspace/`) for reviewable commit sizes. Re-run the grep above FIRST to confirm the list hasn't drifted,
       then verify each touched file still imports/runs clean
       (`python3 -c "import ast; ast.parse(open('<file>').read())"` at minimum; prefer actually invoking the checker).
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries).

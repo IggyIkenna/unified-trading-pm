@@ -60,6 +60,7 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py,
     unified-trading-library/unified_trading_library/manifest_writer/_state.py,
     market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py,
+    /plans/archive/issues/mdps_full_mode_reprocess_manifest_cache_oom_2026_08_03.md,
   ]
 ---
 
@@ -174,3 +175,4 @@ Two independently-shippable angles (do NOT bundle — mirrors the sibling doc's 
   Citations added inline on both checkboxes above. Recommend a future audit re-check batch10's approval status; if it
   lapses without landing this content, re-run this doc through RECLASSIFY instead of leaving it stale-duplicated
   indefinitely. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).

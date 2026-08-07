@@ -73,6 +73,15 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
+    instruments-service/instruments_service/engine/urdi_reference_provider.py,
+  ]
 ---
 
 # TradFi satellite AO batch 6 — fresh audit extraction
@@ -367,6 +376,11 @@ pre-launch). Post-launch = re-download a FRESH manifest + run the phase-2 query 
   `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING' --zones=asia-northeast1-c`. When count
   == 0, run the launch command; confirm VM(s) STARTED (<60s) + RUNNING at T+10min per async-wait-and-poll-discipline (no
   fire-and-forget). When count >0, wait (operator-approved); do NOT `--force`.
+
+- **context-scout 2026-08-07**: populated context_scope (6 entries) — the 4 codex docs already named in this doc's own
+  "Codex SSOTs" section, plus the 2 highest-value per-todo source paths from the File-collision matrix
+  (`launch-tradfi-backfill-vm.sh` for the P0 ES_OPT todo, `urdi_reference_provider.py` for the CME
+  instrument-definitions todo).
 
 ## Codex SSOTs
 

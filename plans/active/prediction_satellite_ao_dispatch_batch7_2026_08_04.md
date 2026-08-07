@@ -120,3 +120,5 @@ reasoning: `ag_closeout_audit_prediction_parked_2026_08_04.md`.
   parent plan's own explicit hand-off language ("tracked separately... not blocking this plan further") confirming no
   double-claim. Extracted the 1 conflict-clear bounded todo. Left `status: draft` per the autonomous-mode safety rail —
   operator flips to `active` to dispatch.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (3 entries) — verified all 3 still resolve and still
+  map to the sole open P3 `available_at` consumer-check todo; unchanged.

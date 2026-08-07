@@ -51,7 +51,11 @@ superseded_by:
 resolved_by:
 depends_on: []
 context_scope:
-  [deployment-service/scripts/vm/lib/launcher_common.sh, deployment-service/scripts/vm/create-code-tarballs.sh]
+  [
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/create-code-tarballs.sh,
+    /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
+  ]
 ---
 
 # `lc_verify_tarball_freshness` auto-mode silent dirty-tree skip (2026-08-06)
@@ -150,3 +154,7 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
   it manually both times (stash-by-name → rebuild tarball → pop stash → relaunch, verified `all 3 tarball(s) current` on
   the successful relaunch). Not yet fixed — flagged for its own dedicated pass rather than a rushed edit to shared
   launcher infrastructure under this session's VM-relaunch time pressure.
+- **context-scout 2026-08-07**: populated context_scope (3 entries) — the 2 pre-existing source files (both already
+  minimal and correct — the `auto` mode call site and the republish command it shells out to) re-verified; added
+  `features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`, the doc this bug's own text names
+  as "the exact incident class" the `lc_verify_tarball_freshness` mechanism was built to prevent.

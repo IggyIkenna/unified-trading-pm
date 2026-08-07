@@ -66,6 +66,7 @@ context_scope:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /plans/archive/2026_08/pytest_timeout_60s_flaky_under_contention_progress_log_history_2026_08_03.md,
     /scripts/quality-gates-base/base-library.sh,
+    /scripts/quality-gates-base/base-service.sh,
   ]
 source: >-
   cicd-role escalation agt-fa86c9 (WALL_TYPE=ldr_qg_failure), triaging GH Actions run
@@ -690,6 +691,10 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       Done when: either the monitoring window closes clean (no recurrence by ~2026-08-20), or a recurrence is confirmed
       and re-opens this doc's investigation per its own re-open convention. (repo: unified-trading-pm)
 
-> **2026-08-07 note**: the 2026-08-06 archive-candidate audit note above is superseded by the fix shipped the same day
-> (todo directly above this note, `unified-trading-pm@52a85d6c7`) — the genuinely still-open work is the post-fix
-> monitoring window, now tracked as a real todo instead of prose.
+> **2026-08-07 note**: the 2026-08-06 archive-candidate audit note that previously sat here is superseded by the fix
+> shipped the same day (todo directly above this note, `unified-trading-pm@52a85d6c7`) — the genuinely still-open work
+> is the post-fix monitoring window, now tracked as a real todo instead of prose.
+
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — added
+  `scripts/quality-gates-base/base-service.sh` (the 2026-08-06 mechanism-level retry-once-on-timeout fix,
+  unified-trading-pm@52a85d6c7, touched this file alongside the already-listed `base-library.sh`).

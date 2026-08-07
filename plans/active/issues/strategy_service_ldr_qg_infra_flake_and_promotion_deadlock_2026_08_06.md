@@ -72,11 +72,12 @@ source:
   ]
 context_scope:
   [
-    strategy-service/pyproject.toml,
-    strategy-service/.github/workflows/main-backmerge-to-ldr.yml,
-    strategy-service/.github/workflows/notify-slack.yml,
-    unified-trading-pm/.github/workflows/ldr-to-main-promote.yml,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/15-runbooks/devops-ci-walls.md,
     unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml,
+    unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
+    unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh,
+    agent-orchestrator/server/routes/slots_worker.py,
   ]
 ---
 
@@ -670,3 +671,16 @@ process itself in this pass).
   supersedes → resolve the new promote PR take-LDR (recipe in the P0 todo). Deferred (tracked todos): [OPERATOR] P2
   orphan `promote/strategy-service/32f0a859d0ae@92231302` branch; [CICD] P2 dispatch-storm mutex promote; [OPERATOR] P2
   glue-runner cache-save investigation.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — full replacement, not an append. The
+  doc's own strategy-service-specific promotion items are all `[x]` resolved; every still-open thread (unified-api-
+  contracts backmerge-hang investigation, the fleet-wide `notify-slack.yml`-on-main audit, the still-open
+  `agent-orchestrator` one-shot `/done` 500) is fleet-wide/orchestrator-side, not strategy-service-specific — dropped
+  `strategy-service/pyproject.toml` + `.github/workflows/{main-backmerge-to-ldr,notify-slack}.yml` (the now-resolved
+  original incident's artifacts) and `unified-trading-pm/.github/workflows/ldr-to-main-promote.yml` (single-repo drain
+  bot, superseded in relevance by the fleet bot) in favor of `/codex/15-runbooks/devops-ci-walls.md` (already cited in
+  `related:` but missing from context_scope), `scripts/cicd/ldr_to_main_fleet_promote.sh` (the fleet bot's actual
+  in-flight-guard logic, cited by line range in the doc's own prose),
+  `scripts/workflow-templates/ rollout-workflow-templates.sh` (the doc's own named root-mechanism gap — "out of scope to
+  build here, flagged for the operator/rollout-process owner"), and `agent-orchestrator/server/routes/slots_worker.py`
+  (the still-open P2 `_done_one_off` 500 fix target). `ldr-to-main-promote-fleet.yml` kept (still the most-cited
+  mechanism throughout).

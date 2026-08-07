@@ -67,6 +67,15 @@ drift_direction: worsening-slowly
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    market-tick-data-service/scripts/pipeline_e2e_check.py,
+    unified-trading-library/unified_trading_library/pipeline_e2e_check/launcher.py,
+    unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh,
+    unified-trading-pm/agents/RULES.md,
+    /plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+  ]
 ---
 
 # pipeline_e2e_check.py's local process is silently killed mid-run — reproducible 2/2
@@ -190,3 +199,4 @@ proven this run.
   open prose investigation work (checked explicitly for the corpus's known prose-only trap): a reproducible-but-
   unexplained process-kill, access-gated on root/kernel access this sandboxed session doesn't have. All 3 suggested
   follow-ups need elevated access or an unmade root-cause call — none is worker-determinable today.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).

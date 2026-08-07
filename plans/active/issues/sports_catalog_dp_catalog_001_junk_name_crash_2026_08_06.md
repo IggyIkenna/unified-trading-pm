@@ -67,10 +67,11 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md,
     instruments-service/scripts/build_instrument_catalogue.py,
     unified-api-contracts/unified_api_contracts/canonical/domain/sports/canonical_ids.py,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md,
   ]
 ---
 
@@ -178,3 +179,9 @@ observability hook whoever picks up the follow-up needs.
   root-cause fix for the ALERT (DP-CATALOG-001), not a mask, since the corrupted name is still correctly rejected from
   the catalogue, just no longer fatal to the whole job. Pinging `dp-fleet-monitor` (authoring slot) with this outcome
   and completing this one-shot escalation.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — added
+  `/codex/04-architecture/shard-level-failure-isolation.md` (already cited in `related:`; the fix IS an application of
+  this exact codex discipline to a new per-row call site, so it belongs in the reading list, not just the sidebar link);
+  dropped `defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md` (only cited contrastively — "a structurally
+  different failure mode from" — not a resource this doc's own follow-up work needs) to stay minimal; the other 3
+  pre-existing entries re-verified to resolve on disk and kept.

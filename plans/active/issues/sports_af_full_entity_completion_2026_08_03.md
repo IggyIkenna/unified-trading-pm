@@ -47,10 +47,12 @@ source: ["sports_satellite_ao_dispatch_batch2, autonomous continuation, 2026-08-
 drift_direction: advance-code
 context_scope:
   [
-    /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
-    /codex/02-data/mvp-scope-canonical.md,
-    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
     instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py,
+    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
+    instruments-service/scripts/census_other_vendors_gap_2026_08_06.py,
+    /codex/02-data/mvp-scope-canonical.md,
+    /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
+    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
   ]
 ---
 
@@ -649,3 +651,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-07T02:58Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 2/26. PLAYER_STATS 973→929 (-44),
   steady real progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued, no switch
   needed. Grand total 64,005 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — added
+  `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` (the actual `af-backfill-*` singleton-lock launcher
+  driving this entire campaign, never named by filename in the doc's own prose despite dozens of VM-name mentions) and
+  `instruments-service/scripts/census_other_vendors_gap_2026_08_06.py` (the newer census script covering the doc's
+  2026-08-06 operator-directed scope expansion to the other 5 sports vendors); all 4 pre-existing entries re-verified to
+  resolve on disk and kept.

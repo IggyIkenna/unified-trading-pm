@@ -48,7 +48,7 @@ context_scope:
   [
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
     deployment-api/deployment_api/services/fixtures_browser.py,
-    deployment-ui/src/components/FixturesBrowser.tsx,
+    instruments-service/scripts/build_instrument_catalogue.py,
     /codex/02-data/sports-2020-06-data-floor.md,
   ]
 ---
@@ -108,3 +108,8 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — swapped in the 2 shipped source files
   (`fixtures_browser.py`, `FixturesBrowser.tsx`) this plan's todos actually touch.
+- **context-scout 2026-08-07**: refreshed context_scope (4 entries) — both P10-B backend + UI todos are now `[x]`
+  shipped, leaving only the `[DATA] P2` regen-cadence freshness call open; swapped `FixturesBrowser.tsx` (its own todo
+  already shipped) for `instruments-service/scripts/build_instrument_catalogue.py` (the actual rollup job the open
+  todo's "confirm the regen cadence" asks about — previously uncited); kept `fixtures_browser.py` (the likely
+  live-day-overlay implementation site if that option is chosen).

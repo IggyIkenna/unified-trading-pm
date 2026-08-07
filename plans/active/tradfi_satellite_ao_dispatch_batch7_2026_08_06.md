@@ -69,6 +69,15 @@ source: >-
 assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
+    instruments-service/scripts/cleanup_legacy_twins.py,
+    features-service/features_service/delta_one/engine/orchestrator.py,
+  ]
 ---
 
 # TradFi satellite AO batch 7 — fresh audit extraction
@@ -339,6 +348,15 @@ Once a todo here ships, flip the corresponding checkbox/section in its named sou
 evidence. This plan's own reconciliation-then-archive step is machine-gated via a companion
 `tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md` (`depends_on` on this plan plus `gate_on_depends: true`),
 mirroring the batch1-6 finalize pattern.
+
+## Progress Log
+
+- **context-scout 2026-08-07**: populated context_scope (6 entries) — 3 codex docs (manifest/data-status, delete-safety,
+  and the batch's own conflict-check protocol) plus the 3 exact source files the File-collision matrix names for todos
+  2-4 (`migrate_tradfi_canonical_2026_07.py`, `cleanup_legacy_twins.py`, delta_one `orchestrator.py`); todo 1's target
+  is a not-yet-built script with no existing file to cite. Dropped `tradfi-databento-sourcing-ssot.md` from the doc's
+  own "Codex SSOTs" list to stay within the 6-entry cap — this batch's 4 todos are post-capture manifest/migration
+  fixes, not databento vendor-sourcing content.
 
 ## Codex SSOTs
 

@@ -833,3 +833,6 @@ Script:
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries, unchanged) — verified all 6 cited source docs still
   exist at their given (post-archival-correction) paths; this is a pure synthesis/index doc over other plans/issues,
   genuinely code-free by design.
+- **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged — the only changes since
+  the last pass were a line-cap history extraction and a na-eligibility-audit re-affirmation, neither of which shifts
+  what the sole remaining "6 Headline P0s" todo points at; all 6 entries still resolve.
