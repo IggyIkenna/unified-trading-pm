@@ -252,6 +252,16 @@ context_scope:
       qualifier (`_Z`/`!`/`_MD1`) into the canonical id, map to the base product root, extend `EXCHANGE_CODE_TO_NAME`.
       Non-MVP, no rush, no longer operator-gated. **Done when**: all 269,520 ICE-qualifier rows + the 1,063-row
       quarantine bucket canonicalize, 0 remaining.
+- [ ] [DATA] P2. **NEW 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — purge these rows, do not keep
+      them live.** `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 1 re-asked this exact question on
+      2026-08-07 without realizing the classifier fix above had already shipped 2026-07-28 (that item was stale —
+      corrected there too). The operator's actual 2026-08-07 answer adds new scope beyond the shipped fix: since ICE is
+      non-MVP and this data will not be used, **delete the (now-canonicalized) 269,520 ICE-qualifier rows + the original
+      1,063-row quarantine bucket from both the catalogue and the live manifest**, rather than leave them sitting as
+      valid-but-unused entries. Needs its own scoped delete pass (identify via the same
+      `_ICE_UNDERSCORE_BODY_RE`/`_ICE_QUALIFIER_SUFFIX_RE`-matched population, delete-safety-cite per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` since this is a manifest/catalogue delete, not yet
+      scoped into a plan).
 - [x] ✅ [DATA] P0. **Enumeration-driven migration (SINGLE SOURCE OF TRUTH — operator, 2026-07-18) — CASING sub-scope
       CLOSED 2026-07-25 to the literal-100% directive bar; semantic-mislabel-relabel + null/blank sub-scopes remain
       separately open, see the new P1 todo just below.** The migration MUST be driven by the FULL distinct set of
@@ -820,6 +830,13 @@ questions when a decision is needed. Ran it. Findings:
     race vs the manifest consolidator's cron 6x (each safely aborted "UNCHANGED-SAFE", auto-retried), succeeded attempt
     7: **65,628 rows dropped in place** (generation 1785080389281002→1785080714940928, 5,824,751 remain) — exact match
     to the reviewed count. Pre-retire snapshot backed up to `_index/backups/` first.
+
+    **Note 2026-08-07 (operator, via consolidated NA-blocker-digest audit)**:
+    `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 2 re-asked whether to apply this exact
+    retire-phase migration on 2026-08-07 (operator answered "agree, agent-executable: re-dry-run first, apply if
+    materially unchanged") — that item was stale, this had already shipped 2026-07-26 as recorded above. The operator's
+    2026-08-07 answer independently matches what was already done (fresh dry-run first, apply on an unchanged/larger
+    list) — no further action needed, closing the loop by citation.
 
 \*\*Remaining, in priority order for the next continuation: (1) re-verify the register-phase rows landed in the
 consolidated index, (2) get operator review on the retire-phase candidate list before ever applying it, (3) finish the
