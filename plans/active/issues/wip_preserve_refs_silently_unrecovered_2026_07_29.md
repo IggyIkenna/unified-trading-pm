@@ -30,13 +30,14 @@ related:
 created: 2026-07-29
 author: unknown
 last_updated: 2026-08-01
-priority: P2
+priority: P1
 parent_epic: orchestrator_master
 source:
   "worker, slot 15 — discovered mid-task while re-verifying a 24-repo fleet rollout after a session-death respawn; a
   repo reported SHIPPED earlier in this same session had its commit silently reset off the branch"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 estimate_class: research
 drift_direction: advance-code
 depends_on: []
@@ -134,11 +135,40 @@ closing the "then what" gap:
       `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own matching todo. This
       doc's slot-15 `strategy-service` ref (`a77eb6d170ca`) — already answered above as SUPERSEDED by the 2026-07-30
       hand-triage — got the identical SUPERSEDED verdict from the automated verifier, cross-validating it.
-- [ ] [SCRIPT] P3. Add a fleet-wide `refs/wip-preserve/**` sweep (age-thresholded alert or a documented runbook check)
-      so a preserved-but-unrecovered commit surfaces instead of sitting forgotten. Repo: agent-orchestrator.
-- [ ] [SCRIPT] P3. Consider a post-push content-verification step in quickmerge's success path (or worker RULES.md's
-      ship loop) — fetch + diff the pushed file(s) against `origin/<branch>` after a reported-successful push, so a
-      "SHIPPED" log line is never trusted without a fresh confirming read. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **Build the daily fleet-wide `wip-preserve` sweep as a SCHEDULED AO-dispatched job** (raised P3 → P1
+      by the 2026-08-06 measurement below — this is a 1,912-ref backlog, not a curiosity). Operator ruling 2026-08-06:
+      sweep daily, auto-recover, delete provably-stale. **It must be TWO sweeps, because the two namespaces behave
+      differently** (see the measurement section — the AO code documents the split at
+      `agent-orchestrator/server/worktree_clean_check/_orphan_verify.py:258-264`): - **Remote sweep**
+      (`refs/heads/wip-preserve/*` — pushed branches, **1,912 across 25 repos**): runnable from any single clone per
+      repo via `git ls-remote`. For each branch, test whether its tip is an ancestor of `origin/live-defi-rollout`.
+      **Ancestor → DELETE the remote branch** (operator-approved: the commit stays reachable from the branch, so nothing
+      can be lost by construction). **Not an ancestor → REPORT, never touch.** - **Local sweep**
+      (`refs/wip-preserve/cascade-*` — LOCAL-ONLY, created by `quickmerge.sh`'s `cascade_dep_branch()` via
+      `git update-ref` and deliberately never pushed): **must run on EVERY host**, because no central job can see them.
+      A central-only sweep is blind to this tier by construction. **Done when**: a scheduled job runs both sweeps daily
+      across all repos + all `.tabs/*` clones, deletes only ancestor-proven remote branches, and reports everything
+      else. Repo: agent-orchestrator (scheduler) + unified-trading-pm (sweep script).
+- [ ] [SCRIPT] P1. **Rescue the local-only tier before classifying it — push, don't just report.** Operator ruling
+      2026-08-06. On each host, for every `refs/wip-preserve/cascade-*` whose content is **not** already on
+      `origin/live-defi-rollout`, push it to the durable `refs/heads/wip-preserve/` namespace FIRST, then classify.
+      **Why**: this is the only tier where a loss is unrecoverable and invisible — the ref lives in one clone's `.git`,
+      is not fetched by the standard refspec (`+refs/heads/*:refs/remotes/origin/*` cannot match it), and dies silently
+      if the clone is deleted or the host wiped. Pushing converts the fragile tier into the durable one, at which point
+      the remote sweep above handles it like any other. **Done when**: a host sweep leaves zero local-only cascade refs
+      carrying content that is not on the branch. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **Add post-push verification to `quickmerge.sh` — and FAIL, not warn.** Operator ruling 2026-08-06.
+      Immediately after a successful push, assert `git merge-base --is-ancestor <pushed-sha> origin/<branch>` (re-fetch
+      first) and exit non-zero if it does not hold. **Verified 2026-08-06 that quickmerge does NOT do this today** — its
+      only ancestry checks are a pre-push early-exit guard (`scripts/quickmerge.sh:1472`), a sentinel check (`:1584`),
+      and a pre-stage-5 HEAD check (`:1779`); none confirms the push actually landed. **Why sha-ancestry is the right
+      oracle HERE specifically** (it is not, elsewhere — see the wolf-crying trap in the measurement section): at the
+      instant after the push you pushed that exact sha, so ancestry is exactly the claim being made. Cost is one fetch +
+      one O(1) check. **Why fail rather than warn**: the failure this prevents is a false `SHIPPED` log line, which is
+      strictly worse than a hard error — it makes everyone downstream believe work landed when it did not, which is
+      precisely how this doc's originating incident went unnoticed. A warning in a long quickmerge log gets scrolled
+      past. **Done when**: a simulated push failure (or a push to a branch that is then force-moved) makes quickmerge
+      exit non-zero rather than print SHIPPED. Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -163,3 +193,52 @@ closing the "then what" gap:
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+## Measurement 2026-08-06 (`/plan-reconcile ao`, interactive) — the pattern is ACTIVE and far larger than filed
+
+Measured live, not recalled. Two namespaces exist and they are **not** interchangeable; the AO code documents the split
+itself at `agent-orchestrator/server/worktree_clean_check/_orphan_verify.py:258-264`.
+
+**Tier 1 — `refs/heads/wip-preserve/*`, PUSHED to remote. 1,912 branches across 25 repos.** Durable and visible from any
+clone, but never cleaned up in ~2 months. Top offenders: `unified-trading-pm` 459, `market-tick-data-service` 237,
+`features-service` 164, `instruments-service` 155, `deployment-service` 100, `unified-api-contracts` 88.
+
+**Tier 2 — `refs/wip-preserve/cascade-*`, LOCAL-ONLY. 3 refs across 81 scanned clones.** Created by `quickmerge.sh`'s
+`cascade_dep_branch()` via `git update-ref`; **never pushed** — confirmed by
+`git ls-remote origin 'refs/wip-preserve/*'` returning empty, and by the standard fetch refspec
+`+refs/heads/*:refs/remotes/origin/*` being structurally unable to match them. This is the dangerous tier: invisible to
+every other machine, destroyed with the clone, no trace anywhere.
+
+The 3 Tier-2 refs found, each adjudicated by hand:
+
+| Repo                      | Ref / sha      | Date       | Verdict                                                 |
+| ------------------------- | -------------- | ---------- | ------------------------------------------------------- |
+| `unified-api-contracts`   | `f2214c09a3c8` | 2026-08-05 | ✅ recovered — ancestor of `origin/LDR`, ref is residue |
+| `unified-trading-library` | `08521d5c1350` | 2026-08-06 | ✅ recovered — ancestor of `origin/LDR`, ref is residue |
+| `unified-trading-library` | `d3fb74d795d5` | 2026-08-05 | ✅ recovered — **by CONTENT, not by sha** (see trap)    |
+
+**Nothing was lost — but nothing would have told us that.** All 3 turned out harmless; the only reason that is known is
+that a human checked each by hand on 2026-08-06. One had sat for a full day; one was created that same day. That is the
+doc's original thesis, re-proven: the safety net has no exit path, no alert, and no cleanup.
+
+### ⚠️ Trap: sha-ancestry is NOT the oracle for an aged ref (it IS for a fresh push)
+
+`d3fb74d795d5` (slot-7, `feat(data): add per-AG Era-B adjudication exception for tradfi in cf_manifest_audit`) is
+**not** an ancestor of `origin/live-defi-rollout` — by sha it looks like unrecovered work. It is not: the content was
+re-shipped under a different sha and is live on the branch today (`unified_trading_library/cf_manifest_audit.py`:
+`ERA_B_ADJUDICATED_AGS` at :123, the `ag in ERA_B_ADJUDICATED_AGS` branch at :437). A sweep that alarms on sha-absence
+alone **will cry wolf**, and a maintainer who then "cleans up" on a false alarm learns to distrust the tool. For an AGED
+ref, confirm by CONTENT. For a JUST-PUSHED sha (the quickmerge post-push check above) sha-ancestry is exactly right,
+because you pushed that precise sha a second earlier — the two cases look similar and are not.
+
+### Operator rulings 2026-08-06
+
+1. **Daily scheduled sweep, AO-dispatched** — not a runbook step. Rationale: the failure mode is that nobody suspects
+   anything, so a check that only runs when someone suspects something cannot catch it. First manual run took ~2 min
+   across 81 clones and immediately found 3 unknown refs.
+2. **Auto-delete on an ancestry proof; report everything else.** A remote `wip-preserve` branch whose tip is an ancestor
+   of `origin/live-defi-rollout` may be deleted automatically — the commit remains reachable from the branch, so the
+   delete cannot lose anything by construction. Anything failing that proof is reported and never touched. This is the
+   only option that actually shrinks 1,912 instead of re-reporting it forever.
+3. **Rescue Tier 2 by PUSHING it, before classifying.** Closes the real data-loss hole rather than merely observing it.
+4. **quickmerge post-push check FAILS, does not warn** — a false `SHIPPED` is worse than a hard error.
