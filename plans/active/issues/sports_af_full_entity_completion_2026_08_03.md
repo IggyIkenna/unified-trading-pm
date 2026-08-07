@@ -879,3 +879,7 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` (`722fd6d4cf`), closing the last
   unilaterally-actionable item from the operator's original asks; only the cross-vendor generalization scoping ask
   (needs operator input) remains genuinely open.
+- **2026-08-07T19:48Z** — FIXTURE_STATS chunk 5/26 (2021-08-20). SFI made a huge jump — **2025-11-23 → 2026-03-21** (~4
+  months of dates in one ~27 min tick) — **now only ~4.5 months from the full-range end, likely to finish within the
+  next tick or two.** `mtds-backfill-odds-smallchunk2` chunk 18/451, one new EPL OOM self-recovered correctly (moved to
+  LA_LIGA, 1/18 chunks — consistent with the established low, tolerable rate). All healthy.
