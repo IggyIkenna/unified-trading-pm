@@ -208,6 +208,15 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - [x] ✅ [SCRIPT] P0. **Re-census run 2026-08-07T11:57Z** (instruments-service@f917f04f,
       `scripts/census_all_sports_sources_2026_08_07.py`, 9,552,235 manifest rows post-floor) — VMs still running; not
       yet converged. Updated table below in Progress Log. Re-census needed once backfill VMs complete.
+- [x] ✅ [SCRIPT] P2. **Bake the vendor-completion/attempted_failed/honest-absence audit checks into a daily AO run** —
+      operator asked (repeated across this session) for the checks done ad hoc here to run automatically every day,
+      choice of `/data-pipeline-check-*` vs `/data-pipeline-reconciliation` left to the agent. Added a new "Per-vendor
+      completion audit" section to
+      `unified-trading-pm/cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` (`722fd6d4cf`) — the
+      closer structural fit, since SKILL.md § 3b already owns the manifest/`capture_status` surface this procedure
+      extends. Documents the 5-step procedure (per-source pivot, error_reason sub-classification, timestamp liveness
+      check, never-trust-exit_code-alone, mid-run tarball-staleness check) with the concrete gotchas measured this
+      session, cross-linked back to this doc's Progress Log for full worked examples.
 
 ## Progress Log
 
