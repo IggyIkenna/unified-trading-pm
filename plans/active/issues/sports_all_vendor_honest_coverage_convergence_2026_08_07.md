@@ -161,10 +161,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - [ ] [SCRIPT] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** once
       `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers (durably 502ing as of
       2026-08-07T10:17Z) — check the endpoint before relaunching, don't blind-retry into the same wall.
-- [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill** — 2026-08-07T11:0XZ,
-      `launch-openmeteo-backfill-vm.sh --entity WEATHER 2020-06-06 2026-08-07`; verify it actually reached RUNNING next
-      tick (launch command backgrounded, VM not yet visible in `gcloud compute instances list` at time of writing —
-      confirm before assuming success).
+- [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill** — `weather-backfill-20260807-120241`,
+      `launch-openmeteo-backfill-vm.sh --entity WEATHER 2020-06-06 2026-08-07`, confirmed RUNNING (auto-republished a
+      stale instruments-service tarball before create, then succeeded). Watch for completion + re-census next tick.
 - [ ] [SCRIPT] P2. **Launch SFI full backfill** for the 205,363 expected_unattempted shards (distinct from the
       already-resolved 89-row attempted_failed cluster).
 - [ ] [SCRIPT] P3. **Understat 30-row expected_unattempted tail** — check if it's just an in-progress-run artifact.
