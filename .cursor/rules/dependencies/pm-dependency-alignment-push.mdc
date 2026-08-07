@@ -13,7 +13,7 @@ tags:
 RULE: Never push or merge unified-trading-pm unless dependency alignment passes. Internal deps (code uses → add; else remove) and external deps (version ranges vs canonical) must be aligned before any PM commit lands.
 WHY: PM owns workspace-manifest.json and canonical-dependency-manifest.json — SSOT for all repos. Pushing misaligned PM propagates drift across 30+ repos.
 CODEX: 06-coding-standards/dependency-management.md (§ Workspace-wide dependency pinning)
-SSOT: 00-SSOT-INDEX.md → Workspace external dependency versions, Canonical external dependency manifest
+SSOT: 00-SSOT-INDEX.md → "Workspace external dependency versions (canonical)", "Canonical external dependency manifest (global list)"
 PM: unified-trading-pm/scripts/manifest/README-DEPENDENCY-ALIGNMENT.md
 
 ## Before pushing PM
