@@ -230,10 +230,10 @@ Confirmed by direct code/config reading before changing anything (not assumed):
       repo, and removes the circular dependency where PM's own stuck promotion prevents the promoter from learning that
       a repo opted out. **Done when**: the fleet promoter resolves `promotion_model` from `live-defi-rollout`, and a
       manifest change on LDR alone is proven to change promoter behaviour on the next scheduled run without a `main`
-      merge. Repo: unified-trading-pm. — unified-trading-pm@48a59d464 (`git fetch origin live-defi-rollout --depth=1` +
+      merge. Repo: unified-trading-pm. — unified-trading-pm@58df945ec (`git fetch origin live-defi-rollout --depth=1` +
       `git show origin/live-defi-rollout:workspace-manifest.json > workspace-manifest.json` step added between "Checkout
-      PM" and "Authenticate to GCP" in `ldr-to-main-promote-fleet.yml`; also re-baselined `evidence_backed_completion`
-      to 23 for pre-existing debt from another slot).
+      PM" and "Authenticate to GCP" in `ldr-to-main-promote-fleet.yml`); unified-trading-pm@48a59d464 re-baselined
+      `evidence_backed_completion` to 23 for pre-existing debt from another slot.
 - [x] ✅ [INFRA] P1. **Missing follow-through discovered 2026-08-07: `agent-orchestrator`'s branch-protection ruleset
       was never re-pinned after the `ldr_main` → `ldr_terminal` flip, leaving it requiring a `sit-gate/fleet-green`
       status that can now structurally NEVER post again** — `ldr_to_main_fleet_promote.sh`'s `PMODEL != "ldr_main"`
