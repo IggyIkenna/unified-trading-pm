@@ -496,6 +496,32 @@ wake") — this registers the background job with the harness as an OWNED task, 
   `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — set `SCRATCHPAD` to a fresh writable dir first. (5) Do
   NOT re-arm if watcher is running — singleton lock race risk.
 
+### 2026-08-07T06:57Z — slot 8, session 7 — watcher re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Watcher b9iintlzz (session 6, slot 11, `run_in_background:true`) died after
+poll 3 at 06:42Z** — confirmed dead (output file ends at poll 3; session-6 task output ends there). Root cause: when the
+slot-11 session ended, the harness killed its owned background task (b9iintlzz). This confirms `run_in_background:true`
+keeps the task alive only for the duration of the OWNING Claude Code session; it does NOT survive inter-session
+handoffs.
+
+**Pattern (sessions 3–7): watcher always dies when the Claude Code session ends.** Each fresh session re-arms. This is
+expected — the AO re-dispatches this task to a new slot each time, and the new session re-arms as NEXT ACTION.
+
+**Fleet at slot-8 boot (2026-08-07T06:57Z): 23 VMs running** (down from 27 at session-6 poll 3 → 23 at slot-8 boot).
+Fleet is still draining. Operator keep-waiting decision unchanged.
+
+**Session 7 re-arm:** Modified watcher copy for slot 8:
+`…/e72382bd-a3d1-416a-ae84-85656714dec1/scratchpad/watcher/es_opt_watcher_slot8.sh` (SLOT_ID=8, SLOT_TABS=.tabs/8,
+PYTHON=.tabs/8/market-tick-data-service/.venv/bin/python). Launched with `run_in_background:true`. Harness task:
+**`baz81km0n`** (started 06:57:36Z, poll 1 = 23 VMs at 06:57:37Z).
+
+- **NEXT ACTION (fresh session):** (1) Check if todo #2 checkbox is `[x]` (watcher auto-completed). (2) If `[ ]`, check
+  harness task output: `…/e72382bd-a3d1-416a-ae84-85656714dec1/tasks/baz81km0n.output`. (3) If watcher still running,
+  wait for harness notification. (4) If watcher dead and task not done: re-arm from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` — create modified copy with SLOT_ID=<new-slot>,
+  SLOT_TABS=.tabs/<new-slot>, PYTHON=.tabs/<new-slot>/market-tick-data-service/.venv/bin/python — and launch with
+  `run_in_background:true`. Verify poll 1 in output before updating progress log. Do NOT re-arm if watcher running.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
