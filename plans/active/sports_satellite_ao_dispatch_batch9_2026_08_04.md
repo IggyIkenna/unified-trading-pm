@@ -775,17 +775,24 @@ Measurement script pattern: 3-col read (`date`, `data_type`, `capture_status`) f
 **VM status at 23:50Z:** RUNNING — at attempt 4/10 (backoff 24.0s) for Transfermarkt 502 retries at 23:37Z; within
 normal 10-attempt retry envelope. Background 5-min poll armed (up to 90 min).
 
+**Updated at 23:42Z (third pre-compact):** VM at attempt 7/10 (backoff capped at 48.0s since attempt 5) on
+`/api/v1/competitions/standings`. Attempts 8–10 also at ~48s each — VM may exit non-zero ~23:44–23:46Z if API stays
+down.
+
 **Resume steps (pick up from repo, zero session memory needed):**
 
 1. Check VM:
    `gcloud compute instances list --filter="name=tm-backfill-20260807-233040" --zones=asia-northeast1-c --format='value(name,status)'`
 2. If gone:
    `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260807-233040/run.log | tail -30`
-   and confirm `exit_code=0`.
+   and look for `[[VM_PROGRESS]] last_completed_date=2025-11-30` (success) or final `exit` line.
 3. If exit_code=0: create `measure_pv_golden.py` with the snippet below, run via
    `cd instruments-service && bash scripts/dev/run-bounded-analysis.sh python <path>/measure_pv_golden.py`.
 4. Flip P2 checkbox (`- [ ] → - [x] ✅`), commit `docs(plans):`, POST `/api/slots/14/done`
    `{"task_id":"sports_satellite_ao_dispatch_batch9-002","sha":"<sha>","evidence":"<measurement output>"}`.
+5. **If exit_code≠0 (API exhaustion):** wait 15–30 min for Transfermarkt API recovery, then re-launch:
+   `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`
+   (skip-fresh is default — already-captured cells won't be re-attempted; idempotent re-launch is safe).
 
 **Measurement script (inline — scratchpad not durable):**
 
