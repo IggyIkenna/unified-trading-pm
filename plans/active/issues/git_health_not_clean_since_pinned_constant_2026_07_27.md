@@ -102,11 +102,17 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
       combined with the next item into one open `[BACKEND] P3` todo in
       `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (line ~160, status: active, assigned_vm:
       planning) — that todo explicitly sources this doc's items #1+#2 by path. Do not duplicate a fresh dispatch for
-      this item; the batch3 todo is the live tracker.
+      this item; the batch3 todo is the live tracker. **Diagnostic complete 2026-08-07** (parent batch3 todo now `[x]`)
+      — see verdict in Progress Log below. Checkbox intentionally left open here: the gated finalize twin
+      (`infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md` todo 1) owns closing this item with its own
+      sha-reverification, per that plan's explicit "source docs' own checkboxes are NOT touched by [the parent]"
+      convention.
 - [ ] [BACKEND] P3. Audit `GET /api/fleet/git-health`'s aggregation path to confirm it surfaces
       `SlotGitStatusRow`-scoped `not_clean_since` per (host, slot, repo) rather than any global/shared snapshot value
       (repo: agent-orchestrator). **Already tracked** — same
-      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo as the item above.
+      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo as the item above. **Diagnostic complete
+      2026-08-07** — see verdict in Progress Log below. Checkbox intentionally left open — same finalize-twin note as
+      the item above.
 - [ ] [BACKEND] P3. Based on the above, either fix the upstream timestamp source, or add a distinct "last observed dirty
       transition" field alongside the existing hysteresis-gated `not_clean_since` so worktree-health consumers
       (review.md § 3d) can reliably distinguish a fresh edit from a genuinely long-stuck worktree (repo:
@@ -139,3 +145,70 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-07 ROOT-CAUSE VERDICT (slot 10, `infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo
+  `infra_satellite_ao_dispatch_batch3-002`)**: Tested all three candidate mechanisms named in this doc's `source` field,
+  hypothesis (iii) first per the batch3 todo's instruction.
+
+  **(i) REFUTED — reporter posts a fresh `reported_at`, not a fixed/boot-time value.** `slot-git-status-report.sh`'s
+  `NOW_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"` (line 173) is computed fresh at the top of every script invocation and
+  threaded through to every repo's POST for that run. Confirmed live: slot 10's `reported_at` advanced 06:22:04Z →
+  06:27:03Z across two consecutive cron ticks (~5 min apart, matching the cron cadence) during this session.
+
+  **(ii) REFUTED — the fleet aggregation does NOT collapse to a global/shared snapshot value.** `SlotGitStatusRow` is
+  keyed by `(host, slot_id)` and its JSON blob is a per-repo-name list (`git_health.py` `_propagate_not_clean_since`,
+  line 74-119, builds `prior_by_name` keyed by repo name); `slot_to_git_health` (line 311-357) reads `not_clean_since`
+  straight off each `RepoStatus`, no cross-slot/cross-repo collapsing anywhere in the path. Confirmed live: one
+  `GET /api/fleet/git-health?scope=local` snapshot simultaneously showed DIFFERENT `not_clean_since` values across
+  different repos/slots on the same host — `null`, `2026-08-07T04:42:03Z`, `2026-08-07T06:17:03Z`,
+  `2026-08-07T06:27:03Z` — which a truly global/collapsed value could not produce.
+
+  **(iii) CONFIRMED as the root-cause mechanism — but more precisely than "simply never clears": the confirm-gate is
+  keyed to the WRONG scope (host-wide, not per-repo).** `_DIRTY_CONSECUTIVE_TICKS_CONFIRM_THRESHOLD` (git_health.py:71)
+  gates `_propagate_not_clean_since`'s clear branch (line 106) on a single `dirty_consecutive_ticks` int the caller
+  passes in. That int is NOT per-repo. Trace: `slot-cron-ff-pull.sh:163` — `FF_RESULT_FILE` defaults to ONE fixed path
+  per HOST (`${TMPDIR:-/tmp}/slot-cron-ff-pull.result.json`), not namespaced per slot or repo — confirmed live on host
+  `ip-172-31-5-118`: exactly one `/tmp/slot-cron-ff-pull.result.json` shared by every slot on that box (alongside
+  per-repo `lockhash`/`last-run` marker files, which ARE namespaced — only the result file isn't). `_write_ff_result`
+  (slot-cron-ff-pull.sh:259-338) computes ONE aggregate `dirty_consecutive_ticks` scalar per sweep: it increments only
+  when the sweep's HOST-WIDE worst outcome is `skip:dirty`/`dirty:unconfirmed` (line 281-288), and resets to 0 on ANY
+  other outcome (`ok`/`fail`/`conflict`) from ANY repo anywhere on the host — the file's own comment (line 205-212)
+  states this is "deliberately NOT a per-repo counter for that consumer", even though a real per-repo counter
+  (`repo_dirty_ticks`, line 229-254, `_read_repo_dirty_ticks`) already exists and IS what `ff_one()`'s own confirm-gate
+  reads (line 608+) — the per-repo fix from `ao_remediation_b_code_chain_2026_07_23.md` item 5 was wired into ONE
+  consumer (`ff_one()`'s own skip-dirty decision) and never into the OTHER (`slot-git-status-report.sh`'s cross-check
+  forwarded to the server). `slot-git-status-report.sh:184-203` reads that same host-wide aggregate into
+  `FF_DIRTY_CONSECUTIVE_TICKS` and forwards it as ONE scalar (`dirty_ticks`, line 440, `argv[6]`) for the ENTIRE slot's
+  payload (line 449) — every repo in that one slot's POST shares the identical value. `git_health.py:244`
+  (`post_slot_git_status`) passes that scalar straight into
+  `_propagate_not_clean_since(..., dirty_consecutive_ticks=req.dirty_consecutive_ticks)`, so a SPECIFIC repo's own
+  `not_clean_since` can only clear when the WHOLE HOST's aggregate reads below threshold — regardless of that repo's own
+  dirty history.
+
+  **Reproduction (live, this session, 2026-08-07)**: Read 1 (`GET /api/fleet/git-health?scope=local`,
+  `reported_at=2026-08-07T06:22:04Z`) showed slot 10 (host `ip-172-31-5-118`)'s 9 repos (alerting-service,
+  batch-live-reconciliation-service, client-reporting-api, deployment-api, execution-service, features-service,
+  fund-administration-service, greeks-service, ibkr-gateway-infra, instruments-service) ALL in `state=ahead` with
+  `not_clean_since` pinned identically at `2026-08-07T04:32:03Z`, despite each repo carrying an independent, distinct
+  leftover unpushed commit (from an earlier session's interrupted CI-template rollout). Pushed/fixed all 9 locally
+  (verified `ahead=0`/`dirty=0` directly via `git rev-list`/`git status`). Read 2 (next tick,
+  `reported_at=2026-08-07T06:27:03Z`) showed all 9 correctly flipped to `state=clean`, `not_clean_since=null` — a
+  genuine dirty→clean transition, correctly cleared. At that exact tick, `/tmp/slot-cron-ff-pull.result.json`'s
+  `dirty_consecutive_ticks` read **0** because `ff_pull_last_result=conflict` that sweep (an UNRELATED repo elsewhere on
+  the host hit a merge conflict, which per the reset logic above zeroes the WHOLE host's aggregate regardless of which
+  repo conflicted) — the confirm-gate happened to pass for these 9 repos purely because of unrelated fleet activity, not
+  because of anything about these repos specifically. Cross-check at the same tick: `slot 0`'s `unified-trading-pm` was
+  genuinely still dirty (5 files) with `not_clean_since` correctly pinned at `2026-08-07T04:42:03Z` (continuously dirty
+  since then — expected, not a symptom) — proving the mechanism CAN track a repo correctly, while the shared-aggregate
+  wiring means a DIFFERENT repo's clear-eligibility is coupled to whatever's happening elsewhere on the host, not its
+  own state. This explains the original 2026-07-27 report (an identical `not_clean_since` pinned across many different
+  actively-churning repos/slots for ~50 minutes): whenever the host-wide aggregate happens to stay ≥2 for a stretch (no
+  repo anywhere hitting `ok`/`fail`/`conflict` in that window), EVERY repo on the host is blocked from clearing
+  regardless of its own state — an unpredictable, racy coupling, not a permanent pin.
+
+  **No code changed** — per the batch3 todo's explicit scope guard ("a code change only if the verdict is (i) or (ii)...
+  NOT a schema/field addition"), a verdict of (iii) stays a recommendation only. **Recommendation**: swap the reporter's
+  forwarded `dirty_consecutive_ticks` (host-wide aggregate, `slot-git-status-report.sh:198`) for a per-repo lookup via
+  the already-existing `_read_repo_dirty_ticks` (keyed by repo path, same result-file JSON) so
+  `_propagate_not_clean_since`'s confirm-gate is keyed to the SAME repo it's clearing/preserving — this is the
+  bugfix-the-existing-field branch of todo #3's field-design fork below, which stays out of this todo's scope.
