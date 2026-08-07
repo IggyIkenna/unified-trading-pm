@@ -684,3 +684,21 @@ process itself in this pass).
   build here, flagged for the operator/rollout-process owner"), and `agent-orchestrator/server/routes/slots_worker.py`
   (the still-open P2 `_done_one_off` 500 fix target). `ldr-to-main-promote-fleet.yml` kept (still the most-cited
   mechanism throughout).
+- **fresh recurrence confirmed 2026-08-07 ~13:00-14:48Z (unrelated session, alerting-service context)**: the same
+  fleet-wide-stall signature is live again today, not just a 2026-08-06 historical incident. Evidence: (1) a clean,
+  QG-green, single-file `alerting-service` commit (`db580b65e`, pushed to LDR 13:05:43Z) has NOT reached `main` after
+  55+ minutes despite the prior fix on this same repo promoting in ~2 min a few hours earlier; (2) zero repos across a
+  5-repo sample (alerting-service, unified-api-contracts, market-tick-data-service, deployment-service,
+  instruments-service) have gotten a fresh `promote/<repo>/<sha>` PR since ~10:41-10:46Z — 4+ hours of fleet-wide
+  promotion silence; (3) `ldr-to-main-promote-fleet.yml` runs at 13:00/13:15/13:20/13:30 all show
+  `conclusion: cancelled` with `jobs: []` (cancelled before any job started), and the 13:45 run was still
+  `status: pending` an hour later; (4) `gh run list --status=queued` on `unified-trading-pm` shows multiple OTHER
+  workflows (`ci-status-update`, `version-coherence-check`, `ldr-docs-gate`, `digest-drift-sweep`,
+  `freeze-deferred-build-replay`, `SIT Debounce Trigger`) queued since 11:49-12:19Z with no completion — all
+  `runs-on: ubuntu-latest`, not self-hosted, so this reads as a queue/concurrency backup rather than a runner-pool
+  outage this time, but the net effect (sit-gate never turns green → every `ldr_main` promotion held fleet-wide) matches
+  this doc's root-cause chain exactly. GitHub's own status page reports all-systems-operational, so this is
+  workspace-side. Not investigated further / not fixed — flagging as confirmation this is CURRENT, not stale history,
+  and leaving the runner-pool-capacity / dispatch-storm-mutex follow-ups above as the likely fix path. Did NOT attempt
+  `--hotfix-to-main` (operator-only `QUICKMERGE_HOTFIX_TO_MAIN_OK=1`, not available to an agent) or any manual
+  intervention in the promoter/SIT workflows themselves.

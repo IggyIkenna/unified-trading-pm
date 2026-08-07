@@ -87,17 +87,20 @@ resolved_by: ""
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix the stale base-image `unified-api-contracts` dependency (rebuild/republish the
-      `unified-trading-library` base image, or find the existing `update-dependency-version.yml` fan-out mechanism
-      referenced in CLAUDE.md and use it) so `DataPipelineAlertRule.mirror_live` actually resolves instead of raising
-      `AttributeError`.
-- [ ] [OPERATOR] P1. Pause Cloud Scheduler job `uts-prod-alerting-paging-cron` (asia-northeast1). Let existing
-      `uts-prod-alerting-paging` executions drain naturally (no force-kill — avoid dropping in-flight Pub/Sub acks). Do
-      NOT delete the Job/Scheduler outright until confirmed `dp-alerting-subscriber` fully covers its role.
-- [ ] [SCRIPT] P1. Verify live: after old executions drain, confirm via
-      `scripts/dev/slack-read-channel.py --channel data-pipeline-alerts` that DP_FLEET_MONITOR_RUN_STARTED/COMPLETED
-      genuinely stop appearing, and that a real CRITICAL DP event still mirrors to Slack correctly via
-      `dp-alerting-subscriber` alone (PagerDuty delivery not expected to succeed — deprecated per operator decision).
+- [x] [SCRIPT] P1. Fix the stale base-image `unified-api-contracts` dependency — alerting-service Dockerfile now runs
+      `uv pip install --system --no-sources --upgrade-package unified-api-contracts -e .` instead of a plain resolve, so
+      it always fetches the freshest AR-published UAC wheel rather than silently accepting the base image's pre-baked
+      copy. Shipped `alerting-service@db580b65e` to LDR, QG-green. NOT YET on `main` — blocked by an unrelated,
+      already-tracked fleet-wide LDR→main promotion stall, see
+      `/plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md` (fresh recurrence
+      confirmed same day). Will drain automatically once that clears; no manual bypass attempted.
+- [x] [OPERATOR] P1. Paused Cloud Scheduler job `uts-prod-alerting-paging-cron` (state: PAUSED, confirmed via
+      `gcloud scheduler jobs pause`). Existing executions (`uts-prod-alerting-paging-xc57k` started 12:00Z, `-xkkv5`
+      started 13:00Z) left to drain naturally, no force-kill.
+- [x] [SCRIPT] P1. Verified live: `slack-read-channel.py --channel data-pipeline-alerts --hours 1` returned 0 messages
+      as of ~13:09Z and again ~14:48Z — DP_FLEET_MONITOR_RUN_STARTED/COMPLETED have genuinely stopped. (The
+      `dp-alerting-subscriber`-still-crashes-on-mirror_live half of this todo — confirming a real CRITICAL DP event
+      mirrors cleanly post-fix — is still open pending the Dockerfile fix reaching `main` + a redeploy; see above.)
 - [ ] [SCRIPT] P3. Once confirmed stable for a few days, consider deleting `uts-prod-alerting-paging` +
       `uts-prod-alerting-paging-cron` outright rather than leaving them paused indefinitely (dead infra).
 
@@ -106,3 +109,8 @@ resolved_by: ""
 - 2026-08-07: Filed after tracing the real root cause via Cloud Logging (dual Pub/Sub consumers on
   `lifecycle-events-sub`) + a direct `docker run` inspection of the deployed image (confirmed the base-image UAC
   staleness). Proceeding to fix in this same session per operator direction ("Consolidate onto dp-alerting-subscriber").
+- 2026-08-07 ~13:00-14:48Z: Shipped the Dockerfile fix (`alerting-service@db580b65e`) + paused the legacy Job's
+  scheduler. Live-verified the user-visible symptom (Slack spam) is gone. The Dockerfile fix itself is stuck on LDR —
+  traced this to an UNRELATED, already-known fleet-wide LDR→main promotion stall (zero promotions landed across a 5-repo
+  sample in 4+ hours), added confirmation to the existing tracking doc rather than duplicating it. Primary bug closed;
+  this doc stays open only for the base-image-fix-reaches-main tail + the P3 dead-infra cleanup.
