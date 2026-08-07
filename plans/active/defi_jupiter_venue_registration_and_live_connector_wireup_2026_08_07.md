@@ -139,9 +139,9 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       unified-api-contracts@ad003d03 QG green; targeted check confirms JUPITER-SOLANA ∈ VENUES_BY_ASSET_GROUP["defi"]
       with adapter key "jupiter"
 
-- [ ] [DATA] P1. **instruments-service: wire `JupiterReferenceDataAdapter` into the live factory + venue list.** Depends
-      on todo 1 (this repo's `unified-api-contracts` dependency must be bumped to the version containing todo 1's change
-      first). In `instruments-service/instruments_service/reference_data/factory.py`: add
+- [x] ✅ [DATA] P1. **instruments-service: wire `JupiterReferenceDataAdapter` into the live factory + venue list.**
+      Depends on todo 1 (this repo's `unified-api-contracts` dependency must be bumped to the version containing todo
+      1's change first). In `instruments-service/instruments_service/reference_data/factory.py`: add
       `from .adapters.defi.jupiter import JupiterReferenceDataAdapter`, add `"jupiter": JupiterReferenceDataAdapter` to
       `_ADAPTERS`, and add `"jupiter": ""` to `ADAPTER_DATA_SOURCES` (Jupiter's lite API needs no key — same shape as
       `"kamino": ""`/`"raydium": ""`/`"orca": ""` already in that dict). In
@@ -150,7 +150,8 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       above the list). Done-when:
       `tests/unit/test_orchestrator_helpers.py::test_defi_set_equals_uac_denominator_drift_guard` passes, a targeted
       test confirms `get_adapter_for_canonical_venue("JUPITER-SOLANA")` returns a `JupiterReferenceDataAdapter`
-      instance, and `instruments-service` `quality-gates.sh` is green.
+      instance, and `instruments-service` `quality-gates.sh` is green. — instruments-service@06c6f2dd QG green; drift
+      guard + factory targeted checks PASSED
 
 - [ ] [BACKEND] P2. **market-tick-data-service: new live connector for Jupiter market data.** No existing MTDS adapter
       covers Jupiter (batch `market_interface/factory.py::VENUE_REGISTRY` has no `jupiter` entry; no
