@@ -67,7 +67,13 @@ Full research-agent report (grounded, file:line cited) is in this session's tran
 
 **Already fine / irreducible (no action)**: usage-cap freeze (re-probes every tick, auto-resumes), auth-fail eviction
 (`rotate_all_slots_off_account`, fully automatic, preserves in-flight task+worktree), auth-fail cooldown self-heal,
-`notify_all_accounts_unusable`'s rate-limit-vs-auth-failed split, CI-wall re-escalation cap (defensible judgment bar),
+`notify_all_accounts_unusable`'s rate-limit-vs-auth-failed split, ~~CI-wall re-escalation cap (defensible judgment
+bar)~~ **SUPERSEDED 2026-08-07** — see `/plans/active/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md`:
+live dashboard evidence (two `unified-trading-pm` escalations stuck `unresolved — still_red_past_deadline` well after
+their underlying walls had actually cleared) showed the cap=1/page-on-first-miss/no-way-back design was NOT just a
+judgment call but a structural dead end (a terminal `unresolved` row is never re-polled, so a wall fixed by a human or
+another agent after the cap hit stays a permanent ghost). Operator ruling retuned it (cap 1→10, deadline 90→45min, page
+delayed to the 2nd failed retry, plus a new passive reconcile pass) rather than leaving it as "defensible,"
 branch-state/wiped-index STOP (explicit data-loss guard, matches CLAUDE.md's own hard rule).
 
 **Already fixed by someone else today**: `plan_health.py`'s DeepSeek-blind account pool (agent-orchestrator@ef44eb9,
