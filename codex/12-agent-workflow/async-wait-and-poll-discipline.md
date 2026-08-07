@@ -24,7 +24,7 @@ authoritative_for: [agent async-wait and poll cadence discipline, background-tas
 referenced_by:
   [/codex/04-architecture/cross-venue-prediction-arb-detection.md, /codex/06-coding-standards/sub-agent-workflow.md]
 owner:
-last_reviewed: 2026-07-24
+last_reviewed: 2026-08-07
 code_refs:
 ---
 
