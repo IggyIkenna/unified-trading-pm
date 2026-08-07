@@ -404,3 +404,23 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   skip-fast sweep from 2020-06-06 rather than literally resuming from a checkpoint — expected, not a bug, just slower
   wall-clock. All other VMs (SFI, both odds VMs) confirmed healthy via value-diffs, consistent with established patterns
   — no new incidents.
+- **2026-08-07T17:18Z — found + fixed a real stale-code problem: `mtds-backfill-odds-smallchunk-20260807` was running ~5
+  hours of PRE-FIX code past the SOURCE_RETURNED_ZERO fix landing.** Investigating `401-retry`'s SPOT preemption (clean,
+  expected — `compute.instances.preempted` at 16:55:35Z, right after its last log line, not an app bug) surfaced
+  something bigger: odds_api `attempted_failed` had grown to 26,934 (from 13,916), and the original 871 stale-401 rows
+  were STILL completely untouched despite hours of VM runtime. Root cause: the SOURCE_RETURNED_ZERO fix
+  (`market-tick-data-service@70f13166`) landed at **2026-08-07T12:19:49Z**, but both odds VMs I'd launched (`401-retry`
+  at 04:55:46Z, `smallchunk` at 05:39:59Z) started HOURS before that — their baked tarballs simply predate the fix's
+  existence, so the launch-time freshness check had nothing to catch (the fix didn't exist yet at launch). `smallchunk`
+  was still running live with the stale tarball, actively generating **13,025 NEW SOURCE_RETURNED_ZERO
+  `attempted_failed` rows since the fix landed** (verified via `attempted_at` timestamps, split cleanly pre/post-fix at
+  ~13,038/~13,025). Checked `scripts/reset_source_returned_zero_manifest.py` as a candidate remediation — doesn't apply,
+  it targets a different pattern (`capture_status=empty_confirmed` fake-empties, not `attempted_failed` rows; ours are
+  correctly classified, just need re-attempting with fixed code). Killed `smallchunk`, relaunched as
+  `mtds-backfill-odds-smallchunk2-20260807` (`--chunk-size 5`, no `--force`), verified via
+  `git merge-base --is-ancestor` that the new tarball's commit (`52d6da40`) genuinely includes the fix. Going forward:
+  `attempted_failed` is not in this pipeline's skip-set, so the relaunch will naturally re-attempt all 26,934 rows
+  including the original 871 stale-401s. **Lesson for future launches**: a VM's tarball freshness is only checked
+  against the repo at LAUNCH TIME — a long-running VM (hours+) can silently drift stale if a relevant fix lands mid-run;
+  for any multi-hour backfill, worth a mid-run check of whether a relevant fix has landed since launch, not just a
+  freshness check at launch.
