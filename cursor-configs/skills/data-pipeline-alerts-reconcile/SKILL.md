@@ -56,6 +56,39 @@ The script writes raw JSON to `slack-<channel>-<hours>h.json` in the CWD (grep/r
 prints a rendered timeline to stdout. **Re-run it fresh each time** — its answer has a date on it, same as any other "is
 it currently broken" check in this workspace.
 
+**Slack silence is not evidence of health — cross-check live GCP infra state as its OWN ground-truth source, not just a
+follow-up to a Slack hit.** A 2026-08-07 parallel audit of Cloud Run Jobs/Services + the GCE VM fleet found 11 real,
+currently-active production failures (OOM crash-loops, dead-image jobs, a 19-month-broken min-instances service, a GCS
+429 storm) — a follow-up cross-reference found **zero of the 11 had ever fired a Slack alert**, and most had **no
+registry rule that could have fired one even in principle** (`no-rule-exists`, not a routing bug — see classification
+(f) below). Compute/infra failures (Cloud Run OOM, crash-loop, dead scheduler target, stale image) are a structurally
+different domain from the DP-`*` data-pipeline events this registry covers, and today nothing bridges them. Before
+concluding "the channel is quiet, nothing to do," run (or ask for the results of) an infra-health sweep alongside the
+Slack read:
+
+```bash
+# Cloud Run Jobs: recent execution failures across the fleet (per-job, all regions in use)
+gcloud run jobs list --project=central-element-323112 --format="table(metadata.name)" # then per-job:
+gcloud run jobs executions list --job=<name> --region=<region> --project=central-element-323112 --limit=20 \
+  --format="table(metadata.name,status.startTime,status.completionTime,status.conditions[0].status)"
+
+# Cloud Run Services: traffic pinning + error-severity logs
+gcloud run services list --project=central-element-323112 --format="table(metadata.name,status.traffic)"
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="<name>" AND severity>=ERROR' \
+  --project=central-element-323112 --freshness=24h --limit=20
+
+# GCE VMs: preemption-without-resume, dead heartbeat while still billably RUNNING
+gcloud compute instances list --project=central-element-323112 --format="table(name,zone,status,creationTimestamp)"
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<vm-name>/PROGRESS.json   # last-updated vs now
+
+# Zombie Cloud Scheduler jobs: firing at a Cloud Run Job that no longer exists (found 38 of these in one sweep)
+gcloud scheduler jobs list --project=central-element-323112 --location=<region> \
+  --format="table(name,schedule,state,httpTarget.uri)"   # cross-check each target against `gcloud run jobs list`
+```
+
+If this turns up something, it's classification (f) below, not (a)-(e) — don't force-fit it into the DP-registry
+categories, and don't skip the fix just because it didn't come from Slack.
+
 Then cross-check what you found against the registry and live infra state — an alert fired hours ago may already be
 routine noise, self-resolved, or superseded by a downstream fix:
 
@@ -123,6 +156,33 @@ an actual `DP-*` failure-mode row is work. If you don't already know which is wh
   (`uts-prod-monitoring-deadman`) itself is the thing that's down (DP-WATCHER-00`N`/DP-CATALOG-001). Verify the
   watcher's OWN liveness signal directly (its GCS census-blob freshness, its Cloud Scheduler job state) — don't trust
   its own silence as "healthy," per the codex doc's "watching the watchers" section.
+- **(f) Infra failure with no alerting coverage at all** — a real, currently-broken Cloud Run Job/Service or GCE VM that
+  NEVER shows up in `#data-pipeline-alerts` because the failure class isn't a registered DP-`*` event at all (not a
+  routing bug — there is genuinely no rule that could fire). Found this way, 2026-08-07: an OOM crash-loop, a
+  10-month-stale service reading a bucket retired 4 months earlier, ~38 Cloud Scheduler jobs firing daily at deleted
+  Cloud Run Jobs, and a real GCS-429 storm inside `dp-alerting-subscriber` itself. Sub-patterns worth checking by name
+  (each recurred, not one-off):
+  - **Dual/orphaned consumer** — two Cloud Run resources (a Service + a legacy Job, or two Jobs) independently pulling
+    the SAME Pub/Sub subscription or targeting the SAME resource; one is a never-decommissioned predecessor. Tell:
+    `resource.labels.job_name`/`service_name` in Cloud Logging for the SAME event shows up under a name you didn't
+    expect. Grep other Cloud Run resources' env vars/args for the same subscription/topic/bucket name before assuming a
+    single-consumer fix is sufficient — see `uts-prod-alerting-paging` (2026-08-07) for the template.
+  - **Zombie scheduler** — a Cloud Scheduler job whose HTTP target job name no longer resolves
+    (`gcloud run jobs describe <target>` → not found), still firing on schedule into a 404/NOT_FOUND void, sometimes for
+    over a year. Cross-check EVERY scheduler's target against the live job list, not just the one you're chasing — this
+    is a cheap, mechanical, whole-fleet check (`gcloud scheduler jobs list ... --format="table(name,httpTarget.uri)"`
+    against `gcloud run jobs list`), and it tends to cluster (found 38 in one pass, not 1).
+  - **Rule exists but the code doesn't use it** — the registry HAS a matching event/rule (e.g. `DP_GCS_429_THRASH`), but
+    the actual failing code path routes through a DIFFERENT, generic handler (e.g. a catch-all `SERVICE_ERROR` →
+    Telegram-only) instead of emitting the specific registered event. This is NOT the same bug as § 1(b)'s "registered
+    under the wrong id" — here the id is right and unused, not colliding. Grep the actual `raise`/`except` site that
+    produces the log line against what event name it emits, not what the registry SAYS should exist. For any (f)
+    finding: fix it the normal way for its domain (Terraform/gcloud config for infra, `quality-gates.sh` →
+    `quickmerge.sh --agent --files` for code), THEN treat closing the alerting gap itself as a separate, real follow-up
+    — either wire a genuinely new DP-`*` event + registry entry (§ 6) if the failure class is common enough to deserve
+    standing coverage, or explicitly document in the issue doc why it's NOT worth a standing alert (e.g., a one-time
+    cleanup that shouldn't recur). Don't silently leave (f) findings uncovered going forward just because you fixed the
+    instance you found.
 
 ## 2. Fix (a) directly, per its registry `escalation` tier
 
@@ -202,10 +262,33 @@ file it per findings-triage, never leave it as an unlogged "still broken."
 
 ## Under `/autonomous`
 
-No-pause loop: after the channel-wide sweep clears and § 4's deploy-chain verification confirms every fix is actually
-live, don't stop and wait for the next alert — re-sweep once more to confirm stability (a routing/dedup fix can look
-correct and still not survive the next real trigger), then stop. This is on-demand reconciliation, not a standing
-watcher — continuous monitoring is the fleet-monitor/deadman's job, not this skill's.
+**Completion criterion (operator ruling, 2026-08-07): 60 consecutive minutes with ZERO new alerts that are not
+auto-resolved within that same 60-minute window.** Not "the channel looks empty right now" — a single quiet snapshot
+proves nothing (this is the same "is it actually running" discipline as everywhere else in this workspace). Track it as
+a rolling clock: every time a genuinely NEW alert appears (not a repeat/dup of one already handled) and it does NOT
+auto-resolve inside the same 60-minute window, the clock resets to zero from that alert's timestamp. Re-run § 0's
+ground-truth sweep (Slack + the infra-health cross-check) periodically to advance the clock — don't just poll Slack in a
+tight loop; space checks sensibly (e.g. every 10-15 min) and let the harness's own notification/wakeup mechanism carry
+you between checks rather than busy-waiting.
+
+**Don't idle through a quiet window if there's already visible work** — if § 0's sweep finds live alerts or infra
+findings RIGHT NOW, audit and fix them immediately (parallel sub-agents per independent finding, same pattern as § 2-4)
+rather than waiting out a passive timer first. The 60-minute clock is the STOP condition, not a reason to delay
+starting. Only once you've worked through everything currently visible does "wait and watch the clock" become the
+correct mode.
+
+After the channel-wide sweep clears and § 4's deploy-chain verification confirms every fix is actually live, don't stop
+at the first quiet moment — hold for the full 60-minute window, re-sweeping periodically (a routing/dedup fix can look
+correct and still not survive the next real trigger, and an infra fix (f) can regress on the next deploy). This is still
+on-demand reconciliation bounded by the 60-minute stability check, not a permanent standing watcher — continuous
+monitoring past that point is the fleet-monitor/deadman's job, not this skill's.
+
+**Promotion-chain check (§ 4) gotcha**: never `gh workflow run ldr-to-main-promote-fleet.yml` yourself to check whether
+a fix promoted — it's a shared, single-concurrency-slot workflow, and ad-hoc dispatches from multiple concurrent
+agents/sessions checking their own promotion starve it (measured 2+ hour livelock, 2026-08-07,
+`plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`). Read
+`scripts/cicd/promotion_lag_monitor.py`'s live output or `gh pr list --search "chore(promote)"` instead — never dispatch
+the shared promoter just to poll it.
 
 ## What this skill does NOT do
 

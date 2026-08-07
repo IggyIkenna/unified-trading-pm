@@ -15,7 +15,7 @@ summary: >-
   — see Deferred). Every todo was grepped against all 6 prior cross-cutting covering docs (consolidated closeout +
   batch1/1b/2 + their finalizes) with zero citations found in any — a clean, unclaimed orphan population, not a
   re-litigation of prior batches' ground.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -31,7 +31,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-06"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,7 +44,7 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize
 depends_on: []
 context_scope:
   [
@@ -61,10 +61,10 @@ source: >-
 
 # Cross-cutting satellite AO batch 3
 
-> **Status: active** — operator-approved 2026-08-06, dispatching. Todos 4, 5, and 7 were found already done-elsewhere
-> before dispatch (see their checkboxes); todo 6 was revised to target its actual current violating lines (the
-> originally-cited lines were already clean, but new violations appeared in the same file since). The remaining todos
-> are unaffected and dispatch as originally drafted.
+> **ARCHIVED (2026-08-07) — all 8 todos done + all 3 deferred items reconciled.** Finalize plan
+> [`/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md`](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md)
+> completed: source-doc checkboxes reconciled (todo 1 ✅), deferred items re-checked + routed (todo 2 ✅), archival
+> ritual executed (todo 3 ✅). Both docs in `plans/archive/2026_08/`.
 
 ## Todos
 

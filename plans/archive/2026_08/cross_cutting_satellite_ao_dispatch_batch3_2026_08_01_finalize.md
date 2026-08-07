@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends: true until all 8 todos are done. Reconciles each named source doc's checkboxes independently, then
   re-checks batch 3's own Deferred items (2 operator-gated, 1 time-gated) for whether the gating ground has cleared, and
   archives the batch via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -15,13 +15,13 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -40,7 +40,7 @@ depends_on: [cross_cutting_satellite_ao_dispatch_batch3_2026_08_01]
 gate_on_depends: true
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -53,13 +53,9 @@ source: >-
 
 # Cross-cutting satellite AO batch 3 — finalize
 
-> **Machine-gated on
-> [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)**
-> (`depends_on` + `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 8 of that plan's
-> todos are `done`. This plan itself ships `status: active` (not `draft`) per the 2026-07-30 no-double-gate finding —
-> `gate_on_depends` alone already covers both an active AND a still-draft upstream batch, so a second `status: draft`
-> rail here would just be a redundant manual flip nobody reliably remembers. `sequential: true` because todo 2 needs
-> todo 1's reconciliation finished, and todo 3 (archival) must run last.
+> **ARCHIVED (2026-08-07) — all 3 todos done.** Todo 1: source-doc checkboxes reconciled (2026-08-07, slot 10). Todo 2:
+> deferred items re-checked — 2 routed to batch 4, 1 still gated (2026-08-07, slot 13). Todo 3: archival ritual executed
+> — both docs moved to `plans/archive/2026_08/` (2026-08-07, slot 9).
 
 ## Todos
 
@@ -88,8 +84,8 @@ source: >-
       `status: open` correct; (5) `data_pipeline_alerts_batch_remediation_2026_07_15.md` second todo `[x]`
       (`deployment-service@ba40e4a` + `unified-trading-pm@7a06bd8a5`, 2026-08-06), first todo `[REVIEW] P0` open
       (time-gated), `status: active` correct. No doc's status advanced past its remaining items.
-- [ ] [REVIEW] P2. **Re-check batch 3's own Deferred items now that time has passed.** For the 2 operator-gated entries
-      (`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`,
+- [x] ✅ [REVIEW] P2. **Re-check batch 3's own Deferred items now that time has passed.** For the 2 operator-gated
+      entries (`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`,
       `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` follow-up 1) and the 1 time-gated entry
       (`data_pipeline_alerts_batch_remediation_2026_07_15.md`'s green-bookend observation): re-read the specific gating
       ground and decide whether it has cleared. Route each to exactly one of — ready for a batch 4 (note it), still
@@ -99,10 +95,31 @@ source: >-
       `issues/ag_closeout_audit_cross-cutting_parked_2026_08_01.md`) were actually picked up/retagged by their owning
       tranche's next audit pass — if any is still `asset_group: [cross-cutting]` and un-retagged after a reasonable
       interval, note that plainly rather than assuming it was handled. **Done when**: every Deferred entry and every
-      parked mistag carries a dated re-verification verdict with its routing named.
-- [ ] [DOC] P1. **Archive `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`** via the standard 6-step ritual:
-      migrate any still-Deferred item to a tracked todo elsewhere (todo 2 above should have routed all 3) → add the
-      archive banner → run the codex-alignment check (this batch introduces no new durable contract; confirm that is
+      parked mistag carries a dated re-verification verdict with its routing named. **VERIFIED 2026-08-07 (slot 13).**
+      Deferred items re-check: (1) `order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md` — **gate CLEARED
+      2026-08-06** (operator ruled option A: advance the contract, add FAIL_OUTBOUND + RECONCILED to UAC OrderStatus,
+      rename PENDING/OPEN → PENDING_NEW/NEW); items retagged `[CODE]` P2 + `[TEST]` P2 (no longer `[OPERATOR]`); work
+      not yet done; doc stays `assigned_vm: NA`. **Routing: READY FOR BATCH 4** — needs a rollout plan authored
+      (consumer audit + migration scope) before AO dispatch. (2)
+      `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` follow-up 1 — **gate CLEARED 2026-08-06** (operator
+      ruled option A: implement documented guard — safe-field allow-list + UnsafeConfigChangeError); item retagged
+      `[CODE]` P2; AO-dispatchable. **Routing: READY FOR BATCH 4.** (3)
+      `data_pipeline_alerts_batch_remediation_2026_07_15.md` [REVIEW] P0 green-bookend observation — **still genuinely
+      gated**: context-scout 2026-08-07 re-verified, no new progress on this item; the green bookend requires underlying
+      sports/tradfi/cefi conditions to clear first, which has not been confirmed. **Routing: STILL GATED** —
+      re-confirmed with fresh 2026-08-07 evidence; no further action this batch. Parked mistags re-verification (6
+      findings; checked live `asset_group` on all 3 still-open as of 2026-08-05): finding 1
+      (ao_slot_capacity_policy_ci_scheduled_split) → ✅ DONE [ci], archived 2026-08-02; finding 2
+      (checkbox_flip_bundled_with_archival_git_mv) → **STILL [cross-cutting]** as of 2026-08-07 check — ao tranche has
+      it in its 23-doc mistag bucket but not yet acted, 6+ days; finding 3 (deployment_api_sigabrt) → ✅ MOOT (doc
+      archived 2026-08-01, no retag needed); finding 4 (gcp_service_accounts_registry_diverged) → **STILL
+      [cross-cutting]** as of 2026-08-07 check — infra tranche has not picked it up in 6+ days; finding 5
+      (workflow_template_drift) → ✅ DONE [ci], corrected 2026-08-02; finding 6 (tradfi_forexfactory) → ✅ DONE
+      [tradfi], corrected 2026-08-02 by tradfi tranche. 4 of 6 resolved; 2 still un-retagged (findings 2 and 4) — noted
+      plainly, not acted on here per owning-tranche rule.
+- [x] ✅ [DOC] P1. **Archive `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`** via the standard 6-step
+      ritual: migrate any still-Deferred item to a tracked todo elsewhere (todo 2 above should have routed all 3) → add
+      the archive banner → run the codex-alignment check (this batch introduces no new durable contract; confirm that is
       still true before archiving) → grep the corpus for every referrer of this batch or this finalize and fix each path
       → confirm `locked_by` is empty on both. **Done when**: both docs are in `plans/archive/2026_08/`, every corpus
       referrer resolves to the new path, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard

@@ -380,11 +380,16 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       (`ao_task_usage_role_group_breakdown_2026_08_06`). Fix: wrap `agent_registered_at` in `ss.to_utc(...)` — mirrors
       the Class-A path (slots_worker.py ~L1698 `ss.to_utc(slot_row.assigned_at)`). Provenance: agt-e33f21 (found
       2026-08-06 12:01Z).
-- [ ] [OPERATOR] P2. Delete the orphaned remote branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my
-      #497 resolution merge — the bot deleted the ref for superseded PR #497 at 10:01:05Z before my push, so the push
-      recreated it as a stray). Not an LDR tip, so it should be inert to the bot's promote-ref scan, but it should be
-      removed to keep `promote/*` clean. Guardrail: `git branch -D` / `git push --delete` are blocked for autonomous
-      workers (orchestrator guardrail) — operator or bot action. Provenance: agt-e33f21.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-07 — operator ran
+      `git push origin --delete promote/strategy-service/32f0a859d0ae` in the strategy-service checkout** (the command
+      initially failed once run from the wrong repo checkout — `unified-trading-pm` — corrected and re-run in
+      `strategy-service`). Verified gone via a fresh
+      `git ls-remote origin refs/heads/promote/strategy-service/32f0a859d0ae` (empty result). Delete the orphaned remote
+      branch `refs/heads/promote/strategy-service/32f0a859d0ae@92231302` (my #497 resolution merge — the bot deleted the
+      ref for superseded PR #497 at 10:01:05Z before my push, so the push recreated it as a stray). Not an LDR tip, so
+      it should be inert to the bot's promote-ref scan, but it should be removed to keep `promote/*` clean. Guardrail:
+      `git branch -D` / `git push --delete` are blocked for autonomous workers (orchestrator guardrail) — operator or
+      bot action. Provenance: agt-e33f21.
 - [x] [OPERATOR] P0. Remove `/tmp/test_slice.log` on the shared fleet host (199 MB, live `ghp_` fine-grained PATs,
       world-readable, abandoned 05:57Z, foreign session's). **RESOLVED: file gone as of 09:25Z (operator/cleanup removed
       it).** Provenance: agt-e33f21 security finding.

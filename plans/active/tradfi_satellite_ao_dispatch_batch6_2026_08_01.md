@@ -689,6 +689,41 @@ Trend: 36 (15:27Z) → 26 (16:02Z) → 24 (16:04Z). Fleet consistently draining.
   `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) +
   `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way.
 
+### 2026-08-07T18:03Z — slot 3, session 16 cont — rapid-kill loop; fleet stabilized at 4 VMs
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Harness kill cycle became extremely aggressive this session (~1-5 second task
+lifetimes), likely a feedback loop: high notification volume → frequent compaction → rapid kills → more notifications.**
+Despite this, each re-arm gets 1 immediate poll (watcher polls within seconds of start), so coverage was maintained
+throughout. Runs 3–58 all confirmed: watcher polls immediately, singleton held.
+
+**Fleet progression (via immediate poll on each re-arm):**
+
+- 16:04Z: 24 VMs → 16:06Z: 23 → 16:11Z: 21 → 16:14Z: 20 → 16:40Z: 14 → 17:28Z: 5 → 17:30Z: 4 → **stable at 4 since
+  17:30Z (>32 min)**
+
+**Stable-at-4 pattern**: Fleet held at 4 VMs for 32+ min without dropping. Continuous-launch likely replenishing slots
+as they complete (each finishing VM launches a successor). This is NOT deadlock — it's the expected tail of the
+NASDAQ/NYSE/CME continuous-launch pattern where the last N shards are slow.
+
+**Pre-compact ritual (2026-08-07T18:03Z, autonomous mode):**
+
+- Step 1: git clean, ahead=0 (after pull). Scratchpad: `es_opt_watcher_slot3.sh` + `heartbeat.sh` (regenerable from
+  committed source on each re-arm), `es_opt_watcher.log` (live state), `manifest_query.py` (watcher-generated phase-5
+  script, regenerable). No dangling refs from this session's scratchpad in committed docs. No secrets.
+- Step 2: Nothing to promote — all scripts regenerable from committed
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`.
+- Step 3: No new todos. Rapid-kill pattern documented here.
+- Step 4: Nothing to flip — todo #2 still `[ ]`.
+- Step 5: Deferred — "Cannot be done yet" — fleet at 4 VMs, singleton lock held, replenishing.
+- Step 7: This commit IS the update.
+- Step 8 verdict: **Safe to compact: YES.** Active watcher is run 58 (`brxkxvoh5`, started ~18:02Z). Fleet stable at 4.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, use
+  `TaskOutput <last_watcher_id> --non-blocking` to check liveness (current: `brxkxvoh5`). **Do NOT use TaskList.** (3)
+  If watcher dead: re-arm from committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch
+  SLOT_ID/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm
+  `watcher/heartbeat.sh` same way. Fleet at 4 — may break loose soon or may keep replenishing.
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,

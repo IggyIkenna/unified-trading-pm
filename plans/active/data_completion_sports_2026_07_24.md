@@ -849,14 +849,24 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
       → after ~8min verify `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<VM_NAME>/run.log` shows
       NO MissingFeatureFamilyError + PROGRESSIVE_DAY_CAPTURED events (exit != 1).
 - [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
-      (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
-      **Blocker-currency note (na-eligibility-audit 2026-08-03, reclassify pass)**: the branch decision itself is no
-      longer open — `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s "Deferred — operator decision needed" section
-      records **RULED 2026-07-28: proceed with the quota bump** (applying the general "cost under $100 is not a concern,
-      full backfills get done" theme). What remains is the vendor account-tier upgrade action itself (a spend/credential
-      action, not a branch choice) — per that ruling, "only the operator (or AO's self-service ambient identity, if it
-      can provision this per finding W) can complete" it; the code/launcher side is already prepped and ready to fire
-      once the account tier lands. Item stays open (credential/spend-gated), not flipped.
+      (documented then as Custom300=300k/day, since superseded — see 2026-08-07 note below). To exceed ~34% needs
+      operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops. **GROUND-TRUTH RE-CHECK 2026-08-07
+      (operator, via consolidated NA-blocker-digest audit)** — operator recalled "75k" (a deliberate downgrade, not the
+      docs' 300k); rather than trust either number, queried the live API-Football account directly (`GET /status`, key
+      from GSM `api-football-api-key`): **plan = "Mega", `limit_day` = 150,000 requests/day, 85,914 already used today,
+      subscription active through 2026-09-22.** Neither the doc's `Custom300=300k/day` nor the operator's recalled `75k`
+      matches current reality — both are stale/wrong. The 2026-07-28 "RULED: proceed with the quota bump [to 1.5M/day]"
+      decision cited below does NOT appear to have been executed — live tier (150k/day) is far below both the
+      pre-existing 300k baseline this todo was written against AND the 1.5M target, closer to a downgrade than a bump.
+      **Needs operator clarification**: was the account deliberately downgraded to Mega/150k after the bump ruling (in
+      which case that ruling is superseded, not pending), or does the 1.5M bump still need to be actioned? Not assumed
+      either way here. **Blocker-currency note (na-eligibility-audit 2026-08-03, reclassify pass)**: the branch decision
+      itself is no longer open — `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s "Deferred — operator decision
+      needed" section records **RULED 2026-07-28: proceed with the quota bump** (applying the general "cost under $100
+      is not a concern, full backfills get done" theme). What remains is the vendor account-tier upgrade action itself
+      (a spend/credential action, not a branch choice) — per that ruling, "only the operator (or AO's self-service
+      ambient identity, if it can provision this per finding W) can complete" it; the code/launcher side is already
+      prepped and ready to fire once the account tier lands. Item stays open (credential/spend-gated), not flipped.
 
 > **History extracted 2026-07-24** (line-cap remediation) → `data_completion_sports_history_2026_07_24.md`: the earliest
 > dated Progress Log entries (2026-06-24 DIAGNOSIS through 2026-06-21 RATE-LIMIT root-cause) — the campaign-opening
