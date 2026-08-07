@@ -816,3 +816,11 @@ are genuinely in scope for the operator's "no exceptions" directive.
   verified via actual date-value diffs again (rule 1b). Watch closely next tick for chunk 26/26 + clean exit — once that
   lands, the `af-backfill-*` singleton lock frees and FIXTURE_STATS (this doc's next queued P0 todo) should launch
   immediately, resuming from its own `PROGRESS.json` checkpoint per the doc's existing Todos section.
+- **2026-08-07T13:39Z** — PLAYER_STATS still chunk 22/26, actively working through it (fixture lookups now at
+  2025-10-26, cheap 0-extra-API-call URDI passthrough). Not done yet — no completion signal, still ~4 chunks remaining.
+  footystats climbing (2024-03-30 → 2024-09-22). Both healthy. (Aside, sibling-doc scope: the odds_api 401-retry VM's
+  EPL chunk finally OOM'd after covering most of its 8-month range — the wrapping loop self-recovered correctly by
+  moving to the next league, matching documented "working as designed" behavior, not a repeat of the earlier bad
+  crash-loop. The independently-tracked SOURCE_RETURNED_ZERO cluster (13,045 rows) turned out to already be root-caused
+  and fixed by another worker this session — one less open item. Full detail in
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
