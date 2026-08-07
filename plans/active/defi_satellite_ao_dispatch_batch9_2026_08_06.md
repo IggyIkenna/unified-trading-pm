@@ -397,3 +397,11 @@ remaining items besides the over-cap-gated one above).
   Confirmed both code fixes still in LDR (`vm_zombie_watchdog.py` line 248: `"canonical-migration-": (90.0, 360.0)`;
   `launch-canonical-migration-vm.sh` line 2094: `STALL_TIMEOUT_SEC=7200`). No new findings. Posting /blocked with
   specific ask: activate `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`. No VM/GCS/cron mutation performed.
+- **2026-08-07 (AO dispatch #6, `infra`, slot 4)**: daemon `vm-zombie-watchdog-20260807-075242` confirmed RUNNING with
+  fresh code (created 07:52:45Z per operator-authorized relaunch recorded in issue doc); GCS 0-object verified fresh
+  (all 10 TARGET_VENUES 0 objects); consolidator cron paused; launched
+  `canonical-migration-defi-gas-fees-legacy-purge-20260807-082535` (e2-highmem-8, ON_DEMAND). VM booted cleanly (no
+  gsutil hang — serial console shows "Task launched PID: 4991" / "=== VM setup complete ===" at 08:28:47Z); run.log
+  appeared at 08:30:15Z; Python task confirmed running: 12,425 rows found in 75,819,124-row index, consolidator PAUSED
+  confirmed, GCS soft-delete retention 604800s verified, 0/0 objects deleted (expected). In `_purge_manifest_rows()` CAS
+  operation now — manifiest purge in progress (30-60 min expected). Background monitor running for completion.
