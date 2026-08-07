@@ -157,9 +157,12 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
       `terraform/gcp/cloud_run_service_liveness.tf`: 3-service Terraform registry with memory-high (>85%/5m), crash-loop
       (2+ restarts/15m), and instance-zero (EVALUATION_MISSING_DATA_ACTIVE) alert policies; QG green, quickmerge landed
       on LDR.
-- [ ] [INFRA] P1. Build a generic Cloud Run Job per-execution failure detector (item 2 above) reading every
+- [x] ✅ [INFRA] P1. Build a generic Cloud Run Job per-execution failure detector (item 2 above) reading every
       `cloud_run_job_registry.py` entry's real execution history, not just `manifest-consolidator-{ag}`. Repo:
-      deployment-service.
+      deployment-service. — deployment-service@302dcef33 — `cloud_run_job_failure_watcher.py` (DP-WATCHER-006): iterates
+      all non-consolidator GCP Cloud Run Jobs in `CLOUD_RUN_JOBS`, reads most-recent `run_v2` execution, emits
+      `DP_CLOUD_RUN_JOB_FAILED` (CRITICAL, PAGE_OPERATOR) when `failed_count > 0` for N consecutive sweeps via
+      MissTracker; wired into `cli.py` meta sweep; 19 unit tests; QG green.
 - [ ] [CODE] P2. Route `write_config_snapshot`'s GCS exceptions through the `DP_GCS_429_THRASH` event when the
       underlying error classifies as rate-limit (429/RESOURCE_EXHAUSTED), instead of the generic `SERVICE_ERROR` path.
       Repo: alerting-service.
@@ -177,3 +180,5 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
   root-cause classification above; cross-referenced against 3 already-open, same-day docs to avoid duplicating in-flight
   root-cause work (compactor OOM fix, rollup 32Gi structural-gap acceptance, dp-alerting-subscriber dual-consumer bug) —
   this doc's scope is deliberately narrowed to the alerting-coverage gap only.
+- **2026-08-07 (item 2)**: DP-WATCHER-006 shipped — `cloud_run_job_failure_watcher.py` + CLI wiring + 19 unit tests.
+  deployment-service@302dcef33. QG green.
