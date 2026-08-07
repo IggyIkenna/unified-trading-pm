@@ -140,9 +140,11 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
 
 ## Todos
 
-- [ ] [INFRA] P2. Fix `lc_verify_tarball_freshness`'s `auto` mode to check the actual freshness result after
+- [x] ✅ [INFRA] P2. Fix `lc_verify_tarball_freshness`'s `auto` mode to check the actual freshness result after
       republishing, not just the republish subprocess's exit code — add a regression test that reproduces this exact
-      case (stale tarball + dirty unrelated tracked files in the repo + `auto` mode → must NOT return success).
+      case (stale tarball + dirty unrelated tracked files in the repo + `auto` mode → must NOT return success). —
+      deployment-service@450b212. QG green; regression test `test_auto_mode_stale_after_dirty_skip_returns_nonzero`
+      passes.
 - [ ] [DIAG] P3. Consider whether `create-code-tarballs.sh --include <repo>` should auto-apply `--allow-dirty-tarball`
       scoped to only the explicitly-`--include`d repo(s) when called FROM `lc_verify_tarball_freshness`'s auto-republish
       path specifically (not as a general default — a human running the script directly should still get the safety
@@ -168,3 +170,8 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
   covered by batch8 — its own Progress Log calls it "a separate, smaller design consideration, not required for this
   fix" — and remains a genuine open design call here. Once batch8 is approved and ships, its own todo reconciles this
   doc's todo 1 checkbox directly; no action needed from this skill until then.
+- **AO slot-9 2026-08-07**: Todo 1 FIXED — deployment-service@450b212. `auto` mode now calls
+  `LC_TARBALL_FRESHNESS=enforce lc_verify_tarball_freshness` for the post-republish re-check (enforce returns non-zero
+  if still stale; warn always returned 0 regardless). Regression test
+  `test_auto_mode_stale_after_dirty_skip_returns_nonzero` added to `TestTarballFreshnessGuard`. QG green. Shipped via
+  `infra_satellite_ao_dispatch_batch8_2026_08_07.md` (now archived).
