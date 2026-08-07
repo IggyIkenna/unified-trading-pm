@@ -241,9 +241,10 @@ No design call needed — every piece here is independently checkable, not a jud
 
 ## Follow-ups
 
-- [ ] [PLAN_RECONCILER] P2. Append a dated CORRECTION 2026-08-02 block to the archived finalize doc
-      (plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md) marking which of its 3
-      sub-claims were false; - [ ] [PLAN_RECONCILER] P1. Run the real 6-step archival ritual on
+- [x] ✅ [PLAN_RECONCILER] P2. Append a dated CORRECTION 2026-08-02 block to the archived finalize doc
+      (plans/archive/2026_07/instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md) — correction appended
+      2026-08-07; unified-trading-pm@c4464835a
+- [ ] [PLAN_RECONCILER] P1. Run the real 6-step archival ritual on
       plans/active/instruments_satellite_ao_dispatch_batch1_2026_07_27.md (it is genuinely 5/5 [x])
 
 > **2026-08-06 archive-candidate audit**: Two [PLAN_RECONCILER]-routed items (correct the archived finalize doc's false
