@@ -33,6 +33,8 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      recovery: ${{ steps.recovery.outputs.recovery }}
     steps:
       - name: Validate payload
         id: payload
@@ -62,6 +64,14 @@ jobs:
           ref: ${{ steps.payload.outputs.commit_sha || 'main' }}
           token: ${{ secrets.GH_PAT }}
           path: library-source
+          # MANDATORY for hatch-vcs repos (fixed 2026-07-23). Every repo is now
+          # `dynamic = ["version"]` + `[tool.hatch.version] source = "vcs"`, so the version is
+          # computed from `git describe`. The default shallow checkout (fetch-depth: 1) carries
+          # NO history and NO tags, so hatch-vcs silently fell back to its no-history sentinel
+          # and this job published a wheel literally versioned `0.0.0.dev0` — that is the
+          # instruments-service artifact sitting in AR from 2026-07-03, carrying neither a
+          # version nor a commit sha. Full history is required for the version to exist at all.
+          fetch-depth: 0
 
       - name: Checkout PM repo (for manifest update)
         uses: actions/checkout@v5
@@ -83,7 +93,13 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v3
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+          # Was `secrets.GCP_SA_KEY_PROD` (2026-03-13, semver-rollout[bot]) — that secret was
+          # NEVER PROVISIONED in this repo (only GCP_SA_KEY + WORKLOAD_IDENTITY_PROVIDER exist,
+          # confirmed via `gh secret list`), so every dispatch through this workflow since its
+          # creation hit "must specify exactly one of workload_identity_provider or
+          # credentials_json" and failed before the checkout even ran. Found 2026-07-25 via a real
+          # `unified-trading-library` publish-package FAILED alert.
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
@@ -98,20 +114,41 @@ jobs:
 
           echo "=== Building wheel for $REPO v$VERSION ==="
 
-          # Verify version in pyproject.toml matches expected version
-          TOML_VERSION=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || echo "unknown")
-          echo "pyproject.toml version: $TOML_VERSION"
-          echo "Expected version: $VERSION"
-
-          if [ "$TOML_VERSION" != "$VERSION" ]; then
-            echo "WARNING: Version mismatch — pyproject.toml=$TOML_VERSION, payload=$VERSION"
-            echo "Proceeding with pyproject.toml version ($TOML_VERSION)"
-          fi
+          # Version provenance. Rewritten 2026-07-23: the previous check grepped a static
+          # `version = "X.Y.Z"` out of pyproject.toml, which matches NOTHING under
+          # `dynamic = ["version"]` — it resolved to "unknown", printed a WARNING, and
+          # published anyway. Combined with the shallow checkout that is exactly how a
+          # `0.0.0.dev0` wheel reached Artifact Registry. Assert against what was actually
+          # BUILT, not what a config file claims, and FAIL rather than warn.
+          echo "Expected version (from dispatch payload): $VERSION"
+          echo "git describe: $(git describe --tags --always --dirty 2>&1 || echo '<no tags reachable>')"
 
           python -m build --wheel --outdir dist/
 
           echo "Built wheels:"
           ls -la dist/*.whl
+
+          # Wheel filenames are `{name}-{version}-{pytag}-...whl`; field 2 is the real version.
+          WHEEL_PATH=$(ls dist/*.whl | head -1)
+          BUILT_VERSION=$(basename "$WHEEL_PATH" | awk -F- '{print $2}')
+          echo "Built version (authoritative, from the wheel): $BUILT_VERSION"
+
+          # FAIL CLOSED on an unidentifiable build. `0.0.0.dev0` is hatch-vcs's no-history
+          # sentinel — publishing it is strictly worse than not publishing, because the
+          # artifact then exists, outranks nothing, and names neither a release nor a commit.
+          if [ "$BUILT_VERSION" = "0.0.0.dev0" ] || [ -z "$BUILT_VERSION" ]; then
+            echo "::error::Refusing to publish $REPO: built version is '$BUILT_VERSION' (hatch-vcs found no reachable tag)."
+            echo "  The checkout must include full history + tags (fetch-depth: 0) and the repo must have at least one v* tag."
+            exit 1
+          fi
+
+          # A mismatch against the payload is a real provenance problem (the dispatch asked for
+          # one version, the tree builds another), but the WHEEL is the truth — publish that and
+          # make the disagreement loud rather than silently relabelling.
+          if [ "$BUILT_VERSION" != "$VERSION" ]; then
+            echo "::warning::Version mismatch — dispatch payload=$VERSION, built wheel=$BUILT_VERSION. Publishing the BUILT version."
+          fi
+          echo "built_version=$BUILT_VERSION" >> "$GITHUB_ENV"
 
       - name: Upload to Artifact Registry
         working-directory: library-source
@@ -119,7 +156,8 @@ jobs:
           set -euo pipefail
 
           REPO="${{ steps.payload.outputs.repo }}"
-          VERSION="${{ steps.payload.outputs.version }}"
+          # built_version is exported by the Build step (the wheel is the truth).
+          VERSION="${built_version:-${{ steps.payload.outputs.version }}}"
           AR_URL="https://${AR_REGION}-python.pkg.dev/${AR_PROJECT}/${AR_REPOSITORY}/"
 
           echo "=== Uploading to Artifact Registry ==="
@@ -139,25 +177,55 @@ jobs:
           set -euo pipefail
 
           REPO="${{ steps.payload.outputs.repo }}"
-          VERSION="${{ steps.payload.outputs.version }}"
+          # Record what was actually PUBLISHED (the wheel), not what the dispatch asked for —
+          # otherwise published_packages re-acquires the identity gap this fix closes.
+          VERSION="${built_version:-${{ steps.payload.outputs.version }}}"
           PUBLISHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
           echo "=== Updating manifest: published_packages.$REPO ==="
 
-          jq --arg repo "$REPO" \
-             --arg version "$VERSION" \
-             --arg ts "$PUBLISHED_AT" \
-             '(.published_packages //= {}) | .published_packages[$repo] = {version: $version, published_at: $ts, registry: "artifact-registry"}' \
-             workspace-manifest.json > workspace-manifest.json.tmp \
-            && mv workspace-manifest.json.tmp workspace-manifest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if ! git diff --quiet workspace-manifest.json; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+          # `main` sees heavy concurrent-push volume (fleet-wide promotes + every repo's own
+          # publish-package run editing this same file) — a bare `git push origin main` here was
+          # observed REJECTED ("! [rejected] main -> main (fetch first)") under load on 2026-07-26,
+          # failing the whole job even though the wheel itself had ALREADY published successfully —
+          # only the manifest bookkeeping commit was lost. Retry: on rejection, fetch fresh main and
+          # re-derive the jq edit against it (idempotent + deterministic + keyed per-repo, so redoing
+          # it from a fresh base is always safe) rather than rebasing a stale local commit.
+          for attempt in 1 2 3 4 5; do
+            jq --arg repo "$REPO" \
+               --arg version "$VERSION" \
+               --arg ts "$PUBLISHED_AT" \
+               '(.published_packages //= {}) | .published_packages[$repo] = {version: $version, published_at: $ts, registry: "artifact-registry"}' \
+               workspace-manifest.json > workspace-manifest.json.tmp \
+              && mv workspace-manifest.json.tmp workspace-manifest.json
+
+            if git diff --quiet workspace-manifest.json; then
+              echo "No manifest change to commit."
+              break
+            fi
+
             git add workspace-manifest.json
-            git commit -m "chore: publish $REPO v$VERSION to Artifact Registry [skip ci]"
-            git push origin main
-          fi
+            git commit -q -m "chore: publish $REPO v$VERSION to Artifact Registry [skip ci]"
+
+            if git push origin main; then
+              echo "Manifest update pushed (attempt $attempt/5)."
+              break
+            fi
+
+            if [ "$attempt" = 5 ]; then
+              echo "::error::Manifest push failed after 5 attempts — main kept moving under concurrent load."
+              exit 1
+            fi
+
+            echo "Push rejected (attempt $attempt/5) — main moved, fetching fresh + retrying."
+            git reset --hard HEAD~1
+            git fetch origin main --quiet
+            git reset --hard origin/main
+            sleep $((attempt * 2))
+          done
 
       - name: Persist CI/CD event
         # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
@@ -179,6 +247,40 @@ jobs:
           events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
           gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
 
+      # Recovery detection (2026-07-25): notify-slack.yml's carrier SUPPRESSES a routine
+      # INFO/success post ("routine green/INFO success — not a recovery; suppressed") unless
+      # `recovery: true` is set — so a successful publish following a failed one was silently
+      # dropped (a real gap: `unified-trading-library` v0.57.0 published cleanly after the
+      # GCP_SA_KEY_PROD auth-bug fix, but nothing said so in Slack, only the FAILURE alerts that
+      # preceded it were visible). Per-repo GCS marker (mirrors cloud-build-failure-watcher's
+      # same-day fix) tracks the LAST conclusion for this repo so a genuine fail→success
+      # transition can flag `recovery: true`; a routine repeat success (already green) does not.
+      - name: Check publish recovery state
+        id: recovery
+        if: always()
+        env:
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        run: |
+          set -uo pipefail
+          REPO="${{ steps.payload.outputs.repo }}"
+          CONCLUSION="${{ job.status }}"
+          RECOVERED="false"
+          if [ -n "${CICD_EVENTS_BUCKET:-}" ] && [ -n "$REPO" ]; then
+            MARKER_URI="gs://${CICD_EVENTS_BUCKET}/cicd/watchers/publish-package/${REPO}.json"
+            PREV_CONCLUSION="unknown"
+            if gsutil cp "$MARKER_URI" /tmp/pp_prev_state.json 2>/dev/null; then
+              PREV_CONCLUSION=$(python3 -c "import json; print(json.load(open('/tmp/pp_prev_state.json')).get('conclusion','unknown'))" 2>/dev/null || echo "unknown")
+            fi
+            if [ "$PREV_CONCLUSION" = "failure" ] && [ "$CONCLUSION" = "success" ]; then
+              RECOVERED="true"
+            fi
+            echo "Previous publish conclusion for ${REPO}: ${PREV_CONCLUSION}; this run: ${CONCLUSION}; recovery=${RECOVERED}"
+            STATE_JSON=$(python3 -c "import json; print(json.dumps({'conclusion': '${CONCLUSION}'}))")
+            printf '%s' "$STATE_JSON" | gsutil cp - "$MARKER_URI" 2>/dev/null \
+              || echo "::warning::failed to persist publish-package recovery marker for ${REPO}"
+          fi
+          echo "recovery=${RECOVERED}" >> "$GITHUB_OUTPUT"
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Publish Package
@@ -189,8 +291,12 @@ jobs:
       message:
         "Package publish | ${{ github.event.client_payload.repo }} v${{ github.event.client_payload.version }} |
         Registry: asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries"
+      # This job runs IN unified-trading-pm; the alert is ABOUT the published repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ github.event.client_payload.repo }}
       severity: "INFO"
       conclusion: ${{ needs.publish.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      recovery: ${{ needs.publish.outputs.recovery == 'true' }}
     secrets: inherit

@@ -42,8 +42,24 @@ on:
         description: "Limit to a single repo (leave empty for the full fleet sweep)"
         required: false
         default: ""
-  repository_dispatch:
-    types: [tier-ab-green]
+  # STOPPED 2026-07-23 (operator ruling; staging-machinery shutdown). With the schedule already off
+  # since 2026-06-28, this listener was the workflow's ONLY live trigger — 39 runs/week, every one a
+  # no-op that skips all 25 repos under `staging_dormant_mode` / `promotion_model: ldr_main` (see
+  # the skip logic below). Self-hosted, so $0, but stopped anyway per "free doesn't mean we want it
+  # to run".
+  #
+  # The DISPATCHER is deliberately left untouched: ci-status-update.yml (the live, high-frequency
+  # status writer) still fires `tier-ab-green` on Tier-A/B green. Disabling the LISTENER here — not
+  # the writer — is the low-risk direction; the dispatch simply becomes unsubscribed, which GitHub
+  # accepts as a harmless 204 no-op. (Unlike the escalate-to-orchestrator bug fixed 2026-07-22, no
+  # correctness signal rides this event: the promote it triggers is itself a no-op today.)
+  #
+  # KEPT REVERSIBLE: `workflow_dispatch` (with its dry_run / only_repo inputs) stays live;
+  # UNCOMMENT the two lines below — together with the schedule above — when a repo is routed back
+  # THROUGH staging by flipping `promotion_model` off `ldr_main` in workspace-manifest.json.
+  # SSOT: plans/active/issues/staging_workflow_shutdown_2026_07_23.md
+  # repository_dispatch:
+  #   types: [tier-ab-green]
 
 permissions:
   contents: write
@@ -118,11 +134,16 @@ jobs:
           import json
           with open("workspace-manifest.json") as f:
               m = json.load(f)
+          # ldr_terminal (2026-08-05): a repo whose LDR branch IS the deploy target — it never
+          # promotes anywhere (not staging, not main-direct), unlike ldr_main which promotes
+          # LDR->main directly. Must be excluded here independent of staging_dormant_mode, or
+          # a future dormant-mode flip would silently sweep it into the staging drain.
+          NEVER_PROMOTE = ("ldr_main", "ldr_terminal")
           dormant = bool(m.get("staging_dormant_mode"))
           for k, v in m.get("repositories", {}).items():
               if k.startswith("_"):
                   continue
-              if dormant or (isinstance(v, dict) and v.get("promotion_model") == "ldr_main"):
+              if dormant or (isinstance(v, dict) and v.get("promotion_model") in NEVER_PROMOTE):
                   print(k)
           PYEOF
           )
@@ -190,9 +211,11 @@ jobs:
           # LDR→staging drain PR for them just jams (stuck drain + CodeBuild action_required + PAT churn).
           # This clears those blockages AT THE SOURCE. Reversible: flip staging_dormant_mode off / unset
           # ldr_main and the drain resumes for that repo (the through-staging path for major/breaking/operator).
+          # ldr_terminal (2026-08-05): same exclusion as ldr_main here — see the orphan-drain
+          # step above for why this must not depend solely on the (separately-toggled) dormant flag.
           dormant = bool(m.get("staging_dormant_mode"))
           def _main_direct(cfg):
-              return dormant or (isinstance(cfg, dict) and cfg.get("promotion_model") == "ldr_main")
+              return dormant or (isinstance(cfg, dict) and cfg.get("promotion_model") in ("ldr_main", "ldr_terminal"))
           repos = {
               k for k, v in m.get("repositories", {}).items()
               if not k.startswith("_") and not _main_direct(v)

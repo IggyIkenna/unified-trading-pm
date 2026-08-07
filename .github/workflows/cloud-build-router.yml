@@ -82,10 +82,7 @@ jobs:
     # always() the implicit success() gate skips this job on the very runs we must
     # capture (verified 2026-06-04: defer-on-freeze was silently skipped → no artifact).
     if: always() && needs.freeze-check.outputs.blocked == 'true'
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     steps:
       - name: Persist deferred qg-passed payload
         env:
@@ -126,10 +123,7 @@ jobs:
   route-build:
     needs: freeze-check
     if: needs.freeze-check.outputs.blocked != 'true'
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     outputs:
       repo: ${{ steps.route.outputs.repo }}
       repo_type: ${{ steps.route.outputs.repo_type }}
@@ -1256,7 +1250,7 @@ jobs:
       always() &&
       needs.route-build.outputs.repo == 'unified-trading-library' &&
       needs.route-build.outputs.repo_type != 'library'
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
       recovered: ${{ steps.decide.outputs.recovered }}
@@ -1354,10 +1348,7 @@ jobs:
       needs.route-build.outputs.repo == 'instruments-service' &&
       needs.route-build.outputs.repo_type != 'library' &&
       (needs.route-build.outputs.build_exit_code == '1' || needs.route-build.outputs.build_exit_code == '2')
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
       # Auth to GCP to read DATA_PIPELINE_ALERTS_SLACK_WEBHOOK from Secret Manager.

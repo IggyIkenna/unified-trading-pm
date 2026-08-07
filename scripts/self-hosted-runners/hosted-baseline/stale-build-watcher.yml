@@ -1,0 +1,197 @@
+name: stale-build-watcher
+
+# Stale-build watcher — Gap 2 of
+# plans/active/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md.
+#
+# The 2026-07-27 incident: a shared concurrency group in change-freeze-check.yml (since fixed)
+# silently CANCELLED cloud-build-router.yml's dispatch for instruments-service after PR #983
+# merged — every CI signal was green (PR merged, quality-gates-v2 passed) while the deployed
+# Cloud Run image silently stayed on the PREVIOUS build for ~5 minutes, with no error, alert, or
+# PR comment anywhere. This is the independent "did the build actually happen" check that class
+# of silent drop (and any future one like it) needs: it does not trust that a green merge implies
+# a fresh image, it MEASURES the image.
+#
+# Every hour: for each `ldr_main` repo with a `:latest`-tagged Cloud Build image, compare its
+# `main` HEAD commit timestamp against that image's last-push time in Artifact Registry. See
+# scripts/cicd/stale_build_monitor.py for the full mechanics + fail-open scoping (a repo with no
+# resolvable `:latest` image, or an unmeasurable AR/gh query, is SKIPPED — never a false page).
+#
+# DEFAULT-BRANCH GOTCHA: GitHub `schedule:` triggers fire ONLY from the DEFAULT branch (main).
+# This workflow is INERT on live-defi-rollout until it reaches main via the standing LDR->main
+# promote. Use workflow_dispatch to run on demand meanwhile.
+#
+# Auth: WIF (OIDC) preferred, GCP_SA_KEY fallback — same dual-path pattern as
+# cloud-build-router.yml / cloud-build-failure-watcher.yml. Cross-repo `gh api` reads (each
+# candidate repo's cloudbuild.yaml + main HEAD) use GH_PAT (GITHUB_TOKEN cannot read OTHER repos).
+
+on:
+  schedule:
+    - cron: "0 * * * *" # hourly — matches cloud-build-failure-watcher.yml / branch-health.yml cadence
+  workflow_dispatch:
+    inputs:
+      threshold_min:
+        description: "Staleness threshold in minutes"
+        default: "45"
+
+permissions:
+  contents: read
+  id-token: write # Required for GCP Workload Identity Federation (OIDC) auth
+
+env:
+  THRESHOLD_MIN: ${{ github.event.inputs.threshold_min || '45' }}
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      alert: ${{ steps.scan.outputs.alert }}
+      report: ${{ steps.scan.outputs.report }}
+      recovered: ${{ steps.scan.outputs.recovered }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      # Secrets are not directly testable in `if:` without exposing them; map to env in a probe
+      # step and emit presence flags so the auth steps can be skipped cleanly when unprovisioned
+      # (graceful no-op on forks) — same pattern as cloud-build-failure-watcher.yml.
+      - name: Detect GCP auth secrets
+        id: detect
+        env:
+          WIF_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${WIF_PROVIDER:-}" ]; then echo "has_wif=true" >> "$GITHUB_OUTPUT"; else echo "has_wif=false" >> "$GITHUB_OUTPUT"; fi
+          if [ -n "${SA_KEY:-}" ]; then echo "has_key=true" >> "$GITHUB_OUTPUT"; else echo "has_key=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: No GCP auth available — graceful no-op
+        if: steps.detect.outputs.has_wif != 'true' && steps.detect.outputs.has_key != 'true'
+        run: |
+          set -euo pipefail
+          echo "::notice::stale-build-watcher: neither WORKLOAD_IDENTITY_PROVIDER nor GCP_SA_KEY secret is present — skipping (fork / unprovisioned repo)."
+
+      - name: Authenticate to GCP via WIF (preferred)
+        id: auth-wif
+        if: steps.detect.outputs.has_wif == 'true'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.detect.outputs.has_key == 'true' && steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        uses: google-github-actions/setup-gcloud@v3
+
+      # Recovery detection mirrors cloud-build-failure-watcher.yml: this watcher is stateless
+      # across ticks, so a prior-tick alert marker (best-effort GCS read) is what lets a
+      # "back to green" tick announce a recovery instead of just going quiet.
+      - name: Read previous tick's alert state
+        id: prev-state
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        env:
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        run: |
+          set -euo pipefail
+          PREV_ALERT="false"
+          if [ -n "${CICD_EVENTS_BUCKET:-}" ]; then
+            if gsutil cp "gs://${CICD_EVENTS_BUCKET}/cicd/watchers/stale-build-watcher/state.json" /tmp/sbw_prev_state.json 2>/dev/null; then
+              PREV_ALERT=$(python3 -c "import json; print(str(json.load(open('/tmp/sbw_prev_state.json')).get('alert', False)).lower())" 2>/dev/null || echo "false")
+            fi
+          fi
+          echo "prev_alert=${PREV_ALERT}" >> "$GITHUB_OUTPUT"
+          echo "Previous tick alert state: ${PREV_ALERT}"
+
+      - name: Scan for stale `:latest` builds
+        id: scan
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }} # cross-repo `gh api` reads need a PAT, not GITHUB_TOKEN
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          PREV_ALERT: ${{ steps.prev-state.outputs.prev_alert }}
+          CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        run: |
+          set +e
+          REPORT=$(python3 scripts/cicd/stale_build_monitor.py --threshold-min "$THRESHOLD_MIN" --slack)
+          RC=$?
+          echo "$REPORT"
+          if [ "$RC" -eq 1 ]; then ALERT=true; else ALERT=false; fi
+
+          RECOVERED=false
+          if [ "$PREV_ALERT" = "true" ] && [ "$ALERT" = "false" ]; then RECOVERED=true; fi
+
+          {
+            echo "alert=$ALERT"
+            echo "recovered=$RECOVERED"
+            echo "report<<__SBW_RPT__"
+            echo "$REPORT"
+            echo "__SBW_RPT__"
+          } >> "$GITHUB_OUTPUT"
+
+          # Persist this tick's alert state for the next tick's recovery check. Best-effort:
+          # a stale/unwritten state.json just degrades the next tick's recovery detection to
+          # "no prior alert" (never a spurious recovery, at worst a missed one).
+          if [ -n "${CICD_EVENTS_BUCKET:-}" ]; then
+            python3 -c "import json; print(json.dumps({'alert': $([ "$ALERT" = "true" ] && echo True || echo False)}))" \
+              | gsutil cp - "gs://${CICD_EVENTS_BUCKET}/cicd/watchers/stale-build-watcher/state.json" \
+              || echo "::warning::failed to persist watcher state"
+          fi
+          exit 0
+
+      - name: Job-log summary
+        if: steps.scan.outputs.alert == 'true'
+        run: |
+          set -euo pipefail
+          echo "::warning::stale-build-watcher: at least one ldr_main repo's \`:latest\` image is stale by more than ${THRESHOLD_MIN}m — see the job above"
+
+      - name: Job-log summary (recovery)
+        if: steps.scan.outputs.recovered == 'true'
+        run: |
+          set -euo pipefail
+          echo "::notice::stale-build-watcher: all previously-stale builds have cleared — no stale builds this tick"
+
+  # ── SLACK NOTIFY ──────────────────────────────────────────────────────────────────────────
+  # A stale `:latest` image means the fix that just merged is NOT running in prod despite every
+  # CI signal being green — same "last mile" blast radius as the incident this closes. CRITICAL.
+  notify:
+    needs: watch
+    if: needs.watch.outputs.alert == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.watch.outputs.report }}
+      severity: CRITICAL
+      workflow_name: stale-build-watcher
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Static, standing-condition key (mirrors branch-health.yml's `dedup_key: promotion-lag`) —
+      # "is any repo currently stale" re-pages on the cooldown-crossing, not every tick.
+      dedup_key: stale-build-image
+      cooldown_min: 90
+    secrets: inherit
+
+  # ── SLACK RECOVERY NOTIFY ─────────────────────────────────────────────────────────────────
+  # Mutually exclusive with `notify` above — a tick is either a stale-build tick, a recovery
+  # tick, or silent steady-state, so this never double-posts alongside it.
+  notify-recovery:
+    needs: watch
+    if: needs.watch.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":white_check_mark: *stale-build-watcher: recovered* — no stale `:latest` builds this tick (prior tick had at
+        least one)"
+      severity: INFO
+      conclusion: success
+      workflow_name: stale-build-watcher
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      recovery: true
+    secrets: inherit

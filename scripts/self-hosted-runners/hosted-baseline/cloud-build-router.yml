@@ -138,6 +138,7 @@ jobs:
       build_triggered: ${{ steps.docker-build.outputs.build_triggered }}
       build_exit_code: ${{ steps.docker-build.outputs.build_exit_code }}
       build_failure_reason: ${{ steps.docker-build.outputs.build_failure_reason }}
+      build_error_detail: ${{ steps.docker-build.outputs.build_error_detail }}
       build_region: ${{ steps.docker-build.outputs.build_region }}
       build_log_url: ${{ steps.docker-build.outputs.build_log_url }}
       health_check_passed: ${{ steps.health-check.outputs.health_check_passed }}
@@ -169,6 +170,23 @@ jobs:
           if [ -z "$REPO_TYPE" ] || [ "$REPO_TYPE" = "null" ]; then
             REPO_TYPE=$(jq -r --arg r "$REPO" '.repositories[$r].type // ""' workspace-manifest.json 2>/dev/null || echo "")
             echo "repo_type was empty in payload → derived from manifest: '$REPO_TYPE'"
+          fi
+
+          # unified-trading-library is a documented EXCEPTION to "library type never builds
+          # a Docker image": it publishes the shared base image every service Dockerfile
+          # FROMs (utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md).
+          # The manifest's `type: library` is correct for VERSIONING (it also ships a wheel)
+          # but wrong for THIS router's gating — every build/notify step below (auth,
+          # docker-build, and the dedicated not-configured alert) is guarded on
+          # `repo_type != 'library'`, so an empty-payload dispatch (e.g. semver-agent, which
+          # omits repo_type) falling through to the manifest derivation above would silently
+          # skip BOTH the Docker-build attempt and its own outage alert — a total-silence
+          # recurrence of this exact issue doc, one step earlier in the chain than the
+          # originally-observed failure. Fix at this ONE resolution point rather than
+          # re-special-casing the repo in six more `if:` conditions downstream.
+          if [ "$REPO" = "unified-trading-library" ] && [ "$REPO_TYPE" = "library" ]; then
+            echo "unified-trading-library derived as 'library' from manifest — overriding to 'service' for router gating (it publishes a Docker base image)"
+            REPO_TYPE="service"
           fi
 
           echo "repo=$REPO branch=$BRANCH version=$VERSION type=$REPO_TYPE sha=$COMMIT_SHA"
@@ -517,9 +535,18 @@ jobs:
             echo "Attempting build trigger in region: $region"
 
             local trigger_output=""
+            # --branch is REQUIRED for a repositoryEventConfig (2nd-gen GitHub-connection) trigger
+            # invoked via API/CLI rather than a real push webhook — without it the call fails
+            # `INVALID_ARGUMENT: source.revision must be specified to run this trigger` (found
+            # 2026-07-27: unified-trading-library-prod is the only fleet trigger both existing AND
+            # CLOUD_BUILD_PROD_DEPLOY_EXPECTED=true, so this call was never actually exercised
+            # against a real trigger before — every other repo's call short-circuits on NOT_FOUND
+            # first. Manual verification during the 2026-07-25 recreation incident passed
+            # `--branch=main` explicitly and worked; this automated path never carried it).
             if gcloud builds triggers run "${REPO}-${ENV}" \
               --project="$GCP_PROJECT" \
               --region="$region" \
+              --branch="$BRANCH" \
               --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
               --format="value(metadata.build.id)" \
               2>/tmp/build_trigger_err.txt; then
@@ -600,6 +627,15 @@ jobs:
               echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
               echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
               echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+              # "not-configured" buckets BOTH a genuinely-missing trigger (NOT_FOUND) AND any other
+              # invocation-shaped failure (e.g. INVALID_ARGUMENT) under one reason — found
+              # 2026-07-27 when a stale hardcoded "trigger NOT_FOUND" alert fired for
+              # unified-trading-library-prod while the trigger actually existed and the real error
+              # was `source.revision must be specified` (the --branch gap fixed above). Surface the
+              # RAW error text so a future genuinely-different failure isn't mis-diagnosed the same
+              # way (single line, capped — this becomes a Slack message body).
+              ERR_DETAIL="$(tr '\n' ' ' < /tmp/build_trigger_err.txt 2>/dev/null | cut -c1-300 || echo "")"
+              echo "build_error_detail=${ERR_DETAIL}" >> "$GITHUB_OUTPUT"
             fi
             exit 0
           fi
@@ -937,6 +973,9 @@ jobs:
         "Tier-Ordered Deploy Warning | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | Blocking: ${{
         needs.route-build.outputs.blocking_repos }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -953,6 +992,9 @@ jobs:
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | URL: ${{
         needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min. deployed_versions
         NOT updated."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -969,6 +1011,9 @@ jobs:
         "Post-Deploy Smoke Test FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | /health passed but /readiness
         or response shape failed. deployed_versions NOT updated."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -988,6 +1033,9 @@ jobs:
         "EMERGENCY: Order flow resumed after failed deploy | Repo: ${{ needs.route-build.outputs.repo }} | Build failed
         but order flow was halted pre-deploy. Order flow has been automatically resumed. Investigate build failure
         immediately."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -1007,6 +1055,9 @@ jobs:
         "Cloud Build Regional Fallback | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
         needs.route-build.outputs.env }} | Primary region asia-northeast1 failed. Build ran in fallback region: ${{
         needs.route-build.outputs.build_region }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -1025,6 +1076,9 @@ jobs:
         "Cloud Build ${{ needs.route-build.outputs.build_failure_reason }} | Repo: ${{ needs.route-build.outputs.repo }}
         | Env: ${{ needs.route-build.outputs.env }} | Branch: ${{ needs.route-build.outputs.branch }} | Region: ${{
         needs.route-build.outputs.build_region }} | Log: ${{ needs.route-build.outputs.build_log_url }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -1043,6 +1097,9 @@ jobs:
       message:
         "Cloud Build poll exhausted after 60 attempts | Repo: ${{ needs.route-build.outputs.repo }} | Build still
         running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -1089,6 +1146,9 @@ jobs:
         `${{ needs.route-build.outputs.repo }}-prod` Cloud Build trigger (the router runs `<repo>-<env>`). NOTE:
         `create-cloud-build-feature-triggers.sh` only creates `<repo>-feature-build` triggers for `feat/*`, NOT the
         prod-deploy trigger — provision that separately at cutover."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -1121,10 +1181,155 @@ jobs:
         --member=serviceAccount:github-actions-deploy@central-element-323112.iam.gserviceaccount.com
         --role=roles/cloudbuild.builds.editor`. The image build may have fired via a direct push:main trigger if one is
         configured — but this IAM gap must be closed to make the CI router path reliable."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  # Alert when the unified-trading-library base-image publish trigger is missing (2026-07-25).
+  # This is a NARROWER, ALWAYS-ON counterpart to notify-build-not-configured — that job is
+  # correctly gated behind vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED (unset fleet-wide today) because
+  # a missing <repo>-prod trigger is OFTEN an intentional pre-cutover build-only posture for a
+  # trading-critical service. unified-trading-library-prod is never that: every service Dockerfile
+  # FROMs this base image, so a missing/NOT_FOUND trigger here is ALWAYS a config bug, mirroring
+  # notify-permission-denied's own "never an intentional pre-cutover state" reasoning immediately
+  # above. Root cause (found 2026-07-25): unified-trading-library-prod went missing at/after
+  # 2026-07-23T09:12:10Z and this exact WARNING sat silent for 51+ hours with zero alerting because
+  # the only wired notification was the gated one — see
+  # plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md.
+  # dedup_key + a long cooldown converts "page on every UTL main push while the trigger stays
+  # missing" into "page once on the transition, then again if it's still broken after a full day".
+  notify-utl-base-image-not-configured:
+    name: Slack — UTL Base-Image Trigger Not Configured
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo == 'unified-trading-library' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "unified-trading-library-prod Cloud Build trigger did not fire — the base Docker image every service Dockerfile
+        FROMs has stopped republishing. This is NEVER an intentional pre-cutover state (unlike other repos' prod
+        triggers). Actual error: `${{ needs.route-build.outputs.build_error_detail }}`. If that says NOT_FOUND, the
+        trigger itself is gone — recreate `unified-trading-library-prod` in GCP project central-element-323112, region
+        asia-northeast1 (mirror instruments-service-prod's config). Any OTHER error (e.g. INVALID_ARGUMENT /
+        source.revision) means the trigger exists but the router's `gcloud builds triggers run` invocation itself is
+        failing — check `cloud-build-router.yml`'s `trigger_build_in_region` first, do NOT assume the trigger is
+        missing. See plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md."
+      subject_repo: unified-trading-library
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "cloud-build-not-configured:unified-trading-library-prod"
+      cooldown_min: 1440
+    secrets: inherit
+
+  # ── UTL CLOUD-BUILD RESULT MEMORY — recovered bookend (operator ruling 2026-07-27) ──────────
+  # notify-utl-base-image-not-configured (above) has no green counterpart, same class of gap as
+  # python-quality-gates-v2.yml's notify-qg-fail before its own recovered-bookend fix earlier
+  # today: it pages CRITICAL when the trigger call fails but never says anything when a later
+  # dispatch succeeds, so a fixed pipeline reads as "still broken" until someone checks by hand
+  # (exactly what happened after the --branch fix above — the fix was verified with a real prod
+  # build, but nothing in this workflow would have announced it). Tracks its own state in a
+  # dedicated Firestore doc (`cloud_build_last_conclusion/{key}`, key mirrors the existing
+  # dedup_key shape) — separate from ci_status, same reasoning as the QG fix: this only answers
+  # "did unified-trading-library-prod's build verdict just flip not-configured -> success?".
+  # Best-effort/fail-open: an auth/network hiccup only costs a missed recovery post.
+  record-cloud-build-result:
+    name: Record UTL Cloud Build result (recovery memory)
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo == 'unified-trading-library' &&
+      needs.route-build.outputs.repo_type != 'library'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      recovered: ${{ steps.decide.outputs.recovered }}
+    steps:
+      - name: Authenticate to GCP (state doc read+write)
+        id: gcp_auth
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          token_format: access_token
+      - name: Read prior verdict, decide recovery, persist current verdict
+        id: decide
+        shell: bash
+        env:
+          TOKEN: ${{ steps.gcp_auth.outputs.access_token }}
+          PROJECT: ${{ steps.gcp_auth.outputs.project_id }}
+          BUILD_TRIGGERED: ${{ needs.route-build.outputs.build_triggered }}
+          BUILD_EXIT_CODE: ${{ needs.route-build.outputs.build_exit_code }}
+          FAILURE_REASON: ${{ needs.route-build.outputs.build_failure_reason }}
+        run: |
+          set -uo pipefail
+          # Only the two states notify-utl-base-image-not-configured actually cares about update
+          # the memory — a genuine full-pipeline SUCCESS (triggered AND polled to exit 0), or the
+          # exact 'not-configured' failure that job pages on. Any other outcome (permission-denied,
+          # a real Cloud Build FAILURE/TIMEOUT once triggered, POLL_EXHAUSTED) is a DIFFERENT
+          # problem class with its own dedicated alert job — leave the memory untouched so it can't
+          # manufacture a false 'recovered' out of an unrelated failure mode clearing.
+          CURRENT=""
+          if [ "${BUILD_TRIGGERED}" = "true" ] && [ "${BUILD_EXIT_CODE}" = "0" ]; then
+            CURRENT=success
+          elif [ "${FAILURE_REASON}" = "not-configured" ]; then
+            CURRENT=failure
+          else
+            echo "build_triggered=${BUILD_TRIGGERED} build_exit_code=${BUILD_EXIT_CODE} failure_reason=${FAILURE_REASON} — not a tracked state, leaving memory untouched"
+            echo "recovered=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RECOVERED=false
+          if [ -n "${TOKEN:-}" ] && [ -n "${PROJECT:-}" ]; then
+            DOC_URL="https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/cloud_build_last_conclusion/cloud-build_unified-trading-library-prod"
+            PREV="$(curl -s --max-time 15 -H "Authorization: Bearer ${TOKEN}" "${DOC_URL}" \
+              | jq -r '.fields.conclusion.stringValue // empty' 2>/dev/null || echo "")"
+            if [ "${PREV}" = "failure" ] && [ "${CURRENT}" = "success" ]; then
+              RECOVERED=true
+            fi
+            NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            CODE="$(curl -s -o /tmp/cb-result-save.json -w '%{http_code}' --max-time 15 -X PATCH \
+              -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" \
+              "${DOC_URL}" \
+              -d "{\"fields\": {
+                    \"conclusion\": {\"stringValue\": \"${CURRENT}\"},
+                    \"updated_at\": {\"timestampValue\": \"${NOW}\"}
+                  }}" || echo 000)"
+            [ "${CODE}" = "200" ] || echo "::warning::cloud_build_last_conclusion save failed (HTTP ${CODE}) — best-effort, next run retries."
+            echo "cloud-build-result-memory: prev=${PREV:-<none>} current=${CURRENT} recovered=${RECOVERED}"
+          else
+            echo "GCP auth unavailable — skipping Cloud Build result memory this run (fail-open)."
+          fi
+          echo "recovered=${RECOVERED}" >> "$GITHUB_OUTPUT"
+
+  notify-utl-base-image-recovered:
+    name: Slack INFO — UTL Base-Image Trigger Recovered
+    needs: [route-build, record-cloud-build-result]
+    if: always() && needs.record-cloud-build-result.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "🟢 *unified-trading-library-prod Cloud Build RECOVERED* — the base Docker image is publishing again (build
+        succeeded after a prior not-configured failure). <${{ github.server_url }}/${{ github.repository
+        }}/actions/runs/${{ github.run_id }}|run>"
+      subject_repo: unified-trading-library
+      severity: "INFO"
+      conclusion: "success"
+      recovery: true
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "cloud-build-recovered:unified-trading-library-prod"
+      cooldown_min: 15
     secrets: inherit
 
   # Route instruments-service build failures to #data-pipeline-alerts (2026-06-26).

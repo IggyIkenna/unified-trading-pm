@@ -54,10 +54,10 @@ concurrency:
 
 jobs:
   reconcile:
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    # REVERTED 2026-08-07 (self_hosted_runner_public_repo_revert_2026_08_05.md todo 24): PM went
+    # PUBLIC 2026-08-06, so ubuntu-latest is free/unmetered for it — the CI-cost B1 rationale this
+    # replaced no longer applies, and self-hosted-on-a-public-repo is a fork-PR security exposure.
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout PM main
         uses: actions/checkout@v5

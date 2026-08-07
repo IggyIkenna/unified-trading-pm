@@ -76,9 +76,13 @@
 # permanent reason from unified-trading-library's/e2e-testing's own prior revert/re-add cycles above (those were
 # about host contention, not billing) — do not fold this into that flaky-recurrence pattern.
 #
-# Remaining 8 are PRIVATE and genuinely need self-hosting for billing:
+# unified-trading-pm REMOVED 2026-08-07 (self_hosted_runner_public_repo_revert_2026_08_05.md todo 24):
+# PM itself was flipped PUBLIC 2026-08-06 while still routing ~8 workflows to this pool — the same
+# free-hosted-minutes-for-public-repos + fork-PR-security-exposure reasoning as the 17-repo revert
+# above, now applied to PM's own workflows.
+#
+# Remaining 7 are PRIVATE and genuinely need self-hosting for billing:
 agent-orchestrator
-unified-trading-pm
 strategy-service
 e2e-testing
 features-service

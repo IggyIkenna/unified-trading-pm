@@ -1,0 +1,84 @@
+name: promote-fleet-startup-failure-monitor
+
+# Dead-man-switch for a repeat of the 2026-07-30 GitHub Actions billing-wall outage: both
+# `ldr-to-main-promote-fleet.yml` and `ldr-to-main-promote.yml` returned `conclusion:
+# startup_failure` / `jobs: []` on EVERY tick for ~10h+, silently blocking LDR->main promotion for
+# the entire `promotion_model: ldr_main` fleet. Nothing paged at the time — the outage was noticed
+# only as a side-effect of an unrelated task (see
+# plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md,
+# resolved 2026-07-31). `promotion_lag_monitor.py` cannot catch this class: a `startup_failure` run
+# never even reaches a job, so it has no branch-pair compare signal to key off.
+#
+# This workflow pages when either target workflow's most-recent N completed runs are ALL
+# `startup_failure` — a single failure is noise, N in a row with nothing else in between is a
+# standing outage, not latency.
+#
+# SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
+# Source: plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md
+#         ([SCRIPT] P2, migrated into ci_satellite_ao_dispatch_batch1_2026_07_26.md)
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # every 15 min — cheap (2 workflow-run lookups) and well inside the ~10h
+      # window the source incident ran undetected
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: "Consecutive startup_failure runs (on either target workflow) before paging"
+        default: "3"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: promote-fleet-startup-failure-monitor
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      stuck: ${{ steps.scan.outputs.stuck }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Scan promote-fleet workflows for a startup_failure streak
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          THRESH: ${{ github.event.inputs.threshold || '3' }}
+        run: |
+          set +e
+          REPORT=$(python3 scripts/cicd/promote_fleet_startup_failure_monitor.py \
+            --repo "${{ github.repository }}" --threshold "$THRESH" --slack)
+          RC=$?
+          echo "$REPORT"
+          [ "$RC" -eq 1 ] && STUCK=true || STUCK=false
+          {
+            echo "stuck=$STUCK"
+            echo "report<<__EOR__"
+            echo "$REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+
+  notify:
+    needs: check
+    if: needs.check.outputs.stuck == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.check.outputs.report }}
+      severity: CRITICAL
+      workflow_name: promote-fleet-startup-failure-monitor
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Standing condition (the outage persists tick-to-tick until fixed) — page on the
+      # false->true transition, re-remind every hour while it persists. Distinct key from
+      # promotion-lag's / glue-pool-starved's so the three independent conditions never share
+      # a cooldown.
+      dedup_key: promote-fleet-startup-failure
+      cooldown_min: 60
+    secrets: inherit

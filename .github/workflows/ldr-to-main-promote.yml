@@ -46,15 +46,11 @@ concurrency:
 
 jobs:
   promote-ldr-to-main:
-    # TEMPORARY REVERT (2026-08-06, agt-80c470): the self-hosted `glue` JIT-ephemeral pool is
-    # currently non-functional on the runner host (github-glue-token-refresh*.service failing
-    # 203/EXEC — /opt/github-glue-runners is missing; zero github-glue-runner@ template units
-    # registered) so `runs-on: [self-hosted, glue]` jobs queue forever ("job was not acquired by
-    # Runner of type self-hosted even after multiple attempts"). This stalled PM's LDR→main
-    # promotion for 748+ commits. Reverted to ubuntu-latest to restore promotion; flip back to
-    # `[self-hosted, glue]` once the pool is repaired (see the fleet-wide follow-up issue doc for
-    # the actual runner-infra fix — this workflow itself is not the root cause).
-    # SSOT: scripts/self-hosted-runners/README.md
+    # ubuntu-latest is now PERMANENT, not just the 2026-08-06 emergency revert this comment
+    # originally recorded (agt-80c470, a then-broken glue pool). Superseded 2026-08-07
+    # (self_hosted_runner_public_repo_revert_2026_08_05.md todo 24): PM went PUBLIC 2026-08-06, so
+    # ubuntu-latest is free/unmetered for it, and self-hosted-on-a-public-repo is a fork-PR security
+    # exposure — do NOT flip this back to `[self-hosted, glue]` even once/if the pool is repaired.
     runs-on: ubuntu-latest
     outputs:
       action: ${{ steps.promote.outputs.action }}

@@ -18,10 +18,7 @@ concurrency:
 
 jobs:
   lock-staging:
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     # Gap 8 completion (2026-06-16): the ci_status overlay needs the project env + the SDK installed
     # below, else resolve_ci_status_map silently falls back to the STALE manifest cache.
     env:
@@ -309,10 +306,7 @@ jobs:
   # SSOT: codex/08-workflows/ci-cd-flow.md § "SIT-harness lint decoupling"
   harness-lint:
     name: SIT-harness lint (non-blocking — files fix-task on issues)
-    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
-    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
-    # SSOT: scripts/self-hosted-runners/README.md
-    runs-on: [self-hosted, glue]
+    runs-on: ubuntu-latest
     continue-on-error: true
     timeout-minutes: 4
     steps:
