@@ -168,9 +168,12 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
       Repo: alerting-service. — alerting-service@773bb55c2 — `_is_gcs_rate_limit()` + `DP_GCS_429_THRASH` routing in all
       4 write methods (`write_config_snapshot`, `write_alert_history`, `write_quietness_report`,
       `write_cooldown_state`) + 16 unit tests; QG green, quickmerge landed on LDR.
-- [ ] [CODE] P2. Register an `AlertCode` family (e.g. `CLOUD_AUTH_FAILED` or similar) for cross-cloud IAM/STS failures +
-      wire `cost_snapshot_worker.py`'s per-cloud failure path to emit it instead of the unregistered `SERVICE_FAILED`.
-      Repo: unified-api-contracts + deployment-api.
+- [x] ✅ [CODE] P2. Register an `AlertCode` family (e.g. `CLOUD_AUTH_FAILED` or similar) for cross-cloud IAM/STS
+      failures + wire `cost_snapshot_worker.py`'s per-cloud failure path to emit it instead of the unregistered
+      `SERVICE_FAILED`. Repo: unified-api-contracts + deployment-api. — unified-api-contracts@da3941692 +
+      deployment-api@faad8437b; `CLOUD_AUTH_FAILED` AlertCode + AlertRule (HIGH, PagerDuty+Telegram) + runbook
+      (cloud_auth_failed.md) + 4 unit tests; `_is_auth_error()` helper routes IAM/STS errors to `CLOUD_AUTH_FAILED`,
+      others to `SERVICE_ERROR`; QG green, both quickmerged to LDR.
 - [ ] [DIAG] P3. For findings 4 and 8 (mtds-dex-swaps-backfill-2 idle VM; mtds-backfill-odds-401-retry self-recovering
       OOM): check the live `MissTracker` state for DP-VM-003/DP-VM-001 against these two VM names to confirm whether the
       conceptually-matching rule genuinely didn't cross its consecutive-miss threshold (benign) vs. a real wiring bug
