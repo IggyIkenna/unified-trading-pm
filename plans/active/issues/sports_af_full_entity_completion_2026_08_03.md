@@ -811,3 +811,8 @@ are genuinely in scope for the operator's "no exceptions" directive.
   relaunched the odds_api full-range backfill with `--chunk-size 5 --allow-parallel` alongside the still-healthy
   `mtds-backfill-odds-401-retry` (confirmed zero OOM signatures across its full log, credits healthy at 14.46M
   remaining) — full detail in `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.)
+- **2026-08-07T13:09Z** — PLAYER_STATS climbing fast (2025-05-31 → 2025-08-19), now **chunk 22/26 — only 4 chunks
+  left**, likely to finish within the next 1-2 ticks. footystats climbing (2023-10-16 → 2024-03-30). Both healthy,
+  verified via actual date-value diffs again (rule 1b). Watch closely next tick for chunk 26/26 + clean exit — once that
+  lands, the `af-backfill-*` singleton lock frees and FIXTURE_STATS (this doc's next queued P0 todo) should launch
+  immediately, resuming from its own `PROGRESS.json` checkpoint per the doc's existing Todos section.
