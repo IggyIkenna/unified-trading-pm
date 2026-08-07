@@ -169,6 +169,17 @@ surface that actually exists (warm + cold event-log tiers).
       (`cd deployment-service/terraform/gcp/live_event_log && tofu apply`, or the repo's sanctioned deploy path), then
       verify the NEXT scheduled 02:05 UTC run (or a manual `gcloud run jobs execute`) completes with 52/52 shards and no
       OOM before re-closing this todo. (repo: deployment-service)
+- [ ] [DATA] P1. **NEW 2026-08-07 ~13:12 UTC (slot-11 worker)** — All `cefi/book_snapshot_5` warm files fail
+      `CanonicalPersistEnvelope` validation; cold file for that shard will never be written. During jhsb7 verification
+      run (`--region=asia-northeast1`, started 12:41 UTC, still running 31 min later — OOM fix confirmed), every one of
+      the 1497 warm objects for 2026-08-06 logs
+      `_extract_rows: blob=live-events/warm/cefi/book_snapshot_5/... failed     CanonicalPersistEnvelope validation — skipping`.
+      Since `pq_writer` stays None, the shard returns False and compactor writes zero cold bytes for book_snapshot_5
+      (per the code's `if pq_writer is None: logger.warning("all     warm files yielded 0 usable rows"); return False`).
+      This is orthogonal to the OOM — even with 4Gi the shard is skipped. Must diagnose: (a) what format do
+      book_snapshot_5 warm files actually contain? (b) is the CanonicalPersistEnvelope schema mismatched for this
+      data_type? (c) does this affect the historic warm tier (2026-07-31 onwards)? Done when root cause identified and
+      warm files parse correctly OR a code fix ships that handles the actual on-wire format. (repo: deployment-service)
 - [ ] [DATA] P0. **RE-OPENED 2026-08-07 — backfill never ran; cold tier still empty.**
       `gcloud storage ls     gs://central-element-323112-events/live-events/cold/cefi/book_snapshot_5/` and
       `.../trades/` (checked 2026-08-07 ~11:50 UTC) both return zero objects — `live-events/cold/cefi/**` is still
@@ -236,3 +247,16 @@ surface that actually exists (warm + cold event-log tiers).
   DATA P0 checkbox (this todo) AND the BACKEND P0 checkbox (Terraform applied + jhsb7 verified); (e) committing via
   safe-doc-push; (f) calling /done. NOTE: driver script `/tmp/compactor_backfill_driver.sh` has a `|| true` bug — it
   won't detect per-date failures; verify cold GCS objects MANUALLY before flipping.
+- **2026-08-07 ~13:13 UTC (slot-11 worker, data_engineering, second pre-compact checkpoint)**: jhsb7 STILL RUNNING
+  (runningCount=1, no completion time, 31 min elapsed). OOM fix confirmed: previous runs died in ~5 min on 512Mi; jhsb7
+  has been alive 31 min under 4Gi/2CPU. **NEW FINDING: all 1497 cefi/book_snapshot_5 warm files for 2026-08-06 fail
+  `CanonicalPersistEnvelope` validation** (log sample:
+  `_extract_rows: blob=live-events/warm/cefi/book_snapshot_5/2026-08-06T12:21:56+00:00_6a406f.parquet failed CanonicalPersistEnvelope validation — skipping`).
+  At ~3 sec/file × 1497 files, book_snapshot_5 takes ~75 min; at 13:12 UTC (31 min in) the run is at blob timestamp
+  12:21 on 2026-08-06 (~51% through) → expected to finish book_snapshot_5 ~13:56 UTC, then
+  derivative_ticker/liquidations/trades. All validation-failed blobs → pq_writer=None → cold file for book_snapshot_5
+  skipped with 0 rows (no crash, graceful skip). Cold GCS: still ZERO objects. Driver busop6lkg alive, waiting. Tracked
+  this as new P1 todo above. After jhsb7 completes: (a) check executions for jhsb7 SUCCEEDED; (b) verify cold objects
+  for trades/liquidations/derivative_ticker (book_snapshot_5 cold will be absent); (c) trigger
+  COMPACTION_DATE=2026-08-07; (d) DATA P0 full completion gated on P1 (book_snapshot_5 validation); (e) BACKEND P0 can
+  be flipped once jhsb7 shows SUCCEEDED (Terraform deployed + run survives OOM window).
