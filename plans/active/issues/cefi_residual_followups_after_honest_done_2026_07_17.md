@@ -471,7 +471,13 @@ pairs stay honest-unresolved (reported, never guessed).
       aligned with the same 2025-10/11 LATE-window boundary other scripts use). Added `cefi-content-apply` launcher
       category (`deployment-service@8868a770`) since none existed. New follow-up needed: a dedicated 30-50+ VM,
       multi-hour-to-multi-day campaign (Script-2 scale or larger) — track as its own todo/plan, not a quick re-dispatch.
-      (repo: market-tick-data-service, deployment-service)
+      (repo: market-tick-data-service, deployment-service) — **na-eligibility-audit 2026-08-07 citation fix**: this is
+      genuinely in-flight, tracked in exhaustive detail in
+      `plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (assigned_vm: planning, status:
+      open — the active Script-1 corpus-content-backfill campaign; 44-shard fleet, multiple OOM/preemption/ freeze
+      failure classes diagnosed+fixed, still not corpus-complete). This checkbox stays open here as the accounting
+      record; do not reclassify this doc for it — flipping `assigned_vm` would dispatch a duplicate of already-active AO
+      work.
 - [x] ✅ [SCRIPT] P1. **SCRIPT-1 pre-`--apply` fixes** — **`market-tick-data-service@d47609ec`** (2026-07-18). (a) pool:
       `--workers` default lowered **32→12** to stop oversubscribing the size-10 urllib3 pool (`get_storage_client()`
       caches ONE pooled client per process shared by all worker threads; 32 > pool_maxsize=10 caused the ~27% transient
@@ -553,7 +559,10 @@ pairs stay honest-unresolved (reported, never guessed).
       verbatim in the current `availability-manifest-and-data-status.md` — already resolved or a mischaracterization; no
       edit needed.
 - [ ] [DOCS] P1. **Progress Log at every gate** — each `--apply` records measured before/after row counts + coverage
-      delta as evidence (per the runtime-verification HARD RULE). (repo: unified-trading-pm)
+      delta as evidence (per the runtime-verification HARD RULE). (repo: unified-trading-pm) — **na-eligibility-audit
+      2026-08-07 citation fix**: gated on the same in-flight Script-1 campaign as the P0 item above
+      (`plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`, assigned_vm: planning) — stays
+      open here only until Script 1 finishes; not an independent duplicate-eligible item.
 
 ## Codex SSOTs (read before touching a phase)
 
@@ -739,3 +748,11 @@ pairs stay honest-unresolved (reported, never guessed).
   citation. Doc stays NA overall — the 586-row blast-radius call, the features schema-shape gap, and the corpus-scale
   `--apply` campaign remain genuine judgment/operator-gated work.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, stale-duplicate citations fixed — the P0
+  "Parquet CONTENT backfill" and P1 "Progress Log at every gate" checkboxes (Phase 1/2) are both already tracked/
+  in-flight in `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (assigned_vm: planning, status: open); fixed
+  both citations inline rather than reclassifying (would dispatch a duplicate). Doc stays NA overall — the 586-row
+  blast-radius call (line 225) and the features schema-shape gap (line 395, + its dependent line 409) remain genuine
+  judgment/operator-gated work, unchanged from the 2026-08-04 verdict. Secondary note for a future pass: the small P3
+  `FORCE` default-value item (line 709) reads as an isolated, unclaimed RECLASSIFY candidate on its own — not actioned
+  this run since it doesn't change the doc-level verdict.
