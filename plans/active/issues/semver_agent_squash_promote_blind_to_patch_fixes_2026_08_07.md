@@ -225,12 +225,11 @@ cycle).
       (batch-live-reconciliation-service=41d, instruments-service=3.5d) once the fix reaches `main`. **Blocked**: the
       LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`, the ONLY path code reaches `main` under the `ldr_main`
       promotion model) has 0 self-hosted `glue` runners registered as of this writing
-      (`gh api repos/IggyIkenna/unified-trading-pm/actions/runners` → `{"total_count": 0}`), and a manually-dispatched
-      promote run has sat `status=pending` for 60+ minutes. This is a recurrence of the ALREADY-TRACKED
+      (`gh api repos/IggyIkenna/unified-trading-pm/actions/runners` → `{"total_count": 0}`), preceded by roughly an hour
+      of consecutive `cancelled` promote-fleet runs. This is a recurrence of the ALREADY-TRACKED
       `/plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (noted there, not re-investigated here — out
       of scope for this task). All 21 repos' fixes are correctly landed on LDR and will promote automatically once the
-      runner pool recovers (the doc's history shows this class of incident usually self-heals within minutes; today's
-      instance has run longer).
+      runner pool recovers (the doc's history shows this class of incident usually self-heals within minutes to hours).
 - [ ] [DEVOPS] P1. Once promoted, re-run `python3 scripts/cicd/reconcile_release_tags.py --dry-run` and confirm the
       stall count drops from 13 (baseline re-measured 2026-08-07, matches the original alert almost exactly).
 - [ ] [DEVOPS] P2. Ship the fix to `market-tick-data-service` once its unrelated pre-existing test failure is fixed
