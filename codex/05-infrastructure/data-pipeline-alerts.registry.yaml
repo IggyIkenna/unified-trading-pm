@@ -590,6 +590,33 @@ failure_modes:
         (accidental pause, not a sanctioned backfill pause) — previously misassigned DP-WATCHER-003's id, colliding with
         DP_FLEET_MONITOR_RUN_FAILED",
     }
+  - {
+      id: DP-WATCHER-005,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: CONSOLIDATOR_DOWN,
+      detector: check_consolidator_oom,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires:
+        "manifest-consolidator Cloud Run Job has a failed execution with OOM signature (signal 9 / exit 137 /
+        oomkill) AND the index blob is stale — auto-recovers by relaunching with machine-tier escalation",
+    }
+  - {
+      id: DP-WATCHER-006,
+      category: WATCHER,
+      severity: CRITICAL,
+      event: DP_CLOUD_RUN_JOB_FAILED,
+      detector: check_cloud_run_jobs,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires:
+        "any registered Cloud Run Job (cloud_run_job_registry.CLOUD_RUN_JOBS) whose most recent failed
+        execution is newer than its most recent successful one — sustained across >= 2 consecutive meta sweeps
+        (~30 min). Covers the entire classified job estate beyond the consolidator-OOM family.",
+    }
 
   # --- DP-DIGEST (daily summaries, INFO) ---
   - {
