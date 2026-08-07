@@ -729,11 +729,13 @@ NASDAQ/NYSE/CME continuous-launch pattern where the last N shards are slow.
 **Status: IN FLIGHT — todo #2 still `[ ]`. Fleet at boot: 2 VMs** (met-met-2023, met-met-2025 — draining from 4-VM
 stable of session 16). Prior watcher `brxkxvoh5` dead at boot (no task found). Operator keep-waiting decision unchanged.
 
-Re-armed: watcher `be00zdpbw` (started 20:51:28Z, poll 1 = **2 VMs**). Slot-12 copy at
-`<scratchpad>/watcher/es_opt_watcher_slot12.sh` (sed-patch of committed `es-opt-backfill-watcher.sh` with SLOT_ID=12,
-SLOT_TABS=.tabs/12). Heartbeat `bip8ges53` (20-min intervals). Both `run_in_background:true`, NO `&` inside.
+Re-armed: watcher `be00zdpbw` (run 1, 20:51Z, poll 1=2 VMs; killed 21:22Z after poll 7=38 VMs — new wave 21:06Z).
+Re-armed run 2: watcher `bw0ae2kf0` (21:23Z, poll 1=38 VMs), heartbeat `byjynq9jz`. Both `run_in_background:true`, NO
+`&` inside. Slot-12 copy at `<scratchpad>/watcher/es_opt_watcher_slot12.sh`.
 
-- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `be00zdpbw.output`
+Fleet drain: 2→2→3→19→35→38→38 (polls 1-7, run 1). New wave at ~21:06Z added 35+ VMs; lock now multi-hour again.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `bw0ae2kf0.output`
   via TaskOutput non-blocking. (3) If watcher dead: re-arm from
   `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) +
   `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm `watcher/heartbeat.sh` same way. Do NOT use
