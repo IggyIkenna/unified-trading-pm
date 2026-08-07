@@ -63,9 +63,138 @@ resolved_by:
   GRACE (9h), not touched this run. Archive-candidates 11: mostly other tranches; cross-cutting ones:
   archive_candidates_content_verification_backlog (GRACE), ag_closeout_audit_cross_cutting_parked ×3 (verify).
 
+**I1 (AO/fleet issue batch, 9 docs) — 2026-08-07:**
+
+- IA1 [P2, GRACE] `ao_fleet_health…:129` "#791 open since 2026-08-06T16:42:19Z" vs `:110` "OPEN since
+  2026-08-05T16:42:19Z" (gh confirms 08-05T16:42:19Z) — date typo understates wedge age by a day.
+- IA2 [P3] `review_role_boot…:174-175` "all 3 of that doc's `[SCRIPT]` todos are still unchecked" vs
+  `boot_composer_misroutes_lifecycle_roles…:180` `[x]` @agent-orchestrator/0a8ed16 (re-verified ancestor;
+  `_ONE_SHOT_ESCALATION_ROLES` live at `server/prompts.py:70`) — the 08-06 audit entry is stale; the one-shot guard
+  lands exactly the change that could moot review_boot's `[DOCS] P1` for na_eligibility_auditor/ag_closeout_auditor.
+- IA3 [P3, GRACE] `watchdog_kill_events…:111-112` Gap-2 "cannot actually SEE the AO host's kill events" vs own
+  `:134-138` `[x]` deployment-ui@ed2466e (verified ancestor; option (b) always-rendered card + smoke spec) —
+  context/Why-it-matters never reconciled.
+- IA4 [P3, GRACE] `ao_fleet_health…:5-9` summary "shipped 4 fixes directly" vs PL `:177-179` "Shipped 3 fixes directly +
+  ruling" — counting inconsistency.
+
+**I4 (manifest/data-status issue batch, 8 docs) — 2026-08-07:**
+
+- M1-C1 [P2] cefi Era-B: `cf_manifest_audit_first_full_rollup…:267` "must NOT suppress cefi's genuine, still-live,
+  unadjudicated Era-B gap (521,513 rows)" (flipped 08-05 @d3fb74d7) vs
+  `cross_cutting_manifest_canonicalisation…: 233-235` "confirmed CF-1/CF-3/CF-4/CF-5/Era-B all GREEN for cefi
+  (mtds@c2ae82e0, 9,662,116 rows, re-verified post-apply)" (08-01; satellite batch1:483 independently confirms) — a
+  worker dispatched on "cefi Era-B unadjudicated" redoes closed work. Doc 1's Finding-2 cefi row (:87) never re-dated
+  after 08-01.
+- M1-C2 [P2] `fleet_data_acquisition_health…:65` "REVISED 2026-07-10 (operator): canonicalize every venue key to ONE
+  UPPERCASE convention — not a runtime fallback" vs live code: the REJECTED fallback IS what shipped
+  (`websocket_streaming_handler.py:140-142` `get(venue.lower())/get(venue.upper())` added 06-21 @5830cc81; registry
+  still mixed-case: `polymarket`/`kalshi` lower vs `POLYMARKET` upper) — doc `status: resolved` (08-04) without the
+  canonicalization ever landing (08-04 slot-5 closeout verified items (a)-(d) only).
+- M1-C3 [P3] `cross_cutting_manifest_canonicalisation…:128` "CF-8 (available_at) RED on ALL five AGs" vs
+  `cf_manifest_audit…:122-127` — same 5 RED / 5 GREEN split; 5 buckets at literal 100% `available_at` fill — doc 2's
+  CF-8 paragraph never updated through 08-06 touches.
+- M1-C4 [P3, GRACE] `data_status_rollup_ml_service…:272-274` audit note "a deferred verification never turned into its
+  own todo" — the follow-up todo EXISTS at `:269-270` — note factually wrong about own content.
+- M1-C5 [P3, GRACE — ⚠️ BIG, route] `data_status_rollup_ml_service…:124-155` `[x]` "ROOT-CAUSED + FIXED …
+  deployment-api@aaa0d1d" (SERVICE_TO_KIND→ml-store) vs LIVE PROBE 08-07:
+  `gs://central-element-323112-data- status-rollups/ml-service/` contains ONLY `coverage.json.gz` (fresh 08-06T12:44Z —
+  worker runs the coverage step) — `full.json.gz` ABSENT ~360 cron cycles post-fix; sibling services write it
+  (instruments 08-05, strategy 08-01). Either the fixed image never deployed (stray revision pin?) or a new failure mode
+  — "FIXED" claim live-contradicted.
+- M1-C6 [P3] `cf_manifest_audit…:101` "cefi CF-3 red isn't in that todo's scope, fold it in when worked" vs cefi CF-3
+  GREEN since 08-01 — fold-in instruction moot.
+
+**I5b (perp-funding semantics issue, 1×282KB doc + 3 cross-checked) — 2026-08-07:**
+
+- P1 [P2] `carry_staked_basis_funding_scan_experiment…:97` "Funding (Aster) — public API (no GCS data)" map row vs perp
+  doc `:534-538` ASTER `derivative_ticker` rows `capture_status=captured, source=aster` since 2026-07-29 + forward
+  resumed 08-04 — map routes a reader to re-derive a fixed gap.
+- P2 [P3] `cross_venue_funding_reversion_research…:236` "Aster needs a GCS backfill (today only live-API)" vs backfilled
+  07-29 (perp `:534-539`,`:641-678`).
+- P3 [P3] carry_staked `:591-592` "treat Deribit funding as suspect until that's fixed" vs same doc `:134` + perp
+  `:210-215` CONFIRMED 2026-06-17 (stores 8h figure) — "suspect" line never corrected.
+- P4 [P3] carry_staked `:96` map row `pipeline_mode=batch_hyperliquid_rest` vs RETIRED by operator R4 (06-07) →
+  canonical `batch_hyperliquid`, verified 0 remaining fleet-wide (`:517-530`,`:672-681`; cross_venue `:259`).
+- P5 [P3] perp doc `:649-651` "no cron ever wired" vs own `:667-668` "Premise was wrong: cron + registry entries existed
+  since 2026-05-20" — only RESOLVED block carries correction; `:313-317`/`:649-651` still state the wrong root cause.
+- P6 [P3] cross_venue `:179-180` `(blocked-by issue doc)` annotation stale — blocker fully resolved (perp P1 `:216-244`
+  DONE 07-27 + historical reprocessing `:328-340` confirmed 08-03); harness switch itself remains open.
+
+## Near-miss flips (I5b — [x]-evidence flags, correct shas identified)
+
+Perp doc: 0/20 open (archive candidate). Flags on `[x]` whose cited shas do NOT resolve on LDR (post-08-05 rewrite /
+copy-paste class):
+
+- M1 [P3] `:202-209` cites UTL@b587b91b/ed622af8 + EXEC@38c7e06f — NONE on LDR; real commits: UTL@1beb1043 +
+  EXEC@efb57e30 (ON-LDR, same message; `return_metrics.py:59` confirms the deletion live).
+- M2 [P3] `:565-570` cites UTL@3b4bd6b8 (ASTER→BATCH_ASTER override) — NOT on LDR; equivalent UTL@c48e3be0 IS.
+- M3 [P2] `:627-633` cites MTDS@497918c2 — WRONG commit (that sha = ohlcv-admit commit, correctly cited at `:620`); the
+  Aster `book_snapshot_5` WS connector was added by MTDS@d43fd628 (ON-LDR) — adjacent-sha copy-paste.
+
+## Doc-drift
+
+**I5b (perp batch):**
+
+- Archive candidate (operator review): perp doc — `status: open`, ALL 20 todos `[x]`, `locked_by: live-defi-rollout` →
+  `[unlock-plan]` needed. At EXACTLY 1000 lines (hard cap). `summary:` truncated mid-sentence (`:8`).
+- Corrupted indentation: lines ~260-430 + ~486-510 carry ~190+ leading spaces (line 260 = 964 chars) — editor artifact.
+  `last_updated: 2026-08-04` vs PL 08-05/08-06.
+- 14.4h since last commit — outside 12h grace (eligible for non-grace treatment, still locked).
+
+## Codex-drift candidates (I5b — ROUTE: codex rewrite needs operator ruling)
+
+- P2 `/codex/02-data/carry-venue-live-integration-reference.md:116-118` still says UTL `FUNDING_PERIODS_PER_DAY`
+  "disagrees (Aster/Deribit 8× wrong)" + "no historical cadence tracker" — BOTH RESOLVED (dict deleted 06-17
+  UTL@1beb1043; tracker shipped 08-03 UAC@e8b45af4 + MTDS@fd9efc85); `:124` lists Aster among "no GCS funding backfill"
+  venues (GCS data since 07-29). Sole codex file still referencing the deleted dict; ~14 days old. A reader of this SSOT
+  re-files already-fixed issues.
+
 ## Flips verified
 
-(none yet)
+- M1-MF2 [flag-not-flip] `pipeline_smoke_sweep…:111` single open todo — sub-item 1 (prediction bucket) resolved
+  elsewhere (batch1:812-815 + milestones_gate:463; flat `kind='market-data-tick-prediction'` is canonical per codex
+  bucket-isolation-model:104; the checker was the defect) but sub-items 2-3 unverified (08-03/08-06 entries: standing
+  re-verify never executed) — bundled checkbox can't partially close.
+- M1-MF1 [evidence proves OPPOSITE] `data_status_rollup…:269` follow-up todo NOT flippable — deployment-api@aaa0d1d IS
+  LDR-ancestor but done-when artifact (fresh full.json.gz on */20 cycle) demonstrably absent (C5) → stay-open +
+  re-diagnose (deployed-image check first).
+- Evidence-resolution: ALL other `[x]` shas in batch are LDR ancestors EXCEPT post-08-05 history-rewrite orphans: UTL
+  `21069582/6ce1ddb6/6af7c4b7/057264fd/78481472/9bdcf7a2/d3fb74d7` + instruments-service `ca3902bb/5b509c0b` resolve
+  ONLY on wip-preserve branches; content present as rewritten commits
+  (`46e2c596/c27c0d70/64eb1b1b/60192d6a+3568f419/06c009ec/44930c21/ed8a79b4/ac1883a7`). Doc 1:118's literal "confirmed
+  present on origin/main" (6af7c4b7) now false as written. NOT flip reversals — every flipped todo's WORK is on current
+  LDR.
+
+## Doc-drift
+
+**I4 (manifest batch):**
+
+- Archive candidates (operator review, both `locked_by: live-defi-rollout` → `[unlock-plan]` needed):
+  `fleet_data_acquisition_health_2026_06_21.md` (resolved, all `[x]`, last touch 08-04; CAVEAT: its operator-ruled
+  venue-casing fix C2 is unexecuted prose — archive only with that surfaced) ·
+  `live_mode_event_sink_topic_missing _2026_06_21.md` (self-declared archive-eligible 07-30 in its Progress Log).
+- Cross-ref path violations (feed to adjudicator — same checker family): doc4 `related` :16-17 + doc5 `:23-24` no
+  leading `/`; doc6 `:18` bare slug `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25` (resolves to archive/2026_08);
+  doc8 `:159` `plans/active/bucket_estate_consolidation_to_sub100…` wrong dir + no leading slash (actual
+  archive/2026_07); doc3 `:101` `data_status_offline_rollup_2026_05_06.md` actual
+  `plans/ai/ data_status_offline_rollup_2026_05_06.plan.md`; doc2 `:230,:236` bare-name cites.
+- [GRACE] doc3 `last_updated: 2026-07-26` stale vs PL through 08-05. Near-complete: docs 1,2,7,8 (1 open each); doc3's
+  single open = evidenced-still-open (MF1). No line-cap breaches (max 341).
+
+## Codex-drift candidates (I4)
+
+- D1 [P3] `cross_cutting_manifest_canonicalisation…:124` defi "populate 2,477 blank source" listed genuinely-open vs
+  `cf_manifest_audit…:89` defi tick bucket "(clean)" all-CF-GREEN on first-ever complete audit — needs one re-check
+  (either fixed→stale claim or 07-26 audit missed them).
+
+## Flips verified
+
+- IF1 ✅ **CONFIRMED FLIP CANDIDATE (non-grace)** —
+  `deployment_api_artifact_pipeline_health_test_date_drift_flake _2026_07_29.md:90-101` open `- [ ] [CODE] P3` whose own
+  body documents "**SHIPPED deployment-api@cf55369**"; hunter ran
+  `git merge-base --is-ancestor cf55369 origin/live-defi-rollout` → **yes**; artifact live —
+  `tests/unit/api/test_artifact_pipeline.py:881` computes `two_days_ago = (datetime.now(UTC) - timedelta(days=2))`,
+  `:879-880` comment cites this exact bug. Needs `- [x]` + sha (also makes the doc a near-complete → archive candidate).
 
 ## Contradictions
 
@@ -425,6 +554,49 @@ All `carry_staked_basis_funding_scan_experiment…` unless noted (PL `:405-531` 
 - [P3] closeout `:99` placeholder sha `unified-trading-pm@<see plan-flip commit>`; execution_strategy `:74` 🟡
   "MIGRATION IN FLIGHT" banner with 6/9 todos done.
 - ARCHIVE-CANDIDATES: none (every batch plan ≥2 open todos).
+
+**STEP-4 verification results (mechanical, shas) — 2026-08-07:**
+
+- ✅ ANCESTOR-of-LDR + artifact live: deployment-api@cf55369 (IF1) · features-service@3162d627 + @43a2b56b (I1 colocated
+  1.3b/1.7e) · mtds@98d12be (I-F5 HL backfill) · agent-orchestrator@623009e3 (wip-preserve sweep, ancestor yes but
+  age-threshold alert unrecorded → flag) · agent-orchestrator@0a8ed16 (IA2) · instruments-service@96ea6c4b re-stamp
+  confirmed (I3 IF2; identical content e324dff2 IS ancestor).
+- ⚠️ **e2e-testing re-stamp pattern**: carry_staked PL-cited shas (6e2ffb8, 37dcede, 5eef20f, 3d219d7) are NOT ancestors
+  of origin/live-defi-rollout — they resolve on origin/main (promoted lineage); LDR carries the SAME commits re-stamped
+  (6e2ffb8 → **326a345**, diff = sports/live.env only, 3 lines). Root cause = the 08-05 provenance-marker Option-B
+  direct promote rewrote e2e-testing main's lineage (matches I3 IF2 class). → flip candidates I-F1..F4 must cite the
+  LDR-resolvable re-stamp (326a345) with a note, NOT the PL-cited sha.
+- ✅ M2: `ml-store` key PRESENT at `configs/cloud-providers.yaml:70` (Fold-B comment) → flip candidate confirmed.
+- ✅ G1 support: `plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md` `status: resolved`.
+- NOT flips (verified open): e2e-testing LDR/main DIVERGED (neither ancestor — Option-B recreate 08-05); I-F6 (Drift
+  production remainder tracked :622) partial; I-F7 low-confidence; IF2 (glue_runner cite unresolvable); fleet #791 still
+  OPEN/DIRTY.
+
+## Near-miss flips (I1 — flag, not flip)
+
+- `slot2_wedged…` `[BACKEND] P2` — escalation code IS live (`worker_liveness_watchdog.py:2179,2184-2186` resume cap 1,
+  config.py:490; AO@e608378 ancestor) but 2nd half (`phase=pre_boot` bookkeeping mismatch) un-evidenced → flag, not
+  flip.
+- `wip_preserve…` `[SCRIPT] P3` — `server/orphan_ref_verify_watchdog.py` (AO@623009e3, ancestor) implements the hourly
+  sweep, but "age-thresholded alert OR documented runbook check" unrecorded; NEW unrecovered ref live in slot-13 UTL
+  clone (`cascade-unified-trading-library-e4f136a9382a`) → surfacing still not effective in practice.
+- `ao_park_disposition…:90-93` `[x]`'s "**Not live-verified end-to-end**" caveat — done-when since met by others
+  (`sports_af_full_entity_completion…:210-220` POST /park 08-04 confirmed parked:true; ao_done_gate…:181) →
+  cross-reference resolution candidate.
+- Verified NOT flips: fleet #791 open/dirty; review_boot `[DOCS] P1` + `[BACKEND] P2` genuinely open; benchmark 4 open;
+  watchdog_gaps `[INFRA] P2` no execution evidence.
+
+## Doc-drift
+
+**I1 (AO/fleet batch):**
+
+- Placeholder sha: `orchestrator_vm_disk_io…:176-177` `unified-trading-pm@<SHA>` never resolved.
+- Archive candidate (operator review): `ao_park_disposition…` — `status: resolved`, all todos `[x]`, but
+  `locked_by: live-defi-rollout` blocks archival (`[unlock-plan]` needed); `locked_since: 2026-05-21` PREDATES
+  `created: 2026-07-31` (frontmatter defect).
+- Stale `last_updated`: benchmark doc 08-03 vs PL 08-06 (GRACE).
+- All 9 docs ≤447 lines (no cap breach). Codex refs all resolve; stale line-number cites noted (prompts.py:111-124,
+  backlog.py:709) — not drift.
 
 ## Near-miss flips (B_F — candidates with caveats)
 
