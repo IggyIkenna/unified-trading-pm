@@ -25,6 +25,9 @@ cutover where LDR promotes straight to main and staging is toggled OFF) — have
 directions SKIPPED: the bypassed staging path is intentionally dormant, not stuck. Staging is
 retained + the toggle is reversible (a major/breaking bump or operator decision still routes through
 staging, which clears `ldr_main` and re-enables its staging monitoring). See `_main_direct_repos()`.
+Repos flagged `promotion_model == "ldr_terminal"` have BOTH main-facing directions skipped (`main` is
+a frozen ref nothing deploys from — see `_ldr_terminal_repos()`); repos flagged `"single_branch"` are
+skipped ENTIRELY (no LDR/staging pipeline exists at all — see `_single_branch_repos()`).
 
 SCOPE (alert_quality_audit_2026_06_18 — collapse the duplicate detectors): this monitor is the
 SSOT for branch-pair PROPAGATION lag ONLY. It deliberately does NOT detect stuck/conflict
@@ -224,6 +227,37 @@ def _ldr_terminal_repos(manifest_path: str | None = None) -> set[str]:
         if isinstance(repos, dict):
             for name, cfg in cast("dict[str, object]", repos).items():
                 if isinstance(cfg, dict) and cast("dict[str, object]", cfg).get("promotion_model") == "ldr_terminal":
+                    out.add(str(name))
+    except (OSError, json.JSONDecodeError, ValueError):
+        pass  # manifest unreadable → fall back to empty (prior behavior: no exemption)
+    return out
+
+
+def _single_branch_repos(manifest_path: str | None = None) -> set[str]:
+    """Repos flagged `promotion_model == "single_branch"` in the manifest — there is no LDR/staging
+    promotion pipeline AT ALL (one branch of record, `main`; any other branch present in the repo,
+    e.g. a leftover `live-defi-rollout`, is not a live target and nothing should push to it). Skip
+    the repo ENTIRELY — all four directions (LDR→main, LDR→staging, main→LDR, staging→LDR) are
+    dormant-by-design here, not stuck, so paging on any of them is a pure alert-accuracy false
+    positive (there is no promote-PR mechanism to clear it through in the first place).
+
+    First repo: unified-trading-ci (extracted from PM 2026-08-06 as "single-branch, main only", but
+    both `main` and `live-defi-rollout` existed in practice and genuinely diverged — reconciled once
+    2026-08-07, see unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md). Mirrors
+    `_main_direct_repos()`/`_ldr_terminal_repos()`'s manifest-driven pattern (no hardcoded repo names
+    beyond the fallback-empty case, so a future single-branch repo picks this up automatically).
+    """
+    if manifest_path is None:
+        here = os.path.dirname(os.path.abspath(__file__))
+        manifest_path = os.path.join(here, "..", "..", "workspace-manifest.json")
+    out: set[str] = set()
+    try:
+        with open(manifest_path) as _mf:
+            m = cast("dict[str, object]", json.load(_mf))
+        repos = m.get("repositories")
+        if isinstance(repos, dict):
+            for name, cfg in cast("dict[str, object]", repos).items():
+                if isinstance(cfg, dict) and cast("dict[str, object]", cfg).get("promotion_model") == "single_branch":
                     out.add(str(name))
     except (OSError, json.JSONDecodeError, ValueError):
         pass  # manifest unreadable → fall back to empty (prior behavior: no exemption)
@@ -722,7 +756,13 @@ def main() -> int:
     # ldr_terminal repos (agent-orchestrator, 2026-08-05): `main` is a frozen historical ref that
     # nothing deploys from, so BOTH main-facing directions are intentionally dormant too.
     ldr_terminal = _ldr_terminal_repos()
+    # single_branch repos (unified-trading-ci, 2026-08-07): no LDR/staging promotion pipeline at
+    # all — skip the repo ENTIRELY (all four directions + the staging-backmerge-workflow-presence
+    # check below), not just one axis. See _single_branch_repos().
+    single_branch = _single_branch_repos()
     for repo in _repos():
+        if repo in single_branch:
+            continue  # no promotion pipeline exists for this repo — nothing to monitor
         repo_lags[repo] = {}
         directions = [
             ("LDR→main", "main", "live-defi-rollout", False),
