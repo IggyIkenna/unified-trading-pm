@@ -149,14 +149,23 @@ closing the "then what" gap:
       A central-only sweep is blind to this tier by construction. **Done when**: a scheduled job runs both sweeps daily
       across all repos + all `.tabs/*` clones, deletes only ancestor-proven remote branches, and reports everything
       else. Repo: agent-orchestrator (scheduler) + unified-trading-pm (sweep script).
-- [ ] [SCRIPT] P1. **Rescue the local-only tier before classifying it — push, don't just report.** Operator ruling
+- [x] ✅ [SCRIPT] P1. **Rescue the local-only tier before classifying it — push, don't just report.** Operator ruling
       2026-08-06. On each host, for every `refs/wip-preserve/cascade-*` whose content is **not** already on
       `origin/live-defi-rollout`, push it to the durable `refs/heads/wip-preserve/` namespace FIRST, then classify.
       **Why**: this is the only tier where a loss is unrecoverable and invisible — the ref lives in one clone's `.git`,
       is not fetched by the standard refspec (`+refs/heads/*:refs/remotes/origin/*` cannot match it), and dies silently
       if the clone is deleted or the host wiped. Pushing converts the fragile tier into the durable one, at which point
       the remote sweep above handles it like any other. **Done when**: a host sweep leaves zero local-only cascade refs
-      carrying content that is not on the branch. Repo: unified-trading-pm.
+      carrying content that is not on the branch. Repo: unified-trading-pm. **Shipped `unified-trading-pm@f60d3caa9`**
+      (`scripts/dev/rescue-local-wip-preserve-refs.sh` — sweeps every slot + root clone, resolves each local
+      `refs/wip-preserve/cascade-*`/`quickmerge-stage5-regate-*` ref to its full sha, pushes
+      `<sha>:refs/heads/wip-preserve/<leaf>` on origin for any not already an ancestor of `origin/live-defi-rollout`,
+      reports the rest). **Executed live on this host (`ip-172-31-x-x`, this session's VM) 2026-08-07**: 184 local-only
+      refs scanned across 16 slot clones (root clones: 0) — 144 already ancestors (skipped, no rescue needed), 38 pushed
+      to `refs/heads/wip-preserve/`, 2 already present remotely (idempotent), 0 errors. This host's local-only tier now
+      carries zero refs with content not on `origin/live-defi-rollout`, satisfying the done-when for THIS host; the
+      sibling `[SCRIPT] P1` daily-scheduled-job todo above is what runs this same script on every OTHER host going
+      forward.
 - [ ] [SCRIPT] P1. **Add post-push verification to `quickmerge.sh` — and FAIL, not warn.** Operator ruling 2026-08-06.
       Immediately after a successful push, assert `git merge-base --is-ancestor <pushed-sha> origin/<branch>` (re-fetch
       first) and exit non-zero if it does not hold. **Verified 2026-08-06 that quickmerge does NOT do this today** — its
