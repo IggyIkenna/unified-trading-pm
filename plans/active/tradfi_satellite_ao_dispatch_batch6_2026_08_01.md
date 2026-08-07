@@ -403,14 +403,34 @@ reparented it to init, so it will NOT die when the launching Bash tool call's ow
 (05:58:35Z): 2 VMs. Same 6-phase autonomous script (poll → launch ES_OPT → verify T+30s/T+10min → poll completion →
 manifest query → flip+commit+push+`/done`).
 
-- **NEXT ACTION (fresh session, supersedes the PID-957114 instructions above):** First check if watcher is still alive:
-  `kill -0 2186673 2>/dev/null && echo ALIVE || echo DEAD`. If ALIVE: wait for autonomous completion (no harness task ID
-  for this instance — it was launched detached; poll the log at `<scratchpad>/es_opt_watcher.log` or just check
-  `plans/active/` for the checkbox flip). If DEAD: check if todo #2 checkbox is already flipped (done). If not done,
-  re-arm AGAIN from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (update `SCRATCHPAD` var to a fresh
-  writable dir, relaunch with `nohup bash script.sh &` backgrounded via a shell `&`, NOT solely via the Bash tool's
-  `run_in_background` flag — `&`+nohup is what gives PPID=1 detachment; verify with `ps -o pid,ppid,cmd -p <pid>` that
-  PPID=1 before trusting it survives). Do NOT re-run if watcher is alive — singleton lock race risk.
+**SLOT-11 SESSION 5 (2026-08-07T06:07Z) — Watcher re-armed AGAIN; root-caused the death and fixed detachment.** PID
+2186673 (session 4) also died silently — between poll 2 (06:03:36Z, 10 VMs) and 06:05:53Z, mid-`sleep 300`, with **zero
+FATAL log entry**. A mid-sleep death with no error output rules out an internal script bug (nothing executes during
+`sleep`) — it means an external signal killed it. Diagnosis: `nohup cmd &` reparents the child to init on parent exit
+(confirmed PPID=1 both times) but does **NOT** put it in a new process group — under `bash -c "..."` (no job control /
+`set -m`), a `&`-backgrounded job stays in the **same PGID** as the invoking shell. If the launching Bash tool's
+tracked-task cleanup kills by process group (common sandbox pattern) rather than by direct-child tracking, a `nohup`'d
+grandchild with PPID=1 is still reachable via that shared PGID and dies anyway — PPID=1 alone is NOT sufficient proof of
+immunity. **Fix: `setsid nohup bash script.sh > log 2>&1 < /dev/null &` + `disown`** — `setsid` makes the process both
+session leader AND process-group leader of a brand-new group, genuinely unreachable via the launching shell's PGID/SID.
+**Gotcha hit while re-arming:** util-linux `setsid` without `-f` forks internally when it can't `setsid()` in-place, so
+`$!` in the launching shell captures the WRONG pid (the forked wrapper, which exits immediately) — the real long-lived
+process gets a **different** PID. Always resolve the real PID via
+`ps -ef | grep '<scratchpad>/es_opt_watcher.sh' | grep -v grep` after launch, never trust `$!` with plain (non-`-f`)
+`setsid`. New instance: **PID 2367038**, confirmed `PGID=SID=2367038` (own session AND own process group — the actual
+isolation bar, not just PPID=1). Poll 1 (06:07:21Z): 22 VMs (fleet is now large — NASDAQ/NYSE 2023 wave in full swing;
+does not change watcher behavior, still just waits for count==0).
+
+- **NEXT ACTION (fresh session, supersedes both PID-957114 and PID-2186673 instructions above):** First check if watcher
+  is still alive: `kill -0 2367038 2>/dev/null && echo ALIVE || echo DEAD`. If ALIVE: wait for autonomous completion —
+  poll the log at `<scratchpad>/es_opt_watcher.log` or check `plans/active/` for the checkbox flip (no harness task ID
+  tracks this instance; it was launched fully detached). If DEAD: check if todo #2 checkbox is already flipped (done).
+  If not done, re-arm AGAIN from `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`: (1) update `SCRATCHPAD` to
+  a fresh writable dir, (2) launch with `setsid nohup bash script.sh > log 2>&1 < /dev/null & disown` — NOT plain
+  `nohup ... &` (insufficient — see above), (3) find the REAL pid via `ps -ef | grep script.sh | grep -v grep` (NOT `$!`
+  — `setsid` without `-f` forks, so `$!` is wrong), (4) verify with `ps -o pid,ppid,pgid,sid -p <pid>` that **PGID and
+  SID both equal the process's own PID** before trusting it survives — PPID=1 alone is insufficient. Do NOT re-run if
+  watcher is alive — singleton lock race risk.
 
 ### 2026-08-07T~04:46Z — slot 11, task `tradfi_satellite_ao_dispatch_batch6-002` (todo #2) — fresh session
 
