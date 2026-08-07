@@ -146,8 +146,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - [ ] [SCRIPT] P0. **Investigate + fix the odds_api SOURCE_RETURNED_ZERO cluster** (13,045 rows, still recurring as of
       2026-08-06) — root-cause whether this is a genuine per-bookmaker vendor gap or an adapter/rate-limit bug; do not
       silently reclassify to `empty_confirmed`.
-- [ ] [SCRIPT] P0. **Retry the odds_api 871 `401 Unauthorized` rows** with the current credential (no 401s recorded
-      since 2026-07-27, so the key is presumably already fixed) — confirm, then targeted-retry those specific shards.
+- [x] ✅ [SCRIPT] P0. **Retry the odds_api 871 `401 Unauthorized` rows** — confirmed credential working
+      (mtds-backfill-odds-1 running with no 401s, 782 rows fetched on 2020-08-18); launched targeted VM
+      `mtds-backfill-odds-401-retry` (2025-09-01→2026-07-27, SPOT e2-highmem-4, `--allow-parallel`) at
+      2026-08-07T11:55:46Z, RUNNING at T+3.5min with log at 11:59:01Z, skip-fast through covered dates, real-fetching
+      2026-02-22 with no 401s. The VM will naturally retry all 871 `attempted_failed` rows as it sweeps through that
+      range (check_shard_freshness retry_failed=True is the default).
 - [x] ✅ [SCRIPT] P1. **api_football's 35,058 attempted_failed — root-caused 2026-08-07**: 27,314 (78%) is the
       already-known 2026-08-06 daily-quota exhaustion, self-resolving via the currently-running AF campaign; 4,996 is a
       named historical operation, not a bug. Remaining ~4,748 across FIXTURES_FETCH_FAILED/TEAMS/FIXTURES_SCHEDULE/
@@ -200,3 +204,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   before the VM was killed (still 8 attempted_failed, unchanged) — this session's identity lacks Secret Manager access
   to the RapidAPI key to check the endpoint directly, so deferring rather than blind-retrying into a possibly-still-down
   endpoint.
+- **2026-08-07T12:00Z** — **Confirmed credential valid + launched targeted 401-retry VM.** Credential check:
+  `mtds-backfill-odds-1` (sweeping 2020-06-06→2026-08-07) has been running with zero 401s; wrote 782 rows on 2020-08-18
+  confirming the key is live. Launched `mtds-backfill-odds-401-retry`
+  (`launch-mtds-sports-odds-backfill-vm.sh --vm-name mtds-backfill-odds-401-retry --start 2025-09-01 --end 2026-07-27 --allow-parallel`,
+  SPOT e2-highmem-4, concurrency guard: 1+1=2 ≤ cap 5, all 4 tarballs fresh). VM RUNNING at 11:55:46Z, startup script
+  completed (exit 0, PID 4903/4917), first log at 11:59:01Z with skip-fast through covered dates and real-fetching
+  2026-02-22 (960 credits, no 401s). `check_shard_freshness(retry_failed=True)` will mark the 871 `attempted_failed`
+  401-rows as stale and re-fetch them as the VM sweeps through their dates.
