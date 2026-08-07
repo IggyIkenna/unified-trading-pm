@@ -245,3 +245,8 @@ no reclassification. No stale items, not an archive candidate (1 substantive ope
 
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — all still resolve, the
   sole open item (parked DESIGN P2 / Deferred E8) is unchanged.
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`): KEEP-NA, valid — confirms the established verdict, unchanged. The
+sole open item (todo 5, `[DESIGN] P2` provider-promote fan-out policy) remains parked as
+`ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred E8, an explicit operator question, unruled. No new content
+since the 2026-08-06 marker beyond a context-scout re-verification.

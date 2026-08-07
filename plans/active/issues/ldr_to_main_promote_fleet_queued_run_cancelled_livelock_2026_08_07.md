@@ -262,3 +262,11 @@ sufficient.
       glue-pool-starvation root cause, the two monitor-hardening agents) are confirmed shipped, start/hold a genuinely
       clean 60-consecutive-minute window with zero new CI/Slack alerts before declaring this incident `resolved`. Per
       operator directive 2026-08-07: do not declare done on partial signal.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-07** (tranche `ci`): KEEP-NA, valid — brand-new (created today), actively-unfolding P1
+incident with an explicit operator instruction to keep verifying for a full 60 consecutive minutes before declaring
+victory (todo 2). Todo 1 (`[OPERATOR] P1`, deferred/conditional self-debounce) is an explicit operator-gated item. Todos
+3-4 (`[DEVOPS] P2` monitor-hardening fixes) read as bounded/deterministic in isolation but are same-day follow-on
+hardening from this still-active incident's own investigating session — not defaulted-to-NA-and-never-assessed.
