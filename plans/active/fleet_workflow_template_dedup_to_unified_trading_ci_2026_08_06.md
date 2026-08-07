@@ -306,15 +306,21 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       during todo 5) — same recovery (`git cherry-pick`) worked every time; root cause is ordinary high push-contention
       from multiple concurrent sessions on the same repos' remotes (confirmed via `ps aux` showing other active Claude
       Code tabs working the same repo set), not a defect in this todo's approach.
-- [ ] 7. [INFRA] P2. **Delete the 9 now-redundant template sources from
-      `unified-trading-pm/scripts/workflow-templates/`** and remove their entries from `rollout-workflow-templates.sh`'s
-      target list (header comment + the main rollout loop) — mirrors exactly how
-      `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 17 deleted PM's own now-redundant
-      `python-quality-gates-v2.yml`/`image-build-validate.yml` local copies once `unified-trading-ci` became the sole
-      live source. **Gated on todos 3-6 being fully shipped and CI-verified fleet-wide** — do not delete the templates
-      while any repo still depends on `rollout-workflow-templates.sh` regenerating a flat copy from them. Done-when:
-      `scripts/workflow-templates/` contains none of the 9 converted files; `rollout-workflow-templates.sh` no longer
-      references them; a fresh `--dry-run` shows no attempt to roll out a deleted template.
+- [x] ✅ 7. [INFRA] P2. **Delete the redundant template sources — DONE 2026-08-07.** **Correction to this plan's own "9"
+      count**: only 7 of the original 9 candidate files are actually redundant now — `notify-slack.yml` was never
+      migrated (PM's own copy stays the canonical source per this plan's own Design decisions) and
+      `staging-lock-check.yml` is explicitly excluded pending todo 11's required-check-name fix, so deleting either
+      would have broken something still live. Deleted the correct 7 from
+      `unified-trading-pm/scripts/workflow-templates/`: `main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`,
+      `request-major-bump.yml`, `staging-backmerge-to-ldr.yml`, `update-dependency-version.yml`,
+      `version-registry-notify.yml`, `semver-agent.yml.tmpl`. Updated `rollout-workflow-templates.sh`'s header comment
+      (its "main rollout loop" is a directory glob, not a hardcoded list — nothing else to edit there once the files are
+      gone). Verified via `bash rollout-workflow-templates.sh --dry-run`: only `image-build-gate.yml`,
+      `notify-slack.yml`, `staging-lock-check.yml`, and `quality-gates-v2.yml.tmpl` still process (the 2 correctly-kept
+      tier-1 templates plus the 2 from the separate, earlier `shared_ci_workflow_repo_extraction_2026_08_06.md`
+      migration). Shipped `unified-trading-pm@54b6fa6945`, independently verified via
+      `git show origin/live-defi-rollout:     scripts/workflow-templates/main-backmerge-to-ldr.yml` (path does not
+      exist) and the header comment no longer listing the 4 it used to.
 - [ ] 8. [INFRA] P2. **Fleet-wide dangling-reference re-sweep, same technique as
       `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 23** — after todos 3-7 land, run
       `grep -rln "uses:.*unified-trading-pm/.github/" --include="*.yml"` across the whole fleet one more time (excluding
