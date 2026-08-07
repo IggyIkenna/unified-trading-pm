@@ -100,14 +100,17 @@ on `attempted_failed=0`, which is true but not the same as done — weather has 
      catalog/`is_transfer_window_open`-style eligibility check, or a genuine adapter/rate-limit bug worth fixing at the
      source. **Do not just flip these to `empty_confirmed`** — the guard rail exists because that would be dishonest;
      the fix has to be in either the catalog's aliveness signal or the actual fetch path.
-2. **api_football — 35,058 attempted_failed** (STANDINGS 12,693 / FIXTURE_STATS 11,914 / FIXTURE_EVENTS 4,996 / TEAMS
-   2,657 / FIXTURES_SCHEDULE 1,969 / FIXTURES 730 / PLAYER_STATS 77 / TRADES 4), **plus 658,426 expected_unattempted.**
-   This overlaps heavily with `sports_af_full_entity_completion_2026_08_03.md`'s existing backfill todos (PLAYER_STATS/
-   TEAMS/STANDINGS/INJURIES/FIXTURE_LINEUPS) — that doc's backfills, once run, should absorb most of the
-   `expected_unattempted` figure; the `attempted_failed` clusters are a DIFFERENT lens (real failures, not just
-   not-yet-attempted) and haven't been root-caused per-data_type yet. Don't duplicate that doc's todos here — this entry
-   is a pointer + the reminder that `attempted_failed` needs its own root-cause pass distinct from the "needed" backfill
-   counts already tracked there.
+2. **api_football — 35,058 attempted_failed, mostly ALREADY EXPLAINED.** Breaks down as: 27,314 tagged
+   `error_reason="requests"`, all `attempted_at` between 2026-08-06T19:27Z and 2026-08-07T00:01Z — this is the SAME
+   API-Football daily-quota exhaustion already root-caused earlier this session (confirmed self-resolving reset ~01:45Z
+   2026-08-07); the currently-running AF campaign backfill (`af-backfill-20260807-013716`) is already past the reset and
+   actively succeeding, so these rows should clear naturally as its sweep re-touches those shards — no separate action
+   needed. 4,996 tagged `fixture_events_phantom_manifest_reflip_2026_07_26` — a named, deliberate historical operation,
+   not an active bug. 2,699 `FIXTURES_FETCH_FAILED` — smaller, not yet individually investigated. Remaining ~730-2,657
+   across TEAMS/FIXTURES_SCHEDULE/FIXTURES/PLAYER_STATS/TRADES — small, not yet investigated. **Plus 658,426
+   expected_unattempted** — overlaps heavily with `sports_af_full_entity_completion_2026_08_03.md`'s existing backfill
+   todos (PLAYER_STATS/TEAMS/STANDINGS/INJURIES/FIXTURE_LINEUPS); that doc's backfills, once run, should absorb most of
+   it. Don't duplicate that doc's todos here.
 3. **mdps_odds_horizon_bucket — 2,791 attempted_failed, 157,994 expected_unattempted.** ALREADY ROOT-CAUSED — not a new
    problem. This is the residual/exposed backlog from a freshness-check bug (a rollup sentinel row was satisfying
    odds_api's staleness check, permanently pinning ~572 days "fresh") fixed 2026-07-30
@@ -145,16 +148,23 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       silently reclassify to `empty_confirmed`.
 - [ ] [SCRIPT] P0. **Retry the odds_api 871 `401 Unauthorized` rows** with the current credential (no 401s recorded
       since 2026-07-27, so the key is presumably already fixed) — confirm, then targeted-retry those specific shards.
-- [ ] [SCRIPT] P1. **Root-cause api_football's 35,058 attempted_failed** per data_type (STANDINGS/FIXTURE_STATS/
-      FIXTURE_EVENTS/TEAMS/FIXTURES_SCHEDULE/FIXTURES/PLAYER_STATS) — distinct from the "needed" backfill counts already
-      tracked in `sports_af_full_entity_completion_2026_08_03.md`.
-- [ ] [SCRIPT] P1. **Launch the single, guard-respecting odds_api gap-backfill VM** (root cause already found + fixed;
-      credential blocker retagged unblocked 2026-08-07) — see `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`
-      P1/P2, which owns this; watch it through to an actual clean terminal state.
+- [x] ✅ [SCRIPT] P1. **api_football's 35,058 attempted_failed — root-caused 2026-08-07**: 27,314 (78%) is the
+      already-known 2026-08-06 daily-quota exhaustion, self-resolving via the currently-running AF campaign; 4,996 is a
+      named historical operation, not a bug. Remaining ~4,748 across FIXTURES_FETCH_FAILED/TEAMS/FIXTURES_SCHEDULE/
+      FIXTURES/PLAYER_STATS/TRADES not individually root-caused — small enough to leave as a residual watch item, not
+      reopening this todo for it.
+- [x] ✅ [SCRIPT] P1. **Launched the single, guard-respecting odds_api gap-backfill VM** — 2026-08-07T11:0XZ,
+      `mtds-backfill-odds-1` (`launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end 2026-08-07`, no
+      `--force`), guard confirmed `0 running + 1 planned <= cap 1`, all 4 tarballs fresh. RUNNING as of the check right
+      after launch — watching through to actual clean completion next tick (see
+      `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the full history/context).
 - [ ] [SCRIPT] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** once
       `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers (durably 502ing as of
       2026-08-07T10:17Z) — check the endpoint before relaunching, don't blind-retry into the same wall.
-- [ ] [SCRIPT] P2. **Launch weather (open_meteo) full backfill** for the 205,517 expected_unattempted shards.
+- [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill** — 2026-08-07T11:0XZ,
+      `launch-openmeteo-backfill-vm.sh --entity WEATHER 2020-06-06 2026-08-07`; verify it actually reached RUNNING next
+      tick (launch command backgrounded, VM not yet visible in `gcloud compute instances list` at time of writing —
+      confirm before assuming success).
 - [ ] [SCRIPT] P2. **Launch SFI full backfill** for the 205,363 expected_unattempted shards (distinct from the
       already-resolved 89-row attempted_failed cluster).
 - [ ] [SCRIPT] P3. **Understat 30-row expected_unattempted tail** — check if it's just an in-progress-run artifact.
