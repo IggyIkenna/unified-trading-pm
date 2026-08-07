@@ -221,3 +221,18 @@ surface that actually exists (warm + cold event-log tiers).
   (correctly, since real work remains) rather than being archived on a false checkbox count. Tagged `big-finding`
   already present in frontmatter; flagging to the operator/main agent as part of this escalation's completion ping since
   this is a genuine data-correctness gap, not a CI/CD-wall matter.
+- **2026-08-07 ~12:40 UTC (slot-11 worker, data_engineering, todo 4 in-flight — pre-compact checkpoint)**: BACKEND todo
+  confirmed deployed: `gcloud run jobs describe live-event-log-compactor --region=asia-northeast1` at 13:06 UTC shows
+  `Memory: 4Gi, CPU: 2` — Terraform `tofu apply` ran at ~12:40 UTC (job `last_updated` 2026-08-07T12:40:38Z).
+  Verification run `live-event-log-compactor-jhsb7` (started 12:41:25 UTC) has been running 25+ minutes without OOM —
+  OOM fix confirmed working (previous runs died at ~5 min). Cold tier still empty as of 13:06 UTC (backfill not yet
+  started). Background tasks in flight: (1) `busop6lkg` driver waits for jhsb7 success then submits COMPACTION_DATE
+  overrides for 2026-08-01..2026-08-05 sequentially; (2) monitor `b4ibtsjfo` watches
+  `/tmp/compactor_backfill_final_status.txt` for BACKFILL_COMPLETE. After compaction, resume by: (a) checking
+  `gcloud run jobs executions list --job=live-event-log-compactor --region=asia-northeast1 --limit=10` for jhsb7
+  SUCCEEDED + subsequent backfill executions; (b) verifying
+  `gcloud storage ls 'gs://central-element-323112-events/live-events/cold/cefi/**'` shows objects for each cefi
+  data_type × date 2026-08-01→2026-08-06; (c) manually running COMPACTION_DATE=2026-08-07 for today; (d) flipping the
+  DATA P0 checkbox (this todo) AND the BACKEND P0 checkbox (Terraform applied + jhsb7 verified); (e) committing via
+  safe-doc-push; (f) calling /done. NOTE: driver script `/tmp/compactor_backfill_driver.sh` has a `|| true` bug — it
+  won't detect per-date failures; verify cold GCS objects MANUALLY before flipping.
