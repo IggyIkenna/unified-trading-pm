@@ -136,12 +136,14 @@ same day) before being drafted here.
       Todo1+Todo2. Repo: unified-trading-pm. Source: `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`
       (Todo1+Todo2, combined — sequentially dependent on the same file). Done when: the plan is verified under 1000L via
       `check_line_caps.sh` and all 3 named checkboxes are flipped with citations.
-- [ ] [INFRA] P1. **Relaunch the stalled `mtds-dex-swaps-backfill-3` VM** with `--start 2025-12-15 --end 2026-07-21` (no
-      `--force`) — per the 2026-08-06 operator ruling this is now AO-dispatchable, no longer gated on the OOM root-cause
-      investigation. **Safe-idempotent justification: standard backfill relaunch, SPOT, skip-if-captured, no GCS
-      delete.** Repo: market-tick-data-service. Source:
+- [x] ✅ [INFRA] P1. **Relaunch the stalled `mtds-dex-swaps-backfill-3` VM** with `--start 2025-12-15 --end 2026-07-21`
+      (no `--force`) — per the 2026-08-06 operator ruling this is now AO-dispatchable, no longer gated on the OOM
+      root-cause investigation. **Safe-idempotent justification: standard backfill relaunch, SPOT, skip-if-captured, no
+      GCS delete.** Repo: market-tick-data-service. Source:
       `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (Todo3). Done when: the VM is health-verified
-      RUNNING at T+10min and progress (throughput/coverage) is logged in the source doc's Progress Log.
+      RUNNING at T+10min and progress (throughput/coverage) is logged in the source doc's Progress Log. Evidence: VM
+      RUNNING 2026-08-07T15:42Z (SPOT, SHARD_INDEX=6, asia-northeast1-c); 95,236 swap rows written in first shard
+      (uniswap_v3_ETHEREUM) at T+5min, RSS=840MiB, PIPELINE_HEARTBEATs firing; progress logged in source doc.
 
 ## Deferred — non-batchable, no operator ruling needed (27; tagged by category, cite-only)
 

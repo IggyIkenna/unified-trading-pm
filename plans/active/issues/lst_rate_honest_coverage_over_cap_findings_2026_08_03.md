@@ -95,9 +95,9 @@ operator-approved wider edit.
 
 ## Todo 3 — stalled DEX-swaps backfill VM needs a relaunch decision
 
-- [ ] [INFRA] P2. **RULED 2026-08-06 (operator): plain relaunch, same --start/--end, no --force** (the doc's own recipe,
-      already proven 3x on sibling VMs). `[INFRA]` tag (was `[OPERATOR]`), AO-dispatchable — relies on the collector's
-      freshness-skip to resume. `mtds-dex-swaps-backfill-3` (one of the 3-VM date-sharded fleet covering
+- [x] ✅ [INFRA] P2. **RULED 2026-08-06 (operator): plain relaunch, same --start/--end, no --force** (the doc's own
+      recipe, already proven 3x on sibling VMs). `[INFRA]` tag (was `[OPERATOR]`), AO-dispatchable — relies on the
+      collector's freshness-skip to resume. `mtds-dex-swaps-backfill-3` (one of the 3-VM date-sharded fleet covering
       `2025-12-15 → 2026-07-21`) FAILED 2026-07-27 03:54 UTC with `exit_code=137` (`Killed` — OOM-shaped, same signature
       as the already-filed `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` P0, which as of 2026-08-03 is still
       open and itself blocked on vendor-credit exhaustion investigating the root cause) and has NOT been relaunched
@@ -137,3 +137,12 @@ for the compact pointer back to this doc.
   judgment item is enough). Incidental: `mtds-dex-swaps-backfill-3` VM (Todo3's subject) was last independently verified
   stalled/OOM on 2026-08-03 — 3 days further elapsed with no fresh check in this doc; flagging for a
   `/vm-preemption-billing-waste-audit` pass, not re-verified live in this run.
+- **2026-08-07 (slot 15, batch10 dispatch `defi_satellite_ao_dispatch_batch10-009`)**: Todo3 DONE — relaunched
+  `mtds-dex-swaps-backfill-3` (SPOT, SHARD_INDEX=6, `--start 2025-12-15 --end 2026-07-21`, no `--force`) via
+  `deployment-service/scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh`. No sibling VMs running at launch time (both `-1`
+  and `-2` had completed). T+10min health check: VM RUNNING (asia-northeast1-c, 35.190.235.80, e2-standard-4 SPOT);
+  95,236 swap rows written to `market-data-tick-defi-prd-central-element-323112` in first shard (uniswap_v3_ETHEREUM) at
+  T+5min; ManifestWriter per-VM shard updated at `_index/per_vm/mtds-dex-swaps-backfill-3.parquet`; RSS=840MiB (well
+  within normal); PIPELINE_HEARTBEATs firing every 60s. ManifestConsolidatorStaleError in freshness-cache refresh
+  (non-blocking; GCS is authoritative source; VM continues capturing). Firestore dual-write fails (best-effort, GCS
+  authoritative, expected).
