@@ -22,7 +22,7 @@ related:
     ../archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md,
     ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
     ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
-    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
+    ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
   ]
 created: 2026-05-07
 name: predictions_master
@@ -43,7 +43,7 @@ related_plans:
   - ../active/prediction_phase_e_football_arb_live_2026_07_24.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
   - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
-last_updated: 2026-07-12
+last_updated: 2026-08-07 # was 2026-07-12 -- plan_reconciler prediction-tranche run (agt-e7f024): fixed dangling related: ref + a stale archived-plan status row
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -956,8 +956,9 @@ batch CLOB depth & trades capture infrastructure
 
 ### [`prediction_perps_kalshi_polymarket_parked_2026_07_24`](../archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
 
-**status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Kalshi + Polymarket perpetual futures —
-PARKED crypto-perp venue track
+**status**: complete (archived 2026-07-24; corrected 2026-08-07, plan_reconciler prediction-tranche run — was stale
+"active", contradicting both the doc's own frontmatter and its already-correct archive/ link above) · **estimate**: 8
+cal AI-days (class: brand-new) **title**: Kalshi + Polymarket perpetual futures — PARKED crypto-perp venue track
 
 ## P3 — backlog; revisit quarterly
 
