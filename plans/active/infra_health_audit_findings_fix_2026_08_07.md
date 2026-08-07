@@ -219,3 +219,10 @@ drift_direction: advance-code
   condition). Proceeding under `/autonomous`.
 - 2026-08-07: Todo 2 (alert-coverage cross-reference) DONE — see the todo's own entry for the full summary. Filed
   `/plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md`.
+- 2026-08-07: Todo 1 (dedicated zombie sweep), Cloud-Scheduler-dead-target class — re-derived the full
+  scheduler↔Cloud-Run-Job cross-reference for `asia-northeast1` (158 schedulers) + the 1 in-scope `europe-west1` job
+  (`central-market-data-service-scheduler-trigger`; the other 3 europe-west1 zombies were already fixed above in this
+  same todo). Found 38 schedulers targeting a Cloud Run Job that no longer exists (32 `ENABLED` + 6 already `PAUSED`);
+  bulk-paused all 32, verified 38/38 now `PAUSED`; flagged 4 with an obvious live successor as repoint candidates (not
+  auto-repointed). Filed `/plans/active/issues/asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md` with the
+  full list + repoint candidates + a `[OPERATOR]` follow-up todo.
