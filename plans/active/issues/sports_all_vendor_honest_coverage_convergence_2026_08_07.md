@@ -185,9 +185,15 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       behaviour). Fix: removed the `raise`; added regression test. `instruments-service@1fafbe23`, QG green. On next
       backfill run the 16,241 `attempted_failed` shards will be re-touched and should resolve to `captured` or
       `empty_confirmed`.
-- [ ] [SCRIPT] P1. **Explain why weather's `expected_unattempted` barely dropped** despite the backfill's date-loop
-      reaching the full range end (`last_completed_date=2026-08-07`) — e.g. 350 untouched rows on 2026-07-28 alone.
-      Likely a skip-condition false-positive or a per-venue sub-loop bug; find it before relaunching blind.
+- [x] ✅ [SCRIPT] P1. **Explain why weather's `expected_unattempted` barely dropped** — root-caused: NOT a
+      skip-condition false-positive or per-venue sub-loop bug. The 205K rows are for non-Prediction leagues NOT in
+      `_expected_weather_league_ids = get_expected_leagues_for_source("open_meteo", classifications=["Prediction"])`
+      (~33 leagues). Every write path in `_fetch_weather_data` (season-window guard, coverage-start guard,
+      `_record_weather_empty`, `_record_weather_failed`, end-of-function EXPECTED_NO_FIXTURE loop) writes ONLY for those
+      33 leagues; non-Prediction league rows persist as `expected_unattempted` indefinitely. The -215 net reduction came
+      from 215 Prediction-league rows resolved by this run. The 350 rows on 2026-07-28 are for non-Prediction leagues —
+      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py     --apply` (already exists
+      for this exact pattern). See Progress Log 2026-08-07 (slot 7).
 - [x] ✅ [SCRIPT] P2. **Launched SFI full backfill** — `sfi-backfill-20260807-123519` confirmed RUNNING
       (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363
       expected_unattempted shards (distinct from the already-resolved 89-row attempted_failed cluster).
@@ -375,3 +381,19 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `test_previous_runs_api_exception_propagates` (renamed, docstring and `call_count` assertion corrected). QG green. On
   the next weather backfill run, the 16,241 shards will be re-touched; they should resolve to `captured` (venues with
   weather data) or `empty_confirmed` (venues with no data) rather than `attempted_failed`.
+- **2026-08-07 (slot 7) — Root-caused why weather's `expected_unattempted` barely moved (205,517→205,302, -215).**
+  Confirmed via code inspection of `weather.py` +
+  `instruments-service/scripts/type_weather_eu_no_provider_coverage_2026_06_27.py`. **Not** a skip-condition
+  false-positive or per-venue sub-loop bug. Definitive finding: `_fetch_weather_data` builds
+  `_expected_weather_league_ids` using `get_expected_leagues_for_source("open_meteo", classifications=["Prediction"])` —
+  only ~33 leagues. All write paths (season-window guard → `record_expected_empty` → `EMPTY_CONFIRMED`; coverage-start
+  guard; `_record_weather_empty`; `_record_weather_failed`; end-of-function EXPECTED_NO_FIXTURE loop) write exclusively
+  for league_ids in that 33-league set. The 205K `expected_unattempted` rows are for the ~172 non-Prediction leagues
+  seeded historically (dates 2026-02-20→2026-06-26, documented in the existing one-off script's own docstring) by an
+  older weather VM that used a broader league set. Since the backfill never emits ANY manifest entry for non-Prediction
+  leagues — not captured, not empty_confirmed, not attempted_failed — those rows are structurally unreachable by the
+  weather writer regardless of date range. The -215 reduction = 215 Prediction-league rows that happened to still be
+  expected_unattempted and got resolved. The 350 rows on 2026-07-28 are for non-Prediction leagues, untouched by design.
+  Resolution path: `instruments-service/scripts/type_weather_eu_no_provider_coverage_2026_06_27.py --apply`
+  (reclassifies to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`) + consolidator pass — separate action, not this
+  task.
