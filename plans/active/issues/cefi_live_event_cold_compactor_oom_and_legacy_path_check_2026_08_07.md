@@ -281,3 +281,19 @@ surface that actually exists (warm + cold event-log tiers).
   512Mi/1CPU limits. Book_snapshot_5 P1 validation failure already tracked. Resume instructions unchanged from prior
   checkpoint: wait for jhsb7 SUCCEEDED → verify cold GCS for trades/derivative_ticker/liquidations → flip BACKEND P0 →
   trigger 2026-08-07 run → investigate P1 → DATA P0.
+- **2026-08-07 ~14:15–14:45 UTC (slot-11 worker, data_engineering, continuation after context-compaction)**: (1)
+  SCHEMA-DRIFT BUG found and fixed: execution `8w4sc` (new image fb2598d9, NDJSON fix live) crashed in 3 min with
+  `ValueError: Target schema's field names are not matching` — `pa.Table.cast(pq_schema)` raised on schema drift when
+  some `book_snapshot_5` envelopes DON'T have `coin` (early-day producer) and later ones DO (post-deploy producer). The
+  `cast` method only handles type coercions, not field-name mismatches. Fix: detect column-name divergence via
+  `pq_schema.names` / `batch_table.schema.names`, re-build the batch from source `rows` dict with aligned keys (missing
+  → None, extra dropped), log a WARNING. 0 new pyright errors. Shipped: deployment-service@5281cb0a0. (2) TF timeout
+  3600s → 10800s: cefi/book_snapshot_5 alone needs ~34+ min at 130 MB/s GCS throughput (1521 files × 1.35s each), plus
+  other shards — 1h was too tight. Applied immediately via `gcloud run jobs update --task-timeout=10800s`; TF change
+  also shipped deployment-service@6edec6b99. (3) Container rebuild: triggered `deployment-service-jobs-image-build`
+  (build `2cef4d0a`) at 14:38, SUCCESS at 14:42 UTC — new image includes NDJSON fix + schema-drift fix. (4) Backfill
+  restarted: execution `6b5g7` (2026-08-01) started at 14:43 UTC. Confirmed working from logs at 14:44 UTC:
+  cefi/book_snapshot_5 processing (1521 files), schema-drift WARNINGs firing for `missing_cols=['coin']`, NO crash —
+  envelopes parsed successfully and Parquet rows written. The old "CanonicalPersistEnvelope validation — skipping"
+  finding (jhsb7, old code) was also caused by NDJSON mis-parsing; it does NOT apply to the new code. Background task
+  `bvcozyjr5` (7 sequential date executions) in flight.
