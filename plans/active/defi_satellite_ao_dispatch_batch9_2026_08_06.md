@@ -418,6 +418,17 @@ remaining items besides the over-cap-gated one above).
   Confirmed both code fixes still in LDR (`vm_zombie_watchdog.py` line 248: `"canonical-migration-": (90.0, 360.0)`;
   `launch-canonical-migration-vm.sh` line 2094: `STALL_TIMEOUT_SEC=7200`). No new findings. Posting /blocked with
   specific ask: activate `infra_vm_zombie_watchdog_relaunch_2026_08_07.md`. No VM/GCS/cron mutation performed.
+- **2026-08-07 (/pre-compact audit, `data_engineering`, slot 10, dispatch #7 terminal)**: **Safe to compact: YES.** All
+  work committed+pushed: `market-tick-data-service@eb380b71b` (streaming download fix QG-green, ahead=0) +
+  `unified-trading-pm@30eff7352` (infra P0 todo + progress logs, ahead=0). Scratchpad empty. No dangling doc references
+  in modified files. Nothing at risk. Blocked as `BLK-62a2db1b` (infra todo added, waiting for infra worker to run VM
+  relaunch). **Resume**: next `[infra]`-role dispatch picks up the new `[INFRA] P0` todo above and executes the VM
+  relaunch; after EXIT_STATUS=0 + 4 verify-only cycles, flip todo 3 checkbox with evidence. **Lessons this session**:
+  (1) `_download_index_chunked()` range-request approach is wrong for GCS VMs — 3rd consecutive 2.46 GiB download in
+  rapid succession hangs for ~47 min (timeout budget exhaustion across 3 outer × 4 inner retries); use
+  `blob.download_as_bytes(timeout=900)` for large manifest downloads on VMs. (2) ruff B904: `raise X` inside `except Y`
+  always needs `from None` or `from err`. (3) Scratchpad task output files: Read tool with `offset` can miss content on
+  small files — use `wc -l` + `tail` via Bash to confirm content exists first.
 - **2026-08-07 (BLK-4cd8f7bb answered, `data_engineering`, slot 10, dispatch #7 follow-up)**: Main answered 09:44Z —
   Option 1: relaunch with fixed code, consolidator cron stays PAUSED until purge completes. Main confirmed `eb380b71b`
   is QG-green on LDR. Added `[INFRA] P0` tracked todo (above) for the VM relaunch: MACHINE_TYPE=e2-highmem-8, SPOT, with
