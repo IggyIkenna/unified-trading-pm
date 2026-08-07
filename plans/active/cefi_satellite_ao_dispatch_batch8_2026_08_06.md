@@ -96,7 +96,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [DOCS] P2. **Re-verify and flip 3 stale-open markers in `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` —
+- [x] ✅ [DOCS] P2. **Re-verify and flip 3 stale-open markers in `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` —
       all 3 already independently confirmed true against live corpus/code state, just never flipped.** (1) G1.2's "wire
       thin-day→attempted_failed at capture time" sub-item is marked `[~]` partial but its shipped half is confirmed on
       current LDR HEAD (`instruments-service@5ebd7f6c`, "G1.2 thin-day partial-capture routing —
@@ -122,7 +122,12 @@ context_scope:
       `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` (G1.2, GATE G4, MANIFEST_ALLOW_STALE_FALLBACK items only).
       **Done when**: each of the 3 claims is re-confirmed with a cited commit/verification command, the corresponding
       checkbox/banner is flipped `[x]`/updated with that evidence, and the doc's other 2 open items remain untouched.
-      Repo: unified-trading-pm (doc-only edit).
+      Repo: unified-trading-pm (doc-only edit). — unified-trading-pm (see commit this turn): G1.2 flipped `[x] ✅`
+      (content-verified: `_detect_thin_day_venues` in `process_completeness.py:705`, instruments-service HEAD
+      `8985daed`; 06-26 re-capture moot at 42 days); GATE G4 banner updated to "D2 CLEARED 2026-08-07" (D2 + both
+      residual threads `status: resolved` in archive); MANIFEST_ALLOW_STALE_FALLBACK todo flipped `[x] ✅` (no longer
+      hardcoded in `launch-cefi-instruments-backfill.sh`, metadata-driven in `setup-data-pipeline-vm.sh`,
+      deployment-service HEAD `616d570`). Other 2 open items (EXTENDED CF-11, GATE G1 sign-off) left untouched.
 
 - [x] ✅ [BACKEND] P1. **Fix the confirmed HYPERLIQUID `derivative_ticker` OOM defect — predicate-pushed parquet read in
       `_read_tick_data`.** market-data-processing-service@4f2b99e — `_read_tick_data` now accepts
