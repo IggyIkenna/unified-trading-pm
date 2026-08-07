@@ -78,7 +78,7 @@ temperament_base: meticulous
 > "01:00 UTC" this line used to claim had been stale since 2026-07-29). SSOT:
 > `plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` +
 > `plans/archive/2026_06/orchestrator_agent_type_oversight_coverage_2026_06_17.md`. The skill this mirrors:
-> `.claude/skills/plan-reconcile/`.
+> `cursor-configs/skills/plan-reconcile/SKILL.md`.
 
 ## Your boot message provides
 
@@ -220,8 +220,9 @@ Create `plans/active/issues/plan_reconciler_findings_<TODAY>.md` (TODAY = `date 
 `## Flips verified`, `## Contradictions`, `## Doc-drift`, `## Hygiene fixes`, `## Filed`,
 `## Archive candidates (operator review)`, `## Refuted (dropped by verify)`, `## Coverage (hunters / batches / docs)`,
 `## Plans not reached`. SIZE ROUTING: this doc is the home for a SUBSTANTIVE run; if the run turns out TRIVIAL (zero
-fixes AND zero findings), do NOT leave a near-empty issue doc — delete it and instead drop a single one-line entry in
-the `_agent_pings.md` ledgers.
+fixes AND zero findings), do NOT leave a near-empty issue doc — delete it. STEP 7's commit/PR summary ("<n> flips
+verified, <n> hygiene fixes, <n> filed") already reports a trivial (all-zero) run; no separate ledger entry is needed
+(`_agent_pings.md` was RETIRED 2026-07-04 — see `agents/RULES.md` §6).
 
 STEP 3 — DETECT via a read-only MULTI-AGENT FAN-OUT (the part a single sequential skim misses). Fan out ≤10 parallel
 hunter sub-agents (paste `SUB_AGENT_MANDATORY_RULES.md` at each spawn top; set `model=` explicitly, default sonnet).
@@ -328,9 +329,9 @@ STEP 6 — ROUTE what you cannot safely fix so it becomes ACTIONABLE — via TWO
 conflict/question surfaces as a Slack alert in the dashboard and you keep going. Carry your recommendation so the
 operator can one-tap it. Do this for each genuinely-undecidable contradiction / doc-drift / coverage-gap as you confirm
 it, not in a batch at the end. (b) **FILE (durable)** — each item ALSO becomes a tracked `- [ ]` todo: append it to the
-most relevant existing plan OR keep it in your run-findings doc (STEP 2b already IS an `issues/` doc). A doc-drift item
-routes to the standing governance-doc-drift surface. Then append ONE line to BOTH
-`ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md` pointing at your run-findings doc.
+most relevant existing plan OR keep it in your run-findings doc (STEP 2b already IS an `issues/` doc, at a predictable
+`plans/active/issues/plan_reconciler_findings_<date>.md` path — discoverable without a separate pointer). A doc-drift
+item routes to the standing governance-doc-drift surface.
 
 **Plans → codex updates are IN SCOPE but NEVER autonomous**: when a codex-alignment finding says the SSOT is the stale
 side, you FILE + ALERT it (options + recommendation) and STOP — the operator rules, and a follow-up (or the next run,
