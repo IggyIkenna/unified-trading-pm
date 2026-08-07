@@ -161,11 +161,18 @@ context_scope:
       tier-first + long-form tick bucket (and the instruments-store legacy buckets per the adjacent drift), GCP + AWS.
       Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`.
       **Do NOT delete an AG's legacy bucket while its L3 plan is open** — prediction/cefi hold legacy-only history.
-      **prediction: ✅ DONE 2026-07-13** — `prediction_manifest_canonicalisation_2026_06_01.md`'s E7/E8/E8b data-safety
-      gates were all GREEN (0 legacy-only cells both buckets, snapshots taken, operator-authorized 2026-07-10); both
+      **cefi: ✅ BUCKET ALREADY DELETED 2026-07-14** (10 days before this doc's own L3 gate was attempted;
+      operator-confirmed deliberate; see
+      `/plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`). CF-11 normalization-aware
+      comparison run 2026-08-07 shows 59,488 unique (date,venue,itype,dtype) cells from the legacy 2026-05-16 snapshot
+      absent from -prd; breakdown is pre-canonical-era data (2019+ DERIBIT/BYBIT/etc.) + pre-CF-11 empty-itype/dtype
+      ghost rows — not a post-migration regression gap. Full counts recorded in that issue doc. **prediction: ✅ DONE
+      2026-07-13** — `prediction_manifest_canonicalisation_2026_06_01.md`'s E7/E8/E8b data-safety gates were all GREEN
+      (0 legacy-only cells both buckets, snapshots taken, operator-authorized 2026-07-10); both
       `market-data-tick-prediction-…` + `instruments-store-prediction-…` version-purged + bucket-deleted, confirmed 404.
-      cefi/defi/tradfi/sports unaffected, this item stays open for them. **(MIGRATED FROM:
-      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      defi/tradfi/sports unaffected, this item stays open for them. cefi: ✅ already deleted (see note above).
+      **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
 
 - [ ] [SCRIPT] P0. **Version-aware + orphan-aware delete (slot/Harsh bucket-state verification 2026-06-02).** Two gaps
       the per-bucket delete must handle, surfaced by reading live bucket state: (1) the canonical `-prd` buckets were
@@ -178,8 +185,9 @@ context_scope:
       Monitoring `type=live-object` counts, never a naive recursive `ls` (which counts versions + soft-deleted).
       **prediction: ✅ DONE 2026-07-13** — `gcloud storage rm --recursive --continue-on-error` purged all versions
       (live + noncurrent) of both prediction buckets natively in one op each (no orphan-sweep needed — prediction's
-      `-prd`/`-pred-prd` buckets were not part of the partial env-split pre-seed this item describes). cefi (3.81M) /
-      tradfi (3.52M) / defi (1.15M) noncurrent versions remain untouched, out of scope for this pass. **(MIGRATED FROM:
+      `-prd`/`-pred-prd` buckets were not part of the partial env-split pre-seed this item describes). **cefi: ✅ BUCKET
+      DELETED 2026-07-14** — all live + noncurrent versions (formerly 3.81M) purged with the bucket. tradfi (3.52M) /
+      defi (1.15M) noncurrent versions remain untouched, out of scope for this pass. **(MIGRATED FROM:
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [SCRIPT] P1. Add this finding to the `batch_live_symmetry_master` audit instructions as a recurring check
