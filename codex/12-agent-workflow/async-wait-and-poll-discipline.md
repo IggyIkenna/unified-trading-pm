@@ -74,6 +74,20 @@ whole window before anyone looks.
    inventory is blind to overwrite; and take a baseline reading at arm time so "flat" is measured against a number you
    know was live.
 
+   **1b. A CRASH-RESTART LOOP CAN LOOK LIKE PROGRESS IN A SHORT WINDOW — check that the metric's VALUES advance across
+   restarts, not just that log lines keep appearing (2026-08-07, `mtds-backfill-odds-1`).** The mirror image of 1a: not
+   a metric that can't move, but one that moves for a genuinely wrong reason. A wrapping chunk-loop that respawns a
+   fresh subprocess per unit of work (per-league, per-chunk) can crash that subprocess (OOM, unhandled exception) and
+   restart it from the same durable checkpoint every time — each restart does REAL work before dying again (skip-fasts
+   through already-covered dates, writes a genuine row or two), so a narrow-window check sees moving log lines, a
+   plausible resource sample, and a real write, and concludes "healthy." Only a WIDER-window re-check (here, ~28 min
+   later) revealed the exact same date/chunk being reprocessed identically — the underlying process had OOM-killed and
+   restarted ~10 times, zero net progress. **Rule:** when the checkpoint mechanism itself is unproven (no
+   `PROGRESS.json` / no monotonic counter visible yet — see the self-deleting-VM rule below), don't conclude health from
+   log activity alone; diff the actual date/chunk/id VALUES between two checks spaced by the process's own expected
+   unit-of-work duration, not just confirm lines are still being written. Full incident:
+   `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`.
+
 2. **Short-interval first, then EXPAND.** When the cadence is unknown, start at **~30–45 s** ticks to (a) confirm the
    mechanism actually moves and (b) catch a stall fast. Once you have ≥2 ticks of real progress, **lengthen** the
    interval (cache-window aware: stay <5 min to keep the prompt cache warm while actively polling; go to 20–30 min only
