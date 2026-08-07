@@ -490,16 +490,21 @@ Databento as a second TradFi feed.
 
 ### Closed-set values
 
-Values mirror the `SOURCE_PRIORITY` source strings defined in `unified_api_contracts`:
+Values mirror the `SOURCE_PRIORITY` source strings defined in `unified_api_contracts` (§7 above shows the full
+`("tradfi", "ohlcv_15m")` cell with all 4 current values):
 
-| Value         | Provider                      | Notes                                                                        |
-| ------------- | ----------------------------- | ---------------------------------------------------------------------------- |
-| `"databento"` | Databento                     | All pre-Phase-3 TradFi data. Stamped by Phase 5 backfill script.             |
-| `"massive"`   | Massive (formerly Polygon.io) | New feed added by this plan. `MassiveTradfiRestConnector` stamps this value. |
+| Value         | Provider                      | Notes                                                                                                                                                                                                                                                              |
+| ------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `"databento"` | Databento                     | All pre-Phase-3 TradFi data. Stamped by Phase 5 backfill script.                                                                                                                                                                                                   |
+| `"massive"`   | Massive (formerly Polygon.io) | New feed added by this plan. `MassiveTradfiRestConnector` stamps this value.                                                                                                                                                                                       |
+| `"yahoo"`     | Yahoo Finance                 | VIX 15m rolling fallback; confirmed live-stamped (`unified-trading-library` `test_manifest_writer_source.py`).                                                                                                                                                     |
+| `"barchart"`  | Barchart                      | VIX 15m rolling fallback per `SOURCE_PRIORITY` — CLAUDE.md's TradFi/Databento sourcing rules note Barchart RETIRED; this row's current live-vs-retired status needs re-verification against `/codex/02-data/tradfi-databento-sourcing-ssot.md`, not asserted here. |
 
-The set is intentionally closed. Adding a new TradFi source requires: (1) a new `SOURCE_PRIORITY` entry in UAC, (2) an
-explicit string constant in the adapter (`MASSIVE_SOURCE`, `DATABENTO_SOURCE`, etc.), and (3) a `source=` kwarg at every
-`record_captured` callsite for that category.
+This table previously listed only `databento`/`massive` and called the set "intentionally closed" at that size — that
+undercounted the doc's own `SOURCE_PRIORITY` code block 2 sections above, which already showed 4 values for the
+`ohlcv_15m` cell. Adding a genuinely new TradFi source (beyond the 4 above) requires: (1) a new `SOURCE_PRIORITY` entry
+in UAC, (2) an explicit string constant in the adapter (`MASSIVE_SOURCE`, `DATABENTO_SOURCE`, etc.), and (3) a `source=`
+kwarg at every `record_captured` callsite for that category.
 
 ### Enforcement
 

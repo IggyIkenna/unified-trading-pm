@@ -255,14 +255,14 @@ timeframes `15s/1m/5m/15m/1h/4h/24h`, DeFi treated 24/7. Empty paths: zero rows 
 `OnChainOrchestrationService`; definitions in `onchain/schemas/feature_definitions.yaml`. Every loader reads
 `raw_tick_data/.../data_type=…` from the dedicated buckets (D4) — never processed_candles.
 
-| Group                                           | Inputs                                              | What it computes                                                                                                |
-| ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `lending_rates`                                 | `rate_indices`/`lending_indices` (+ DeFiLlama live) | normalise supply/borrow/util; **synthesise supply APY** (`borrow×util×(1−reserve_factor)`); `rate_spread`       |
-| `lst_yields`                                    | `lst_rates`                                         | **`staking_apy_bps = ((rate[t]/rate[t-1])^365 − 1)×1e4`**; `staking_apy_total = base + eigen + seasonal − dust` |
-| `perp_funding_rates`                            | `perp_funding`                                      | `funding_rate_apy_bps = annualise_funding_rate_bps(raw, venue)` (MVP: Hyperliquid ETH-PERP)                     |
-| `utilization` / `risk_params` / `health_factor` | `rate_indices`                                      | `aave_utilization`, `aave_ltv`, `aave_liquidation_threshold`, `aave_health_factor`                              |
-| `rate_impact` (live)                            | DeFiLlama                                           | projected APY after a $500k position (two-slope IRM); `rate_impact_*_bps`                                       |
-| `regime`                                        | mixed                                               | `oracle_deviation_flag` (\|oracle−dex\|/dex > 1%), `tvl_regime_bucket`, util/gas/HF buckets                     |
+| Group                                           | Inputs                                              | What it computes                                                                                                                                              |
+| ----------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lending_rates`                                 | `rate_indices`/`lending_indices` (+ DeFiLlama live) | normalise supply/borrow/util; **synthesise supply APY** (`borrow×util×(1−reserve_factor)`); `rate_spread`                                                     |
+| `lst_yields`                                    | `lst_rates`                                         | **`staking_apy_bps = ((rate[t]/rate[t-1])^365 − 1)×1e4`**; `staking_apy_total = base + eigen + seasonal − dust`                                               |
+| `perp_funding_rates`                            | `perp_funding`                                      | `funding_rate_apy_bps = annualise_funding_rate_bps(raw, venue)` (MVP: Hyperliquid ETH-PERP — **stale example, see §4.1: no DeFi perp source currently live**) |
+| `utilization` / `risk_params` / `health_factor` | `rate_indices`                                      | `aave_utilization`, `aave_ltv`, `aave_liquidation_threshold`, `aave_health_factor`                                                                            |
+| `rate_impact` (live)                            | DeFiLlama                                           | projected APY after a $500k position (two-slope IRM); `rate_impact_*_bps`                                                                                     |
+| `regime`                                        | mixed                                               | `oracle_deviation_flag` (\|oracle−dex\|/dex > 1%), `tvl_regime_bucket`, util/gas/HF buckets                                                                   |
 
 App-layer calculators (live/current-day): `ChainlinkPegDeviationCalculator`,
 `ConcentratedLiquidityIlRealisedCalculator`, `VaultSharePriceApyCalculator`, `PoolInvariantDriftCalculator`.
@@ -276,8 +276,10 @@ App-layer calculators (live/current-day): `ChainlinkPegDeviationCalculator`,
 `DEFI_DATA_TYPE_OVERRIDES` (`delta_one/engine/orchestrator.py`) remap inputs: **`oracle_prices`** →
 `technical_indicators` / `moving_averages` / `oscillators` / `volatility_realized` / `momentum` / `returns` /
 `market_structure` / `candlestick_patterns` / `targets`; **`dex_swaps`** → `volume_analysis` / `vwap` /
-`microstructure`; **`derivative_ticker`** (Hyperliquid) → `funding_oi` / `liquidations`. So DeFi price features come off
-the **Chainlink/Pyth oracle series**, flow features off **swap events**.
+`microstructure`; **`derivative_ticker`** (Hyperliquid) → `funding_oi` / `liquidations` — **stale mapping: no DeFi perp
+source is currently live (§4.1), so this override key has no live input today**. So DeFi price features come off the
+**Chainlink/Pyth oracle series**, flow features off **swap events** — `derivative_ticker`-derived features do not
+currently flow for DeFi.
 
 ### 7.3 Output
 
