@@ -143,6 +143,7 @@ flips-to-resolved-within-window, still-red-left-alone, past-window-skipped). All
       green before shipping (ruff, basedpyright, pytest).
 - [x] ✅ [DOCS] P2. Cross-referenced the superseded judgment in
       `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`.
+- [x] ✅ [DEVOPS] P1. Live-verification-caught follow-up bug fixed: `agent-orchestrator@37cd533` — see Progress Log.
 
 ## Progress Log
 
@@ -150,3 +151,13 @@ flips-to-resolved-within-window, still-red-left-alone, past-window-skipped). All
   they'd never resolve, then proposed the retune+reconcile design after confirming (via live `gh run list`) that `main`
   had in fact already gone green. Implemented, tested, `quality-gates.sh --no-fix` green, shipped via
   `quickmerge.sh --agent --files`. Auto-deploys to the live `planning` VM within ~15min via `ao-self-pull.sh`'s cron.
+- **2026-08-07 (same session, live-verification catch)**: after confirming the deploy landed (`git rev-parse HEAD` on
+  the VM via read-only SSM matched `d9e59db6`), the two rows STILL hadn't reconciled 5+ minutes later. Direct in-process
+  test via SSM proved `_poll_wall_resolution("unified-trading-pm", 0, "main_ci_red")` correctly returned
+  `"main_qg_v2_green"` — the logic was right, but `reconcile_stale_unresolved_escalations` never reached that row: its
+  query sorted 238+ historical `unresolved` rows (oldest from 2026-07-15) ASCENDING with a small per-tick `limit`, so
+  every tick re-examined the same handful of ancient rows (always skipped, outside the 24h window) and never got to a
+  row from today. Fixed via `order_by(resolved_at.desc())` — `agent-orchestrator@37cd533` — plus a real-in-memory-SQLite
+  regression test (the existing MagicMock-based tests can't catch an ORDER BY bug). This is exactly the class of error
+  the workspace's "runtime verification, never 'done' without running the code" rule exists to catch — the first ship
+  was quality-gates-green and logically reviewed, but wrong in a way only live data could surface.
