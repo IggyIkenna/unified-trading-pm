@@ -94,3 +94,15 @@ of load or a single additional offline runner triggers a complete stall.
   replacement was needed**: the runners recovered by design, monitoring is now correct, and the pool is fully healthy.
   SSM host-level verification not possible from `ikenna-worker` identity (consistent with all prior entries in the
   sibling issue doc); GitHub API is the authoritative signal and shows clean state.
+- **2026-08-07 (slot 2, semver_agent_squash_promote_blind_to_patch_fixes investigation)**: Recurrence observed while
+  verifying an unrelated semver-agent fix — `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` returned
+  `{"total_count": 0, "runners": []}` (HTTP 200, not an auth artifact) starting ~13:30 UTC. `ldr-to-main-promote-fleet`
+  run `31182919694` (workflow_dispatch) sat `status=pending` (never reached `in_progress`) for 60+ minutes straight —
+  worse than the 08-06 incident (25% pool) and the 08-07 morning check (100% online): now genuinely 0 runners
+  registered, not just some offline. Preceding runs in the window (12:23–13:20) show the same cancel-treadmill pattern
+  as the original incident (`cancel-in-progress: false` should queue, not cancel — something external is
+  re-dispatching/cancelling faster than any runner can pick up work, or the pool emptied entirely). Did not investigate
+  further or attempt a fix (out of scope for the semver-agent task in progress; this doc's owners already have the
+  runbook). Impact: blocks LDR→main promotion fleet-wide, which in turn blocked live-fire verification of 15 repos'
+  semver-agent fix for over an hour. Flagging as a live, currently-blocking recurrence — worth a fresh look at whether
+  this is the same JIT-restart-window false-positive class or a genuine new pool-depletion event.
