@@ -219,11 +219,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       extends. Documents the 5-step procedure (per-source pivot, error_reason sub-classification, timestamp liveness
       check, never-trust-exit_code-alone, mid-run tarball-staleness check) with the concrete gotchas measured this
       session, cross-linked back to this doc's Progress Log for full worked examples.
-- [ ] [SCRIPT] P1. **Confirm the SFI + weather `expected_unattempted`→`empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`
-      reclassifications (410,665 rows combined, applied 2026-08-07T21:16Z as per-VM shards
-      `type-sfi-eu-1786133580.parquet` / `type-weather-eu-1786133699.parquet`) actually landed in the canonical index**
-      once the manifest consolidator's next cycle runs — re-census both sources, confirm `expected_unattempted` drops to
-      ~0 for both (modulo the small residual `attempted_failed` clusters, tracked separately).
+- [x] ✅ [SCRIPT] P1. **Confirmed the SFI + weather reclassifications landed in the canonical index** —
+      2026-08-07T20:47Z re-census: `expected_unattempted` is completely gone (0 rows) for both sources,
+      `empty_confirmed` grew by exactly the retyped counts (SFI +205,447 ≈ 205,363 retyped; weather +205,302, an exact
+      match). Both sources now hold only `captured` + `empty_confirmed` + their small, already-diagnosed
+      `attempted_failed` tail.
 - [ ] [SCRIPT] P2. **Check whether `type_understat_eu_no_provider_coverage.py` and any equivalent for footystats/
       transfermarkt/odds_api are needed** — the same "narrower current write-scope vs broader historically-seeded
       `expected_unattempted`" pattern hit weather AND SFI independently; worth a quick dry-run sweep across the
@@ -488,3 +488,15 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `expected_unattempted` count will still read the old figures until that merge completes; re-verify next tick. The 80
   new SFI `attempted_failed` rows and weather's pre-existing 16,241 (already root-caused + code-fixed earlier this
   session) are separate, smaller residuals, not touched by this reclassification.
+- **2026-08-07T20:47Z — CONFIRMED: the consolidator merge landed, both sources genuinely converged.** Re-census (rule
+  4a, live manifest re-read, not assumed): `soccer_football_info` — `empty_confirmed` 208,726→**414,173** (+205,447,
+  matching the retype), `expected_unattempted` **completely gone** (0 rows, was 205,363), `captured` 20,953,
+  `attempted_failed` unchanged at 80. `open_meteo` — `empty_confirmed` 215,865→**421,167** (+205,302, an EXACT match to
+  the retype count), `expected_unattempted` **completely gone** (0 rows, was 205,302), `captured` 28,698,
+  `attempted_failed` unchanged at 16,241 (the already-tracked, separately-fixed residual). Both sources are now down to
+  just `captured` + `empty_confirmed` + a small, already-diagnosed `attempted_failed` tail — this is genuinely,
+  verifiably the operator's original target state for these two vendors. `mtds-backfill-odds-smallchunk2-20260807`
+  (chunk 18/451, now 6 OOM total — checked the actual league list: EPL, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
+  SUPER_LIG, GREEK_SUPER_LEAGUE, six DIFFERENT leagues each failing once and self-recovering, not a stuck repeat —
+  consistent with the established tolerable pattern, watching but not intervening) and FIXTURE_STATS (chunk 6/26,
+  2021-10-14) both remain healthy.
