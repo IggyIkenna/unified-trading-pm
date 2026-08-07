@@ -534,3 +534,19 @@ remaining items besides the over-cap-gated one above).
   "~30min" miscount that was actually ~10min this session). **Lesson**: the VM's GCS log directory is keyed by the FULL
   VM name (`vm-logs/<full-vm-name>/`), not the bare timestamp suffix used as shorthand in prior Progress Log entries — a
   `gcloud storage ls` on the shorthand path returns "no objects" even though logs exist.
+- **2026-08-07 15:22Z (AO dispatch #10, `infra`, slot 8)**: VM
+  `canonical-migration-defi-gas-fees-legacy-purge-20260807-134308` (dispatch #9) found GONE — killed at 14:36Z by Cloud
+  Run `heartbeat_stall_watcher.py` (audit log: `python-requests/2.34.2` UA + `unified-trading-sa` identity), ~49min
+  after launch. Root cause: `heartbeat_stall_watcher.py` fix (`deployment-service@1424037`) is on `live-defi-rollout`
+  but NOT yet on `main` or in the Cloud Run image (`deployment-api:latest` last built 09:31Z, pre-fix; LDR→main promote
+  stalled — last promote at 10:51Z). Pre-flight: 0 GCS objects confirmed for all 10 TARGET_VENUES; manifest generation
+  `1786048462981342` unchanged (CAS never fired in dispatch #9). **Mitigation**: paused
+  `uts-prod-dp-heartbeat-watcher-cron` Cloud Scheduler job to prevent further Cloud Run kills during the blocking 2.46
+  GiB download; zombie watchdog `vm-zombie-watchdog-20260807-075242` still RUNNING (90-min threshold) as backup.
+  Launched 4th relaunch: `canonical-migration-defi-gas-fees-legacy-purge-20260807-152116` (SPOT, e2-highmem-8). Boot
+  clean: 12,425 rows confirmed, cron PAUSED, 0/0 GCS objects, streaming download started 15:25:19Z. Expected completion
+  ~16:25Z. **Resume**: poll
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-gas-fees-legacy-purge-20260807-152116/EXIT_STATUS`;
+  on EXIT_STATUS=0: (a) verify manifest 3-part TARGET filter = 0 rows, (b) resume both
+  `uts-prod-manifest-consolidator-market-data-defi-cron` AND `uts-prod-dp-heartbeat-watcher-cron`, (c) await ≥4 clean
+  `--verify-only` cycles, (d) flip todo 3 ([DIAG] P1) + [INFRA] P0 relaunch todo, (e) push + /done.
