@@ -322,3 +322,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   isn't done yet and a premature narrow retry would just get re-covered by the eventual full-range small-chunk VM
   anyway. `mtds-backfill-odds-smallchunk-20260807` remains fully clean: 0 `CHUNK_FAILED`/`OOM_KILLED` matches, now at
   chunk 13/451 (`2020-08-05→2020-08-09`).
+- **2026-08-07T14:17Z — `401-retry` OOM'd 5 more times (6 total), but produced a genuinely useful diagnostic, not just
+  churn.** Precise timing: EPL (first subprocess this VM's lifetime) survived 93.3 min; every subsequent league
+  (LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE) OOM'd in a tight 6.5-8.9 min band — too consistent across leagues
+  with genuinely different real-fetch densities to be pure per-process real-fetch-volume variance, suggesting something
+  persists across subprocess launches within one VM lifetime (candidate mechanisms + full writeup added to
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s Progress Log — not investigated further here, out of scope
+  for an operational tick). No data lost (per-date incremental writes are durable); self-recovery continues working
+  correctly (now on PRIMEIRA_LIGA). Not killing it — still net-positive real progress each cycle. AF campaign
+  PLAYER_STATS now at **chunk 24/26** (only 2 left). footystats (2024-09-22→2025-04-06), SFI (2021-11-02→2022-03-11),
+  weather (→2026-07-25), `mtds-backfill-odds-smallchunk-20260807` (chunk 17/451, still 0 OOM) all confirmed healthy via
+  value-diffs.
