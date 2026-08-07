@@ -91,6 +91,15 @@ funding-carry analysis or backtest touching 2026-05-22→2026-08-02 is working o
 
 ## Progress Log
 
+- **slot-2 2026-08-07 ~09:40Z (data_engineering, task `cefi_tardis_derivative_ticker_historical_gap-003`, checkpoint
+  #16)**: VM `cefi-fwd-20260806-065837` still RUNNING. At 09:37Z log on day=2026-06-04 (~12/75 days done, 63 remaining).
+  Pace ~2.27h/day → ETA ~2026-08-13. RC3 tarball (`mtds-code@b2cc274219acf0b25750a25a4ec4570a3e44d642`) confirmed
+  already in GCS from prior slot-14 build; no rebuild needed. Launcher extension (`--venue/--force-download/--mtds-sha`)
+  already shipped at `deployment-service@2f1b36d`. Watchdog re-armed as bg task `b6sson3iw` (20-min cadence, 8h cap).
+  **Next**: wait for VM termination → verify Tardis fleet clear → run
+  `bash scripts/vm/launch-cefi-forward-poll.sh --venue DERIBIT --force-download --mtds-sha b2cc274219acf0b25750a25a4ec4570a3e44d642 2026-05-23 2026-08-05`
+  → GCS verify DERIBIT derivative_ticker → flip P2 checkbox → POST /done.
+
 - **slot-3 2026-08-06 ~20:00Z (data_engineering, checkpoint #15, task
   `cefi_tardis_derivative_ticker_historical_gap-002`)**: VM `cefi-fwd-20260806-065837` still RUNNING. Day=2026-05-28
   completed at 18:33Z (21 ok/2 failed/2.20B records); day=2026-05-29 in progress since 18:33Z (pace ~2h05m/day, ~20:38Z
