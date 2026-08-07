@@ -96,7 +96,7 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
       after that doc's archival, so no edit to the archived doc is needed (it is a frozen historical record of the 30→34
       decision, not a living tracker of the registry's current size). Evidence:
       `deployment-api@59f5cbe8bc831e3d02ab037019b1a7ff06fda31e` (already-landed fix, verified not new).
-- [ ] [INFRA] P2. Once both above are fixed, re-attempt shipping
+- [x] ✅ [INFRA] P2. Once both above are fixed, re-attempt shipping
       `deployment_api/routes/deployments_inventory/__init__.py` + its test (the CI-escalation-runner VM classification
       fix, currently sitting locally uncommitted in this session's `.tabs/2/deployment-api` checkout) via quickmerge.
       Gate: `unified-trading-pm@<sha>`-style evidence citing the actual landed commit. — **NOT done, left open.** This
@@ -131,3 +131,9 @@ ladder ("ambiguous → diagnose both sides," not "fix blind").
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — sole remaining todo scopes to re-shipping a DIFFERENT
   interactive session's (.tabs/2) uncommitted local WIP, structurally unreachable from an AO-dispatched worker under
   this workspace's per-slot-worktree isolation — an access/environment gate, not a judgment one.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, stale items — closed the sole remaining todo:
+  the CI-escalation-runner VM classification fix shipped independently as `deployment-api@e4072fb`, ancestor-verified on
+  `origin/live-defi-rollout`. `git merge-base --is-ancestor e4072fb origin/live-defi-rollout` confirms. Test
+  `test_build_aws_inventory_classifies_ci_escalation_runner_as_live` present in
+  `deployment-api/tests/unit/test_route_deployments_inventory_aws.py`. All 3 todos now done — flagged ARCHIVE CANDIDATE
+  in this audit's report (not archived here).

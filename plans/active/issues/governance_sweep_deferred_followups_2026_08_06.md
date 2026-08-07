@@ -211,3 +211,7 @@ different task than writing the ruling:
   since this doc's own related-list was written; not added to context_scope (fully resolved, superseded by this doc's
   own newer 2026-08-06 sweep) but the dead active-path citation is a `/plan-reconcile`-class fix this skill does not
   make itself.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — all 7 open todos are either explicit
+  `[OPERATOR]` business/policy/security-setting decisions (5) or bounded-but-genuinely-unassessed
+  investigation/editorial work this sweep itself deliberately declined to do blind (the CME `instrument_id` format
+  check, the line-cap doc trim) — none is a mechanical mass edit.

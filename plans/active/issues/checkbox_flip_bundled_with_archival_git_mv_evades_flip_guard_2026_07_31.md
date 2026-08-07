@@ -141,3 +141,6 @@ repeated per-incident coaching.
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (cited in `related:` but missing from
   context_scope -- this doc is specifically about the archival-git-mv + checkbox-flip interaction, so the archival
   discipline SSOT is as load-bearing as the commit-push-flip one already there).
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Sole open todo
+  still requires an operator/plan-owner decision among the 3 named options (A/B/C) before an implementation step is
+  determinable; no new information since 2026-08-06.

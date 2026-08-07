@@ -128,3 +128,9 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — first assessment: genuine mix — todo 1's root cause is
   unresolved and needs the ratchet-owner's sign-off, todo 2 depends on todo 1 landing first (no structural gate, so
   default concurrent AO dispatch would race it) and touches a laptop-local uncommitted WIP; whole doc stays NA.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — todo 2 (the prek Intel-Mac ship) is now
+  closed (see checkbox above, already shipped `market-tick-data-service@b55cf9ad`, found by `/plan-reconcile ao`
+  2026-08-06), so the 'todo 2 depends on todo 1' rationale is now moot; doc stays NA on the 2 remaining items (todo 1
+  root-cause + baseline-owner sign-off, todo 3 investigate the quickmerge-regate-vs-standalone-QG inconsistency). Both
+  are fairly bounded/mechanical — flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` in this audit's report for a possible
+  future reclassify pass rather than reclassified here.

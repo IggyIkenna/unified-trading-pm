@@ -183,3 +183,6 @@ the call is still awaited (ordering preserved), and check the file's line/functi
   already-shipped/tuning-question, not missing code) and the archived disk-starvation background doc (context already
   summarized in this doc's own "Why" section) for `live/websocket_runner.py` and `streaming/live_aggregator.py`, the two
   sync-function sites the new P3 todo (added 2026-08-06) names directly.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Both open todos
+  (item-1 concurrency fan-out for 8 residual DeFi handlers, item-3 the 2 sync-function blocking-write sites) still need
+  per-site correctness judgment (verify async caller, ordering, line-cap), not a mechanical mass edit.

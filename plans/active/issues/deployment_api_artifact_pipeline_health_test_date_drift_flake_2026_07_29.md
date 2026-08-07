@@ -87,7 +87,7 @@ string. Low-risk, mechanical — no production behavior change, test-only.
 > re-run — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc's own Progress Log
 > had already self-nominated for exactly this conversion. Scope and fix shape are unchanged.
 
-- [ ] [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
+- [x] ✅ [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
       trailing-7-day health window deterministic under test: either parameterize `_resolve_window`'s "today"
       (`deployment_api/services/artifact_pipeline/service.py:79-92`) behind an injectable clock, or compute the
       `_fact(...)` fixture date relative to a frozen `datetime.now(UTC)` rather than the literal
@@ -117,3 +117,7 @@ mid-dispatch.
   `_resolve_window()`, and the discovery-context archive doc still resolve and remain the minimal correct set.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, stale items — closed the sole open checkbox
+  (already-shipped evidence was present inline but never flipped): `deployment-api@cf55369` re-confirmed
+  ancestor-of-`origin/live-defi-rollout` via `git merge-base --is-ancestor cf55369 origin/live-defi-rollout`. Doc now
+  has 0 open todos — flagged ARCHIVE CANDIDATE in this audit's report (not archived here).
