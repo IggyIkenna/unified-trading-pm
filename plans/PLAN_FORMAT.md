@@ -103,7 +103,7 @@ estimate_baseline_ai_days: <N> # raw estimate
 estimate_calibrated_ai_days: <N> # baseline × class multiplier
 
 # Plan-specific — work-philosophy (/codex/12-agent-workflow/work-philosophy.md)
-assigned_role: backend-engineer | data-pipeline-engineer | ui-developer | infra-engineer | monitor | review
+assigned_role: backend_engineer | data_engineering | ui_developer | infra | monitor | review
 drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap
 
 # Plan-specific — reasoning-effort override (elective; model-tier-selection.md is the SSOT).

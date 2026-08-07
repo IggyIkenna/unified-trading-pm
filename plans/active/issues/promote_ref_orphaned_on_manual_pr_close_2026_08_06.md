@@ -63,5 +63,5 @@ manual step for anyone who closes a promote PR outside the fleet bot.
 - **B: document the manual step** — note in the conflict_resolver role / ci-cd codex that manually closing a promote PR
   must also delete its ref. Cheaper, but leaves accumulation to memory.
 
-- [ ] [P3] fleet-bot orphan-ref sweep: delete `promote/<repo>/*` refs with no open PR (and not current PROMOTE_HEAD) in
-      `ldr_to_main_fleet_promote.sh` — owner: LDR→main fleet bot maintainer (unified-trading-pm).
+- [ ] [AGENT] P3. fleet-bot orphan-ref sweep: delete `promote/<repo>/*` refs with no open PR (and not current
+      PROMOTE_HEAD) in `ldr_to_main_fleet_promote.sh` — owner: LDR→main fleet bot maintainer (unified-trading-pm).

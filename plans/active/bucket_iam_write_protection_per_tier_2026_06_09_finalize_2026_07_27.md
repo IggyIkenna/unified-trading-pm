@@ -55,8 +55,11 @@ context_scope:
 
 # bucket_iam_write_protection_per_tier_2026_06_09 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **CORRECTED 2026-08-07 (plan-reconcile agt-c6e8c7)**: this finalize ships `status: active` per the 2026-07-30
+> no-double-gate finding (gate_on_depends already holds it — `draft` is redundant and blocks the coverage check). It is
+> NOT dispatched: `depends_on` + `gate_on_depends: true` on the parent
+> (`bucket_iam_write_protection_per_tier_2026_06_09`, which still holds 2 open todos P1.3/P2.1b) machine-holds every
+> todo until the parent's todos are done.
 
 ## Todos
 

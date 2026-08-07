@@ -16,8 +16,9 @@ scope: [engineer, admin]
 tags: [features, manifest, verification, smoke-test, backfill, mdps, data-pipeline]
 related:
   [
-    plans/active/features_input_manifest_migration_2026_05_25.md,
-    plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
+    /plans/archive/2026_05/features_input_manifest_migration_2026_05_25.md,
+    /plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-05-25
 parent_epic: features_and_ml_master

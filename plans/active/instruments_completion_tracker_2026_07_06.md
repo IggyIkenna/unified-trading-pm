@@ -553,11 +553,16 @@ reconciling + signing off, not redoing.)_
       todos `[x]`: operator decided DELETE (2026-07-18), then deleted — `instruments-service@650dd4b7` (removed
       `api/data_status.py` + route registration + its unit test; re-verified no workspace caller at delete time; IS gate
       green, 4559 passed).
-- [ ] [CODE] P2. Build a generic manifest-reprocessing utility (11 near-identical one-off reclassify scripts written
+- [x] ✅ [CODE] P2. Build a generic manifest-reprocessing utility (11 near-identical one-off reclassify scripts written
       across instruments-service + market-tick-data-service in 8 weeks; codex's own `script-homes.md` says a recurring
       need like this should graduate to a permanent tool). See
-      `issues/manifest_reprocessing_generic_utility_2026_07_07.md`. **STILL OPEN (reconciled 2026-07-28)** — not covered
-      by any named archived child; genuinely unbuilt.
+      `issues/manifest_reprocessing_generic_utility_2026_07_07.md`. **FLIPPED 2026-08-07 (plan-reconcile agt-c6e8c7)** —
+      utility SHIPPED + CLI-wired: UTL@a1b08307 (design `select_shards_for_reprocess()`/`reprocess_shards()`
+      signature) + UTL@00d33d12 (implement `reprocess_shards` flip-and-write) + IS@cbbad6ae
+      (`--operation reprocess-shards` subcommand) — LDR re-stamps of the archived issue's cited shas;
+      `unified_trading_library/manifest_reprocess.py` + tests live on origin LDR; issue
+      `manifest_reprocessing_generic_utility_2026_07_07.md` archived `status:     resolved`; PL na-eligibility 08-03
+      "Closed 1 checkbox" (the flip the PL claimed but the box never carried).
 
 ---
 

@@ -148,8 +148,9 @@ candidate for that tranche's next pass, not just a retag-only finding.
   clearances found (both spot-checked items remain gated on their owning tranche's action, unchanged since last write).
   Phase 1 (`Workflow`, 1 agent): the sole never-cited candidate verdicted `exclude_cross_cutting`. **Ledger**: 1 new
   parked finding this run, 1 entry written above — balanced. No Phase 3 batch draft (zero genuine orphans found;
-  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
-  to dispatch — not flipped by this run per the "ASK BEFORE CREATING"/never-auto-flip HARD RULE).
+  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` was FLIPPED `status: active` 2026-08-06 (de1d795de); this
+  entry predates that flip — corrected 2026-08-07 to dispatch — not flipped by this run per the "ASK BEFORE
+  CREATING"/never-auto-flip HARD RULE).
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02/08-03 (unchanged): the retag sub-part is
