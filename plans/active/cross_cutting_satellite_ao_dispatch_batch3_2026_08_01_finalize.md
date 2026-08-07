@@ -21,7 +21,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-01"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -121,9 +121,9 @@ source: >-
       (workflow_template_drift) → ✅ DONE [ci], corrected 2026-08-02; finding 6 (tradfi_forexfactory) → ✅ DONE
       [tradfi], corrected 2026-08-02 by tradfi tranche. 4 of 6 resolved; 2 still un-retagged (findings 2 and 4) — noted
       plainly, not acted on here per owning-tranche rule.
-- [ ] [DOC] P1. **Archive `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`** via the standard 6-step ritual:
-      migrate any still-Deferred item to a tracked todo elsewhere (todo 2 above should have routed all 3) → add the
-      archive banner → run the codex-alignment check (this batch introduces no new durable contract; confirm that is
+- [x] ✅ [DOC] P1. **Archive `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`** via the standard 6-step
+      ritual: migrate any still-Deferred item to a tracked todo elsewhere (todo 2 above should have routed all 3) → add
+      the archive banner → run the codex-alignment check (this batch introduces no new durable contract; confirm that is
       still true before archiving) → grep the corpus for every referrer of this batch or this finalize and fix each path
       → confirm `locked_by` is empty on both. **Done when**: both docs are in `plans/archive/2026_08/`, every corpus
       referrer resolves to the new path, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard
