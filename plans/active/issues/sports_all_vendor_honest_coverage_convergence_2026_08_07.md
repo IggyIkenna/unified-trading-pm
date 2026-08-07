@@ -108,9 +108,17 @@ on `attempted_failed=0`, which is true but not the same as done — weather has 
    not-yet-attempted) and haven't been root-caused per-data_type yet. Don't duplicate that doc's todos here — this entry
    is a pointer + the reminder that `attempted_failed` needs its own root-cause pass distinct from the "needed" backfill
    counts already tracked there.
-3. **mdps_odds_horizon_bucket — 2,791 attempted_failed, 157,994 expected_unattempted.** Not yet investigated at all this
-   session. MTDS-side; needs its own root-cause pass (likely a `market-tick-data-service` orchestrator, not
-   instruments-service).
+3. **mdps_odds_horizon_bucket — 2,791 attempted_failed, 157,994 expected_unattempted.** ALREADY ROOT-CAUSED — not a new
+   problem. This is the residual/exposed backlog from a freshness-check bug (a rollup sentinel row was satisfying
+   odds_api's staleness check, permanently pinning ~572 days "fresh") fixed 2026-07-30
+   (`market-tick-data-service@362e64e3`, `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`). The actual
+   backfill to fill the exposed gap is tracked in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` — its P1/P2
+   todos were stuck `BLOCKED-CREDENTIALS` (stale as of the 2026-08-02 quota exhaustion); retagged 2026-08-07 after
+   confirming live the 2026-08-03 top-up landed (14.4M credits available). **That doc's own history is a warning**: 5+
+   uncoordinated relaunches, preemptions, and silent freezes chasing this exact gap, one contributing to the original
+   quota-exhaustion incident. Next action: one single, guard-respecting VM launch
+   (`launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end <today>`, no `--force`), watched through to an
+   actual clean terminal state — no prior attempt has reached one. Don't duplicate tracking here; that doc owns it.
 4. **transfermarkt — 8 attempted_failed, unchanged.** Root-caused this session: the vendor's
    `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` endpoint is durably returning HTTP 502
    as of 2026-08-07T10:17Z (2h17m of continuous retry-cycling with zero progress, confirmed via `run.log`) — killed the
@@ -140,8 +148,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - [ ] [SCRIPT] P1. **Root-cause api_football's 35,058 attempted_failed** per data_type (STANDINGS/FIXTURE_STATS/
       FIXTURE_EVENTS/TEAMS/FIXTURES_SCHEDULE/FIXTURES/PLAYER_STATS) — distinct from the "needed" backfill counts already
       tracked in `sports_af_full_entity_completion_2026_08_03.md`.
-- [ ] [SCRIPT] P1. **Investigate mdps_odds_horizon_bucket** (2,791 attempted_failed, 157,994 expected_unattempted,
-      MTDS-side) — not yet looked at this session at all.
+- [ ] [SCRIPT] P1. **Launch the single, guard-respecting odds_api gap-backfill VM** (root cause already found + fixed;
+      credential blocker retagged unblocked 2026-08-07) — see `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`
+      P1/P2, which owns this; watch it through to an actual clean terminal state.
 - [ ] [SCRIPT] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** once
       `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers (durably 502ing as of
       2026-08-07T10:17Z) — check the endpoint before relaunching, don't blind-retry into the same wall.
