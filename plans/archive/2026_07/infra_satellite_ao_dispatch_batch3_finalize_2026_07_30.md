@@ -10,7 +10,7 @@ summary: >-
   source doc becomes archivable — both were partial carve-outs and both keep judgment-gated todos at assigned_vm: NA —
   so this plan's main job is to flip accurately and then explicitly NOT archive, rather than to run the 6-step ritual on
   the sources. It does run the ritual on the batch pair itself.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, finalize, batch-3, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -42,7 +42,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -56,8 +56,7 @@ source: >-
 
 # Infra satellite AO batch 3 — finalize
 
-> **⚠️ STATUS: `draft`** — flips to `active` with its parent; `gate_on_depends: true` additionally keeps the dispatcher
-> from queueing this plan's todos until the parent's 2 todos are `[x]`.
+> **ARCHIVED 2026-08-07 (slot 6) — both todos `[x]`, 6-step archival ritual complete for the batch pair.**
 
 ## Todos
 
@@ -75,7 +74,7 @@ source: >-
       6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), not just a checkbox flip.
       **Done when**: each of the 4 extracted checkboxes is closed with a re-verified sha or explicitly left open with a
       re-confirmed reason, and each source doc's `status`/`assigned_vm` matches its actual residual.
-- [ ] [DOC] P2. **Re-check the parent's Deferred table, then archive the batch pair.** (1) Re-test the two
+- [x] ✅ [DOC] P2. **Re-check the parent's Deferred table, then archive the batch pair.** (1) Re-test the two
       ruled-but-gated clusters the parent recorded as still-blocked — G1 (`base-service.sh`/`base-library.sh`
       serialization, entry #36) and G3 (`DataStatusTab.tsx` sequencing, entry #35): if
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s `base-service.sh` sub-item and
@@ -93,6 +92,14 @@ source: >-
 
 ## Progress Log
 
+- **2026-08-07 (slot 6) — todo 2 done. unified-trading-pm@(pending-sha).** G1/G2 deferred re-check: original blocking
+  conditions ALL met (batch1b BACKEND P3 sub-item 3 at PM@4d3713ade; ci-batch2 todos 1/11 ARCHIVED), but NEW blocker
+  batch6 UV_LINK_MODE `[INFRA] P3` claim on base-service.sh is still open → G1/G2 still gated, tracked in
+  `issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` (6-step ritual step 1, deferred migration). G3: already
+  extracted + archived in batch5; not tracked here. Stop-iterating verdict: CONFIRMED — re-ran
+  `generate_ag_closeout_audit_candidates.py --tranche infra`; 4 new orphans found (post-Aug-5), all non-batchable (open
+  mystery / event-timing-gated / BLOCKED / design-preference-gated). Codex alignment: no new SSOT contracts. Both plans
+  moved to `plans/archive/2026_07/`. Referrer paths fixed in 7 corpus files + INDEX.md entries removed.
 - **2026-08-07 (slot 10) — todo 1 done. unified-trading-pm@08cfee7f7.** Reconciled all 4 extracted checkboxes: (1)
   `gitignore_sync…` item 1: already `[x]` @ `78a3740bf` — re-verified SHA exists (`git show --stat`), correct. (2)
   `git_health…` item 1: closed `[x] ✅` — verdict (i) REFUTED (fresh `reported_at` per cron run); citing

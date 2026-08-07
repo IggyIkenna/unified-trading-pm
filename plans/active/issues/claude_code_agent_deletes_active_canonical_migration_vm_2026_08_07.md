@@ -31,7 +31,9 @@ assigned_vm: "NA"
 source: slot-8-infra-dispatch-batch9-018
 resolved_by: ""
 locked_by: ""
-owner: slot-8-infra
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Issue: claude_code Agent Deletes Active Canonical-Migration VM (HARD RULE Violation)

@@ -15,7 +15,7 @@ summary: >-
   respectively. This is a deliberately thin batch, and the audit's own conclusion is that a batch4 could not extract
   anything new: after these two land, every remaining orphaned infra doc's open work is PURELY non-batchable, which is
   the skill's explicit stop-iterating condition.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-3, plan-hygiene, tooling-safety, fleet-monitoring]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -54,7 +54,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md,
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
   ]
 supersedes:
 superseded_by:
@@ -68,10 +68,10 @@ source: >-
 
 # Infra satellite AO batch 3
 
-> **✅ ACTIVE + DISPATCHABLE (2026-08-02).** `status: active` since authoring; `assigned_vm` flipped `NA` → `planning`
-> 2026-08-02 (operator ruling, `ag_closeout_audit_infra_parked_2026_08_02.md` finding 7) to match sibling batches 1/2's
-> convention — this banner was stale (still said `draft`/`NOT dispatched` after the doc had already gone active,
-> compounding the separate `assigned_vm` gap). The remaining `[BACKEND] P3` todo is now genuinely AO-dispatchable.
+> **ARCHIVED 2026-08-07 (slot 6) — both todos `[x]`, finalize-pair ritual complete.** Deferred re-check: G1/G2
+> (base-service.sh/base-library.sh) original gates met, new batch6 gate; G3 extracted by batch5 (archived); G4/G5
+> changes noted in Progress Log. Stop-iterating verdict: CONFIRMED (4 new orphans, none batchable). Follow-up tracked in
+> `issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`.
 
 ## Why this batch is thin — and why it is the last one
 
@@ -266,3 +266,29 @@ Measured 2026-07-30 against the live corpus, not carried forward on trust:
 - **context-scout 2026-08-03**: re-scouted; trimmed context_scope from 8 to 6 entries (dropped `script-homes.md` and
   `agent-orchestrator-single-vm-architecture.md` as non-essential — both are already in the doc's own "Codex SSOTs"
   section and less central to executing the 2 batch todos than the finalize twin + the two source issue docs).
+- **2026-08-07 (slot 6) — Deferred re-check (finalize todo 2, measured against live corpus, not assumed):**
+  - **G1/G2** (base-service.sh/base-library.sh serialized unit, entry #36): Original blocking conditions **NOW MET** —
+    `ci_satellite_ao_dispatch_batch2_2026_07_29.md` is **ARCHIVED** (all todos `[x]`, incl. todo 1 base-service.sh +
+    todo 11 base-library.sh); `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s `[BACKEND] P3` MTDS
+    retry_safe todo is `[x]` done (sub-item 3 = lint generalized into base-service.sh as STEP 5.104, `PM@4d3713ade`).
+    **NEW gate:** `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s open `[INFRA] P3` UV_LINK_MODE todo claims
+    `base-service.sh`. Serialized-resource ruling still applies; G1/G2 remain gated until batch6 ships. Follow-up
+    tracked: `/plans/active/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`.
+  - **G3** (DataStatusTab.tsx, entry #35): **Already extracted and archived** —
+    `infra_satellite_ao_dispatch_batch5_2026_08_01.md` (archived 2026_08) extracted and shipped this item.
+    `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[INFRA] P2` (part B, HonestCoverageCard.tsx,
+    `deployment-ui@727298b`) confirmed `[x]` done. No re-extraction needed.
+  - **G4** (PYTEST_UNIT_DIR): Confirmed RESOLVED per batch5's iterative-drain re-check (operator ruling + shipped as
+    cefi's approach, 2026-07-31). Not a deferred item anymore.
+  - **G5/G6**: Unchanged from original assessment — still subsumed by wider active claims or owned by other plans.
+  - **Stop-iterating verdict: CONFIRMED.** Re-ran `generate_ag_closeout_audit_candidates.py --tranche infra` → 46
+    members / 13 covering docs / 4 never-cited orphans (all post-2026-08-05, all non-batchable):
+    `ci_pipeline_speed_and_cost_redesign_2026_08_05.md` (1 open todo with unresolved mystery — not conflict-clear);
+    `self_hosted_runner_public_repo_revert_2026_08_05.md` (1 measurement todo, event-timing-gated on longer window);
+    `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (BLOCKED active VM);
+    `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md` (design-preference-gated). No batch4
+    warranted — verdict stands.
+  - **Codex alignment**: no new SSOT contracts from batch3's todos (--dry-run flag gate documented in source issue doc;
+    git-health verdict recorded in `issues/git_health_not_clean_since_pinned_constant_2026_07_27.md` Progress Log).
+  - **Archival**: both plans archived to `plans/archive/2026_07/`; all corpus-wide /plans/active/ path referrers
+    updated. `issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` filed for G1/G2 migration (6-step step 1).

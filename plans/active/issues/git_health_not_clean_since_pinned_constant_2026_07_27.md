@@ -53,7 +53,7 @@ context_scope:
     agent-orchestrator/server/routes/git_health.py,
     scripts/dev/slot-git-status-report.sh,
     agents/review.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
   ]
 drift_direction: advance-code
 depends_on: []
@@ -100,7 +100,7 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
 - [x] ✅ [BACKEND] P3. Instrument or trace `slot-git-status-report.sh`'s `reported_at`/dirty-transition posting to
       confirm whether it sends a fresh timestamp per run or a fixed value (repo: agent-orchestrator). **Already
       tracked**: combined with the next item into one open `[BACKEND] P3` todo in
-      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (line ~160, status: active, assigned_vm:
+      `/plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (line ~160, status: active, assigned_vm:
       planning) — that todo explicitly sources this doc's items #1+#2 by path. **Verdict: (i) REFUTED** — reporter sends
       a fresh `reported_at` per run (`NOW_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"`, `slot-git-status-report.sh` line 173,
       computed fresh at invocation; confirmed live: `reported_at` advanced 06:22:04Z → 06:27:03Z across two consecutive
@@ -108,8 +108,8 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
 - [x] ✅ [BACKEND] P3. Audit `GET /api/fleet/git-health`'s aggregation path to confirm it surfaces
       `SlotGitStatusRow`-scoped `not_clean_since` per (host, slot, repo) rather than any global/shared snapshot value
       (repo: agent-orchestrator). **Already tracked** — same
-      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo as the item above. **Verdict: (ii) REFUTED**
-      — aggregation does NOT collapse to a global value; `SlotGitStatusRow` keyed by `(host, slot_id)`,
+      `/plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md` todo as the item above. **Verdict: (ii)
+      REFUTED** — aggregation does NOT collapse to a global value; `SlotGitStatusRow` keyed by `(host, slot_id)`,
       `_propagate_not_clean_since` builds `prior_by_name` keyed by repo name; live snapshot simultaneously showed
       distinct `not_clean_since` values (`null`, `2026-08-07T06:17:03Z`, `2026-08-07T06:27:03Z`) across slots/repos on
       the same host — impossible under a collapsed-global path. Closed 2026-08-07 by finalize twin todo 1.
@@ -138,11 +138,11 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
 - **na-eligibility-audit 2026-08-03** (ao tranche): **KEEP-NA, valid — citation fix only, no reclassify.** In scope
   because the doc was edited since the 2026-08-02 marker (`context_scope` backfill). New finding this run: todos #1 and
   #2 (the two diagnostic instrument/audit tasks) are already duplicated — combined into one open `[BACKEND] P3` todo in
-  `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (status: active, assigned_vm: planning, line ~160),
-  which explicitly sources this doc's items #1+#2 by path and states its own done-when as writing the verdict back into
-  this doc's Progress Log. Added a citation on both items above pointing at that live tracker so a future dispatch pass
-  doesn't duplicate the diagnostic work. Doc stays NA overall — todo #3 (the field-design fork) remains a genuine
-  root-cause-contingent architecture decision, unchanged from every prior pass, and
+  `/plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md` (status: active, assigned_vm: planning, line
+  ~160), which explicitly sources this doc's items #1+#2 by path and states its own done-when as writing the verdict
+  back into this doc's Progress Log. Added a citation on both items above pointing at that live tracker so a future
+  dispatch pass doesn't duplicate the diagnostic work. Doc stays NA overall — todo #3 (the field-design fork) remains a
+  genuine root-cause-contingent architecture decision, unchanged from every prior pass, and
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own combined todo explicitly excludes that branch from its
   bounded scope too ("a code change only if the verdict is (i) or (ii)... NOT a schema/field addition").
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries — added
