@@ -589,7 +589,7 @@ context_scope:
     — 0 open todos (resolved/archived 2026-07-26: count self-recovered to 150, well below the 06-22 baseline; see doc's
     Progress Log for the full evidence trail).
     - **[SCRIPT] P2.** Once root-caused: re-run recovery or diagnose a new adapter break.
-  - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
+  - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
     (exactly 8 open — all listed)
     - 2. **[DATA] P1.** Corpus-wide count of zero-length-stem candle objects; purge or repair.
     - 3. **[DATA] P1.** Canonicalise TradFi candle leaf ids (`E1AF0_*_migrated_*` → `VENUE:TYPE:SYMBOL`) — 93% of the

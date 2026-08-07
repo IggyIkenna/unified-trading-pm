@@ -77,7 +77,7 @@ related:
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
@@ -936,7 +936,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DESIGN] P2.** New finding, 2026-07-10 — 31 DeFi (venue, data_type) pairs declare a genesis start-date in Layer
       2
     - **[SCRIPT] P3.** Delete confirmed-dead code: `MVP_VENUE_DATA_TYPES`, DeFi's emptied `DEFI_VENUE_AXIS_OVERRIDES`
-  - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
+  - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
     (already in this plan's `related:` frontmatter; not previously given a digest entry here)
     - **[DATA] P0.** Root-cause the object↔manifest disconnect (20,734 cefi candle objects on 2026-04-14 vs 6 MDPS
       manifest rows)
