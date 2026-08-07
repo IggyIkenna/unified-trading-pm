@@ -99,6 +99,62 @@ resolved_by:
   updated; worker gating on "35" re-scans a clean population.
 - C5 [P3] `backfill_vm_slack_alert_e2e_verification…:3` title "three gaps found" vs body Gap 4 section (added 06-23).
 
+- **RESUME STATE (post-compaction 2, 2026-08-07 ~02:00 UTC)**: STEPS 1-7 DONE, STEP 8 in flight.
+  - Delivery: review branch `plan_reconciler/agt-c6e8c7` (ahead=0), PR **#2418** (base live-defi-rollout). Findings doc
+    (this) + `plan_reconciler_batch_journal_2026_08_07.md` (detail). `plan_health/result` POSTED (10 contradictions + 15
+    doc-drift). Git-status "AHEAD=8 unpushed" nudges are EXPECTED (review-branch delivery) — do NOT push to LDR.
+  - **5 blocked questions posted (awaiting operator answers)**: BLK-9b3d751f (codex rewrites ×8), BLK-b3ddcbe7
+    (ml-service full.json.gz live gap — deploy-verify first), BLK-3051fc32 (ml-models-store delete authority — annotate
+    fold_ml to human-only disposition), BLK-00e5bdf7 (5 archive unlocks: perp_funding / macro_micro /
+    ao_park_disposition / fleet_data_acquisition [casing-fix caveat] / live_mode_event_sink), BLK-f8e14d80 (FRED
+    live-state → tradfi-owned issue).
+  - **Next actions in order**: (1) poll /messages for answers; (2) apply each answer (codex rewrites → 8 doc edits per
+    the cited locations in this doc's Codex-drift section; unlocks → [unlock-plan] + 6-step archive ritual for the 5;
+    FRED → file `plans/active/issues/fred_live_capture_and_backfill_gap_2026_08_07.md` routed to tradfi; ml-service →
+    deploy-check then reconcile the [x] claim); (3) commit each on the review branch with `docs(plans):` prefix; (4)
+    when ALL 5 resolved → POST /api/slots/13/done {"task_id":"agt-c6e8c7",...} as the LAST action.
+  - Watcher: background task polling /messages every 45s (script /tmp/wait_answers.sh; re-create if /tmp wiped: curl
+    /api/slots/13/messages, print texts containing BLK-/option/answer, loop).
+
+## Deferred work after 2026-08-07
+
+| Item                                                                      | State / why deferred                                 | Blocked on                     |
+| ------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------ |
+| 5 /blocked answers applied                                                | Operator-owned (human decision)                      | operator answers via dashboard |
+| 8 codex corrections                                                       | Operator-owned (authorization ruling)                | BLK-9b3d751f                   |
+| 5 archive unlocks + archival ritual                                       | Operator-owned ([unlock-plan] grants)                | BLK-00e5bdf7                   |
+| ml-service full.json.gz deploy-check                                      | Cannot be done yet (needs prod deploy investigation) | BLK-b3ddcbe7                   |
+| FRED tradfi-owned issue                                                   | Operator-owned (routing ruling)                      | BLK-f8e14d80                   |
+| batch1b:208-224 mirror reversal                                           | Cannot be done yet (doc in 12h grace at verify)      | grace expiry (next run)        |
+| batch1 evidence placeholder shas (:90,:299,:350)                          | Not done — mechanical fix                            | next run (non-grace)           |
+| `dp_consolidator_scheduler_paused_defi_recurrence` terminal-status (defi) | Other-tranche (defi)                                 | defi sibling worker            |
+| sit_stamp terminal-status (cross-cutting)                                 | Cannot be done yet (grace at run start)              | grace expiry                   |
+| INDEX.md regen                                                            | Operator-owned (regeneration decision)               | operator                       |
+
+**Recommended next item**: poll /messages for the first answer and apply it — everything downstream (PR update, /done)
+hangs on the answers.
+
+## Lessons (2026-08-07 run)
+
+- **/blocked API**: ONE question per POST; fields task_id/question/options[]/recommendation/can_continue/authority.
+  Traps: an array payload 422s; unquoted-heredoc expands backticks into command substitution; `recommendation` needs
+  explicit quotes in the heredoc. Validate with `python3 -m json.tool` before POST.
+- **sed traps**: `|` in the pattern breaks `s|...|` — switch delimiter; line-wrapped prose breaks single-line patterns —
+  anchor on the un-wrapped fragment or use Edit. Grep-verify after every sed.
+- **No-double-gate rule (2026-07-30 finding)**: a finalize plan with `gate_on_depends: true` MUST be `status: active` —
+  `draft` is machine-hostile and FAILS check_finalize_plan_coverage (regression > baseline 0). My initial IAM-finalize
+  `active`→`draft` flip was rejected by the gate; the correct fix was the body banner. Run the checker standalone BEFORE
+  touching any finalize status.
+- **plan_health/result** needs `X-Orchestrator-Secret` from agent-orchestrator/.env.local (route is
+  /api/plan-health/result, not /api/plan_health/result).
+- **Post-08-05 history-rewrite shas**: PL-cited shas in e2e-testing/UTL/IS may resolve ONLY on origin/main or
+  wip-preserve branches. Find the LDR re-stamp via `git log origin/live-defi-rollout --oneline --grep=<subject>`
+  - `git diff <old> <re-stamp> --stat` (expect trivial/env-only). Flip citing the LDR re-stamp.
+- **Findings-doc line cap**: incremental journaling blew the 1000-line hard cap → split into a consolidated findings
+  doc + raw batch-journal doc. Write the journal in a companion doc from the start.
+- **e2e-testing default branch is main** (origin/HEAD→main) though it HAS live-defi-rollout; LDR↔main diverged (Option-B
+  direct promote 08-05) — check BOTH before judging ancestry.
+
 ## Flips verified (confirmed + applied 2026-08-07, adversarial-verified; review branch 3b4bd3c79)
 
 - IF1 ✅ `deployment_api_artifact_pipeline_health_test_date_drift_flake_2026_07_29.md:90-101` → `[x]` @cf55369 (ancestor
