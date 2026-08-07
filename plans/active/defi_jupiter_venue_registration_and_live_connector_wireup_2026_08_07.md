@@ -153,8 +153,8 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       instance, and `instruments-service` `quality-gates.sh` is green. — instruments-service@06c6f2dd QG green; drift
       guard + factory targeted checks PASSED
 
-- [ ] [BACKEND] P2. **market-tick-data-service: new live connector for Jupiter market data.** No existing MTDS adapter
-      covers Jupiter (batch `market_interface/factory.py::VENUE_REGISTRY` has no `jupiter` entry; no
+- [x] ✅ [BACKEND] P2. **market-tick-data-service: new live connector for Jupiter market data.** No existing MTDS
+      adapter covers Jupiter (batch `market_interface/factory.py::VENUE_REGISTRY` has no `jupiter` entry; no
       `live/connectors/jupiter*.py` file exists). Create
       `market_tick_data_service/live/connectors/jupiter_solana_ws.py`, mirroring
       `market_tick_data_service/live/connectors/raydium_defi_ws.py` / `orca_defi_ws.py`'s established pattern almost
@@ -170,7 +170,9 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       `register_ws_feed_connector(venue="JUPITER-SOLANA", ...)` and add the module to
       `live/connectors/__init__.py::register_all()`'s tuple. Done-when: `market-tick-data-service` `quality-gates.sh`
       green and a targeted test confirms the connector is present in `WS_FEED_CONNECTOR_FACTORIES` under
-      `JUPITER-SOLANA` after `register_all()`.
+      `JUPITER-SOLANA` after `register_all()`. — market-tick-data-service@9e9c9817 QG green (10108 passed, 0 failed);
+      TestJupiterRegistry::test_jupiter_solana_registered_after_register_all PASSED confirming JUPITER-SOLANA in
+      WS_FEED_CONNECTOR_FACTORIES after register_all(); 27/27 Jupiter-specific tests passed.
 
 - [ ] [BACKEND] P2. **execution-service: wire the already-built `JupiterConnector` into `DeFiAdapter`.** In
       `execution_service/defi_execution/__init__.py`, add `JupiterConnector` to the existing
