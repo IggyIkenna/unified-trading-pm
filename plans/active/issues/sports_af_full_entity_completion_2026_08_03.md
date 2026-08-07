@@ -859,3 +859,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   weather's messy outcome. SFI, `mtds-backfill-odds-smallchunk-20260807` (chunk 18/451, 4 OOM total, still
   self-recovering), and `mtds-backfill-odds-401-retry` (18 OOM total, same ~6-9 min/league cadence) all confirmed
   healthy via value-diffs.
+- **2026-08-07T16:38Z** — FIXTURE_STATS chunk 2/26 (2020-10-25/26), a `PROGRESS.json` timestamp momentarily looked stale
+  (~an hour old by my initial, WRONG assumption of current time) — checked `date -u` before concluding a stall per the
+  async-wait discipline, found actual current time was only ~2 min past the log's last line; false alarm, genuinely
+  healthy. Lesson: always verify current wall-clock time directly rather than assuming a scheduled-wakeup delay landed
+  exactly on time. SFI (2023-05-11→2023-11-17), `mtds-backfill-odds-smallchunk-20260807` (chunk 18/451, 5 OOM),
+  `mtds-backfill-odds-401-retry` (23 OOM, CHILE_PRIMERA/LIGA_MX/K_LEAGUE_1) all confirmed healthy, consistent with
+  established patterns — no new incidents.
