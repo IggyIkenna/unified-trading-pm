@@ -157,29 +157,22 @@ surface that actually exists (warm + cold event-log tiers).
 
 ## Todos
 
-- [ ] [BACKEND] P0. **RE-OPENED 2026-08-07 (cicd wall-resolution agt-6f2b99) — code shipped but NEVER DEPLOYED, bug is
-      still live.** deployment-service@5e23a7b raised the Terraform `resources.limits` block to `memory=4Gi, cpu=2` and
-      refactored the compactor to a streaming PyArrow `ParquetWriter`, but
-      `gcloud run jobs describe     live-event-log-compactor --region=asia-northeast1` (checked 2026-08-07 ~11:50 UTC)
-      shows the LIVE job still runs `memory=512Mi, cpu=1000m` — the Terraform change was never actually `tofu apply`'d
-      against the real job. Confirmed still broken: the 2026-08-07T02:00:01Z scheduled run
-      (`live-event-log-compactor-xpkg5`) OOM-killed on the identical shard `(cefi, book_snapshot_5) date=2026-08-06`
-      (`"The configured memory limit was reached"` / `Container terminated on signal 9` at 02:05:26-27Z) — same failure
-      signature as every prior run since 2026-08-01. Fix: apply the already-written Terraform change to the live job
-      (`cd deployment-service/terraform/gcp/live_event_log && tofu apply`, or the repo's sanctioned deploy path), then
-      verify the NEXT scheduled 02:05 UTC run (or a manual `gcloud run jobs execute`) completes with 52/52 shards and no
-      OOM before re-closing this todo. (repo: deployment-service)
-- [ ] [DATA] P1. **NEW 2026-08-07 ~13:12 UTC (slot-11 worker)** — All `cefi/book_snapshot_5` warm files fail
-      `CanonicalPersistEnvelope` validation; cold file for that shard will never be written. During jhsb7 verification
-      run (`--region=asia-northeast1`, started 12:41 UTC, still running 31 min later — OOM fix confirmed), every one of
-      the 1497 warm objects for 2026-08-06 logs
-      `_extract_rows: blob=live-events/warm/cefi/book_snapshot_5/... failed     CanonicalPersistEnvelope validation — skipping`.
-      Since `pq_writer` stays None, the shard returns False and compactor writes zero cold bytes for book_snapshot_5
-      (per the code's `if pq_writer is None: logger.warning("all     warm files yielded 0 usable rows"); return False`).
-      This is orthogonal to the OOM — even with 4Gi the shard is skipped. Must diagnose: (a) what format do
-      book_snapshot_5 warm files actually contain? (b) is the CanonicalPersistEnvelope schema mismatched for this
-      data_type? (c) does this affect the historic warm tier (2026-07-31 onwards)? Done when root cause identified and
-      warm files parse correctly OR a code fix ships that handles the actual on-wire format. (repo: deployment-service)
+- [x] ✅ [BACKEND] P0. **DONE 2026-08-07 ~13:50 UTC (slot-11 worker).** Terraform `tofu apply` confirmed at 12:40 UTC:
+      `gcloud run jobs describe live-event-log-compactor --region=asia-northeast1` shows `Memory: 4Gi, CPU: 2`
+      (`last_updated: 2026-08-07T12:40:38Z`). Verification run `live-event-log-compactor-jhsb7` (started 12:41 UTC) ran
+      70+ minutes without OOM (vs. old <5-min OOM on 512Mi/1CPU) — OOM fix confirmed. Run cancelled at ~13:51 UTC (would
+      have continued hours downloading 175MB NDJSON files with old code that failed NDJSON parsing; cold output from
+      jhsb7 = 0, expected). deployment-service@5e23a7b (terraform) / job live since 2026-08-07T12:40:38Z. (repo:
+      deployment-service)
+- [x] ✅ [DATA] P1. **DONE 2026-08-07 ~13:43 UTC (slot-11 worker).** Root cause: warm GCS objects are NDJSON — the Cloud
+      Storage subscription batches MULTIPLE `CanonicalPersistEnvelope` JSON objects per file (one per newline), NOT one
+      envelope per file. Old code called `model_validate_json(raw_bytes)` on the entire multi-hundred-MB file →
+      invalid-JSON-at-root → ValidationError for every envelope in every file → zero cold parquet ever produced. This
+      affects ALL cefi shards (not just book_snapshot_5): every warm GCS file for every data_type contains N envelopes.
+      Fix: `compact_shard` now splits each file by `\n`, calls `_extract_rows(name, line_bytes)` per line; one Parquet
+      row group written per envelope (streaming, peak memory bounded to one envelope's rows). Fix shipped via
+      quickmerge: deployment-service@d5f850f (on live-defi-rollout; LDR→main auto-promote in flight). QG green before
+      shipping. (repo: deployment-service)
 - [ ] [DATA] P0. **RE-OPENED 2026-08-07 — backfill never ran; cold tier still empty.**
       `gcloud storage ls     gs://central-element-323112-events/live-events/cold/cefi/book_snapshot_5/` and
       `.../trades/` (checked 2026-08-07 ~11:50 UTC) both return zero objects — `live-events/cold/cefi/**` is still
@@ -247,6 +240,17 @@ surface that actually exists (warm + cold event-log tiers).
   DATA P0 checkbox (this todo) AND the BACKEND P0 checkbox (Terraform applied + jhsb7 verified); (e) committing via
   safe-doc-push; (f) calling /done. NOTE: driver script `/tmp/compactor_backfill_driver.sh` has a `|| true` bug — it
   won't detect per-date failures; verify cold GCS objects MANUALLY before flipping.
+- **2026-08-07 ~13:51 UTC (slot-11 worker, data_engineering, post-compact continuation)**: (1) BACKEND P0 CONFIRMED:
+  jhsb7 ran 70+ min without OOM (vs. <5-min death on 512Mi/1CPU) — Terraform 4Gi/2CPU fix live. jhsb7 cancelled at 13:51
+  UTC to avoid hours of wasted compute: with old code every 175MB warm file downloads then hits immediate
+  ValidationError, so jhsb7 would never write cold files and would loop for ~11 hrs on book_snapshot_5 alone. (2) P1
+  NDJSON FIX SHIPPED: `compact_shard` now iterates lines within each warm GCS file (NDJSON split), parsing one
+  `CanonicalPersistEnvelope` per line. deployment-service@d5f850f quickmerge-ed at ~13:43 UTC (LDR push confirmed, QG
+  green). (3) DATA P0 BACKFILL BLOCKED: waiting for new container image to be built via CI/CD after d5f850f promotes
+  from LDR→main. Once new image deployed, run
+  `bash deployment-service/scripts/jobs/run-compactor-date-range-backfill.sh` for 2026-08-01..2026-08-07. Background
+  driver `busop6lkg` stopped (was waiting for jhsb7 SUCCEEDED which won't happen). Heartbeat b042b84yx last fired at
+  13:44 UTC.
 - **2026-08-07 ~13:13 UTC (slot-11 worker, data_engineering, second pre-compact checkpoint)**: jhsb7 STILL RUNNING
   (runningCount=1, no completion time, 31 min elapsed). OOM fix confirmed: previous runs died in ~5 min on 512Mi; jhsb7
   has been alive 31 min under 4Gi/2CPU. **NEW FINDING: all 1497 cefi/book_snapshot_5 warm files for 2026-08-06 fail
