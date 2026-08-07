@@ -133,10 +133,15 @@ reasoning above.
 - [ ] [SCRIPT] P1. **CORRECTED 2026-08-04 (na-eligibility-audit) — the "whichever side loses, implement" framing is
       stale.** Option A's reverse-mapper fix already shipped (`market-tick-data-service@8a6bbc97`, 2026-07-30 22:55 UTC
       — landed BEFORE this operator decision, without the sign-off `[OPERATOR] P1` above requires). Remaining scope,
-      either branch: (a) reconcile the module docstring's now-conflicting "no marker" narrative in `okx_futures_ws.py`
-      against what actually shipped; (b) IF the operator instead ratifies Option B, revert this already-shipped change
-      and implement Option B in instruments-service's `tardis/parsing.py` OKX branch instead (the harder path now that A
-      is live). Not closed — real work remains on both branches.
+      either branch: (a) ✅ DONE-ELSEWHERE 2026-08-06 (batch8 todo 3, governance-sweep activation-readiness check) —
+      `okx_futures_ws.py`'s module docstring already correctly describes the shipped `@LIN`/`@INV` marker convention;
+      the "no marker" narrative was stale in this doc's text, not in the live file. Verified at
+      `market-tick-data-service@8a6bbc97` and re-confirmed present in the LDR→main squash-promote `b5a1aa73`
+      (2026-07-31). No code change needed for sub-part (a). (b) MOOT — `[OPERATOR] P1` ratified Option A 2026-08-06, no
+      Option-B revert will be performed. Checkbox left open per
+      `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md` todo 1 (batch8 finalize reconciliation 2026-08-07).
+      **Remaining open in this doc: `[SCRIPT] P1` (nominally — both sub-parts resolved/moot as noted above),
+      `[SCRIPT] P2` (parity test), `[RESEARCH] P2` (AAPL-USD live check)** — 3 items.
 - [ ] [SCRIPT] P2. Add a live-vs-batch OKX-FUTURES instrument_id parity test (mirroring the existing
       BINANCE-FUTURES/KRAKEN-FUTURES parity tests) so this class of drift can't silently regress again.
 - [ ] [RESEARCH] P2. Live-verify whether AAPL-USD (and any other equity-underlying) OKX-FUTURES dated-future universe

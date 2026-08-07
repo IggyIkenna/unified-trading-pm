@@ -54,7 +54,7 @@ depends_on: []
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Quiet-host rerun CONFIRMED a genuine MDPS defect, root cause identified (`_read_tick_data`
 > full-file load at live_workers.py:489), and the predicate-pushed read fix shipped
-> market-data-processing-service@4f2b99e (batch8 todo 2, QG green) — both `[x]` todos closed with the fix landed. Moved
+> market-data-processing-service@4f2b99e (batch8 todo 2, QG green) — all 3 `[x]` todos closed with the fix landed. Moved
 > by the 2026-08-06 AO issue-doc archive sweep.
 
 # MDPS derivative_ticker candle build: high RSS for a single instrument, unconfirmed root cause
@@ -128,6 +128,14 @@ genuine defect — hence P3, not P1 like todo 1.
       columns. **Fix**: Use `pl.scan_parquet` with `row_index_name` + predicate on `data_type` column, or pyarrow
       `ParquetFile.read_row_groups()` filtered by row-group statistics, to only load the target data_type's row groups —
       never materializing book_snapshot_5/trades data at all. Repo: market-data-processing-service.
+
+- [x] ✅ [BACKEND] P1. **Implement the predicate-pushed read fix in `_read_tick_data`.** —
+      `market-data-processing-service@4f2b99e` (batch8 todo 2, QG green, 2346 tests passed): `_read_tick_data` now
+      accepts `filter_data_type`/`filter_related_types`; caller pre-computes the filter before GCS download; reader uses
+      `pl.scan_parquet + filter + collect` to load only matching row groups, skipping `book_snapshot_5`/`trades` data
+      entirely. Promoted from Progress Log prose to a real checkbox per
+      `cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md` todo 1 (batch8 finalize reconciliation 2026-08-07).
+      Repo: market-data-processing-service. **Remaining open in this doc: 0** (doc is archived, all resolved).
 
 ## Progress Log
 

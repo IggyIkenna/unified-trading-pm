@@ -66,7 +66,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** Batch 8's 3 todos draw from 3 source docs:
+- [x] ✅ [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** Batch 8's 3 todos draw from 3 source docs:
       `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` (the G1.2/GATE-G4/MANIFEST_ALLOW_STALE_FALLBACK items only —
       the doc's other 2 open items, EXTENDED-STARKNET CF-11 and formal GATE G1 sign-off, stay open, untouched),
       `issues/mdps_derivative_ticker_single_instrument_high_rss_2026_08_03.md` (promote the "Implement the fix" prose
@@ -77,7 +77,14 @@ context_scope:
       batch-8 todo, flip the corresponding checkbox/section in its named source doc citing the shipping commit —
       **verify the commit exists and is reachable on `origin/live-defi-rollout` before citing it**. **Done when**: every
       landed todo's source checkbox is flipped (or, for the prose-only item, promoted+flipped) with a verified commit,
-      and each source doc's remaining-open count is explicitly re-stated rather than assumed.
+      and each source doc's remaining-open count is explicitly re-stated rather than assumed. — **DONE 2026-08-07**: (1)
+      instruments doc: G1.2/GATE-G4/MANIFEST_ALLOW_STALE_FALLBACK flipped at unified-trading-pm@82a9ec25 (slot-16,
+      2026-08-07); 2 open items remain (EXTENDED CF-11, GATE G1 sign-off). (2) mdps doc (archived): "Implement the fix"
+      promoted to `[x] ✅ [BACKEND] P1` checkbox citing `market-data-processing-service@4f2b99e` (verified reachable on
+      origin/live-defi-rollout); 0 open items remain. (3) okx doc: `[SCRIPT] P1` sub-part (a) marked DONE-ELSEWHERE
+      citing `market-tick-data-service@8a6bbc97` (verified reachable); sub-part (b) marked MOOT (operator ratified
+      Option A 2026-08-06); checkbox left open per plan; 3 items nominally open (`[SCRIPT] P1` shell, `[SCRIPT] P2`,
+      `[RESEARCH] P2`).
 
 - [ ] [REVIEW] P1. **Re-check the two items carried forward from batch4→batch6→batch7's Deferred/re-check sections for
       cleared gates — still unresolved as of 2026-08-06, third consecutive re-check to find them unchanged.** (a) Has
