@@ -57,13 +57,6 @@ by hand._
   — Gated closeout for cefi_satellite_ao_dispatch_batch6_2026_08_02.md — machine-held via depends_on + gate_on_depends:
   true until all 6 of that plan's todos are done. Mirrors the batch1 through batch5 finalize pattern: reconcile each
   source…
-- [`cefi_satellite_ao_dispatch_batch8_2026_08_06`](./cefi_satellite_ao_dispatch_batch8_2026_08_06.md) — Eighth
-  AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-06 (scheduled autonomous dispatch,
-  tranche=cefi, slot 3, dispatch agt-02411c). Phase 0 re-derived the covering-plan set via…
-- [`cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize`](./cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md)
-  — Gated closeout for cefi_satellite_ao_dispatch_batch8_2026_08_06.md — machine-held via depends_on + gate_on_depends:
-  true until all 3 of that plan's todos are done. Mirrors the batch1 through batch7 finalize pattern: reconcile each
-  source…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) **[draft]** —
   Ninth AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous
   dispatch, tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…

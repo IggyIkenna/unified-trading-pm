@@ -35,8 +35,8 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
     /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
@@ -72,7 +72,7 @@ source: >-
   before drafting.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
