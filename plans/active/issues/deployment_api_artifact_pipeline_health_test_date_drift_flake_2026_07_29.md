@@ -87,7 +87,7 @@ string. Low-risk, mechanical — no production behavior change, test-only.
 > re-run — register: `/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md`). This doc's own Progress Log
 > had already self-nominated for exactly this conversion. Scope and fix shape are unchanged.
 
-- [ ] [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
+- [x] ✅ [CODE] P3. **De-flake `test_health_flags_recent_failures_dup_builds_and_registry_sprawl`** — make the
       trailing-7-day health window deterministic under test: either parameterize `_resolve_window`'s "today"
       (`deployment_api/services/artifact_pipeline/service.py:79-92`) behind an injectable clock, or compute the
       `_fact(...)` fixture date relative to a frozen `datetime.now(UTC)` rather than the literal

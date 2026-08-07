@@ -599,11 +599,14 @@ history, so the live path uses **every venue we can reach by public API or hold 
 estimates (filed below) where a characteristic isn't yet verified. **Probed reachable 2026-06-17** (public, no auth):
 Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget, Kraken Futures, MEXC** (11 venues).
 
-- [ ] [STRATEGY] P2. Build the harness `--live` multi-venue snapshot mode per the spec doc §1–§3: fetch current funding
-      from all 11 venues (interval-aware annualise — HL+Kraken hourly, Kraken `fundingRate÷markPrice`, Deribit
+- [x] ✅ [STRATEGY] P2. Build the harness `--live` multi-venue snapshot mode per the spec doc §1–§3: fetch current
+      funding from all 11 venues (interval-aware annualise — HL+Kraken hourly, Kraken `fundingRate÷markPrice`, Deribit
       8h-figure, Gate/MEXC interval from the API), `FundingPoint(day="LIVE")` → existing
       `_build_panel`/ensemble/`_build_instructions`/ `_diff_to_target` (batch==live). New venues default to cash-margin
-      (conservative). Expand coins to ~40. **Repo: e2e-testing harness.**
+      (conservative). Expand coins to ~40. **Repo: e2e-testing harness.** **FLIPPED 2026-08-07 (plan-reconcile
+      agt-c6e8c7)**: e2e-testing@326a345 (LDR re-stamp of PL-cited 6e2ffb8; env-only diff verified) — 14 venues incl
+      dYdX/Vertex/Drift, 446 funding points live-verified, cash-margin default, coins 30→40, FundingPoint day="LIVE" all
+      present.
 - [ ] [DATA] P2. UAC `perp_funding_cadence`: add Gate/KuCoin/Bitget/Kraken/MEXC cadences (+ per-pair non-8h exceptions);
       prefer the interval the API returns. **Repo: unified-api-contracts.**
 - [ ] [DATA] P2. UAC `venue_collateral`: verify + add the 5 new venues' real collateral programs (several run
@@ -616,9 +619,11 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 - [ ] [DATA] P2. Live Aave reserve-data adapter (supply/borrow APY from `getReserveData`
       liquidityRate/variableBorrowRate, RAY-scaled) for the cash floor + recursive borrow leg; Compound v3 source.
       **Repo: e2e-testing → mtds.**
-- [ ] [STRATEGY] P2. Wire **dYdX v4 + Vertex** (both PUBLIC, verified 2026-06-17) into the live snapshot: dYdX
+- [x] ✅ [STRATEGY] P2. Wire **dYdX v4 + Vertex** (both PUBLIC, verified 2026-06-17) into the live snapshot: dYdX
       `indexer.dydx.trade/v4/perpetualMarkets` (`nextFundingRate`, hourly); Vertex `gateway.prod`/`archive.prod`
-      (public; `api.vertexprotocol.com` is a stale 404). **Repo: e2e-testing harness.**
+      (public; `api.vertexprotocol.com` is a stale 404). **Repo: e2e-testing harness.** **FLIPPED 2026-08-07
+      (plan-reconcile agt-c6e8c7)**: wired at e2e-testing@326a345 (dYdX indexer.dydx.trade + Vertex
+      gateway.prod/archive.prod, both PUBLIC per 06-17 operator correction).
 - [ ] [DATA] P2. Production Drift funding in **MTDS** via the isolated-venv reader pattern (a Drift handler that shells
       out to the driftpy venv / a Drift gateway subprocess; canonize into `derivative_ticker` like other venues). Same
       isolation — driftpy stays out of MTDS flat deps. **Repo: market-tick-data-service.**
@@ -630,10 +635,11 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
       RPC. Drift **takes jitoSOL/mSOL as margin → unlocks SOL staked-basis** (the only venue that does). Already in UAC
       (`venue_mapping`/`chain_env`). Not BLOCKED-CREDENTIALS — a wiring task. **Repo: e2e-testing → mtds drift
       handler.**
-- [ ] [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN + use
-      the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
+- [x] ✅ [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN +
+      use the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
       degrades to a point estimate under < halflife days. Backtest still needs history; this is live/paper only. **Repo:
-      e2e-testing harness.**
+      e2e-testing harness.** **FLIPPED 2026-08-07 (plan-reconcile agt-c6e8c7)**: operator 06-17 carve-out (WARN +
+      current snapshot, never block; EWMA degrades to point estimate) shipped at e2e-testing@326a345.
 - [ ] [STRATEGY] P3. Genuinely credentialed venues (Paradex, Backpack, Edgewink): file each `BLOCKED-CREDENTIALS` with
       the operator ask + build the adapter scaffold anyway (External-Data-Always-Available rule). **Repo: e2e-testing →
       ping ledger.**
@@ -648,8 +654,12 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 - [ ] [DATA] P2. **Tick size** per (coin, venue) — pull from each venue's instrument-info endpoint; feed the
       min-increment into spread/round-cost + order sizing. Not yet in the harness (only ADV + spread). **Repo:
       e2e-testing harness → MDPS.**
-- [ ] [STRATEGY] P2. Backfill the liquidity snapshot as a **constant** across the backtest window + document the
+- [x] ✅ [STRATEGY] P2. Backfill the liquidity snapshot as a **constant** across the backtest window + document the
       assumption inline in the harness/report (e2e-only approximation until MDPS history exists). **Repo: e2e-testing.**
+      **FLIPPED 2026-08-07 (plan-reconcile agt-c6e8c7)**: constant backfill live via e2e-testing@2ac1a9d (liquidity
+      layer: ADV + market-width snapshot) + @760d6ba (execution-cost model) —
+      `scripts/defi/staked_basis_funding_scan.py:2349` "backfill the live ADV/spread snapshot as a CONSTANT" (NOT
+      326a345 — that commit has no liquidity code).
 - [ ] [STRATEGY] P2. **Dispersion per-venue-liquidity guard** (live-exclusion shipped 2026-06-17; deeper fix pending):
       `--live` perp-perp dispersion picks cross-venue funding EXTREMES (e.g. LDO 91% short KRAKEN/long BITGET) that
       mean-revert — tighten (per-venue winsor, min-ADV venue filter, require the spread to persist, or down-weight
@@ -664,8 +674,11 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
       raises the Tardis bill; confirm scope/window with operator before launch. This is the ONE lever that adds REAL
       opportunity to the carry backtest (vs reweighting 20 coins). **Repo: deployment-service +
       market-tick-data-service.**
-- [ ] [DATA] P3. Pull HYPE's full HL-S3 funding history (asset_ctxs) from its listing (~Nov-2024) via
-      `HyperliquidS3Downloader` to close the small pre-2025 gap. **Repo: market-tick-data-service.**
+- [x] ✅ [DATA] P3. Pull HYPE's full HL-S3 funding history (asset_ctxs) from its listing (~Nov-2024) via
+      `HyperliquidS3Downloader` to close the small pre-2025 gap. **Repo: market-tick-data-service.** **FLIPPED
+      2026-08-07 (plan-reconcile agt-c6e8c7)**: market-tick-data-service@98d12be — the S3 `asset_ctxs` archive backfill
+      (same HyperliquidS3Downloader axis, NOT Tardis): 100% perp_funding coverage 2023-05-20→2026-06-09 (1117/1117 days,
+      0 gaps, ~230-coin universe); HYPE (Nov-2024 listing) inside the covered window.
 - [ ] [STRATEGY] P3. Gate this behind the v9 data-migration completion (per project sequencing); the harness auto-picks
       up new coins once they're in GCS (it skips dataless coins via honest absence). **Repo: e2e-testing.**
 

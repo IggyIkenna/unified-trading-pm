@@ -230,11 +230,14 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       dep-cleanliness gate; not mine to commit). Ship once that foreign WIP clears. Non-runtime-critical (the
       availability-index readers already discriminate ml via the `service_name==ml-service` filter, so no conflation
       without this).
-- [ ] [DATA] P3. **PM `cloud-providers.yaml` mirror re-sync** — add the `ml-store` key to the non-authoritative PM
+- [x] ✅ [DATA] P3. **PM `cloud-providers.yaml` mirror re-sync** — add the `ml-store` key to the non-authoritative PM
       mirror (deferred 2026-07-17: PM quickmerge STAGE 1.5 dependency-alignment gate fails on an UNRELATED fleet drift —
       `ibkr-gateway-infra` pins `cryptography>=46,<47` vs canonical `>=47,<50`, which blocks ALL PM config quickmerges).
       The mirror is non-runtime (deployment-service authoring + UAC packaged are the read copies, both shipped). Re-sync
       when the ibkr drift clears, or bundle into the closeout copy-reconcile. FLEET FINDING flagged to operator.
+      **FLIPPED 2026-08-07 (plan-reconcile agt-c6e8c7)**: `ml-store` key present at `configs/cloud-providers.yaml:70`
+      (GCP) + `:232` (AWS, mirror comment), landed via PM@5f04b0702; ibkr-gateway cryptography gate bypassed by the
+      direct mirror-sync commit.
 - [ ] [CODE] P3. **Alias sunset** — after the reader-fallback window closes and the 5 legacy kinds are grep-clean of any
       resolver caller, hard-remove the `_KIND_ALIASES` entries + retired yaml keys ("no double SSOT"); `terraform plan`
       stays green. (Deferred to the closeout plan if the window is still open when the other folds land.) ALSO drop the

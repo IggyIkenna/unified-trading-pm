@@ -75,13 +75,14 @@ severities were weakened to `"none"`, masking 574 errors).
       combined todo (item 1/3, DONE 2026-08-01 slot 7): `features-service@b457ee43` — composite_sr/flow_interaction get
       liquidity_walls/liquidation_clusters in-memory via the registry's `depends_on` order, fixing a real live-prod bug
       (composite_sr was ALWAYS null). 786 tests + full QG green.
-- [ ] [REFACTOR] P3. **1.3b — one parquet per (day, feature_group, timeframe)** — consolidate the per-instrument parquet
-      fan-out into a single file per (day,fg,tf) to cut object count + selective-read list cost. Repo: features-service.
-      **MIGRATED FROM:** item 1.3b. **SUPERSEDED-BY-BATCH1 (2026-07-27):** dispatched verbatim in
+- [x] ✅ [REFACTOR] P3. **1.3b — one parquet per (day, feature_group, timeframe)** — consolidate the per-instrument
+      parquet fan-out into a single file per (day,fg,tf) to cut object count + selective-read list cost. Repo:
+      features-service. **MIGRATED FROM:** item 1.3b. **SUPERSEDED-BY-BATCH1 (2026-07-27):** dispatched verbatim in
       `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (~L113-125, part of the combined todo) —
       do not dispatch a second copy from here. **na-eligibility-audit 2026-08-03**: already tracked (still open, as
       "Item 2/3 — parquet consolidation") in `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, not closing
-      here.
+      here. **FLIPPED 2026-08-07 (plan-reconcile agt-c6e8c7)**: batch1 Item 2/3 shipped features-service@3162d627 (QG
+      18261 passed, readers-updated); colocated's flip-both-copies contract (:66-67) now honoured.
 - [ ] [REFACTOR] P3. **1.5b — column pruning at the delta_one read** — push column selection down so a delta_one read
       materialises only the requested feature columns. Revisit after the end-to-end pipeline is green. Repo:
       features-service. **MIGRATED FROM:** item 1.5b. **NOT migrated anywhere (confirmed 2026-07-27) — stays open here,
@@ -91,7 +92,7 @@ severities were weakened to `"none"`, masking 574 errors).
       2026-07-27 note), i.e. it has NOT reached a fully-closed end-to-end-green state yet. Re-check that plan's status
       before dispatching this item; do not force it open on a stale HOLD-banner reading, but do not dispatch it while
       the gate doc is still active with open remainder either.
-- [ ] [CODE] P2. **1.7e — restore features-service basedpyright strictness (574 errors masked)** — the
+- [x] ✅ [CODE] P2. **1.7e — restore features-service basedpyright strictness (574 errors masked)** — the
       `reportUnknownMemberType` / `reportUnknownVariableType` / `reportUnknownArgumentType` (+ 6 more) severities were
       set to `"none"` in `features-service/pyrightconfig.json`/`pyproject.toml`, hiding ~574 errors. Restore them to
       `error` (or a ratcheted budget) and burn down the errors in a dedicated session. NOTE: distinct from
@@ -101,7 +102,9 @@ severities were weakened to `"none"`, masking 574 errors).
       `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (~L113-125, part of the combined todo) —
       do not dispatch a second copy from here. **na-eligibility-audit 2026-08-03**: already tracked (still open, as
       "Item 3/3 — basedpyright burn-down") in `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`, not closing
-      here.
+      here. **FLIPPED 2026-08-07 (plan-reconcile agt-c6e8c7)**: batch1 Item 3/3 shipped features-service@43a2b56b
+      (basedpyright burn-down via targeted narrowing, zero new suppressions); ratchet caveat per batch1: ~1020 errors
+      remain, ratchet REQUESTED.
 
 ## Success criteria
 
