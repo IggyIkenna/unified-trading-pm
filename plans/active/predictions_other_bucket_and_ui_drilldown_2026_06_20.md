@@ -14,7 +14,7 @@ tags: [prediction, ui, drilldown, synthetic-bucket, canonical-question-group, de
 related:
   [
     ../epics/predictions_master.md,
-    ./prediction_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md,
     ../epics/infrastructure_master.md,
   ]
 created: "2026-06-12"
@@ -25,7 +25,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-last_updated: 2026-06-27
+last_updated: 2026-08-07 # was 2026-06-27 -- plan_reconciler agt-e7f024: repointed a dangling related: ref
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:
@@ -49,9 +49,10 @@ context_scope:
 > predictions consumer-surface work: the synthetic `OTHER` canonical-question-group bucket end-to-end (UAC seeding,
 > classifier event, data-status rendering, writer rebundle coverage) + the deployment-ui 3-level drilldown + the
 > data-status predictions panel shape. The manifest/parquet canonicalisation + writer-rebundling work is owned by
-> [`prediction_manifest_canonicalisation_2026_06_01.md`](./prediction_manifest_canonicalisation_2026_06_01.md) — do NOT
-> duplicate it here. The deployment-ui drilldown also aligns with `infrastructure_master` Data-status multi-axis
-> follow-up (cross-link only — this plan owns the predictions-specific slice).
+> [`prediction_manifest_canonicalisation_2026_06_01.md`](../archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md)
+> (archived, `status: active` retained on the doc itself) — do NOT duplicate it here. The deployment-ui drilldown also
+> aligns with `infrastructure_master` Data-status multi-axis follow-up (cross-link only — this plan owns the
+> predictions-specific slice).
 
 ## Context
 
@@ -184,3 +185,6 @@ in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% r
   `./prediction_manifest_canonicalisation_2026_06_01.md`, which no longer resolves under `plans/active/` — it was
   archived to `plans/archive/2026_07/`; left out of context_scope, not flagged for a body rewrite (out of this skill's
   scope).
+- **plan_reconciler 2026-08-07 (agt-e7f024, prediction tranche)**: fixed the dangling ref flagged above — the
+  frontmatter `related:` entry and the "Provenance" body link both repointed to
+  `../archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md`.
