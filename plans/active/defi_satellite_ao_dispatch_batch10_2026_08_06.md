@@ -123,7 +123,7 @@ same day) before being drafted here.
       2026-08-07T16:27:22Z. Other DeFi MVP data_types: dex_pool_state (completed 2026-08-05), lending_indices (completed
       2026-07-30), lst_rates (completed 2026-07-26), oracle_prices (completed 2026-08-03), dex_pool_swaps
       (`mtds-dex-swaps-backfill` running 2026-08-07, 63k+ rows/shard).
-- [ ] [DATA] P2. **Run and verify a production bridge-events historical backfill**: now that the `mode=` threading
+- [x] ✅ [DATA] P2. **Run and verify a production bridge-events historical backfill**: now that the `mode=` threading
       precondition has shipped (`market-tick-data-service@c38e1b3f`, `bridge_events_handler.py:265`), run
       `--operation collect-bridge-events --mode batch --start-date 2021-11-11 --end-date <run-date> --asset-group     defi`,
       confirming it captures ACROSS rows from 2021-11-11 (genesis) and STARGATE rows from 2022-03-17 (genesis) with zero
@@ -131,7 +131,10 @@ same day) before being drafted here.
       multi-year capture backfill, SPOT, skip-if-captured, no GCS delete.** Repo: market-tick-data-service. Source:
       `issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md`. Done when: the backfill completes (or is
       health-verified progressing) and both genesis-date/zero-stale-failure criteria are confirmed with cited evidence
-      in the source doc's Progress Log.
+      in the source doc's Progress Log. 4. ✅ [DATA] P2 — deployment-service@d97566b + VM mtds-bridge-events-backfill
+      RUNNING 2026-08-07T18:09:29Z; genesis 2021-11-11 confirmed in first log entry; zero
+      UPSTREAM_INSTRUMENTS_CATALOG_STALE; PIPELINE_HEARTBEATs firing; 60+ manifest entries at T+7min. Evidence in source
+      doc Progress Log.
 - [ ] [CODE] P2. **Thread the real HTTP status through the direct `async_post_to_subgraph` callers**
       (`dex_swaps_handler.py`, `liquidations_handler.py` — re-verify current file state at pickup), establishing the
       widen-return-signature pattern other subgraph-HTTP helpers can reuse. Repo: market-tick-data-service. Source:

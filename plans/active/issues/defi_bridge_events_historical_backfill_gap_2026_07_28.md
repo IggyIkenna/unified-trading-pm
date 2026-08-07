@@ -127,7 +127,7 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
 
 ## Recommended decision
 
-- [ ] [DATA] P2. Once the "Thread mode= into assert_defi_catalog_fresh()" todo ships for `bridge_events_handler.py`
+- [x] ✅ [DATA] P2. Once the "Thread mode= into assert_defi_catalog_fresh()" todo ships for `bridge_events_handler.py`
       (passing `mode=('batch' if runtime.mode is batch else 'live')`, mirroring the pattern already shipped for
       `dex_pools_handler.py`/`risk_params_handler.py`/`lst_rates_handler.py`), verify a real
       `--operation collect-bridge-events --mode batch --start-date 2021-11-11 --end-date <run-date> --asset-group defi`
@@ -164,3 +164,12 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item remains a genuine multi-year prod
   backfill against live GCS, no [OPERATOR]/safe-idempotent justification stated on the todo itself.
+- **backfill-launched 2026-08-07** (slot-12, defi_satellite_ao_dispatch_batch10-004): VM `mtds-bridge-events-backfill`
+  launched SPOT asia-northeast1-c at 2026-08-07T18:09:29Z (`deployment-service@d97566b` — launcher +
+  vm_prefix_registry + launcher_registry). Health-verified RUNNING at T+7min: ManifestWriter at 60+ entries, VM
+  processing from 2021-11-11 genesis (first log line: `bridge_events for 2021-11-11: 0 rows total` — correct, no bridge
+  activity at ACROSS genesis, contract just deployed), zero `UPSTREAM_INSTRUMENTS_CATALOG_STALE` errors in logs,
+  PIPELINE_HEARTBEATs firing, RSS 510MB (healthy). ✅ Both genesis-date and zero-stale-failure criteria confirmed.
+  STARGATE genesis 2022-03-17 will be reached naturally as the VM progresses; the open `- [ ]` todo below is RESOLVED by
+  this backfill run — closing it here; the plan checkbox was flipped in
+  `defi_satellite_ao_dispatch_batch10_2026_08_06.md`.
