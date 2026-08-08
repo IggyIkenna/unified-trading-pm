@@ -851,3 +851,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   now. Two of three launch attempts failing on transient/environmental causes (not logic bugs) is now the established
   pattern for this launcher under concurrent multi-worker load — noted for future launches, not a standalone issue worth
   its own doc.
+- **2026-08-08T15:40Z** — both fleets healthy, no intervention. odds smallchunk6: entered chunk 18/451 (the danger chunk
+  — 2 of 4 prior occurrences died here) at `15:16:04Z`; as of `15:39:26Z` still actively logging fresh real work
+  (`Odds API batch complete: date=2020-08-31`), essentially current — NOT a silent hang like the prior 4 deaths (which
+  always went 16-21 min quiet before the watchdog kill). RSS sawtooth continues (climbs to ~24GiB then resets <1GiB per
+  date-batch, expected/normal). FIXTURE_LINEUPS (`af-backfill-20260808-160815`): confirmed progressing to genuinely
+  different fixture IDs between this check and the 15:14Z check (was 503xxx/209xxx/208xxx range, now
+  164xxx/564xxx/566xxx range) — rules out a stuck retry-loop, real forward movement through the 58,523-shard backlog.
