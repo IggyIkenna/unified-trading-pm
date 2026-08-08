@@ -74,15 +74,20 @@ skill's no-double-gate mechanism).
       todo 1 acknowledged "RESOLVED independently 2026-08-03, before this batch was ever dispatched." Source doc
       confirmed NOT an archival candidate: 1 open todo remains (P1-C `sync-system.mdc` — human decision on DO: line, no
       successor script). No other section touched.
-- [ ] [REVIEW] P3. **Reconcile `issues/host_root_disk_full_transient_2026_07_13.md`'s `[INFRA] P2` todo.** Once batch6's
-      hardlink-investigation todo ships (with its dated finding + fixable/not-fixable verdict recorded in that doc),
-      update the source doc's own `[INFRA] P2` todo to reflect the investigation is done: if the finding is NOT-FIXABLE
-      or fixable-but-out-of-scope-here, flip the checkbox `[x]` citing the batch6 commit and the recorded verdict; if a
-      concrete fix was identified but not yet built (per batch6's explicit scope exclusion on building/deploying prune
-      tooling), leave the checkbox open but update its text to reflect the narrowed remaining scope (the fix-build step
-      only, not the whole original 3-part item) and confirm the cron-install sub-item is still correctly
-      `[OPERATOR]`-gated. This source doc keeps its own operator-gated remainder either way — `assigned_vm: NA`, NOT an
-      archival candidate this round. (repo: unified-trading-pm)
+- [x] ✅ [REVIEW] P3. **Reconcile `issues/host_root_disk_full_transient_2026_07_13.md`'s `[INFRA] P2` todo.** Once
+      batch6's hardlink-investigation todo ships (with its dated finding + fixable/not-fixable verdict recorded in that
+      doc), update the source doc's own `[INFRA] P2` todo to reflect the investigation is done: if the finding is
+      NOT-FIXABLE or fixable-but-out-of-scope-here, flip the checkbox `[x]` citing the batch6 commit and the recorded
+      verdict; if a concrete fix was identified but not yet built (per batch6's explicit scope exclusion on
+      building/deploying prune tooling), leave the checkbox open but update its text to reflect the narrowed remaining
+      scope (the fix-build step only, not the whole original 3-part item) and confirm the cron-install sub-item is still
+      correctly `[OPERATOR]`-gated. This source doc keeps its own operator-gated remainder either way —
+      `assigned_vm: NA`, NOT an archival candidate this round. (repo: unified-trading-pm) — **DONE 2026-08-08**:
+      batch6's verdict (`88668b743`) was FIXABLE-not-yet-built, so per this todo's own second branch the checkbox was
+      left OPEN in the source doc and its text narrowed to the fix-build step only (add `UV_LINK_MODE`/`UV_CACHE_DIR`
+      exports to `scripts/setup.sh` + single-repo `nlink>1` verification); cron-install sub-item (a) confirmed correctly
+      `[OPERATOR]`-gated (already done). Source doc confirmed NOT an archival candidate — `assigned_vm: NA` unchanged.
+      See `issues/host_root_disk_full_transient_2026_07_13.md` Progress Log for the full reconciliation entry.
 - [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch6_2026_08_02.md`** once both todos above are done and both
       reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix
       every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both
