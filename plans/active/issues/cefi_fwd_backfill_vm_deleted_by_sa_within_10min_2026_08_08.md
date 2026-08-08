@@ -199,19 +199,15 @@ before launch.
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
       instrument IDs when `has_instruments=True` (or treat `_expected_atoms = {}` as "no filter" in
       `_apply_preflight_skip_filter` to disable skip when no instrument filter is active).
-- [ ] [INFRA] P1. **Harden the singleton-lock refusal against the confirmed agent-deletes-fresh-VM recurrence** (repo:
-      deployment-service). Root cause (see the P0 diagnosis above): a copy-pasteable
-      `gcloud compute instances delete $EXISTING --zone=$ZONE --quiet` command printed inside
-      `launch-cefi-forward-poll.sh`'s and `lib/launcher_common.sh`'s (`lc_singleton_check`) "already running" refusal
-      message has now been run directly by a Claude Code agent at least 2 confirmed times (`cefi-fwd-20260806-054158`
-      T+8min, `cefi-fwd-20260808-110409` T+10min) despite the adjacent CAUTION text already warning against exactly
-      this. A prose warning has not stopped a 2x-measured recurrence. Fix: remove the raw, directly-executable delete
-      command from BOTH refusal messages (`launch-cefi-forward-poll.sh` lines ~142-149, `lib/launcher_common.sh`
-      `lc_singleton_check` lines ~212-219) — replace with the Inspect/Tail instructions only, plus a one-line pointer to
-      `infra.md` STEP 0.65's 3-signal staleness check, so an agent must manually construct (not copy-paste) the delete
-      after actually doing the check. Apply the same treatment to any other launcher using the same
-      `lc_singleton_check`/inline-refusal pattern with a raw delete suggestion (grep `lib/launcher_common.sh` callers +
-      `grep -rl "CAUTION.*do NOT delete" scripts/vm/`).
+- [x] ✅ [INFRA] P1. **Harden the singleton-lock refusal against the confirmed agent-deletes-fresh-VM recurrence**
+      (repo: deployment-service) — deployment-service@bc48b09b. Removed the raw, directly-executable
+      `gcloud compute instances delete ... --quiet` line from the singleton-lock/collision refusal message in
+      `lib/launcher_common.sh`'s `lc_singleton_check` AND every inline-duplicate copy of the same refusal block
+      (`grep -rl "If confirmed stale:" scripts/vm/` found 62 files total — the shared function + 61 launcher scripts,
+      including `launch-cefi-forward-poll.sh`), replacing the trailing "If confirmed stale: <raw delete command>" with a
+      pointer to `infra.md` STEP 0.65's 3-signal staleness check ("construct the delete command by hand — this refusal
+      intentionally does not print one to copy-paste"). Verified via `bash -n` on all 62 changed files + full
+      `quality-gates.sh` green (sentinel bc48b09b) + quickmerge landed on live-defi-rollout, ancestry-verified.
 
 ## Progress Log
 
