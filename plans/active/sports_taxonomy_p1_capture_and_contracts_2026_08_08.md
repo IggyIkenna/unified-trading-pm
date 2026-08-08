@@ -159,11 +159,15 @@ achieved by exclusion, not canonicalisation.**
       parquet objects at the canonical path AND lands `captured` manifest rows with non-zero `row_count`. "The job
       exited 0" is not proof — the outage's whole signature is a job that succeeds while writing nothing. Cite the day,
       the object count, and the manifest row count.
-- [ ] [CODE] P0. **Add a staleness guard so a frozen raw source can never again silently feed the derived layer.** MDPS
+- [x] [CODE] P0. **Add a staleness guard so a frozen raw source can never again silently feed the derived layer.** MDPS
       must refuse (loudly) to derive `odds_snapshot`/`odds_movement`/`horizon` output for a day whose raw source shard
       is absent or older than a bounded threshold, rather than emitting derived rows off stale input. This is the defect
       that let 12 days of derived data be produced from a dead feed. Wire the failure into the existing
-      data-pipeline-alerts registry rather than inventing a new alert path.
+      data-pipeline-alerts registry rather than inventing a new alert path. ✅ market-data-processing-service@41cdb702d
+      — `DependencyChecker.check_sports_raw_source_captured` reads MTDS manifest for SPORTS bucket;
+      `_process_one_category` blocks odds_snapshot/odds_movement/odds_horizon_bucket when manifest has no
+      `capture_status=captured` row for trades/odds; emits `DP_DOWNSTREAM_BEFORE_UPSTREAM` alert; fails-open on manifest
+      read errors. 9 unit tests green. QG: ✅ ALL QUALITY GATES PASSED.
 
 ## Block B — contracts (P0/P1, after Block A's diagnosis, parallel within the block)
 
@@ -259,3 +263,9 @@ achieved by exclusion, not canonicalisation.**
   "trades max date 2026-07-26" was a stale read from `market-data-tick-sports-prd` per-bucket index at plan-authoring
   time — the canonical `instruments-store-sports-prd` manifest and live GCS both show captures post-07-26 from the 08-06
   backfill VM and resumed live capture.
+- **2026-08-08 (slot 11, infra)** — Block A todo-3 (staleness guard) flipped.
+  `DependencyChecker.check_sports_raw_source_captured` added to MDPS: reads MTDS manifest (SPORTS bucket), checks
+  `capture_status=captured` for `data_type in {trades, odds}`. `_process_one_category` blocks
+  `odds_snapshot`/`odds_movement`/`odds_horizon_bucket` when manifest has no captured row, emits
+  `DP_DOWNSTREAM_BEFORE_UPSTREAM` alert via existing UAC `DATA_PIPELINE_ALERT_RULES`. Fails-open on manifest read
+  errors. 9 unit tests. Shipped: market-data-processing-service@41cdb702d. QG green.
