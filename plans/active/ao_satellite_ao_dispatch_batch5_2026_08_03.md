@@ -141,7 +141,9 @@ below rather than duplicated here.
       is flipped `[x]` with the shipping commit sha cited in the same turn. Source:
       `/plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` (its
       4th, docs-only item — its P1 backend-routing-code item and P3 operator-sign-off item are explicitly self-gated in
-      the source doc and NOT in scope here). Repo: unified-trading-pm. — unified-trading-pm@ea5d699c9
+      the source doc and NOT in scope here). Repo: unified-trading-pm. — unified-trading-pm@6c4e57b8a (corrected
+      2026-08-08: original citation `ea5d699c9` was fabricated/unresolvable; real shipping commit verified via
+      `git log -- agents/review.md`, see the source doc's matching correction note)
 
 - [x] ✅ [REVIEW] P2. **Close out `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` — pure bookkeeping, no new
       investigation.** ~~Flip its remaining `[OPERATOR] P2` / `[REVIEW] P2` checkboxes~~ — **stale premise**: both were
