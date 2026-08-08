@@ -825,3 +825,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   full 58,523 shards (unchanged, no backfill had run against it yet). This flips the AF campaign's remaining scope to:
   FIXTURE_LINEUPS (running now) → INJURIES (62,709 needed, queued behind the same singleton lock) → final re-census
   across all 8 entities → close the doc. AF entity doc flipped + pushed at its 1000-line cap exactly (`0f2ba70293`).
+- **2026-08-08T15:00Z — CORRECTION: the first FIXTURE_LINEUPS launch attempt actually FAILED** (good thing the Progress
+  Log entry above already said "confirming next tick, not assuming success" — it hadn't converged yet, this confirms
+  why). Launcher output ended `ERROR: auto-republish completed but tarball(s) still stale ... aborting launch`.
+  Root-caused: `instruments-service` had a dirty `uv.lock` (harmless auto-regenerated diff — just added marker variants
+  for an already-declared `schema-validation` extra, from running the census scripts earlier this tick — not real work,
+  confirmed via `git diff --stat` = 7 lines, all mechanical). This IS the `auto`-mode tarball guard working as designed
+  (fixed `deployment-service@450b212`, 2026-08-07, per
+  `lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md`) — it correctly refused to launch onto
+  potentially-stale code rather than a new bug. Fixed by `git restore uv.lock` (confirmed zero content loss — pure
+  lockfile noise, not intentional work) and retried. Retry is currently in progress (backgrounded, >120s again — tarball
+  republish across 3 repos takes a while); confirming genuine VM creation next tick before trusting it.
