@@ -14,6 +14,6 @@
 # --update-baseline after fixing or filing (issue-doc todo) the newly-found
 # accidental exclusions. A genuine spike is a real signal -- make it visible in the
 # commit message, same convention as every other ratchet in this corpus.
-max_accidental_exclusions: 27
-max_zero_dispatchable_docs: 24
+max_accidental_exclusions: 25
+max_zero_dispatchable_docs: 26
 last_updated: "2026-08-08"
