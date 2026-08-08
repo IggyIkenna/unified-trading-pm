@@ -1,0 +1,25 @@
+# Shrinking-ratchet baseline for the disk-vs-backlog todo dispatchability delta
+# (check_ao_dispatch_visibility_gate.py).
+#
+# Tracks two numbers over the LIVE `assigned_vm: planning` population (plans/active/*.md +
+# plans/active/issues/*.md), computed by agent-orchestrator's REAL `_parse_open_todos` /
+# `_is_non_dispatchable` (never a re-implemented regex). SHRINKING ratchet, same convention
+# as na_corpus_baseline.yaml: a run that finds the CURRENT corpus WORSE than this baseline on
+# EITHER axis fails. The goal is not "zero exclusions" -- a genuine BLOCKED-CREDENTIALS todo
+# SHOULD be excluded from the backlog -- the goal is that invisible exclusion cannot grow
+# unattended: a new one is fine when it's genuinely deliberate, but it must be reviewed
+# (--report) before --update-baseline absorbs it.
+#
+# NEVER hand-raise these numbers to silence a run that just found the invisible set grew --
+# only --update-baseline after reviewing the new exclusions via --report. A deliberate raise
+# (a real batch of new BLOCKED-* todos) is a real signal -- make it visible with why in the
+# commit message, same convention as any other ratchet exception in this corpus.
+#
+# Do NOT "fix" a growth by widening agent-orchestrator's _BLOCKED_TOKEN_RE /
+# _STALE_MARKER_PREFIX_RE / _STALE_MARKER_SUFFIX_RE again -- four widenings (2026-07-28,
+# 07-29, 08-02, 08-08) already failed to converge on that approach. This ratchet is the fix:
+# make growth in the invisible set a hard, visible signal instead of trying to perfectly
+# regex-classify intent.
+max_excluded_todos: 45
+max_zero_dispatchable_docs: 24
+last_updated: "2026-08-08"

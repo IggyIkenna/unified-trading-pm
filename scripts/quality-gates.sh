@@ -827,6 +827,30 @@ if [ -f "$REPO_DOCS_SSOT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: AO dispatch-visibility ratchet — silently-excluded todo count ──
+# SSOT: plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md.
+# regen_backlog_from_plan.py's _parse_open_todos deliberately drops a todo asserting a live
+# BLOCKED-<token>/stretch marker from the backlog — correct on its own terms, but nothing
+# previously reported the disk-vs-backlog delta. Shrinking ratchet on that delta, computed via
+# agent-orchestrator's REAL parser (never a re-implemented regex) subprocess-invoked through its
+# own .venv — needs WORKSPACE_ROOT (the sibling clone) AND that sibling's .venv synced; CI
+# (siblings absent) degrades to a no-op, so this is the LOCAL / full-workspace gate, same shape
+# as the repo-docs-ssot + workflow-template-parity gates above.
+AO_DISPATCH_VISIBILITY_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_ao_dispatch_visibility_gate.py"
+if [ -f "$AO_DISPATCH_VISIBILITY_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running AO dispatch-visibility ratchet (silently-excluded todo count)..."
+    if python3 "$AO_DISPATCH_VISIBILITY_CHECKER" --workspace-root "$WORKSPACE_ROOT" --quiet; then
+        log_success "AO dispatch-visibility ratchet passed (at-or-below baseline, or AO sibling/.venv absent)"
+    else
+        echo "❌ AO dispatch-visibility ratchet — the silently-excluded (invisible-to-backlog) todo" >&2
+        echo "   count grew beyond baseline. Re-run with --report to see which docs/todos are new:" >&2
+        echo "   python3 ${AO_DISPATCH_VISIBILITY_CHECKER} --workspace-root \$WORKSPACE_ROOT --report" >&2
+        echo "   Fix genuine accidental exclusions (reword the todo), or if this is a reviewed," >&2
+        echo "   justified exception (real new BLOCKED-* todos), re-baseline: python3 ${AO_DISPATCH_VISIBILITY_CHECKER} --workspace-root \$WORKSPACE_ROOT --update-baseline" >&2
+        _post_gate_fail "ao-dispatch-visibility"
+    fi
+fi
+
 # ── Post-gates: agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) — HARD cap ──
 # SSOT: CLAUDE.md header § "Size budget". The agent rule files are a lean index (1-line directive +
 # codex pointer); detail lives in codex, never inline. They keep silently re-bloating, so the cap is
