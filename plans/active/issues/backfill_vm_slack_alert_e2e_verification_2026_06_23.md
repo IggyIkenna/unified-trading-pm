@@ -221,12 +221,15 @@ for these messages to close the verification loop.
       `dp_event_pubsub_delivery_gap_2026_06_22.md` (already archived, resolved) +
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (already `[x]`) are now all consistent.
 
-- [ ] [VERIFY] P2. **Operator spot-check `#data-pipeline-alerts` channel** for the 2 `DP_VM_EXIT_NONZERO` CRITICAL
-      alerts from ~13:45 UTC 2026-06-23 — genuinely still open, requires an operator to look at Slack; not something an
-      agent can self-certify. Given the alerting-service logging gap above, this is also the ONLY way to currently
-      confirm delivery for that surface (logs can't yet corroborate it).
+- [x] ✅ [VERIFY] P2. **RESOLVED 2026-08-08 (operator, NA-corpus blocker digest round 5, id=55)** — was: operator
+      spot-check `#data-pipeline-alerts` channel for the 2 `DP_VM_EXIT_NONZERO` CRITICAL alerts from ~13:45 UTC
+      2026-06-23. Superseded by better, hard evidence the operator provided directly: a real, current
+      `DP_VM_EXIT_NONZERO` CRITICAL alert (VM `mtds-live-smoke-cefi-20260808-044733-0e32e9`, exit_code=1, 2026-08-08
+      09:31 AM) pasted showing full delivery — this closes the original 2026-06-23 ask's underlying question (does Slack
+      delivery for this alert class actually work) with a newer, directly-inspected occurrence rather than the stale
+      6-week-old one. See the DEPLOY todo immediately below — same evidence closes both.
 
-- [ ] [DEPLOY] P0. **Rebuild + redeploy BOTH alerting-service (`dp-alerting-subscriber`) AND deployment-api
+- [x] ✅ [DEPLOY] P0. **Rebuild + redeploy BOTH alerting-service (`dp-alerting-subscriber`) AND deployment-api
       (`uts-prod-dp-exit-code-monitor`) Cloud Run units** so the Gap-4 verbose/actionable-alert fix (UTL envelope
       unwrap + explain block + run.log snippet + log link) is live; then verify a real `DP_VM_EXIT_NONZERO` renders VM
       name + exit code + log link + error snippet + explanation in `#data-pipeline-alerts`. (alerting-service +
@@ -244,7 +247,12 @@ for these messages to close the verification loop.
       `DP_VM_EXIT_NONZERO`/`EXIT_NONZERO` occurrence; **none found** — no VM has exited non-zero in the observable
       window, so there is no real event to inspect yet. This is not a stale citation, it's a genuine "nothing to verify
       against" gap — same class as Gap 3 below (operator-only, and only actionable once/if a real occurrence happens to
-      land in `#data-pipeline-alerts`). Checkbox stays open pending a live occurrence to inspect.
+      land in `#data-pipeline-alerts`). **RESOLVED 2026-08-08 (operator, NA-corpus blocker digest round 5, id=55)** — a
+      real occurrence finally landed: the operator pasted a live `DP_VM_EXIT_NONZERO` CRITICAL alert (VM
+      `mtds-live-smoke-cefi-20260808-044733-0e32e9`, exit_code=1, 2026-08-08 09:31 AM) showing full rendering — VM name,
+      exit code, asset group, cloud, source, and a working `run.log` trace link with real log content. Confirms the
+      Gap-4 render fix (envelope unwrap + explain block + run.log snippet + log link) actually renders correctly
+      end-to-end in production, closing the render-verification half this todo was waiting on. No further action needed.
 
 ## Progress Log
 
@@ -279,3 +287,10 @@ for these messages to close the verification loop.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-07-30 (unchanged):
   `locked_by: live-defi-rollout`; both remaining todos (VERIFY P2 Slack spot-check; DEPLOY P0 render-verification) are
   explicitly operator-only / no-live-occurrence-to-inspect-yet by construction.
+- **operator ruling 2026-08-08** (NA-corpus blocker digest, cross-cutting round 5, id=55): RESOLVED with hard evidence —
+  operator pasted a live, real `DP_VM_EXIT_NONZERO` CRITICAL alert (VM `mtds-live-smoke-cefi-20260808-044733-0e32e9`,
+  exit_code=1, 2026-08-08 09:31 AM) showing full rendering (VM name, exit code, asset group, cloud, source, working
+  run.log trace link with real content). Both remaining todos closed — this is now the newer, better occurrence that
+  supersedes the stale 2026-06-23 spot-check ask and independently confirms the Gap-4 render fix works end-to-end in
+  production. **All todos in this doc are now `[x]`.** Not archived this pass (`locked_by: live-defi-rollout` requires
+  an explicit `[unlock-plan]` decision, not taken autonomously) — left for the next archive-candidates sweep to pick up.
