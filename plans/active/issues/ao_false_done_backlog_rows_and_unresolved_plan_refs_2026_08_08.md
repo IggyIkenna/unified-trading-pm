@@ -85,7 +85,20 @@ Each needs one verdict: **REOPEN** (`POST /api/backlog/{id}/reopen`, work genuin
 done; flip the plan checkbox with evidence per the Commit+Push+Flip rule). Verdict must come from reading the cited
 plan + verifying the `done_sha`, never from the row's status alone.
 
-- [ ] [BACKEND] P2. `infra_capture_and_devops_leftovers_finalize-001` (`done_sha=268f7147a`)
+- [x] ✅ [BACKEND] P2. `infra_capture_and_devops_leftovers_finalize-001` (`done_sha=268f7147a`) — **verified 2026-08-08
+      (slot 22): row no longer exists in `state.db`** — `GET /api/backlog` has zero rows matching this id, this title,
+      or `done_sha=268f7147a` (2,369 total rows checked); the only row still tied to this doc family is
+      `infra_capture_and_devops_leftovers-001` (parent plan, `status: queued`). Read the cited plan
+      (`plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md`) and confirmed `268f7147a` is a real
+      commit
+      (`docs(plans): reconcile infra_capture_and_devops_leftovers parent — MANTLE + Live-ODDS quota blockers     cleared`,
+      2026-08-02) that did genuine partial-reconciliation work, but the plan's own todo 2 checkbox is correctly still
+      `- [ ]` — it is an intentionally-recurring re-check pointer ("re-run again once…") and 3 of 4 gated `BLOCKED-*`
+      items remain open per that todo's own 2026-08-02 Progress Log entry, so the checkbox is NOT mis-stated. **No
+      REOPEN or FLIP action was needed or possible**: the backlog row this audit item names has already vanished from
+      state.db (consistent with `regen_positional_task_ids_not_content_stable_2026_07_17.md` — positional ids reshuffle
+      across regen ticks) between the 2026-08-08 03:15 UTC audit snapshot and this check, and the plan doc it pointed at
+      is already in its correct, honest state. Nothing further to do on this item.
 - [ ] [BACKEND] P2. `defi_dex_pool_swaps_733_row_indexer_health_findings-001` (`done_sha=69d41b26f`)
 - [ ] [BACKEND] P2. `cefi_track2_backfill_vm_preempted_no_recovery-003` (**`done_sha` EMPTY** — the strongest reopen
       candidate: a `done` row with no shipping evidence at all; todo is gate-shaped, "Once the relaunched VM genuinely
@@ -138,20 +151,26 @@ plan + verifying the `done_sha`, never from the row's status alone.
   against 1 dispatched. Reopening 14 tasks into that queue would have deepened the starvation while producing no
   throughput. Sequencing is therefore: resolve account capacity first, then work these 14.
 
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. All 17 open
-  items are bounded, worker-determinable audit work with a clear evidence requirement: the 14 named backlog rows
-  each need "read the cited plan + verify the `done_sha`, verdict REOPEN or FLIP" — the exact same per-row
-  evidence-based audit pattern this tranche's workers already run routinely elsewhere in this corpus (see e.g.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. All 17 open items
+  are bounded, worker-determinable audit work with a clear evidence requirement: the 14 named backlog rows each need
+  "read the cited plan + verify the `done_sha`, verdict REOPEN or FLIP" — the exact same per-row evidence-based audit
+  pattern this tranche's workers already run routinely elsewhere in this corpus (see e.g.
   `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own false-done reconciliation work); the 3 follow-ups
-  (characterise the 1,013 unresolved rows; bound the 12 UNAUDITABLE rows; decide whether a standing breach should
-  page, checked against an existing codex contract) are similarly bounded fact-finding/verification tasks, none a
-  fresh design/judgment call. The filing session's own capacity-starvation concern (deferring the 14 REOPEN-or-FLIP
-  verdicts until account headroom recovers) is an operational sequencing note, not a design gate — a worker
-  dispatched this doc naturally queues behind the fleet's existing capacity-aware dispatch throttling the same way
-  every other backlog task does; it does not require a hard `assigned_vm: NA` block. Conflict-check clear: grepped
-  `plans/active/*.md` for every one of the 14 named task ids plus "audit_false_done"/"false_done" — zero hits
-  outside this doc (the `ao_observability_and_deploy_hygiene_gaps_2026_08_08.md` false-done item, filed earlier the
-  same day from a shallower ~26-row snapshot, is independently confirmed already closed/superseded by this doc's
-  own more precise 14-row audit — no overlap remains to conflict on). `execution_scope: local-only →
-  orchestrator-agent`. Companion gated finalize:
+  (characterise the 1,013 unresolved rows; bound the 12 UNAUDITABLE rows; decide whether a standing breach should page,
+  checked against an existing codex contract) are similarly bounded fact-finding/verification tasks, none a fresh
+  design/judgment call. The filing session's own capacity-starvation concern (deferring the 14 REOPEN-or-FLIP verdicts
+  until account headroom recovers) is an operational sequencing note, not a design gate — a worker dispatched this doc
+  naturally queues behind the fleet's existing capacity-aware dispatch throttling the same way every other backlog task
+  does; it does not require a hard `assigned_vm: NA` block. Conflict-check clear: grepped `plans/active/*.md` for every
+  one of the 14 named task ids plus "audit_false_done"/"false_done" — zero hits outside this doc (the
+  `ao_observability_and_deploy_hygiene_gaps_2026_08_08.md` false-done item, filed earlier the same day from a shallower
+  ~26-row snapshot, is independently confirmed already closed/superseded by this doc's own more precise 14-row audit —
+  no overlap remains to conflict on). `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
   `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md`.
+
+- **2026-08-08 (slot 22, backend_engineer)**: Verdict on `infra_capture_and_devops_leftovers_finalize-001`
+  (`done_sha=268f7147a`): checked off, no action possible or needed — the named backlog row no longer exists in
+  `state.db` (0 hits by id, title, or `done_sha` across all 2,369 rows), and the plan doc it pointed at
+  (`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`) already carries its own correct, honest state (todo 2
+  intentionally `- [ ]` as a recurring re-check pointer, 3 of 4 gated `BLOCKED-*` parent items still open per its
+  2026-08-02 Progress Log). See the checklist item above for the full verification trail.
