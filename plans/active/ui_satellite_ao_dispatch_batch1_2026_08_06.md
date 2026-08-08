@@ -118,7 +118,7 @@ AND conflict-clear today.
       the source doc's own Progress Log, and its own todo 1 checkbox is flipped citing this evidence. Repo:
       deployment-api. Source: `data_status_cell_grid_rearchitecture_2026_07_18.md`. — deployment-api@8a36931
 
-- [ ] [REVIEW] P2. **CORRECTED 2026-08-07 (was: "file a new artifact-pipeline metadata-gaps issue doc" — stale, would
+- [x] ✅ [REVIEW] P2. **CORRECTED 2026-08-07 (was: "file a new artifact-pipeline metadata-gaps issue doc" — stale, would
       have created a duplicate; see below) — reconcile the source doc's stale Phase-5 issue-filing checkbox + fix the
       one genuinely-still-wrong item in the doc it should have pointed at.** The source doc's own line 652 checkbox
       ("File `plans/active/issues/artifact_pipeline_metadata_gaps_<date>.md` with the 6 pipeline bugs above... Verify
@@ -137,7 +137,7 @@ AND conflict-clear today.
       line-652 checkbox is flipped citing the existing issue doc, and that issue doc's #1 item reflects the
       confirmed-dead-semver-agent finding. Repo: unified-trading-pm. Source:
       `artifact_pipeline_observability_2026_07_17.md` (line 652), cross-referencing
-      `build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`.
+      `build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`. — unified-trading-pm@d2094b791
 
 - [ ] [REVIEW] P2. **Fix the 5 named `dual-cloud-image-builds.md` codex drifts.** Correct
       `/codex/05-infrastructure/dual-cloud-image-builds.md` per the source doc's own "Phase 5" description: registry
