@@ -172,13 +172,40 @@ over all pending draft batches) that independently spot-verified every todo belo
       `defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md`. Done when: every parser in that file has a
       written classification and any additional venues beyond Balancer sharing the legacy cumulative shape are listed
       with evidence (sample column names/values), or the audit confirms Balancer is the only affected venue.
-- [ ] [DIAG] P2. **Research a per-call HTTP-status-equivalent** for (a) the Aave/Alchemy RPC batch client used by
+- [x] ✅ [DIAG] P2. **Research a per-call HTTP-status-equivalent** for (a) the Aave/Alchemy RPC batch client used by
       `_aave_oracle_collection.py` and (b) the Chainlink/Pyth on-chain legs of `oracle_prices_handler.py` — read-only
       research, no code change; if not obtainable for a family, propose the alternative signal (e.g. RPC-level error
       code) instead of guessing. Repo: market-tick-data-service. Source:
       `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`. Done when: a written finding exists for each of the
       two families stating obtainable/not-obtainable, with either the concrete field name or a proposed alternative
-      signal cited.
+      signal cited. **RESOLVED (2026-08-08, read-only research, no code shipped)** —
+      - **Aave** (`_aave_oracle_collection.py::query_aave_reserves`) and **Chainlink**
+        (`oracle_prices_handler.py::_query_chain_feeds`) both go through the same RPC path:
+        `AlchemyBaseClient.get_web3()` → `Web3(Web3.HTTPProvider(rpc_url, ...))`. web3.py's `HTTPProvider` does
+        `requests.Session.post(...).raise_for_status()` internally, so a genuine HTTP-transport failure (429/5xx from
+        Alchemy) DOES raise `requests.exceptions.HTTPError` carrying `.response.status_code` — **a per-call HTTP status
+        IS technically obtainable**. It is NOT obtainable at either manifest-recording call site TODAY: both
+        `query_aave_reserves`'s per-reserve loop and `_query_chain_feeds`'s per-feed loop catch it with a blanket
+        `except Exception as exc: logger.warning(...)` that discards the exception before it can reach
+        `collect_aave_rows`/`_collect_chainlink_rows` or the `emit_*_manifest` sites.
+        `AlchemyBaseClient.get_block_by_timestamp`'s `except (OSError, ValueError, RuntimeError)` has the identical
+        swallow (`requests.exceptions.RequestException` is an `OSError` subclass in Python 3, so it's already caught
+        there too — just discarded, never inspected for `.response.status_code`).
+      - A SEPARATE failure class has **no HTTP-status equivalent at all**: a JSON-RPC-level error (HTTP 200 but an RPC
+        `{"error": ...}` response — e.g. execution-reverted, block-not-found) raises web3.py exceptions carrying an RPC
+        error CODE, not an HTTP status — the transport succeeded, so there is nothing HTTP-shaped to thread for this
+        class.
+      - **Proposed alternative/threading approach** (not implemented — DIAG only): widen the per-reserve/per-feed
+        try/except to type-narrow on `requests.exceptions.HTTPError` and propagate `exc.response.status_code` (falling
+        back to a documented sentinel — e.g. the RPC error code as a negative int, or `None` — for the non-HTTP
+        JSON-RPC-error class) up through `collect_aave_rows`/`_collect_chainlink_rows`, mirroring the subgraph family's
+        `(payload, http_status)` return-widen pattern already used for `async_post_to_subgraph`. Same shape of
+        refactor as the subgraph-HTTP family's P2 item — not blocked on anything new, just unscoped from this DIAG
+        todo.
+      - **Pyth is DIFFERENT and needs no fix**: `_hermes_latest_get` already returns `(status, body, data)` in local
+        scope and `_fetch_pyth_prices`/`_fetch_pyth_prices_at_timestamp` RAISE on any non-200 (routing to
+        `record_failed`), so Pyth's clean-empty path is only ever reached on a genuine HTTP 200 — the recorded
+        `http_status=200` there is not fabricated; no fidelity gap exists for Pyth.
 - [ ] [DATA] P2. **Relaunch `mtds-dex-swaps-backfill-1`/`-2`** onto the shipped checkpoint fix
       (`market-tick-data-service@8046e25b`), using each VM's per-VM manifest shard's max `date`
       (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`) as an explicit `--start` date-frontier so the relaunch

@@ -141,17 +141,21 @@ close by citation once batch9 ships.
       `asyncio.gather(..., return_exceptions=True)`; new unit tests cover genuine-empty vs HTTP-error vs
       connection-error plus a `_process_protocol`-level test proving the error reaches `record_failed` not
       `record_zero_rows`.
-- [ ] [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
+- [x] ✅ [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
       Alchemy RPC batch client `_aave_oracle_collection.py` uses. If not, this family cannot be closed the same way as
       the HTTP-subgraph family — report that and propose the alternative (RPC-level error code? nothing to thread?)
-      rather than guessing. Read-only research, no code change. (market-tick-data-service) **Extracted verbatim (both
-      this item and the Chainlink/Pyth item below, combined into one todo) into
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179` (status: active, `Source:` cites this doc by name) — do
-      not reclassify this doc on this item's account; close this checkbox by citation once batch9's todo ships.**
-- [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
+      rather than guessing. Read-only research, no code change. (market-tick-data-service) **RESOLVED by citation
+      (2026-08-08)** — `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s combined DIAG todo shipped the finding:
+      technically obtainable via `requests.exceptions.HTTPError.response.status_code` (web3.py's `HTTPProvider` raises
+      it on 429/5xx), but discarded today by a blanket `except Exception` in `query_aave_reserves`'s per-reserve loop
+      before it reaches the manifest-recording site; a separate JSON-RPC-level error class has no HTTP-status
+      equivalent at all. Full finding + proposed threading approach at that todo.
+- [x] ✅ [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
       item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
-      (market-tick-data-service) **Same extraction/citation as the Aave item above —
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`, status: active.**
+      (market-tick-data-service) **RESOLVED by citation (2026-08-08)** — same
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo: Chainlink shares the identical Alchemy-RPC swallow
+      pattern as Aave (same finding applies); Pyth is different and needs no fix — its Hermes fetch already returns
+      the real HTTP status in scope and raises on non-200, so its clean-path 200 is never fabricated.
 - [x] ✅ [CODE] P2. **Subgraph-HTTP family — thread real status through the direct `async_post_to_subgraph` callers**
       (verified 2 real callers today: `dex_swaps_handler.py`, `liquidations_handler.py` — RE-VERIFY this count at
       dispatch time, don't trust it stale) by widening `async_post_to_subgraph`'s return to `(payload, http_status)` and
@@ -236,3 +240,15 @@ close by citation once batch9 ships.
   remaining `assigned_vm: NA` blocker (items 2-3 are non-blocking `KEEP-NA-STALE` duplicates already covered by active
   `defi_satellite_ao_dispatch_batch9_2026_08_06.md`) — flipped `assigned_vm: NA` → `planning`,
   `execution_scope: local-only` → `orchestrator-agent`.
+- **AO dispatch (slot-8, 2026-08-08)**: shipped `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s combined
+  Aave/Chainlink/Pyth DIAG todo — read `_aave_oracle_collection.py`, `oracle_prices_handler.py`'s
+  `_query_chain_feeds`/`_hermes_latest_get`/`_fetch_pyth_prices`, and `alchemy_base_client.py` directly. Finding: Aave
+  and Chainlink share the same Alchemy-RPC (`Web3.HTTPProvider`) path — a real HTTP status IS obtainable via
+  `requests.exceptions.HTTPError.response.status_code` on a genuine transport failure, but is discarded today by a
+  blanket `except Exception` in each family's per-item retry loop before it reaches the manifest-recording call site;
+  a separate JSON-RPC-level error class (HTTP 200, RPC `{"error":...}`) has no HTTP-status equivalent at all. Pyth is
+  unaffected — its Hermes fetch already surfaces the real status and raises on non-200, so its clean-path 200 is
+  genuine, not fabricated. Flipped both this doc's Aave and Chainlink/Pyth `[DIAG]` checkboxes by citation per the
+  doc's own instruction (batch9's todo has now shipped). One item remains open in this doc — the `[SCRIPT] P2`
+  constant-threading todo for `governance_proposals_handler.py` — unrelated to this DIAG research, left for separate
+  dispatch.
