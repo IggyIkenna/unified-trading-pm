@@ -180,6 +180,14 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       vm-launcher-runbook SSOT), and the TSMOM_BTC_CTA archetype (already built, `strategy-service` per Phase 11
       P2.11.14, DONE) produces non-null signals on the next paper run. Source:
       `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.16 (moved verbatim).
+      **BLOCKED-UPSTREAM-DATA (2026-08-08, slot-33)**: dry-run VM
+      `features-delta-one-cefi-20260808-171347` confirmed `DERIBIT:PERPETUAL:BTC-USD@INV` (the
+      `feature_perp_representative`-chosen rep venue for BTC) has ZERO `data_type=trades` 1d candles in MDPS for the
+      entire queried range — the venue's daily trades-candle production regressed from full coverage (confirmed
+      2023/2024) to `ASTER`-only by 2026-05-15 to NOTHING by 2026-08. `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` has current
+      1d/trades data instead. No amount of re-running this recompute fixes it. Full diagnosis + fix todos:
+      `/plans/active/issues/mdps_cefi_1d_trades_candles_missing_for_rep_venues_blocks_btc_trend_features_2026_08_08.md`.
+      Not flipping this checkbox until that issue doc's fix todos land and a re-run verifies non-null columns.
 
 - [ ] [BACKEND] P2. **Complete `TSMOM_BTC_CTA` capability wiring into the UAC `archetype_capability_manifest`** (was
       Phase 11 P2.11.20 in the source doc) — `TSMOM_BTC_CTA` is already in `StrategyArchetype` + the UI
