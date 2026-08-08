@@ -42,8 +42,8 @@ related:
 created: "2026-08-08"
 last_updated: "2026-08-08"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 5
@@ -51,6 +51,12 @@ estimate_calibrated_ai_days: 4
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+sequential: true # operator directive 2026-08-08: flip to AO dispatch. Several todos have a real
+# ordering dependency this plan's own file-order encodes (todo 1's finding gates the
+# execution-service cutover; each service's deploy->verify->cutover->delete is itself
+# sequential) that same-priority concurrent dispatch would NOT respect on its own --
+# serializing the whole plan is the safe choice for a live-infra cutover, even at the cost
+# of forgoing parallelism on the doc-update todos.
 context_scope:
   [
     /codex/04-architecture/cloud-agnostic-migration.md,
