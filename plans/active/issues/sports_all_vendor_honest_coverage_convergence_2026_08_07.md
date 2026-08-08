@@ -680,3 +680,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `SCOTTISH_PREMIERSHIP` (10 leagues) is durable. Relaunched as **`mtds-backfill-odds-smallchunk4-20260808`** (guard
   passed, RUNNING, tarballs fresh); not yet verified booted this tick (checked too soon after launch — startup script
   was still extracting tarballs). FIXTURE_STATS unaffected, continuing healthy.
+- **2026-08-08T05:57Z — smallchunk4 confirmed booted + healthy.** Chunk 4/451 (`2020-06-21`), zero OOMs, correctly
+  skip-fasting through already-covered ground same as prior relaunches — no third occurrence yet (it's still well before
+  chunk 18, where both prior deaths' real-fetch load was heaviest). FIXTURE_STATS jumped **98 days**
+  (`last_completed_date=2024-03-15`, fresh `05:55:28Z`) — steadily accelerating toward chunk 26/26. Both healthy, no
+  intervention.
