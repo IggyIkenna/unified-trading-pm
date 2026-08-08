@@ -94,11 +94,19 @@ gated on an upstream whose remaining todos are all silently excluded will read t
 
 ## Recommended decision
 
-- [x] ✅ [SCRIPT] P1. **Add a QG gate that reports the disk-vs-backlog todo delta per AO-dispatched doc, and ratchet it
-      down.** — unified-trading-pm@fc8ec3e64, agent-orchestrator@3d4abba (slot-24, 2026-08-08). Shipped
+- [ ] [SCRIPT] P1. **Add a QG gate that reports the disk-vs-backlog todo delta per AO-dispatched doc, and
+      ratchet it down.** PM-side gate code fully built, tested, wired, and PUSHED: unified-trading-pm@bcd6aaaa5. The
+      one remaining piece — `agent-orchestrator/scripts/plan_hygiene/dump_dispatchable_todos.py` (agent-orchestrator@
+      3d4abba, committed but NOT YET PUSHED) — is blocked behind a pre-existing, unrelated QG red on
+      `live-defi-rollout` (`worker_liveness`/`context_lifecycle` test failures, verified not caused by this change;
+      see `/plans/active/issues/ao_worker_liveness_context_lifecycle_qg_red_2026_08_08.md`, repo-blocker declared).
+      Without this file present, `check_ao_dispatch_gap.py` degrades to a silent no-op (its own designed fallback
+      when the AO sibling/wrapper is absent) — so the gate is NOT yet actually enforcing anything in production.
+      Leave this checkbox open until agent-orchestrator@3d4abba lands via quickmerge once the repo is green again;
+      re-verify the gate fires for real (not the no-op path) before flipping to done. Shipped
       `scripts/quality_gates/check_ao_dispatch_gap.py` (PM) which imports regen's REAL `_parse_open_todos` via a
       subprocess into agent-orchestrator's own `.venv` (new
-      `agent-orchestrator/scripts/plan_hygiene/     dump_dispatchable_todos.py` wrapper — no parser change) rather than
+      `agent-orchestrator/scripts/plan_hygiene/dump_dispatchable_todos.py` wrapper — no parser change) rather than
       re-implementing the marker regex a fifth time. Per-todo (not gap-count) classification: an excluded disk todo is
       DECLARED if its own continuation block carries a
       `BLOCKED-<token>`/`[OPERATOR]`/`blocked on`/`DEFERRED-BY-DESIGN`/`stretch, optional` marker not itself disclaimed
@@ -134,7 +142,10 @@ gated on an upstream whose remaining todos are all silently excluded will read t
   `/plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md` because that doc is
   `assigned_vm: NA` (human-owned) and folding a dispatchable todo into it would have made this undispatchable too — the
   exact failure mode being reported. Kept to a single open todo so the finalize-coverage single-todo carve-out applies.
-- **2026-08-08 (slot-24)** — Shipped the gate (see checkbox above for full detail). All todos now done + doc unlocked —
-  will be archived per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` as a separate commit from
-  this checkbox flip (2026-07-30 incident: never combine a checkbox flip with the `git mv` archival in one commit, or
-  `/done`'s M3 check can't see the transition at the original path).
+- **2026-08-08 (slot-24)** — Built, tested, and pushed the PM-side gate (see checkbox above for full detail):
+  unified-trading-pm@bcd6aaaa5. The AO-side wrapper (agent-orchestrator@3d4abba) is committed but blocked from
+  shipping by a pre-existing, unrelated QG red on that repo (`/plans/active/issues/
+  ao_worker_liveness_context_lifecycle_qg_red_2026_08_08.md`) — without it the gate silently no-ops rather than
+  actually enforcing, so the checkbox stays open and the doc stays active (not archived) until AO ships and the gate
+  is re-verified live. Not a blocked-question — this is a wait-on-a-shared-repo-fix, handled via the repo-blocker
+  mechanism (RULES.md §4b), no operator input needed.
