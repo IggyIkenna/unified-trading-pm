@@ -495,6 +495,22 @@ achieved by exclusion, not canonicalisation.**
       net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
       (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
       enough. **Done when**: the decision is recorded, or the semantic check exists.
+- [ ] [DOCS] P2. **`codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
+      live `VENUES_BY_ASSET_GROUP["sports"]`** (found by `/docs-reconcile` 2026-08-08, direct-import verification
+      against `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`). The doc claims "32
+      canonical members" and names `BETFAIR_EX_AU`, `WILLIAM_HILL`, `BWIN`, `MYBOOKIEAG`, `LOWVIG`, `WYNNBET`, `FOXBET`,
+      `MARATHONBET`, `1XBET`, `SUPABETS`, plus an open-ended "and additional regional books" tail; the live registry
+      (verified via
+      `.venv/bin/python -c "from unified_api_contracts.registry.market_data_categories import     VENUES_BY_ASSET_GROUP; print(sorted(VENUES_BY_ASSET_GROUP['sports']))"`)
+      has **31** members and includes `BETFAIR_SB_UK`, `WILLIAMHILL` (no underscore), `BETOPENLY`, `BETRIVERS`,
+      `BETVICTOR`, `CASUMO`, `LADBROKES`, `LIVESCOREBET`, `NOVIG`, `ONEXBET`, `PADDYPOWER`, `PROPHETX`, `SKYBET`,
+      `VIRGINBET`, bare `UNIBET` — none of which the doc names — while omitting several the doc DOES name
+      (`BETFAIR_EX_AU`, `BWIN`, `MYBOOKIEAG`, etc.). Not fixed here: this plan's own "Codex SSOTs" section calls the doc
+      "rewritten 2026-08-08... now documents the target model", so it's unclear whether the doc is stating a target the
+      registry hasn't fully landed yet or is simply a stale/miscopied enumeration — needs someone with this chain's full
+      context to reconcile, not a doc-health pass guessing at domain intent. **Done when**: the doc's Venue Axis list is
+      verified to either match the live registry exactly (member-for-member) or explicitly document why it intentionally
+      diverges (target vs. current state).
 
 ## Codex SSOTs
 
