@@ -33,7 +33,7 @@ author: unknown
 parent_epic: batch_live_symmetry_master
 priority: P2
 source: layer1_remeasure_and_certify_2026_07_06.md task 007 live-verify session (slot-9 planning)
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 context_scope:
@@ -213,6 +213,13 @@ numbering.)**
           text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
           marker for a re-run.
 
+      **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
+      BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
+      task**: re-run `run_live_verify_tradfi.py` against
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
+      fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
+      matrix/smoke-set citation.
+
 ## Evidence
 
 - Tradfi run: `WARNING tradfi catalog not available ... 404` → empty matrix. Output at
@@ -312,3 +319,14 @@ numbering.)**
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-03 (unchanged): sole todo self-parked
   BLOCKED-PREREQUISITES; the prerequisite plan landed but surfaced a new unresolved prd/ vs prod/ GCS-prefix operator
   call.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning` — today's
+  round5-cross-cutting-audit entry on the sole open `-004` todo resolved the prd/-vs-prod/ operator call the 2026-08-06
+  marker cited (`/codex/02-data/non-canonical-path-inventory.md:211`: `prd/` is the non-canonical leaked short-env
+  form, `prod/` — already populated, 10.5MB — is canonical; no operator input needed). Bounded, worker-determinable:
+  amend one path reference + re-run one existing script + publish output as evidence. Conflict-check (parent_epic
+  `batch_live_symmetry_master`): no active `assigned_vm: planning` plan in the same epic, no sibling batch/finalize
+  doc, and no other active doc targets `run_live_verify_tradfi.py` or this tradfi catalogue path — clear.
+  `execution_scope` was already `orchestrator-agent` (a pre-existing pairing mismatch with `assigned_vm: NA`, now
+  resolved); `assigned_role: data_engineering` unchanged (validated against `agents/data_engineering.md`). No
+  finalize twin authored — `doc_type: issue` is structurally exempt from the finalize-plan-coverage rule (precedent:
+  `governance_sweep_deferred_followups_2026_08_06.md`'s 7 reclassified issue docs).
