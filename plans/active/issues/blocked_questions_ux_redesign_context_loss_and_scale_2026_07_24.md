@@ -152,16 +152,15 @@ exists" section together before scoping the workstream.
       cross-question dedup/similarity; explicitly deferred by the operator 2026-07-24, renewed interest 2026-08-03,
       direction finally chosen 2026-08-08. Split into 3 concrete build todos below, each independently shippable
       (file-disjoint: schema/backend, UI, and a separate dedup query surface).
-- [ ] [BACKEND] P2. **Capture `claude_session_id` on `BlockedRow` at creation time.** Add a `claude_session_id` column
-      to `BlockedRow` (`agent-orchestrator/server/orm.py`, mirrors the existing `SlotRow.claude_session_id` /
-      `TaskUsageRow.claude_session_id` precedent) and populate it wherever a `BlockedRow` is created (the
-      `/ask`-blocking endpoint path, wherever that currently reads `slot_id`/`task_id` — find it via
-      `grep -n "BlockedRow(" server/`). Add an idempotent migration (mirror `_migrate_tasks_sequential_column`'s pattern
-      in `server/bootstrap.py`: `ALTER TABLE` + backfill NULL for pre-existing rows, since historical blocked questions
-      have no recoverable session id). **Done when**: a fresh blocked question's row has a non-null `claude_session_id`
-      matching the asking session, a regression test proves it survives a slot respawn (the exact BLK-f09e9ca9 failure
-      mode this doc describes — `slot_id` alone points at the CURRENT session post-respawn, `claude_session_id` must
-      still point at the ORIGINAL asking session), and `quality-gates.sh` is green. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **Capture `claude_session_id` on `BlockedRow` at creation time.** — agent-orchestrator@37f73f9.
+      Added the nullable `claude_session_id` column (orm.py) + idempotent migration
+      (`_migrate_blocked_queue_claude_session_id` in bootstrap.py, mirrors
+      `_migrate_slot_message_task_scoped_delivery`'s no-backfill pattern), populated at the real worker `/blocked`
+      endpoint (`routes/slots_worker.py::blocked_slot`) by reading the slot's CURRENT `claude_session_id` before insert
+      (the synthetic slot_id=0 rows in bootstrap.py/plan_health.py stay NULL — no originating worker session).
+      `tests/test_blocked_claude_session_id_capture.py` proves: capture at creation, survival across a simulated respawn
+      (the exact BLK-f09e9ca9 failure mode), and NULL-safety when the slot has no session id. `quality-gates.sh` green.
+      Repo: agent-orchestrator.
 - [ ] [UI] P2. **Wire a transcript-jump affordance into the blocked-question resolution UI**, using the
       `claude_session_id` from the todo above and the already-working `server/transcript_log.py` retrieval primitive
       (the dashboard's existing "Show log" render, keyed by `claude_session_id` — reuse it, don't rebuild it). Add a
@@ -215,6 +214,13 @@ exists" section together before scoping the workstream.
   actual fix for this recurring dispatch gap and is still unactioned — not doing it myself here since it's outside
   `ui_developer` craft scope and isn't this session's dispatched task (per worker.md, "I see related work" is not a
   valid reason to fan out to untasked work); leaving it to dispatch normally to an `infra`-capable worker.
+- **2026-08-08 (slot-14, backend_engineer, dispatched onto `-001`)**: shipped the `[BACKEND] P2` `claude_session_id`
+  capture todo — agent-orchestrator@37f73f9 (column + migration + population at `blocked_slot` + 3 regression tests,
+  `quality-gates.sh` green). The `-002`/`-001` dispatch-gate gap slot-11 and slot-27 both hit today (this doc's
+  `[INFRA] P3` todo below) is now moot for THIS specific pair — `-001` is done, so `-002` re-dispatching no longer races
+  an undone dependency. The `[INFRA]` todo itself (a general fix so the same gate-gap pattern doesn't recur on a future
+  todo pair) is still open and unactioned; leaving it as-is for an `infra`-capable worker, per worker.md's "I see
+  related work" not being a valid reason to fan out beyond this session's dispatched task.
 
 ## Todos (continued)
 
