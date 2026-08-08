@@ -240,3 +240,10 @@ same CLI path would hit the identical wall.
   `ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md`, confirming the 2026-08-06
   context-scout's flagged note). Doc stays NA — the sole remaining open todo (`[CODE] P3`, wire vs. drop `--family`) is
   unchanged, still an explicit design decision per every prior pass's reasoning.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — the sole open todo is now resolved by
+  the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("WIRE IT, do not drop it") AND is already
+  being implemented by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (`assigned_vm: planning`, live,
+  status: active) — its "ML" section's first todo names this doc's sole open todo verbatim as what it resolves.
+  Never-re-litigate + conflict-check both point the same way: do NOT flip this doc to `planning` (would duplicate an
+  already-active implementing plan in the same `parent_epic`); checkbox is flipped by that plan's finalize sibling once
+  the wiring ships. Citation-only, no reclassification.

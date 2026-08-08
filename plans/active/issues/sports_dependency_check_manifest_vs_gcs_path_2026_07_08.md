@@ -351,3 +351,10 @@ it's titled after never consults the manifest) is unchanged today.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is an operator question.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — the sole open item is now resolved by
+  the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("enumerate callers and use cases FIRST, then
+  apply a pre-specified rule") AND is already being implemented by
+  `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (`assigned_vm: planning`, live, status: active) — its
+  "Catalogue, browser, dependency" section's third todo names this doc verbatim as what it resolves. Never-re-litigate +
+  conflict-check both point the same way: do NOT flip to `planning` (would duplicate the already-active implementing
+  plan in the same `parent_epic`). Citation-only, no reclassification.

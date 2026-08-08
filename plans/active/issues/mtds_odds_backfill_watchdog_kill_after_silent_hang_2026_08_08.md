@@ -168,3 +168,15 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   next needs either IAP SSH access granted to the automation service account, or to be an interactive/operator session
   with working SSH, positioned to attach the moment a hang is suspected (heartbeat >10min stale but VM still RUNNING =
   the window to act in, before the watchdog's own ~16-21 min kill).
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — fresh P1 incident doc (created today),
+  3 open todos. Considered against today's IAM-self-service precedent (grant yourself a missing role rather than
+  treating `PERMISSION_DENIED` as operator-gated): the IAP-tunnel-SSH gap this doc's own text flags is real and
+  self-serviceable in principle, but self-servicing it does not make the WHOLE doc's remaining work bounded/
+  deterministic — todo 1 ("next time this recurs, catch it before the silent window elapses") is an opportunistic
+  catch-a-live-event task with no schedulable done-when, and todo 3 (threshold tuning) is explicitly gated in its own
+  text on not knowing the root cause yet ("a threshold change... risks masking a real bug"). Todo 2 (audit whether the
+  `odds_api` HTTP client has explicit connect/read timeouts) IS a bounded, mechanical code-audit and would be a good
+  RECLASSIFY candidate on its own, but `assigned_vm` flips whole-doc only and the other 2 todos are genuine
+  judgment/opportunistic-gated work — not splitting this doc's todos across two `assigned_vm` values in this pass.
+  Doc stays NA.

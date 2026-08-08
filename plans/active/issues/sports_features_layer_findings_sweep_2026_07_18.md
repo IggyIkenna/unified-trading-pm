@@ -773,3 +773,12 @@ have moved; use the section index above to locate it.
   doc's one genuinely open item (§E's `[CONFIG] P1`).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items: 1 dependency-blocked, 1 genuine work.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, both open items now cited elsewhere, doc stays
+  NA. (1) §E `[CONFIG] P2` (trigger-tier residual gap — add `odds_t12h`/`odds_t4h`/`odds_t2h` + relaunch the
+  sports-scheduler VM) — **KEEP-NA-STALE, already-duplicated**: extracted verbatim (same source cited) into
+  `/plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 2 (`assigned_vm: planning`, status: active).
+  (2) §E `[MODEL] P2` (consider T-6h/T-2h as MODEL horizons) — resolved by the dated `✅ OPERATOR RULING 2026-08-08`
+  banner at the top of this doc ("add BOTH T-2h and T-6h") and is already being implemented by
+  `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s "ML" section, which names this doc's open todo verbatim.
+  Neither item is dispatchable from this doc without duplicating an already-active plan in the same `parent_epic` — no
+  reclassification, citation-only.

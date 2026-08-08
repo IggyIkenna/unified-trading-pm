@@ -281,3 +281,13 @@ work doesn't reintroduce a 5th convention.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the UAC schema file this migration targets
   - the 3 real consumer source files (producer/loader/subscriber) the remaining parity-test todo spans.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — no new 2026-08-08 operator ruling
+  touches this doc; the 2026-07-29 ruling that keeps it NA-by-name while sanctioning its bounded todos to land via the
+  satellite AO-dispatch-batch pattern is unchanged and not re-litigated. Cross-checked
+  `/plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md` (2026-08-06, most recent batch): its own
+  "Conflict-gated" section lists this doc's `[REVIEW] P3` FSS↔ml-service↔strategy-service naming-parity todo as
+  explicitly sequenced after the (per that batch's text) "still-unshipped 3-repo four-way naming migration" — but this
+  doc's own Todos show that migration (todos 1-6) is now fully `[x]` shipped, so batch10's premise for holding it back
+  is stale and the parity test may be ripe for extraction into the next sports satellite batch. Flagging for the next
+  `/ag-closeout-audit sports` or batch-drafting pass rather than reclassifying here — this skill's scope is
+  in-place verdicts on existing docs, not drafting new satellite-batch content. Doc stays NA, unchanged this pass.
