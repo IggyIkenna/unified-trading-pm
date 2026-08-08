@@ -215,7 +215,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       no-promotion-workflows-and-no-exemption gap** the `unified-trading-ci` divergence fix just closed. Re-run the
       `_main_direct_repos()`/manifest promotion-model check against the current repo list; for any newly-created repo
       missing both a promotion workflow and an explicit exemption, apply the same fix pattern
-      (`unified-trading-pm@a0561c4`/`@3d6e25e`) or file the gap. **Done when**: every repo created after 2026-08-05 is
+      (`unified-trading-ci@a0561c4`/`@3d6e25e`) or file the gap. **Done when**: every repo created after 2026-08-05 is
       accounted for (has promotion workflows, or a recorded exemption), recorded in the source doc. Source:
       `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` (todo, lines 113-115, [DEVOPS] P3) — never
       cited by any covering doc (created 2026-08-07, postdates every active covering doc). — **Done 2026-08-08**: live
