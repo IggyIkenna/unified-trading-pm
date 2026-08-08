@@ -348,9 +348,26 @@ context_scope:
       be tracked) in `prediction_phase_ab_residuals_2026_07_24.md` (active).
 - [ ] [DATA] P2. **G1.run-full-history — extend the bounded-window seed to the FULL 2018→today per-instrument universe
       (~190M rows fleet-wide)** once the index-size/reader-perf impact is operator-reviewed (the bounded window keeps
-      the LIVE denominator honest now; full history is the complete drilldown denominator). **DEFERRED** (named
-      successor: THIS item; gated on operator review of the 190M index-size blow-up). Provenance: 2026-06-19 audit —
-      bounded window shipped, full history sized but not materialised.
+      the LIVE denominator honest now; full history is the complete drilldown denominator). Provenance: 2026-06-19 audit
+      — bounded window shipped, full history sized but not materialised. **operator ruling 2026-08-08 (NA-corpus blocker
+      digest round 5, id=53)**: approved — yes, extend to full history. Scoped as a concrete `[DATA]`/`[SCRIPT]`
+      implementation (NOT executed this session — real, sizeable infra build, deliberately left for its own dedicated
+      VM-launch pass per this workspace's "heavy I/O never runs unattended in a doc-editing session" discipline): (1)
+      re-run the existing `enumerate_expected_universe.py` v2 per-AG (same tool the bounded seed already used,
+      `--apply-write`, `MANIFEST_PER_VM_SHARDS=true`) with `EXPECTED_UNIVERSE_START_DATE` widened from the current ~120d
+      bounded window to `2018-01-01`, across all 5 AGs (cefi/defi/tradfi/sports/prediction); (2) per-VM shard output →
+      consolidator-merge, same pattern as G1.run-bounded (watch for the idle-bucket consolidator trap — cefi/tradfi
+      needed a manual `consolidate(force=True)` last time, per
+      `consolidator_idle_bucket_incremental_trap_2026_06_19.md`); (3) size the actual per-AG row counts BEFORE a
+      fleet-wide `--apply-write` (a `--dry-run` first per AG, since the ~190M estimate is from 2026-06-19 and the live
+      universe has grown since) to confirm the index-size/reader-perf impact the operator was asked to review is still
+      in the expected ballpark, not a surprise multiple; (4) launch on a VM per the vm-launcher-runbook (this is exactly
+      the "heavy I/O, full-corpus-scale write" class that never runs on a local/interactive session) — likely one VM per
+      AG or a small sharded fleet, SPOT per the backfill-VM default; (5) verify post-run: `expected_unattempted` row
+      counts per AG land in the expected range, captured rows preserved (no regression), consolidator green. **Not gated
+      on anything further** — approval is unconditional; this todo's remaining scope is purely the execution pass
+      (sizing + VM launch + verify), which is intentionally NOT done in this same session per the operator's own
+      instruction to scope-not-execute.
 - [x] ✅ [INFRA] P1. (**APPLIED 2026-06-11, autonomous run** — `tofu apply` vs `terraform/state/prod`: **16 added / 0
       changed / 0 destroyed**; all 5 `lifecycle-catalogue-regen-<ag>` Cloud Run jobs + 5 ENABLED 01:00-UTC schedulers
       verified via `gcloud run jobs list`/`scheduler jobs list`; cefi smoke execution triggered + watched. THREE
