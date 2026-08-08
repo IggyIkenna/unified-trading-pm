@@ -80,7 +80,7 @@ source: >-
       `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 1st + 2nd items — leave its
       3rd item, the operator-decision ask, untouched). **Done when**: both flips are committed with the `docs(plans):`
       prefix and cite the real commit sha(s).
-- [ ] [INFRA] P0. **Re-check the conflict-gated declined item's gate and spin it into batch 8 if it has cleared.** The
+- [x] [INFRA] P0. **Re-check the conflict-gated declined item's gate and spin it into batch 8 if it has cleared.** The
       gated item: `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s 1st item (LDR-triggered `quality-gates-v2`
       template extension) was parked because it targets the same files as
       `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18. Check whether that sibling plan's todo 18 has since
@@ -88,7 +88,18 @@ source: >-
       leaves a residual gap worth its own todo) — per this skill's iterative-drain methodology, re-check the SPECIFIC
       named gate, don't re-derive the classification from scratch. Also spot-check whether `RB-04f4f852` (blocking that
       same source doc's 3rd item) has cleared. **Done when**: the item is marked cleared-and-moved (naming the new
-      batch-8 plan/todo) or still-gated with the current reason — no entry left unstated.
+      batch-8 plan/todo) or still-gated with the current reason — no entry left unstated. ✅ **NO BATCH-8 SPIN-OFF
+      NEEDED — the gate cleared AND the work is already done, archived.**
+      `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18 confirmed `[x]` at current HEAD (the file-collision it
+      was gated on). `RB-04f4f852` confirmed cleared: not present in the live `/api/repo-blockers` open list. Both gates
+      clearing let the source doc's own owner ship the item directly (not via a batch):
+      `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s 1st item is `[x]` ✅, evidence
+      `unified-trading-pm@d597eb759` + `agent-orchestrator@3f22253` (LDR-triggered `quality-gates-v2` now live). The
+      doc's 3rd item (the `RB-04f4f852` propagation-lag fix) is also `[x]` ✅, evidence PM promote PR #2436 merged
+      ~04:34 UTC 2026-08-07. The entire source doc reached zero open todos and was independently ARCHIVED 2026-08-07
+      (`plans/archive/2026_08/issues/agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`, banner "🟢 ARCHIVED
+      2026-08-07 — RESOLVED") by a separate `check_archive_candidates` ratchet-fix pass — so there is nothing left to
+      extract into batch 8.
 - [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** Re-check
       both source docs named in todo 2 above for whether their OTHER (non-batched, deferred) items are also closed
       before archiving — `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s 3rd item and
@@ -150,3 +161,13 @@ source: >-
   boot were all already resolved by earlier turns of this same session (the strategy-service `FILL_COMPLETED` qty/price
   key fix, `strategy-service@4b3f5b0c`, was independently confirmed already shipped and on origin before this todo
   started).
+
+- **2026-08-08 (slot 23, `infra`, dispatch `ao_satellite_ao_dispatch_batch7_finalize-004`)**: Executed todo 3 —
+  re-checked the conflict-gated declined item's named gate directly (not re-derived from scratch). Confirmed
+  `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18 is `[x]` at current HEAD, clearing the file-collision the
+  item was parked on. Confirmed `RB-04f4f852` has cleared (absent from the live `GET /api/repo-blockers` open list).
+  Read the gated source doc directly (`agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`) and found both its
+  gated item AND the doc's RB-04f4f852-blocked item were already shipped once the gates cleared — the doc reached zero
+  open todos and was independently archived 2026-08-07 by an unrelated `check_archive_candidates` ratchet pass, before
+  this finalize plan's sequential drain ever reached todo 3. No batch-8 spin-off item is warranted — the work the gate
+  was protecting is already done and shipped, not merely eligible to be scheduled.
