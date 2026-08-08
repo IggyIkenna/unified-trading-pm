@@ -21,6 +21,7 @@ related:
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
     /plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
   ]
 created: 2026-08-08
 author: unknown
@@ -112,18 +113,85 @@ This is a **different-shaped population** than every prior collision finding in 
 4. The remainder of the resume sequence (BYBIT-SPOT, COINBASE-FUTURES, cron resume, loop-until-dry verifier, 4-surface
    re-proof) is unaffected and proceeds independently — see the parent todo's own progress log.
 
+## Root-cause findings (2026-08-08 audit, slot 20)
+
+**Method**: read-only audit script
+`market-tick-data-service/scripts/audit_lighter_zksync_dual_write_collision_2026_08_08.py` (committed as evidence/
+tooling; no rename/delete/merge — reuses the SAME shared resolver + single-walk-safe per-day discovery the migration
+scripts use). Sampled 8 evenly-spaced dates across the reported 2026-06-24..2026-07-14 dense run, plus 3 supplementary
+post-window dates (2026-07-20, 2026-07-28, 2026-08-05) to test whether the pattern is still recurring today. For every
+(wire-form, canonical-form) pair coexisting in the same (day, pipeline_mode, data_type) group, fetched both objects' GCS
+metadata (`last_modified` as the `timeCreated` proxy) and an exact row count (parquet footer `num_rows`, no full
+decode).
+
+**Findings**:
+
+1. **The colliding population is 100% `pipeline_mode=batch_tardis`, `data_type=derivative_ticker`** — every sampled
+   pair, no exceptions. Not a general capture-path issue.
+2. **Row counts are IDENTICAL between the wire-form and canonical-form object in every sampled pair** (e.g.
+   `LIGHTER-ZKSYNC:PERPETUAL:AAVE` on 2026-06-24: both 73,355 rows) — these are genuine duplicate captures of the SAME
+   underlying data, not a partial-vs-complete mismatch. Byte size differs (wire-form consistently larger despite equal
+   row count — a schema/dtype difference, not a content difference).
+3. **`canonical_last_modified` clusters tightly at 2026-07-25T04:22-04:35Z (most dates) and 2026-07-27T00:58Z**
+   (2026-07-11 only) — i.e. an EARLIER canonicalization pass wrote the canonical-form objects for this whole window in
+   one bounded run. This matches the parent doc's own "Finding 8/10 full-range scan from 2026-07-25" characterization of
+   LIGHTER-ZKSYNC as zero-collision-risk AT THAT TIME.
+4. **`wire_last_modified` is ALWAYS later than `canonical_last_modified`** (72-348h later) and falls into exactly TWO
+   tight clusters: `2026-07-30T00:57-01:00Z` (dates 2026-07-05..2026-07-14) and `2026-08-08T16:31-16:37Z` — i.e. TODAY,
+   ~4h before this audit ran (dates 2026-06-24..2026-07-03). The wire-form copies were written well AFTER the
+   already-canonical objects existed, in a pattern consistent with a backfill walking through this date range over
+   multiple separate runs/sessions.
+5. **Zero collisions on the 3 post-window dates (07-20, 07-28, 08-05)** — the live/forward capture path is clean; the
+   dual-write is confined to this specific historical re-processing of the pre-07-15 window.
+6. **The live write path (`tardis_shared.py`) has built fully-canonical filenames via `build_canonical_instrument_id` /
+   `_file_stem_for` since commit `d302f07a` (2026-07-17)** — well before every wire-form timestamp observed. No evidence
+   of an ongoing code-level dual-write bug in the current default (live/websocket) write path.
+7. **Identified the active culprit**: VM `cefi-fwd-20260808-123230` (`VM_TASK=cefi-backfill`,
+   `VM_SERVICE=market_tick_data_service`, `VM_OPERATION=download`, RUNNING, `VM_SHUTDOWN_ON_COMPLETION=true`) is
+   executing (confirmed via serial-port log, launched 2026-08-08T12:34:45Z):
+   `python -m market_tick_data_service --operation download --mode batch --asset-group CEFI --start-date 2026-06-05 --end-date 2026-08-05 --force --data-types derivative_ticker`
+   — a BOUNDED, `--force` (unconditional overwrite) historical re-download of `derivative_ticker` across the whole
+   2026-06-05..2026-08-05 window (which fully contains the reported 2026-06-24..2026-07-14 dense run). This VM (and its
+   immediate predecessors today) is tracked in detail, independently, by
+   `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` — per that doc's own progress
+   log, elapsed ~90h as of the latest update, frontier at 2026-07-11, **measured ETA ~2026-08-12T05:00Z** (throughput
+   ~0.67 days/hour). That doc's own venue-coverage checks were scoped to the 6 CARRY_BASIS_PERP venues
+   (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES/BITFINEX-FUTURES); this audit independently confirms
+   the SAME VM's unscoped (`--asset-group CEFI`, no `--venue` filter) `derivative_ticker` download is ALSO producing
+   wire-form LIGHTER-ZKSYNC writes in exactly its target window.
+
+**Determination: (a) SELF-RESOLVING RACE**, per the Recommended-decision framing above — a still-running, BOUNDED
+historical backfill (`cefi-fwd-20260808-123230`) is independently re-capturing `derivative_ticker` for dates an earlier
+canonicalization pass (2026-07-25/07-27) already normalized, using a base-only (missing `-USDC@LIN`) file stem. The VM
+self-terminates on completion (`VM_SHUTDOWN_ON_COMPLETION=true`, explicit `--end-date`) — this is not an indefinitely
+recurring writer misconfiguration. No code change is required in `tardis_shared.py`'s live canonicalization path (it has
+been correct since 2026-07-17); residual uncertainty on why THIS SPECIFIC `--force --data-types derivative_ticker`
+historical-download code path emits a base-only stem is not resolved here (would need a deployed-code-version read on
+the VM) but does not change the recommended next action either way.
+
+**Next action (todo 2, below) is gated on the `cefi-fwd-20260808-123230` VM lineage completing** (~2026-08-12T05:00Z per
+the sibling doc) — do NOT re-attempt the Range 2 apply before then; it would re-hit the same collisions for whatever
+dates the backfill is still mid-processing, and could race a live write.
+
 ## Todos
 
-- [ ] [DATA] P2. **Root-cause the LIGHTER-ZKSYNC wire/canonical dual-write collision** — sample 5-10 dates from the
-      2026-06-24..2026-07-14 dense run, compare wire-form vs canonical-form object `timeCreated` + row counts via
-      `gsutil stat`/manifest columns, determine self-resolving-race vs genuine-writer-bug per the "Recommended decision"
-      above. Audit only — do NOT rename/delete/merge anything. (repo: market-tick-data-service)
-- [ ] [DATA] P2. **Re-attempt the LIGHTER-ZKSYNC Range 2 (2026-04-18..2026-07-24) `cefi-late-renames` apply** once the
-      root-cause todo above determines the population is resolved/stable — pause cron, verify PAUSED, run, verify 0
-      unhandled collisions, resume cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
+- [x] ✅ [DATA] P2. **Root-cause the LIGHTER-ZKSYNC wire/canonical dual-write collision** — market-tick-data-service
+      (slot 20, 2026-08-08). Audit script + findings above; determination = (a) self-resolving race, culprit identified
+      (`cefi-fwd-20260808-123230`, ETA ~2026-08-12T05:00Z). Zero mutation — audit only, per scope.
+- [ ] [DATA] P2. **Re-attempt the LIGHTER-ZKSYNC Range 2 (2026-04-18..2026-07-24) `cefi-late-renames` apply** —
+      **BLOCKED until `cefi-fwd-20260808-123230` (tracked in
+      `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`) terminates
+      (~2026-08-12T05:00Z estimated)**. Once terminated: confirm via a fresh spot-check that no NEW LIGHTER-ZKSYNC
+      wire-form `derivative_ticker` objects appear for the dense-run window, THEN pause cron, verify PAUSED, run, verify
+      0 unhandled collisions, resume cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
 
 ## Progress Log
 
 - **2026-08-08** — Filed during the `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` resume, slot 18.
   EXTENDED-STARKNET applied clean; LIGHTER-ZKSYNC blocked on this systemic collision after a safe single-day exclusion
   attempt proved insufficient; proceeding to BYBIT-SPOT/COINBASE-FUTURES independently.
+- **2026-08-08 (slot 20)** — Root-cause todo closed. Read-only audit (script committed) sampled 11 dates (8 dense-window
+  - 3 post-window), confirmed 100%-`derivative_ticker` collision population with identical wire/canonical row counts,
+    and traced the wire-form writes to the active, bounded `cefi-fwd-20260808-123230` `--force` historical backfill VM
+    (tracked separately, ETA ~2026-08-12T05:00Z). Determination: self-resolving race, not a code bug. Todo 2 left open,
+    gated on that VM's completion.
