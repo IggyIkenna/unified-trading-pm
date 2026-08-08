@@ -888,3 +888,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   ~1,744-shard net progress in ~1h27m since launch), despite the denominator itself growing (other campaigns capturing
   more schedule shards concurrently, per the doc's own dynamic denominator formula). FIXTURE_STATS residual unchanged at
   116 (correctly stable, no active backfill targeting it now). Confirmed genuine forward convergence, not a fluke.
+- **2026-08-08T17:10Z** — both healthy. smallchunk8: `Chunk 5/451`, correct 5-day spans confirmed (e.g.
+  `2020-06-26→2020-06-30`), zero OOMs yet, heartbeat live. FIXTURE_LINEUPS: `last_completed_date=2020-10-16`, fresh; 2nd
+  re-census needed **56,779 → 56,147** (-632/~27min, consistent rate). At this rate full convergence is a long horizon
+  (~44h) — expected for a campaign this size, not a stall (metric still climbing each check). Doc nearing its cap (~110
+  lines left) — future ticks go terser; will milestone-compact older entries once <50 lines remain.
