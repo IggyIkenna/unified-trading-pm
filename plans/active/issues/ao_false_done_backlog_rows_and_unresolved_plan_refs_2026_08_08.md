@@ -99,7 +99,20 @@ plan + verifying the `done_sha`, never from the row's status alone.
       state.db (consistent with `regen_positional_task_ids_not_content_stable_2026_07_17.md` — positional ids reshuffle
       across regen ticks) between the 2026-08-08 03:15 UTC audit snapshot and this check, and the plan doc it pointed at
       is already in its correct, honest state. Nothing further to do on this item.
-- [ ] [BACKEND] P2. `defi_dex_pool_swaps_733_row_indexer_health_findings-001` (`done_sha=69d41b26f`)
+- [x] ✅ [BACKEND] P2. `defi_dex_pool_swaps_733_row_indexer_health_findings-001` (`done_sha=69d41b26f`) — **FLIP,
+      verified 2026-08-08 (slot 8)**: `69d41b26f` is a real commit
+      (`docs(plans): resolve UNISWAP_V3/OPTIMISM+     PANCAKESWAP_V3/BSC bad-indexers investigation…`, author
+      `ikennaigboaka [slot-8·planning]`, 2026-08-02T21:11:29Z, confirmed ancestor of `origin/live-defi-rollout`) that
+      genuinely resolved the cited plan's "bad indexers transient vs. permanent" investigation todo —
+      UNISWAP_V3/OPTIMISM confirmed PERMANENT/structural, PANCAKESWAP_V3/BSC confirmed transient-and-resolved with a new
+      stalled-indexer-head finding filed separately (full evidence: that plan's Progress Log entry "2026-08-02T~21:10Z
+      (slot 8, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-001`)"). The false-done flag
+      was a plan-doc bookkeeping artifact, not undone work: a later worker appended a near-duplicate `[x]` checkbox
+      elsewhere in the same doc instead of editing the original todo, leaving the original orphaned as `- [ ]` — the doc
+      itself now documents this root cause in full (see its "✅ CLOSED 2026-08-08 (false-done audit reconciliation)"
+      annotation), and that orphaned duplicate was already reconciled by a separate slot-1 session
+      (`unified-trading-pm@b55c96fb0`, confirmed via `git     blame`). No further action needed on the underlying plan;
+      this item only needed its tracker checkbox flipped here.
 - [ ] [BACKEND] P2. `cefi_track2_backfill_vm_preempted_no_recovery-003` (**`done_sha` EMPTY** — the strongest reopen
       candidate: a `done` row with no shipping evidence at all; todo is gate-shaped, "Once the relaunched VM genuinely
       completes (measured exit, not a wall-clock guess)…")
@@ -174,3 +187,10 @@ plan + verifying the `done_sha`, never from the row's status alone.
   (`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`) already carries its own correct, honest state (todo 2
   intentionally `- [ ]` as a recurring re-check pointer, 3 of 4 gated `BLOCKED-*` parent items still open per its
   2026-08-02 Progress Log). See the checklist item above for the full verification trail.
+
+- **2026-08-08 (slot 8, backend_engineer)**: Verdict on `defi_dex_pool_swaps_733_row_indexer_health_findings-001`
+  (`done_sha=69d41b26f`): **FLIP** — verified `69d41b26f` is a real, on-origin commit (authored by this same slot on
+  2026-08-02) that genuinely completed the cited plan's "bad indexers transient vs. permanent" investigation todo. The
+  false-done flag traced to a plan-doc duplicate-checkbox bookkeeping bug, already root-caused and reconciled by a
+  separate slot-1 session earlier the same day (`unified-trading-pm@b55c96fb0`) — confirmed via `git blame` on the
+  reconciled checkbox. No REOPEN warranted; no code work needed. See the checklist item above for the full trail.
