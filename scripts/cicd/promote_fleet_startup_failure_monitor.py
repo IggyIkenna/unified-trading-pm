@@ -37,6 +37,16 @@ entire ~2-hour+ livelock — zero coverage — until found by manual investigati
 longer than `--queued-threshold-min` is flagged, independent of whether it ever reaches
 `completed` — a structurally separate check from the streak above.
 
+False-positive found 2026-08-08 (same day this hardening first shipped): an 8-day-old orphaned
+run (created 2026-07-30, GitHub's own `cancel`/`force-cancel` endpoints both refuse it with
+"Cannot cancel a workflow re-run that has not yet queued" — a GitHub-side inconsistency on
+ancient run records) kept re-firing this alert every tick, even though 10/10 of the workflow's
+MOST RECENT runs were `success` — i.e. the concurrency slot has clearly cycled through many
+runs since, so this old record isn't actually occupying anything; it's a stale, unkillable API
+artifact, not a live blocker. Fix: a queued run only counts as genuinely stuck if NO newer run of
+the same workflow has reached a terminal (`completed`) state since it started queuing — if one
+has, the "single waiter slot" has demonstrably moved on and this one is orphaned, not blocking.
+
 Stdlib + `gh` only. Prints a human report; with `--slack` prints it Slack-ready and writes
 `stuck=true|false` to `$GITHUB_OUTPUT` (if set) for the calling workflow to gate on. Exit 1 if
 either workflow is startup_failure-stuck OR zombie-queued (so a required-check/alert can gate),
@@ -114,14 +124,34 @@ def parse_iso(ts: object) -> dt.datetime | None:
         return None
 
 
-def stuck_queued_runs(runs: list[dict[str, object]], threshold_min: float, now: dt.datetime) -> list[dict[str, object]]:
+def stuck_queued_runs(
+    runs: list[dict[str, object]],
+    threshold_min: float,
+    now: dt.datetime,
+    completed_runs: list[dict[str, object]] | None = None,
+) -> list[dict[str, object]]:
     """Pure decision: which of `runs` (already filtered to `status=queued` by the caller) have been
     sitting queued longer than `threshold_min`. Each returned dict is the original run dict plus an
     injected `_age_min` key (rounded minutes) for reporting.
 
     A run with no parseable `created_at` is skipped rather than treated as stuck (fail-safe: never
     page on a malformed/missing timestamp).
+
+    `completed_runs` (2026-08-08 false-positive fix) — same-workflow runs already known to have
+    reached `status=completed` (the caller's `fetch_recent_runs` result). A queued run is excluded
+    if any completed run is NEWER (`created_at` after the queued run's own `created_at`): that
+    proves the single `cancel-in-progress: false` waiter slot has been claimed and released by at
+    least one later trigger, so THIS queued run is an orphaned/superseded record — not the one
+    actually occupying the slot — even though GitHub's own API still reports it as `queued` and may
+    refuse to cancel it. `completed_runs` defaults to `None`, in which case every queued run is
+    judged on age alone (unchanged from before this parameter existed).
     """
+    newest_completed_at: dt.datetime | None = None
+    for c in completed_runs or []:
+        c_at = parse_iso(c.get("created_at"))
+        if c_at is not None and (newest_completed_at is None or c_at > newest_completed_at):
+            newest_completed_at = c_at
+
     stuck: list[dict[str, object]] = []
     for run in runs:
         queued_since = parse_iso(run.get("created_at"))
@@ -129,6 +159,8 @@ def stuck_queued_runs(runs: list[dict[str, object]], threshold_min: float, now: 
             continue
         age_min = (now - queued_since).total_seconds() / 60.0
         if age_min <= threshold_min:
+            continue
+        if newest_completed_at is not None and newest_completed_at > queued_since:
             continue
         stuck.append({**run, "_age_min": round(age_min, 1)})
     return stuck
@@ -250,7 +282,7 @@ def main() -> int:
             findings[wf] = leading_run_of(runs, STARTUP_FAILURE)
 
         queued_runs = fetch_queued_runs(args.repo, wf, args.per_page)
-        stuck_q = stuck_queued_runs(queued_runs, args.queued_threshold_min, now)
+        stuck_q = stuck_queued_runs(queued_runs, args.queued_threshold_min, now, completed_runs=runs)
         if stuck_q:
             queued_stuck[wf] = stuck_q
 
