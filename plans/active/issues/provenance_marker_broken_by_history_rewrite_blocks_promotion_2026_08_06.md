@@ -88,6 +88,10 @@ context_scope:
 
 # LDR→main provenance-marker corrupted post-history-rewrite — 3 repos stuck since 2026-08-05
 
+> **Archival status (2026-08-08): all 3 todos done, but the archival move itself is BLOCKED** by a newly-discovered
+> tooling deadlock — see `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`.
+> This doc stays `status: open` (not `resolved`) at its original path until that's cleared, per that doc's own todo #2.
+
 ## What was measured (live, 2026-08-06)
 
 - **instruments-service PR #1084/#1085 both closed, not merged** (`superseded by newer validated SHA` — the fleet bot's
