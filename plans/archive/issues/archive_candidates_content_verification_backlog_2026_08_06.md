@@ -174,7 +174,7 @@ checkbox signal alone, but confirming it actually IS requires reading:
       attributing other slots' debt to whoever happens to be promoting. **Done when**: a promote PR whose diff adds no
       new candidate passes `quality-gates-v2` while the corpus still holds pre-existing candidates, AND a PR that adds
       one still fails. Repo: unified-trading-ci (workflow) + unified-trading-pm (checker). **Cross-ref**:
-      `/plans/active/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` is the live incident
+      `/plans/archive/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` is the live incident
       this prevents recurring.
 - [x] ✅ [SCRIPT] P2. Once the backlog is cleared (or the residual is small + all `archive_exempt`-justified), consider
       whether this check's remediation should get its own dedicated skill (mirroring `/na-eligibility-audit`'s tranche +
@@ -259,7 +259,7 @@ closest active tracking doc for this wall family):
   todos above are for AO workers to execute, and no interactive session should start batch-archiving from them.
 
   **Ruling on BLK-46fa5703 (option A, re-scoped)**: the operator chose option A of
-  `/plans/active/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` — dispatch a worker to
+  `/plans/archive/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` — dispatch a worker to
   clear the backlog — but **re-scoped to per-doc content verification**, explicitly NOT the mechanical batch-archive
   that option A's original wording implied. This doc's central finding is the reason, and it was independently re-proven
   the same day: closing two todos in `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`
