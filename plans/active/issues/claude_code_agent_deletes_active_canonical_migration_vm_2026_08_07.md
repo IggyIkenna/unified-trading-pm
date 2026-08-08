@@ -160,7 +160,7 @@ wrapper):
       promote, PREFIX_KILL_MINUTES verified on origin/main; `uts-shared-deployment-api-00464` at 100% traffic, image
       sha256:7042ab88 built 2026-08-08T00:24Z; cron ENABLED, last run 2026-08-08T03:30Z)
 
-- [ ] [INFRA] P1. **Fix 3 — codify a `canonical-migration-` prefix carve-out on the VM-delete guardrail** in the two
+- [x] [INFRA] P1. ✅ **Fix 3 — codify a `canonical-migration-` prefix carve-out on the VM-delete guardrail** in the two
       role files that mirror it: `agents/infra.md` STEP 0.65 and `agents/data_engineering.md` STEP 0.55. Both currently
       require confirming genuine staleness via ALL of (1) the heartbeat blob mtime vs. the watchdog's per-prefix
       threshold, (2) a `run.log` tail/mtime (active writes in the last few minutes = alive), and (3) the manifest shard
@@ -171,7 +171,8 @@ wrapper):
       where the manifest generation is EXPECTED to sit unchanged through the whole download phase (confirmed in this
       incident: the VM was 22 minutes into a `blob.download_as_bytes(timeout=900)` call when killed, manifest generation
       genuinely unchanged, not evidence of staleness) — a frozen run.log/heartbeat alone is not dispositive the way it
-      is for other fleet VM classes.
+      is for other fleet VM classes. — unified-trading-pm@4fbb6113e (agents/infra.md STEP 0.65 +
+      agents/data_engineering.md STEP 0.55 updated)
 
 ## Triage Disposition
 
