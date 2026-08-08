@@ -64,6 +64,24 @@ source: ['interactive session 2026-08-08 — operator: "did you fix all these so
   `/plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md`, not duplicated here.
   **agent-orchestrator@b52dd1910**.
 
+- **`process-category-sampler` failed EVERY run** — `TasksMax=50` with `TasksCurrent=40` (1420 `can't start new thread`
+  in 6h, first seen 2026-08-07T16:48Z). NOT host exhaustion: 668 system threads against a threads-max of 231854. The
+  unit enumerates every process on the box and publishes each as its own Pub/Sub call, so its thread demand grows with
+  the fleet while the cap did not — guaranteed to fail harder as slots are added. Raised to 256
+  (**agent-orchestrator@36067b6ac**); that exposed a second cap underneath — `MemoryMax=256M` with a measured
+  `256.0M peak, 174.4M swap peak`, i.e. pinned and SWAPPING — raised to 1G. Both deployed + live-fired:
+  `Result=success`.
+
+## Outcome measured at session end (2026-08-08 ~12:10 UTC)
+
+| signal                     | before           | after                             |
+| -------------------------- | ---------------- | --------------------------------- |
+| live worker tmux sessions  | 8                | **12 / cap 13**                   |
+| effective backlog cap      | 8                | **13**                            |
+| slots pinned >=80% context | 5 (all at 100%)  | **0**                             |
+| watchdog kills today       | 3, flapping=true | **0, flapping=false**             |
+| failed systemd units       | 2                | 1 (`audit-false-done`, by design) |
+
 ## Todos
 
 - [ ] [BACKEND] P2. **`ao-self-pull.sh` silently stops auto-deploying when an UNTRACKED file appears.** Measured
