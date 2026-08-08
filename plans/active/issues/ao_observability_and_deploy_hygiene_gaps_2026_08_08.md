@@ -8,12 +8,16 @@ summary: >-
   cluster of unrelated observability and deploy-hygiene defects on the central VM. Two are fixed and deployed:
   OrphanRefVerifyWatchdog wrote one activity row per wip-preserve ref per tick (measured 882 of 1000 rows in a SIX
   MINUTE window, 76% of the feed) making /api/activity near-useless for diagnosing anything else, now transition-deduped
-  (agent-orchestrator@b19140b23); and the context-saturation retry loop burned 15 minutes per wedge on a /compact that
-  cannot succeed (agent-orchestrator@b52dd1910, tracked on its own issue doc). Four residual gaps are tracked here and
-  are NOT fixed - the ao-self-pull auto-deploy silently skipping on an untracked backup file, ~26 genuine false-done
-  backlog rows the audit cron keeps re-finding, a 50-event stash_pile_stale backlog, and the glue-runner fleet whose own
-  runbook still reads last_executed NEVER while 51 orphaned unit files sit disabled on the VM pointing at directories
-  that do not exist.
+  (agent-orchestrator@b19140b23, verified live at 6 rows on the next sweep vs ~450 before); the context-saturation retry
+  loop burned 15 minutes per wedge on a /compact that cannot succeed (agent-orchestrator@b52dd1910, tracked on its own
+  issue doc); process-category-sampler failed EVERY run on its own TasksMax/MemoryMax caps; and ao-self-pull silently
+  skipped auto-deploy on any untracked file, the second recurrence of that wedge (agent-orchestrator@2c08afd85). The
+  glue-runner fleet's 51 orphaned unit files were retired after verifying 0 active / 0 enabled / no directories / no
+  Runner.Listener. The false-done backlog turned out to be 26 -> 1 on a re-run, and the survivor is a positional-task-ID
+  mapping artifact where BOTH sides are individually correct, so it was deliberately neither flipped nor reopened.
+  Genuinely still open - raising ORCHESTRATOR_FLEET_WORKER_CAP, which after two slot tranches is now the ONLY thing
+  capping the fleet; a stash-content verifier (hundreds of stashes across 20 slots, ~15x the original report); and one
+  short slot (30) needing an idempotent re-run.
 status: open
 nature: issue
 asset_group: [ao]
