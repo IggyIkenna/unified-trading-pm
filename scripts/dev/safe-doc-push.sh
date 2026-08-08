@@ -127,6 +127,41 @@ unstage_foreign_paths() {
   done <<<"$staged"
 }
 
+# autostash_rebase_reconcile -- `git pull --rebase --autostash` PLUS verification that the
+# autostash actually popped. Bug fixed 2026-08-08 (see
+# autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md): under heavy
+# contention, git's own post-rebase autostash pop can itself fail/conflict without failing the
+# overall `pull --rebase` command -- the rebase succeeds, but the caller's pre-existing edits
+# stay parked in refs/stash instead of landing back in the working tree. The old code's blind
+# `git restore --staged .` right after did nothing to detect this: with the edits still in the
+# stash, `git add` stages nothing, the "already matches HEAD" heuristic below is satisfied on a
+# false premise, and the script reports success while silently dropping the whole commit.
+# Returns 0 on success (rebase done, any autostash cleanly restored or none existed).
+# Returns 1 on failure -- caller should treat this as "needs a human", same as a rebase conflict.
+autostash_rebase_reconcile() {
+  local before_stash after_stash
+  before_stash="$(git rev-parse -q --verify refs/stash 2>/dev/null || echo none)"
+  if ! git pull --rebase --autostash origin "$BRANCH" -q 2>/tmp/_sdp_rebase_err; then
+    git rebase --abort 2>/dev/null || true
+    echo "  rebase conflicted -- this is a genuine content collision, not contention. Resolve manually:" >&2
+    cat /tmp/_sdp_rebase_err >&2
+    return 1
+  fi
+  after_stash="$(git rev-parse -q --verify refs/stash 2>/dev/null || echo none)"
+  if [[ "$after_stash" != "$before_stash" ]]; then
+    echo "  autostash did not auto-pop (a new stash entry is still present after the rebase) -- attempting an explicit pop"
+    if ! git stash pop -q 2>/tmp/_sdp_stash_pop_err; then
+      echo "  explicit stash pop ALSO failed -- this is a genuine unresolved conflict, not contention:" >&2
+      cat /tmp/_sdp_stash_pop_err >&2
+      echo "  your edits are safe in the stash (run 'git stash list' to find them) -- resolve manually." >&2
+      return 1
+    fi
+    echo "  explicit pop succeeded -- edits restored to the working tree"
+  fi
+  git restore --staged . 2>/dev/null || true
+  return 0
+}
+
 backoff() {
   local attempt="$1"
   sleep "$((1 + RANDOM % 3 + attempt))"
@@ -154,13 +189,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
         if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
           echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
-          if ! git pull --rebase --autostash origin "$BRANCH" -q 2>/tmp/_sdp_rebase_err; then
-            git rebase --abort 2>/dev/null || true
-            echo "  rebase conflicted -- this is a genuine content collision, not contention. Resolve manually:"
-            cat /tmp/_sdp_rebase_err >&2
+          if ! autostash_rebase_reconcile; then
             exit 3
           fi
-          git restore --staged . 2>/dev/null || true
         else
           echo "  pull failed:"; cat /tmp/_sdp_pull_err
           backoff "$attempt"
@@ -170,13 +201,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     else
       # Defensive: shouldn't normally happen pre-commit, but handle the same as the
       # post-commit case if it does (e.g. a prior failed attempt left a local commit).
-      if ! git pull --rebase --autostash origin "$BRANCH" -q 2>/tmp/_sdp_rebase_err; then
-        git rebase --abort 2>/dev/null || true
-        echo "  rebase conflicted -- genuine content collision, resolve manually:"
-        cat /tmp/_sdp_rebase_err >&2
+      if ! autostash_rebase_reconcile; then
         exit 3
       fi
-      git restore --staged . 2>/dev/null || true
     fi
 
     git add -- "${FILES[@]}"
@@ -220,13 +247,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
   if grep -qiE "non-fast-forward|rejected|fetch first" /tmp/_sdp_push_err; then
     echo "  origin moved during this attempt -- reconciling (post-commit: rebase+autostash) and retrying"
-    if ! git pull --rebase --autostash origin "$BRANCH" -q 2>/tmp/_sdp_rebase_err; then
-      git rebase --abort 2>/dev/null || true
-      echo "  rebase conflicted on retry -- genuine content collision, resolve manually:"
-      cat /tmp/_sdp_rebase_err >&2
+    if ! autostash_rebase_reconcile; then
       exit 3
     fi
-    git restore --staged . 2>/dev/null || true
     backoff "$attempt"
     continue
   fi
