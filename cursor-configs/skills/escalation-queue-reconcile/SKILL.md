@@ -15,13 +15,15 @@ description: >-
   `dispatched`/`queued` row past its deadline, or the retuned constants having drifted back toward the old single-shot
   behavior) triggers the expensive path: diagnose at the root via the same read-only SSM approach used to catch the
   original bug, auto-fix anything small/clear/obviously-correct the same way this workspace's background agents already
-  do (quickmerge the fix), and file/update a `plans/active/issues/` doc for anything ambiguous or not immediately
-  fixable — mirroring `/ci-reconcile`'s "always auto-fixes, never silently logs" contract, scoped down to this one
-  subsystem. Designed to be dispatched on a 3-hour systemd timer via `agent-orchestrator/scripts/
-  install-escalation-queue-reconciler-timer.sh` (`mode=escalation_reconcile`, `agents/escalation_queue_reconciler.md`) —
-  a ONE-SHOT check per invocation, not a self-looping watch; AO's own timer supplies the cadence. Trigger on
-  `/escalation-queue-reconcile`, "check the escalation queue is healthy", "did the escalation watchdog regress", "audit
-  the AO escalation queue", "is a CI wall stuck unresolved".
+  do (quickmerge the fix), and for a genuine judgment call raise a live `/blocked` question to `main` first (bounded
+  2-minute wait, mirroring `cicd.md`'s pattern) before falling back to filing/updating a `plans/active/issues/` doc for
+  the operator — mirroring `/ci-reconcile`'s "always auto-fixes, never silently logs" contract, scoped down to this one
+  subsystem, plus the ask-main-then-operator escalation ladder `plan_reconciler`/`cicd` already use. Designed to be
+  dispatched on a 3-hour systemd timer via `agent-orchestrator/scripts/ install-escalation-queue-reconciler-timer.sh`
+  (`mode=escalation_reconcile`, `agents/escalation_queue_reconciler.md`) — a ONE-SHOT check per invocation, not a
+  self-looping watch; AO's own timer supplies the cadence. Trigger on `/escalation-queue-reconcile`, "check the
+  escalation queue is healthy", "did the escalation watchdog regress", "audit the AO escalation queue", "is a CI wall
+  stuck unresolved".
 ---
 
 # /escalation-queue-reconcile — escalation-queue mechanism health check
@@ -114,29 +116,66 @@ right — file it, don't just keep silently retrying).
      `/ci-reconcile` or the `cicd` worker) or already cleared (a reconcile-pass bug that should have caught it, file it
      here).
 
-## Step 3 — fix or file, never silently log
+## Step 3 — genuinely uncertain? Ask main first, bounded wait, operator as last resort
+
+Not every Step-2 finding is a slam-dunk fix or a slam-dunk file-it. A judgment call — "is this fix actually safe to
+auto-apply", "which of two plausible root causes is it", "does this pattern match an accepted precedent or is it new" —
+gets a LIVE attempt at main before falling back to a durable issue doc, the same pattern `cicd`/`plan_reconciler`
+already use (`unified-trading-pm/agents/cicd.md` § "NEEDS-A-HUMAN-DECISION"):
+
+```bash
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/blocked \
+  -H 'Content-Type: application/json' \
+  -d '{"task_id": "'"$DISPATCH_ID"'", "question": "<the finding + why it is genuinely ambiguous>",
+       "options": ["A: ...", "B: ..."], "recommendation": "A", "can_continue": false, "authority": "main_agent"}'
+```
+
+This fires a dashboard alert and sets your slot `status=blocked`. Poll `GET $SERVER_URL/api/slots/$SLOT_ID/messages`
+(heartbeating each tick) for **up to 2 MINUTES**:
+
+- **main answers** → apply the decision, fold it into Step 4 (fix or file, now disambiguated by the answer), and cite
+  the answer in your Step 5 report — this is the "answers structure things" payoff: a resolved judgment call becomes a
+  documented precedent (in the issue doc or the fix's commit message) instead of a re-diagnosed-from-scratch guess next
+  time the same shape recurs.
+- **main replies it can't resolve, or 2 minutes elapse with no answer** → STOP waiting, don't hold the slot (shared
+  capacity). File the finding as `plans/active/issues/<slug>_<date>.md` per Step 4 as normal, but note explicitly that a
+  live main-agent attempt was made and timed out/deferred — this is the "operator as last resort" path: the row persists
+  in `/api/blocked` for a human to answer at their own pace (`authority: main_agent`'s 10-min system timeout would
+  otherwise kill+requeue your slot — stopping yourself at 2 min avoids that and hands off cleanly instead), and the
+  issue doc means the operator doesn't have to re-derive context main already saw.
+
+Reserve `authority: "operator"` on the initial call (skip asking main at all) only for the kind of hard-stop this
+workspace treats as human-only regardless of context (e.g. a fix that would need touching wallet keys or force-pushing
+main — extremely unlikely for this skill's scope, but the same bar as everywhere else in this workspace).
+
+## Step 4 — fix or file, never silently log
 
 Same findings-triage HARD RULE this whole workspace uses: a small, clear, obviously-correct code fix (a reverted
 constant, an ordering bug, a missing log line) → fix it directly and ship via `bash scripts/quality-gates.sh --no-fix` +
 `quickmerge.sh --agent --files '<paths>'`, add a regression test if the bug class is the kind unit tests can catch (the
 ordering bug from 2026-08-07 needed a REAL in-memory SQLite test — a MagicMock-based test cannot catch an `ORDER BY`
 regression, see `tests/test_escalation.py`'s `test_reconcile_prioritizes_recent_over_ancient_under_a_tight_limit`).
-Anything ambiguous, cross-repo, or requiring a judgment call → `plans/active/issues/<slug>_<date>.md`, citing the
-specific row(s)/evidence found. A genuinely stuck wall whose root cause is in the TARGET repo's own code (not the
-escalation mechanism) is out of scope for THIS skill — hand it to `/ci-reconcile` rather than fixing it here.
+Anything ambiguous, cross-repo, or requiring a judgment call → Step 3 first (ask main, bounded wait), then
+`plans/active/issues/<slug>_<date>.md` either way (answered-and-fixed still gets a brief record; unresolved gets the
+full finding) citing the specific row(s)/evidence found. A genuinely stuck wall whose root cause is in the TARGET repo's
+own code (not the escalation mechanism) is out of scope for THIS skill — hand it to `/ci-reconcile` rather than fixing
+it here.
 
-## Step 4 — report
+## Step 5 — report
 
 **Cheap path (Step 1 only, the expected common case)**: one line — row count, oldest age, verdict. Nothing more.
 
-**Deep path (Step 2+ reached)**: what was found, the root-cause diagnosis, what was fixed (repo@sha) or filed (issue doc
-path), and the Step-1 re-check confirming the queue is healthy again post-fix.
+**Deep path (Step 2+ reached)**: what was found, the root-cause diagnosis, whether Step 3's live ask was used and by
+whom it was answered (main / timed-out-to-operator), what was fixed (repo@sha) or filed (issue doc path), and the Step-1
+re-check confirming the queue is healthy again post-fix.
 
 ## Under `/autonomous`
 
 One-shot per dispatch, matching AO's 3-hour scheduled-timer cadence (`install-escalation-queue-reconciler-timer.sh`) —
-do not loop internally waiting for the next tick; the timer supplies that. If Step 2+ fixed something, do one confirming
-Step-1 re-check before finishing, then stop (mirrors `/ci-reconcile`'s own no-pause contract).
+do not loop internally waiting for the next tick; the timer supplies that. Step 3's 2-minute bounded wait is the ONE
+exception to "never pause" — it has its own hard ceiling precisely so it can't turn into an unbounded stall. If Step 2+
+fixed something, do one confirming Step-1 re-check before finishing, then stop (mirrors `/ci-reconcile`'s own no-pause
+contract).
 
 ## What this skill does NOT do
 

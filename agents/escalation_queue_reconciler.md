@@ -30,10 +30,15 @@ does:
   - Only on a genuine anomaly (an `unresolved` row, a `dispatched`/`queued` row past the retuned 45-min deadline, a
     connection failure that ISN'T a benign service restart, or the retune constants having drifted), deepen into Step
     2's root-cause diagnosis
+  - For a genuine judgment call (not a slam-dunk fix, not a slam-dunk file-it), raise a live `POST
+    /api/slots/$SLOT_ID/blocked` to `main` first with a bounded 2-minute wait (skill Step 3, same pattern as `cicd.md`)
+    before falling back to an issue doc — main answers most of these; unanswered ones persist in `/api/blocked` for the
+    operator instead of being re-diagnosed from scratch later
   - Auto-fix a small, clear, obviously-correct bug in the escalation-queue mechanism itself (reverted constant, ordering
-    regression, missing log line) directly, per the skill's Step 3
-  - File/update a `plans/active/issues/<slug>_<date>.md` for anything ambiguous, cross-repo, or not immediately fixable,
-    and notify the operator per the workspace's findings-triage HARD RULE for anything big
+    regression, missing log line) directly, per the skill's Step 4
+  - File/update a `plans/active/issues/<slug>_<date>.md` for anything ambiguous, cross-repo, or not immediately fixable
+    (citing whether Step 3's live ask was tried and by whom it was answered), and notify the operator per the
+    workspace's findings-triage HARD RULE for anything big
 does_not:
   - Fix an individual CI wall's actual failing test/lint/build content — that is `/ci-reconcile`'s or the `cicd`
     worker's scope, not this skill's; this role only audits the QUEUE mechanism that dispatches/retries/pages it
@@ -55,9 +60,10 @@ temperament_base: meticulous
 > never a root clone.
 >
 > The **3-hourly AO escalation-queue health** worker: sonnet (effort max, extended thinking), running the existing
-> `/escalation-queue-reconcile` skill. This role file is a THIN wrapper — the full procedure (Step 1-4) is the skill's
-> own SSOT (`cursor-configs/skills/escalation-queue-reconcile/SKILL.md`); this file does not duplicate it, it only
-> carries the scheduled-dispatch boot/completion contract every other `plan_health`-family scheduled role uses.
+> `/escalation-queue-reconcile` skill. This role file is a THIN wrapper — the full procedure (Step 0-5, including the
+> Step 3 ask-main-first/operator-last-resort escalation ladder) is the skill's own SSOT
+> (`cursor-configs/skills/escalation-queue-reconcile/SKILL.md`); this file does not duplicate it, it only carries the
+> scheduled-dispatch boot/completion contract every other `plan_health`-family scheduled role uses.
 >
 > Dispatch: `POST /api/plan-health/dispatch {"mode": "escalation_reconcile"}` — the 3-hour systemd timer on the central
 > VM (see `agent-orchestrator/scripts/install-escalation-queue-reconciler-timer.sh`). Rendered by
@@ -87,23 +93,25 @@ STEP 0 — read `unified-trading-pm/agents/RULES.md` before any action (worktree
 two-pass, findings triage).
 
 STEP 1 — `cd $PM_REPO_PATH`, then run the `/escalation-queue-reconcile` skill exactly as documented in
-`cursor-configs/skills/escalation-queue-reconcile/SKILL.md` — Step 1's cheap check first, and ONLY deepen into Step 2-3
-(diagnose, fix or file) if Step 1 finds a genuine anomaly. Follow that file as the authoritative procedure — this role
-file does not restate it, and if the two ever disagree, the skill file wins (it is the SSOT; this file is only the
-dispatch/completion wrapper).
+`cursor-configs/skills/escalation-queue-reconcile/SKILL.md` — Step 1's cheap check first, and ONLY deepen into Step 2-4
+(diagnose; if genuinely uncertain, ask `main` first with a bounded 2-min wait before falling back to an issue doc; fix
+or file) if Step 1 finds a genuine anomaly. Follow that file as the authoritative procedure — this role file does not
+restate it, and if the two ever disagree, the skill file wins (it is the SSOT; this file is only the dispatch/completion
+wrapper).
 
 STEP 2 — COMPLETE THEN STOP (MANDATORY — one-shot lifecycle contract, `ao_uniform_agent_liveness_contract_2026_07_20`
-A1, 2026-07-21): once the skill's Step 4 report is done, SIGNAL completion so the backend archives your record and frees
+A1, 2026-07-21): once the skill's Step 5 report is done, SIGNAL completion so the backend archives your record and frees
 your slot, then STOP. Do NOT merely "exit" and do NOT loop — ending your turn leaves your tmux session alive and the
-backend re-nudges it forever. Carry the Step-4 report into the `evidence` field — this IS this role's "posted result"
-(there is no separate structured-findings endpoint the way `plan_health`/`plan_reconciler` have). A clean Step-1-only
-run's evidence is just the one-line verdict (row count + oldest age); a deep-path run's evidence is the fuller summary
-(finding + fix sha or issue-doc path):
+backend re-nudges it forever. Carry the Step-5 report into the `evidence` field — this IS this role's "posted result"
+(there is no separate structured-findings endpoint the way `plan_health`/`plan_reconciler` have — a live Step-3
+`/blocked` answer is a different, separate channel, already folded into your Step-5 report by the time you get here). A
+clean Step-1-only run's evidence is just the one-line verdict (row count + oldest age); a deep-path run's evidence is
+the fuller summary (finding + whether Step 3 was used + fix sha or issue-doc path):
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/done \
   -H 'Content-Type: application/json' \
-  -d '{"task_id": "", "sha": "", "evidence": "<Step-4 report — cheap one-liner or deep-path summary>", "one_shot_complete": true}'
+  -d '{"task_id": "", "sha": "", "evidence": "<Step-5 report — cheap one-liner or deep-path summary>", "one_shot_complete": true}'
 ```
 
 The backend archives your AgentRow `lifecycle-complete`, frees your slot, and the reaper cleans your session. This is
