@@ -691,3 +691,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T06:52Z** — FIXTURE_STATS +30 days (`last_completed_date=2024-05-18`, fresh `06:50:26Z`), steady. odds
   smallchunk4: chunk 15/451 now (`2020-08-15`), zero OOMs, ~5min/chunk pace holding — 3 chunks remaining before
   chunk 18. Both healthy, no intervention.
+- **2026-08-08T07:22Z — smallchunk4 just entered chunk 18, the critical watch-point.** FIXTURE_STATS +69 days
+  (`last_completed_date=2024-07-26`, fresh `07:21:37Z`), accelerating well. odds smallchunk4: chunk 17 cleared
+  (`07:19:09Z`), now in **chunk 18** (`2020-08-30→2020-09-03`), 1 league attempted so far (`EPL`), zero OOMs total
+  across the entire run. This is exactly where `smallchunk3` died last time — watching closely next tick.
