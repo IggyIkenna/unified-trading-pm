@@ -995,3 +995,5 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`4d57ad99b8`.
 - **2026-08-08T05:57Z** — smallchunk4 confirmed booted + healthy (chunk 4/451, zero OOMs). FIXTURE_STATS jumped 98 days
   (`last_completed_date=2024-03-15`, fresh `05:55:28Z`). Both healthy.
+- **2026-08-08T06:24Z** — FIXTURE_STATS +34 days (`last_completed_date=2024-04-18`, fresh `06:23:27Z`). smallchunk4
+  chunk 10/451 (`2020-07-21`), zero OOMs, no 3rd hang occurrence yet. Both healthy.
