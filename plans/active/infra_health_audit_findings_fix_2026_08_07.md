@@ -207,11 +207,48 @@ drift_direction: advance-code
       whose logs share the same `service_name` label; re-scoped the query with `resource.labels.location="us-central1"`
       and got 0 logs/0 requests, confirming ONLY the us-central1 instance was dead. The europe-west4 live instance and
       the real `uts-shared-deployment-api` were both verified untouched post-deletion.
-- [ ] [SCRIPT] P1. **Recheck `mdps-backfill-cefi-20260807-130321` preemption** — preempted 2026-08-07T14:49:27Z; the
+- [x] [SCRIPT] P1. ✅ **Recheck `mdps-backfill-cefi-20260807-130321` preemption** — preempted 2026-08-07T14:49:27Z; the
       same launcher left a sibling VM un-relaunched for ~33h on 2026-08-04. Verify it actually got relaunched this time
       (per the PROGRESS-checkpoint contract) — if not, this is the exact class of bug the launcher-registry
       preemption-recovery contract is supposed to prevent, and needs the same fix applied fleet-wide, not just a one-off
-      relaunch.
+      relaunch. **(a) VM-specific: did NOT recover — worse than the 2026-08-04 precedent.** No successor
+      instance/vm-logs dir was ever created (`gcloud compute operations list` shows only
+      `insert`+`compute.instances.preempted` for this exact name, nothing after); the VM was instead silently REAPED as
+      `vm_not_running` at 14:55:49Z (`reap_stale: archived ... reason=vm_not_running`) with zero relaunch attempt — no
+      PROGRESS.json checkpoint ever existed either (`mdps-backfill` is a single-shot `_launch_with_tee` VM_TASK in
+      `setup-data-pipeline-vm.sh`, not one of the chunked launcher families with the shell-level `[[VM_PROGRESS]]`
+      marker per `/codex/05-infrastructure/spot-vms-for-backfill.md`), so even a relaunch would have replayed
+      `START_DATE=2023-06-01` verbatim. This VM's specific relaunch-or-confirm action is already tracked separately at
+      `/plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo (line ~135) — not duplicated here. **(b)
+      General DP-VM-008/009/011 mechanism: found GENUINELY BROKEN at the root, now FIXED.** The exit-code fleet monitor
+      (`uts-prod-dp-exit-code-monitor`, Cloud Run Job, cron healthy — ran on schedule every 5 min straight through the
+      incident, confirmed via `gcloud run jobs executions list`) DID see the VM terminate (14:51:03Z: "1 terminated ...
+      0 preempted") but its Operations-API preemption fallback (`was_instance_preempted` in
+      `unified-trading-library/.../gcp_compute.py`, consulted whenever the in-guest GCS `PREEMPTED` marker is absent —
+      exactly this VM's case, killed too abruptly for its shutdown-script to write one) returned `False` for a VM that
+      was provably preempted (`compute.instances.preempted` op confirmed live via `gcloud compute operations list`).
+      Root-caused by reproducing the exact call live against GCP (`.venv/bin/python` +
+      `unified_trading_library.cloud_interface.get_compute_engine_client(...).was_instance_preempted(...)` returned
+      `False`): the server-side GCE Operations `aggregatedList` filter's compound clause
+      `(operationType="compute.instances.preempted") AND (targetLink:"<vm_name>")` silently returns ZERO results — the
+      `:` "has" operator does not do substring/contains matching on URL-typed fields like `targetLink` at all (tested
+      every wildcard variant, all 0 hits; only a full-URL EXACT match works, which needs the zone ahead of time). Never
+      raised — `_compute_ops.py`'s inner `try/except: return False` swallows it silently, so this failure mode had ZERO
+      diagnostic trace anywhere (no WARNING logged, confirmed via `gcloud logging read`). Net effect: `DP_VM_PREEMPTED`
+      never fired for this class of VM (abrupt-kill, no in-guest marker) since the fallback was added — not just this
+      incident — so `DP_VM_PREEMPTED_NO_RELAUNCH` (DP-VM-009) never had a chance to fire either, since its own
+      precondition (a detected-but-unrelaunchable preemption) was never reached. The primary GCS-marker signal path and
+      the actuator/relaunch layer itself are NOT broken (same-day `DP_VM_PREEMPTED`+`DP_VM_PREEMPTED_RECOVERED` fired
+      correctly for `cefi-fwd-20260807-100050` at 10:25Z via that path) — this was specifically the abrupt-kill
+      fallback. **Fix**: dropped the dead `targetLink` clause from the server-side filter (kept `operationType`-only,
+      still bounded — ~750 ops fleet-wide, not an unbounded scan) and rely entirely on the already-present client-side
+      exact trailing-path-segment match. Re-verified live post-fix: same call now returns `True`. Added a regression
+      test (`test_server_side_filter_has_no_dead_target_link_clause`) pinning the filter string so a future re-add of a
+      targetLink clause fails loudly. Shipped `unified-trading-library@dc5fc16a6` (quality-gates.sh green,
+      `--agent --files`). **Residual**: this fix is live on LDR; propagating to the actually-deployed
+      `uts-prod-dp-exit-code-monitor` Cloud Run image requires the standard LDR→main promotion + wheel publish +
+      deployment-service picking up the new pin and rebuilding/redeploying — not yet confirmed live in the deployed cron
+      job as of this writing (a separate downstream step, not "next 5-min tick").
 
 ## Progress Log
 
@@ -232,3 +269,14 @@ drift_direction: advance-code
   market-data-query-service crash-loop" todo (the service was deleted entirely by an earlier todo in this same doc). Doc
   otherwise stays NA — genuinely live, currently-being-executed `/autonomous` infra remediation work created today (P0),
   8 remaining open items are real unblocked ops-fix work, not defaulted/unassessed.
+- **na-eligibility-audit 2026-08-08 (ui tranche)**: KEEP-NA, valid — re-confirmed; a same-day `/autonomous` session
+  closed the `client-reporting-batch` OOM item (live-verified `2Gi` limit) since yesterday's marker, so 7 items remain
+  open (was 8). Every remaining item still requires investigate-then-decide judgment before a fix is even choosable
+  (zombie-sweep classification; shard-vs-resize on the rollup OOM; keep-vs-decommission on `vm-serial-capture-prd`;
+  root-cause-before-raising-the-ceiling on the compactor OOM; a coalescing/backoff design for the 429 storm;
+  verify-then- maybe-fleet-wide-fix on the preemption recheck) — none is a pre-decided, deterministic-outcome todo. One
+  exception worth flagging for a future look: the `mtds-backfill-odds-401-retry` memory-footprint item has a direct
+  working precedent to copy (`mtds-backfill-odds-smallchunk-20260807`'s chunk-size mitigation) and reads more bounded
+  than its siblings — not promoted to RECLASSIFY this run since the doc's other 6 items don't clear the bar and a
+  whole-doc flip would dispatch those too, but worth a second look if it's still open next pass. Doc stays NA as a
+  whole; still genuinely live `/autonomous` work, not defaulted/unassessed.

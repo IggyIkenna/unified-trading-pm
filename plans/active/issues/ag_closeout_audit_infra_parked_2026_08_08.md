@@ -216,3 +216,10 @@ orphaned_never_touched, 1 orphaned_partial_coverage, 0 conflict-clear-bounded, 0
   tag question), not another batch" rather than spinning a batch that can't extract anything new. **Ledger**: 2 new
   informational entries (21 pointer, 22 low-confidence flag) + 1 info-only reconfirmation (23) + 2 carried-forward
   re-verified unchanged — balanced, 0 operator-decision-requiring findings this run.
+- **na-eligibility-audit 2026-08-08 (infra tranche)**: KEEP-NA, valid — fresh doc (today's own
+  `/ag-closeout-audit infra` parked-findings register, no prior marker). Read end-to-end;
+  `grep -cE '^[[:space:]]*[-*] \[ \]'` = 4, matching. All 4 open items are non-bounded: findings 12 and 13 are carried
+  design/tooling-priority calls (6th consecutive day, unresolved on the merits, not defaulted); finding 22 is an
+  explicit `[OPERATOR]` low-confidence retag question; the 4th item is a stale-checkbox pointer whose target file is
+  defi-owned, explicitly not this doc's or this tranche's to write. Doc-level RECLASSIFY bar fails (not every remaining
+  item is worker-bounded/deterministic) → stays NA.

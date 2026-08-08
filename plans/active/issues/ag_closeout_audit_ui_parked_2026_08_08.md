@@ -186,3 +186,9 @@ only, no action needed until the infra-tranche migration progresses further.
   this skill's remit to fix (that's `/na-eligibility-audit`'s job, which already runs its own daily pass); the check is
   not wired into `quality-gates.sh`/pre-push hooks so it does not block this session's own doc push. Flagging only for
   visibility.
+- **na-eligibility-audit 2026-08-08 (ui tranche)**: KEEP-NA, valid — a point-in-time `ag-closeout-audit` findings record
+  (0 open todos; the actionable content lives in the batch1/batch2 plans this doc points at, tracked separately), same
+  disposition as its 2026-08-07 sibling. Acted on Finding 2 directly: converted
+  `artifact_pipeline_observability_2026_07_17.md`'s prose-only "still open" vulnerability-scan sentence into a real
+  `- [ ]` checkbox (see that doc's own marker) so it's no longer at risk of being missed a 5th time. Findings 1/3/4/5
+  are process notes / already correctly deferred / no new information — no further action needed from this skill.

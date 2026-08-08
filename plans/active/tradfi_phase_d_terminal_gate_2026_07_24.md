@@ -535,3 +535,12 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   fetch with (not just the registry naming) is real code that does not exist yet and is not yet scoped as its own todo.
   So this gate's blocking condition is NOT yet cleared -- still correctly gated, just on a narrower remaining step than
   before. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid -- confirmed via an
+  independent full end-to-end read of the cited blocker doc's own §4**
+  (`tradfi_chain_bundle_sampler_root_mismatch_ 2026_07_23.md`), not just its marker summary. Both open checkboxes
+  re-read; count reconciled (2/2). Verified: the `EXCHANGE_CODE_TO_NAME` naming-SSOT contradiction was genuinely
+  ruled+shipped 2026-08-07 (`uac@00b2de546`), but the canonical-underlying-to-raw-Databento-symbol reverse-translation
+  CODE the sampler needs to actually fetch CME futures_chain/options_chain and CBOE VIX->VX/VX.FUT chain-bundle shards
+  still does not exist -- §4 frames it only as a "Recommendation," not yet scoped as its own buildable todo. Two
+  independent same-day audits (this doc and the blocker doc itself) now converge on the identical conclusion. Gate
+  correctly stays blocked, not prematurely. Nothing to reclassify.

@@ -92,6 +92,11 @@ source:
       This checkbox stays `- [ ]` because the OTHER two legs are still genuinely open — verified live this pass:
       `/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` is `status: open` with 1 open todo, and
       `/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md` is `status: active` with 3 open todos.
+      **(2026-08-08 na-eligibility-audit citation refresh)**: `tradfi_backfill_oom_remediation_2026_06_24.md` is now
+      `assigned_vm: planning` (already actively AO-dispatched, a stronger duplication claim than "just still open");
+      `consolidator_throughput_backlog_monitor_2026_07_09.md`'s open-todo count has drifted 3→2 (one item closed
+      2026-08-07 by a concurrent audit pass in that doc's own `[ui]` tranche). Neither change affects this checkbox's
+      umbrella-pointer verdict.
 - [x] ✅ [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) —
       add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
       deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;
@@ -427,6 +432,13 @@ source:
   `tradfi_backfill_oom_remediation_2026_06_24.md` is `status: open` (1 open todo) and
   `consolidator_throughput_backlog_monitor_2026_07_09.md` is `status: active` (3 open todos). This doc's checkbox
   correctly stays open as a cross-link, not independent work; nothing to reclassify.
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA-STALE-DUPLICATED, confirmed --
+  re-verified, 2 minor citation refinements applied (see the checkbox note above).** Sole open todo re-read end-to-end;
+  count reconciled (1/1). Live-confirmed both cross-linked targets: `tradfi_backfill_oom_remediation_2026_06_24.md` is
+  now `assigned_vm: planning` (already actively AO-dispatched, not merely "still open");
+  `consolidator_throughput_backlog_monitor_2026_07_09.md`'s open-todo count drifted 3->2 since 08-07 (one item closed by
+  a concurrent `[ui]`-tranche audit pass). Neither changes the umbrella-pointer verdict -- this doc's checkbox has no
+  independent worker-determinable content of its own. Nothing to reclassify.
 
 > **Moved verbatim from the parent's Progress Log (2026-07-24 line-cap split)** — this is the download/backfill-
 > throughput slice of the parent's single continuous autonomous-session narrative (ticks 14, 16, 22, the tick-26 ETA

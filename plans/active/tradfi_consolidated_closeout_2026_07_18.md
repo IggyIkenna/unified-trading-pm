@@ -285,6 +285,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid -- 6th consecutive pass, 0
+  checkboxes confirmed genuine (not a prose-trap), 1 stale digest fixed (see corrected `canonical_id_p1` entry below).**
+  Also backfilling: `/ag-closeout-audit tradfi` 2026-08-08 (slot 6) drafted
+  `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (17 orphans found, 3 drafted) but its creation was never narrated
+  here (only frontmatter touched) -- full detail lives in that plan's own Progress Log, not reproduced here.
 - **`/ag-closeout-audit tradfi` 2026-08-06 (slot 3, dispatch agt-7d91ed, sharded scheduled `ag_closeout_auditor` worker,
   operator away)**: fresh full pass (Phase 0 via `generate_ag_closeout_audit_candidates.py`, extended with a direct dump
   for the full member list). 54 real tradfi-primary candidates classified via a 54-agent Workflow against the 11-doc
@@ -537,8 +542,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 - **ID-format**:
   - [`plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`](/plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
-    - **[SCRIPT] P2.** Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
-    - **[SCRIPT] P3.** Extend UAC's `build_leg()` with an opt-in venue-omission mode
+    (1 open -- **digest corrected 2026-08-08**: the leg-hard-cap P2 + `build_leg()` P3 items below are stale, both `[x]`
+    DONE 2026-07-26/27; actual open item is the residual-91-CBOE+312-DBEQ catalog re-apply, extracted into batch8 todo 1
+    above)
   - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md)
     - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols)
     - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4)

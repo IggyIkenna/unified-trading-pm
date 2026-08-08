@@ -190,3 +190,10 @@ data landing under an unexpected path.
   staleness/availability issue, not a formula-correctness issue).
 - `/codex/05-infrastructure/vm-launcher-runbook.md` — "no fire-and-forget" principle this launcher violates one level
   removed (Cloud Run Job → VM, not the operator → VM case the doc's examples usually cover).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — doc filed same-day; todo 2 is explicitly
+  `[OPERATOR]`-tagged (decide immediate machine-type bump vs. wait for the diagnostic, no ruling on record), alone
+  keeping the whole doc NA; todo 3 is self-described in-doc as needing an owner decision on the detection mechanism
+  before implementation.

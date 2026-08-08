@@ -333,6 +333,21 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       filed finding list (or a stated "clean" verdict) covering every defect class in `task_template.md` §3, with any
       fixes applied directly or filed as follow-up todos.
 
+## Progress Log
+
+- **2026-08-08 (draft-flip conflict-check session)**: Operator authorized flipping AO plans from draft to active
+  today, conditional on a real per-doc conflict-check. Checked this doc's own
+  `depends_on: [tradfi_manifest_content_recovery_completion_2026_07_24, tradfi_backfill_throughput_followups_2026_07_24]`
+  + `gate_on_depends: true` gate before considering anything. **Both prerequisites are still `status: active` with
+  real open todos as of this check**: `tradfi_manifest_content_recovery_completion_2026_07_24.md` has, among others,
+  the 2026-08-07 ICE-qualifier-row purge todo (operator-ruled, not yet executed) and the still-open 1,328-cell
+  unrecoverable-quarantine vendor-check todo; `tradfi_backfill_throughput_followups_2026_07_24.md` has 1 open todo
+  (the OOM rc137 cross-link), re-verified still genuinely open by the 2026-08-07 na-eligibility-audit pass — its two
+  owning docs (`tradfi_backfill_oom_remediation_2026_06_24.md`, `consolidator_throughput_backlog_monitor_2026_07_09.md`)
+  remain `status: open`/`active` with their own open todos. Since `gate_on_depends: true` requires BOTH prerequisites
+  done and neither is, the gate is genuinely unmet — this is the `gate_on_depends: true` class of draft (a real
+  prerequisite), not a simple operator-approval draft. **Not flipped** — stays `assigned_vm: NA` / `status: draft`.
+
 ## Codex SSOTs (read before touching a phase)
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,

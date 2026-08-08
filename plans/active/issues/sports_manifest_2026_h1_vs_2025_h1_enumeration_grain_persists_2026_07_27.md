@@ -458,6 +458,13 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   Launched fresh parent run in tmux `orch-slot-7:backfill` (~01:38 UTC). Chunk 1/7 VM
   `expected-universe-v2-sports-20260808-013813` RUNNING. Tarballs all fresh (no LC_TARBALL_FRESHNESS=warn needed). Will
   monitor all 7 chunks; post-run ratio re-check runs once all EXIT_STATUS=0.
+- **data_engineering worker (slot-10) 2026-08-08**: slot-7 session gone, no competing VMs. Relaunched in tmux
+  `orch-slot-10:backfill` (~02:40 UTC). Chunk 1/7 VM `expected-universe-v2-sports-20260808-024035` EXIT_STATUS=0 in ~3
+  min (fast — rows already consolidated into main manifest). Chunk 2/7 VM `expected-universe-v2-sports-20260808-024458`
+  RUNNING (2021-01-01..2021-12-31) as of ~02:44 UTC. All 4 tarballs fresh (IS 9e96f5f3, UAC fa383493, UTL 28a9160d, DS
+  f3063b98). LC_TARBALL_FRESHNESS=warn set as safety precaution (no actual republish needed). Background 30-min
+  heartbeat monitor armed (sends /progress every 5 min). Chunks 3-7 (2022..2026-04-09) not yet reached — this entry
+  captures the start state; will update on completion.
 
 ## Follow-ups
 

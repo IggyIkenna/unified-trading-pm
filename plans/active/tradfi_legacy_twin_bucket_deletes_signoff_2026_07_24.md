@@ -251,3 +251,9 @@ restated here.
   clear -- twin-coverage was last measured at 0% (2026-07-30/31), not the 100% the 2026-07-28 §3a reversibility
   carve-out requires, and no fresher re-run was found. Established ruling not re-litigated (4th consecutive
   KEEP-NA-valid pass). Doc stays NA.
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid -- confirmed via git log
+  that this doc's most recent commit IS the 2026-08-07 marker above (provably unchanged since, not just claimed).** Sole
+  open todo re-read; count reconciled (1/1). 5th consecutive KEEP-NA-valid pass -- same standing reasons hold: the
+  delete gate remains unmet (twin-coverage 0% vs required 100%), and bundling a re-verify step with an
+  irreversible-if-wrong multi-bucket prod GCS delete in one todo still flags for plan-owner confirmation before AO
+  dispatch even once the gate clears (2026-08-02 reasoning, not re-litigated). Doc stays NA.

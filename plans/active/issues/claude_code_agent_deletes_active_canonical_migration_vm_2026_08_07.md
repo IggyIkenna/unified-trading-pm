@@ -128,6 +128,34 @@ wrapper):
 ## Triage Disposition
 
 - **Scope**: cross-cutting (affects all `canonical-migration-` prefix VM operations)
-- **Blocker for**: defi_satellite_ao_dispatch_batch9 gas_fees purge
-- **Next action**: Fix 1 → ship to LDR → promote → redeploy → resume heartbeat cron. Then Fix 3 as a codex rule update.
+- **Blocker for**: defi_satellite_ao_dispatch_batch9 gas_fees purge — RESOLVED via a different path (dispatch #11 ran
+  directly on the planning VM, bypassing the VM-kill vector; manifest confirmed 0 of 12,425 TARGET rows, GCS 0 objects,
+  per `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s Progress Log). The acute blocker is gone; the systemic safety
+  gap below (Fixes 1 and 3) is generic to ALL future `canonical-migration-` VM dispatches and remains live/unaddressed.
 - **Operator notification**: REQUIRED (cross-agent HARD RULE violation, repeated pattern)
+
+## Resolution
+
+- [ ] [INFRA] P0 (URGENT). Heartbeat sidecar SIGPIPE guard: wrap the `vm-life-emitter` loop in `trap '' SIGPIPE` (exact
+      snippet in "Required Fixes" Fix 1 above) — `deployment-service` or `market-tick-data-service` vm-exec wrapper,
+      exact file TBD (not confirmed as a standalone file; may be generated inline in a per-VM startup-script template).
+- [ ] [INFRA] P0. LDR→main promote `deployment-service@14240378`, redeploy the Cloud Run image to activate
+      `PREFIX_KILL_MINUTES`, then resume `uts-prod-dp-heartbeat-watcher-cron`. Confirmed as of 2026-08-08 still NOT on
+      `origin/main` (standing LDR→main auto-promote appears stalled on this commit — worth checking why the standard
+      `*/15` auto-promote didn't already carry it, not just re-triggering it blind).
+- [ ] [INFRA] P0. Fleet monitoring agents must verify ALL THREE liveness signals (heartbeat blob mtime, run.log mtime,
+      manifest generation advancing) before any `gcloud instances delete` on `canonical-migration-` prefix VMs — fold
+      the SIGPIPE-can-fake-a-frozen-run.log nuance into `/codex/05-infrastructure/vm-launcher-runbook.md` (the
+      underlying 3-signal HARD RULE already exists there; what's missing is this doc's specific nuance).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — doc self-flags "Operator notification:
+  REQUIRED (cross-agent HARD RULE violation, repeated pattern)," the 5th VM-kill in this saga; continued human
+  visibility is appropriate even though the 3 fixes are individually fairly bounded. Hygiene fix: this doc had ZERO
+  checkbox syntax anywhere despite carrying real P0 "Required Fixes" work in prose only — per CLAUDE.md's "every
+  follow-up is a `- [ ]` todo, never prose" HARD RULE, converted the 3 Required Fixes into a new "## Resolution" section
+  with tracked checkboxes (content unchanged, evidence live-reverified: Fix 2's commit confirmed still not on
+  `origin/main`; no SIGPIPE guard found anywhere in deployment-service or market-tick-data-service via targeted grep).
+  This is a small, clear, in-file fix per the findings-triage HARD RULE, not a reclassification — the doc stays NA
+  (operator-notification flag above is dispositive on its own).

@@ -84,6 +84,15 @@ datetimes; QG-green.
 
 ## Progress Log
 
+- **2026-08-08 (draft-flip conflict-check session)**: Operator authorized flipping AO plans from draft to active today
+  conditional on a real per-doc conflict-check; checked THIS doc's own `depends_on: [deployment_registry_firestore_p3_cutover_2026_07_14, deployment_registry_firestore_p4_dynamodb_2026_07_14]`
+  + `gate_on_depends: true` before touching anything. P4 is `complete (archived)`, but P3
+  (`deployment_registry_firestore_p3_cutover_2026_07_14.md`) is still `status: active` with its own 🔴 HALT banner in
+  force and 3 of 4 todos unchecked (drop-GCS-write, soak, snapshot-then-delete) — most recently re-confirmed still
+  blocked by the 2026-08-07 na-eligibility-audit pass and the 2026-07-30 soak measurement (GO/NO-GO criterion 1,
+  fleet-wide Firestore doc-count parity, not yet met — only 4/~19 running GCE instances were Firestore-represented at
+  soak time). `depends_on` requires BOTH P3 and P4 done; P3 is not, so this is a genuine unmet dependency-gate, not an
+  operator-approval-only draft. Correctly staying `assigned_vm: NA` / `status: draft`. **Not flipped.**
 - **2026-07-14 (slot 5, Opus — local execution)** — Ran the two measurement todos early (they don't depend on the P3
   cutover — they validate the shipped P1/P4 backend). The codex/CLAUDE.md doc updates + master archival (todos 3-5) stay
   BLOCKED on P3 (the cutover) completing — documenting "the registry IS Firestore" would be false while prod is still

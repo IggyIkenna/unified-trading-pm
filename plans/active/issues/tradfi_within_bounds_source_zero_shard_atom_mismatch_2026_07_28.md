@@ -365,3 +365,9 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   above) does NOT change the dispatch vehicle -- the todo's own text already correctly says the live dispatch is
   `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (status: active, assigned_vm: planning); this doc stays NA per the
   standing KEEP-NA-STALE citation, not flipped. Todos 3-4 remain genuinely open follow-on work. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA-STALE-DUPLICATED, confirmed --
+  re-verified, unchanged.** 3 open todos re-read end-to-end; count reconciled (3/3). Todo 1's citation to
+  `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` as the live dispatch vehicle remains accurate (still
+  `status: active`, `assigned_vm: planning`); correctly not flipped independently. Todo 3 stays conditionally-scoped
+  ("if it is found to cause its own denominator/accounting issues" -- trigger condition not yet evaluated); todo 4 stays
+  DEPENDENCY_BLOCKED, sequenced after todo 1's `--apply` landing. Nothing to reclassify.

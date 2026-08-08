@@ -218,3 +218,5 @@ the triage given their concentration.
   largely by today's cross-cutting run adding 14 permanent linkage citations (see that tranche's closeout doc). Closed
   Todo 2 on the met done-when — see its own checkbox note for the volatility caveat. Todo 3 remains open, untouched
   (still an unruled feature-investment question, not this run's to decide).
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — reaffirms 2026-08-06/07 (unchanged):
+  sole open item (Todo 3, P3) is an open build-or-not investment question with no stated done-when.

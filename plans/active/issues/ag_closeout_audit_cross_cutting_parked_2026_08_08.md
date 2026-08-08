@@ -300,3 +300,11 @@ ledger.
   (Orthogonality peer-set widening in SKILL.md; citation-loss-on-archival fixed via a permanent tracking section in the
   closeout doc), linkage ratchet gate returned to PASSING (65 ≤ 69, first pass since 2026-08-06). Ledger: 14 new
   findings, 14 entries written — balanced.
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — doc filed same-day; 2 of 5 open items
+  are hand-offs to other tranches' own audits (this tranche's worker may not act on them per the owning-tranche rule), 1
+  is an unruled `[OPERATOR]` design question (strategy_config_hot_reload, unruled since 2026-07-31) which alone keeps
+  the whole doc NA, 1 is a bounded script fix, 1 is a mechanical line-cap split. Separately surfacing: the
+  `deployment_api_prod_disable_auth_true_2026_08_06.md` retag item (todo 2, flagged urgent 3 consecutive days
+  08-06/07/08) documents a LIVE unauthenticated prod Cloud Run endpoint — see this run's own final report for a
+  standalone NOTIFY-OPERATOR callout; not fixed here (out of this doc's scope, its own todos are already correctly
+  tracking the retag + the underlying fix separately).

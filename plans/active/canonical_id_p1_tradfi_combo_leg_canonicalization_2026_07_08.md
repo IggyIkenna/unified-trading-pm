@@ -204,6 +204,20 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid — the 2026-08-07 entry
+  below's flagged contradiction is now RESOLVED, not open.** Independently traced via commit timestamps + a direct
+  re-read of both referenced docs' CURRENT live text (not just the 08-06/08-07 self-reports): a later same-day commit
+  (`unified-trading-pm@f9672e180e`, 2026-08-07T08:49:19Z UTC, ~5.3h after the 08-07 marker below was written) resolved
+  it — `governance_sweep_deferred_followups_2026_08_06.md` item 1/6 now reads "RESOLVED 2026-08-07 (operator, via
+  consolidated NA-blocker-digest audit): 'go ahead' confirmed as the current, correct ruling ...
+  `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` was simply stale ... fixed in that doc directly," and batch7's own
+  live text is now struck through with "**STALE, corrected 2026-08-07 ... 'go ahead' is the confirmed-current answer ...
+  No longer operator-gated.**" This doc's own "RULED 2026-08-06 (operator): go-ahead to run --apply" todo text was right
+  all along — batch7 was the stale side. Sole open todo (1/1 reconciled) already independently extracted verbatim into
+  `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (drafted today, todo 1, `status: draft`) — doc correctly stays
+  `assigned_vm: NA` pending that batch's operator review/activation, consistent with this doc's entire history (every
+  prior fix here has landed via satellite-batch dispatch, then reconciled back as a checkbox flip, never a direct
+  `assigned_vm` flip of this doc itself). Not reclassifying independently of batch8 to avoid a duplicate dispatch path.
 - **na-eligibility-audit 2026-08-07** (tradfi tranche, dispatch agt-aca83b): **KEEP-NA — do NOT trust this doc's own
   "RULED 2026-08-06 (operator): go-ahead to run --apply" todo text at face value; do NOT reclassify.** That text (added
   `unified-trading-pm@13f80f797`, 2026-08-06T17:14:59Z) directly contradicts

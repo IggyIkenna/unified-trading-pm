@@ -142,3 +142,13 @@ Two directions are both plausible and this is an architecture decision, not a bo
   rewrite-registry-to-match-reality) is stated...
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — todo 1 ("blocks the rest of this list")
+  is an architecture decision between two SA-provisioning directions; the 2026-08-06 "DEFAULT-RULED" self-resolution is
+  internally contradictory (its own parenthetical admits "no explicit operator input on this specific P2 item," and the
+  retained sentence directly below still frames the decision as open). The sibling per-tier-SA scheme's own precedent
+  (`bucket_iam_write_protection_per_tier_2026_06_09.md`, ruling BLK-0c84ceac) required a genuine, cited operator ruling
+  before its analogous decision proceeded — todo 1 does not clear the RECLASSIFY bar, so the whole doc stays NA
+  regardless of todos 2/3 individually looking bounded. Independently re-derived rather than trusting the stale
+  2026-08-01 note or the 08-06 self-resolution at face value; reaches the same verdict as 2026-08-01. Investigated 3
+  related docs to rule out KEEP-NA-STALE-DUPLICATE — none absorb this doc's scope (see this run's chat-level report for
+  detail).

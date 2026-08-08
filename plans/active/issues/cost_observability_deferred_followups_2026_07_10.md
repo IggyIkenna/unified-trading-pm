@@ -124,6 +124,18 @@ context_scope:
   try, per the operator's own cost-conditioned fallback.
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — both prior operator-gated items are correctly
   retagged to their resolved state (ruled-proceed / ruled-closed) in the same edit, no stale gate tags remain. The
-  business-context-enrichment item (now ruled+scoped) plus the 4 unscheduled P3 items are a plausible batched
-  RECLASSIFY candidate (bounded/deterministic, no remaining judgment call) — flagged for the orchestrator's
-  conflict-check, not actioned here per this audit's own verdict-4 protocol.
+  business-context-enrichment item (now ruled+scoped) plus the 4 unscheduled P3 items are a plausible batched RECLASSIFY
+  candidate (bounded/deterministic, no remaining judgment call) — flagged for the orchestrator's conflict-check, not
+  actioned here per this audit's own verdict-4 protocol.
+- **na-eligibility-audit 2026-08-08 (ui tranche)**: KEEP-NA, valid — closing the loop on 2026-08-07's flagged RECLASSIFY
+  candidate. A dedicated scoping check (`ag_closeout_auditor`, same-day 2026-08-08 run) found the
+  business-context-enrichment item does NOT clear the bounded-outcome bar after all: 176 VM launcher scripts exist, only
+  ~9 route through the one shared label-injection choke point, and a directly-analogous 2026-08-06 operator ruling on a
+  sibling infra-tranche issue already declined to treat a near-identical file count as one todo — so the "batched, no
+  remaining judgment call" premise from yesterday's marker was wrong on the enrichment half. The 4 unscheduled P3 items
+  ARE still cleanly bounded and are now covered by `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (drafted today via
+  the satellite-batch pathway, `status: draft`, pending operator approval) — the intended mechanism for extracting just
+  the actionable slice, per this skill's own "not the corpus's main unblock pathway" guidance, so a whole-doc RECLASSIFY
+  here would only dispatch a duplicate of what batch2 already covers once approved. Doc stays NA as a whole. No citation
+  fix yet (batch2 hasn't shipped/been approved) — revisit once it has to close the 4 P3 checkboxes with a citation
+  instead of leaving them open.

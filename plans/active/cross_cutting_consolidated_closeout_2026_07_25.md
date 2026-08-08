@@ -1004,3 +1004,4 @@ batch)
   resurfaced 3 already-classified docs as false orphans). `check_ag_closeout_linkage.py` now PASSES: 65 (baseline 69),
   down from 71-87 on 08-06/07; cross-cutting's share 37→29. Full evidence:
   `issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
+- **na-eligibility-audit 2026-08-08**: KEEP-NA, valid — reaffirms prior passes; 2026-07-25 operator gate still stands.

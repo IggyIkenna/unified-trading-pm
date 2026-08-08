@@ -15,7 +15,8 @@ tags: [role, main, orchestration, project-management, boot-prompt]
 related: [worker.md, review.md, RULES.md, plan_reconciler.md]
 created: 2026-06-27
 role: project_management
-model: opus
+model: sonnet
+sonnet_variant: default
 thinking: high
 lifecycle: persistent
 does:

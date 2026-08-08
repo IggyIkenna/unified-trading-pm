@@ -466,3 +466,27 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   execution (measure/migrate/purge), heavy-I/O VM-scale work with a stated Done-when bar -- flagged as a RECLASSIFY
   CANDIDATE in this pass's final report, not flipped here. Todo 3 (P2-OPERATOR-DECISION, the broken
   canonicalize_raw_tradfi_id regression) remains a genuine design call. Doc stays NA for this pass.
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid -- closing the loop on
+  todo 2's RECLASSIFY-candidate flag from 2026-08-07: PROMOTED to RECLASSIFY-READY.** All 3 open todos re-read
+  end-to-end; count reconciled (3/3). Todo 2 clears the bounded/deterministic-outcome bar on independent re-assessment:
+  (a) explicit, broad operator sign-off on record for full autonomous execution ("not just a copy and leave duplicate
+  values, a purge/deletes/apply/migration, agents can do it all"); (b) mirrors an established, precedented safe
+  methodology already proven in this corpus (`tradfi_manifest_content_recovery_completion_2026_07_24.md`'s Surface A-D
+  playbook: dry-run measure -> review -> `--apply`, never blind rewrite, snapshot-before-write); (c) a clear, checkable
+  Done-when bar (dry-run counts, before/after apply evidence, `tradfi_roots.py` + tests converged, quality-gates green
+  in both repos); (d) heavy-I/O handled via the standard VM-launcher pattern, an ordinary engineering-latitude choice
+  (extend `launch-canonical-migration-vm.sh` vs. add a `--underlying-remap` mode), not an authority-level call. Two
+  caveats to carry forward into extraction: (i) the todo's own text warns not to assume "unresolved passthrough" is the
+  only failure mode until a live dry-run count confirms it -- if the dry-run surfaces already-conflated/silently-folded
+  data instead, that anomalous subset should route to a fresh operator escalation, not be guessed at (mirrors
+  `tradfi_within_bounds_source_zero...`'s CME 32,864-row "unresolved residual deliberately left untouched by design"
+  precedent); (ii) ambiguous whether "purge duplicates" means real GCS object deletes (old-path objects post-rename) vs.
+  pure manifest CAS rewrites -- if real object deletes are involved, the extracted todo needs an explicit delete-safety
+  citation (bucket retention check) per CLAUDE.md's VM-launch/delete gating rule. **Not flipping this doc's own
+  `assigned_vm`** -- todos 1 and 3 remain genuinely blocked (dependency/operator-decision respectively), so a whole-doc
+  RECLASSIFY still doesn't apply; per this skill's own scope, extraction into a satellite AO-dispatch batch (not a
+  doc-level flip) is the correct mechanism, and that drafting belongs to `/ag-closeout-audit`, not this skill. **Checked
+  and confirmed NOT yet drafted**: grepped `tradfi_satellite_ao_dispatch_batch6/7/8` for this todo's distinguishing
+  terms ("sector-identity", "MICRO-AUD", "tradfi_roots.py", "Surface A-D") -- zero hits in all three. Recommend the next
+  `/ag-closeout-audit` tradfi pass draft it explicitly, carrying both caveats above. Todo 1 and todo 3 unchanged
+  (DEPENDENCY_BLOCKED / OPERATOR_QUESTION respectively, per the 2026-08-07 reasoning, not re-litigated).

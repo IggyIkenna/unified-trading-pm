@@ -962,3 +962,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`9422004062`.
 - **2026-08-08T00:16Z** — FIXTURE_STATS +29 days (`last_completed_date=2022-09-29`, fresh `00:15:42Z`), steady. odds
   smallchunk2 now chunk 25/451 (`2020-10-04`, via `run.log`), zero new OOMs (16 total, unchanged). Both healthy.
+- **2026-08-08T00:16Z-02:46Z — MAJOR: odds smallchunk2 found DELETED (external kill, unexplained), recovered with zero
+  data loss as `smallchunk3`.** FIXTURE_STATS: confirmed **chunk 12/26** (`last_completed_date=2023-03-05`, actively
+  processing `2023-03-06`), healthy. odds: `gcloud compute operations list` showed unexplained `delete` ops at
+  `00:55:20Z`/`00:56:15Z` (shared automation SA, not attributable to a specific worker); `run.log` genuinely stopped at
+  `00:37:08Z` mid-chunk-26 with **no terminal `exit_code=` line** — not the VM's own graceful self-delete-on-exit per
+  codex's "Self-deleting VM/job" rule, looks like an external forced deletion. Real progress preserved through chunk
+  25/451 (no data loss). Concurrency guard confirmed 0 running odds VMs, relaunched as
+  **`mtds-backfill-odds-smallchunk3-20260808`** (same params, tarballs fresh), verified booted + correctly skip-fasting
+  through already-covered dates. Also hit a >1h `gcloud storage cat` flakiness episode (three different error types on
+  files `ls -L` proved existed) — worked around via direct HTTPS GET, resolved on its own by ~02:44Z. Full detail:
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`a6dab782b5`.

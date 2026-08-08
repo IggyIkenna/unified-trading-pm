@@ -656,3 +656,17 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   autonomous watcher session in progress -- updated wording + switched to the leading-slash `/plans/active/...` path
   convention. No fresh RECLASSIFY/ARCHIVE candidates; doc remains genuinely operator-gated (G1 retirement
   approved-but-unexecuted, GCS parquet cleanup approved-conditional).
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA-STALE-DUPLICATED confirmed --
+  ES_OPT citation still accurate (batch6 live watcher re-verified) -- but flagging 2 extraction candidates not yet
+  drafted into any active/draft batch.** 5 open todos re-read end-to-end; count reconciled (5/5). Line 350 (G1
+  retirement purge -- ICE/CBOE-OPRA/CBOE-VX-spread/VIX-cash/NASDAQ-NYSE-misclass/cefi-singles catalogue rows) carries an
+  UNCONDITIONAL operator GO-AHEAD ("Ready to execute") with a fully mechanical done-when (pause consolidator -> snapshot
+  -> filter -> resume -> verify) -- checked `tradfi_satellite_ao_dispatch_batch6/7/8` for any mention of "G1
+  retirement"/"catalogue rows"/"OPRA"/"VX-spread": zero hits in all three. This item has now been operator-cleared since
+  2026-08-07 and has not been picked up by 2 subsequent satellite-batch drafting passes (batch7 on 08-06 predates the
+  ruling; batch8 on 08-08 postdates it but still omits it) -- recommend the next `/ag-closeout-audit` or satellite batch
+  author include it explicitly. Line 597 (ICE-Databento parquet GCS cleanup, P3) is a weaker/lower-priority version of
+  the same finding -- its GO-AHEAD remains explicitly conditional on a twin-verify-0-consumers check not yet run, so it
+  correctly stays NA pending that check, not flagged for extraction yet. `assigned_vm` unchanged (doc-level RECLASSIFY
+  does not apply -- the top-level Gated-Phase-2 rollup and ICE BLOCKED-CREDENTIALS items remain genuinely
+  operator/credential-gated).

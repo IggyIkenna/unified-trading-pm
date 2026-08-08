@@ -26,7 +26,7 @@ summary: >-
   CHECK exists to prevent. Conflict-checked clean (nothing else claims this exact fix — one adjacent doc merely
   cross-references it as "already independently tracked... needs an operator/committer to execute it"). `status: draft`
   — a skill-drafted AO batch is never auto-shipped; flipping to `active` to dispatch is an operator decision.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [meta]
@@ -80,9 +80,9 @@ source: >-
 
 # Prediction satellite AO batch 8 — line-cap remediation for `prediction_cross_venue_arb_and_coverage`
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call (CLAUDE.md §
-> "Plan destination — ASK BEFORE CREATING"). Drafted autonomously 2026-08-08 by the scheduled `ag_closeout_auditor`
-> role; see `## Operator approval gate` below for exactly what approving this means.
+> **APPROVED 2026-08-08 (operator, interactive) — flipped `status: draft` → `active`.** Now ingested and dispatchable.
+> Drafted autonomously 2026-08-08 by the scheduled `ag_closeout_auditor` role; see `## Operator approval gate` below for
+> what approving this meant.
 
 ## Why this batch exists
 

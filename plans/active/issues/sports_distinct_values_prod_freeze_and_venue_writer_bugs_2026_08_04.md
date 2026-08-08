@@ -362,6 +362,15 @@ confirming before scoping a re-stamp for it.
   ("a scoping/design todo, small") — filing a proposal to change a launcher-wide default is a design call (what the
   right default even is, blast radius across other `mtds-live-*` shapes), not a mechanical fact-check. Everything else
   in this doc is already resolved (0/0/0/0 non-canonical, verified live).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA-STALE, already-duplicated (sports tranche) — the sole open `[INFRA] P3`
+  todo (`LC_TARBALL_FRESHNESS=enforce` default) has since been extracted verbatim (same repo, same env var, same
+  proposed default) into `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3 (`assigned_vm: planning`), whose
+  companion gated finalize plan `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md` already carries the
+  reconciliation step to flip this checkbox and archive this doc once batch10 todo 3 lands. This postdates (by ~15h) the
+  2026-08-06 KEEP-NA-valid entry above, which was correct when written — batch10 didn't exist yet. Citation-only fix,
+  not a reclassification: dispatching this doc's own copy of the todo would race the already-designed batch10
+  extraction. No `assigned_vm` change. Let the batch10 -> batch10-finalize pipeline run its course (pending operator
+  flip from draft to active); this doc self-closes through that path.
 
 ## Deferred work after 2026-08-05
 
