@@ -313,6 +313,19 @@ pane-scan + the watchdog; this self-report only covers the still-actionable tool
 The progress response may include `messages: [...]` — these are from the operator or main agent. Read them and act
 accordingly.
 
+**A one-shot "Direct instruction from main" message you determine is already fulfilled/moot — ACK it, don't just move
+on (codified 2026-08-08, `ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08.md`).** These
+`slot_messages` rows have no ack path short of a 30x redelivery cap, so an unacked one keeps redelivering to every
+future session on this slot — confirmed hitting 12+ slots simultaneously in one day. If you independently verify (git
+log / live state, not just trusting the text) that the ask is already done or moot, close it immediately:
+
+```bash
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/messages/<message_id>/ack -H 'Content-Type: application/json'
+```
+
+`<message_id>` comes from the message object in your `/progress`/`/heartbeat`/`/boot`/`/done` response. Do this the
+SAME turn you verify staleness — don't defer it, and don't skip it just because the message didn't require code work.
+
 ### 4) BLOCKED — if you hit ambiguity you can't resolve
 
 ```bash
