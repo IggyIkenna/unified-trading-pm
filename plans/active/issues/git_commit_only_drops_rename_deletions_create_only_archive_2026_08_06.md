@@ -162,11 +162,16 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
       `orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29`: diff active twin vs archive twin (15-34 diff lines
       each, both evolved), merge any unique active-only content into the archive copy, `git rm` the stale active
       duplicate, re-verify zero duplicate pairs corpus-wide. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. **Archival-workflow fix** — update
+- [x] ✅ [SCRIPT] P3. **Archival-workflow fix** — update
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (and any runbook the archival ritual points
       to) to require, after any `git mv` archival: route the commit through `scripts/dev/safe-doc-push.sh` (plain
       full-staged-set commit) or, if a bare `git commit --only` is used, list BOTH old and new paths; and a post-commit
-      `git status --porcelain` check confirming no staged deletions were left uncommitted. (repo: unified-trading-pm)
+      `git status --porcelain` check confirming no staged deletions were left uncommitted. (repo: unified-trading-pm) —
+      unified-trading-pm@4ad2f00f4. Added a new "The archival commit itself must not drop the rename's delete side
+      (RULED 2026-08-08)" subsection to the archival-discipline doc (both required commit shapes + the post-commit
+      `git status --porcelain` verification step, cross-referencing the shipped `check_create_only_archive_commits.py`
+      backstop). Also cross-referenced from `codex/11-project-management/plan-hygiene.md`'s archive-destination note
+      (the only other doc directly instructing `git mv` for archival) so the hazard is visible from both entry points.
 - [x] ✅ [SCRIPT] P3. **DONE 2026-08-06 (slot-6) — the parent doc archived.** The resolved parent doc
       `prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` was moved to `plans/archive/issues/` via
       `git mv` (`status: resolved`, ARCHIVED banner added) and every path referrer updated corpus-wide (the old
@@ -203,3 +208,11 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
   `scripts/plan-hygiene/check_create_only_archive_commits.py` (the shipped guard script itself, P1's actual deliverable,
   not previously cited); the 3 pre-existing entries (the two referrer/hygiene scripts + the archival-discipline codex
   doc the remaining open P3 todo targets) re-verified, still resolve.
+- 2026-08-08 (slot-26, review): P3 shipped — `unified-trading-pm@4ad2f00f4`. Added the "The archival commit itself must
+  not drop the rename's delete side (RULED 2026-08-08)" subsection to
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (both required commit shapes —
+  `safe-doc-push.sh`/full-staged-set commit, or two-path `--only` — plus the mandatory post-commit
+  `git status --porcelain` verification), and cross-referenced it from `plan-hygiene.md`'s archive-destination note (the
+  only other doc directly instructing `git mv` for archival; no separate runbook doc names the archival git-commands
+  beyond these two). Every todo in this doc is now `[x]` with no `locked_by` — archival-eligible per the 6-step ritual
+  on the next pass.
