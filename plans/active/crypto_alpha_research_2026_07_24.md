@@ -106,6 +106,16 @@ context_scope:
 > class of decision CLAUDE.md reserves for a human permanently (wallet keys, force-push main). This category is
 > explicitly excluded from the general "unpause/relax/complete-in-full" theme applied elsewhere in this pass; these 16
 > items stay `BLOCKED-OPERATOR-DECISION` indefinitely and are not retagged.
+>
+> **⚠️ Parser-blind-spot risk flagged 2026-08-08 (plan_reconciler)**: "not retagged" means the checkbox lines themselves
+> (e.g. the Short-sleeve/Basis items below) still carry plain `[RESEARCH]`/`[STRATEGY]` tags with no
+> `BLOCKED-OPERATOR-DECISION` marker ON the checkbox line — the dispatch parser only reads each todo's own line, not
+> this prose banner. Currently inert (`assigned_vm: NA`), but the identical gap was found live-dispatchable in a sibling
+> doc this same run (`l2_book_microstructure_capture_2026_07_13.md`, since fixed by moving the marker onto the checkbox
+> itself). **Before this doc is ever reclassified to `assigned_vm: planning`, first add a `BLOCKED-OPERATOR-DECISION`
+> marker directly to each of the 16 checkbox lines this banner covers** (identifying the exact 16 among the doc's 21
+> open items requires matching against the Short-sleeve/Basis categories named below — a real categorization task, not
+> attempted here to avoid mis-tagging under time pressure).
 
 - Short sleeve: re-cast as a basis tail-hedge · re-evaluate book weight (15%→smaller/0) · wire the R8 confirmed-momentum
   short gate into production · ship the de-risk overlay + 12% short.
