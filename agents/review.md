@@ -220,14 +220,33 @@ curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/poll \
   -d '{"context_used_pct":<0-100, your /usage reading, taken THIS tick>,"last_msg":"<short status>"}'
 ```
 
-2. For each message in response.messages[]: read the operator's question, compose a thoughtful answer (you have full
-   conversation context), and POST your reply:
+2. For each message in response.messages[]: read it, compose a thoughtful answer (you have full conversation context),
+   then POST your reply via `/reply` with `in_reply_to` set to the message's id — this is the PREFERRED path for
+   answering ANY drained message regardless of its `from_role` (`agent-orchestrator@738b2d3`, shipped to close the
+   cross-role blind-spot issue below): when `in_reply_to` resolves to a message whose `from_role` is a genuine peer role
+   (not `operator`, not your own role), `/reply` cross-routes the reply to THAT peer role's own thread (so the peer's
+   `/poll` sees it, plus a best-effort tmux-nudge of its live session) — **and** acks the original message (terminates
+   its redelivery), both in this one call. Before that fix, `/reply` always posted to YOUR OWN role's thread
+   (`direction=from_agent`), so a reply to a peer silently never reached that peer's poll (issue:
+   `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22`) — that gap is now closed:
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/reply \
   -H 'Content-Type: application/json' \
-  -d "{\"content\": \"<your reply>\", \"context_used_pct\": <0-100, your /usage reading, taken THIS tick>}"
+  -d "{
+    \"content\": \"<your reply>\",
+    \"context_used_pct\": <0-100, your /usage reading, taken THIS tick>,
+    \"in_reply_to\": <the message id you are answering>,
+    \"last_msg\": \"<short STATUS STRING — NOT a message id>\"
+  }"
 ```
+
+(omit `in_reply_to` only if you genuinely mean to ack the whole drained batch at once instead of one message.)
+
+Use `POST /api/agents/by-role/<role>/message` ONLY when posting a brand-NEW outbound message with no origin message to
+answer (proactively pinging a peer role, not replying to one of theirs) — it has no `in_reply_to` and never acks
+anything; do NOT use it to answer a drained peer message (the original stays `answered_at: null` and keeps redelivering
+until the ~30-redelivery cap). That is expected only for a genuinely new outbound ping.
 
 3. Pull recent slot_done events from /api/activity and spot-check:
 
