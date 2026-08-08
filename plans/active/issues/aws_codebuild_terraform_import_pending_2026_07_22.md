@@ -190,7 +190,20 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
       the provider-pin question (v5-align vs v6-adopt) — recommend v5-align (`~> 5.82`) for consistency with every
       sibling module, avoiding a one-off v6 deprecation surface (`data.aws_region.name`) this module alone would carry.
       D1-D4's IAM-policy-drift specifics need your own read of the table above before ruling. **Rule D1-D4 above** — one
-      ruling per row, so the residual becomes mechanical. Blocks every remaining todo here.
+      ruling per row, so the residual becomes mechanical. Blocks every remaining todo here. **round5-cross-cutting-audit
+      2026-08-08 (id=58, operator-directed relevance check before ruling)**: operator suspected this AWS CodeBuild
+      resource might be MOOT given the trading-infra GCP shift ("AWS scoped down to just CI self-hosted runners + AO") —
+      investigated before ruling. **Verdict: NOT moot, still live and load-bearing.** Evidence:
+      `codex/05-infrastructure/dual-cloud-image-builds.md` (`status: current`) is the SSOT for a dual-cloud image-build
+      flow where GCP Cloud Build + this exact AWS CodeBuild fleet (18 projects) fire in parallel on every `qg-passed`
+      dispatch, and **both clouds must pass before a staging→main promote PR merges** (`image-build-gate.yml` →
+      `image-build-validate.yml` gate job) — this is a live CI hard-gate, not a dormant resource.
+      `.github/workflows/cloud-build-router-aws.yml` was actively touched as recently as 2026-08-07 (same-day as this
+      audit -1). `codex/11-project-management/dual-cloud-cost-ops-playbook.md` frames the AWS side as a deliberate
+      "GCP-primary/AWS-backup" resilience posture, not a leftover — the CodeBuild fleet is exactly the mechanism that
+      keeps that backup posture real (an AWS-buildable image on standby). Conclusion: the D1-D4 rows stay genuinely open
+      and operator-gated as before; nothing closes as moot. No ruling was fabricated for D1-D4 itself — it remains a
+      real per-row IAM-policy-drift judgment call only the operator can make.
 - [ ] [INFRA] P3. **Reconcile `main.tf` to the D1-D4 rulings**, then `terraform import` all 23 resources into the live
       S3 state and prove `terraform plan` is a genuine no-op. Do NOT import before D1-D4 — an imported state plus these
       diffs is an armed destructive apply.
