@@ -104,12 +104,13 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
       BOTH the canonical form and any residual lowercase vendor spelling resolve to the same group. Do not simply
       lowercase the caller: the data layer's canonical output is uppercase and the registry is the SSOT. —
       unified-api-contracts@e080ef74
-- [ ] [CODE] P0. **Add the missing operator-group parent for Betfair.** Per operator ruling 2026-08-08, bare `BETFAIR`
-      stops being a data-axis venue and becomes the operator-group PARENT that `BETFAIR_EX_UK` / `BETFAIR_EX_EU` /
-      `BETFAIR_SB_UK` roll up to. Encode that hierarchy in UAC (a real venue→operator map keyed on venue constants), and
-      have `VENUE_OPERATOR_GROUPS` derive from it rather than restating it. **PRE-SPECIFIED**: all three roll up to a
-      single `BETFAIR` operator — the sportsbook and the exchange are the same counterparty for arb-independence
-      purposes, which is the only question this map answers. Do not preserve the separate `BETFAIR_SB` group.
+- [x] [CODE] P0. ✅ **Add the missing operator-group parent for Betfair.** Per operator ruling 2026-08-08, bare
+      `BETFAIR` stops being a data-axis venue and becomes the operator-group PARENT that `BETFAIR_EX_UK` /
+      `BETFAIR_EX_EU` / `BETFAIR_SB_UK` roll up to. Encode that hierarchy in UAC (a real venue→operator map keyed on
+      venue constants), and have `VENUE_OPERATOR_GROUPS` derive from it rather than restating it. **PRE-SPECIFIED**: all
+      three roll up to a single `BETFAIR` operator — the sportsbook and the exchange are the same counterparty for
+      arb-independence purposes, which is the only question this map answers. Do not preserve the separate `BETFAIR_SB`
+      group. — unified-api-contracts@b9a0be80
 - [ ] [CODE] P0. **Add SMARKETS to `EXCHANGE_VENUES` + `EXCHANGE_COMMISSION_RATES` at `0.02` (2.0% on net winnings).**
       Rate PRE-SPECIFIED by the operator 2026-08-08 so this todo needs no decision: use `0.02`, and record in the
       Progress Log the published source you verified it against. If the published rate turns out to differ, ship `0.02`
