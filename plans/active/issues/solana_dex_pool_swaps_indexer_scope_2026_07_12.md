@@ -119,12 +119,20 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 
 ## Open actions
 
-- [ ] [DESIGN] P3. Author the dedicated implementation plan per the breakdown above, when this becomes a priority (repo:
-      market-tick-data-service). Not urgent — `dex_pool_swaps` coverage for every OTHER defi venue is unaffected; this
-      is a 2-venue gap on a data_type that already has non-zero coverage elsewhere.
+- [x] N. ✅ [DESIGN] P3. **DONE 2026-08-08 (operator ruling: prioritize it now).** Authored the dedicated implementation
+      plan per the breakdown above -- `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`
+      (`assigned_vm: planning`, 5 todos, `sequential: true`) + its gated companion
+      `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`. The indexer itself is not built yet (that
+      plan's own scope); this doc's sole open item is now closed by citation.
 
 ## Progress Log
 
+- **round5-na-digest-defi 2026-08-08 (apply pass, item 74)**: operator ruled "yes, prioritize it now" -- authored the
+  dedicated implementation plan (`solana_dex_pool_swaps_indexer_2026_08_08.md`) per this doc's own 5-step breakdown,
+  plus its gated finalize companion. Closed this doc's sole open todo by citation (see above). This issue doc now has 0
+  open todos -- flagged for the finalize plan's own reconciliation todo to archive it once the implementation plan
+  completes, per `task_template.md`'s "also check each SOURCE doc" rule; not archived immediately here since the
+  finalize-plan pattern owns that step.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole todo is 'author a dedicated implementation plan when this
   becomes a priority' — plan-authoring + prioritisation, both operator calls
 - **context-scout 2026-08-03**: reviewed context_scope (4 entries), no change needed — still accurate.
