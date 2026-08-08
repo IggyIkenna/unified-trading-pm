@@ -378,8 +378,15 @@ Heartbeat: **`bheikwhqr`** (5-min interval loop, no `&` inside). Scratchpad:
 - **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, run
   `ps -ef | grep es_opt_watcher | grep -v grep` — dedup-check for more than one live pair (see the 2026-08-08T~11:10Z
   slot-6 lesson on the dual-watcher race) before doing anything else. (3) If exactly one pair, check liveness via
-  `TaskOutput bztaf4c8p --non-blocking` (or, if untracked by a fresh session, `kill -0 <pid>` against the PID found via
-  the `ps -ef` grep). (4) If zero watcher processes: re-arm from committed
-  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID/SLOT_TABS/PYTHON) +
-  `run_in_background:true`, NO `&` inside; re-arm heartbeat the same way from `watcher/heartbeat.sh`. Do NOT re-arm if a
-  live pair already exists.
+  `kill -0 <pid>` against the PID(s) found via the `ps -ef` grep. (4) If zero watcher processes: re-arm via
+  `setsid nohup bash <script> > log 2>&1 < /dev/null & disown` (NOT `run_in_background:true` — see update below),
+  resolve the real PID via `ps -ef | grep <script path> | grep -v grep` (not `$!`), verify PGID=SID=PID. Do NOT re-arm
+  if a live pair already exists.
+
+**Update 2026-08-08T22:30Z (same slot-28 session)**: `run_in_background:true` hit the documented rapid-kill pattern 3×
+in ~2 min this session (bztaf4c8p, bj0u96s11, bwjx735ic — each killed within ~30-90s, far faster than the 25-46min
+cadence seen in most prior sessions). Switched to `setsid nohup ... & disown` (the same fix already proven to survive 7+
+hours unattended in the slot-6/`703695`/`703746` lineage). Current live pair, genuinely isolated (confirmed PGID=SID=PID
+for both, per the standard verification): **watcher PID `3762433`, heartbeat PID `3762556`** (started 22:30:37Z, poll 1
+= 157 VMs). PID record: `scratchpad/watcher/watcher.pid`. A fresh session picking this up should check these PIDs first
+via `kill -0` before assuming dead / re-arming.
