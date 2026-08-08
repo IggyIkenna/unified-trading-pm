@@ -293,10 +293,16 @@ achieved by exclusion, not canonicalisation.**
       manifest rows with zero backing GCS content". The live manifest shows **6,306 `captured` rows** spanning
       2020-06-05 → 2026-04-14. Fix the comment to state what is actually true; the set itself is retired by the
       lowercase merge above. — unified-api-contracts@54e7e64d (slot-3, 2026-08-08; checkbox flip slot-14)
-- [ ] [CODE] P1. **Reconcile UAC's two contradictory odds-feature upstream registries.** For the SAME calculator,
+- [x] ✅ [CODE] P1. **Reconcile UAC's two contradictory odds-feature upstream registries.** For the SAME calculator,
       `required_inputs.py::odds_calculator` declares `ODDS_HORIZON_BUCKET` only and says footystats `ODDS` was "removed
       2026-06-25 — MTDS/odds-api owns raw odds", while `feature_upstream.py::odds_calculator` declares footystats `ODDS`
-      as REQUIRED. Pick one, make the other derive from it, and add a test that the two can never diverge again.
+      as REQUIRED. Pick one, make the other derive from it, and add a test that the two can never diverge again. —
+      **DONE 2026-08-08 (slot 21, data_engineering)**: `unified-api-contracts@66d8ce6d`. Removed
+      `UpstreamReq(source="footystats", data_type="ODDS")` from `feature_upstream.py::odds_calculator` (the 2026-06-25
+      ruling was already in `required_inputs.py`; `feature_upstream.py` hadn't been updated). Promoted
+      `mdps_odds_horizon_bucket` to `required=True` (sole upstream). Added `TestOddsCalculatorRegistryConsistency` with
+      3 cross-registry tests: no footystats ODDS present, mdps ODDS_HORIZON_BUCKET required=True, and required
+      data_types agree between both registries. QG: ✅ ALL QUALITY GATES PASSED (335s, 12536 passed).
 - [x] ✅ [DOCS] P0. **Author the codex rename/split process rule** (operator ruling 2026-08-08, resolves
       `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`): an entity rename or
       split MUST enumerate and migrate every consumer in the SAME change. Then APPLY it to this chain — every rename
