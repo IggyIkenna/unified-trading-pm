@@ -324,12 +324,13 @@ source:
       VENDOR'S rate limits from a disposable IP, which is what this task actually is). The stated `why_operator_only`
       reasoning holds unchanged: running an intentionally adversarial probe against an external vendor's infrastructure
       carries reputational/ToS/abuse-detection exposure that is a business risk-tolerance judgment, not a data-derivable
-      fact or an engineering prerequisite a worker can clear. Left as BLOCKED-OPERATOR-DECISION — this is the one
-      decision in this file's assigned set that the general theme does not determine; it needs the operator's own direct
+      fact or an engineering prerequisite a worker can clear. Was BLOCKED-OPERATOR-DECISION — this was the one
+      decision in this file's assigned set that the general theme did not determine; needed the operator's own direct
       yes/no. **RE-CONFIRMED STILL BLOCKED, checked 2026-08-02 (slot 2, finalize reconciliation)**: grepped the corpus
-      for any operator sanction/answer on the disposable-IP rate-limit probe — none found; only restated (unchanged) in
-      `plans/active/instruments_completion_tracker_2026_07_06.md` and
-      `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`. Genuinely still operator-decision-gated.
+      for any operator sanction/answer on the disposable-IP rate-limit probe — none found at that time; only restated
+      (unchanged) in `plans/active/instruments_completion_tracker_2026_07_06.md` and
+      `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`. **SUPERSEDED 2026-08-06** — see the
+      RULED/AUTHORIZED note at the top of this item; no longer operator-decision-gated.
 - [x] ✅ [DATA] P1. **CLASSIFICATION ALREADY DECIDED — remaining scope is enumerator/data-status consistency** (was:
       "BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification (Lighter / Pacifica / Extended): are these
       cefi or a distinct on-chain-CLOB group? Operator classification call." — corrected 2026-07-14, doc-reconciliation
