@@ -63,6 +63,7 @@ related:
     /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
   ]
 created: 2026-07-15
 parent_epic: tradfi_master
@@ -813,6 +814,48 @@ longer a `VENUE_DATA_TYPE_CAPABILITIES` key (`False`). CBOE `ohlcv_24h` capture 
 UAC) — no separate deploy needed here.
 
 ## Progress Log
+
+> **Line-cap remediation (2026-08-08)**: the Progress Log's dated entries from 2026-07-15 through the 2026-07-31 CME
+> billing-gating audit pass (mbp_10 adapter fix, the ohlcv_15m/ohlcv_24h per-venue audit, corporate_action_confirmed/
+> earnings_result misclassification fix, the Yahoo Finance source-vs-venue investigation, CBOE Treasury-tenor routing,
+> the YAHOO_FINANCE phantom-venue cleanup) were extracted verbatim to
+> `/plans/archive/2026_08/tradfi_unreachable_databento_data_types_history_2026_08.md` to restore headroom below the
+> 1000-line hard cap (this doc sat at the exact cap with zero headroom). The full technical writeups these entries
+> narrate are UNCHANGED and remain in this doc's `## Resolution —` / `## Verdict —` sections above — only the
+> chronological Progress Log narrative moved. This doc did not reach the 500-line soft cap via this extraction alone
+> (Progress-Log-only extraction per `task_template.md` finding J is scoped to the dated log entries, not the
+> `## Resolution —`/`## Verdict —` sections, which document already-shipped fixes but are not "Progress Log" — see
+> this same entry's note below for the residual-gap flag). The 2026-08-01 `context-scout` entry onward is kept in
+> place below so future `/na-eligibility-audit`/`/context-scout` incremental-skip logic still sees the most recent
+> dated marker.
+
+- **2026-08-08 (docs_reconciler, slot 2)**: Extracted the Progress Log per the note above (evidence:
+  `/plans/archive/2026_08/tradfi_unreachable_databento_data_types_history_2026_08.md`). Also recorded here — per
+  `issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md`'s "What I found" — the
+  cross-doc conflict this line-cap issue surfaced during the 2026-08-08 na-eligibility-audit tradfi-tranche Phase-1
+  classification pass: `/plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` already
+  BUILT and LIVE-VERIFIED the exact "general-purpose ohlcv_1m→ohlcv_15m/24h MDPS aggregation" mechanism this doc's
+  sole open `[DESIGN] P2` todo (line ~247, "RULED 2026-08-07 — YES, build it, MDPS-owned") calls for — shipped
+  `market-data-processing-service@0671953` + `unified-api-contracts@079d48ff` (2026-08-03, 4 days BEFORE this doc's
+  2026-08-07 "build it, general-purpose" ruling), live-proven with 99,711 real candles / 788 new `captured` manifest
+  rows for CME(non-combo)/NASDAQ/NYSE. That sibling doc also carries its own 2026-08-06 ruling that
+  `instrument_type=combo`/`futures_chain` grain is DELIBERATELY EXCLUDED from ohlcv_15m/24h ("no downstream consumer
+  expects combo-grain candles") — verified against features/strategy/ml-service generally, but NOT explicitly checked
+  against THIS doc's CBOE/`vix_features` need. Independently confirmed in UAC's `market_data_categories.py`: CBOE's
+  `VENUE_DATA_TYPE_CAPABILITIES` maps CBOE only to `{"index","futures_chain","options_chain"}` instrument_types (no
+  bare `future`) — i.e. CBOE's VX-futures may themselves fall under the SAME `futures_chain` grain the sibling doc
+  already excluded (not confirmed against the live catalogue this pass — flagging, not asserting). Net: this doc's
+  "build it, general-purpose" framing risks either (a) ~90% duplicate work (the mechanism mostly already exists, only
+  needs CBOE added to a working pipeline) or (b) re-opening a futures_chain-grain policy question already answered
+  "no" elsewhere without CBOE/vix_features in view when it was answered. **Not resolved here** — whoever picks up the
+  line-247 `[DESIGN]` todo should read the sibling doc first rather than building from scratch. **Residual line-cap
+  gap flagged for the finalize plan's reviewer**: this doc is now well under the 1000-line hard cap (real headroom
+  restored, `check_line_caps.sh` green) but did not reach the 500-line soft cap via this Progress-Log-only extraction
+  — its `## Resolution —`/`## Verdict —` sections (~450 lines, all documenting already-shipped/closed work) are the
+  only remaining lever, and extracting those is out of this todo's scope (finding J targets Progress Log entries, not
+  Resolution sections) and risked losing technical context still useful for the open todo (the "Resolution —
+  ohlcv_15m/ohlcv_24h audit" section documents what aggregation infrastructure does/doesn't exist, directly relevant
+  to the open `[DESIGN]` todo) — left inline deliberately, not an oversight.
 
 - 2026-07-15: Filed by background research/triage agent (diagnosis only, no code changes) while triaging a
   `#data-pipeline-alerts` `DP_RUN_MOSTLY_EMPTY` alert batch's TRADFI 100%-failed cells. All 3 mechanisms verified via
