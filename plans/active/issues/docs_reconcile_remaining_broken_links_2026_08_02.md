@@ -186,6 +186,32 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       skill's charter to change unilaterally per its own "never weakened by either mode" rule) — just recording the
       observation so it's visible if/when the freshness-gate design is revisited.
 
+## New from 2026-08-08 sweep — 1 dead link with no confident target, 1 script root-cause finding
+
+- [ ] [DOCS] P3. `.cursor/rules/core/plans-prompts-index.mdc` (`alwaysApply: false`, self-branded "SSOT for where agent
+      prompts and task entry points live") — its "Task Entry Points" table cites
+      `unified-trading-pm/plans/tasks/cursor/START_HERE.md` and `unified-trading-pm/plans/tasks/claude-code/START.md`;
+      `plans/tasks/` does not exist anywhere in the repo (confirmed via `find`). Every OTHER table in this same file
+      (Phase Prompts ×3, Sports ×1, the `CODEX:` pointer) resolves correctly — this is an isolated staleness, not a
+      wholesale-obsolete rule. Not auto-fixed: unlike the `04-architecture/README.md` ToC cluster above, there's no
+      equivalent doc elsewhere in the corpus using this "Cursor vs Claude Code START_HERE/START" convention to confirm
+      whether the right fix is (a) write the two missing onboarding docs, (b) repoint to `plans/active/task_template.md`
+      (the CLAUDE.md-current plan-authoring entry point, but not a strict semantic match — that's for authoring a NEW
+      plan, not general "task entry"), or (c) strip the table because the per-tool-onboarding-doc concept itself was
+      retired without anyone updating this index. Needs a human who knows whether these were ever built.
+- [ ] [SCRIPT] P2. **Root cause of most of this doc's own truncated-summary findings, identified 2026-08-08**:
+      `scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()` (used to auto-backfill a missing
+      `summary:` field) hard-truncates at char 197 + `"..."` with NO sentence/word-boundary awareness (the function
+      body: `if len(result) > 200: result = result[:197] + "..."`). Harmless when a doc's first paragraph is under 200
+      chars (the common case), but produces a genuinely unusable, mid-word-cut summary whenever it isn't — this is the
+      mechanism behind the 12-of-14 exactly-200-char truncations in `docs_reconcile_operator_decisions_2026_08_02.md`
+      BLOCKED-OPERATOR-DECISION 3. Not fixed this run (a shared frontmatter-tooling script is more consequential than a
+      doc-content edit, and this skill's Phase 3 auto-fix table covers DOC content classes, not doc-TOOLING bugs) —
+      filing so it's tracked rather than left to keep silently recurring every time the backfill script runs against a
+      doc with a long first paragraph. Recommended fix (not implemented): truncate at the last sentence or word boundary
+      before 200 chars, and/or flag any doc where the auto-derived summary got truncated at all for required human
+      review before it ships, rather than silently landing a partial sentence.
+
 ## Progress Log
 
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed. See sibling issues

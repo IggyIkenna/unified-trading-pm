@@ -1,10 +1,10 @@
 ---
 doc_type: issue
 title:
-  "docs-reconcile 2026-08-02 — 3 genuine operator-decision parks (cursor-rules/ purpose; locked docs' broken frontmatter
-  fields)"
+  "docs-reconcile 2026-08-02 — 4 genuine operator-decision parks (cursor-rules/ purpose; locked docs' broken frontmatter
+  fields; Fireblocks rotation-cadence SSOT contradiction)"
 summary: >-
-  Three findings across two docs-reconcile autonomous sweeps that the skill's own contract requires parking for the
+  Four findings across three docs-reconcile autonomous sweeps that the skill's own contract requires parking for the
   operator rather than auto-fixing: (1) what the 25-file `cursor-rules/` tree is actually FOR today, now that it's
   confirmed NOT synced to the real canonical `.cursor/rules/` tree (150 files, 0 overlap) -- an authority call about
   intent, not a correctness call; (2) `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` carries
@@ -13,21 +13,32 @@ summary: >-
   without sign-off; (3) added 2026-08-06 -- 14 `plans/active/issues/*.md` docs (incl. the same
   `macro_micro_econ_data_capture_audit_2026_06_05.md` from item 2) all carry a `locked_by`-gated, mechanically truncated
   `summary:` field (12 of 14 cut at exactly 200 chars mid-word/mid-link), pre-drafted replacements ready to apply on
-  sign-off.
+  sign-off; (4) added 2026-08-08 -- credentials-matrix.md and credential-rotation-runbook.md, both `authoritative_for`
+  credential rotation cadence, assert DIFFERENT numbers for Fireblocks custody creds (quarterly vs 60d) -- a real
+  content contradiction on a security-relevant credential class, not just an ownership overlap.
 status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [docs-reconcile, operator-decision, cursor-rules, locked-doc, retrieval-layer]
+tags:
+  [
+    docs-reconcile,
+    operator-decision,
+    cursor-rules,
+    locked-doc,
+    retrieval-layer,
+    credentials,
+    authoritative-for-collision,
+  ]
 related: []
 created: 2026-08-02
 author: unknown
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P1
 estimate_class: research
 estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
@@ -36,6 +47,8 @@ locked_by:
 locked_since:
 context_scope:
   [
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
     /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
     /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md,
     /plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md,
@@ -141,6 +154,38 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   normally. C: **Leave as-is** — the truncation is cosmetic (L2 retrieval degradation only, not a correctness bug) and
   not worth an exception to the locked-doc rule. Other: operator can type a custom answer.
 
+## 🚧 BLOCKED-OPERATOR-DECISION 4 — Fireblocks custody credential rotation cadence: two SSOTs disagree (added 2026-08-08)
+
+- [ ] [DOCS] P0. **Reconcile the Fireblocks RSA rotation cadence between `credentials-matrix.md` and
+      `credential-rotation-runbook.md` — pick the correct number and fix the other doc to match.**
+
+  Found by the 2026-08-08 `/docs-reconcile --autonomous` sweep's `authoritative_for` collision hunter, independently
+  re-verified against both live docs (not just the hunter's report) before parking. Both docs declare
+  `authoritative_for: [credential rotation cadence...]` and both are `status: current`:
+
+  - `codex/05-infrastructure/credentials-matrix.md` § 1 (Custody row): **"60d for HMAC creds; quarterly for Fireblocks
+    RSA"** — explicitly carves Fireblocks RSA out of the 60d HMAC bucket into its own ~90d cadence.
+  - `codex/15-runbooks/credential-rotation-runbook.md` § 1 (Custody row, labeled "Copper / Fireblocks / CEFFU HMAC +
+    JWT"): **"60d"** — no carve-out, Fireblocks lumped into the uniform 60d bucket.
+
+  This is NOT a resolution-logic false positive — I read both tables directly and the numbers genuinely disagree for the
+  same named provider/credential (Fireblocks custody creds). One candidate explanation the runbook's own row label
+  suggests: it calls the row "HMAC + JWT," but `credential-rotation-runbook.md` §3.2 elsewhere describes Fireblocks as
+  using an **RSA PEM**, not HMAC/JWT — so the runbook's Custody row may have been written for Copper/CEFFU specifically
+  and Fireblocks may have been swept in under the same row by mistake, rather than the cadence itself being a deliberate
+  disagreement. I have no way to confirm that read without knowing which cadence Fireblocks' custodian API actually
+  enforces/expects — a security-operational fact, not something derivable from the docs alone. This is exactly the class
+  of `authoritative_for` collision this skill's own contract forbids auto-resolving in any mode (evidence can show the
+  collision exists but not which side is right).
+
+  A: **`credentials-matrix.md` is correct (quarterly for Fireblocks RSA)** — fix `credential-rotation-runbook.md`'s
+  Custody row to carve out Fireblocks separately from Copper/CEFFU HMAC, matching the RSA-vs-HMAC distinction §3.2
+  already draws. [Weakly favored — the runbook's own §3.2 describes Fireblocks as RSA-based, and a distinct key-type
+  plausibly warrants a distinct cadence, but this is not a confident recommendation.] B:
+  **`credential-rotation-runbook.md` is correct (uniform 60d)** — fix `credentials-matrix.md`'s Custody row to drop the
+  Fireblocks carve-out. C: **Neither — the real cadence is something else entirely** (e.g. whatever Fireblocks' own
+  API/dashboard actually enforces), and both docs need updating to match. Other: operator can type a custom answer.
+
 ## Progress Log
 
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed. 4 other commits from this same sweep already shipped
@@ -207,3 +252,19 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **docs-reconcile 2026-08-08** (dispatch agt-bb1c67): added BLOCKED-OPERATOR-DECISION 4 (Fireblocks rotation-cadence
+  contradiction between `credentials-matrix.md` and `credential-rotation-runbook.md`) — found by this run's Phase 1
+  `authoritative_for` collision hunter (4 candidate collisions surfaced corpus-wide; 3 were content-consistent overlaps
+  reported separately in this run's Phase 5 chat report, this is the 1 genuine content contradiction). Independently
+  re-verified both docs' actual tables + the runbook's §3.2 RSA-vs-HMAC distinction before parking, per this run's own
+  standard of not just trusting a sub-agent's report. Bumped this doc's frontmatter `priority` P2→P1 to reflect the new
+  item's severity (security-relevant credential class); did not touch items 1-3's own priority framing.
+- **docs-reconcile 2026-08-08, re item 3**: this run's OWN Phase 1 summary-quality hunter independently re-swept the
+  full corpus (not primed with this doc's existing findings) and surfaced the exact same 14 docs with the exact same
+  200-char truncation defect. Cross-checked all 14 `locked_by` fields live before considering any fix — all 14 still
+  carry a real lock (13× `live-defi-rollout`, 1× `harsh-fleet-audit`), so none were touched; this is a re-confirmation
+  that item 3's park is still current, not a new finding. Also traced the root cause precisely this run:
+  `scripts/plan-hygiene/fix_frontmatter.py::get_first_paragraph_after_heading()` hard-truncates at char 197 + "..." with
+  no word/sentence-boundary awareness (verified by reading the function directly) — filed as a standalone P2 finding in
+  `docs_reconcile_remaining_broken_links_2026_08_02.md` (a script-tooling fix, not a doc-content fix, so out of scope
+  for the item-3 sign-off itself) rather than duplicated here.
