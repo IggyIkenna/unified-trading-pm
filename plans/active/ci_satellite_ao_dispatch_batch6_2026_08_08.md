@@ -237,16 +237,29 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       further gap to close. Findings recorded in
       `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`'s todo + Progress Log.
 
-- [ ] 9. [DEVOPS] P3. **Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, `notify-slack.yml`'s dedup-marker-write
-      `A && B || C` → `if`) from `unified-trading-ci`'s copy back into the fleet SSOT
-      `scripts/workflow-templates/notify-slack.yml`, then re-run `rollout-workflow-templates.sh` so all 26 consuming
-      repos pick it up.** Claims the `scripts/workflow-templates/` rollout mechanism this round — see § Same-file
-      contention; do not run this concurrently with any other template-rollout todo. Currently only grandfathered into
-      `workflow_template_drift_baseline.json` as a stopgap. **Done when**: the template carries the fix, the rollout has
-      run for all 26 consumers, `workflow_template_drift_baseline.json`'s grandfather entry for this specific drift is
-      removed (ratchet moves down, never up), and every touched repo's `quality-gates.sh` is green. Source:
-      `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` (todo, lines 116-125, [DEVOPS] P3) — never
-      cited by any covering doc.
+- [x] ✅ 9. [DEVOPS] P3. **Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, `notify-slack.yml`'s dedup-marker-write
+      `A && B → if`) from `unified-trading-ci`'s copy back into the fleet SSOT
+      `scripts/workflow-templates/notify-slack.yml`.** Claims the `scripts/workflow-templates/` rollout mechanism this
+      round — see § Same-file contention; do not run this concurrently with any other template-rollout todo. **DONE
+      2026-08-08, but the "26 consumers" premise was STALE — corrected scope, see
+      `issues/notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md` for the full investigation.** Ported the
+      fix into the template + PM's own deployed copy (`unified-trading-pm@f5fe2372e`) and into `deployment-service`
+      (`deployment-service@00a23128`, its confirmed sole remaining legitimate local caller via
+      `cloud-run-traffic-drift-check.yml`). Did NOT blanket-roll to the other 24 manifest repos: 21 of them had their
+      local `notify-slack.yml` copies DELIBERATELY DELETED 2026-08-07 as genuinely dead
+      (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 6, "22/23 repos" — their only callers
+      migrated to `unified-trading-ci`-hosted reusable workflows) and running the rollout would have silently
+      resurrected 20 of those as brand-new dead files (caught before push — reverted); `execution-service` and
+      `strategy-service` carry pre-existing zombie copies with zero current local callers each (left untouched, not part
+      of this todo's fix, flagged in the new issue doc as candidates for the same deletion todo 6 already applied
+      fleet-wide). `workflow_template_drift_baseline.json` ratcheted to 0 entries via
+      `detect_template_drift.py --workflows --baseline-write` (the notify-slack.yml/unified-trading-ci grandfather
+      genuinely resolved; the 25 `staging-lock-check.yml` entries were already moot — that template source was deleted
+      2026-08-08 per the same dedup plan's todo 11). `quality-gates.sh` green on `unified-trading-pm` and
+      `deployment-service`. Source: `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` (todo, lines
+      116-125, [DEVOPS] P3) — never cited by any covering doc; its "all 25 OTHER repos' local copies are still on the
+      un-fixed pattern" claim (2026-08-07) is the specific stale premise this todo inherited — see the new issue doc for
+      why.
 
 - [ ] 10. [SCRIPT] P3. **Root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across
       per-slot worktree clones** (empirically confirmed non-hardlinked across 5 clones). Check pnpm version, `.npmrc`
