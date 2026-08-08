@@ -144,3 +144,15 @@ own Tick history.
   branch) — whoever reads the TmuxPruner/keeper source for todo 1 should specifically check whether the liveness check
   is worker-heartbeat-based (and thus structurally mismatched for the review role) rather than tmux-session-based.
   Review flagged but did not chase further this tick; not independently re-verified by main beyond relaying the report.
+- 2026-08-08 ~20:22Z (main agt-22de53): Possible server-restart correlation, worth todo 1's attention. Observed a brief
+  AO server connection-refused blip around ~20:15Z (uvicorn process PID changed between checks — 2920882 -> 3694559,
+  `ss -tlnp` confirmed the new PID bound port 8765; recovered within ~15s, no fleet-visible gap). Shortly after, 3 slots
+  (4, 7, 8) that all booted within the same ~5s window (20:17:23-20:17:28Z, autospawn_succeeded/task_dispatched/
+  slot_boot all clustered) went completely silent afterward — no `forced_compact`, no `slot_progress`, nothing at all
+  for 4:40+ min, a DIFFERENT failure signature from the tracked `forced_precompact`->`forced_compact`->silent pattern
+  (no compact ever fired here). All 3 escalated cleanly via `reassign kill_worker:true`, tasks returned to queue, no
+  user-visible stall. Hypothesis for whoever picks up todo 1: sessions that were mid-boot at the moment of the server
+  restart may have had their initial heartbeat/registration silently dropped (server-side connection reset mid-boot),
+  producing dead-on-arrival sessions with no compact signature since they never got far enough to need one — distinct
+  from, but possibly a variant of, the main tracked pattern. Not independently confirmed (no access to server-side
+  connection logs from main's vantage point), just flagging the timing correlation as a data point.
