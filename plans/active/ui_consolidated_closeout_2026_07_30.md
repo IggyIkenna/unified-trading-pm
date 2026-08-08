@@ -296,3 +296,12 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   per-doc judgment on the same 2 cross-tranche-ownership candidates. Todo 6 correctly still unchecked:
   `/ag-closeout- audit ui` has now run 3 times (08-06/07/08) but `/plan-reconcile ui` has still never run on this
   tranche. No reclassification, no citation fix, no archival warranted.
+- **ui_satellite_ao_dispatch_batch1_finalize's own todo 3, 2026-08-08 (slot 7)**: a scoped re-measure (not a full
+  standalone `/ag-closeout-audit ui` cron pass) run as part of batch1's finalize ritual, after batch1's 3 todos landed
+  and batch2 was approved. Candidate set re-derived fresh at **14** (the 12 from the 08-08 `agt-a0f1b7` run plus the
+  `..._parked_2026_08_08.md` doc that run itself produced, now itself a candidate). Result: **8 orphaned of 14** (down
+  from the 2026-08-06 baseline of 9/12) — `data_status_tab_and_downloads_remediation_2026_06_16.md` moved to
+  `archivable_after_planned_work` (batch1_finalize's todo 2 closer-read + its still-open todo 4's migration commitment).
+  The other 8 baseline-orphaned docs are unchanged, each with a stated operator-gated/time-gated/too-large reason — full
+  per-doc breakdown lives in `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s own todo 3 completion note, not
+  duplicated here. `check_ag_closeout_linkage.py` reconfirmed 0 `ui`-tagged orphans.
