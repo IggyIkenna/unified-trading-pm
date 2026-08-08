@@ -127,7 +127,23 @@ plan + verifying the `done_sha`, never from the row's status alone.
       regardless (resets an already-`queued`/`done_sha: null` row to the same state) — not calling it, since there is
       nothing to correct. No REOPEN or FLIP was warranted or performed; this item only needed its tracker checkbox
       resolved with the verification trail above.
-- [ ] [BACKEND] P2. `deployment_api_sigabrt_crash_loop-017` (`done_sha=467b28964`)
+- [x] ✅ [BACKEND] P2. `deployment_api_sigabrt_crash_loop-017` (`done_sha=467b28964`) — **verified 2026-08-08 (slot 18):
+      no REOPEN or FLIP action needed or possible — the row this audit item names has already self-corrected.**
+      `467b28964` (slot-6, 2026-07-31) is a `docs(plans):` commit against
+      `plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` itself — the `[REVIEW] P1` MASTER/WORKER
+      pid-role-correlation todo (now at line 224). At that time the commit's own content shows the todo's done-when
+      genuinely wasn't met ("a SIGABRT occurred, but the correlation is UNRESOLVABLE… Leaving this checkbox unchecked")
+      — i.e. the 03:15 UTC audit snapshot correctly caught a real false-done (backlog row `done`, checkbox honestly
+      still `- [ ]`). Per `GET /api/backlog`, the positional id `deployment_api_sigabrt_crash_loop-017` now points at a
+      DIFFERENT, orphaned row (`title: "(orphan — no longer in backlog.yaml)"`, `done_sha=ffd41f98e`,
+      `dispatched_to=12`, `done_at=2026-08-08T11:12:59Z`) — confirming the
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle gotcha. `ffd41f98e` (slot-12,
+      2026-08-08T11:12:22Z) IS the honest resolution of the same line-224 todo: gate genuinely met (a SIGABRT occurred
+      post-`785405d`-deploy), all 7 correlated pids matched `gunicorn WORKER forked` entries, checkbox correctly flipped
+      `[x]` with a `[BACKEND] P3` follow-up filed for why workers abort(). Current file state: line 224 is `[x]` ✅,
+      matching `ffd41f98e` exactly. The false-done condition the audit captured has already been superseded by genuine,
+      correctly-flipped follow-up work — nothing to REOPEN (would re-open already-honestly-done work) or FLIP (already
+      flipped, by the row now holding the real work).
 - [ ] [BACKEND] P2. `sports_fast_t1_recon_oom_live_capture_outage-003` (`done_sha=80265d6`) — gate-shaped ("Once fixed,
       backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28…)")
 - [ ] [BACKEND] P2. `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`)
@@ -219,3 +235,15 @@ plan + verifying the `done_sha`, never from the row's status alone.
   confirm no VM is currently running). Read `reopen_backlog_task` in `agent-orchestrator/server/routes/backlog.py` to
   confirm calling it now would be a pure no-op (already `queued`/`done_sha: null`) — declined to call it since there is
   nothing to correct. No REOPEN or FLIP warranted; no code work needed. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 18, backend_engineer)**: Verdict on `deployment_api_sigabrt_crash_loop-017` (`done_sha=467b28964`
+  at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting-positional-id pattern as the
+  slot-19/slot-22 items above. `467b28964` (2026-07-31, slot-6) was a genuine false-done AT THE TIME: it's a
+  `docs(plans):` commit whose own content leaves the `[REVIEW] P1` MASTER/WORKER pid-correlation todo (now line 224 of
+  `deployment_api_sigabrt_crash_loop_2026_07_24.md`) explicitly unchecked ("Leaving this checkbox unchecked — done-when
+  genuinely not met"). But `GET /api/backlog` shows the positional id `-017` now belongs to a DIFFERENT, orphaned row
+  (`done_sha=ffd41f98e`, dispatched to slot 12, done `2026-08-08T11:12:59Z`) — the id was reused by a regen tick per
+  `regen_positional_task_ids_not_content_stable_2026_07_17.md`. `ffd41f98e` is the honest, correctly-flipped resolution
+  of that same line-224 todo (slot 12 today: gate met, 7/7 SIGABRT pids matched `gunicorn WORKER`, checkbox flipped
+  `[x]` with a `[BACKEND] P3` follow-up filed). Current plan-doc state already matches `ffd41f98e` exactly — nothing to
+  correct. See the checklist item above for the full trail.
