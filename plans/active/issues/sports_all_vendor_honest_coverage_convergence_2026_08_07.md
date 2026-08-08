@@ -695,3 +695,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (`last_completed_date=2024-07-26`, fresh `07:21:37Z`), accelerating well. odds smallchunk4: chunk 17 cleared
   (`07:19:09Z`), now in **chunk 18** (`2020-08-30→2020-09-03`), 1 league attempted so far (`EPL`), zero OOMs total
   across the entire run. This is exactly where `smallchunk3` died last time — watching closely next tick.
+- **2026-08-08T07:39Z — smallchunk4 SURVIVED the critical window, still alive and progressing through chunk 18.** 4
+  leagues attempted so far (`EPL, LA_LIGA, BUNDESLIGA, SERIE_A`), zero OOMs total, actively logging as recently as ~90s
+  ago — no third occurrence. Useful negative data point: this specific chunk can clear cleanly, so the hang isn't
+  deterministically tied to chunk 18's content alone. FIXTURE_STATS +14 days (`last_completed_date=2024-08-09`, fresh
+  `07:38:10Z`), still healthy. Continuing to watch until smallchunk4 is clearly into chunk 19+.

@@ -104,10 +104,11 @@ spelling variant survives, which is the entire point of the panel". It does not.
       multi-venue key (leg list / venue set), replacing the single-venue stamp that cannot be correct for a cross-venue
       construct. Preserve the existing 13 days (2026-07-25 → 08-06) rather than discarding — it is the only
       arb-frequency history and the arb-decay analysis needs a series.
-- [ ] [CODE] P1. **Make the relocated series consume the CORRECTED operator-group guard** shipped by
-      `/plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`. Any arb whose legs are all one
-      operator must never enter the series. If the historical 13 days contain such rows, recompute or flag them — do not
-      carry a known-wrong population forward as a baseline.
+- [ ] [CODE] P1. **Make the relocated series consume the CORRECTED operator-group guard** shipped in
+      `unified-api-contracts@e080ef74` (re-keyed VENUE_OPERATOR_GROUPS, case-insensitive `.upper()` normalisation) +
+      `unified-api-contracts@b9a0be80` (OPERATOR_GROUP_VENUES hierarchy — BETFAIR_EX_UK/EU/SB_UK → BETFAIR). Any arb
+      whose legs are all one operator must never enter the series. If the historical 13 days contain such rows,
+      recompute or flag them — do not carry a known-wrong population forward as a baseline.
 - [ ] [REVIEW] P1. **Recompute the arb-decay/alpha-gate baseline on the corrected population** if the bugfix plan's
       blast-radius count comes back non-zero (that plan files this as a follow-up; this todo is its landing site).
       Operator ratified the decay spec as-written on 2026-08-08 — per-leg decay against a shared t=0, gate on p25, edge
