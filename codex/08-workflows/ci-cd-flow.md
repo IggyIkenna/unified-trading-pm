@@ -400,6 +400,17 @@ they diverged.
     **fail-safe** (a stale/missing marker widens the range → over-flags, never under-flags). **Do NOT "simplify" the
     range back to `main..LDR`.** (The pre-push hook range `origin/live-defi-rollout..HEAD` is already a since-base range
     and is unaffected.)
+  - **The marker must be a true ANCESTOR of LDR, not merely an existing object (HARD; bug found 2026-08-06, fixed
+    PM@7b5390649).** A security-driven git history rewrite can leave the stored marker SHA still fetchable from GitHub
+    (so a bare existence check passes) while it sits on the OLD, pre-rewrite history line — `git log <marker>..LDR` then
+    balloons to nearly the repo's entire history instead of a small since-last-promote delta, still technically
+    "over-flags, never under-flags" but at a scale (thousands of commits, largely predating the `Quickmerge:` trailer
+    convention itself) that is impractical to clear. `promote_provenance_range.py`'s `marker_usability()` composes an
+    object-existence check with `marker_is_ancestor()` (`git merge-base --is-ancestor <marker> <ldr_ref>`); a marker
+    that is reachable but NOT an ancestor is treated the same as an unreachable one and falls through to the safe
+    `origin/main..origin/live-defi-rollout` fallback range. Full incident + the fleet-wide scope audit confirming
+    exactly 3 repos were affected:
+    `/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.
 
 Every shippable unit goes through exactly two passes:
 
