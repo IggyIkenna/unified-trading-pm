@@ -74,12 +74,12 @@ source: >-
 depends_on: []
 ---
 
-> **🟡 IN-FLIGHT 2026-08-08 ~00:37 UTC — slot-5 running in tmux `orch-slot-5:backfill` (harness-kill-proof). Rolling
-> boundary 2026-04-10 (7 chunks: 2020-06-06..2026-04-09). Chunk 1/7 EXIT_STATUS=0 (VM 003059). Chunk 2/7 VM
-> `expected-universe-v2-sports-20260808-003520` RUNNING (2021-01-01..2021-12-31). LC_TARBALL_FRESHNESS=warn. Resume:
-> `tmux capture-pane -t "orch-slot-5:backfill" -p -S -20` or
+> **🟡 IN-FLIGHT 2026-08-08 ~01:38 UTC — slot-7 running in tmux `orch-slot-7:backfill` (harness-kill-proof). Rolling
+> boundary 2026-04-10 (7 chunks: 2020-06-06..2026-04-09). Chunk 1/7 VM `expected-universe-v2-sports-20260808-013813`
+> RUNNING (2020-06-06..2020-12-31). Tarball fresh (no LC_TARBALL_FRESHNESS warn needed). Resume:
+> `tmux capture-pane -t "orch-slot-7:backfill" -p -S -20` or
 > `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'`. If tmux window gone: re-run
-> `tmux new-window -t orch-slot-5 -n backfill && tmux send-keys -t orch-slot-5:backfill "cd /home/ubuntu/unified-trading-system-repos/.tabs/5/deployment-service && LC_TARBALL_FRESHNESS=warn bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports 2>&1 | tee /tmp/backfill-slot5.log" Enter`.**
+> `tmux new-window -t orch-slot-7 -n backfill && tmux send-keys -t orch-slot-7:backfill "cd /home/ubuntu/unified-trading-system-repos/.tabs/7/deployment-service && bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports 2>&1 | tee /tmp/backfill-slot7.log" Enter`.**
 
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 
@@ -451,6 +451,13 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   deployment-service tarball is slightly behind but benign (all the critical launch fixes are in `27fd5779`). Relaunched
   in tmux `orch-slot-9:backfill` (harness-kill-proof). Chunk 1/7 VM `expected-universe-v2-sports-20260808-000138`
   RUNNING as of 00:01 UTC; background monitor (`bcz22sw1y`/`bsl5zwnd7`) sending heartbeats every 5 min.
+- **data_engineering worker (slot-7) 2026-08-08**: slot-9 and slot-5 sessions gone; no competing VMs. Assessed state:
+  chunk 1/7 (VM `000138`) EXIT_STATUS=0 and chunk 1 re-run (VM `003059`) EXIT_STATUS=0 confirm chunk 1 fully seeded.
+  Chunk 2/7 last attempt (VM `003520`) EXIT_STATUS=5 with `would-write 1000001 > max_writes_per_run 1000000` — 1M rows
+  written this attempt, ~1 row still remaining. Per-VM shards from all prior runs consolidated into main manifest.
+  Launched fresh parent run in tmux `orch-slot-7:backfill` (~01:38 UTC). Chunk 1/7 VM
+  `expected-universe-v2-sports-20260808-013813` RUNNING. Tarballs all fresh (no LC_TARBALL_FRESHNESS=warn needed). Will
+  monitor all 7 chunks; post-run ratio re-check runs once all EXIT_STATUS=0.
 
 ## Follow-ups
 
