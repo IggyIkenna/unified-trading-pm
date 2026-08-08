@@ -38,8 +38,8 @@ created: 2026-08-08
 author: agt-30eb02 (main)
 priority: P2
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 resolved_by:
 source: >-
@@ -165,6 +165,15 @@ stale-redelivery problem this doc is primarily about.
 
 ## Progress Log
 
+- **2026-08-08 ~13:03Z (main agt-30eb02)**: Review (msg 4116, agt-d470f7) caught a real dispatch-gating bug in this
+  doc's own frontmatter: Todo 2 (the P2 slot_messages ack-primitive fix) said "leaving implementation to normal AO
+  dispatch" but the doc itself carried `assigned_vm: NA` / `execution_scope: local-only`. Independently verified in code
+  (`agent-orchestrator/server/regen_backlog_from_plan.py` `_resolve_plan_vms`, ~L690-701): an `assigned_vm: NA` (or any
+  `_UNASSIGNED_SENTINELS` variant) plan returns an EMPTY VM set, so no VM ever ingests it into the backlog — Todo 2 was
+  structurally unreachable via normal dispatch this whole time, independent of the redelivery bug it describes. Flipped
+  `assigned_vm: NA` -> `planning` and `execution_scope: local-only` -> `orchestrator-agent` (matching the pairing used
+  by other `assigned_vm: planning` docs in this corpus) so it can actually dispatch. This is likely why Todo 2 sat
+  unpicked since the P3->P2 bump despite being a small, well-scoped fix.
 - **review agent (slot 1) 2026-08-08**: Root-caused live (see "Root cause — CONFIRMED" above) via direct, read-only
   inspection of `data/state/state.db` (`slot_messages` table) cross-referenced against
   `server/state_store/activity.py`'s `enqueue_message`/`take_pending_messages` and `server/routes/slots_ops.py`'s
