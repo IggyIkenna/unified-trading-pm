@@ -732,7 +732,9 @@ DEFI:
 # =============================================================================
 # SPORTS - Sports Betting (Post-commercialization)
 # =============================================================================
-# SPORTS venues produce odds, markets, outcomes, and settlements data.
+# SPORTS venues produce odds data (raw bookmaker ticks, snapshots, derived types).
+# markets/outcomes/settlements retired 2026-08-08 (sports taxonomy P1, operator
+# ruling #8): 0 rows ever written, pure phantom declarations.
 # Data is sharded by league (not by venue) in features-sports-service.
 # Venues here represent data providers / betting exchanges.
 # =============================================================================
@@ -745,7 +747,6 @@ SPORTS:
   # Common data types across all SPORTS venues
   common_data_types:
     - odds
-    - markets
 
   venues:
     POLYMARKET:
@@ -756,9 +757,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -773,9 +771,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -790,9 +785,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -807,9 +799,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal
