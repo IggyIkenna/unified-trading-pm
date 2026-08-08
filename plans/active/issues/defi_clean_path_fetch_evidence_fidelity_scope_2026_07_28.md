@@ -141,13 +141,39 @@ close by citation once batch9 ships.
       `asyncio.gather(..., return_exceptions=True)`; new unit tests cover genuine-empty vs HTTP-error vs
       connection-error plus a `_process_protocol`-level test proving the error reaches `record_failed` not
       `record_zero_rows`.
-- [ ] [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
-      Alchemy RPC batch client `_aave_oracle_collection.py` uses. If not, this family cannot be closed the same way as
-      the HTTP-subgraph family — report that and propose the alternative (RPC-level error code? nothing to thread?)
-      rather than guessing. Read-only research, no code change. (market-tick-data-service) **Extracted verbatim (both
-      this item and the Chainlink/Pyth item below, combined into one todo) into
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179` (status: active, `Source:` cites this doc by name) — do
-      not reclassify this doc on this item's account; close this checkbox by citation once batch9's todo ships.**
+- [x] ✅ [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
+      Alchemy RPC batch client `_aave_oracle_collection.py` uses. **RESOLVED (2026-08-08, unified-trading-pm slot-8)** —
+      traced the full call chain live against installed `web3==6.20.3` source
+      (`.venv/lib/python3.13/site-packages/web3/`): `collect_aave_rows`/`query_aave_reserves`
+      (`_aave_oracle_collection.py:40-113`) call `alchemy_client.get_block_by_timestamp()` and
+      `oracle.functions.getAssetPrice(...).call(...)`, both routed through `AlchemyBaseClient.get_web3()`
+      (`alchemy_base_client.py:267-315`) → `Web3.HTTPProvider`. `HTTPProvider.make_request()`
+      (`web3/providers/rpc.py:85-96`) delegates to `web3/_utils/request.py::make_post_request()` (line 111-116), which
+      calls `response.raise_for_status()` then returns **only `response.content`** — the status code is read for the
+      raise check but never propagated to any caller.
+      - **On success (2xx): NOT obtainable.** No code path from `HTTPProvider` up through
+        `AavePositionsMixin`/`collect_aave_rows`/`query_aave_reserves` ever sees or stores a status code — success is
+        signaled only by "no exception raised." There is nothing to thread on the clean-empty path for this family.
+      - **On HTTP-level failure (4xx/5xx): partially obtainable.** `raise_for_status()` raises
+        `requests.exceptions.HTTPError`, which propagates uncaught up to `query_aave_reserves`'s per-reserve
+        `except Exception as exc:` (line 78) — `exc.response.status_code` IS accessible there, but only when the
+        exception is specifically an `HTTPError`. Connection failures/timeouts raise
+        `requests.exceptions.ConnectionError`/`Timeout` instead (no `.response`, no status at all).
+      - **JSON-RPC application-level errors carry NO HTTP status at all** — confirmed in `web3/manager.py:268-291`: a
+        clean 200 response whose body has an `"error"` key (execution reverted, rate-limited, bad params, etc.) is
+        turned into `raise ValueError(error)` where `error` is the JSON-RPC error dict (`code`/`message`, e.g.
+        `-32000`) — orthogonal to HTTP status, not a substitute for it, and the only signal available for this whole
+        class of RPC-level failure.
+      - **Proposed alternative signal**: none needed. This family's genuine failures already reach
+        `emit_aave_manifest`'s `record_failed(error=...)` path (`_aave_oracle_collection.py:194-202`) with the real
+        exception object attached — strictly more informative than a bare HTTP status. If finer fidelity is ever
+        wanted, the JSON-RPC error `code` (when present) is the correct RPC-level equivalent to surface, never an HTTP
+        status — but no action item follows from this research; the family cannot be closed "the same way" as the
+        HTTP-subgraph family because the HTTP status it would thread doesn't exist on this path. Read-only research, no
+        code change (repos: []).
+      Was extracted verbatim (bundled with the Chainlink/Pyth item below) into
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-181` — narrowed that combined todo to the still-open
+      Chainlink/Pyth half via citation to this resolved finding.
 - [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
       item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
       (market-tick-data-service) **Same extraction/citation as the Aave item above —
@@ -236,3 +262,9 @@ close by citation once batch9 ships.
   remaining `assigned_vm: NA` blocker (items 2-3 are non-blocking `KEEP-NA-STALE` duplicates already covered by active
   `defi_satellite_ao_dispatch_batch9_2026_08_06.md`) — flipped `assigned_vm: NA` → `planning`,
   `execution_scope: local-only` → `orchestrator-agent`.
+- **slot-8 2026-08-08** (task `defi_clean_path_fetch_evidence_fidelity_scope-001`): closed the Aave/Alchemy `[DIAG]`
+  item with a real finding — read `web3==6.20.3`'s installed source directly to trace the call chain; HTTP status is
+  discarded on success and only sometimes obtainable on failure (see checkbox for detail), and JSON-RPC application
+  errors carry an orthogonal error code, not an HTTP status. No code change (read-only research, `repos: []` on the
+  dispatched task). Narrowed `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s combined todo (lines 175-181) down to
+  just the still-open Chainlink/Pyth half, citing this finding for the Aave/Alchemy half.

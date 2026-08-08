@@ -172,13 +172,16 @@ over all pending draft batches) that independently spot-verified every todo belo
       `defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md`. Done when: every parser in that file has a
       written classification and any additional venues beyond Balancer sharing the legacy cumulative shape are listed
       with evidence (sample column names/values), or the audit confirms Balancer is the only affected venue.
-- [ ] [DIAG] P2. **Research a per-call HTTP-status-equivalent** for (a) the Aave/Alchemy RPC batch client used by
-      `_aave_oracle_collection.py` and (b) the Chainlink/Pyth on-chain legs of `oracle_prices_handler.py` — read-only
-      research, no code change; if not obtainable for a family, propose the alternative signal (e.g. RPC-level error
-      code) instead of guessing. Repo: market-tick-data-service. Source:
-      `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`. Done when: a written finding exists for each of the
-      two families stating obtainable/not-obtainable, with either the concrete field name or a proposed alternative
-      signal cited.
+- [ ] [DIAG] P2. **Research a per-call HTTP-status-equivalent** for the Chainlink/Pyth on-chain legs of
+      `oracle_prices_handler.py` — read-only research, no code change; if not obtainable, propose the alternative
+      signal (e.g. RPC-level error code) instead of guessing. Repo: market-tick-data-service. Source:
+      `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`. **Narrowed 2026-08-08 (slot-8,
+      `defi_clean_path_fetch_evidence_fidelity_scope-001`)**: this todo originally bundled the Aave/Alchemy RPC half
+      too — that half is now RESOLVED with a written finding in the source doc's checkbox (not obtainable on success;
+      partially obtainable via `requests.exceptions.HTTPError.response.status_code` on HTTP failure only; JSON-RPC
+      errors carry an orthogonal error code, not an HTTP status). Only the Chainlink/Pyth half remains open. Done when:
+      a written finding exists for the Chainlink/Pyth family stating obtainable/not-obtainable, with either the
+      concrete field name or a proposed alternative signal cited.
 - [ ] [DATA] P2. **Relaunch `mtds-dex-swaps-backfill-1`/`-2`** onto the shipped checkpoint fix
       (`market-tick-data-service@8046e25b`), using each VM's per-VM manifest shard's max `date`
       (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`) as an explicit `--start` date-frontier so the relaunch
