@@ -200,11 +200,15 @@ achieved by exclusion, not canonicalisation.**
       direct `from unified_api_contracts.registry import SMARKETS`). Full `quality-gates.sh` green (12528 passed) after
       2 rebases onto concurrent slots' commits to the same plan (arb-operator-group bugfix, horizon-axis todo) — no
       conflicts.
-- [ ] [CODE] P0. **Make bare `BETFAIR` an operator-group parent, not a venue.** Remove it from the data-axis venue set;
+- [x] [CODE] P0. **Make bare `BETFAIR` an operator-group parent, not a venue.** Remove it from the data-axis venue set;
       add a real venue→operator hierarchy in UAC that `BETFAIR_EX_UK`/`EX_EU`/`SB_UK` roll up to. Coordinate with
       `/plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`, which ships the consuming fix FIRST
       — this todo must not regress that fix; if the bugfix already added the hierarchy, extend it rather than
-      duplicating it.
+      duplicating it. 5. ✅ unified-api-contracts@49e83239 — removed BETFAIR from SPORTS_EXCHANGE_VENUES,
+      VENUES_BY_ASSET_GROUP["sports"], VENUE_DATA_TYPE_CAPABILITIES, and representative_sample.py; updated 5 test files
+      (test_sports_schemas, test_venue_context_integration, test_instrument_generator, representative_sample) to use
+      BETFAIR_EX_UK as the canonical data-axis exchange representative; hierarchy already in place via arb bugfix
+      (OPERATOR_GROUP_VENUES@b9a0be80); QG green (12533 passed).
 - [ ] [CODE] P0. **Collapse the raw odds vocabulary to a single lowercase `odds`.** `trades` → `odds`; footystats
       `ODDS`/`odds` → `odds`; the two populations stay distinguishable via the existing `source` column (`odds_api` vs
       `footystats`), which is exactly the axis that should carry that distinction. Add an `in_play` boolean column
