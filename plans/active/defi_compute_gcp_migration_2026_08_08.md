@@ -236,12 +236,13 @@ them).
       does not exist yet, deploying fresh** — all 3 services are absent from GCP Cloud Run in project
       `central-element-323112` across all fleet regions. — unified-trading-pm@(see commit)
 
-- [ ] [INFRA] P1. **Write `deployment-service/scripts/cloud-run/deploy.sh`** — the script `execution-service.yaml` and
-      `strategy-service.yaml` both reference under their deploy instructions but which does not exist. Base it on the
-      existing `deploy-shared.sh` pattern (same repo) and/or `deploy_features_service_cloud_run.sh`'s actual mechanics
-      (which already works for a Cloud-Run DeFi service in this same cluster shape) rather than inventing a new pattern.
-      Done-when: `bash deploy.sh --service execution-service --dry-run` (or equivalent) produces a valid
-      `gcloud run services replace` invocation without error.
+- [x] ✅ [INFRA] P1. **Write `deployment-service/scripts/cloud-run/deploy.sh`** — the script `execution-service.yaml`
+      and `strategy-service.yaml` both reference under their deploy instructions but which does not exist. Base it on
+      the existing `deploy-shared.sh` pattern (same repo) and/or `deploy_features_service_cloud_run.sh`'s actual
+      mechanics (which already works for a Cloud-Run DeFi service in this same cluster shape) rather than inventing a
+      new pattern. Done-when: `bash deploy.sh --service execution-service --dry-run` (or equivalent) produces a valid
+      `gcloud run services replace` invocation without error. — deployment-service@9c84158a; verified dry-run produces
+      valid `gcloud run services replace` for both execution-service and strategy-service.
 
 - [ ] [BACKEND] P1. **Deploy `features-service` to GCP Cloud Run** using
       `deployment-service/configs/cloud-run/features-service.yaml` + its existing
@@ -364,3 +365,8 @@ them).
   (asia-northeast1, us-central1, europe-west1/2/4, asia-south1, asia-east1): zero hits. deployment-api's
   `CLOUD_RUN_SERVICE` census reads GCP live state via Admin API — no separate local DB, same source. **Verdict: does not
   exist yet, deploying fresh** — proceed to todo 4 (write `deploy.sh`) and todo 5 (deploy features-service).
+- **2026-08-08 (slot-16, AO worker — todo 4)**: Wrote `deployment-service/scripts/cloud-run/deploy.sh`. Uses
+  `gcloud run services replace <yaml>` with the declarative YAML spec as the SSOT. Supports `--service <name>`
+  (execution-service | strategy-service) and `--dry-run`. Verified:
+  `bash deploy.sh --service execution-service --dry-run` produces a valid `gcloud run services replace` invocation; same
+  for strategy-service. QG green (exit 0). Shipped via quickmerge — deployment-service@9c84158a.
