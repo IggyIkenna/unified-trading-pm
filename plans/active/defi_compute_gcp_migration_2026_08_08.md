@@ -192,12 +192,21 @@ them).
 
 ## Todos
 
-- [ ] [INFRA] P0. **Confirm `execution-service`'s AWS deployment's actual role** — grep `run-live.sh` /
+- [x] ✅ [INFRA] P0. **Confirm `execution-service`'s AWS deployment's actual role** — grep `run-live.sh` /
       `launch-strategy-live-vm.sh` / `colocated_engine.py` (per `promote-workflow-architecture.md`) for any network call
       INTO the AWS ECS `execution-service` endpoint (a load balancer DNS name, a service-discovery lookup, an env var
       pointing at it). Done-when: a written finding — either "the GCE live-promote path calls this AWS endpoint at
       `<location>`, cutover must repoint it to the new GCP Cloud Run URL as part of todo 5" or "confirmed no live caller
-      references this AWS deployment; it is not in any current hot path."
+      references this AWS deployment; it is not in any current hot path." **FINDING (2026-08-08, slot-11)**: Confirmed
+      no live caller references the AWS ECS `uts-execution-service-prod` deployment. The GCE live-promote path
+      (`launch-strategy-live-vm.sh` → VM runs `run-live.sh` → `e2e-testing/scripts/defi/colocated_engine.py`) is a
+      **colocated in-process engine** — `colocated_engine.py` adds `execution-service` to `sys.path` and imports its
+      engine functions directly (zero-serialization, shared memory). Verified: `local-live.env` sets
+      `CLOUD_PROVIDER=gcp`, `EXECUTION_PROVIDER=copper` (Copper MPC custody — no AWS endpoint); zero hits searching for
+      AWS ALB/ELB DNS names, `EXECUTION_SERVICE_URL` env vars, or HTTP client calls from any of the three scripts or
+      their imports. The AWS ECS deployment is not in any current hot path. **Todo 5 (deploy execution-service to Cloud
+      Run) does NOT need to repoint any live caller's target URL** — there is no caller that knows the AWS ECS endpoint
+      exists. — unified-trading-pm@(see commit)
 
 - [ ] [INFRA] P1. **Find what scaled `uts-defi-prod` from 0 running tasks (2026-07-17) to running (2026-08-08)** — check
       ECS service events (`aws ecs describe-services --query services[].events`) for a scale-up timestamp/reason, cross
@@ -318,3 +327,11 @@ them).
   `seamless-cloud-switch.md` safety mechanism this kind of move would normally need does not exist in code, but operator
   confirmed no real trading capital is at risk today (live data streaming only), so it is not a blocker for this
   specific cutover. Two open investigation items (todo 1, todo 2) carried forward rather than resolved speculatively.
+- **2026-08-08 (slot-11, AO worker — todo 1)**: Investigated `run-live.sh`, `launch-strategy-live-vm.sh`, and
+  `colocated_engine.py`. Finding: the GCE live-promote path uses a **colocated in-process engine**
+  (`e2e-testing/scripts/defi/colocated_engine.py`), which adds `execution-service` to `sys.path` and imports its code
+  directly — no HTTP call to any remote execution-service endpoint. `local-live.env` is `CLOUD_PROVIDER=gcp`,
+  `EXECUTION_PROVIDER=copper`. Grep across `execution-service`, `strategy-service`, `e2e-testing` finds zero references
+  to an AWS ALB/ELB DNS, `EXECUTION_SERVICE_URL` env var, or HTTP client calls from the live path. **Conclusion:
+  confirmed no live caller references the AWS ECS `uts-execution-service-prod` deployment; it is not in any current hot
+  path. Todo 5 (deploy execution-service to Cloud Run) requires no caller repointing.**
