@@ -783,3 +783,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   smallchunk5: chunk 22/451 (`2020-09-19`), zero new OOMs (still 24 total). Both healthy, no intervention.
 - **2026-08-08T12:59Z** — FIXTURE_STATS +26 days (`last_completed_date=2025-11-30`, fresh `12:58:49Z`), steady. odds
   smallchunk5: chunk 24/451 (`2020-09-29`), zero new OOMs (still 24 total). Both healthy, no intervention.
+- **2026-08-08T13:21Z — FIXTURE_STATS crossed into 2026.** +34 days (`last_completed_date=2026-01-03`, fresh
+  `13:20:37Z`) — very close to its 2026-08-07 target end now, likely just 1-2 chunks remaining. Watching very closely
+  next tick. odds smallchunk5: chunk 25/451 (`2020-10-04`), 1 new OOM (25 total). Both healthy, no intervention.
