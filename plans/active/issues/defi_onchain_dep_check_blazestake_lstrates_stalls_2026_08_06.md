@@ -248,3 +248,16 @@ BLAZESTAKE still blocking — Option A still needed).
   pointing at a scheduling/trigger issue over a code-level break). Item 4 (BLAZESTAKE paging policy) left
   untouched/still operator-gated per instruction, with a non-reclassifying context note added (self-resolves
   ~2026-08-19/20 once the 08-06-stamped retirement markers age out of the ~14-day trailing alert window).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: CONFLICT-DEFERRED, not reclassified — item 3 (now
+  `[DATA] P1`, AO-dispatchable per today's own self-resolution above) is still held by an ACTIVE sibling plan,
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (`status: active`), whose own "Deferred — conflict-parked, needs an
+  operator ruling" section explicitly recommends a live re-read before drafting a diagnosis todo — that re-read WAS
+  done today (this doc's own na-corpus-digest-closeout entry above) and confirmed the gap, but batch9's park text has
+  not itself been updated/closed to reflect it, and `batch10` (also `status: active`) independently lists this doc's
+  item 3 under its own `time_gated` bucket pending the same re-check "next round." Flipping this doc's `assigned_vm`
+  now — before either sibling batch reconciles its own stale characterization — risks exactly the "second, redundant
+  dispatch path" this doc's own 2026-08-07 verdict already guarded against. Item 4 (the `[SCRIPT] P3` manifest-mutation
+  script, filed today) is not mentioned in either batch and would itself be a clean RECLASSIFY candidate, but the
+  whole-doc-flip constraint means it can't be split from item 3's conflict. Recommend: batch9/batch10 owners reconcile
+  their stale park text against this doc's live self-resolution next round, then re-run this classification. Doc stays
+  `assigned_vm: NA`.

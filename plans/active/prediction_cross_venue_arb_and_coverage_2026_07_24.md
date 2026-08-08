@@ -997,3 +997,11 @@ themselves required manual VM backfill triggers.
   shipped, not a design call still open. Disagrees with the 2026-07-30/08-02 audits, which kept it NA without checking
   the code; this is a fresh finding, not a re-litigation (no operator ruling/redirect-banner/documented-revert protected
   it). 7 open todos -> 6.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-verified live (2 open items, down
+  from the 6-9 range prior rounds tracked; most items closed/extracted since). Remaining: the `[OPS] P2`
+  tarball-overwrite-race item is a genuine open-ended infra design question (two named options, no directive) matching
+  this doc's own long-standing precedent for this exact item; the `[SCRIPT] P1` series-scoped historical Kalshi
+  backfill residual (the 2025-10→2026-04 mid-gap) is a substantial but genuinely bounded build (IS series enumerator +
+  e2e driver, both prerequisites already shipped) and on its own would be a reasonable RECLASSIFY candidate, but
+  `assigned_vm` flips whole-doc and the tarball item is a real judgment call, so the doc stays together. Doc stays
+  `assigned_vm: NA`.

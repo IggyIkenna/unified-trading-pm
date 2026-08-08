@@ -117,3 +117,7 @@ todos/plans or a documented reason it still can't be scoped.
   executed yet. `assigned_vm: NA` deliberately — the scope isn't known yet, so dispatch-eligibility can't be assessed
   until the DIAG todos land real numbers (per the dispatch-scope-eligibility rule: a todo is AO-eligible only once its
   outcome is a checkable, bounded fact, not "figure out how big this is").
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — all 5 open todos are the scoping pass
+  itself (exact date list, cell shapes, sizing, backfill-vs-relabel classification), none of which is a bounded fact
+  yet; the doc's own last todo already names the correct future action (fork into `assigned_vm: planning` child
+  plan(s) once the scoping numbers exist). No cheat-sheet precedent applies pre-scoping. Doc stays `assigned_vm: NA`.

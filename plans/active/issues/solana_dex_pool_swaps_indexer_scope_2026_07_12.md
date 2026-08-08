@@ -143,3 +143,8 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
   since the 2026-08-04 audit (context-scout metadata only, per git log). Sole open item remains a plan-authoring
   timing/prioritization call, an operator judgment, not a bounded task. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 open todos (the sole item was closed
+  by citation today via `round5-na-digest-defi 2026-08-08`, operator ruling "prioritize it now": the dedicated
+  implementation plan `solana_dex_pool_swaps_indexer_2026_08_08.md` was authored, `assigned_vm: planning`, gated
+  finalize companion included). This scoping doc's own work is done; the real dispatchable build lives in that new
+  plan pair, not here. Not archived this pass. Nothing to reclassify.

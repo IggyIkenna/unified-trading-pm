@@ -443,3 +443,8 @@ now — it is genuinely waiting on external VM/infra state, not idle from neglec
   run.log at
   `gs://deployment-scripts-central-element-323112/vm-logs/backfill-defi-legacy-datatype-fold-20260808-024818/run.log`
   directly (never trust a bare PID across a session restart).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 tracked `- [ ]` todos by design
+  (live operator-session dispatch-tracking checkpoint; its "work items" are an in-flight status table, not a
+  checklist), consistent with every prior round (2026-08-04/07). Not archival-eligible yet per its own §4 criterion
+  (multiple rows still genuinely in-flight: `dex_swaps` VM running, gas_fees manifest purge blocked, the
+  `AAVEV3`/Balancer/`dex_pools` residuals not yet closed). Nothing to reclassify.

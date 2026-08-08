@@ -188,3 +188,10 @@ vault-share-price collector) end-to-end:
   (2026-07-30), a single-source rename of `SOURCE_PRIORITY[('defi','vault_share_price')]` to `["onchain_rpc"]`, not a
   second-source addition. Confirmed live against the current file (`_source_priority_data.py:344-357`) before flipping.
   Todo 5 (F10 register-append) left untouched — genuinely still open, out of this pass's scope.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE (already-duplicated), not reclassified —
+  the sole remaining open item (todo 5, "Append F10 to the reconciliation register") is ALREADY an open todo in the
+  active `defi_satellite_ao_dispatch_batch10_2026_08_06.md` (`status: active`), whose own text reads "Sync a stale
+  checkbox: `defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`'s Todo 5 ... is unchecked but the substance
+  already shipped 2026-07-26." Reclassifying this doc now would open a second, redundant dispatch path the moment
+  batch10 executes its own copy of the same fix. Correct owner is batch10; this doc's checkbox stays as the citation
+  anchor per this corpus's own convention. Doc stays `assigned_vm: NA`.

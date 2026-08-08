@@ -780,3 +780,6 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   07-30/07-31/08-04 markers. The 6-bullet prose-only "Deferred work after 2026-07-18" section (confirmed-trap checked —
   no `- [ ]` markup, so it doesn't surface in the grep count) is genuine operator/shared-file-gated work, correctly
   KEEP-NA, not stale. Doc stays NA, not archive-eligible.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 native open checkboxes, re-confirmed
+  (`archive_exempt: true`, `gate_on_depends: false` coordination hub; `depends_on` lists the 4 Phase A-E children, all
+  still open under their own docs — this parent has nothing of its own to reclassify). Nothing to reclassify.

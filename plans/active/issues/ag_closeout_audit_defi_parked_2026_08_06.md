@@ -173,3 +173,8 @@ operator ruling.
 - **context-scout 2026-08-07**: populated context_scope (4 entries) — both findings' actual target docs
   (`mtds_pipeline_check_...`, `phantom_audit_estate_coverage_gap_...`), the `batch10` draft that already covers this
   tranche's conflict-clear work, and SKILL.md for process context.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 checkboxes (audit-report doc); this
+  skill dispatches from real todos, not an `/ag-closeout-audit` finding ledger. Superseded by the 2026-08-08
+  `ag_closeout_audit_defi_parked_2026_08_08.md` run (Finding 2 confirms this doc's own 2 findings are
+  `orphaned_never_touched, 0 AO-eligible for defi` — both belong to the cross-cutting/cefi/tradfi tranches under the
+  primary-owner rule, not a defi reclassify target). No action.

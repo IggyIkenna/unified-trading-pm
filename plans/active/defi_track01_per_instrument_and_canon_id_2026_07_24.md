@@ -933,3 +933,11 @@ instruments in one `instruments.parquet` with `available_from/to`).
   escalation #1, and it is the traced root cause of the CRITICAL `DP-CATALOG-001` page
   (`issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md`). The doc also carries a live "🟡 In-flight
   refactor + capture halted" banner with all DeFi capture STOPPED. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-read the full open-todo set (8
+  items). The doc's headline state is unchanged: DeFi capture remains STOPPED (live banner), R3's full-corpus migration
+  gates R4 (coverage), and the residual canon walk C2-C12 needs a live index read after the currently-running
+  `canonical-migration-defi-rebuild` VM reaches a terminal state (not yet). Today's operator rulings on this doc
+  (derivative_ticker canonical-home ratification, SUSHISWAP factory-address capture option (b)) already got their own
+  new `[SCRIPT]`/`[SCRIPT] P1` implementation todos filed same-day — both genuinely bounded, but sit alongside R4
+  (`gated on R1+R2+R3+R5`) and the residual canon walk (infra-state-gated) in the same doc, so a whole-doc flip is not
+  clean. Doc stays `assigned_vm: NA`.
