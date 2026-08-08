@@ -351,18 +351,18 @@ future batch's re-triage; the rest need direct operator/human action, elapsed ti
 
 One question, quote/location/options/recommendation, not resolved autonomously:
 
-1. **D4-10 (`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`)** — should adding a BATS test-execution phase
-   to the shared, fleet-wide `scripts/quality-gates-base/base-service.sh` be its own dedicated AO-dispatched or human
-   plan (per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" rule), given it changes a script every repo's
-   `quality-gates.sh` run depends on? Quote (doc's own "Recommended decision"): _"This is a base-service.sh change (used
-   by every repo in the fleet), so it needs its own properly-scoped plan with the operator's plan-destination call, not
-   a silent addition inside an unrelated one-script todo."_ Options: (a) fold into a future ci-tranche batch anyway,
-   scoped as warn-only-first per the doc's own transitional design (mirrors the existing actionlint pattern) — lower
-   blast radius than it sounds, since a warn-only initial phase can't redden the fleet; (b) author it as its own
-   standalone plan, operator picks `assigned_vm`. **Recommendation: (a)** — the doc's own proposed design already
-   includes the safety rail (warn-only until a clean fleet PR cycle is observed, exact actionlint precedent cited), so
-   the blast-radius concern is smaller than the doc's own text implies; but this is genuinely the operator's call per
-   the HARD RULE, not mine to assume.
+1. ~~**D4-10 (`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`)** — should adding a BATS test-execution
+   phase to the shared, fleet-wide `scripts/quality-gates-base/base-service.sh` be its own dedicated AO-dispatched or
+   human plan?~~ **RESOLVED 2026-08-08 (round5-ci-question-resolution) via the workspace default, not a fresh operator
+   ruling.** CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE states: _"Default is human
+   (`assigned_vm: NA`) unless the operator explicitly says otherwise."_ No explicit override exists anywhere in the
+   corpus, so option (b) below is the answer by default, not this entry's own soft-recommended option (a) — which this
+   entry itself correctly declined to assume without operator sign-off. Original options/quote preserved for the record:
+   Quote (doc's own "Recommended decision"): _"This is a base-service.sh change (used by every repo in the fleet), so it
+   needs its own properly-scoped plan with the operator's plan-destination call, not a silent addition inside an
+   unrelated one-script todo."_ Options were (a) fold into a future ci-tranche batch anyway, scoped as warn-only-first
+   (mirrors the existing actionlint pattern); (b) **[DEFAULT — now the answer]** author it as its own standalone human
+   plan (`assigned_vm: NA`); the operator may still explicitly override to (a) later.
 
 ## Codex SSOTs (read before executing any todo)
 
