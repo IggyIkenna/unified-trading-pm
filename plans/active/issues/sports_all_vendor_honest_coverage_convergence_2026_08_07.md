@@ -746,3 +746,26 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   picking up the previously-parked cross-vendor honest-absence/denominator-hardening generalization ask as a scoped
   audit + documented proposal (not a unilateral architecture change) rather than leaving it `BLOCKED-OPERATOR` — will
   work this in as a parallel thread once the current milestone watch eases.
+- **2026-08-08T~11:35Z — CLOSED: cross-vendor denominator-hardening ask.** Background audit (footystats, open_meteo,
+  soccer_football_info, transfermarkt, understat — the 5 vendors the operator's original ask named, distinct from
+  api_football/odds_api which have their own dedicated docs, and instruments_service/mdps_odds_horizon_bucket which are
+  internal not vendors) found the generalization **already holds workspace-wide**: a fresh live census of all 9 sports
+  manifest sources shows **0% blank-`error_reason` `empty_confirmed` rows everywhere**, not just the 5 — a direct
+  downstream effect of the SFI/weather retype fixes landed earlier this session plus the other 3 vendors never having
+  had the blank-reason problem. Per-vendor dominant reason codes: footystats `EXPECTED_NO_PROVIDER_COVERAGE` 70.8%,
+  open_meteo 87.4%, SFI 85.7%, transfermarkt 92.1% (matches the original PLAYER_VALUES finding almost exactly),
+  understat 97.9%. Checked for the SFI/weather-class `expected_unattempted` structural bug in all 5: only 3 residuals
+  exist (open_meteo 384, SFI 350, understat 35), all dated `2026-08-05` through today — the already-diagnosed
+  self-resolving in-progress-cron-shard pattern, not a new backlog. One candidate that looked structural — **footystats'
+  891 `expected_unattempted` rows for CHINA_SUPER_LEAGUE + RUSSIA_PREMIER_LEAGUE** — resolved as honest, expected churn:
+  the 2026-08-07 out-of-scope purge (`footystats_purge_out_of_scope_leagues_2026_08_07.py`) removed these leagues from
+  subscription scope, and the full-history footystats backfill VM (`fs-backfill-20260807-100731`) is correctly
+  re-sweeping the entire league universe, writing fresh honestly-typed `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`
+  rows as it passes over these 2 now-descoped leagues — same as every other non-subscribed league. **Not a bug, no
+  action needed** — but noting here so a future tick doesn't mistake this for a live regression and attempt to re-purge
+  rows that will just regenerate on the next full sweep. **No retype script run, no manifest purge performed** — nothing
+  was found wrong to fix. Shipped the one genuine deliverable: two small codex/skill-doc additions codifying the
+  "blank-reason-is-a-code-smell" principle for future vendors (`codex/02-data/honest-absence-downstream-handling.md`
+  Reason Taxonomy § principle 3, `cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` per-vendor
+  audit step 6) — pushed `304041840e`. This closes the last standing item from the operator's original big-picture asks
+  for this session.
