@@ -246,14 +246,22 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       sub-part 3 specifically is a diagnostic task, not the pnpm-migration implementation those deferrals were about —
       narrower and genuinely uncovered.
 
-- [ ] 11. [SCRIPT] P2. **Optimize `check_pm_script_path_refs.py`** — measured at 28% of a from-scratch
+- [x] ✅ 11. [SCRIPT] P2. **Optimize `check_pm_script_path_refs.py`** — measured at 28% of a from-scratch
       `quality-gates.sh` run via `profile_qg_resources.py`. Profile the hot path, apply the optimization (e.g. cache
       repeat file reads, narrow the file-walk scope, or parallelize independent checks — worker's judgment on
       mechanism), and re-measure. **Done when**: a repeatable before/after `profile_qg_resources.py` measurement shows a
       real wall-clock reduction with zero regression in what the checker catches (existing test suite for the checker
       stays green). Source: `quality_gates_quickmerge_timing_baseline_2026_07_31.md` (line ~351) — never cited by any
       covering doc; flagged as a RECLASSIFY-candidate by two prior na-eligibility-audit passes but never actually
-      dispatched.
+      dispatched. — `unified-trading-pm@ec01e4167`. cProfile'd `_scan_file`: 79,295 lines fed the full
+      `_SKIP_LINE_RE`/`_PATTERNS` regex pipeline but only ~1.6% (1,266) contain `"scripts/"` at all — added a cheap
+      substring pre-filter so non-matching lines skip both regexes entirely. Standalone cProfile: 0.333s → 0.087s (74%
+      less CPU work). `profile_qg_resources.py --repo unified-trading-pm --core 2` before/after full run: STEP 5.64
+      28.62s → 25.91s wall (the in-run coarse-phase number is confounded by concurrent sibling-slot host load on this
+      shared VM — the source doc's own noise caveat applies here too; the isolated cProfile delta is the attributable
+      win). Zero regression: manual before/after correctness check (clean PM tree passes; a synthetic broken-ref +
+      valid-ref fixture still correctly flags the broken one and resolves the valid one) — no dedicated unit test
+      pre-existed for this checker to regress.
 
 - [ ] 12. [VERIFY] P3. **Run the `--skip-tests`/`--skip-<X>` per-phase delta measurement** the source doc's own Deferred
       table calls "now unblocked"/"ready to run" — a bounded benchmark using the existing timing methodology already
