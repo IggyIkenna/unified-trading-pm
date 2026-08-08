@@ -25,6 +25,8 @@ related:
     plans/epics/global_ledger_pnl_attribution_master.md,
     plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md,
     plans/active/crypto_alpha_research_2026_07_24.md,
+    plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
   ]
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master
@@ -136,24 +138,40 @@ are identified (2) and the ledger exists (3).
 > deployment-api-SSOT reconcile (P11.21), the synthetic-seam guard (P11.17), the Group-C smart-fill replay (P11.6,
 > `execution-service@3d7d760c`) and the drivable-but-thin threshold (P11.22) all shipped. **89 boxes done / remaining
 > open boxes are classified below** (incl. Phase 2's P2.1/P2.2). This register is an INDEX of the open `- [ ]` items in
-> the phases below — it adds no new dispatches; the canonical todos stay in-phase.
+> the phases below — it adds no new dispatches; the canonical todos stay in-phase. **UPDATE 2026-08-08**: 7 of the
+> register's § A items (incl. P2.1/P2.2) had their canonical `- [ ]` checkboxes MOVED to
+> `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` (operator-authorized extraction) — the phases below now carry
+> non-ingestable pointer lines for those 7, not the live checkbox. The 3 items still tracked here as real open
+> checkboxes are P2.7.3 (operator-gated), P9.2 (dependency-blocked), and P2.11.15 (held back on a conflict-check
+> duplicate-claim finding — see register § A).
 
-**A — Agent-shippable infra/code (NO operator gate — a VM/agent can ship these):**
+**A — Agent-shippable infra/code (NO operator gate — a VM/agent can ship these) — EXTRACTED 2026-08-08:**
 
-- [CODE] Paper-side smart-fill handoff (`fill_model` BENCHMARK→SMART) — wire the paper-run to consume the now-shipped
-  `execution-service` Group-C smart-fill replay (P11.6); the determinism follow-through (currently honest at BENCHMARK).
-- [CODE] Phase-2 per-trade identity — execution events gain `trade_key` + side/qty/price/fees; colocated fill records
-  carry the key.
-- [DATA] features-service BTC trend features `btc_trailing_return_{1m,3m,6m,12m}`.
-- [CODE] Complete `TSMOM_BTC_CTA` capability wiring into the UAC `archetype_capability_manifest`.
-- [CODE] Intraday BTC mean-reversion signal as a cross-sectional ML feature.
-- [CODE] cs-leg longer-horizon TARGET retrain in `_panel.py` (2026 drag).
-- [BUG] `_mom_tb.py` daily-PnL save skipped under `OOSLO`/`WFSTART`<2023.
-- [BUG] Combined-book vol-normalisation uses full-period (in-sample) vol.
-- [DATA] cs ensemble (`_panel.py`) reads `alt_*` (2022+) not `altfull_*` (2017+).
-- [DATA] Add HYPE + the post-2024 cohort (SUI, …) to the trading universe.
-- [UI] Verify the prod UI selector resolves the **145**-strategy run (not the old 14-strategy run) — likely already
-  fixed by P11.16; verify + close.
+> **EXTRACTED 2026-08-08**: 7 of this section's items (trade_key/fill-record identity P2.1/P2.2, the GroupC smart-fill
+> paper-run handoff P1.6, BTC-trend feature corpus recompute P2.11.16, TSMOM_BTC_CTA capability-manifest wiring
+> P2.11.20, the intraday mean-reversion ML feature P2.11.18 [scope-trimmed — its retrain sub-step stays here, see
+> below], and the UI run-selector bug P2.14) moved verbatim to
+> [`plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+> — operator-authorized extraction, per that plan's own `source:` for the authorization. See that plan (+ its finalize
+> twin, `citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md`) for the live dispatchable todos. The canonical
+> `- [ ]` checkboxes for these items (Phase 2 / Phase 11 below) are converted to non-ingestable pointer lines in the
+> same commit as this extraction (`task_template.md` finding H — a digest of another plan's todos is never real
+> checkbox syntax).
+>
+> **cs-leg longer-horizon TARGET retrain in `_panel.py` (P2.11.15) — NOT extracted, HELD BACK on conflict.** The
+> satellite batch's conflict-check found this is a near-verbatim duplicate of `crypto_alpha_research_2026_07_24.md`'s
+> own open `[RESEARCH] P2` todo (line 536: "...or a longer-horizon target retrain in `_panel.py`..."). Per
+> `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3, a verbatim/near-verbatim duplicate
+> claim is NOT extracted into a competing todo — this item stays exactly where it is, below in Phase 11 (still
+> `assigned_vm: NA` here). See `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`'s own `## Deferred` section for the
+> full citation.
+>
+> **4 stale bullets removed from this list (2026-08-08 correction, NOT part of the extraction above)**: this section
+> previously ALSO listed `_mom_tb.py` daily-PnL-save bug, combined-book vol-normalisation bug, cs ensemble
+> `alt_*`-vs-`altfull_*` gap, and HYPE+post-2024-cohort universe gap. These are stale remnants of the 2026-07-24
+> section-C migration below — all 4 are already live, open checkboxes in `crypto_alpha_research_2026_07_24.md` (lines
+> 436, 487, 440, 480 respectively as of 2026-08-08), never checkboxes in THIS doc, and were never orphaned. Removed here
+> to stop this register misrepresenting them as open-and-unclaimed in this doc.
 
 **B — Operator-gated: LIVE TRADING (hard-stop, human-only):**
 
@@ -207,10 +225,17 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 
 ## Phase 2 — Per-trade identity in execution events (G2)
 
-- [ ] [CODE] P2.1. **Execution events gain `trade_key` + side/qty/price/fees** — replace the date-level float-metric
-      event lines with per-trade keyed records (the `LedgerRow` is the natural carrier). Repo: execution-service.
-- [ ] [CODE] P2.2. **colocated_engine fill records carry the key** — `fill_id` → the UAC `trade_key`; persist
-      `correlation_id` (not a sequential int). Repo: strategy-service.
+> **EXTRACTED 2026-08-08**: both items below moved verbatim to
+> [`citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+> — see register § A above for the extraction note. Non-checkbox digest lines only below (`task_template.md` finding
+> H) — the live dispatchable todos are in the satellite doc.
+
+- **[CODE] P2.1.** Execution events gain `trade_key` + side/qty/price/fees — replace the date-level float-metric event
+  lines with per-trade keyed records (the `LedgerRow` is the natural carrier). Repo: execution-service. → moved to
+  `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`.
+- **[CODE] P2.2.** colocated_engine fill records carry the key — `fill_id` → the UAC `trade_key`; persist
+  `correlation_id` (not a sequential int). Repo: strategy-service. → moved to
+  `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`.
 
 ## Phase 7 — The 19→26 operator dry-run (runs to completion)
 
@@ -356,13 +381,13 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       `strategy_ids` = ONLY the `@`-qualified slot ids (bare archetype dropped → no per-strategy double-count); batch
       rerun resolves archetype via `archetype_for_slot_label`. `test_slot_labels_are_qualified_not_bare_archetype`;
       batch_rerun ε=0 intact.
-- [ ] [CODE] P1.6. **GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART)** — PARTIAL
-      (strategy-service@ba63ab1c left manifest HONEST at `BENCHMARK`, NOT faked). Blocked by the no-service-deps HARD
-      RULE: strategy-service MUST NOT import execution-service, so smart-matching cannot be called in-process.
-      **Remaining (correct architecture):** a new **execution-service Layer-3 entrypoint** consuming
-      `{run}/ledger_type=instruction` + RunManifest → GroupCRunner smart-matching → an `execution_alpha_bps` artifact,
-      driven from the e2e-testing harness; CRA reads it at `PnLLayer.EXECUTION`; UI surfaces exec-α. (FEES is already
-      the only EXECUTION-layer leg.)
+- **[CODE] P1.6.** GroupC smart-fill handoff into paper-run (`fill_model` BENCHMARK→SMART) — PARTIAL
+  (strategy-service@ba63ab1c left manifest HONEST at `BENCHMARK`, NOT faked). Blocked by the no-service-deps HARD RULE:
+  strategy-service MUST NOT import execution-service, so smart-matching cannot be called in-process. Remaining (correct
+  architecture): a new execution-service Layer-3 entrypoint consuming `{run}/ledger_type=instruction` + RunManifest →
+  GroupCRunner smart-matching → an `execution_alpha_bps` artifact, driven from the e2e-testing harness; CRA reads it at
+  `PnLLayer.EXECUTION`; UI surfaces exec-α. (FEES is already the only EXECUTION-layer leg.) **EXTRACTED 2026-08-08** →
+  moved verbatim to `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`.
 - [x] ✅ [INFRA] P11.7. **Custom domain for the paper-trading UI** — DONE pending DNS (deployment-service@1168718 +
       @3c54e64). `portal.odum-research.com` Cloud Run domain mapping created + tracked in
       `terraform/gcp/domain_mappings.tf` (`DomainRoutable=True`, `CertificatePending`). **Operator DNS step:** add CNAME
@@ -515,18 +540,18 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       commit for the WS mappings → then quickmerge strategy-service (it depends on the UAC enum, so promote UAC first).
       The agent's first pass left it unshipped + had ONE hallucinated WS-test edit (invented connectors) which was
       dropped; the real WS mappings were re-added.
-- [ ] [DATA] P2.11.16. **features-service: compute + write BTC trend features `btc_trailing_return_{1m,3m,6m,12m}` +
-      `btc_realized_vol` to the canonical GCS feature corpus the paper run reads** — the CTA engine (P2.11.14) reads
-      these from `features: dict[str,float]`; without them the paper run produces null signals (honest absence).
-      Trailing returns = BTC daily mark `pct_change(21/63/126/252)` shifted (T-1, no lookahead); realized*vol = rolling
-      60d std ×√365. Source = the daily BTC mark from the perp-funding corpus (`perp_daily_ctx`) the providers already
-      read. batch=live one path. Repo: features-service (+ resolve_bucket_name SSOT / UTC). This is the CRITICAL-PATH
-      gate for a non-null CTA paper run. **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@653cf158.**
-      `btc_trailing_return*{1,3,6,12}m`+`btc_realized_vol` added to
-      delta_one's`returns`calculator +`registry_specs.yaml`(no-lookahead trailing windows, NaN until filled),
-      `test_returns` unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the
-      delta_one feature corpus** so these columns exist in GCS for the live paper run (a features-service backfill —
-      shared with the P2.11.18 reversion-feature corpus recompute; run both together).
+- **[DATA] P2.11.16.** features-service: compute + write BTC trend features `btc_trailing_return_{1m,3m,6m,12m}` +
+  `btc_realized_vol` to the canonical GCS feature corpus the paper run reads — the CTA engine (P2.11.14) reads these
+  from `features: dict[str,float]`; without them the paper run produces null signals (honest absence). Trailing returns
+  = BTC daily mark `pct_change(21/63/126/252)` shifted (T-1, no lookahead); realized_vol = rolling 60d std ×√365.
+  Source = the daily BTC mark from the perp-funding corpus (`perp_daily_ctx`) the providers already read. batch=live
+  one path. Repo: features-service (+ resolve_bucket_name SSOT / UTC). This is the CRITICAL-PATH gate for a non-null
+  CTA paper run. STEP 1 ✅ SHIPPED 2026-06-22 — features-service@653cf158. `btc_trailing_return_{1,3,6,12}m` +
+  `btc_realized_vol` added to delta_one's `returns` calculator + `registry_specs.yaml` (no-lookahead trailing windows,
+  NaN until filled), `test_returns` unit tests GREEN, full QG passed (622s), on origin LDR. REMAINING (operational):
+  recompute the delta_one feature corpus so these columns exist in GCS for the live paper run (a features-service
+  backfill — shared with the P2.11.18 reversion-feature corpus recompute; run both together). **EXTRACTED 2026-08-08**
+  → moved verbatim to `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`.
 - [x] ✅ [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui — SHIPPED + VERIFIED
       2026-06-22: ui@6442d46e | pw:L2 ✓ (67 passed, 4.0m) | regression: tests/unit/lib/architecture-v2/enums.test.ts
       (toHaveLength 19) + tests/unit/wizard/parity-gates.test.ts (58 archetypes) — both fail on TSMOM removal.** 15
@@ -536,44 +561,42 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       `public/     capability-verdict-matrix.json` + 6 test files). tsc clean, 286 Vitest pass, `quality-gates.sh`
       exit 0. The playwright SMOKE gate (`tests/smoke/`) self-starts `PORT=3100 pnpm dev:mock` (120s boot) — the earlier
       BLOCKED-PLAYWRIGHT was just not waiting for boot; ran green here. Repo: unified-trading-system-ui.
-- [ ] [CODE] P2.11.20. **Complete TSMOM_BTC_CTA capability wiring — add it to the UAC archetype_capability_manifest**
-      (found 2026-06-22 via the e2e archetype-capability playbook). `TSMOM_BTC_CTA` is in `StrategyArchetype` + the UI
-      enum/capability-verdict-matrix but **MISSING from
-      `unified-api-contracts/.../internal/architecture_v2/     archetype_capability_manifest.json`** (22 archetypes, no
-      TSMOM) → the archetype is half-wired (no per-venue/ asset-group capability cells) and the e2e playbook
-      `tests/e2e/playbooks/refactor/     refactor-g1-8-uac-archetype-capability.spec.ts` would fail. Fix: add TSMOM's
-      capability declaration to the source (`registry/archetype_capability_matrix.py` — family RULES_DIRECTIONAL,
-      BTC-level CTA → CEFI perp+spot on the major venues, signal `price`/trend) → regen via
-      `scripts/generate_archetype_capability_manifest.py` → sync to UI via
-      `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Then the e2e playbook becomes the
-      proper playwright-dir regression for the archetype. Repo: unified-api-contracts (+ UI sync). Confirm the exact
-      venue/asset-group capability profile with the operator (CeFi-only BTC, or the DeFi+CeFi hybrid).
-- [ ] [CODE] P2.11.18. **Add the intraday BTC mean-reversion signal as a cs ML feature** (research 2026-06-22, root
-      `_ic_test.py`). A short-horizon reversion z-score (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m +
-      4h on the canonical OHLCV) has a **stable Spearman IC ≈ +0.05 vs forward 15m–1h returns, positive across all
-      horizons + every recent year** (2022-26). It is intraday-microstructure information the daily-horizon delta_one
-      features do NOT capture (orthogonal), so it should ADD to the pooled-LightGBM cs ensemble. NOTE: the signal is NOT
-      standalone-tradeable (its alpha is inside the execution-cost band — see the research arc: daily Monday-wick edge
-      decayed, migrated to 1h, but realistic 1.5bp-taker fills cap it at a marginal +1.14 Sharpe); its value is as a
-      FEATURE (here) + an execution-timing overlay (P2.11.19), where it never pays its own round-trip. Implement: add
-      the reversion z-score feature spec(s) to the **features-service** `delta_one/app/features/registry.py` (new
-      `feature_group` or extend an existing momentum/reversion group; bump `formula_version`; HIVE-partition + footer
-      metadata per the feature-formula-versioning SSOT), compute + write to the feature corpus, then retrain + validate
-      the cs model (does it lift cs Sharpe / reduce the 2026 drag — composes with P2.11.15). No lookahead (trailing
-      window, shifted). Repo: features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`. **STEP
-      1 ✅ SHIPPED 2026-06-22 — features-service@1110ee1d.** `reversion_zscore_60m`/`reversion_zscore_240m` added to
-      delta_one's `anomaly` calculator + `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window /
-      no-lookahead, honest NaN until filled), 6 `test_anomaly` unit tests GREEN, full QG passed (402s), on origin LDR
-      (Tier-C drain → staging). **REMAINING (downstream operational/ML — both feature specs (reversion @1110ee1d + BTC
-      trend @653cf158) are on LDR promoting; these run AFTER the spec deploy):** (a) **corpus recompute** — once the new
-      feature image deploys (LDR→staging→main→image), backfill the `returns` + `anomaly` groups for cefi/BTC so the
-      columns land in GCS: `features-service` CLI
-      `--operation calculate --mode batch --asset-group cefi --feature-group     returns` (and `anomaly`), at scale via
-      `deployment-service/scripts/vm/launch-features-backfill-vm.sh` (no-fire-and- forget: T+10min verify + manifest-row
-      check). Also gates the P2.11.16 BTC-feature corpus for a non-null CTA paper run. (b) **cs retrain** — after the
-      corpus has the columns, retrain the pooled-LightGBM cs model including the reversion features; validate it lifts
-      cs Sharpe / cuts the 2026 drag (composes with P2.11.15's longer-horizon retrain — do both in one train). (c)
-      `features-status --check-drift` verification. Sequenced-later; not in-session.
+- **[CODE] P2.11.20.** Complete TSMOM_BTC_CTA capability wiring — add it to the UAC archetype_capability_manifest
+  (found 2026-06-22 via the e2e archetype-capability playbook). `TSMOM_BTC_CTA` is in `StrategyArchetype` + the UI
+  enum/capability-verdict-matrix but MISSING from
+  `unified-api-contracts/.../internal/architecture_v2/archetype_capability_manifest.json` (22 archetypes, no TSMOM) →
+  the archetype is half-wired (no per-venue/asset-group capability cells) and the e2e playbook
+  `tests/e2e/playbooks/refactor/refactor-g1-8-uac-archetype-capability.spec.ts` would fail. Fix: add TSMOM's capability
+  declaration to the source (`registry/archetype_capability_matrix.py` — family RULES_DIRECTIONAL, BTC-level CTA →
+  CEFI perp+spot on the major venues, signal `price`/trend) → regen via
+  `scripts/generate_archetype_capability_manifest.py` → sync to UI via
+  `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Then the e2e playbook becomes the
+  proper playwright-dir regression for the archetype. Repo: unified-api-contracts (+ UI sync). Confirm the exact
+  venue/asset-group capability profile with the operator (CeFi-only BTC, or the DeFi+CeFi hybrid). **EXTRACTED
+  2026-08-08** → moved verbatim to `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`.
+- **[CODE] P2.11.18.** Add the intraday BTC mean-reversion signal as a cs ML feature (research 2026-06-22, root
+  `_ic_test.py`). A short-horizon reversion z-score (`zscore = -(close - rolling_mean) / rolling_std`, anchors 60m + 4h
+  on the canonical OHLCV) has a stable Spearman IC ≈ +0.05 vs forward 15m–1h returns, positive across all horizons +
+  every recent year (2022-26). It is intraday-microstructure information the daily-horizon delta_one features do NOT
+  capture (orthogonal), so it should ADD to the pooled-LightGBM cs ensemble. NOTE: the signal is NOT standalone-
+  tradeable (its alpha is inside the execution-cost band — see the research arc: daily Monday-wick edge decayed,
+  migrated to 1h, but realistic 1.5bp-taker fills cap it at a marginal +1.14 Sharpe); its value is as a FEATURE (here) +
+  an execution-timing overlay (P2.11.19), where it never pays its own round-trip. Implement: add the reversion z-score
+  feature spec(s) to the features-service `delta_one/app/features/registry.py` (new `feature_group` or extend an
+  existing momentum/reversion group; bump `formula_version`; HIVE-partition + footer metadata per the
+  feature-formula-versioning SSOT), compute + write to the feature corpus, then retrain + validate the cs model (does
+  it lift cs Sharpe / reduce the 2026 drag — composes with P2.11.15). No lookahead (trailing window, shifted). Repo:
+  features-service (feature) + cs-model retrain. Evidence: IC table in `_ic_test.py`. STEP 1 ✅ SHIPPED 2026-06-22 —
+  features-service@1110ee1d. `reversion_zscore_60m`/`reversion_zscore_240m` added to delta_one's `anomaly` calculator +
+  `registry_specs.yaml` (clip ±5, `min_periods=bars` so NO partial-window/no-lookahead, honest NaN until filled), 6
+  `test_anomaly` unit tests GREEN, full QG passed (402s), on origin LDR (Tier-C drain → staging). REMAINING
+  (downstream operational/ML — both feature specs (reversion @1110ee1d + BTC trend @653cf158) are on LDR promoting;
+  these run AFTER the spec deploy): (a) corpus recompute; (b) cs retrain (composes with P2.11.15's longer-horizon
+  retrain — do both in one train); (c) `features-status --check-drift` verification. **EXTRACTED 2026-08-08, SCOPE-
+  TRIMMED** → sub-parts (a) corpus recompute + (c) drift-check moved verbatim to
+  `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`; sub-part (b) the cs retrain stays HERE (not extracted) because
+  it composes with P2.11.15 below, which the satellite batch's conflict-check found duplicates
+  `crypto_alpha_research_2026_07_24.md`'s own open `[RESEARCH] P2` todo — see register § A for the full citation.
 - [x] ✅ [CODE] P2.11.19. **Reversion execution-timing model — SHIPPED 2026-06-22: execution-service@4b8dc545.** New
       `backtest_v2/reversion_timing.py` (`time_reversion_fill`): the research z-score `-(p−mean_W)/std_W` times the fill
       to the first over-extension bar in the trade's favour (BUY at z>thr / SELL at z<−thr) within the window, **CLAMPED
@@ -638,18 +661,18 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       return target so the signal is less whipsawed by the noisy 15m next-bar label. No lookahead (trailing features,
       shifted target; IS-select 2023-24 / OOS-validate 2025-26). Repo: features/strategy research (`_panel.py`).
 
-- [ ] [UI] P2.14. **Prod UI selector resolves the 14-strategy run, not the 145-run** (found 2026-06-21). The CRA API
-      correctly resolves + serves the newest run `paper-20260621225959-e86237f7` (145 strategies / 7 archetypes —
-      verified authenticated: `net-views.run_id` = the 145-run on every call). But the prod odum-portal UI's strategy
-      selector renders only the 14 CARRY_STAKED_BASIS strategies of an OLDER run (`paper-20260621171725-fcf31316`). The
-      UI calls SAME-ORIGIN `/api/*` (Next.js server-side proxy to the CRA — no `*_API_URL` env on odum-portal, so the
-      target is baked in next.config rewrites). DIAGNOSIS: the selector's endpoint (instructions/manifest list) resolves
-      or caches a different run than the CRA `per-strategy` SSOT `resolve_canonical_run` — likely (a) the proxy points
-      at a different CRA, (b) a Next.js/React-Query cache, or (c) the selector endpoint doesn't key off
-      `resolve_canonical_run`. FIX: confirm the next.config `/api` rewrite target == the deployed CRA, ensure the
-      selector reads the same `resolve_canonical_run` SSOT, bust any cache. The 145-run data + ε=0 + all ledgers are
-      correct in GCS + served by the CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui (+ verify
-      next.config proxy target).
+- **[UI] P2.14.** Prod UI selector resolves the 14-strategy run, not the 145-run (found 2026-06-21). The CRA API
+  correctly resolves + serves the newest run `paper-20260621225959-e86237f7` (145 strategies / 7 archetypes — verified
+  authenticated: `net-views.run_id` = the 145-run on every call). But the prod odum-portal UI's strategy selector
+  renders only the 14 CARRY_STAKED_BASIS strategies of an OLDER run (`paper-20260621171725-fcf31316`). The UI calls
+  SAME-ORIGIN `/api/*` (Next.js server-side proxy to the CRA — no `*_API_URL` env on odum-portal, so the target is
+  baked in next.config rewrites). DIAGNOSIS: the selector's endpoint (instructions/manifest list) resolves or caches a
+  different run than the CRA `per-strategy` SSOT `resolve_canonical_run` — likely (a) the proxy points at a different
+  CRA, (b) a Next.js/React-Query cache, or (c) the selector endpoint doesn't key off `resolve_canonical_run`. FIX:
+  confirm the next.config `/api` rewrite target == the deployed CRA, ensure the selector reads the same
+  `resolve_canonical_run` SSOT, bust any cache. The 145-run data + ε=0 + all ledgers are correct in GCS + served by the
+  CRA — this is purely UI run-resolution. Repo: unified-trading-system-ui (+ verify next.config proxy target).
+  **EXTRACTED 2026-08-08** → moved verbatim to `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`.
 
 - [x] ✅ [CODE] P2.15. **Match the e2e weighting: per-archetype RANK allocators, not FIXED equal-weight** — DONE,
       DUPLICATE of the shipped **P11.15** (`paper_universe` `allocator_archetype` default FIXED→rank; rank metrics from
@@ -821,3 +844,23 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   open todos span Phase-2 determinism-spine work needing a cross-repo blast-radius pre-audit, the permanent P7.3/ P2.7.3
   live-wallet/custody `BLOCKED-OPERATOR-DECISION` hard-stop, an explicit operator-confirm-capability-profile ask
   (P2.11.20), and ML research retrain+validate judgment calls (P2.11.15/18).
+- **2026-08-08 (interactive session, operator-authorized satellite extraction)**: the operator explicitly authorized
+  splitting this doc's register-§A "Agent-shippable infra/code (NO operator gate)" items into their own AO-dispatchable
+  satellite, since every prior `/na-eligibility-audit` pass correctly kept this WHOLE DOC `assigned_vm: NA` (justified
+  alone by P2.7.3's permanent live-wallet hard-stop) without ever addressing why the agent-shippable items stayed
+  bundled in rather than being split out. Read this doc end-to-end to confirm the operator's named 8-item list against
+  its own current text, then ran the shared conflict-check protocol
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) against every `assigned_vm:
+  planning` plan in `parent_epic: batch_live_symmetry_master` plus corpus-wide fingerprint greps per candidate.
+  **Result: 7 of the 8 named items extracted** (P2.1, P2.2, P1.6, P2.11.16, P2.11.20, P2.11.18 [scope-trimmed — its
+  retrain sub-step stays here], P2.14) to
+  [`citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+  (+ gated finalize twin). **1 held back on a genuine conflict**: P2.11.15 ("cs-leg longer-horizon TARGET retrain in
+  `_panel.py`") near-verbatim-duplicates `crypto_alpha_research_2026_07_24.md`'s own open `[RESEARCH] P2` todo (line
+  536) — left unchanged here, not extracted, per the conflict-check protocol's "verbatim/near-verbatim duplicate claim
+  → do NOT draft a competing todo" rule. **Also found + corrected**: register § A additionally listed 4 stale bullets
+  (`_mom_tb.py` bug, combined-book vol-norm bug, cs ensemble `alt_*`/`altfull_*` gap, HYPE+post-2024-cohort gap) that
+  were already migrated to and live as open checkboxes in `crypto_alpha_research_2026_07_24.md` (2026-07-24
+  section-C move) — never orphaned, removed from this register's listing as still-open-here. This doc's own open-todo
+  count drops from 10 to 3 (P2.7.3, P9.2, P2.11.15); the extracted 7 are now tracked + dispatchable in the satellite
+  doc. This doc's `assigned_vm: NA` classification is UNCHANGED and remains correct (P2.7.3 alone still justifies it).

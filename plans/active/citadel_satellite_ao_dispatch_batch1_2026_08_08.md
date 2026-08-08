@@ -1,0 +1,267 @@
+---
+doc_type: plan
+title:
+  Citadel paper⟷batch⟷live reconciliation — satellite AO batch 1 (the 7 conflict-clear agent-shippable items from the
+  Remaining-work register)
+summary: >-
+  Operator-authorized extraction 2026-08-08 of the agent-shippable items from
+  `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s own "Remaining-work register" § A ("Agent-shippable
+  infra/code — NO operator gate — a VM/agent can ship these"), which every prior `/na-eligibility-audit` pass had
+  verdicted whole-doc KEEP-NA without addressing why these items stayed bundled with the one genuinely operator-gated
+  item (P2.7.3, live-wallet custody). Of the operator's named 8-item list (trade_key/fill-record identity P2.1/P2.2, the
+  GroupC smart-fill paper-run handoff P1.6, BTC-trend feature corpus recompute P2.11.16, TSMOM_BTC_CTA
+  capability-manifest wiring P2.11.20, intraday mean-reversion ML feature P2.11.18, cs-leg longer-horizon retrain
+  P2.11.15, a UI run-selector bug P2.14), this batch carries **7** — the shared AO-dispatch conflict-check protocol
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) found P2.11.15 ("cs-leg
+  longer-horizon TARGET retrain in `_panel.py`") is a near-verbatim duplicate claim of
+  `crypto_alpha_research_2026_07_24.md`'s own open `[RESEARCH] P2` todo (line 536: "Apply the cs denoise + tsmom-long-
+  only to the production legs — cs: `ewm(span≈7)`... **or a longer-horizon target retrain in `_panel.py`**") — held back
+  per the protocol, left un-extracted, both sides cited below. P2.11.18's own remaining-work text ("(b) cs retrain...
+  composes with P2.11.15's longer-horizon retrain — do both in one train") couples its retrain sub-step to the same
+  held-back item, so this batch scopes P2.11.18 to its bounded corpus-recompute + drift-check portions only and defers
+  the retrain sub-step to whichever plan eventually executes P2.11.15/crypto_alpha_research's P2. The conflict-check also
+  surfaced that 4 OTHER register-§A bullets (`_mom_tb.py` daily-PnL-save bug, combined-book vol-normalisation bug, cs
+  ensemble `alt_*`-vs-`altfull_*` gap, HYPE+post-2024-cohort universe gap) are STALE remnants of the 2026-07-24
+  section-C migration — all 4 are already live, open checkboxes in `crypto_alpha_research_2026_07_24.md` (lines 436,
+  487, 440, 480) — not orphaned, not part of this extraction, and the source doc's register is corrected accordingly in
+  the same commit as this batch.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [
+    execution-service,
+    strategy-service,
+    features-service,
+    unified-api-contracts,
+    unified-trading-system-ui,
+    deployment-service,
+    e2e-testing,
+  ]
+scope: [engineer]
+tags: [reconciliation, paper-trading, determinism, ao-dispatch, close-out, batch-1, citadel]
+related:
+  [
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
+    /plans/active/crypto_alpha_research_2026_07_24.md,
+    /plans/epics/batch_live_symmetry_master.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
+created: "2026-08-08"
+last_updated: "2026-08-08"
+parent_epic: batch_live_symmetry_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 5.0
+estimate_calibrated_ai_days: 4.0
+assigned_role: backend_engineer
+sequential: false
+drift_direction: advance-code
+locked_by:
+locked_since:
+context_scope:
+  [
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /plans/active/crypto_alpha_research_2026_07_24.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/global-ledger-architecture.md,
+    /plans/active/task_template.md,
+  ]
+supersedes:
+superseded_by:
+depends_on: []
+source: >-
+  2026-08-08: operator-authorized extraction — the operator explicitly named
+  `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`'s "Remaining-work register" § A as containing 8
+  agent-shippable items that every prior `/na-eligibility-audit` pass (2026-07-30, 2026-08-02, 2026-08-08 cross-cutting)
+  had verdicted whole-doc KEEP-NA without splitting out. This batch follows the corpus's established
+  `/ag-closeout-audit` satellite-batch pattern (source doc unchanged in place except its own todos get pointer'd out,
+  new sibling doc + gated finalize twin created). Conflict-checked per
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3 against every `status: active`,
+  `assigned_vm: planning` plan in `parent_epic: batch_live_symmetry_master` (`daily_trading_analyst_llm_job_design_2026_07_29.md`,
+  `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` + finalize, `pipeline_mode_partition_migration_2026_06_01.md`,
+  the BLRS/honest-coverage/live-pipeline issue docs) and corpus-wide against distinctive fingerprints for each candidate
+  (`trade_key`, `colocated_engine fill`, `btc_trailing_return`, `archetype_capability_manifest`, `reversion_zscore`,
+  `145-strateg`/`14-strategy run`, `GroupC smart-fill`) — one genuine conflict found (P2.11.15 vs
+  `crypto_alpha_research_2026_07_24.md` line 536), held back; the other 7 cleared.
+---
+
+# Citadel satellite AO batch 1 — 7 conflict-clear agent-shippable items
+
+> **`status: active` — operator already authorized this split** (see `source:` above); no double-gate per
+> `task_template.md` §4's no-double-gate rule. The finalize plan below ships `active` from the start too —
+> `gate_on_depends: true` already fully holds it.
+
+## Why this batch exists
+
+`citadel_paper_batch_live_reconciliation_2026_06_19.md` (P1, `assigned_vm: NA`, 48-day estimate) has sat whole-doc
+KEEP-NA through 3+ `/na-eligibility-audit` passes even though its own "Remaining-work register" § A explicitly labels
+most of its open todos "Agent-shippable infra/code (NO operator gate — a VM/agent can ship these)" — bundled in the same
+doc as the one genuinely operator-gated item (P2.7.3, live-wallet custody, a permanent human-only hard-stop per
+CLAUDE.md) and the one dependency-blocked item (P9.2, UAC version drift). Every audit pass correctly kept the WHOLE DOC
+`NA` (because P2.7.3 alone justifies that verdict for a single-doc classification) but never addressed why the other
+items stayed bundled in rather than being split into their own AO-dispatchable satellite, exactly the gap
+`/na-eligibility-audit`'s RECLASSIFY bucket exists for. This batch performs that split, operator-authorized.
+
+## Todos
+
+- [ ] [BACKEND] P1. **Execution events gain `trade_key` + side/qty/price/fees** (was Phase 2 P2.1 in the source doc) —
+      replace execution-service's date-level float-metric event lines with per-trade keyed records; the UAC `LedgerRow`
+      is the natural carrier for the new fields (order_id/instrument_key/ts equivalents). Repo: execution-service.
+      **Done when**: execution-service's event-emission path writes a `trade_key` + side/qty/price/fees per trade (not
+      a date-level aggregate), a new/updated unit test asserts the keyed shape, and `quality-gates.sh` is green.
+      Coordinates with the next todo (P2.2, colocated_engine fill records) — same `trade_key` scheme, different repo,
+      no file overlap. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 2, item P2.1 (moved
+      verbatim).
+
+- [ ] [BACKEND] P1. **colocated_engine fill records carry the trade key** (was Phase 2 P2.2 in the source doc) —
+      `fill_id` becomes the UAC `trade_key` (not a bare id); persist `correlation_id` as a real correlation identifier,
+      not a sequential int. Repo: strategy-service. **Done when**: colocated_engine fill records carry the UAC
+      `trade_key` + a non-sequential `correlation_id`, a new/updated unit test asserts this, `quality-gates.sh` is
+      green, and (if the prior todo already landed) a quick cross-repo sanity check confirms the same `trade_key` scheme
+      is used on both sides. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 2, item P2.2 (moved
+      verbatim).
+
+- [ ] [BACKEND] P2. **GroupC smart-fill handoff into the paper run (`fill_model` BENCHMARK→SMART)** (was Phase 11 P1.6
+      in the source doc) — the paper-run manifest is currently honest at `BENCHMARK` (not faked) because
+      strategy-service must not import execution-service in-process (no-service-deps HARD RULE). The correct
+      architecture — and the part that's still missing — is wiring the paper-run to CONSUME the already-SHIPPED
+      execution-service Layer-3 smart-fill entrypoint (`execution-service@3d7d760c`,
+      `backtest_v2/smart_fill_replay.py` + `--operation smart-fill-replay` CLI, per Phase 11 P11.6-retry, already DONE):
+      the entrypoint reads `{run}/ledger_type=instruction` + RunManifest → GroupCRunner smart-matching → an
+      `execution_alpha_bps` artifact, driven from the e2e-testing harness; CRA reads it at `PnLLayer.EXECUTION`; UI
+      surfaces exec-α. Repo: execution-service (entrypoint already shipped — verify it's callable end-to-end) +
+      e2e-testing (harness wiring) + strategy-service (manifest still reads BENCHMARK until this lands). **Done when**:
+      an e2e-testing-driven run produces a real `execution_alpha_bps` artifact from a paper-run's instruction ledger via
+      the shipped Layer-3 entrypoint (not a synthetic/mocked one), and CRA's `PnLLayer.EXECUTION` reads it. Source:
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P1.6 (moved verbatim).
+
+- [ ] [DATA] P2. **features-service: recompute the BTC trend feature corpus so `btc_trailing_return_{1m,3m,6m,12m}` +
+      `btc_realized_vol` actually exist in GCS** (was Phase 11 P2.11.16 in the source doc) — the feature SPECS already
+      shipped (`features-service@653cf158`, `returns` calculator + `registry_specs.yaml`, GREEN QG, on origin LDR); this
+      todo is the OPERATIONAL recompute so the columns land in the canonical delta_one feature corpus (shared work with
+      the next todo's P2.11.18 corpus recompute — run both together, same backfill VM). No `[OPERATOR]` tag needed: this
+      is a read+compute+write feature-recompute (no GCS delete, no `--apply` mutation of existing data), via the
+      already-established `launch-features-backfill-vm.sh` pattern this corpus already runs routinely for the same
+      class of job. Repo: features-service CLI
+      `--operation calculate --mode batch --asset-group cefi --feature-group returns`, at scale via
+      `deployment-service/scripts/vm/launch-features-backfill-vm.sh`. **Done when**: the delta_one feature corpus in
+      GCS carries non-null `btc_trailing_return_{1,3,6,12}m` + `btc_realized_vol` columns for the paper-trading window
+      (verify via a manifest-row check, not just job exit code — no fire-and-forget, T+10min verify per the
+      vm-launcher-runbook SSOT), and the TSMOM_BTC_CTA archetype (already built, `strategy-service` per Phase 11
+      P2.11.14, DONE) produces non-null signals on the next paper run. Source:
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.16 (moved verbatim).
+
+- [ ] [BACKEND] P2. **Complete `TSMOM_BTC_CTA` capability wiring into the UAC `archetype_capability_manifest`** (was
+      Phase 11 P2.11.20 in the source doc) — `TSMOM_BTC_CTA` is already in `StrategyArchetype` + the UI
+      enum/capability-verdict-matrix (Phase 11 P2.11.17, DONE) but is MISSING from
+      `unified-api-contracts/.../internal/architecture_v2/archetype_capability_manifest.json` (22 archetypes, no TSMOM)
+      — the archetype is half-wired (no per-venue/asset-group capability cells), and the e2e playbook
+      `tests/e2e/playbooks/refactor/refactor-g1-8-uac-archetype-capability.spec.ts` fails on it. Fix: add TSMOM's
+      capability declaration to `registry/archetype_capability_matrix.py` (family RULES_DIRECTIONAL, BTC-level CTA →
+      CEFI perp+spot on the major venues, signal `price`/trend — confirm the exact venue/asset-group profile against
+      the already-shipped `TsmomBtcCtaEngine` implementation in strategy-service if the source's original "confirm with
+      operator" note turns out to need a live decision, rather than blocking on it) → regen via
+      `scripts/generate_archetype_capability_manifest.py` → sync to UI via
+      `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Repo: unified-api-contracts (+ UI
+      sync). **Done when**: `archetype_capability_manifest.json` includes TSMOM_BTC_CTA (23 archetypes), the UI sync
+      script has run, `refactor-g1-8-uac-archetype-capability.spec.ts` passes, and both repos are QG-green. Source:
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.20 (moved verbatim).
+
+- [ ] [DATA] P2. **features-service: recompute the corpus for the intraday BTC mean-reversion cs-ML feature (bounded
+      scope — corpus recompute + drift-check only, NOT the cs retrain)** (was Phase 11 P2.11.18 in the source doc,
+      SCOPE-TRIMMED — see note below) — the feature specs already shipped
+      (`features-service@1110ee1d`, `reversion_zscore_60m`/`reversion_zscore_240m` in the `anomaly` calculator +
+      `registry_specs.yaml`, GREEN QG, on origin LDR). This todo covers the two BOUNDED remaining pieces: (a) backfill
+      the `returns` + `anomaly` feature groups for cefi/BTC so the columns land in GCS (shared VM run with the P2.11.16
+      todo above — `features-service` CLI `--operation calculate --mode batch --asset-group cefi --feature-group
+      anomaly`, at scale via `deployment-service/scripts/vm/launch-features-backfill-vm.sh`, no-fire-and-forget: T+10min
+      verify + manifest-row check); (b) run `features-status --check-drift` and record the result. No `[OPERATOR]` tag
+      needed: same already-established read+compute+write backfill-VM pattern as the P2.11.16 todo above, no delete, no
+      `--apply` mutation. **Explicitly OUT OF
+      SCOPE for this todo**: the source doc's own remaining-work text describes a third sub-step — "cs retrain: after
+      the corpus has the columns, retrain the pooled-LightGBM cs model including the reversion features; validate it
+      lifts cs Sharpe / cuts the 2026 drag (composes with P2.11.15's longer-horizon retrain — do both in one train)".
+      That retrain step is coupled to Phase 11 P2.11.15 ("cs-leg longer-horizon TARGET retrain in `_panel.py`"), which
+      this batch's conflict-check found is a near-verbatim duplicate of `crypto_alpha_research_2026_07_24.md`'s own
+      open `[RESEARCH] P2` todo (see this doc's `## Deferred` section) — held back, not extracted here. Doing the
+      retrain in isolation here would diverge from the source's own "do both in one train" intent, so it is left for
+      whichever plan eventually executes P2.11.15/crypto_alpha_research's P2. Repo: features-service. **Done when**: the
+      GCS feature corpus carries non-null `reversion_zscore_60m`/`reversion_zscore_240m` for the cefi/BTC window
+      (manifest-row-verified), and `features-status --check-drift`'s result is recorded in this todo's own Progress Log
+      entry. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.18 (moved, scope-
+      trimmed per the conflict-check finding above).
+
+- [ ] [UI] P2. **Prod UI selector resolves the 145-strategy run, not the stale 14-strategy run** (was P2.14 in the
+      source doc) — the CRA API correctly resolves + serves the newest run (145 strategies / 7 archetypes — verified
+      authenticated: `net-views.run_id` = the 145-run on every call), but the prod odum-portal UI's strategy selector
+      renders only the 14 CARRY_STAKED_BASIS strategies of an OLDER run. The UI calls SAME-ORIGIN `/api/*` (Next.js
+      server-side proxy to the CRA — no `*_API_URL` env on odum-portal, baked into next.config rewrites). DIAGNOSIS
+      (from the source doc): the selector's endpoint (instructions/manifest list) likely resolves/caches a different run
+      than the CRA `per-strategy` SSOT `resolve_canonical_run` — check (a) the proxy target matches the deployed CRA,
+      (b) a Next.js/React-Query cache is stale, or (c) the selector endpoint doesn't key off `resolve_canonical_run`.
+      Note the source doc's own register flags this as "likely already fixed by P11.16 [DONE] — verify + close" — check
+      that first before assuming the bug is still live; it may just need a checkbox flip with evidence, not a code fix.
+      Repo: unified-trading-system-ui (+ verify next.config proxy target). **Done when**: either (i) live verification
+      on prod confirms the selector already resolves the current (145-strategy, or whatever is current at execution
+      time) run — cite the browser-verified evidence and close as already-fixed, or (ii) a real fix lands (proxy target
+      / cache-bust / `resolve_canonical_run` wiring) and prod verification confirms the selector renders the current
+      run's full strategy count. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md`, item P2.14 (moved
+      verbatim).
+
+## Deferred
+
+- **P2.11.15 — "cs-leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`" — HELD BACK, genuine conflict.** The
+  source doc's item (Phase 11, unnumbered paragraph following P2.11.19) reads: "the cross-sectional ML book (cs) is the
+  single worst leg in the 2026 selloff... the proper fix is retraining the pooled LightGBM on a longer-horizon return
+  target so the signal is less whipsawed by the noisy 15m next-bar label." `crypto_alpha_research_2026_07_24.md` line
+  536 already carries an open `[RESEARCH] P2` todo doing the SAME fix: "Apply the cs denoise + tsmom-long-only to the
+  production legs — cs: `ewm(span≈7)` on the ML book (**or a longer-horizon target retrain in `_panel.py`**); tsmom:
+  ship LONG-ONLY... Both IS-chosen, OOS-validated, lookahead-free." Per the shared conflict-check protocol § 3 step 3
+  ("verbatim or near-verbatim duplicate claim → CONFLICT — do NOT draft a competing todo"), this item is NOT extracted
+  into this batch and NOT removed from the source doc — it stays exactly where it is
+  (`citadel_paper_batch_live_reconciliation_2026_06_19.md`, still `assigned_vm: NA`, still open). Whichever plan
+  executes `crypto_alpha_research_2026_07_24.md`'s P2 (a genuine RESEARCH/judgment-call retrain, not AO-eligible as
+  bounded work per `task_template.md` §4's dispatch-scope-eligibility bar) naturally resolves both. No operator ruling
+  needed here — both sides point at the identical mechanism, so this is a duplicate-claim resolution, not a genuine
+  two-sided disagreement requiring escalation.
+- **4 stale register-§A bullets, NOT part of this extraction** — the source doc's register § A also lists `_mom_tb.py`
+  daily-PnL-save bug, combined-book vol-normalisation bug, cs ensemble `alt_*`-vs-`altfull_*` gap, and HYPE+post-2024-
+  cohort universe gap. All 4 are stale remnants of the 2026-07-24 section-C migration (when "the alpha-research +
+  book-SIZING-decision items... the exact '16 items' this section used to list" moved to
+  `crypto_alpha_research_2026_07_24.md`) — all 4 are already live, open checkboxes there (`[BUG] P3` line 436,
+  `[BUG] P3` line 487, `[DATA] P3` line 440, `[DATA] P2` line 480 respectively), not orphaned, not agent-shippable-and-
+  unclaimed. Not extracted here; the source doc's register is corrected in the same commit as this batch to stop
+  listing them as if still open there.
+
+## Codex SSOTs
+
+- `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` — the determinism-spine design SSOT these todos
+  implement against.
+- `/codex/04-architecture/global-ledger-architecture.md` — the four-SSOT-ledger taxonomy (`LedgerRow`/`trade_key`
+  context for P2.1/P2.2).
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3 — the shared conflict-check
+  protocol this batch applied (the P2.11.15 hold-back).
+- `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual the finalize plan
+  applies once these 7 todos land.
+- `/plans/active/task_template.md` §4 — bounded-outcome dispatch-scope eligibility (why P2.11.15's retrain stays
+  NA/judgment-gated, and why P2.11.18 is scope-trimmed rather than fully extracted).
+
+## Progress Log
+
+- 2026-08-08 (interactive session, operator-authorized extraction): drafted per the operator's explicit direction to
+  split `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s register-§A agent-shippable items into their own
+  AO-dispatchable satellite, following the corpus's established `/ag-closeout-audit` satellite-batch pattern. Read the
+  source doc end-to-end (824 lines) to confirm the operator's named 8-item list against the doc's own current text.
+  Ran the shared conflict-check protocol (`ao-dispatch-batch-naming-and-conflict-check.md` § 3) against every
+  `assigned_vm: planning` plan sharing `parent_epic: batch_live_symmetry_master` and corpus-wide fingerprint greps for
+  each candidate: found P2.11.15 is a near-verbatim duplicate of `crypto_alpha_research_2026_07_24.md`'s own open
+  `[RESEARCH] P2` todo (held back — see `## Deferred`); found P2.11.18's own text couples its retrain sub-step to the
+  same held-back item (scope-trimmed to corpus-recompute + drift-check only); found the source doc's register § A
+  additionally lists 4 stale bullets already migrated-and-open in `crypto_alpha_research_2026_07_24.md` (corrected in
+  the source doc, not extracted here). Net: 7 of the operator's named 8 items extracted into this batch; 1
+  (P2.11.15) held back on conflict, unchanged in the source doc.
