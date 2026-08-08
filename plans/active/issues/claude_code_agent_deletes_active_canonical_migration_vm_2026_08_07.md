@@ -27,11 +27,12 @@ related:
   - /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md
 created: 2026-08-07
 parent_epic: infrastructure_master
-assigned_vm: "NA"
+assigned_vm: planning
 source: slot-8-infra-dispatch-batch9-018
 resolved_by: ""
 locked_by: ""
 execution_scope: orchestrator-agent
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
@@ -125,6 +126,54 @@ wrapper):
 2. run.log mtime vs per-prefix threshold
 3. Manifest generation unchanged for >90 min → proceed with human confirmation, not autonomous delete
 
+## Todos
+
+- [x] [INFRA] P0. ✅ **Fix 1 (URGENT) — heartbeat sidecar SIGPIPE guard.** Target:
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`, the `_hb_prefix` vm-life-emitter loop construction
+      (currently ~line 1204:
+      `_hb_prefix="( while true; do echo \"PIPELINE_HEARTBEAT vm=${VM_NAME_SELF} ag=${VM_ASSET_GROUP} task=${VM_TASK:-} source=vm-life-emitter ts=\$(date -u +%Y-%m-%dT%H:%M:%SZ)\"; sleep 60; done ) & __DP_HB_PID=\$!; trap 'kill \"\$__DP_HB_PID\" 2>/dev/null || true' EXIT; "`).
+      This loop shares stdout with the tee'd main process; when the GCS log uploader closes the pipe (possibly on a 60s
+      flush cycle) the next `echo` gets SIGPIPE and terminates the subshell, making the VM look stale to
+      heartbeat-staleness checks — root cause of all 4 kills in the table above. Add a `trap '' SIGPIPE` guard around
+      the loop body:
+
+  ```bash
+  # In the vm-life-emitter loop:
+  ( trap '' SIGPIPE; while true; do echo "PIPELINE_HEARTBEAT ..." 2>/dev/null || true; sleep 60; done ) &
+  ```
+
+  Preserve the existing `PIPELINE_HEARTBEAT vm=... ag=... task=... source=vm-life-emitter ts=...` payload and the
+  existing `__DP_HB_PID` / `trap ... EXIT` kill wiring — only add the SIGPIPE guard, do not restructure the rest of the
+  construction. Ship via quickmerge + verify CI green. — deployment-service@3b25aae4 (QG green, verified on
+  origin/live-defi-rollout)
+
+- [x] [INFRA] P0. ✅ **Fix 2 — LDR→main promote `deployment-service@1424037`
+      (`14240378194039fe5a2cfb5e2d86dbed6cffe8d8`, ships `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` +
+      `_resolve_kill_minutes()` in `heartbeat_stall_watcher.py`), then redeploy the Cloud Run image.** The fix is
+      already on `live-defi-rollout` (shipped during dispatch #8, `quality-gates.sh` green — see
+      `/plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md`), but the live `deployment-api:latest` Cloud Run
+      image was built at 09:31Z on 2026-08-07, pre-fix — the per-prefix `canonical-migration-` 90-minute threshold is
+      therefore NOT active in production. Promote LDR→main via the standard pipeline (`sit-gate/fleet-green` +
+      `quality-gates-v2` + quickmerge-provenance — the only 3 blocking gates), redeploy the Cloud Run image, verify
+      `status.traffic` shows the new revision live (not just a green build), then resume the paused
+      `uts-prod-dp-heartbeat-watcher-cron` (paused as dispatch-#10 mitigation). — deployment-service@1157abe1 (squash
+      promote, PREFIX_KILL_MINUTES verified on origin/main; `uts-shared-deployment-api-00464` at 100% traffic, image
+      sha256:7042ab88 built 2026-08-08T00:24Z; cron ENABLED, last run 2026-08-08T03:30Z)
+
+- [x] [INFRA] P1. ✅ **Fix 3 — codify a `canonical-migration-` prefix carve-out on the VM-delete guardrail** in the two
+      role files that mirror it: `agents/infra.md` STEP 0.65 and `agents/data_engineering.md` STEP 0.55. Both currently
+      require confirming genuine staleness via ALL of (1) the heartbeat blob mtime vs. the watchdog's per-prefix
+      threshold, (2) a `run.log` tail/mtime (active writes in the last few minutes = alive), and (3) the manifest shard
+      mtime (is it still advancing) — but treat a pass on all 3 as sufficient to delete. Add, to both files: for
+      `canonical-migration-` prefix VMs specifically, even when all 3 signals read stale, if the manifest generation has
+      been unchanged for **>90 minutes**, that is NOT sufficient to autonomously delete — escalate for human
+      confirmation instead. Rationale to include: these VMs run large-index download-then-filter-then-write operations
+      where the manifest generation is EXPECTED to sit unchanged through the whole download phase (confirmed in this
+      incident: the VM was 22 minutes into a `blob.download_as_bytes(timeout=900)` call when killed, manifest generation
+      genuinely unchanged, not evidence of staleness) — a frozen run.log/heartbeat alone is not dispositive the way it
+      is for other fleet VM classes. — unified-trading-pm@4fbb6113e (agents/infra.md STEP 0.65 +
+      agents/data_engineering.md STEP 0.55 updated)
+
 ## Triage Disposition
 
 - **Scope**: cross-cutting (affects all `canonical-migration-` prefix VM operations)
@@ -136,19 +185,33 @@ wrapper):
 
 ## Resolution
 
-- [ ] [INFRA] P0 (URGENT). Heartbeat sidecar SIGPIPE guard: wrap the `vm-life-emitter` loop in `trap '' SIGPIPE` (exact
-      snippet in "Required Fixes" Fix 1 above) — `deployment-service` or `market-tick-data-service` vm-exec wrapper,
-      exact file TBD (not confirmed as a standalone file; may be generated inline in a per-VM startup-script template).
-- [ ] [INFRA] P0. LDR→main promote `deployment-service@14240378`, redeploy the Cloud Run image to activate
-      `PREFIX_KILL_MINUTES`, then resume `uts-prod-dp-heartbeat-watcher-cron`. Confirmed as of 2026-08-08 still NOT on
-      `origin/main` (standing LDR→main auto-promote appears stalled on this commit — worth checking why the standard
-      `*/15` auto-promote didn't already carry it, not just re-triggering it blind).
-- [ ] [INFRA] P0. Fleet monitoring agents must verify ALL THREE liveness signals (heartbeat blob mtime, run.log mtime,
-      manifest generation advancing) before any `gcloud instances delete` on `canonical-migration-` prefix VMs — fold
-      the SIGPIPE-can-fake-a-frozen-run.log nuance into `/codex/05-infrastructure/vm-launcher-runbook.md` (the
-      underlying 3-signal HARD RULE already exists there; what's missing is this doc's specific nuance).
+- [x] [INFRA] P0 (URGENT). ✅ Heartbeat sidecar SIGPIPE guard: wrap the `vm-life-emitter` loop in `trap '' SIGPIPE`
+      (exact snippet in "Required Fixes" Fix 1 above) — confirmed in
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` line 1204. deployment-service@3b25aae4, QG green,
+      verified on origin/live-defi-rollout.
+- [x] [INFRA] P0. ✅ LDR→main promote `deployment-service@14240378`, redeploy the Cloud Run image to activate
+      `PREFIX_KILL_MINUTES`, then resume `uts-prod-dp-heartbeat-watcher-cron`. Content-verified on `origin/main` via
+      squash promote `1157abe1` (Promoted-From-LDR: f514b6a0). `PREFIX_KILL_MINUTES` grep returns 3 lines on main. Image
+      sha256:7042ab88 built 2026-08-08T00:24Z deployed to `uts-shared-deployment-api-00464` (100% traffic, created
+      2026-08-08T00:28Z). `uts-prod-dp-heartbeat-watcher-cron` ENABLED in asia-northeast1, last run 2026-08-08T03:30Z,
+      running every 5 min successfully.
+- [x] [INFRA] P0. ✅ Fleet monitoring agents must verify ALL THREE liveness signals (heartbeat blob mtime, run.log
+      mtime, manifest generation advancing) before any `gcloud instances delete` on `canonical-migration-` prefix VMs —
+      fold the SIGPIPE-can-fake-a-frozen-run.log nuance into `/codex/05-infrastructure/vm-launcher-runbook.md` (the
+      underlying 3-signal HARD RULE already exists there; what's missing is this doc's specific nuance). —
+      unified-trading-pm@762008c33
 
 ## Progress Log
+
+- **slot-7 Fix 2 verification 2026-08-08T03:35Z**: Fix 2 (PREFIX_KILL_MINUTES promote) confirmed complete. Squash
+  promote `1157abe1` (Promoted-From-LDR: f514b6a0) carried the content of `14240378` to `origin/main` — grep for
+  `PREFIX_KILL_MINUTES` in `deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py` on main returns 3
+  matches (lines 110-117). Image sha256:7042ab88 built 2026-08-08T00:24Z (11h after fix commit at 13:27Z on 2026-08-07)
+  deployed to Cloud Run service `uts-shared-deployment-api-00464-94g` with 100% traffic (created 2026-08-08T00:28Z).
+  Cloud Run job `uts-prod-dp-heartbeat-watcher` uses `deployment-api:latest` (same digest, modified 2026-08-08T00:28Z).
+  `uts-prod-dp-heartbeat-watcher-cron` scheduler is ENABLED in asia-northeast1 (schedule: `*/5 * * * *`), last ran
+  2026-08-08T03:30Z successfully. Flipped Fix 2 checkboxes in Todos and Resolution sections. Fix 3 (codex guardrail
+  update) remains open.
 
 - **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — doc self-flags "Operator notification:
   REQUIRED (cross-agent HARD RULE violation, repeated pattern)," the 5th VM-kill in this saga; continued human

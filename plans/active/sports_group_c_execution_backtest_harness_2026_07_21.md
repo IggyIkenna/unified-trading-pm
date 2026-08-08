@@ -50,6 +50,16 @@ context_scope:
   ]
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — dispatch APPROVED; the craft-split question is a NON-QUESTION, closed.** This doc's
+> "Open questions for operator sign-off" asks whether the fill-time odds-plumbing todo belongs to `backend_engineer` or
+> `quant_dev`. **It makes no operational difference.** Verified against
+> `agent-orchestrator/server/state_store/slots.py:616-624`: `backend_engineer`, `quant_dev`, `infra`, `ui_developer`,
+> `data_engineering` and plain unset/`worker` **all collapse to the same `planning` dispatch group and the same worker
+> pool** — `assigned_role` only selects which role-prompt file the worker is handed, never who executes it. Keep the
+> existing `assigned_role: backend_engineer` and treat the question as resolved; do not re-raise it. The zero-caller
+> `SportsMatchingEngine` (`execution_service/matching_engine/sports_matching.py`) is confirmed dead code — delete it
+> rather than wiring it, per the workspace no-shims rule.
+
 # Sports/predictions Group-C execution-alpha backtest harness — scope note
 
 **This is a LOCAL/human plan (`assigned_vm: NA`) — not ingested by the AO backlog.** It scopes the work; it does not

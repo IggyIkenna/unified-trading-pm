@@ -12,7 +12,7 @@ summary: >-
   the `scripts/workflow-templates/` rollout mechanism re-contended 3 ways (rationed to ONE todo here; the other two
   parked in `## Deferred` for batch 7) — otherwise no file collisions among the 12 conflict-cleared todos below. 21
   items stayed Deferred (conflict-gated / operator-gated / time-gated / live-incident / needs-re-scoping / human-only).
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -80,10 +80,10 @@ source: >-
 
 # CI satellite AO batch 6
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize sibling, already `active` per
-> the established no-double-gate rule) to `status: active` is the operator's call per CLAUDE.md § "Plan destination —
-> ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule. Drafted in autonomous/scheduled mode;
-> nothing here has been shipped.
+> **✅ STATUS: `active` — dispatched, ingested.** Operator-approved 2026-08-08 after a fresh conflict-check re-verified
+> Phase 3's original clearance still holds (no newer sibling batch, no new same-`parent_epic` claim, no `locked_by`).
+> Its finalize sibling was already `active` per the established no-double-gate rule. Drafted in autonomous/scheduled
+> mode; now live for AO dispatch.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (42/43 done),
 > `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (8/9 done), and `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (5/6
@@ -349,3 +349,9 @@ contention to the smallest fully-decided edit) rather than needing a fresh rulin
   and 08-07's interrupted attempt) each found zero, largely because today's candidate set includes 5 docs created
   2026-08-07 (after every prior sweep ran) plus finer-grained per-item scrutiny of docs previously judged wholesale
   "orphaned_partial_coverage" that surfaced individually-uncovered sub-items batch1/4/5 never extracted.
+- **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check re-verified
+  Phase 3's original clearance: (a) no `ci`/`infrastructure_master` sibling batch drafted after this one exists; (b) no
+  active `parent_epic: infrastructure_master` `assigned_vm: planning` plan claims the same target files as any of the
+  12 todos (spot-checked the 3-way `scripts/workflow-templates/` contention, the glue-starvation-monitor targets, and
+  the stranded-branch rebase — all still clean); (c) no `ci_consolidated_closeout` doc exists for this tranche to check
+  against. `locked_by` unset. Dispatching.

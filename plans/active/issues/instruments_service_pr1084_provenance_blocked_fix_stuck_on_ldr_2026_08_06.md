@@ -67,6 +67,17 @@ context_scope:
   ]
 ---
 
+> **✅ RESOLVED 2026-08-08 — verified against live GitHub, not inferred. This doc's blocker has CLEARED.** The open todo
+> asks whether to bulk-bless the ~19 foreign commits or patch the promotion gate's ancestry check. **Neither is needed —
+> a promotion has since succeeded.** Measured 2026-08-08: `IggyIkenna/instruments-service` `main` HEAD is `db7f7d3b44`
+> _"chore(promote): LDR → main (Option-B direct)"_ dated **2026-08-07T23:02:53Z**, with the back-merge to
+> `live-defi-rollout` landing at 23:03:05Z. PR #1084 itself remains CLOSED (never merged), but a later promote carried
+> the work through. **The dependent sports fix is confirmed deployed**:
+> `origin/main:scripts/build_instrument_catalogue.py` contains `junk_name_skips`, the observability hook shipped with
+> the DP-CATALOG-001 fix. NOTE that SHA-based ancestry checks against the pre-rewrite `instruments-service@497c4f5e` are
+> unreliable here — that repo underwent a history rewrite (`.stale-pre-history-rewrite-20260805T112453Z`), so the fix
+> was verified **by content**, not by SHA reachability.
+
 # instruments-service PR #1084 provenance-blocked — fix stuck on LDR, not on main
 
 ## Evidence (verified live, this session)

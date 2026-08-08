@@ -99,6 +99,18 @@ context_scope:
   ]
 ---
 
+> **⚠️ CORRECTION 2026-08-08 — this doc's "0/0 non-canonical, RESOLVED" all-clear is MISLEADING and must not be read as
+> evidence the sports axes are canonical.** The writer-bug fixes and the deploy-freeze recovery recorded here were real
+> and are not in question. But the **"venues/instrument_types/data_types/chains all 0/0 non-canonical"** headline was
+> achieved by adding values to `_ACCEPTED_EXCEPTIONS`, **not** by canonicalising them. Measured 2026-08-08 against the
+> live prod manifest and the 2026-08-05 honest-coverage rollup: the manifest carries **31 venues and 10 data types**;
+> the panel rendered **10 and 7**. `deployment-api::_distinct_values.py::enumerate_distinct_values` drops blank
+> sentinels and every accepted exception **before** enumerating, hiding 21 fan-out bookmakers (~340k shards), `KALSHI`
+> (20,785 rows), a blank venue (2,490 rows) and uppercase `ODDS` (**6,306 CAPTURED** shards, not the "4 stale empty
+> rows" the UAC comment claims). The panel is fixed to badge-not-hide by
+> `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`; the underlying values are genuinely canonicalised by P1/P2
+> of that chain. The success bar is the exception sets reaching **empty**.
+
 # Sports distinct-values panel — 44→0 non-canonical, RESOLVED (2026-08-04/05)
 
 ## What was live when this session started (verified via the raw endpoint, not just the screenshot)

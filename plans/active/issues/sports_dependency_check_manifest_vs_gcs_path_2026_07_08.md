@@ -65,6 +65,15 @@ context_scope:
 resolved_by:
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — enumerate callers and use cases FIRST, then apply a pre-specified rule.** Ruled: do
+> not guess at a fix for possibly-dead code. Enumerate `fixture_ids_override`'s real callers against the two named use
+> cases — (a) the **fixtures catalogue as a sports auxiliary to the instruments catalogue**, and (b) **dependency checks
+> from downstream services**, which already have the manifest and so may not need this path at all. **Then**: if there
+> are **zero** real use cases, **DELETE** the path (no shims, per the workspace rule). If the use cases extend beyond
+> MVP to all API-Football leagues, note that **UAC already holds most of the mapping fixtures** for prediction, features
+> and the outside-MVP set — reuse those rather than rebuilding the mapping. Implemented by
+> `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`.
+
 ## The finding
 
 `instruments-service/instruments_service/reference_data/sports_dependency.py::check_api_football_dependency()` never

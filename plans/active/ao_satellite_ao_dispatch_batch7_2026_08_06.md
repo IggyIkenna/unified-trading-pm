@@ -17,7 +17,7 @@ summary: >-
   (`shared_ci_workflow_repo_extraction_2026_08_06.md`) — surfaced, not silently dropped. One doc
   (`deepseek_flash_ab_routing_test_2026_08_05.md`) confirmed NOT orphaned: a large, actively-maintained, self-covering
   LOCAL plan with its own live Deferred table.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -35,7 +35,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-06"
+last_updated: "2026-08-08"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -71,9 +71,12 @@ source: >-
 
 # AO satellite AO batch 7
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call
-> (`/plans/PLAN_FORMAT.md`; CLAUDE.md § "Plan destination — ASK BEFORE CREATING"). Authored autonomously (scheduled
-> dispatch); deliberately stops at draft per the skill's Autonomous-mode contract.
+> **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap and all 3 todos
+> re-verified still genuinely open (see Progress Log). **`assigned_vm: NA` / `execution_scope: local-only` are
+> UNCHANGED, deliberately** — same `ao`-tranche established convention as batch5/batch6/batch2/batch3 (see batch5's
+> Progress Log for the full citation trail back to the operator's 2026-07-17 "local execution" ruling). Active means:
+> live, tracked, ready for an interactive/human session — NOT AO-dispatched. Authored autonomously (scheduled dispatch)
+> and originally shipped `status: draft` pending operator approval.
 
 ## Why this plan exists
 
@@ -230,3 +233,12 @@ methodology step 1), not re-derive the classification from scratch.
   item) — written durably on its own source doc's Progress Log (Phase 3 ran this session, so this batch's own Deferred
   section above is the primary durable home per the skill's parking rule; the source-doc note is a pointer back to it,
   not a duplicate record).
+- **2026-08-08 (operator-authorized draft→active review)** — Re-ran the shared 3-surface conflict-check against (a)
+  active `assigned_vm: planning` plans in `parent_epic: orchestrator_master` (only the batch finalize twins, all
+  correctly `gate_on_depends`-held), (b) sibling batches 5/6/8 (no new overlap), (c)
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` (not touched by this batch's todos, no conflict). All 3 todos'
+  Source docs (`ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`,
+  `ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`) re-verified still `status: open` with the specific
+  referenced items still `[ ]` — no stale/already-done items found (unsurprising, this batch was drafted only 2 days
+  prior). Applied the same `assigned_vm`/`execution_scope`-unchanged treatment as batch5/batch6 (see batch5's Progress
+  Log for the full investigation); flipped `status: draft → active` only. Fixed the stale draft-era H1 banner to match.

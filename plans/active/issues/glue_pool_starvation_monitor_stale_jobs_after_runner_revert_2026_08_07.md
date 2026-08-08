@@ -34,7 +34,7 @@ related:
     /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
     /plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md,
     /plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md,
-    /plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
+    /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /codex/04-architecture/ci-alerting.md,
   ]
 created: 2026-08-07

@@ -23,7 +23,7 @@ summary: >-
   remaining judgment call." Combined into ONE sequential todo (same two files: `deployment-api`'s costs route +
   `deployment-ui`'s `CostObservability.tsx`) per CLAUDE.md's same-file concurrency rule — a deliberately small second
   batch, not an exhaustive one.
-status: draft
+status: active
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -76,11 +76,11 @@ source: >-
 
 # UI satellite docs — AO dispatch batch 2
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call (CLAUDE.md §
-> "Plan destination — ASK BEFORE CREATING"). Drafted autonomously 2026-08-08 by the scheduled `ag_closeout_auditor`
-> role; see `## Operator approval gate` at the bottom for exactly what approving this means. **Independent of batch 1**
-> (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`, still `status: draft` as of this writing) — approving one does not
-> require or imply approving the other.
+> **`status: active` — operator-approved 2026-08-08, ingested/dispatched.** Drafted autonomously 2026-08-08 by the
+> scheduled `ag_closeout_auditor` role; a fresh conflict-check re-verified the original Phase 3 clearance still held
+> before dispatch — see `## Operator approval gate` at the bottom for what approving this batch meant, and the Progress
+> Log for the re-check. **Independent of batch 1** (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`, flipped `active`
+> in the same operator-approval pass) — the two batches' todos touch disjoint files, no collision.
 
 ## Why this plan exists (the coverage gap, measured)
 
@@ -176,9 +176,9 @@ Approving this plan means: flip `status: draft` → `active` here (the finalize 
    population (9 of 13 docs) is still dominated by the same operator-gated/time-gated/too-large categories batch 1's
    Deferred section already documented; today's audit found exactly one item that newly cleared to genuinely-bounded,
    and drafted exactly that.
-2. **Batch 1 (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`) is still unapproved, 3 days in** — approving this batch
-   does not require approving that one, but the operator may want to review both together given they're both currently
-   pending ui-tranche satellite work.
+2. **Batch 1 (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`) was approved + dispatched in the same 2026-08-08 pass** —
+   approving this batch did not require approving that one (independent decisions), but the operator reviewed both
+   together given they were both pending ui-tranche satellite work.
 3. **The deferred business-context-enrichment item is NOT waiting on this plan** — it needs a scoping decision on the
    infra-tranche launcher-migration side first (see `## Deferred` item 1). No action needed here beyond awareness.
 
@@ -215,3 +215,9 @@ for why Deferred item 1 was NOT drafted) · `/codex/11-project-management/ao-dis
   collisions found; the 2 incidental `costs.py` hits (`ci_pipeline_speed_and_cost_redesign_2026_08_05.md`, read-only
   reference; `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, an already-shipped historical `[x]` item) are both
   benign, confirmed by direct read.
+- **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check re-verified this
+  batch's own Phase 3 clearance still held: (a) no `deployment_and_user_management_master` sibling batch drafted after
+  this one exists; (b) re-grepped `CostObservability.tsx`/`costs.py` across the full active corpus — same 2 benign
+  incidental hits as at drafting time, no new claim; (c) `ui_consolidated_closeout_2026_07_30.md` unchanged since this
+  batch's drafting. `locked_by` unset. Batch 1 (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`) approved in the same
+  pass — confirmed disjoint target files, no collision. Dispatching.

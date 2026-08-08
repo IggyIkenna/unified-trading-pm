@@ -47,7 +47,7 @@ tags: [ci-cd, semver-agent, release-tags, squash-promote, fleet-template]
 related:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
+    /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /plans/archive/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md,
   ]
@@ -315,7 +315,7 @@ before).
       an auth artifact), with a run of consecutive `cancelled` promote-fleet conclusions from 12:23–13:45 UTC (6
       cancelled runs across `schedule` + `workflow_dispatch` events) and the newest dispatch (`31184137209`, 13:45:05
       UTC) still `status=pending` with no runner picking it up. This is a live recurrence of the ALREADY-TRACKED
-      `/plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (Progress Log entry added there the same
+      `/plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (Progress Log entry added there the same
       session) — NOT investigated or fixed here, out of scope for this task (requires VM/SSM-level runner-pool
       intervention owned by that doc). All 21 repos' fixes are correctly landed on LDR (verified SHAs above,
       `git merge-base --is-ancestor` confirmed post-push for each) and will promote to `main` automatically — no further
@@ -454,6 +454,29 @@ conservative here since it can't verify reversibility from command text alone).
   the fleet promoter is banned) and no promote is currently queued for either repo. See
   `## Follow-up regression #2 (2026-08-08)` for full detail. Doc stays `status: open` pending that caller-side
   confirmation.
+- **2026-08-08 (resume session)**: Re-verified from scratch after a context handoff. Confirmed
+  `unified-trading-ci@2c67855` is genuinely on `origin/main` (`git merge-base --is-ancestor` true) and
+  `unified-trading-ci`'s own workflow registration still resolves `"Semver Agent"`. Re-checked
+  `instruments-service`/`unified-trading-api` plus 8 more fleet repos (unified-trading-library,
+  market-tick-data-service, market-data-processing-service, features-service, execution-service,
+  batch-live-reconciliation-service, agent-orchestrator, unified-trading-system-ui, deployment-api) — none has had a
+  `push:[main]` since the fix landed (~01:38 UTC); all still show the stale pre-fix registration. `gh run rerun` on the
+  latest failed run confirmed NOT retriable ("cannot be rerun" — a true zero-job parse failure, not a flaky run), so no
+  way to force a clean re-verification without an actual new promote. Armed a bounded (~20 min) background poller across
+  9 repos to catch the first post-fix run opportunistically; will report if one lands, otherwise this stays pending the
+  next natural promote per the existing plan above (still correct, not re-litigated). Separately found this doc's own
+  **2026-08-08 20:58 write-up commit (`b753382723`/rebased to `868deea279`) had been committed locally but never
+  actually pushed** — `safe-doc-push.sh`'s "content already matches HEAD" fast-path incorrectly declared success without
+  reaching the push step when invoked on an already-committed-but-unpushed commit (a real gap in that script for the
+  "resume after interruption" case, worth a follow-up hardening but not chased further here). Pushed manually
+  (`git pull --rebase --autostash` + `git push`) — now confirmed on `origin/live-defi-rollout@2c25f8a9c1`. That push was
+  itself blocked once by a pre-existing, unrelated broken-YAML frontmatter in an untracked foreign file sharing this
+  slot's checkout (`agents/escalation_queue_reconciler.md`, part of a different concurrent escalation-queue-reconcile
+  task) — `check_frontmatter_schema.py`'s `load_registries()` walks ALL `agents/*.md` unconditionally (not just the
+  files being pushed), so a malformed doc anywhere in that tree blocks every push from this checkout regardless of
+  what's actually being shipped. Fixed the YAML minimally (added `>-` to an unquoted multi-line `summary:` that
+  contained `": "`, matching the block-scalar convention already used elsewhere in `agents/*.md`) rather than bypassing
+  the hook — left uncommitted for that file's owning session to pick up.
 
 ## na-eligibility-audit verdict
 

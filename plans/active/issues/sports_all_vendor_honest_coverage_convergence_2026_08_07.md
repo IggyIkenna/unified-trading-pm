@@ -638,3 +638,26 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   otherwise on this new instance). **Open question, not investigated further**: who/what actually issued the delete —
   worth asking the operator or checking other slots' session logs if this pattern recurs, since an unexplained VM kill
   mid-run is exactly the kind of thing that should be attributable.
+- **2026-08-08T03:15Z** — FIXTURE_STATS +80 days (`last_completed_date=2023-05-24`, fresh `03:14:21Z`), steady, roughly
+  chunk 13/26 now. `smallchunk3` confirmed healthy via `run.log`: chunk 7/451 (`2020-07-06→2020-07-10`), chunks 1-6 each
+  cleared in a steady ~4.5min (subprocess-bootstrap overhead across ~40-60 rostered leagues dominates even pure
+  skip-fast dates — matches the earlier bootstrap-cost pattern seen on smallchunk2), zero OOMs so far (expected —
+  skip-fast dates need minimal memory). At this pace, ETA to reach chunk 26 (`2020-10-09`, where real new work resumes
+  past smallchunk2's last confirmed progress) is roughly another ~1h20m. Both VMs healthy, no intervention.
+- **2026-08-08T03:43Z** — FIXTURE_STATS +72 days (`last_completed_date=2023-08-04`, fresh `03:41:29Z`), steady. odds
+  smallchunk3: chunk 13/451 now (`2020-08-05`), up from chunk 7 — pace holding at ~4.5min/chunk, zero OOMs. ~13 chunks
+  (~58 min) remaining to reach chunk 26. Both healthy, no intervention.
+- **2026-08-08T04:10Z** — FIXTURE_STATS +30 days (`last_completed_date=2023-09-03`, fresh `04:09:26Z`), steady. odds
+  smallchunk3: chunk 17/451 (`2020-08-25`), zero OOMs still. **Forward-looking note**: chunk 18
+  (`2020-08-30→2020-09-03`) is next — the same season-opener week that took smallchunk2 3h38m with a 55% per-league OOM
+  rate. Since smallchunk2 already durably captured ~14/30 of that window's leagues before dying (manifest writes survive
+  VM death regardless of which VM wrote them), `smallchunk3` should skip-fast through those and only need real
+  re-fetches for the ~16 leagues smallchunk2 left `attempted_failed` (EPL, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
+  SUPER_LIG, GREEK_SUPER_LEAGUE, SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, ALLSVENSKAN, and others per the
+  earlier per-league tally) — expect SOME OOMs to resume there, but a materially shorter pass than the original ordeal.
+  Not alarming if it happens; logging the expectation now so it reads as anticipated, not a new incident.
+- **2026-08-08T04:38Z** — FIXTURE_STATS +47 days (`last_completed_date=2023-10-20`, fresh `04:37:30Z`), steady. odds
+  smallchunk3: **now in chunk 18** (`2020-08-30→2020-09-03`, the known season-opener week), 4 leagues attempted so far
+  (EPL, LA_LIGA, BUNDESLIGA, SERIE_A), **zero OOMs** — confirms the skip-fast-for-already-captured-leagues hypothesis
+  from last tick, materially better than smallchunk2's original 55% OOM rate on this same chunk. Watching for it to
+  clear; not alarming if OOMs do appear on the previously-`attempted_failed` leagues later in this chunk.

@@ -17,7 +17,7 @@ summary: >-
   `deepseek-per-turn-metrics.spec.ts` with overlapping root-cause hypotheses) and merged them into one todo rather than
   drafting two racing ones. 4 bounded items extracted into this batch; the remaining items across those 5 docs are
   operator-gated design forks, deferred below.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -73,9 +73,15 @@ source: >-
 
 # AO satellite AO batch 8
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call
-> (`/plans/PLAN_FORMAT.md`; CLAUDE.md § "Plan destination — ASK BEFORE CREATING"). Authored autonomously (scheduled
-> dispatch); deliberately stops at draft per the skill's Autonomous-mode contract.
+> **`status: active`** — approved 2026-08-08, same-day as drafting, after a fresh conflict-check found no blocking
+> overlap (see Progress Log). This batch's own text already argued this was the single highest-leverage action
+> available ("The single highest-leverage action available right now is operator review + approval of batch5/6/7, not
+> another audit pass") — batch5/6/7 were approved in the same review pass as this doc. **`assigned_vm: NA` /
+> `execution_scope: local-only` are UNCHANGED, deliberately** — same `ao`-tranche established convention as
+> batch5/batch6/batch7/batch2/batch3 (see batch5's Progress Log for the full citation trail back to the operator's
+> 2026-07-17 "local execution" ruling). Active means: live, tracked, ready for an interactive/human session — NOT
+> AO-dispatched. Authored autonomously (scheduled dispatch) and originally shipped `status: draft` pending operator
+> approval.
 
 ## Why this plan exists — and the bigger finding it surfaces
 
@@ -276,3 +282,17 @@ isolation does NOT cover", `/codex/12-agent-workflow/plan-completion-and-archiva
 - **Parked-findings ledger**: 4 findings parked this run (the 4 Deferred bullets above, one per doc) — all written
   durably in this batch's own Deferred section (Phase 3 ran this session, so this is the primary durable home per the
   skill's parking rule).
+- **2026-08-08 (operator-authorized draft→active review, same-day)** — Re-ran the shared 3-surface conflict-check
+  against (a) active `assigned_vm: planning` plans in `parent_epic: orchestrator_master` (only the batch finalize
+  twins, all correctly `gate_on_depends`-held), (b) sibling batches 5/6/7 (this batch's own drafting already
+  cross-referenced all 3 directly), (c) `ao_open_issues_consolidated_close_out_2026_07_17.md` (not touched by this
+  batch's todos, no conflict). All 4 todos' Source docs
+  (`ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`,
+  `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`,
+  `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`) re-verified still `status: open` with
+  matching open-todo counts — no stale/already-done items (unsurprising, this batch was drafted the same day as this
+  review). Investigated the `assigned_vm: NA`/`execution_scope: local-only` frontmatter alongside batch5-7 (see
+  batch5's Progress Log for the full citation trail — a real, tranche-rooted 2026-07-17 operator ruling, not an
+  oversight); applied the same unchanged treatment, flipped `status: draft → active` only, matching the exact
+  precedent live on batch2/3/5/6/7. Fixed the stale draft-era H1 banner to match, and cited this batch's own
+  "highest-leverage action" recommendation now that it has been acted on.

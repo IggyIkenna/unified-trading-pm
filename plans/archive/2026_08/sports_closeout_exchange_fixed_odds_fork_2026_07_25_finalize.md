@@ -8,7 +8,7 @@ summary: >-
   replaced by a short pointer during the 2026-07-25 split) and its QG-assertion todo's forward-pointer note, then runs
   the standard archival ritual on the fork plan. Mirrors sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md's
   pattern.
-status: active
+status: superseded # archived 2026-08-08 alongside its parent, which went terminal (superseded) so this gate could never fire
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -48,6 +48,15 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-08 — SUPERSEDED, not completed.** The EXCHANGE_ODDS/FIXED_ODDS instrument_type split this plan
+> implements was retired by operator ruling 2026-08-08: exchange-vs-sportsbook is a property of the **venue** (UAC
+> `SportsVenueType` already encodes it), so the split is redundant, is derived at read time instead, and the
+> already-written values are purged from manifest rows and GCS objects. Its remaining todos will never be completed —
+> finishing the fork would only create more values to purge. Superseded by
+> `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (retire the contract) and
+> `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` (purge the values). Archived together with its finalize
+> sibling, which could never fire once its parent went terminal.
 
 # Sports EXCHANGE_ODDS/FIXED_ODDS fork — finalize
 

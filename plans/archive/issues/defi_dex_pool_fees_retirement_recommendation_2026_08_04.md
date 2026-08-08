@@ -68,7 +68,7 @@ context_scope:
 
 Retiring `materialize_dex_pool_fees.py` requires touching `canonical_dex_pool_provider.py` — a live strategy-layer read
 path that feeds LP-fee-accrual context into PnL-adjacent computation. Per this workspace's own precedent (see
-`/plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`'s explicit decision to decline a
+`/plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`'s explicit decision to decline a
 similarly-shaped live-reader migration same-session), a strategy-read-path change of this kind needs a dedicated review
 with the actual downstream consumers checked, not a same-session autonomous code change. This doc stops at the
 recommendation + the concrete unblocking verification step.

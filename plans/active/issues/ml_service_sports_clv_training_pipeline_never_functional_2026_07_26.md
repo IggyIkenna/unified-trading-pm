@@ -60,6 +60,14 @@ supersedes:
 superseded_by:
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — WIRE IT, do not drop it.** The sole open todo asks whether to wire `--family` to
+> actually scope SPORTS training or drop the required-argument validation as vestigial. Ruled: **wire it.** Each family
+> must genuinely scope leagues and target-types (e.g. `pregame_clv_family` → CLV targets over the pre-match horizon set)
+> — the CLV work needs that handle, and a required flag that provably does nothing (`grep '\.family'` returns zero hits
+> outside argparse) is worse than either alternative. Implemented by
+> `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`; this doc's checkbox is flipped by that plan's finalize
+> sibling.
+
 # ml-service SPORTS training pipeline never actually loaded real features
 
 ## What I found

@@ -84,6 +84,13 @@ context_scope:
   ]
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — add BOTH T-2h and T-6h as MODEL horizons.** The open todo asks whether to add T-6h
+> _or_ T-2h. Ruled: **both.** Current model set is `['T-10m','T-1h','T-24h']`; both new horizons already have captured
+> data (measured on the live prod manifest 2026-08-08: T-2h **14,209** shards, T-6h **14,217**), carry ~2.7x the fixture
+> coverage of T-24h, and fall safely pre-match. Taking both lets the model learn the T-6h→T-2h movement as its own
+> signal. The retrain must report a **measured** coverage and performance delta — do not assume the richer set is an
+> improvement. Implemented by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`.
+
 # Sports features-layer findings sweep (2026-07-18)
 
 All findings below are **measured**, not inferred. Where a number was retracted during the sweep it is marked

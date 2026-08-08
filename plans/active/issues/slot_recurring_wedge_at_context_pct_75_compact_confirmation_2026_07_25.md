@@ -238,3 +238,10 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
   and the original ~75%-typed-unsubmitted-confirmation-stall mode are the same underlying mechanism at different
   severities, or two genuinely distinct wedge causes sharing one doc — flagging for whoever next reads the actual
   _respawn.py / compact-confirmation logic to determine, per the earlier 2026-08-08 addendum on this same open question.
+
+- **na-eligibility-audit 2026-08-08** (ao tranche): KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` = **3**,
+  matching (item 4 already closed). Re-confirms every prior pass's caution: all 3 survivors touch core
+  watchdog/kill-resume/context-lifecycle machinery — live-dispatch-critical-path code every worker (including this one)
+  depends on — and the doc's own two most recent entries (2026-08-07 fleet-wide scope widening; 2026-08-08 a SECOND,
+  possibly-distinct high-threshold wedge sub-mode with an explicitly unresolved same-root-cause-or-not question) show
+  this is still actively being characterized, not settled enough for a bounded worker fix. Not re-litigated.

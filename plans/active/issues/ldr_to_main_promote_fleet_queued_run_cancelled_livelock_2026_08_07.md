@@ -37,7 +37,7 @@ tags: [ci-cd, promotion-lag, contention, github-actions, monitoring-gap]
 related:
   [
     /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
-    /plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
+    /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
   ]
 created: 2026-08-07

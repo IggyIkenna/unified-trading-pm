@@ -386,3 +386,7 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   `unified-trading-pm/`, not the PM root itself — the script has no fallback for the latter, unlike
   `check_doc_retrieval_layer_parity.py`, which does): 309 docs scanned, 26 violations, matches the 26-baseline exactly
   (gap 0).
+- **na-eligibility-audit 2026-08-08** (ao tranche): KEEP-NA, valid — in scope only because today's docs-reconcile pass
+  narrowed the P1-C table (3 of 4 rows resolved/moot). `grep -cE '^[[:space:]]*[-*] \[ \]'` = **1**, matching. The sole
+  survivor (`sync-system.mdc` — strip the `DO:` line vs. delete the rule outright) is still an explicit human decision
+  per its own text; no bounded worker-determinable content added or removed by today's edit. Not re-litigated.

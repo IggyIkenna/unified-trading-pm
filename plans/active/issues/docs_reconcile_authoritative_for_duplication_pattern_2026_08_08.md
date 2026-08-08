@@ -93,3 +93,12 @@ prose only, per the workspace's "every follow-up is a todo, never prose" rule.
   authoritative_for hunter explicitly widen its read-coverage of the remaining ~146 candidate pairs, prioritizing
   `cross-asset-canonical-target-ssot.md`-adjacent pairs (the hunter flagged it as the common thread in 2 of 4 findings
   here, i.e. a broad consolidated-SSOT doc is the recurring offender shape).
+- **na-eligibility-audit 2026-08-08** (ao tranche): KEEP-NA, valid — deferring to the authoring docs_reconciler's own
+  explicit judgment-call framing (it read the actual content in both docs of each pair before filing). Closer read on
+  this pass: todo 1 and todo 2 each already have a fully-determined fix stated in their own text (todo 1: "pick the
+  dedicated doc as sole owner" — schema-placement.md over the nested copy in schema-governance.md; todo 2: "trim §6 down
+  to a pointer, per the doc's own stated design" — cross-asset-canonical-target-ssot.md's own intro already commits to
+  deferring, not restating) — tagging both MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a closer look next pass rather than
+  overriding today's filing verdict unilaterally. Todo 3 genuinely still needs a defer-direction call ("or to each
+  other" leaves which-doc-defers-to-which open even though the third-doc-banner option is the likelier fix) —
+  GENUINE_WORK. Not re-litigated beyond that.

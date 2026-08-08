@@ -218,3 +218,14 @@ mitigation from this session (a size-sanity write guard in `rollout-workflow-tem
 `unified-trading-pm@a3d058c63e`) is defense-in-depth against the WORST-CASE outcome (silent destructive truncation
 reaching disk) regardless of whether this exact mechanism is what caused the original incident — it does not require
 understanding the root cause to be valuable.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08** (ao tranche): KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` = **4**,
+  matching. Todo 2 (deliberate minimal 2-clone reproduction) is individually bounded/AO-eligible on its own, but the
+  other 3 stay genuine judgment/dependency work: todo 1 is opportunistic (needs a live reproduction in progress to
+  investigate, not independently schedulable), todo 3 explicitly reads "do not implement without operator sign-off," and
+  todo 4 is downstream of todo 3's decision — the whole-doc RECLASSIFY bar is not cleared. Tagging todo 2
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future `/ag-closeout-audit ao` satellite-batch extraction rather than forcing a
+  whole-doc flip. Blocker tags: todo1=DEPENDENCY_BLOCKED(on todo2), todo2=GENUINE_WORK/MISCLASSIFIED_LIKELY_AO_ELIGIBLE,
+  todo3=DEPENDENCY_BLOCKED(on todo2)+OPERATOR_QUESTION once unblocked, todo4=DEPENDENCY_BLOCKED(on todo3).

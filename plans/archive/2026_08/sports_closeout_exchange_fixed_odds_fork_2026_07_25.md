@@ -11,7 +11,7 @@ summary: >-
   todo would hold it — it won't, since a non-dispatchable todo first in a `sequential: true` chain does not count as
   "the predecessor." Splits that step into an immediately-dispatchable pass for the 5 already-unambiguous venues plus a
   separate `[OPERATOR]`-gated follow-on for the 3 still-ambiguous ones.
-status: active
+status: superseded # was: active — superseded + archived 2026-08-08 (instrument_type split retired by operator ruling)
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -45,7 +45,7 @@ estimate_calibrated_ai_days: 3.6
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: [sports_taxonomy_p1_capture_and_contracts_2026_08_08, sports_taxonomy_p2_migration_2026_08_08]
 depends_on: [sports_odds_venue_enumeration_undercount_predrain_2026_07_27]
 gate_on_depends: true
 source: >-
@@ -64,6 +64,28 @@ context_scope:
     unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-08 — SUPERSEDED, not completed.** The EXCHANGE_ODDS/FIXED_ODDS instrument_type split this plan
+> implements was retired by operator ruling 2026-08-08: exchange-vs-sportsbook is a property of the **venue** (UAC
+> `SportsVenueType` already encodes it), so the split is redundant, is derived at read time instead, and the
+> already-written values are purged from manifest rows and GCS objects. Its remaining todos will never be completed —
+> finishing the fork would only create more values to purge. Superseded by
+> `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (retire the contract) and
+> `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` (purge the values). Archived together with its finalize
+> sibling, which could never fire once its parent went terminal.
+
+> **🔴 SUPERSEDED 2026-08-08 BY OPERATOR RULING — the EXCHANGE_ODDS/FIXED_ODDS fork this plan implements is RETIRED.**
+> This plan's whole purpose is splitting the sports `odds` instrument_type into `EXCHANGE_ODDS` (peer-to-peer exchanges)
+> vs `FIXED_ODDS` (sportsbooks). The operator ruled 2026-08-08 that **exchange-vs-sportsbook is a property of the VENUE,
+> not the instrument** — UAC `SportsVenueType` already encodes it — so the split is redundant, is **derived at read
+> time** instead, and the already-written values are **purged from both manifest rows and GCS objects**. Evidence that
+> the fork was not converging anyway (live prod manifest, 2026-08-08): only **60,095 of 375,257** `trades` shards (16%)
+> ever carried a fork token, and the split runs THROUGH individual venues rather than between them — BETFAIR_EX_UK holds
+> 9,204 `exchange_odds` **and** 3,405 pre-fork `odds`; PINNACLE holds 15,570 `fixed_odds` **and** 5,845 `odds`. It ran
+> forward-only from a cutover date and never backfilled. Superseded by
+> `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (retire the contract) and
+> `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` (purge the values). Do NOT continue this plan's remaining
+> todos — completing the fork would create more values to purge.
 
 # Sports EXCHANGE_ODDS vs FIXED_ODDS fork
 
@@ -348,15 +370,15 @@ context_scope:
       **Done when**: both named codex docs cite EXCHANGE_ODDS/FIXED_ODDS and the migration ordering used.
 
       **DISPATCHED PREMATURELY 2026-07-31T15:38Z (slot 14) — declined, still genuinely blocked.** This plan's own
-                                                      banner states the intended chain ends `... → cutover → retire legacy → codex audit`, but both predecessors
-                                                      are still `[ ]` open at dispatch time: the "cut the live sports odds writers over" todo (2 above) and the
-                                                      "retire the legacy `odds` contract entry" todo (1 above). Writing the codex "migration ordering used" section
-                                                      now would describe an ordering that hasn't actually finished executing yet. This is the SAME `sequential: true`
-                                                      dispatch-order gap already tracked in
-                                                      `/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (now confirmed across
-                                                      4 independent plans — mtds prediction-lane, mdps tradfi ohlcv, and now this sports fork) — added as further
-                                                      corroborating evidence there rather than re-diagnosing here. Declined to write the codex update prematurely; no
-                                                      code shipped.
+                                                                                                                      banner states the intended chain ends `... → cutover → retire legacy → codex audit`, but both predecessors
+                                                                                                                      are still `[ ]` open at dispatch time: the "cut the live sports odds writers over" todo (2 above) and the
+                                                                                                                      "retire the legacy `odds` contract entry" todo (1 above). Writing the codex "migration ordering used" section
+                                                                                                                      now would describe an ordering that hasn't actually finished executing yet. This is the SAME `sequential: true`
+                                                                                                                      dispatch-order gap already tracked in
+                                                                                                                      `/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (now confirmed across
+                                                                                                                      4 independent plans — mtds prediction-lane, mdps tradfi ohlcv, and now this sports fork) — added as further
+                                                                                                                      corroborating evidence there rather than re-diagnosing here. Declined to write the codex update prematurely; no
+                                                                                                                      code shipped.
 
 ## Codex SSOTs
 

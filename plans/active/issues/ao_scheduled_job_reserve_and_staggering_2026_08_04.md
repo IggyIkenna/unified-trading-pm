@@ -381,6 +381,20 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (a) drop it from `ScheduledJobStatus` entirely and make `job_name` required on the dispatch route, or (b) keep it
       as the deliberate opt-out for operator one-offs that want fail-fast. Do not leave both paths undocumented. (repo:
       agent-orchestrator)
+- [x] ✅ [CODE] P1. **Trigger 3 (heartbeat-silent) no longer reaps a worker that is genuinely working** — the
+      "undersized timeouts" half of this issue's own title, root-caused live 2026-08-08 and fixed in
+      agent-orchestrator@1c8c54ac9. Two carve-outs: (a) `_pane_shows_live_work(pane, prev_pane)` — Triggers 1.4/1.5
+      always refused to act on a pane showing live work, Trigger 3 was purely timestamp-based and so was the ONE trigger
+      that could kill mid-tool-call; a worker looping on a long VM backfill emits fresh pane output per poll but posts
+      no `/progress`, and `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` explicitly permits a 20-30 min
+      poll cadence, i.e. LONGER than the flat 900s bar — the two rules directly contradicted. (b) new
+      `tuning.watchdog_scheduled_heartbeat_timeout` (3600s) for scheduled/one_shot workers, resolved via the SAME
+      `find_active_agent_for_session` lifecycle lookup `health.py` already uses for its 25-min stale-flip exemption, so
+      the two stay in lockstep. A frozen pane past the bar is still reaped and tmux_pruner's `has_session` sweep still
+      catches dead sessions — neither carve-out removes a safety net. Operator ruling 2026-08-08 ("scheduled tasks
+      should be raised to 60 mins, and add an `_is_actively_thinking` guard"; VM-waiters may wait as long as they are
+      looping). Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262
+      vitest. (repo: agent-orchestrator)
 - [ ] [OPERATOR] P1. **RE-INSTALL ALL SEVEN timer units on the orchestrator VM — nothing from the 2026-08-06 slot-3
       batch is live until this runs.** `sudo bash scripts/install-<each>-timer.sh` for all 7. The earlier re-install
       todo above IS done, but it ran at 15:04 UTC — BEFORE agent-orchestrator@5f15d0a (16:21, shard + Saturday) and

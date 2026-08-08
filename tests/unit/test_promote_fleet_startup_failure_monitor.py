@@ -57,6 +57,16 @@ def _queued_run(run_id: int, created_at: str, event: str = "schedule", name: str
     }
 
 
+def _completed_run(run_id: int, created_at: str, conclusion: str = "success") -> dict[str, object]:
+    return {
+        "id": run_id,
+        "status": "completed",
+        "conclusion": conclusion,
+        "created_at": created_at,
+        "html_url": f"https://github.com/IggyIkenna/unified-trading-pm/actions/runs/{run_id}",
+    }
+
+
 # ── leading_run_of ────────────────────────────────────────────────────────────────────────────
 
 
@@ -221,6 +231,39 @@ def test_stuck_queued_runs_only_flags_the_stale_one() -> None:
     ]
     out = PFM.stuck_queued_runs(runs, threshold_min=30.0, now=now)
     assert [r["id"] for r in out] == [2]
+
+
+# ── stuck_queued_runs + completed_runs — the 2026-08-08 orphaned-record false-positive fix ──────
+
+
+def test_stuck_queued_runs_excludes_run_superseded_by_a_later_completed_run() -> None:
+    """The actual incident shape: an 8-day-old queued run GitHub itself won't cancel, while 10/10
+    of the workflow's most recent runs are `success` — the slot has clearly moved on."""
+    now = dt.datetime(2026, 8, 8, 0, 41, 0, tzinfo=dt.UTC)
+    queued = [_queued_run(30513367555, "2026-07-30T04:15:04Z")]
+    completed = [_completed_run(31230263685, "2026-08-08T00:30:03Z")]
+    out = PFM.stuck_queued_runs(queued, threshold_min=30.0, now=now, completed_runs=completed)
+    assert out == []
+
+
+def test_stuck_queued_runs_still_flags_when_no_newer_completed_run_exists() -> None:
+    """A genuinely live livelock (nothing has completed since) must still page — the fix must not
+    blanket-suppress every queued-run alert."""
+    now = dt.datetime(2026, 8, 7, 17, 42, 0, tzinfo=dt.UTC)
+    queued = [_queued_run(31176101874, "2026-08-07T11:56:22Z")]
+    completed = [_completed_run(1, "2026-08-07T10:00:00Z")]  # older than the queued run
+    out = PFM.stuck_queued_runs(queued, threshold_min=30.0, now=now, completed_runs=completed)
+    assert len(out) == 1
+    assert out[0]["id"] == 31176101874
+
+
+def test_stuck_queued_runs_omitted_completed_runs_behaves_like_before() -> None:
+    """Backward compatibility: no `completed_runs` arg -> old age-only behavior, unchanged."""
+    now = dt.datetime(2026, 8, 8, 0, 41, 0, tzinfo=dt.UTC)
+    queued = [_queued_run(30513367555, "2026-07-30T04:15:04Z")]
+    out = PFM.stuck_queued_runs(queued, threshold_min=30.0, now=now)
+    assert len(out) == 1
+    assert out[0]["id"] == 30513367555
 
 
 # ── build_report — queued_stuck section, additive to the existing streak report ─────────────────

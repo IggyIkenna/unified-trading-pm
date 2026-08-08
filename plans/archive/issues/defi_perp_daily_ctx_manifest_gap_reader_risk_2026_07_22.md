@@ -17,7 +17,7 @@ summary: >-
   tuples, WITHOUT touching the reader or writer schema) — flagged as itself needing operator awareness before autonomous
   execution, mirroring this exact plan's own established "UAC canonical-set additions are not safe-code" precedent
   (RESULT 4, venue-axis case).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -271,11 +271,16 @@ list?) before executing autonomously — flagging for operator awareness rather 
       `unified-trading-pm/scripts/migration/register_perp_mark_price_manifest_backfill_2026_08_04.py` (316 manifest rows
       registered against prod, verified via direct per-VM-shard read — all `capture_status=captured`, `row_count` sum
       22,690, matching discovery exactly).
-- [ ] [OPERATOR-DECISION] P3. Whether/when to execute the ALREADY-GATED `[DESIGN] P1` todo in
+- [x] [OPERATOR-DECISION] P3. **CLOSED/MOOT 2026-08-08 — the gated decision was already ruled.** Was: "Whether/when to
+      execute the ALREADY-GATED `[DESIGN] P1` todo in
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` (demote `perp_funding` to a derived
-      view) — and, if so, whether `perp_daily_ctx`/mark-price should be folded into that same decision. This issue doc
-      does not resolve that question; it only establishes that the source todo's migration should not be forced ahead of
-      it.
+      view) — and, if so, whether `perp_daily_ctx`/mark-price should be folded into that same decision." That source
+      `[DESIGN] P1` todo was CLOSED 2026-07-28 as **KEEP BOTH** (the todo's own pre-stated parity gate ran and FAILED:
+      HYPERLIQUID, the only surviving venue with comparable history, matched only 60.7% of sampled rows — well below the
+      90% genuine-divergence threshold — so `perp_funding` was NOT demoted to a derived view). The source doc is now
+      archived at `/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`
+      (`status: resolved`, confirmed via a fresh read 2026-08-08). Since there is no active demotion to execute, there
+      is nothing for `perp_daily_ctx`/mark-price to be folded INTO — this doc's own gating question is moot.
 
 ## Not fixed here, why
 
@@ -445,3 +450,8 @@ instruments-service/unified-api-contracts/market-tick-data-service/features-serv
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item remains an [OPERATOR-DECISION] on a
   linked canonicalisation design question; the other 3 items already closed with evidence.
+- **2026-08-08 (doc-hygiene, digest close-out)**: Closed the sole remaining `[OPERATOR-DECISION] P3` todo — the
+  `[DESIGN] P1` decision it was gated on was already ruled 2026-07-28 (KEEP BOTH, HYPERLIQUID parity 60.7% < 90%
+  threshold), confirmed via a fresh read of the now-archived source doc
+  (`/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`,
+  `status: resolved`). All 4 todos in this doc are now closed.

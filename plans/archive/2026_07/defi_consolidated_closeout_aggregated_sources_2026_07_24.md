@@ -448,7 +448,7 @@ picture.
       DERIVED interval view now that `derivative_ticker` is the canonical raw funding home for all perps.
   - [`plans/active/issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`](/plans/active/issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`](/plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md)
+  - [`plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`](/plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md)
     (3 open)
     - **[VERIFY] P2.** Confirm whether adding a data_type to `DATA_TYPES_BY_ASSET_GROUP["defi"]` actually changes
       `expected_unattempted`/`completeness_pct`, or is scoped independently.

@@ -25,7 +25,7 @@ summary: >-
   own /autonomous DELTA ruling — reclassified operator_gated, NOT drafted here) — 6 todos below, zero further conflicts.
   The remaining 32 non-batchable orphaned docs are in the Deferred sections by taxonomy (19 operator_gated, 6
   human_only, 3 conflict_gated, 4 time_gated).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -93,11 +93,9 @@ context_scope:
 
 # CeFi satellite AO batch 10 — full-corpus closeout-completeness re-audit
 
-> **Status: DRAFT — this batch has NOT been reviewed/approved by the operator.** Per the ag-closeout-audit skill's
-> autonomous mode: Phase 3 drafting is safe to do autonomously (a draft is never ingested/dispatched), but flipping
-> `status: draft` → `active` to actually dispatch it is an operator decision, tracked as this batch's own follow-up, not
-> auto-flipped. The paired finalize plan ships `status: active` from the start — `gate_on_depends: true` machine-holds
-> it until this batch's todos are done, no double gate (2026-07-30 ruling).
+> **Status: ACTIVE — operator-approved 2026-08-08.** A fresh conflict-check re-verified Phase 3's original clearance
+> before dispatch (see the Progress Log entry below). The paired finalize plan was already `active` from the start —
+> `gate_on_depends: true` machine-holds it until this batch's todos are done, no double gate (2026-07-30 ruling).
 >
 > **Cross-todo file-collision check: PASS.** The 6 todos touch, respectively: (1) this plan's own source doc's status
 > text (no code); (2) a read-only investigation + the source issue doc's Findings section (no code unless a merge is
@@ -309,7 +307,7 @@ context_scope:
   "resolve by logic, do not draft a competing todo" path this protocol prescribes.
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — the
   bounded/checkable test applied to each candidate.
-- `plans/PLAN_FORMAT.md` — `status: draft` semantics (this batch stays draft pending operator approval).
+- `plans/PLAN_FORMAT.md` — `status: draft` semantics (this batch dispatched 2026-08-08 on operator approval).
 - `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the locked-plan-archival-needs-human-unlock
   rule applied to the 2 "Archivable — reported, NOT actioned" docs above.
 
@@ -338,3 +336,21 @@ context_scope:
   `install-ag-closeout-auditor-timer.sh` documents a per-tranche "already dispatched successfully today" guard
   (`scheduled-job-already-ran.py --list-done-tranches`) meant to stop exactly this same-tranche-same-day re-fire; worth
   a look by whoever owns `ao`-tranche scheduling if the pattern recurs.
+- **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check re-verified Phase
+  3's original clearance: (a) no `cefi_master` sibling batch drafted after this one exists (batch9 remains the only
+  other active cefi batch, already accounted for in this doc's own drafting); (b) no new active
+  `parent_epic: cefi_master` claim on any of the 6 todos' target files/mechanisms found; (c) `cefi_consolidated_closeout`
+  unchanged since this batch's drafting. `locked_by` unset. **Independently corroborated**: the same-day re-confirmation
+  pass immediately above reached the identical zero-material-change conclusion via its own independent method (fresh
+  git-log diff since drafting + a full 9-tranche Orthogonality re-check), reinforcing this flip's basis. **Two
+  informational, non-blocking findings surfaced by this operator-approval re-check, outside the formal 3-surface
+  protocol's scope (cross-`parent_epic`) so not treated as conflicts**: (1) todo 3's target VM
+  `mdps-backfill-cefi-20260807-130321` is ALSO named in an open `[SCRIPT] P1` todo in
+  `infra_health_audit_findings_fix_2026_08_07.md` (`parent_epic: observability_master`, `assigned_vm: NA`) — that todo's
+  payload (verify the launcher's preemption-recovery contract fired, fix fleet-wide if not) is complementary rather than
+  duplicative of this todo's payload (relaunch if needed, then run the per-cell audit), and the two are
+  order-independent, so left as-is rather than deferred — flagging for visibility only. (2) todo 4's source doc
+  `issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md` is itself `assigned_vm: planning`/`status: open`
+  (already independently AO-dispatchable), same underlying fix as this todo — the doc's own text already anticipates
+  this ("keep both docs' checkboxes in sync"), so not a new conflict, just noting the two-doors-to-one-fix shape
+  explicitly. Dispatching.

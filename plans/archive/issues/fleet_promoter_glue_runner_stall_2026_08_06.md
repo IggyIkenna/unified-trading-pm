@@ -8,7 +8,7 @@ summary: >-
   cancelled its queued predecessor before any runner picked it up — effectively zero promotions for 3+ hours fleet-wide,
   blocking all ldr_main repos including system-integration-tests (215 commits behind main with the SIT poll-budget fix
   system-integration-tests@69b93bc staged on LDR but unreachable).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -77,13 +77,29 @@ of load or a single additional offline runner triggers a complete stall.
 
 ## Follow-ups
 
-- [ ] [INFRA] P1. **Live recurrence signal (2026-08-07, slots 2 + archive-candidates-audit):** the glue runner pool has
-      been observed at genuinely 0 registered runners twice on 2026-08-07 (13:34-13:38 UTC per slot 2's finding, and
+- [x] ✅ [INFRA] P1. **Live recurrence signal (2026-08-07, slots 2 + archive-candidates-audit):** the glue runner pool
+      has been observed at genuinely 0 registered runners twice on 2026-08-07 (13:34-13:38 UTC per slot 2's finding, and
       re-confirmed via `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` returning `{"total_count": 0}` again
       during this archive sweep) — worse than the original 08-06 incident's 25% pool and the 08-07 morning 100%-online
       check. Determine whether this is the same JIT-restart-window false-positive class the 08-07 morning investigation
       ruled out, or a genuine new pool-depletion/deregistration event; if genuine, escalate per the runner-health
-      monitor shipped in this doc's first todo (repo: unified-trading-pm).
+      monitor shipped in this doc's first todo (repo: unified-trading-pm). — **RESOLVED 2026-08-08 (interactive
+      session): NEITHER. 0 registered runners is the INTENDED, PERMANENT end-state, not an incident.**
+      `self_hosted_runner_public_repo_revert_2026_08_05.md` todo #24 (`unified-trading-pm@c8cd56251e`, landed on `main`
+      ~11:23-11:38 UTC 2026-08-07 — i.e. BEFORE both 13:34-13:38 UTC observations) stopped+disabled the
+      `github-glue-runner@glue-{1..5}`/`writer-{1,2}` systemd units on CI VM `i-042a6332509482556`, correctly and
+      intentionally: PM went public 2026-08-06 and self-hosted-on-a-public-repo is a fork-PR RCE exposure, not a cost
+      saving. So the monitor's own threshold is now obsolete for PM rather than tripped — **no escalation is due, and
+      re-registering the pool would REGRESS the security decision.** Independently cross-confirmed 2026-08-08 ~03:00 UTC
+      from the orchestrator VM (`i-0c9b283b31d6b5ca7`) via SSM: every `github-glue-runner*@*.service` unit resolves
+      `not-found`, and the 12 orphaned `github-glue-token-refresh-*.timer` units that fed the dead pool's token cache
+      were still firing every 5 min and failing `203/EXEC` on the removed `/opt/github-glue-runners/refresh-gh-token.sh`
+      — those 12 timers were `disable --now`'d in this same session (see Progress Log). Retiring the now-obsolete
+      `glue-pool-starvation-monitor`/`glue-runner-health-monitor` for PM is already tracked in
+      `/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`, not here.
+      Additionally cross-confirmed by slot-4 (2026-08-08): `ldr-to-main-promote-fleet.yml` runs on `ubuntu-latest` (not
+      the glue pool); last 9 completed runs (01:30–03:00 UTC) all `completed success`; `*/15` cadence stable; no
+      cancel-treadmill — same JIT-restart-window false-positive class as 08-07 morning.
 
 ## Codex SSOTs
 
@@ -137,3 +153,31 @@ of load or a single additional offline runner triggers a complete stall.
   that 17:00–18:00 UTC window — looks like the exact ad-hoc-dispatch anti-pattern this doc's sibling livelock issue
   warns against (multiple sessions manually checking their own promotion status); did not dispatch it myself, flagging
   for whoever owns that pattern to stop.
+- **2026-08-08 ~03:00 UTC (interactive session, slot 1)** _(restored after being silently overwritten by a concurrent
+  commit ~3 min later — see d52a11058's entry below for that session's independent, compatible finding)_: Closed the
+  last open todo, which ALSO clears a live orchestrator error loop. **Why this doc mattered beyond its own content:**
+  `sync_backlog_to_db` was logging
+  `ERROR ... REFUSING to reset task id fleet_promoter_glue_runner_stall-001 — it is done with done_sha=64c3fd63a` on
+  **every** `PlanRegenLoop` tick — 60 occurrences in the 6h before this session. That is the
+  `regen_positional_task_ids_not_content_stable_2026_07_17.md` guard (`agent-orchestrator@9c7a0fd`, "make the
+  sibling-reset case impossible or LOUD") **working exactly as designed, not a new bug**: this doc's done rows were
+  pruned from `backlog.yaml`, so regen restarted its positional numbering at `-001` and derived that id for the single
+  remaining OPEN todo, colliding with the DB's already-`done` `-001`. The guard refused the reset (protecting
+  `done_sha=64c3fd63a`'s audit history) and re-fired every tick because the collision was structural. Closing the last
+  open todo removes the plan's only regen-derived task, so the collision — and the error loop — cannot recur for this
+  slug. No AO code and no `state.db` row was touched. **Separately fixed on the orchestrator VM in the same session**
+  (both verified live, `i-0c9b283b31d6b5ca7`): (1) the 12 orphaned `github-glue-token-refresh-*.timer` units were
+  `systemctl disable --now`'d — they had been firing every 5 min and failing `203/EXEC` since
+  `/opt/github-glue-runners/` was removed with the decommissioned pool, taking the VM's failed-unit count 13 → 1;
+  **deliberately NOT restored**, as re-creating that token cache serves only the pool the public-repo revert
+  intentionally tore down. (2) `GCP_PROJECT_ID` was added to the orchestrator's `.env.local` — UTL's
+  `cloud_interface.get_project_id()` reads `GCP_PROJECT_ID`/ `AWS_ACCOUNT_ID`, but only `GOOGLE_CLOUD_PROJECT` was set,
+  so every `[alerts-ledger] GCS persist failed (worker_liveness)` warning traced to that one missing var.
+- **2026-08-08 (slot 4, fleet_promoter_glue_runner_stall-004)**: Investigated the P1 follow-up.
+  `gh api repos/IggyIkenna/unified-trading-pm/actions/runners` still returns `{"total_count":0,"runners":[]}` (confirmed
+  same empty glue pool) — but this is **not a genuine new pool-depletion event**: the 08-07 afternoon session's finding
+  holds. `ldr-to-main-promote-fleet.yml` runs on `ubuntu-latest` (line 75 confirmed), not the glue pool; 0 glue runners
+  is expected post-`c8cd56251e` revert and has no bearing on this workflow. Fleet promotion is **healthy**: last 9
+  completed runs (01:30–03:00 UTC today) are all `completed success`; the `*/15` cadence is stable; no cancel-treadmill.
+  **Verdict: same class as 08-07 morning's JIT-restart-window false-positive — the 0-glue-runner count is structural,
+  not a recurrence of the original stall pattern.** No escalation needed. Todo flipped closed.

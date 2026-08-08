@@ -155,14 +155,16 @@ vault-share-price collector) end-to-end:
       `pipeline_mode_for_source` — closing the crosscutting "`source=` required" gap for this handler (repo:
       market-tick-data-service). — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for
       execution).
-- [ ] 4. [DECISION] P2. **RE-SCOPED 2026-07-28 per todos 1+2's findings** — the original framing ("if todo 1 confirms
-      stale legacy rows, rule on remediation: accept-as-historical-artifact vs targeted-correction") no longer applies:
-      todo 1 REFUTED the stale-row premise, so there is no distinguishing "wrong" row population to correct or annotate.
-      The actual open decision is now: should UAC's `SOURCE_PRIORITY[('defi','vault_share_price')]` register a second
-      source (e.g. `"onchain_rpc"`) so this handler's rows can carry their TRUE collection mechanism instead of the
-      forced single-source auto-stamp? That is a genuine operator/design call (adds a multi-source cell, requires
-      `source_required()`→True for this pair, and a one-time backfill/no-op decision on the 7,476 existing rows) — not
-      resolved here (repo: unified-api-contracts + market-tick-data-service, design decision).
+- [x] 4. [DECISION] P2. **RESOLVED 2026-07-30, differently than either option this todo posed — not a second-source
+      addition.** `unified-api-contracts@8c506575` ("fix(defi): register onchain_rpc as vault_share_price's true
+      SOURCE_PRIORITY source") swapped `SOURCE_PRIORITY[('defi','vault_share_price')]` from `["onchain_subgraph"]` to
+      `["onchain_rpc"]` — a single-source RENAME to match the handler's actual RPC-only collection mechanism, not the
+      "register a second source" design call this todo originally posed (that path was overtaken by events: the Phase-4
+      writer invariant, `d7b3ed7d` 2026-07-26, started hard-rejecting the pipeline_mode<->source mismatch, silently
+      dropping every ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3 captured manifest row from ~2026-07-28 onward, forcing a
+      same-day fix rather than a deferred multi-source design decision). Verified live 2026-08-08 against
+      `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py:344-357` — the code
+      comment there cites this exact todo and confirms the rename rationale.
 - [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
       `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
@@ -182,3 +184,7 @@ vault-share-price collector) end-to-end:
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
   since the 2026-08-04 audit (context-scout metadata only, per git log). Todo 4 remains an explicit `[DECISION]` on a
   second SOURCE_PRIORITY source; todo 5 (register-append, P3) doesn't outweigh it. Doc stays `assigned_vm: NA`.
+- **2026-08-08 (doc-hygiene, digest close-out)**: Closed todo 4 — already resolved by `unified-api-contracts@8c506575`
+  (2026-07-30), a single-source rename of `SOURCE_PRIORITY[('defi','vault_share_price')]` to `["onchain_rpc"]`, not a
+  second-source addition. Confirmed live against the current file (`_source_priority_data.py:344-357`) before flipping.
+  Todo 5 (F10 register-append) left untouched — genuinely still open, out of this pass's scope.

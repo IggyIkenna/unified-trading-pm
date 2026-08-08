@@ -973,3 +973,15 @@ are genuinely in scope for the operator's "no exceptions" directive.
   through already-covered dates. Also hit a >1h `gcloud storage cat` flakiness episode (three different error types on
   files `ls -L` proved existed) — worked around via direct HTTPS GET, resolved on its own by ~02:44Z. Full detail:
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`a6dab782b5`.
+- **2026-08-08T03:15Z** — FIXTURE_STATS +80 days (`last_completed_date=2023-05-24`, fresh `03:14:21Z`), ~chunk 13/26.
+  `smallchunk3` confirmed healthy: chunk 7/451 (`2020-07-06`), steady ~4.5min/chunk skip-fast pace, zero OOM, ETA ~1h20m
+  to reach chunk 26 where real new work resumes. Both healthy.
+- **2026-08-08T03:43Z** — FIXTURE_STATS +72 days (`last_completed_date=2023-08-04`, fresh `03:41:29Z`). smallchunk3
+  chunk 13/451 (`2020-08-05`), pace holding, zero OOMs. Both healthy.
+- **2026-08-08T04:10Z** — FIXTURE_STATS +30 days (`last_completed_date=2023-09-03`, fresh `04:09:26Z`). smallchunk3
+  chunk 17/451 (`2020-08-25`), zero OOMs — approaching chunk 18 (the known season-opener week); expect some OOMs to
+  resume there but a shorter pass than the original 3h38m since ~14/30 leagues are already durably captured. Full
+  detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`0428a48f99`.
+- **2026-08-08T04:38Z** — FIXTURE_STATS +47 days (`last_completed_date=2023-10-20`, fresh `04:37:30Z`). smallchunk3 now
+  in chunk 18, 4 leagues attempted, zero OOMs so far — confirms the skip-fast hypothesis. Full detail:
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`8c7d3249ac`.

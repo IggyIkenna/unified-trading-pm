@@ -13,7 +13,7 @@ summary: >-
   those contribute 5 more eligible todos here after direct review. Total: 10 todos, each conflict-checked against the
   whole `plans/active` corpus before drafting (one soft same-file adjacency found and handled via a caution note, per
   batch3/4/5's own precedent, not exclusion).
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -30,7 +30,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-08"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -64,9 +64,12 @@ source: >-
 
 # AO satellite AO batch 6
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call
-> (`/plans/PLAN_FORMAT.md`; CLAUDE.md § "Plan destination — ASK BEFORE CREATING"). Authored autonomously (scheduled
-> dispatch); deliberately stops at draft per the skill's Autonomous-mode contract.
+> **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap (see Progress Log).
+> **`assigned_vm: NA` / `execution_scope: local-only` are UNCHANGED, deliberately** — same `ao`-tranche established
+> convention as batch5/batch2/batch3 (see this doc's Progress Log and batch5's own Progress Log for the full citation
+> trail back to the operator's 2026-07-17 "local execution" ruling). Active means: live, tracked, ready for an
+> interactive/human session — NOT AO-dispatched. Authored autonomously (scheduled dispatch) and originally shipped
+> `status: draft` pending operator approval.
 
 ## Why this plan exists
 
@@ -134,19 +137,27 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (its sole
       remaining item). Repo: unified-trading-pm.
 
-- [ ] [BACKEND] P3. **Give a worker that hits an EXTERNAL dispatch gate (a commit/promote not yet on a target branch) a
-      way to park the task DURABLY, and document why a `priority_override` park doesn't survive backlog re-derivation
-      while a named `auto_unpark__` prereq does.** In one change: (1) confirm/document the priority_override-vs-prereq
-      durability difference (cross-ref RULES.md §4 + the batch2-011 park precedent) — if `priority_override` parks are
-      meant to be durable, that's a separate bug/its own todo; if not, workers should stop relying on them for anything
-      that must outlast a re-derivation tick. (2) Give the worker a durable self-park mechanism keyed on the external
-      gate — either (a) a named `auto_unpark__<task-id>` prereq (mirroring batch2-011, dispatcher already honors it,
-      survives re-derivation) or (b) an explicit "gated on external ref reaching branch X" blocker-type; pick using
-      (1)'s finding. A related but distinct mechanism now exists (`agent-orchestrator@5bfde668`'s
-      `POST /api/backlog/{task_id}/park` / `server/auto_park.py::manual_park`, MAIN/operator-triggered) — check whether
-      it's reusable as the worker-callable primitive before building a parallel one. **Done when**: both halves land; a
-      promote-gated task parks after the FIRST worker detects the gate and does NOT re-dispatch to a fresh worker every
-      tick, resuming only when the gate clears; a test simulates "ref not yet on main." Source:
+- [x] ✅ [BACKEND] P3. **CLOSED 2026-08-08 — already shipped, found during this review's re-verification.** The source
+      doc (`external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`) is now `status: resolved` +
+      archived (`last_updated: 2026-08-06`) at
+      `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`, its own text
+      recording: "The single `[BACKEND] P3` todo is `[x]` done — implemented + shipped `agent-orchestrator@23bd0b3`
+      (Part 1 `auto_park.py` docstring documenting `priority_override` vs `auto_unpark__` prereq, Part 2
+      `park_now`/`manual_park` …)" — matching this todo's own done-when (both halves: the durability-difference
+      documentation AND the durable self-park mechanism) exactly. Original text follows. **Give a worker that hits an
+      EXTERNAL dispatch gate (a commit/promote not yet on a target branch) a way to park the task DURABLY, and document
+      why a `priority_override` park doesn't survive backlog re-derivation while a named `auto_unpark__` prereq does.**
+      In one change: (1) confirm/document the priority_override-vs-prereq durability difference (cross-ref RULES.md §4
+      + the batch2-011 park precedent) — if `priority_override` parks are meant to be durable, that's a separate
+      bug/its own todo; if not, workers should stop relying on them for anything that must outlast a re-derivation
+      tick. (2) Give the worker a durable self-park mechanism keyed on the external gate — either (a) a named
+      `auto_unpark__<task-id>` prereq (mirroring batch2-011, dispatcher already honors it, survives re-derivation) or
+      (b) an explicit "gated on external ref reaching branch X" blocker-type; pick using (1)'s finding. A related but
+      distinct mechanism now exists (`agent-orchestrator@5bfde668`'s `POST /api/backlog/{task_id}/park` /
+      `server/auto_park.py::manual_park`, MAIN/operator-triggered) — check whether it's reusable as the worker-callable
+      primitive before building a parallel one. **Done when**: both halves land; a promote-gated task parks after the
+      FIRST worker detects the gate and does NOT re-dispatch to a fresh worker every tick, resuming only when the gate
+      clears; a test simulates "ref not yet on main." Source:
       `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (its sole
       remaining item — GATED-prefix cleared 2026-08-03, see that doc's own inline note). Repo: agent-orchestrator.
 
@@ -342,3 +353,15 @@ methodology step 1), not re-derive the classification from scratch.
   deliberately — flipping to `active` is the operator's call. Full per-doc Phase 1 verdicts + reasoning for all 64
   candidates (including the 45 declined): Workflow run `wf_8c217203-b49`, journal at
   `subagents/workflows/wf_8c217203-b49/journal.jsonl` (this session's transcript dir).
+- **2026-08-08 (operator-authorized draft→active review)** — Re-ran the shared 3-surface conflict-check against (a)
+  active `assigned_vm: planning` plans in `parent_epic: orchestrator_master` (only the batch finalize twins, all
+  correctly `gate_on_depends`-held), (b) sibling batches 5/7/8 (no new overlap), (c)
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` (Phase-8 items 5+6, todo 1's target, re-confirmed still `[ ]`
+  open at lines ~789-793). Spot-checked every open todo's Source doc for post-drafting closure and found todo 3's
+  Source (`external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`) independently resolved+archived
+  2026-08-06 (`agent-orchestrator@23bd0b3`) — closed todo 3 above via verification, hard evidence: the archived doc's
+  own `[x]` checkbox + inline resolution note. Todos 1, 2, 4-7, 9, 10 re-verified still genuinely open (source docs
+  still `status: open` with the specific referenced items still `[ ]`). Applied the same `assigned_vm`/
+  `execution_scope`-unchanged treatment as batch5 (see that doc's Progress Log for the full investigation — this is the
+  `ao` tranche's own established, operator-rooted convention, not an oversight); flipped `status: draft → active` only.
+  Fixed the stale draft-era H1 banner to match.
