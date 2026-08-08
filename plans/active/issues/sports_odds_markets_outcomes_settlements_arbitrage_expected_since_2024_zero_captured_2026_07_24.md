@@ -241,14 +241,14 @@ one commit that modeled `arbitrage_opportunity` at all treated it as a downstrea
 target. This does not contradict the external-data-always-available rule (that rule protects against descoping a
 genuinely wanted, credential-blocked feature) — it establishes these were never a real capture target to begin with.
 
-- [ ] [CODE] P2. Execute the FINAL decided fix (retire OR scaffold-with-BLOCKED-CREDENTIALS, per the operator's answer
-      to the discriminator investigation above) — either wire up + schedule real capture (or scaffold the adapters and
-      mark `BLOCKED-CREDENTIALS` per the external-data-always-available rule), or retire/adjust
-      `VENUE_DATA_TYPE_CAPABILITIES` for these tuples (repo: unified-api-contracts and/or instruments-service /
-      market-tick-data-service depending on the decision). **Done when**: the expected-universe golden regression
-      (`tests/unit/scripts/goldens/expected_universe/sports.json`) is updated to match the new reality and the
-      honest-coverage denominator reflects it. **Gated on the operator's FINAL decision (not just the DECISION todo's
-      recommendation above) — do NOT touch `VENUE_DATA_TYPE_CAPABILITIES` or the golden regression until then.**
+- [ ] [CODE] P2. BLOCKED-OPERATOR-DECISION. Execute the FINAL decided fix (retire OR scaffold-with-BLOCKED‑CREDENTIALS,
+      per the operator's answer to the discriminator investigation above) — either wire up + schedule real capture (or
+      scaffold the adapters and mark `BLOCKED‑CREDENTIALS` per the external-data-always-available rule), or
+      retire/adjust `VENUE_DATA_TYPE_CAPABILITIES` for these tuples (repo: unified-api-contracts and/or
+      instruments-service / market-tick-data-service depending on the decision). **Done when**: the expected-universe
+      golden regression (`tests/unit/scripts/goldens/expected_universe/sports.json`) is updated to match the new reality
+      and the honest-coverage denominator reflects it. **Gated on the operator's FINAL decision (not just the DECISION
+      todo's recommendation above) — do NOT touch `VENUE_DATA_TYPE_CAPABILITIES` or the golden regression until then.**
 
 ### DIAG findings (2026-07-24, slot 5) — corroborating a second, independent investigation
 

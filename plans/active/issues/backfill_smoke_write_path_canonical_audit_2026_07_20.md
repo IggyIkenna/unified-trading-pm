@@ -281,9 +281,18 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `partitioned_writer.py:291-293` populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare
       `underlying={U}/ticks.parquet` while W2 (`tardis_shared.py:861-870`) emits the canonical v6 tail. Include the
       `:198` vs `:201` casing divergence. Provenance: this audit § 3a.
-- [ ] 3. [DOCS] P2. instruments-service + market-tick-data-service: correct the three in-repo comments that assert the
-      IS live writer emits the hive layout (`instrument_availability_paths.py:1-23`, `DEFI_INSTRUMENTS.md:642`,
-      `repair_tradfi_instrument_type_counts_2026_07_17.py:21`). Provenance: this audit § 3b.
+- [x] ✅ 3. [DOCS] P2. instruments-service + market-tick-data-service: correct the three in-repo comments that assert
+      the IS live writer emits the hive layout — instruments-service@9c2cddf1 (2026-08-08, slot 18). Re-verified against
+      current `process_write.py`: the 2026-07-21/22 hive-canonicalisation fix only rewired the sports/prediction
+      branches; the generic `_write_venue` path CEFI/DEFI/TRADFI share still emits the flat `day=/venue=` shape today.
+      `instrument_availability_paths.py:1-23` and `repair_tradfi_instrument_type_counts_2026_07_17.py:21` already
+      carried an accurate 2026-07-30 CORRECTION note (re-verified accurate, no edit needed); added an equivalent closing
+      CORRECTION/CONFIRMATION note to `DEFI_INSTRUMENTS.md`'s Finding 3 section (never actually asserted hive-as-live,
+      but lacked an explicit note — added for parity + to forestall a future reader misreading the bare `pipeline_mode=`
+      path string on its own). Also fixed an unrelated pre-existing QG red hit while shipping
+      (instruments-service@90f667ec): stale `expected_universe` golden missing 6 SOLEND-SOLANA/VENUS-BSC/VENUS-ETHEREUM
+      oracle_prices tuples from an earlier lending-adapter addition — regenerated via the documented recipe, set-diff
+      verified additive-only. Provenance: this audit § 3b.
 - [x] ✅ 4. [SCRIPT] P2. **[already covered by
       `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`, see that doc for execution]** —
       citation added 2026-07-30 (`/na-eligibility-audit` tranche=cefi). unified-trading-pm: add a Phase-0 `-test-`
@@ -303,10 +312,11 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `market_lifecycle` (`writers.py:495-501`, `partition={"group","day","venue"}` → `group=/day=/venue=`) and
       `futures_contracts` (`writers.py:377-383`, flat `day=/venue=`) are in the canonical shard grammar's scope; if so
       they inherit todo 1's fix. Provenance: this audit § 2 rows 9-10. **ANSWER: YES, in scope — both were fixed in the
-      SAME commit as todo 1's `instrument_availability` fix.** `plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`
-      todos 4/5 (✅, `instruments-service@a9be6ce9`) shipped `futures_contracts`'s full-hive prefix fix and
-      `market_lifecycle`'s full-hive prefix fix (`_market_lifecycle_sink_for` helper) in the same shipment as
-      `instrument_availability`'s own sink-PREFIX fix (todo 3) — that doc's own §7b sizing table explicitly enumerates
+      SAME commit as todo 1's `instrument_availability` fix.**
+      `plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` todos 4/5 (✅,
+      `instruments-service@a9be6ce9`) shipped `futures_contracts`'s full-hive prefix fix and `market_lifecycle`'s
+      full-hive prefix fix (`_market_lifecycle_sink_for` helper) in the same shipment as `instrument_availability`'s own
+      sink-PREFIX fix (todo 3) — that doc's own §7b sizing table explicitly enumerates
       `market_lifecycle`/`futures_contracts` alongside `instrument_availability` as migrated together. 5 consecutive
       na-eligibility-audit passes (07-30 through 08-07) kept this todo open as an unresolved scope-DECISION without
       cross-checking the sibling doc that had already answered + shipped it one day later (2026-07-21). No new code
@@ -336,20 +346,21 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   candidate, not actioned here); todo 6 is an explicit scope-DECISION per its own prior sports-tranche audit citation.
   Doc-level assigned_vm can't split the two, so it stays NA overall.
 - **round5-cefi-question-resolution 2026-08-08**: todo 6 flipped `[x]` — the "is `market_lifecycle`/`futures_contracts`
-  in scope" question was never actually open; `plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`
-  answered YES and shipped both fixes (`instruments-service@a9be6ce9`) one day after this doc was filed, in the SAME
-  commit as todo 1's fix. 5 prior na-eligibility-audit passes cited it as an unresolved scope-decision without
-  cross-checking the sibling doc. Only todo 3 (doc-comment correction) remains genuinely open; doc stays `assigned_vm:
-  NA` pending that one bounded item being claimed.
+  in scope" question was never actually open;
+  `plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` answered YES and shipped both fixes
+  (`instruments-service@a9be6ce9`) one day after this doc was filed, in the SAME commit as todo 1's fix. 5 prior
+  na-eligibility-audit passes cited it as an unresolved scope-decision without cross-checking the sibling doc. Only todo
+  3 (doc-comment correction) remains genuinely open; doc stays `assigned_vm: NA` pending that one bounded item being
+  claimed.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning`
   (`execution_scope: local-only` → `orchestrator-agent`, `assigned_role: data` → `data_engineering` — the prior value
   was not a registered `agents/*.md` role). With todo 6 already closed (2026-08-08, above), the doc's sole remaining
   open item is todo 3: a checkable, worker-determinable doc-comment correction (3 named file:line locations across 2
-  repos that assert the IS live writer emits the hive layout, when this audit's own §3b already proved it emits the
-  flat shape) — no judgment call, the 2026-08-07 audit had already flagged it "bounded but not yet claimed." Not a
-  direct match to any of today's 9 generalizable rulings, but the same "bounded/deterministic, previously just
-  unclaimed" shape the sweep exists to catch. Conflict-check: (a) grepped `plans/active/` for other `assigned_vm:
-  planning` docs under `parent_epic: infrastructure_master` — none cover this exact doc-comment fix; (b) grepped
+  repos that assert the IS live writer emits the hive layout, when this audit's own §3b already proved it emits the flat
+  shape) — no judgment call, the 2026-08-07 audit had already flagged it "bounded but not yet claimed." Not a direct
+  match to any of today's 9 generalizable rulings, but the same "bounded/deterministic, previously just unclaimed" shape
+  the sweep exists to catch. Conflict-check: (a) grepped `plans/active/` for other `assigned_vm: planning` docs under
+  `parent_epic: infrastructure_master` — none cover this exact doc-comment fix; (b) grepped
   `plans/active/infra_satellite_ao_dispatch_batch*` and `cefi_satellite_ao_dispatch_batch9/10` — zero hits for this
   doc's filename or the 3 named source paths (`instrument_availability_paths.py`,
   `repair_tradfi_instrument_type_counts_2026_07_17.py`); (c) `cefi_consolidated_closeout_2026_07_18.md` does not

@@ -108,17 +108,72 @@ context_scope:
       set for the sibling factory-address decision below: two sources of truth (a non-canonical `SUSHISWAP` label
       sitting alongside `SUSHISWAP_V3` in real GCS paths + manifest rows) is the actual defect being fixed, not just the
       registry/label going forward.
-- [ ] [SCRIPT] P2. **Migrate + purge bare-`SUSHISWAP` historical objects/manifest rows to `SUSHISWAP_V3`** — per the
-      2026-08-08 ruling above: (1) enumerate every GCS object under the DeFi bucket whose path/filename carries the bare
-      `SUSHISWAP` venue token (not `SUSHISWAP_V2`/`SUSHISWAP_V3`), (2) for each, resolve/rewrite to the canonical
+- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR-DECISION 2026-08-08 (slot 16) — scoping revealed the premise doesn't hold as
+      literally worded; see the finding + queued question below before any migration executes.** Original text preserved
+      for the audit trail: "Migrate + purge bare-`SUSHISWAP` historical objects/manifest rows to `SUSHISWAP_V3` — per
+      the 2026-08-08 ruling above: (1) enumerate every GCS object under the DeFi bucket whose path/filename carries the
+      bare `SUSHISWAP` venue token (not `SUSHISWAP_V2`/`SUSHISWAP_V3`), (2) for each, resolve/rewrite to the canonical
       `SUSHISWAP_V3` path (venue + chain, matching the canonical naming convention this same epic already established
       for the composite-venue-objects fold), (3) re-register the corrected paths in the manifest, (4) purge the original
       non-canonical objects/rows once the canonical twin is verified present — a fresh
       `gcs_bucket_soft_delete_retention_seconds()` reversibility check on the target bucket qualifies this for
       agent-execution without operator sign-off per `gcs-and-manifest-delete-safety-protocol.md` §3a (same pattern as
-      the sibling `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` migration, archived 2026-08-08). **No
-      backfill needed** — this is a rename/relabel of already-captured data, not new capture. Scope this against the
-      live row count for bare `SUSHISWAP` first (a fresh availability_index read) before estimating size.
+      the sibling `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` migration, archived 2026-08-08). No
+      backfill needed — this is a rename/relabel of already-captured data, not new capture. Scope this against the live
+      row count for bare `SUSHISWAP` first (a fresh availability_index read) before estimating size."
+
+## Finding (2026-08-08, slot 16) — the scoping step surfaced a genuine data-correctness ambiguity, not a simple rename
+
+Ran the todo's own required first step (a fresh, filtered `read_availability_index` read — never a corpus walk) before
+writing any migration code, per this doc's + the sibling `_2026_08_04` precedent scripts' established idiom:
+
+```python
+read_availability_index(bucket, columns=["date","venue","chain","data_type","capture_status","instrument_type"],
+                         filters=[("venue", "==", "SUSHISWAP")])   # then repeated for venue == "SUSHISWAP_V3"
+```
+
+**Bare `venue=SUSHISWAP` (613,628 rows, 483,751 `captured`, 1,761 dates, 2021-08-31..2026-08-02) is 100%
+`chain=ARBITRUM` — ZERO rows on `chain=ETHEREUM` or blank/null chain.** Cross-checked against GCS directly (bounded,
+prefix-scoped listings, 5 sampled dates 2022-2026, never a corpus walk): `venue=SUSHISWAP/chain=ETHEREUM/` matches NO
+objects on any sampled date; `venue=SUSHISWAP/chain=ARBITRUM/` (under a `pipeline_mode=` prefix) DOES have real objects.
+`SUSHISWAP` + `ARBITRUM` is exactly how the registry's own already-canonical `SUSHISWAP-ARBITRUM` venue
+(`unified_api_contracts.registry.defi_venues.ALL_DEFI_VENUES`) is represented in this manifest (venue/chain stored as
+separate columns, joined at display time) — **this is real, live, actively-growing canonical data, not a legacy
+artifact.** The "classic-`SUSHISWAP`-vs-`SUSHISWAP_V3` on Ethereum" ambiguity this todo was written to resolve has NO
+corresponding population anywhere in the current bucket — the premise the 2026-08-08 ruling was made against does not
+hold; there is nothing on Ethereum to migrate.
+
+**A separate, more dangerous ambiguity turned up while checking the sibling bare `venue=SUSHISWAP_V3` population**
+(2,273,083 rows, 1,325,155 `captured`, spanning `chain ∈ {ETHEREUM, BASE, AVALANCHE, ARBITRUM}`). The ETHEREUM/BASE/
+AVALANCHE chains all match already-registered `SUSHISWAP_V3-{CHAIN}` venues (consistent, not a defect) — but
+**`chain=ARBITRUM` (701,982 rows, `captured` through 2026-08-06 — actively growing) has NO registered
+`SUSHISWAP_V3-ARBITRUM` venue in `ALL_DEFI_VENUES` at all.** Confirmed via
+`instruments-service/instruments_service/reference_data/adapters/defi/_dex_factory_registry.py` (lines 106-140, sourced
+from Etherscan/Arbiscan/DefiLlama contract name-tags): SushiSwap V2 and V3 have **genuinely different,
+independently-sourced factory addresses on Arbitrum** (`0xc35DADB6...bc74C4` for V2 vs `0x1af415a1E...82231e` for V3) —
+this is real, distinct on-chain DEX data, not a duplicate/mislabel of the V2 `SUSHISWAP-ARBITRUM` data found above. The
+same file's own docstring (line 52-54) already flags this exact registry gap as a known, still-open item
+(`issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`).
+
+**Consequence for the dispatched todo**: neither literal reading of "fold bare SUSHISWAP into SUSHISWAP_V3" is safe to
+execute as-is. Forcing bare `SUSHISWAP` (→ Ethereum-default alias target `SUSHISWAP_V3-ETHEREUM`) would mislabel 613,628
+real Arbitrum-V2 rows as Ethereum data. Renaming bare `SUSHISWAP_V3`+`ARBITRUM` to any existing registered venue would
+either collide with unrelated `SUSHISWAP_V3-{other chain}` data (if chain is dropped) or requires a canonical venue name
+(`SUSHISWAP_V3-ARBITRUM`) that does not exist yet in UAC. No GCS object, manifest row, or code was touched — this is a
+read-only scoping finding.
+
+> **🟡 OPERATOR QUESTION QUEUED (not blocking other work — answer whenever convenient)**: the 2026-08-08 ruling above
+> assumed a single Ethereum-only classic-vs-V3 ambiguity; live data shows the real picture is multi-chain and the
+> literal "fold bare SUSHISWAP into SUSHISWAP_V3" instruction has no safe execution as worded. Options: **(a) close this
+> todo as a verified no-op** — there is no bare-SUSHISWAP-Ethereum population to migrate; the only real open item is the
+> separately-tracked `SUSHISWAP_V3-ARBITRUM` registry gap
+> (`defi_sushiswap_uniswap_bare_version_factory_gap_ 2026_07_21.md`), which should absorb this todo's remaining scope
+> instead of a fresh migration script; **(b) register `SUSHISWAP_V3-ARBITRUM` as a new canonical UAC venue** (it's real,
+> distinct, actively-growing data per the factory- address evidence above) and THEN dispatch a proper venue-relabel
+> migration for the 701,982-row population currently mislabeled bare; **(c) operator inspects further** before deciding.
+> **Recommendation: (a)** — the original todo's premise doesn't hold, and (b)'s registry decision is exactly the open,
+> already-tracked sibling issue's job, not a reason to duplicate scope here. This todo stays open pending that answer;
+> not re-attempting the migration until then.
 
 ## Success criteria
 
@@ -130,6 +185,16 @@ context_scope:
    of this criterion.
 
 ## Progress Log
+
+- **2026-08-08 (slot 16)**: dispatched the `[SCRIPT] P2` migrate+purge todo. Its own first step (a fresh, filtered
+  `read_availability_index` scoping read) surfaced that the premise doesn't hold: bare `venue=SUSHISWAP` is 100%
+  `chain=ARBITRUM` (already-canonical `SUSHISWAP-ARBITRUM` data, not an Ethereum legacy artifact — zero
+  bare-SUSHISWAP-Ethereum rows exist, cross-verified against GCS directly on 5 sampled dates). Found a separate, more
+  consequential issue while checking the sibling bare `venue=SUSHISWAP_V3` population: 701,982 `ARBITRUM`-chain rows
+  have no registered `SUSHISWAP_V3-ARBITRUM` canonical venue, and are confirmed (via the dex-factory-address registry)
+  to be genuinely distinct SushiSwap V3 data, not a V2 duplicate. No GCS object, manifest row, or code touched —
+  read-only scoping only. Queued an operator question (see Finding above) rather than force a migration that risks
+  mislabeling/corrupting real, actively-growing multi-chain data; skipping this task back to the queue.
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole residual is the SUSHISWAP classic-vs-V3 alias question,
   explicitly a genuinely undecided data-semantics call

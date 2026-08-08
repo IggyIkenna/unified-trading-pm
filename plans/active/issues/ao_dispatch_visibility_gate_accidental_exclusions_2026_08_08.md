@@ -397,19 +397,20 @@ human already made the call and the fleet still never executes it.
       longer appears anywhere in the block. Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
+- [x] ✅ [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/issues/sports_odds_markets_outcomes_settlements_arbitrage_expected_since_2024_zero_captured_2026_07_24.md`.**
-      Its checkbox reads (truncated): "[CODE] P2. Execute the FINAL decided fix (retire OR
-      scaffold-with-BLOCKED‑CREDENTIALS, per the operator's answer" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      Genuinely still blocked, not accidental: the target doc's own DECISION/DISCRIMINATOR sections (lines 153-322) show
+      the RETIRE recommendation is only a recommendation — "operator sign-off requested via /blocked (slot 5,
+      2026-07-24)... **Why sign-off is still required before execution**" — with no Progress Log entry showing the
+      operator ever answered. Retagged the checkbox line's own `[CODE] P2.` prefix with an explicit
+      `BLOCKED-OPERATOR-DECISION.` marker (matches `_BLOCKED_TOKEN_RE`'s `OPERATOR(-DECISION)?` alternative) so it opens
+      its own line instead of being buried inside "scaffold-with-BLOCKED-CREDENTIALS" prose; also converted the two
+      other inline `BLOCKED-CREDENTIALS` mentions in that same todo block to the non-breaking-hyphen spelling
+      (`BLOCKED‑CREDENTIALS`) so they stay documentation-only and don't independently trip the live-token check.
+      Verified: `dispatch_visibility_report --pm-path ../unified-trading-pm --json` for this doc now shows
+      `"declared": true` (was `false`); still correctly excluded (`disk_open=1, backlog_open=0` — genuinely blocked, not
+      dispatchable) since the operator decision remains outstanding. Fleet-wide accidental count: 26→25 (repo:
+      unified-trading-pm).
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.** Its checkbox reads
       (truncated): "[BACKEND] P2. **DESIGN DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 17): "Let Claude
@@ -437,3 +438,12 @@ human already made the call and the fleet still never executes it.
   (`_BLOCKED_TOKEN_RE` and `_PERMANENT_NON_DISPATCHABLE_RE` respectively). Rewrote both plus the doc's other two
   `BLOCKED-` mentions to the non-breaking-hyphen spelling already used elsewhere in this issue doc. Verified via
   `dispatch_visibility_report --json`: the doc's `excluded` list is now empty, `backlog_open` 2→3.
+- **2026-08-08 (slot 29, infra)** — Fixed the
+  `sports_odds_markets_outcomes_settlements_arbitrage_expected_since_2024_zero_captured_2026_07_24.md` todo. Unlike the
+  two prior fixes, this one is a GENUINE, still-open block (operator sign-off on the retire-vs-scaffold decision was
+  requested via `/blocked` 2026-07-24 and never answered), so the fix declares the hold rather than removing it:
+  retagged the checkbox's own `[CODE] P2.` prefix with `BLOCKED-OPERATOR-DECISION.` (opens its own line, matches
+  `_BLOCKED_TOKEN_RE`'s `OPERATOR(-DECISION)?` alternative) and converted the two incidental `BLOCKED-CREDENTIALS`
+  mentions later in the same block to the non-breaking-hyphen spelling so they stay documentation-only. Verified via
+  `dispatch_visibility_report --json`: the doc's todo now shows `"declared": true` (still correctly excluded — genuinely
+  blocked, not a false negative). Fleet-wide accidental count 26→25.

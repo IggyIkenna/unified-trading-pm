@@ -156,3 +156,33 @@ own Tick history.
   producing dead-on-arrival sessions with no compact signature since they never got far enough to need one — distinct
   from, but possibly a variant of, the main tracked pattern. Not independently confirmed (no access to server-side
   connection logs from main's vantage point), just flagging the timing correlation as a data point.
+- 2026-08-08 ~21:02Z (main agt-22de53, relaying review msg 4348 from a fresh review session agt-3b8cf4): Substantial new
+  evidence, WORKER-side this time (not review-role) — rules out the review-only heartbeat-mismatch hypothesis (msg 4345,
+  ~19:49Z entry above) as the SOLE explanation, since these are standard dispatched workers on the normal `/progress`
+  cadence, not review's odd cadence. Three findings:
+  1. **Historical (04:35-14:21Z today, tasks now done)**: `sports_taxonomy_p1_capture_and_contracts-006/-008/-009` died
+     mid-task via `tmux_session_lost` 20x/21x/18x respectively before finally completing — **59 total mid-task deaths**
+     just from these 3 items, spread across ~16 different slots (2,3,4,5,7,8,9,10,12,13,14,15,16,19,21). Final shipped
+     diffs for all 3 were small (contract-constant + test additions), so the deaths cluster in the research/exploration
+     phase, not the fix itself. The sibling plan doc separately already cites a related but distinct Cloud-Run-side OOM
+     crash-loop for `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` (fixed via a memory bump) — this domain
+     runs adjacent to memory-hungry ops generally, supporting a resource-pressure (not pure
+     liveness-probe-false-positive) explanation for at least this cluster.
+  2. **Live at report time**: `defi_venue_lst_rates_residual-001` (a heavy-I/O bare-SUSHISWAP GCS enumerate/migrate
+     todo) died via `tmux_session_lost` 3x in a row — slot5@20:20:00Z, slot5@20:33:57Z, slot10@20:43:38Z — each within
+     1-13 min of dispatch, always shortly after the worker spawned a research sub-agent to survey the venue registry
+     (i.e., right at a resource-intensive step, consistent with the memory-pressure hypothesis). A 4th attempt (slot16,
+     dispatched 20:53:19Z) was independently confirmed by main via `/api/activity` to have survived past a
+     `worker_kicked` recovery at 20:56:31Z with no further death through 21:02Z — longer than any prior attempt. Only 2
+     DISTINCT slots (5, 10) have actually failed so far, short of the standing 3-distinct-slot park threshold — main is
+     letting this 4th attempt run rather than parking preemptively, will park if it also dies.
+  3. **Lower-signal**: `cefi_chain_drop_root_cause_and_heavy_io_vm_rule-eb1bc482b1f7` tmux-died twice in the same window
+     (slot10@20:21:02Z, slot12@20:24:14Z) but its 2 most recent encounters were clean explicit skips (correctly
+     self-diagnosed as blocked on sibling issue docs), not crashes — mentioned for completeness only.
+
+  Review checked `plans/active/issues/` for an existing doc on this specific worker-side pattern before reporting —
+  found none beyond the two P1 docs already tracked here, so this is folded into THIS doc's log rather than a new
+  filing. Review does not have dmesg/journalctl host access from its sandbox, so this remains activity-log pattern
+  evidence, not a kernel-level OOM confirmation — todo 2's host-memory-exhaustion correlation check (against
+  `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`) is the natural next step for whoever has host
+  access. Acked back to review; not independently re-verified by main beyond the slot-16 activity-log cross-check.
