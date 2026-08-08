@@ -79,7 +79,7 @@
     "market-tick-data-service": "0.111.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.101.3",
-    "unified-trading-library": "0.76.2",
+    "unified-trading-library": "0.76.3",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.26.3",
     "e2e-testing": "0.41.0",
@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
@@ -2225,8 +2225,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.76.2.dev2+gf760b8b62",
-      "published_at": "2026-08-08T21:21:05Z",
+      "version": "0.76.3.dev1+gedb8cd313",
+      "published_at": "2026-08-08T22:33:11Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
@@ -2235,8 +2235,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.98.2.dev8+g389472ce1",
-      "published_at": "2026-08-08T21:30:06Z",
+      "version": "0.98.2.dev9+g5ac366aa2",
+      "published_at": "2026-08-08T22:48:41Z",
       "registry": "artifact-registry"
     }
   }
