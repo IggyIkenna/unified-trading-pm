@@ -20,7 +20,12 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [schema placement rules (which repo owns a type), UAC-external-vs-UIC-internal type ownership matrix]
-referenced_by: [/codex/04-architecture/schema-versioning.md, /codex/04-architecture/separation-of-concerns.md]
+referenced_by:
+  [
+    /codex/04-architecture/schema-versioning.md,
+    /codex/04-architecture/separation-of-concerns.md,
+    /codex/02-data/schema-governance.md,
+  ]
 owner:
 last_reviewed: 2026-10-11
 code_refs:
@@ -85,16 +90,16 @@ Services own types that never cross service boundaries:
 
 ## DeFi-Specific Placement
 
-| Type                   | Owner | Path                                        |
-| ---------------------- | ----- | ------------------------------------------- |
+| Type                   | Owner | Path                                                   |
+| ---------------------- | ----- | ------------------------------------------------------ |
 | `DefiErrorCode`        | UAC   | `canonical/crosscutting/errors/defi.py`                |
 | `DefiAlertType`        | UAC   | `canonical/crosscutting/errors/defi.py`                |
 | `DeFiDataSource`       | UAC   | `registry/capability_declarations/_defi.py`            |
 | `CHAIN_RPC_TEMPLATES`  | UAC   | `registry/capability_declarations/_defi_chain_data.py` |
-| `DeFiSwapResult`       | UIC   | `domain/execution/`                         |
-| `FlashLoanResult`      | UIC   | `domain/execution/`                         |
-| `DefiAlert`            | UIC   | `domain/alerts/`                            |
-| `ExecutionInstruction` | UIC   | `domain/execution/`                         |
+| `DeFiSwapResult`       | UIC   | `domain/execution/`                                    |
+| `FlashLoanResult`      | UIC   | `domain/execution/`                                    |
+| `DefiAlert`            | UIC   | `domain/alerts/`                                       |
+| `ExecutionInstruction` | UIC   | `domain/execution/`                                    |
 
 ## Reference
 

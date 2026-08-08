@@ -44,8 +44,6 @@ authoritative_for:
     the four shard-atom grain patterns,
     SPOT_PAIR vs SPOT_ASSET vs POOL decision rule,
     lending A_TOKEN/DEBT_TOKEN split,
-    CLOB-vs-DEX-pool perp asset_group classification,
-    defi two-id model,
     kept/dropped venue list,
   ]
 referenced_by: []
@@ -288,20 +286,15 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 
 ## 6. Perp classification + the defi two-id model
 
-- **CLOB (orderbook) on-chain perps → `asset_group=cefi`**: HYPERLIQUID, ASTER, EXTENDED, LIGHTER, PACIFICA(culled).
-  They trade the perp/hedge leg like a centralized orderbook, just settle on-chain.
-- **DEX-pool-shaped perps → `asset_group=defi`**: traders trade against an AMM/liquidity pool, oracle-priced.
-  `instrument_type=perpetual` is valid for defi; the defi perp id carries **no chain suffix** (e.g. the now-defunct
-  `GMX:PERPETUAL:BTC-USD` pattern). **GMX** (the sole venue in this category, DRIFT culled earlier) was REMOVED
-  2026-07-25 — see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; no DEX-pool-shaped perp venue is
-  currently live, but the classification + id-shape rule is kept for any future venue.
-- **Two-id model (defi, Option A — intentional, NOT a gap)**: every address-identified defi row carries TWO ids:
-  **`canonical_instrument_id`** = the symbolic `VENUE-CHAIN:TYPE:SYMBOL` (human/canonical; carries NO raw addresses),
-  and **`instrument_id`** = the **address-anchored machine/join key** (POOL → `pool_address.lower()`, SPOT_ASSET →
-  `spot_asset:{chain}:{token_addr}`). POOL rows legitimately **diverge**; SPOT_ASSET converges. The pool/token CONTRACT
-  ADDRESS lives in `instrument_id` + the instrument DEFINITION — never inside the canonical id. **No mass address→symbol
-  rewrite.** POOL canonical key = **3-segment, fee inside the symbol** (`…:POOL:USDC-WETH-500`), never the 4-segment
-  `…:POOL:USDC-WETH:500` form.
+Both facts below are owned by `/codex/02-data/defi-canonical-naming-ssot.md`, per this doc's own reference-not-duplicate
+design principle (line 10) — this section is a pointer, not a second copy:
+
+- **CLOB-vs-DEX-pool perp classification** (which venues are `asset_group=cefi` vs `asset_group=defi`, the GMX removal,
+  the no-chain-suffix defi perp id shape) — see defi-canonical-naming-ssot.md § "On-chain perp CLOBs are CeFi, NOT DeFi
+  (asset_group boundary — codified 2026-06-25)".
+- **The defi two-id / dual-key model** (`instrument_id` bare address-anchored machine key vs `canonical_instrument_id`
+  symbolic human key; POOL rows legitimately diverge, SPOT_ASSET converges) — see defi-canonical-naming-ssot.md § "POOL
+  identity is a two-id / dual-key model (Option A, operator-ruled 2026-07-18)".
 
 ## 7. instrument_type case + venue spelling
 

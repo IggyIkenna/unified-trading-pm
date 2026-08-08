@@ -64,19 +64,28 @@ prose only, per the workspace's "every follow-up is a todo, never prose" rule.
 
 ## Findings
 
-- [ ] [DOCS] P2. **`/codex/02-data/schema-governance.md` vs `/codex/04-architecture/schema-placement.md`** — both
+- [x] ✅ [DOCS] P2. **`/codex/02-data/schema-governance.md` vs `/codex/04-architecture/schema-placement.md`** — both
       independently maintain a "which repo/location owns this type" matrix (schema-governance.md's copy is nested inside
       a broader parquet/GCS-write doc; schema-placement.md is dedicated solely to this question). Neither
       cross-references the other despite covering the same 3-way split (service-local vs UAC-internal cross-service vs
       UAC-external). Fix: pick the dedicated doc (`schema-placement.md`) as the sole owner of the matrix itself, have
-      `schema-governance.md` cross-reference it instead of restating it.
-- [ ] [DOCS] P2. **`/codex/02-data/cross-asset-canonical-target-ssot.md` §6 vs
+      `schema-governance.md` cross-reference it instead of restating it. **Fixed 2026-08-08 (docs_reconciler)**: trimmed
+      schema-governance.md's 5-row matrix down to a pointer at schema-placement.md + the one non-duplicated fact
+      (SchemaDefinition/ColumnSchema stays service-local); removed `schema type ownership placement matrix` from
+      schema-governance.md's own `authoritative_for` (kept `parquet SchemaDefinition vs UAC data-contract split`, its
+      genuinely unique content); added bidirectional `related:`/`referenced_by:` links between the two docs.
+- [x] ✅ [DOCS] P2. **`/codex/02-data/cross-asset-canonical-target-ssot.md` §6 vs
       `/codex/02-data/defi-canonical-naming-ssot.md`** — both restate the identical CLOB-vs-DEX-pool perp cefi/defi
       asset_group boundary fact near-verbatim (same 4 venues, same GMX-removal history, same DRIFT/PACIFICA culled
       history). Notably, `cross-asset-canonical-target-ssot.md`'s own intro states its design principle is to "REFERENCE
       the detailed per-domain SSOTs rather than duplicating them" — §6 violates that stated principle by fully restating
       rather than deferring to `defi-canonical-naming-ssot.md` (already `related:`-linked, just not deferred to in body
-      prose). Fix: trim §6 down to a pointer, per the doc's own stated design.
+      prose). Fix: trim §6 down to a pointer, per the doc's own stated design. **Fixed 2026-08-08 (docs_reconciler)**:
+      §6 now points at defi-canonical-naming-ssot.md's two named sections instead of restating them; moved
+      `CLOB-vs-DEX-pool perp asset_group classification` + `defi two-id model` off
+      cross-asset-canonical-target-ssot.md's `authoritative_for` (the two-id-model topic was previously undeclared on
+      either doc — added it to defi-canonical-naming-ssot.md, the doc that actually carries the content, alongside its
+      existing CLOB-boundary claim).
 - [ ] [DOCS] P3. **`/codex/02-data/prediction-schema-paths.md` vs `/codex/04-architecture/prediction-batch-live.md`** —
       both independently state the identical `canonical_question_group` shard-atom 5-tuple with near-identical wording.
       Both actually attribute the true "banner-canonical" source to a THIRD doc
@@ -102,3 +111,8 @@ prose only, per the workspace's "every follow-up is a todo, never prose" rule.
   overriding today's filing verdict unilaterally. Todo 3 genuinely still needs a defer-direction call ("or to each
   other" leaves which-doc-defers-to-which open even though the third-doc-banner option is the likelier fix) —
   GENUINE_WORK. Not re-litigated beyond that.
+- 2026-08-08 (docs_reconciler, second same-day dispatch, one-off boot): re-verified this doc's own state fresh before
+  acting (grepped for a same-day duplicate docs-reconcile run first, per the workspace's pre-task plan/issue conflict
+  check) — found this issue + the na-eligibility-audit's MISCLASSIFIED_LIKELY_AO_ELIGIBLE tag on todos 1/2, agreed with
+  that read after independently re-reading both doc pairs in full, and applied both fixes (see checkbox notes above).
+  Todo 3 still open — deferred (see below), not a mechanical fix the way 1/2 were.

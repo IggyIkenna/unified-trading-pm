@@ -3,10 +3,10 @@ doc_type: codex-ssot
 title: Schema Governance
 summary: >-
   Schema governance SSOT — the split between service-local SchemaDefinition/ColumnSchema parquet write-enforcement
-  descriptors (schemas/output_schemas.py) and UAC-owned domain/external/canonical data contracts; the
-  validate_timestamp_date_alignment pre-upload gate, NaN + dimension-aware nullability rules, safe-vs-breaking schema
-  evolution, canonical field type standards (Decimal prices, tz-aware timestamps), and the schema-ownership placement
-  matrix.
+  descriptors (schemas/output_schemas.py) and UAC-owned domain/external/canonical data contracts (general type-placement
+  rule owned by schema-placement.md); the validate_timestamp_date_alignment pre-upload gate, NaN + dimension-aware
+  nullability rules, safe-vs-breaking schema evolution, and canonical field type standards (Decimal prices, tz-aware
+  timestamps).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -27,9 +27,10 @@ related:
     /codex/02-data/contracts-scope-and-layout.md,
     /codex/02-data/per-source-colocation.md,
     /codex/02-data/partitioning.md,
+    /codex/04-architecture/schema-placement.md,
   ]
 created: 2026-03-27
-authoritative_for: [schema type ownership placement matrix, parquet SchemaDefinition vs UAC data-contract split]
+authoritative_for: [parquet SchemaDefinition vs UAC data-contract split]
 referenced_by:
   [
     /codex/02-data/README.md,
@@ -380,18 +381,15 @@ GCP/AWS SDKs, etc.).
   `/codex/02-data/unified-api-contracts-chain.md` for the full chain, SCHEMA_VERSIONS.md, and
   check_sdk_version_alignment.
 
-**Schema type ownership matrix:**
+**Schema type ownership matrix**: for the general type-placement rule (which repo/service owns a type — UAC-internal
+cross-service vs UAC-external vs service-local), see `/codex/04-architecture/schema-placement.md` — the dedicated SSOT
+for that question, so this doc doesn't maintain a second copy. The one schema-specific fact that doc doesn't cover:
+**SchemaDefinition / ColumnSchema** (parquet write-enforcement objects, `schemas/output_schemas.py`) stay local to the
+service — they're write-side infrastructure, not a shared data contract, so `validate_timestamp_date_alignment()` runs
+against them before every GCS write.
 
-| Type                                                          | Owner        | Location                                                | Use Case                                                                   |
-| ------------------------------------------------------------- | ------------ | ------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **SchemaDefinition / ColumnSchema** (parquet infra)           | Service      | `schemas/output_schemas.py`                             | GCS write enforcement; `validate_timestamp_date_alignment()` before upload |
-| **Domain data contract** (BaseModel / TypedDict / @dataclass) | UAC internal | `unified_api_contracts/internal/domain/<service-name>/` | Cross-repo data shape; imported via UTL or UDC                             |
-| **External API schema**                                       | UAC          | `unified_api_contracts/external/<venue>/schemas.py`     | Validate HTTP/SDK responses before normalization                           |
-| **Canonical normalization output**                            | UAC          | `unified_api_contracts/canonical/`                      | Output type of UAC normalizers                                             |
-| **Messaging / pub-sub canonical**                             | UAC internal | `unified_api_contracts/internal/<domain>/`              | Internal event and pub-sub contracts                                       |
-
-Services call `validate_timestamp_date_alignment()` before every GCS write. Adapters use unified-api-contracts schemas
-to validate external API responses before mapping to canonical formats (CanonicalTrade, CanonicalOrderBook, etc.).
+Adapters use unified-api-contracts schemas to validate external API responses before mapping to canonical formats
+(CanonicalTrade, CanonicalOrderBook, etc.).
 
 ### Service domain data schemas → unified_api_contracts.internal
 
