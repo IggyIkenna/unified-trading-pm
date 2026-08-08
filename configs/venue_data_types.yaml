@@ -759,8 +759,9 @@ SPORTS:
         - odds
         # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
         # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
-        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
-        - odds_movement # OHLC of line movement per event horizon
+        # odds_snapshot/odds_movement removed 2026-08-08 (UAC sports taxonomy P1): MDPS-derived
+        # processed types (LOCF sample / OHLC candle of odds), not raw MTDS capture types —
+        # retired from UAC canonical registry.
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
         - odds_horizon_bucket # Time-to-event classifier (pre-event bucketing)
       start_date: "2020-01-01"
@@ -775,8 +776,9 @@ SPORTS:
         - odds
         # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
         # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
-        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
-        - odds_movement # OHLC of line movement per event horizon
+        # odds_snapshot/odds_movement removed 2026-08-08 (UAC sports taxonomy P1): MDPS-derived
+        # processed types (LOCF sample / OHLC candle of odds), not raw MTDS capture types —
+        # retired from UAC canonical registry.
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
         - odds_horizon_bucket # Time-to-event classifier (pre-event bucketing)
       start_date: "2020-01-01"
@@ -791,8 +793,9 @@ SPORTS:
         - odds
         # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
         # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
-        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
-        - odds_movement # OHLC of line movement per event horizon
+        # odds_snapshot/odds_movement removed 2026-08-08 (UAC sports taxonomy P1): MDPS-derived
+        # processed types (LOCF sample / OHLC candle of odds), not raw MTDS capture types —
+        # retired from UAC canonical registry.
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
         - odds_horizon_bucket # Time-to-event classifier (pre-event bucketing)
       start_date: "2020-01-01"
@@ -807,8 +810,9 @@ SPORTS:
         - odds
         # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
         # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
-        - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
-        - odds_movement # OHLC of line movement per event horizon
+        # odds_snapshot/odds_movement removed 2026-08-08 (UAC sports taxonomy P1): MDPS-derived
+        # processed types (LOCF sample / OHLC candle of odds), not raw MTDS capture types —
+        # retired from UAC canonical registry.
         - arbitrage_opportunity # Cross-venue arb signal
         - odds_horizon_bucket # Time-to-event classifier
       start_date: "2020-01-01"

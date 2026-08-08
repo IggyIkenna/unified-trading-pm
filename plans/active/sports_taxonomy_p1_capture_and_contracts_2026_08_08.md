@@ -349,9 +349,19 @@ achieved by exclusion, not canonicalisation.**
       the same class of resolver across MTDS/MDPS/IS. Deferred from the hot-fix only to keep the blast radius off an
       in-flight chain — a genuinely-unknown cefi venue currently relies on this default, so the raise needs its own
       enumeration pass first.
-- [ ] [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
-      `tests/test_data_type_canonicalization.py::test_yaml_data_types_in_uac` is ALREADY failing (pre-existing, 2
-      params: `unified-trading-pm`, `market-tick-data-service`) on exactly these tokens —
+- [x] ✅ [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
+      — unified-trading-pm@\<pending\>, market-tick-data-service@\<pending\>. Fixed via the `ldr_qg_failure` escalation
+      (agt-fecbe9): UAC commit `1f5879fc` (2026-08-08) collapsed `odds_snapshot`/`odds_movement` out of
+      `DATA_TYPES_BY_ASSET_GROUP` but did not cascade to the YAMLs, which broke `quality-gates-v2` on
+      `live-defi-rollout` for `unified-api-contracts` (both parametrized cases:
+      `test_yaml_data_types_in_uac[unified-trading-pm]` — POLYMARKET/BETFAIR/PINNACLE/ODDS_API — and
+      `[market-tick-data-service]` — BETFAIR/PINNACLE/ODDS_API). Removed the `- odds_snapshot`/`- odds_movement`
+      per-venue list entries in both `configs/venue_data_types.yaml` files, following the same retirement-comment
+      pattern already used for the markets/outcomes/settlements deletion. `bash scripts/quality-gates.sh` in
+      unified-api-contracts now EXITs 0 (292s, full suite). Also surfaced + fixed an unrelated second wall on the same
+      gate: pip-audit flagged aiohttp 3.14.1 (PYSEC-2026-3545/3546/3547), bumped to 3.14.3 — see
+      unified-api-contracts@e092f3e9. `tests/test_data_type_canonicalization.py::test_yaml_data_types_in_uac` is ALREADY
+      failing (pre-existing, 2 params: `unified-trading-pm`, `market-tick-data-service`) on exactly these tokens —
       `SPORTS.common_data_types: 'markets'`, `SPORTS.venues.BETFAIR: 'markets'/'outcomes'/'settlements'`,
       `SPORTS.venues.PINNACLE: …`. Deleting them from UAC without updating the YAML makes that failure WORSE, not
       better. This is a live worked example of the codex rename rule's "a token grep is not a sufficient enumeration"
