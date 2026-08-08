@@ -786,6 +786,21 @@ slot_recurring_wedge issue doc already applied by prior session — confirmed pr
   PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python) + `run_in_background:true`, NO `&` inside. Do NOT use
   TaskList. Do NOT re-arm if alive.
 
+### 2026-08-08T00:58Z — slot 2 — watcher re-armed (b80259it6)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher `bzfv850ih` (slot 10, 22:26Z) dead at boot.** Fleet at boot:
+**24 VMs** (draining from 18 at slot-10 check → new wave brought count back up). No ES_OPT VMs exist. Python binary:
+`.tabs/2/market-tick-data-service/.venv/bin/python` (slot 2 has venv). Operator keep-waiting decision unchanged.
+
+Re-armed: watcher **`b80259it6`** launched `run_in_background:true`, NO `&` inside. Poll 1 (00:58:53Z): 24 VMs.
+Heartbeat: **`bnwbjx249`** (20-min intervals). Scratchpad:
+`…/ba26466e-4673-45ad-a2d7-6cdc4ba14555/scratchpad/watcher/es_opt_watcher_slot2.sh`.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `b80259it6.output`
+  via TaskOutput non-blocking. (3) If watcher dead: sed-patch `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`
+  (SLOT_ID=<new>/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm
+  `heartbeat.sh` same way. Do NOT use TaskList.
+
 ### 2026-08-08 — slot-7, task `tradfi_satellite_ao_dispatch_batch6-001` (todo #1) — DONE
 
 **1. ✅ [DATA] P2 (todo #1) — historical manifest repair** — resolved via before/after manifest census +
