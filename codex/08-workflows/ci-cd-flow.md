@@ -1157,6 +1157,32 @@ was never referenced cross-repo. Full incident + migration history:
 `plans/archive/shared_ci_workflow_repo_extraction_2026_08_06.md` (once archived) or
 `plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`.
 
+**Second wave — the rest of the flat-copy fleet templates moved too (2026-08-07/08).** The same
+host-in-`unified-trading-ci` pattern was extended from the 2 files above to 7 more: `version-registry-notify.yml`,
+`main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`, `request-major-bump.yml`, `staging-backmerge-to-ldr.yml`,
+`update-dependency-version.yml`, `semver-agent.yml` (all now
+`IggyIkenna/unified-trading-ci/.github/workflows/<file>@main` reusable workflows called via a per-repo thin caller stub,
+same shape as the table above; `self_hosted_runner_labels` is the input carrying the old `__RUNS_ON__` per-repo
+variance, and `semver-agent.yml` additionally takes `repo_name` / `source_dir` / `version_source` inputs since it has
+real per-repo logic, not just a runner-label difference). **PM exception, same rationale as the quality-gates
+precedent**: `major-bump-issue-handler.yml`, `request-major-bump.yml`, and `semver-agent.yml` were NOT converted for
+`unified-trading-pm` itself — its local copies are genuinely customized (richer Slack alerting / its own `concurrency:`
+block), not stale duplicates. Once every repo's local caller of `notify-slack.yml` was gone (i.e. once
+`main-backmerge-to-ldr.yml`/`semver-agent.yml` became thin stubs), the local `notify-slack.yml` copy itself became dead
+weight in 22 of 23 fleet repos and was deleted (kept: PM's own canonical copy, and `deployment-service`, which still has
+an unrelated live local caller). The 7 now-redundant template sources were deleted from `scripts/workflow-templates/` in
+PM — **`rollout-workflow-templates.sh`'s role is now limited to what remains genuinely templated**:
+`image-build-gate.yml` + `quality-gates-v2.yml.tmpl` (both already thin caller stubs, rolled out so each repo's local
+file matches), `notify-slack.yml` (still full content, canonical, never migrated), and `staging-lock-check.yml` (still
+full content — deliberately NOT yet converted, see todo 11 in
+`plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`: its `check-staging-lock` job is a
+literal required-status-check context on 16 repos' branch-protection rulesets, and a naive stub conversion would
+silently rename the reported check to `"check-staging-lock / check-staging-lock"`, permanently failing that context).
+Full migration history + the two real bugs found while converting (a dropped `env:` block in the conversion tooling, and
+an SSOT-drift gap where a same-day squash-promote fix had landed on 21 repos' rendered copies but never reached the
+canonical template): `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (once archived,
+`plans/archive/`).
+
 **SSOT template**: `scripts/workflow-templates/quality-gates-v2.yml.tmpl`. **Roll-forward** a workflow change: (1) edit
 the template; (2) `rollout-workflow-templates.sh --template <tmpl>`; (3) commit + push the rendered file to each repo's
 `live-defi-rollout` in the SAME unit (the mandatory second half — a left-dirty rollout strands clones; see the two-half
