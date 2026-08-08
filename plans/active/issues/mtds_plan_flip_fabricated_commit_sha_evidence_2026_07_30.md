@@ -145,10 +145,11 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
       citations rewritten with the real SHAs (`41372139` for item 1, `00c2cfe4` for item 2) and an explicit correction
       note. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. **RECURRENCE 2026-08-08 — the baseline was RAISED again (0 -> 2) instead of the citations being
+- [x] ✅ [SCRIPT] P1. **RECURRENCE 2026-08-08 — the baseline was RAISED again (0 -> 2) instead of the citations being
       corrected.** `35e99e4ba3` had ratcheted `fabricated_sha_citation_baseline` to 0 with `baseline_citations: []`;
-      `unified-trading-pm@a969d9ba8b` (slot-16, 2026-08-08) re-raised it to 2. Both new entries cite the SAME
-      `unified-trading-pm@ea5d699c9`, at `plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md:130` and
+      `unified-trading-pm@a969d9ba8b` (slot-16, 2026-08-08) re-raised it to 2. Both new entries cite the SAME fabricated
+      SHA `ea5d699c9` (repo `unified-trading-pm`), at `plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md:130`
+      and
       `plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md:187`.
       MEASURED 2026-08-08 after a fresh `git fetch origin`: `git cat-file -t ea5d699c9` -> UNRESOLVABLE, so these are
       genuinely wrong citations, NOT the fetch-miss false positive that `35e99e4ba3` fixed in the checker itself. Per
@@ -157,7 +158,12 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       both citations resolve via `git cat-file -t`, `fabricated_sha_citation_baseline: 0` with `baseline_citations: []`,
       and `python scripts/quality_gates/check_plan_commit_sha_evidence.py` reports 0 unresolvable. If a citation's
       underlying work turns out never to have landed, un-flip that todo instead of inventing a SHA. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — **DONE** `unified-trading-pm@d88c654f3` (slot 31, 2026-08-08): archaeology
+      (`git log -- agents/review.md`) identified the real commit as `6c4e57b8a0483de2` (slot-13, "docs(agents): mirror
+      peer-vs-operator reply-routing from main.md STEP 2B into review.md STEP 2", `Closes:` trailer matches both citing
+      todos). Both citations rewritten `ea5d699c9 -> 6c4e57b8a` with correction notes; baseline reset to 0 /
+      `baseline_citations: []`; `check_plan_commit_sha_evidence.py` re-run post-commit: 2612 citations checked, 0
+      unresolvable.
 
 ## Progress Log
 
