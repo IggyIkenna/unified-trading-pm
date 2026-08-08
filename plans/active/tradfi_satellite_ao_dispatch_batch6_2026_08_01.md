@@ -39,12 +39,12 @@ related:
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
+    /plans/archive/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
     /plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-06"
+last_updated: "2026-08-08"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -121,7 +121,7 @@ This is the first fresh `/ag-closeout-audit tradfi` pass since batch5 (2026-07-2
 
 ## Todos
 
-- [ ] [DATA] P2. **Historical manifest repair for the 2026-07-27T16:46:40-48Z registration burst's null-id rows.** 3,612
+- [x] [DATA] P2. **Historical manifest repair for the 2026-07-27T16:46:40-48Z registration burst's null-id rows.** 3,612
       NASDAQ/NYSE equity/ETF rows (`ohlcv_1m`/`trades`) + 100 CBOE INDEX rows (`ohlcv_15m`) carry canonical UPPERCASE
       `instrument_type` but `instrument_id=None`; content `date` spans dozens of historical dates 2024-2026 sharing one
       8-second write burst — the signature of a one-time metadata registration/recovery script, NOT a live writer bug
@@ -785,6 +785,27 @@ slot_recurring_wedge issue doc already applied by prior session — confirmed pr
   `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=10, SLOT_TABS=.tabs/10,
   PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python) + `run_in_background:true`, NO `&` inside. Do NOT use
   TaskList. Do NOT re-arm if alive.
+
+### 2026-08-08 — slot-7, task `tradfi_satellite_ao_dispatch_batch6-001` (todo #1) — DONE
+
+**1. ✅ [DATA] P2 (todo #1) — historical manifest repair** — resolved via before/after manifest census +
+non-recoverability determination. Live manifest read (6,837,762 rows, column-pruned census script,
+`run-bounded-analysis.sh` RSS-poll-capped): **BEFORE** = 3,712 null-id rows; **AFTER** = 0 null-id rows in burst window
+(both phantom-purge-overlap 16:46:38-42Z and post-purge 16:46:42-50Z return zero).
+
+Non-recoverability recorded for all 3,712 rows:
+
+- **CBOE INDEX ohlcv_15m (100 rows)**: dead cell — `reclass_tradfi_cboe_ohlcv_15m_dead_cell_2026_07_29.py` confirms
+  Databento never offered ohlcv_15m for CBOE INDEX (stale from retired Yahoo VIX-cash-index; narrowed out of expected
+  coverage 2026-07-15, `unified-api-contracts@78b9e899`); phantom purge removal was correct data hygiene.
+- **NASDAQ/NYSE equity/ETF ohlcv_1m/trades (3,612 rows)**: data confirmed covered by canonical captured entries — 97,242
+  NASDAQ + 848,622 NYSE rows, non-null instrument_ids, 830 dates (2023-04-17..2026-07-20), 133+1,049 instruments. Burst
+  rows were duplicate registrations of data the live writer captured correctly with canonical ids.
+
+Side-finding (out of scope): 149 new CBOE INDEX ohlcv_24h `empty_confirmed` null-id rows written 2026-08-07 — separate
+population. Source issue resolved + checkbox flipped:
+`plans/archive/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` (all todos done, status=resolved). No
+code changes required; quality-gates.sh green (no code modified).
 
 ## Codex SSOTs
 
