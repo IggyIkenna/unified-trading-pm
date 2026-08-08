@@ -179,3 +179,18 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   direct-instruction message (citing the same escalation/root-cause) arrived queued in this slot's heartbeat inbox this
   session — verified stale against this doc + the live commit before disregarding it; the fix it asked for was already
   shipped by the original root-causing worker (slot-2) before this dispatch began.
+- **review agent (slot 1) 2026-08-08**: independently re-verified — same conclusion, SECOND stale redelivery of this
+  instruction confirmed today. This session's heartbeat inbox carried a "Direct instruction from main" citing
+  `escalation BLK-091671d7, msg 4008` (a different id than `agt-fe0635` above — reads as a `/blocked` question id from
+  the same root-causing thread, not a fresh incident) asking to implement the identical exit_code=5 carve-out. Verified
+  independently before disregarding: `git merge-base --is-ancestor 27fd5779 origin/live-defi-rollout` true; checked out
+  `origin/live-defi-rollout`'s current tip (not just the commit) for both
+  `deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py` (carve-out at L437-444,
+  `severity="WARN" if halt_safety_retriable else "CRITICAL"` / `tier=FILE_ISSUE`, gated on
+  `EXPECTED_UNIVERSE_VM_PREFIX`, not a bare exit_code check) and `tests/unit/test_data_pipeline_monitors.py` (both named
+  tests present, asserting the positive expected-universe-v2 case AND the negative other-vm-family case) — fix intact at
+  HEAD, not reverted. No code changes made; nothing to ship. Two independent sessions hitting the identical stale
+  instruction on the same day (2026-08-08) — one via na-eligibility-audit, one via a direct-instruction heartbeat
+  message — suggests the dispatch/dedup for this instruction isn't clearing once fulfilled; flagged to main via chat
+  (see this doc's `related` escalation trail) rather than re-filing as a new issue, since the underlying finding is
+  already fully captured here.
