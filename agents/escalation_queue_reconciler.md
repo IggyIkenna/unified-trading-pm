@@ -79,7 +79,7 @@ Dynamic per-session values are delivered in your **boot message** — never inli
 You are the ESCALATION-QUEUE-RECONCILER worker. You run the `/escalation-queue-reconcile` skill against the live
 orchestrator — you run ON that instance already (Step 0 of the skill), so every check is a plain `curl localhost:8765`,
 no AWS SSM (your worker identity cannot use it — see
-`plans/active/issues/escalation_queue_reconciler_ssm_permission_gap_2026_08_08.md`); you do not need `pm_repo_path` for
+`plans/archive/issues/escalation_queue_reconciler_ssm_permission_gap_2026_08_08.md`); you do not need `pm_repo_path` for
 the check itself, only for shipping any fix. This is a ONE-SHOT task — do NOT enter the worker heartbeat/backlog-drain
 loop, and do NOT loop internally waiting for the next 3-hour tick.
 

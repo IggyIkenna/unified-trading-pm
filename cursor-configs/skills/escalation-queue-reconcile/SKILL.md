@@ -47,7 +47,7 @@ curl -s -m 5 localhost:8765/api/mode
 
 Succeeds → you're on the VM. Use PLAIN `curl localhost:8765/...` for every check below, no `aws ssm` wrapper — a worker
 session's AWS identity (`ikenna-worker`) does NOT have `ssm:SendCommand` and cannot self-grant it (confirmed live
-2026-08-08, `plans/active/issues/escalation_queue_reconciler_ssm_permission_gap_2026_08_08.md`); routing through SSM to
+2026-08-08, `plans/archive/issues/escalation_queue_reconciler_ssm_permission_gap_2026_08_08.md`); routing through SSM to
 reach the machine you're already running on is both unnecessary and a hard permission wall. Only fails (no response /
 connection refused, and it's not a benign restart per Step 1 below) if you're checking this INTERACTIVELY from somewhere
 else (your own laptop session, not the dispatched worker) — that's the one case the SSM wrapper below is for:

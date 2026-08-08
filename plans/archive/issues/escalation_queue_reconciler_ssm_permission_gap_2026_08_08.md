@@ -22,7 +22,7 @@ summary: >-
   skill, so any other role/skill relying on this same pattern from a similarly-provisioned worker session is equally
   blocked. No fix attempted — self-granting IAM on a human-tied, deliberately narrow-scoped identity is out of this
   role's authorized scope (does not match either of the two self-service identities named in the codex SSOT).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -52,7 +52,7 @@ source:
     "escalation_queue_reconciler dispatch agt-c5db55, slot 9, 2026-08-08 — first live Step-1 SSM attempt since the
     role's 2026-08-07 creation",
   ]
-resolved_by:
+resolved_by: interactive session, 2026-08-08 — unified-trading-pm@a3abc30f9
 locked_by:
 depends_on: []
 context_scope:
@@ -64,6 +64,10 @@ context_scope:
 ---
 
 # 2026-08-08: escalation_queue_reconciler blocked on missing ssm:SendCommand for ikenna-worker
+
+> **🟢 ARCHIVED 2026-08-08 — RESOLVED** (status: resolved, 0 open todos, unlocked). No IAM change needed — fixed at
+> the skill layer (`unified-trading-pm@a3abc30f9`) and re-verified live. Same-session archival per the
+> completion-and-archival-discipline SSOT.
 
 ## What happened
 
@@ -149,8 +153,9 @@ interactive-operator case, not for a dispatched worker calling itself.
 
 - [x] [DOCS] P1. Fix `/escalation-queue-reconcile`'s Step 0-2 to try direct `localhost:8765` first (the dispatched
       worker's own case) and reserve `aws ssm send-command` for a genuinely remote/interactive check — shipped
-      `unified-trading-pm@<pending>`. Re-verify LIVE by manually triggering `escalation-queue-reconciler.service` again
-      and confirming Step 1 completes with a plain curl, no `AccessDeniedException`.
+      `unified-trading-pm@a3abc30f9`. Re-verified LIVE: manually triggered `escalation-queue-reconciler.service` again
+      (dispatch `agt-11683c`, slot 10) — dispatch-to-`/done` in ~40s (03:27:17 → 03:27:57), no `AccessDeniedException`,
+      vs. ~11 minutes for the first (broken) dispatch `agt-c5db55`.
 
 ## Blast radius
 
@@ -165,3 +170,7 @@ directly) is not itself resolved — noting it as a real but currently non-block
   above). Two OTHER stale/already-resolved messages surfaced in this same session's boot heartbeat (a git-status nudge
   already clean, and a "direct instruction from main" exit_code=5 fix already shipped by slot-2 2026-08-07 — commit
   `27fd5779`) — both confirmed resolved and required no action, unrelated to this finding.
+- 2026-08-08 (same day, interactive session): recognized the IAM ask was the wrong fix before asking the operator to
+  act on it — the worker runs ON the instance it was routing SSM through to reach. Fixed the skill's Step 0 to check
+  `localhost:8765` directly, shipped `unified-trading-pm@a3abc30f9`, and re-verified live with a fresh manual dispatch
+  (`agt-11683c`) — clean ~40s completion, confirming the fix. Closing with 0 open todos, no IAM change requested.
