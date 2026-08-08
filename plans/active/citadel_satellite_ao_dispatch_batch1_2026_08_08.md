@@ -203,7 +203,7 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       unmodified committed `coverage.ts`; `refactor-g1-8-uac-archetype-capability.spec.ts` 6/6 pass
       (`--project=chromium --workers=1`, one retry needed at default 30s timeout due to shared-host dev-server
       cold-start contention — passes cleanly at 60s, a known flake class per
-      `codex/06-coding-standards/ui-testing-layers.md`, not a regression); `unified-api-contracts` CI green (cited
+      `/codex/06-coding-standards/ui-testing-layers.md`, not a regression); `unified-api-contracts` CI green (cited
       above, no local re-run needed since no code changed there); `unified-trading-pm` `quality-gates.sh` green on this
       commit. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.20 (moved verbatim).
 

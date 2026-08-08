@@ -315,22 +315,22 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   "3 sibling surfaces" enumeration never named this file; it still pointed agents at `codex/00-SSOT-INDEX.md` as the
   "canonical entry point" instead of the current grep-native `DOC_INDEX.generated.md` L0-L4 doctrine, and carried a dead
   `OpenClaw/Lobster` section referencing a `.lobster/` dir confirmed absent repo-wide — fixed,
-  `unified-trading-pm@bfbc69910`; (2) `codex/02-data/sports-data-types-catalog.md` self-contradicted within its own body
-  (added within the last 24h) — its `executable` predicate section (line ~91-92) states no exchange-type venue has a
-  complete adapter as of 2026-08-08 (i.e. `executable=False`), but its Venue Axis section (line 249) labeled the same 5
-  exchange venues `executable=True pending credentials` — corrected to `executable=False pending credentials`, matching
-  the predicate section and the sibling Fixed-odds-sportsbooks heading's phrasing, `unified-trading-pm@71e7f700b`.
-  Broken-link ratchet unchanged from the second dispatch's re-verification earlier today (11 `known_broken` in
-  `doc_body_link_baseline.yaml`, all still genuinely reproduce; 0 in `doc_reference_baseline.yaml`) — not re-verified a
-  third time same-day, deferring to that already-fresh check. **New report-only observation**: computed a
-  freshness-staleness distribution for codex dirs OUTSIDE the 4 cutover-critical gated dirs (the existing
-  `check_codex_doc_freshness.py` only scans `02-data`/`04-architecture`/ `05-infrastructure`/`11-project-management`) —
-  564 non-gated codex docs, 510 missing `last_reviewed` entirely (0 flagged as `stale` with a present-but-expired date;
-  the gap is near-universal absence of the field, not expiry). Heaviest concentrations: `09-strategy` (184/202),
-  `14-customer-journeys` (126/129), `15-runbooks` (63/75), `06-coding-standards` (53/63). Per this skill's own charter
-  this is report-only (widening the freshness gate's scope is an operator call, not this skill's to make unilaterally) —
-  flagging the scale here rather than leaving it buried in a single run's chat output, consistent with this doc's
-  existing freshness-ratchet design-observation entry above.
+  `unified-trading-pm@bfbc69910`; (2) `/codex/02-data/sports-data-types-catalog.md` self-contradicted within its own
+  body (added within the last 24h) — its `executable` predicate section (line ~91-92) states no exchange-type venue has
+  a complete adapter as of 2026-08-08 (i.e. `executable=False`), but its Venue Axis section (line 249) labeled the same
+  5 exchange venues `executable=True pending credentials` — corrected to `executable=False pending credentials`,
+  matching the predicate section and the sibling Fixed-odds-sportsbooks heading's phrasing,
+  `unified-trading-pm@71e7f700b`. Broken-link ratchet unchanged from the second dispatch's re-verification earlier today
+  (11 `known_broken` in `doc_body_link_baseline.yaml`, all still genuinely reproduce; 0 in
+  `doc_reference_baseline.yaml`) — not re-verified a third time same-day, deferring to that already-fresh check. **New
+  report-only observation**: computed a freshness-staleness distribution for codex dirs OUTSIDE the 4 cutover-critical
+  gated dirs (the existing `check_codex_doc_freshness.py` only scans `02-data`/`04-architecture`/
+  `05-infrastructure`/`11-project-management`) — 564 non-gated codex docs, 510 missing `last_reviewed` entirely (0
+  flagged as `stale` with a present-but-expired date; the gap is near-universal absence of the field, not expiry).
+  Heaviest concentrations: `09-strategy` (184/202), `14-customer-journeys` (126/129), `15-runbooks` (63/75),
+  `06-coding-standards` (53/63). Per this skill's own charter this is report-only (widening the freshness gate's scope
+  is an operator call, not this skill's to make unilaterally) — flagging the scale here rather than leaving it buried in
+  a single run's chat output, consistent with this doc's existing freshness-ratchet design-observation entry above.
 - **docs-reconcile 2026-08-08** (fourth same-day dispatch, one-off boot, no `pm_repo_path` in the boot message so this
   slot's own `unified-trading-pm` clone was treated as the target per the role file's fallback). Phase 0 deterministic
   checks re-run fresh: parity/frontmatter (1892 docs)/generator/body-links (1938 docs) all clean; freshness `--strict` =
@@ -366,25 +366,25 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   outside the 2 already-covered QG surfaces reference retrieval-layer terminology; all 5 point at the live, current
   `doc-frontmatter-schema.md`, none stale). **5 genuinely NEW findings this run, 4 verified + fixed, 1 routed to the
   owning plan instead of fixed here:**
-  1. `codex/07-security/self-hosted-runner-security-posture.md` — the "Dedicated VM" section overclaimed identity
+  1. `/codex/07-security/self-hosted-runner-security-posture.md` — the "Dedicated VM" section overclaimed identity
      decoupling ("ambient identity is now scoped to the runner box alone and no longer doubles as... the
      agent-orchestrator's own identity"), contradicting the doc's own mitigation-ladder item 2 ("Not yet done").
      Verified against `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` todo 3: the runner
      VM was launched with the SAME AWS IAM instance profile (`uts-orchestrator-epic`) and the SAME GCP service account
      (`unified-trading-sa`, freshly-keyed, not a distinct SA) as the orchestrator box — identity genuinely was NOT
      decoupled, only the VM/box was. Corrected. `unified-trading-pm@27173cdd4`.
-  2. `codex/08-workflows/ci-cd-flow.md` L60-65 — blockquote/list structural break (a continuous 3-item gate-set clause
+  2. `/codex/08-workflows/ci-cd-flow.md` L60-65 — blockquote/list structural break (a continuous 3-item gate-set clause
      split by a blank `>` line + spurious `- ` prefix), the same defect class an earlier 2026-08-08 dispatch fixed in
      sibling docs but missed here. Fixed. `unified-trading-pm@27173cdd4`.
-  3. `codex/08-workflows/ci-cd-flow.md` L204 — stale "PM `scripts/**`" phrasing the doc's own D16 correction (~L810+)
+  3. `/codex/08-workflows/ci-cd-flow.md` L204 — stale "PM `scripts/**`" phrasing the doc's own D16 correction (~L810+)
      already superseded with the ratified all-repos framing; L204 wasn't updated when that correction landed. Fixed.
      `unified-trading-pm@27173cdd4`.
-  4. `codex/15-runbooks/alerting/README.md` + `_template.md` — both had genuine free-prose `authoritative_for:` values
+  4. `/codex/15-runbooks/alerting/README.md` + `_template.md` — both had genuine free-prose `authoritative_for:` values
      (no list syntax at all) and NO `summary:` field, so the CLAUDE.md-documented L1 retrieval grep
      (`rg -l '^authoritative_for:.*<topic>' codex/`) provably fails to match either doc (tested live). Added a derivable
      `summary:` from the existing prose, normalized `authoritative_for` to a short topic list. Fixed.
      `unified-trading-pm@27173cdd4`.
-  5. `codex/02-data/sports-data-types-catalog.md`'s Venue Axis section ("32 canonical members") diverges substantially
+  5. `/codex/02-data/sports-data-types-catalog.md`'s Venue Axis section ("32 canonical members") diverges substantially
      from the live `VENUES_BY_ASSET_GROUP["sports"]` (31 members, verified via direct import of
      `unified_api_contracts.registry.market_data_categories` — different names on both sides, not just a count
      mismatch). NOT fixed here: the file is mid-migration under the active
@@ -393,7 +393,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
      ambiguous whether the doc states a target the registry hasn't fully landed or is simply a stale enumeration, a call
      that needs this chain's full context. Per findings-triage ("fits another plan → annotate it, don't fix — collision
      risk"), added a new `- [ ] [DOCS] P2.` todo to that plan with the full member-list diff instead of editing the
-     codex doc directly. Confirmed-not-a-finding (adversarially checked, false positive): `codex/10-audit/README.md`'s
+     codex doc directly. Confirmed-not-a-finding (adversarially checked, false positive): `/codex/10-audit/README.md`'s
      missing `summary:`/ minimal frontmatter — verified this is the established convention for every section-level
      `README.md` in the codex (checked 8 siblings: `02-data`, `03-observability`, `04-architecture`, `09-strategy`,
      `11-project-management`, `12-agent-workflow`, `13-codex-governance`, `14-customer-journeys` — all carry only

@@ -167,7 +167,7 @@ corpus actually uses was never brought into the checker's purview.
   `scripts/quality_gates/check_doc_body_links.py` and wired it into `_extract_links()`, reusing `_is_checkable()`/
   `_resolve()` unchanged. Found + fixed one real bug surfaced by the widened scope during implementation (not
   anticipated by the investigation): a wildcard-glob illustration `` `codex/**.md` `` in
-  `codex/11-project-management/cross-reference-path-convention.md` matched the naive backtick pattern and crashed
+  `/codex/11-project-management/cross-reference-path-convention.md` matched the naive backtick pattern and crashed
   `_resolve()`'s archive-fallback `Path.glob("**/<name>")` call on a bare `**` path segment — fixed by excluding `*`
   from the backtick path charclass (a real citation never contains one). Added 7 unit tests in
   `test_check_doc_body_links.py` (resolve / broken / non-codex-scope-excluded / fence-excluded / leading-slash /

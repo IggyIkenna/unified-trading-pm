@@ -117,7 +117,7 @@ venues — only features do.
 ## §4 Shard atomicity + market lifecycle — prediction
 
 Prediction shard atom (banner-canonical per
-[`availability-manifest-and-data-status.md § Multi-axis correction banner`](../02-data/availability-manifest-and-data-status.md#multi-axis-correction-banner-canonical),
+[`availability-manifest-and-data-status.md § Multi-axis correction banner`](/codex/02-data/availability-manifest-and-data-status.md#multi-axis-correction-banner-canonical),
 restated here for batch/live-architecture readability, not a second SSOT) is
 **`(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`** —
 the LIVE writer's atom is the canonical atom (batch=live SSOT).
