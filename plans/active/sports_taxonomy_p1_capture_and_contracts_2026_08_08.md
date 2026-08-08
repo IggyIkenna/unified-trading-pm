@@ -422,13 +422,30 @@ achieved by exclusion, not canonicalisation.**
       key-minting function the next todo must read before changing). None of these are RAW MTDS capture vocabulary (this
       todo's scope, per the plan header's "contracts only" phase boundary) — they are MDPS-internal processed-output
       keys, correctly deferred.
-- [ ] [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
+- [x] ✅ [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
       (point-in-time LOCF) and `odds_movement` (OHLC bar) are different SHAPES at the same grain, so `timeframe` alone
       cannot distinguish them once the names are gone. **PRE-SPECIFIED**: follow the fleet convention already used for
       the cefi/tradfi candle family — the OHLC form is the candle (`odds` + `timeframe`), and the LOCF point-in-time
       form is a distinct processed key via `_RAW_TO_PROCESSED_PREFIX` (`odds_ohlcv_*` vs a snapshot prefix), NOT a new
       `data_type`. Confirm against `canonical_writer_shaping.mdps_data_type_key`'s real output before implementing, and
-      record the chosen keys in codex.
+      record the chosen keys in codex. — **DONE 2026-08-08 (slot 12, data_engineering)**. Confirmed against the real
+      `mdps_data_type_key`/`_DATA_TYPE_TO_MDPS_PREFIX` + UAC `_RAW_TO_PROCESSED_PREFIX` implementations AND the actual
+      adapter code (`odds_movement_adapter.py`/`odds_snapshot_adapter.py`): `_RAW_TO_PROCESSED_PREFIX` is strictly
+      raw-MTDS-`data_type`-scoped (backs `MDPS_DERIVABLE_DATA_TYPES`/`PROCESSED_REQUIRES_RAW`'s honest-coverage
+      classification) — `odds_snapshot`/`odds_movement` are NOT raw data_types (confirmed: neither was ever a
+      raw-vocabulary entry), so a literal new prefix-table entry for them would misclassify them as raw sources and risk
+      colliding `odds_movement_{tf}` with the base `odds_ohlcv_{tf}` candle. **Ruling**: `odds_movement`'s adapter
+      already computes a genuine OHLC aggregation (first/max/min/last of `home_odds`) — this **is** the "OHLC form is
+      the candle" the pre-spec calls for, just realized as the sports-specific candle-of-`home_odds` rather than a
+      literal `odds`+`timeframe` merge; `odds_snapshot`'s LOCF (last-value, flat O=H=L=C) remains the distinct
+      point-in-time key. Both stay MDPS-internal `CandleAdapterRegistry` product keys — NOT new raw `data_type`s —
+      resolved via `mdps_data_type_key`'s existing deterministic fallback (`odds_movement_{tf}`/`odds_snapshot_{tf}`),
+      which was already correct; no functional key-minting change was needed. Shipped: (1) clarifying comments in both
+      prefix tables + the fallback branch marking the omission deliberate — market-data-processing-service@d3ac175,
+      unified-api-contracts@c4ed6094; (2) codex decision record + a fix to a stale schema description (the doc wrongly
+      described `odds_movement` as a `price_prev`/`price_curr`/`delta` shape; the real adapter output is OHLC columns) —
+      unified-trading-pm@\<pending\>, in `/codex/02-data/sports-data-types-catalog.md` § "Snapshot vs Candle
+      Discriminator (P1 decision, 2026-08-08)".
 - [ ] [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.**
       `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any unrecognised venue to `"cefi"` SILENTLY.
       When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from the canonical venue axis, that default

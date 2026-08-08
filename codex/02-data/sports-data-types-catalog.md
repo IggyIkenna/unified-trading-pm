@@ -154,20 +154,68 @@ MDPS snapshot runs. A partial venue set corrupts downstream cross-bookmaker comp
 
 ---
 
-### 3. `odds_movement` — MDPS OHLC delta
+### 3. `odds_movement` — MDPS OHLC candle
 
-| Field               | Value                                                                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Producer**        | MDPS `odds_movement_adapter` (derived from `odds_snapshot`)                                                                   |
-| **Shard key**       | `venue` × `league_id` × `day`                                                                                                 |
-| **Instrument type** | `odds`                                                                                                                        |
-| **NEEDS_CANDLE**    | True                                                                                                                          |
-| **Schema fields**   | `fixture_id`, `league_id`, `venue`, `market_type`, `outcome`, `price_prev`, `price_curr`, `delta`, `delta_pct`, `ts_snapshot` |
-| **Upstream guard**  | Same `DependencyChecker` staleness gate as `odds_snapshot`                                                                    |
-| **Status**          | Production (16,470 captured shards since 2026-07-25)                                                                          |
+| Field               | Value                                                                                                                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Producer**        | MDPS `SportsOddsMovementAdapter` (`odds_movement_adapter.py`, derived from raw `odds`/`trades` ticks)                                                                                                                           |
+| **Shard key**       | `venue` × `league_id` × `day`                                                                                                                                                                                                   |
+| **Instrument type** | `odds`                                                                                                                                                                                                                          |
+| **NEEDS_CANDLE**    | True                                                                                                                                                                                                                            |
+| **Schema fields**   | `timestamp`, `timestamp_out`, `venue`, `symbol`, `instrument_id`, `open`, `high`, `low`, `close`, `volume` (always 0), `trade_count` (tick count in the interval) — genuine OHLC of `home_odds`, one row per timeframe interval |
+| **Upstream guard**  | Same `DependencyChecker` staleness gate as `odds_snapshot`                                                                                                                                                                      |
+| **Status**          | Production (16,470 captured shards since 2026-07-25)                                                                                                                                                                            |
 
-OHLC delta of odds from the prior snapshot interval. `delta` = absolute change; `delta_pct` = percentage change. Primary
-steam-move and closing-line signals for features-service. Requires `odds_snapshot` as upstream.
+**Corrected 2026-08-08** (P1 discriminator todo): the schema fields above were previously mis-documented as
+`price_prev`/`price_curr`/`delta`/`delta_pct` (a two-point delta shape) — verified against the live adapter code
+(`market-data-processing-service/.../adapters/sports/odds_movement_adapter.py`), the actual output is a genuine OHLC
+candle: `grouped["home_odds"].agg(["first", "max", "min", "last"])` → `open`/`high`/`low`/`close`, with `trade_count` =
+the tick count observed in that interval. This is computationally the same SHAPE as any other fleet OHLCV candle (e.g.
+`odds_ohlcv_{tf}`, `ohlcv_{tf}`) — it is the candle-of-`home_odds` form, not a delta/movement metric between two prior
+points. See § "Snapshot vs Candle Discriminator" below for how this reconciles with the collapsed `odds` raw model.
+
+---
+
+## Snapshot vs Candle Discriminator (P1 decision, 2026-08-08)
+
+> Resolves `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`'s "Decide and record the
+> snapshot-vs-candle discriminator on the collapsed model" todo. `odds_snapshot` and `odds_movement` are two DIFFERENT
+> computations over the same raw `odds` ticks at the same grain, so `timeframe` alone cannot distinguish them once the
+> raw `odds_snapshot`/`odds_movement` `data_type` names are retired from the RAW MTDS vocabulary (done in the prior P0
+> todo — raw vocabulary is now `odds` + `timeframe`/`horizon`/`in_play` only).
+
+**Verified against the real adapter code** (`market-data-processing-service/app/adapters/sports/`):
+
+- **`odds_movement`** (`SportsOddsMovementAdapter`) computes a genuine OHLC aggregation — `open`/`high`/`low`/`close` =
+  first/max/min/last of `home_odds` within the interval, `trade_count` = observed-tick count. This **is** the
+  fleet-standard "OHLC form" the plan's pre-specified ruling describes as "the candle (`odds` + `timeframe`)" — it is
+  architecturally identical in kind to `odds_ohlcv_{tf}` (open/high/low/close/volume/trade_count), just computed from
+  the sports-specific `home_odds` field via the sports MDPS adapter rather than the generic candle builder.
+- **`odds_snapshot`** (`SportsOddsSnapshotAdapter`) computes LOCF — `open`=`high`=`low`=`close` = the single last
+  observed `home_odds` value in the interval (a degenerate/flat candle), `trade_count`=0. This is the point-in-time
+  "value as of T" form, semantically distinct from price-action-within-interval even though it shares the same
+  `CandleOutput` container shape.
+
+**Discriminator ruling**: both forms remain **MDPS-internal processed-output keys**, minted via
+`canonical_writer_shaping.mdps_data_type_key(source_data_type, timeframe)` using the sports `CandleAdapterRegistry`
+product name (`"odds_snapshot"` / `"odds_movement"`) as `source_data_type` — **confirmed against the function's real
+implementation**: neither name is an entry in `_DATA_TYPE_TO_MDPS_PREFIX` (MDPS) / `_RAW_TO_PROCESSED_PREFIX` (UAC
+`processed_data_dependencies.py`), so both fall through `mdps_data_type_key`'s deterministic generic-fallback branch
+(`f"{source_data_type}_{tf}"`), producing `odds_snapshot_{tf}` / `odds_movement_{tf}` — already registered as real
+per-timeframe contracts in UAC `_candle_contracts.py`'s sports-derived-candle loop and matched by
+`_SPORTS_ODDS_DERIVED_CANDLE_PREFIXES` for contract lookup. **This is deliberately NOT routed through
+`_RAW_TO_PROCESSED_PREFIX`/`_DATA_TYPE_TO_MDPS_PREFIX`**: those two tables are raw-MTDS-`data_type`-scoped SSOTs
+(consumed by `MDPS_DERIVABLE_DATA_TYPES` and `PROCESSED_REQUIRES_RAW` for raw-vs-blocked-on-raw honest-coverage
+classification — verified via `processed_data_dependencies.py`'s own docstring + consumers) — `odds_snapshot`/
+`odds_movement` are NOT raw MTDS capture types (that raw vocabulary is `odds` alone, per the P0 collapse), so adding
+them there would misclassify them as raw sources and would collide `odds_movement_{tf}`'s key with the unrelated base
+`odds_ohlcv_{tf}` candle if a prefix entry pointed both at the same `"odds_ohlcv"` prefix.
+
+**Net**: no functional key-minting code change is required — the existing fallback mechanism already discriminates the
+two forms correctly and deterministically. What was missing (this todo's actual deliverable) is this recorded decision
+plus explicit source comments (see `canonical_writer_shaping.py` and `processed_data_dependencies.py`) marking the
+omission of `odds_snapshot`/`odds_movement` from the raw-prefix tables as deliberate, so a future edit doesn't "fix" it
+as an oversight and collide the movement candle's key with the base `odds` candle.
 
 ---
 
