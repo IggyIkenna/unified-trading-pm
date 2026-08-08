@@ -444,9 +444,44 @@ reconciling + signing off, not redoing.)_
       `instruments_foundation_completeness_2026_06_24.md` (owned by this tracker's sibling
       `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` [AUDIT] "Reconcile GATE 0" todo, not this one) — not
       re-derived here; G4 stays annotated OPEN pending that dedicated re-check.
-- [ ] [DATA] P1. tradfi **§8 retirement purge** (4-leg GCS delete — ICE / CBOE-OPRA / VX-spread / VIX-cash) —
-      **OPERATOR-CONFIRM**. **STILL OPEN (reconciled 2026-07-28)** — genuinely operator-gated, not covered by any named
-      archived child; expected to stay open per this todo's own instructions.
+- [x] ✅ [DATA] P1. tradfi **§8 retirement purge** (4-leg GCS delete — ICE / CBOE-OPRA / VX-spread / VIX-cash) —
+      **EXECUTED 2026-08-08** (operator, NA-corpus blocker digest round 5, id=52, "Confirm - execute the 4-leg purge").
+      Target: `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (the tradfi
+      instrument-catalogue rollup — this is a catalogue-row purge, not a raw market-tick-data delete). **Fresh row-level
+      survey before executing** (numbers barely drifted from the 2026-06-24 baseline, confirming stability): ICE
+      whole-venue 16,147 (was 16,158) · CBOE OPRA OPTION 33,258 (exact match) · CBOE VX-spread SPOT_PAIR 4,216 (exact
+      match) · VIX-cash INDEX 2 rows (`CBOE:INDEX:VIX-USD`, `CBOE:INDEX:^VIX-USD`). **CRITICAL FINDING before
+      executing**: the plan text (and this doc's sibling `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`)
+      claimed the tradfi catalogue-regen scheduler was "operator-PAUSED pending tradfi G1 retirement/sign-off" since
+      2026-06-25 — **live `gcloud scheduler jobs describe lifecycle-catalogue-regen-tradfi-daily` showed `ENABLED`, with
+      fire logs at 2026-08-07T01:00 and 2026-08-08T01:00 UTC** (today), and `catalog.parquet`'s `last_modified` was
+      2026-08-08T05:50 UTC — the daily regen has actually been LIVE and silently re-baking these same pollutant rows
+      every day (the 2026-06-25 pause was evidently a manual/out-of-band action that never actually touched the Cloud
+      Scheduler resource, or was reverted since without anyone noticing). The weekly
+      `lifecycle-catalogue-full-tradfi-weekly` full-rebuild job was ALSO found `ENABLED` (not previously named in any
+      pause list). **Protectively paused both** (`gcloud scheduler jobs pause`) before running the purge — confirmed
+      `PAUSED` on both post-pause. **Executed the purge**: wrote + ran a read-filter-snapshot-backup-write-verify script
+      mirroring `instruments-service/scripts/purge_defi_catalogue_cefi_reclassified_venues_2026_08_04.py`'s exact
+      pattern (dry-run first, fresh `gcs_bucket_soft_delete_retention_seconds()` check = 604800s, qualifies). **Result:
+      53,623 rows removed (16,147+33,258+4,216+2, union no double-count), 973,116 → 919,493 rows.** Snapshot
+      (`prod/snapshots/pre_g1_retirement_4leg_purge_2026_08_08.parquet`) + `.bak` written before the rewrite; post-write
+      verify confirms 0 pollutant rows remain and CBOE COMBO/FUTURE (the correct VX outright/decomposed- spread rows)
+      are untouched (before/after counts identical). **NOT resumed**: the two schedulers stay PAUSED — resuming the
+      unmodified daily/weekly regen would silently re-bake the exact rows just purged tomorrow at 01:00 UTC, since
+      `build_instrument_catalogue.py` has no build-time filter excluding these venues/types from its by_date source read
+      (the underlying historical `instrument_availability/by_date/day=X/venue=ICE/...` source objects were never deleted
+      — a separate, larger, single-walk-disciplined leg out of THIS item's scope). **Filed as an explicit follow-up**
+      (see the new todo immediately below) rather than leaving it implicit. Deliberately scoped to exactly these 4 legs
+      per the digest's literal wording — the NASDAQ/NYSE mis-class SPOT_PAIR (318 rows) and 12 cefi-singles EQUITY rows
+      mentioned in the sibling gate-execution doc's fuller list were NOT part of what this item asked/approved, left
+      untouched pending a separate explicit ask.
+- [ ] [INFRA] P1. **NEW (filed 2026-08-08, follow-up of the 4-leg purge above)**: add a build-time exclusion filter to
+      `instruments-service/scripts/build_instrument_catalogue.py`'s `build_catalogue_dataframe` (or an equivalent
+      pre-write filter) so `venue=ICE`, `venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR)`, and the 2 VIX-cash
+      `INDEX` ids are excluded from every future rebuild — the durable fix that lets
+      `lifecycle-catalogue-regen-     tradfi-daily` and `lifecycle-catalogue-full-tradfi-weekly` be safely RE-ENABLED
+      without re-baking the pollution just purged. Until this lands, both schedulers must stay paused (currently paused,
+      this session). Repo: instruments-service.
 - [x] ✅ [DESIGN] P1. defi completeness **oracle** design. **DONE — reconciled 2026-07-28 against
       `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,
       2026-07-06).** Design SSOT landed at `/codex/02-data/defi-completeness-oracle.md` (`unified-trading-pm@650c2b881`)
