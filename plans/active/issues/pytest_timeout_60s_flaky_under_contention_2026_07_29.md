@@ -742,3 +742,12 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `31229610631`, not yet terminal); unified-trading-pm latest run `31229619009` confirmed `QG slice (checks): failure`,
   `QG slice (tests): success` — known ratchet class, not pytest-timeout. Zero pytest-timeout recurrence anywhere. Window
   NOT yet closed (day ~3 of ~14); skipping per prior-pass precedent.
+- **slot-9 2026-08-08 (eighth pass, same task)**: corroborates all prior passes — 30/30 `quality-gates-v2` runs across
+  10 repos all consistent with zero pytest-timeout: 9 service repos × 3 runs each = 27/27 `conclusion=success`
+  (unified-api-contracts, instruments-service, features-service, market-data-processing-service, unified-trading-api,
+  deployment-service, ml-service, market-tick-data-service, client-reporting-api); unified-trading-pm latest 3 runs all
+  `QG slice (checks): failure`, `QG slice (tests): success` (run `31233408586` confirmed, known ratchet class, not
+  pytest-timeout). Zero pytest-timeout recurrence anywhere. Also confirmed the direct-instruction fix for
+  deployment-service exit_code=5 false-page (BLK-091671d7) was already shipped on 2026-08-07 (commit `27fd5779`,
+  `fix(dp-vm-001): stop false-paging expected-universe-v2 halt-safety exits`, on origin/live-defi-rollout) — no action
+  needed. Window NOT yet closed (day ~3 of ~14); skipping per prior-pass precedent.
