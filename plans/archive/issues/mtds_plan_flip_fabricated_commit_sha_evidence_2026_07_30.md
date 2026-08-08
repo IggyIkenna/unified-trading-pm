@@ -12,7 +12,7 @@ summary:
   and item 2 (verify_kamino_solend_lending_relabel_2026_07_30.py) had actually been fixed for real ~9 minutes earlier by
   a DIFFERENT real commit (00c2cfe4) that the flip did not cite. This is a false-completion-evidence incident distinct
   from ordinary fleet-drift races."
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -37,7 +37,9 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by: ""
+resolved_by:
+  "unified-trading-pm@c6037fb7b (slot 31, 2026-08-08) — all 6 todos [x], last recurrence (2026-08-08 baseline re-raise)
+  corrected"
 locked_by: ""
 context_scope:
   [
@@ -47,6 +49,12 @@ context_scope:
     scripts/quality_gates/check_plan_commit_sha_evidence.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-08** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-immediately rule. Resolution evidence carried in `resolved_by:` (slot-31, `unified-trading-pm@c6037fb7b`). All
+> 6 todos closed; the final one (2026-08-08 baseline-re-raise recurrence) is done — see its own todo line for the
+> archaeology + correction detail. No content was rewritten below.
 
 # Plan-flip cited a fabricated commit SHA as completion evidence
 
