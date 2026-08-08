@@ -112,13 +112,22 @@ resolved in this doc.
 
 ## Todos
 
-- [ ] [CODE] P1. **Register the missing cefi options_chain candle SchemaContract(s)** in
+- [x] ✅ [CODE] P1. **Register the missing cefi options_chain candle SchemaContract(s)** in
       `unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py::CONTRACT_REGISTRY` for
       `instrument_type="option"` (lowercase, matching the registry's convention) across the candle timeframe suffixes
       MDPS requests (`options_chain_15s`/`_1m`/`_5m`/`_15m`/`_1h`/`_4h`/`_24h`) — confirm which timeframes are genuinely
       needed vs already covered before adding all seven blindly. Add/extend
       `VENUE_CONTRACT_OVERRIDES[("cefi", "DERIBIT", "option", "options_chain_15s")]` instead of the generic registry
-      entry if the schema needs to be DERIBIT-specific. (repo: unified-api-contracts)
+      entry if the schema needs to be DERIBIT-specific. — unified-api-contracts@5f51c6d4. Registered in
+      `_candle_contracts.py` (not `contracts.py` directly — matches the module's existing side-effect-import pattern),
+      generic `("cefi", "option", "options_chain_{tf}")` (not a DERIBIT-only override — `CefiOptionsChainAdapter` is
+      venue-agnostic) for all 7 `_TIMEFRAMES_CEFI` timeframes, since
+      `BASE_GRANULARITY_BY_DATA_TYPE["options_chain"] ==     "15s"` and cefi has no timeframe ceiling to scope the
+      request down — all 7 are genuinely requested, not just the narrower `_TIMEFRAMES_OPTIONS` subset the pre-existing
+      (different, underlying-bundle) `options_chain`/`ohlcv_{tf}` registration uses. Columns match
+      `CefiOptionsChainAdapter`'s actual `CandleOutput` fields (implied_volatility, mark_price, strike, open_interest,
+      expiration, option_type, staleness_seconds) — verified via a live `lookup_contract()` round-trip for all 7
+      timeframes. (repo: unified-api-contracts)
 - [ ] [DATA] P2. **Re-verify** by re-running MDPS `process --force` for `2023-08-10` (or any date with confirmed DERIBIT
       options_chain data) after the contract lands, confirming the per-date subprocess now exits 0 with no
       `SchemaContractNotFoundError` for `options_chain_15s`/DERIBIT/OPTION. (repo: market-data-processing-service)
@@ -130,3 +139,16 @@ resolved in this doc.
   RUNNING, not terminal — that todo remains gated, releasing back to queue per the same precedent slot-11/slot-15 set).
   Filed as a separate cross-cutting doc since this defect is unrelated to the `--force` forwarding bug and needs its own
   UAC-side fix.
+- **slot-3 (data_engineering) 2026-08-08T23:15Z**: Todo 1 shipped — `unified-api-contracts@5f51c6d4`. Traced the exact
+  live lookup key by reading `canonical_writer.py::write_candle_parquet` →
+  `instrument_type = _infer_instrument_type(...)` (per-CONTRACT type token, e.g. `"OPTION"`) and
+  `mdps_data_type_key(source_data_type="options_chain", tf)` (adapter's `data_type` attribute on
+  `CefiOptionsChainAdapter`, which is `"options_chain"` — not `"trades"` — so it's absent from
+  `_DATA_TYPE_TO_MDPS_PREFIX` and falls through to the `f"{source_data_type}_{tf}"` shape, deliberately, matching the
+  sports odds_snapshot/odds_movement precedent). Confirmed `BASE_GRANULARITY_BY_DATA_TYPE["options_chain"] == "15s"`, so
+  the adapter's own base granularity doesn't filter any of the 7 requested timeframes down. Registered
+  `("cefi", "option", "options_chain_{tf}")` for all 7 `_TIMEFRAMES_CEFI` values with the adapter's real `CandleOutput`
+  columns (verified against `CefiOptionsChainAdapter.process_to_candles()` directly, not assumed). Live-verified via
+  `lookup_contract()` for all 7 timeframes + venue="DERIBIT" post-fix (case-normalisation fallback resolves `"OPTION"` →
+  registered `"option"`). Todo 2 (re-run MDPS `process --force` for a real date) left open — out of this task's scope
+  (est_hours=1.0, single-todo dispatch); the next AO pass on this doc picks it up.
