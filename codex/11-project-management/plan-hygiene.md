@@ -218,7 +218,11 @@ A plan is eligible for archival when:
 1. `grep -c "^- \[ \]" <plan>` returns 0 (zero open todos).
 2. No genuine DEFERRED prose in the body (prose deferrals must be converted to `- [ ]` todos first).
 
-Archive destination: `plans/archive/YYYY_MM/`. Use `git mv` — do not copy-paste.
+Archive destination: `plans/archive/YYYY_MM/`. Use `git mv` — do not copy-paste. **Commit via
+`scripts/dev/safe-doc-push.sh` (or a full-staged-set `git commit`)** — a bare `git commit --only -- <new-path>` silently
+drops the rename's delete side (create-only commit, live duplicate left behind); see
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "The archival commit itself must not drop the
+rename's delete side" for the full mechanism + the two-path `--only` alternative.
 
 `check_archive_candidates.sh` surfaces eligible plans. `check_frontmatter.sh` also runs over `plans/archive/` to keep
 archived plans schema-clean.
