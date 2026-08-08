@@ -85,23 +85,30 @@ is an ancestor of `origin/live-defi-rollout`) is a stronger correctness signal t
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix the idle-reap watchdog to NOT reclassify/reassign a slot mid-one-shot-dispatch while it has a
+- [x] ✅ [BACKEND] P1. Fix the idle-reap watchdog to NOT reclassify/reassign a slot mid-one-shot-dispatch while it has a
       pending `ScheduleWakeup` or other tracked async-wait in flight — the watchdog needs to check for an active
       one-shot session's own wait-state before treating slot silence as abandonment. Alternatively/additionally, harden
       `POST /api/slots/{id}/done`'s `one_shot_complete` path to accept completion from the ORIGINAL one-shot `agent_id`
       even if the backend's session-ownership record was reassigned in the interim, since the actual work-completion
       evidence (a verified git commit ancestor of origin) is a stronger signal of legitimacy than session-ownership
       bookkeeping. Reproduce via a one-shot dispatch that includes a `ScheduleWakeup` gap long enough to trigger
-      idle-reap (both confirmed instances tonight were ~2-3h span dispatches). (repo: agent-orchestrator)
+      idle-reap (both confirmed instances tonight were ~2-3h span dispatches). (repo: agent-orchestrator) —
+      agent-orchestrator@43fc142. Took the hardening path: `tmux_pruner`'s `reaped-stale` archive now snapshots
+      `AgentRow.last_tmux_session` before nulling `tmux_session`; `_done_one_off` falls back to
+      `find_reaped_stale_agent_for_session` (or an explicit self-reported `agent_id` on `DoneRequest`) and corrects
+      `exit_reason` to `lifecycle-complete` — deliberately never touching `SlotRow`, since by the time this fires the
+      slot may already be reassigned to unrelated live work. 6 new regression tests in `tests/test_done_one_off.py`
+      cover the recovery-via-tmux_session, recovery-via-agent_id (+ cross-slot agent_id mismatch rejection),
+      evidence-persistence, and duplicate-call-409 paths. Full `quality-gates.sh` green (2760 passed, 2 skipped).
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY -> `assigned_vm: planning`. Sole open
-  item (`[BACKEND] P1`) is a bounded backend bug fix with a confirmed root cause (idle-reap watchdog reclassifying
-  a slot mid-`ScheduleWakeup`-gap, verified live twice the same day) and a concrete repro recipe already stated
-  in-doc ("reproduce via a one-shot dispatch that includes a `ScheduleWakeup` gap long enough to trigger
-  idle-reap"). No design fork requiring an operator -- both candidate fixes named in-doc are complementary, not
-  competing, and the todo does not ask for a choice between them. Conflict-check clear: grepped `plans/active/*.md`
-  for "idle-reap"/"ScheduleWakeup"/"session-ownership desync" -- zero hits outside this doc. `execution_scope:
-  local-only -> orchestrator-agent`. Companion gated finalize:
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY -> `assigned_vm: planning`. Sole open item
+  (`[BACKEND] P1`) is a bounded backend bug fix with a confirmed root cause (idle-reap watchdog reclassifying a slot
+  mid-`ScheduleWakeup`-gap, verified live twice the same day) and a concrete repro recipe already stated in-doc
+  ("reproduce via a one-shot dispatch that includes a `ScheduleWakeup` gap long enough to trigger idle-reap"). No design
+  fork requiring an operator -- both candidate fixes named in-doc are complementary, not competing, and the todo does
+  not ask for a choice between them. Conflict-check clear: grepped `plans/active/*.md` for
+  "idle-reap"/"ScheduleWakeup"/"session-ownership desync" -- zero hits outside this doc.
+  `execution_scope: local-only -> orchestrator-agent`. Companion gated finalize:
   `one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md`.
