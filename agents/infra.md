@@ -105,6 +105,17 @@ watchdog's per-prefix threshold), (2) a `run.log` tail (active writes in the las
 `tardis-concurrency-guard.sh`) means WAIT or escalate, not delete the running VM yourself — deleting a live backfill VM
 destroys hours of in-progress, idempotent-but-costly work.
 
+**`canonical-migration-` prefix carve-out (codified 2026-08-08,
+`plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`)**: Even when all 3 signals
+above read stale, a `canonical-migration-` prefix VM with **unchanged manifest generation for >90 minutes is NOT
+sufficient justification to autonomously delete** — escalate for human confirmation instead. These VMs run large-index
+download-then-filter-then-write operations where the manifest generation is EXPECTED to be frozen through the entire
+download phase (confirmed in the 2026-08-07 incident: the VM was 22 minutes into a `blob.download_as_bytes(timeout=900)`
+call when killed; heartbeat sidecar dead via SIGPIPE, manifest generation genuinely unchanged — not evidence of
+staleness). A frozen run.log/heartbeat alone is not dispositive for this VM class the way it is for other fleet classes.
+If a `canonical-migration-` VM has all 3 signals stale AND unchanged manifest generation >90 min: **human confirmation
+required; do NOT autonomously delete**.
+
 STEP 1+ — work the plan start-to-finish (it is sized for one agent). Resolved decisions + acceptance Gates are in the
 plan; you implement to the Gate. Run quality-gates.sh, ship via quickmerge, and VERIFY CI after push (quality-gates-v2
 is the required check on every repo). If you surface an unknown the plan didn't anticipate, file an issue doc + escalate
