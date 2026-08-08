@@ -195,11 +195,34 @@ achieved by exclusion, not canonicalisation.**
       `footystats`), which is exactly the axis that should carry that distinction. Add an `in_play` boolean column
       (derivable from `bm_minutes_to_kickoff < 0`) and retire `trades_inplay`. Re-reserve `trades` for genuine matched
       volume with ZERO current producers.
-- [ ] [CODE] P0. **Add a first-class `horizon` axis** to the manifest/shard contract and stop overloading `timeframe`.
-      `timeframe` reverts to meaning candle grain only. `odds_horizon_bucket` stops being a data_type and becomes `odds`
-      at a horizon. Enumerate every reader of the current `timeframe` column BEFORE changing it (see the rename process
-      rule below) — MDPS, the features loader's `_ODDS_BUCKETED_PREFIXES` path match, and the honest-coverage rollup all
-      read it.
+- [x] ✅ [CODE] P0. **Add a first-class `horizon` axis** to the manifest/shard contract and stop overloading
+      `timeframe`. `timeframe` reverts to meaning candle grain only. `odds_horizon_bucket` stops being a data_type and
+      becomes `odds` at a horizon. Enumerate every reader of the current `timeframe` column BEFORE changing it (see the
+      rename process rule below) — MDPS, the features loader's `_ODDS_BUCKETED_PREFIXES` path match, and the
+      honest-coverage rollup all read it. — **LANDED 2026-08-08 (slot 3, data_engineering)**:
+      `unified-api-contracts@685b288a` adds `SPORTS_HORIZONS` (T-24h..T-0) as the SSOT horizon vocabulary, separate from
+      `TIMEFRAMES`/`timeframe` (candle grain only), plus `is_valid_horizon()`. Registers a NEW, additive
+      `SPORTS_ODDS_HORIZON_BUCKET` SchemaContract at `CONTRACT_REGISTRY[("sports","odds","odds_horizon_bucket")]` — this
+      data_type had NO contract at all before — with `horizon` as a required column, instead of bolting an optional
+      column onto `SPORTS_ODDS_TRADES` (confirmed that breaks `validate_dataframe` for every currently-shipping
+      unbucketed row — the same `validate_dataframe` ignores `nullable`/`required` footgun `broker`/`client` were
+      removed for on this exact contract). Added the `("sports","odds")` → `odds_horizon_bucket` entry to
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`. 42/42 UAC sports-contract unit tests green; full UAC QG green.
+      `market-data-processing-service@3e0fb852` wires `SportsBucketAssignmentAdapter.TIER1_HORIZONS`'s bucket NAMES to
+      the new UAC SSOT with a module-load drift-guard assertion (this adapter is the sole writer of horizon-bucketed
+      rows) — calibration values (target_minutes/staleness_cap) stay local, only the name vocabulary moved. No behavior
+      change; 80/80 bucket-adapter unit tests green; full MDPS QG green. **Readers enumerated but NOT changed this
+      phase** (contracts-only, no GCS/manifest mutation, per the plan header):
+      `features-service/features_service/sports/data/gcs_reader.py` (`_BUCKETED_ODDS_*_PREFIX`,
+      `read_bucketed_odds`/`read_odds_at_horizon`, physical column `horizon_name`) and the honest-coverage rollup
+      (deployment-api `_distinct_values.py`) both still read the CURRENT `timeframe`-carries-horizon manifest shape —
+      neither repo is in this plan's `repos:` list, and the physical `AvailabilityRecord.timeframe` column lives in
+      `unified-trading-library`, also out of this plan's `repos:` list. The P1 phase header is explicit ("mutates NO GCS
+      object and NO manifest row... lands contracts and writer behaviour only, so the migration phase has a settled
+      target to migrate toward") — the physical manifest-column split (UTL) and the reader updates (features-service,
+      deployment-api) are P2/P3 scope once the data re-stamp actually happens. Flagging here so P2 picks up: UTL
+      `AvailabilityRecord.timeframe` needs the physical split, and the two readers above need to switch to the new
+      `horizon` column once the writer stamps it.
 - [ ] [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
       OVERTURNS `/codex/02-data/sports-data-types-catalog.md`'s "legitimately coexist; do NOT merge". Blast radius is
       the WHOLE 19-token IS reference vocabulary (`FIXTURES`, `MATCHES`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`,
@@ -282,3 +305,9 @@ achieved by exclusion, not canonicalisation.**
   `capture_status=captured` rows** for `data_type=trades`, ALL with `row_count > 0`, sum = **9,154**; source=`odds_api`.
   Post-outage capture confirmed for 13 dates spanning 2026-07-25 → 2026-08-07 (2026-08-04 gap consistent with prior
   note). Not the silent-zero pattern — this is genuine captured data. All 3 Block A todos now ✅.
+- **2026-08-08 (slot 3, data_engineering)** — Block B "first-class horizon axis" todo flipped.
+  `unified-api-contracts@685b288a` + `market-data-processing-service@3e0fb852`. See the todo's own note above for the
+  full design + rationale (the `validate_dataframe`-ignores-`required` footgun, the new additive
+  `SPORTS_ODDS_HORIZON_BUCKET` contract, the MDPS SSOT-drift-guard wiring). Both repos' full QG green. Deferred to P2/P3
+  (out of this plan's `repos:` — UTL/features-service/deployment-api): the physical `AvailabilityRecord.timeframe`
+  manifest-column split, and switching `gcs_reader.py`/the honest-coverage rollup to read the new `horizon` axis.
