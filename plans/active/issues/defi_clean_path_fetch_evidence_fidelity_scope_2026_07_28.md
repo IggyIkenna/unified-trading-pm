@@ -31,7 +31,7 @@ related:
   ]
 created: "2026-07-28"
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-08"
 source: sports_consolidated_native_ao_extract-010/cross_cutting_satellite_ao_dispatch_batch2-011 dispatch (slot-11)
 resolved_by:
 locked_by:
@@ -141,13 +141,28 @@ close by citation once batch9 ships.
       `asyncio.gather(..., return_exceptions=True)`; new unit tests cover genuine-empty vs HTTP-error vs
       connection-error plus a `_process_protocol`-level test proving the error reaches `record_failed` not
       `record_zero_rows`.
-- [ ] [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
+- [x] ✅ [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
       Alchemy RPC batch client `_aave_oracle_collection.py` uses. If not, this family cannot be closed the same way as
       the HTTP-subgraph family — report that and propose the alternative (RPC-level error code? nothing to thread?)
-      rather than guessing. Read-only research, no code change. (market-tick-data-service) **Extracted verbatim (both
-      this item and the Chainlink/Pyth item below, combined into one todo) into
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179` (status: active, `Source:` cites this doc by name) — do
-      not reclassify this doc on this item's account; close this checkbox by citation once batch9's todo ships.**
+      rather than guessing. Read-only research, no code change. (market-tick-data-service) **RESOLVED (2026-08-08,
+      slot-20)** — direct trace of `_aave_oracle_collection.py::query_aave_reserves`/`collect_aave_rows` →
+      `AlchemyBaseClient.get_web3()` (`alchemy_base_client.py:289`, `Web3(Web3.HTTPProvider(rpc_url, ...))`) → web3.py
+      6.20.3's `HTTPProvider.make_request()` (`web3/providers/rpc.py:85-98`) → `web3._utils.request.make_post_request()`
+      (`web3/_utils/request.py:111-116`): `response = session.post(...); response.raise_for_status(); return
+      response.content`. **Not obtainable on the success path** — the raw `requests.Response`/`.status_code` is
+      discarded inside `make_post_request`; only the decoded RPC result is ever returned up through
+      `oracle.functions.getAssetPrice(...).call()`. But this is a trivial-constant answer, not "unavailable": since
+      `raise_for_status()` fires BEFORE any content is parsed, every successful `.call()` is invariant-backed 200 — same
+      shape as this doc's resolved governance dual-source finding. **Obtainable on the failure path, but only if the
+      `except` narrows type** — `raise_for_status()` raises `requests.exceptions.HTTPError` whose `.response.status_code`
+      carries the real status; the current per-reserve/setup handlers catch bare `Exception` and never extract it. A
+      SEPARATE, non-HTTP signal exists for JSON-RPC-level errors returned inside an HTTP 200 body (Alchemy
+      quota/method errors) — surfaces as a `ValueError`/RPC-error-code from web3's decode layer, not an HTTP status;
+      network-level failures (timeout/DNS/connection-refused) never reach `raise_for_status()` at all, so no HTTP status
+      exists for those either. **Proposed alternative signal if ever threaded**: narrow to
+      `requests.exceptions.HTTPError` → `exc.response.status_code`; for non-HTTP RPC/connection failures, thread the
+      JSON-RPC error `code` or exception `type(exc).__name__` instead — do not conflate the two signal types or with
+      `clean_fetch_evidence()`'s synthesized 200.
 - [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
       item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
       (market-tick-data-service) **Same extraction/citation as the Aave item above —
@@ -190,6 +205,32 @@ close by citation once batch9 ships.
       to tolerate a partial failure (e.g. one source optional), this call site is where a real non-200 would need to
       start flowing through. **Done when**: a test asserts the recorded `FetchEvidence.source == "subgraph+snapshot"`
       and `http_status == 200` on the governance clean-empty path; existing behavior/tests otherwise unchanged.
+- [ ] [CODE] P1. **NEW FINDING (2026-08-08, slot-20, discovered while researching the Aave/Alchemy item above) —
+      `_aave_oracle_collection.py::query_aave_reserves` silently swallows genuine per-reserve RPC/HTTP failures with no
+      `record_failed`, matching the exact C1 danger class the `governance_adapter.py` fix (item 1 above) targeted, AND
+      the literal "Swallowing errors silently... without `record_failed`" anti-pattern named in
+      `/codex/04-architecture/shard-level-failure-isolation.md` § Anti-Patterns.** `query_aave_reserves` (lines 50-80)
+      loops per AAVE reserve, calling `oracle.functions.getAssetPrice(...).call(...)`, wrapped in `except Exception as
+      exc: logger.warning(...); continue` — this catches BOTH a legitimate business condition (reserve reverts because
+      it isn't listed yet at that block — arguably fine to skip) AND a genuine transport failure (Alchemy 429/5xx/
+      timeout via web3.py's `raise_for_status()`, see the resolved item above) identically: logged, then silently
+      dropped. Two concrete consequences: (1) if EVERY reserve in a shard fails this way (e.g. an Alchemy outage/rate-
+      limit hitting the whole batch), `collect_aave_rows` still returns cleanly (`error=None`, `rows=[]`) since the
+      exception never escapes `query_aave_reserves` to the try/except in `collect_aave_rows` (lines 94-111, which DOES
+      correctly route setup-phase failures — block lookup, contract creation — to `record_failed`) — so
+      `emit_aave_manifest` (line 194: `if error is not None`) takes the `record_aave_empty` branch and records a clean
+      `SOURCE_RETURNED_ZERO`/honest-absence with the fabricated 200, exactly what this doc's `clean_fetch_evidence()`
+      docstring calls out as the case requiring a raise→`record_failed` fix, not weaker evidence. (2) Even a PARTIAL
+      failure (some reserves fail, most succeed) leaves the failed reserve(s) with NO manifest row at all for that
+      `(chain=ETHEREUM, venue=AAVE, instrument_id=<reserve>, day)` shard atom — not `record_captured`, not
+      `record_empty`, not `record_failed` — since `emit_aave_manifest` only iterates `feed_counts` (the survivors) for
+      `record_captured` and only takes the aggregate empty branch when ALL reserves are absent from `feed_counts`; a
+      silently-dropped subset is invisible to the manifest entirely, a DeFi first-class shard axis per
+      `shard-level-failure-isolation.md`'s shard-atom matrix. Repo: market-tick-data-service. **Done when**: a test
+      proves a simulated per-reserve RPC/HTTP error (e.g. a mocked `requests.exceptions.HTTPError` from the underlying
+      web3 call) reaches `record_failed` for that specific reserve, distinguished from a genuine not-yet-listed-revert
+      (still cleanly skipped, per `_AAVE_EARLIEST_RESERVE_LISTING_DATE` gating or an on-chain revert-reason check);
+      existing "genuinely zero reserves this window" / "reserve not yet listed" behavior is unchanged.
 
 ## Codex SSOTs
 
@@ -226,6 +267,17 @@ close by citation once batch9 ships.
   dual-source merge design question) remains the genuine unresolved human decision keeping the whole doc
   `assigned_vm: NA` — it has no active-batch coverage and still needs the (report-per-source / worse-of-two /
   track-both) call made before any CODE todo can be filed against it. Doc stays `assigned_vm: NA`.
+- **slot-20 (data_engineering, 2026-08-08)**: resolved the Aave/Alchemy RPC HTTP-status DIAG item by tracing the real
+  call path (`_aave_oracle_collection.py` → `AlchemyBaseClient.get_web3()` → web3.py 6.20.3's `HTTPProvider` →
+  `web3._utils.request.make_post_request()`, which discards the raw `requests.Response` on success but raises
+  `requests.exceptions.HTTPError` — carrying `.response.status_code` — on failure via `raise_for_status()`). Answer:
+  not obtainable on success (invariant-backed constant 200, same shape as the resolved governance finding); obtainable
+  on failure only if the exception handler narrows to `HTTPError` (it currently doesn't). While researching this,
+  discovered and filed a new P1 finding: `query_aave_reserves` swallows genuine per-reserve RPC failures with no
+  `record_failed`, the same danger class as the governance_adapter fix and the literal anti-pattern named in
+  `shard-level-failure-isolation.md`. Did not implement either fix — this task was scoped read-only/diagnostic; the new
+  P1 CODE todo is filed above for separate dispatch. `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`'s
+  combined Aave+Chainlink/Pyth todo still covers the Chainlink/Pyth half — not touched here.
 - **na-corpus-digest-closeout 2026-08-08**: resolved the governance dual-source design question (decision: "worse of the
   two") by reading `governance_adapter.py` (`_fetch_both_sources` re-raises either source's exception before
   `fetch_governance_proposals` returns) and `governance_proposals_handler.py` (`_process_protocol` routes any such raise
