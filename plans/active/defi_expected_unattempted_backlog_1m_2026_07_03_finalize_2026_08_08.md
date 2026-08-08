@@ -154,7 +154,7 @@ is done. Do not start manually before then.
   time). Prior na-eligibility-audit rounds (2026-08-04/07/08) characterized this as "a branch-name artifact, not treated
   as a blocker" for CLASSIFICATION purposes only — none of them actually archived the doc, so none tested whether the
   lock gate itself would fire. Per the workspace HARD RULE ("Agents MUST NEVER unlock plans autonomously — always ask
-  first", `codex/12-agent-workflow/plan-completion-and-archival-discipline.md` + `plans/PLAN_FORMAT.md` § "Plan
+  first", `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` + `plans/PLAN_FORMAT.md` § "Plan
   Locking"), did NOT force an `[unlock-plan]` archival commit. Filed a `/blocked` question to the operator recommending
   unlock (all todos on both docs are genuinely done; the lock's own value is the branch name, not a distinguishing agent
   claim) and am closing out my assigned `[REVIEW]` task via `/done` instead of holding the slot on a human-gated step.

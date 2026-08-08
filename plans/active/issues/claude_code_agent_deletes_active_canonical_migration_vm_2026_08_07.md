@@ -23,7 +23,7 @@ repos:
 tags: [vm-safety, agent-safety, heartbeat, cross-agent-kill, canonical-migration, HARD-RULE-VIOLATION]
 related:
   - /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md
-  - /plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md
+  - /plans/archive/2026_08/watchdog_kill_events_deployment_gaps_2026_08_05.md
   - /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md
 created: 2026-08-07
 parent_epic: infrastructure_master

@@ -68,8 +68,8 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md,
-    /plans/active/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
+    /plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
     features-service/scripts/run_cefi_perp_funding_corpus.py,
     strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
     instruments-service/scripts/migration_orphan_sweep.py,
@@ -251,7 +251,7 @@ in this read-only audit pass (time-bounded scope).
                                                                                                                                                                                                                           — `perp_funding_data_semantics_and_cadence_2026_06_16.md`'s CEX-Tardis forward-capture-cron bug was ROOT-CAUSED
                                                                                                                                                                                                                           + FIXED 2026-08-04 (slot-6, `deployment-service@fa794a1`) and real captures are confirmed resuming; the
                                                                                                                                                                                                                           2026-05-22→2026-08-02 historical hole this outage left is a SEPARATE, already-launched, in-progress backfill
-                                                                                                                                                                                                                          (`/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, VM
+                                                                                                                                                                                                                          (`/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, VM
                                                                                                                                                                                                                           `cefi-fwd-20260804-021235`, running since ~02:12Z 2026-08-04, confirmed actively writing real
                                                                                                                                                                                                                           `derivative_ticker` shards as of the last progress-log check). **But raw capture resuming does NOT by itself
                                                                                                                                                                                                                           refresh the DeFi-bucket corpus `CanonicalPerpFundingProvider` reads** — that corpus is produced by a SEPARATE
@@ -298,7 +298,7 @@ in this read-only audit pass (time-bounded scope).
                                                                                                                                                                                                                           idea evaluated above may never actually be needed.
 
 - [ ] [DATA] P1. **NEW 2026-08-04.** Once
-      `/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`'s backfill (VM
+      `/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`'s backfill (VM
       `cefi-fwd-20260804-021235`, `derivative_ticker` for the 8 CEX-Tardis venues, 2026-05-01/22→2026-08-02) completes
       and is manifest-verified: re-run
       `features-service/scripts/run_cefi_perp_funding_corpus.py --start 2026-05-16 --end <today>` (or promote it to a
@@ -308,7 +308,7 @@ in this read-only audit pass (time-bounded scope).
       (`KRAKEN-FUTURES`/`BINANCE-FUTURES`/`BYBIT-FUTURES`/`OKX-FUTURES`/`BITFINEX-FUTURES`/`BITGET-FUTURES`), then
       verify `CanonicalPerpFundingProvider.funding_window()` returns non-empty observations for a recent day per venue
       (bounded live check, not a corpus walk). **Depends on**
-      `/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md` (raw input must land first — no
+      `/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md` (raw input must land first — no
       point recomputing over a still-honest-absent raw window). **Only after** the corpus is verified staying current
       should the reader-side additive-fallback idea (evaluated above, not built) be revisited — if the corpus stays
       fresh via this fix, the fallback may not be needed at all; if scheduling drifts again, this todo's own 2026-08-04
@@ -432,7 +432,7 @@ in this read-only audit pass (time-bounded scope).
   only BITFINEX-FUTURES has 101 total objects, on 07-22/07-24). Slot-14 backfill VM `cefi-fwd-20260806-065837` still
   RUNNING (~day 05-25 of the 74-day 05-23→08-05 window, ETA multi-day) and will NOT cover DERIBIT even after it
   terminates (needs the separate DERIBIT-only backfill, tarball@b2cc2742). The RE-OPENED raw-capture fix P1 in
-  `/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md` is still `- [ ]`. However the fix
+  `/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md` is still `- [ ]`. However the fix
   CODE (RC1/RC2/RC3: `market-tick-data-service@467a3cd1`/`@b2cc2742`) HAS shipped to LDR and slot-14 has no unshipped
   deployment-service work left (`deployment-service@2f1b36d`/`@c6707cb` already landed). Because the todo's own gate
   ("can ship any time post the raw-capture fix landing") is ambiguous vs this state (fix-code landed vs fix-todo not
@@ -778,7 +778,7 @@ in this read-only audit pass (time-bounded scope).
   (`features-service/features_service/cefi/calculators/perp_funding_corpus.py`, driven only by the manual
   `scripts/run_cefi_perp_funding_corpus.py`) has no cron/scheduler wiring at all — so even the already-fixed forward
   capture cron + the already-running historical backfill VM (`cefi-fwd-20260804-021235`, see
-  `/plans/active/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`) will NOT by themselves refresh what
+  `/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`) will NOT by themselves refresh what
   `CanonicalPerpFundingProvider` reads. Filed a new sequenced P1 todo above (`depends_on` the historical-gap doc) to
   re-run/schedule that compute step once the raw backfill lands — a write-side-only fix carrying zero risk to the live
   paper(W)==batch-rerun(W) read path, and the better next move before any reader-side fallback is reconsidered. No code

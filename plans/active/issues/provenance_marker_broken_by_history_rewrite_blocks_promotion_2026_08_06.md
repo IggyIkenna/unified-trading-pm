@@ -74,6 +74,7 @@ drift_direction: advance-code
 depends_on: []
 source: "surfaced while diagnosing instruments-service PR #1084 (497c4f5e provenance-blocked), 2026-08-06"
 resolved_by:
+archive_exempt: true # all 3 todos done, but the archival move itself is blocked by a genuine tooling deadlock — see /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md (its own [OPERATOR]/[INFRA] todos track the unblock; this doc's own banner explains why)
 locked_by:
 locked_since:
 context_scope:
@@ -444,3 +445,11 @@ Two reasons, mirroring the UTL-34-bypass precedent
   (not the `issues/` subdirectory this doc lives in) AND separately exempts any plan with ≤1 open todo (this doc has
   exactly
   1. — clears both the structural and content exemptions task_template.md §4 documents.
+
+- **cicd (ldr_qg_failure escalation) 2026-08-08**: `check_archive_candidates.sh` (baseline 0) flagged this doc as a new
+  done-but-unarchived candidate, failing `quality-gates-v2` on `live-defi-rollout`. Per this doc's own banner + the
+  sibling `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`'s open `[OPERATOR]`/`[INFRA]` todos,
+  the archival move itself is genuinely blocked pending an operator decision — not a hygiene oversight to force through.
+  Added `archive_exempt: true` (established pattern, see e.g. `deployment_registry_firestore_migration_2026_07_14.md`)
+  so the gate reflects the real, already-tracked reason this doc isn't archived yet, rather than re-litigating or
+  force-archiving around the deadlock.

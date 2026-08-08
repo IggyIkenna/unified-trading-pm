@@ -75,7 +75,8 @@ unlocked) per the immediate-archival HARD RULE:
 2. `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` also cites the doc, but via markdown-link syntax
    `[`...`](/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md)` (line
    741). Leaving it untouched → `validate_plan_links.py` (corpus-wide, unconditional, HARD) fails the commit:
-   `BROKEN: active/cross_cutting_consolidated_closeout_2026_07_25.md -> /plans/active/issues/provenance_marker_...md`.
+   `BROKEN: active/cross_cutting_consolidated_closeout_2026_07_25.md -> /plans/active/issues/provenance_marker_…md`
+   (the tool's own truncated error text — not a real path, quoted verbatim for evidence).
 3. Fixing that one line → `check_line_caps.sh` SCOPED mode fails instead: the file is 1007L (over the 1000L hard cap,
    `todos=1` so not archival-eligible itself), and a same-line text substitution always shows `DELETED=1` in
    `git diff --cached --numstat` (verified directly, not assumed), which fails the ONLY over-cap carve-out

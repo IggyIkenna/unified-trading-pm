@@ -16,7 +16,7 @@ summary: >-
   confirmed live via two rejected calls (`reason: "cross_repo_pm_file_touched_no_checkbox_flip"` then `reason:
   "cross_repo_pm_log_clean"` on the same task, `data_completion_cefi-011`) even on a fully clean tree with
   already-pushed evidence commits.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -56,6 +56,11 @@ context_scope:
 ---
 
 # /done checkbox-flip verification has no carve-out for RED-gate evidence-only closure
+
+> **ARCHIVED (2026-08-08) — all 4 todos done.** Fourth Mode-2/Mode-1 disposition (`BLOCKED-ON:<ref>` marker) shipped
+> (`agent-orchestrator@22a14b1`); Mode-2 aged-out-window fallback shipped (`agent-orchestrator@e1b30f5`); the
+> `task_template.md` marker-convention doc note landed (`unified-trading-pm@79565c404`); the self-archival variant fix
+> shipped (`agent-orchestrator@3839380`). Full `quality-gates.sh` green on each; all shipped via quickmerge.
 
 ## What I found
 

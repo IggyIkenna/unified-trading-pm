@@ -315,7 +315,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   "3 sibling surfaces" enumeration never named this file; it still pointed agents at `codex/00-SSOT-INDEX.md` as the
   "canonical entry point" instead of the current grep-native `DOC_INDEX.generated.md` L0-L4 doctrine, and carried a dead
   `OpenClaw/Lobster` section referencing a `.lobster/` dir confirmed absent repo-wide — fixed,
-  `unified-trading-pm@bfbc69910`; (2) `codex/02-data/sports-data-types-catalog.md` self-contradicted within its own body
+  `unified-trading-pm@bfbc69910`; (2) `/codex/02-data/sports-data-types-catalog.md` self-contradicted within its own body
   (added within the last 24h) — its `executable` predicate section (line ~91-92) states no exchange-type venue has a
   complete adapter as of 2026-08-08 (i.e. `executable=False`), but its Venue Axis section (line 249) labeled the same 5
   exchange venues `executable=True pending credentials` — corrected to `executable=False pending credentials`, matching
@@ -366,25 +366,25 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   outside the 2 already-covered QG surfaces reference retrieval-layer terminology; all 5 point at the live, current
   `doc-frontmatter-schema.md`, none stale). **5 genuinely NEW findings this run, 4 verified + fixed, 1 routed to the
   owning plan instead of fixed here:**
-  1. `codex/07-security/self-hosted-runner-security-posture.md` — the "Dedicated VM" section overclaimed identity
+  1. `/codex/07-security/self-hosted-runner-security-posture.md` — the "Dedicated VM" section overclaimed identity
      decoupling ("ambient identity is now scoped to the runner box alone and no longer doubles as... the
      agent-orchestrator's own identity"), contradicting the doc's own mitigation-ladder item 2 ("Not yet done").
      Verified against `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` todo 3: the runner
      VM was launched with the SAME AWS IAM instance profile (`uts-orchestrator-epic`) and the SAME GCP service account
      (`unified-trading-sa`, freshly-keyed, not a distinct SA) as the orchestrator box — identity genuinely was NOT
      decoupled, only the VM/box was. Corrected. `unified-trading-pm@27173cdd4`.
-  2. `codex/08-workflows/ci-cd-flow.md` L60-65 — blockquote/list structural break (a continuous 3-item gate-set clause
+  2. `/codex/08-workflows/ci-cd-flow.md` L60-65 — blockquote/list structural break (a continuous 3-item gate-set clause
      split by a blank `>` line + spurious `- ` prefix), the same defect class an earlier 2026-08-08 dispatch fixed in
      sibling docs but missed here. Fixed. `unified-trading-pm@27173cdd4`.
-  3. `codex/08-workflows/ci-cd-flow.md` L204 — stale "PM `scripts/**`" phrasing the doc's own D16 correction (~L810+)
+  3. `/codex/08-workflows/ci-cd-flow.md` L204 — stale "PM `scripts/**`" phrasing the doc's own D16 correction (~L810+)
      already superseded with the ratified all-repos framing; L204 wasn't updated when that correction landed. Fixed.
      `unified-trading-pm@27173cdd4`.
-  4. `codex/15-runbooks/alerting/README.md` + `_template.md` — both had genuine free-prose `authoritative_for:` values
+  4. `/codex/15-runbooks/alerting/README.md` + `_template.md` — both had genuine free-prose `authoritative_for:` values
      (no list syntax at all) and NO `summary:` field, so the CLAUDE.md-documented L1 retrieval grep
      (`rg -l '^authoritative_for:.*<topic>' codex/`) provably fails to match either doc (tested live). Added a derivable
      `summary:` from the existing prose, normalized `authoritative_for` to a short topic list. Fixed.
      `unified-trading-pm@27173cdd4`.
-  5. `codex/02-data/sports-data-types-catalog.md`'s Venue Axis section ("32 canonical members") diverges substantially
+  5. `/codex/02-data/sports-data-types-catalog.md`'s Venue Axis section ("32 canonical members") diverges substantially
      from the live `VENUES_BY_ASSET_GROUP["sports"]` (31 members, verified via direct import of
      `unified_api_contracts.registry.market_data_categories` — different names on both sides, not just a count
      mismatch). NOT fixed here: the file is mid-migration under the active
@@ -393,7 +393,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
      ambiguous whether the doc states a target the registry hasn't fully landed or is simply a stale enumeration, a call
      that needs this chain's full context. Per findings-triage ("fits another plan → annotate it, don't fix — collision
      risk"), added a new `- [ ] [DOCS] P2.` todo to that plan with the full member-list diff instead of editing the
-     codex doc directly. Confirmed-not-a-finding (adversarially checked, false positive): `codex/10-audit/README.md`'s
+     codex doc directly. Confirmed-not-a-finding (adversarially checked, false positive): `/codex/10-audit/README.md`'s
      missing `summary:`/ minimal frontmatter — verified this is the established convention for every section-level
      `README.md` in the codex (checked 8 siblings: `02-data`, `03-observability`, `04-architecture`, `09-strategy`,
      `11-project-management`, `12-agent-workflow`, `13-codex-governance`, `14-customer-journeys` — all carry only

@@ -178,7 +178,7 @@ equivalent plain-commit path) rather than a bare `git commit --only -- <new-path
       unified-trading-pm@4ad2f00f4. Added a new "The archival commit itself must not drop the rename's delete side
       (RULED 2026-08-08)" subsection to the archival-discipline doc (both required commit shapes + the post-commit
       `git status --porcelain` verification step, cross-referencing the shipped `check_create_only_archive_commits.py`
-      backstop). Also cross-referenced from `codex/11-project-management/plan-hygiene.md`'s archive-destination note
+      backstop). Also cross-referenced from `/codex/11-project-management/plan-hygiene.md`'s archive-destination note
       (the only other doc directly instructing `git mv` for archival) so the hazard is visible from both entry points.
 - [x] ✅ [SCRIPT] P3. **DONE 2026-08-06 (slot-6) — the parent doc archived.** The resolved parent doc
       `prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` was moved to `plans/archive/issues/` via

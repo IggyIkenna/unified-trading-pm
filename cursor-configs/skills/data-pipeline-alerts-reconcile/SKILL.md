@@ -20,7 +20,7 @@ description:
 
 Answers one question with evidence, then fixes what's actually broken: **is `#data-pipeline-alerts` actually quiet, and
 where exactly is it not — at the root, not the symptom?** Companion to `/ci-reconcile` (same shape, different domain).
-SSOT: `codex/05-infrastructure/data-pipeline-alerts.md` (the DP-`<CATEGORY>`-`<NNN>` registry, human-readable) +
+SSOT: `/codex/05-infrastructure/data-pipeline-alerts.md` (the DP-`<CATEGORY>`-`<NNN>` registry, human-readable) +
 `data-pipeline-alerts.registry.yaml` (same dir, machine-readable — what the router rules actually load).
 
 **Always auto-fixes.** Not a diagnose-and-wait skill. Ship every root-caused fix the way this workspace already does

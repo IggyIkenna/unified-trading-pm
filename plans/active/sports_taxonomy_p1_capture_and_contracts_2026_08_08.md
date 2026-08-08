@@ -512,7 +512,7 @@ achieved by exclusion, not canonicalisation.**
       net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
       (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
       enough. **Done when**: the decision is recorded, or the semantic check exists.
-- [ ] [DOCS] P2. **`codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
+- [ ] [DOCS] P2. **`/codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
       live `VENUES_BY_ASSET_GROUP["sports"]`** (found by `/docs-reconcile` 2026-08-08, direct-import verification
       against `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`). The doc claims "32
       canonical members" and names `BETFAIR_EX_AU`, `WILLIAM_HILL`, `BWIN`, `MYBOOKIEAG`, `LOWVIG`, `WYNNBET`, `FOXBET`,

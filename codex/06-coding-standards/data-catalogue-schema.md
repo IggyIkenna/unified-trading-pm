@@ -28,7 +28,7 @@ code_refs:
 > # ⛔ SUPERSEDED 2026-08-08 (docs-reconcile autonomous sweep) — THIS DOCUMENT DESCRIBES A SYSTEM THAT DOES NOT EXIST.
 >
 > **Live SSOT for the `data-catalogue.*.yaml` files:
-> [`/codex/02-data/service-shard-status-catalogue.md`](../02-data/service-shard-status-catalogue.md).** Everything below
+> [`/codex/02-data/service-shard-status-catalogue.md`](/codex/02-data/service-shard-status-catalogue.md).** Everything below
 > is retained for history only. Do not build a reader, writer, validator, or QG step against it.
 >
 > This doc's own frontmatter already flagged itself as a non-canonical "duplicate view" of
