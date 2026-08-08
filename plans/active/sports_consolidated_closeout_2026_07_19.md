@@ -939,8 +939,9 @@ section above, which conflated answered and open items):
 - **League_id migration prod-apply + delete** (decision 7) — scheduling, not a question, but the actual window needs
   picking.
 - **CF-8 maintenance window** (decision 11) — same, scheduling.
-- **Sports ODDS_API capture pipeline dormancy investigation** (decision 8) — needs AWS IAM access this session didn't
-  have; genuinely the top-priority next action.
+- ~~**Sports ODDS_API capture pipeline dormancy investigation** (decision 8) — needs AWS IAM access this session didn't
+  have; genuinely the top-priority next action.~~ — **stale, DONE** (Track H's 1st `[DIAG] P0` todo, `[x]` since 07-27,
+  resolved w/o AWS IAM, `pm@3d48c7a9b`; na-eligibility-audit 2026-08-08).
 - **§O diagnoses before any relabel** (Track O's 2 `[DIAG]` items — "Root-cause the 112,277 `attempted_failed` rows..."
   and "Locate the emitter of the 139,620 `venue=ODDS_API, source=api_football, empty_confirmed` rows...") — root-cause
   the 112,277 `attempted_failed` triplet and the 139,620 `empty_confirmed` emitter before relabeling either; these are
@@ -995,3 +996,5 @@ section above, which conflated answered and open items):
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the native-extract child plan + the Track C
   root-cause source file (canonical_writer_shaping.py).
 - **context-scout 2026-08-06**: restored both entries above (silently missing despite the 08-03 marker). 5 entries.
+- **na-eligibility-audit 2026-08-08**: re-read in full, 25/25 todos. **KEEP-NA valid, citation-locked 4th time** (⛔
+  07-23 ruling holds). 1 stale-prose fix above; 9 todos flagged satellite-batch-eligible (chat report).

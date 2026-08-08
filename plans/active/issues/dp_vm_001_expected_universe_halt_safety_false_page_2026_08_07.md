@@ -167,3 +167,15 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
       launcher family has a supervising wrapper (grep `deployment-service/scripts/vm/` for a `*-historical-*` or
       loop-style caller) before relaunching, mirroring the "re-fails the SAME way twice → STOP" rule that's already
       there but easy to skip past under dispatch pressure.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08**: KEEP-NA, valid — main fix already shipped + verified live
+  (`deployment-service@27fd5779`, confirmed ancestor of origin, carve-out + both regression tests present in the current
+  file). 2 open P3 follow-ups remain: the `[CODE]` one is a genuine generalization/design judgment call (GENUINE_WORK —
+  "consider whether page_operator findings in general should distinguish..."), the `[DOC]` one reads individually
+  bounded (MISCLASSIFIED_LIKELY_AO_ELIGIBLE — a short runbook callout, mirroring an existing pattern) but doesn't change
+  the whole-doc verdict since RECLASSIFY is a whole-doc bar and its sibling todo isn't bounded. Note: a near-identical
+  direct-instruction message (citing the same escalation/root-cause) arrived queued in this slot's heartbeat inbox this
+  session — verified stale against this doc + the live commit before disregarding it; the fix it asked for was already
+  shipped by the original root-causing worker (slot-2) before this dispatch began.

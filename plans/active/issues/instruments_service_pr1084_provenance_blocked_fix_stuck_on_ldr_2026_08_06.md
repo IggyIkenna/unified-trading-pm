@@ -192,3 +192,9 @@ real forward-looking risk window, unchanged from the original assessment.
   remedy); the 2 pre-existing entries re-verified, still resolve.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — the fleet-wide marker-bug fix already shipped;
   instruments-service's own ~19-commit foreign range still needs this doc's own remedy, dependency-blocked.
+- **na-eligibility-audit 2026-08-08**: re-read (in scope again — the only change since the 08-07 marker was
+  `/ag-closeout-audit ao`'s `asset_group` correction, `[sports, ao] → [sports, ci]`; no content/scope change).
+  **KEEP-NA, valid — verdict UNCHANGED.** Re-verified live: `497c4f5e` still not an ancestor of `origin/main`; the
+  blocking doc (`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`) is still `status: open`,
+  unlocked. The 1 open `[CI] P1` todo is DEPENDENCY_BLOCKED on that doc's own operator-gated remedy — not a clean
+  worker-determinable outcome today.
