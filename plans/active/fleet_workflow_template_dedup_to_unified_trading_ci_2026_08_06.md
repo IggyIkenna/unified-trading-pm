@@ -355,23 +355,40 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       identically for `unified-trading-pm` today and has no such guard either; scope this as its own small follow-up if
       pursued, don't block this plan on it.
 
-- [ ] 11. [INFRA] P1. **`staging-lock-check.yml` — split out of todo 4, DO NOT convert with the naive stub pattern.**
-      Found 2026-08-07: this file's `check-staging-lock` job is registered as a literal required-status-check context
-      (`"check-staging-lock"`, exact string, no prefix — confirmed live on `execution-service`'s
-      `require-staging-lock-check` ruleset, and the same ruleset name/shape exists on 16 of 24 repos per the canonical
-      template's own header comment). Empirically confirmed (via the already-shipped `version-registry-notify.yml`
-      canary's real check-run) that a `workflow_call` caller job produces a check named
-      `"<caller job name> / <callee job name>"`, NOT the bare callee job name — converting this file with the same stub
-      pattern used for the other 9 would silently change the reported check name to
-      `"check-staging-lock / check-staging-lock"`, permanently failing to satisfy the ruleset's exact-string match. Low
-      blast radius TODAY only because `staging` is frozen with 0 open PRs fleet-wide (per the file's own 2026-07-23
-      comment) — but a real landmine for whenever staging is un-frozen, and NOT something to leave silently broken. Two
-      viable fixes, pick one before converting: (a) update the ruleset's `required_status_checks` context string in all
-      16 affected repos to the new `"check-staging-lock / check-staging-lock"` form as part of the SAME migration commit
-      (verify via a real triggered run before considering it safe, the same way todo 3's canary did); or (b) name the
-      reusable workflow's job something that makes the caller-side name collapse back to the bare string (GitHub does
-      NOT support this — the prefix is structural, not cosmetic, so (a) is the only real option). Do NOT silently skip
-      this file forever — track it here until resolved.
+- [x] ✅ 11. [INFRA] P1. **`staging-lock-check.yml` converted — DONE 2026-08-08.** Applied option (a): updated the
+      `require-staging-lock-check` ruleset's `required_status_checks` context string on all 16 affected repos
+      (`alerting-service`, `batch-live-reconciliation-service`, `client-reporting-api`, `deployment-api`,
+      `deployment-service`, `deployment-ui`, `execution-service`, `ibkr-gateway-infra`, `instruments-service`,
+      `market-data-processing-service`, `market-tick-data-service`, `strategy-service`, `system-integration-tests`,
+      `trading-agent-service`, `unified-api-contracts`, `unified-trading-library`) from bare `"check-staging-lock"` to
+      `"check-staging-lock / check-staging-lock"` via the GitHub rulesets API, THEN converted. **Real bug found + fixed
+      during the canary verification (not anticipated by this todo's own text)**: this file's canonical template carries
+      its own `concurrency:` block. `make_reusable.py`/`make_stub.py`'s existing behavior (proven fine for the other 9
+      files) copies that block into BOTH the hosted callee AND the local caller stub — for a `pull_request`-triggered
+      caller specifically, having the IDENTICAL concurrency group (`${{ github.workflow }}-${{ github.ref }}`) declared
+      on both sides is a self-referential collision that makes GitHub fail the ENTIRE run with zero jobs scheduled
+      ("This run likely failed because of a workflow file issue", conclusion=`failure`) — silent and total, not a
+      partial/job-level failure. Root-caused via 7 bisection iterations against a live throwaway branch
+      (`trading-agent-service`, PR #402, closed without merging): confirmed NOT an issue for the other 8 files'
+      `push`-triggered callers (`semver-agent.yml` has the identical duplicate-concurrency-declaration pattern and works
+      live), so the fix (`SKIP_CALLER_CONCURRENCY` in `make_stub.py`) is scoped to this one `pull_request`-triggered
+      file rather than applied fleet-wide. Live-verified after the fix: check-run
+      `"check-staging-lock / check-staging-lock"` conclusion=`success` (run 31236639223). All 24 fleet repos converted
+      to thin caller stubs and independently verified via
+      `git show origin/live-defi-rollout:.github/workflows/staging-lock-check.yml | grep -c unified-trading-ci`
+      (expect 3) — not just quickmerge's own exit code, which this session proved unreliable: 7 of the 24 repos'
+      first-attempt pushes silently discarded the commit via quickmerge's known "Reset to origin" bug
+      (`quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`) despite reporting `exit=0` —
+      `deployment-service`, `execution-service`, `market-data-processing-service`, `strategy-service`,
+      `unified-api-contracts` (needed 3 attempts total), `unified-trading-library` (needed 3 attempts total), and
+      `unified-trading-system-ui` — every one recovered via `git log --all --oneline --grep=...` + `git cherry-pick`,
+      re-verified independently after each retry. Deleted the now-redundant
+      `scripts/workflow-templates/     staging-lock-check.yml` template source and updated
+      `rollout-workflow-templates.sh`'s header comment + stale usage examples (dry-run verified: only
+      `image-build-gate.yml`, `notify-slack.yml`, `quality-gates-v2.yml.tmpl` still process). Shipped:
+      `unified-trading-ci@686bca7` (hosted reusable workflow, final content after the debug session),
+      `unified-trading-pm@79223bec17` (make_stub.py fix), `unified-trading-pm@290100bb3c` (template deletion + script
+      update, landed as a rebased sha on origin), plus one commit per fleet repo (24 total).
 
 ## Todo 1 findings (2026-08-06)
 
