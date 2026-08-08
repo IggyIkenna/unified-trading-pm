@@ -745,7 +745,8 @@ SPORTS:
   # Common data types across all SPORTS venues
   common_data_types:
     - odds
-    - markets
+    # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
+    # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
 
   venues:
     POLYMARKET:
@@ -756,9 +757,8 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
+        # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
+        # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -773,9 +773,8 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
+        # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
+        # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -790,9 +789,8 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
+        # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
+        # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -807,9 +805,8 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
+        # markets/outcomes/settlements removed 2026-08-08 (UAC sports taxonomy P1,
+        # operator ruling #8) — 0 rows ever written, retired from UAC canonical registry.
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal
