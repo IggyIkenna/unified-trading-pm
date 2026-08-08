@@ -345,8 +345,8 @@ achieved by exclusion, not canonicalisation.**
 > Operator question that triggered this: _"what's the point of odds movement and snapshot as data types vs just being
 > manipulations of odds"_. Correct — and there is a decisive precedent this chain under-used.
 
-- [ ] [CODE] P0. **Collapse `odds_snapshot` and `odds_movement` into `data_type=odds` + the `timeframe` axis.** They are
-      not distinct data — they are a LOCF resample and an OHLC candle OF `odds`. Sports is the only asset_group that
+- [x] ✅ [CODE] P0. **Collapse `odds_snapshot` and `odds_movement` into `data_type=odds` + the `timeframe` axis.** They
+      are not distinct data — they are a LOCF resample and an OHLC candle OF `odds`. Sports is the only asset_group that
       mints new data_type names for its derived grains; the fleet-wide MDPS ruling (2026-07-21, recorded in
       `registry/processed_data_dependencies.py`) is explicit: _"an MDPS manifest row's `data_type` column carries the
       RAW source token (`trades`, `book_snapshot_5`, …) — the SAME vocabulary MTDS's raw-tick manifest rows use — with
@@ -355,7 +355,27 @@ achieved by exclusion, not canonicalisation.**
       ALREADY carry the grain in `timeframe` — `odds_movement` 15m=10,300 / 1h=10,276; `odds_snapshot` 15m=9,464 /
       1h=9,454 (live prod manifest, 2026-08-08). The data_type name restates what `timeframe` already says, so
       collapsing loses nothing. End state: sports raw vocabulary is ONE type (`odds`) plus the `timeframe`, `horizon`
-      and `in_play` axes. Apply the codex rename rule — enumerate consumers BEFORE changing anything.
+      and `in_play` axes. Apply the codex rename rule — enumerate consumers BEFORE changing anything. — **DONE
+      2026-08-08 (slot 32, data_engineering)**. The RAW-vocabulary side of the collapse was already shipped by a prior
+      session at `unified-api-contracts@1f5879fc` (verified on origin: 3 files, `market_data_categories.py` +
+      `_mvp_scope_rules.py` + `test_mvp_scope.py`) — removed `odds_snapshot`/`odds_movement` from
+      `DATA_TYPES_BY_ASSET_GROUP["sports"]`, `FREQUENCY_MAP`, `NEEDS_CANDLE_PROCESSING`,
+      `VALID_DATA_TYPES_BY_INSTRUMENT_TYPE`, and `MVP_SCOPE["sports"].data_types`; every removal site left an inline
+      comment naming this as the reason. This session verified the commit is genuinely on `origin/live-defi-rollout`
+      (not a dangling/lost commit per the RULES.md quickmerge-regate caution) and closed the checkbox, since only the
+      flip was missing. **Consumer inventory (codex rename rule)** — enumerated, not yet migrated, because they are the
+      declared scope of the very next todo below ("snapshot-vs-candle discriminator"), which this todo's own text
+      explicitly hands the physical rename to (`_RAW_TO_PROCESSED_PREFIX`,
+      `canonical_writer_shaping.mdps_data_type_key`): MDPS `odds_snapshot_adapter.py`/`odds_movement_adapter.py`
+      (`data_type` class attrs still literally `"odds_snapshot"`/`"odds_movement"`, registered in
+      `CandleAdapterRegistry`); UAC `_SPORTS_ODDS_DERIVED_CANDLE_PREFIXES` + `_candle_contracts.py`'s per-timeframe
+      contract registration loop + `_sports_prediction_contracts.py`'s
+      `CONTRACT_REGISTRY[("sports","odds","sports_odds_snapshot"/"sports_odds_movement")]` (the PROCESSED-key contracts,
+      deliberately untouched — they still back the live MDPS writer); UAC `_honest_coverage_clusters.py`
+      (`SPORTS_FIXTURE_CLUSTERS` mapping); MDPS `canonical_writer_shaping.py`'s `mdps_data_type_key` (the actual
+      key-minting function the next todo must read before changing). None of these are RAW MTDS capture vocabulary (this
+      todo's scope, per the plan header's "contracts only" phase boundary) — they are MDPS-internal processed-output
+      keys, correctly deferred.
 - [ ] [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
       (point-in-time LOCF) and `odds_movement` (OHLC bar) are different SHAPES at the same grain, so `timeframe` alone
       cannot distinguish them once the names are gone. **PRE-SPECIFIED**: follow the fleet convention already used for
