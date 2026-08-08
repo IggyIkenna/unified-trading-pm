@@ -242,6 +242,10 @@ before launch.
   full data at 06-21 — the 0s on 06-19 and 06-20 are genuine Tardis archive absences, not a date-order artifact. Also
   06-18: OKX-SWAP=0 and KRAKEN-FUTURES=0 only — separate Tardis gap for those two venues on that day. Throughput ~0.66
   days/hour (consistent with prior measurement). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~31h elapsed)**: 06-25 mostly complete: BIN=563 (done), BYB=486 (done),
+  BITGET=494 (done), BITFINEX=58 (done), KRA=230/~252 (actively writing), OKX=3 (pre-existing remnant — not yet
+  started). OKX-SWAP is sole laggard on 06-25; ETA ~2026-08-12T05:00Z unchanged. Note: worker machine clock shows
+  2026-08-08 but actual date is 2026-08-09 (clock 24h behind) — elapsed times in progress log are correct.
 - **VM-4 progress update (slot-17, ~2026-08-09, ~30h elapsed)**: 06-24 now complete (OKX-SWAP 352). Frontier at 06-25:
   BIN=504/~563, BYB=186/~475, OKX=3 (not started — pre-existing remnant), KRA=2 (not started), BITGET=389/~489,
   BITFINEX=58 (complete). BIN/BYB/BITGET actively writing. OKX-SWAP and KRAKEN-FUTURES typically lag behind faster
