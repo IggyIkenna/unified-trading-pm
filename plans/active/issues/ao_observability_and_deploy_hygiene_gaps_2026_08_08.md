@@ -150,22 +150,36 @@ the ONLY lever that matters. See the P1 todo below.
       deliberately did NEITHER. Root fix is ALREADY IN FLIGHT by another agent: `_make_content_task_id` exists in
       `regen_backlog_from_plan.py` behind a `reportUnusedFunction` suppression (agent-orchestrator@ac36202 + @e0f107a),
       built but not yet wired. Not colliding with it.
-- [ ] [BACKEND] P2. **Stash piles are ~15x bigger than first reported, and need a CONTENT VERIFIER before any discard.**
-      The original report was "slot 11 has 8 stashes in `market-tick-data-service`". A full fleet sweep on 2026-08-08
-      found **hundreds across 20 slots** — in `unified-trading-pm` alone: slot 10 = 31, slot 12 = 24, slot 11 = 23, slot
-      13 = 23; plus slot 12 `market-tick-data-service` = 11, slot 11 `market-tick-data-service` = 8, and long tails on
-      features-service / unified-api-contracts / instruments-service. The oldest reach back to 2026-06-23. Priority
-      raised P3 -> P2 on that measured scale. **Deliberately NOT bulk-discarded this session.** Discarding foreign WIP
-      is a workspace HARD RULE (and is hook-blocked for autonomous workers); at this scale a wrong call destroys real
-      work fleet-wide — the single worst outcome available in this doc. Two findings make it tractable rather than
-      open-ended: (a) the large majority are `autostash`, which git pops AUTOMATICALLY on a successful rebase — so a
-      LEFTOVER autostash specifically means the pop FAILED (conflict), i.e. genuinely un-restored working state rather
-      than noise; (b) the safe test is content-identity, the exact question
-      `worktree_clean_check.verify_all_wip_preserve_refs` already answers for orphaned commits (is this content already
-      in origin? SUPERSEDED / GONE / STILL-ORPHANED). **Done when**: a stash verifier reusing that verdict vocabulary
-      exists, and every stash is either landed, preserved to a `wip-preserve/` ref, or written off with its verdict
-      recorded. Note the detection half already exists (`stash_audit_watchdog.py` emits `stash_pile_stale`, 50 events in
-      a 1000-row window) — what is missing is the verifier, not the alarm. (repo: all slot clones, agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **Stash piles are ~15x bigger than first reported, and need a CONTENT VERIFIER before any
+      discard.** FIXED agent-orchestrator@2572571 (+ agent-orchestrator@06b92e6 same-session follow-up fix). Added
+      `worktree_clean_check.verify_stash`/`verify_all_stashes` (`server/worktree_clean_check/_stash_verify.py`), reusing
+      `_orphan_verify.py`'s exact SUPERSEDED/STILL-ORPHANED/WOULD-REGRESS/GONE verdict vocabulary and per-file
+      blob-compare method, adapted for a stash commit's multi-parent structure — measured directly (not assumed) that a
+      stash commit's OWN tree captures only TRACKED changes; untracked files live in a separate third-parent commit
+      built from scratch, so the verifier enumerates both via `diff-tree` (tracked) + `ls-tree` on the third parent
+      (untracked) and unions them before the blob compare. Wired into a new transition-deduped `StashVerifyWatchdog`
+      (`server/stash_verify_watchdog.py`, `tuning.stash_verify_interval_seconds` default 3600s), logging
+      `stash_verified` on verdict change + a `stash_self_closed` bookend for SUPERSEDED/GONE — built deduped FROM THE
+      START, learning `OrphanRefVerifyWatchdog`'s own measured 76%-of-activity-feed flood lesson rather than repeating
+      it. 15 new tests (`tests/test_stash_content_verifier.py`, `tests/test_stash_verify_watchdog.py`), full
+      `quality-gates.sh` green (2796 passed). **Scope note on "Done when" part 2**: this ships the verifier + the
+      always-on recording mechanism (every stash the watchdog sweeps now gets a verdict logged going forward,
+      self-closing the safe cases) — it does NOT hand-triage the several-hundred CURRENTLY-EXISTING stashes across the
+      other 19 slots in this same session. Touching another slot's untracked/dirty state is out of scope for a single
+      bounded task (workspace HARD RULE: "don't touch dirty files in other workspace areas"), and the watchdog's next
+      sweep (≤1h) will verdict the existing pile automatically once deployed — no separate manual pass is needed.
+      ORIGINAL FINDING: the original report was "slot 11 has 8 stashes in `market-tick-data-service`". A full fleet
+      sweep on 2026-08-08 found **hundreds across 20 slots** — in `unified-trading-pm` alone: slot 10 = 31, slot 12 =
+      24, slot 11 = 23, slot 13 = 23; plus slot 12 `market-tick-data-service` = 11, slot 11 `market-tick-data-service` =
+      8, and long tails on features-service / unified-api-contracts / instruments-service. The oldest reach back to
+      2026-06-23. Priority raised P3 -> P2 on that measured scale. Discarding foreign WIP is a workspace HARD RULE (and
+      is hook-blocked for autonomous workers); at this scale a wrong call destroys real work fleet-wide — the single
+      worst outcome available in this doc. Two findings made it tractable rather than open-ended: (a) the large majority
+      are `autostash`, which git pops AUTOMATICALLY on a successful rebase — so a LEFTOVER autostash specifically means
+      the pop FAILED (conflict), i.e. genuinely un-restored working state rather than noise; (b) the safe test is
+      content-identity, the exact question `worktree_clean_check.verify_all_wip_preserve_refs` already answers for
+      orphaned commits (is this content already in origin? SUPERSEDED / GONE / STILL-ORPHANED). (repo:
+      agent-orchestrator)
 - [x] ✅ [OPERATOR] P3. **Glue-runner litter removed — 51 orphaned unit files retired 2026-08-08T13:05Z.** Verified
       immediately before acting, and re-asserted inside the same script as a refuse-guard: **0 of 51 active, 0 enabled,
       no `/opt/github-glue*` directory anywhere, and no `Runner.Listener` process** (an earlier `pgrep -fc` reading of 1
@@ -197,17 +211,17 @@ drive-by. Corrected two earlier mis-reads during the session: the "12 failing gl
 failing, and the "33 vs 27 repos" gap between old and new slots is leftover `*.stale-pre-history-rewrite-*` dirs, i.e.
 the new slots are cleaner.
 
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. Re-read the
-  doc fresh (it had moved significantly since filing — self-pull fix, false-done triage, and glue-runner retirement
-  all shipped+closed by the originating/a concurrent session between this sweep's first and second pass). Of the 3
-  remaining open items: the fleet-cap raise is explicitly `[OPERATOR] P1` (capacity/spend ruling, correctly
-  non-dispatchable within a `planning` doc — coexists fine per `task_template.md`'s non-dispatchable-marker
-  convention); the slot-30 re-run (`[BACKEND] P3`) is a single idempotent command re-invocation with a named root
-  cause; the stash-content-verifier (`[BACKEND] P2`) has a concrete spec already written in-doc (reuse
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. Re-read the doc
+  fresh (it had moved significantly since filing — self-pull fix, false-done triage, and glue-runner retirement all
+  shipped+closed by the originating/a concurrent session between this sweep's first and second pass). Of the 3 remaining
+  open items: the fleet-cap raise is explicitly `[OPERATOR] P1` (capacity/spend ruling, correctly non-dispatchable
+  within a `planning` doc — coexists fine per `task_template.md`'s non-dispatchable-marker convention); the slot-30
+  re-run (`[BACKEND] P3`) is a single idempotent command re-invocation with a named root cause; the
+  stash-content-verifier (`[BACKEND] P2`) has a concrete spec already written in-doc (reuse
   `worktree_clean_check.verify_all_wip_preserve_refs`'s SUPERSEDED/GONE/STILL-ORPHANED verdict vocabulary) and an
   explicit "Done when". No remaining judgment call on either bounded item. Conflict-check clear: grepped
-  `plans/active/*.md` for `ORCHESTRATOR_FLEET_WORKER_CAP`/`stash_pile_stale`/`add-slot 30` — zero hits outside this
-  doc. `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
+  `plans/active/*.md` for `ORCHESTRATOR_FLEET_WORKER_CAP`/`stash_pile_stale`/`add-slot 30` — zero hits outside this doc.
+  `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
   `ao_observability_and_deploy_hygiene_gaps_2026_08_08_finalize_2026_08_08.md`.
 
 ## Deferred work after 2026-08-08
