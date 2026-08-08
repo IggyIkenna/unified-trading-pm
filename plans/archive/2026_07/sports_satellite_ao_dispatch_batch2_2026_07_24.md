@@ -55,7 +55,7 @@ related:
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
     /plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
     /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
-    /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
+    /plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     /plans/archive/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
@@ -681,7 +681,7 @@ context_scope:
       confirms the container image is `...instruments-service:latest` (mutable tag, not pinned); 3 most-recent
       executions (2026-07-22/23/24, all 01:30Z) completed successfully. No redeploy needed. Both this todo and the
       original redeploy todo marked resolved in
-      `plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
+      `plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
 
 ### From `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`
 

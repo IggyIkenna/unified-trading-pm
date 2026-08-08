@@ -25,7 +25,7 @@ summary: |
   verify green twice, zero captured-key losses; ALL 100 FIXTURES cells were truthset gaps (see body). REMAINING:
   the INFRA image redeploy + the P3 fleet sweep + 2 residual atoms (parked blank-data_type row; new TEAMS/TFF
   nightly-image masking).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -41,7 +41,9 @@ parent_epic: sports_master
 priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: planning
-resolved_by: ""
+resolved_by:
+  "plan_reconciler agt-2add8d, 2026-08-08 — all 7 todos verified done, doc's own 2026-08-05 Progress Log already
+  confirmed 'this closes the last open todo', archived"
 locked_by:
 context_scope:
   [
@@ -229,6 +231,8 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
       (masking writer is `uts-prod-instruments-service-sports-fixtures`, a different job) is tracked separately as the
       `[CODE] P1` "extend the guard" todo above, dispatched via
       `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`.
+
+## Deferred work — migrated to: none (all 7 todos done, no open deferrals)
 
 ## Progress Log
 

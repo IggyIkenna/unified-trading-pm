@@ -33,7 +33,7 @@ related:
   [
     plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md,
-    plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
+    plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/availability-manifest-and-data-status.md,
