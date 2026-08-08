@@ -134,12 +134,27 @@ achieved by exclusion, not canonicalisation.**
 
 ## Block A — restore raw capture (P0, gates everything else)
 
-- [ ] [DATA] P0. **Diagnose why raw sports capture stopped on 2026-07-26.** Measured: `trades` max date is 2026-07-26; a
-      recursive listing of `raw_tick_data/by_date/day=2026-08-01/` returns ZERO objects; `odds_horizon_bucket` and the
-      derived types kept writing through 2026-08-06 off the frozen source. Two existing issue docs describe candidate
-      causes (`mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md` — force-fetch writing no parquet;
-      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` — T1-recon OOM). READ both before diagnosing; they
-      may already carry the answer. Do NOT conclude from a grep — read the writer and check live.
+- [x] ✅ [DATA] P0. **Diagnose why raw sports capture stopped on 2026-07-26.** Measured: `trades` max date is
+      2026-07-26; a recursive listing of `raw_tick_data/by_date/day=2026-08-01/` returns ZERO objects;
+      `odds_horizon_bucket` and the derived types kept writing through 2026-08-06 off the frozen source. Two existing
+      issue docs describe candidate causes (`mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md` — force-fetch
+      writing no parquet; `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` — T1-recon OOM). READ both before
+      diagnosing; they may already carry the answer. Do NOT conclude from a grep — read the writer and check live. —
+      **DIAGNOSED 2026-08-08 (slot 3)**. Full root cause already in
+      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`; confirmed live and code-level. Summary: (1)
+      `market-tick-data-service@410d7569` (2026-07-26) removed the future-date guard that had previously blocked all
+      same-day SPORTS dispatches from reaching `OddsApiAdapter._fetch_all_leagues`; (2) `fire_trigger` in
+      `deployment-service/deployment_service/sports_trigger_scheduler.py` dispatched `market-tick-data-service` with NO
+      `--league` arg for fixture-proximate triggers, so `_candidate_leagues(registry, None)` returned all 30
+      Prediction-tier leagues (~30x overfetch per single-fixture event); (3) the job OOM'd at 8Gi before writing any
+      manifest row, so `_apply_freshness_skip` never fired → crash loop every 5 min starting ~2026-07-27. All fixes
+      confirmed live: memory bump (16Gi/4cpu), `--league` scoping (`deployment-service@4e0e03d`), pre-flight
+      source-scoping (`market-tick-data-service@afa8eaec`), freshness-skip demotion
+      (`unified-trading-library@2e072fbf`). Live capture confirmed restored: Cloud Run executions completing (8hlxb
+      2026-08-08T00:30Z wrote 293594 records for date=2026-08-07), `data_type=trades` parquet confirmed in GCS under
+      day=2026-08-07/pipeline_mode=batch_odds_api/ (20 bookmaker venues present). `odds_horizon_bucket` and derived
+      types were fed from frozen source because MDPS has no staleness guard against a dead raw source — this is the
+      Block A todo-3 defect. unified-trading-pm (this plan)
 - [ ] [DATA] P0. **Restore capture and prove it with a MEASURED terminal verdict**: a fresh capture day writes real
       parquet objects at the canonical path AND lands `captured` manifest rows with non-zero `row_count`. "The job
       exited 0" is not proof — the outage's whole signature is a job that succeeds while writing nothing. Cite the day,
@@ -236,3 +251,11 @@ achieved by exclusion, not canonicalisation.**
 - **2026-08-08** — Authored from the interactive sports venue/data-type audit (27 operator rulings). All figures above
   measured against the live prod manifest and the 2026-08-05 honest-coverage rollup, not inferred. Capture-outage block
   placed FIRST per operator ruling ("fix inside this plan, phase 0").
+- **2026-08-08 (slot 3, data_engineering)** — Block A todo-1 (diagnose) flipped. Root cause in
+  `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` (fully traced in prior sessions); code-confirmed writer
+  read (`odds_api_adapter.py:105-119` — `_candidate_leagues` with `leagues=None` returns 30 Prediction-tier leagues);
+  live-verified GCS (day=2026-08-01 through 2026-08-07 present, data_type=trades confirmed, 2026-08-04 gap noted); Cloud
+  Run executions completing normally (8hlxb 2026-08-08T00:30Z: 293594 records written date=2026-08-07). The plan's
+  "trades max date 2026-07-26" was a stale read from `market-data-tick-sports-prd` per-bucket index at plan-authoring
+  time — the canonical `instruments-store-sports-prd` manifest and live GCS both show captures post-07-26 from the 08-06
+  backfill VM and resumed live capture.
