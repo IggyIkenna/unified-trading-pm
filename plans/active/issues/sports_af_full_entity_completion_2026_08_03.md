@@ -973,3 +973,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   through already-covered dates. Also hit a >1h `gcloud storage cat` flakiness episode (three different error types on
   files `ls -L` proved existed) — worked around via direct HTTPS GET, resolved on its own by ~02:44Z. Full detail:
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`a6dab782b5`.
+- **2026-08-08T03:15Z** — FIXTURE_STATS +80 days (`last_completed_date=2023-05-24`, fresh `03:14:21Z`), ~chunk 13/26.
+  `smallchunk3` confirmed healthy: chunk 7/451 (`2020-07-06`), steady ~4.5min/chunk skip-fast pace, zero OOM, ETA ~1h20m
+  to reach chunk 26 where real new work resumes. Both healthy.
