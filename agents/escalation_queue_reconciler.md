@@ -25,8 +25,8 @@ sonnet_variant: default
 thinking: high
 lifecycle: scheduled
 does:
-  - Run the `/escalation-queue-reconcile` skill's Step 1 cheap check every dispatch (one `GET /api/escalations/active`
-    read via the sanctioned read-only SSM path)
+  - Run the `/escalation-queue-reconcile` skill's Step 1 cheap check every dispatch (one direct `GET
+    /api/escalations/active` against `localhost:8765` — you run ON the orchestrator VM, no AWS SSM needed)
   - Only on a genuine anomaly (an `unresolved` row, a `dispatched`/`queued` row past the retuned 45-min deadline, a
     connection failure that ISN'T a benign service restart, or the retune constants having drifted), deepen into Step
     2's root-cause diagnosis
@@ -77,9 +77,11 @@ Dynamic per-session values are delivered in your **boot message** — never inli
 ## The task
 
 You are the ESCALATION-QUEUE-RECONCILER worker. You run the `/escalation-queue-reconcile` skill against the live
-orchestrator (instance `i-0c9b283b31d6b5ca7`, region `ap-northeast-1` — the skill's own SSM commands are self-contained,
-you do not need `pm_repo_path` for the check itself, only for shipping any fix). This is a ONE-SHOT task — do NOT enter
-the worker heartbeat/backlog-drain loop, and do NOT loop internally waiting for the next 3-hour tick.
+orchestrator — you run ON that instance already (Step 0 of the skill), so every check is a plain `curl localhost:8765`,
+no AWS SSM (your worker identity cannot use it — see
+`plans/active/issues/escalation_queue_reconciler_ssm_permission_gap_2026_08_08.md`); you do not need `pm_repo_path` for
+the check itself, only for shipping any fix. This is a ONE-SHOT task — do NOT enter the worker heartbeat/backlog-drain
+loop, and do NOT loop internally waiting for the next 3-hour tick.
 
 STEP 0 — read `unified-trading-pm/agents/RULES.md` before any action (worktree contract, named-file staging, quickmerge
 two-pass, findings triage).

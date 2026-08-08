@@ -35,17 +35,41 @@ the reconcile pass that's supposed to catch that silently not working.
 whether the queue's own dispatch/retry/give-up/reconcile machinery is still doing its job — a narrower, cheaper,
 higher-frequency check than a fleet-wide CI sweep.
 
-## Step 1 — the cheap check (always do this first, and ONLY this, on a healthy queue)
+## Step 0 — are you ON the orchestrator VM, or checking it remotely?
+
+The scheduled `escalation_queue_reconciler` worker (the common case — this is what runs every 3 hours) IS DISPATCHED ON
+the orchestrator instance itself (`i-0c9b283b31d6b5ca7`) — it can reach `localhost:8765` directly, no AWS anything
+needed. **Try the direct path first, always:**
+
+```bash
+curl -s -m 5 localhost:8765/api/mode
+```
+
+Succeeds → you're on the VM. Use PLAIN `curl localhost:8765/...` for every check below, no `aws ssm` wrapper — a worker
+session's AWS identity (`ikenna-worker`) does NOT have `ssm:SendCommand` and cannot self-grant it (confirmed live
+2026-08-08, `plans/active/issues/escalation_queue_reconciler_ssm_permission_gap_2026_08_08.md`); routing through SSM to
+reach the machine you're already running on is both unnecessary and a hard permission wall. Only fails (no response /
+connection refused, and it's not a benign restart per Step 1 below) if you're checking this INTERACTIVELY from somewhere
+else (your own laptop session, not the dispatched worker) — that's the one case the SSM wrapper below is for:
 
 ```bash
 CMD_ID=$(aws ssm send-command \
   --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1 \
   --document-name "AWS-RunShellScript" \
-  --parameters 'commands=["curl -s -m 10 localhost:8765/api/escalations/active"]' \
+  --parameters 'commands=["curl -s -m 10 localhost:8765/api/mode"]' \
   --query "Command.CommandId" --output text)
 sleep 4
 aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id i-0c9b283b31d6b5ca7 \
   --region ap-northeast-1 --query "{Status:Status,Out:StandardOutputContent,Err:StandardErrorContent}" --output json
+```
+
+Every command in Step 1-2 below is written as a plain `curl`/shell command — wrap it in the SSM pattern above ONLY when
+Step 0 confirmed you're remote. Don't reach for SSM by default; it's the exception, not the rule.
+
+## Step 1 — the cheap check (always do this first, and ONLY this, on a healthy queue)
+
+```bash
+curl -s -m 10 localhost:8765/api/escalations/active
 ```
 
 This is the SAME view the AO dashboard's escalations widget renders (default `active_within_hours` window) — never act
@@ -63,7 +87,7 @@ a benign service restart before calling it a finding — this has happened twice
 times was ordinary maintenance, not a bug:
 
 ```bash
-# same SSM pattern, command: systemctl is-active orchestrator; journalctl -u orchestrator --since "-10 min" | tail -20
+systemctl is-active orchestrator; journalctl -u orchestrator --since "-10 min" | tail -20
 ```
 
 `deactivating`/`Stopping orchestrator.service` in the log around the failure time → benign restart, retry the Step 1
@@ -79,7 +103,7 @@ right — file it, don't just keep silently retrying).
    (90/1/page-on-first-miss) is itself the finding — someone shipped a revert, intentionally or not.
 2. **Confirm the reconcile pass is actually running and ordered correctly** — the ordering-bug class (ascending instead
    of descending `resolved_at`, or a `LIMIT` too small for the backlog) is exactly the kind of regression that looks
-   correct in a code review and only shows up live. Pull a few `unresolved` rows via the same SSM approach
+   correct in a code review and only shows up live. Pull a few `unresolved` rows via the same approach as Step 1
    (`GET /api/escalations/active?include_resolved_within_hours=<N>`, widen `N` until the stuck row appears) and check:
    is `reconcile_stale_unresolved_escalations()` (`agent-orchestrator/server/autospawn.py`'s `_drain_escalations()`
    calls it) even being invoked on a live tick — check recent `journalctl`/activity-log output for its log lines, not

@@ -130,19 +130,34 @@ Grant `ikenna-worker` (or a shared identity/group all worker sessions actually r
 This mirrors `uts-orchestrator-epic-role`'s existing pattern of a narrowly resource-scoped inline policy rather than a
 broad managed policy. Re-verify live (not just IAM-policy-read-back) via the same Step 1 curl before closing.
 
+## Superseding fix — no IAM grant needed (2026-08-08, same day)
+
+The recommended IAM grant above was the wrong fix, caught before asking the operator to act on it: the
+`escalation_queue_reconciler` worker is DISPATCHED ON the exact instance (`i-0c9b283b31d6b5ca7`) it was routing through
+AWS SSM to reach. There is no network boundary between the two — going through SSM to command the machine you are
+already running on is unnecessary indirection, not a real requirement, and it's what hit the `ikenna-worker` permission
+wall. The actual fix is a Step 0 added to `/escalation-queue-reconcile`
+(`unified-trading-pm/cursor-configs/skills/escalation-queue-reconcile/SKILL.md`): try a direct `curl localhost:8765`
+first (works whenever the caller IS the dispatched worker — the common, 3-hourly case), and reserve the
+`aws ssm send-command` wrapper for the one case that genuinely needs it — an OPERATOR checking the queue interactively
+from their own laptop session, using their own AWS credentials (a different identity than `ikenna-worker` entirely, and
+not actually broken by this finding). No IAM change requested or needed. `check-ao-backlog-status.sh` /
+`/check-agent-orchestrator` are unaffected by this finding for the same reason: they're designed for exactly that
+interactive-operator case, not for a dispatched worker calling itself.
+
 ## Todo
 
-- [ ] [OPERATOR] P1. Grant `ikenna-worker` (confirm first whether other worker sessions run as a different/shared
-      identity — if so, grant that one instead or additionally) the scoped `ssm:SendCommand` +
-      `ssm:GetCommandInvocation` inline policy above, then re-verify LIVE via the Step 1 curl in
-      `/escalation-queue-reconcile` (not just an IAM-policy read-back) before marking this resolved.
+- [x] [DOCS] P1. Fix `/escalation-queue-reconcile`'s Step 0-2 to try direct `localhost:8765` first (the dispatched
+      worker's own case) and reserve `aws ssm send-command` for a genuinely remote/interactive check — shipped
+      `unified-trading-pm@<pending>`. Re-verify LIVE by manually triggering `escalation-queue-reconciler.service` again
+      and confirming Step 1 completes with a plain curl, no `AccessDeniedException`.
 
 ## Blast radius
 
-Every future 3-hourly `escalation_queue_reconciler` dispatch will hit this same wall until fixed — the safety-net this
-role exists to provide (catching a genuinely stuck escalation row) has had this blind spot since the role's creation
-2026-08-07. Also blocks any other worker-session use of `check-ao-backlog-status.sh` / `/check-agent-orchestrator` from
-an identically-provisioned session.
+Was: every future 3-hourly `escalation_queue_reconciler` dispatch would hit this same wall. Now: none — the fixed Step 0
+means the common (on-VM, scheduled) case never touches AWS SSM at all, so the `ikenna-worker` permission gap is moot for
+this role. The gap itself (should some future worker genuinely need to reach a DIFFERENT AWS resource it can't touch
+directly) is not itself resolved — noting it as a real but currently non-blocking observation, not a new open item.
 
 ## Progress Log
 
