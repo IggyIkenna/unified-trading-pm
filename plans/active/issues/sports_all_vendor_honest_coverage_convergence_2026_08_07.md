@@ -723,3 +723,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T09:13Z** — FIXTURE_STATS +86 days (`last_completed_date=2024-12-08`, fresh `09:12:35Z`), accelerating
   well. odds smallchunk5: chunk 7/451 (`2020-07-06`), zero OOMs, healthy skip-fast pace — still well before chunk 18's
   danger zone. Both healthy, no intervention.
+- **2026-08-08T09:40Z** — FIXTURE_STATS +71 days (`last_completed_date=2025-02-17`, fresh `09:39:39Z`), getting close to
+  convergence. odds smallchunk5: chunk 12/451 (`2020-07-31`), zero OOMs, 6 chunks remaining before chunk 18. Both
+  healthy, no intervention.
