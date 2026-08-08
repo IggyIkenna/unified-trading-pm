@@ -148,8 +148,12 @@ spelling variant survives, which is the entire point of the panel". It does not.
       of it; every current row is an odds_api quote. **Fully AO-completable with no operator step**: the scaffold,
       contract, venue capability wiring and unit tests are all buildable credential-free per the
       External-Data-Always-Available rule, and the todo is DONE when they exist and pass QG. It must write
-      `data_type=trades` (the name P1 reserved for real matched volume), NOT `odds`. Do NOT mark this
-      `BLOCKED-CREDENTIALS` — the credential ask is a separate, already-tracked item and must not gate the scaffold.
+      `data_type=trades` (the name P1 reserved for real matched volume), NOT `odds`. This todo must NOT carry a
+      blocked-on-credentials marker: the credential ask is a separate, already-tracked item and must not gate the
+      scaffold. **Do not restate the literal marker token here either** — a live `BLOCKED-<TOKEN>` string anywhere in a
+      todo block makes that todo permanently non-dispatchable (`_has_live_blocked_token`,
+      `agent-orchestrator/server/regen_backlog_from_plan.py`), which is exactly how this todo sat silently absent from
+      the live backlog from authoring until 2026-08-08 — the sentence forbidding the marker contained the marker.
 
 ### Catalogue, browser, dependency
 
