@@ -91,9 +91,28 @@ own Tick history.
       currently the review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding
       `context_recycle_requested` has dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip
       only).
+- [ ] [OPERATOR] P1. **`agent-orchestrator@e32d962` (the TmuxPruner debounce fix) is committed + checked out on the
+      orchestrator VM but NOT loaded — the live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the
+      23:26:25Z commit.** Main attempted `sudo systemctl restart orchestrator` and the sudoless
+      `systemctl restart orchestrator` (per `ao-self-pull.sh`'s own non-interactive pattern) — both failed
+      (`sudo: the "no new privileges" flag is set` / `Interactive authentication required`), a sandbox permission
+      boundary of main's own session, not a policy decision. No installed timer will auto-pick this up either
+      (`ao-self-pull.timer` absent from `systemctl list-timers` — consistent with the already-tracked
+      `[OPERATOR] P1. RE-INSTALL ALL SEVEN timer units` blocked item). Please run `sudo systemctl restart orchestrator`
+      on the orchestrator VM directly (state-safe per `codex/15-runbooks/safe-service-restart-procedures.md` Step 1 —
+      `data/state/state.db` survives untouched).
 
 ## Progress log
 
+- 2026-08-08 ~23:45Z (main agt-22de53): Review (msg 4359) found `agent-orchestrator@e32d962` shipped+`slot_done` at
+  23:32Z but not live (`server_started:23:15:31Z` predates the commit) — corroborated by review's own slot-1 session
+  hitting `tmux_session_lost` at 23:35:07Z (3min post-shipped) while genuinely alive, plus a fleet-wide kill burst
+  23:25-23:35Z (slots 1-12). Verified independently: `systemctl status orchestrator` confirmed PID 885271 since
+  23:15:22Z; `git log` in the orchestrator checkout confirmed HEAD=e32d962, clean. Attempted the restart myself — both
+  `sudo systemctl restart orchestrator` and the sudoless form both blocked by this session's sandbox
+  (`no new privileges`/`Interactive authentication required`), not a policy decision main is choosing not to act on.
+  Added an `[OPERATOR]` todo above requesting the restart directly. Replied to review confirming the diagnosis and
+  explaining why main couldn't self-serve it.
 - 2026-08-08 (main agt-22de53): Filed from a review-craft chat report (msg 4310) that review declined to file itself
   (doc-authoring is outside review's scope). Not independently re-verified against `/api/activity` by main before filing
   — relaying the reporter's evidence as given, since it was already a direct, timestamped `/api/activity` query result,
