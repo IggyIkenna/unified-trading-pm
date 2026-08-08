@@ -260,9 +260,32 @@ plan + verifying the `done_sha`, never from the row's status alone.
       ancestors of `origin/live-defi-rollout`). Fixed the citation in the plan doc itself (same-file findings-triage
       fix). No REOPEN (would re-open genuinely-done work) or FLIP (already flipped, honestly, just mis-cited) was
       warranted; this item needed a citation fix, not a status change.
-- [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-009` (`done_sha=6ddb0374`)
+- [x] ✅ [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-009` (`done_sha=6ddb0374`) — **verified 2026-08-08
+      (slot 7): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected.** `GET /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null` (not
+      `done`), same self-correcting `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as
+      every item above. `6ddb0374` is a real, on-origin commit
+      (`feat(mtds): add record_vm_progress checkpoint to migrate_sports_casing_revert_2026_07_27.py`, slot-8,
+      2026-08-05T04:45:50Z, confirmed ancestor of `origin/live-defi-rollout`) that genuinely added the checkpoint:
+      `record_vm_progress` is imported and called (gated on the per-day `Counter` reaching zero) in
+      `market-tick-data-service/scripts/sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py`.
+      Read the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md`, Category
+      A): the corresponding todo is correctly `[x]` ✅ and already cites `6ddb0374` accurately — no citation defect here
+      (unlike -008's `c98e0abb` mis-citation). So the false-done state the 03:15 UTC audit snapshot captured (backlog
+      row `done`, checkbox possibly not yet flipped at that instant) has already been corrected — both the backlog row
+      (back to `queued`/`done_sha: null`) and the plan checkbox (honestly `[x]` with an accurate citation) are
+      consistent. No REOPEN (would re-open genuinely-done work) or FLIP (already flipped, honestly) was warranted or
+      performed; this item only needed its tracker checkbox resolved with the verification trail above.
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-010` (`done_sha=6ddb0374` — **same sha as -009**;
-      check whether one commit legitimately closed both or whether a shared sha was copied across rows)
+      check whether one commit legitimately closed both or whether a shared sha was copied across rows). **Scoping note
+      (2026-08-08, slot 7, from adjacent -009 verification): the cited plan's Category A has exactly 3
+      sports-casing-family todos — `migrate_sports_casing_revert_2026_07_27.py` (`6ddb0374`, ✅ correctly closed,
+      claimed by -009 above), `migrate_sports_casing_2026_07_22.py` (`486c61b2`, ✅ correctly closed, already reconciled
+      by -008), and `migrate_sports_league_id_casing_2026_07_21.py` (still `- [ ]`, no sha at all). `6ddb0374` only
+      covers the first script — it does not touch `migrate_sports_league_id_casing_2026_07_21.py`. If -010's backlog row
+      maps positionally to the third (still-open) todo, its `done_sha=6ddb0374` citation is a copied-sha defect and the
+      underlying checkpoint work is genuinely NOT done — a REOPEN candidate, not a citation fix. Left open for whoever
+      picks up -010 to confirm against the live backlog row's title/brief and close with the same verification rigor.**
 - [ ] [BACKEND] P2. `deployment_scripts_bucket_soft_delete_retention_drift-002` (`done_sha=97d37ce57`) — explicitly
       dated "Final drain confirmation on/after 2026-08-09", i.e. **not due yet**; likely REOPEN, not FLIP
 - [ ] [BACKEND] P2. `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025` (`done_sha=0e9185d2c`) —
