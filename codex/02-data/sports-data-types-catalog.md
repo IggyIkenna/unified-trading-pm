@@ -31,6 +31,34 @@ code_refs:
 
 # Sports Data Types Catalog
 
+> **🔴 PARTIALLY SUPERSEDED 2026-08-08 BY OPERATOR RULING — three sections of this doc are now WRONG. Read this banner
+> before trusting anything below it.** Governing plans:
+> `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (contracts) and
+> `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` (migration).
+>
+> 1. **"do NOT merge" is OVERTURNED.** The § "Disambiguation with instruments-service ODDS" below rules that IS
+>    `data_type=ODDS` (footystats) and the MTDS sports types "legitimately coexist; do NOT merge in the aggregator". The
+>    operator ruled 2026-08-08 that the sports data_type vocabulary **merges to ONE lowercase form** — footystats `ODDS`
+>    folds into `odds`, and the whole 19-token uppercase instruments-service vocabulary (`FIXTURES`, `MATCHES`,
+>    `PLAYER_STATS`, …) lowercases with it. The `source` column (`footystats` vs `odds_api`) becomes the discriminator
+>    the two spellings were doing badly.
+> 2. **The GCS path convention below is STALE.** It documents
+>    `{bucket}/raw_tick_data/by_date/day={date}/asset_group=sports/source={BOOKMAKER}/data_type={dt}/league_id={LEAGUE}/`.
+>    Production actually writes
+>    `.../by_date/day={date}/pipeline_mode={mode}/asset_group=sports/venue={BOOKMAKER}/instrument_type={it}/data_type={dt}/league_id={LEAGUE}/`
+>    — the bookmaker sits on a **`venue=`** segment (not `source=`), and two segments (`pipeline_mode=`,
+>    `instrument_type=`) are undocumented here. Verified against live prod objects 2026-08-08. Interestingly this doc's
+>    `source={BOOKMAKER}` framing is closer to the ruled TARGET model than production is — but it was never true as
+>    written.
+> 3. **The data-type list below is incomplete and partly phantom.** It documents 8 types and never documents `trades`
+>    (375,257 captured shards — the LARGEST population in the sports estate) or `trades_inplay`. Meanwhile
+>    `markets`/`outcomes`/`settlements` are documented as real but have **0 rows ever written** and are retired by the
+>    ruling; ML labels come from IS `fixtures_outcomes`/`matches` instead. Post-migration the raw vocabulary collapses
+>    to a single `odds` with `in_play` as a column, a first-class `horizon` axis replaces the `timeframe` overloading,
+>    and `arbitrage_opportunity` leaves the data layer for signals/features.
+>
+> Rewrite this doc against the new model when P1 lands — do not patch it incrementally.
+
 > **⚠️ CANONICAL CORRECTION (2026-07-22) — data_type is LOWER-CASE for sports; this REVERSES the 2026-07-19
 > K0-DECISION(b) below.** Operator ruling 2026-07-22 (interactive session), on physical-estate evidence from the 7-agent
 > audit in `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 4.3 / § 2.1: GCS holds
