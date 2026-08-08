@@ -223,16 +223,16 @@ evidence-backed, zero-risk housekeeping action, not new work.
       allowlist. See `/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (now
       `status: resolved`) for the full resolution.
 
-- [ ] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** In
-      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3, add surface "(d) any
-      `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from EITHER `/ag-closeout-audit`
-      or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
+- [x] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** ✅ unified-trading-pm@c2083029d
+      — added surface "(d) any `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from
+      EITHER `/ag-closeout-audit` or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
       `Source:`/`## Deferred`/`## Already     covered` citations for the candidate doc's path before finalizing a
-      RECLASSIFY or drafting a new extraction." Update both `na-eligibility-audit/SKILL.md` (its Phase 2) and
-      `ag-closeout-audit/SKILL.md` (its own Phase 3 conflict-check section) to reference the new surface explicitly.
-      **Done when**: all 3 docs cite the new surface; the source doc's `[DOC] P2` checkbox flips `[x]` citing the
-      commit. Source: `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item —
-      its 2nd item is an explicit operator/design-owner decision, stays open/NA). Repo: unified-trading-pm.
+      RECLASSIFY or drafting a new extraction" to
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3; wired both
+      `na-eligibility-audit/SKILL.md` (its Phase 2) and `ag-closeout-audit/SKILL.md` (its own Phase 3 conflict-check
+      section) to reference the new surface explicitly. Source:
+      `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item — its 2nd item is
+      an explicit operator/design-owner decision, stays open/NA). Repo: unified-trading-pm.
 
 - [ ] [BACKEND] P2. **Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time** — for
       each of (`unified-trading-library c927ec58`, `unified-api-contracts 06c8e90b`, `deployment-service 0e62096f`):
