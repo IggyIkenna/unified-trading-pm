@@ -492,6 +492,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       green-filtered) is the v1 signal — a green-only refinement is folded into the promotion-drain P3 follow-up. Repos:
       deployment-api (`_repo_ci_github`/`repo_ci`/ `_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi`
       OverviewTable + `client` + `mock-api`).
+- [x] ✅ [CODE] P1. **(G7b) Watchdog DORMANCY had no standing alert and was invisible on the HealthStrip** —
+      agent-orchestrator@1c8c54ac9. G7 below surfaced dormancy on the landing page's VM cards, but (a) the only Slack
+      signal was `notify_watchdog_kill`'s cap-hit page, which fires from INSIDE the single kill that crosses the cap —
+      since no further kill can happen while dormant it never re-reminded and never closed, and (b) the SLOT dashboard's
+      HealthStrip (the "Multiple issues — eyes on this" strip an operator actually watches) had no idea fleet
+      self-healing was off, so a dormant watchdog looked identical to a healthy one. Adds the fire-on-change + RESOLVED
+      bookend pair (`notify_watchdog_dormant` / `_resolved`, disk-latched via
+      `dedup_state.watchdog_dormant_alerted_path`, evaluated every tick BEFORE the cap early-return so the UTC-rollover
+      edge can close the episode) + `StateResponse.watchdog_dormant` → `HealthSummary.watchdogDormant` → straight to
+      `crit` with no warn tier (while dormancy holds, every OTHER signal on the strip stops being self-correcting).
+      Complementary to `CriticalHealth` (ao_dashboard_critical_health_visibility_2026_08_07), not a duplicate: this
+      rides the `/api/state` poll the strip already makes, rather than the extra fetches CriticalHealth needs — worth a
+      look at folding it into `CriticalHealth` if that surface becomes the standard home. Operator ruling 2026-08-08.
+      Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262 vitest (3
+      new). (repo: agent-orchestrator)
 - [x] ✅ [CODE] P3. **(G7) Worker-liveness watchdog activity has no dedicated standing panel** — slot
       working/paused/blocked states render, but the watchdog's kill / daily-cap-dormancy / autospawn-flap /
       respawn-escalation events are transition-only. Add a watchdog-health panel (kills today vs cap, dormant?, recent
