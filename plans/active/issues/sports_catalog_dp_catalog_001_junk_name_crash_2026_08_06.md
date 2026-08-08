@@ -24,7 +24,7 @@ status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
-repos: [instruments-service]
+repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags:
   [
@@ -50,8 +50,8 @@ related:
 created: 2026-08-06
 last_updated: "2026-08-06"
 parent_epic: instruments_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -147,8 +147,13 @@ observability hook whoever picks up the follow-up needs.
       `quality-gates-v2` PASS, `semver-agent/label-check` PASS; the `validate / GCP Cloud Build` image-build-gate check
       was still QUEUED as of 08:06 UTC) — once that check passes the PR auto-merges (`*/15` fleet cadence), Cloud Build
       rebuilds `:latest`, and the next `lifecycle-catalogue-regen-sports` execution (scheduled `0 1 * * *` UTC, or a
-      fresh manual trigger) will run the fixed code. Re-check PR #1084's merge status + re-trigger the job once merged.
-      (repo: instruments-service, verification only — blocked on the standard promotion pipeline, not a new problem)
+      fresh manual trigger) will run the fixed code. **STALE CITATION (found 2026-08-07): PR #1084 is now CLOSED,
+      mergedAt=null** — superseded by a chain of later same-title "chore(promote): LDR -> main (Option-B direct)" PRs
+      (#1085-#1092, all closed unmerged); the current live promote PR is **#1093** (opened 2026-08-06T22:10:44Z, head
+      8985daedf532, OPEN/mergeable as of 2026-08-07). Don't chase #1084 — check the CURRENT open LDR→main promote PR via
+      `gh pr list --repo <org>/instruments-service --search "promote"` (the number will likely have moved again by
+      execution time), then re-trigger the job once it merges. (repo: instruments-service, verification only — blocked
+      on the standard promotion pipeline, not a new problem)
 - [ ] [DATA] P3. Trace and fix the actual upstream encoding defect producing UTF-8-as-Latin-1 mojibake sports
       player/team names (this incident's `'JeleÅ\x84'` for `'Jeleń'`) — most likely in an MTDS api_football lineups
       adapter or orchestrator write path. Not chased down this session (would need either a corpus grep of MTDS sports
@@ -187,3 +192,14 @@ observability hook whoever picks up the follow-up needs.
   pre-existing entries re-verified to resolve on disk and kept.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items: 1 dependency-blocked, 1 lower-confidence
   AO-eligible candidate not yet promoted.
+- **na-eligibility-audit 2026-08-07**: RECLASSIFY (sports tranche) — both remaining open items are bounded,
+  deterministic-outcome verification/diagnose-and-fix work simply defaulted to `assigned_vm: NA` by the one-shot
+  escalation responder, not a deliberate human-gate. Live re-verification (2026-08-07) confirmed the P2 verify-item is
+  still genuinely open (commit `497c4f5e` still not on `main`) but its PR #1084 citation is now stale/closed — corrected
+  above (current live promote PR is #1093). Added `market-tick-data-service` to `repos:` since the P3 item names it as
+  the likely target. Conflict-check cleared: grepped every active `assigned_vm: planning` doc in
+  `parent_epic: instruments_master` (6 docs) for
+  DP-CATALOG-001/lifecycle-catalogue-regen-sports/mojibake/JunkSymbolError — 0 hits;
+  `sports_consolidated_closeout_2026_07_19.md` has zero overlap (grepped directly). Flipped
+  `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`. Issue doc under
+  `plans/active/issues/` — exempt from the finalize-plan-coverage rule, no companion finalize doc needed.

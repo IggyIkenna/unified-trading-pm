@@ -97,6 +97,11 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid (sports tranche) — sole open `[DATA] P2` (regen-cadence either/or)
+  triply corroborated as operator-gated: this doc's own 2026-07-30 entry below, plus two independent AO-dispatch
+  conflict-checks (`sports_satellite_ao_dispatch_batch9_2026_08_04.md`,
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md`) both examined it as a dispatch candidate and declined for the
+  same reason. Not re-litigated.
 - **2026-07-25 (slot-6, backend_engineer)**: Shipped the backend todo (deployment-api@dbbf64c) via the AO-dispatched
   copy in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`. This UNBLOCKS the `[UI] P3` todo below (the
   `FixturesBrowser.tsx` window note + `MAX_SPAN_DAYS=120` warning are now stale and should be relabeled/dropped) — it is

@@ -168,6 +168,10 @@ must map into, not invent a parallel "other" bucket for), `/codex/04-architectur
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid (sports tranche) — re-confirms the 2026-07-30 entry below;
+  BLK-b567ce7d citation re-verified real (13 hits across 9 docs), and the freshest independent corroboration in the
+  corpus (`sports_satellite_ao_dispatch_batch10_2026_08_06.md`, one day before this audit) independently lists this doc
+  as operator-gated/not-re-triageable with an 11-item count matching this audit's own read exactly. Not re-litigated.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — explicit dated operator ruling BLK-b567ce7d
   (2026-07-21) in `source:` — 'author a scoped design-only plan, assigned_vm: NA, NOT AO-dispatched — brand-new
   undefined feature work needs operator/spec sign-off on acceptance criteria + thresholds BEFORE any implementation

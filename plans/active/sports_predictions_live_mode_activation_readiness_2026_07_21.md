@@ -205,8 +205,8 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       un-liftable `[OPERATOR]` hard-stop below regardless of this ruling, so saying "yes, scope it" only unblocks
       READINESS/plumbing work, not capital risk. This does NOT cancel the plan; it converts Todo 1 into "yes" and folds
       directly into Todo 2 below (no separate action needed — Todo 2 already reads "Once Todo 1 is a yes: scope...").
-- [ ] [INFRA] P3. **CORRECTED 2026-07-29 (was: "scope the MTDS live-odds connector ... as its own follow-up plan")** —
-      the connector already exists and is shipped, not merely scoped: `odds_api_ws.py`'s `WSFeedConnector`
+- [x] ✅ [INFRA] P3. **CORRECTED 2026-07-29 (was: "scope the MTDS live-odds connector ... as its own follow-up plan")**
+      — the connector already exists and is shipped, not merely scoped: `odds_api_ws.py`'s `WSFeedConnector`
       (market-tick-data-service) + the `LIVE_ODDS_API` `SOURCE_MODE_CAPABILITY`/`SOURCE_PRIORITY` UAC entries are live
       in code, and a real VM is running it (`mtds-live-sports-odds-api-trades`, launched via
       `launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades` —
@@ -230,13 +230,27 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       market-tick-data-service, unified-api-contracts)
 
       **UNBLOCKED 2026-08-07 (operator)**: the quota-exhaustion blocker is resolved — "now we have 15m credits on the
-                      api key so all good unblocked." Root cause of the 4-days-to-exhaustion still not independently tracked as its
-                      own finding (unchanged from the note above). **Checkbox NOT flipped** — this todo's own done-when additionally
-                      requires "a fresh poll cycle succeeding against the live key in production, not just a direct-API-call
-                      verification," which has not been independently confirmed here; the api_football second-source half also
-                      remains STRUCK/not-pursued. Whoever next touches this doc should re-verify a live poll cycle before closing.
+                              api key so all good unblocked." Root cause of the 4-days-to-exhaustion still not independently tracked as its
+                              own finding (unchanged from the note above). **Checkbox NOT flipped** — this todo's own done-when additionally
+                              requires "a fresh poll cycle succeeding against the live key in production, not just a direct-API-call
+                              verification," which has not been independently confirmed here; the api_football second-source half also
+                              remains STRUCK/not-pursued. Whoever next touches this doc should re-verify a live poll cycle before closing.
 
-- [ ] [INFRA] P3. **CORRECTED 2026-07-29 (was: "build `launch-mtds-live-sports.sh` +
+              **na-eligibility-audit 2026-08-07 — UNRESOLVED TENSION, flagging not closing**: found
+              `/plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md` already `status: complete`,
+              archived 2026-08-04 — "All 8 todos complete; the final remaining todo (Live-ODDS quota/second-source) was verified
+              done 2026-08-03 (live VM healthy, api_football half struck per `BLK-b969f5f0`)," with that doc's own Progress Log
+              (2026-08-03, slot 7) citing a live-verified poll cycle: "found `mtds-live-sports-odds-api-trades-20260803-172841`
+              already RUNNING ... 35+ min of clean run.log with zero ERROR/401/OUT_OF_USAGE_CREDITS." This predates (by 3-4
+              days) the operator's 2026-08-07 UNBLOCKED note directly above, which describes resolving a quota-exhaustion
+              blocker as though still open at that later date — unclear whether this is a SECOND, later quota exhaustion (the
+              key ran dry again after 08-03/04) or a delayed answer to an already-self-resolved question. Did not independently
+              re-verify a live poll cycle to break the tie (recovering an interrupted prior run's uncommitted WIP from a
+              git-stash conflict, not doing fresh sports-tranche analysis). **Leaving checkbox open per the operator's explicit
+              instruction above** rather than closing on the archived doc's older evidence — next sports-tranche pass should
+              re-verify a live poll cycle now and resolve this explicitly either way.
+
+- [x] ✅ [INFRA] P3. **CORRECTED 2026-07-29 (was: "build `launch-mtds-live-sports.sh` +
       `launch-mdps-features-live-sports.sh`" — 2 new per-asset-group scripts from scratch)** — `launch-mtds-live.sh`
       already works for sports today: it's the SAME generic (not per-asset-group) launcher used across every asset
       group, invoked as `launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades`, and it is the
@@ -253,7 +267,14 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       exec-dispatch section") is the actual remaining build spec, not a fresh sports-specific launcher; its
       `[OPERATOR] P2` todo (family↔asset_group mapping for the other 6 feature families) is cross-cutting and does not
       block sports specifically. (repo: market-tick-data-service confirmed working; market-data-processing-service,
-      features-service, deployment-service remaining, tracked in the linked issue)
+      features-service, deployment-service remaining, tracked in the linked issue) **CLOSED (na-eligibility-audit
+      2026-08-07)**: `/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` now has
+      all 5 of its todos checked `[x]` — the `[SCRIPT] P2` exec-dispatch branch this todo named as "the actual remaining
+      build spec" shipped `deployment-service@e7d17f2` 2026-08-03 ("a new `VM_TASK == \"mdps-features-live\"` branch
+      discovers MDPS's (venue,data_type) shards at boot ... and generates a self-contained fan-out supervisor"). That
+      doc's Progress Log (2026-08-04): "All 5 todos in this issue doc are now done; plan is eligible for archival." A
+      narrower `[VERIFY] P2` live-launch-confirmation follow-up remains open in that OTHER doc (added by a 2026-08-06
+      audit) but is a separately-tracked step, not the build-spec work this checkbox named.
 - [x] ✅ [DATA] P3. **CORRECTED 2026-07-29 (code-verified, not an operator ruling — was: "Build the FSS live handler ...
       currently batch-only")**: the FSS live handler for the sports feature family is NOT missing — it is already
       shipped, CLI-wired, and unit-tested. `features_service/sports/cli/handlers/live_handler.py`'s `LiveHandler`
@@ -298,6 +319,15 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, stale items (sports tranche) — of the 4 open todos, Todo 2 (MTDS
+  live-odds connector quota/second-source) and Todo 3 (mdps-features-live launcher exec-dispatch wiring) are both now
+  resolved via sibling docs that shipped 2026-08-03/08-04 (`sports_live_availability_and_source_latency_2026_07_24.md`
+  archived-complete; `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` all 5 todos done,
+  `deployment-service@e7d17f2`) — flipped both `[x]` with cited evidence inline. Todo 5 (REVIEW run-promote-workflow,
+  gated on the still-unbuilt Group-C execution-alpha harness) and Todo 6 (OPERATOR final go-ahead, reaffirmed permanent
+  hard-stop 2026-07-28) remain genuinely open — never re-litigated per the explicit dated ruling on Todo 6. Doc stays
+  `assigned_vm: NA` (2 genuine human/design-gated items remain); this is a citation-closure pass, not a
+  reclassification.
 - 2026-07-29: **Corrected the 4 prerequisite-piece references per operator ruling (see banner above)** — added
   `sports_live_availability_and_source_latency_2026_07_24.md`,
   `gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md`,

@@ -106,6 +106,11 @@ CLI wiring, same shape as the 3 domains that already have it.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid (sports tranche) — re-confirms the 2026-07-30 entry below. Live
+  re-verification (execution-service HEAD 4e7f4833, 2026-08-06): `run_sports_backtest` still does not exist in
+  `backtest_domains.py`, `SportsMatchingEngine` still has zero real callers — factual premises unchanged. Independently
+  re-derived and corroborated by `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s 2026-08-04 orphan-analysis pass,
+  which excluded all 5 todos from AO dispatch for the same per-todo gating reasons. Not re-litigated.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — self-declared scope note that explicitly says
   'sits for operator review; flip to assigned_vm: planning if/when approved for dispatch', plus an 'Open questions for
   operator sign-off before implementation dispatches' section (craft split + priority) — an established,
