@@ -25,6 +25,7 @@ related:
   [
     /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md,
   ]
 created: "2026-08-04"
 author: unknown
@@ -35,11 +36,11 @@ source: >-
   Found while executing defi_satellite_ao_dispatch_batch6_2026_07_30.md's todo -010 (perp_daily_ctx manifest
   registration), 2026-08-04 — a real bounded GCS scan of the historical corpus surfaced this forward gap as a byproduct
   of establishing the corpus's exact date range.
-assigned_vm: NA
-execution_scope: local-only
-estimate_class: research
+assigned_vm: planning
+execution_scope: orchestrator-agent
+estimate_class: infra
 estimate_baseline_ai_days: 0.5
-estimate_calibrated_ai_days: 0.6
+estimate_calibrated_ai_days: 0.4
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
@@ -51,9 +52,10 @@ depends_on: []
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py,
     market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py,
     strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
-    /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
+    /plans/active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md,
   ]
 ---
 
@@ -155,6 +157,15 @@ is the open question below.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning` (was `NA`),
+  `execution_scope: orchestrator-agent`. Both open todos are bounded/worker-determinable: the operator's
+  round5-na-digest-defi ruling (item 73, same day) named the exact approach and the `[CODE] P2` todo below already
+  carries the full scoping (write path, schema, wiring point, Done-when criterion) — this is exactly the invitation
+  the same-day filer left ("a future `/na-eligibility-audit` pass may reclassify it"). The `[DIAG] P3` todo is a small,
+  independently bounded follow-up check. Conflict-check clear: no active `assigned_vm: planning` plan in
+  `parent_epic: defi_master` claims this work; `defi_satellite_ao_dispatch_batch9/batch10` (still active) don't
+  reference this doc; the consolidated-closeout doesn't cite it either. Gated finalize companion authored:
+  `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md`.
 - **round5-na-digest-defi 2026-08-08 (apply pass, item 73)**: operator ruled approach (a) — add the `perp_daily_ctx`
   write to the existing `perp_funding_handler.py` cron path. Read `perp_funding_handler.py` +
   `_perp_funding_hyperliquid.py` before writing the follow-up to scope the real diff: the current handler has no
