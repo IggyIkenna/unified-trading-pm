@@ -211,14 +211,19 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       unknown" explicitly. 12 new regression tests (`test_promotion_lag_monitor_promote_pr_cause.py`) cover a synthetic
       case per cause. `quality-gates.sh` green (1839 passed).
 
-- [ ] 8. [DEVOPS] P3. **Audit whether any repo extracted/created after 2026-08-05 has the same
+- [x] 8. ✅ [DEVOPS] P3. **Audit whether any repo extracted/created after 2026-08-05 has the same
       no-promotion-workflows-and-no-exemption gap** the `unified-trading-ci` divergence fix just closed. Re-run the
       `_main_direct_repos()`/manifest promotion-model check against the current repo list; for any newly-created repo
       missing both a promotion workflow and an explicit exemption, apply the same fix pattern
       (`unified-trading-pm@a0561c4`/`@3d6e25e`) or file the gap. **Done when**: every repo created after 2026-08-05 is
       accounted for (has promotion workflows, or a recorded exemption), recorded in the source doc. Source:
       `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` (todo, lines 113-115, [DEVOPS] P3) — never
-      cited by any covering doc (created 2026-08-07, postdates every active covering doc).
+      cited by any covering doc (created 2026-08-07, postdates every active covering doc). — **Done 2026-08-08**: live
+      `gh repo list IggyIkenna --limit 500 --json name,createdAt` (115 repos) shows exactly one repo created after
+      2026-08-05 — `unified-trading-ci` itself (2026-08-06) — already exempted via `promotion_model: "single_branch"`
+      and confirmed live in `promotion_lag_monitor._single_branch_repos()`. No other post-2026-08-05 repo exists, so no
+      further gap to close. Findings recorded in
+      `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`'s todo + Progress Log.
 
 - [ ] 9. [DEVOPS] P3. **Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, `notify-slack.yml`'s dedup-marker-write
       `A && B || C` → `if`) from `unified-trading-ci`'s copy back into the fleet SSOT

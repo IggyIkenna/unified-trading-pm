@@ -111,9 +111,15 @@ silent merge choice here risks dropping one side's fix. Not attempted.
       `a0561c443c67b5c6fc244ec93705f1f261816688` (main), `3d6e25ee1dd7d6884b73f00cad2063a589d10d83` (live-defi-rollout).
       Verified: `promotion_lag_monitor.py` live run shows zero findings for unified-trading-ci in either direction (only
       an unrelated pre-existing instruments-service provenance block remains).
-- [ ] [DEVOPS] P3. Audit whether any other repo extracted/created after 2026-08-05 (the last
+- [x] [DEVOPS] P3. ✅ Audit whether any other repo extracted/created after 2026-08-05 (the last
       `_main_direct_repos()`/manifest promotion-model audit) has the same "branches exist, no promotion workflows, no
-      exemption" gap.
+      exemption" gap. — **Done 2026-08-08, ci_satellite_ao_dispatch_batch6 todo 8**:
+      `gh repo list IggyIkenna --limit     500 --json name,createdAt` (115 repos total, live query) shows exactly ONE
+      repo created after 2026-08-05: `unified-trading-ci` itself (`2026-08-06T04:16:11Z`) — already the repo this
+      issue's own reconciliation fixed. Confirmed live via `promotion_lag_monitor._single_branch_repos()` that its
+      `workspace-manifest.json` entry still carries `promotion_model: "single_branch"` and the monitor correctly places
+      it in `_single_branch_repos()` (fully exempt, all 4 directions dormant-by-design). No other post-2026-08-05 repo
+      exists, so there is no additional gap to close.
 - [ ] [DEVOPS] P3. Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, notify-slack.yml's dedup-marker-write
       `A && B || C` -> `if`) from unified-trading-ci's `.github/workflows/notify-slack.yml` back into
       `scripts/workflow-templates/notify-slack.yml` (the fleet SSOT) and re-run `rollout-workflow-templates.sh` so all
@@ -149,3 +155,6 @@ silent merge choice here risks dropping one side's fix. Not attempted.
   `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todos 8 and 9 respectively (`status: draft`, `assigned_vm: planning`).
   Not reclassifying this doc's `assigned_vm` — batch6 activation is the operator's call; flipping here too risks a
   duplicate dispatch once it activates.
+- **2026-08-08** (`ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 8, slot 2): the post-2026-08-05 repo audit todo
+  above is now done — no gap found (see todo). One open todo remains here (SC2015 shellcheck fleet-propagation, batch6
+  todo 9).
