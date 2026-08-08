@@ -858,3 +858,19 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   date-batch, expected/normal). FIXTURE_LINEUPS (`af-backfill-20260808-160815`): confirmed progressing to genuinely
   different fixture IDs between this check and the 15:14Z check (was 503xxx/209xxx/208xxx range, now
   164xxx/564xxx/566xxx range) — rules out a stuck retry-loop, real forward movement through the 58,523-shard backlog.
+- **2026-08-08T16:05Z — killed and relaunched smallchunk6 (unnecessarily, self-corrected).** Deeper look at chunk 18
+  showed 14 explicit `CHUNK_FAILED exit=137 reason=OOM_KILLED` lines (one per league, each auto-retried by
+  `mtds_chunk_loop.sh`) over 45 min. Misread this as a new "infinite crash loop" distinct from the odds hang doc's
+  tracked bug and killed the VM — but the odds hang doc's own prior entry already documents `smallchunk5` clearing this
+  same chunk via 24 such OOM-kill+retry cycles before succeeding ("24 OOM/zero hangs"). Explicit `CHUNK_FAILED` +
+  continuous restart activity is the designed retry-until-success mechanism, not the silent-hang bug (which has NO error
+  message, no restart, just quiet). No real progress lost (OOM-retry state isn't durable across attempts regardless of
+  VM identity) — relaunched fresh as `mtds-backfill-odds-smallchunk7-20260808`. Full correction:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`. **Standing rule going forward**: `CHUNK_FAILED`/
+  OOM-kill-with-immediate-restart is expected background noise, not actionable — only total silence (no restart, no
+  error line) for >10-15 min while RUNNING is the real signal.
+- **2026-08-08T16:13Z** — `mtds-backfill-odds-smallchunk7` confirmed booted and genuinely working: skip-fasting through
+  already-captured dates rapidly, real fetch on new ground (`2020-08-18`), heartbeat fresh. No re-census yet (too early
+  — will check once past the chunk-18 OOM-retry stretch, expect ~30-90min per the smallchunk5/6 precedent, NOT
+  actionable unless it goes fully silent). FIXTURE_LINEUPS still actively progressing at `16:08Z` (new fixture ID range
+  599xxx/595xxx). Both healthy.

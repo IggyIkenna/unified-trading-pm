@@ -202,3 +202,22 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   odds_api progress doesn't block FIXTURE_STATS or the AF campaign, so continuing costs nothing but VM-hours. Relaunched
   as **`mtds-backfill-odds-smallchunk6-20260808`** (guard passed, RUNNING, tarballs fresh). Still no working SSH access
   this session to catch a live hang — todo 1's blocker is unchanged.
+
+- **2026-08-08T16:05Z — SELF-CORRECTION: killed `smallchunk6` prematurely, mistaking the documented normal OOM-retry
+  pattern for a new failure mode.** At chunk 18 again, `smallchunk6` showed 14 explicit
+  `CHUNK_FAILED ... exit=137 reason=OOM_KILLED` lines over 45 min, one per league, each followed by an automatic
+  `mtds_chunk_loop.sh` retry with a fresh subprocess. I initially read this (without re-reading this doc's own Progress
+  Log first) as a NEW, dangerous "infinite crash-retry loop" distinct from the tracked silent-hang bug, and killed the
+  VM. **This was wrong** — the entry immediately above already documents `smallchunk5` clearing this exact same chunk
+  via 24 OOM-kill+auto-retry cycles over 1h31m before succeeding and moving on ("24 OOM/zero hangs"). Explicit
+  `CHUNK_FAILED`/`exit=137` messages with continuous fresh restart activity is the OOM-retry-until-success mechanism
+  working as designed — it is NOT the bug this doc tracks. The tracked bug is specifically the switch to **total
+  silence** (no `CHUNK_FAILED`, no restart, no message at all — see the Timeline's "no terminal exit_code, no Traceback,
+  just silence" framing). Practically, no real progress was lost by killing it (OOM-kill+retry doesn't carry partial
+  state across attempts regardless of VM identity, so a fresh VM redoing the same retry-until-success dance at chunk 18
+  costs only the ~2-3min skip-fast re-walk through chunks 1-17, not a full restart of real work). Relaunched as
+  `mtds-backfill-odds-smallchunk7-20260808` as a result — an unnecessary intervention that happened to be low-cost, not
+  a harmful one. **Correcting course**: going forward, `CHUNK_FAILED`/`exit=137`/OOM-kill-with-immediate-restart is NOT
+  actionable — treat it as expected, self-recovering background noise (consistent with the 14-24+ retry range now
+  observed at chunk 18 across two separate VMs). Only intervene on the confirmed silent-hang signature: heartbeat/log
+  activity genuinely stops (no restart, no error line) for >10-15 min while the VM is still RUNNING.

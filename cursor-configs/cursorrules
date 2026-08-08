@@ -14,9 +14,12 @@
 
 ## Source of Truth: unified-trading-pm/codex
 
-ALL code changes must comply with `unified-trading-pm/codex/` principles. Start with the master navigator:
+ALL code changes must comply with `unified-trading-pm/codex/` principles. Finding the right doc (grep-native, L0→L4):
+grep `unified-trading-pm/DOC_INDEX.generated.md` first (regen: `bash scripts/docs/refresh-doc-index.sh` if
+stale/absent — never read it whole). Narrow with frontmatter facets, e.g.
+`rg -l '^authoritative_for:.*<topic>' unified-trading-pm/codex/`. Full doctrine:
+`unified-trading-pm/cursor-configs/CLAUDE.md` § "Doc retrieval". Key domain dirs:
 
-- **`unified-trading-pm/codex/00-SSOT-INDEX.md`** — canonical entry point: maps every topic to its SSOT doc
 - `06-coding-standards/` — quality gates, testing, contribution, dependencies
 - `04-architecture/` — batch-live symmetry, deployment topology, concurrency (TIER-ARCHITECTURE.md)
 - `03-observability/` — 3-tier event logging, alerting, monitoring
@@ -87,18 +90,6 @@ Epic → Workspace mapping:
 - quality-gates/infra epics → `cursor-infra`
 
 See: `.cursor/workspace-configs/WORKSPACE-RECOMMENDATIONS.md`
-
----
-
-## OpenClaw/Lobster Workflows
-
-```bash
-lobster run .lobster/harden-all-repos.lobster        # ~60 min: pass quality gates without shortcuts
-lobster run .lobster/improve-test-coverage.lobster   # ~90 min: reach 50% coverage
-lobster run .lobster/complete-ai-epic-tasks.lobster  # ~2-3 hrs: AI epic tasks (591 AI-doable)
-```
-
-See `.lobster/FOR_AGENTS.md` (quick guide), `.lobster/README.md` (full docs).
 
 ---
 

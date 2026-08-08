@@ -136,27 +136,18 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
       `code=300` and `code=140` are indistinguishable in the logs — the split is currently UNMEASURABLE. Log the code
       before anything tries to size this. — **VERIFIED DONE 2026-07-26**: the same commit `a7569298` already added
       `code=%s` to both 400-path log lines (streaming + non-streaming).
-- [ ] [DATA] P1. Size the damage: count existing `attempted_failed` rows attributable to 400s, and purge/reclassify them
-      (snapshot-first, like the 2026-07-17 eu purge). Expect a real coverage-% correction upward. **Sizing half DONE
-      2026-07-27** (`market-tick-data-service@c36d35d1`) via
-      `scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py` (dry-run only, `--apply` never invoked —
-      see Progress Log for the count + methodology). The `--apply` half remains open. **NOT operator-gated
-      (round5-cefi-question-resolution 2026-08-08)** — two independent blockers, both resolved: (1) **reversibility**:
-      fresh same-run check (2026-08-08),
-      `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112     --format="value(softDeletePolicy.retentionDurationSeconds)"`
-      → **604800** (the 7-day floor `plans/active/task_template.md` finding T requires), and the script is already
-      backup-first/snapshot-before-write by design (same shape as the cited EU-purge precedent) — qualifies under
-      finding T/U, not a whole-bucket destroy. (2) **taxonomy**: the script's own Progress Log already names the
-      precedent to follow — `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py`'s
-      `EXPECTED_SOURCE_NOT_AVAILABLE` pattern (a raw descriptive `error_reason` string for bulk historical reclass,
-      since `record_empty()`'s enum-membership check can't be used retroactively) — apply the SAME pattern here
-      (`EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400`, already the script's own proposed string) rather than routing through
-      the in-flight `coverage_exclusions` registry, which is for NEW writes going forward, not backfilling historical
-      rows. Also directly reinforced by CLAUDE.md's "Data pipeline correctness is the heartbeat" HARD RULE (fix in FULL,
-      no deadline deferrals) — leaving 5,572+ rows permanently mis-denominatored is exactly the kind of incomplete fix
-      that rule exists to prevent. Re-run the sizing script fresh before `--apply` (counts drift, per the script's own
-      note) — the actual `--apply` was not executed in this pass (documentation-question audit, not an implementation
-      dispatch).
+- [x] ✅ [DATA] P1. Size the damage: count existing `attempted_failed` rows attributable to 400s, and purge/reclassify
+      them (snapshot-first, like the 2026-07-17 eu purge). Expect a real coverage-% correction upward. — **DONE
+      2026-08-08** (`market-tick-data-service@46e830c8` fix + `@5a4638f6` cleanup): re-ran the sizing script fresh
+      (counts drifted from 5,572 to 5,568 per the doc's own note), re-verified reversibility fresh-same-run
+      (`softDeletePolicy.retentionDurationSeconds` = 604800), then `--apply`'d. **5,568 rows** reclassified
+      `attempted_failed -> empty_confirmed` (`error_reason -> EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400`) on
+      `gs://market-data-tick-cefi-prd-central-element-323112`. Pre-flip snapshot at
+      `_index/snapshots/pre_tardis_400_impossible_combination_reclass_20260808T155702Z.parquet`. Gate verified: total
+      rows unchanged (10,289,570), `captured` unchanged (4,474,796), `attempted_failed` -5,568 / `empty_confirmed`
+      +5,568 exactly. Post-apply fresh dry-run confirms 0 remaining matching rows. See Progress Log for a memory-safety
+      finding hit + fixed along the way (the original script OOM-killed against the real 10.3M-row manifest scale) and
+      the script's own subsequent deletion (its `Delete-when` condition was met by this apply).
 - [x] ✅ [CONTRACT] P2. Register Tardis error codes in UAC (`classify_venue_error` currently knows none), so the
       honest-absence-vs-fetch-failure decision is contract-driven rather than string-matched on `"Empty CSV"`. — **DONE
       2026-07-26**: `unified-api-contracts@c144f975` — `140`/`300` registered as `ErrorAction.SKIP`, 2 new unit tests,
@@ -286,3 +277,36 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
   `unified-api-contracts/.../coverage_exclusions.py` (the in-flight UAC work the open `[CODE] P0` vendor-catalog-gate
   todo must coordinate with) for the generic `cefi_master.md` epic pointer.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-08 (slot-20, task `tardis_impossible_combinations_recorded_as_attempted_failed-002`)**: completed the
+  `[DATA] P1` sizing/purge todo — the `--apply` half. Re-ran the sizing script fresh: **5,568** matching rows (drifted
+  down from the 2026-07-27 count of 5,572 — 4 rows resolved via normal retries in the interim, consistent with the doc's
+  own note that counts drift). Re-verified reversibility fresh-same-run before touching prod
+  (`gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112 --format="value(softDeletePolicy.retentionDurationSeconds)"`
+  → 604800, matching finding T's 7-day floor).
+  - **Memory-safety finding + fix (found mid-task, fixed in the same session — not deferred)**: the original script
+    (`market-tick-data-service@c36d35d1`, pandas-based) was safe in dry-run but its `--apply` path
+    (`reclassify(df.copy())` + re-serializing BOTH the original and reclassified 10.3M-row/42-column DataFrame for the
+    snapshot and write uploads) reliably exceeded the shared-host resource-watchdog's 10GB per-slot RSS cap — confirmed
+    via `journalctl` (`resource-watchdog[...] KILL #4/#5/#6 ... rss:~11-12GB > 10485760kB`), 2 of my own `--apply`
+    attempts SIGTERM-killed before completing a write. Root cause: pandas boxes every string cell as a separate Python
+    object (10.3M rows x ~26 string columns is hundreds of millions of objects) — even a bare `pd.read_parquet` load
+    alone peaked at 9.4GB RSS, leaving under 1GB of headroom before any mutation/serialization. Fixed in two commits:
+    `market-tick-data-service@72c8a756` (first pass: in-place mutation instead of `df.copy()`, reuse raw bytes for the
+    snapshot instead of re-serializing) then `@46e830c8` (measured the first fix still only had a shrinking margin —
+    9.4GB just to load — and rewrote `main()`'s IO path as fully pyarrow-native: `pq.read_table` +
+    `pyarrow.compute`-based mask/mutation via `Table.set_column` + `pq.write_table`, since Arrow's columnar string
+    storage has no per-cell object overhead and `set_column` only duplicates the 2 changed columns, not the whole
+    frame). Measured: dry-run peak RSS dropped from 9.36GB (pandas) to 5.17GB (pyarrow); the real `--apply` run peaked
+    at 5.32GB. `reclassify()` (the pandas pure function backing the script's own unit tests) was left untouched — all 5
+    existing unit tests pass unmodified; only `main()`'s IO path changed.
+  - **Applied**: `market-tick-data-service@46e830c8` (memory fix) + `@5a4638f6` (script+test deletion, below). 5,568
+    rows reclassified `attempted_failed -> empty_confirmed` (`error_reason -> EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400`)
+    on `gs://market-data-tick-cefi-prd-central-element-323112`. Pre-flip snapshot at
+    `_index/snapshots/pre_tardis_400_impossible_combination_reclass_20260808T155702Z.parquet`. Gate verified live: total
+    rows unchanged (10,289,570), `captured` unchanged (4,474,796), `attempted_failed` -5,568 / `empty_confirmed` +5,568
+    exactly. A fresh post-apply dry-run confirms **0** remaining `attempted_failed` rows with
+    `error_reason == "Tardis HTTP 400"`.
+  - **Script deleted** (`market-tick-data-service@5a4638f6`): the script's own header declared
+    `# Delete-when: after --apply verified + 0 cefi attempted_failed rows carry error_reason=="Tardis HTTP 400"` — both
+    conditions are now met, so deleted `scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py` and its
+    dedicated unit test (which only exercised this script's own `reclassify()`, with no other callsite).
