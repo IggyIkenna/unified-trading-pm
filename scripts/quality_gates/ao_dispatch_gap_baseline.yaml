@@ -1,0 +1,13 @@
+# Shrinking-ratchet baseline for check_ao_dispatch_gap.py.
+#
+# Tracks two numbers over the live `assigned_vm: planning`, status in {active, open} corpus
+# (plans/active/*.md + plans/active/issues/*.md): the count of ACCIDENTAL (undeclared) silently
+# non-dispatchable todos, and the count of docs that parse to ZERO dispatchable todos. Shrinking
+# ratchet, same convention as na_corpus_baseline.yaml -- a run that finds either number HIGHER
+# than this baseline fails. NEVER hand-raise these numbers to silence a run that just found new
+# accidental exclusions -- only --update-baseline after actually fixing/filing the new ones.
+#
+# See plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md.
+max_accidental_exclusions: 0
+max_zero_dispatchable_docs: 24
+last_updated: "2026-08-08"

@@ -827,6 +827,30 @@ if [ -f "$REPO_DOCS_SSOT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: AO silent-non-dispatch gap (baselined ratchet) ──
+# SSOT: plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md.
+# Calls agent-orchestrator's REAL _parse_open_todos (via a subprocess into that repo's own .venv —
+# never a re-implemented regex; four prior fixes widening the parser's own marker regex have not
+# converged, because the defect is that exclusion goes UNREPORTED, not that the regex is too
+# narrow) and compares it against the on-disk `- [ ]` count per assigned_vm:planning doc. Ratchets
+# on two counts: ACCIDENTAL (undeclared) silent exclusions, and docs that parse to ZERO
+# dispatchable todos (an active AO plan the orchestrator will never touch at all). Needs
+# WORKSPACE_ROOT (the sibling agent-orchestrator clone + its .venv) — degrades to a no-op when
+# either is absent, same shape as the repo-docs-ssot gate just above.
+AO_DISPATCH_GAP_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_ao_dispatch_gap.py"
+if [ -f "$AO_DISPATCH_GAP_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running AO silent-non-dispatch gap check (baselined ratchet)..."
+    if python3 "$AO_DISPATCH_GAP_CHECKER" --workspace-root "$WORKSPACE_ROOT" --quiet; then
+        log_success "AO silent-non-dispatch gap check passed (at-or-below baseline)"
+    else
+        echo "❌ AO silent-non-dispatch gap grew — a plan todo is being silently dropped from the" >&2
+        echo "   backlog without declaring why. Add a BLOCKED-<token>/[OPERATOR] marker if it genuinely" >&2
+        echo "   waits on something, or fix the doc so it's dispatchable. Never widen the parser's own" >&2
+        echo "   marker regex as the fix. Pre-existing debt: --update-baseline (see script header)." >&2
+        _post_gate_fail "ao-dispatch-gap"
+    fi
+fi
+
 # ── Post-gates: agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) — HARD cap ──
 # SSOT: CLAUDE.md header § "Size budget". The agent rule files are a lean index (1-line directive +
 # codex pointer); detail lives in codex, never inline. They keep silently re-bloating, so the cap is
