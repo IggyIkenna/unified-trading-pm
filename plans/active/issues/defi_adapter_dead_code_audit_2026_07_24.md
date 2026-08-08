@@ -417,7 +417,7 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       `GovernanceParamsEventPoller` never runs in production; either wire the poller into a real entrypoint (a
       `live/connectors/`-style registration, or a scheduled batch job) or update the plan/codex record to state plainly
       that this feature has never been live.
-- [ ] [SERVICE] P2. **RULED 2026-08-07 (operator) — wire in, do not delete.** market-tick-data-service:
+- [x] ✅ [SERVICE] P2. **RULED 2026-08-07 (operator) — wire in, do not delete.** market-tick-data-service:
       `adapters/defi/live/onchain_event_poller.py` and `adapters/defi_live/{alchemy_adapter.py,thegraph_ws_adapter.py}`
       register into the real `live/connectors/` registration mechanism (`register_all()` /
       `WS_FEED_CONNECTOR_FACTORIES`) — the code is already built + tested per § 2.2, this is wiring, not new
@@ -426,10 +426,15 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       `onchain_event_poller.py` (Aave-liquidation path only — its own investigation found none of the 3 named classes is
       a `WSFeedConnector`-conforming self-registering class, so real new wrapper code is needed, not a one-line
       `register_all()` addition; the Uniswap-Swap-topic half is deliberately excluded as a duplicate of the already-live
-      `dex_swap_uniswap_v3_ws.py`). `alchemy_adapter.py`/`thegraph_ws_adapter.py` are NOT covered — that plan's "Open
-      questions" section explains why they lack a determinable single-venue wiring target and need a further
-      operator/design decision before they can become a todo. Leave this checkbox open until scoped for those 2 files
-      too.
+      `dex_swap_uniswap_v3_ws.py`). **`alchemy_adapter.py`/`thegraph_ws_adapter.py` — the "further operator/design
+      decision" landed 2026-08-08** (live interactive session): confirmed `onchain_event_poller.py` (already shipped)
+      does not import either file, and the actual live-streaming pattern this codebase uses is the completed
+      `batch_live_symmetry_master` epic's ~20 dedicated per-venue `WSFeedConnector`s, which neither file is part of —
+      operator ruled DELETE. Both files + their `defi_live/` package + scattered test coverage in 3 mixed test files
+      deleted; confirmed live on `origin/live-defi-rollout` HEAD (zero re-exports remain in
+      `market_interface/__init__.py`, `market_tick_data_service/market_interface/adapters/defi_live/` no longer exists).
+      Landed bundled into a concurrent session's cleanup commit rather than its own standalone SHA — verified by
+      content, not by a specific commit citation.
 - [ ] [SERVICE] P2. market-tick-data-service: consolidate `onchain/helius_solana.py::HeliusSolanaAdapter` and
       `cli/handlers/native_staking_handler.py`'s hand-rolled Helius calls onto one implementation. **2026-08-07 note**:
       the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE — `helius-api-key` was approved + provisioned 2026-05-15
