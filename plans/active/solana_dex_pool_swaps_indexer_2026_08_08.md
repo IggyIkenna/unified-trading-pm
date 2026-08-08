@@ -80,13 +80,20 @@ context_scope:
       over the old Drift V2 program address for regression + the ORCA Whirlpool address) in
       `tests/unit/scripts/test_sig_index_walker.py` — Drift's address is used only as an inert string constant, no Drift
       capability restored. `quality-gates.sh` green.
-- [ ] [DATA] P1. **Build the per-signature transaction fetch + Whirlpool (ORCA) swap-instruction decoder.** For each
+- [x] ✅ [DATA] P1. **Build the per-signature transaction fetch + Whirlpool (ORCA) swap-instruction decoder.** For each
       indexed ORCA signature (from the generalized walker above), fetch the full transaction via Helius
       `getTransaction`, decode the Whirlpool swap instruction's account + data layout into
       `(pool, base_amount, quote_amount, side, price)`. Start here — Orca's swap instruction layout is
       simpler/better-documented than Raydium's CLMM/CPMM variants (per the scoping doc's own recommendation). Repo:
       market-tick-data-service. Done-when: a unit test decodes a real captured ORCA swap transaction (fixture) into the
-      expected tuple, with honest-absence (skip + log, never raise) on an unparseable/unexpected instruction layout.
+      expected tuple, with honest-absence (skip + log, never raise) on an unparseable/unexpected instruction layout. —
+      market-tick-data-service@3619f9e2. Fetch via the existing shared `solana_get_transaction` (`_solana_rpc_async.py`,
+      plain `json` encoding). New `_dex_swap_tx_helpers.py` (program-agnostic: `resolve_account_keys`,
+      `iter_program_instructions` incl. inner/CPI, `token_balance_delta`) + `_orca_swap_decoder.py` (Whirlpool `swap`
+      Anchor-discriminator decode, executed amounts derived from real `preTokenBalances`/`postTokenBalances` vault
+      deltas — NOT the instruction args, since `otherAmountThreshold` is only a slippage bound). 24 new unit tests
+      (synthetic `getTransaction`-shaped fixtures, top-level + inner-CPI + honest-absence paths), `quality-gates.sh`
+      green, `basedpyright` strict clean (no new suppressions).
 - [ ] [DATA] P1. **Build the per-signature transaction fetch + Raydium swap-instruction decoder** — same shape as the
       ORCA decoder above, branching on AMM version (legacy AMM vs CLMM vs CPMM, each with a different swap instruction
       shape per the scoping doc). Repo: market-tick-data-service. Done-when: a unit test decodes a real captured Raydium
@@ -110,6 +117,13 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-08 (slot-33, item 2)**: shipped the ORCA Whirlpool per-signature fetch + swap decoder —
+  market-tick-data-service@3619f9e2. Note: this exact task (`solana_dex_pool_swaps_indexer-002`) had wedged 4 other
+  slots (11, 9, 33-earlier-incarnation, 7) via the fleet-wide post-compact respawn crash-loop in the ~17:31Z-18:02Z
+  window and was durably `park`ed by main-agent at ~18:02Z pending root-cause
+  (`/plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`) — this session's dispatch
+  landed just before that park took effect and completed a clean boot->work->done cycle with no wedge, which is direct
+  evidence for that issue doc's REVIEW todo 4. Noted in that doc's own Progress Log rather than duplicated here.
 - **2026-08-08 (round5-na-digest-defi apply pass, item 74)**: authored this plan per operator ruling ("prioritize it
   now") and the source scoping doc's own 5-step implementation breakdown. `sequential: true` — the todos are a real
   dependency chain (the generalized walker must land before either decoder can be built against it; the manifest-write

@@ -110,3 +110,14 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
   `park` since skip alone clearly did not stop redispatch). Task parked via
   `POST /api/backlog/solana_dex_pool_swaps_indexer-002/park` — condition
   `auto_unpark__solana_dex_pool_swaps_indexer-002` confirmed set in the response.
+- 2026-08-08 ~18:15Z (slot-33, fresh boot): dispatched this exact task (`solana_dex_pool_swaps_indexer-002`) via
+  `already_in_progress: true` — the dispatch evidently landed just before the ~18:02Z `park` took effect. Completed a
+  full `boot -> work -> done` cycle with **no wedge**: built the ORCA Whirlpool per-signature fetch + swap decoder, 24
+  new unit tests, `quality-gates.sh` green, shipped `market-tick-data-service@3619f9e2`, plan checkbox flipped
+  (`/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md` item 2). Relevant to two open todos, though not checked
+  off here since neither's stated condition is exactly met: todo 4 wants a POST-unpark verification (this run was
+  pre-park) but the observation is the same — this exact task, on this exact slot number that was the 3rd wedge
+  instance, ran clean end-to-end when NOT hitting the crash-loop signature, so the wedge looks environment/timing-
+  triggered rather than an inherent property of this task's workload; todo 3's rescoping question is also informed — the
+  actual indexer work (the fetch+decode implementation) completed in one normal session with no sign of being oversized.
+  Leaving both open for BACKEND/OPERATOR to close with full context once todo 1's root cause lands.
