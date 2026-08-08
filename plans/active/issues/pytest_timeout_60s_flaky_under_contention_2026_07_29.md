@@ -758,3 +758,12 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   failures (runs `31240730199`/`31240526607`) confirmed `QG slice (checks): failure`, `QG slice (tests): success` —
   known ratchet class, not pytest-timeout. Zero pytest-timeout recurrence anywhere. Window NOT yet closed (day ~3 of
   ~14); skipping per prior-pass precedent.
+- **slot-3 2026-08-08 (tenth pass, same task)**: corroborates all prior passes — surveyed latest 3 `quality-gates-v2`
+  runs across all 10 tracked repos (runs spanning ~04:00Z–06:30Z 2026-08-08). 8 service repos: 24/24
+  `conclusion=success` (unified-api-contracts, instruments-service, features-service, unified-trading-api,
+  deployment-service, ml-service, client-reporting-api, market-tick-data-service). market-data-processing-service: 2/3
+  success + 1 failure (`31243535947`, `QG slice (tests)`) — confirmed NOT pytest-timeout; a real assertion error
+  `test_sports_venues_configured: assert 'BETFAIR' in [...]` (unrelated venue-config test, not a scheduling flake).
+  unified-trading-pm: latest 3 runs all `QG slice (checks): failure`, `QG slice (tests): success` (run `31244090433`
+  confirmed, known ratchet class, not pytest-timeout). Zero pytest-timeout recurrence anywhere. Window NOT yet closed
+  (day ~3 of ~14); skipping per prior-pass precedent.
