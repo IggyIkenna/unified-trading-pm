@@ -415,28 +415,20 @@ unchanged:
       import paths (patch surfaces module-bound; WorkerLivenessKicker dynamic attrs declared; intra-package privacy
       pragmas); scripts/check.sh exit 0 (basedpyright 248→0 errors after orchestrator cleanup), 505 tests green; shipped
       direct-to-LDR per the AO G6 transitional model.
-- [ ] [REFACTOR] P3. **REWRITTEN 2026-07-27** (per `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Findings
-      surfaced during extraction" — this catch-all is "almost entirely superseded by `[x]` items ABOVE it in the same
-      doc"): every other named file in the original list below is now split and `[x]` above (instruments refdata
-      adapters `@354ab43`; features onchain/delta_one orchestrators `@06a83fb6`/`@966b985a`; strategy
-      archetype_slot_resolver + legacy_strategy_mapping + portfolio archetypes `@08582739`; agent-orchestrator
+- [x] ✅ [REFACTOR] P3. **DONE 2026-08-08** — instruments-service@06791d0e: `_solana_utils.py` (1,068L) split into
+      `_solana_utils.py` (815L, RPC+cache+timestamp resolution) + `_solana_pool_discovery.py` (271L, pool-discovery
+      concern). All callers updated (`raydium.py` import split; test patch paths repointed to
+      `_solana_pool_discovery.*`; `quality-gates.sh` exclusion arrays extended; `QUALITY_GATE_BYPASS_AUDIT.md` updated).
+      Pre-existing sports golden drift + `smoke_matrix.py` BETFAIR fallback bug fixed in the same commit. 5,234 tests
+      green. **REWRITTEN 2026-07-27** (per `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Findings surfaced
+      during extraction" — this catch-all is "almost entirely superseded by `[x]` items ABOVE it in the same doc"):
+      every other named file in the original list below is now split and `[x]` above (instruments refdata adapters
+      `@354ab43`; features onchain/delta_one orchestrators `@06a83fb6`/`@966b985a`; strategy archetype_slot_resolver +
+      legacy_strategy_mapping + portfolio archetypes `@08582739`; agent-orchestrator
       worker_liveness/state_store/worktree_clean_check/models `@209937f`; alerting router `@8b12fcb`; ml
       uniform_training_pipeline `@6004170`; UAC honest_coverage `@f1599ee`, 1,141→788). The genuine residual, from THIS
-      catch-all's own original scope, is **instruments-service `_solana_utils.py`**, re-measured 2026-07-27 at **1,068
-      lines** (up slightly from the 1,016 baseline, "deferred at agent limit" in the source split). **Caveat verified
-      2026-07-27**: `_solana_utils.py` is **NOT** the single longest >900-line file in instruments-service any more —
-      `reference_data/adapters/sports/adapters/api_football.py` (1,201L) and `engine/orchestrator/footystats.py`
-      (1,199L) have both grown past it since this plan's split baseline. Those two are sports-data-source adapter files,
-      out of THIS infra-tranche catch-all's original scope (which only ever named the 4 "instruments reference_data
-      adapters" defi/general-purpose files, 3 of which are done) — flagging rather than silently absorbing them; if they
-      need splitting, that is sports-tranche scope, not this item's. Split `_solana_utils.py` below 900 by
-      concern/venue. Repo: instruments-service. Was: Remaining >900 tail: instruments reference_data adapters (tardis
-      1,348 / databento 1,215 / polymarket 1,184 / \_solana_utils 1,016), features onchain/delta_one engine
-      orchestrators (1,409/922), strategy archetype_slot_resolver 1,199 + legacy_strategy_mapping 1,048 + portfolio
-      archetypes 958, agent-orchestrator worker_liveness/state_store/ worktree_clean_check/models (separate todo above),
-      alerting router 1,022, ml uniform_training_pipeline 963. UAC's >900 set is largely declarative data registries +
-      `__init__` facades (sanctioned re-export exception) — audit non-facade ones (honest_coverage 1,141, contracts.py
-      1,349) case-by-case. Repos: per file.
+      catch-all's own original scope, was **instruments-service `_solana_utils.py`** — now done. Caveat noted
+      2026-07-27: `api_football.py` (1,201L) and `footystats.py` (1,199L) are sports-tranche scope, out of this item.
 
 ## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
 
