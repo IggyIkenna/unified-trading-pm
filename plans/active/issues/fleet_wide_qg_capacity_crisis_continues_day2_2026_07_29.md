@@ -189,11 +189,45 @@ not just noting.
       todo above it that was already done exactly this way. Flagging as extraction-ready for the next ci satellite-batch
       carve-out rather than spinning up a standalone one-item batch doc this pass (same proportionality call this run
       made for `post_cutover_silent_assumption_sweep_2026_07_23.md`'s F3 item) — doc stays NA in the meantime.
-- [ ] [OPERATOR] P3. Confirm the OOM-killer mechanism for the 2026-07-30 14:54-15:01Z mass `tmux_session_lost` cluster
-      (slots 1, 4, 5, 9, 10, 11 killed across 3 waves in ~7 min, see Progress Log below) via `dmesg`/`journalctl -k` on
-      `i-0c9b283b31d6b5ca7` (needs root — no agent session has it). Currently UNCONFIRMED: swap (14-16Gi used) + load
-      (peak ~26/16vCPU) are consistent with memory pressure but the kernel OOM-killer log has not been read this session
-      or any prior one in this doc.
+- [x] ✅ [DEVOPS] P3. **RESOLVED 2026-08-08 — root access confirmed working; ran the check live; result is NOT what
+      the working hypothesis assumed.** Operator believed root access may have already been granted — re-tested live
+      via `aws ssm send-command` (`AWS-RunShellScript` document) against `i-0c9b283b31d6b5ca7`: **`whoami` returns
+      `root`** — SSM Session Manager's `RunShellScript` runs as root on this instance, confirmed working right now, no
+      further grant needed. Went to pull `dmesg`/`journalctl -k` directly: the instance **rebooted 2026-08-07T10:40:44Z**
+      (new kernel `7.0.0-1010-aws`, up from `6.17.0-1019-aws`) — both `dmesg`'s ring buffer and journald's live boot ID
+      (`journalctl --list-boots` shows exactly one boot, starting 2026-08-07T16:46:29Z) only cover since that reboot, so
+      neither can see 2026-07-30 directly. **Found the data anyway** in the ROTATED classic syslog (not journald) —
+      `/var/log/kern.log.1` (rotated 2026-08-01T23:59, so its content spans 2026-07-26 through 2026-08-01, covering the
+      incident) is intact and has real content for that day (809 log lines dated `2026-07-30`, verified via
+      `awk -F"T" '{print $1}' | sort | uniq -c`). **Grepped the exact incident window** (`2026-07-30T14:` +
+      `2026-07-30T15:` timestamps) for `oom|out of memory|killed process|invoked oom-killer` (case-insensitive):
+      **ZERO matches** — confirmed twice, once windowed to the 14-15Z hours and once for the ENTIRE day 2026-07-30 (also
+      zero). Read the actual full kernel-log content for the 14:00-16:00Z window directly (not just grep counts): every
+      single entry in that 2-hour span is a routine, ~5-minutes-apart `cgroup: fork rejected by pids controller in
+      /system.slice/<audit-stale-gate-references|process-category-sampler|audit-false-done>.service` — a PID-limit
+      rejection on three specific MONITORING/audit systemd services, not memory pressure, and not touching any AO
+      worker/tmux cgroup. Also checked `/var/log/syslog.1` for `systemd-oomd`/`memory.pressure` activity in the same
+      window — zero matches there too. **Verdict: the kernel OOM-killer was NOT invoked during the 2026-07-30
+      14:54-15:01Z window** — this doc's own working hypothesis ("swap 14-16Gi used + load peak ~26/16vCPU are
+      consistent with memory pressure") is NOT supported by the kernel log; the log-confirmable mechanism this todo
+      asked for is a clean NO, not a confirmation. **This closes the todo as asked** (get the actual finding and close
+      it for real) — the mass `tmux_session_lost` cluster's real cause is NOT a kernel OOM kill and needs a fresh,
+      differently-scoped investigation (new todo below); do not re-open this exact question, it is answered.
+      **Method note for future root-access sessions on this host**: `aws ssm send-command --instance-ids
+      i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript --parameters 'commands=["<cmd>"]'` then
+      `aws ssm get-command-invocation --command-id <id> --instance-id i-0c9b283b31d6b5ca7` — no interactive session,
+      no operator grant needed, works today with the credentials already in this workspace.
+- [ ] [DEVOPS] P3. **NEW 2026-08-08 — find the REAL cause of the 2026-07-30 14:54-15:01Z mass `tmux_session_lost`
+      cluster** (slots 1, 4, 5, 9, 10, 11 killed across 3 waves in ~7 min), now that the OOM-killer hypothesis above is
+      RULED OUT by direct kernel-log evidence. Candidates worth checking first, none yet investigated: (a) a
+      cgroup/systemd unit restart or resource-limit action outside the kernel's own OOM path (e.g. an AO watchdog or
+      the `process-category-sampler`/`audit-*` services seen firing every ~5min in that exact window — check whether
+      any of THOSE three services' own actions, not memory pressure, coincide with the 3 kill waves); (b) a manual or
+      scripted `tmux kill-session`/process-manager action around that timestamp (check AO's own dispatch/respawn logs,
+      not just the host kernel log); (c) an AWS-side event (spot interruption warning, instance status check, EBS
+      throttling) via `aws cloudwatch`/`aws ec2 describe-instance-status` for that exact window (data still available —
+      CloudWatch retention is much longer than a syslog rotation). Root access is now confirmed working (see the
+      resolved todo above) — this is directly investigable, not blocked.
 - [ ] [BACKEND] P3. **New, opened by the `plan_health` diagnosis above.** `server/escalation.py`'s
       `retry_queued_escalations()` caps queued-escalation retries at `RETRY_PER_TICK = 2` per `AutoSpawnLoop` tick
       (default 60s), shared GLOBALLY across every `WALL_TYPES` value (not partitioned per wall_type) — a deliberate
