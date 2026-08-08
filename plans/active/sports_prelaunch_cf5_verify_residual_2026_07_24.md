@@ -58,6 +58,16 @@ context_scope:
   ]
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — this doc's sole open todo is STALE, not open.** It offers a choice between extending
+> `SOURCE_COVERAGE_START["footystats"]` 2019→2018 (plus the api_football sub-entity windows) and re-backfilling the
+> 10,345-object C3 corpus, OR ratifying it as outside-window. **That choice was already foreclosed.**
+> `/codex/02-data/sports-2020-06-data-floor.md` (operator ruling 2026-07-21) explicitly supersedes the 2018 amendment —
+> _"all sports `SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START` floors are clamped to `date(2020, 6, 6)`"_
+> (`unified-api-contracts@8cdf7808`) — and pre-floor sports data is fabrication-by-construction: **delete, do not
+> backfill**. Re-confirmed by the operator 2026-08-08. Disposition is executed by
+> `/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md` (agent-autonomous via delete-safety §3a) and this doc is
+> closed out by its finalize sibling. Do NOT extend the coverage windows.
+
 # Sports pre-launch-window + CF-5 relabel residual
 
 > **Origin.** Both todos below are moved **verbatim** from

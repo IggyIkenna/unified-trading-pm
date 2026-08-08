@@ -53,6 +53,12 @@ context_scope:
   ]
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — accept and LABEL the staleness; do NOT build a live-day overlay.** Ruled: confirm
+> the catalogue-rollup regen cadence and surface it honestly in the UI ("as of <timestamp>"), consistent with how the
+> rest of the estate labels rollup freshness. A live-day overlay would add a second data path and a consistency surface
+> between overlay and rollup for a problem that honest labelling solves. Implemented by
+> `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` under the `[UI]` + `pw:L2` playwright gate.
+
 # Sports fixtures browser — switch to the single-file catalogue source
 
 > **Human/LOCAL plan** (`assigned_vm: NA`) — forked 2026-07-24 out of

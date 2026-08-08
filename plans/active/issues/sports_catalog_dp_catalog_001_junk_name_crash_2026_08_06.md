@@ -75,6 +75,16 @@ context_scope:
   ]
 ---
 
+> **✅ UNBLOCKED 2026-08-08 — the promotion blocker cleared; the verification todo is now runnable.** This doc's
+> remaining verification todo was gated on
+> `/plans/active/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`. That blocker is
+> RESOLVED: `instruments-service` `main` HEAD is `db7f7d3b44` _"chore(promote): LDR → main (Option-B direct)"_
+> (2026-08-07T23:02:53Z), and the fix is confirmed present **by content** on main —
+> `origin/main:scripts/build_instrument_catalogue.py` contains `junk_name_skips`. (SHA reachability against the
+> pre-rewrite `497c4f5e` is not a valid check: the repo underwent a history rewrite on 2026-08-05.) **Now runnable**:
+> confirm the sports catalogue advances past the frozen 2026-08-05T01:09:18Z snapshot, which is what actually clears
+> DP-CATALOG-001.
+
 # DP-CATALOG-001: sports catalogue stale — traced to an uncaught JunkSymbolError crashing the whole FTP rollup
 
 ## Evidence trail (all verified live, this session — `gcloud`/`gsutil` as `unified-trading-sa`)

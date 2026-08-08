@@ -44,7 +44,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md,
-    /plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
+    /plans/archive/2026_08/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
     /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,

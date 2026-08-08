@@ -54,6 +54,19 @@ context_scope:
   ]
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — RATIFIED AS WRITTEN. All 8 [DESIGN] todos are unblocked for implementation.** The
+> operator approved every one of this doc's own recommended answers: per-leg decay measured against a shared t=0 (option
+> c), gate statistic **p25** rather than mean, edge expressed in **both** absolute bps and as a fraction of signal-time
+> edge, and the window capped at the engine's `hedge_deadline_ms` + abort-on-adverse-move cutoff. The fill-time odds
+> re-snapshot is ACCEPTED as a real new field on the instruction/fill record — a code consequence, not a blocker. No
+> further sign-off is required before implementation dispatches. **Two inbound changes to account for**: (1)
+> `arbitrage_opportunity` moves out of the market-data layer into signals/features with a multi-venue key — see
+> `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` — which is where this decay series will live; (2) the
+> same-operator guard was measured BROKEN on canonical venue values
+> (`arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU'])` returned True), so any baseline computed before
+> `/plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md` lands may contain fake arbs and must be
+> recomputed on the corrected population.
+
 # Sports arb-decay-window analysis + paper-trade alpha gate — design spec
 
 **This is a LOCAL/human plan (`assigned_vm: NA`) — not ingested by the AO backlog.** It defines the SPEC; it does not

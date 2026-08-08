@@ -65,6 +65,16 @@ context_scope:
   ]
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — AUTHOR the codex process rule, and apply it immediately.** The open todo proposes a
+> codex rule that an entity rename/split (e.g. `fixtures` → `fixtures_schedule` / `fixtures_outcomes`) MUST enumerate
+> and migrate every consumer in the same change. Ruled: **author it, and make the sports taxonomy chain its first
+> governed case** — that chain performs exactly this operation twice (`trades` → `odds`, and the whole 19-token
+> uppercase→lowercase instruments-service vocabulary), so the rule gets validated by real use instead of being written
+> abstractly. Authored by `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`. Concrete evidence for
+> why the rule is needed, found by the 2026-08-08 audit: `features-service`'s sports feature loader reads bucketed odds
+> by **GCS path prefix** (`_ODDS_BUCKETED_PREFIXES`), not by the `data_type` column — so a `data_type` grep does not
+> find it, and a rename would silently break it.
+
 # Sports features-layer findings sweep — PART 3 of 3 (2026-07-18/19, split 2026-07-26)
 
 > Continued from

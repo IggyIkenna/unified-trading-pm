@@ -59,6 +59,13 @@ context_scope:
   ]
 ---
 
+> **✅ OPERATOR RULING 2026-08-08 — DISPATCH APPROVED, gated on the taxonomy contracts phase.** The
+> fixture-grain-vs-league-grain decision was already ruled 2026-07-14 ("FIXTURE-GRAIN WANTED"); only dispatch routing
+> was outstanding. Ruled: **dispatch, with `depends_on` on
+> `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`** — the catalogue is downstream of the
+> venue/data_type/horizon axes that phase changes, so building it first would guarantee a rebuild. All 4 open todos are
+> carried by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` and flipped by its finalize sibling.
+
 > **🟡 SCOPE OVERLAP — reconcile against `sports_consolidated_closeout_2026_07_19.md`, do not resolve unilaterally here
 > (flagged during a 2026-07-23 orphan-plan audit).** This plan's fixture-grain work collides with that closeout on two
 > fronts it is not aware of: (1) it writes fixture/team/player reference data under a bare
