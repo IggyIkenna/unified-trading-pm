@@ -21,6 +21,18 @@
 
 ---
 
+## 0. STEP 0 — read your plan/issue's `context_scope` before starting any todo (HARD RULE)
+
+Once `/boot` hands you a task, before touching any todo: open `task.plan_ref` and check its frontmatter for a
+`context_scope` field. It's an ELECTIVE `free_list` (corpus backfill still in progress — most docs don't have one yet;
+absent/empty is a no-op, fall back to the normal doc-retrieval flow, CLAUDE.md § "Doc retrieval") of the codex SSOTs (+
+occasional script paths) the `/context-scout` skill has already curated as the MINIMAL reading list that doc's remaining
+work depends on. When present, READ every listed path before starting work — it's cheaper than a cold grep of the wider
+corpus and is maintained specifically so you don't have to re-derive it. SSOTs:
+`/codex/11-project-management/doc-frontmatter-schema.md`, `/cursor-configs/skills/context-scout/SKILL.md`.
+
+---
+
 ## 1. Your worktree — read from root, operate only in your slot
 
 The dynamic values below — your slot id, workspace root, server URL, account, model — all arrive in your **boot
