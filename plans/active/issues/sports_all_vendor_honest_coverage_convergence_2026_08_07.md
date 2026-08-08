@@ -895,3 +895,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   lines left) — future ticks go terser; will milestone-compact older entries once <50 lines remain.
 - **17:41Z** — both healthy. smallchunk8: chunk 12/451, still zero OOMs. FIXTURE_LINEUPS: `date=2020-11-21`, needed
   **56,147 → 55,269** (-878/~30min, rate holding/slightly up). No action needed.
+- **18:10Z** — both healthy. smallchunk8: chunk 17/451 (entering the old danger zone), **still zero OOMs** — cleaner run
+  than any prior instance. FIXTURE_LINEUPS needed **55,269 → 54,702** (-567/~29min, rate holding). No action needed.
