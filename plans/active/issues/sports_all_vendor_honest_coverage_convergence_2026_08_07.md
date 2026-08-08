@@ -903,3 +903,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   **54,139 → 53,582** (-557/~27min). Both healthy, no action.
 - **19:31Z** — smallchunk8 still chunk 18, 19 `CHUNK_FAILED` (near precedent's upper end, expected), fresh.
   FIXTURE_LINEUPS needed **53,582 → 52,360** (-1,222/~27min, accelerating). Both healthy, no action.
+- **19:58Z — smallchunk8 CLEARED chunk 18** at exactly 24 `CHUNK_FAILED` (matches smallchunk5's precedent exactly), now
+  chunk 19/451, fresh. FIXTURE_LINEUPS needed **52,360 → 51,595** (-765/~27min). Both healthy, no action.
