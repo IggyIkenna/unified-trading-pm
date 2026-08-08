@@ -403,3 +403,17 @@ started 22:38:08Z, poll 1 = 154 VMs). **Open question for a future session**: if
 timescale, the setsid approach may not be reliable in this environment either, and the only real answer may be accepting
 reactive re-arm on every check-in (whatever the trigger) rather than expecting either mechanism to survive unattended
 for long stretches.
+
+**Update 2026-08-08T22:50Z (same slot-28 session) — confirmed: no background mechanism survives in this session;
+switched to bounded synchronous polling.** The 4017297/4017373 setsid pair was ALSO found dead (`kill -0` failed on
+both) immediately after an 8-minute _foreground_ poll window — meaning ALL THREE background approaches tried this
+session (`run_in_background:true`, plain re-arm, `setsid nohup … & disown`) failed to survive more than a few minutes,
+unlike the slot-6 lineage's 7+ hour survival. Root cause not confirmed, but no longer worth chasing — **switched
+strategy**: ran an 8-minute bounded synchronous poll loop directly in the foreground
+(`timeout 480 bash -c 'while true; do gcloud …; sleep 60; done'`, error-aware, same rc==0-AND-empty check as the watcher
+script) instead of depending on a detached background process. This is reliable (I directly observe every poll) at the
+cost of consuming turn time. Result: fleet stable at 153 VMs across 8 polls (22:42Z-22:49Z), lock still held.
+**Recommended approach for future sessions in this environment**: don't rely on background watchers surviving between
+check-ins — instead, run a bounded (~8min, safely under the 10min Bash timeout) synchronous poll loop each time the
+session is active, and accept that coverage has gaps between sessions (as it always has across this saga's ~25+
+sessions) rather than assuming either `run_in_background` or `setsid` closes those gaps unattended.
