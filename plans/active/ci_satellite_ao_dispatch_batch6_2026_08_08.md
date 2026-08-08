@@ -198,14 +198,18 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       bounded implementation task, not an open judgment call — it cooled from "operator needs to decide" to "operator
       decided, needs building."
 
-- [ ] 7. [SCRIPT] P2. **Make `promotion_lag_monitor.py`'s lag alert distinguish a cause per line** (SIT-gated-in-flight
-      / no promote PR / PR blocked-conflicting / cause-unknown) instead of implying generic slowness. **Done when**: a
-      synthetic case for each named cause fires the correctly-worded line, and a genuinely-unknown cause says so
-      explicitly rather than defaulting to a misleading "slow" message. Source:
+- [x] ✅ 7. [SCRIPT] P2. **Make `promotion_lag_monitor.py`'s lag alert distinguish a cause per line**
+      (SIT-gated-in-flight / no promote PR / PR blocked-conflicting / cause-unknown) instead of implying generic
+      slowness. **Done when**: a synthetic case for each named cause fires the correctly-worded line, and a
+      genuinely-unknown cause says so explicitly rather than defaulting to a misleading "slow" message. Source:
       `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (P2, line 165) — the doc's other 3 open
       items (the `glue-runner-run.sh` `--selfcheck` redo, the `StartLimitBurst` unit hardening, the TS-only
       `detect_breaking_change.py` gap) remain correctly parked too-large-or-risky per batch1 D14/D15/D33 — unchanged,
-      not re-listed as new Deferred rows here.
+      not re-listed as new Deferred rows here. **unified-trading-pm@66ba7feda** — `_ldr_main_finding()` now names
+      provenance-blocked (pre-existing), SIT-gated-in-flight (`sit-gate/fleet-green` status pending),
+      no-promote-PR-open, and PR-BLOCKED/CONFLICTING (`mergeable_state` dirty/blocked); a match-less case says "cause
+      unknown" explicitly. 12 new regression tests (`test_promotion_lag_monitor_promote_pr_cause.py`) cover a synthetic
+      case per cause. `quality-gates.sh` green (1839 passed).
 
 - [ ] 8. [DEVOPS] P3. **Audit whether any repo extracted/created after 2026-08-05 has the same
       no-promotion-workflows-and-no-exemption gap** the `unified-trading-ci` divergence fix just closed. Re-run the
@@ -367,3 +371,12 @@ contention to the smallest fully-decided edit) rather than needing a fresh rulin
   (spot-checked the 3-way `scripts/workflow-templates/` contention, the glue-starvation-monitor targets, and the
   stranded-branch rebase — all still clean); (c) no `ci_consolidated_closeout` doc exists for this tranche to check
   against. `locked_by` unset. Dispatching.
+- **2026-08-08 (todo 7 shipped, slot 31)**: `unified-trading-pm@66ba7feda`. Added `_open_promote_pr()` /
+  `_sit_fleet_status()` / `_promote_pr_cause()` / `_ldr_main_finding()` to `scripts/cicd/promotion_lag_monitor.py` — the
+  LDR→main finding line now names one of 5 causes (provenance-blocked, pre-existing; SIT-gated-in-flight via the
+  `sit-gate/fleet-green` commit-status; no promote PR open; PR BLOCKED/CONFLICTING via `mergeable_state`; or an explicit
+  "cause unknown" when none match) instead of the old generic "N commit(s), oldest Xm old" line. The other 3 branch-pair
+  directions (no promote-PR mechanism) keep the generic line unchanged. Cause-dispatch isolated into
+  `_ldr_main_finding()` to stay under the ruff C901 complexity cap. 12 new tests in
+  `test_promotion_lag_monitor_promote_pr_cause.py` cover a synthetic case per cause plus the helper functions.
+  `quality-gates.sh` green (1839 passed, 17 skipped, 84s).
