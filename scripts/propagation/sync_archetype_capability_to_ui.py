@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -27,8 +29,24 @@ MANIFEST_REL = Path(
     "unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json"
 )
 COVERAGE_TS_REL = Path("unified-trading-system-ui/lib/architecture-v2/coverage.ts")
+ENUMS_TS_REL = Path("unified-trading-system-ui/lib/architecture-v2/enums.ts")
 
-_HEADER = """\
+# Baseline instrument types always present, in this fixed display order. Any
+# additional instrument_type values found in the manifest's own cell data
+# (e.g. "sleeve_mix" for PORTFOLIO_* archetypes) are appended after these,
+# sorted, so a manifest-only value never needs a hand-patch here again.
+_BASE_INSTRUMENT_TYPES = [
+    "spot",
+    "perp",
+    "dated_future",
+    "option",
+    "lending",
+    "staking",
+    "lp",
+    "event_settled",
+]
+
+_HEADER_TEMPLATE = """\
 // AUTO-GENERATED from UAC archetype_capability_manifest.json.
 // Do not edit by hand. Re-run:
 //   bash unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh --write
@@ -38,24 +56,10 @@ _HEADER = """\
 import type { StrategyArchetype, VenueCategoryV2 } from "./enums";
 
 export type InstrumentTypeV2 =
-  | "spot"
-  | "perp"
-  | "dated_future"
-  | "option"
-  | "lending"
-  | "staking"
-  | "lp"
-  | "event_settled";
+__INSTRUMENT_TYPE_UNION__;
 
 export const INSTRUMENT_TYPES_V2: readonly InstrumentTypeV2[] = [
-  "spot",
-  "perp",
-  "dated_future",
-  "option",
-  "lending",
-  "staking",
-  "lp",
-  "event_settled",
+__INSTRUMENT_TYPE_ARRAY__
 ] as const;
 
 export type CoverageStatus = "SUPPORTED" | "PARTIAL" | "BLOCKED" | "NOT_APPLICABLE";
@@ -98,6 +102,47 @@ export interface ArchetypeCoverage {
 }
 
 """
+
+
+def _extract_ts_string_array(ts_source: str, const_name: str) -> list[str]:
+    """Pull the ordered string literals out of a ``const NAME: readonly X[] = [...]`` block."""
+
+    match = re.search(
+        rf"{const_name}\s*:\s*readonly\s+\w+\[\]\s*=\s*\[(.*?)\]\s*(?:as const\s*)?;", ts_source, re.DOTALL
+    )
+    if not match:
+        raise ValueError(f"could not find `{const_name}` array in enums.ts")
+    return re.findall(r'"([^"]+)"', match.group(1))
+
+
+def _collect_instrument_types(manifest: dict[str, object]) -> list[str]:
+    """Baseline instrument types, plus any additional value actually used by a manifest
+    cell (e.g. "sleeve_mix" for the PORTFOLIO_* archetypes) appended in sorted order —
+    so a manifest-only value is never silently dropped from the TS union again."""
+
+    seen = set(_BASE_INSTRUMENT_TYPES)
+    extra: set[str] = set()
+    for entry in manifest["archetypes"]:  # type: ignore[union-attr]
+        for cell in entry.get("cells", []):  # type: ignore[union-attr]
+            instrument_type = str(cell["instrument_type"])
+            if instrument_type not in seen:
+                extra.add(instrument_type)
+    return [*_BASE_INSTRUMENT_TYPES, *sorted(extra)]
+
+
+def _render_stub_archetype(archetype_id: str) -> str:
+    """A placeholder ``ArchetypeCoverage`` for an archetype declared in enums.ts but not
+    yet present in the UAC capability manifest — keeps ``Record<StrategyArchetype, ...>``
+    total. Replaced with real data automatically once the manifest gains this archetype."""
+
+    const = _const_name(archetype_id)
+    return (
+        f"const {const}: ArchetypeCoverage = {{\n"
+        f"  archetype: {_ts_string_literal(archetype_id)},\n"
+        "  usesRollingFutures: false,\n"
+        "  cells: [],\n"
+        "};\n"
+    )
 
 
 def _ts_string_literal(value: str) -> str:
@@ -205,15 +250,61 @@ export function rollingFutureCells(): readonly CoverageCell[] {
 """
 
 
-def render_coverage_ts(manifest: dict[str, object]) -> str:
+def render_coverage_ts(manifest: dict[str, object], enums_ts_source: str) -> str:
     archetypes = list(manifest["archetypes"])  # type: ignore[arg-type]
     archetype_blocks = "\n".join(_render_archetype(entry) for entry in archetypes)
-
     mapping_lines = [f"  {entry['archetype_id']!s}: {_const_name(str(entry['archetype_id']))}," for entry in archetypes]
+
+    covered_ids = {str(entry["archetype_id"]) for entry in archetypes}
+    all_archetype_ids = _extract_ts_string_array(enums_ts_source, "STRATEGY_ARCHETYPES_V2")
+    missing_ids = [a for a in all_archetype_ids if a not in covered_ids]
+    if missing_ids:
+        stub_blocks = "\n".join(_render_stub_archetype(a) for a in missing_ids)
+        archetype_blocks += (
+            "\n\n"
+            "// Stub entries — archetypes declared in enums.ts but not yet in the capability\n"
+            "// manifest. Re-run sync-archetype-capability-to-ui.sh --write to replace these\n"
+            "// with real data once the manifest is populated.\n\n" + stub_blocks
+        )
+        mapping_lines += [f"  {a}: {_const_name(a)}," for a in missing_ids]
+
     mapping_body = "\n".join(mapping_lines)
     footer = _FOOTER.replace("__MAPPING_BODY__", mapping_body)
 
-    return _HEADER + archetype_blocks + "\n" + footer
+    instrument_types = _collect_instrument_types(manifest)
+    instrument_type_union = "\n".join(f"  | {_ts_string_literal(t)}" for t in instrument_types)
+    instrument_type_array = "\n".join(f"  {_ts_string_literal(t)}," for t in instrument_types)
+    header = _HEADER_TEMPLATE.replace("__INSTRUMENT_TYPE_UNION__", instrument_type_union).replace(
+        "__INSTRUMENT_TYPE_ARRAY__", instrument_type_array
+    )
+
+    return header + archetype_blocks + "\n" + footer
+
+
+def _format_with_prettier(rendered: str, ui_repo_root: Path) -> str:
+    """Pipe the raw render through the UI repo's own pinned prettier binary so both
+    `--write` and `--check` compare against the SAME formatted style the repo commits
+    (the raw renderer emits single-line arrays; prettier is what wraps long ones —
+    skipping this step made `--check` always report drift against a freshly-formatted
+    commit even when the content was otherwise correct)."""
+
+    prettier_bin = ui_repo_root / "node_modules" / ".bin" / "prettier"
+    if not prettier_bin.is_file():
+        sys.stderr.write(f"ERROR: prettier binary not found at {prettier_bin} (run `pnpm install` first)\n")
+        raise SystemExit(2)
+    result = subprocess.run(
+        [str(prettier_bin), "--stdin-filepath", str(COVERAGE_TS_REL.name)],
+        input=rendered,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+        cwd=ui_repo_root,
+    )
+    if result.returncode != 0:
+        sys.stderr.write(f"ERROR: prettier failed formatting the rendered coverage.ts:\n{result.stderr}\n")
+        raise SystemExit(2)
+    return result.stdout
 
 
 def main() -> int:
@@ -226,13 +317,19 @@ def main() -> int:
     workspace = Path(args.workspace_root).resolve()
     manifest_path = workspace / MANIFEST_REL
     coverage_ts_path = workspace / COVERAGE_TS_REL
+    enums_ts_path = workspace / ENUMS_TS_REL
 
     if not manifest_path.is_file():
         sys.stderr.write(f"ERROR: UAC manifest not found at {manifest_path}\n")
         return 2
+    if not enums_ts_path.is_file():
+        sys.stderr.write(f"ERROR: UI enums.ts not found at {enums_ts_path}\n")
+        return 2
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    rendered = render_coverage_ts(manifest)
+    enums_ts_source = enums_ts_path.read_text(encoding="utf-8")
+    rendered = render_coverage_ts(manifest, enums_ts_source)
+    rendered = _format_with_prettier(rendered, workspace / "unified-trading-system-ui")
 
     if args.write:
         coverage_ts_path.write_text(rendered, encoding="utf-8")
