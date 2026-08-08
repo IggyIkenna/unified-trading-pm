@@ -186,3 +186,15 @@ own Tick history.
   evidence, not a kernel-level OOM confirmation — todo 2's host-memory-exhaustion correlation check (against
   `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`) is the natural next step for whoever has host
   access. Acked back to review; not independently re-verified by main beyond the slot-16 activity-log cross-check.
+
+- 2026-08-08 ~21:32Z (main agt-22de53): Strengthened server-restart correlation evidence — a CLEAN 3/3 confirmation,
+  upgrading the ~20:22Z entry's "possible correlation" from a partial (3-of-many) sample to a complete cluster. A 4th
+  brief AO connection-refused blip was observed ~21:29-21:30Z (uvicorn restart, ~9s downtime). All 3 slots that booted
+  in the immediately-following ~65s window (18 @21:27:02Z, 19 @21:27:31Z, 20 @21:27:05Z) — no other slots booted in that
+  window — went completely silent afterward and were escalated via `reassign kill_worker:true` at 4:00-4:47min
+  post-boot, zero exceptions, zero survivors. Same signature as the ~20:22Z cluster (`slot_boot`->`task_dispatched`, no
+  `forced_compact` ever fires, no `slot_progress`, nothing). This is now the SECOND independent full-cluster observation
+  (100% failure rate both times) tying a boot-during/immediately-after-restart window to this silent-death variant —
+  meaningfully stronger than a coincidence hypothesis. Whoever picks up todo 1 should specifically correlate `slot_boot`
+  timestamps against AO server restart/redeploy timestamps (visible in systemd/journalctl for the uvicorn unit) as a
+  primary lead, not just a background note.
