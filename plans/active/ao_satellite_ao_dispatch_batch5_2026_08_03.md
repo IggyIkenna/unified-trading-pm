@@ -292,7 +292,7 @@ below rather than duplicated here.
       `[x]` in the same turn with the same evidence. `check_no_empty_string_fallback.py` count verified <= 319 (the
       `# noqa` marker keeps this site excluded).
 
-- [ ] [INFRA] P1. **In `agent-orchestrator/server/orphan_reap.py`'s reap-classification path, before treating a
+- [x] ✅ [INFRA] P1. **In `agent-orchestrator/server/orphan_reap.py`'s reap-classification path, before treating a
       heartbeat-silent pane's detached quickmerge subprocess tree as reapable, walk its descendant process tree and
       check for a currently-CPU-progressing child** (e.g. a pytest/basedpyright/ruff/QG subprocess with recent measured
       CPU%, not just process existence) — a pane waiting on a live, CPU-progressing detached quickmerge must NOT be
@@ -304,7 +304,7 @@ below rather than duplicated here.
       still reaped (no regression); full `agent-orchestrator` `quality-gates.sh` green. Source:
       `/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` (item 1, the
       reaper-overeagerness fix only — its other 2 items stay held/deferred per that doc's own state). Repo:
-      agent-orchestrator.
+      agent-orchestrator. — agent-orchestrator@f91b4d0
 
 ## Deferred — full per-doc disposition of the 31 declined orphaned candidates
 

@@ -83,11 +83,14 @@ Two distinct defects compound:
 
 ## Todos
 
-- [ ] [INFRA] P1. Make the orphan-reaper / frozen-pane kicker NOT kill a detached quickmerge whose QG child is actively
-      CPU-progressing (check the descendant process tree for a running pytest/basedpyright/ruff with recent CPU before
-      classifying `kind=frozen` + reaping). A pane waiting on a live detached quickmerge is not frozen. **Done when**: a
-      slow (>5min) detached quickmerge on a heartbeat-silent pane completes + lands rather than being reaped; add a
-      regression covering "pane waiting on CPU-progressing detached child".
+- [x] ✅ [INFRA] P1. Make the orphan-reaper / frozen-pane kicker NOT kill a detached quickmerge whose QG child is
+      actively CPU-progressing (check the descendant process tree for a running pytest/basedpyright/ruff with recent CPU
+      before classifying `kind=frozen` + reaping). A pane waiting on a live detached quickmerge is not frozen. **Done
+      when**: a slow (>5min) detached quickmerge on a heartbeat-silent pane completes + lands rather than being reaped;
+      add a regression covering "pane waiting on CPU-progressing detached child". — agent-orchestrator@f91b4d0
+      (`fix(orphan-reap): spare CPU-progressing detached quickmerge from sweep`): `_has_cpu_progressing_descendant`
+      helper + guard in `sweep_orphan_processes`; two discriminator regression tests added in
+      `test_orphan_process_reap.py` (CPU-progressing → spared; idle → still reaped).
 - [ ] [INFRA] P1. Close the false-done gap: gate `/done` acceptance (or a fast follow-up verifier) on the task's code
       actually being on origin for code tasks — a `/done` with the slot clone still `ahead>0` on the touched repo should
       flip the task back to a landing-pending state, not read as durably done. Cross-ref
