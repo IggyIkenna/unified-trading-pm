@@ -635,8 +635,17 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
       degrades to a point estimate under < halflife days. Backtest still needs history; this is live/paper only. **Repo:
       e2e-testing harness.**
 - [ ] [STRATEGY] P3. Genuinely credentialed venues (Paradex, Backpack, Edgewink): file each `BLOCKED-CREDENTIALS` with
-      the operator ask + build the adapter scaffold anyway (External-Data-Always-Available rule). **Repo: e2e-testing →
-      ping ledger.**
+      the operator ask + build the adapter scaffold anyway (External-Data-Always-Available rule). **operator ruling
+      2026-08-08** (cross-cutting round 5, id=64): checked whether an existing/canonical source already covers this
+      funding data before keeping the ask — grepped UAC `venue_mapping.py`/`venue_collateral.py`/
+      `perp_funding_cadence.py`/`venue_adapter_keys.py` and the full workspace for Paradex/Backpack/Edgewink: **zero
+      wiring found for any of the 3** (Paradex/Backpack appear only as DefiLlama TVL-protocol mock entries, unrelated to
+      perp funding; "Edgewink" has no hits anywhere outside this doc + its codex mirror — likely a typo/codename,
+      possibly "edgeX Perps" (`pro.edgex.exchange`), unconfirmed). No live Tardis.dev exchange-list query was run
+      (outside this codebase's reach), so Tardis coverage for Paradex/Backpack specifically remains unverified either
+      way. **Verdict: genuinely not available elsewhere in-repo today — all 3 credential asks STAY BLOCKED as originally
+      scoped, adapter scaffold still to be built regardless per the External-Data-Always-Available rule.** **Repo:
+      e2e-testing → ping ledger.**
 - [ ] [STRATEGY] P3. Sign/units cross-check on integration: one coin per venue vs the spec §3 reference values before
       trusting the live ranking. **Repo: e2e-testing harness.**
 
@@ -661,9 +670,9 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
       perp funding: add their Tardis symbols to the `--instrument-ids` universe in
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (+ the AWS variant) and re-run for 2022->present.
       **COST NOTE**: the universe is deliberately curated to cap Tardis cost — adding 10 coins x ~5 venues x spot+perp
-      raises the Tardis bill; confirm scope/window with operator before launch. This is the ONE lever that adds REAL
-      opportunity to the carry backtest (vs reweighting 20 coins). **Repo: deployment-service +
-      market-tick-data-service.**
+      raises the Tardis bill. **operator ruling 2026-08-08**: approved, backfill all 10 coins/scope as specified — no
+      further cost/window confirmation needed, cleared to launch. This is the ONE lever that adds REAL opportunity to
+      the carry backtest (vs reweighting 20 coins). **Repo: deployment-service + market-tick-data-service.**
 - [ ] [DATA] P3. Pull HYPE's full HL-S3 funding history (asset_ctxs) from its listing (~Nov-2024) via
       `HyperliquidS3Downloader` to close the small pre-2025 gap. **Repo: market-tick-data-service.**
 - [ ] [STRATEGY] P3. Gate this behind the v9 data-migration completion (per project sequencing); the harness auto-picks
