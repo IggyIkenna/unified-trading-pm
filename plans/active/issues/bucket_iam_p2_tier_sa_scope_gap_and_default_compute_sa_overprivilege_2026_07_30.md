@@ -300,10 +300,12 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
 
 ## Follow-ups
 
-- [ ] [CODE] P3. Wire the remaining 30 VM launchers that do not source launcher_common.sh to their tier SAs — P3.2
-      (deployment-service@ce7ef8f) states '30 launchers remain unwired: they do not source launcher_common.sh, need
-      structural changes before tier-SA integration — filed as follow-up' (a deferred follow-up in prose, never a
-      tracked todo).
+- [x] ✅ [CODE] P3. Wire the remaining 30 VM launchers that do not source launcher_common.sh to their tier SAs — P3.2
+      deployment-service@42fb8450d. Wired 8 files covering all remaining GCP launchers: `_tradfi-ohlcv-launcher-lib.sh`
+      (covers all 10 tradfi-bf launchers via shared lib), `launch-alerting-quietness-baseline.sh`,
+      `launch-synthetic-benchmark-vm.sh`, `launch-dashboard-vm.sh`, `launch-ml-training-vm.sh`, `launch-ml-vm.sh`,
+      `launch-tier3-cefi-backfill.sh` (also fixed pre-existing undefined-function bug), `launch-vm-zombie-watchdog.sh`.
+      AWS/EC2 launchers excluded (no GCP tier SAs). All QG green.
 
 > **2026-08-06 archive-candidate audit**: All 5 todos are [x]: P0 operator ruling (C: hybrid), P1 tier-SA grants
 > (deployment-service@e8684fe), P2 deploy-shared wiring (@118ad9e), P3.1 default-compute-SA hardening (@c76f710), P3.2
