@@ -10,7 +10,7 @@ summary: >-
   while verifying the sports taxonomy chain: its P3 Betfair todo was dropped because the sentence FORBIDDING the marker
   ("Do NOT mark this BLOCKED-CREDENTIALS") contained the marker — the todo's own text asserted it was fully
   AO-completable with no operator step.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -30,7 +30,7 @@ execution_scope: orchestrator-agent
 priority: P1
 assigned_role: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@d4f4947d0, unified-trading-pm@fb70812a8
 locked_by:
 source: "slot-3 interactive, 2026-08-08 — verifying that the 8 sports taxonomy plans were fully AO-dispatched"
 depends_on: []
