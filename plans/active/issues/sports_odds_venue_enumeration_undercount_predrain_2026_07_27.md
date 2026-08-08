@@ -264,15 +264,17 @@ now has a concrete, checkable hypothesis to confirm rather than an open judgment
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       session's final report. Follow-up tracked as a fresh todo below (never left as prose per the
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       todos-not-prose rule). Repos: market-tick-data-service (verification only) / unified-trading-pm (doc).
 
-- [ ] [DATA] P0. **Extend `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s venue→class mapping to cover all 19
-      previously-"unmapped" venues** (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER,
+- [x] ✅ [DATA] P0. **Extend `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s venue→class mapping to cover all
+      21 previously-"unmapped" venues** (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER,
       DRAFTKINGS, UNIBET_UK, SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY,
-      UNIBET_EU — 292,117 real `data_type=trades` shards / 51,291,778 rows, measured 2026-07-29, see the todo above) —
-      classify each as EXCHANGE_ODDS or FIXED_ODDS (mirroring the already-executed 9-venue precedent), move the GCS
-      objects, and only then let the fork plan's legacy-contract-retirement todo proceed. This is an operator/
-      data-engineering decision (which class each bookmaker belongs to), not a mechanical fact — genuinely needs the
-      same `[OPERATOR]`-adjacent mapping-ruling pattern the fork plan's own todo 1 already used for the first 9 venues.
-      Repos: market-tick-data-service, unified-api-contracts, unified-trading-pm.
+      UNIBET_EU — live manifest count was 21, not 19; 292,117 real `data_type=trades` shards / 51,291,778 rows, measured
+      2026-07-29, see the todo above). **RESOLVED MECHANICALLY 2026-08-08 by operator ruling 9 in
+      sports_taxonomy_p1_capture_and_contracts_2026_08_08.md**: the `exchange_odds`/`fixed_odds` instrument_type SPLIT is
+      RETIRED — exchange-vs-sportsbook is a property of the VENUE (SportsVenueType already encodes it), so no per-venue
+      classification decision is needed. All 21 bookmakers map to `InstrumentType.ODDS`; the P2 migration will restamp
+      the historical `exchange_odds`/`fixed_odds` manifest rows to `odds`. The backward-compat fallback in
+      `lookup_contract` (`contracts.py`) ensures historical rows still resolve until the P2 migration completes.
+      Repos: unified-api-contracts, market-tick-data-service (P1 done); manifest rows: P2 scope.
 
 ## Secondary, smaller finding (not this doc's main subject)
 
