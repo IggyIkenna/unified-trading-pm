@@ -188,12 +188,15 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       — the archetype is half-wired (no per-venue/asset-group capability cells), and the e2e playbook
       `tests/e2e/playbooks/refactor/refactor-g1-8-uac-archetype-capability.spec.ts` fails on it. Fix: add TSMOM's
       capability declaration to `registry/archetype_capability_matrix.py` (family RULES_DIRECTIONAL, BTC-level CTA →
-      CEFI perp+spot on the major venues, signal `price`/trend — confirm the exact venue/asset-group profile against the
-      already-shipped `TsmomBtcCtaEngine` implementation in strategy-service if the source's original "confirm with
-      operator" note turns out to need a live decision, rather than blocking on it) → regen via
-      `scripts/generate_archetype_capability_manifest.py` → sync to UI via
-      `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Repo: unified-api-contracts (+ UI
-      sync). **Done when**: `archetype_capability_manifest.json` includes TSMOM_BTC_CTA (23 archetypes), the UI sync
+      CEFI perp+spot on the major venues, signal `price`/trend). **round5-cross-cutting-audit 2026-08-08**: the "confirm
+      with operator (CeFi-only BTC, or hybrid)" note is answered by
+      `/codex/09-strategy/architecture-v2/category-     instrument-coverage.md` §19 `TSMOM_BTC_CTA` — "Scope is
+      intentionally BTC-only... DeFi/TradFi: N/A by design." No live operator decision needed; implement CeFi-only per
+      that SSOT. (was: confirm the exact venue/asset-group profile against the already-shipped `TsmomBtcCtaEngine`
+      implementation in strategy-service if the source's original "confirm with operator" note turns out to need a live
+      decision, rather than blocking on it) → regen via `scripts/generate_archetype_capability_manifest.py` → sync to UI
+      via `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Repo: unified-api-contracts (+
+      UI sync). **Done when**: `archetype_capability_manifest.json` includes TSMOM_BTC_CTA (23 archetypes), the UI sync
       script has run, `refactor-g1-8-uac-archetype-capability.spec.ts` passes, and both repos are QG-green. Source:
       `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.20 (moved verbatim).
 
