@@ -86,7 +86,7 @@ to re-derive them.
       `plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md` (find every `…`-terminated bullet under the
       `## Deferred` section, finish each citation or replace it with an explicit "claim not recoverable — re-verified in
       batch10" note). Source: this issue doc + the batch10 Progress Log. Done when: zero `…`-truncated Deferred bullets
-      remain in batch9, with each either completed or explicitly retired. — unified-trading-pm@pending
+      remain in batch9, with each either completed or explicitly retired. — unified-trading-pm@a72c755c3
 
 ## Progress Log
 
