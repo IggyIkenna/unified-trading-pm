@@ -122,11 +122,12 @@ Both were established by reading the code, and both are silent — neither raise
       transferable. Assert the birthday bound at this corpus's real scale (~2,187 backlog rows today, ~90/tick regen)
       and record the chosen `N` + the margin. Done-when: a test names the constant and fails if it shrinks. (repo:
       agent-orchestrator) — agent-orchestrator@0b1507e
-- [ ] [BACKEND] P1. **Switch new-task minting to the content id, collision-checked against BOTH yaml ids AND the full
+- [x] ✅ [BACKEND] P1. **Switch new-task minting to the content id, collision-checked against BOTH yaml ids AND the full
       historical `tasks` table.** `_make_task_id`'s next-index scan is yaml-only (`:1717, :1831`) — a `done`-and-pruned
       id is invisible to it, which is itself a contributing root cause. `remint_backlog_collision` already does the
       wider check (`routes/backlog.py:638-639`); carry that into the minting path. After this lands, a freed positional
-      slot can never be reassigned, because nothing new is positional. (repo: agent-orchestrator)
+      slot can never be reassigned, because nothing new is positional. (repo: agent-orchestrator) —
+      agent-orchestrator@ba6eff5
 - [ ] [BACKEND] P2. **Rewrite the two guard tests to inject their collision at the DB layer.**
       `test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`
       (`tests/test_regen_backlog_from_plan.py:3249`) and `test_sync_refuses_to_reset_a_done_row_on_id_reuse` (`:3300`)
@@ -269,3 +270,30 @@ Both were established by reading the code, and both are silent — neither raise
   p_target=1e-6 per regen tick, k_min=11; `_CONTENT_ID_HEX_CHARS=12` has 16x margin above that minimum. Test
   `test_content_id_hex_chars_birthday_bound` names the constant and fails if it shrinks below k_min. QG: 2732+ passed.
   Evidence: agent-orchestrator@0b1507e (verified on origin/live-defi-rollout).
+
+- **2026-08-08 (slot 18, content_derived_backlog_task_ids-004)**: Switched the live minting call site (`regen()`'s
+  per-plan add loop) from `_make_task_id(slug, next_index)` to
+  `_make_content_task_id(plan_ref_str, description, _occurrence)`. Added `_load_all_db_task_ids(db_path)` (raw sqlite3,
+  mirrors `_load_unconsumed_operator_rulings`'s pattern) so the collision check covers the FULL historical `tasks`
+  table, not just yaml — a fresh id colliding with a live yaml row is skipped + logged ERROR (should be astronomically
+  rare per the birthday-bound test); a fresh id colliding with a non-live DB-only row (done/pruned) is the EXPECTED
+  content-stable case and proceeds, governed by the sibling-reset guard (`bootstrap.py`, kept as defence-in-depth per
+  todo below). Removed the now-dead positional `next_index`/`existing_for_slug` block. `_make_task_id` itself is KEPT
+  (still used by `routes/backlog.py`'s `remint_backlog_collision`, todo P3 below decides its fate) — annotated
+  `# pyright: ignore[reportUnusedFunction]` now that its only caller is a cross-module private import. Updated 24 tests
+  in `tests/test_regen_backlog_from_plan.py` that asserted hardcoded positional ids (`my_plan-001` etc.) to key off
+  `brief` instead (`_by_brief` helper) since ids are no longer predictable strings; rewrote
+  `test_regen_id_slot_reuse_inherits_stale_terminal_status` (renamed
+  `test_regen_id_slot_reuse_no_longer_reissues_freed_slot`) to assert the FIX — a "totally different" checkbox no longer
+  reissues a done row's freed id. QG: 2767 passed (full suite, incl. the two guard tests at `:3249`/`:3300` which are
+  UNCHANGED — their own collision-injection todo, P2 below, is separately scoped).
+
+  **Unplanned-but-blocking fix, same session**: local `quality-gates.sh` was red on a clean HEAD (7 pre-existing
+  failures in `test_context_lifecycle.py` + `test_worker_liveness.py`, unrelated to this todo) — root-caused to a
+  test-isolation gap (fixture session names like `orch-slot-9` collide with REAL slot config dirs on this shared 18-slot
+  host, so an unmocked `context_probe.context_used_pct()` read genuine transcript data instead of `None`; invisible on
+  CI's ephemeral runner). Fixed by mocking it in both files' worker-path fixtures. Full details + the root-cause
+  diagnosis: `/plans/active/issues/agent_orchestrator_local_qg_red_context_lifecycle_worker_liveness_2026_08_08.md`.
+  Shipped in the SAME commit as the todo above (both were `git add`-staged together since the QG-red fix was a hard
+  precondition for shipping anything from this repo on this host). Evidence: agent-orchestrator@ba6eff5 (verified on
+  origin/live-defi-rollout; QG PASSED 2767/2767 on this exact SHA before quickmerge).
