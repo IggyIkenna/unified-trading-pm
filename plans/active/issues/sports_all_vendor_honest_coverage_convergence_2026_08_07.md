@@ -688,3 +688,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T06:24Z** — FIXTURE_STATS +34 days (`last_completed_date=2024-04-18`, fresh `06:23:27Z`), steady. odds
   smallchunk4: chunk 10/451 now (`2020-07-21`), up from chunk 4, ~5min/chunk pace, zero OOMs — still no third
   occurrence, 8 chunks remaining before reaching chunk 18's known danger zone. Both healthy, no intervention.
+- **2026-08-08T06:52Z** — FIXTURE_STATS +30 days (`last_completed_date=2024-05-18`, fresh `06:50:26Z`), steady. odds
+  smallchunk4: chunk 15/451 now (`2020-08-15`), zero OOMs, ~5min/chunk pace holding — 3 chunks remaining before
+  chunk 18. Both healthy, no intervention.
