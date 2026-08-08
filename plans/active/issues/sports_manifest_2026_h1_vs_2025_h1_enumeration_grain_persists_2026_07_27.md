@@ -72,6 +72,9 @@ source: >-
   data_completion_sports_2026_07_24.md's 2026-06-23 "concentrated in 2026-H1 (~120k/data_type vs ~8-30k/prior-year)"
   finding).
 depends_on: []
+sequential: true # 2026-08-08: only remaining open todo is the chunks-3-7 backfill, split into 6 ordered per-chunk
+# todos below (chunk N must complete before chunk N+1 starts; ratio-recheck only after all 5) — see Progress Log
+# entry citing this instruction. Safe to set doc-wide: no other open todos exist in this doc to needlessly serialize.
 ---
 
 > **🟡 IN-FLIGHT 2026-08-08 ~03:01 UTC — slot-3 running in tmux `orch-slot-3:backfill` (harness-kill-proof). Rolling
@@ -467,11 +470,62 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   f3063b98). LC_TARBALL_FRESHNESS=warn set as safety precaution (no actual republish needed). Background 30-min
   heartbeat monitor armed (sends /progress every 5 min). Chunks 3-7 (2022..2026-04-09) not yet reached — this entry
   captures the start state; will update on completion.
+- **data_engineering worker (slot-4) 2026-08-08**: direct instruction from main (BLK-free, dispatch-model fix, not a
+  backlog task) — split the single "complete remaining chunks 3-7" todo into 6 bounded per-chunk todos (`sequential:
+  true` added to this doc's frontmatter to enforce 3→4→5→6→7→recheck ordering, since this doc has no other open
+  todos to needlessly serialize). Reason: 6 wedge-kills in ~3h across 5 slots (9@00:14, 5@00:37, 7@01:44, 9@01:59,
+  10@02:51, 3@03:14 UTC) with zero forward progress on chunks 3-7 — a dispatch-model mismatch (one interactive
+  session can't reliably babysit a multi-hour, multi-VM, high-friction backfill start-to-finish, and each
+  kill-requeue loses monitoring continuity). Each new todo invokes the child launcher
+  (`launch-expected-universe-v2-vm.sh`) directly with `ENUM_START_DATE`/`ENUM_END_DATE` for its one calendar-year
+  window, instead of the monolithic wrapper, so a worker can complete or hit a clean resumable stop within one
+  session's context budget. Pure doc edit, no VM launched this turn.
 
 ## Follow-ups
 
-- [ ] [DATA] P2. Complete remaining chunks 3-7 (2022..2026-04-04) of the job (2) historical expected_unattempted
-      backfill and run the post-run cell-seeding ratio re-check (done-when gate).
+> **2026-08-08 dispatch-model fix**: the single "chunks 3-7" todo below wedge-killed 6x in ~3 hours across 5 slots
+> (9@00:14, 5@00:37, 7@01:44, 9@01:59, 10@02:51, 3@03:14 UTC, all `slot_wedged_killed_for_resume`/kick-failed-idle)
+> with zero forward progress — root cause is a dispatch-model mismatch (one interactive session cannot reliably
+> babysit a multi-hour, multi-VM, high-friction backfill start-to-finish; each kill-requeue also loses monitoring
+> continuity, forcing costly re-orientation). Split into 6 bounded per-chunk todos (`sequential: true` in this doc's
+> frontmatter enforces 3→4→5→6→7→recheck ordering); each chunk uses the child launcher directly
+> (`ENUM_START_DATE=<start> ENUM_END_DATE=<end> bash deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh
+> sports --apply-write`) rather than the monolithic wrapper, so a worker can complete one chunk (or hit a clean,
+> resumable stop) well within a single session's context budget. Direct instruction from main, 2026-08-08, BLK-free.
+
+- [ ] [DATA] P2. Launch + verify chunk 3/7 (2022-01-01..2022-12-31) of the job (2) historical expected_unattempted
+      backfill: `ENUM_START_DATE=2022-01-01 ENUM_END_DATE=2022-12-31 bash
+      deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh sports --apply-write`. Not fire-and-forget:
+      verify STARTED <60s, monitor to a terminal state, confirm no FAILED lifecycle event. If you hit
+      `dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07` symptoms (a CRITICAL page / `exit_code=5` on
+      an `expected-universe-v2-sports-*` VM), that is expected and already tracked — `exit_code=5` is the enumerator's
+      own deliberate, self-managed `max-writes-per-run` halt-safety trip; treat it as retriable, not a crash (that doc
+      is now fixed to route this to WARN, not PAGE_OPERATOR). If you hit
+      `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04` symptoms (an unexpected `PERMISSION_DENIED` on
+      `compute.instances.create` mid-run with no account change of your own), that is also expected and tracked — the
+      shared-host `~/.config/gcloud` active account can be clobbered by a concurrent slot; re-run
+      `gcloud config set account unified-trading-sa@...` (or pin per-invocation with `--account=`) and retry.
+- [ ] [DATA] P2. Launch + verify chunk 4/7 (2023-01-01..2023-12-31) of the job (2) historical expected_unattempted
+      backfill: `ENUM_START_DATE=2023-01-01 ENUM_END_DATE=2023-12-31 bash
+      deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh sports --apply-write`. Same monitoring +
+      halt-safety/gcloud-clobber guidance as chunk 3's todo above.
+- [ ] [DATA] P2. Launch + verify chunk 5/7 (2024-01-01..2024-12-31) of the job (2) historical expected_unattempted
+      backfill: `ENUM_START_DATE=2024-01-01 ENUM_END_DATE=2024-12-31 bash
+      deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh sports --apply-write`. Same monitoring +
+      halt-safety/gcloud-clobber guidance as chunk 3's todo above.
+- [ ] [DATA] P2. Launch + verify chunk 6/7 (2025-01-01..2025-12-31) of the job (2) historical expected_unattempted
+      backfill: `ENUM_START_DATE=2025-01-01 ENUM_END_DATE=2025-12-31 bash
+      deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh sports --apply-write`. Same monitoring +
+      halt-safety/gcloud-clobber guidance as chunk 3's todo above.
+- [ ] [DATA] P2. Launch + verify chunk 7/7 (2026-01-01..rolling-boundary) of the job (2) historical
+      expected_unattempted backfill: recompute the rolling boundary live at launch time as `today - 120d`
+      (mirroring job (1)'s fix — do NOT reuse the stale `2026-04-04`/`2026-04-09` dates seen elsewhere in this doc's
+      Progress Log) and run `ENUM_START_DATE=2026-01-01 ENUM_END_DATE=<recomputed-boundary> bash
+      deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh sports --apply-write`. Same monitoring +
+      halt-safety/gcloud-clobber guidance as chunk 3's todo above.
+- [ ] [DATA] P2. Once chunks 3-7 above are ALL terminated with no FAILED lifecycle event, run the post-run
+      cell-seeding ratio re-check (done-when gate) — same method as this issue's own read-only measurement — and
+      record whether the 2025-vs-2026 H1 ratio has moved toward ~1x.
 
 > **2026-08-06 archive-candidate audit**: Todo 4 is flipped [x] but its own text says 'post-run ratio re-check
 > transferred to slot 8 entry (open todo)', and Progress Log (slot 8 + slot 6, 2026-08-04) confirms 'Chunks 3-7 not yet
