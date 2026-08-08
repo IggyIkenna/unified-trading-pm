@@ -184,8 +184,30 @@ plan + verifying the `done_sha`, never from the row's status alone.
       matches `f79fbded3` exactly. No REOPEN (would re-open genuinely, freshly-verified-done work) or FLIP (already
       flipped, honestly) was warranted or performed; this item only needed its tracker checkbox resolved with the
       verification trail above.
-- [ ] [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
-      `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose
+- [x] ✅ [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
+      `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose — **verified
+      2026-08-08 (slot 12): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected.** `GET /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null`,
+      `dispatched_to: null` (NOT `done`), same self-correcting
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as the 6 items above; a full scan
+      of the live 2,429-row backlog found zero rows anywhere still carrying `done_sha=976786c5`. `976786c5`
+      (`market-tick-data-service`, slot-8, 2026-08-04) is a real, on-origin commit — confirmed via
+      `unified-trading-pm@c85fb2eb1`'s same-turn plan-flip commit — but it only built + shipped the migration SCRIPT
+      (`migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`); the dry-run itself was explicitly never
+      executed, and that same slot-8 commit deliberately left the plan-level P2 checkbox open ("Plan- level P2 checkbox
+      stays open (gated on the full migration, not just the script)"). Verified against the REAL object count per this
+      item's own instruction, not just the prose: read the cited plan
+      (`plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` line 138) — still honestly `- [ ]`, "Done when: a
+      fresh census of `instruments-store-sports-prd` returns 0 objects carrying the contaminated vocabulary" — and the
+      split sub-todos in `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`: todo 2
+      (build+dry-run) is `[x]` but explicitly documents the dry-run was NOT run; todo 3 ("Apply the migration to prod,
+      gated on todo 2's dry-run review") is still `- [ ]`. No object has actually moved — the 9,733-object count is
+      unchanged from its 2026-07-20 census. So the false-done state the 03:15 UTC audit snapshot captured (backlog row
+      `done` citing a script-build sha, plan checkbox honestly still open) has already self-corrected: the live backlog
+      row for this exact id is back to `queued`/`done_sha: null`, matching the plan's own honest open state. No REOPEN
+      (would re-open work that's already honestly open, not done) or FLIP (would falsely mark an un-executed migration
+      done) was warranted or performed; this item only needed its tracker checkbox resolved with the verification trail
+      above.
 - [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`)
 - [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-014` (`done_sha=b78ec6e7c`)
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`)
@@ -296,6 +318,18 @@ plan + verifying the `done_sha`, never from the row's status alone.
   live backlog row for this same todo (`-015`) is correctly `queued`/`done_sha: null`, not `done`. Both the backlog and
   the plan checkbox already reflect the honest state; nothing to correct. See the checklist item above for the full
   trail.
+
+- **2026-08-08 (slot 12, backend_engineer)**: Verdict on `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5` at
+  audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting positional-id pattern as the 6
+  items above. `GET /api/backlog` (2,429 rows) has zero rows with `done_sha=976786c5` anywhere, and this exact id is now
+  `status: "queued"`, `done_sha: null`. `976786c5` (market-tick-data-service, slot-8, 2026-08-04) only built + shipped
+  the migration SCRIPT — the dry-run was never executed and that same commit's own plan-flip explicitly left the
+  plan-level checkbox open. Verified against the real object count per this item's instruction, not just prose: the
+  cited plan (`sports_closeout_track_x_hygiene_2026_07_25.md` line 138) is still honestly `- [ ]`, and the issue doc's
+  own gated "Apply the migration to prod" sub-todo
+  (`sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`) is still `- [ ]` — no object has actually
+  moved, the 9,733-object count is unchanged. Both the backlog and the plan checkbox already reflect the honest open
+  state; nothing to correct. See the checklist item above for the full trail.
 
 - **2026-08-08 (slot 18, backend_engineer)**: Verdict on `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`
   at audit time): **no REOPEN or FLIP action needed or possible** — already self-corrected by a different session
