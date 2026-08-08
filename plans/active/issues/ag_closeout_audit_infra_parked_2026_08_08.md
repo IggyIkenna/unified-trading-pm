@@ -34,7 +34,7 @@ tags: [infra, ag-closeout-audit, parked-findings, asset-group-mistag, stop-itera
 related:
   [
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
-    /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_07.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_07.md,
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,

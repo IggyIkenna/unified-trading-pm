@@ -39,7 +39,7 @@ related:
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_07.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_07.md,
     /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/08-workflows/ci-cd-flow.md,

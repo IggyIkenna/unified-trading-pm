@@ -11,7 +11,7 @@ summary: >-
   fresh and completed Phase 1-3 in `ag_closeout_audit_ci_parked_2026_08_08.md`, which carries the full orphan-count
   report + the resulting `ci_satellite_ao_dispatch_batch6_2026_08_08.md` draft. All 4 findings below are re-confirmed
   unchanged there.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]

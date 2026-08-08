@@ -64,20 +64,20 @@ prose only, per the workspace's "every follow-up is a todo, never prose" rule.
 
 ## Findings
 
-- [ ] [DOCS] P2. **`codex/02-data/schema-governance.md` vs `codex/04-architecture/schema-placement.md`** — both
+- [ ] [DOCS] P2. **`/codex/02-data/schema-governance.md` vs `/codex/04-architecture/schema-placement.md`** — both
       independently maintain a "which repo/location owns this type" matrix (schema-governance.md's copy is nested inside
       a broader parquet/GCS-write doc; schema-placement.md is dedicated solely to this question). Neither
       cross-references the other despite covering the same 3-way split (service-local vs UAC-internal cross-service vs
       UAC-external). Fix: pick the dedicated doc (`schema-placement.md`) as the sole owner of the matrix itself, have
       `schema-governance.md` cross-reference it instead of restating it.
-- [ ] [DOCS] P2. **`codex/02-data/cross-asset-canonical-target-ssot.md` §6 vs
-      `codex/02-data/defi-canonical-naming-ssot.md`** — both restate the identical CLOB-vs-DEX-pool perp cefi/defi
+- [ ] [DOCS] P2. **`/codex/02-data/cross-asset-canonical-target-ssot.md` §6 vs
+      `/codex/02-data/defi-canonical-naming-ssot.md`** — both restate the identical CLOB-vs-DEX-pool perp cefi/defi
       asset_group boundary fact near-verbatim (same 4 venues, same GMX-removal history, same DRIFT/PACIFICA culled
       history). Notably, `cross-asset-canonical-target-ssot.md`'s own intro states its design principle is to "REFERENCE
       the detailed per-domain SSOTs rather than duplicating them" — §6 violates that stated principle by fully restating
       rather than deferring to `defi-canonical-naming-ssot.md` (already `related:`-linked, just not deferred to in body
       prose). Fix: trim §6 down to a pointer, per the doc's own stated design.
-- [ ] [DOCS] P3. **`codex/02-data/prediction-schema-paths.md` vs `codex/04-architecture/prediction-batch-live.md`** —
+- [ ] [DOCS] P3. **`/codex/02-data/prediction-schema-paths.md` vs `/codex/04-architecture/prediction-batch-live.md`** —
       both independently state the identical `canonical_question_group` shard-atom 5-tuple with near-identical wording.
       Both actually attribute the true "banner-canonical" source to a THIRD doc
       (`availability-manifest-and-data-status.md`'s Multi-axis correction banner) yet both still self-declare

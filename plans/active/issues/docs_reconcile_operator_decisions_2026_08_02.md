@@ -163,9 +163,9 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   re-verified against both live docs (not just the hunter's report) before parking. Both docs declare
   `authoritative_for: [credential rotation cadence...]` and both are `status: current`:
 
-  - `codex/05-infrastructure/credentials-matrix.md` § 1 (Custody row): **"60d for HMAC creds; quarterly for Fireblocks
+  - `/codex/05-infrastructure/credentials-matrix.md` § 1 (Custody row): **"60d for HMAC creds; quarterly for Fireblocks
     RSA"** — explicitly carves Fireblocks RSA out of the 60d HMAC bucket into its own ~90d cadence.
-  - `codex/15-runbooks/credential-rotation-runbook.md` § 1 (Custody row, labeled "Copper / Fireblocks / CEFFU HMAC +
+  - `/codex/15-runbooks/credential-rotation-runbook.md` § 1 (Custody row, labeled "Copper / Fireblocks / CEFFU HMAC +
     JWT"): **"60d"** — no carve-out, Fireblocks lumped into the uniform 60d bucket.
 
   This is NOT a resolution-logic false positive — I read both tables directly and the numbers genuinely disagree for the
