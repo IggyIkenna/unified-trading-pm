@@ -993,3 +993,5 @@ are genuinely in scope for the operator's "no exceptions" directive.
   issue: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`. No data loss. Relaunched as
   `mtds-backfill-odds-smallchunk4-20260808`. FIXTURE_STATS unaffected. Full detail:
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`4d57ad99b8`.
+- **2026-08-08T05:57Z** — smallchunk4 confirmed booted + healthy (chunk 4/451, zero OOMs). FIXTURE_STATS jumped 98 days
+  (`last_completed_date=2024-03-15`, fresh `05:55:28Z`). Both healthy.
