@@ -349,7 +349,7 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       capturing the running SHA at reap time (the observability todo above is the enabler) and watching whether
       `kind=cicd` reaped-stale continues at the pre-fix rate (baseline: 72 reaped-stale/7d, 71 of them `role=custom`).
       (repo: agent-orchestrator)
-- [ ] [DOC] P2. Give the scheduled-task dispatch mechanism a CODEX home — it currently has none. Grep-confirmed
+- [x] ✅ [DOC] P2. Give the scheduled-task dispatch mechanism a CODEX home — it currently has none. Grep-confirmed
       2026-08-06: no `codex/` doc describes the scheduled-job dispatch status model at all, so the whole contract lives
       only in THIS issue doc, which archives. That inverts the SSOT rule (durable fact -> codex; a plan/issue merely
       references it). Write it as a codex SSOT — suggested filename `agent-orchestrator-scheduled-jobs.md` under
