@@ -289,3 +289,9 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   doc), flagged for na-eligibility-audit's next pass. **Batch1 is still `status: draft`, unapproved, 3 audit runs
   (08-06/07/08) without operator action** — remains the top recommendation. Full write-up:
   `issues/ag_closeout_audit_ui_parked_2026_08_08.md`.
+- **na-eligibility-audit 2026-08-08 (ui tranche)**: KEEP-NA, valid — re-confirmed; only change since the 2026-08-07
+  marker is today's `ag_closeout_auditor` Progress Log entry (informational, no todo-content edit). Todos 1-4 remain
+  self-declared verification-only rollups against work tracked elsewhere. Todo 5 (corpus-wide retag) still needs genuine
+  per-doc judgment on the same 2 cross-tranche-ownership candidates. Todo 6 correctly still unchecked:
+  `/ag-closeout- audit ui` has now run 3 times (08-06/07/08) but `/plan-reconcile ui` has still never run on this
+  tranche. No reclassification, no citation fix, no archival warranted.

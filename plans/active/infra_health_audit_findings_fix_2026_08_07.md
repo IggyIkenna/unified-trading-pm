@@ -232,3 +232,14 @@ drift_direction: advance-code
   market-data-query-service crash-loop" todo (the service was deleted entirely by an earlier todo in this same doc). Doc
   otherwise stays NA — genuinely live, currently-being-executed `/autonomous` infra remediation work created today (P0),
   8 remaining open items are real unblocked ops-fix work, not defaulted/unassessed.
+- **na-eligibility-audit 2026-08-08 (ui tranche)**: KEEP-NA, valid — re-confirmed; a same-day `/autonomous` session
+  closed the `client-reporting-batch` OOM item (live-verified `2Gi` limit) since yesterday's marker, so 7 items remain
+  open (was 8). Every remaining item still requires investigate-then-decide judgment before a fix is even choosable
+  (zombie-sweep classification; shard-vs-resize on the rollup OOM; keep-vs-decommission on `vm-serial-capture-prd`;
+  root-cause-before-raising-the-ceiling on the compactor OOM; a coalescing/backoff design for the 429 storm;
+  verify-then- maybe-fleet-wide-fix on the preemption recheck) — none is a pre-decided, deterministic-outcome todo. One
+  exception worth flagging for a future look: the `mtds-backfill-odds-401-retry` memory-footprint item has a direct
+  working precedent to copy (`mtds-backfill-odds-smallchunk-20260807`'s chunk-size mitigation) and reads more bounded
+  than its siblings — not promoted to RECLASSIFY this run since the doc's other 6 items don't clear the bar and a
+  whole-doc flip would dispatch those too, but worth a second look if it's still open next pass. Doc stays NA as a
+  whole; still genuinely live `/autonomous` work, not defaulted/unassessed.

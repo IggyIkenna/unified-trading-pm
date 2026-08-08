@@ -649,12 +649,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 
 ### Phase 5 — codex + issue doc + notify
 
-- [x] [REVIEW] P2. ✅ **STALE — already done under a different name, closing 2026-08-07 (na-eligibility-audit).**
-      File `plans/active/issues/artifact_pipeline_metadata_gaps_<date>.md` with the 6 pipeline bugs above; notify the
+- [x] [REVIEW] P2. ✅ **STALE — already done under a different name, closing 2026-08-07 (na-eligibility-audit).** File
+      `plans/active/issues/artifact_pipeline_metadata_gaps_<date>.md` with the 6 pipeline bugs above; notify the
       operator/Ikenna; verify bug #2 first. This plan's own "Pipeline bugs found" section (above) already states the
-      filing happened 2026-07-21 under `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`
-      (RE-VERIFIED 2026-07-21, most of the list resolved itself), and bug #2 (`REPO_NAME` vs `_REPO_NAME`) is already
-      verified "NOT A BUG — never reproduced" in that same section. Independently corroborated by
+      filing happened 2026-07-21 under
+      `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md` (RE-VERIFIED
+      2026-07-21, most of the list resolved itself), and bug #2 (`REPO_NAME` vs `_REPO_NAME`) is already verified "NOT A
+      BUG — never reproduced" in that same section. Independently corroborated by
       `issues/ag_closeout_audit_ui_parked_2026_08_07.md` Finding 3, which found this exact stale-read on the same day.
 - [ ] [REVIEW] P2. Fix the 5 `dual-cloud-image-builds.md` drifts (registry name, tag convention, trigger/project naming,
       canonical-trigger claim, empty-manifest provenance). Post-phase codex audit.
@@ -680,7 +681,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       policy (`keep-5-recent` + `keep-deployed-digests` + `delete-older-than-3d`) was applied live (no dry-run) on
       2026-07-29; the ~daily GCP background job removed ~2,958 images (85% reduction, 519 remaining from ~3,477)
       entirely via the policy — no manual per-image deletion. All 20 package counts are now consistent with the policy
-      window. **Still open**: image vulnerability-scan status (AR + ECR native scanning).
+      window.
+- [ ] [INFRA] P3. _(stretch, optional)_ **Image vulnerability-scan status** (AR + ECR native scanning) — split out
+      2026-08-08 (na-eligibility-audit) from the orphaned-image-GC todo above, where it sat as an unchecked trailing
+      sentence with zero checkbox representation and was missed by 3 prior passes (the 2026-08-06 and 2026-08-07
+      `/ag-closeout-audit ui` runs, and this doc's own 2026-08-07 na-eligibility-audit marker, which counted "10 open
+      items" without it). Check whether AR/ECR native vulnerability scanning is enabled and report current status —
+      never itself investigated, only ever noted as remaining.
 - [ ] [INFRA] P3. _(stretch, optional)_ Deploy-churn / crash-loop signal (e.g. uts-shared-deployment-api redeployed ~14×
       in hours; ~40% config-only) surfaced as a health condition.
 
@@ -964,6 +971,14 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   confirmed correct, Phase 7's last open todo closed.
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale item closed — Phase 5's "file issue doc" todo was
   stale (the filing + bug #2 verification already happened 2026-07-21 under a different-named doc, see the closed todo
-  above for the citation). Doc otherwise stays NA — human/local plan, dense operator sign-off history, remaining 10
-  open items are real follow-on/stretch work (1 sequencing-blocked on a net-new VM-launch deploy provider, 9
-  unblocked).
+  above for the citation). Doc otherwise stays NA — human/local plan, dense operator sign-off history, remaining 10 open
+  items are real follow-on/stretch work (1 sequencing-blocked on a net-new VM-launch deploy provider, 9 unblocked).
+- **na-eligibility-audit 2026-08-08 (ui tranche)**: KEEP-NA, valid — checkbox-representation fix applied: split the
+  prose-only "still open: image vulnerability-scan status" sentence (line ~683, trailing an `[x]`-checked parent) into
+  its own `- [ ]` item, per `issues/ag_closeout_audit_ui_parked_2026_08_08.md` Finding 2 (3 prior passes had missed it,
+  including this skill's own 2026-08-07 count). Open-item count is now 11 (was 10). Doc otherwise unchanged — same
+  human/local plan, dense operator sign-off history; all 11 remaining items are real follow-on/stretch/P3 work (1 still
+  sequencing-blocked, the rest unblocked but genuinely optional/low-priority), not defaulted/unassessed. No whole-doc
+  RECLASSIFY candidate — this doc's satellite-batch extraction is already handled incrementally by
+  `/ag-closeout-audit ui`'s batch1/batch2 mechanism (see `ui_consolidated_closeout_2026_07_30.md`), not this skill's
+  remit.
