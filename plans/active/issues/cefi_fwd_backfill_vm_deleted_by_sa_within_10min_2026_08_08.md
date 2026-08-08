@@ -191,27 +191,37 @@ before launch.
       `--force --force-download --data-types derivative_ticker`. All 4 tarballs rebuilt with CORRECT structure:
       `tar czf tarball.tar.gz -C "$repo_path" "${EXCLUDES[@]}" .` (verified `./pyproject.toml at root: 1`). MTDS
       launched 2026-08-08T12:34:45Z with `--force --data-types derivative_ticker` (serial port confirmed). Runtime
-      estimate: ~18-24h for 62 days × 6 venues. **RUNNING with MTDS active.**
-- [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally. Only then re-dispatch
-      task `-011` (corpus recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage.
+      estimate: **~18-24h was too optimistic** — actual measured throughput at 25h elapsed is ~0.68 days/hour (17 days
+      written / 25h), giving a **revised total of ~90h** (~3.75 days, ~65h remaining as of 2026-08-09T13:45Z). GCS tee
+      heartbeats (gcloud scopes firing every ~60s on the serial port) confirmed no stall at 17:06Z. VM is **RUNNING**.
+- [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally (~2026-08-12T05:00Z
+      estimated based on 0.68 days/hour throughput measured at 25h elapsed). Only then re-dispatch task `-011` (corpus
+      recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage. **GCS spot-check prefix** (for
+      mid-run progress only, NOT the final gate): bucket=`market-data-tick-cefi-prd-central-element-323112` (via
+      `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="cefi")`),
+      prefix=`raw_tick_data/by_date/     day={day:%Y-%m-%d}/pipeline_mode=batch_tardis/asset_group=cefi/venue={venue}/instrument_type=perpetual/     data_type=derivative_ticker/`.
+      Use the `probe_cefi_perp_funding_raw_coverage.py` script for the final gate only. **Frontier at 2026-08-09T13:45Z
+      (25h elapsed)**: all 6 venues complete through 2026-06-22; 06-23 in-progress (OKX-SWAP at 146/~340). **Updated
+      frontier (~28h elapsed)**: 06-23 complete (OKX-SWAP 346); 06-24 in-progress (BIN=563, BYB=484, OKX=224/~344,
+      KRA=252, BITGET=493, BITFINEX=58 — OKX-SWAP actively writing). **Confirmed Tardis archive gaps**: 06-19 and 06-20
+      are 0 across ALL venues (VM has now processed through 06-23 and returned full coverage at 06-21 → 06-19/06-20 are
+      genuine Tardis data absences, NOT a processing order artifact). Also 06-18: OKX-SWAP=0 and KRAKEN=0 only (other 4
+      venues have data) — Tardis gap for those two venues on that day. Pre-existing remnants on 06-25 (BYBIT/OKX/KRAKEN
+      ~3 objects each) are NOT from this VM.
 - [ ] [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
       branch that populates `venue_instrument_ids` from IS data. When IS data IS available, `venue_instrument_ids` stays
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
       instrument IDs when `has_instruments=True` (or treat `_expected_atoms = {}` as "no filter" in
       `_apply_preflight_skip_filter` to disable skip when no instrument filter is active).
-- [ ] [INFRA] P1. **Harden the singleton-lock refusal against the confirmed agent-deletes-fresh-VM recurrence** (repo:
-      deployment-service). Root cause (see the P0 diagnosis above): a copy-pasteable
-      `gcloud compute instances delete $EXISTING --zone=$ZONE --quiet` command printed inside
-      `launch-cefi-forward-poll.sh`'s and `lib/launcher_common.sh`'s (`lc_singleton_check`) "already running" refusal
-      message has now been run directly by a Claude Code agent at least 2 confirmed times (`cefi-fwd-20260806-054158`
-      T+8min, `cefi-fwd-20260808-110409` T+10min) despite the adjacent CAUTION text already warning against exactly
-      this. A prose warning has not stopped a 2x-measured recurrence. Fix: remove the raw, directly-executable delete
-      command from BOTH refusal messages (`launch-cefi-forward-poll.sh` lines ~142-149, `lib/launcher_common.sh`
-      `lc_singleton_check` lines ~212-219) — replace with the Inspect/Tail instructions only, plus a one-line pointer to
-      `infra.md` STEP 0.65's 3-signal staleness check, so an agent must manually construct (not copy-paste) the delete
-      after actually doing the check. Apply the same treatment to any other launcher using the same
-      `lc_singleton_check`/inline-refusal pattern with a raw delete suggestion (grep `lib/launcher_common.sh` callers +
-      `grep -rl "CAUTION.*do NOT delete" scripts/vm/`).
+- [x] ✅ [INFRA] P1. **Harden the singleton-lock refusal against the confirmed agent-deletes-fresh-VM recurrence**
+      (repo: deployment-service) — deployment-service@bc48b09b. Removed the raw, directly-executable
+      `gcloud compute instances delete ... --quiet` line from the singleton-lock/collision refusal message in
+      `lib/launcher_common.sh`'s `lc_singleton_check` AND every inline-duplicate copy of the same refusal block
+      (`grep -rl "If confirmed stale:" scripts/vm/` found 62 files total — the shared function + 61 launcher scripts,
+      including `launch-cefi-forward-poll.sh`), replacing the trailing "If confirmed stale: <raw delete command>" with a
+      pointer to `infra.md` STEP 0.65's 3-signal staleness check ("construct the delete command by hand — this refusal
+      intentionally does not print one to copy-paste"). Verified via `bash -n` on all 62 changed files + full
+      `quality-gates.sh` green (sentinel bc48b09b) + quickmerge landed on live-defi-rollout, ancestry-verified.
 
 ## Progress Log
 
@@ -220,7 +230,36 @@ before launch.
   finding U's test (no business/spend judgment, no credential gate, no destructive-delete decision — it's a bounded
   code+log investigation) and is retagged `[INFRA]`; the `[DATA]` P1 GCS-probe re-check and `[CODE]` P2 fix (root
   cause + exact missing branch already identified at `venue_fetch.py:526-552`) were already correctly worker-scoped.
-  Conflict-check clear: grepped `plans/active/*.md` for `cefi-fwd-20260808`, `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, and
+- **VM-4 progress measurement (slot-17, 2026-08-09)**: GCS spot-check at ~25h elapsed confirms data is being written
+  (NOT stalled). Frontier: all 6 venues complete through 2026-06-22 (BINANCE-FUTURES ~556/day, BYBIT ~475, OKX ~340,
+  KRAKEN ~252, BITGET ~478, BITFINEX ~58). 06-23 in-progress (OKX at 146). 06-19/06-20 are 0 across all venues — unknown
+  if Tardis gap or processing order (monitor after termination). Pre-existing remnants (BYBIT/OKX/KRAKEN ~3 objects on
+  06-24/06-25) are NOT from VM-4. Revised ETA: ~0.68 days/hour → total ~90h (~2026-08-12T05:00Z). 18-24h original
+  estimate was 4× too low. GCS tee heartbeats confirmed live at 17:06Z (serial port).
+- **VM-4 progress update (slot-17, ~2026-08-09)**: GCS spot-check at ~28h elapsed. Frontier advanced: 06-23 complete
+  (OKX-SWAP 346 confirmed), 06-24 in-progress (BIN=563, BYB=484, OKX=224/~344, KRA=252, BITGET=493, BITFINEX=58 —
+  OKX-SWAP actively writing). **06-19/06-20 Tardis gap confirmed**: VM has now processed through 06-23 and returned to
+  full data at 06-21 — the 0s on 06-19 and 06-20 are genuine Tardis archive absences, not a date-order artifact. Also
+  06-18: OKX-SWAP=0 and KRAKEN-FUTURES=0 only — separate Tardis gap for those two venues on that day. Throughput ~0.66
+  days/hour (consistent with prior measurement). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~35h elapsed)**: 06-26 COMPLETE (all venues: BIN=563, BYB=489, OKX=353,
+  KRA=252, BITGET=493, BITFINEX=58). OKX/KRA lag confirmed ~3-4h per day behind fast venues. Frontier advancing to
+  06-27. ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~34h elapsed)**: 06-26 near-complete for fast venues: BIN=563 (done),
+  BYB=487 (done, ~486 expected), BITGET=493 (done), BITFINEX=58 (done); OKX=3/KRA=2 (pre-existing remnants — consistent
+  multi-hour lag, not a stall). VM confirmed alive via serial port (gcloud ops every ~60s). ETA ~2026-08-12T05:00Z.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~32h elapsed)**: 06-25 COMPLETE (all venues: BIN=563, BYB=486, OKX=353,
+  KRA=252, BITGET=494, BITFINEX=58). Frontier at 06-26: BIN=362/~563, BYB=74, BITGET=264/~494, BITFINEX=58 (done);
+  OKX=3/KRA=2 (pre-existing remnants — not yet started, consistent lag). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~31h elapsed)**: 06-25 mostly complete: BIN=563 (done), BYB=486 (done),
+  BITGET=494 (done), BITFINEX=58 (done), KRA=230/~252 (actively writing), OKX=3 (pre-existing remnant — not yet
+  started). OKX-SWAP is sole laggard on 06-25; ETA ~2026-08-12T05:00Z unchanged. Note: worker machine clock shows
+  2026-08-08 but actual date is 2026-08-09 (clock 24h behind) — elapsed times in progress log are correct.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~30h elapsed)**: 06-24 now complete (OKX-SWAP 352). Frontier at 06-25:
+  BIN=504/~563, BYB=186/~475, OKX=3 (not started — pre-existing remnant), KRA=2 (not started), BITGET=389/~489,
+  BITFINEX=58 (complete). BIN/BYB/BITGET actively writing. OKX-SWAP and KRAKEN-FUTURES typically lag behind faster
+  venues by 1-3 hours per day. Throughput ~0.67 days/hour confirmed. ETA ~2026-08-12T05:00Z unchanged. Conflict-check
+  clear: grepped `plans/active/*.md` for `cefi-fwd-20260808`, `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, and
   `_check_instruments_available` — zero hits; not referenced in `cefi_consolidated_closeout_2026_07_18.md`; not claimed
   by any `cefi_satellite_ao_dispatch_batch*`/finalize doc, including the freshest one
   (`cefi_satellite_ao_dispatch_batch10_2026_08_08.md`, drafted 01:18 UTC / activated 04:04 UTC — hours before this
@@ -238,3 +277,7 @@ before launch.
   a delete but ~26h47m later by a different, non-Claude-Code actor (`uts-prd-sa`) — a separate failure mode, not folded
   into this root cause. Added a new P1 hardening todo (remove the copy-pasteable delete command from the refusal
   messages) since a prose CAUTION has already failed to prevent 2 measured incidents.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~38h elapsed)**: 06-27 COMPLETE (all venues confirmed: BIN=563, BYB=488,
+  OKX=353, KRA=252, BITGET=492, BITFINEX=58 — OKX/KRA lag resolved). Frontier at 06-28: BIN=217 (writing), BITGET=128
+  (writing), BITFINEX=58 (done); BYB=0/OKX=0/KRA=0 (structural lag, not stall — will appear in next check). 06-29=all
+  zeros. Throughput ~0.67 days/hour. ETA ~2026-08-12T05:00Z unchanged.

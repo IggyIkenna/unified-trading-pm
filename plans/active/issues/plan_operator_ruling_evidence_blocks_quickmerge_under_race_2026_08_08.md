@@ -38,7 +38,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
+    /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]

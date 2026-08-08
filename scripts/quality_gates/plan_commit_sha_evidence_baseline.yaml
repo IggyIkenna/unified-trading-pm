@@ -1,10 +1,4 @@
-fabricated_sha_citation_baseline: 2
+fabricated_sha_citation_baseline: 0
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
-baseline_citations:
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md
-    line: 130
-    cited: unified-trading-pm@ea5d699c9
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md
-    line: 187
-    cited: unified-trading-pm@ea5d699c9
+baseline_citations: []

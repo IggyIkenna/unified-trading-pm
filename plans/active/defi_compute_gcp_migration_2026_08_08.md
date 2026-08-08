@@ -276,14 +276,40 @@ them).
       deleted) per plan's rollback-window design — deletion is the later cluster-teardown todo, gated on a multi-day
       stability period. — unified-trading-pm@(see commit)
 
-- [ ] [INFRA] P2. **Confirm `uts-prod-data-status-rollup-svc` (GCP Cloud Run) actually covers the same job as the 26
-      dormant AWS `uts-prod-manifest-consolidator-*` Batch job definitions** — read its own source/config, compare
-      against what the AWS job definitions were built to do (per-asset-group manifest consolidation:
-      market-data/instruments/features/execution/strategy × cefi/defi/tradfi/sports/prediction). Done-when: a clear
-      "yes, GCP-side already covers this — safe to delete the 26 AWS Batch job definitions + job queue" or "no, GCP does
-      something different — the AWS Batch definitions still describe uncovered work; decide whether to leave them
-      dormant (no cost either way, per confirmed facts above) or port them to GCP Cloud Run Jobs" ruling, with the
-      reasoning stated.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-08 (slot-16, infra craft)** — Confirm `uts-prod-data-status-rollup-svc` (GCP Cloud
+      Run) actually covers the same job as the 26 dormant AWS `uts-prod-manifest-consolidator-*` Batch job definitions.
+      **FINDING: NO, name-similarity red herring — but GCP already covers the real job under a DIFFERENT name.**
+      `gcloud run services describe uts-prod-data-status-rollup-svc` shows it runs the `deployment-api` image
+      (`asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api:af6aaf6`), source
+      `deployment-api/deployment_api/scripts/data_status_rollup_worker.py` — a dashboard-facing summarizer that writes
+      one rollup blob per SERVICE (`gs://central-element-323112-data-status-rollups/{service}/full.json.gz`) for the
+      cockpit's fast-path reads. This is NOT the manifest consolidator: different image, different entrypoint, different
+      output shape (per-service dashboard summary vs. per-bucket canonical manifest), and it is a downstream CONSUMER of
+      the manifest, not a producer of it.
+
+      The REAL GCP-side equivalent of the AWS `uts-prod-manifest-consolidator-*` Batch definitions already exists,
+          confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
+          (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
+          `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
+          Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
+          running the **identical entrypoint** the AWS side runs: sample-verified
+          `uts-prod-manifest-consolidator-market-data-defi`'s container args =
+          `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
+          matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
+          runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
+          `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
+          being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
+          bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
+          broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
+          a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
+          uncovered scope.
+
+          **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
+          (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
+          `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
+          authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
+          established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
+          Repo: unified-trading-pm (doc-only finding).
 
 - [ ] [INFRA] P2. **Act on the previous todo's finding** — either delete the 26 AWS Batch job definitions + the
       `uts-prod-manifest-consolidator` job queue + the 26 disabled EventBridge rules (if confirmed redundant), or

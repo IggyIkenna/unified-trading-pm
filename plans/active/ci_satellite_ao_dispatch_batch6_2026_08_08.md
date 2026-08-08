@@ -122,7 +122,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (Part 8 line 523) — never cited by any
       covering doc.
 
-- [ ] 2. [BACKEND] P2. **Ship the stranded, already-diagnosed-good `features-service` `PYRIGHT_TIMEOUT` fix.** Rebase
+- [x] ✅ 2. [BACKEND] P2. **Ship the stranded, already-diagnosed-good `features-service` `PYRIGHT_TIMEOUT` fix.** Rebase
       `origin/wip-preserve/slot-4-features-service-diverged-20260803T171854Z` onto current `origin/live-defi-rollout`
       (verify no new conflicts introduced by the rebase), run `features-service`'s `quality-gates.sh` green, ship via
       `quickmerge --agent --files`. **Done when**: the rebased commit is on origin, `quality-gates.sh` is green, and the
@@ -130,6 +130,11 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       `issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` ([BACKEND] P2, added 2026-08-03) — never cited
       by any covering doc (batch4's "Already covered" claim for this doc was stale/unsubstantiated — re-verified this
       run: batch2 is archived with zero mentions, and this doc's own frontmatter is `assigned_vm: NA`, not `planning`).
+      **RESOLVED 2026-08-08 — superseded, nothing to ship.** The rebase attempt conflicts on `scripts/quality-gates.sh`:
+      every other commit on the stranded branch is already an ancestor of LDR, and `030c8b95`'s own substance
+      (`PYRIGHT_TIMEOUT=600`) is already live via a separately-authored `features-service@7c86a6b1` (2026-08-06) — the
+      conflict is value-identical, confirming no code change remains to land. Full evidence + verify commands in the
+      source doc's item 4 entry (flipped same commit).
 
 - [x] 3. ✅ [SCRIPT] P1. **Generalize glue-pool-starvation detection to catch a `quality-gates-v2` run stuck `queued`
       behind a busy self-hosted runner, and confirm whether `glue-runner-crash-loop-watchdog.sh` actually paged for the

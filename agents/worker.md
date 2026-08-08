@@ -88,6 +88,28 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/heartbeat \
 3. Your craft file if your `slot_role` / task `assigned_role` names one
    (`unified-trading-pm/agents/<assigned_role>.md`).
 
+**Batch these reads into ONE turn — don't issue them as separate sequential tool calls.** These 2-3 files have no
+dependency on each other (none of them tells you to read the next one first), so they're exactly the "independent tool
+calls, no dependencies between them" case CLAUDE.md's parallel-tool-call instruction already covers — call `Read` for
+all of them in the SAME response, not one Read per turn waiting for each result before issuing the next:
+
+```
+# ONE turn, N Read calls (N = 2 with no craft file, 3 with one):
+Read("unified-trading-pm/agents/RULES.md")
+Read("unified-trading-pm/agents/worker.md")
+Read("unified-trading-pm/agents/<assigned_role>.md")   # only if slot_role/assigned_role names one
+```
+
+This is not a style nicety — it's a measured cost multiplier. A fleet-wide transcript sample (12 real completed tasks
+across 4 provider/model combinations, `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`) found only ~11%
+of assistant turns batch more than one tool call, with these exact boot-sequence reads confirmed firing as separate
+sequential turns in the originally-sampled task — and every turn resends the full accumulated conversation as a
+cache-read (the stateless completions API), so turn count is the direct multiplier on both real $ (metered providers)
+and quota burn (flat-rate subscriptions). The same batching instinct applies for the rest of your session whenever you
+have multiple independent lookups queued up (e.g. checking several candidate plan files, grepping for a few unrelated
+keywords) — this boot sequence is just the one place EVERY worker hits it on EVERY session, so it's the highest-leverage
+place to make the habit concrete instead of restating the general principle once and hoping it sticks.
+
 These reads are READ-ONLY. You WRITE and run work ONLY inside your assigned `.tabs/<your-slot>/` slot.
 
 **STEP 2 — `POST /boot`, declaring what you read.** Include `read_files` (the list of canonical files you just read).

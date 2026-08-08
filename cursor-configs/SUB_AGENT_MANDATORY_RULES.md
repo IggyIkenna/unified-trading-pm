@@ -16,6 +16,10 @@
 - **Before any task (HARD RULE)**: grep `plans/active/`+`issues/` for conflicts first (0 hits ≠ clear). **Grep-then-
   READ**: 0 hits ≠ missing (runtime-resolved) — read the consumer; uncertain → ASK. Never `python3 <<EOF` for file
   analysis (backtrack risk) — use `rg`/`grep`.
+- **Batch independent tool calls into ONE turn** (same response) — never fire single-lookup Reads/Greps/Bash calls one
+  per turn when they have no dependency on each other; measured fleet-wide only ~11% of turns batch >1 call
+  (`ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`) and every turn re-sends the full cache-read
+  context. Worked example: `agents/worker.md`'s boot-sequence reads.
 
 ## Quality gates / tests — the ONLY way to run them
 

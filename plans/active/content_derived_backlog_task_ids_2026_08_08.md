@@ -133,11 +133,11 @@ Both were established by reading the code, and both are silent — neither raise
       manufacture a positional collision through normal minting — which becomes unreachable after the previous todo.
       Inject directly so both keep testing the guard in isolation rather than silently becoming vacuous. (repo:
       agent-orchestrator) — agent-orchestrator@a746e83
-- [ ] [BACKEND] P2. **Record the guard disposition in `sync_backlog_to_db`'s docstring.** Ruling: **KEEP** the
+- [x] ✅ [BACKEND] P2. **Record the guard disposition in `sync_backlog_to_db`'s docstring.** Ruling: **KEEP** the
       sibling-reset guard (`bootstrap.py:747-806`) as defence-in-depth — Phase 1 removes its position-shift trigger but
       not a hand-edited `backlog.yaml` or a bug in the new minting's own collision check. **KEEP** the NULL-`brief_hash`
       backfill branch unchanged. The source doc requires this decision be written down either way. (repo:
-      agent-orchestrator)
+      agent-orchestrator) — agent-orchestrator@5ae9dd5
 - [ ] [BACKEND] P3. **Decide `remint_backlog_collision`'s fate** (`routes/backlog.py:545-687`). Its premise — a
       positional id got reused — is structurally unreachable post-Phase-1. Check whether it has ever actually fired (its
       own `backlog_sibling_reset_guard_collision_reminted` activity event answers this), then either retire it with its
@@ -308,3 +308,12 @@ Both were established by reading the code, and both are silent — neither raise
   doesn't mistake the tests (or the guard itself) for testing something now-unreachable and remove them as vacuous. No
   production code changed; test-only docstring edit. QG: 2756 passed, 2 skipped (full suite, basedpyright clean).
   Evidence: agent-orchestrator@a746e83 (verified ancestor of origin/live-defi-rollout before `/done`).
+
+- **2026-08-08 (slot 20, content_derived_backlog_task_ids-006)**: Added a "Guard disposition post-content-derived-ids"
+  paragraph to `sync_backlog_to_db`'s docstring (`bootstrap.py`), recording the ruling in writing: the sibling-reset
+  guard's original trigger (positional-id reuse) is structurally closed by Phase 1's switch to `_make_content_task_id`,
+  but the guard is explicitly KEPT as defence-in-depth against a hand-edited `backlog.yaml` or a latent bug in the new
+  minting's own collision check (`_load_all_db_task_ids`). NULL-`brief_hash` backfill branch noted unchanged, pointing
+  to its own existing paragraph. Docstring-only change, no production logic touched. `.venv` was absent on this slot's
+  agent-orchestrator clone (fresh worktree); ran `uv sync --all-extras` to build it before Pass-1. QG: 2773 passed (full
+  suite). Evidence: agent-orchestrator@5ae9dd5 (verified ancestor of origin/live-defi-rollout before `/done`).

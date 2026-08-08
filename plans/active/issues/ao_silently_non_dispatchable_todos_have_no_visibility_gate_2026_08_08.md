@@ -94,7 +94,7 @@ gated on an upstream whose remaining todos are all silently excluded will read t
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P1. **Add a QG gate that reports the disk-vs-backlog todo delta per AO-dispatched doc, and ratchet it
+- [x] ✅ [SCRIPT] P1. **Add a QG gate that reports the disk-vs-backlog todo delta per AO-dispatched doc, and ratchet it
       down.** Import regen's real `_parse_open_todos` (never a re-implemented regex — the whole point is that the parser
       IS the oracle) and compare, per doc, against the count of `^- [ ]` lines. For every delta, require the plan to
       DECLARE the exclusion: an excluded todo must carry an explicit `[BLOCKED]`-style tag or a stated blocked-on line,
@@ -124,3 +124,28 @@ gated on an upstream whose remaining todos are all silently excluded will read t
   `/plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md` because that doc is
   `assigned_vm: NA` (human-owned) and folding a dispatchable todo into it would have made this undispatchable too — the
   exact failure mode being reported. Kept to a single open todo so the finalize-coverage single-todo carve-out applies.
+
+- **2026-08-08 (slot 21, infra)** — ✅ Shipped. `agent-orchestrator/server/dispatch_visibility_report.py` (new, additive
+  — imports `_parse_open_todos`/`_plan_contributes_briefs` from `regen_backlog_from_plan.py` unchanged, no parser
+  change) walks every `assigned_vm: planning` doc and diffs the real parser's dispatchable set against the raw `- [ ]`
+  count, classifying every excluded todo `declared` (a live BLOCKED-<token>/DEFERRED-BY-DESIGN/stretch marker that opens
+  its own physical line) vs `accidental` (the marker is merely present in a longer sentence — the Betfair shape, and the
+  class four prior regex widenings never converged on).
+  `unified-trading-pm/scripts/quality_gates/ check_ao_dispatch_visibility_gate.py` shells out to it
+  (agent-orchestrator's own `.venv`, since this repo's environment lacks its pydantic et al. deps) and ratchets two axes
+  against `ao_dispatch_visibility_baseline.yaml`. Wired into `scripts/quality-gates.sh` (guarded on `WORKSPACE_ROOT`,
+  same no-op-without-siblings convention as `check_repo_docs_ssot.py`). Unit tests:
+  `agent-orchestrator/tests/test_dispatch_visibility_report.py` covers all four known trigger shapes (2 already-fixed
+  stale-marker shapes stay zero-delta; BLOCKED-PREREQUISITES documented as a different, separately-tracked bug direction
+  outside this gate's scope; the Betfair shape reproduces excluded+accidental) plus declared-marker positive controls
+  and the zero-dispatchable-doc case (8 tests, all green);
+  `unified-trading-pm/scripts/quality_gates/test_check_ao_dispatch_visibility_gate.py` covers the ratchet/summary
+  arithmetic (4 tests, all green, no sibling-repo dependency). MEASURED run against the live corpus (today, post the
+  Betfair fix and ~1 month of further plan authoring): 246 AO-dispatched docs, 642 disk-open / 597 backlog-open, 45
+  excluded (18 declared / 27 accidental), 24 zero-dispatchable docs — baseline seeded at 27/24. The fold-in
+  (`server.py:239` cadence comment) was already corrected in a prior session (verified live: the comment now correctly
+  states 30min/`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS`, not "every 6h"). The 27 accidental exclusions are filed, not
+  hand-fixed here (same precedent this issue's own filing set) —
+  `/plans/active/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_08.md`, one todo per doc. Evidence:
+  agent-orchestrator@d4f4947d0 (report module + tests), unified-trading-pm@fb70812a8 (gate + baseline + quality-gates.sh
+  wiring, both landed on live-defi-rollout).

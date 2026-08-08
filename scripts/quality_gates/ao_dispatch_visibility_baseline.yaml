@@ -1,0 +1,19 @@
+# Shrinking-ratchet baseline for the AO dispatch-visibility gate
+# (check_ao_dispatch_visibility_gate.py).
+#
+# See ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md for the
+# full incident history (four prior _STALE_MARKER_*_RE widenings that did not
+# converge). Two tracked axes:
+#   max_accidental_exclusions  -- excluded todos whose marker does not declare itself
+#     (does not open its own line). This is the regex-widening bug class; goal is
+#     zero, baseline seeds current debt so it doesn't fail every run.
+#   max_zero_dispatchable_docs -- assigned_vm:planning docs with open todos on disk
+#     but zero reach the backlog (an active plan AO never touches at all).
+#
+# NEVER hand-raise these numbers to silence a run that just found new drift -- only
+# --update-baseline after fixing or filing (issue-doc todo) the newly-found
+# accidental exclusions. A genuine spike is a real signal -- make it visible in the
+# commit message, same convention as every other ratchet in this corpus.
+max_accidental_exclusions: 27
+max_zero_dispatchable_docs: 24
+last_updated: "2026-08-08"

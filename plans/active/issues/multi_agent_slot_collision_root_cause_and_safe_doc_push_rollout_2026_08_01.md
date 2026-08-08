@@ -155,32 +155,72 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       clause); both files land under cap. (Reconciled 2026-08-06: an independently-reached, less-evidenced duplicate
       ruling from a concurrent session agreed on "mandate" — this fuller version, already executed with the shipped
       commit, is the one kept.)
-- [ ] [SCRIPT] P1. **`safe-doc-push.sh` corrupts a RENAME on its retry path — fix before the mandate is fully safe.**
-      Discovered live 2026-08-06 while archiving a plan under the newly-mandated flow. Mechanism, verified by
-      reproduction: `git` reports only a rename's **DESTINATION** in `git diff --cached --name-only` (the source is
-      folded into the `R100` status), so the deletion half is carried implicitly by the index. The script's retry path
-      then does `git pull --rebase --autostash` followed by an **unconditional `git restore --staged .`** — the very
-      line that makes the autostash pop safe for ordinary edits — which unstages that implicit deletion. The subsequent
-      `git add -- "${FILES[@]}"` re-adds only the destination, so the commit contains the new file **without the
-      deletion, leaving the doc at BOTH paths**. That is precisely the active/archive duplicate-path divergence already
-      seen in this corpus (`a62bdd8ea`). Reproduced this run: after the autostash pop the old path came back as an
-      unstaged ` D` and a blind commit would have shipped the duplicate; recovered with an explicit `git rm --cached`.
-      **Secondary defect**: the pre-flight `[[ ! -e "$f" ]]` existence check (line ~102) rejects a rename's source path
-      outright — `Refusing: named path does not exist` — so the caller cannot even name both halves to protect them.
-      **Why P1**: the 6-step archival ritual is one of the most common doc operations in this workspace, and
-      `safe-doc-push.sh` is now the MANDATED path for doc pushes, so every archival run through it is exposed. **Fix
-      sketch**: capture `git diff --cached --name-status -M` BEFORE the restore and re-assert staged deletions/renames
-      after re-adding; relax the existence check to accept a path that is absent from disk but tracked in the index.
-      **Done when**: an archival `git mv` + a forced retry (simulate a concurrent push between commit and push) yields a
-      commit whose `git ls-tree -r HEAD` shows the doc at exactly ONE path. Repo: unified-trading-pm. **Until this
-      lands, do an archival/rename commit with plain git**, verifying `git ls-tree -r HEAD --name-only | grep <slug>`
-      returns a single path before pushing.
-- [ ] [SCRIPT] P1. **UNBLOCKED 2026-08-08 (operator ruling, ao round-5 apply item 15, via
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-08 (slot-3, infra craft)** — `safe-doc-push.sh` corrupts a RENAME on its retry path
+      — fixed. Repo: unified-trading-pm.
+
+      **Root cause, refined during reproduction**: the fix sketch's own hypothesis (mid-flight `git diff --cached
+                      --name-status -M` re-detection right before `git restore --staged .`) turned out to be insufficient on its own —
+                      empirically, when the CONCURRENT commit forcing reconciliation also touches the rename source's CONTENT (the
+                      realistic collision shape, not just an unrelated file elsewhere), `git`'s own autostash pop can no longer
+                      cleanly re-apply the staged rename as one `R100` unit: it comes back as a staged ADD of the destination plus an
+                      **UNSTAGED** delete of the source, which a `git diff --cached -M` re-detection step (staged-state only) cannot
+                      see at all. Confirmed by reproduction in a sandboxed origin+2-clone setup (bare repo, clone A stages the rename
+                      while behind, clone B lands a concurrent edit to the SAME source file, forcing clone A's merge-pull into the
+                      rebase+autostash fallback) — the unpatched script reliably produced `git ls-tree -r HEAD` showing the doc at
+                      BOTH paths, reproducing the doc's own observed symptom exactly.
+
+                      **Fix actually shipped** (more robust than the sketch): capture the rename mapping (`git diff --cached
+                      --name-status -M`, filtered to renames whose destination is one of the caller's named `--files`) **ONCE, at
+                      script start**, before any fetch/pull/rebase touches the tree — the only point the staged rename is guaranteed
+                      unambiguous. A new `reassert_renames()` then unconditionally re-stages (`git add -- <source>`) the deletion of
+                      every captured source path that is still missing from disk, right before every commit attempt — regardless of
+                      whether the index shows it as a clean rename, an unstaged delete, or nothing at all, since the source's absence
+                      from disk (not its index shape) is the one thing that survives every reconcile step. Also relaxed the pre-flight
+                      `[[ ! -e "$f" ]]` existence check to accept a named path that is tracked (index OR `HEAD:<path>`) but absent from
+                      disk, so a caller can optionally name BOTH rename halves explicitly.
+
+                      **Verification** (done-when: an archival `git mv` + a forced retry yields `git ls-tree -r HEAD` showing the doc
+                      at exactly ONE path) — 6 sandboxed scenarios, all against a fresh bare-repo + clone setup, none reusing state
+                      across runs:
+                      1. Original bug reproduction (unpatched script) — confirmed corruption (doc at both paths).
+                      2. Same scenario, patched script — `git ls-tree -r HEAD` shows exactly ONE path (`X_renamed.md`), and `git show
+                         HEAD` displays it as a clean `rename from`/`rename to` diff.
+                      3. No-collision rename (plain fast-forward, `autostash_rebase_reconcile` never invoked) — still correct (the
+                         once-at-start capture + unconditional reassert covers this path too, not just the reconcile-triggered one).
+                      4. Plain non-rename edit — regression check, unaffected (`KNOWN_RENAME_SOURCES` empty, no spurious reassert
+                         output).
+                      5. Caller explicitly names BOTH rename halves (exercises the relaxed existence check) — single final path,
+                         correct.
+                      6. Foreign staged content mid-run (a concurrent process's own `git add`) combined with a rename — foreign path
+                         correctly isolated (left untracked, not committed) AND the rename still lands at a single path; separately,
+                         a post-commit push-race retry (commit already made, rebase replays the already-correct commit onto a moved
+                         origin tip) confirmed no corruption there either (as expected — `git restore --staged .` only resets the
+                         index, never an already-baked commit's tree).
+
+                      `bash -n` + `shellcheck -S error` clean. Shipped via the repo's own `quality-gates.sh` → `quickmerge --agent`
+                      flow (this is a `scripts/dev/*.sh` CODE change, not a docs-only edit — the `safe-doc-push.sh` fast path itself
+                      does not apply to shipping safe-doc-push.sh's own source).
+
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-08 (slot-14, infra craft)** — `unified-trading-pm@f75e752d8`. **UNBLOCKED
+      2026-08-08 (operator ruling, ao round-5 apply item 15, via
       `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`'s citation): "Build a collision-warning
       mechanism (detect + warn when 2 sessions share a slot, not a hard block)."** This resolves the warn-vs-refuse
-      question below (fix 2) as WARN. Implement candidate fix 1 (live heartbeat on `.agent-claim`) — extend the existing
-      per-slot 5-min cron to refresh `.agent-claim`'s mtime, so a future liveness check can tell claimed-and-alive from
-      claimed-and-abandoned. Prerequisite for fix 2.
+      question below (fix 2) as WARN. Implemented candidate fix 1 (live heartbeat on `.agent-claim`) — added
+      `refresh_agent_claim_heartbeat()` to the existing per-slot 5-min cron (`scripts/dev/slot-git-status-report.sh`,
+      called once per slot in the "Walk each slot" loop alongside `check_starvation_for_slot`/
+      `check_stash_pile_for_slot`), so a future liveness check can tell claimed-and-alive from claimed-and-abandoned.
+      Each tick: read `.agent-claim`'s `tmux_session` field; if that tmux session is confirmed alive via an exact-match
+      `has-session -t "=<name>"` check (mirrors `tmux_spawn.exact_target()`'s slot-1-vs-slot-10 prefix-collision guard
+      and FM8's maker-liveness classifier, `server/worktree_clean_check/_liveness.py`), `touch` the claim file so its
+      mtime advances; if the session is gone (or `tmux` isn't installed), the mtime is left untouched and ages
+      naturally. Read-only w.r.t. the claim's JSON content — only the file's own mtime changes, so this can never race
+      the server's own `refresh_expiry()` writes. New hermetic bats suite
+      `tests/test_slot_git_status_claim_heartbeat.bats` (5 tests, real short-lived tmux sessions killed in teardown, not
+      mocked has-session): no-claim no-op, alive-session touches mtime, dead-session leaves mtime untouched,
+      malformed-JSON no-crash, and an exact-match regression proving a live SUFFIX-colliding session name does NOT
+      falsely heartbeat. All 19 tests in the script's full bats suite green (no regressions). `bash -n` +
+      `shellcheck -S error` clean; `quality-gates.sh` full run (sentinel disabled) green. Prerequisite for fix 2
+      (`-003`).
 - [ ] [SCRIPT] P2. **UNBLOCKED 2026-08-08 (same ruling as fix 1 above) — WARN, never refuse.** Implement candidate fix 2
       (session-start collision warning), once fix 1 lands: add a liveness-aware check (reuse the FM8 discriminator
       pattern already used elsewhere for dead-vs-live slot claims) that prints a loud warning when a new interactive
@@ -250,3 +290,23 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   (which explicitly defers the mechanism build to THIS doc, not a competing claim). `assigned_role: infra` (added,
   matches content). Companion gated finalize:
   `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`.
+
+- **2026-08-08 (slot-3, infra craft)**: Shipped the rename-corruption fix (`[SCRIPT] P1`, flipped above) —
+  `unified-trading-pm@<sha, see commit>`. Reproduced the bug live in a sandbox before fixing (confirming the doc's own
+  symptom exactly), found the fix sketch's "mid-flight re-detect via `git diff --cached -M`" approach insufficient once
+  the concurrent commit touches the rename source's content (the autostash pop then decomposes the rename into a staged
+  add + unstaged delete, invisible to a staged-only re-detection), and shipped a more robust once-at-start capture +
+  unconditional pre-commit reassert instead. 6 sandboxed scenarios verified (bug repro, fix confirmation, no-collision
+  rename, plain-edit regression, both-halves-named usage, foreign-content isolation + post-commit push-race). 3 todos
+  remain open (2 `[SCRIPT]` collision-warning mechanism halves, 1 `[DOCS]` fold-in) — doc stays `status: open`.
+
+- **2026-08-08 (slot-14, infra craft)**: Shipped candidate fix 1 (live `.agent-claim` heartbeat, flipped above) —
+  `unified-trading-pm@f75e752d8`. Added `refresh_agent_claim_heartbeat()` to `scripts/dev/slot-git-status-report.sh`'s
+  existing per-slot 5-min cron walk, giving every claim (interactive or AO-dispatched) an independent liveness signal on
+  top of `expires_at` (which for interactive sessions is a flat 12h TTL, never refreshed) — the file's own mtime,
+  advanced only when the claim's `tmux_session` is confirmed alive via an exact-match has-session check. New hermetic
+  bats suite (5 tests, real short-lived tmux sessions, no mocking) covers no-claim, alive, dead, malformed JSON, and the
+  slot-1-vs-slot-10 exact-match collision guard; full existing suite for the script stays green (19/19, no regressions).
+  `bash -n`/`shellcheck -S error` clean; `quality-gates.sh` full run (sentinel disabled, so tests genuinely re-ran
+  against this exact tree, not a cached fast-path) green. 2 todos remain open (`-003` session-start collision warning,
+  now unblocked by this landing; `-004` DOCS fold-in) — doc stays `status: open`.

@@ -116,9 +116,9 @@ context_scope:
       non-canonical objects/rows once the canonical twin is verified present — a fresh
       `gcs_bucket_soft_delete_retention_seconds()` reversibility check on the target bucket qualifies this for
       agent-execution without operator sign-off per `gcs-and-manifest-delete-safety-protocol.md` §3a (same pattern as
-      the sibling `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` migration). **No backfill needed** —
-      this is a rename/relabel of already-captured data, not new capture. Scope this against the live row count for bare
-      `SUSHISWAP` first (a fresh availability_index read) before estimating size.
+      the sibling `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` migration, archived 2026-08-08). **No
+      backfill needed** — this is a rename/relabel of already-captured data, not new capture. Scope this against the
+      live row count for bare `SUSHISWAP` first (a fresh availability_index read) before estimating size.
 
 ## Success criteria
 

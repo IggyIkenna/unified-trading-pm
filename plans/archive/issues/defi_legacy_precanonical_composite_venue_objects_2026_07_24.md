@@ -18,7 +18,7 @@ summary: >-
   is a systemic pattern, not a one-off. The structural blind spot is already documented
   (`/codex/02-data/orphan-object-detection.md` §2d, "Blind spot 3") but this concrete population was never enumerated or
   swept.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -49,6 +49,8 @@ source: >-
   Operator question 2026-07-24, mid-session, prompted by a specific GCS path they encountered directly and asked whether
   it was really canonical / how downstream code reads it.
 resolved_by:
+  worker slot 9, 2026-08-08 -- delete verified complete (0/5,332 legacy objects remain, canonical twins spot-checked
+  present); market-tick-data-service (script committed, delete-safety §3a-compliant)
 context_scope:
   [
     /codex/02-data/orphan-object-detection.md,
@@ -277,24 +279,36 @@ for the standing recommendation and the open operator ask.
       delete todo's own done-when. Part (2), delete-authorization, was already ANSWERED 2026-08-08 (see the "2026-08-08
       update" section above -- fresh `gcs_bucket_soft_delete_retention_seconds()`=604800 qualifies + Part 5
       twin-coverage 100% content-verified).
-- [ ] [SCRIPT] P1. **Execute the delete of the 5,332 legacy composite-venue objects** in
-      `market-data-tick-defi-prd-central-element-323112` (per-venue prefixes under
-      `raw_tick_data/by_date/day=*/asset_group=defi/venue={V}/` for V in {AAVEV3-ETHEREUM, CURVE-ETHEREUM,
-      ETHENA-ETHEREUM, ETHERFI-ETHEREUM, LIDO-ETHEREUM, MORPHO-ETHEREUM, UNISWAPV2-ETHEREUM, UNISWAPV3-ETHEREUM,
-      UNISWAPV4-ETHEREUM}) now that both §3a conditions are cleared (Part 5 twin-coverage 100% content-verified,
-      324,867/324,867 canonical objects + manifest rows registered via the batch6 fold; fresh 2026-08-08
-      `gcs_bucket_soft_delete_retention_seconds()`=604800 qualifies, >=604800s). Self-justified per `task_template.md`
-      finding T (path (c), reversibility-verified) -- **re-run the retention check FRESH in the SAME execution before
-      deleting** (never reuse this doc's 2026-08-08 citation, per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a's "fresh means queried in the same execution as
-      the delete" rule). Use UTL `gcs_delete_object`/`gcs_conditional_delete` per-object, never subprocess
-      `gcloud`/`gsutil`. Done-when: a bounded listing (scoped to the 9 known composite-venue prefixes, NOT a fresh
-      whole-corpus walk) confirms 0 objects remain at those prefixes, and a spot-check confirms the 324,867 canonical
-      twins are unaffected. This todo's own completion is this doc's archival trigger (no separate finalize plan, per
-      the note above).
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-08 — market-tick-data-service (script:
+      `scripts/delete_legacy_composite_venue_objects_2026_08_08.py`).** Dispatched worker verified the delete is
+      complete: a full bounded re-enumeration (identical 9-venue x 2024-05-02..2026-01-24 window the fold itself used,
+      `raw_tick_data/by_date/day=*/asset_group=defi/venue={V}/`, never a whole-corpus walk) found **0/5,332 legacy
+      objects remaining across all 9 venues** — confirmed via TWO independent tools (the UTL SDK listing AND a direct
+      `gcloud storage ls` cross-check on both the exact object cited in this doc's original 2026-07-24 finding and the
+      bounded prefix root). This session's own worker script ran a fresh, same-run
+      `gcs_bucket_soft_delete_retention_seconds()` check (`604800`, qualifies) immediately before its `--apply` pass;
+      that pass processed 0 candidates (none remained to delete) and exited clean (0 failed, 0 skipped_no_twin).
+      Canonical-twin health was independently spot-checked (not reused from the fold's own claim): all 9 venues'
+      canonical protocol prefixes (`AAVE_V3`/`CURVE`/`ETHENA`/`ETHERFI`/`LIDO`/`MORPHO`/`UNISWAP_V2`/
+      `UNISWAP_V3`/`UNISWAP_V4`, `chain=ETHEREUM`) resolved present across 4 sample days spanning the window
+      (2024-05-02, 2025-01-15, 2025-08-06, 2026-01-24) — UNISWAP_V4 correctly absent only on the 2 pre-window sample
+      days (matches its documented narrower 2025-01-30+ start), not a gap. Execution provenance: this exact task was
+      already `already_in_progress` on this worker's very first `/boot` this session (a prior dispatch of the identical
+      task, per the operator's own resume framing) — the live GCS state is the authoritative evidence of completion; no
+      GCS Data Access audit logging is enabled on this bucket to attribute the exact prior run, so provenance is
+      inferred from state, not logged, and is reported as such rather than overclaimed. Done-when fully satisfied: 0
+      objects remain at the 9 prefixes (bounded listing) + canonical twins confirmed unaffected (spot-check). Per this
+      todo's own note, its completion is this doc's archival trigger — archiving now.
 
 ## Progress Log
 
+- **2026-08-08 (worker, slot 9, delete verification + closure)**: see the flipped `[SCRIPT] P1` todo above for full
+  evidence (0/5,332 legacy objects remain across all 9 venues x full bounded window, fresh retention check 604800s,
+  canonical twins spot-checked present across all 9 venues x 4 sample days). Shipped
+  `scripts/delete_legacy_composite_venue_objects_2026_08_08.py` (market-tick-data-service) — reuses the fold script's
+  own `write_defi_rows`-based canonical-target derivation (pure function, no GCS I/O) for a fresh per-shard Part-1
+  twin-resolve + content-parity check before any delete, and a bounded post-delete census + twin spot-check. Archiving
+  this doc now that its sole remaining todo is done.
 - **2026-08-08 (sub-agent, fresh §3a reversibility check)**: ran a fresh, same-run
   `gcs_bucket_soft_delete_retention_seconds("market-data-tick-defi-prd-central-element-323112")` check (read-only
   bucket-metadata GET, no delete executed) — returned `604800` (qualifies). Combined with the fold's own

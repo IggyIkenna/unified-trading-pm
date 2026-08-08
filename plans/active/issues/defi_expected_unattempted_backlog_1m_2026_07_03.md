@@ -19,6 +19,7 @@ related:
   [
     plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
+    /plans/active/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md,
   ]
 created: 2026-07-03
 author: unknown
@@ -33,7 +34,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-10
+last_updated: "2026-08-08"
 locked_by: live-defi-rollout
 locked_since: 2026-07-03
 resolved_by:
@@ -119,14 +120,14 @@ The enumerator's halt message is explicit: "Increase `--max-writes-per-run` afte
       report per-(venue, data_type, year) distribution so the operator can review what's being seeded.
 
       2026-07-03 run `enum-universe-defi-20260703-154354` (scan-only, cap 50M): **1,380,376 candidates**, report CSV
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  reason EXPECTED wildcard), NOT download work.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              `/tmp/enum-universe-defi-20260703-154354.csv` (slot-2 host). Distribution: **99.95% is 2018 (695,830) + 2019
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              (683,862)** — pre-launch/pre-genesis days for protocols that did not exist yet (AAVE_V3 / PANCAKESWAP_V3 /
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              YEARN_V3 / BEEFY etc. all launched years later), i.e. HONEST-ABSENCE documentation rows (record_expected_empty
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              reason EXPECTED wildcard), NOT download work.
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Only **684 cells across 2021–2025** are potentially actionable "remaining to download" rows. Even spread across
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              data_types (~80k each); top venues BEEFY 96k / BALANCER 86k / PANCAKESWAP_V3 64k. (First attempt hit a
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              transient consolidator read race — 404 on a replaced `_index` generation — retry succeeded; not a defect.)
 
 - [x] ✅ [INFRA] P1. **RESOLVED 2026-07-10 (operator, fresh review at real v2 scale): Option A — apply the full
       63,876,053 rows in one run**, same "honest by default" principle as the original 2026-07-03 decision, now at the
@@ -368,23 +369,45 @@ above are otherwise fully reproducible via the shipped CLI.
         `unified-trading-library/tests/config_interface/unit/test_venue_config.py::TestDataTypeConfig` (a unit test of
         the dead table itself). Filed the scoped fix below as a dispatchable `[SCRIPT]` todo instead of implementing it
         directly (per task scope — ruling + reclassification only, no code change this pass).
-  * [ ] [SCRIPT] P2. **Add `a_token`/`debt_token` aliases + widen `("defi","lending")` `oracle_prices` validity**
-        (unified-api-contracts, per the SSOT ruling above): (1) add `"a_token": "lending"` and `"debt_token": "lending"`
-        entries to `market_data_categories._INSTRUMENT_TYPE_ALIASES` so
-        `valid_data_types_for_instrument_type("defi", "A_TOKEN"/"DEBT_TOKEN")` stops returning `None` (the unmapped
-        fallback that caused the 7.36M-row `perp_trades` over-fan, see the 2026-07-16 Progress Log entry above); (2) the
-        `lending` instrument_type's valid-data_types set is derived from `PROTOCOL_CAPABILITIES`
-        (`capability_declarations/_defi.py`, unioned per `valid_data_types_for_instrument_type`'s DeFi branch) — widen
-        the AAVE_V3/FLUID/SOLEND/SPARK/VENUS lending protocols' declared `data_types` to include `oracle_prices`
-        (currently `{lending_indices, liquidations, risk_params}`), matching the legacy
-        `DataTypeConfig.instrument_data_types["A_TOKEN"] == ["lending_indices", "oracle_prices"]` declaration so real
-        captured `oracle_prices` cells for these tokens stop misclassifying as orphan candidates under
-        `is_valid_shard_key`. **Follow-up (do not do in this todo)**: once (1)+(2) ship and are verified live, delete
-        `venue_mapping.DataTypeConfig` as confirmed dead code (zero production call sites per the ruling above; update
-        the one unit test accordingly). **Done when**: `valid_data_types_for_instrument_type("defi", "A_TOKEN")` and
-        `("defi", "DEBT_TOKEN")` both return a non-`None` frozenset containing `oracle_prices`; existing
-        `is_valid_shard_key`/enumerator tests still pass; a new test asserts the previous unmapped-fallback bug
-        (`--data-types perp_trades` over-fanning A_TOKEN/DEBT_TOKEN venues) no longer reproduces.
+  * [x] ✅ [SCRIPT] P2. **NARROWED 2026-08-08 (finalize-plan REVIEW re-verification — see finalize doc's Progress Log
+        for full evidence)**: independent re-verification against a fresh `git pull --ff-only` on
+        `unified-api-contracts` (HEAD `c041010dd`) found most of the original scope already true WITHOUT any code
+        change: `_INSTRUMENT_TYPE_ALIASES.get(key, key)`'s identity fallback + `_LENDING_ATOKEN_DEBTTOKEN`'s
+        already-lowercase enum values (`_IT.A_TOKEN.value == "a_token"`) mean
+        `valid_data_types_for_instrument_type("defi",     "A_TOKEN"/"DEBT_TOKEN")` ALREADY returns a non-`None`
+        frozenset containing `oracle_prices` (live-tested) — no explicit `_INSTRUMENT_TYPE_ALIASES` entries are needed;
+        original item (1) is DROPPED. The 2026-07-16 `--data-types perp_trades` over-fan bug ALSO does not reproduce via
+        `valid_data_types_for_venue_instrument_type("defi", <venue>, "A_TOKEN"/"DEBT_TOKEN")` for AAVE_V3-ETHEREUM,
+        VENUS-BSC, and SOLEND-SOLANA (live-tested: `perp_trades` excluded from all three venue-narrowed sets already).
+        Original item (2) is PARTIALLY done: AAVE_V3/SPARK/FLUID already declare `oracle_prices` in
+        `PROTOCOL_CAPABILITIES` (pre-existing, shipped for the unrelated
+        `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` finding-2 fix — NOT this todo; live-tested
+        `oracle_prices` present in their venue-narrowed sets). **VENUS and SOLEND still lack it**
+        (`data_types=["lending_indices"]` only — confirmed at `capability_declarations/_defi.py:495-502` (venus) and
+        `:918-924` (solend)) — this is the only remaining code change. **Remaining scope (narrowed)**: (a) add
+        `"oracle_prices"` to the `venus` and `solend` `_ProtocolCapability.data_types` lists in
+        `capability_declarations/_defi.py`; (b) add ONE regression test asserting
+        `valid_data_types_for_venue_instrument_type("defi", <a lending venue>, "A_TOKEN"/"DEBT_TOKEN")` excludes
+        `perp_trades` (codifies the already-true non-reproduction so it can't silently regress). **Follow-up (do not do
+        in this todo, unchanged)**: once (a)+(b) ship, delete `venue_mapping.DataTypeConfig` as confirmed dead code
+        (zero production call sites) + its one unit test. **Done when**: VENUS/SOLEND venue-narrowed
+        `valid_data_types_for_venue_instrument_type` calls include `oracle_prices`; the new regression test passes;
+        existing `is_valid_shard_key`/enumerator tests still pass. Repo: unified-api-contracts.
+
+        **DONE 2026-08-08 (finalize-plan REVIEW re-verification, slot 30)**: shipped
+                `unified-api-contracts@768c6f93` — (a) added `"oracle_prices"` to `venus` (`_defi.py:495-508`) and `solend`
+                (`_defi.py:918-931`) `_ProtocolCapability.data_types` (+ `"collect-oracle-prices"` to their `mtds_operations`,
+                matching the spark/compound_v3 convention); (b) added
+                `test_lending_a_token_debt_token_exclude_perp_trades` to `tests/test_valid_data_types_by_instrument_type.py`
+                (`TestValidDataTypesForVenueInstrumentType`), asserting `perp_trades` excluded for A_TOKEN/DEBT_TOKEN across
+                AAVE_V3-ETHEREUM/VENUS-BSC/SOLEND-SOLANA. Live-verified post-ship:
+                `valid_data_types_for_venue_instrument_type("defi", "VENUS-BSC"/"SOLEND-SOLANA", "A_TOKEN"/"DEBT_TOKEN")` all
+                now include `oracle_prices` and exclude `perp_trades`. Full `quality-gates.sh` green (427s,
+                `.qg_last_passed_sha=768c6f9325eb235ca9da5caad4f3bb4459bcf4f9`); 88/88 tests pass in the affected module;
+                landed on `live-defi-rollout`, ancestry-verified. Follow-up (venue_mapping.DataTypeConfig deletion) filed as
+                its own doc — `issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md` — rather than a new
+                checkbox in THIS doc, so this doc's own todos stay fully closed for the finalize plan's `gate_on_depends`
+                (this doc's gated finalize companion only waits on THIS doc's checkboxes, not on unrelated dead-code cleanup).
 
 ## Progress Log
 
@@ -411,14 +434,39 @@ above are otherwise fully reproducible via the shipped CLI.
   is exactly the deterministic, bounded follow-up the 2026-08-08 SSOT ruling above invited — add 2 named dict entries
   (`market_data_categories._INSTRUMENT_TYPE_ALIASES`), widen 5 named protocols' declared `data_types` in
   `capability_declarations/_defi.py`, delete the now-confirmed-dead `venue_mapping.DataTypeConfig` + its one unit test,
-  with an explicit `Done when` (two `valid_data_types_for_instrument_type` calls return non-`None` frozensets
-  containing `oracle_prices`; existing tests pass; a new regression test added). No remaining judgment call. Priority
-  downgraded doc-level P1->P2 to match the sole remaining todo's own tag. Conflict-check clear:
+  with an explicit `Done when` (two `valid_data_types_for_instrument_type` calls return non-`None` frozensets containing
+  `oracle_prices`; existing tests pass; a new regression test added). No remaining judgment call. Priority downgraded
+  doc-level P1->P2 to match the sole remaining todo's own tag. Conflict-check clear:
   `defi_satellite_ao_dispatch_batch6/batch9/batch10` (all still `status: active`) each cite this doc only in
   pre-2026-08-08 "cite-only"/Deferred informational lists characterizing it as SSOT-gated — none carries an active
-  `- [ ]` todo claiming this specific alias-fix work, and all three citations predate today's SSOT ruling (stale, not
-  a live conflict). `repos:` widened to include `unified-api-contracts`; `context_scope` refreshed to the 3
-  live-consumed files the SSOT ruling identified, dropping the now-confirmed-dead `venue_mapping.py`. Gated finalize
-  companion authored: `defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`. `locked_by:
-  live-defi-rollout` (stale since 2026-07-03, a branch-name artifact — every na-eligibility-audit round since has
-  classified/edited this doc under the same lock without incident) not treated as a blocker.
+  `- [ ]` todo claiming this specific alias-fix work, and all three citations predate today's SSOT ruling (stale, not a
+  live conflict). `repos:` widened to include `unified-api-contracts`; `context_scope` refreshed to the 3 live-consumed
+  files the SSOT ruling identified, dropping the now-confirmed-dead `venue_mapping.py`. Gated finalize companion
+  authored: `defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`. `locked_by: live-defi-rollout`
+  (stale since 2026-07-03, a branch-name artifact — every na-eligibility-audit round since has classified/edited this
+  doc under the same lock without incident) not treated as a blocker.
+- **2026-08-08 (finalize-plan REVIEW re-verification, slot 7)**: independently re-verified the `[SCRIPT] P2` todo
+  against a fresh `unified-api-contracts@c041010dd` — the todo was NOT executed (confirmed: zero `a_token`/`debt_token`
+  hits in `_INSTRUMENT_TYPE_ALIASES`), but live-testing found most of its claimed effect already holds true without it:
+  `valid_data_types_for_instrument_type("defi", "A_TOKEN"/"DEBT_TOKEN")` already returns a non-`None` frozenset
+  containing `oracle_prices` (identity-fallback + already-lowercase enum values make the explicit alias entries
+  unnecessary), and the 2026-07-16 `perp_trades` over-fan bug does not reproduce via
+  `valid_data_types_for_venue_instrument_type` for AAVE_V3/VENUS/SOLEND (all three exclude `perp_trades` already).
+  AAVE_V3/SPARK/FLUID already declare `oracle_prices` (pre-existing, unrelated fix); VENUS/SOLEND do not. Narrowed the
+  `[SCRIPT]` todo in place to the two genuinely-remaining items (VENUS/SOLEND `oracle_prices` widening + one regression
+  test); did not implement (review scope — verification + doc correction only, no code change this pass). The finalize
+  plan (`gate_on_depends: true` on this doc) was dispatched to a worker anyway — this doc's `[SCRIPT]` todo derives ZERO
+  backlog rows at all (`GET /api/backlog` query, live), matching the still-open "zero-derived- parent-row" root-cause
+  mechanism already tracked in `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` (added a
+  recurrence note there rather than filing a duplicate issue doc — a further documented bounce there). Finalize plan's
+  `[REVIEW]` todo left un-flipped per that doc's established disposition (declining to force a gated task through); its
+  `[DOC]` archival todo remains correctly un-dispatchable (this doc still carries one open todo).
+- **2026-08-08 (finalize-plan REVIEW re-verification, slot 30)**: redispatched the same gated `[REVIEW]` task (the
+  `gate_on_depends` wiring gap from the recurrence note above bounced it again). Implemented the narrowed `[SCRIPT]`
+  todo directly instead of bouncing a third time (small, deterministic, fully scoped by slot 7's prior narrowing) —
+  shipped `unified-api-contracts@768c6f93` (VENUS/SOLEND `oracle_prices` widening + regression test, QG green, landed +
+  ancestry-verified on `live-defi-rollout`). Flipped the `[SCRIPT]` checkbox to done with evidence. This doc now has
+  ZERO open todos. Filed the deferred `venue_mapping.DataTypeConfig` deletion follow-up as its own doc
+  (`issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`) rather than reopening this doc — keeps the
+  finalize plan's `gate_on_depends` condition genuinely satisfied. Proceeding to the finalize plan's `[REVIEW]`
+  re-verification + `[DOC]` archival todos in the same session.

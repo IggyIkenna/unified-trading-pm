@@ -192,15 +192,16 @@ gates IMPL+VERIFY), `plans/active/issues/defi_catalog_engine_config_key_contract
 trading-parameter/design rulings), `plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`
 (SSOT-contradiction judgment call),
 `plans/active/issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md` ([OPERATOR] disposition of 567
-objects), `plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (PROD-bucket delete,
-human-only), `plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` (HOW-to-close
-design decision), `plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`
-(naming-convention reconciliation deliberately deferred as risky design work),
-`plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` (blocked on the sibling CEFI/DEFI
-dual-counting axis ruling), `plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md` (ownership +
-design ruling needed), `plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`
-(which-side-is-authoritative ruling), `plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`
-(HL coin-case design decision — items (b)+(c) already claimed by batch6's own open todo, not re-drafted here),
+objects), `plans/archive/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (archived 2026-08-08 —
+the PROD-bucket delete completed, reversibility-qualified agent-execution, not human-only after all),
+`plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` (HOW-to-close design decision),
+`plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md` (naming-convention reconciliation
+deliberately deferred as risky design work), `plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`
+(blocked on the sibling CEFI/DEFI dual-counting axis ruling),
+`plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md` (ownership + design ruling needed),
+`plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` (which-side-is-authoritative
+ruling), `plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md` (HL coin-case design
+decision — items (b)+(c) already claimed by batch6's own open todo, not re-drafted here),
 `plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md` (operator prioritization decision).
 
 **too_large_or_risky (4)** — itself a live multi-phase migration/money-path item, risky to fold into one batch todo:

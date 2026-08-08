@@ -908,6 +908,29 @@ if [ -f "$TWO_SIDED_AUDIT" ]; then
     fi
 fi
 
+# -- Post-gates: AO dispatch-visibility gate (disk-vs-backlog open-todo delta) -- baselined ratchet --
+# SSOT: ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md. Per assigned_vm:planning
+# doc, compares the REAL agent-orchestrator _parse_open_todos oracle (imported via a subprocess call into
+# agent-orchestrator's own venv -- server.dispatch_visibility_report, a thin reporting wrapper, no parser
+# change) against the raw `- [ ]` count on disk, and classifies every excluded todo declared (a live
+# BLOCKED-<token>/DEFERRED-BY-DESIGN/stretch marker that opens its own line) vs accidental (the marker is
+# merely present in a longer sentence -- the regex-widening bug class that has resisted four successive
+# fixes). Ratcheted on two axes (ao_dispatch_visibility_baseline.yaml): accidental exclusions + zero-
+# dispatchable docs. Needs WORKSPACE_ROOT (the sibling agent-orchestrator clone + its .venv); CI (siblings
+# absent) degrades to a no-op, same convention as the other workspace-wide PM gates.
+AO_DISPATCH_VISIBILITY_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_ao_dispatch_visibility_gate.py"
+if [ -f "$AO_DISPATCH_VISIBILITY_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running AO dispatch-visibility gate (disk-vs-backlog todo delta, baselined ratchet)..."
+    if python3 "$AO_DISPATCH_VISIBILITY_CHECKER" --workspace-root "$WORKSPACE_ROOT" --quiet; then
+        log_success "AO dispatch-visibility gate passed (at-or-below baseline)"
+    else
+        echo "❌ AO dispatch-visibility gate — a NEW accidental (undeclared) exclusion or zero-dispatchable" >&2
+        echo "   doc appeared. Re-run with --json for the doc/description list. Fix: declare the marker (start" >&2
+        echo "   of its own line) or rewrite the todo so it no longer trips it. Or --update-baseline (justified)." >&2
+        _post_gate_fail "ao-dispatch-visibility"
+    fi
+fi
+
 # ── Post-gates: Capability-regression gate (Wave-2 #5) — baselined ratchet ──
 # SSOT: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Wave-2 #5.
 # FAILS when a capability edge regressed available -> not_available/not_registered
