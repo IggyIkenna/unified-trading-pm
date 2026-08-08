@@ -36,8 +36,8 @@ source: sports_consolidated_native_ao_extract-010/cross_cutting_satellite_ao_dis
 resolved_by:
 locked_by:
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -118,10 +118,13 @@ Neither is acceptable, so this doc exists to make the true scope visible and dis
 ## Recommended decision
 
 Split into two tracks, both P2 (matches the source doc's own "Nicety" framing — the DANGER class is genuinely closed for
-the shared-helper-based sites; only `governance_adapter.py` needs the C1 fix at higher priority). Left `assigned_vm: NA`
-at this doc's own frontmatter level (this is a scoping/triage document, not a pre-vetted dispatch-ready backlog — item 2
-below is explicitly gated on a human design call) — a future triage pass should spin item 1 off into its own
-`assigned_vm: planning` dispatch todo once picked up, since it alone is genuinely bounded.
+the shared-helper-based sites; only `governance_adapter.py` needs the C1 fix at higher priority). **Frontmatter flipped
+`assigned_vm: NA` → `planning` 2026-08-08**: the last remaining human-design-call item (the governance dual-source merge
+question, formerly item 5) is now resolved and reclassified below — that was the sole documented blocker per this doc's
+own 2026-08-08 Progress Log entry ("Item 5 ... remains the genuine unresolved human decision keeping the whole doc
+`assigned_vm: NA`"); items 2-3 (Aave/Alchemy + Chainlink/Pyth research) stay open here but are `KEEP-NA-STALE`
+duplicates already covered by `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179` (status: active) — non-blocking,
+close by citation once batch9 ships.
 
 - [x] ✅ [CODE] P1. **Fix the `governance_adapter.py` swallowed-exception bug** (the one real correctness gap found
       here, market-tick-data-service): raise on a genuine HTTP/network error from `_fetch_subgraph_proposals`/
@@ -158,13 +161,35 @@ below is explicitly gated on a human design call) — a future triage pass shoul
       `governance_adapter.py`'s inline `session.post`, etc.), each of which needs its OWN per-file widen (not a shared
       helper) — re-scope this todo to the actual highest-value single file once picked up, don't attempt all of them in
       one dispatch. (market-tick-data-service) — market-tick-data-service@17aed396 · QG green · 2026-08-07
-- [ ] [LOCAL] P2. **`governance_proposals_handler.py`'s dual-source merge — resolve the "report which source's status"
-      design question** (subgraph + Snapshot are two independent fetches per call; there is no single scalar "the" HTTP
-      status once both are queried and merged) as a human/local decision FIRST (per
+- [x] ✅ [LOCAL] P2. **`governance_proposals_handler.py`'s dual-source merge — resolve the "report which source's
+      status" design question** (subgraph + Snapshot are two independent fetches per call; there is no single scalar
+      "the" HTTP status once both are queried and merged) as a human/local decision FIRST (per
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — this is a
       judgment call, not a checkable fact), THEN file the scoped CODE todo against that decision. Options to weigh:
       report per-source (2 fields), report the worse of the two, or track both up through `_write_or_empty` and let the
-      caller decide. Do not dispatch a CODE todo for this handler before the decision lands.
+      caller decide. Do not dispatch a CODE todo for this handler before the decision lands. **RESOLVED (2026-08-08)** —
+      decision: **"worse of the two."** Read `governance_adapter.py` + `governance_proposals_handler.py` directly
+      (market-tick-data-service) to confirm: `_fetch_both_sources` (`governance_adapter.py:399-416`) runs
+      `_fetch_subgraph_proposals`/`_fetch_snapshot_proposals` via `asyncio.gather(..., return_exceptions=True)` then
+      explicitly re-raises either exception; both fetch functions call `resp.raise_for_status()` before parsing, so any
+      genuine 4xx/5xx/network error propagates all the way up. `_process_protocol`
+      (`governance_proposals_handler.py:155-179`) catches that raise and routes it to `record_failed` —
+      `_write_or_empty` (the clean path calling `record_zero_rows`) is only ever reached when
+      `fetch_governance_proposals` returned normally, which per `_fetch_both_sources`'s re-raise means BOTH sources
+      already succeeded with a genuine 2xx. So "worse of the two" is invariant-backed to always collapse to the trivial
+      constant `http_status=200`, `source="subgraph+snapshot"` on this code path — zero schema change needed to UAC's
+      `FetchEvidence` (`build_fetch_evidence()` already accepts `http_status: int | None`).
+- [ ] [SCRIPT] P2. **Thread the resolved constant through `governance_proposals_handler.py`'s clean-path
+      `record_zero_rows` call** (`_write_or_empty`, market-tick-data-service): build a `FetchEvidence` via UAC's
+      `build_fetch_evidence(http_status=200, ...)`
+      (`unified_api_contracts/canonical/crosscutting/honest_coverage.py:507`) with `source="subgraph+snapshot"` and pass
+      it explicitly as `record_zero_rows(..., fetch_evidence=...)`, instead of falling through to
+      `DefiManifestRecorder.clean_fetch_evidence()`'s generic synthesized 200. Purely for
+      clarity/future-proofing/explicit provenance — the resulting recorded value is unchanged (still 200) since the
+      invariant above proves it can never be anything else on this path today; if `_fetch_both_sources` is ever changed
+      to tolerate a partial failure (e.g. one source optional), this call site is where a real non-200 would need to
+      start flowing through. **Done when**: a test asserts the recorded `FetchEvidence.source == "subgraph+snapshot"`
+      and `http_status == 200` on the governance clean-empty path; existing behavior/tests otherwise unchanged.
 
 ## Codex SSOTs
 
@@ -201,3 +226,13 @@ below is explicitly gated on a human design call) — a future triage pass shoul
   dual-source merge design question) remains the genuine unresolved human decision keeping the whole doc
   `assigned_vm: NA` — it has no active-batch coverage and still needs the (report-per-source / worse-of-two /
   track-both) call made before any CODE todo can be filed against it. Doc stays `assigned_vm: NA`.
+- **na-corpus-digest-closeout 2026-08-08**: resolved the governance dual-source design question (decision: "worse of the
+  two") by reading `governance_adapter.py` (`_fetch_both_sources` re-raises either source's exception before
+  `fetch_governance_proposals` returns) and `governance_proposals_handler.py` (`_process_protocol` routes any such raise
+  to `record_failed`, never reaching `_write_or_empty`'s clean path) directly — proves the clean path only ever sees
+  both sources already 2xx, so the decision collapses to a trivial invariant-backed constant (`http_status=200`,
+  `source="subgraph+snapshot"`), zero UAC schema change needed. Reclassified the former `[LOCAL]` item as resolved +
+  filed a new `[SCRIPT] P2` implementation todo to thread the constant through explicitly. This was the doc's sole
+  remaining `assigned_vm: NA` blocker (items 2-3 are non-blocking `KEEP-NA-STALE` duplicates already covered by active
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md`) — flipped `assigned_vm: NA` → `planning`,
+  `execution_scope: local-only` → `orchestrator-agent`.
