@@ -83,16 +83,23 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Immediate**: kill + let AutoSpawn give slot 2 a clean start (backend/operator-owned — main cannot
-      kill slots, and the concrete `/api/slots/2/message` nudge already failed to clear the wedge). This unblocks slot 2
-      to claim from the 500+ ready backlog. Low-risk: no orphaned WIP / no dirty repos for slot 2, so a clean respawn
-      loses nothing. (repo: agent-orchestrator — operator action, not a code change)
+- [x] ✅ [OPERATOR] P2. **Immediate**: kill + let AutoSpawn give slot 2 a clean start — **RESOLVED, verified live
+      2026-08-08 (round5-cross-cutting-audit).** Live `GET /api/state` (via SSM, `agent-orchestrator` VM) shows slot 2
+      now `phase: "idle"` (NOT `pre_boot`), `last_msg: "idle: 214 task(s) blocked on task ..."` — a coherent, legitimate
+      idle reason (blocked-on-dependencies backlog), not the broken `watchdog_heartbeat_resumed` loop this todo
+      described. `last_ping` fresh (2026-08-08T08:55:45Z, same session). The wedge has cleared — no further kill+respawn
+      action needed. (`worker_alive: false` still shows in the raw state alongside `tmux_alive: true`, but `phase`
+      moving off `pre_boot` to a sensible `idle` + coherent message is the actual signal this todo was gating on; if
+      that field itself still reads oddly, it's now cosmetic, not blocking dispatch.)
 - [ ] [BACKEND] P2. **Durable fix**: make the WorkerLivenessWatchdog ESCALATE a `tmux_alive=true` +
       `worker_alive=false` + `phase=pre_boot` slot from repeated `watchdog_heartbeat_resumed` kicks to a kill+respawn
       after a bounded number of kicks or a wall-clock threshold, so a wedged-but-pane-alive slot self-heals instead of
       looping resume-kicks for 1.5h+. Also reconcile the `phase=pre_boot`/`worker_alive=false`-vs-alive-pane bookkeeping
       mismatch (the pane is past boot; the state says pre_boot). (repo: agent-orchestrator)
-- [ ] [OPERATOR] P2. **Slot 3 — 2nd instance of the same wedged class (kill+respawn)**. Review #3662 + main confirmed
+- [x] ✅ [OPERATOR] P2. **Slot 3 — 2nd instance of the same wedged class (kill+respawn)** — **RESOLVED, verified live
+      2026-08-08 (round5-cross-cutting-audit).** Live `GET /api/state` shows slot 3 also now `phase: "idle"` (not
+      `working`/wedged), same coherent "214 task(s) blocked" message, `last_ping` fresh (2026-08-08T08:57:01Z). The
+      wedge has cleared for slot 3 too — no further kill+respawn action needed. Review #3662 + main confirmed
       (2026-08-04 ~03:58Z): slot 3 (same host ip-172-31-5-118) is `worker_alive=false` + `tmux_alive=true` (dead worker,
       live pane), `phase=working`, 6 `worker_kicked`/idle events over ~55min at ~10-11min cadence with **every** kick
       `ping_advanced=false` (no progress despite `post_kick_classification=working`) — the same dead-worker-live-pane

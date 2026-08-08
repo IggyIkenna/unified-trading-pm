@@ -5370,6 +5370,10 @@ shipped (market-tick-data-service@4d32528, Phase D P1c Item 3) but cannot run un
   under QG --block-network; integration tests marked @pytest.mark.requires_credentials skipped by default)
 - **status**: BLOCKED-CREDENTIALS — NOT deferred; adapter scaffold + unit tests already shipped.
 - **operator action needed**: Reply `[ack]` with Tardis API key location in Secret Manager once provisioned.
+- **round5-cross-cutting-audit 2026-08-08 — STALE, credential already granted, no ack pending**: Tardis billing gate
+  LIFTED 2026-07-12 (operator ruling, paid unlimited access), live in production since (DERIBIT-COMBO + OKX
+  `options_chain` Tardis data flowing). Do not re-ask. The 14 `VOL_*` engines remain blocked on a SEPARATE gate — the
+  standing `v2_engine_venue_buildout_2026_06_15.md` "do NOT run backfills yet" operator ruling — not a credential ack.
 
 ## CREDENTIAL APPROVAL REQUEST — sports credentialed sources (2026-06-19, sports e2e audit)
 
