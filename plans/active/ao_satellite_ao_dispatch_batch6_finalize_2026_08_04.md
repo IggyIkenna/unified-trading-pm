@@ -63,11 +63,12 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify every batch-6 done-claim against reality, not against its checkbox** — for each of the 10
-      todos in `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, re-run `git show --stat <sha>` for every
-      cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
-      own stated done-when check where it is a command. **Done when**: all 10 verified, and any claim whose evidence
-      does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
+- [x] ✅ [REVIEW] P0. **Re-verify every batch-6 done-claim against reality, not against its checkbox** — for each of the
+      10 todos in `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, re-run `git show --stat <sha>` for
+      every cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each
+      todo's own stated done-when check where it is a command. **Done when**: all 10 verified, and any claim whose
+      evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy
+      stated. — **All 10 verified, all hold up** (see Progress Log 2026-08-08 for the full per-todo evidence trail).
 - [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       6 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of: `ao_open_issues_consolidated_close_out_2026_07_17.md` (Phase-8 items 5+6 only),
@@ -111,6 +112,47 @@ source: >-
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility".
 
 ## Progress Log
+
+- **2026-08-08 (ao_satellite_ao_dispatch_batch6_finalize-001, slot-15, data_engineering→review)**: Todo 1 complete —
+  re-verified all 10 batch-6 done-claims against reality, all 10 HOLD UP:
+  1. `unified-trading-pm@4f5a1e6ba` — ✅ ancestor of origin; content matches (tmux_session_lost 189→645 events/2-day
+     window, ~95→~322/day, rate INCREASED ~3.4×, not decreased; stale-dispatch invariant dispatched=6==worker-held=6,
+     PASS); source doc's Phase-8 items 5+6 confirmed `[x]` with the exact same numbers.
+  2. `unified-trading-pm@79565c404` — ✅ ancestor; `task_template.md` confirmed carries the "`/done`-time disposition
+     markers" bullet (CANCELLED/SUPERSEDED, DEFERRED-BY-DESIGN, `BLOCKED-ON:<ref>`) distinguishing it from the
+     pre-existing `BLOCKED-<TOKEN>` ingestion-gate family.
+  3. `agent-orchestrator@23bd0b3` (external, cited not authored by this batch) — ✅ ancestor; source doc
+     `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` confirmed `status: resolved`,
+     archived, sole todo `[x]`; `tests/test_auto_park.py` re-run: **17 passed**.
+  4. `agent-orchestrator@82578c3` — ✅ ancestor; `tests/test_redispatch_clears_stale_owner.py` re-run: **3 passed**.
+  5. `unified-trading-pm@c6fde000a` — ✅ ancestor; `agents/review.md` step 3d confirmed carries the liveness-by-progress
+     check (commit-recency + `pgrep` live-process check) verbatim as described. Operator sign-off note: the source doc's
+     Progress Log records the P3 gate as cleared via inference from the operator's 2026-08-08 batch6 draft→active
+     activation, not a separate explicit statement approving the suppression predicate itself — a soft observation, not
+     a discrepancy (the underlying code + doc changes are real and correctly scoped), not reopened.
+  6. `agent-orchestrator@6166269` — ✅ ancestor; `test_register_poll_role_gets_slotless_shape_even_with_slot_id` +
+     `test_one_shot_lifecycle_role_unaffected_by_register_poll_guard` re-run: **4 passed** (the "2 skipped" in the same
+     run are unrelated `moto`-import skips in other collected modules, not these tests). Cited sibling
+     `agent-orchestrator@0a8ed16` (one-shot lifecycle guard) also confirmed ✅ ancestor.
+  7. `agent-orchestrator@41da3e578` — ✅ ancestor; `tests/test_done_empty_sha_gate.py` re-run: **3 passed**.
+  8. MOOT claim — confirmed against source doc `fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md`:
+     `status: resolved`, `resolved_by` note confirms the host was terminated 2026-08-03, matches the batch's claim
+     exactly.
+  9. `unified-trading-pm@c2083029d` — ✅ ancestor; content confirmed: adds surface (d) to
+     `ao-dispatch-batch-naming-and-conflict-check.md` § 3, wires both `na-eligibility-audit` and `ag-closeout-audit`
+     skill docs to reference it.
+  10. Rescue-verification (no new commit) — all 3 cited target commits confirmed ✅ ancestor of origin with matching
+      content: `unified-trading-library@60c840f2` (lst_yields docstring fix), `unified-api-contracts@06c54fee`
+      (AAVE-PLASMA phase→live), `deployment-service@eff55ae7` (fastapi/starlette cap-lift) — the original slot-12 SHAs
+      cited in the batch (`c927ec58`/`06c8e90b`/`0e62096f`) are absent from these repos' local history (consistent with
+      "orphaned, never landed under their own SHA" — the batch's own claim), so ancestry was checked on the SHAs the
+      content actually landed under, per the batch's stated methodology.
+
+  **No discrepancies found** — todo 1's done-when ("any claim whose evidence does not hold up is re-opened as a new
+  tracked todo") has nothing to action; todo 2 (reconcile evidence into source docs) is largely already satisfied as a
+  side effect of the commits above (most already flip their own source-doc checkboxes per their commit messages,
+  observed during this verification) but is out of scope for this todo — left for the next dispatch per
+  `sequential: true`.
 
 - **2026-08-04** — Authored in the same turn as its batch by `/ag-closeout-audit ao` (autonomous mode, scheduled
   dispatch). `sequential: true` is deliberate here: the five todos are a genuine chain (verify → reconcile → re-check
