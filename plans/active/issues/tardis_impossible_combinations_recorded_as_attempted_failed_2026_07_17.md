@@ -161,6 +161,25 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
       honest-absence-vs-fetch-failure decision is contract-driven rather than string-matched on `"Empty CSV"`. — **DONE
       2026-07-26**: `unified-api-contracts@c144f975` — `140`/`300` registered as `ErrorAction.SKIP`, 2 new unit tests,
       QG green.
+- [ ] [CODE] P2. **Verify the shipped vendor-catalog gate (`tardis_vendor_catalog.py`,
+      `market-tick-data-service@8e406dbb`) reads its `dataTypes`/`availableSince`/`availableTo` from the RIGHT array —
+      likely reading the wrong one, which silently degrades the data_type dimension of the 3-condition gate to a no-op
+      (fail-open-safe, not a correctness bug, but an incomplete implementation of this todo's own spec).** Evidence: (1)
+      `_fetch_vendor_catalog` in `tardis_vendor_catalog.py` parses `exchange_info.get("availableSymbols", [])` and reads
+      `sym.get("dataTypes", [])` off THOSE entries — but this issue doc's own "The fix" section (verified live against
+      the real API, 2026-07-17) states the 3-tuple lives under `datasets.symbols[]`, a SEPARATE array, not
+      `availableSymbols[]`. (2) `unified_api_contracts.external.tardis.schemas.TardisAvailableSymbol` (the pre-existing,
+      already-live model for `availableSymbols[]` entries, used by instruments-service's own enumeration) deliberately
+      has NO `dataTypes` field — only `id`/`type`/`availableSince`/`availableTo` — consistent with `dataTypes` genuinely
+      not existing on that array in the real response. (3) The shipped code's own unit tests
+      (`tests/unit/test_tardis_vendor_catalog.py`) mock `availableSymbols[]` entries WITH a fabricated `dataTypes` key
+      to make the tests pass — i.e., the tests validate the code's assumption, not the real API shape, so a live
+      response never exercised this. If confirmed: point the fetch at `datasets.symbols[]` instead (or additionally), or
+      run one live authenticated `GET /v1/exchanges/<venue>` call and diff the two arrays to settle this before touching
+      code. Low severity — the `availableSince`/`availableTo`/symbol-presence dimensions likely still work (those DO
+      exist on `availableSymbols[]`), and the reactive 400 classification (`tardis_csv_transport.is_structural_absence`,
+      already shipped) remains the correctness backstop regardless — this is a missed proactive-optimization dimension,
+      not a denominator-corruption or infinite-retry risk. (repo: market-tick-data-service)
 
 ## Progress Log (append-only)
 
@@ -242,6 +261,18 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 
 ## Progress Log
 
+- **2026-08-08 (slot-13, task `tardis_impossible_combinations_recorded_as_attempted_failed-003`)**: dispatched the SAME
+  `[CODE] P0` vendor-catalog-gate todo slot-29/slot-33 already closed below — a THIRD concurrent pickup of this task.
+  Built an independent implementation (new `tardis_catalog_gate.py` + a UAC `TardisDatasetSymbol` schema addition for
+  `datasets.symbols[]`) before fresh-pulling mid-session and discovering the checkbox was already flipped with shipped
+  commits. Discarded this slot's own uncommitted duplicate work entirely (never staged/committed — no conflicting second
+  implementation shipped) after verifying the landed code addresses the todo. While building my own version I
+  cross-checked the issue doc's own "The fix" spec (`datasets.symbols[]` carries `dataTypes`) against the SHIPPED
+  `tardis_vendor_catalog.py`, which instead reads `dataTypes` off `availableSymbols[]` — filed as a new `[CODE] P2` todo
+  above (evidenced against the pre-existing `TardisAvailableSymbol` UAC schema, which has no `dataTypes` field, and
+  against the shipped code's own test fixtures, which fabricate a `dataTypes` key on `availableSymbols` mocks rather
+  than asserting the real API shape). Low severity — fail-open, reactive 400 classification remains the correctness
+  backstop — so filed as a follow-up rather than reopening this todo.
 - **2026-08-08 (slot-29)**: flipped the `[CODE] P0` vendor-catalog-gate checkbox — the fix landed on
   `origin/live-defi-rollout` via `market-tick-data-service@8e406dbb` (gate) + `@07cafbbb` (file-size-cap follow-up,
   moved manifest emission into `tardis_vendor_catalog.py`), shipped by slot-33 concurrently with this slot's independent
