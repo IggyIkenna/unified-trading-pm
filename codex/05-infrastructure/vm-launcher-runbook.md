@@ -181,6 +181,36 @@ through `quality-gates.sh`, and not a registered VM launcher), pick one:
 bandwidth from those VMs is still fine. This section adds a second, independent axis (compute/memory), it does not
 narrow the first.
 
+**HARD RULE — `canonical-migration-` VMs require ALL THREE liveness signals before any `gcloud compute instances delete`
+(codified 2026-08-07, incident:
+`/plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`).** The standard
+two-heuristic check (heartbeat blob stale AND run.log frozen) is INSUFFICIENT for this prefix class. Root cause, proven
+in ≥5 kills: the vm-life-emitter heartbeat sidecar is a shell subshell that writes to the stdout/tee pipe; when the GCS
+log uploader closes that pipe (typical on a 60-second flush boundary), the next `echo` gets SIGPIPE and the sidecar dies
+silently — the heartbeat blob goes stale even though the main Python process is fully alive. Simultaneously, a
+`blob.download_as_bytes(timeout=900)` call produces **no log output for its entire duration** (minutes to hours), so
+`run.log` is also genuinely frozen — but that frozen state is EXPECTED, not evidence of failure. This combination makes
+a live, actively-downloading `canonical-migration-` VM look identically stale to a truly dead one. Fix
+`deployment-service@3b25aae4` adds a `trap '' SIGPIPE` guard to the sidecar so future runs survive the pipe close, but
+the nuance must be understood for any liveness audit of in-flight VMs.
+
+Before running `gcloud compute instances delete` on any `canonical-migration-*` VM, verify **ALL THREE** signals:
+
+1. **Heartbeat blob mtime** — `vm-heartbeat/<vm>.txt` age vs. the per-prefix threshold (90 min for
+   `canonical-migration-` VMs, configured in `heartbeat_stall_watcher.py`'s `PREFIX_KILL_MINUTES`)
+2. **run.log mtime** — recent writes = alive; but a **frozen run.log is NOT dispositive** for this prefix class —
+   SIGPIPE kills the sidecar AND the download phase produces no output, so frozen-log is expected during a legitimate
+   multi-GB GCS download
+3. **Manifest generation ID** — is the generation ADVANCING? A generation unchanged for <90 min is EXPECTED during the
+   download phase (writes happen only after the full download + filter completes)
+
+**If all three signals read stale AND the manifest generation has been unchanged for >90 min**: do NOT delete
+autonomously — escalate for human confirmation. Even with all three stale, the frozen-run.log/sidecar-SIGPIPE failure
+mode makes this VM class ambiguous in a way that other prefixes are not. The `agents/infra.md` STEP 0.65 /
+`agents/data_engineering.md` STEP 0.55 VM-delete guardrail (the canonical 3-signal rule) applies here as the baseline;
+this section adds the `canonical-migration-`-specific nuance that frozen signals are systematically expected in the
+large download window.
+
 ---
 
 ## 1. Infrastructure / Cron VMs
