@@ -506,12 +506,53 @@ achieved by exclusion, not canonicalisation.**
       work was real, corrected to `01c3dbbab9`/`79c4a72737`/`b7e41849d6` (each verified to exist first). Checker fixed
       to fetch once on the miss path; **baseline ratcheted 8 -> 0**, verified 2,549 citations / 0 unresolvable.
 
-- [ ] [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
+- [x] ✅ [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
       screened 47 test-touching commits for NET assertion loss + added xfail/skip. That shape is blind to a commit which
       DELETES a strong assertion and ADDS a weak one — it nets zero and never surfaces. Treat the sweep's result as "no
       net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
       (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
-      enough. **Done when**: the decision is recorded, or the semantic check exists.
+      enough. **Done when**: the decision is recorded, or the semantic check exists. — **DONE 2026-08-08 (slot 7,
+      data_engineering)**. Built the semantic check —
+      `unified-trading-pm@\<pending\>:scripts/cicd/detect_assert_replacement_2026_08_08.py` (`Lifecycle: oneoff`,
+      `Delete-when: next scripts/ hygiene sweep`, left in the tree per the `oneoff`-with-unverified-Delete-when
+      precedent in `codex/06-coding-standards/script-homes.md`) — and ran it: hunk-level diff of every test-touching
+      commit since 2026-08-07 across all 26 fleet repos, flagging a commit only when the WHOLE-COMMIT net assert-line
+      count is exactly zero AND at least one hunk shows a removed assert line paired with a non-identical added one in
+      the same hunk — precisely the shape a net-count check cannot see. Scanned 135 test-touching commits across 13
+      active repos; **9 raw hits collapsing to 5 distinct commits** (4 were `chore(promote): LDR → main` squash-copies
+      of the same diff — expected, not double-counted). Read all 5 by hand against their real diffs, not the script's
+      own pairing (caught the tool's own display bug mid-triage: it originally paired every removed line with hunk
+      added-line[0], which mis-implied `market-data-processing-service@df00b235`'s `ODDS_API`-removal mapped to the same
+      replacement as the `BETFAIR` one — fixed to print unpaired removed/added lists per hunk before trusting any
+      output). Verdicts: **(1) `deployment-api@661c0805`** — legitimate: `_get_ar_repo_name()`'s fallback default was
+      fixed (bare service-name → `unified-trading-system`), test renamed
+      `test_unknown_service_uses_service_name`→`test_unlisted_service_defaults_to_cb_repo` to match. **(2)
+      `deployment-service@f514b6a0`** — legitimate and pre-planned: the removed test's own docstring said "flip this
+      assertion to True once P2.2f's grant lands and is live-verified"; this commit is exactly that flip, citing the
+      live `tofu apply` + P2.2f DONE 2026-08-03. **(3) `market-data-processing-service@df00b235`** — legitimate: bare
+      `BETFAIR`/`ODDS_API` were retired from the sports venue axis by this SAME plan's ruling (BETFAIR → operator-group
+      parent; ODDS_API → source, not venue); test now asserts `BETFAIR_EX_UK`/`DRAFTKINGS` membership — same property
+      (real per-book venues configured), current vocabulary. **(4) `unified-api-contracts@1f5879fc`** — legitimate:
+      `odds_snapshot` retired as an MVP raw type by this plan's own P0 landing in the same window; the flipped
+      `assert is_mvp(...)`→`assert not is_mvp(...)` and shrunk `frozenset` both track that ruling, test renamed
+      `test_mls_odds_snapshot_is_mvp`→`test_mls_odds_snapshot_retired` to say so. **(5)
+      `unified-api-contracts@49e83239`** — legitimate: the SAME commit's source diff
+      (`market_data_categories.py`/`venue_constants.py`) removes bare `BETFAIR` from
+      `VENUES_BY_ASSET_GROUP`/`SPORTS_EXCHANGE_VENUES` with an inline comment explaining why; touched tests swap
+      `"BETFAIR"`→`"BETFAIR_EX_UK"` with matching inline comments. **Zero genuine weakenings found** — every net-zero
+      replacement in the window was a deliberate, documented consequence of an already-tracked change (4 of 5 are this
+      plan's own P0/P1 work landing in real time). **Decision: do NOT promote this to a permanent CI gate.** On this
+      sample every flag was legitimate (0/5 true weakenings), and the common tell separating them from the original seed
+      case (`market-tick-data-service@85423040`, which renamed nothing and explained nothing) — a renamed test function
+      and/or an inline comment naming the taxonomy change — is exactly the kind of intent signal a line-level diff
+      cannot evaluate mechanically. A standing gate on this shape would fire on most ordinary test-maintenance commits
+      during any active migration (precisely when the fleet is noisiest and the check matters least), training reviewers
+      to rubber-stamp it — worse than no gate. The existing structural safeguards (craft-role review per
+      `unified-trading-pm/agents/review.md`'s data_engineering north-star, which already names "no silent placeholder"
+      test-weakening as a finding class, plus the QG-green-tree-before-merge contract, plus periodic manual sweeps like
+      this one and the P1 sweep above it) are the right calibration for a check this dependent on reading intent — not a
+      blocking mechanical gate. Full 135-commit scan output + the fixed script are the citable evidence trail; no
+      further action needed unless a future sweep wants to re-derive a similar one-off from this entry.
 - [ ] [DOCS] P2. **`codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
       live `VENUES_BY_ASSET_GROUP["sports"]`** (found by `/docs-reconcile` 2026-08-08, direct-import verification
       against `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`). The doc claims "32
