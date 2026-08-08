@@ -836,3 +836,18 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   potentially-stale code rather than a new bug. Fixed by `git restore uv.lock` (confirmed zero content loss — pure
   lockfile noise, not intentional work) and retried. Retry is currently in progress (backgrounded, >120s again — tarball
   republish across 3 repos takes a while); confirming genuine VM creation next tick before trusting it.
+- **2026-08-08T15:08Z** — 2nd retry ALSO failed, differently: only `instruments-service` flagged stale despite a
+  genuinely clean, origin-synced tree (`git status --short` empty, 0 ahead/0 behind `origin/live-defi-rollout`).
+  Root-caused via direct manifest read (`gcloud storage cat .../instruments-service-code.manifest.json`):
+  `commit_sha=8548182b...` (older) vs local HEAD `6cdb0423...` — a genuine concurrent-push timing race on the shared
+  branch between the republish step reading HEAD and the manifest settling, not a bug in this checkout. Retried a 3rd
+  time (backgrounded).
+- **2026-08-08T15:16Z — ✅ FIXTURE_LINEUPS LAUNCH CONFIRMED GENUINE on the 3rd attempt.** `lc_verify_tarball_freshness`
+  passed clean this time (`tarball fresh: instruments-service @ 6cdb04239097`), VM `af-backfill-20260808-160815` created
+  (`asia-northeast1-c`, RUNNING). Per no-fire-and-forget discipline, waited and read `run.log` directly rather than
+  trusting the launcher's own exit code: confirmed genuine real work — `Fetched N lineup rows for fixture=<id>` lines
+  against real AF fixture IDs, `PIPELINE_HEARTBEAT` emitting on schedule, a healthy mix of populated (36-40 rows) and
+  legitimately-empty (0 rows — fixtures with no lineup data, expected) fetches. FIXTURE_LINEUPS is genuinely progressing
+  now. Two of three launch attempts failing on transient/environmental causes (not logic bugs) is now the established
+  pattern for this launcher under concurrent multi-worker load — noted for future launches, not a standalone issue worth
+  its own doc.
