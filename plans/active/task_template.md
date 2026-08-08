@@ -178,7 +178,26 @@ version.
   `[UI]`→ui_developer · `[REVIEW]`→review. Generic `[CODE]` / `[SCRIPT]` → the plan's `assigned_role`.
 - **Priority** `P0`–`P3` (P0 = most urgent). Same-priority tasks run in plan-file order (§4).
 - **Non-dispatchable** (kept visible, never ingested): a line containing `BLOCKED-<TOKEN>` (e.g. `BLOCKED-CREDENTIALS`,
-  `BLOCKED-OPERATOR-DECISION`), `[OPERATOR]` (operator-only action), or a `_(stretch, optional)_` marker.
+  `BLOCKED-OPERATOR-DECISION`), `[OPERATOR]` (operator-only action), or a `_(stretch, optional)_` marker. **Do not
+  confuse this ingestion-gate family with the `/done`-time disposition markers below** — `BLOCKED-<TOKEN>` keeps a todo
+  OUT of the backlog entirely; the markers below are how a worker CLOSES a dispatched todo it cannot `[x]`-flip.
+- **`/done`-time disposition markers** (server-recognized closures for a dispatched todo that cannot be `[x]`-flipped;
+  ground truth `agent-orchestrator/server/verify.py`'s `_ADDED_*_LINE_RE`/`_diff_*_checkbox` family — a worker's `/done`
+  M3 gate accepts any of these in place of a real checkbox flip):
+  - **`CANCELLED`/`SUPERSEDED`** — the todo is re-scoped or dead, nothing left to complete. Replace the `- [ ] <brief>`
+    line with a bold, non-checkbox bullet: `- **[TAG] P<n>. CANCELLED — SUPERSEDED <date> (<who>, per <ref>).**`
+  - **`DEFERRED-BY-DESIGN`** — the operator has ruled a CLOSED, PERMANENT non-fix (no timeline, nothing to schedule).
+    Line stays `- [ ]` but the text carries the literal marker: `- [ ] [TAG] P<n>. DEFERRED-BY-DESIGN — <why + ref>.`
+  - **`BLOCKED-ON:<ref>`** — distinct from the `BLOCKED-<TOKEN>` ingestion-gate family above: this is genuinely still
+    open, real work, temporarily blocked on ANOTHER owner's already-in-flight fix (not a permanent non-fix like
+    DEFERRED-BY-DESIGN, not re-scoped/dead like CANCELLED — e.g. a RED-gated data-correctness todo whose real fix is
+    owned by a different slot's active chain). Line stays `- [ ]`, text carries `BLOCKED-ON:<slug-or-doc-ref>` anywhere:
+    `- [ ] [TAG] P<n>. BLOCKED-ON:<other-doc-slug> — <why + who owns the unblocking fix>.` The todo stays visible and
+    dispatchable-looking in the plan text, but the disposition marker is what lets the worker holding it call `/done`
+    (`reason: "todo_blocked_pending_other_owner"`) without a false `[x]` flip — it does NOT remove the todo from the
+    backlog the way `BLOCKED-<TOKEN>` does; whoever resolves the blocking work still needs to come back and either flip
+    it for real or re-tag it. Source:
+    `/plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`.
 - **No bare cross-doc section shorthand** _(2026-07-23, adversarial-review finding D:
   `sports_consolidated_closeout_2026_07_19.md` had todos citing `§A2`/`§T`/`§W`-style labels that only resolved against
   a DIFFERENT document's internal sections — meaningless to an agent dispatched just that one todo)._ A `§X` reference
