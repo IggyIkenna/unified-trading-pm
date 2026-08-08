@@ -214,18 +214,35 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       fetched successfully and then silently discarded by `_filter_pyth_rows_to_is` every day since 2026-07-19 (will
       resolve going forward once shipped; does NOT backfill the already-lost 2026-07-19..2026-08-03 window, which is
       unrecoverable — Hermes only serves recent history per feed availability).
-- [ ] [OPERATOR] P2. **DOWNGRADED from P1 DO-FIRST (governance-sweep stale-tag cleanup, 2026-08-06)** — the "ongoing
-      data loss" premise this todo was filed under no longer holds: the same-day 03:50Z RESOLUTION entry below shipped
-      `market-tick-data-service@202bacc9`, a self-contained MTDS union fix (unions IS-enumerated pairs with the
-      collector's own static `_PYTH_FEEDS` set) that stops BTC/ETH/INF from being silently dropped **independent of
-      whether `instruments-service` ever redeploys** — verified via a fresh 1-day VM capturing all 12 PYTH SOLANA feeds
-      including BTC/ETH/INF. Triggering the `instruments-service` redeploy so `instruments-service@6fbaae90` goes live
-      is still worth doing (a complementary SSOT-catalogue-accuracy fix, and IS `quality-gates-v2` was separately found
-      red on `064e2560` per the 01:35Z CI-check note below, which may itself be blocking promotion) — but it is no
-      longer a data-loss emergency, just routine catalogue cleanup. Repo: instruments-service (deploy/trigger only, no
-      code change — the fix already shipped). Source: added by na-eligibility-audit 2026-08-06 (agt-e00d37) — this
-      action existed only as Progress Log prose (see the 2026-08-06 slot-12 entry below) and was never converted to a
-      tracked checkbox, per the workspace HARD RULE "every follow-up is a `- [ ]` todo, never prose."
+- [x] ✅ [OPERATOR] P2 → **RESOLVED/SUPERSEDED 2026-08-08.** DOWNGRADED from P1 DO-FIRST (governance-sweep stale-tag
+      cleanup, 2026-08-06) — the "ongoing data loss" premise this todo was filed under no longer holds: the same-day
+      03:50Z RESOLUTION entry below shipped `market-tick-data-service@202bacc9`, a self-contained MTDS union fix (unions
+      IS-enumerated pairs with the collector's own static `_PYTH_FEEDS` set) that stops BTC/ETH/INF from being silently
+      dropped **independent of whether `instruments-service` ever redeploys** — verified via a fresh 1-day VM capturing
+      all 12 PYTH SOLANA feeds including BTC/ETH/INF. **The "should IS redeploy" question this todo asked is now moot**:
+      `instruments-service@6fbaae90` (the BTC/ETH/INF PYTH-SOLANA catalogue fix) already reached `origin/main` on
+      `instruments-service` via squash-promote (`chore(promote): LDR → main`, 2026-08-03T20:00Z, per the 004d6499
+      promote commit) — reconfirmed BY CONTENT (not SHA ancestry; the repo underwent a history rewrite 2026-08-05,
+      invalidating any `git merge-base` check):
+      `git show origin/main:instruments_service/reference_data/     adapters/defi/pyth.py` shows all 3 Hermes feed-ids
+      present (`BTC/USD`/`ETH/USD`/`INF/USD`, `0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43` /
+      `0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace` /
+      `0xf51570985c642c49c2d6e50156390fdba80bb6d5f7fa389d2f012ced4f7d208f`, matching the `PYTH_PRICE_FEEDS`
+      restoration). CI reconfirmed green:
+      `gh run list --branch main --repo IggyIkenna/instruments-service --workflow     quality-gates-v2.yml --limit 5` —
+      5/5 most recent runs `completed success` (2026-08-07T20:19Z..23:02Z), so the 2026-08-06 01:35Z CI-red note below
+      is stale/self-resolved and no longer blocking promotion. The remaining action is a mechanical ops-check, not an
+      operator judgment call — reclassified below.
+- [ ] [SCRIPT] P2. **Confirm the live IS Cloud Run revision actually serves `instruments-service@main` HEAD** (i.e. the
+      deployed image includes the `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix, not a stale pre-fix image) — a
+      mechanical ops-check, not a redeploy-authorization judgment call (the code question above is closed). Read the
+      active Cloud Run revision's deployed image digest/commit label
+      (`gcloud run services describe     instruments-service --region <region> --format=...` or the equivalent per
+      `/codex/05-infrastructure/deployment-observability.md`) and compare against `origin/main` HEAD; if stale, confirm
+      whether the daily `instruments-service-daily-trigger` Workflow already picked up a newer revision on its own
+      (Cloud Run auto-deploy vs manual-trigger-only) before concluding a redeploy is still needed. **Done when**: a
+      dated Progress Log entry states the live revision's commit/digest and whether it matches main HEAD, with the
+      `gcloud`/`gh` command output cited as evidence.
 
 ## Progress Log
 
@@ -412,3 +429,9 @@ Two genuinely different directions, not mutually exclusive with the naming recon
     complementary SSOT fix; the union guard makes the collector resilient to any future IS catalogue gap. Plan
     `[DATA] P2` flipped with evidence. Remaining: `[DATA] P3` (instrument_id naming reconciliation) is tracked
     separately.
+- **na-corpus-digest-closeout 2026-08-08**: reconfirmed live that `instruments-service@6fbaae90`'s BTC/ETH/INF fix
+  reached `origin/main` (content-verified via `git show origin/main:.../pyth.py`, all 3 Hermes feed-ids present — SHA
+  ancestry not used, per the 2026-08-05 history-rewrite caveat) and that `quality-gates-v2` is green on main (5/5 recent
+  runs success, 2026-08-07T20:19Z..23:02Z). Marked the `[OPERATOR] P2` "should IS redeploy" todo resolved/superseded —
+  the code question is closed — and filed a new `[SCRIPT] P2` mechanical ops-check todo to confirm the LIVE Cloud Run
+  revision actually serves that main HEAD (distinct from "is the fix on main", which is now answered).

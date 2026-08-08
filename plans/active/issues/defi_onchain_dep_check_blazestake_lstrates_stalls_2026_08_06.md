@@ -125,23 +125,32 @@ BLAZESTAKE still blocking — Option A still needed).
       slot-10): VM `features-onchain-defi-20260807-172238` (SPOT, asia-northeast1-c, 1-day benchmark date=2026-07-29)
       exit_code=0; dep-check ✅ passed; 7/13 groups; lending_rates: 28045 rows written, lst_yields: 18 rows written;
       wall_clock≈121s/benchmark-day. Numbers recorded in progress log below.
-- [ ] [DATA] P2. **Investigate lending_indices capture stall (post-2026-07-31)** — diagnose why DEFI MTDS isn't writing
-      lending_indices rows for 2026-08-01+; may require a separate issue in MTDS. **Conflict-park note (2026-08-07):
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (2026-08-06) ran this exact conflict-check and found
-      contradicting evidence — `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 (KAMINO captured a
-      row 2026-08-05) and the resolved `defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`
-      (`KAMINO-SOLANA captured=80`) both directly contradict this item's "no captured data since 2026-07-31" premise —
-      possibly a different manifest surface (per_vm shards vs live availability_index) or a partial/venue-scoped stall,
-      not resolvable from text alone. batch9 PARKED this exact item as BLOCKED-OPERATOR-DECISION rather than drafting a
-      from-scratch diagnosis todo, recommending a live per-venue `lending_indices` availability_index re-check FIRST.
-      This na-eligibility-audit pass respects that standing park — do not reclassify this item independently of that
-      ruling.**
+- [ ] [DATA] P1. **Root-cause why `lending_indices` capture stopped 2026-08-01 — REOPENED 2026-08-08, live re-check
+      done, stall CONFIRMED real and ongoing.** The 2026-08-07 `BLOCKED-OPERATOR-DECISION` park (below, superseded) was
+      pending exactly this re-check; a sibling read-only agent this session ran the recommended live per-venue
+      `lending_indices` `availability_index.parquet` re-check directly (bounded pushdown read, no whole-corpus walk) and
+      found: captured-row counts by `date` show 07-25→143 declining through 07-31→250, then **zero** captured rows on
+      08-01/02/03/04/05, a one-off spike on 08-06→217 (a backfill/relabel batch — all 217 rows share ONE `attempted_at`
+      timestamp but span historical `date` values, i.e. a re-run writing PAST dates, not fresh same-day capture), then
+      **zero again** 08-07/08. This also resolves the specific contradiction that caused the park: the KAMINO "captured
+      a row 2026-08-05" counter-evidence (`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` item 7 /
+      `defi_manifest_consolidator_stale_lock_silent_stall_2026_08_05.md`'s `KAMINO-SOLANA captured=80`) is the SAME trap
+      — a backfill-batch `attempted_at` misread as a resumed cron, not genuinely fresh capture. **Diagnosis scope**:
+      root-cause why the live/cron `lending_indices` capture path stopped writing 08-01 — the 08-06 spike proves SOME
+      process CAN still write (so this is not e.g. a fully broken/deleted handler), meaning the stall is most likely a
+      scheduling/trigger/cron-registration issue rather than a code-level capture bug. Read-only diagnosis is
+      AO-dispatchable (a checkable root-cause question, not an operator judgment call); any actual fix (e.g.
+      re-registering a stalled cron/Workflow trigger) may still need an `[OPERATOR]` follow-up once the cause is known.
 - [ ] [OPERATOR] P3. **Decide DP-FETCH-009 paging policy for permanent retirement-marker cells** — the 1404 BLAZESTAKE
       markers permanently keep `(defi, lst_rates)` over the `attempted_failed` abs threshold, so the alert re-pages as
       STATIC BACKLOG each re-nag cooldown forever. Suppression / paging-cadence policy for stale cells is explicitly
       left open to the operator/alerting owner (`attempted_failed_staleness.py` docstring); options: (a) accept visible
       pressure on the known backlog, (b) have the detector exclude `superseded_by_*`-reason rows from the high count,
       (c) reclassify markers out of `attempted_failed`. Disposition evidence: slot-6 escalation agt-d87c1c, 2026-08-06.
+      **Context (2026-08-08, not a reclassification — still genuinely operator-gated)**: the 1404 retirement markers
+      were stamped 2026-08-06 (relabel Phase B); if the alert's staleness check uses a ~14-day trailing window (per
+      `attempted_failed_staleness.py`), this self-resolves around 2026-08-19/20 once the markers age out on their own —
+      worth knowing before spending operator time on a permanent policy for what may be a transient nag.
 
 ## Progress Log
 
@@ -204,3 +213,14 @@ BLAZESTAKE still blocking — Option A still needed).
   - EXIT_STATUS=0; wall_clock≈121s/1-benchmark-day (17:27:09→17:29:10 UTC)
   - **Throughput: ~121 s/benchmark-day** (for reference: TRADFI:commodity was ~39 s/shard-day on a 7-day run)
   - Note: `data_pipeline_check_mdps_features_2026_07_20.md` at 1000L hard cap — numbers recorded here, not in -056 plan.
+
+- **na-corpus-digest-closeout 2026-08-08**: item 3's live re-check (recommended by batch9, pending since 2026-08-07) is
+  now done — a sibling read-only agent this session read `_index/availability_index.parquet` directly for
+  `lending_indices` and confirmed the stall is real and ongoing: captured-row counts by `date` decline 07-25→143 through
+  07-31→250, then zero 08-01..08-05, a one-off backfill spike 08-06→217 (single shared `attempted_at`, historical `date`
+  spread — not fresh capture), then zero again 08-07/08. This also explains away the KAMINO counter-evidence that caused
+  the original park — same backfill-`attempted_at` misread. Removed the `BLOCKED-OPERATOR-DECISION` park, upgraded item
+  3 to `[DATA] P1` (root-cause diagnosis, AO-dispatchable — the 08-06 spike proves some process can still write,
+  pointing at a scheduling/trigger issue over a code-level break). Item 4 (BLAZESTAKE paging policy) left
+  untouched/still operator-gated per instruction, with a non-reclassifying context note added (self-resolves
+  ~2026-08-19/20 once the 08-06-stamped retirement markers age out of the ~14-day trailing alert window).

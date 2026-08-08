@@ -34,8 +34,8 @@ related:
 created: "2026-08-03"
 last_updated: "2026-08-08"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3.5
@@ -417,31 +417,36 @@ methodology step 1), not re-derive the classification from scratch.
 - **2026-08-08 (operator-authorized draft→active review)** — Re-ran the shared 3-surface conflict-check
   (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) against (a) every active
   `assigned_vm: planning` plan in `parent_epic: orchestrator_master` (only the batch2-8 finalize twins, all correctly
-  `gate_on_depends`-held — no independent claim), (b) sibling batches 6/7/8 (no new overlap beyond what those docs'
-  own drafting already cross-referenced), and (c) `ao_open_issues_consolidated_close_out_2026_07_17.md` (no new
-  conflict). Also spot-checked every open todo's Source doc for post-drafting closure: todo 5's Source
+  `gate_on_depends`-held — no independent claim), (b) sibling batches 6/7/8 (no new overlap beyond what those docs' own
+  drafting already cross-referenced), and (c) `ao_open_issues_consolidated_close_out_2026_07_17.md` (no new conflict).
+  Also spot-checked every open todo's Source doc for post-drafting closure: todo 5's Source
   (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`) was independently resolved+archived
   2026-08-06, so its `[DEVOPS] P1` was already answered — closed todo 5 above via verification (option (a), hard
   evidence: the archived doc's own `[x]` checkbox + `resolved_by` citation). Todos 1-4, 6-8, 10 re-verified still
   genuinely open against their live Source docs (todo 1: `agents/review.md` STEP 2 still shows unconditional `/reply`,
   no `in_reply_to`/`from_role` branch, confirmed by direct grep; todo 2: the source doc's `[OPERATOR]`/`[REVIEW]`
   checkboxes are already `[x]` but the doc itself is still `status: open`, un-archived, and the tracker's MISTAGGED-row
-  bookkeeping this todo also covers is still pending — todo correctly stays open for that remainder). **Investigated
-  the `assigned_vm: NA`/`execution_scope: local-only` frontmatter (atypical for a fresh `_satellite_ao_dispatch_batch{N}_`
+  bookkeeping this todo also covers is still pending — todo correctly stays open for that remainder). **Investigated the
+  `assigned_vm: NA`/`execution_scope: local-only` frontmatter (atypical for a fresh `_satellite_ao_dispatch_batch{N}_`
   doc per `ag-closeout-audit/SKILL.md`'s own stated `assigned_vm: planning` convention) before touching either field**:
   confirmed via `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own frontmatter `source:` block — a direct
   operator quote, 2026-07-17: _"for all the remaining issues check which are live vs resolved … for all the relevant
-  open issue docs create ONE plan, local execution"_ — and its body (line ~98: "**Human plan — operator session
-  executes it**"; line ~107: "All are **LOCAL** … operator-assigned agents on this host, never AO-dispatched") that
-  this is a real, deliberate, tranche-rooted operator ruling this batch inherits as the consolidated closeout's own
-  satellite extraction, not an unexplained deviation — batch2's 2026-08-01 na-eligibility-audit note ("worth the
-  operator's attention as a possible systemic skill-convention drift… no explicit ruling/citation found") had not yet
-  traced it to this origin. Given the ruling is real but was never re-cited per-batch (and a 2026-07-17-vintage ruling
-  extending to fresh 2026-08-03..08-08 batches is itself worth an explicit re-confirmation), left `assigned_vm`/
-  `execution_scope` UNCHANGED — flipping `status: draft → active` only, matching the exact precedent already live on
-  batch2/batch3 (`status: active`, `assigned_vm: NA`). Fixed the stale draft-era H1 banner to match. **Flagged to the
-  operator as a corpus-wide question worth one explicit ruling**: should the `ao` tranche's satellite batches keep
-  deviating from the general `assigned_vm: planning` convention indefinitely (codify the exception in
-  `ag-closeout-audit/SKILL.md`), or should the 2026-07-17 ruling be treated as scoped to that one plan's original
-  children and NOT extended to new batches going forward (in which case batch5-8 should be reclassified to
-  `assigned_vm: planning` after this same conflict-check)? Not resolved unilaterally here.
+  open issue docs create ONE plan, local execution"_ — and its body (line ~98: "**Human plan — operator session executes
+  it**"; line ~107: "All are **LOCAL** … operator-assigned agents on this host, never AO-dispatched") that this is a
+  real, deliberate, tranche-rooted operator ruling this batch inherits as the consolidated closeout's own satellite
+  extraction, not an unexplained deviation — batch2's 2026-08-01 na-eligibility-audit note ("worth the operator's
+  attention as a possible systemic skill-convention drift… no explicit ruling/citation found") had not yet traced it to
+  this origin. Given the ruling is real but was never re-cited per-batch (and a 2026-07-17-vintage ruling extending to
+  fresh 2026-08-03..08-08 batches is itself worth an explicit re-confirmation), left `assigned_vm`/ `execution_scope`
+  UNCHANGED — flipping `status: draft → active` only, matching the exact precedent already live on batch2/batch3
+  (`status: active`, `assigned_vm: NA`). Fixed the stale draft-era H1 banner to match. **Flagged to the operator as a
+  corpus-wide question worth one explicit ruling**: should the `ao` tranche's satellite batches keep deviating from the
+  general `assigned_vm: planning` convention indefinitely (codify the exception in `ag-closeout-audit/SKILL.md`), or
+  should the 2026-07-17 ruling be treated as scoped to that one plan's original children and NOT extended to new batches
+  going forward (in which case batch5-8 should be reclassified to `assigned_vm: planning` after this same
+  conflict-check)? Not resolved unilaterally here.
+- **2026-08-08 (operator, interactive)**: RULED — the 2026-07-17 local-only ruling is LIFTED for batch5-8 going forward;
+  `ao`-tranche work now flows to AO like every other tranche. `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent` applied to this doc and its batch6/7/8 siblings, each already
+  conflict-checked clean above. This does not retroactively reopen batch2/3 (already `active`/complete under the old
+  ruling) — it applies from this ruling forward.

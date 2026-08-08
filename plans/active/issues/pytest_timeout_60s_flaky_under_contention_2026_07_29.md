@@ -780,3 +780,17 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   passes' consistent `checks`-slice ratchet failures; earlier same-day failures `31244650600`/`31243520576` confirmed
   `QG slice (checks): failure`, `QG slice (tests): success` — known ratchet class, not pytest-timeout). Zero
   pytest-timeout recurrence anywhere. Window NOT yet closed (day ~3 of ~14); skipping per prior-pass precedent.
+- **slot-13 2026-08-08 ~08:15Z (twelfth pass, same task)**: corroborates all prior passes — surveyed latest 3
+  `quality-gates-v2` runs across all 10 tracked repos (runs spanning ~04:00Z–08:05Z 2026-08-08). 9 service repos: 27/27
+  `conclusion=success` (instruments-service `31239388228`/`31238600361`/`31238493276`; features-service
+  `31239381829`/`31238262678`/`31237965978`; market-data-processing-service `31245328812`/`31244752718`/`31244657826`;
+  unified-trading-api `31239403461`/`31239133409`/`31239051524`; deployment-service
+  `31241329768`/`31239660964`/`31239453844`; ml-service `31239394322`/`31238621226`/`31238492102`; client-reporting-api
+  `31245974364`/`31243600516`/`31243528974`; market-tick-data-service `31241338540`/`31240565282`/`31240372662`; plus
+  unified-api-contracts `31244675894`/`31244658816` success). unified-api-contracts latest run `31245985052` (07:21Z):
+  `conclusion=failure` — confirmed NOT pytest-timeout; genuine assertion error on
+  `tests/test_data_type_canonicalization.py::test_yaml_data_types_in_uac[unified-trading-pm]` ("Data types in
+  venue_data_types.yaml not registered in UAC DATA_TYPES_BY_ASSET_GROUP", 1 failed/12401 passed, completed in 208s —
+  well within per-test budget, no timeout involved); unrelated to this doc's flake class. unified-trading-pm: latest 3
+  runs all `conclusion=success` (`31247609729`/`31247453779`/`31247024661`, through 08:04Z) — both slices green. Zero
+  pytest-timeout recurrence anywhere. Window NOT yet closed (day ~3 of ~14); skipping per prior-pass precedent.

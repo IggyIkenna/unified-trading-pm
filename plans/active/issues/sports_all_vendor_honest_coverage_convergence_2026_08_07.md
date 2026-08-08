@@ -700,3 +700,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   ago — no third occurrence. Useful negative data point: this specific chunk can clear cleanly, so the hang isn't
   deterministically tied to chunk 18's content alone. FIXTURE_STATS +14 days (`last_completed_date=2024-08-09`, fresh
   `07:38:10Z`), still healthy. Continuing to watch until smallchunk4 is clearly into chunk 19+.
+- **2026-08-08T08:13Z** — FIXTURE_STATS +35 days (`last_completed_date=2024-09-13`, fresh `08:11:18Z`), steady. odds
+  smallchunk4: still chunk 18/451, now 2 OOMs total (up from 0) — normal self-recovery pattern (distinct leagues,
+  correctly advancing), not the silent-hang signature (no total-silence gap observed). Both healthy, no intervention.
+  **Also this tick**: dug into whether the AF entity chain (FIXTURE_STATS→FIXTURE_LINEUPS→INJURIES) could be
+  parallelized per an operator ask — confirmed it cannot (real, previously-hit account-wide API-Football daily quota,
+  launcher refuses a 2nd concurrent AF VM by design) — but confirmed via live AO backlog that 3 workers (slots 5, 7, 12)
+  are already actively dispatched on `sports_taxonomy_p1`'s remaining P0 todos in parallel with this campaign, so
+  parallelism is already maximized where it's genuinely available. No action needed on this doc from that finding.

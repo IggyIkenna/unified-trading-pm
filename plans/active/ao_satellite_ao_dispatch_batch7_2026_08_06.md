@@ -37,8 +37,8 @@ related:
 created: "2026-08-06"
 last_updated: "2026-08-08"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.2
@@ -242,3 +242,6 @@ methodology step 1), not re-derive the classification from scratch.
   referenced items still `[ ]` — no stale/already-done items found (unsurprising, this batch was drafted only 2 days
   prior). Applied the same `assigned_vm`/`execution_scope`-unchanged treatment as batch5/batch6 (see batch5's Progress
   Log for the full investigation); flipped `status: draft → active` only. Fixed the stale draft-era H1 banner to match.
+- **2026-08-08 (operator, interactive)**: RULED — the 2026-07-17 local-only ruling is LIFTED going forward; see batch5's
+  Progress Log for the full note. `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`
+  applied here too.
