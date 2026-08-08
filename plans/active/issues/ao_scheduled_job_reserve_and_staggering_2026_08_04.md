@@ -395,6 +395,20 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       should be raised to 60 mins, and add an `_is_actively_thinking` guard"; VM-waiters may wait as long as they are
       looping). Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262
       vitest. (repo: agent-orchestrator)
+- [x] ✅ [CODE] P1. **All 8 timer installers converted to `systemd --user` — the re-install below is the LAST one that
+      needs sudo** — agent-orchestrator@c3a85c3b4. Root cause of this todo being `[OPERATOR]` at all was WHERE the
+      installers wrote (`/etc/systemd/system`, `/usr/local/bin`), never what they did: the dispatch scripts only
+      `curl localhost:8765` and read the operator's own `.env.local`. Now `~/.config/systemd/user/` + `~/.local/bin/`
+      via a shared `scripts/lib/user-timer-env.sh` preamble that refuses to run under sudo (would install into `/root`'s
+      unlingered user manager — a timer that looks installed and never fires) and fails loudly on an unreachable user
+      manager. Not new infra: `bootstrap_vm.sh` STEP 7.5b2 already enables lingering and installs the reflog guard as
+      user units by this exact mechanism — these 8 were the outliers. `After=orchestrator.service` dropped
+      (cross-boundary) and replaced by an `ExecStartPre` `/api/healthz` gate, which is strictly stronger — `After=` only
+      ordered the START and never waited for readiness. Verified by running all 8 against a sandbox `HOME` with a
+      stubbed `systemctl`: 8/8 emit the expected unit + dispatch-script pair. Operator ruling 2026-08-08 (keep them
+      under `ubuntu`). Evidence: `quality-gates.sh` green — 2677 python, basedpyright 0/0, `tsc --noEmit` clean, 262
+      vitest; `bash -n` clean on all 9 files. Codex SSOT `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`
+      updated (its "re-run `sudo bash …`" HARD RULE was made wrong by this change). (repo: agent-orchestrator)
 - [ ] [OPERATOR] P1. **RE-INSTALL ALL SEVEN timer units on the orchestrator VM — nothing from the 2026-08-06 slot-3
       batch is live until this runs.** `sudo bash scripts/install-<each>-timer.sh` for all 7. The earlier re-install
       todo above IS done, but it ran at 15:04 UTC — BEFORE agent-orchestrator@5f15d0a (16:21, shard + Saturday) and
