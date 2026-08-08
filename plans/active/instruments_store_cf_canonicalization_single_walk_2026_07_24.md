@@ -297,3 +297,7 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
   the 2026-08-05 marker was a 2026-08-06 na-eligibility-audit reaffirmation (body byte-identical), no new targets.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): the C0/E3-E6 single-walk todos
   remain a coordinated migration requiring VM launch + writer-drain coordination (E6 explicitly IRREVERSIBLE).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  the C0/E3-E6 single-walk todos are a coordinated migration requiring VM launch + writer-drain coordination (E6
+  explicitly IRREVERSIBLE, hands C-GREEN to a permanent legacy-bucket delete) -- no cheat-sheet precedent
+  unblocks a whole-corpus irreversible single-walk migration.

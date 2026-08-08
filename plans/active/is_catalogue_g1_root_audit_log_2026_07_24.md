@@ -444,3 +444,8 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- dropped the sibling defi audit-log link, added
   the 3 real source-code targets this log's shipped commits actually touch (catalogue builder, enumerator, v9 migrator).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- self-described
+  historical/audit record; every open todo is gated (G1.run on the IS backfill + UAC accuracy + v9;
+  G1.run-prediction on another plan's loader wiring; G1.run-full-history explicitly deferred pending the
+  operator's already-approved-but-not-yet-executed dedicated VM-launch pass) -- consistent with 2026-08-02/08-06
+  verdicts.

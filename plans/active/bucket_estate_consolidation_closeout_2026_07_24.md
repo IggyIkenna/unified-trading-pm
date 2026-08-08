@@ -403,3 +403,9 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   recon-bucket P0 remains OPERATOR_QUESTION-blocked (kind-vs-prefix decision); ml-models-store delete P1 remains
   OPERATOR_QUESTION (fully-proven-safe disposition, but a human-only hard stop per
   `gcs-and-manifest-delete-safety-protocol.md` §3 — agent execution is categorically excluded, not just judgment-gated).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  2 open todos remain -- the recon-bucket item's operator-gate is now cleared (per its own 2026-08-08
+  round5-cross-cutting-audit correction) but its remaining scope (multi-repo producer-chain stand-up) is
+  explicitly out-of-scope-for-this-plan; the `ml-models-store` prod-bucket delete stays a human-only hard stop
+  per `gcs-and-manifest-delete-safety-protocol.md` §3 regardless of how well-proven the disposition is --
+  whole doc stays NA.

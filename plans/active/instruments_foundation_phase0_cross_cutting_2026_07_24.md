@@ -621,3 +621,8 @@ wrong).
   behind GATE 0 (NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra with genuine DESIGN-judgment items
   (expected-universe oracle venue-truth sourcing decision, canonical-form single-SoT whole-corpus migration sequencing)
   that aren't cleanly bounded-outcome — consistent with the prior two passes' verdict, doc stays NA as a mixed set.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  all open Phase-0 items sit behind GATE 0 (still NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra
+  with genuine DESIGN-judgment items (expected-universe oracle venue-truth sourcing decision) that aren't
+  cleanly bounded-outcome. No cheat-sheet precedent (IAM/reversible-delete/recurring-finding-job) applies to any
+  open item here.

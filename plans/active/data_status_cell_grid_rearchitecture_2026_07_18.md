@@ -171,3 +171,7 @@ real fix is to never load the whole manifest per request.
     are still OOM-dangerous — hence the `live_build_guard.py` pre-flight refusal.
   - Target for todo 2 design: bounded/streamed/precomputed approach must keep peak RSS < 4 GiB even for a full-history
     request at MTDS's worst-case rate (5.19 MB/day/category).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  todo 2 is still an unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on; a
+  genuine architecture choice among 3 directions with different Cloud-Run-memory/single-walk-discipline
+  implications, not a cheat-sheet-matched default.

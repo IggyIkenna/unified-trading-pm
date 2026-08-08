@@ -263,3 +263,7 @@ member, not just a retag.
   genuinely open — both target docs' `asset_group` still reads `[cross-cutting]` today (fresh grep), unretagged. Doc
   stays `assigned_vm: NA` — both remaining todos are cross-tranche retags per the 2026-07-30 concurrent-sharded-worker
   rule, not this tranche's write.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  a cross-tranche parked-findings register; the 2 remaining open todos are `[DOCS] P3` `asset_group` retags of docs
+  owned by OTHER tranches, explicitly scoped "leave to the owning tranche's own audit" per the 2026-07-30
+  concurrent-sharded-worker rule -- structurally not this tranche's write, not a defaulted-to-NA judgment call.

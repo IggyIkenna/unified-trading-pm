@@ -150,3 +150,7 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): todos 1/3 are
   [OPERATOR]-tagged kill+respawn/judgment actions main cannot self-serve; todo 2 touches live dispatch-critical watchdog
   machinery already under active sequenced modification elsewhere (batch5).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-06 (unchanged):
+  the 2 remaining open todos are an `[OPERATOR]`-tagged live kill+respawn action (slot 3, 3rd recurrence) and a
+  `[BACKEND]` fix to live dispatch-critical-path watchdog machinery -- neither is a worker-determinable bounded
+  fix safely dispatchable through the same fleet it would be modifying.

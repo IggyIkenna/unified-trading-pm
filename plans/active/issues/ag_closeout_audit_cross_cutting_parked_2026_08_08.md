@@ -308,3 +308,7 @@ ledger.
   08-06/07/08) documents a LIVE unauthenticated prod Cloud Run endpoint — see this run's own final report for a
   standalone NOTIFY-OPERATOR callout; not fixed here (out of this doc's scope, its own todos are already correctly
   tracking the retag + the underlying fix separately).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- same-day filing, reaffirms the
+  earlier na-eligibility-audit entry above (unchanged): 2 of 5 open items are cross-tranche retag handoffs
+  (owning-tranche's write, not this one's), 1 is an unruled `[OPERATOR]` design question that alone keeps the
+  whole doc NA, and the remaining 2 (script fix, line-cap split) don't clear the whole-doc bar on their own.

@@ -743,3 +743,10 @@ staleness found — doc stays `assigned_vm: NA`.
 
 **context-scout 2026-08-03**: re-scouted; context_scope unchanged (5 entries), still accurate against the doc's current
 content post-line-cap-split.
+
+## Progress Log
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- this doc self-declares
+  "HUMAN TRACKER -- operator-owned (`assigned_vm: NA`, NOT auto-dispatched)" in its own header; it points at
+  source plans/issues rather than being itself executable, and several open items remain genuine judgment work
+  (Stage-3 Layer-1 re-measure methodology, the systemic unregistered-handler audit's widen-scope addendum) --
+  consistent with the 2026-08-03 verdict.

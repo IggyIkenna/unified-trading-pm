@@ -521,3 +521,6 @@ is the single place to scan them all in one pass.
   tracking/index surface, no source path applies.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): standing reference surface,
   `archive_exempt: true` by operator ruling, 0 open todos by design.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  `archive_exempt: true`, standing reference surface by operator ruling (`autonomous_session_operator_decisions_
+  2026_07_25.md` entry #10); 0 open todos is expected/by design here, not a reclassification signal.

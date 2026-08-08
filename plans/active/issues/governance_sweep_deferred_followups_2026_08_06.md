@@ -106,7 +106,7 @@ context_scope:
       inside a fenced quote block, not live checkboxes; `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
       `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`,
       `issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`). Evidence: `unified-trading-pm@09cdfaad65`.
-- [ ] [OPERATOR] P2. **6 RECLASSIFY candidates from the 2026-08-06 na-eligibility-audit reclassification pass hit a
+- [x] [OPERATOR] P2. **6 RECLASSIFY candidates from the 2026-08-06 na-eligibility-audit reclassification pass hit a
       genuine conflict-check CONFLICT — filed here per protocol, not flipped.** Each needs an explicit operator ruling
       (or a fresh re-check once the cited sibling doc's own state settles) before it can be either reclassified or
       closed as duplicate: 1. `plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` — **genuine
@@ -159,6 +159,8 @@ context_scope:
               as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
               already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
               corrections against the docs they collide with.
+
+      **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
 
 - [x] ✅ [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
       this sweep ruled the provider-pin sub-question (v5-align, recommended) but explicitly did not fabricate answers to
@@ -247,3 +249,8 @@ different task than writing the ruling:
   settled), re-confirmed the other 2 stay genuinely open (live-trading go-ahead permanent hard-stop; fork-PR-approval
   setting deferred by the operator's own "later" answer). 2 of 7 open todos remain: fork-PR-approval-setting (P0, manual
   GitHub UI click owed) and live-trading go-ahead (P3, permanent human sign-off).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale item closed -- flipped todo 2's
+  checkbox (the 6 conflict-parked RECLASSIFY candidates), citing the doc's own round5-cross-cutting-audit entry
+  that already found all 6 resolved. Remaining open todos are 2 permanent operator hard-stops (live-trading
+  go-ahead; fork-PR-approval GitHub UI click with no API path), 1 bounded-but-gated-by-the-whole-doc-rule DIAG
+  item, and 1 editorial line-cap trim needing human judgment -- whole doc stays NA.

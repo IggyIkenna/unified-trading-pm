@@ -246,3 +246,8 @@ Scope exemptions (by design, not gaps): features-service / strategy / execution 
 - **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (6 entries, corrects the prior marker's
   stale count) -- unchanged; already covers the enforcement SSOT source + the preflight-chain codex doc the A12a todo
   needs.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-07-30 (unchanged):
+  P0 provenance enforcement whose `[DATA]` todos are prod corpus backfills explicitly folded into other plans'
+  single-walk windows (cross-plan sequencing is coordination judgment); genuinely AO-eligible slices exist
+  (`[SCRIPT]` backfill_defi_source_column, `[TEST]` unit tests, the A12a remaining-8-handler wiring) but
+  splitting them out of this coordination doc into a fresh batch is plan-authoring work this audit does not do.

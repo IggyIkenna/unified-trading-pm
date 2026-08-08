@@ -118,3 +118,8 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries) -- pure coordination-index doc
   over 8 source plans (this doc's own todo is a future triage pass, not itself code work), so no source-code path
   applies; existing plan/issue/codex links remain the minimal correct set.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- this doc's own
+  round5-cross-cutting-audit entry (2026-08-08) already resolved the plan-destination question the sole todo
+  raises, citing the standing "Plan destination -- ASK BEFORE CREATING" HARD RULE: default `NA` unless the
+  operator explicitly overrides. The sole todo's own output is authoring a NEW dispatch batch, which defaults
+  NA -- not re-litigating an already-resolved-today question.
