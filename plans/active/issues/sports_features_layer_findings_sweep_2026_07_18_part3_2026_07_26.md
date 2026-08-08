@@ -414,12 +414,14 @@ that is real — but the catalogue will keep reporting ~0% until its reader is r
       wired into the catalogue build. **Retracted, wrong layer** — see R-FIXED's own already-flipped entry directly
       below: these are `features_sports` UAC fields, not catalogue columns; the producer (`season_context.py`) already
       existed, only needed `round` populated (§ Q/§ R), no new projection code.
-- [ ] [PROCESS] P1. An entity rename/split MUST enumerate and migrate consumers in the same change. This one shipped the
-      writer on 2026-05-23 and left ~10 readers pointing at a corpus that stopped updating — silently, because a frozen
-      corpus still reads successfully. **Genuinely open** — a proposed workspace process rule, not yet codified into a
-      codex doc (checked `codex/12-agent-workflow/` and `codex/04-architecture/` for an entity-migration-consumer rule;
-      none exists). Not batchable — codifying a new authoring rule is an operator call, same class as batch6 todo 7's
-      own Deferred item on generalising the finalize-plan fix.
+- [x] ✅ [PROCESS] P1. An entity rename/split MUST enumerate and migrate consumers in the same change. This one shipped
+      the writer on 2026-05-23 and left ~10 readers pointing at a corpus that stopped updating — silently, because a
+      frozen corpus still reads successfully. **Genuinely open** — a proposed workspace process rule, not yet codified
+      into a codex doc (checked `codex/12-agent-workflow/` and `codex/04-architecture/` for an entity-migration-consumer
+      rule; none exists). Not batchable — codifying a new authoring rule is an operator call, same class as batch6 todo
+      7's own Deferred item on generalising the finalize-plan fix. ✅ Codified 2026-08-08 —
+      `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md`; applied to sports taxonomy P1 chain (consumer
+      inventories on every rename todo). Resolved by P1 plan `[DOCS] P0`.
 
 ### R-FIXED (2026-07-19 02:01Z) — catalogue repointed to the LIVE entity: `round` 0.7% -> **70.6%**
 
