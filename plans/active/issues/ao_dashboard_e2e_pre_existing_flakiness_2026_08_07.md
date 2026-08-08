@@ -14,7 +14,10 @@ summary: >-
   port-collision work that surfaced it.
 status: open
 nature: issue
-asset_group: [ao, cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-08 (/ag-closeout-audit ao) -- was [ao, cross-cutting]. Content is 100% agent-orchestrator's
+  # own dashboard e2e test suite (Playwright flakiness in agent-orchestrator/dashboard/tests/e2e/*); nothing spans
+  # outside ao -- cross-cutting was a redundant mistag per the Orthogonality HARD CHECK.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]

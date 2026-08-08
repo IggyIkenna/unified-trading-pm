@@ -60,6 +60,13 @@ context_scope:
 
 # main_ci_red: promote PR blocked by plan-hygiene backlog on LDR
 
+> **🗄️ ARCHIVED 2026-08-08 (/ag-closeout-audit ao)** — both todos `[x]` done, 0 open items. Operator ruling executed
+> (option A, re-scoped as per-doc content verification via
+> `archive_candidates_content_verification_backlog_2026_08_06.md`) and the causal chain independently re-verified
+> 2026-08-07: promote PR #2514 (`unified-trading-pm@2c8bd8125`) `quality-gates-v2: SUCCESS`, MERGED
+> 2026-08-07T23:19:35Z. Found sitting done-but-unarchived by `check_archive_candidates.sh` during this run; archived per
+> `/codex/11-project-management/plan-completion-and-archival-discipline.md`.
+
 ## What I found (verified 2026-08-06, escalation agt-80c470)
 
 1. **main is RED.** Last `quality-gates-v2` push run on main (head `7b5390649`, "fix: promote-provenance marker must
