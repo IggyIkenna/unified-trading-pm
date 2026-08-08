@@ -194,10 +194,11 @@ wrapper):
       sha256:7042ab88 built 2026-08-08T00:24Z deployed to `uts-shared-deployment-api-00464` (100% traffic, created
       2026-08-08T00:28Z). `uts-prod-dp-heartbeat-watcher-cron` ENABLED in asia-northeast1, last run 2026-08-08T03:30Z,
       running every 5 min successfully.
-- [ ] [INFRA] P0. Fleet monitoring agents must verify ALL THREE liveness signals (heartbeat blob mtime, run.log mtime,
-      manifest generation advancing) before any `gcloud instances delete` on `canonical-migration-` prefix VMs — fold
-      the SIGPIPE-can-fake-a-frozen-run.log nuance into `/codex/05-infrastructure/vm-launcher-runbook.md` (the
-      underlying 3-signal HARD RULE already exists there; what's missing is this doc's specific nuance).
+- [x] [INFRA] P0. ✅ Fleet monitoring agents must verify ALL THREE liveness signals (heartbeat blob mtime, run.log
+      mtime, manifest generation advancing) before any `gcloud instances delete` on `canonical-migration-` prefix VMs —
+      fold the SIGPIPE-can-fake-a-frozen-run.log nuance into `/codex/05-infrastructure/vm-launcher-runbook.md` (the
+      underlying 3-signal HARD RULE already exists there; what's missing is this doc's specific nuance). —
+      unified-trading-pm@762008c33
 
 ## Progress Log
 
