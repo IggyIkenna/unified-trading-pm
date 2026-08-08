@@ -334,10 +334,12 @@ plan + verifying the `done_sha`, never from the row's status alone.
 
 ## Follow-ups
 
-- [ ] [BACKEND] P2. **Characterise the 1,013 `unresolved` rows.** Confirm the expected explanation (rows whose plan was
-      archived, so `plan_ref` no longer resolves at `origin/live-defi-rollout`) actually accounts for the bulk, and
+- [x] ✅ [BACKEND] P2. **Characterise the 1,013 `unresolved` rows.** Confirm the expected explanation (rows whose plan
+      was archived, so `plan_ref` no longer resolves at `origin/live-defi-rollout`) actually accounts for the bulk, and
       report the residue that does NOT. A row that is `done` and unresolvable is invisible to this audit forever, so a
-      large unexplained residue is a silent-blindspot, not bookkeeping noise. Report the split; do not bulk-mutate.
+      large unexplained residue is a silent-blindspot, not bookkeeping noise. Report the split; do not bulk-mutate. —
+      **verified 2026-08-08 (slot 22): expected explanation accounts for 100% of the bulk, zero unexplained residue.**
+      Full trail in the Progress Log below.
 - [ ] [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows.**
       `regen_positional_task_ids_not_content_stable_2026_07_17.md` already shipped `agent-orchestrator@aaa2db8` to bound
       this tail and the count still moves — re-measure, and confirm every remaining unhashed row is a `done` row (which
@@ -494,3 +496,25 @@ plan + verifying the `done_sha`, never from the row's status alone.
   correctly still `- [ ]` and `DEFERRED-BY-DESIGN`-gated to on/after 2026-08-09 (not due yet as of today, 2026-08-08).
   Nothing to correct on either the backlog row (already gone/self-corrected) or the plan checkbox (already honest). See
   the checklist item above for the full trail.
+
+- **2026-08-08 (slot 22, backend_engineer)**: Follow-up — **Characterise the 1,013 `unresolved` rows.** Ran
+  `audit_false_done.py --json` live against the actual production `state.db` (`agent-orchestrator/data/state/state.db`,
+  224MB, on the orchestrator VM itself — this slot runs ON that VM, so no SSM hop was needed) with `--pm` pointed at a
+  fresh `origin/live-defi-rollout` fetch (ref `0f6635534`). Live counts have moved since the 03:15 UTC snapshot
+  (expected, ongoing churn): `false_done=3` (down from 14 — the other 11 already self-corrected per the checklist items
+  above), `honest=745`, `UNAUDITABLE=11`, **`unresolved=1042`** (up from 1,013). **Characterisation**: for each of the
+  1,042 unresolved `task_id`s, pulled its `plan_ref` from `state.db`, then checked whether that path's basename appears
+  anywhere under `plans/archive/` at `origin/live-defi-rollout` (via `git ls-tree -r --name-only`, 2,768 archive files
+  indexed) — i.e., whether the row's plan doc was genuinely archived (the audit script's own hypothesis) rather than
+  broken/mis-cited. Result: **1,042 / 1,042 (100%) matched an archived file by basename — zero residue.** Spot-checked 3
+  random samples with `git show origin/live-defi-rollout:<literal plan_ref>` (confirmed each fails to resolve, as the
+  audit found) cross-referenced against the matching archive path (confirmed each exists, e.g.
+  `plans/active/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` →
+  `plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`) — all 3 confirmed genuine
+  archival, not coincidence. Caveat noted for rigor: 15 basenames are duplicated across the archive tree (e.g. two
+  different `api_host_chronic_impairment_2026_05_29.md` docs in different month folders) — a basename-only match can't
+  distinguish which specific archived copy a row's original doc became in that rare case, but it does not change the
+  headline finding (still a real archived doc either way, not a broken/dangling `plan_ref`). **Verdict: the expected
+  explanation fully accounts for the unresolved bucket — this is bookkeeping noise from normal plan-archival lifecycle,
+  not a silent blindspot.** No bulk-mutation performed (per the todo's own instruction); this is a report-only finding,
+  no code shipped, no backlog rows touched.
