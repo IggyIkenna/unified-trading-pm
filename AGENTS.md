@@ -52,7 +52,10 @@ Every sub-agent prompt MUST include:
 - "Before any action, read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` and follow ALL rules
   strictly."
 - `WORKSPACE_ROOT: <absolute path>`
-- NEVER pass `model=` in Task tool calls (auto mode = free)
+- ALWAYS pass `model=` explicitly in Task tool calls (CLAUDE.md § Model tier HARD RULE, current as of 2026-07 —
+  supersedes the older "never pass model=" framing this file previously carried, which no longer matches policy).
+  Sub-agents are still ~10x cheaper because they run in an isolated context window, not because omitting `model=`
+  triggers a free tier.
 
 ---
 
