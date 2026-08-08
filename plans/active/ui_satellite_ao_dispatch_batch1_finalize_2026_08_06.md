@@ -85,20 +85,20 @@ source: >-
       sha, and either is left unflipped only with a stated reason. Repo: unified-trading-pm.
 
       **DONE 2026-08-08**: all 3 boxes across the 2 source docs were already `[x]` (flipped by the batch-1 todos
-                      themselves per their own "Done when" clauses), so this pass focused on sha-verification + citation completeness:
-                      (1) `data_status_cell_grid_rearchitecture_2026_07_18.md` todo 1 already cites `deployment-api@8a36931` —
-                      verified ancestor of `origin/live-defi-rollout`. (2) `artifact_pipeline_observability_2026_07_17.md` Phase 5's
-                      2nd item (dual-cloud-image-builds drift fix) already cites `unified-trading-pm@dab5f0273` — verified ancestor.
-                      (3) `artifact_pipeline_observability_2026_07_17.md` Phase 5's 1st item (line 652, stale issue-filing checkbox)
-                      was `[x]` but cited only "na-eligibility-audit", no batch-1 sha — root-caused: that checkbox was independently
-                      pre-flipped 2026-08-07 by a na-eligibility-audit pass (`unified-trading-pm@2b8073083`, verified ancestor) one
-                      day BEFORE batch-1's own todo 2 shipped (`unified-trading-pm@d2094b791`, verified ancestor) fixing the
-                      cross-referenced issue doc's stale `#1` item; added both shas as an explicit citation so the checkbox properly
-                      reflects both closures rather than crediting only the earlier one. All 3 shas verified via
-                      `git merge-base --is-ancestor <sha> origin/live-defi-rollout` before citing (none copied blind). — this plan's
-                      own reconciliation commit.
+                          themselves per their own "Done when" clauses), so this pass focused on sha-verification + citation completeness:
+                          (1) `data_status_cell_grid_rearchitecture_2026_07_18.md` todo 1 already cites `deployment-api@8a36931` —
+                          verified ancestor of `origin/live-defi-rollout`. (2) `artifact_pipeline_observability_2026_07_17.md` Phase 5's
+                          2nd item (dual-cloud-image-builds drift fix) already cites `unified-trading-pm@dab5f0273` — verified ancestor.
+                          (3) `artifact_pipeline_observability_2026_07_17.md` Phase 5's 1st item (line 652, stale issue-filing checkbox)
+                          was `[x]` but cited only "na-eligibility-audit", no batch-1 sha — root-caused: that checkbox was independently
+                          pre-flipped 2026-08-07 by a na-eligibility-audit pass (`unified-trading-pm@2b8073083`, verified ancestor) one
+                          day BEFORE batch-1's own todo 2 shipped (`unified-trading-pm@d2094b791`, verified ancestor) fixing the
+                          cross-referenced issue doc's stale `#1` item; added both shas as an explicit citation so the checkbox properly
+                          reflects both closures rather than crediting only the earlier one. All 3 shas verified via
+                          `git merge-base --is-ancestor <sha> origin/live-defi-rollout` before citing (none copied blind). — this plan's
+                          own reconciliation commit.
 
-- [ ] [REVIEW] P1. **Re-check all 11 of batch 1's `## Deferred` items for resolution.** Batch 1 found zero
+- [x] ✅ [REVIEW] P1. **Re-check all 11 of batch 1's `## Deferred` items for resolution.** Batch 1 found zero
       conflict-gated items (the tranche's first batch has nothing yet to conflict with), so this step is broader than
       the conflict-only re-check other tranches' finalize plans run — check EVERY category: - **Operator-gated (items
       1-5)**: has the operator ruled on any of the 5 (prediction-catalogue dedupe design; cell-grid
@@ -122,6 +122,91 @@ source: >-
       todo + the evidence). For each still-blocked one, restate the live blocker so batch 2 does not have to re-derive
       it. **Done when**: all 11 items carry a dated CLEARED-or-STILL-BLOCKED verdict with evidence, and the cleared set
       is written up as the batch-2 candidate list. Repo: unified-trading-pm.
+
+      **DONE 2026-08-08.** All 11 verdicts, dated, with evidence:
+
+          **Operator-gated (1-5):**
+          1. `data_status_catalogue_true_source_phase2` — **STILL-BLOCKED.** No ruling; prerequisite (prediction
+             `/catalogue` 79-row `_dedupe_latest` collapse) still unresolved per its own 2026-08-07 na-eligibility-audit.
+          2. `data_status_cell_grid_rearchitecture` todo 2 — **STILL-BLOCKED.** Batch 1's own measurement todo shipped
+             (`deployment-api@8a36931`, real numbers now recorded), but the bound/stream/precompute design gate itself is
+             still an unmade 3-way architecture choice — reaffirmed by an 2026-08-08 na-eligibility-audit round7 pass.
+          3. `deployment_api_inventory_alert_gate_ondemand_only` — **STILL-BLOCKED.** No ruling on the `[HUMAN]`-tagged
+             reuse-vs-narrow-path trade-off; unchanged since 2026-07-30 per 2026-08-06 na-eligibility-audit.
+          4. `consolidator_throughput_backlog_monitor`'s 2 `[REVIEW]` deploy-gate closers — **STILL-BLOCKED.** No tracker
+             doc for "end-of-cockpit-plans" exists to check against; both closers remain explicitly deferred by the dated
+             2026-07-10 operator decision, unchanged per 2026-08-07 na-eligibility-audit.
+          5. `cost_observability_deferred_followups` — **CLEARED (operator ruled 2026-08-07), with a nuance.** (a) AWS CUR
+             historical backfill: RULED CLOSED as July-2026-onward, final — no further work, not a batch candidate. (b)
+             Business-context/`asset_group` enrichment: RULED "proceed," but a same-day 2026-08-08 scoping pass (captured in
+             `ui_satellite_ao_dispatch_batch2_2026_08_08.md`'s own Deferred section) found it does NOT clear the
+             bounded-outcome bar as a single todo — 176 VM launcher scripts exist, only ~9 route through the one shared
+             label-injection choke point (143 call `gcloud compute instances create` directly), plus key-name drift
+             (`asset_group=` vs `asset-group=`) on the ones that do pass labels. Direct precedent: a near-identical
+             143-launchers-bypass shape on a different concern was operator-ruled 2026-08-06 to NOT be one bounded todo.
+             Recommend it piggyback on the infra-tranche's `lc_gcloud_create` migration
+             (`vm_launcher_setup_script_freshness_gap_2026_07_31.md`) rather than fork a parallel ui-tranche effort — not a
+             fresh batch-2 candidate on its own.
+
+          **Time-gated (6-7):**
+          6. `deployment_registry_firestore_p3_cutover` GO/NO-GO criterion 1 — **STILL-BLOCKED**, fresh 2026-08-08
+             live measurement (Firestore REST, full pagination, cross-checked against `gcloud compute instances list
+             --filter=status=RUNNING`): only 48 of 176 currently-RUNNING GCE instances have a matching Firestore
+             `status=running` doc (27% coverage, same under-coverage direction as 2026-07-30). **New this pass**: 509 of the
+             557 `status=running` Firestore docs are genuinely stale (median heartbeat age 102h, not a convergence lag) —
+             root-caused to `SyncService.reap_stale_deployments()` operating on the GCS registry only, never Firestore (zero
+             `firestore` references in `sync_service.py`). Not a new defect — the doc's own todo 2 already anticipates
+             migrating the reaper to Firestore — but it corrects the 2026-07-30 note's "passive wait" framing: criterion 1
+             cannot converge without that migration landing. Full writeup + evidence added to the source doc's own Progress
+             Log (its own re-verification convention). HALT stays in force; no batch-2 candidate.
+          7. `deployment_registry_firestore_p5_verify` — **STILL-BLOCKED**, unchanged — sequenced behind item 6 landing in
+             prod, which has not happened.
+
+          **Too-large-or-risky (8-9):**
+          8. `artifact_pipeline_observability` — **CLEARED for a closer-read pass (not one bounded todo).** Phase 7's
+             CPU-throttling investigation is RESOLVED (operator ruling 2026-08-07: `cpu-throttling: false` confirmed live,
+             `/api/artifacts/images` verified returning full real data, symptom no longer reproducible). Churn has settled
+             (11 open items, stable across audits through 2026-08-08, no new phases opened). Both preconditions batch 1's
+             Deferred section named are now met. Recommend a dedicated standalone closer-read/scoping session (not a blind
+             single-todo extraction) to identify batch-3 candidates from its remaining 11 items — out of this todo's own
+             scope to perform.
+          9. `data_status_tab_and_downloads_remediation` — **Closer read DONE this pass.** `locked_by`: `locked_since`
+             (2026-06-16) equals `created` (2026-06-16) — same-day, a WEAKER staleness signal than the
+             `deployment_ui_smoke_failures` precedent (where the lock predated creation by 2 months, proven impossible); the
+             doc also has continuous genuine activity through 2026-08-07 (operator APPLY-GATE rulings). Inconclusive either
+             way — not resolved by this pass, doesn't block anything since the doc has real open work regardless. **8 open
+             items catalogued, verdicts**: 3 CLEARED as one bounded batch-2 candidate — Phase A "Venue filter — frontend" +
+             Phase B "Collapse duplicate panels" + "Pagination visible-count selector" are all CODE-SHIPPED
+             (deployment-ui@80c547d) and blocked ONLY on a stale citation (`deployment_ui_fleet_git_nav_entry_regression`,
+             resolved+archived 2026-07-29 per 2026-08-03 na-eligibility-audit) — candidate: re-run `pw:L2` full suite,
+             tick all 3 on a confirmed exit 0. 1 CLEARED — Phase F "Verify YAHOO_FINANCE/KALSHI out-of-scope
+             correct-by-design" `[DATA]` P2, cleanly bounded (batch 1's own Deferred description already flagged this as
+             plausible). 1 CLEARED — the `[CODE]` P3 `BucketNamingError` follow-up (features-calendar/ml-service SHARED
+             pseudo-key + features-cross-instrument-service `asset_group=None`), cleanly bounded, single deployment-api
+             area. 1 CLEARED but low-priority — Phase B "Rollup-difference clarity" `[UI]` P3 (small optional tooltip). 2
+             STILL-BLOCKED — the sub-bucket phantom-row audit (`[DATA]` P2, explicitly gated on the v9 `--apply` migration
+             landing first, per its own text) and the `[DATA]` P0 APPLY GATE sign-off for defi/sports (explicit operator
+             HOLD, 2026-08-07 — Ikenna still working canonicalisation).
+
+          **Needs-verification (10-11):**
+          10. `consolidator_throughput_backlog_monitor` WS-3 seam-endpoint todo — **CLEARED, already closed.** An
+              independent 2026-08-07 na-eligibility-audit pass found + flipped it: all 4 concrete sub-parts were already
+              individually shipped (`deployment-api@1a505c16`/`@14650f9`, `deployment-ui@15832cd`/`@368ea8e6`); the umbrella
+              checkbox was simply never flipped alongside its parts. Already reflected in the source doc — no batch-2
+              candidate needed.
+          11. `cost_observability_deferred_followups`'s 4 unscheduled P3 items — **CLEARED, already covered.** Combined into
+              ONE sequential todo in `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (`status: active`, operator-approved
+              2026-08-08, already dispatched) — same conclusion this todo's own closer-read instruction asked for (combine
+              vs. confirm independence), already reached independently. No fresh batch-2 candidate needed — it's already in
+              flight.
+
+          **Batch-2/3 candidate summary (new, not already covered by an active batch):**
+          - `data_status_tab_and_downloads_remediation_2026_06_16.md`: (a) re-run deployment-ui `pw:L2` full suite, tick 3
+            already-shipped Phase A/B checkboxes on green; (b) `[DATA]` verify YAHOO_FINANCE/KALSHI out-of-scope
+            correctness; (c) `[CODE]` fix the 2 named `BucketNamingError` sites. All 3 touch disjoint files/areas from each
+            other and from batch 1/2's existing todos.
+          - `artifact_pipeline_observability_2026_07_17.md`: needs a dedicated closer-read/scoping session first (not itself
+            a bounded todo) — its own preconditions (Phase 7 resolved, churn settled) are now met.
 
 - [ ] [REVIEW] P1. **Re-measure the ui tranche's orphan count.** Re-run the `/ag-closeout-audit ui` classification over
       the tranche's now-updated docs (12 tranche-primary candidates as of this run — re-derive the current count fresh,
@@ -186,3 +271,17 @@ every category, not just conflicts) to match that.
   shas. `data_status_cell_grid_rearchitecture_2026_07_18.md` todo 1 (`deployment-api@8a36931`) and
   `artifact_pipeline_observability_2026_07_17.md`'s dual-cloud-drift item (`unified-trading-pm@dab5f0273`) were already
   correctly cited. Next: todo 2 (re-check the 11 Deferred items) is now dispatchable.
+- **2026-08-08 — Todo 2 (re-check all 11 Deferred items) done (slot 27).** All 11 given a dated CLEARED/STILL-BLOCKED
+  verdict with evidence — see the todo's own completion note for the full per-item writeup. Net: **4 CLEARED outright**
+  (items 5-partial/10/11 already resolved or already covered by an existing active batch — no new batch needed for
+  those), **2 CLEARED for extraction** (item 8's doc is now unblocked for a closer-read session; item 9's closer read
+  surfaced 5 of its 8 open items as cleanly bounded batch-2 candidates), **6 confirmed STILL-BLOCKED** with restated
+  live blockers (items 1-4, 6, 7) so batch 2 doesn't have to re-derive them. Notable: item 6's fresh live re-measurement
+  (Firestore REST + `gcloud compute instances list`) found a new dimension to the Firestore P3 cutover's GO/NO-GO
+  criterion-1 failure — 509 stale `status=running` docs (median 102h old) traced to `reap_stale_deployments()` being
+  GCS-only — written up in that doc's own Progress Log per its re-verification convention, not a new issue doc (the fix
+  is already scoped inside that plan's own todo 2). New batch-2/3 candidates identified (not yet drafted as a plan — out
+  of this todo's own scope): 3 bounded items from `data_status_tab_and_downloads_remediation_2026_06_16.md` (pw:L2
+  re-run + 3-checkbox tick; Yahoo/Kalshi scope-verify; 2 BucketNamingError fixes), plus a recommendation that
+  `artifact_pipeline_observability_2026_07_17.md` get a dedicated scoping session now that its 2 blocking preconditions
+  have cleared. Next: todo 3 (re-measure orphan count) is now dispatchable.
