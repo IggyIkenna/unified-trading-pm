@@ -135,11 +135,19 @@ re-triggers AutoSpawn's spawn-in-txn on restart).
       `pool_size` bump too, but only alongside the two P1 fixes above (not instead of them). — already covered by
       plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (agent-orchestrator, quality-gates.sh green 1760
       passed/1 skipped) (see that doc for execution).
-- [ ] [BACKEND] P2. Determine root cause: connection LEAK vs. concurrency-over-pool. Audit every DB-session usage on the
-      hot paths (`/api/slots/*/git-status`, `/api/agents/*/poll`, `/api/state`) for a session/connection that isn't
-      returned to the pool on all exit paths (missing `with Session(...)` / context-manager / `finally` close,
-      especially on error branches). **Done when**: each hot-path handler is proven to release its connection on success
-      AND error, with a test that exhausts the pool and asserts recovery.
+- [x] [BACKEND] P2. Determine root cause: connection LEAK vs. concurrency-over-pool. — DONE 2026-08-08 (slot 31).
+      `agent-orchestrator@54b86a9`
+      (`test(db): prove pool-exhaustion + release-safe recovery for pool exhaustion     issue`): confirmed by direct
+      source read that all 4 named hot-path handlers (`server/routes/state.py::get_state` →
+      `server/state_store/slots.py::list_slots`, `server/routes/agents.py::agent_poll`,
+      `server/routes/git_health.py::post_slot_git_status`/`get_slot_git_status`) route through
+      `session_scope()`/`read_only_session_scope()`, which release via `finally: session.close()`
+      (`server/db.py:117-152`) on every exit path including error branches — no raw session-factory call skips cleanup.
+      New `tests/test_db_pool_exhaustion_recovery.py` exhausts the pool (checks out `pool_size + max_overflow` = 15
+      connections), asserts the next checkout raises `sqlalchemy.exc.TimeoutError`, then releases and asserts a fresh
+      request succeeds promptly — recovery proven. `quality-gates.sh` green (2779 passed, 2 skipped) on this SHA. This
+      is the formal proof only; the leak-vs-concurrency VERDICT itself (sustained concurrency over the 15-conn ceiling,
+      not a leak) was already recorded via occurrence #6/#7 above.
 - [ ] [BACKEND] P2. Make the liveness/health signal DB-aware (or add a separate readiness probe the unit/monitor can
       watch): a cheap `SELECT 1` with a short timeout so pool starvation surfaces as unhealthy and the existing
       auto-restart path can fire. Keep `/health` cheap for the LB, but expose DB-backed readiness for the self-heal
@@ -288,3 +296,8 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **ao_satellite_ao_dispatch_batch5 2026-08-08 (slot 31)**: closed the formal-proof gap flagged by the 2026-07-30
+  na-eligibility-audit entry above — flipped `[BACKEND] P2` (leak-vs-concurrency) `[x]` via `agent-orchestrator@54b86a9`
+  (new `tests/test_db_pool_exhaustion_recovery.py`, `quality-gates.sh` green 2779 passed/2 skipped). Doc remains NA
+  overall: the readiness-probe `[BACKEND] P2` todo still embeds the never-autonomous `autonomous-recovery-matrix.md`
+  edit.

@@ -257,26 +257,23 @@ below rather than duplicated here.
       `/plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md` (its
       residual-risk finding). Repo: agent-orchestrator.
 
-- [ ] [BACKEND] P2. **Close the connection-release-proof gap on
+- [x] ✅ [BACKEND] P2. **Close the connection-release-proof gap on
       `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`'s still-open "Determine root cause: connection
-      LEAK vs. concurrency-over-pool" todo** (the leak-vs-concurrency conclusion is already recorded via the doc's own
-      occurrence #6/#7 log and a 2026-07-30 na-eligibility-audit entry — only the formal proof + test remain): (1)
-      confirm every hot-path DB session usage — `server/routes/state.py::get_state` → `server/state_store/slots.py`,
-      `server/routes/agents.py::agent_poll`, `server/routes/git_health.py::post_slot_git_status`/`get_slot_git_status` —
-      routes through `session_scope()`/`read_only_session_scope()` (both already release via `finally: session.close()`,
-      `server/db.py:117-152`) rather than a raw session-factory call that could skip cleanup on an error branch; (2) add
-      a new pool-exhaustion-and-recovery test, mirroring the threading-harness style
-      `tests/test_db_read_only_session.py` already uses (and already cites this exact issue doc), that opens
-      `pool_size + max_overflow` concurrent sessions via `get_session_factory()` and holds them past `pool_timeout`,
-      asserts the next concurrent request raises the expected pool-exhaustion `TimeoutError`, then releases the held
-      sessions and asserts a fresh request succeeds promptly. **Done when**: `quality-gates.sh` green in
-      agent-orchestrator; the new test module (`tests/test_db_pool_exhaustion_recovery.py`) demonstrates both the
-      exhaustion and the recovery; each of the 4 named hot-path handlers is confirmed (recorded in the test module's
-      docstring or a code comment) to route through the release-safe helpers; the source doc's `[BACKEND] P2` todo flips
-      `[x]` citing the new test module + commit sha. Source:
-      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (`[BACKEND] P2` only — its
-      codex-governance-matrix item and its unscoped write-batching item are NOT in scope, see this run's Workflow
-      journal for why). Repo: agent-orchestrator.
+      LEAK vs. concurrency-over-pool" todo** — DONE 2026-08-08 (slot 31). `agent-orchestrator@54b86a9`
+      (`test(db): prove pool-exhaustion + release-safe recovery for pool exhaustion issue`): (1) confirmed by direct
+      source read — `server/routes/state.py::get_state` → `server/state_store/slots.py::list_slots`
+      (`read_only_session_scope`), `server/routes/agents.py::agent_poll` (`session_scope`),
+      `server/routes/git_health.py::post_slot_git_status`/`get_slot_git_status` (`session_scope`) — all 4 route through
+      `session_scope()`/`read_only_session_scope()`, which release via `finally: session.close()`
+      (`server/db.py:117-152`); no raw session-factory call skips cleanup. (2) Added
+      `tests/test_db_pool_exhaustion_recovery.py`, mirroring `tests/test_db_read_only_session.py`'s style: checks out
+      `pool_size + max_overflow` (5+10=15, SQLAlchemy `QueuePool` defaults — `make_engine` never overrides them)
+      connections via `get_read_only_session_factory()`, asserts the next checkout raises `sqlalchemy.exc.TimeoutError`,
+      releases the held sessions, and asserts a fresh session succeeds promptly (both exhaustion and recovery
+      demonstrated in one test). `quality-gates.sh` green (2779 passed, 2 skipped) on this exact SHA. Source
+      `[BACKEND] P2` todo flipped in
+      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` citing the same test
+      module + SHA. Repo: agent-orchestrator.
 
 - [x] ✅ [SCRIPT] P3. **Close out the stale `[SCRIPT] P3]` todo on
       `plan_health_tests_leak_real_slack_alerts_2026_07_24.md` via VERIFICATION, not re-implementation.** — DONE
