@@ -227,8 +227,37 @@ ever applied after an explicit operator ruling — filed here, not edited:
 
 ## Coverage (hunters / batches / docs)
 
-(populated at STEP 7 — running total)
+- **30 hunters fanned out** across 3 waves: 24 epic-cluster batches (infra ×6, sports ×2, agent_operating_framework ×2,
+  defi ×2, orchestrator ×2, cefi/predictions/manifest/tradfi/instruments/mtds_mdps/deployment_and_user_management ×1
+  each, 2 combined-small-epic batches), 2 epic-vs-epic sweeps (covering all 28 `plans/epics/*.md`), 1 corpus-wide
+  missed-flip grep sweep, 3 cross-cutting topic sweeps (CI/CD+AO-lifecycle, data-correctness cross-AG, codex-alignment).
+- **Docs read in full**: all 333 non-grace `plans/active/*.md` + `plans/active/issues/*.md` (the full actionable set)
+  - all 28 `plans/epics/*.md` = 361 docs, each read by exactly one epic-cluster/epic-vs-epic hunter, plus targeted
+    grep-scoped reads by the missed-flip/topic hunters layered on top. Grace-protected docs (262, 44% of the corpus)
+    were correctly excluded from the actionable set per the 12h HARD LIMIT — read-only where a hunter happened to
+    cross-reference one for context, never written.
+- **Candidates generated**: ~75 distinct findings across P1-P3. **Verified + applied this run**: ~20 (5-epic stale
+  banner removal, 6 stale archive-audit banners, 2 missed-flips, 3 archived docs + 5 referrer path fixes, 6 `locked_by`
+  normalizations, 3 operator-ruling-mirror/tag fixes). **Refuted**: 1 (cefi venues-filter hypothesis, via direct code
+  read). **Filed as tracked todos + alerted via `/blocked`**: 13 (2 data-correctness big-findings, 9 codex-drift, 2
+  other).
+- **Not individually re-verified/applied this run** (found by a hunter, evidence looked solid on read, but time budget
+  didn't extend to personally verifying + fixing each): a meaningful tail of P2/P3 items — mostly epic-hub staleness
+  (stale rosters/priority tables in `cefi_master.md`, `manifest_master.md`, `predictions_master.md`,
+  `strategy_master.md`, `deployment_and_user_management_master.md`; stale `last_updated` fields on ~10 of the 28 epics),
+  a handful of same-doc checkbox/prose contradictions in individual issue docs
+  (`ao_satellite_ao_dispatch_ batch6_2026_08_04.md`'s and `batch7_2026_08_06.md`'s internal ledger-arithmetic
+  mismatches, `honest_coverage_shard_ dimension_model_definitional_data_2026_07_07.md`'s tracker-vs-source drift,
+  several more), and ~5 more stale same-day-ruling-vs-audit-verdict pairs of the shape already fixed above (e.g.
+  `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`,
+  `pytest_timeout_60s_flaky_under_contention_continued3_ 2026_08_03.md`). None are safety-critical or
+  data-correctness-adjacent (those were prioritized and either fixed or routed above) — all are cosmetic/bookkeeping
+  drift. Preserved for a follow-up pass: the full per-hunter raw candidate list this section summarizes is in this run's
+  session transcript; a future `/plan-reconciler` or `/plan-reconcile` pass re-hunting the same non-grace set will
+  resurface any still-live ones (none are time-sensitive enough to need filing as individual todos right now, unlike the
+  13 above).
 
 ## Plans not reached
 
-(populated as the run progresses — anything in the non-grace actionable set not reached by a hunter this run)
+None in the non-grace actionable set (333 active/issue docs + 28 epics) — every one was assigned to and read by at least
+one hunter this run. The 262 grace-protected docs were correctly excluded per the HARD LIMIT, not "not reached."
