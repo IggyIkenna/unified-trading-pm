@@ -978,3 +978,7 @@ are genuinely in scope for the operator's "no exceptions" directive.
   to reach chunk 26 where real new work resumes. Both healthy.
 - **2026-08-08T03:43Z** — FIXTURE_STATS +72 days (`last_completed_date=2023-08-04`, fresh `03:41:29Z`). smallchunk3
   chunk 13/451 (`2020-08-05`), pace holding, zero OOMs. Both healthy.
+- **2026-08-08T04:10Z** — FIXTURE_STATS +30 days (`last_completed_date=2023-09-03`, fresh `04:09:26Z`). smallchunk3
+  chunk 17/451 (`2020-08-25`), zero OOMs — approaching chunk 18 (the known season-opener week); expect some OOMs to
+  resume there but a shorter pass than the original 3h38m since ~14/30 leagues are already durably captured. Full
+  detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`0428a48f99`.
