@@ -32,7 +32,7 @@ related:
   - /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md
 created: 2026-07-24
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-08"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -187,6 +187,44 @@ with the 2026-07-28 distribution finding above (38/43 sampled objects carry subs
 rows/day for UNISWAPV3), means fold would recover real, non-trivial historical DeFi tick data currently invisible to the
 manifest — both prerequisite facts (scale + distribution) are now in hand for that decision.
 
+## 2026-08-08 update — fresh §3a reversibility check CLEARS; part (2) of the `[PM] P2` todo is ANSWERED
+
+Per the `[PM] P2` todo's "pending a fresh `gcs_bucket_soft_delete_retention_seconds()` reversibility check" clause, ran
+a FRESH, same-run check (not reused from any prior session's claim or this doc's own baseline citations):
+
+```
+bucket=market-data-tick-defi-prd-central-element-323112 retention_seconds=604800 qualifies_604800=True
+```
+
+Invoked via
+`unified_trading_library.cloud_interface.gcs_bucket_soft_delete_retention_seconds("market-data-tick-defi-prd-central-element-323112")`
+(GCP project `central-element-323112`), 2026-08-08T03:20:34Z — a read-only bucket-metadata GET, no object touched, no
+delete executed.
+
+**Both conditions of `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a are now independently satisfied for
+this delete class** (this is a hard-stop #2 case — legacy-object-delete-after-**copy**, since the fold wrote new
+canonical objects rather than moving the legacy ones):
+
+1. **Part 5 twin-coverage = 100%, content-verified** — already established by the closed `[DATA] P1` fold todo above:
+   5,332/5,332 legacy shards processed, zero errors, 324,867 canonical objects written + 324,867 `record_captured`
+   manifest rows registered, "a per-shard content-parity invariant + GCS read-back spot-check enforced throughout." This
+   is exactly the proof form §3a/Part 5 requires (content-verified, not path-assumed) — not re-derived here, only cited.
+2. **Fresh retention check ≥ 604800s** — confirmed above, this run, this bucket by name.
+
+**Therefore part (2) of the `[PM] P2` todo below — the delete-authorization question — is ANSWERED**: per §3a item 1 ("a
+legacy-object-delete-after-copy... qualifies once Part 5... has independently confirmed 100% canonical-twin coverage —
+this section only clears who executes") and §2's disposition-table "Who may act" column ("`yes-twin-confirmed`... Agent
+executes once §3a's fresh reversibility check clears"), the delete of the 5,332 legacy composite-venue objects is
+**agent-executable, no operator sign-off needed, once it is actually dispatched as its own todo**. This finding does NOT
+execute the delete — no `gcs_delete_object`/`gcs_conditional_delete` call was made in this session, per this task's
+explicit read-only scope. **Recommendation for whoever authors the follow-up migration plan (part (1) below)**: tag the
+delete step `[SCRIPT] P1` (not `[OPERATOR]`), citing this section + the codex §3a sections above, and re-run the
+retention check fresh again at execution time per §3a's own "fresh means queried in the same execution as the delete,
+never assumed from a prior session's claim" rule — this citation does not substitute for that.
+
+Part (1) of the `[PM] P2` todo — plan-destination (AO vs human) — is **not** resolved by this update; see the todo body
+for the standing recommendation and the open operator ask.
+
 ## Todos
 
 - [x] [DATA] P1. Measure the true scale of this legacy population — either extend `rebuild_defi_manifest`'s own
@@ -235,14 +273,28 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
       **SCOPE NARROWED 2026-08-02**: the fold ITSELF no longer needs a migration plan — it was executed directly and to
       completion via batch6 (see the closed `[DATA] P1` above). What genuinely remains for this todo is only the
       **delete-the-legacy-copies** phase the fold todo deliberately left out of scope: the 5,332 legacy composite-venue
-      objects are still present, un-deleted and unregistered, alongside their 324,867 verified canonical twins. That
-      delete is a PROD-bucket delete — human-only unless reversibility-qualified per
-      [`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
-      § 3a (a FRESH same-run `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check, never a whole-bucket destroy)
-      — so it stays `assigned_vm: NA` and needs the operator's plan-destination answer before anything is authored.
+      objects are still present, un-deleted and unregistered, alongside their 324,867 verified canonical twins. **Part
+      (2), delete-authorization: ANSWERED 2026-08-08** — see the "2026-08-08 update" section above. A fresh, same-run
+      `gcs_bucket_soft_delete_retention_seconds("market-data-tick-defi-prd-central-element-323112")` check returned
+      `604800` (qualifies, ≥604800s), and Part 5 twin-coverage is already 100% content-verified per the closed fold todo
+      above — both §3a conditions clear, so the delete is agent-executable without operator sign-off once dispatched as
+      its own todo (tag it `[SCRIPT] P1`, re-check retention fresh at execution time, never reuse this citation). **Part
+      (1), plan-destination: still OPEN, operator ask.** Recommendation (not a forced flip): this workspace's default is
+      a human/NA plan (`assigned_vm: NA`) unless the operator states otherwise — a short bounded plan citing this issue
+      doc + the 2026-08-08 retention evidence would suffice, given the delete itself is now a single well-scoped
+      `[SCRIPT] P1` step rather than an open design question. Left open here for the operator's visibility/final call
+      rather than force-flipped, since plan-destination is explicitly an operator decision per CLAUDE.md ("ASK BEFORE
+      CREATING (HARD RULE)").
 
 ## Progress Log
 
+- **2026-08-08 (sub-agent, fresh §3a reversibility check)**: ran a fresh, same-run
+  `gcs_bucket_soft_delete_retention_seconds("market-data-tick-defi-prd-central-element-323112")` check (read-only
+  bucket-metadata GET, no delete executed) — returned `604800` (qualifies). Combined with the fold's own
+  already-established 100% content-verified Part 5 twin-coverage (324,867/324,867), both §3a conditions clear for the
+  `[PM] P2` todo's part (2), delete-authorization: agent-executable, no operator sign-off needed, once the delete is
+  dispatched as its own `[SCRIPT] P1` todo. Part (1), plan-destination, stays an open operator ask (recommendation
+  recorded, not force-flipped). See the "2026-08-08 update" section above for full detail. No GCS object was modified.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the [PM] todo is 'file a proper migration plan'
   (plan-destination operator ask) and the doc's own text calls itself the scoping step, not the execution surface
 - **context-scout 2026-08-01**: populated context_scope (5 entries).
