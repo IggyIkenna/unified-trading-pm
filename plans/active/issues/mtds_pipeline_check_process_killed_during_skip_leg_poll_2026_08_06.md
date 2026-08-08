@@ -53,7 +53,7 @@ related:
   ]
 created: 2026-08-06
 author: cefi_mtds_smoke_tester (agt-e76dc5, slot 6)
-last_updated: 2026-08-06
+last_updated: 2026-08-08
 source: cefi_mtds_smoke_tester
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -200,3 +200,33 @@ proven this run.
   unexplained process-kill, access-gated on root/kernel access this sandboxed session doesn't have. All 3 suggested
   follow-ups need elevated access or an unmade root-cause call — none is worker-determinable today.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries).
+- **cefi_mtds_smoke_tester 2026-08-08** (day=2026-08-07, slot 8): the SKILL.md §1a fix landed since this issue was
+  opened — the driver now runs on its own dedicated `e2-highmem-4` (32GB) VM (`launch-pipeline-e2e-check-driver-vm.sh`)
+  instead of inline on the shared host — and this run confirms that fix DOES change the failure shape but does NOT
+  eliminate a kill. Launched `pipeline-e2e-check-mtds-20260808-014110-a016d8` (unscoped
+  `--legs force,skip --mvp-only --require-captured --auto-day`, no `--asset-group` filter) at 01:41:10 UTC. It ran
+  cleanly for **29 minutes** (vs. the original bug's fixed ~300-330s window) and got only through 8 TRADFI shards
+  (NASDAQ, NYSE, CME×2, FX×2 — never reached CEFI/DEFI/SPORTS/PREDICTION) before dying at 02:10:42 UTC with an
+  UNAMBIGUOUS signature this time:
+  `bash: line 1: 4873 Killed /home/ikennaigboaka/venv/bin/python scripts/pipeline_e2e_check.py ...` +
+  `[vm-exec] command exited rc=137` (128+9=SIGKILL — the classic bash job-control "Killed" message, consistent with the
+  Linux OOM-killer). Full `run.log` shows zero explicit memory/RSS diagnostic lines (the script doesn't self-report
+  memory), so this is inferred from the kill signature + duration, not a direct RSS measurement — the VM had already
+  self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`) by the time I looked, so no postmortem SSH/`dmesg` was possible.
+  **This is very likely a DIFFERENT problem than the original ~300-330s silent kill this issue documents**, not proof
+  the original bug recurred: running on a genuinely dedicated, single-tenant VM rules out the two suspects this issue's
+  "what I could not confirm" section raised (shared-host cross-slot `pkill`, session/sandbox lifetime cap) — both are
+  host/session-scoped mechanisms that don't apply to a VM running one process alone — and the ~29min duration is ~5-6x
+  longer than the original pattern. Circumstantial support for the original short-kill bug being genuinely
+  host/session-scoped (and thus fixed by the §1a VM move) rather than a `pipeline_e2e_check.py` code bug: this run
+  survived far past the old ~330s cutoff. What's newly exposed instead looks like real, unbounded memory growth in the
+  driver's own polling loop over a long enough run — plausible contributing evidence: the
+  `firestore dual-write heartbeat ... failed ... has no transaction ID, so it cannot be rolled back` WARNING fires on
+  every single ~60-70s heartbeat cycle throughout the whole 29min run (never once succeeds) — worth checking whether
+  that failed-dual-write retry path leaks a transaction/retry object per attempt rather than discarding it cleanly.
+  **Workaround used this run**: retried scoped to `--asset-group CEFI` only (this role's actual mandate) rather than
+  re-attempting the full unscoped sweep a second time — see this run's own report for the outcome. Suggested follow-up
+  (not attempted — same access gap as before, now narrower): reproduce on a dedicated driver VM with
+  `VM_SHUTDOWN_ON_COMPLETION` temporarily disabled + a periodic `ps -o rss= -p <pid>` logged into `run.log` itself, so a
+  future recurrence leaves both a live VM to SSH into AND an in-band RSS timeline instead of requiring a postmortem
+  guess from the kill signature alone.
