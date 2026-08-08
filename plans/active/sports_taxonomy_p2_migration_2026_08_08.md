@@ -153,6 +153,19 @@ than proceeding.
       `league_id=BUNDESLIGA/ticks.parquet`. Determine which is canonical (`league_id=` per the path SSOT), census the
       full extent — do NOT assume one day generalises — and purge the non-canonical side. **§3a fresh check required.**
 
+### Added 2026-08-08 (operator, mid-flight) — re-stamp the collapsed derived types
+
+- [ ] [DATA] P0. **Re-stamp `odds_snapshot` (16,521) + `odds_movement` (16,470) onto `data_type=odds` + `timeframe`**,
+      per P1's collapse todo. These rows ALREADY carry the grain in `timeframe` (15m/1h), so the re-stamp is dropping a
+      redundant data_type token, not inventing an axis — measured live 2026-08-08. Only ~33k shards over 13 days
+      (2026-07-25 → 08-06), so this is small NOW and grows with every day P4's backfill adds: doing it before the
+      backfill is materially cheaper than after. Both the GCS path segment and the manifest column move together
+      (path==manifest on data_type).
+- [ ] [REVIEW] P1. **Assert the sports data_type vocabulary has actually collapsed.** Post-migration the sports manifest
+      should carry ONE raw type (`odds`) plus the `timeframe`/`horizon`/`in_play` axes — down from the 10 distinct
+      data_types the 2026-08-08 audit measured. Report the final distinct set; any surviving derived data_type name is
+      an incomplete migration, not an accepted exception.
+
 ### Verification
 
 - [ ] [REVIEW] P0. **Four-surface reconciliation after the migration**, per

@@ -309,6 +309,48 @@ achieved by exclusion, not canonicalisation.**
       — no change expected, but state explicitly that the floor governs the derived-layer backfill and the C3 pre-launch
       corpus disposition, so the next reader does not re-open it.
 
+### Added 2026-08-08 (operator, mid-flight) — collapse the remaining derived data_types onto `odds` + axes
+
+> Operator question that triggered this: _"what's the point of odds movement and snapshot as data types vs just being
+> manipulations of odds"_. Correct — and there is a decisive precedent this chain under-used.
+
+- [ ] [CODE] P0. **Collapse `odds_snapshot` and `odds_movement` into `data_type=odds` + the `timeframe` axis.** They are
+      not distinct data — they are a LOCF resample and an OHLC candle OF `odds`. Sports is the only asset_group that
+      mints new data_type names for its derived grains; the fleet-wide MDPS ruling (2026-07-21, recorded in
+      `registry/processed_data_dependencies.py`) is explicit: _"an MDPS manifest row's `data_type` column carries the
+      RAW source token (`trades`, `book_snapshot_5`, …) — the SAME vocabulary MTDS's raw-tick manifest rows use — with
+      the candle timeframe living in a SEPARATE `timeframe` column."_ cefi/tradfi/defi all obey it; UAC's own
+      `_RAW_TO_PROCESSED_PREFIX` even pre-declares `"odds": "odds_ohlcv"`. **The redundancy is measurable**: these rows
+      ALREADY carry the grain in `timeframe` — `odds_movement` 15m=10,300 / 1h=10,276; `odds_snapshot` 15m=9,464 /
+      1h=9,454 (live prod manifest, 2026-08-08). The data_type name restates what `timeframe` already says, so
+      collapsing loses nothing. End state: sports raw vocabulary is ONE type (`odds`) plus the `timeframe`, `horizon`
+      and `in_play` axes. Apply the codex rename rule — enumerate consumers BEFORE changing anything.
+- [ ] [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
+      (point-in-time LOCF) and `odds_movement` (OHLC bar) are different SHAPES at the same grain, so `timeframe` alone
+      cannot distinguish them once the names are gone. **PRE-SPECIFIED**: follow the fleet convention already used for
+      the cefi/tradfi candle family — the OHLC form is the candle (`odds` + `timeframe`), and the LOCF point-in-time
+      form is a distinct processed key via `_RAW_TO_PROCESSED_PREFIX` (`odds_ohlcv_*` vs a snapshot prefix), NOT a new
+      `data_type`. Confirm against `canonical_writer_shaping.mdps_data_type_key`'s real output before implementing, and
+      record the chosen keys in codex.
+- [ ] [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.**
+      `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any unrecognised venue to `"cefi"` SILENTLY.
+      When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from the canonical venue axis, that default
+      began pointing every read of their **146,163 historical shards** (ODDS_API 123,650 + FOOTYSTATS 22,513) at the
+      **CEFI bucket** — a silent wrong answer, caught only because one unit test happened to assert the sports case.
+      Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the fallback now WARN-logs), but the default
+      itself remains. Replace it with a typed raise, and sweep for other `.get(..., <default asset_group>)` lookups in
+      the same class of resolver across MTDS/MDPS/IS. Deferred from the hot-fix only to keep the blast radius off an
+      in-flight chain — a genuinely-unknown cefi venue currently relies on this default, so the raise needs its own
+      enumeration pass first.
+- [ ] [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
+      `tests/test_data_type_canonicalization.py::test_yaml_data_types_in_uac` is ALREADY failing (pre-existing, 2
+      params: `unified-trading-pm`, `market-tick-data-service`) on exactly these tokens —
+      `SPORTS.common_data_types: 'markets'`, `SPORTS.venues.BETFAIR: 'markets'/'outcomes'/'settlements'`,
+      `SPORTS.venues.PINNACLE: …`. Deleting them from UAC without updating the YAML makes that failure WORSE, not
+      better. This is a live worked example of the codex rename rule's "a token grep is not a sufficient enumeration"
+      clause — the YAML is a consumer no `data_type` grep of the Python registries would surface. Fix both sides
+      together and get the test to pass.
+
 ## Codex SSOTs
 
 - `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` — HARD RULE governing every rename/split in this

@@ -58,7 +58,11 @@
 # EXIT CODES: 0 success (incl. "nothing to commit" -- another slot already landed the
 # identical content). 2 bad usage. 3 unresolved rebase conflict (real content collision,
 # needs a human). 4 push rejected for a non-drift reason. 5 exhausted retries under
-# sustained contention (transient -- just re-run).
+# sustained contention (transient -- just re-run). 6 commit rejected by a pre-commit hook
+# for a DETERMINISTIC content reason (plan-hygiene, conflict markers, frontmatter schema,
+# terminal-status-archived, ...) -- fix the content; re-running cannot help. Added
+# 2026-08-08: exit 5 was previously returned for this case too, which told the next agent
+# to retry something that could never succeed (see commit_failure_is_retriable below).
 
 set -uo pipefail
 
@@ -112,6 +116,52 @@ is_named() {
     [[ "$candidate" == "$_f" ]] && return 0
   done
   return 1
+}
+
+# Pre-commit hooks whose failure is a genuine RACE against a concurrent slot -- the retry
+# loop's own fetch+pull clears them, so retrying is correct. Everything else is a
+# DETERMINISTIC content failure that will fail identically on all 6 attempts.
+RETRIABLE_HOOK_IDS="check-branch-drift"
+
+# commit_failure_is_retriable <err-file> -- classify a `git commit` rejection.
+#
+# Bug fixed 2026-08-08: this script previously funnelled EVERY commit failure into
+# backoff+continue, so a deterministic pre-commit content failure (plan-hygiene conflict
+# markers / frontmatter schema / terminal-status-archived / todo format / line caps) was
+# retried 6 times and then reported as "Exhausted N attempts under sustained contention --
+# this is transient, not a defect. Re-run." That message is actively harmful: it is wrong,
+# it buries the hook's own actionable remedy under 6 repetitions, it costs ~6 full prek runs,
+# and it tells the next agent to re-run something that cannot succeed. Measured live during
+# the 2026-08-08 sports canonicalisation push (a stale conflict marker + a terminal-status
+# archival violation, both reported as "transient contention"). The script's own header has
+# ALWAYS documented the intended behaviour -- "hard-stop immediately on ... a pre-commit hook
+# rejection unrelated to drift" -- it was simply never implemented.
+#
+# NOT a fleet-wide defect: `quickmerge.sh` (this script's 2000-line hardened sibling) has
+# always got this right -- see its "Distinguish a branch-drift RACE (retryable) from a
+# genuine content-level pre-commit failure (lint/type/etc -- pulling can never fix this, so
+# fail fast, never loop blindly)" block, which exits 1 with an actionable remedy when
+# `behind == 0`. This script was extracted 2026-08-01 as the pure-docs fast path and simply
+# did not carry that logic across. Checked 2026-08-08; quickmerge needs no change.
+#
+# Classification is by prek's own `- hook id: <id>` lines, not by message text: if every
+# failing hook is in RETRIABLE_HOOK_IDS it is a race (retry); if ANY other hook failed it is
+# deterministic (fail fast). This is strictly more precise than quickmerge's behind-count
+# heuristic, which needs one extra loop to converge when drift and a content failure
+# coincide. A commit rejection with no parseable hook id is treated as retriable, preserving
+# the old behaviour for genuinely unknown/racy failures.
+# Returns 0 = retriable, 1 = deterministic.
+commit_failure_is_retriable() {
+  local err_file="$1" hook_ids id
+  hook_ids="$(sed -n 's/^- hook id: //p' "$err_file" 2>/dev/null || true)"
+  [[ -z "$hook_ids" ]] && return 0
+  while IFS= read -r id; do
+    [[ -z "$id" ]] && continue
+    if [[ " $RETRIABLE_HOOK_IDS " != *" $id "* ]]; then
+      return 1
+    fi
+  done <<<"$hook_ids"
+  return 0
 }
 
 unstage_foreign_paths() {
@@ -231,7 +281,19 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
         sleep 2
         continue
       fi
-      echo "  commit blocked (likely a pre-commit hook, e.g. branch drift re-detected mid-race):"
+      if ! commit_failure_is_retriable /tmp/_sdp_commit_err; then
+        {
+          echo
+          echo "❌ COMMIT REJECTED BY A PRE-COMMIT HOOK -- this is a DETERMINISTIC content failure, NOT contention."
+          echo "   Retrying will fail identically. Do NOT re-run this script until the content is fixed."
+          echo "   Failing hook(s): $(sed -n 's/^- hook id: //p' /tmp/_sdp_commit_err | paste -sd', ' -)"
+          echo "   The hook's own output (its remedy line is the thing to act on):"
+          echo
+          cat /tmp/_sdp_commit_err
+        } >&2
+        exit 6
+      fi
+      echo "  commit blocked by a retriable hook (branch drift re-detected mid-race) -- reconciling and retrying:"
       cat /tmp/_sdp_commit_err
       backoff "$attempt"
       continue
@@ -259,6 +321,17 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 done
 
 if [[ "$final_ok" != true ]]; then
-  echo "❌ Exhausted ${MAX_ATTEMPTS} attempts under sustained contention -- this is transient, not a defect. Re-run." >&2
+  {
+    echo "❌ Exhausted ${MAX_ATTEMPTS} attempts. Deterministic pre-commit content failures now exit 6 BEFORE"
+    echo "   reaching here, so this path means a genuine race (fetch/pull/push contention) that did not settle."
+    echo "   Re-running is reasonable -- but READ the last error below first rather than assuming transience:"
+    echo
+    for _last in /tmp/_sdp_commit_err /tmp/_sdp_push_err /tmp/_sdp_pull_err /tmp/_sdp_fetch_err; do
+      if [[ -s "$_last" ]]; then
+        echo "   --- last ${_last##*/_sdp_} ---"
+        sed 's/^/   /' "$_last"
+      fi
+    done
+  } >&2
   exit 5
 fi
