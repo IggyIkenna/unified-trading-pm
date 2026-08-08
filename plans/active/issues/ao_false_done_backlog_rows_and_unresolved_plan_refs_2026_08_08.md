@@ -249,7 +249,7 @@ plan + verifying the `done_sha`, never from the row's status alone.
       (slot 30): no REOPEN or FLIP action needed on the backlog row — already self-corrected**, same
       `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every item above.
       `GET     /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null` (not `done`). But
-      verifying the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md` line
+      verifying the cited plan (`plans/archive/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md` line
       119-121, the `migrate_sports_casing_2026_07_22.py` checkpoint todo) surfaced a genuine **citation defect**: the
       checkbox was already correctly `[x]` and the checkpoint code genuinely exists (`record_vm_progress` import + call
       confirmed present in the script), but the cited sha `c98e0abb` is a real, on-origin commit that has NOTHING to do
@@ -269,7 +269,7 @@ plan + verifying the `done_sha`, never from the row's status alone.
       2026-08-05T04:45:50Z, confirmed ancestor of `origin/live-defi-rollout`) that genuinely added the checkpoint:
       `record_vm_progress` is imported and called (gated on the per-day `Counter` reaching zero) in
       `market-tick-data-service/scripts/sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py`.
-      Read the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md`, Category
+      Read the cited plan (`plans/archive/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md`, Category
       A): the corresponding todo is correctly `[x]` ✅ and already cites `6ddb0374` accurately — no citation defect here
       (unlike -008's `c98e0abb` mis-citation). So the false-done state the 03:15 UTC audit snapshot captured (backlog
       row `done`, checkbox possibly not yet flipped at that instant) has already been corrected — both the backlog row
@@ -288,7 +288,7 @@ plan + verifying the `done_sha`, never from the row's status alone.
       log -1 origin/live-defi-rollout --
       scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`     shows the file's last touch was an unrelated commit (`1970ef45`, defi gas-fees/casing script batch), and     `grep
       -n
-      record_vm_progress`against that script at`origin/live-defi-rollout` returns zero hits — no checkpoint     exists. Cross-checked the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md`    line 124): the third todo is correctly still`-
+      record_vm_progress`against that script at`origin/live-defi-rollout` returns zero hits — no checkpoint     exists. Cross-checked the cited plan (`plans/archive/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md`    line 124): the third todo is correctly still`-
       [
       ]`, consistent with both the live backlog (queued, real     unstarted work) and the script (no checkpoint present). No REOPEN (nothing `done`to reopen) or FLIP (work     genuinely isn't done) was warranted or performed; this item only needed its tracker checkbox resolved with the     verification trail above — the real checkpoint work stays live in the backlog as task    `mtds_migrate_executor_progress_checkpoint_gap-010`
       for a future data_engineering dispatch.

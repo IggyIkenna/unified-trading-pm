@@ -8,7 +8,7 @@ summary: >-
   since, so the gap is growing, not closing. 10 date-loop scripts can adopt record_vm_progress directly; 5 non-date
   scripts need a different object-index checkpoint. None are currently in active multi-hour SPOT campaigns, so each is a
   tracked P2 follow-up todo rather than an inline fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -22,7 +22,10 @@ priority: P2
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-resolved_by: ""
+resolved_by:
+  "2026-08-08 slot-10: last open todo (`sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`)
+  shipped market-tick-data-service@3ec92a02 — all 16/16 scripts now carry the record_vm_progress/object-index
+  checkpoint. Every todo [x], plan archived same-turn."
 locked_by:
 source:
   [
@@ -44,6 +47,11 @@ context_scope:
     /plans/archive/issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-08**. All 16/16 `migrate_*_2026_07*.py` executors now carry the PROGRESS.json checkpoint — the
+> last open todo (`migrate_sports_league_id_casing_2026_07_21.py`) shipped `market-tick-data-service@3ec92a02`. Codex
+> SSOT (`/codex/05-infrastructure/spot-vms-for-backfill.md` § "Preemption recovery MUST resume from PROGRESS") already
+> documents the pattern this closeout executed against — no new contract to stub.
 
 # 15 of 16 `migrate_*_2026_07*.py` executors lack PROGRESS.json checkpoint
 
