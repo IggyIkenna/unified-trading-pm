@@ -5,7 +5,7 @@
 """Create-only archival-commit guard.
 
 Detects the `git commit --only` partial-commit hazard root-caused in
-plans/active/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md:
+plans/archive/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md (resolved 2026-08-08):
 a `git mv plans/active/issues/X.md plans/archive/issues/X.md` followed by
 `git commit --only -m "..." -- plans/archive/issues/X.md` commits the ADD side of
 the rename but silently EXCLUDES the DELETE side (the old path is not in the
@@ -47,7 +47,7 @@ FIX_POINTER = (
     "Redo the archival via `scripts/dev/safe-doc-push.sh` (plain full-staged-set commit) or, if a bare "
     "`git commit --only` is used, list BOTH old and new paths; then verify `git status --porcelain` shows "
     "no staged deletions left uncommitted. SSOT: "
-    "plans/active/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md"
+    "plans/archive/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md"
 )
 
 

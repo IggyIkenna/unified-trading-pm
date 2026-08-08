@@ -70,6 +70,34 @@ but all todos are done — should I unlock it?") but MUST NEVER unlock autonomou
 `run_hygiene_sweep.sh` + `regenerate_active_plan_inventory.py` catch a stale-active-but-fully-checked plan on their own
 cadence, but that is the SAME "caught later, not at completion time" pattern this doc exists to stop relying on.
 
+### The archival commit itself must not drop the rename's delete side (RULED 2026-08-08)
+
+`git commit --only -m "<msg>" -- <new-path>` after a `git mv` commits the ADD side of the rename but silently **excludes
+the DELETE side** — a partial commit builds its temp index from HEAD + staged changes to only the listed paths, so the
+deletion at the old path never lands in the commit. The old-path file stays gone from the working tree and the deletion
+stays staged in the index, but nothing downstream notices: the result is a **create-only commit** that leaves a live
+duplicate at the old `plans/active/...` path, which the rest of the fleet (including the AO dispatch backlog, derived
+from `plans/active/**` todos) still reads as open/unresolved. The two copies then diverge on the next unrelated edit to
+either one. Root-caused and reproduced prek-independently in
+`/plans/archive/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md` (5 live diverged
+duplicate pairs found and reconciled from this exact mechanism).
+
+**Step 6 of the ritual above ("`git mv` ... confirm the move") MUST use one of these two commit shapes** — never a bare
+`git commit --only -- <new-path>` naming only the destination:
+
+1. **Preferred**: route the commit through `scripts/dev/safe-doc-push.sh` — a plain, full-staged-set `git commit` (no
+   `--only` path-scoping), which always lands both sides of the rename correctly.
+2. If a bare `git commit --only` is genuinely needed (e.g. staging alongside unrelated in-flight WIP you don't want to
+   commit yet), the `--only` path list MUST name **both** the old and new paths:
+   `git commit --only -m "<msg>" -- plans/active/issues/<slug>.md plans/archive/issues/<slug>.md`.
+
+**Then verify before moving on**: run `git status --porcelain` immediately after the archival commit and confirm it
+shows no staged deletion left at the old path — a lingering `D` entry there means the commit just repeated the
+create-only hazard and must be fixed (amend, or a corrective follow-up commit) before the archival counts as done.
+`scripts/plan-hygiene/check_create_only_archive_commits.py` (wired into `run_hygiene_sweep.sh`) is the mechanical
+backstop that catches this shape if it slips through — but don't rely on the sweep catching it later; verify at commit
+time.
+
 ### The line-cap does NOT block archival of an already-done doc (RULED 2026-07-30)
 
 **A doc with ZERO open todos archives via the normal 6-step ritual regardless of how far over the line-cap it is.**

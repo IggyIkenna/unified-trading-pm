@@ -101,9 +101,9 @@ conflict/operator/time-gated (parked below, not silently dropped).
   file-disjoint.
 - **File-adjacency (soft caution, not a hard collision)**: todo 2 (`autospawn.py` spawn-success path) and todo 3
   (`worker_liveness_watchdog.py` `_tick_once()` reorder) both cite the SAME source issue doc
-  (`/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`) for their own separate checkbox.
-  Re-pull that doc fresh immediately before flipping your checkbox regardless of which todo you picked up — no code-file
-  overlap, but a stale read on the source doc's own file could silently clobber the other todo's flip.
+  (`/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`) for their own separate
+  checkbox. Re-pull that doc fresh immediately before flipping your checkbox regardless of which todo you picked up — no
+  code-file overlap, but a stale read on the source doc's own file could silently clobber the other todo's flip.
 - Do not edit a source issue doc's checkboxes beyond appending your evidence line to the todo you executed. The paired
   finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`) reconciles evidence back into
   every source doc and runs archival.
@@ -144,8 +144,8 @@ conflict/operator/time-gated (parked below, not silently dropped).
       usually recover the slot ~15 min later without manual action. **See this plan's file-adjacency rule before
       starting.** **Done when**: the new regression test passes; full `agent-orchestrator` `quality-gates.sh` green; the
       alert text no longer overstates the dead-end. Source:
-      `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 1st item only). Repo:
-      agent-orchestrator. ✅ agent-orchestrator@bc37d03 — spawn_retry_count=0 added to shared spawn-success path
+      `/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 1st item only).
+      Repo: agent-orchestrator. ✅ agent-orchestrator@bc37d03 — spawn_retry_count=0 added to shared spawn-success path
       (autospawn.py:2146); test_do_spawn_resets_spawn_retry_count added (tests/test_autospawn.py:1367); "stays down
       until manual respawn" text corrected to Trigger-3 auto-recovery message (worker_liveness/_auth_failover.py). QG
       green.
@@ -168,9 +168,9 @@ conflict/operator/time-gated (parked below, not silently dropped).
       dormant on a cap-hit day, not just future kills. **See this plan's file-adjacency rule before starting.** **Done
       when**: a regression test proves orphan-session reclaim (and any other cleanup mechanism moved) still runs on a
       cap-hit tick; the docstring matches the live default; the alert text is accurate; full `agent-orchestrator`
-      `quality-gates.sh` green. Source: `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`
-      (its 2nd item only — its 3rd item is explicitly operator-decision-framed, stays in that doc). Repo:
-      agent-orchestrator.
+      `quality-gates.sh` green. Source:
+      `/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 2nd item only — its
+      3rd item is explicitly operator-decision-framed, stays in that doc). Repo: agent-orchestrator.
 
 ## Deferred — the 1 partially-declined doc + the 1 confirmed-not-orphaned doc
 

@@ -123,10 +123,16 @@ These prevent a misconfigured or flapping watchdog from kill-looping a slot:
 | Gate                   | Threshold                                       | Reset                            |
 | ---------------------- | ----------------------------------------------- | -------------------------------- |
 | Per-slot kill cooldown | 5 min between kills on the same slot            | Auto-reset after cooldown window |
-| Per-VM daily cap       | 20 kills total across all slots before dormancy | UTC midnight reset               |
+| Per-VM daily cap       | 50 kills total across all slots before dormancy | UTC midnight reset               |
 
-On daily-cap hit: Slack alert fires + watchdog goes dormant on that VM until manual operator reset (forces operator to
-investigate root cause rather than mask it with repeated auto-recovery).
+On daily-cap hit: Slack alert fires + the 5 live NEW-kill triggers go dormant on that VM until UTC midnight (forces
+operator investigation of root cause rather than masking it with repeated auto-kill). **Cleanup/reconcile mechanisms are
+NOT gated by the cap** (`agent-orchestrator@bc37d03`/`53492cb`, 2026-08-06/08 — `_tick_once()`'s reorder moved
+orphan-session reclaim + the other sweep/reconcile calls ahead of the cap early-return, since they clean up already-dead
+work rather than making a new kill decision): `_sweep_dirty_slots`, `_sweep_unpushed_slots`, orphan-session reclaim,
+`_reclaim_idle_lingering_sessions`, `_release_prereq_blocked_slots`, `_reclaim_orphaned_dispatched_tasks`,
+`_reclaim_stale_resume_pending_dispatches`, and `_reconcile_unacked_dispatches` all keep running on a cap-hit day — only
+the 5 live kill triggers themselves (and `WorkerLivenessKicker`'s separate nudge layer, which was never cap-gated) stop.
 
 State is in-memory (`_last_kill_at: dict[int, datetime]`, `_kills_today: int`) — lost on orchestrator restart, which is
 intentional (fresh state = conservative on restart day).

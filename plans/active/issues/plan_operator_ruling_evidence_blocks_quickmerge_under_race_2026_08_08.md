@@ -170,6 +170,6 @@ here.
   already have dedicated OPEN tracked issue docs (confirmed, not re-filed):
   `/plans/active/issues/reference_path_convention_2026_07_23.md`,
   `/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`,
-  `/plans/active/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md` — `plan_reconciler`
-  scope, not this escalation's. This escalation (agt-9bdc09) is being closed as resolved for its diagnosed root cause
-  per cicd.md's mandate scope.
+  `/plans/archive/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md` (resolved 2026-08-08)
+  — `plan_reconciler` scope, not this escalation's. This escalation (agt-9bdc09) is being closed as resolved for its
+  diagnosed root cause per cicd.md's mandate scope.
