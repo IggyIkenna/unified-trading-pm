@@ -339,6 +339,11 @@ architecture (L0–L4)".
 - **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
   (`disabled` != auto-clear on `rate_limited_until`; check `weekly_resets_at`). Queue never needs manual replay. SSOT
   (diagnostic order + fix-vs-not table, per service): `/codex/15-runbooks/safe-service-restart-procedures.md`.
+- **AO scheduled jobs (8 systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
+  (`agent_exit_reason == "lifecycle-complete"` is done); `git pull` does NOT reinstall a timer — re-run
+  `sudo bash scripts/install-<job>-timer.sh`; `no_capacity` is legacy (queue-on-no-capacity is the default);
+  `quarantined/timeout/ error` page, `dispatched/queued` don't. SSOT:
+  `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers, do NOT reference:
   Elysium/Arkham/Bloxroute/Infura/Kaiko + Massive-formerly-Polygon.io (the `polygon` in DeFi code is the CHAIN, not the
