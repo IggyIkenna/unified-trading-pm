@@ -12,7 +12,7 @@ summary:
   and item 2 (verify_kamino_solend_lending_relabel_2026_07_30.py) had actually been fixed for real ~9 minutes earlier by
   a DIFFERENT real commit (00c2cfe4) that the flip did not cite. This is a false-completion-evidence incident distinct
   from ordinary fleet-drift races."
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]

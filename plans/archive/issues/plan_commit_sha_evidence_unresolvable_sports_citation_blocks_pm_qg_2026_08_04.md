@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [qg-red, plan-hygiene, commit-sha-evidence, repo-blocker, ratchet]
 related:
   [
-    /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
+    /plans/archive/2026_08/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-08-04
@@ -92,7 +92,7 @@ root-causing the baseline-authoring gap itself is out of scope for unblocking to
   bad citation anywhere in `plans/active/` blocks the whole fleet.
 - If the SHA is genuinely fabricated (not just a rewritten/rebased commit), it's exactly the class of violation
   `check_plan_commit_sha_evidence.py` was built to catch per CLAUDE.md's "Runtime verification" hard rule
-  (`plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`) — a `- [x]` claim citing proof
+  (`plans/archive/2026_08/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`) — a `- [x]` claim citing proof
   that doesn't actually exist. It should not be silently re-baselined away without confirming which case this is.
 
 ## Recommended decision
