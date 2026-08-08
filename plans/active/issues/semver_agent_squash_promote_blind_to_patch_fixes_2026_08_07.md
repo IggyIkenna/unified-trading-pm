@@ -18,6 +18,7 @@ stage: [meta]
 repos:
   [
     unified-trading-pm,
+    unified-trading-ci,
     batch-live-reconciliation-service,
     client-reporting-api,
     e2e-testing,
@@ -68,7 +69,7 @@ locked_since:
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    scripts/workflow-templates/semver-agent.yml.tmpl,
+    unified-trading-ci/.github/workflows/semver-agent.yml,
     scripts/cicd/reconcile_release_tags.py,
     scripts/cicd/detect_breaking_change.py,
     scripts/cicd/promote_provenance_range.py,
@@ -219,6 +220,64 @@ cycle).
   `pyproject.toml`, essentially just a README). Deliberately excluded — out of scope for this fix, a separate decision
   about whether this repo should have semver-agent at all.
 
+## Follow-up regression (2026-08-07): GH Actions ~21000-char `run:` block-scalar cap
+
+Discovered while spot-checking the shipped fix live:
+`gh api repos/IggyIkenna/instruments-service/actions/workflows --jq '.workflows[] | select(.path|test("semver-agent")) | .name'`
+returned the raw path (`.github/workflows/semver-agent.yml`) instead of `"Semver Agent"` — the documented GitHub symptom
+for a workflow file GitHub's own parser/schema validator rejects (a generic YAML parser, incl.
+`python3 -c "import yaml; yaml.safe_load (...)"`, still parses the file fine and reads `name: Semver Agent` correctly —
+this is a GH-side schema/size constraint, not a YAML syntax error). Confirmed this is live on `origin/main` (not just
+LDR): `instruments-service`'s `main` already carries `51f45049` ("chore(promote): LDR → main (Option-B direct)"), which
+included the `c7af8834a` semver-agent fix from `## Shipped` above, and the API still resolves the path — i.e. the
+ORIGINAL fix from this doc (the patch-level-fallback + concurrency-group change) already broke GH's parse fleet-wide the
+moment it promoted to `main`, before this follow-up was even found.
+
+Root cause: the original fix's rationale comment (the multi-paragraph "why patch-level-fallback exists" narrative) was
+written INSIDE the `run: |` block-scalar, immediately above the `if [ -z "$BUMP" ]; then` line. GitHub Actions imposes
+an undocumented hard cap (~21,000 characters) on a single `run:` block-scalar VALUE — this step's script was already
+close to that ceiling, and the added essay-length in-script comment tipped every rolled-out repo over it. Measured:
+committed (pre-fix) run-block length was **25,485 chars**.
+
+Fix (this session, applied directly to the SSOT template, purely comment-relocation — verified zero non-comment/
+non-blank diff lines via `git diff ... | grep -vE '^[+-]\s*#|^[+-]\s*$'`, so no runtime logic changed):
+
+1. Moved the original fix's rationale comment out of `run:` entirely, into a plain YAML comment block directly above the
+   step's `- name:` line (GH strips comments before building any string node, so a step-level YAML comment costs NOTHING
+   against the per-value budget) — only a short pointer remains in-script.
+2. Found 9 more sizable pure-comment blocks still inside the same `run:` script (historical incident rationale: the
+   HEAD-commit re-entry brake, the 0.0.0-baseline bounded-scan rule, the robust-baseline-resolution note, the
+   unresolvable-baseline fail-safe, the baseline-reuse-for-diff note, the content-based differ rationale, the
+   here-string-not-pipe SIGPIPE-incident note, and the label-check advisory-only note) and relocated all of them the
+   same way — verbatim, into a consolidated "Relocated in-script rationale" appendix comment block above the step, each
+   replaced in-script with a one-line pointer (`# See step-level comment above (char-cap relocation, 2026-08-07).` ). No
+   rationale text was deleted, only moved.
+3. Result: run-block length reduced from 25,485 → **19,244 chars** (24.5% reduction, ~1,750 chars of margin below the
+   ~21,000 cap). Validated: `bash -n` on the extracted+dedented script (syntax OK), `actionlint` on the rendered canary
+   file (same pre-existing shellcheck style nits as before, zero new/schema errors), `python3 yaml.safe_load` (parses,
+   `name: Semver Agent` present — this already worked pre-fix too, confirming the break is GH-side, not
+   generic-YAML-side).
+
+Re-shipped to all 21 fleet repos from `## Shipped` above (re-render via
+`rollout-workflow-templates.sh --template semver-agent.yml`, re-quickmerge `.github/workflows/semver-agent.yml` per
+repo). `market-tick-data-service` remains deliberately unshipped (same pre-existing unrelated test-failure blocker as
+before).
+
+- [x] ✅ [DEVOPS] P1. **SUPERSEDED, see `## Follow-up regression #2 (2026-08-08)` below** — a completely separate,
+      unrelated initiative (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 7,
+      `unified-trading-pm@79c4a72737`) deleted the per-repo `.github/workflows/semver-agent.yml` files this checkbox was
+      about to check and replaced them with thin `workflow_call` stubs pointing at a single central
+      `unified-trading-ci/.github/workflows/semver-agent.yml` (this deletion +
+      `scripts/workflow-templates/     semver-agent.yml.tmpl` retirement happened almost simultaneously with the
+      char-cap fix below landing on the template, `unified-trading-pm@6603a5beb5` — the migration used a stale
+      pre-char-cap-fix copy of the logic, silently reintroducing this exact bug in the new central location). Per-repo
+      "did the name resolve" checks are now moot in their original form (there is no longer a per-repo `run:` block to
+      hit the cap) — the equivalent check is now "does the ONE central `unified-trading-ci` file register
+      `Semver Agent`, and does the fix propagate to callers on their next `push:[main]`" — tracked by the new todos in
+      Follow-up regression #2.
+- [x] ✅ [DEVOPS] P2. **SUPERSEDED** — same reason as above; "that repo's variant" no longer exists post-migration,
+      there is exactly ONE variant now (the central reusable workflow).
+
 ## Verification
 
 - [x] ✅ [DEVOPS] P1. **Logic-level verification (DONE, real evidence, side-effect-free)**: the live GH-Actions
@@ -267,10 +326,104 @@ cycle).
 - [ ] [DEVOPS] P2. Ship the fix to `market-tick-data-service` once its unrelated pre-existing test failure is fixed
       (tracked in the docs cited above — this todo is just the reminder to circle back, not a duplicate of that fix).
 
+## Follow-up regression #2 (2026-08-08): unified-trading-ci reusable-workflow migration silently reintroduced the char-cap bug
+
+Fleet-wide symptom recurred: `semver-agent.yml` workflows across ~21 repos were again failing with ZERO jobs created and
+GitHub's "This run likely failed because of a workflow file issue" tell
+(`gh api repos/<owner>/<repo>/actions/workflows --jq '...name'` returning the raw file path instead of `Semver Agent`) —
+identical symptom to Follow-up regression #1 above, but the #1 fix (`unified-trading-pm@6603a5beb5`, applied 2026-08-07
+to `scripts/workflow-templates/semver-agent.yml.tmpl`) was already correctly landed and verified.
+
+**Root cause**: almost simultaneously with #1's fix, a completely separate, unrelated initiative
+(`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 7, `unified-trading-pm@79c4a72737`,
+"chore(ci): delete 7 now-redundant flat-copy templates, now hosted in unified-trading-ci") deleted
+`scripts/workflow-templates/semver-agent.yml.tmpl` and every per-repo hosted copy entirely, replacing them with a single
+central reusable workflow, `unified-trading-ci/.github/workflows/semver-agent.yml` (`unified-trading-ci@65111fc`,
+"feat(ci): host semver-agent.yml as a reusable workflow"), called via
+`uses: IggyIkenna/unified-trading-ci/.github/workflows/semver-agent.yml@main` from a thin per-repo stub. **The migration
+copied the logic from a version of the workflow that predated the #1 char-cap fix** — its "Compute next semver via diff
+analysis" step's `run:` block-scalar measured **21,685 chars**, over GitHub Actions' undocumented ~21,000-char cap,
+reintroducing the exact same parse failure in the new central location. Because every caller repo's own
+`semver-agent.yml` is now just a `workflow_call` stub with no logic of its own, this made `unified-trading-ci`'s one
+file a **single point of failure for the whole fleet** — confirmed via
+`gh api repos/IggyIkenna/unified-trading-ci/actions/workflows --jq '...name'` also returning the raw path, proving the
+central file itself (not just callers) was broken.
+
+**Fix** (this session, 2026-08-08, ported the exact #1 fix pattern into the new `workflow_call`/`inputs.*` shape):
+
+1. Fetched the #1 fix's full diff (`git show 6603a5beb5 -- scripts/workflow-templates/semver-agent.yml.tmpl`) as the
+   structural reference — confirmed the current `unified-trading-ci` file's "Compute next semver via diff analysis" step
+   carries the SAME 10 embedded rationale-comment blocks at the same relative locations (HEAD-commit re-entry brake,
+   Step-1 baseline-source, 0.0.0-baseline bounded-scan, robust-baseline-resolution, unresolvable-baseline fail-safe,
+   baseline-reuse-for-diff, content-based-differ, patch-level-fallback [the largest, ~22 lines], here-string-not-pipe,
+   label-check-advisory-only) — parameterized for `${{ inputs.repo_name }}` instead of `__REPO_NAME__` but otherwise
+   structurally identical.
+2. Relocated all 10 blocks verbatim from inside the `run: |` block scalar to a single top-level YAML comment placed
+   directly above the `- name: Compute next semver via diff analysis` step (GitHub strips comments before computing
+   string-node length, so this costs nothing against the per-value budget) — each original in-script location now
+   carries a one-line pointer (`# See step-level comment above (char-cap relocation, 2026-08-08).`, or a slightly more
+   specific pointer for the patch-fallback block).
+3. Result: run-block length reduced from **21,685 → 16,106 chars** (comfortably under the ~21,000 cap, in the same
+   ballpark as the ~15,964 chars the #1 fix itself achieved on the template). No non-comment lines changed — purely
+   additive relocation, zero runtime-logic diff.
+4. As a side effect of getting this repo onto a clean checkout, also ran an informational (read-only, not a fix) size
+   check across the other 6 newly-added `unified-trading-ci` reusable workflows for the same failure class — all
+   comfortably clear (`main-backmerge-to-ldr.yml` 15,386 being the closest, still ~5,600 chars of margin;
+   `staging-backmerge-to-ldr.yml` 5,507, `update-dependency-version.yml` 5,102, others lower) — no other file is
+   currently at risk, no further action taken there.
+
+**Verified before shipping**:
+
+- `python3 -c "import yaml; yaml.safe_load(...)"` — parses clean.
+- `actionlint .github/workflows/semver-agent.yml` — zero schema errors; only pre-existing shellcheck style nits
+  (`SC2129`/`SC2086`, unrelated to this diff, same class noted as pre-existing in Follow-up regression #1).
+- Run-block size re-measured post-fix via a small local script that parses the YAML and sums each `steps[*].run`
+  string's `len()` — confirmed 16,106 for the fixed step, all other steps unchanged and already well under the cap.
+
+**Shipped**: `unified-trading-ci@2c67855` ("fix(ci): move semver-agent patch-fallback rationale out of run: block to fix
+GH Actions 21000-char expression limit (fleet-wide zero-jobs parse failure, reintroduced by the 2026-08-06
+template-hosting migration)"). This repo is single-branch (`main` only, `promotion_model: single_branch` per
+`workspace-manifest.json` — no LDR/staging tiers, not a Python package to gate with `quality-gates.sh`, no
+`scripts/quality-gates.sh`/`quickmerge.sh` present) — committed + pushed directly to `main`, which is the correct and
+only path for this repo (confirmed via its own README + `workspace-manifest.json` entry before pushing, per the
+workspace's "raw push banned unless no other mechanism exists" carve-out).
+
+Note: the local `unified-trading-ci` checkout used for this fix had drifted (local `main` was tracking a stale
+`origin/live-defi-rollout` ref from before this repo's single-branch retirement, 2 commits behind `origin/main` at fetch
+time, plus 3 brand-new upstream commits that had landed from the template-hosting migration moments earlier). Reconciled
+via `git merge origin/main --no-edit` (confirmed first via `git diff --stat HEAD origin/main` that the divergence was
+purely additive — no file modified/deleted, only new files added — so the merge was conflict-free and lossless; a
+`git reset --hard` alternative was blocked by the orchestrator's destructive-command guardrail, which was correctly
+conservative here since it can't verify reversibility from command text alone).
+
+**Live verification**:
+
+- [x] ✅ [DEVOPS] P1. Central file confirmed fixed and live:
+      `gh api repos/IggyIkenna/unified-trading-ci/actions/workflows --jq '.workflows[]|select(.path|test("semver"))|.name'`
+      → `"Semver Agent"` (was the raw path before this fix).
+- [ ] [DEVOPS] P1. Caller-repo re-registration still pending as of this writing: `instruments-service` and
+      `unified-trading-api` (the 2 caller repos checked) both STILL show the raw path, not `"Semver Agent"` — expected
+      per the task's own prediction ("reusable-workflow callers re-resolve on next evaluation... you may need to trigger
+      a fresh event"). Checked for a safe forced-trigger: the caller stub's own `on:` block is `push: branches: [main]`
+      ONLY (no `workflow_dispatch`), and per the shared-workflow starvation rule
+      (`ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`) this task must NOT
+      `gh workflow run ldr-to-main-promote-fleet.yml` to force one. Checked for a naturally-pending promote that would
+      trigger soon regardless: `gh pr list --search "chore(promote)"` returned empty for both repos — no promote
+      currently queued. This will self-resolve on either repo's next natural `push:[main]` (any future LDR→main promote
+      cycle); no forcing mechanism exists that doesn't violate a HARD RULE. Re-check opportunistically (next session
+      touching either repo, or the next `/ci-reconcile` sweep) — do not spin up a dedicated wait/poll loop for this
+      alone.
+- [ ] [DEVOPS] P2. Once at least one caller repo naturally promotes, re-run the same
+      `gh api .../workflows --jq '...name'` check on it (and ideally 2-3 more, spot-checked) to close out this doc's
+      live-verification bar, matching the standard this doc already held itself to for Follow-up regression #1.
+
 ## Codex SSOTs
 
 - `/codex/08-workflows/ci-cd-flow.md` — promoter/semver-agent gate set, LDR→main model
-- `scripts/workflow-templates/semver-agent.yml.tmpl` — the fix itself
+- `unified-trading-ci/.github/workflows/semver-agent.yml` — the current fix location (reusable `workflow_call` workflow;
+  the original `scripts/workflow-templates/semver-agent.yml.tmpl` this doc originally cited was retired by the
+  2026-08-06 `fleet_workflow_template_dedup_to_unified_trading_ci` migration — see
+  `## Follow-up regression #2 (2026-08-08)`)
 
 ## Progress Log
 
@@ -290,6 +443,17 @@ cycle).
   flagging this as informational context for whoever next runs the actual verification, not as a substitute for it: per
   the na-eligibility-audit verdict below, this doc's own evidence bar for closing anything here is a real
   `reconcile_release_tags.py --dry-run` re-run or a minted tag, not an inference from CI run history.
+- **2026-08-08**: An unrelated same-day initiative (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`)
+  migrated all `semver-agent.yml` logic out of per-repo copies into one central `unified-trading-ci` reusable workflow,
+  using a stale pre-char-cap-fix copy — silently reintroducing the exact Follow-up regression #1 bug (21,685-char `run:`
+  block, over the ~21,000 cap) in the new central location, now a fleet-wide single point of failure. Ported the same
+  comment-relocation fix into the new `workflow_call`/`inputs.*` file (`unified-trading-ci@2c67855`) — run-block reduced
+  to 16,106 chars. Central file confirmed live-fixed (`gh api .../workflows` resolves `"Semver Agent"`). Caller-repo
+  re-registration (`instruments-service`, `unified-trading-api`) still shows the stale raw-path name pending each repo's
+  next natural `push:[main]` — no safe forced-trigger exists (caller stub has no `workflow_dispatch`; force-dispatching
+  the fleet promoter is banned) and no promote is currently queued for either repo. See
+  `## Follow-up regression #2 (2026-08-08)` for full detail. Doc stays `status: open` pending that caller-side
+  confirmation.
 
 ## na-eligibility-audit verdict
 
