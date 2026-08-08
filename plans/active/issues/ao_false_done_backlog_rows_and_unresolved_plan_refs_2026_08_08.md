@@ -227,7 +227,24 @@ plan + verifying the `done_sha`, never from the row's status alone.
       this check. So the false-done state the 03:15 UTC audit snapshot captured (backlog row `done` citing a stale sha,
       plan checkbox honestly open) was correctly re-verified and closed by slot 9 with no code needed — nothing further
       to do here.
-- [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-014` (`done_sha=b78ec6e7c`)
+- [x] ✅ [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-014` (`done_sha=b78ec6e7c`) — **verified 2026-08-08
+      (slot 27): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected.** `GET /api/backlog` for this exact id currently returns `status: "dispatched"`,
+      `dispatched_to: 17`, `done_sha: null` (NOT `done`), same self-correcting
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every item above. `b78ec6e7c`
+      (slot-9, 2026-08-04T12:52:21Z) IS a real, on-origin commit — confirmed ancestor of `origin/live-defi-rollout` —
+      and its diff + Progress Log entry ("slot-9 2026-08-04 ~12:39Z … Step 2 DONE. Steps 1/3/4 still gated") show it
+      genuinely completed only STEP 2 of the 4-step sequenced P1 cleanup at line 330 (the 42 corrupted
+      `venue=<bare>`/`chain=FUTURES` manifest rows — 42 CAS-dropped, consolidator resumed) while explicitly leaving
+      steps 1/3/4 gated; the commit never claimed the todo itself was done, so the 03:15 UTC audit's `false_done` flag
+      (backlog row `done` citing this sha, checkbox honestly `- [ ]`) was a real Half-2 miss at the time. Cross-checked
+      the cited plan (`plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md` line 330): the todo
+      is still correctly `- [ ]` — steps 1 (corpus re-run/schedule confirmed fresh) and 3/4 (physical GCS duplicate
+      cleanup, HYPERLIQUID residual root-cause) remain open per the doc's own body. The live backlog id now points at a
+      fresh dispatch (slot 17, `dispatched_at: 2026-08-08T10:55:22Z`) actively working the same title, not a stale
+      `done` row — the false-done state has already been superseded by honest re-dispatch. No REOPEN (would collide with
+      slot 17's in-flight work on an already-correctly-queued task) or FLIP (would falsely mark unmet steps 1/3/4 done)
+      was warranted or performed; this item only needed its tracker checkbox resolved with the verification trail above.
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`)
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-009` (`done_sha=6ddb0374`)
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-010` (`done_sha=6ddb0374` — **same sha as -009**;
@@ -358,3 +375,13 @@ plan + verifying the `done_sha`, never from the row's status alone.
   VM freshly re-verified RUNNING with a clean run.log. The plan checkbox at
   `infra_capture_and_devops_leftovers_2026_07_06.md` line 292 is correctly `[x]` ✅ and matches `f79fbded3` exactly.
   Nothing to correct. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 27, backend_engineer)**: Verdict on `defi_cefi_venue_chain_axis_contamination-014`
+  (`done_sha=b78ec6e7c` at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting
+  positional-id pattern as the 7 items above. `GET /api/backlog` shows this exact id is currently
+  `status: "dispatched"`, `dispatched_to: 17`, `done_sha: null` (not `done`). `b78ec6e7c` (slot-9, 2026-08-04) was a
+  genuine false-done AT THE TIME: it only completed step 2 of the 4-step sequenced P1 cleanup at line 330 of
+  `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (its own Progress Log entry says "Step 2 DONE. Steps 1/3/4
+  still gated"), and the checkbox there is correctly still `- [ ]`. The live backlog row for this id is now a fresh
+  in-flight dispatch to slot 17, not a stale `done` row — the false-done state has already self-corrected. See the
+  checklist item above for the full trail.
