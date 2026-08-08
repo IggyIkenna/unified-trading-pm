@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
@@ -2230,8 +2230,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.96.2.dev5+g0d9ededcd",
-      "published_at": "2026-08-08T04:36:58Z",
+      "version": "0.96.2.dev7+gd92b0197a",
+      "published_at": "2026-08-08T05:06:42Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
