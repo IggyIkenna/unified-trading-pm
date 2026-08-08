@@ -194,13 +194,21 @@ agent-orchestrator's own dashboard — the `cross-cutting` half was redundant, d
       left unflipped per this batch's own reconciliation rule — the finalize plan flips it). Repo: agent-orchestrator.
       Source: `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` (its 2nd item only).
 
-- [ ] [TEST] P3. **Root-cause `backlog-collision.spec.ts`'s intermittent "click Fix" failure.** Check for an
-      async-completion race in the remint→confirm sequence (the "remint" action + "a follow-up API call confirms the new
-      task_id is clean" step suggests a multi-request sequence that could race the test's assertion). **Done when**: a
-      written root-cause verdict is recorded in the source doc's Progress Log; a landed fix + a passing stable re-run
-      (10x in a loop, zero flakes) or an operator-ask if genuinely design-gated; full `agent-orchestrator`
-      `quality-gates.sh` green. Source: `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`
-      (its 3rd item only). Repo: agent-orchestrator.
+- [x] ✅ [TEST] P3. **DONE 2026-08-08 (backend_engineer craft)** — Root-caused `backlog-collision.spec.ts`'s
+      intermittent "click Fix" failure. **NOT an async-completion race** — static review of the remint→confirm flow
+      found no structural race. Actual blocker: TWO local-slot-only port-mismatch bugs (neither manifests in CI, which
+      runs un-tabbed at `SLOT_OFFSET=0`) that made this spec un-reproducible from any `.tabs/N` slot checkout: (1)
+      `run-e2e-backend-collision.sh` pointed the dashboard's Login screen at a static, hardcoded-port
+      `backends.e2e.collision.json` instead of the actual slot-offset-aware backend port — "Failed to fetch" on every
+      non-zero slot; (2) the spec's own follow-up out-of-band fetch read `process.env.E2E_COLLISION_BACKEND_PORT`, which
+      `playwright.config.ts` never propagated to the test-runner process (only to the spawned backend subprocess). Fixed
+      both — `agent-orchestrator@1e2ecac` + `agent-orchestrator@3ba4ba4` (mirrors `run-e2e-backend-tier.sh`'s
+      already-established runtime-generated-backends-file pattern). **Verification**: 5/5 clean isolated re-runs, both
+      tests, zero flakes (~20s/run); full `agent-orchestrator` `quality-gates.sh` green (2796 passed, dashboard
+      tsc+vitest clean). SHA `3ba4ba4` independently verified ancestor of `origin/live-defi-rollout`. Full write-up +
+      Progress Log in the source doc (checkbox there intentionally left unflipped per this batch's own reconciliation
+      rule — the finalize plan flips it). Repo: agent-orchestrator. Source:
+      `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` (its 3rd item only).
 
 - [x] [INFRA] P1. **Deliberately and minimally reproduce the autostash-pop content-loss hazard, and determine whether
       discarded content is recoverable — one combined todo (the two source items are tightly sequential: the
