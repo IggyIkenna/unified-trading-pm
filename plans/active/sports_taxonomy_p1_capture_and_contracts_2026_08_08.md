@@ -278,9 +278,16 @@ achieved by exclusion, not canonicalisation.**
       `trades` rows sourced `polymarket_clob`, spanning 2020-06-06 → 2026-05-21 — prediction-market venues seeded into
       the sports expected-universe. Stop the seeding at the enumerator, and retire
       `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED` once it is genuinely empty. Manifest-row cleanup is P2.
-- [ ] [CODE] P1. **Stop instruments-service writing into the MTDS tick manifest with a blank venue.** 2,490 rows
+- [x] ✅ [CODE] P1. **Stop instruments-service writing into the MTDS tick manifest with a blank venue.** 2,490 rows
       (`service_name=instruments-service`, `venue=""`: 1,106 `odds_horizon_bucket` + 1,273 `trades` + 111
-      `trades_inplay`). Find the writer, fix the attribution or stop the write. Row cleanup is P2.
+      `trades_inplay`). Find the writer, fix the attribution or stop the write. Row cleanup is P2. — **LANDED 2026-08-03
+      (prior session, slot 12/14)**: writer = `backfill_orphan_class_e_sports.py::record_cells()` — a case-sensitivity
+      gap made lower-case GCS-path data_types miss UAC `SOURCE_PRIORITY` (upper-case-only keys), falling through to
+      `BATCH_INSTRUMENTS_SERVICE` fallback. Three-part fix: (1) `instruments-service@a722014a` — `.upper()` retry in
+      `resolve_source_and_mode()` + pipeline_mode entries for `odds_api`/`mdps_odds_horizon_bucket`; (2)
+      `unified-api-contracts@b27717b8` — registered `TRADES_INPLAY` in `SOURCE_PRIORITY` (`odds_api`); (3)
+      `instruments-service@869f1ce7` — one-off restamp script added + ran against prod: 2,490/2,490 rows restamped,
+      re-verified GREEN (0 remaining); test updated for correct `trades_inplay` resolution.
 - [ ] [CODE] P1. **Correct the false UAC exception comment.** `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` in
       `market_data_categories.py` asserts uppercase `ODDS` is "4 stale capture_status=empty_confirmed/row_count=0
       manifest rows with zero backing GCS content". The live manifest shows **6,306 `captured` rows** spanning
