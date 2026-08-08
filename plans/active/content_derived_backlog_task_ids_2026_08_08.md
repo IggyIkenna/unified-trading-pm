@@ -102,12 +102,13 @@ Both were established by reading the code, and both are silent — neither raise
 
 ## Phase 1 — content-derived minting (safe, closes the bug going forward)
 
-- [ ] [BACKEND] P1. **Audit every worker-facing endpoint for a client-echoed `task_id`.** The blast-radius map confirmed
-      `/done`, `/progress`, `/blocked` echo it and `/heartbeat` does not, but did NOT trace `/skip-current-task`,
-      `/reassign`, `/park`, `/unpark` or the rest of `routes/slots_worker.py` + `routes/slots_ops.py`. Produce the
-      complete list of endpoints whose request model carries a `task_id` the CLIENT supplies. This is hazard 1's real
-      blast radius and every later phase depends on it being complete, not sampled. Done-when: every endpoint in both
-      route files classified echoed/not-echoed, recorded in this plan's Progress Log. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **Audit every worker-facing endpoint for a client-echoed `task_id`.** The blast-radius map
+      confirmed `/done`, `/progress`, `/blocked` echo it and `/heartbeat` does not, but did NOT trace
+      `/skip-current-task`, `/reassign`, `/park`, `/unpark` or the rest of `routes/slots_worker.py` +
+      `routes/slots_ops.py`. Produce the complete list of endpoints whose request model carries a `task_id` the CLIENT
+      supplies. This is hazard 1's real blast radius and every later phase depends on it being complete, not sampled.
+      Done-when: every endpoint in both route files classified echoed/not-echoed, recorded in this plan's Progress Log.
+      (repo: agent-orchestrator)
 - [ ] [BACKEND] P1. **Add `_make_content_task_id(plan_ref, brief, occurrence)`** next to the existing `_make_task_id`
       (`regen_backlog_from_plan.py:1556`), returning
       `f"{slug}-{sha256(f'{plan_ref}|{brief}|{occurrence}').hexdigest()[:N]}"`. **The hash input MUST include
@@ -222,3 +223,34 @@ Both were established by reading the code, and both are silent — neither raise
   dispatch. The source doc stays `assigned_vm: NA` as the analysis SSOT — BLK-29884333 is not re-litigated, it is
   satisfied. Phase 1 is fully AO-dispatchable; Phase 2's two irreversible steps (scratch-copy dry-run, live apply) are
   `[OPERATOR]`-tagged because they copy/mutate live orchestrator state.
+
+- **2026-08-08 (slot 9, content_derived_backlog_task_ids-001)**: Complete endpoint audit of `routes/slots_worker.py` and
+  `routes/slots_ops.py`. Every endpoint classified. **ECHOED (client supplies `task_id` in request body) — 4
+  endpoints:**
+  1. `POST /api/slots/{slot_id}/progress` — `ProgressRequest.task_id` (`models/worker_api.py:82`)
+  2. `POST /api/slots/{slot_id}/done` — `DoneRequest.task_id` (`models/worker_api.py:181`)
+  3. `POST /api/slots/{slot_id}/blocked` — `BlockedRequest.task_id` (`models/worker_api.py:243`)
+  4. `POST /api/slots/{slot_id}/unskip-task` — `UnskipTaskRequest.task_id` (`models/slots.py:155`) ← **NEW vs
+     blast-radius map**
+
+  **NOT-ECHOED — server derives task from `slot.current_task` or no task_id in model (remaining 17 endpoints):**
+  `routes/slots_worker.py`: `/boot` (BootRequest — no task_id), `/heartbeat` (HeartbeatRequest — no task_id),
+  `/messages` (GET). `routes/slots_ops.py`: `/message` (SendMessageRequest — no task_id), `/message-live`,
+  `/transcript-tail` (GET), `/bootstrap` (query params only), `/reset-worktree` (query params only), `/spawn`
+  (SpawnRequest — no task_id), `/claim` (GET), `/claim-interactive` (ClaimInteractiveRequest — no task_id),
+  `/in-flight-files` (GET), `/reassign` (ReassignRequest — no task_id; uses `slot.current_task`), `/switch-account`
+  (SwitchAccountRequest — no task_id), `/switch-model` (SwitchModelRequest — no task_id), `/skip-current-task`
+  (SkipCurrentTaskRequest — no task_id; uses `slot.current_task`), `/clear-skips` (no body), `/clear-spawn-role` (no
+  body), `/pause` (no body), `/resume` (no body), `/loop-interval` (LoopIntervalRequest — no task_id), `/log` (GET),
+  DELETE (no body).
+
+  **Migration note for `/unskip-task`**: `UnskipTaskRequest.task_id` is operator-facing (removes a per-slot skip
+  exclusion via `ss.clear_slot_skip(session, slot_id, req.task_id)`). If a task is renamed while a slot skip row still
+  holds the old id, the skip row survives under the old id and an `/unskip-task` call with the new id would silently
+  no-op (skip not found, `cleared=False`). Phase 2 migration MUST remap `slot_skips.task_id` in the same pass as
+  `tasks.id`.
+
+  **Out of scope** (not in the two slot route files): `/api/backlog/{task_id}/park`, `/unpark` live in
+  `routes/backlog.py` — task_id there is a PATH parameter (server-resolved), not a client-echoed body field. Separately,
+  `routes/backlog.py` has body-task_id endpoints (`/reconcile-brief`, `/reopen`, `/park/mark-done`) but those are
+  backlog-operator endpoints, not worker-facing; included here for completeness of the namespace scan.
