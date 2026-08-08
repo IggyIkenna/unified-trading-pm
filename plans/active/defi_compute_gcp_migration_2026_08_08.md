@@ -244,12 +244,20 @@ them).
       `gcloud run services replace` invocation without error. — deployment-service@9c84158a; verified dry-run produces
       valid `gcloud run services replace` for both execution-service and strategy-service.
 
-- [ ] [BACKEND] P1. **Deploy `features-service` to GCP Cloud Run** using
+- [x] ✅ [BACKEND] P1. **Deploy `features-service` to GCP Cloud Run** using
       `deployment-service/configs/cloud-run/features-service.yaml` + its existing
       `scripts/cloud-run/deploy_features_service_cloud_run.sh`. Done-when: the Cloud Run revision is `Ready`, its
       `/health`/`/readiness` probes return 200, and a manual check confirms it reads from
-      `features-defi-prd-central-     element-323112` (not the empty AWS bucket) via real logs/output, not just config
-      inspection.
+      `features-defi-prd-central-element-323112` (not the empty AWS bucket) via real logs/output, not just config
+      inspection. **DONE (2026-08-08, slot-7)**: Revision `features-service-00001-fzt` deployed to `asia-northeast1`,
+      URL `https://features-service-cldtjniqvq-an.a.run.app`. VPC connector `features-conn` (10.8.0.0/28, default
+      network) created for private Redis (`redis://10.37.84.139:6379`). Health checks: `/health` → 200 `healthy:true`,
+      `/readiness` → 200 `{"status":"ready"}`. GCS routing confirmed: `CLOUD_PROVIDER=gcp`,
+      `GCP_PROJECT_ID=central-element-323112`; `features-defi-prd-central-element-323112` has real data (`_index/`,
+      `delta_one/`, `onchain/`); `features-prod@central-element-323112.iam.gserviceaccount.com` holds
+      `roles/storage.objectAdmin` on that bucket; zero AWS credentials in deployment. No code changed — pure
+      `gcloud run deploy` operation. Streaming processor (Phase E.2 follow-up) not yet active → `data_freshness` returns
+      `stale:true, last_processed_date:null` as expected on Health-API-only deploy.
 
 - [ ] [INFRA] P1. **Scale `uts-features-service-prod` (AWS ECS) to 0** once the GCP deployment above is confirmed
       healthy and has run cleanly for a real observation window (state how long you actually waited, e.g. "24h, zero
@@ -370,3 +378,14 @@ them).
   (execution-service | strategy-service) and `--dry-run`. Verified:
   `bash deploy.sh --service execution-service --dry-run` produces a valid `gcloud run services replace` invocation; same
   for strategy-service. QG green (exit 0). Shipped via quickmerge — deployment-service@9c84158a.
+- **2026-08-08 (slot-7, AO worker — todo 5)**: Deployed `features-service` to GCP Cloud Run. Prerequisites resolved
+  inline: (1) `Serverless VPC Access API` enabled for private Redis access; (2) `roles/vpcaccess.admin` granted to
+  `unified-trading-sa` (IAM self-service); (3) VPC connector `features-conn` created (region `asia-northeast1`, network
+  `default`, range `10.8.0.0/28`) — the connector from the 2026-07-26 smoke test had been torn down. Deployed via
+  `gcloud run deploy features-service` (imperative, per `deploy_features_service_cloud_run.sh`). Revision
+  `features-service-00001-fzt`, URL `https://features-service-cldtjniqvq-an.a.run.app`. Health: `/health` 200
+  `healthy:true`, `/readiness` 200. GCS routing verified: `CLOUD_PROVIDER=gcp`, `GCP_PROJECT_ID=central-element-323112`;
+  `features-defi-prd-central-element-323112` bucket populated (`_index/`, `delta_one/`, `onchain/`);
+  `features-prod@central-element-323112.iam.gserviceaccount.com` → `roles/storage.objectAdmin` on GCS bucket; zero AWS
+  credentials. No code commits (pure infrastructure deployment). Next: todo 6 — scale `uts-features-service-prod` to 0
+  after observation window.
