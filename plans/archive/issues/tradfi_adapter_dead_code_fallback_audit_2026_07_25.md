@@ -322,13 +322,16 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       through past a silent miss). Updated `test_cancel_order_real_not_found` (previously asserted the buggy
       fabricated-success behavior) to assert the raise instead. Repo: execution-service — execution-service@2514bd6b.
 
-- [x] ✅ [BACKEND] P1. **DECIDED 2026-08-03 (operator ruling) — keep it gated; documented as intentional
-      not-yet-activated scaffolding** (Finding E-1): all 6 venue adapters (`cme_adapter.py`, `cboe_adapter.py`,
-      `nasdaq_adapter.py`, `nyse_adapter.py`, `ice_adapter.py`, `fx_adapter.py`) + shared `ibkr_tradfi.py` base remain
-      registered+tested but excluded by both the `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the
-      UAC-capability-declarations manual-HTTP gate — ruling was NOT to bridge the two vocabulary gates. Added STATUS
-      documentation at both gate sites (`execution-service/execution_service/utils/nautilus_compatibility.py`'s
-      `NAUTILUS_UNSUPPORTED_VENUES`,
+- [x] ✅ [BACKEND] P1. **CORRECTED 2026-08-08 — the "operator ruling" cited below was UNSOURCED; operator confirmed
+      2026-08-08 (ao round-5 apply session item 14) they do not remember ruling on this: "Do not remember - treat as
+      unruled."** The underlying architecture question remains genuinely open, tracked as a fresh `[OPERATOR]` todo in
+      `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`. The shipped change
+      itself (STATUS-docstring-only, no behavior change) is NOT reverted. Original text preserved below. (Finding E-1):
+      all 6 venue adapters (`cme_adapter.py`, `cboe_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`,
+      `ice_adapter.py`, `fx_adapter.py`) + shared `ibkr_tradfi.py` base remain registered+tested but excluded by both
+      the `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the UAC-capability-declarations manual-HTTP gate — ~~ruling
+      was NOT to bridge the two vocabulary gates~~ (unsourced, see correction above). Added STATUS documentation at both
+      gate sites (`execution-service/execution_service/utils/nautilus_compatibility.py`'s `NAUTILUS_UNSUPPORTED_VENUES`,
       `unified-api-contracts/unified_api_contracts/registry/capability_declarations/     _tradfi.py`'s module docstring)
       plus the `TRADFI_VENUES` registration site (`execution-service/execution_service/trade_execution/factory.py`) and
       the shared base's own module docstring (`ibkr_tradfi.py`), each cross-referencing this finding and this same plan
@@ -438,7 +441,8 @@ doc directly — per that plan's own stated reconciliation pattern.
   -07-19" language against the now-actually-removed code — both already read true as written, no further doc edits
   needed. Flipped the checkbox citing the landed commit; no new code shipped by this slot.
 - **2026-08-03 (slot 9, backend_engineer)**: applied the operator ruling for Finding E-1 (keep tradfi order-routing
-  gated, document as intentional scaffolding rather than bridging the gates). Added STATUS notes at both gate sites
+  gated, document as intentional scaffolding rather than bridging the gates). **CORRECTION 2026-08-08**: unsourced
+  citation, no such ruling confirmed (operator: "do not remember"). Added STATUS notes at both gate sites
   (`nautilus_compatibility.py::NAUTILUS_UNSUPPORTED_VENUES`, UAC `_tradfi.py` module docstring) plus
   `factory.py::TRADFI_VENUES` and `ibkr_tradfi.py`'s module docstring, each cross-referencing this finding + the
   still-open backfill=paper=live wiring-proof todo. No behavior change — documentation only, gates stay closed.
