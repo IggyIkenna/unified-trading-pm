@@ -42,7 +42,7 @@ source:
   'Operator ruling 2026-07-16: "kill drift entirely from our whole system... kill all other solana perp dex''s. uac,
   code, adaptors, manifest, gcs, everything." Discovered as a side-finding while fixing the TreasuryTab
   SUB_ACCOUNT_DRIFT dropdown bug in deployment-ui (the 12th repo the operator''s fleet grep caught).'
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 context_scope:
@@ -372,11 +372,32 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 
 ## Todos
 
-- [ ] [ENGINEER] P2. **Resync the fourth instance (`unified-api-contracts/openapi/prospectus/*.md`, 57 files)** — the
-      prospectus generator (`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py`) has drifted from the
-      committed files on multiple unrelated axes (venue-category classification, execution-algorithm lists, formatting,
-      `generated_from_commit` baseline, 2 missing archetypes), so a blind regen isn't safe yet — still carries DRIFT
-      residue and remains unowned (see "Fourth instance found, NOT applied" above).
+- [ ] [SCRIPT] P2. **RECLASSIFIED 2026-08-08 — "source wins, full regen is correct" is the ruling, not an open design
+      question.** Original text (kept for context): "Resync the fourth instance
+      (`unified-api-contracts/openapi/prospectus/*.md`, 57 files) — the prospectus generator
+      (`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py`) has drifted from the committed files on
+      multiple unrelated axes (venue-category classification, execution-algorithm lists, formatting,
+      `generated_from_commit` baseline, 2 missing archetypes), so a blind regen isn't safe yet." Re-verified 2026-08-08:
+      the generator is a PURE regenerate-from-source tool by construction — its own docstring states "Output:
+      deterministic (sorted, no timestamps). Run twice = byte-identical," and the only file write in the whole script is
+      a single unconditional `with open(out_path, "w", encoding="utf-8") as f: f.write(doc)` inside the per-archetype
+      loop (line 663) — no read-existing-file, no diff-against-committed, no merge, no preserve-hand-edit logic anywhere
+      in the file. This means there is no mechanism by which a committed `.md` could carry authoritative content the
+      generator doesn't already derive from source — any divergence is drift, not intentional hand-authored content the
+      generator would destroy. Confirmed by git history in `unified-api-contracts`: commits `f8d266ab` (2026-07-30,
+      "correct stale gap#3 notes on ARBITRAGE_PRICE_DISPERSION") and `f8515eb7` (2026-07-30, "correct stale gap#10 notes
+      on CARRY_BASIS_DATED CME cell") both land the same fix simultaneously in
+      `internal/architecture_v2/archetype_capability_manifest.json` (the source registry) AND
+      `openapi/prospectus/<archetype>.md` (the generated artifact this todo covers) AND
+      `openapi/capability-manifest.json`/`openapi/capability-unlock-report.json` in one commit each — i.e. the
+      established, repeated workflow for fixing this content is "edit the source registry, propagate everywhere," never
+      "hand-edit the prospectus `.md` independently." The source registry is authoritative by construction. **Remaining
+      work is now purely mechanical**: run `generate_strategy_prospectus.py` against current `unified-api-contracts`
+      HEAD, review the diff — expected to be large (the doc's own dry-run above found many unrelated-axis differences
+      plus 2 wholly missing archetypes, `CARRY_FUNDING_DISPERSION` and `TSMOM_BTC_CTA`) — confirm the 2 missing
+      archetypes land correctly and nothing else looks structurally wrong (e.g. a `[MACHINE-DERIVED]`/`[CODEX-DERIVED]`
+      header on every file, no truncated sections), then commit all 57 (or 59, with the 2 new ones) regenerated files as
+      one `unified-api-contracts` change.
 
 ## Progress Log addendum
 
@@ -398,3 +419,24 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
   (author-field backfill + context-scout refresh). Incidental, not actioned: 1 untracked prose-only item (build
   deployment-ui's own capability-manifest generator) — likely moot-by-precedent given the surgical-prune workaround now
   proven twice (DRIFT 07-21, GMX 08-04). Doc stays `assigned_vm: NA`.
+- **2026-08-08**: prior audits treated "which side is authoritative" as an open human design call. Re-read of the
+  generator itself (`generate_strategy_prospectus.py`) shows it's a pure regenerate-from-source tool with no
+  read-existing/merge/preserve logic — nothing for a hand-edit to have authoritatively diverged INTO — and
+  `unified-api-contracts` history (`f8d266ab`, `f8515eb7`, both 2026-07-30) shows the established fix pattern already is
+  "edit the source registry, the downstream `.md`/`.json` regenerate/get hand-propagated together," never the reverse.
+  Ruled: source wins, full regen is correct — no design decision actually remains, just running the tool and reviewing
+  the (expected-large) diff. Reclassified the sole open todo `[ENGINEER]` -> `[SCRIPT]` P2. Flipped `assigned_vm: NA` ->
+  `assigned_vm: planning` — this was the doc's only open todo. Also considered retagging `asset_group` from `[defi]` to
+  `[cross-cutting]` (the prospectus genuinely spans CEFI/DEFI/TRADFI/SPORTS/PREDICTION) — **decided against it**,
+  leaving `asset_group: [defi]` as-is. Reasons: (1) `check_ag_closeout_linkage.py`'s own docstring states a
+  multi-value/`cross-cutting`-tagged doc is "EXEMPT by construction" from the AG-closeout-linkage check — retagging
+  would silently drop this doc out of the mechanism that keeps a doc from becoming an orphan nothing tracks, right as
+  it's being flipped to AO-dispatched. (2) Unlike `phantom_captures_tradfi_2026_06_28.md` (retagged `[cross-cutting]` ->
+  `[tradfi]` 2026-08-07 because its content was "100% tradfi-specific"), this doc is majority DEFI content by volume
+  (created for a DEFI DRIFT/PACIFICA cull; 4 of its 5 documented "instances" are DEFI-repo fixes already shipped) with
+  only the sole _remaining_ todo being genuinely cross-cutting-scoped — not a clean "the whole doc is mistagged" case.
+  (3) This doc has an established `na-eligibility-audit`/`context-scout` tracking history under the `defi` tranche (7+
+  prior passes above) that a mid-stream retag would fragment. Flagging the mistag here for a dedicated retag pass
+  instead, per the task's own fallback: a worker picking up the reclassified todo should register the completed
+  `unified-api-contracts` commit under BOTH this doc and whichever cross-cutting tracking surface exists, rather than
+  this doc's tag being silently wrong in the meantime.

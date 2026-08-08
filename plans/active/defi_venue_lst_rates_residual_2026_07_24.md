@@ -31,8 +31,8 @@ related:
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 1
@@ -100,9 +100,25 @@ context_scope:
       also explicitly out of scope for the dispatched todo that closed this
       (`defi_satellite_ao_dispatch_batch2_2026_07_26.md` item 4: "Do NOT touch the bare-`SUSHISWAP` classic-vs-V3 alias
       question in the same registries — that is explicitly out of scope here (conflict-gated)").
-- [ ] [DATA] P3. **Decide the SUSHISWAP classic-vs-V3 alias question** — the bare-`SUSHISWAP` venue attribution (classic
-      vs `SUSHISWAP_V3`) is a genuinely undecided data-semantics call, explicitly left open when the rest of this doc's
-      VAULT/SUSHISWAP todo closed 2026-07-26.
+- [x] ✅ [DATA] P3. **Decide the SUSHISWAP classic-vs-V3 alias question** — the bare-`SUSHISWAP` venue attribution
+      (classic vs `SUSHISWAP_V3`) is a genuinely undecided data-semantics call, explicitly left open when the rest of
+      this doc's VAULT/SUSHISWAP todo closed 2026-07-26. **RULED (operator, 2026-08-08)**: fold bare `SUSHISWAP` into
+      `SUSHISWAP_V3` going forward, AND migrate + purge the historical GCS object filenames/paths and manifest rows to
+      the canonical venue name — not a forward-only labeling default. This is explicitly the same standard the operator
+      set for the sibling factory-address decision below: two sources of truth (a non-canonical `SUSHISWAP` label
+      sitting alongside `SUSHISWAP_V3` in real GCS paths + manifest rows) is the actual defect being fixed, not just the
+      registry/label going forward.
+- [ ] [SCRIPT] P2. **Migrate + purge bare-`SUSHISWAP` historical objects/manifest rows to `SUSHISWAP_V3`** — per the
+      2026-08-08 ruling above: (1) enumerate every GCS object under the DeFi bucket whose path/filename carries the bare
+      `SUSHISWAP` venue token (not `SUSHISWAP_V2`/`SUSHISWAP_V3`), (2) for each, resolve/rewrite to the canonical
+      `SUSHISWAP_V3` path (venue + chain, matching the canonical naming convention this same epic already established
+      for the composite-venue-objects fold), (3) re-register the corrected paths in the manifest, (4) purge the original
+      non-canonical objects/rows once the canonical twin is verified present — a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` reversibility check on the target bucket qualifies this for
+      agent-execution without operator sign-off per `gcs-and-manifest-delete-safety-protocol.md` §3a (same pattern as
+      the sibling `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` migration). **No backfill needed** —
+      this is a rename/relabel of already-captured data, not new capture. Scope this against the live row count for bare
+      `SUSHISWAP` first (a fresh availability_index read) before estimating size.
 
 ## Success criteria
 
@@ -132,5 +148,10 @@ context_scope:
   out-of-scope carve-out. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: refreshed context_scope (3 entries) -- fixed a dead path (the
   `defi_venue_capabilities.py` entry was missing the `unified-api-contracts/` sibling-repo prefix, resolved to nothing).
+- **na-corpus-digest-closeout 2026-08-08**: operator ruled the SUSHISWAP classic-vs-V3 question interactively — fold
+  into `SUSHISWAP_V3`, AND migrate + purge the historical GCS objects/manifest rows to canonical naming (not a
+  forward-only label default; explicitly the same standard as the factory-address ruling in
+  `defi_track01_per_instrument_and_canon_id_2026_07_24.md` — avoid two sources of truth, not just relabel going
+  forward). Flipped `assigned_vm: NA` → `planning`; filed the migration+purge as a new `[SCRIPT] P2` todo.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item (bare-SUSHISWAP alias) remains an
   undecided data-semantics call; other 2 items closed 2026-07-26 with hard evidence.
