@@ -113,9 +113,20 @@ plan + verifying the `done_sha`, never from the row's status alone.
       annotation), and that orphaned duplicate was already reconciled by a separate slot-1 session
       (`unified-trading-pm@b55c96fb0`, confirmed via `git     blame`). No further action needed on the underlying plan;
       this item only needed its tracker checkbox flipped here.
-- [ ] [BACKEND] P2. `cefi_track2_backfill_vm_preempted_no_recovery-003` (**`done_sha` EMPTY** — the strongest reopen
+- [x] ✅ [BACKEND] P2. `cefi_track2_backfill_vm_preempted_no_recovery-003` (**`done_sha` EMPTY** — the strongest reopen
       candidate: a `done` row with no shipping evidence at all; todo is gate-shaped, "Once the relaunched VM genuinely
-      completes (measured exit, not a wall-clock guess)…")
+      completes (measured exit, not a wall-clock guess)…") — **verified 2026-08-08 (slot 19): no REOPEN action needed or
+      possible — the row is no longer false-done.** `GET /api/backlog` for this exact id returns `status: "queued"`,
+      `done_sha: null`, `dispatched_to: null` (not `done`) — the false-done state the 03:15 UTC audit snapshot captured
+      has already self-corrected. Cross-checked against the cited plan
+      (`plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`): the todo's own checkbox is
+      still honestly `- [ ]` (the gate — "the relanched VM genuinely completes, measured exit" — remains unmet as of
+      today; the 6th VM died via `WORKER_STALLED` on 2026-08-06, a 7th relaunch is queued but not yet dispatched, and 5
+      separate review-craft dispatches today alone independently re-verified the gate is still unmet and declined via
+      `reason_code: "GATED"`). Read `server/routes/backlog.py`'s `reopen_backlog_task` to confirm it is a no-op here
+      regardless (resets an already-`queued`/`done_sha: null` row to the same state) — not calling it, since there is
+      nothing to correct. No REOPEN or FLIP was warranted or performed; this item only needed its tracker checkbox
+      resolved with the verification trail above.
 - [ ] [BACKEND] P2. `deployment_api_sigabrt_crash_loop-017` (`done_sha=467b28964`)
 - [ ] [BACKEND] P2. `sports_fast_t1_recon_oom_live_capture_outage-003` (`done_sha=80265d6`) — gate-shaped ("Once fixed,
       backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28…)")
@@ -194,3 +205,17 @@ plan + verifying the `done_sha`, never from the row's status alone.
   false-done flag traced to a plan-doc duplicate-checkbox bookkeeping bug, already root-caused and reconciled by a
   separate slot-1 session earlier the same day (`unified-trading-pm@b55c96fb0`) — confirmed via `git blame` on the
   reconciled checkbox. No REOPEN warranted; no code work needed. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 19, backend_engineer)**: Verdict on `cefi_track2_backfill_vm_preempted_no_recovery-003` (`done_sha`
+  EMPTY at audit time): **no action possible or needed** — `GET /api/backlog` shows this exact id is currently
+  `status: "queued"`, `done_sha: null`, not `done`. The false-done state the 03:15 UTC audit snapshot captured has
+  already self-corrected by the time of this check (consistent with this task id's own well-documented history of
+  positional-ID/status churn — see the cited issue doc's Progress Log, which records 17+ review-craft dispatches to this
+  same gate-shaped todo over 2026-07-30 through today, each independently re-verifying and declining via
+  `/skip-current-task reason_code: "GATED"`). Cross-checked the underlying plan
+  (`plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`): its own todo checkbox is
+  correctly still `- [ ]` — the gate ("relaunched VM genuinely completes, measured exit") remains genuinely unmet (6th
+  VM died via `WORKER_STALLED` 2026-08-06; 7th relaunch queued, not yet dispatched; 5 independent dispatches today alone
+  confirm no VM is currently running). Read `reopen_backlog_task` in `agent-orchestrator/server/routes/backlog.py` to
+  confirm calling it now would be a pure no-op (already `queued`/`done_sha: null`) — declined to call it since there is
+  nothing to correct. No REOPEN or FLIP warranted; no code work needed. See the checklist item above for the full trail.
