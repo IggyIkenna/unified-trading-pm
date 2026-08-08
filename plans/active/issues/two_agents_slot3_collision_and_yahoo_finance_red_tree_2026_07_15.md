@@ -192,11 +192,20 @@ is not complete until the counterpart's files build again, not just until your o
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 15)**: operator ruled "Build a collision-warning mechanism
+  (detect + warn when 2 sessions share a slot, not a hard block)." Closed the `[OPERATOR]` follow-up todo; applied the
+  decision to `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`'s already-designed
+  candidate fixes 1+2 (unblocked, ready for dispatch there).
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Decide the each-slot-ONE-agent / explicit file-ownership policy (operator-gated design call) —
-      na-eligibility-audit 2026-08-06 marks this as remaining open.
+- [x] ✅ [OPERATOR] P2. **DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 15): "Build a collision-warning
+      mechanism (detect + warn when 2 sessions share a slot, not a hard block)."** Not a hard each-slot-ONE-agent
+      enforcement policy -- a detect-and-warn mechanism instead. Applied to the sibling doc that already carries the
+      concrete mechanism design (candidate fixes 1+2):
+      `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` -- both its `[SCRIPT]` todos (live
+      `.agent-claim` heartbeat + session-start collision warning) are now unblocked (warn, not refuse) and ready for
+      dispatch. No further action needed on this doc itself.
 
 > **2026-08-06 archive-candidate audit**: The sole hunk-scope todo was RULED decided-against 2026-08-06, but the
 > na-eligibility-audit 2026-08-06 marker explicitly says 'Operator-gated, design-judgment, or standing-corpus-ruling

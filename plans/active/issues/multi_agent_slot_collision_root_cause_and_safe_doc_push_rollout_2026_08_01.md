@@ -171,12 +171,18 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       commit whose `git ls-tree -r HEAD` shows the doc at exactly ONE path. Repo: unified-trading-pm. **Until this
       lands, do an archival/rename commit with plain git**, verifying `git ls-tree -r HEAD --name-only | grep <slug>`
       returns a single path before pushing.
-- [ ] [SCRIPT] P1. **Implement candidate fix 1 (live heartbeat on `.agent-claim`)** — extend the existing per-slot 5-min
-      cron to refresh `.agent-claim`'s mtime, so a future liveness check can tell claimed-and-alive from
+- [ ] [SCRIPT] P1. **UNBLOCKED 2026-08-08 (operator ruling, ao round-5 apply item 15, via
+      `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`'s citation): "Build a collision-warning
+      mechanism (detect + warn when 2 sessions share a slot, not a hard block)."** This resolves the warn-vs-refuse
+      question below (fix 2) as WARN. Implement candidate fix 1 (live heartbeat on `.agent-claim`) — extend the existing
+      per-slot 5-min cron to refresh `.agent-claim`'s mtime, so a future liveness check can tell claimed-and-alive from
       claimed-and-abandoned. Prerequisite for fix 2.
-- [ ] [SCRIPT] P2. **Implement candidate fix 2 (session-start collision warning)** — once fix 1 lands, add a
-      liveness-aware check (reuse the FM8 discriminator pattern) that warns loudly when a new interactive session starts
-      in an already-live-claimed slot. Needs an operator ruling on warn-vs-refuse first.
+- [ ] [SCRIPT] P2. **UNBLOCKED 2026-08-08 (same ruling as fix 1 above) — WARN, never refuse.** Implement candidate fix 2
+      (session-start collision warning), once fix 1 lands: add a liveness-aware check (reuse the FM8 discriminator
+      pattern already used elsewhere for dead-vs-live slot claims) that prints a loud warning when a new interactive
+      Claude Code session starts in a slot whose `.agent-claim` is live-claimed by a different, still-alive process —
+      never a hard refusal (an operator may deliberately want two sessions for a review pass). No operator ruling
+      blocker remains; ready for dispatch.
 - [ ] [DOCS] P2. Fold this incident + the commit-attribution gap into `/codex/05-infrastructure/per-tab-worktrees.md`'s
       "Troubleshooting" section and CLAUDE.md's "Multi-agent safety" block — currently neither documents "two operators
       sharing one slot" as a distinct failure mode from "two AO slots colliding on a file."
@@ -192,6 +198,12 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   times in ~15 minutes. `safe-doc-push.sh` built, tested, shipped, and proven live same-session. Root-cause fix
   (candidates 1/2/3 above) deliberately left undecided — touches session-start behavior fleet-wide, needs operator input
   on warn-vs-refuse and on whether (1)+(2) are worth building now vs (3) alone as an interim mitigation.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 15 -- answered via the sibling
+  `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`'s citation)**: operator ruled "Build a
+  collision-warning mechanism (detect + warn when 2 sessions share a slot, not a hard block)." Resolves the
+  warn-vs-refuse question: WARN. Unblocked candidate fix 1 (live heartbeat) and fix 2 (session-start collision warning)
+  -- both now ready for dispatch, no remaining operator-gate. Not implemented this session (real script work + cron
+  changes, out of this apply session's scope); the two `[SCRIPT]` todos above carry the full spec.
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the
   dominant gate is the explicit `[OPERATOR] P1` decision (make `safe-doc-push.sh` the CLAUDE.md-mandated default)
   blocking the whole downstream cluster: candidate fixes 1/2 are explicitly framed in the doc's own text as "not yet
