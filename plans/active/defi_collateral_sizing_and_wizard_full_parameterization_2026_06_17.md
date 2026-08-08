@@ -190,10 +190,12 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 
 ## Phase A follow-ups (discovered during build)
 
-- [ ] [SCRIPT] P2. **Calibrate / parameterize the dual-deposit cross-exchange cost** — `archetypes_rank.py`
-      `_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS = 150` is a flagged PLACEHOLDER (operator-calibration pending; affects
-      opportunity RANKING only, never sizing/funds). Calibrate to a real cost + expose it as a config param in Phase C's
-      wizard parameterization. Repo: strategy-service.
+- [x] ✅ [SCRIPT] P2. **RULED 2026-08-08 (operator): keep 150 bps — no real calibration provided.** `archetypes_rank.py`
+      `_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS = 150` is now the CONFIRMED-STANDING value (operator ruling 2026-08-08),
+      not an unconfirmed placeholder awaiting calibration — the docstring above the constant was updated to reflect this
+      (`strategy-service`, docs-only diff, affects opportunity RANKING only, never sizing/funds). The constant's own
+      comment still notes it can be exposed as a config param in a future Phase C wizard pass if the operator wants a
+      per-deployment override later; no further calibration work is tracked here.
 - [ ] [TEST] P3. **`test_batch_harness.py::test_position_state_survives_across_ticks` fails in ISOLATION** with
       `Event logging not initialized` (pre-existing on HEAD, events-bus setup ordering — NOT Phase A); passes in the
       full QG suite. Add a `setup_events()` fixture so it's isolation-safe. Repo: strategy-service.
@@ -225,5 +227,11 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
   since the 2026-08-04 audit (context-scout metadata only, per git log). Of the 4 open items: wizard food-chain
   parameterization + codex SSOT doc update are genuine design/build work; dual-deposit cross-exchange cost calibration
-  is explicitly flagged pending operator calibration; the P3 test-isolation flake remains too small to justify
-  splitting the doc. Doc stays `assigned_vm: NA`.
+  is explicitly flagged pending operator calibration; the P3 test-isolation flake remains too small to justify splitting
+  the doc. Doc stays `assigned_vm: NA`.
+- **na-corpus-digest-closeout 2026-08-08 (operator ruling applied)**: operator answered the dual-deposit bps question —
+  keep 150 bps (no real calibration data provided). Closed the Phase-A follow-up todo above by updating
+  `archetypes_rank.py`'s docstring to state this is now the confirmed-standing value rather than an unconfirmed
+  placeholder pending operator calibration (small comment-only diff, no logic change — the constant's numeric value is
+  unchanged). Doc stays `assigned_vm: NA` (the remaining 3 open items — food-chain parameterization, codex SSOT update,
+  the P3 test-isolation flake — are unaffected).

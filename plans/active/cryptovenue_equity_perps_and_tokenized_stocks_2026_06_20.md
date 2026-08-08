@@ -160,12 +160,12 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
   > Progress Log 2026-07-18). **Sub-item 4 (launch the Tardis backfill) stays OPEN** — explicitly out of scope for this
   > catalogue-definition widen (operator: no MTDS backfill / prod mutation).
   >
-  > **Round5 finding (2026-08-08): the "is it now OK to launch" question is already answered — "no MTDS backfill /
-  > prod mutation" was a scope restriction for THAT SPECIFIC catalogue-widen task, not a standing operator gate.**
+  > **Round5 finding (2026-08-08): the "is it now OK to launch" question is already answered — "no MTDS backfill / prod
+  > mutation" was a scope restriction for THAT SPECIFIC catalogue-widen task, not a standing operator gate.**
   > `plans/active/cefi_consolidated_closeout_2026_07_18.md` Track 0 already re-lists "Launch the CeFi Tardis backfill
   > for the equity-perp window" as a plain `[SCRIPT] P1` todo (no `[OPERATOR]` tag), filed the SAME day this note was
-  > written — the closeout plan's own author already treated it as ordinary dispatchable infra work, consistent with
-  > how every other backfill in this doc's own Progress Log (Kalshi trades, `instr-backfill-tradfi-20260623`,
+  > written — the closeout plan's own author already treated it as ordinary dispatchable infra work, consistent with how
+  > every other backfill in this doc's own Progress Log (Kalshi trades, `instr-backfill-tradfi-20260623`,
   > `mdps-backfill-cefi-*`) was launched without a fresh per-launch operator ask. Sub-item 4 is AO-dispatchable SCRIPT
   > work; the actual launch was not performed in this pass (documentation-question audit, not an implementation
   > dispatch).
@@ -640,10 +640,17 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
 - [ ] [SCRIPT] P2. e2e-testing — recurring DAILY funding/basis scan across all crypto-venue equity-perps (annualized
       funding + perp-vs-index basis + flag market-hours vs off-hours) → opportunity-sizing report. Wire as a scheduled
       job (mirror an existing scan). Repo: e2e-testing.
-- [ ] [DESIGN] P2. strategy-service — single-stock basis execution-venue gap: CME has index futures (ES/NQ for SPX/NDX
-      basis) but NOT broad single-stock futures → the long-cash leg for NVDA/MSTR/etc needs IBKR (equities) OR a second
-      tokenized/perp venue OR pure cross-crypto-venue basis. Decide per-symbol hedge venue; off-hours = no-cash-hedge
-      (dispersion-only or unhedged-funding-capture with risk limits). Repo: strategy-service.
+- [x] ✅ [DESIGN] P2. strategy-service — single-stock basis execution-venue gap: CME has index futures (ES/NQ for
+      SPX/NDX basis) but NOT broad single-stock futures → the long-cash leg for NVDA/MSTR/etc needs IBKR (equities) OR a
+      second tokenized/perp venue OR pure cross-crypto-venue basis. Decide per-symbol hedge venue; off-hours =
+      no-cash-hedge (dispersion-only or unhedged-funding-capture with risk limits). Repo: strategy-service. **RESOLVED —
+      this question was independently answered later the same day in Phase 1d's NET-basis backtest** (§ "Single stocks
+      hedged with the ACTUAL stock (IBKR)... CLEANER net than the futures-hedged index/commodity, at the cost of the
+      equities-venue gap"; result line: "hedge=IBKR stock borrow wins for all singles (no CME single-stock futures for
+      US equities)"). **APPROVED (operator, 2026-08-08)**: "Approve, build it" — confirms IBKR cash-stock as the
+      per-symbol hedge venue for all 12 (now more, per Phase 1f) single-stock basis pairs; off-hours stays no-cash-hedge
+      per the original design. No further per-symbol venue decision needed; the open work is the IBKR adapter BUILD
+      itself (Phase 1e todo below).
 
 ## Phase 1c — INDEX perps are the executable-NOW basis (operator 2026-06-20)
 
@@ -769,10 +776,14 @@ funding.
 
 ### Follow-ups (the unlocks)
 
-- [ ] [DESIGN] P0. execution-service — **IBKR equities execution adapter is the GATING unlock**: the winning
+- [ ] [BACKEND] P0. execution-service — **IBKR equities execution adapter is the GATING unlock**: the winning
       single-stock basis (NET +5–24%) needs the long CASH-stock leg on IBKR (`ibkr-gateway-infra`); the short perp is
       already executable (cefi). Without IBKR equities, none of the 12 winners are tradeable. Wire IBKR equities (not
-      just the existing index/futures path). Repo: execution-service + ibkr-gateway-infra.
+      just the existing index/futures path). Repo: execution-service + ibkr-gateway-infra. **APPROVED (operator,
+      2026-08-08)**: "Approve, build it" — retagged `[DESIGN]`→`[BACKEND]` (the design question — whether to build this
+      adapter — is resolved; what remains is the build itself). Genuinely multi-day, cross-repo build (new
+      execution-service adapter + `ibkr-gateway-infra` wiring); not a single-worker bounded-outcome task, so
+      `assigned_vm` stays `NA` pending its own scoped build plan rather than blind AO dispatch on this umbrella doc.
 - [ ] [RESEARCH] P1. Check OKX/Bybit (+ Hyperliquid) for a WTI/Brent OIL perp — CL is in −20% backwardation so an
       oil-perp + long-CL-future hedge would be NET >20% (the single best pair if a perp exists). If found, add it. Repo:
       instruments-service.
@@ -792,10 +803,12 @@ size; deep S&P/Nasdaq for cross-strategy (SPX-vs-BTC pairs/stat-arb) must use CM
 retail long-demand → richest funding = high-attention/volatile/retail-heavy names (NVDA/TSLA/MSTR/CRCL/meme/AI), NOT
 strictly biggest; the set CHURNS over quarters. The 12 added in 0fe9067e are a starting seed, NOT the universe.
 
-- [ ] [DESIGN] P0. strategy-service + UAC — replace the fixed net-profitable-12 with: (a) BROAD universe = top-N US
+- [ ] [BACKEND] P0. strategy-service + UAC — replace the fixed net-profitable-12 with: (a) BROAD universe = top-N US
       stocks by market cap ∪ top-N crypto-venue equity-perps by OI/volume; (b) a DYNAMIC live-net-carry ranking that
       selects the tradeable set each rebalance (avoids look-ahead/survivorship). Repo: unified-api-contracts
-      (universe) + strategy-service (ranking).
+      (universe) + strategy-service (ranking). **APPROVED (operator, 2026-08-08)**: "Approve, build it" — retagged
+      `[DESIGN]`→`[BACKEND]`. Genuinely multi-repo build (UAC universe schema + strategy-service ranking logic); not a
+      single-worker bounded-outcome task, so `assigned_vm` stays `NA` pending its own scoped build plan.
 - [ ] [SCRIPT] P1. e2e-testing — re-run the NET-basis backtest with DIVIDENDS priced into the long cash-stock leg
       (holding the stock EARNS dividends → ADDS to net; current +5–24% is a FLOOR). Use a dividend-yield source per
       name. Repo: e2e-testing.

@@ -143,6 +143,14 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   (content unchanged besides context-scout refreshes). Phase 1 fully shipped (features-service@8608ea5d); Phase 3's
   strategy-side ADV consumption needs a design conversation on cap placement/% ceiling (doc's own text: "needs a design
   conversation"), and the book_depth.py item is an explicit out-of-scope stretch.
+- **na-corpus-digest-closeout 2026-08-08**: operator ruled interactively on Phase 3's open design question: cap applies
+  at order-sizing time, ceiling 10% of ADV. Filed the concrete `[BACKEND]` implementation todo (scope: clamp
+  `PerClientSignal.allocation_amount_usd` in `AllocationSizer.size_signal()` to `0.10 * adv_usd`, fail-closed when
+  `AdvStatus` isn't `OK`). Implementation still depends on Phase 2 candle coverage landing for the relevant venues
+  (largely done per Phase 2's own log; residual manifest-emission gap tracked in the separate
+  `mdps_cefi_candle_manifest_never_emitted_2026_07_26` issue). `assigned_vm` stays `NA` — flipping to `planning` needs a
+  gated finalize companion plan (`task_template.md` §4, plan-hygiene-enforced) which is out of scope for a single-item
+  ruling application; a future scoping pass can flip it together with authoring that companion.
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 
@@ -199,20 +207,30 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
       issue's own `rebuild_manifest_from_canonical_paths` reconciliation once fixed, not the live write path. ASTER
       stays excluded per the item above.
 
-## Phase 3 — wire ADV into strategy-side volume caps (NOT STARTED — depends on Phase 1 output being usable, does not need Phase 2 to start designing)
+## Phase 3 — wire ADV into strategy-side volume caps (RULED 2026-08-08 — implementation not yet started)
 
-- [ ] [BACKEND] P2. Design + implement the strategy-side consumption of the ADV signal: position-size cap as a % of ADV,
-      and the min-7-day-history-to-trade gate the operator asked for. _(Left intentionally light — needs a design
-      conversation on where in the strategy pipeline this cap applies and what the % ceiling should be; not yet scoped
-      in detail.)_
+- [x] ✅ [DESIGN] P2. Design + implement the strategy-side consumption of the ADV signal: position-size cap as a % of
+      ADV, and the min-7-day-history-to-trade gate the operator asked for. **RULED (operator, 2026-08-08)**: cap applies
+      **at order-sizing time**, ceiling **10% of ADV** — filed as `[BACKEND]` below.
+- [ ] [BACKEND] P2. **Implement the 10%-of-ADV position-size cap at order-sizing time** (per the 2026-08-08 ruling
+      above): the natural integration point is `AllocationSizer.size_signal()` /
+      `strategy-service/strategy_service/allocation_sizer.py` (the per-client sizing entry point that produces each
+      `PerClientSignal.allocation_amount_usd`) — clamp the final order notional to `min(computed_size, 0.10 * adv_usd)`
+      using `RollingAdvReader.compute_rolling_adv()`
+      (`features-service/features_service/cross_instrument/app/calculators/adv.py`, shipped `features-service@8608ea5d`)
+      for the instrument's `adv_usd`. When `AdvStatus` is `INSUFFICIENT_HISTORY` or `NO_DATA` (min-7-day-history gate
+      not yet met, or MDPS candle coverage absent for the venue — e.g. all 4 on-chain-perp venues today), the instrument
+      is **not tradeable** — the cap must fail closed (no ADV data = no trade), not silently pass uncapped. Scope the
+      exact call site (`AllocationSizer` vs. a downstream execution-side check) before estimating; this todo is a
+      genuine build task once Phase 2 candle coverage exists for the relevant venues, not a config-only change.
 - [ ] [DATA] P3. _(stretch, optional)_ Consider whether `book_depth.py`'s currently-unfilled `adv_30d_usd` input should
       be wired to call the SAME Phase-1 utility with `window_days=30`, now that a real producer exists — out of scope
       for this plan, a candidate follow-up once Phase 1 ships.
 
 ## Deferred work after 2026-07-21
 
-| Item                                     | Status      | Why deferred                                                |
-| ---------------------------------------- | ----------- | ----------------------------------------------------------- |
-| Phase 2 (MDPS candle coverage extension) | Not started | Operator explicit decision — consumer-first, producer later |
-| Phase 3 (strategy-side wiring)           | Not started | Needs a design conversation on cap %/placement              |
-| `book_depth.py` → Phase-1 utility wiring | Not started | Stretch, only after Phase 1 ships and proves out            |
+| Item                                     | Status      | Why deferred                                                  |
+| ---------------------------------------- | ----------- | ------------------------------------------------------------- |
+| Phase 2 (MDPS candle coverage extension) | Not started | Operator explicit decision — consumer-first, producer later   |
+| Phase 3 (strategy-side wiring)           | Not started | RULED 2026-08-08 (order-sizing time, 10% ADV) — build pending |
+| `book_depth.py` → Phase-1 utility wiring | Not started | Stretch, only after Phase 1 ships and proves out              |

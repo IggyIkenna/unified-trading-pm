@@ -147,8 +147,14 @@ context_scope:
 - [ ] [SCRIPT] P2. **Wire a recurring daily funding/basis scan** across all crypto-venue equity-perps (annualized
       funding + perp-vs-index basis + market-hours-vs-off-hours flag) → opportunity-sizing report. Repo: e2e-testing.
       Source: Phase 1b.
-- [ ] [DESIGN] P2. **strategy-service — decide the single-stock basis execution-venue/hedge approach** (IBKR / tokenized
-      / cross-crypto-venue dispersion; off-hours = no-cash-hedge). Repo: strategy-service. Source: Phase 1b.
+- [x] ✅ [DESIGN] P2. **strategy-service — decide the single-stock basis execution-venue/hedge approach** (IBKR /
+      tokenized / cross-crypto-venue dispersion; off-hours = no-cash-hedge). Repo: strategy-service. Source: Phase 1b.
+      **RESOLVED + APPROVED (operator, 2026-08-08)**: hedge=IBKR cash-stock borrow for all singles (decided same-day
+      2026-06-20 in the source doc's Phase 1d NET-basis backtest; operator's "Approve, build it" ruling confirms it).
+      Mirrors the source doc's own Phase 1b checkbox flip
+      (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`, 2026-08-08 Progress Log entry). Open work is now
+      the IBKR adapter BUILD itself (that doc's Phase 1e P0 todo, `[BACKEND]`, not embedded in this Track 0's 11-todo
+      list — out of this track's Phase 1/1b/1c/2/5 scope).
 - [ ] [UAC] P0. **Map the index perps** (`SPXUSDT`/`NAS100`/`SPYUSDT`/`XAUUSDT`) to the CME index-future + Databento
       index canonical, carrying the scale/multiplier (Binance SPX-perp is a SCALED micro unit — sizing MUST use the
       multiplier for the ES hedge ratio). Repo: unified-api-contracts. Source: Phase 1c.

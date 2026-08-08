@@ -263,3 +263,31 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
   depends on — and the doc's own two most recent entries (2026-08-07 fleet-wide scope widening; 2026-08-08 a SECOND,
   possibly-distinct high-threshold wedge sub-mode with an explicitly unresolved same-root-cause-or-not question) show
   this is still actively being characterized, not settled enough for a bounded worker fix. Not re-litigated.
+- **2026-08-08 ~12:00 UTC (interactive session, slot 1) — NEGATIVE RESULT, measured: `agent-orchestrator@d6f3df2`'s
+  out-of-band pane sampling is STRUCTURALLY INERT. Do not build on it.** The diagnosis it was built on is correct —
+  `context_worker_force_compact_pct` is 60, yet forces demonstrably fire at 90-100 (`"was NN at force"`), because the DB
+  column only advances on a worker-INITIATED call, so a worker in a long tool-heavy stretch is invisible until it calls
+  back in already saturated. The chosen REMEDY, however, cannot work: it reads the pct out of the tmux pane via
+  `derive_context_used_pct(capture_pane(...))`, and **the Claude CLI in this version never renders a context percentage
+  in the pane at all**. Measured directly: all 10 live worker panes returned `<no context readout>` when grepped for
+  `context (left|low|remaining)` / `NN% context` / `context: NN%` — **including `orch-slot-4`, whose
+  `slots.context_used_pct` was 100 at that moment**. So `_pane_pct()` returns `None` on every tick, the
+  `if pane_pct is not None and pane_pct > db_pct` branch in `ContextLifecyclePolicy._read_pct` never fires, and nothing
+  is sampled or persisted. The observed 90-100 force values are simply the worker's own last self-report, unchanged by
+  the fix. **Validation numbers (fix loaded live 11:32:11 UTC, PID 2205409, confirmed in-process via
+  `inspect.getsource`)**: 11:32→11:58 (26 min) = **4 terminal wedges, forces at 95/97/97/100** — i.e. ~9.2 wedges/hr
+  against a pre-fix baseline of 41 wedges in the 6h 05:32→11:32 (~6.8/hr). NOT an improvement; the 60-min validation
+  window was terminated early on this evidence rather than burning further ticks, per the dispatch's own "if wedges
+  appear, STOP and diagnose". **SECOND, INDEPENDENT failure mode found in the same pass — this is item 2 of this doc,
+  now with direct evidence.** `orch-slot-4`'s pane showed `❯ /compact` sitting in the input box under "Press up to edit
+  queued messages": the forced `/compact` was DELIVERED but never SUBMITTED. So even a force that fires at the right
+  moment does not necessarily execute — which is consistent with this doc's long-standing "typed-but-unsubmitted
+  `/compact` confirmation" hypothesis and is the first time it has been caught in a live pane capture rather than
+  inferred. **Where a real fix has to come from**: any context signal that exists independently of what the CLI chooses
+  to render. The session transcript JSONL is the obvious candidate (it grows monotonically and is readable at any time,
+  with no dependence on pane rendering or on the worker calling in) — `/ao-context-metrics` already scans transcripts
+  for exactly this kind of measurement. Whatever is chosen, the acceptance test is the one this session used and which
+  any future attempt should re-run BEFORE claiming success: capture live panes and assert a non-null pct is actually
+  observable at mid-range, then measure `"was NN at force"` and require the distribution to move DOWN, not just "no
+  wedges for a while". `d6f3df2` shipped QG-green with 5 passing unit tests and still did nothing in production — green
+  tests proved the code path, not the premise.
