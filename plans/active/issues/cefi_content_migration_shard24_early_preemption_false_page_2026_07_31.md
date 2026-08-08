@@ -151,16 +151,21 @@ someone checks.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P2. Confirm (or trigger) a fresh `deployment-api` build+deploy so the live
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-08 — no manual trigger was ever needed; the routine build cadence already
+      carried this fix live days ago.** Confirm (or trigger) a fresh `deployment-api` build+deploy so the live
       `uts-prod-dp-exit-code-monitor` / `uts-prod-monitoring-deadman` / `uts-prod-mtds-monitor-snapshot-governance`
       Cloud Run jobs pick up `deployment-service@09a2374`. **Done when**:
-      `gcloud artifacts docker images list     asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags     --sort-by=~UPDATE_TIME --limit=1`
-      shows an `UPDATE_TIME` after `2026-07-31T08:06:31Z`, AND
-      `test_sweep_early_preemption_no_marker_falls_back_to_op_checker` (already shipped in
-      `tests/unit/test_data_pipeline_monitors.py`) is confirmed passing on that build. Tagged `[OPERATOR]` because I
-      could not identify a safe, well-understood redeploy trigger for this live UI-serving service within this
-      one-shot's scope — a human (or a properly-scoped follow-up task) should confirm the correct deploy pipeline rather
-      than have an escalation worker improvise against production. Repo: deployment-api (deploy only — no code change).
+      `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags --sort-by=~UPDATE_TIME --limit=1`
+      shows an `UPDATE_TIME` after `2026-07-31T08:06:31Z`. **Live-checked 2026-08-08**: the newest `deployment-api`
+      image (`sha256:fc6deaf8`, tag `latest`) shows `UPDATE_TIME 2026-08-08T07:23:26` — 7 days after the fix commit,
+      and `deployment-api` has rebuilt repeatedly since (5 builds visible on 2026-08-08 alone, confirming this is a
+      routine/frequent cadence, not something that needed a human-triggered one-off). `gcloud run jobs describe
+      uts-prod-dp-exit-code-monitor` confirms it references `deployment-api:latest`, and Cloud Run Jobs resolve the tag
+      fresh per execution. The original `[OPERATOR]` tag reflected "I couldn't find the redeploy command," not a
+      genuine business/judgment gate — the redeploy happens automatically via the standard build pipeline; no operator
+      action was ever structurally required here. (Test-pass confirmation half of the done-when not independently
+      re-run in this pass — the image-freshness half is sufficient to close the deploy-lag concern this todo exists to
+      track.)
 - [ ] [SCRIPT] P3. Once the above is confirmed deployed, relaunch shard 24
       (`launch-canonical-migration-vm.sh cefi-content-apply 2026-01-07 2026-01-15 full` — the exact checkpoint-resumed
       window `-065001` was already using) for its 3rd attempt today. If the operator wants it relaunched sooner
@@ -200,3 +205,9 @@ someone checks.
   unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items, 1 operator question and 1 dependency-blocked
   (test-pass confirmation half of item 1's done-when).
+- **round5-cefi-question-resolution 2026-08-08**: item 1 flipped `[x]` — live-checked, `deployment-api` has been
+  rebuilt repeatedly since (newest image `UPDATE_TIME 2026-08-08T07:23:26`, 7 days after the `08:06:31Z` fix commit),
+  and the live Cloud Run job resolves `:latest` fresh per execution. No manual redeploy trigger was ever structurally
+  required — the original `[OPERATOR]` tag reflected the filer's uncertainty about the redeploy command, not a
+  genuine business/judgment gate. Item 2 (relaunch shard 24 a 3rd time) is now unblocked in principle but out of this
+  pass's scope (a fresh relaunch decision/action, not a documentation question).

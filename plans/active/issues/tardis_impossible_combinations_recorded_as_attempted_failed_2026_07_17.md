@@ -133,10 +133,26 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
       before anything tries to size this. — **VERIFIED DONE 2026-07-26**: the same commit `a7569298` already added
       `code=%s` to both 400-path log lines (streaming + non-streaming).
 - [ ] [DATA] P1. Size the damage: count existing `attempted_failed` rows attributable to 400s, and purge/reclassify them
-      (operator-gated, snapshot-first, like the 2026-07-17 eu purge). Expect a real coverage-% correction upward.
+      (snapshot-first, like the 2026-07-17 eu purge). Expect a real coverage-% correction upward.
       **Sizing half DONE 2026-07-27** (`market-tick-data-service@c36d35d1`) via
       `scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py` (dry-run only, `--apply` never invoked —
-      see Progress Log for the count + methodology). The `--apply` half remains open and operator-gated.
+      see Progress Log for the count + methodology). The `--apply` half remains open. **NOT operator-gated
+      (round5-cefi-question-resolution 2026-08-08)** — two independent blockers, both resolved: (1) **reversibility**:
+      fresh same-run check (2026-08-08),
+      `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112
+      --format="value(softDeletePolicy.retentionDurationSeconds)"` → **604800** (the 7-day floor `plans/active/task_template.md`
+      finding T requires), and the script is already backup-first/snapshot-before-write by design (same shape as the
+      cited EU-purge precedent) — qualifies under finding T/U, not a whole-bucket destroy. (2) **taxonomy**: the
+      script's own Progress Log already names the precedent to follow —
+      `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py`'s `EXPECTED_SOURCE_NOT_AVAILABLE` pattern (a raw
+      descriptive `error_reason` string for bulk historical reclass, since `record_empty()`'s enum-membership check
+      can't be used retroactively) — apply the SAME pattern here (`EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400`, already
+      the script's own proposed string) rather than routing through the in-flight `coverage_exclusions` registry,
+      which is for NEW writes going forward, not backfilling historical rows. Also directly reinforced by CLAUDE.md's
+      "Data pipeline correctness is the heartbeat" HARD RULE (fix in FULL, no deadline deferrals) — leaving 5,572+
+      rows permanently mis-denominatored is exactly the kind of incomplete fix that rule exists to prevent. Re-run the
+      sizing script fresh before `--apply` (counts drift, per the script's own note) — the actual `--apply` was not
+      executed in this pass (documentation-question audit, not an implementation dispatch).
 - [x] ✅ [CONTRACT] P2. Register Tardis error codes in UAC (`classify_venue_error` currently knows none), so the
       honest-absence-vs-fetch-failure decision is contract-driven rather than string-matched on `"Empty CSV"`. — **DONE
       2026-07-26**: `unified-api-contracts@c144f975` — `140`/`300` registered as `ErrorAction.SKIP`, 2 new unit tests,

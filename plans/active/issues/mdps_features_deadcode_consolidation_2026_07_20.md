@@ -61,12 +61,26 @@ source: >-
 > fleet the operator returns to: self-heal rebinding, deleting a registered live-pipeline launcher, registry parity) —
 > per findings-triage they are documented here + surfaced in the final report, NOT auto-deleted. S2/S3 are safe trims.
 
-## Big findings — operator keep/delete decision (options)
+## Big findings — keep/delete decision (options)
 
 **Recommended (A):** delete the two orphan launchers (S1-a, S1-b) + their registry rows, and close the `mdps-sports-`
 registry gap (S1-c) by registering it. **(B):** finish `launch-mdps-features-live.sh`'s dispatcher branch and keep it;
 repoint S1-a's self-heal to `launch-features-vm.sh`. **(C):** do only the `mdps-sports-` registry gap now, defer the
-launcher deletions. Other: operator free-text.
+launcher deletions. Other: free-text.
+
+> **NOT genuinely `[OPERATOR]`-gated (round5-cefi-question-resolution 2026-08-08).** Applying `plans/active/task_template.md`
+> finding U's explicit positive test: `[OPERATOR]` is for (i) a business/spend/value judgment with no data-derivable
+> answer, (ii) a credential/access-only gate, or (iii) a whole-bucket destroy / failed reversibility check. This is
+> none of those — S1-a/S1-b are launchers ALREADY confirmed non-functional (`ModuleNotFoundError` on every invocation,
+> not merely deprecated-but-working), so deleting them + repointing the self-heal binding to the already-working
+> `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION` STRICTLY REDUCES blast radius (a
+> broken launcher can't succeed today regardless; repointing to a working one only helps). S1-c is a pure registry-gap
+> fix (add missing rows), zero deletion involved. This doc's own stated "Recommended (A)" is the correct, low-risk
+> engineering default — ordinary dead-code cleanup + registry hygiene, not a product/strategic call. S3-b (sports dual
+> entrypoint) is DIFFERENT and correctly stays a real design adjudication — do NOT silently delete, it backs live
+> sports backfills. Reclassifying todos 1-3 as ordinary AO-dispatchable `[SCRIPT]` work per option A; the actual
+> multi-file deletion + registry edit was not executed in this pass (documentation-question audit, not an
+> implementation dispatch).
 
 ## Todos
 
@@ -142,3 +156,9 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — all 4 remaining open todos are gated
   on an unanswered operator keep/delete decision (options A/B/C for S1-a/b/c) plus an explicit S3-b operator/design
   adjudication ("Do NOT silently delete"). Reaffirms 3 prior 2026-07-30 passes (cefi/defi/sports).
+- **round5-cefi-question-resolution 2026-08-08**: todos 1-3 (S1-a/b/c) declassified from `[OPERATOR]` per finding U's
+  explicit test — see the annotation above the todos. Todo 8 (S3-b) correctly remains a genuine design adjudication,
+  unchanged. The actual multi-file deletion + registry edit (implementing recommendation A) was not executed in this
+  pass — this was a documentation-question audit, not an implementation dispatch. The sibling doc
+  `plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` (2 more
+  launchers with the same defect class) follows the same reasoning once picked up.

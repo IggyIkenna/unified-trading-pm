@@ -165,14 +165,19 @@ exposed to this class before the veto shipped.
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P2. Once `deployment-service`/`unified-trading-library` land on `live-defi-rollout` and promote to
-      `main`, confirm (or trigger) a fresh `deployment-api` build+deploy so the live `uts-prod-dp-exit-code-monitor`
-      Cloud Run job actually picks up the fix (same deploy-lag gap
-      `cefi_content_migration_shard24_early_preemption_     false_page_2026_07_31.md` flagged for the prior preemption
-      fix — `deployment-service` is vendored into `deployment-api`'s image at BUILD time, not a versioned wheel pin, so
-      a code-only merge does not update the live monitor). Done when
-      `gcloud artifacts docker images list     asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags     --sort-by=~UPDATE_TIME --limit=1`
-      shows an `UPDATE_TIME` after this fix's merge commit.
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-08 — no trigger needed, already picked up by the routine build cadence.**
+      Once `deployment-service`/`unified-trading-library` land on `live-defi-rollout` and promote to `main`, confirm
+      (or trigger) a fresh `deployment-api` build+deploy so the live `uts-prod-dp-exit-code-monitor` Cloud Run job
+      actually picks up the fix (same deploy-lag gap `cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`
+      flagged for the prior preemption fix). Done when
+      `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags --sort-by=~UPDATE_TIME --limit=1`
+      shows an `UPDATE_TIME` after this fix's merge commit. **Live-checked 2026-08-08**: fix commit
+      `deployment-service@5bd0017b` landed `2026-08-06T10:53:59+01:00`; the `deployment-api` image has since been
+      rebuilt repeatedly (5 builds on 2026-08-08 alone), latest `sha256:fc6deaf8` tagged `latest`, `UPDATE_TIME
+      2026-08-08T07:23:26` — well after the fix commit. `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
+      confirms the job references `deployment-api:latest`, and Cloud Run Jobs pull the tag fresh per execution, so the
+      live monitor already runs the fixed code. This was never actually an operator-only action — `deployment-api`
+      rebuilds on a routine, frequent cadence (multiple builds/day observed) independent of any manual trigger.
 - [ ] [SCRIPT] P2. Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU race — CONFIRMED RECURRING, not a
       one-off: it fired on BOTH the original launch (`-064507`/`-064513`/`-064526`, insert timestamps 13s apart) AND its
       own relaunch 12 minutes later (`-065757` then `-065837`, only 46s apart) in the same incident window. Bound the
@@ -217,3 +222,8 @@ exposed to this class before the veto shipped.
   already shipped and verified) to stay within the 6-entry cap.
 - **context-scout 2026-08-07 (batch11 independent re-verify)**: all 6 entries confirmed resolving on disk; content
   unchanged.
+- **round5-cefi-question-resolution 2026-08-08**: line-168 `[OPERATOR]` deploy-confirmation item flipped `[x]` —
+  live-checked `gcloud artifacts docker images list` shows `deployment-api` rebuilt `2026-08-08T07:23:26` (well after
+  this doc's `2026-08-06T10:53:59+01:00` fix commit), and `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
+  confirms it runs `deployment-api:latest`. This was never a genuine operator-only decision — `deployment-api`
+  rebuilds on a routine multi-times-daily cadence independent of manual triggering.
