@@ -291,3 +291,55 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
   observable at mid-range, then measure `"was NN at force"` and require the distribution to move DOWN, not just "no
   wedges for a while". `d6f3df2` shipped QG-green with 5 passing unit tests and still did nothing in production — green
   tests proved the code path, not the premise.
+
+- **2026-08-08 (interactive session, slot 1) — ROOT CAUSE FOUND AND FIXED; it was not (only) pane blindness.** Ran this
+  doc's own acceptance test first, before writing any code. It confirmed the pane is blind (`"% context used"` matched
+  **0/11** live worker panes, `"% until auto-compact"` **2/11**) — but the decisive finding was a second, larger defect
+  underneath it. `orch-slot-8` on `claude-sonnet-4-6` held **165,797 tokens** while its OWN pane read **99% used**,
+  implying a ~167K usable window. `model_tier.context_window()` returned **1M for every model except Haiku**, so AO
+  computed `165797/1e6 = 16%` for a session the CLI itself considered full. **The denominator was 5x too big for the
+  model then carrying most of the fleet** — every threshold was unreachable by construction. That is why the pre-fix
+  force distribution has NO value below 91: measured over 3h before the fix, 29 wedges (~9.7/hr) and forces at
+  `100 x28 · 99 x5 · 97 x5 · 96 x5 · 93 x4 · 95 x3 · 94 x3 · 91 x3`. AO only ever saw a high number when the pane's
+  end-of-life auto-compact countdown appeared.
+- **The window is now LEARNED, not tabulated** (operator ruling this session: "shouldn't be hardcoded, should adapt to
+  the model — deepseek, sonnet, whatever"). `server/context_probe.py` reads `message.usage` from the session transcript
+  — present on EVERY assistant turn, so it works mid-range where the pane is silent — and divides by a per-model window
+  inferred from observation: exact calibration from a pane pct when one is visible, else the observed high-water mark,
+  else the `model_tier` prior. A corpus scan over **17,974 transcripts** separates the tiers with no table: opus-4-8
+  999,934 · sonnet-5 937,882 · deepseek-v4-flash 917,159 · deepseek-v4-pro 425,572 · sonnet-4-6 171,577 · haiku-4-5
+  104,369. Note `deepseek-v4-pro` sits BELOW `deepseek-v4-flash` despite **more** sessions (671 vs 518) and **more**
+  turns (87,828 vs 70,202) — not under-sampling, a genuinely smaller window, and precisely the kind of fact a
+  hand-written table gets backwards.
+- **Two measurement traps, both hit while building — the guards are load-bearing.** (1) `model: "<synthetic>"` records
+  carry a zero-token `usage` block and are frequently the LAST record: a naive "last usage wins" read reported 0% for
+  full sessions on **8/21** slots in the first probe run. (2) A `compact_boundary` AFTER the last usage record means the
+  reading describes the pre-compact session; reporting it would force a second, pointless compaction. Both are asserted
+  in `tests/test_context_probe.py`, which also pins the old arithmetic (`int(165797*100/1e6) == 16`) so the defect
+  itself is documented, not just the fix.
+- **Shipped** `agent-orchestrator@c6e6d982a` (QG green: 2746 passed, basedpyright 0 errors, 262 dashboard tests).
+  **Deployed and verified live** on the orchestrator VM at 13:10:57 UTC — `git` HEAD `c6e6d98`, service PID 2406505 ->
+  90097, and `context_window_for("claude-sonnet-4-6")` evaluated **in that process** returns `200000`. Verifying the new
+  code is loaded in the RUNNING process (not merely present on disk) is deliberate: the previous attempt was reported
+  live while the process predated it.
+
+## Follow-ups from the 2026-08-08 root-cause session
+
+- [ ] [BACKEND] P2. **Do not spend the force latch on a merely-QUEUED `/compact`.** `tmux_spawn.submit_to_pane()`
+      returns True when the text leaves the input box, and its own docstring counts "consumed by an already-running
+      turn" as success — but a message consumed into the CLI's queue ("Press up to edit queued messages", caught live on
+      `orch-slot-4`) has NOT executed. The caller then sets `forced_at`, and the compaction that never ran counts toward
+      `ineffective_forces` -> terminal wedge. Detect the queued-messages state and hold the latch un-spent until the
+      queue drains, rather than re-sending (which would compact twice). Lower priority now that forces fire with real
+      headroom instead of at 99%.
+- [ ] [BACKEND] P2. **Port the measured signal to the local watcher.**
+      `unified-trading-pm/scripts/dev/precompact-     watcher.py` still derives context% purely from the pane
+      (`read_pct()`), so it carries BOTH defects fixed here: it is blind mid-range, and its `_TOKEN_USAGE_RE` fallback
+      divides by a hardcoded `_DEFAULT_CONTEXT_WINDOW_K = 1000`. It should read the session transcript and learn the
+      window the same way. Note the `UserPromptSubmit` hook `cursor-configs/hooks/context-threshold-nudge.sh` already
+      does the transcript half correctly (measured `message.usage`, windowed at the last `compact_boundary`) — reuse its
+      approach, but it only fires on user prompt submission, so it cannot cover an autonomous loop.
+- [ ] [BACKEND] P3. **Re-check the learned windows once the fleet is fully on sonnet-5.** The high-water mark only ever
+      rises, which is the safe direction, but a model whose sessions never run long keeps an under-estimated window and
+      will compact earlier than necessary. `learned_context_windows.json` sits next to `state.db`; deleting it is safe
+      and forces re-learning from the priors.
