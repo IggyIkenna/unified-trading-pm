@@ -9,7 +9,7 @@ summary: >-
   broad "consolidated target SSOT" doc restates a fact a narrower sibling doc already owns, instead of cross-referencing
   it -- a real drift risk on the next edit to either side, and one instance (cross-asset-canonical-target-ssot.md)
   directly violates that same doc's own stated "reference, don't duplicate" design principle.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -30,7 +30,7 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
-resolved_by:
+resolved_by: docs_reconciler (second same-day dispatch, 2026-08-08)
 locked_by:
 locked_since:
 context_scope:
@@ -51,6 +51,14 @@ drift_direction: none
 ---
 
 # docs-reconcile 2026-08-08 — authoritative_for content duplication (not contradiction)
+
+> **🟢 ARCHIVED 2026-08-08 (docs_reconciler, second same-day dispatch).** All 3 todos fixed: todo 1
+> (schema-governance.md ↔ schema-placement.md) and todo 2 (cross-asset-canonical-target-ssot.md §6 ↔
+> defi-canonical-naming-ssot.md) trimmed to pointers + `authoritative_for` corrected, `unified-trading-pm@36c2335aa`;
+> todo 3 (prediction-schema-paths.md ↔ prediction-batch-live.md) — added the missing manifest-doc-banner citation to
+> prediction-batch-live.md § 4. Zero referrers to this doc's path found corpus-wide (grep, pre-archive) — no step-5
+> referrer updates needed. Codex-alignment check: the fixes themselves ARE the codex updates (the 3 collision pairs), no
+> separate codex doc needed.
 
 Found by this run's Phase 1 `authoritative_for` collision hunter (scanned 879 codex docs, 744 declaring
 `authoritative_for`, ~156 fuzzy-matched candidate pairs, ~10 highest-value pairs read in full). Of 4 confirmed
@@ -86,12 +94,21 @@ prose only, per the workspace's "every follow-up is a todo, never prose" rule.
       cross-asset-canonical-target-ssot.md's `authoritative_for` (the two-id-model topic was previously undeclared on
       either doc — added it to defi-canonical-naming-ssot.md, the doc that actually carries the content, alongside its
       existing CLOB-boundary claim).
-- [ ] [DOCS] P3. **`/codex/02-data/prediction-schema-paths.md` vs `/codex/04-architecture/prediction-batch-live.md`** —
-      both independently state the identical `canonical_question_group` shard-atom 5-tuple with near-identical wording.
-      Both actually attribute the true "banner-canonical" source to a THIRD doc
+- [x] ✅ [DOCS] P3. **`/codex/02-data/prediction-schema-paths.md` vs `/codex/04-architecture/prediction-batch-live.md`**
+      — both independently state the identical `canonical_question_group` shard-atom 5-tuple with near-identical
+      wording. Both actually attribute the true "banner-canonical" source to a THIRD doc
       (`availability-manifest-and-data-status.md`'s Multi-axis correction banner) yet both still self-declare
       `authoritative_for` on it — a 3-way duplication. Fix: have both defer to the manifest doc's banner as the single
-      source, or to each other, rather than each independently restating it.
+      source, or to each other, rather than each independently restating it. **Fixed 2026-08-08 (docs_reconciler)**:
+      re-read both docs — `prediction-schema-paths.md` already cited the manifest-doc banner correctly (its own
+      `<!-- MULTI_AXIS_CORRECTION_2026_05_06 -->` banner + a "banner-canonical per..." citation right before its
+      restatement); `prediction-batch-live.md` § 4 was the actual gap — it restated the identical 5-tuple with ZERO
+      attribution, presenting it as this doc's own fact. Added the same "banner-canonical per
+      availability-manifest-and-data-status.md § Multi-axis correction banner" citation to § 4, resolving the 3-way
+      duplication by making both docs explicitly defer to the third doc rather than each independently asserting it.
+      Neither doc's `authoritative_for` declared this narrow fact (both are broad: "prediction GCS schema paths" /
+      "prediction asset-group batch/live architecture"), so no frontmatter change was needed here — this was purely a
+      missing-citation gap in body prose, unlike todos 1/2.
 
 ## Progress Log
 
