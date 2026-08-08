@@ -423,12 +423,31 @@ achieved by exclusion, not canonicalisation.**
       work was real, corrected to `01c3dbbab9`/`79c4a72737`/`b7e41849d6` (each verified to exist first). Checker fixed
       to fetch once on the miss path; **baseline ratcheted 8 -> 0**, verified 2,549 citations / 0 unresolvable.
 
-- [ ] [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
+- [x] ✅ [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
       screened 47 test-touching commits for NET assertion loss + added xfail/skip. That shape is blind to a commit which
       DELETES a strong assertion and ADDS a weak one — it nets zero and never surfaces. Treat the sweep's result as "no
       net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
       (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
-      enough. **Done when**: the decision is recorded, or the semantic check exists.
+      enough. **Done when**: the decision is recorded, or the semantic check exists. — **DECIDED + BUILT 2026-08-08
+      (slot 14, review)**: a literal blocking gate is NOT worth building (true semantic "is this assertion weaker"
+      judgment is undecidable syntactically — the same rewrite can legitimately tighten OR loosen a check, and this
+      fleet's rename-cascade churn would make a strict version a constant false-positive source). Built a narrower,
+      cheap, ADVISORY screen instead:
+      `unified-trading-pm/scripts/checkers/assertion_replacement_scanner.py` — parses unified diffs of test files and
+      flags any hunk that both REMOVES and ADDS a distinct check line (assert / unittest assertXxx / pytest.raises /
+      `@pytest.mark.parametrize` / JS-TS `expect(`), regardless of net count, so a same-hunk swap surfaces even when the
+      commit nets to zero. Deliberately widened past bare `assert` lines: the seed incident
+      (`market-tick-data-service@85423040`) replaced a `parametrize` INPUT, not an assert statement — the assert text
+      never changed, only which case ran, so an assert-only heuristic would have missed the exact commit that motivated
+      this todo. It never renders a verdict (no "weaker" claim) — it only widens the CANDIDATE list a human/agent reads,
+      same shape as the 2026-08-08 sweep's own screen-then-read process. Verified: `--self-test` (5 built-in scenarios:
+      the seed parametrize-swap flagged, pure add not flagged, pure remove not flagged, identical re-add not flagged, a
+      synthetic weakened-bound assert flagged) plus a live run against this repo's own last-7-days history, which
+      surfaced 8 real candidates (signature-arg additions, slice-bound changes, an updated exceptions-count literal) —
+      none alarming, confirming the tool produces plausible, readable output rather than noise. Not wired into
+      `quality-gates.sh` (advisory, not blocking — `scripts/checkers/` is outside `PYTEST_UNIT_DIR`, matching
+      `triad_assertion_checker.py`'s and `fixture_drift_checker.py`'s existing precedent in the same directory); intended
+      use is a review-agent / `/code-review` / future-sweep screening step, not an automated gate.
 
 ## Codex SSOTs
 
@@ -534,3 +553,9 @@ redo, which is exactly why it was split out.
   enumerated in the enforcement surface, and (2) the P4 C3 pre-launch corpus disposition (10,345 objects) is settled by
   this doc's standing supersession of the 2018 coverage-window-extension option, not a fresh decision — P4 cites this
   doc rather than re-litigating.
+- **2026-08-08 (slot 14, review)** — [REVIEW] P2 (semantic check vs counting decision) flipped.
+  `unified-trading-pm@<pending>` — added `scripts/checkers/assertion_replacement_scanner.py`, an advisory (not
+  QG-blocking) diff-hunk scanner that flags same-hunk check-replacement in test files, widened past bare `assert` lines
+  to also catch `parametrize`/fixture-value swaps (the seed incident's actual shape). See the todo's own note above for
+  full rationale (why a blocking semantic gate was rejected, why the advisory screen was built instead) and the
+  self-test + live-run verification.
