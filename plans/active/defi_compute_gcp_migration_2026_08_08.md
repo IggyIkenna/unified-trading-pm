@@ -222,12 +222,19 @@ them).
       the 2026-07-17 observation of 0 running tasks. **No automated process to disable before AWS teardown.** —
       unified-trading-pm@(see flip commit)
 
-- [ ] [INFRA] P1. **Confirm the 3 GCP Cloud Run services (`execution-service`, `features-service`, `strategy-service`)
-      are not already deployed under a name this plan's `gcloud run services list` pass missed** — re-check with
-      `--platform=managed --project=central-element-323112` across ALL regions the fleet uses (not just
+- [x] ✅ [INFRA] P1. **Confirm the 3 GCP Cloud Run services (`execution-service`, `features-service`,
+      `strategy-service`) are not already deployed under a name this plan's `gcloud run services list` pass missed** —
+      re-check with `--platform=managed --project=central-element-323112` across ALL regions the fleet uses (not just
       `asia-northeast1`), and check `deployment-api`'s own service registry/database for a record of these 3 if one
       exists. Done-when: a definitive "does not exist yet, deploying fresh" or "exists as `<name>` in `<region>`,
-      already at revision `<rev>`" statement.
+      already at revision `<rev>`" statement. **FINDING (2026-08-08, slot-12)**:
+      `gcloud run services list     --platform=managed --project=central-element-323112` (all-regions listing, 22
+      services returned) — zero services named `execution-service`, `features-service`, or `strategy-service`.
+      Per-region explicit check across `asia-northeast1`, `us-central1`, `europe-west1/2/4`, `asia-south1`, `asia-east1`
+      — all returned zero hits. deployment-api's `CLOUD_RUN_SERVICE` census (`routes/_cloud_run_services.py`) reads GCP
+      live state directly via the Admin API (no separate local DB); same underlying source, same result. **Conclusion:
+      does not exist yet, deploying fresh** — all 3 services are absent from GCP Cloud Run in project
+      `central-element-323112` across all fleet regions. — unified-trading-pm@(see commit)
 
 - [ ] [INFRA] P1. **Write `deployment-service/scripts/cloud-run/deploy.sh`** — the script `execution-service.yaml` and
       `strategy-service.yaml` both reference under their deploy instructions but which does not exist. Base it on the
@@ -351,3 +358,9 @@ them).
   manual CLI action 9 days after the 2026-07-17 observation. **Implication for cutover**: no automated process needs to
   be disabled before scaling the services back to 0 and decommissioning the ECS cluster. Proceed with the remaining
   cutover todos (3 onward) with confidence.
+- **2026-08-08 (slot-12, AO worker — todo 3)**:
+  `gcloud run services list --platform=managed --project=central-element-323112` returned 22 services across all regions
+  — zero named `execution-service`, `features-service`, or `strategy-service`. Per-region explicit checks
+  (asia-northeast1, us-central1, europe-west1/2/4, asia-south1, asia-east1): zero hits. deployment-api's
+  `CLOUD_RUN_SERVICE` census reads GCP live state via Admin API — no separate local DB, same source. **Verdict: does not
+  exist yet, deploying fresh** — proceed to todo 4 (write `deploy.sh`) and todo 5 (deploy features-service).
