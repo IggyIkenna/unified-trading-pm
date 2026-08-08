@@ -64,7 +64,7 @@ missing):
 | 8   | `migrate_prediction_trades_legacy_bundle_2026_07_28.py`                           | yes        | ❌ MISSING (NEW, post-census) |
 | 9   | `sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py` | yes        | ❌ MISSING                    |
 | 10  | `sports/league_id_relocation/migrate_sports_casing_2026_07_22.py`                 | yes        | ❌ MISSING                    |
-| 11  | `sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`       | yes        | ❌ MISSING                    |
+| 11  | `sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`       | yes        | ✅ HAS checkpoint             |
 | 12  | `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`                          | no         | ❌ MISSING                    |
 | 13  | `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py`                       | no         | ❌ MISSING                    |
 | 14  | `migrate_tradfi_manifest_itype_semantic_relabel_2026_07_27.py`                    | no         | ❌ MISSING                    |
@@ -121,9 +121,10 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
       market-tick-data-service@486c61b2 (sha corrected 2026-08-08 — the prior citation `c98e0abb` was an unrelated
       test-fix commit by the same slot; the actual checkpoint commit is `486c61b2`, verified via `git log --follow` on
       the script + `git blame` on the added lines, both confirmed ancestors of `origin/live-defi-rollout`).
-- [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
-      `sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`, same pattern. Repo:
-      market-tick-data-service.
+- [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to
+      `sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`, same pattern (per-day `Counter` +
+      `record_vm_progress(day)`, gated on a confirmed PROD write — plan-only/TEST-bucket runs never advance the resume
+      frontier) — market-tick-data-service@3ec92a02.
 
 ### Category B — Non-date scripts: need object-index checkpoint (5 scripts)
 
