@@ -138,11 +138,25 @@ Both were established by reading the code, and both are silent — neither raise
       not a hand-edited `backlog.yaml` or a bug in the new minting's own collision check. **KEEP** the NULL-`brief_hash`
       backfill branch unchanged. The source doc requires this decision be written down either way. (repo:
       agent-orchestrator) — agent-orchestrator@5ae9dd5
-- [ ] [BACKEND] P3. **Decide `remint_backlog_collision`'s fate** (`routes/backlog.py:545-687`). Its premise — a
-      positional id got reused — is structurally unreachable post-Phase-1. Check whether it has ever actually fired (its
-      own `backlog_sibling_reset_guard_collision_reminted` activity event answers this), then either retire it with its
-      test, or repurpose it as a general "force a task onto a fresh id" admin tool. Record which and why. (repo:
-      agent-orchestrator)
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-08 (slot-26, backend_engineer)** — **Decide `remint_backlog_collision`'s fate**
+      (`routes/backlog.py:545-687`). Ruling: **KEEP**, not retire. The todo's premise — "structurally unreachable
+      post-Phase-1" — does not hold: Phase 1's `_make_content_task_id` switch only prevents a FRESH mint from landing on
+      a collided id; it does nothing for the ~2,187 rows already sitting in `backlog.yaml` under the OLD positional
+      `<slug>-NNN` scheme, which this endpoint remediates and which only Phase 2's (not-yet-run) historical backfill
+      retires the need for. Empirically confirmed via
+      `GET /api/activity?type=backlog_sibling_reset_guard_collision_reminted`: 173 fires between 2026-07-26 and
+      2026-08-08, **including after** the Phase-1 minting switch landed (`agent-orchestrator@ba6eff5`,
+      2026-08-08T14:28:06Z) — `defi_catalog_engine_config_key_contract_drift-002` alone refused 156+ times from 11:38Z
+      through past 22:40Z today, well after the switch. Also actively wired into the dashboard's one-click "Fix"
+      affordance (`dashboard/src/layout.tsx`, `dashboard/src/api.ts`) with its own e2e coverage
+      (`dashboard/tests/e2e/backlog-collision.spec.ts`) — retiring it would be a UI regression too. It already IS the
+      general "force a task onto a fresh id" admin tool the alternative disposition asked for (any flagged collision,
+      not slug-specific) — no repurposing needed. Recorded the ruling + evidence directly in the endpoint's own
+      docstring (not just here) per this plan's established "record the guard disposition in the docstring" pattern
+      (Phase 1 todo P2 above). New finding filed as a Follow-up below (the `-002` collision recurring even after an
+      explicit remint at 15:44:23Z suggests remint's "future regen ticks stop re-deriving that position" claim doesn't
+      always hold — out of this todo's scope to root-cause). No test changes (nothing retired). QG: full suite green
+      (basedpyright clean, no new violations). Evidence: agent-orchestrator@e47eb50. Repo: agent-orchestrator.
 
 ## Phase 2 — historical backfill (Option B). Every irreversible step is operator-gated.
 
@@ -208,6 +222,21 @@ Both were established by reading the code, and both are silent — neither raise
       occurrences), each citing a wrong sha — a direct symptom of positional ids. After Phase 1, dedupe them to one row.
       Source: /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
       unified-trading-pm)
+- [ ] [BACKEND] P2. **Root-cause why `remint_backlog_collision` didn't durably stop
+      `defi_catalog_engine_config_key_contract_drift-002`'s collision from recurring.** Found while working the
+      `remint_backlog_collision` fate todo above (2026-08-08, slot-26): the collision was reminted exactly once
+      (`backlog_sibling_reset_guard_collision_reminted` @ 2026-08-08T15:44:23Z, `new_task_id: -004`), yet
+      `backlog_sibling_reset_guard_refused` fired 156+ MORE times for the SAME id `-002` afterward (11:38Z through past
+      22:40Z, `existing_done_sha` unchanged at `2667e967d` the whole time) — contradicting the endpoint's own docstring
+      claim that reminting makes "future regen ticks stop re-deriving that position back onto the collided id."
+      `GET /api/backlog` also shows no `-004` row at all today — only `-002` (`done`), `-001`, `-003`, `-005`.
+      Hypothesis (unverified): `regen_backlog_from_plan`'s per-plan matching for an ALREADY-yaml'd checkbox may still
+      derive by POSITION-within-brief-group rather than by content, so removing the yaml row at `-002` (what remint
+      does) doesn't stop the next regen tick from re-deriving a brand-new entry back at the SAME position/id. Needs
+      someone to trace `_group_plan_tasks_by_brief` + `regen()`'s matching path for the specific
+      `defi_catalog_engine_config_key_contract_drift_*.md` plan checkbox to confirm/refute. Not fixed here — out of the
+      fate-decision todo's scope and touches the same collision-sensitive minting path Phase 1/2 are already carefully
+      sequencing around. (repo: agent-orchestrator)
 
 ## Codex SSOTs
 
@@ -317,3 +346,22 @@ Both were established by reading the code, and both are silent — neither raise
   to its own existing paragraph. Docstring-only change, no production logic touched. `.venv` was absent on this slot's
   agent-orchestrator clone (fresh worktree); ran `uv sync --all-extras` to build it before Pass-1. QG: 2773 passed (full
   suite). Evidence: agent-orchestrator@5ae9dd5 (verified ancestor of origin/live-defi-rollout before `/done`).
+
+- **2026-08-08 (slot 26, content_derived_backlog_task_ids-007, review craft dispatched off
+  `cefi_track2_backfill_vm_preempted_no_recovery-003` then reassigned to this backend_engineer task on next
+  heartbeat)**: Decided `remint_backlog_collision`'s fate — **KEEP**, not retire. Checked the todo's own premise
+  ("structurally unreachable post-Phase-1") against live activity data before accepting it:
+  `GET /api/activity?type=backlog_sibling_reset_guard_collision_reminted` shows 173 fires 2026-07-26..2026-08-08,
+  **including 156+ for `defi_catalog_engine_config_key_contract_drift-002` alone AFTER** the Phase-1 minting switch
+  (`agent-orchestrator@ba6eff5`, landed 2026-08-08T14:28:06Z) — the premise was wrong for pre-existing positional-id
+  rows, which Phase 1 never touches (only fresh mints go through `_make_content_task_id`); only Phase 2's not-yet-run
+  historical backfill retires the need for this endpoint. Also confirmed it's wired into the dashboard's one-click "Fix"
+  UI with its own e2e spec — retiring it would regress that too. Recorded the ruling + evidence in the endpoint's own
+  docstring (`routes/backlog.py`), following this plan's established "record the guard disposition in the docstring"
+  pattern from todo `-006`. No test changes (nothing retired). `.venv` was absent on this slot's agent-orchestrator
+  clone; ran `uv sync --all-extras` before Pass-1. QG: 2816 passed (full suite, basedpyright clean). Evidence:
+  agent-orchestrator@e47eb50 (verified ancestor of origin/live-defi-rollout before `/done`). Filed a new Follow-up todo
+  for a genuinely new, out-of-scope finding surfaced during this investigation: the `-002` collision kept recurring even
+  after an explicit remint at 2026-08-08T15:44:23Z, contradicting the endpoint's own claim that reminting stops future
+  re-derivation at the same position — needs a `regen_backlog_from_plan` matching-path trace to confirm/refute, not
+  fixed here.
