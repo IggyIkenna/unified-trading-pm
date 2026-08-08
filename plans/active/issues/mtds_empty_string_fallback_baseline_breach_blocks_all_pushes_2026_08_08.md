@@ -105,12 +105,14 @@ is not scoped to the connector's own author.
       (Ethereum spec guarantees them)". The "" fallback in the consumer is dead-defensive (only fires if the producer
       bugs), not a substitution for a legitimately-absent field — `# noqa` is the correct disposition. Comment in
       aave_liquidations_ethereum_ws.py updated with explicit payload evidence.
-- [ ] [REVIEW] P2. **Consider whether the ratchet should fail the AUTHOR's push rather than everyone's.** This is the
+- [x] ✅ [REVIEW] P2. **Consider whether the ratchet should fail the AUTHOR's push rather than everyone's.** This is the
       second recorded instance of a whole-tree ratchet in MTDS blocking unrelated agents
       (`/plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` is the first). A
       ratchet that only counts sites in the pushing agent's own `--files` scope would have caught this at authoring time
       and not blocked the fleet. Evaluate feasibility and either implement or record why whole-tree is deliberate.
-      **Done when**: a decision is recorded with rationale.
+      **Done when**: a decision is recorded with rationale. — **DECIDED 2026-08-08 (slot-11): whole-tree is deliberate;
+      per-files scope is infeasible as a replacement; the right fix is fresh-baseline discipline at authoring time. Full
+      rationale in Progress Log.**
 
 ## Progress Log
 
@@ -125,3 +127,43 @@ is not scoped to the connector's own author.
   every eth_getLogs log object; a real Aave liquidation log CANNOT lack these fields. The "" fallback in the consumer is
   dead-defensive (producer always sets them; would only fire on a producer bug). `# noqa` is correct. Updated comment in
   `aave_liquidations_ethereum_ws.py` with explicit payload evidence per the task done-definition.
+- **2026-08-08 (slot-11) — P2 decision: whole-tree checking is deliberate; per-files scope is technically infeasible as
+  a replacement and insufficient to prevent fleet-blocking.** Evaluation against `check_no_empty_string_fallback.py`
+  implementation and the fleet history (two prior archived incidents + this one +
+  `mtds_empty_string_fallback_baseline_exceeded_scripts_2026_08_08.md` as a concurrent fourth) yields the following:
+
+  **Why whole-tree must remain the primary gate:**
+  1. The baseline is a total-count-per-repo contract (`no_empty_string_fallback_baseline.yaml`). A per-file baseline
+     would require tracking each Python file individually — a fundamentally different (and much more fragile) data
+     structure, since files are renamed, split, and merged across commits, making the per-file anchor stale immediately.
+  2. Two agents can each add 1 site to different files and both pass a per-files check, while together the total
+     breaches the repo baseline. The whole-tree count is the only guarantee that drift doesn't accumulate through
+     pairwise-safe increments.
+  3. A per-files scope at push time does NOT retroactively unblock agents blocked by a prior commit that landed over
+     baseline. Once any over-baseline commit lands on LDR, EVERYONE is blocked until the count is fixed — regardless of
+     whether the block was detected at the author's push time or not.
+
+  **Why per-files scope would NOT have prevented either documented fleet-block:**
+  - In both 2026-08-08 incidents, the breaching code was already committed (and passed quickmerge's sentinel) before the
+    fleet-block was noticed. The aave incident's root cause is the stale-baseline race: the author ran quality-gates.sh
+    when their PM clone had a higher baseline (the baseline had been ratcheted down between their Pass-1 run and their
+    commit landing on LDR). A per-files check at THAT push time would have used the SAME stale baseline and also passed.
+  - The scripts/ incident shows the checker's own uncertainty: "positional tail-slice — git-diff found no new sites
+    still present" — the diff-based attribution cannot confirm these are genuinely new sites from a specific push,
+    meaning per-files scoping would be unable to attribute the breach to a specific `--files` set at all.
+
+  **The actual root cause (common to both 2026-08-08 instances):** stale PM baseline at authoring time. The fix is
+  operational, not architectural: **agents MUST `git pull --ff-only origin live-defi-rollout` the PM repo IMMEDIATELY
+  before running quality-gates.sh** so the baseline.yaml reflects the current fleet state, not a snapshot from minutes
+  or hours ago. The existing repo-blocker mechanism (`POST /api/repo-blockers kind=qg_red`) + AO's fast P0 dispatch on
+  over-baseline issues is the correct fleet response once a breach lands — both 2026-08-08 incidents were resolved
+  within hours.
+
+  **Optional future improvement (NOT required to close this todo):** an additional early-warn check in quickmerge
+  Stage-pre (before Pass-1) that uses the existing `_diff_added_empty_string_sites` function to detect NEW sites in the
+  author's `--files` and fails loudly at THEIR push, not the next agent's. This would prevent the stale-baseline race
+  from silently shipping a violation. The infrastructure (`_diff_added_empty_string_sites` in
+  `check_no_empty_string_fallback.py`) already exists; wiring it into quickmerge as a pre-sentinel warning is ~30 lines.
+  Worth doing as a standalone P3 follow-up, not as part of this P2 decision task. **Decided NOT to implement it here** —
+  the decision is the deliverable, per the todo's own done-when. If the fleet-blocking pattern recurs a third+ time in
+  MTDS specifically, the quickmerge integration is the right next step.
