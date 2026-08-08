@@ -71,8 +71,8 @@ row) prevents duplicate work on the same day.
 | `docs-reconciler.service`             | `docs_reconcile`       | `docs_reconciler`             | No                                          | hourly                 | 5950 s          | 6000 s                  |
 | `context-scout.service`               | `context_scout`        | `context_scout_auditor`       | No                                          | hourly                 | 5950 s          | 6000 s                  |
 | `escalation-queue-reconciler.service` | `escalation_reconcile` | `escalation_queue_reconciler` | No                                          | every 3 h              | 5950 s          | 6000 s                  |
-| `cefi-reconciliation.service`         | `cefi_reconciliation`  | `cefi_reconciliation_auditor` | No                                          | every 2 h (even hours) | 5950 s          | 6000 s                  |
-| `cefi-mtds-smoke.service`             | `cefi_mtds_smoke`      | `cefi_mtds_smoke_tester`      | No                                          | every 2 h (odd hours)  | 5950 s          | 6000 s                  |
+| `cefi-reconciliation-auditor.service` | `cefi_reconciliation`  | `cefi_reconciliation_auditor` | No                                          | every 2 h (even hours) | 5950 s          | 6000 s                  |
+| `cefi-mtds-smoke-tester.service`      | `cefi_mtds_smoke`      | `cefi_mtds_smoke_tester`      | No                                          | every 2 h (odd hours)  | 5950 s          | 6000 s                  |
 
 The sharded jobs (plan-reconciler, ag-closeout, na-eligibility) POST one request per tranche. Non-sharded jobs POST
 once. The `job_name` field in each POST is the dedup key for the capacity queue and the already-ran guard.
