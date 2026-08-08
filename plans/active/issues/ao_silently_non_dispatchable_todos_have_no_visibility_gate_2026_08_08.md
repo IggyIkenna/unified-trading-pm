@@ -94,25 +94,35 @@ gated on an upstream whose remaining todos are all silently excluded will read t
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P1. **Add a QG gate that reports the disk-vs-backlog todo delta per AO-dispatched doc, and ratchet it
-      down.** Import regen's real `_parse_open_todos` (never a re-implemented regex — the whole point is that the parser
-      IS the oracle) and compare, per doc, against the count of `^- [ ]` lines. For every delta, require the plan to
-      DECLARE the exclusion: an excluded todo must carry an explicit `[BLOCKED]`-style tag or a stated blocked-on line,
-      so a deliberate hold reads as deliberate and an accidental one fails the gate. Baseline at the measured 47 and
-      ratchet DOWN — do not widen `_STALE_MARKER_PREFIX_RE` again as the fix; four successive widenings (2026-07-28,
-      07-29, 08-02, 08-08) have not converged, because the failure is that exclusion is unreported, not that the regex
-      is too narrow. Also emit the 14 zero-dispatchable docs as their own louder finding: an `active`,
-      `assigned_vm: planning` doc with zero dispatchable todos is either mis-tagged or finished, never correct as-is.
-      **Done when**: the gate is wired into `scripts/quality-gates.sh` with a baseline YAML, its own unit test covering
-      the four known trigger shapes, and a MEASURED report of the 47 split into declared-intentional vs accidental —
-      with the accidental ones either fixed or filed. Repo: unified-trading-pm (gate), agent-orchestrator (parser import
-      path only, no parser change required). **Fold in while you are in that file** (found 2026-08-08, same session, too
-      small for its own doc): `agent-orchestrator/server/server.py:239` comments the plan-regen loop as running "every
-      6h", but `PlanRegenLoop` is constructed with no `interval_seconds` so it takes
-      `DEFAULT_PLAN_REGEN_INTERVAL_SECONDS = 1800` (30 min) unless `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` overrides
-      it on the VM. Read the VM's live env, then correct the comment to the real value — a wrong cadence in the comment
-      directly misleads anyone reasoning about how long a plan edit takes to reach the backlog, which is this issue's
-      whole subject.
+- [x] ✅ [SCRIPT] P1. **Add a QG gate that reports the disk-vs-backlog todo delta per AO-dispatched doc, and ratchet it
+      down.** — unified-trading-pm@fc8ec3e64, agent-orchestrator@3d4abba (slot-24, 2026-08-08). Shipped
+      `scripts/quality_gates/check_ao_dispatch_gap.py` (PM) which imports regen's REAL `_parse_open_todos` via a
+      subprocess into agent-orchestrator's own `.venv` (new
+      `agent-orchestrator/scripts/plan_hygiene/     dump_dispatchable_todos.py` wrapper — no parser change) rather than
+      re-implementing the marker regex a fifth time. Per-todo (not gap-count) classification: an excluded disk todo is
+      DECLARED if its own continuation block carries a
+      `BLOCKED-<token>`/`[OPERATOR]`/`blocked on`/`DEFERRED-BY-DESIGN`/`stretch, optional` marker not itself disclaimed
+      by a nearby negation phrase (the sports-Betfair "Do NOT mark this BLOCKED-CREDENTIALS" shape — an 80-char
+      proximity window, not a whole-block search, after a whole-block version false-positived on an unrelated "not
+      blocking paper" phrase in a real corpus doc), else ACCIDENTAL. Wired into `scripts/quality-gates.sh` (guarded on
+      `WORKSPACE_ROOT`, same no-op-when-siblings-absent shape as the repo-docs-ssot gate). 7 unit tests in
+      `test_check_ao_dispatch_gap.py` cover all 4 known trigger shapes (resolved retag, unrecognized-token variant,
+      marker-then-resolution word order, negated-marker mention) plus the description-extraction parity and a
+      live-corpus smoke test — all pass. **MEASURED live run (2026-08-08, 287 assigned_vm:planning docs checked — corpus
+      has moved since this doc's original 551/504/47/37/14 snapshot earlier the same day, expected on a fast-moving
+      fleet)**: **0 accidental** exclusions, **24 zero-dispatchable docs**. Baseline seeded at
+      `max_accidental_exclusions: 0` / `max_zero_dispatchable_docs: 24` (`ao_dispatch_gap_baseline.yaml`) — a future
+      accidental exclusion now fails the gate immediately rather than hiding indefinitely. Zero accidental means every
+      currently-excluded todo in the live corpus is genuinely declared (verified by direct read on one spot-check,
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s 3/3 — all live
+      BLOCKED-OPERATOR-DECISION/BLOCKED-CREDENTIALS/DEFERRED-BY-DESIGN markers), consistent with the four prior
+      regex-widening fixes plus this same doc's own same-day sports-Betfair rewrite having already closed the accidental
+      cases that existed. The 24 zero-dispatchable docs are the "louder finding" this todo asked for — filed as
+      `/plans/active/issues/ao_zero_dispatchable_planning_docs_triage_2026_08_08.md` (one bounded triage todo per
+      findings-closure convention, RULES.md §4.5) rather than hand-triaged here, since determining
+      mis-tagged-vs-finished for 24 docs is real per-doc judgment work outside this task's scope. The `server.py:239`
+      comment fold-in was already fixed by another worker earlier the same day (confirmed current text at
+      `server/server.py:245-248` cites the real 300s production override, not the stale "every 6h") — no action needed.
 
 ## Progress Log
 
@@ -124,3 +134,7 @@ gated on an upstream whose remaining todos are all silently excluded will read t
   `/plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md` because that doc is
   `assigned_vm: NA` (human-owned) and folding a dispatchable todo into it would have made this undispatchable too — the
   exact failure mode being reported. Kept to a single open todo so the finalize-coverage single-todo carve-out applies.
+- **2026-08-08 (slot-24)** — Shipped the gate (see checkbox above for full detail). All todos now done + doc unlocked —
+  will be archived per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` as a separate commit from
+  this checkbox flip (2026-07-30 incident: never combine a checkbox flip with the `git mv` archival in one commit, or
+  `/done`'s M3 check can't see the transition at the original path).
