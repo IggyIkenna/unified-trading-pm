@@ -206,3 +206,16 @@ All three are real design/priority calls, not something determinable from code o
   later — leave blocked for now." Doc status re-confirmed accurate as-is — the `[HUMAN] P1` todo already correctly
   states only the operator's own Bybit exchange login can perform this, direction already approved 2026-07-28, action
   still pending. No change needed.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — whole-doc flip fails on 3 of 4 open
+  items. Checked carefully against cheat-sheet rulings #1 (IAM self-service) and #9 (self-service sibling-precedent)
+  as directed: NEITHER applies — the `[HUMAN] P1` Bybit item needs the operator's own EXCHANGE-side API-key login (not
+  a GCP IAM role grant; no cloud identity/service-account can create a third-party exchange trading key), so ruling #1
+  is a category mismatch, and there is no adjacent-script `--flag` precedent making ruling #9 fit either. The
+  `[BACKEND] P2` OKX/Hyperliquid item is operator-approved to build but its own text still asks the worker to "scope
+  the exact per-venue mechanism... before estimating" — an unresolved design call (task_template.md's "figure out how
+  X should look" trap), not yet bounded. The `[HUMAN] P3` Upbit/Kraken/Bitfinex/Bitget item is an explicit,
+  undispatched priority call. Only the `[BACKEND] P2` Aster-adapter item (scope fully specced: mirror
+  `upbit_ccxt.py`, wire `factory.py` + `live_execution_handler.py`, ~35-40 tests, ~1 day) is independently bounded —
+  noted as a future split-candidate for a dedicated single-item AO doc, not split this round (out of this audit's
+  scope, which reclassifies existing docs whole, not decomposes them). No conflict found in
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` (lists this doc as "no new work landed," consistent).

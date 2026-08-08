@@ -34,7 +34,8 @@ source:
   - Operator questions 2026-07-17 ("is it doing data that doesnt exist or is it just skipping", "why you looking for
     wrong symbol dont we have a converter / mapping", "is it the date (available for and to?)") - all three proved
     correct against live measurement; the date hypothesis in particular surfaced a class I had missed.
-assigned_vm: NA
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: data_engineering
 priority: P0
 estimate_class: refactor
@@ -42,7 +43,6 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 drift_direction: advance-code
 parent_epic: cefi_master
-execution_scope: local-only
 depends_on: []
 last_updated: 2026-07-17
 locked_by:
@@ -207,6 +207,34 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
   P0 vendor-catalog-gate is still entangled with the unresolved canonical-enum-vs-coverage_exclusions taxonomy decision
   the script explicitly declines to make; the P1 `--apply` purge half is still operator-gated + snapshot- first (counts
   drift). No duplicate-claim risk found (grepped all active cefi_master planning docs — no overlap).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. Both remaining
+  items are now bounded. (1) **P1 `--apply` purge** — the doc's own `round5-cefi-question-resolution 2026-08-08` entry
+  above already resolved both blockers this round exists to check for: reversibility (fresh same-run
+  `softDeletePolicy.retentionDurationSeconds` check = 604800s, qualifying under `task_template.md` finding T) and
+  taxonomy (use the `EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400` raw-string precedent, same shape as the cited
+  `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py` pattern — matches cheat-sheet ruling #6 exactly: "a
+  doc whose only remaining gate is 'needs a human at the keyboard for an already-approved, reversibility-provable
+  delete' may now be reclassifiable"). That resolution session explicitly stopped short of `--apply` itself
+  ("documentation-question audit, not an implementation dispatch") — the remaining work is mechanical: re-run the
+  sizing script fresh (counts drift per its own note), confirm the gate, `--apply`. (2) **P0 vendor-catalog gate** —
+  re-verified the "coordinate with the in-flight `coverage_exclusions` work" blocker this doc has carried since
+  2026-07-17: `unified-api-contracts/unified_api_contracts/canonical/coverage_exclusions.py` (git log: created +
+  finished same-day 2026-07-17, commit `a1284b3d`, untouched since — genuinely NOT in-flight anymore) is a manually
+  curated, evidence-gated registry for permanent historical outage windows (mandatory `evidence_uri`/`verified_by` per
+  entry) — a structurally different mechanism from this todo's live, machine-refreshed per-venue Tardis catalog cache
+  (`GET /v1/exchanges/<venue>`, refreshed daily, thousands of symbols). The two don't actually intersect; the
+  "coordination" concern was a 2026-07-17-vintage hedge that no longer applies now that `coverage_exclusions` has
+  shipped as a stable, orthogonal registry. The fix (already-checked `exc.is_structural_absence` classification exists
+  at `tardis_csv_transport.py`'s streaming-download 400 handler, confirming the reactive half is live) is a
+  self-contained, fully-specified implementation (exact request shape + 3-condition gate given in "The fix" section
+  above) — no design call remains. Conflict-check: grepped `plans/active/cefi_satellite_ao_dispatch_batch{9,10}*`,
+  `cross_cutting_satellite_ao_dispatch_batch1*`, `defi_satellite_ao_dispatch_batch6*_finalize`, and
+  `cefi_consolidated_closeout_2026_07_18.md`/`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` — all
+  mentions are cross-references/rollup listings of this doc's own still-open items, none is an active AO dispatch
+  implementing either todo. **Note for whoever reads `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred —
+  human-only" listing for this doc**: that snapshot predates this doc's own `round5-cefi-question-resolution
+  2026-08-08` entry above, which supersedes it. Companion finalize plan:
+  `/plans/active/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md`.
 
 ## Progress Log
 

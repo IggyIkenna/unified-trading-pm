@@ -238,3 +238,12 @@ noted here only so the two aren't conflated.
   output, and re-check the concurrency/QPS cap against the widened combined prefix count before shipping. Doc stays
   `assigned_vm: NA` — this is real, non-trivial engineering (touches the audit script's core listing strategy + the
   cron orchestrator), not a bounded single-worker AO-dispatch task as scoped.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — independently re-assessed rather
+  than deferring to the same-day verdict above. The 6-step batching plan is unusually well-specified (exact
+  file/function references, no open "how should this work" question), which is a genuine RECLASSIFY signal — but step
+  5's concurrency/QPS safety check ("measure real prefix-count totals... rather than guessing a safe pool size") still
+  asks the worker to PICK a safe concurrency cap/backoff strategy against GCS QPS limits from first principles, not
+  apply a stated formula — a residual judgment component. Combined with the multi-file, 2-repo scope (audit script's
+  core listing strategy + the cron orchestrator) touching a single-walk-discipline-sensitive path, this stays just shy
+  of whole-doc worker-determinable. No cheat-sheet ruling matches directly. Reaffirms the concurrent verdict on
+  independent grounds.

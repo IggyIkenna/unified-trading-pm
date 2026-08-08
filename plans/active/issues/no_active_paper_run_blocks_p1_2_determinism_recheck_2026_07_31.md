@@ -28,10 +28,12 @@ related:
 created: "2026-07-31"
 author: unknown
 parent_epic: batch_live_symmetry_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
-estimate_class: research
+estimate_class: infra
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.4
 drift_direction: none
 assigned_role: data_engineering
 depends_on: []
@@ -192,3 +194,18 @@ run already covers them under different instrument routing), not a mechanical da
   the paper run stays NOT startable yet. Closed the `[DECISION]` todo (the decision itself — start it, conditionally —
   is now made) and filed a new `[DIAG] P1` blocking-prerequisite todo for the venue-scoped check that would actually
   clear the gate, carrying the operator's cost-control instruction forward for whenever it does.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The doc's own
+  `[OPERATOR]`-gated `[DECISION]` judgment call is CLOSED (na-corpus-digest-closeout 2026-08-08, ruled "start it,
+  conditionally" — the direction is decided, only the mechanical gate remains). The sole remaining open item (`[DIAG]
+  P1`) is bounded and worker-determinable: run `measure_honest_coverage.py --asset-group cefi` (or a targeted IS/MTDS
+  spot-check) scoped to exactly 3 named venues, cite the verdict, then branch on a pre-specified rule — clean → launch
+  the paper VM (self-terminating, deliberately spun down per the operator's own explicit cost-control instruction, the
+  same idempotent smoke-test-class VM launch already routinely AO-dispatched — satisfies the safe-idempotent
+  justification without an `[OPERATOR]` tag); gaps found → file them as a new blocking data-completeness issue
+  (a determinable, not a judgment, branch). Conflict-check: no `assigned_vm: planning` doc under `parent_epic:
+  batch_live_symmetry_master` exists; `cefi_consolidated_closeout_2026_07_18.md` does not reference this doc or
+  BINANCE-FUTURES/ASTER/OKX-FUTURES paper-run completeness. `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s
+  "Deferred — operator-gated" listing for this doc predates the same-day na-corpus-digest-closeout entries that
+  closed the `[DECISION]` item and filed the new bounded `[DIAG]` item — superseded, not a live conflict. Estimate
+  re-tiered `research`→`infra` (a completeness measurement + a conditionally-launched, self-terminating VM). Companion
+  finalize plan: `/plans/active/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize_2026_08_08.md`.
