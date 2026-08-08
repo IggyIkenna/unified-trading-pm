@@ -577,3 +577,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   forward — but worth a note in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` for whoever next touches the
   launcher, since a future session trusting `PROGRESS.json` alone on this specific VM would wrongly conclude it's been
   stuck since 19:22Z.
+- **2026-08-08T00:16Z** — FIXTURE_STATS +29 days (`last_completed_date=2022-09-29`, fresh `00:15:42Z`), steady. odds
+  smallchunk2 (via `run.log`, `PROGRESS.json` still not used per above): now **chunk 25/451** (`2020-10-04`), up from
+  chunk 22 — chunks 23 (00:07:19Z) and 24 (00:13:41Z) both cleared, zero new OOMs (still 16 total since chunk 18). Both
+  VMs healthy, no intervention.
