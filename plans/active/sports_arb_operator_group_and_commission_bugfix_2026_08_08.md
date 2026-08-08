@@ -136,11 +136,11 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
       `_find_best_odds_per_outcome` passes `entry["bookmaker"]` straight into `arb_legs_are_independent`; confirm what
       casing the live market dict actually carries end-to-end (read the producer, do not assume), and record the
       finding. Grep-then-READ — a zero-hit grep is not evidence here.
-- [ ] [SCRIPT] P1. **Quantify the blast radius**: over the paper-trade / backtest record, count how many detected arbs
-      had all legs within one operator group (i.e. would have been rejected by the fixed guard) and how many carried a
-      SMARKETS leg. This tells us whether any historical "alpha" was this bug. Report the counts in the Progress Log; if
-      the count is non-zero, file a follow-up `- [ ]` todo against the arb-decay/alpha-gate design plan so its baseline
-      is recomputed on the corrected population.
+- [x] [SCRIPT] P1. ✅ **Quantify the blast radius**: over the paper-trade / backtest record, count how many detected
+      arbs had all legs within one operator group (i.e. would have been rejected by the fixed guard) and how many
+      carried a SMARKETS leg. This tells us whether any historical "alpha" was this bug. Report the counts in the
+      Progress Log; if the count is non-zero, file a follow-up `- [ ]` todo against the arb-decay/alpha-gate design plan
+      so its baseline is recomputed on the corrected population. — see Progress Log 2026-08-08 (blast radius 0).
 
 ## Codex SSOTs
 
@@ -181,3 +181,14 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
   members to their group, standalone venues to themselves (identity is expected). Both failure modes covered: a grouped
   venue silently falling through to identity, or a standalone venue unexpectedly mapping to a non-identity result. QG
   green, SHA verified ancestor of origin/live-defi-rollout.
+- **2026-08-08** — Todo 8 ([SCRIPT] P1 blast radius) — counts: **same-operator-group arbs = 0; SMARKETS arbs = 0**. Two
+  structural reasons neither bug was ever triggered in the paper-trade / backtest record: (1) Backtest
+  (`SportsArbDutchingEngine`, venues: pinnacle / bet365 / betfair): neither `arb_legs_are_independent()` nor
+  `_expected_commission_pct()` is called by that engine — the buggy code paths are structurally unreachable from the
+  dutching backtest. Venues confirmed fully independent post-fix: each maps to its own identity operator. (2)
+  Paper-trade (`SportsFeatureSubscriber`): `_parse_feature_vector` builds a market from a single FSS vector with one
+  `bookmaker_key` — all outcome entries share the same bookmaker, so `arb_legs_are_independent([bk, bk, bk])` correctly
+  returns False and no arb signal is ever emitted. The Bug 1 casing defect is structurally unreachable through this
+  path. Verified by executing `detect_sports_arbitrage` on single-bookmaker markets for BETFAIR_EX_UK, BETFAIR_EX_EU,
+  and SMARKETS — all returned 0 signals as expected. **No baseline recomputation needed for the alpha-gate design
+  plan.**
