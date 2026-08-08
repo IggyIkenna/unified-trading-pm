@@ -776,3 +776,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T11:53Z — smallchunk5 cleared chunk 18.** Chunk 18 took `10:20:04Z→11:51:19Z` (1h31m), 24 total OOMs this
   pass, zero hangs — now on **chunk 19/451** (`2020-09-04`), moving fast with skip-fast dates. FIXTURE_STATS +24 days
   (`last_completed_date=2025-09-22`, fresh `11:52:30Z`), steady. Both healthy, no intervention.
+- **2026-08-08T12:15Z** — FIXTURE_STATS +25 days (`last_completed_date=2025-10-17`, fresh `12:15:18Z`), steady. odds
+  smallchunk5: chunk 20/451 (`2020-09-09`), zero new OOMs since clearing chunk 18 (still 24 total). Both healthy, no
+  intervention.
