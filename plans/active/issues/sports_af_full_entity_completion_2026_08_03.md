@@ -976,3 +976,5 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-08T03:15Z** — FIXTURE_STATS +80 days (`last_completed_date=2023-05-24`, fresh `03:14:21Z`), ~chunk 13/26.
   `smallchunk3` confirmed healthy: chunk 7/451 (`2020-07-06`), steady ~4.5min/chunk skip-fast pace, zero OOM, ETA ~1h20m
   to reach chunk 26 where real new work resumes. Both healthy.
+- **2026-08-08T03:43Z** — FIXTURE_STATS +72 days (`last_completed_date=2023-08-04`, fresh `03:41:29Z`). smallchunk3
+  chunk 13/451 (`2020-08-05`), pace holding, zero OOMs. Both healthy.
