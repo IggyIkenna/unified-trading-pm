@@ -858,3 +858,25 @@ immediately: watcher **`bqxm55orc`** (poll 1 = 10 VMs at 02:05:46Z), heartbeat *
 
 - **NEXT ACTION**: same as prior entry — check checkbox, `TaskOutput bqxm55orc --non-blocking`, re-arm reactively on
   kill notification, do not re-arm if alive.
+
+### 2026-08-08T02:37Z — slot 6 — watcher re-armed (b235dij83)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Prior watcher `bqxm55orc` (slot 14, 02:05Z) not reachable from this session
+(cross-session harness tasks aren't visible via TaskOutput). Direct `gcloud` check at boot: **5 VMs running**
+(`tradfi-bf-cme-ohlcv-1m-g01-{es-es-2020, met-met-2023 x2, met-met-2024, met-met-2025}`, all `asia-northeast1-c`). No
+ES_OPT VMs exist. Git status clean, both PM and unified-api-contracts already `ahead=0` (a stale GIT-STATUS-RED nudge
+from an earlier heartbeat was already resolved before this session touched anything).
+
+Re-armed from committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=6,
+SLOT_TABS=.tabs/6, PYTHON=.tabs/6/market-tick-data-service/.venv/bin/python — slot 6 has its own mtds venv). Watcher:
+**`b235dij83`** (`run_in_background:true`, no `&` inside), poll 1 confirmed = 5 VMs (02:37:37Z). Heartbeat:
+**`b58l2j9nt`** (5-min interval loop, no `&` inside — tightened from the 20-min interval used in some earlier sessions,
+matching RULES.md's 5-min heartbeat cadence more closely). Scratchpad:
+`…/1a3bdb1d-9415-4e91-945c-75d797113b7b/scratchpad/watcher/`.
+
+- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, use
+  `TaskOutput b235dij83 --non-blocking` to check liveness (do NOT use TaskList — always shows "No tasks found" for
+  background Bash tasks). (3) If watcher dead: sed-patch `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`
+  (SLOT_ID=<new>/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead (check `b58l2j9nt`),
+  re-arm `watcher/heartbeat.sh` same way. Do NOT re-arm either if alive — singleton lock race risk. Expect harness to
+  kill background tasks periodically per the documented rapid-kill pattern — this is normal, re-arm reactively.
