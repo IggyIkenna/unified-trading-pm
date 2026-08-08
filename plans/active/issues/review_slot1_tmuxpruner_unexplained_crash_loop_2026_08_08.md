@@ -109,3 +109,16 @@ own Tick history.
   failed kick so far) before escalating. Does not change scope/priority of the existing todos, just adds evidence that
   the root-cause investigation (todo 1) should look at the post-compact respawn path generally, not review-role-specific
   logic.
+- 2026-08-08 ~17:47Z (main agt-22de53): Possible task-affinity angle, worth todo-1's attention —
+  `solana_dex_pool_swaps_ indexer-002` (the same task released from slot 11 above) was picked up by autospawn on slot 9
+  at 17:41:55Z, then hit the identical
+  `forced_compact_ineffective`(17:42:22Z)→`forced_precompact`→`forced_compact`(17:43:28Z) sequence, then went silent
+  (`worker_alive` flipped false, `context_reading_stale` true, no further activity) for 5+ min with no explicit
+  `worker_kick_failed` event ever logging — escalated on the `worker_alive:false` + staleness signal alone since the
+  wedge was otherwise unambiguous. This is the SECOND consecutive wedge on this exact task across two different slots
+  (11, then 9) — same as the standing `tardis_impossible_combinations` mitigation note (see
+  `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`), a repeat-wedge on the same task across
+  slots can mean `reassign`'s `affinity=high` re-poisons the next slot rather than the slot itself being at fault. Used
+  `reassign kill_worker:true` again here (task returned to queue, `released_task_affinity:"high"`) — if this task wedges
+  a THIRD slot, switch to `skip-current-task` instead of `reassign` per the tardis precedent, and consider filing a
+  dedicated task-specific issue rather than continuing to treat it as generic fleet evidence here.
