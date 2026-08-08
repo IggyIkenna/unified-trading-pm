@@ -39,6 +39,7 @@ superseded_by:
 source: >-
   Isolated by the post-deploy validation windows for the context-measurement fix (2026-08-08 interactive session, slot
   1).
+depends_on: []
 ---
 
 # Forced /compact reports submitted=True but never executes

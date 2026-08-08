@@ -46,6 +46,7 @@ calibrated_ai_days: 0.4
 assigned_role: infra
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # cefi-fwd-20260808-110409 deleted within 10-13 min — 0 data written

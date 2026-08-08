@@ -42,6 +42,7 @@ resolved_by:
 locked_by:
 source:
   "review (agent-orchestrator loop tick, msg 4091, ~2026-08-08T11:22Z); main independently verified via /api/state read"
+depends_on: []
 ---
 
 # AutoSpawn refill slower than documented ~60s SLA — two data points
@@ -96,13 +97,12 @@ impact — both are self-healing idle-capacity gaps, not silent failures.
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY -> `assigned_vm: planning`. Sole open
-  item (`[BACKEND] P2`, root-cause the AutoSpawn refill SLA gap, now 3 data points incl. a 5-slot simultaneous
-  context-wedge batch) is a single, bounded live investigation with a concrete "Done when" (confirmed root cause +
-  fix, or a decision with evidence from a larger sample) -- the same read-only-SSM-against-`/api/state`/activity_log
-  investigation pattern this tranche's workers already run routinely (see e.g.
-  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own AF-series investigations). No judgment call, no
-  design fork. Conflict-check clear: grepped `plans/active/*.md` for "AutoSpawn refill"/"refill.*SLA" -- zero hits
-  outside this doc. `execution_scope: local-only -> orchestrator-agent`, `assigned_role: backend_engineer`
-  (unchanged, already correct). Companion gated finalize:
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY -> `assigned_vm: planning`. Sole open item
+  (`[BACKEND] P2`, root-cause the AutoSpawn refill SLA gap, now 3 data points incl. a 5-slot simultaneous context-wedge
+  batch) is a single, bounded live investigation with a concrete "Done when" (confirmed root cause + fix, or a decision
+  with evidence from a larger sample) -- the same read-only-SSM-against-`/api/state`/activity_log investigation pattern
+  this tranche's workers already run routinely (see e.g. `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own
+  AF-series investigations). No judgment call, no design fork. Conflict-check clear: grepped `plans/active/*.md` for
+  "AutoSpawn refill"/"refill.*SLA" -- zero hits outside this doc. `execution_scope: local-only -> orchestrator-agent`,
+  `assigned_role: backend_engineer` (unchanged, already correct). Companion gated finalize:
   `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08.md`.

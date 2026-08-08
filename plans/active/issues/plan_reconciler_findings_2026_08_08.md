@@ -38,6 +38,8 @@ context_scope:
     unified-trading-pm/agents/plan_reconciler.md,
     unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # plan_reconciler run — 2026-08-08 (agt-2add8d, whole-corpus `all`)
