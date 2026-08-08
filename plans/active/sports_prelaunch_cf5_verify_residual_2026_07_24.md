@@ -102,14 +102,21 @@ context_scope:
       (cherry-pick the wip commit onto a clean MTDS tree) the moment all MTDS deps are clean. Reason-level only
       (status-diff GREEN — does NOT block the G4 apply). Repo: market-tick-data-service. Provenance: 2026-06-16 prod
       MDPS index diagnosis.
-- [ ] [DATA] P1. **Sports pre-launch-window corpus decision (C3, 10,345 objects — operator-gated)**: either extend the
-      UAC windows (`SOURCE_COVERAGE_START["footystats"]` 2019-01-01 → 2018-01-01 — the footystats HISTORICAL season API
-      demonstrably serves 2018 rows now on disk; + the api_football `DATA_TYPE_COVERAGE_START` sub-entity windows) and
-      re-run `backfill_orphan_class_e_sports.py` to manifest the corpus, OR ratify the corpus as permanently
-      outside-window (it then becomes a CF-21-style cleanup candidate). Blast radius of a window change: backfill
-      orchestrators start fetching those windows (`clip_dates_to_source_coverage`), data-status denominators, the
-      phantom audit. Repos: unified-api-contracts + instruments-service. Provenance: R8 sweep 2026-06-11 (C3 rows in the
-      reference bucket's `orphan_sweep_sports.parquet`).
+- [x] ✅ SUPERSEDED 2026-08-08 (see OPERATOR RULING banner above) — the choice this todo posed was already foreclosed by
+      `/codex/02-data/sports-2020-06-data-floor.md` (operator ruling 2026-07-21, `unified-api-contracts@8cdf7808`): all
+      sports `SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START` floors are clamped to `date(2020, 6, 6)`, so the C3
+      pre-floor corpus is fabrication-by-construction — delete, do not backfill. Re-confirmed by the operator
+      2026-08-08. Disposition executed by `/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md`
+      (active/unimplemented as of this edit; agent-autonomous via delete-safety §3a), closed out by its finalize
+      sibling. Do NOT extend the coverage windows. ~~[DATA] P1. Sports pre-launch-window corpus decision (C3, 10,345
+      objects — operator-gated): either extend the UAC windows (`SOURCE_COVERAGE_START["footystats"]` 2019-01-01 →
+      2018-01-01 — the footystats HISTORICAL season API demonstrably serves 2018 rows now on disk; + the api_football
+      `DATA_TYPE_COVERAGE_START` sub-entity windows) and re-run `backfill_orphan_class_e_sports.py` to manifest the
+      corpus, OR ratify the corpus as permanently outside-window (it then becomes a CF-21-style cleanup candidate).
+      Blast radius of a window change: backfill orchestrators start fetching those windows
+      (`clip_dates_to_source_coverage`), data-status denominators, the phantom audit. Repos: unified-api-contracts +
+      instruments-service. Provenance: R8 sweep 2026-06-11 (C3 rows in the reference bucket's
+      `orphan_sweep_sports.parquet`).~~
 
 ## Success criteria
 
@@ -127,5 +134,10 @@ context_scope:
   permanently outside-window) — flipping the doc dispatches both, so it stays NA. Extraction of todo 1 into a batch doc
   is the right next move and is a plan-authoring call, parked
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
+- **resolve-round5-sports 2026-08-08**: RESOLVED — closed todo 2 as SUPERSEDED, citing the OPERATOR RULING banner (added
+  earlier this session by a concurrent agent) and independently confirming `/codex/02-data/sports-2020-06-data-floor.md`
+  already forecloses the extend-windows option. Verified `/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md`
+  exists and is `status: active`. Both todos in this doc are now closed — flagging for archival review (not archived
+  here; leaving that to the taxonomy P4 finalize sibling per its own stated ownership). Closes round-5 sports item 4.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries) — added the 2 source files the plan's 2 remaining
   todos target directly (`rebuild_sports_manifest_v9.py` for CF-5, `backfill_orphan_class_e_sports.py` for C3).

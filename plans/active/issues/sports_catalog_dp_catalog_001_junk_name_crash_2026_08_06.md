@@ -146,24 +146,31 @@ observability hook whoever picks up the follow-up needs.
 
 - [x] [DATA] P1. Fix the uncaught-exception crash so a single corrupted display name cannot fail the whole sports
       catalogue rollup — instruments-service@497c4f5e (try/except ValueError, regression test, QG green, quickmerged).
-- [ ] [OPS] P2. Verify a `lifecycle-catalogue-regen-sports` run promotes cleanly and `prod/catalog.parquet` mtime
-      advances past the frozen 2026-08-05T01:09:18Z snapshot, confirming DP-CATALOG-001 clears. **NOT possible yet this
-      session** — the deployed Cloud Run Job image (`…/instruments-service:latest`, digest confirmed unchanged, built
-      2026-08-05T11:24:03 from a DIFFERENT commit `04ce8cd`) has not picked up `497c4f5e`: a manual
-      `gcloud run jobs execute --wait` re-run at 07:42 UTC hit the byte-identical pre-fix traceback (same line numbers,
-      no `try/except` in the stack), proving the running container is still the OLD image. The fix reaches the image
-      only once it lands on `main` — LDR→main promotion PR **instruments-service#1084**
-      (`promote/instruments-service/497c4f5e824d`) is open and progressing normally (`sit-gate/fleet-green` PASS,
-      `quality-gates-v2` PASS, `semver-agent/label-check` PASS; the `validate / GCP Cloud Build` image-build-gate check
-      was still QUEUED as of 08:06 UTC) — once that check passes the PR auto-merges (`*/15` fleet cadence), Cloud Build
-      rebuilds `:latest`, and the next `lifecycle-catalogue-regen-sports` execution (scheduled `0 1 * * *` UTC, or a
-      fresh manual trigger) will run the fixed code. **STALE CITATION (found 2026-08-07): PR #1084 is now CLOSED,
-      mergedAt=null** — superseded by a chain of later same-title "chore(promote): LDR -> main (Option-B direct)" PRs
-      (#1085-#1092, all closed unmerged); the current live promote PR is **#1093** (opened 2026-08-06T22:10:44Z, head
-      8985daedf532, OPEN/mergeable as of 2026-08-07). Don't chase #1084 — check the CURRENT open LDR→main promote PR via
+- [x] ✅ DONE 2026-08-08 (round5-sports session) — re-verified live: `gsutil stat` on
+      `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet` now shows Update time
+      **2026-08-08T08:16:12Z** (creation time identical, i.e. a clean fresh write, not a stale re-stat), well past the
+      frozen 2026-08-05T01:09:18Z snapshot — DP-CATALOG-001 clears. Cross-checked against instruments-service
+      `origin/main` HEAD `d89b9cb193` (fetched live 2026-08-08), which contains `junk_name_skips` in
+      `scripts/build_instrument_catalogue.py` (confirmed by content, not by a since-rewritten SHA-ancestry check) — the
+      fix is live on `main` and the deployed image has run it successfully. ~~[OPS] P2. Verify a
+      `lifecycle-catalogue-regen-sports` run promotes cleanly and `prod/catalog.parquet` mtime advances past the frozen
+      2026-08-05T01:09:18Z snapshot, confirming DP-CATALOG-001 clears. NOT possible yet this session** — the deployed
+      Cloud Run Job image (`…/instruments-service:latest`, digest confirmed unchanged, built 2026-08-05T11:24:03 from a
+      DIFFERENT commit `04ce8cd`) has not picked up `497c4f5e`: a manual `gcloud run jobs execute --wait` re-run at
+      07:42 UTC hit the byte-identical pre-fix traceback (same line numbers, no `try/except` in the stack), proving the
+      running container is still the OLD image. The fix reaches the image only once it lands on `main` — LDR→main
+      promotion PR **instruments-service#1084** (`promote/instruments-service/497c4f5e824d`) is open and progressing
+      normally (`sit-gate/fleet-green` PASS, `quality-gates-v2` PASS, `semver-agent/label-check` PASS; the
+      `validate / GCP Cloud Build` image-build-gate check was still QUEUED as of 08:06 UTC) — once that check passes the
+      PR auto-merges (`*/15` fleet cadence), Cloud Build rebuilds `:latest`, and the next
+      `lifecycle-catalogue-regen-sports` execution (scheduled `0 1 * * *` UTC, or a fresh manual trigger) will run the
+      fixed code. **STALE CITATION (found 2026-08-07): PR #1084 is now CLOSED, mergedAt=null** — superseded by a chain
+      of later same-title "chore(promote): LDR -> main (Option-B direct)" PRs (#1085-#1092, all closed unmerged); the
+      current live promote PR is **#1093** (opened 2026-08-06T22:10:44Z, head 8985daedf532, OPEN/mergeable as of
+      2026-08-07). Don't chase #1084 — check the CURRENT open LDR→main promote PR via
       `gh pr list --repo <org>/instruments-service --search "promote"` (the number will likely have moved again by
       execution time), then re-trigger the job once it merges. (repo: instruments-service, verification only — blocked
-      on the standard promotion pipeline, not a new problem)
+      on the standard promotion pipeline, not a new problem)~~
 - [ ] [DATA] P3. Trace and fix the actual upstream encoding defect producing UTF-8-as-Latin-1 mojibake sports
       player/team names (this incident's `'JeleÅ\x84'` for `'Jeleń'`) — most likely in an MTDS api_football lineups
       adapter or orchestrator write path. Not chased down this session (would need either a corpus grep of MTDS sports
@@ -213,3 +220,11 @@ observability hook whoever picks up the follow-up needs.
   `sports_consolidated_closeout_2026_07_19.md` has zero overlap (grepped directly). Flipped
   `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`. Issue doc under
   `plans/active/issues/` — exempt from the finalize-plan-coverage rule, no companion finalize doc needed.
+- **resolve-round5-sports 2026-08-08**: RESOLVED — closed the `[OPS] P2` verification todo with fresh live evidence
+  (catalogue mtime advanced to 2026-08-08T08:16:12Z, past the frozen snapshot; instruments-service `main` HEAD
+  `d89b9cb193` confirmed to carry the fix by content). This also independently resolves round-5 sports item 12 (the
+  instruments-service LDR→main provenance-range judgment call blocking this fix from reaching main) — the fix reached
+  `main` via the normal promotion pipeline without needing the operator bulk-bless/gate-patch judgment call described in
+  `instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`'s remaining open todo; that doc's own
+  broader ~19-foreign-commit provenance-range question (a `ci` tranche concern, not sports-specific) remains genuinely
+  open and is left untouched here.
