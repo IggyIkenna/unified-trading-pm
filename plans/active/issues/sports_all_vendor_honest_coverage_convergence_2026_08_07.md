@@ -909,3 +909,15 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   FIXTURE_LINEUPS needed **51,595 → 50,805** (-790/~27min). Both healthy, no action.
 - **20:52Z** — smallchunk8 chunk 24/451, still 24 `CHUNK_FAILED` total, fresh. FIXTURE_LINEUPS needed **50,805 →
   49,250** (-1,555/~27min, best rate yet). Both healthy, no action.
+- **21:19Z — FIXTURE_LINEUPS hit the API-Football daily quota wall, PAUSED (VM deleted).** Same account-wide daily quota
+  this campaign hit before (2026-08-06, confirmed UTC-midnight reset ~01:45Z on 2026-08-07 —
+  `sports_af_full_entity_completion_2026_08_03.md` history). `run.log` showed 1,770
+  `'reached the request limit for the day'` errors starting `21:03:32Z`, `recovery=fail_fast` — verified NOT silently
+  writing false `empty_confirmed` rows (checked for `ManifestWriter`/persistence near the failures — none for the failed
+  fetches, only genuine `EXPECTED_NO_PROVIDER_COVERAGE` skips), so no data-integrity risk, just wasted ~120 req/min
+  against a wall. Deleted `af-backfill-20260808-160815` (billing-waste avoidance, same reasoning as the Aug-6 precedent)
+  — its checkpoint is durable, relaunch resumes forward, no work lost. Re-census just before full exhaustion: needed
+  49,250→48,593 (-657, real). smallchunk8 (odds_api, different vendor) confirmed unaffected, still RUNNING healthy.
+  **Per precedent, NOT probing again until well past tonight's UTC midnight** (~00:00Z) — plan to test-relaunch around
+  01:00-01:30Z. INJURIES (next AF-campaign item, same singleton lock/API key) also blocked until then — no point
+  launching either.
