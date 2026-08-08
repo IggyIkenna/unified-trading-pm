@@ -95,13 +95,15 @@ would fail to fetch code. (Note: this corrects the 2026-07-17 finding, which sai
 side is now producing objects; the launcher-side bucket mismatch is the remaining defect.) **Fix (when AWS resumes):**
 point both halves at one bucket. **AWS-deferred.**
 
-### #1 — GCP image tags lost their version (SHA-only) ~late June (root cause UNCONFIRMED)
+### #1 — GCP image tags lost their version (SHA-only) ~late June — **RESOLVED 2026-07-24, NOT A BUG**
 
 Registry evidence: GCP Artifact Registry image tags went `version+SHA` → SHA-only around late June, and the one still-
 pushing ECR repo (`market-tick-data-service`) is `latest`-only. The routers read `client_payload.version`
-(`cloud-build-router.yml`, `-aws.yml`), so if the `qg-passed` dispatch omits `version`, the tag loses it. **Not yet
-root-caused** — could be an intentional move to SHA-only tagging rather than a defect. Needs a confirmed
-dispatch-payload inspection before designing a fix. **Owner: CI (Ikenna/Harsh area) — do not assume it is a bug.**
+(`cloud-build-router.yml`, `-aws.yml`), so if the `qg-passed` dispatch omits `version`, the tag loses it. **Root cause
+CONFIRMED 2026-07-24 (operator)**: the semver-agent that would compute + send `version` in the build dispatch payload is
+**dead, deliberately** — "we have kept it dead deliberately." SHA-only tagging is the expected, intentional consequence,
+not a defect. **Not a bug — no fix needed.** (Source: `artifact_pipeline_observability_2026_07_17.md` Progress Log
+2026-07-24; the source doc itself flagged this correction as an owed follow-up to this issue doc.)
 
 ### #3 — cicd-events ledger carries no build_id (LOW confidence · minor)
 
@@ -142,8 +144,9 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
       than the originally-cited 2 line numbers: the same wrong bucket was duplicated 6 more times in launcher heredocs,
       not caught by the original finding. **Not verified by a real AWS tarball VM launch** — same AWS-deferred
       constraint as #4.
-- [ ] [DEVOPS] P3. **#1** — inspect a real `qg-passed` dispatch payload to confirm whether `version` is sent; decide if
-      SHA-only tagging is intentional before any fix. Coordinate with Ikenna/Harsh (CI area).
+- [x] ✅ [DEVOPS] P3. **#1** — RESOLVED 2026-07-24 (operator confirmed): the semver-agent is dead deliberately; SHA-only
+      tagging is the expected, intentional consequence, not a defect. No dispatch-payload inspection or fix needed.
+      Evidence: `artifact_pipeline_observability_2026_07_17.md` Progress Log 2026-07-24.
 - [ ] [DEVOPS] P3. **#3** — confirm whether the cicd-events ledger should carry `build_id`; low priority.
 
 ## Progress Log
@@ -191,3 +194,9 @@ items. Only change since the last marker was a `related:` path fixup (one archiv
 content/todo change — confirmed via `git show 50b8643dc`. Dated operator ruling ("Page-first, do NOT fix here",
 2026-07-21) still governs #4/#7 (AWS-lane, credit-gated); #1/#3 remain explicit judgment calls in a CI area under active
 named-owner coordination. No `assigned_vm` change.
+
+- **2026-08-08 (ui_satellite_ao_dispatch_batch1-002, slot 10)**: Applied confirmed-dead-semver-agent finding to `#1`
+  section and todo — root cause confirmed 2026-07-24 by operator: "the semver-agent that was supposed to write the
+  version is dead right now and we have kept it dead deliberately." SHA-only tagging is intentional, not a defect; `#1`
+  is not a bug. Closed `#1` todo `[x]`. Source: `artifact_pipeline_observability_2026_07_17.md` Progress Log 2026-07-24
+  (flagged as owed follow-up to this doc) + `/plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md` todo 2.

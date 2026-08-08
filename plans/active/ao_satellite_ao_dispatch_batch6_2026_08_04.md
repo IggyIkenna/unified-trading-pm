@@ -199,13 +199,14 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its 1st +
       3rd items, combined — the 3rd explicitly extends the 1st's guard). Repo: agent-orchestrator.
 
-- [ ] [SCRIPT] P1. **Fix `/done` so an empty `sha` does NOT mark a task `status=done`.** A release-not-complete signal
-      (`done_sha=""`) must return the task to `queued` (or be rejected outright), never record a terminal `done` with
-      empty evidence — this is the data-integrity defect that turned the 2026-07-31 boot-misroute incident from benign
-      into silent data loss, independent of the composer-routing fix above. Pair with the existing
-      `/api/backlog/{id}/reopen` correction path and the `no_plan_flip` hardening it already has. **See this plan's
-      file-adjacency rule #1 before starting.** **Done when**: a regression test asserts a `/done` call with an empty
-      `sha` never leaves the task `status=done`; full `agent-orchestrator` `quality-gates.sh` green. Source:
+- [x] [SCRIPT] P1. **Fix `/done` so an empty `sha` does NOT mark a task `status=done`.** ✅ agent-orchestrator@41da3e578
+      — added early 409 guard in `done_slot` + regression test `test_done_empty_sha_gate.py`; QG 2684 passed. A
+      release-not-complete signal (`done_sha=""`) must return the task to `queued` (or be rejected outright), never
+      record a terminal `done` with empty evidence — this is the data-integrity defect that turned the 2026-07-31
+      boot-misroute incident from benign into silent data loss, independent of the composer-routing fix above. Pair with
+      the existing `/api/backlog/{id}/reopen` correction path and the `no_plan_flip` hardening it already has. **See
+      this plan's file-adjacency rule #1 before starting.** **Done when**: a regression test asserts a `/done` call with
+      an empty `sha` never leaves the task `status=done`; full `agent-orchestrator` `quality-gates.sh` green. Source:
       `/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its 2nd item
       — independent of the composer-guard fix above per the doc's own text). Repo: agent-orchestrator.
 

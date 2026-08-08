@@ -32,7 +32,7 @@ priority: P0
 source:
   "Operator hypothesis follow-up, 2026-07-07 -- verified against the real GCS manifest via instruments-service/.venv +
   GCP ADC, not asserted from code reading alone"
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 execution_scope: local-only
@@ -291,17 +291,31 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       full onboarding is real feature work, properly scoped as its own follow-up:
       `issues/defi_plasma_chain_onboarding_gap_2026_07_26.md` (not attempted here — identity resolution was this todo's
       actual scope).
-- [ ] [CODE] P1. **PARTIALLY FIXED 2026-07-21 (Track 6, `defi_consolidated_closeout_2026_07_18.md`) — user-facing
-      symptom resolved via a deployment-api-local stopgap, UAC declaration still open.** `deployment-api@427ede5` adds a
-      supplemental whitelist (`_CEFI_DEFI_HYBRID_VENUE_CHAIN_PAIRS` in `defi.py`) admitting the exact confirmed
+- [ ] [SCRIPT] P1. **RECLASSIFIED 2026-08-08 — axis decision already ruled, only mechanical UAC registration remains.**
+      Original text (kept for context): "PARTIALLY FIXED 2026-07-21 (Track 6,
+      `defi_consolidated_closeout_2026_07_18.md`) — user-facing symptom resolved via a deployment-api-local stopgap, UAC
+      declaration still open." `deployment-api@427ede5` adds a supplemental whitelist
+      (`_CEFI_DEFI_HYBRID_VENUE_CHAIN_PAIRS` in `defi.py`) admitting the exact confirmed
       `(HYPERLIQUID, HYPERLIQUID)`/`(ASTER, BSC)` pairs so their real captured rows stop being dropped by
       `_filter_to_canonical_defi_venues` — NOT a double-counting risk (this whitelist only gates DEFI-category bucket
       reads; CEFI's own coverage numbers come from a completely separate CEFI-category read), matching the
       operator-confirmed hybrid architecture already on record (Update §3 below: CEFI holds instrument definitions, DEFI
-      holds chain-level settlement data — two distinct row sets). **Still open**: the durable fix — declaring
-      HYPERLIQUID/ASTER in UAC's own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — is out of scope for a
-      deployment-api/deployment-ui-only dispatch; this stopgap unblocks the dashboard today but the registry-level
-      declaration (and any UAC-side dual-counting axis decision it still needs) remains a real follow-up.
+      holds chain-level settlement data — two distinct row sets). **The "CEFI/DEFI dual-counting axis decision" this
+      todo names as a prerequisite is not actually undecided** — this todo's own prior text above already states the
+      whitelist is "NOT a double-counting risk," and the sibling doc
+      `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` records the operator ruling directly:
+      "Separately confirmed as NOT a bug: HYPERLIQUID and ASTER appear in DeFi's venue list too (operator-confirmed
+      intentional, 2026-07-07)... CEFI holds the instrument definitions... while DEFI holds the chain-level
+      classification/context... The `0/0` under DEFI isn't evidence of a bug on its own." That doc's own broader
+      Decision Gate D6 (generalizing `instrument_type` into a breakdown dimension everywhere) stays genuinely open, but
+      the narrow question this todo was blocked on — whether declaring HYPERLIQUID/ASTER into DEFI's registries risks
+      double-counting against CEFI — is already ruled: it does not, by design. Re-verified 2026-08-08: both venues are
+      still absent from `ALL_DEFI_VENUES` (`unified-api-contracts/unified_api_contracts/registry/defi_venues.py`, 0 grep
+      hits for `HYPERLIQUID`/`ASTER`) and from `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
+      (`unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py`, same 0 hits). **Remaining work
+      is now purely mechanical**: declare `(HYPERLIQUID, HYPERLIQUID)` and `(ASTER, BSC)` in `ALL_DEFI_VENUES`, and add
+      matching `DEFI_VENUE_DATA_TYPE_CAPABILITIES` entries, mirroring the confirmed real data types (`data_type`
+      observed in the GCS sweep above) — no further design decision needed first.
 - [x] [OPS] P1. **New 2026-07-10.** Restart/fix the `uts-prod-data-status-rollup` Cloud Run Job — Cloud Scheduler has
       been firing into `UNAVAILABLE` (gRPC code 14) since at least 2026-07-05T15:53Z (confirmed still broken 2026-07-10,
       blob age ~4.8 days at check time). The 2026-07-08 staleness-gate fix (3847d6f) means `/turbo` now degrades to
@@ -383,3 +397,12 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   since the 2026-08-04 audit (context-scout metadata only, per git log). Sole remaining todo (durable UAC registry
   declaration for HYPERLIQUID/ASTER) is still gated on the open CEFI/DEFI dual-counting axis decision in a still-open
   sibling doc. Doc stays `assigned_vm: NA`.
+- **2026-08-08**: prior audits (07-30/08-04/08-07) mischaracterized the residual as blocked on an open axis decision —
+  re-read of this todo's own text plus `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` shows the
+  narrow HYPERLIQUID/ASTER dual-counting question was already operator-ruled NOT a double-counting risk on 2026-07-07
+  (that doc's broader Decision Gate D6 stays open, but that's a separate, wider question this todo never actually
+  depended on). Re-verified live: `HYPERLIQUID`/`ASTER` still absent from both `ALL_DEFI_VENUES`
+  (`unified-api-contracts/unified_api_contracts/registry/defi_venues.py`) and `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
+  (`.../defi_venue_capabilities.py`) — 0 grep hits each. Reclassified the sole open todo `[CODE]` -> `[SCRIPT]` P1
+  (deterministic UAC registration, no remaining judgment call). Flipped `assigned_vm: NA` -> `assigned_vm: planning` —
+  this was the doc's only open todo.

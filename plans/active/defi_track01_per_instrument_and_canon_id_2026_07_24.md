@@ -448,10 +448,16 @@ instruments in one `instruments.parquet` with `available_from/to`).
       defi instrument_type case-insensitively; with the underlying data now PROVEN unanimous rather than merely
       tolerated, that comparison has nothing left to fold). (repos: market-tick-data-service, unified-trading-library —
       no code changes needed in either; the fix was verifying the premise, not writing a migration)
-- [ ] [DATA] P1. **perp_funding → `derivative_ticker`** as the canonical raw-funding home for ALL perps (drop the
+- [x] ✅ [DATA] P1. **perp_funding → `derivative_ticker`** as the canonical raw-funding home for ALL perps (drop the
       Drift-only 24h/7d/30d window aggregates). Ratify enum-member DeFi grains (`lst`/`staking`/`yield_bearing`) as
       canonical (case-fold only, already `InstrumentType` members). (repos: market-tick-data-service,
-      unified-api-contracts)
+      unified-api-contracts) **RATIFIED (operator, 2026-08-08)**: yes to both — `derivative_ticker` is the single
+      canonical raw-funding home for all DeFi perps, and `lst`/`staking`/`yield_bearing` are ratified canonical
+      `InstrumentType` grains. Filed the implementation as a new `[SCRIPT] P1` todo below.
+- [ ] [SCRIPT] P1. **Implement the derivative_ticker/InstrumentType ratification** (per the 2026-08-08 ruling above):
+      drop the Drift-only 24h/7d/30d window aggregates in favor of `derivative_ticker` as the sole raw-funding capture
+      path for all DeFi perps; confirm `lst`/`staking`/`yield_bearing` carry no remaining case-variant/alias drift
+      anywhere they're consumed (repos: market-tick-data-service, unified-api-contracts).
 - [x] ✅ [DECISION] P2. **Bare `SUSHISWAP`/`UNISWAP` version (199,397→206,107 rows, measured 2026-07-21) — decided +
       infra shipped `instruments-service@3ffd1adf`.** Operator ruling applied (see § "Operator decisions applied
       (2026-07-21..." above): derive per-pool from the deploying factory contract address, not "undecidable." Shipped: a
@@ -466,7 +472,7 @@ instruments in one `instruments.parquet` with `available_from/to`).
       versioned venue for Sushi-on-Arbitrum at all (cross-repo prerequisite). Full writeup + the two follow-up capture
       options: `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`. Follow-up capture work tracked as
       the new todo below (non-trivial residual, not silently dropped).
-- [ ] [DATA] P2. **NEW 2026-07-21 — actually start capturing factory addresses so the shipped resolver above has
+- [x] ✅ [DATA] P2. **NEW 2026-07-21 — actually start capturing factory addresses so the shipped resolver above has
       something to resolve** (today it resolves 0 of 206,107 bare SUSHISWAP/UNISWAP rows — see
       `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`). Two options, not yet decided between: (a)
       augment the 4 subgraph query cascades in `instruments-service`'s `uniswap_v3.py` to request a `factory` field —
@@ -476,7 +482,25 @@ instruments in one `instruments.parquet` with `available_from/to`).
       the missing `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` (or whichever the capture work resolves to) canonical
       venues in UAC `ALL_DEFI_VENUES` — currently only the bare `SUSHISWAP-ARBITRUM` is registered, so even a
       correctly-resolved factory address cannot be written back without this. (repos: instruments-service,
-      unified-api-contracts, market-tick-data-service)
+      unified-api-contracts, market-tick-data-service) **RULED (operator, 2026-08-08)**: option (b), on-chain RPC
+      `factory()` lookup — bounded, no live-schema-probe risk. Operator explicitly extended the scope beyond just
+      capturing factory addresses on the go-forward batch: **the 206,107-row historical residual must also be migrated**
+      — GCS object filenames/paths and manifest rows rewritten to the resolved canonical venue name + chain, with the
+      non-canonical bare `SUSHISWAP`/`UNISWAP` originals purged once the canonical twins are verified. This is the same
+      avoid-two-sources-of-truth standard as the sibling SUSHISWAP-alias ruling in
+      `defi_venue_lst_rates_residual_2026_07_24.md` — not a forward-only labeling fix.
+- [ ] [SCRIPT] P1. **Wire RPC `factory()` lookup for the 206,107 bare SUSHISWAP/UNISWAP rows, register the missing
+      Sushi-Arbitrum UAC venues, then migrate + purge the historical objects/manifest to canonical venue+chain naming**
+      (per the 2026-08-08 ruling above): (1) enumerate the unique `pool_address` set from the raw MTDS parquet for these
+      206,107 rows, (2) RPC `factory()` lookup per pool (needs an RPC provider — build the adapter scaffold now
+      regardless of provider-credential status per the External-Data-Always-Available rule), (3) resolve each pool to
+      its canonical venue via the already-shipped factory-address→version map (`_dex_factory_registry.py`), (4) register
+      `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` in UAC `ALL_DEFI_VENUES` (currently only bare `SUSHISWAP-ARBITRUM`
+      exists), (5) rewrite/migrate the historical GCS objects + manifest rows to the resolved canonical venue+chain
+      path, (6) purge the non-canonical originals once canonical twins are verified present — a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check qualifies this for agent-execution per
+      `gcs-and-manifest-delete-safety-protocol.md` §3a, same pattern as the sibling composite-venue-objects migration in
+      this epic. **No backfill needed** — rename/relabel of already-captured data.
 - [x] ✅ [DATA] P2. **RESOLVED 2026-07-24 (autonomous session, sub-agent investigation) — the "2,936 rows = cefi
       leakage" premise was WRONG for 99.998% of the population; genuine leakage is 4 rows, not 2,936, and needs a writer
       fix, not a manifest cleanup.** Fresh live count (24,209,852-row manifest): `HYPERLIQUID`=204,286, `KALSHI_PERP`=2,
@@ -826,17 +850,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                                                                                                                                                                                                                                                                                          ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                                                                                                                                                                                                                                                                                          `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                                                                                                                                                                                                                                                                                          manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                                                                                                                                                                                                                                                                                          rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                                                                                                                                                                                                                                                                                          the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                                                                                                                                                                                                                                                                                          docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                                                                                                                                                                                                                                                                                          the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                                                                                                                                                                                                                                                                                          supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                                                                                                                                                                                                                                                                                          `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                                                                                                                                                                                                                                                                                          (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                                                                                                                                                                                                                                                                                          unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                                                                                                                                                                                                                                                                                                  ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                                                                                                                                                                                                                                                                                                  `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                                                                                                                                                                                                                                                                                                  manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                                                                                                                                                                                                                                                                                                  rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                                                                                                                                                                                                                                                                                                  the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                                                                                                                                                                                                                                                                                                  docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                                                                                                                                                                                                                                                                                                  the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                                                                                                                                                                                                                                                                                                  supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                                                                                                                                                                                                                                                                                                  `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                                                                                                                                                                                                                                                                                                  (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                                                                                                                                                                                                                                                                                                  unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
@@ -875,6 +899,14 @@ instruments in one `instruments.parquet` with `available_from/to`).
 
 ## Progress Log
 
+- **na-corpus-digest-closeout 2026-08-08**: operator ruled two of the 8 genuine judgment items interactively — (1)
+  factory-address capture: option (b), RPC `factory()` lookup, AND the 206,107-row historical residual must be migrated
+  (GCS objects + manifest rewritten to canonical venue+chain, non-canonical originals purged) not just fixed going
+  forward — filed as a new `[SCRIPT] P1` todo; (2) perp_funding→derivative_ticker canonical-home +
+  lst/staking/yield_bearing InstrumentType ratification: yes to both — filed as a new `[SCRIPT] P1` todo. Doc stays
+  `assigned_vm: NA` — 6 of the 8 originally-listed judgment/operator-gated items remain open (physical zero-row-marker
+  design decision, R3 full-corpus migration gating, Track 8 cron-resume, etc.), so this ruling narrows but does not
+  clear the NA gate.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA, stale item closed — re-read end to end (9 open items at
   entry, grep-verified). 8/9 remain genuine judgment/operator-gated work (factory-address Option A/B, perp_funding
   canonical-home ratification, physical zero-row-marker design decision, R3 full-corpus migration gating Half-B + Track
