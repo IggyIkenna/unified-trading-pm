@@ -103,8 +103,13 @@ if [[ ! -d .git ]]; then
 fi
 
 for f in "${FILES[@]}"; do
-  if [[ ! -e "$f" ]]; then
-    echo "Refusing: named path does not exist: $f" >&2
+  # A path absent from disk is still valid to name if it's tracked at HEAD (e.g. the
+  # SOURCE half of a `git mv` rename, or a plain `git rm` deletion) -- only reject a path
+  # that is neither on disk nor known to git at all. Bug fixed 2026-08-06 (see the
+  # NAMED_REMOVALS block below): this check used to reject a rename's source path outright,
+  # so a caller couldn't even name both halves to protect them.
+  if [[ ! -e "$f" ]] && ! git cat-file -e "HEAD:$f" 2>/dev/null; then
+    echo "Refusing: named path does not exist and is not tracked at HEAD: $f" >&2
     exit 2
   fi
 done
@@ -117,6 +122,34 @@ is_named() {
   done
   return 1
 }
+
+# NAMED_REMOVALS -- captured ONCE, up front, before any reconcile can touch the index.
+#
+# Bug fixed 2026-08-06 (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_
+# 2026_08_01.md / git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md):
+# `git diff --cached --name-only` reports only a rename's DESTINATION -- the source's
+# implicit deletion is folded into the R-status pair, not listed as its own path. That
+# source is usually the one thing a caller CANNOT name in --files (it no longer exists on
+# disk). `autostash_rebase_reconcile`'s retry path ends with an unconditional
+# `git restore --staged .` -- the line that makes the autostash-pop safe for ordinary edits
+# -- which also unstages that implicit deletion. The next `git add -- "${FILES[@]}"` only
+# re-adds the destination, so the commit ships the new file WITHOUT the deletion, leaving
+# the doc at BOTH paths (reproduced live during the 2026-08-06 mandated-flow archival run).
+#
+# Fix: snapshot every rename pair whose destination is a named file, before the retry
+# loop's first reconcile can lose it, then re-assert the source's deletion after every
+# re-add (see "re-assert NAMED_REMOVALS" below). Captured once, immutably -- a later
+# attempt's own reconcile could otherwise corrupt the very state we'd need to recover it
+# from, so this must read the ORIGINAL staged state the caller set up (e.g. via `git mv`).
+NAMED_REMOVALS="$(
+  git diff --cached --name-status -M 2>/dev/null | while IFS=$'\t' read -r status src dst; do
+    case "$status" in
+      R*)
+        [[ -n "$dst" ]] && is_named "$dst" && echo "$src"
+        ;;
+    esac
+  done
+)"
 
 # Pre-commit hooks whose failure is a genuine RACE against a concurrent slot -- the retry
 # loop's own fetch+pull clears them, so retrying is correct. Everything else is a
@@ -258,6 +291,21 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
     git add -- "${FILES[@]}"
     unstage_foreign_paths
+
+    # re-assert NAMED_REMOVALS -- runs AFTER unstage_foreign_paths so a re-staged rename
+    # source isn't immediately swept back out as "foreign" (it's not in FILES by
+    # construction -- see the NAMED_REMOVALS comment above). Only acts when the path is
+    # genuinely still missing from disk; a reconcile that legitimately restored it is left
+    # alone.
+    if [[ -n "$NAMED_REMOVALS" ]]; then
+      while IFS= read -r rp; do
+        [[ -z "$rp" ]] && continue
+        if [[ ! -e "$rp" ]]; then
+          echo "  -> re-asserting a staged deletion the reconcile dropped (rename source): $rp"
+          git add -- "$rp" 2>/dev/null || true
+        fi
+      done <<<"$NAMED_REMOVALS"
+    fi
 
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
