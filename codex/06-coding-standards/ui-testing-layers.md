@@ -845,6 +845,45 @@ and reviewers MUST enforce this — it is equivalent in weight to the `docs(plan
 
 ---
 
+## agent-orchestrator e2e: background-poller vs. fixture-data interaction
+
+The agent-orchestrator e2e backend spawns background pollers at boot. **`DeepSeekUsagePoller`** waits
+`min(interval_seconds, 30)` = 30 s before its first tick, then unconditionally overwrites the ENTIRE
+`AccountUsageRow.deepseek_usage_json` blob via `_sweep_account`. A spec that hand-seeds that blob and asserts its values
+is not racing the poller — it is on a 30 s detonation timer: the test passes if it finishes within the startup window,
+fails deterministically after.
+
+Two distinct failure patterns arise from AO's e2e backend; they have different causes and different correct fixes:
+
+| Pattern                                                                                          | Root cause                                                                                                                                                       | Correct fix                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Spec hand-seeds `AccountUsageRow.deepseek_usage_json` and asserts fixed per-turn/per-task values | `DeepSeekUsagePoller._sweep_account` unconditionally overwrites the entire blob on every tick (after a 30 s startup delay); the seeded values are gone, not late | Disable the poller via an env var gate in `run-e2e-backend.sh` (checked in `server.py` before constructing `DeepSeekUsagePoller`) — assertion-timeout increases CANNOT help because the value is genuinely wrong post-overwrite, not merely late |
+| Spec asserts panel data that arrives asynchronously from a backend API call                      | API response has not arrived within Playwright's default 5 s assertion timeout; no poller involved                                                               | Add `{ timeout: 10_000 }` to the **first** data assertion only, per the cold-start convention in `critical-health.spec.ts`                                                                                                                       |
+
+**Never apply an assertion-timeout increase to a poller-overwrite fixture race.** A longer timeout only makes the test
+reliably observe the wrong (post-overwrite) value. The `{ timeout: N }` pattern applies only when the value is correct
+but late (async fetch); when the value is wrong (overwritten), the poller must be disabled for the e2e run.
+
+Confirmed blast radius (all 7 columns) for `deepseek-per-turn-metrics.spec.ts`'s second test — after a
+`DeepSeekUsagePoller` tick on an e2e backend that has the "E2E-DONE" `TaskUsageRow` (`account_id=deepseek-v4-pro-demo`,
+`turn_count=9`, `task_count=1`) but zero `DeepSeekMessageUsageRow` rows for that account:
+
+| Column                           | Seeded  | After tick | Computed from                                     |
+| -------------------------------- | ------- | ---------- | ------------------------------------------------- |
+| `avg_turns_per_task`             | 25.0    | 9.0        | E2E-DONE: 9 turns / 1 task                        |
+| `avg_context_tokens_per_task`    | 67.0 K  | 361.5 K    | E2E-DONE: (12 000+1 500+340 000+8 000)/1 task     |
+| `input_tokens_per_turn`          | 1.2 K   | "—"        | 0 `DeepSeekMessageUsageRow` → turn_count=0 → None |
+| `cache_creation_tokens_per_turn` | 300     | "—"        | same                                              |
+| `cache_read_tokens_per_turn`     | 45.0 K  | "—"        | same                                              |
+| `output_tokens_per_turn`         | 890     | "—"        | same                                              |
+| `spend_per_turn`                 | $0.0123 | "—"        | same                                              |
+
+Fix direction decided (operator-authorized, source:
+`/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` todo 2 ✅): disable
+`DeepSeekUsagePoller` in the e2e backend. Implementation tracked in that doc's todo 3.
+
+---
+
 ## References
 
 - **Backend SSOT (mirror target):** [`06-coding-standards/integration-testing-layers.md`](integration-testing-layers.md)

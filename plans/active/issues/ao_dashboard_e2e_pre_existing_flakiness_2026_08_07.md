@@ -132,25 +132,45 @@ shipped independently or these findings would still be sitting entirely undocume
   Re-verified the whole-doc bar first: all 4 open todos read as bounded diagnostics with a stated hypothesis + a known
   fix pattern to apply if confirmed (todo 1's async-poller-vs-test-timeout race check names the exact convention to
   reuse from `critical-health.spec.ts`), so this doc would otherwise clear Step 1. Ran the shared conflict-check
-  protocol (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) and found a real
-  CONFLICT on todo 1: `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`
-  already root-caused `deepseek-per-turn-metrics.spec.ts`'s failure to a MORE SPECIFIC, confirmed mechanism —
+  protocol (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) and found a real CONFLICT
+  on todo 1: `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` already
+  root-caused `deepseek-per-turn-metrics.spec.ts`'s failure to a MORE SPECIFIC, confirmed mechanism —
   `DeepSeekUsagePoller`'s `_sweep_account` unconditionally overwrites the spec's hand-seeded fixture blob on every live
-  tick, not a race — and that doc's own 2026-08-07 na-eligibility-audit pass already verdicted KEEP-NA because its
-  todo 2 is explicitly "(operator call, not unilateral)" between 3 named fix directions. Todo 1 here bundles
+  tick, not a race — and that doc's own 2026-08-07 na-eligibility-audit pass already verdicted KEEP-NA because its todo
+  2 is explicitly "(operator call, not unilateral)" between 3 named fix directions. Todo 1 here bundles
   `deepseek-per-turn-metrics.spec.ts` together with `deepseek-wallet-reconciliation.spec.ts` as ONE dispatchable line,
   so the whole todo is compromised, not just the per-turn-metrics half — and per this task's own protocol, a
-  verbatim/near-verbatim duplicate claim blocks the flip rather than being silently resolved by picking a side.
-  **Not fixed by simply re-pointing todo 1 at the sibling doc**: this doc's hypothesis (an async-poller/test-timeout
-  race, fixable by a wait-for-tick or longer assertion timeout) is actually superseded by the sibling doc's finding —
-  the real mechanism is a deterministic overwrite on every tick, not a race, and the right fix is one of 3 named
-  options requiring an operator call, not a mechanical timeout bump. Dispatching todo 1 as written would send a worker
-  down an already-disproven path and/or have it re-discover the sibling doc's own operator-gated fork mid-task.
+  verbatim/near-verbatim duplicate claim blocks the flip rather than being silently resolved by picking a side. **Not
+  fixed by simply re-pointing todo 1 at the sibling doc**: this doc's hypothesis (an async-poller/test-timeout race,
+  fixable by a wait-for-tick or longer assertion timeout) is actually superseded by the sibling doc's finding — the real
+  mechanism is a deterministic overwrite on every tick, not a race, and the right fix is one of 3 named options
+  requiring an operator call, not a mechanical timeout bump. Dispatching todo 1 as written would send a worker down an
+  already-disproven path and/or have it re-discover the sibling doc's own operator-gated fork mid-task.
   **Recommendation, not executed here** (restructuring this doc is outside this pass's mandate): split todo 1 out of
   this doc — fold the `deepseek-per-turn-metrics.spec.ts` sub-claim into
   `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` (where the real root-cause context already
   lives) and re-scope todo 1 here to `deepseek-wallet-reconciliation.spec.ts` only, which has no known conflict and
   would likely clear on its own. Todos 2-4 (worker-chat, backlog-collision, the doc-update note) showed no conflict on
-  the same 3-surface check and would also likely clear independently, but this doc's `assigned_vm` cannot be flipped
-  as a single unit while todo 1 stays conflicted. Left `assigned_vm: NA`. Cross-linked both directions with the
-  conflicting doc (`related`/`context_scope` above) so a future worker on either doc sees the other.
+  the same 3-surface check and would also likely clear independently, but this doc's `assigned_vm` cannot be flipped as
+  a single unit while todo 1 stays conflicted. Left `assigned_vm: NA`. Cross-linked both directions with the conflicting
+  doc (`related`/`context_scope` above) so a future worker on either doc sees the other.
+- **ao_satellite_ao_dispatch_batch8-001 2026-08-08**: Root-cause verdicts written for both specs.
+  **`deepseek-per-turn-metrics.spec.ts`**: CONFIRMED same root cause as the sibling doc's already-confirmed mechanism —
+  `DeepSeekUsagePoller._sweep_account` unconditionally overwrites the hand-seeded `AccountUsageRow.deepseek_usage_json`
+  blob on every tick after a 30 s startup delay. This is NOT a timing race — the values are genuinely wrong after the
+  overwrite, not merely late. All 7 Accounts-panel columns are affected (blast-radius table recorded in
+  `/codex/06-coding-standards/ui-testing-layers.md` § "agent-orchestrator e2e: background-poller vs. fixture-data
+  interaction" and in the sibling doc's Progress Log). Hard stop applied — no non-disabling mitigation can restore
+  hand-seeded values after overwrite; fix direction already decided (sibling doc todo 2 ✅: disable poller in e2e
+  backend); implementation pending (sibling doc todo 3, operator-authorized but not yet done).
+  **`deepseek-wallet-reconciliation.spec.ts`**: CONFIRMED different root cause — async panel-data-fetch timing. This
+  spec reads from `seed_e2e_state.py`-seeded `deepseek_message_usage` + top-up rows directly (not from any poller
+  sweep); the `DeepSeekBalancePoller` skips accounts without `oauth_token_env_file` (not set in e2e backend's
+  `backends.e2e.json`), so no poller is involved. Root cause: the wallet panel's data arrives asynchronously from the
+  API and Playwright's default 5 s assertion timeout occasionally fires before the first render. Fix:
+  `{ timeout: 10_000 }` on the first data assertion, per the cold-start convention in `critical-health.spec.ts`. **Fix
+  landed**: `agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts` line 38 updated. 10x
+  stability loop NOT run — `dashboard/node_modules` absent in this environment (Playwright not installed);
+  `quality-gates.sh` skips dashboard checks when node_modules is absent and still passes. Fix is reasoned-correct by the
+  root cause + follows the established convention; a slot with `npm install` should run the 10x loop before ticking this
+  doc's todo 1 ✅.

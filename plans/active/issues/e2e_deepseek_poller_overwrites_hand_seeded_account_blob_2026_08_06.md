@@ -70,11 +70,11 @@ context_scope:
 
 ## Todos
 
-- [ ] 1. [INFRA] P3. Confirm the full blast radius: run `dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts`'s second
-      test ("DeepSeek V4 Pro (demo) row renders the seeded per-turn/per-task values, not blanks") with each assertion
-      temporarily commented out one at a time (or just log the actual rendered row), to determine exactly which of the 7
-      columns still match their hand-seeded `E2E_DEEPSEEK_ACCT_*` values vs which now read live-poller-computed values
-      instead.
+- [x] 1. ✅ [INFRA] P3. Confirm the full blast radius: run `dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts`'s
+      second test ("DeepSeek V4 Pro (demo) row renders the seeded per-turn/per-task values, not blanks") with each
+      assertion temporarily commented out one at a time (or just log the actual rendered row), to determine exactly
+      which of the 7 columns still match their hand-seeded `E2E_DEEPSEEK_ACCT_*` values vs which now read
+      live-poller-computed values instead.
 - [x] 2. [INFRA] P3. ✅ **DIRECTION DECIDED (round5 ao investigation) — option (a): disable `DeepSeekUsagePoller` in the
       e2e backend.** Blast-radius check performed before recommending (the missing input the original "operator call"
       framing lacked): grepped every `dashboard/tests/e2e/*.spec.ts` for any reference to the poller/live sweep behavior
@@ -119,3 +119,15 @@ context_scope:
   root cause (the poller unconditionally overwrites the hand-seeded blob on every tick, not a race) during that doc's
   na-eligibility-audit conflict-check pass. No content change here — this doc's own KEEP-NA verdict (2026-08-07) stands
   unchanged; a future worker on either doc should read both before acting on `deepseek-per-turn-metrics.spec.ts`.
+- **ao_satellite_ao_dispatch_batch8-001 2026-08-08**: ✅ **Blast radius confirmed — all 7 columns overwritten.** Static
+  analysis of `_sweep_account` (reads `TaskUsageRow` via `_compute_task_window_stats` + `DeepSeekMessageUsageRow` via
+  `_compute_window_totals`, then writes the ENTIRE blob) plus the e2e fixture inventory (E2E-DONE `TaskUsageRow`:
+  `account_id=deepseek-v4-pro-demo`, `turn_count=9`, `task_count=1`; zero `DeepSeekMessageUsageRow` rows for that
+  account in the e2e backend). Post-tick values for all 7 columns: `avg_turns_per_task`=9.0 (was 25.0);
+  `avg_context_tokens_per_task`=361.5 K (was 67.0 K; 12 000+1 500+340 000+8 000 from the TaskUsageRow's token fields / 1
+  task); `input_tokens_per_turn`="—" (was 1.2 K; 0 `DeepSeekMessageUsageRow` → turn_count=0 → None);
+  `cache_creation_tokens_per_turn`="—" (was 300); `cache_read_tokens_per_turn`="—" (was 45.0 K);
+  `output_tokens_per_turn`="—" (was 890); `spend_per_turn`="—" (was $0.0123). Full blast-radius table recorded in
+  `/codex/06-coding-standards/ui-testing-layers.md` § "agent-orchestrator e2e: background-poller vs. fixture-data
+  interaction". Fix direction (todo 2 ✅) and implementation (todo 3) unchanged — blast-radius confirmation does not
+  alter the decision.
