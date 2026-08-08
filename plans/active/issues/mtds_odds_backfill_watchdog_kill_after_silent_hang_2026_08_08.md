@@ -221,3 +221,14 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   actionable — treat it as expected, self-recovering background noise (consistent with the 14-24+ retry range now
   observed at chunk 18 across two separate VMs). Only intervene on the confirmed silent-hang signature: heartbeat/log
   activity genuinely stops (no restart, no error line) for >10-15 min while the VM is still RUNNING.
+
+- **2026-08-08T16:40Z — unrelated but adjacent mistake caught on `smallchunk7`: wrong chunk size, not a hang.** The
+  relaunch that created `smallchunk7` (previous entry) omitted `--chunk-size`/`CHUNK_SIZE`, so the launcher silently
+  used its default (250 days) instead of the 5-day convention every prior `smallchunk*` VM used. Result:
+  `CHUNK_FAILED chunk=1/10 range=2020-06-06→2021-02-10 exit=137 reason=OOM_KILLED` on its very first attempt, repeated
+  5x in ~20min — a 250-day span OOMs almost immediately, unlike the 5-day chunks which get well into double-digit chunk
+  counts before needing retries. Not a new instance of this doc's tracked bug (no silent hang occurred — logs stayed
+  active with explicit `CHUNK_FAILED` lines throughout). Fixed by confirming `CHUNK_SIZE=5` against
+  `smallchunk5`/`smallchunk6`'s `LAUNCH_PARAMS.json` and relaunching as `mtds-backfill-odds-smallchunk8` with it
+  explicit. Noted here since it could otherwise be mistaken for a worsening of the hang pattern by a future reader
+  diffing chunk-progress speed.

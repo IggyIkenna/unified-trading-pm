@@ -874,3 +874,17 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   — will check once past the chunk-18 OOM-retry stretch, expect ~30-90min per the smallchunk5/6 precedent, NOT
   actionable unless it goes fully silent). FIXTURE_LINEUPS still actively progressing at `16:08Z` (new fixture ID range
   599xxx/595xxx). Both healthy.
+- **2026-08-08T16:40Z — SECOND self-correction: `smallchunk7` was misconfigured, killed + fixed.** Found
+  `CHUNK_FAILED chunk=1/10 ... range=2020-06-06→2021-02-10 exit=137 reason=OOM_KILLED` — a **250-day** chunk span,
+  OOM-killing immediately on its first attempt (5 failures in ~20 min, chunk 1 of only 10 total). Root cause: my
+  relaunch omitted `--chunk-size`, silently defaulting to the launcher's `CHUNK_SIZE=250` instead of the established
+  5-day "smallchunk" convention. Confirmed the correct value via `smallchunk5`/`smallchunk6`'s own `LAUNCH_PARAMS.json`
+  (`"CHUNK_SIZE": "5"`) before fixing. Killed the misconfigured VM, relaunched correctly as
+  **`mtds-backfill-odds-smallchunk8`** with `CHUNK_SIZE=5` explicit (launcher output confirmed
+  `Chunk: 5 days per batch`, RUNNING, all 4 tarballs fresh). Two config mistakes in two consecutive relaunches this tick
+  — going forward, **always verify a relaunch's actual chunk-size/config against a known-good prior instance's
+  `LAUNCH_PARAMS.json` before trusting launcher defaults**, not just VM RUNNING status.
+- **2026-08-08T16:43Z — FIXTURE_LINEUPS first real re-census (rule 4a).** Needed dropped **58,523 → 56,779** (genuine
+  ~1,744-shard net progress in ~1h27m since launch), despite the denominator itself growing (other campaigns capturing
+  more schedule shards concurrently, per the doc's own dynamic denominator formula). FIXTURE_STATS residual unchanged at
+  116 (correctly stable, no active backfill targeting it now). Confirmed genuine forward convergence, not a fluke.
