@@ -62,12 +62,18 @@ skill's no-double-gate mechanism).
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `issues/docs_reconcile_autonomous_sweep_2026_07_30.md`'s P2-E todo.** Once batch6's
+- [x] ✅ [REVIEW] P2. **Reconcile `issues/docs_reconcile_autonomous_sweep_2026_07_30.md`'s P2-E todo.** Once batch6's
       bare-name-wording todo ships, flip that source doc's
       `- [ ] [DOC] P2. Retire the 5 bare-name unified-trading-codex mentions (P2-E)` checkbox to `[x]`, citing the
       batch6 commit SHA, and note that the doc's own P2-E section text (which already narrowed this to 2 genuinely-
       stale mentions) is now resolved. Do NOT touch any other section of this doc (P0-A, P1-C, P1-D remain open,
       operator/judgment-gated — this doc stays `assigned_vm: NA`, NOT an archival candidate). (repo: unified-trading-pm)
+      — **VERIFIED 2026-08-08**: source doc's P2-E checkbox was already `[x]` before batch6 dispatched — flipped by the
+      docs-reconcile 2026-08-03 sweep (`unified-trading-pm@2ae6762fc`) which fixed `act-secrets-setup.mdc:14` +
+      `test-coverage-targets.mdc:80` (the 2 genuinely-stale mentions) and flipped the checkbox in-sweep. Batch6's own
+      todo 1 acknowledged "RESOLVED independently 2026-08-03, before this batch was ever dispatched." Source doc
+      confirmed NOT an archival candidate: 1 open todo remains (P1-C `sync-system.mdc` — human decision on DO: line, no
+      successor script). No other section touched.
 - [ ] [REVIEW] P3. **Reconcile `issues/host_root_disk_full_transient_2026_07_13.md`'s `[INFRA] P2` todo.** Once batch6's
       hardlink-investigation todo ships (with its dated finding + fixable/not-fixable verdict recorded in that doc),
       update the source doc's own `[INFRA] P2` todo to reflect the investigation is done: if the finding is NOT-FIXABLE
