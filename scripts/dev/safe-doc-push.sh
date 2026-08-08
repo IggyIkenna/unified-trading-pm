@@ -48,6 +48,13 @@
 #   branch defaults to live-defi-rollout. Message becomes the full commit message.
 #   Files must already be edited on disk (dirty working tree) before calling this --
 #   same convention as `quickmerge.sh "msg" --agent --files '<paths>'`.
+#   RENAME/ARCHIVAL (`git mv old new`): name BOTH the old and new paths in --files.
+#   The old path is expected to be ABSENT from disk (that's what `git mv` does) --
+#   the pre-flight check below accepts a missing path as long as git still knows
+#   about it (tracked at HEAD or in the index), specifically so a rename's deletion
+#   half survives any mid-run reconcile. Naming only the destination silently drops
+#   the deletion on the retry path -- see the 2026-08-06 corruption this fixes,
+#   multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md.
 #
 # SCOPE: pure documentation/plan changes ONLY. check_strict_quickmerge.py already exempts
 # docs(plans): commits from the Quickmerge: trailer requirement (the "prek only" carve-out
@@ -102,9 +109,22 @@ if [[ ! -d .git ]]; then
   exit 2
 fi
 
+# path_known_to_git <path> -- true if git already knows about this path
+# (tracked at HEAD, or still sitting in the index) even though it is
+# currently missing from the working tree. This is exactly the state of a
+# rename's SOURCE right after `git mv old new`: `-e old` is false, but the
+# caller must still be able to name it so its deletion survives a mid-run
+# reconcile (see the USAGE note above for why).
+path_known_to_git() {
+  local f="$1"
+  git cat-file -e "HEAD:$f" 2>/dev/null && return 0
+  git ls-files --error-unmatch -- "$f" >/dev/null 2>&1 && return 0
+  return 1
+}
+
 for f in "${FILES[@]}"; do
-  if [[ ! -e "$f" ]]; then
-    echo "Refusing: named path does not exist: $f" >&2
+  if [[ ! -e "$f" ]] && ! path_known_to_git "$f"; then
+    echo "Refusing: named path does not exist and git has no record of it: $f" >&2
     exit 2
   fi
 done
