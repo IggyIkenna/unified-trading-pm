@@ -63,13 +63,15 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify every batch-7 done-claim against reality, not against its checkbox** — for each of the 3
+- [x] [REVIEW] P0. **Re-verify every batch-7 done-claim against reality, not against its checkbox** — for each of the 3
       todos in `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, re-run `git show --stat <sha>` for every
       cited commit and re-run the specific named test(s)/verdict directly rather than trusting the claim (todo 1's
       done-when is a written verdict + evidence, not a commit — check the source doc's Progress Log entry exists and the
       raw per-task metrics are actually present, not just asserted). **Done when**: all 3 verified, and any claim whose
       evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy
-      stated.
+      stated. ✅ VERIFIED — all 3 batch-7 done-claims re-checked against reality (commits confirmed on origin, diffs
+      match claims, named regression tests re-run directly and pass); no discrepancies found. See Progress Log for
+      per-todo evidence.
 - [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       7 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of:
@@ -119,3 +121,32 @@ source: >-
   the skill's 2026-07-30 finding (`gate_on_depends` already holds every task; no separate draft-gate needed).
 - **context-scout 2026-08-07**: re-verified context_scope (5 entries) — all paths resolve, matches the established
   finalize-doc pattern (parent batch + the 4 archival-ritual codex SSOTs); genuine `*_finalize` gate, no source path.
+- **2026-08-08 (slot 3, `review`, dispatch `ao_satellite_ao_dispatch_batch7_finalize-001`)**: Executed todo 1 —
+  re-verified all 3 batch-7 done-claims against reality, not against their checkboxes:
+  - **Todo 1** (worker.md/SUB_AGENT_MANDATORY_RULES.md batching worked-example, claimed `unified-trading-pm@a20e52125`):
+    commit exists, confirmed ancestor of `origin/live-defi-rollout`. Diff matches the claim exactly (22 lines added to
+    `agents/worker.md` STEP 1 + 4 lines to `SUB_AGENT_MANDATORY_RULES.md`) — this is the identical text already read
+    live in this session's own STEP 1 boot sequence. Cross-checked the claimed source: source doc
+    `/plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s Progress Log carries the
+    raw per-task table (12 tasks, 4 provider/model buckets, per-bucket % single/multi-tool-turn + gap<5s columns) —
+    genuine measured data, not just an asserted verdict. Both source-doc items 1-2 already `[x]`.
+  - **Todo 2** (`spawn_retry_count` reset, claimed `agent-orchestrator@bc37d03`): commit exists, ancestor of origin.
+    Diff confirms `slot.spawn_retry_count = 0` added to the shared spawn-success path in `server/autospawn.py`, and the
+    misleading "stays down until manual respawn" text in `server/worker_liveness/_auth_failover.py` replaced with
+    accurate Trigger-3 auto-recovery language. Re-ran the named regression test directly:
+    `tests/test_autospawn.py::test_do_spawn_resets_spawn_retry_count` — **PASSED**.
+  - **Todo 3** (`_tick_once()` reorder + docstring/alert-text fix, claimed `agent-orchestrator@bc37d03` +
+    `agent-orchestrator@53492cb`): both commits exist, both ancestors of origin. `bc37d03`'s diff confirms the
+    daily-kill-cap early-return moved to sit only ahead of the `active_slots` reap loop (after orphan-session reclaim +
+    the 5 reclaim/reconcile calls), the stale "default 20" docstring corrected to "default 50" (2 locations), and an
+    inline comment documenting the kept-vs-gated rationale. `53492cb`'s diff confirms `notify_watchdog_kill`'s cap-hit
+    alert text reworded to disclose "The WorkerLivenessWatchdog's 5 kill triggers are dormant" (matching
+    `notify_watchdog_dormant`'s existing phrasing) and adds the specific named regression test. Re-ran it directly:
+    `tests/test_worker_liveness_watchdog.py::test_tick_daily_cap_still_runs_orphan_session_reclaim` — **PASSED**.
+
+  **Verdict: all 3 claims hold up under direct re-verification — no discrepancies, nothing re-opened.** Fleet git-status
+  sweep of this slot's other repos (unified-api-contracts, agent-orchestrator, execution-service, strategy-service) also
+  confirmed clean/ahead=0/behind=0 — the several queued "GIT STATUS RED"/urgent-fix nudges surfaced at this session's
+  boot were all already resolved by earlier turns of this same session (the strategy-service `FILL_COMPLETED` qty/price
+  key fix, `strategy-service@4b3f5b0c`, was independently confirmed already shipped and on origin before this todo
+  started).
