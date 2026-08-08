@@ -324,7 +324,7 @@ achieved by exclusion, not canonicalisation.**
       **DONE 2026-08-08 (slot 11, data_engineering)**: added "Reaffirmed against the P4 derived-layer backfill" section
       — confirms no change to the floor date/window, states explicitly the floor governs both P4's backfill start-date
       and the C3 corpus disposition (delete per the standing wipe ruling, not reopened as a 2018-extension choice).
-      unified-trading-pm@\<pending\>
+      unified-trading-pm@6030eb32a
 
 ### Added 2026-08-08 (operator, mid-flight) — collapse the remaining derived data_types onto `odds` + axes
 
