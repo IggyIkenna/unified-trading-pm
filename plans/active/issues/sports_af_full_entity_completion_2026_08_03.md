@@ -982,3 +982,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   chunk 17/451 (`2020-08-25`), zero OOMs — approaching chunk 18 (the known season-opener week); expect some OOMs to
   resume there but a shorter pass than the original 3h38m since ~14/30 leagues are already durably captured. Full
   detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`0428a48f99`.
+- **2026-08-08T04:38Z** — FIXTURE_STATS +47 days (`last_completed_date=2023-10-20`, fresh `04:37:30Z`). smallchunk3 now
+  in chunk 18, 4 leagues attempted, zero OOMs so far — confirms the skip-fast hypothesis. Full detail:
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`8c7d3249ac`.
