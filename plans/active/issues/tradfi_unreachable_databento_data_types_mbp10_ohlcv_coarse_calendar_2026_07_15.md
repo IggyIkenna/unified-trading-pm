@@ -357,44 +357,12 @@ these 5 cells.
 
 ## Resolution — mbp_10 (2026-07-15)
 
-Fixed the mechanical adapter-wiring gap exactly as recommended: `market-tick-data-service@e2018167` adds `"mbp_10"` to
-`_DATABENTO_SUPPORTED_DATA_TYPES` (`umi_tick_provider.py:143`).
-
-**Fetch path verified genuinely end-to-end before shipping** (not just the schema-map line cited in the original
-diagnosis) — read `databento_fetch.py` in full: `_resolve_databento_schema` maps `mbp_10` → `db.Schema.MBP_10` AND calls
-UAC's `assert_schema_allowed("mbp_10")`, which passes (`mbp-10` is in `ALLOWED_DATABENTO_SCHEMAS`, billing level L2, not
-in the banned-OHLCV set). Downstream, `_fetch_timeseries_range` calls
-`assert_databento_request_allowed(dataset, schema, start)` — dataset `GLBX.MDP3` (CME) is in
-`ALLOWED_DATABENTO_DATASETS`, and the L2 30-day free-lookback window is enforced (`LEVEL_MAX_LOOKBACK_DAYS["L2"] = 30`).
-So a real, correctly-billing-gated Databento request now flows for any `mbp_10` request that reaches `_route_databento`
-— no further gap in the fetch mechanics themselves.
-
-**Important scope caveat found during this pass (not identified in the original diagnosis) — my fix alone does NOT yet
-cause CME `mbp_10` capture to start flowing in production.** `venue_fetch.py`'s per-shard dispatch (lines ~444-459)
-intersects EVERY `data_types` request — both the default path and any explicit `--data-types` CLI override — against
-`get_expected_data_types_for_venue("CME")` (UAC, backed by `VENUE_DATA_TYPE_CAPABILITIES`) BEFORE it ever reaches
-`fetch_tick_data_for_venue`/`_route_databento`. As of this fix, `VENUE_DATA_TYPE_CAPABILITIES["CME"]` in UAC's
-`market_data_categories.py` only declares `{"ohlcv_1s", "ohlcv_1m"}` — the 2026-05-15 "OHLCV-only MVP" operator scope
-(`tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`). `trades`/`tbbo`/`mbp_10` were deliberately deferred to a named
-successor plan, `plans/archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md` — archived
-`status: complete`, but its own body shows Phases 1-2 (the actual `VENUE_DATA_TYPE_CAPABILITIES` re-merge) marked
-`[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]` and migrated to the `tradfi_master` epic, gated on an operator Databento
-PAYG-spend sign-off (its own Phase 8) — i.e. the registry-level restoration was never actually re-applied to UAC. One
-sub-item of that same plan (Phase 6 P1, "Add `mbp_10` to MTDS DatabentoAdapter supported schemas") carries real evidence
-(`uac@9f8373f + mtds@020442b`) but only the lower `_resolve_databento_schema` mapping shipped then — the
-`umi_tick_provider.py` pre-flight allowlist this issue's finding (1) named was never actually fixed until today, despite
-that plan's checkbox reading ✅. **So**: this fix completes the adapter-layer half of that stalled 2026-06 restoration
-and is correct/necessary regardless of what happens next, but a live default or explicit-`--data-types` MTDS
-orchestrator run for CME will still filter `mbp_10` out at the UAC-intersection step in `venue_fetch.py` until
-`VENUE_DATA_TYPE_CAPABILITIES["CME"]` is separately restored — that registry change is UAC-repo, operator-PAYG-gated,
-and out of this task's scope (touch only `market-tick-data-service` per this issue's brief). **Flagging for whoever
-picks up `tradfi_master`'s post-cutover residual**: re-running `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`
-Phases 1-2 against current UAC would fully close the loop this fix opened.
-
-This also means the historical 1186/1186 100% `attempted_failed` `mbp_10` manifest rows the alert batch surfaced are
-most likely a fixed historical count (residue from before the 2026-05-15 MVP narrowing, or from whatever partial
-pre-narrowing live run originally hit the fetch path) rather than actively-growing — not independently re-verified
-against a live manifest query in this pass (would require the P3 VERIFY trace below).
+**Extracted 2026-08-08** (fully closed, line-cap remediation) — full write-up now at
+`/plans/archive/2026_08/tradfi_unreachable_databento_data_types_history_2026_08.md`. One-line summary: fixed the
+mechanical adapter-wiring gap (`market-tick-data-service@e2018167` adds `mbp_10` to `_DATABENTO_SUPPORTED_DATA_TYPES`);
+CME `mbp_10` capture still does not flow live because `VENUE_DATA_TYPE_CAPABILITIES["CME"]` remains 2026-05-15
+MVP-scoped to `{ohlcv_1s, ohlcv_1m}` (operator confirmed 2026-07-15 this restriction stays deliberate — see the Open
+work checklist above).
 
 ## Resolution — ohlcv_15m/ohlcv_24h audit (2026-07-15)
 
