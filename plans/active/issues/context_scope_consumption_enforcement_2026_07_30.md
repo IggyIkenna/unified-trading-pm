@@ -122,8 +122,16 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
       first), and a bounded rollout (pilot on one role, e.g. `backend_engineer`, before fleet-wide across all roles). If
       (b) alone proves insufficient in practice (workers still skip the read), escalate to (c) as a follow-up — not a
       reason to hold this off now. Source: this issue doc.
-- [ ] [INFRA] P2. Once the mechanism ships, re-run the `context-scout` skill's freshness check across the corpus once
-      more immediately before flipping enforcement on, to catch any doc whose `context_scope` drifted stale in the
+- [ ] [INFRA] P2. **Ship the decided mechanism** — add a STEP 0 instruction to `unified-trading-pm/agents/RULES.md`
+      telling a worker to read its plan/issue's `context_scope` entries (when present) before starting any todo, per the
+      2026-08-08 operator ruling (option (b), see the checked todo above). Then run
+      `scripts/plan-hygiene/generate_context_scope_inventory.py` fresh and confirm the currently-dispatchable
+      (`assigned_vm: planning`, active/open) corpus has real, non-stale `context_scope` coverage before treating this as
+      safely fleet-wide (last measured 2026-08-01: only 222/647 `UP_TO_DATE`, ~34% — almost certainly still
+      majority-uncovered; re-measure, don't assume it closed the gap). This is the actual, currently-open implementation
+      step the checked todo above never executed (see Progress Log 2026-08-08 slot-16 note).
+- [ ] [INFRA] P2. Once the mechanism above ships, re-run the `context-scout` skill's freshness check across the corpus
+      once more immediately before flipping enforcement on, to catch any doc whose `context_scope` drifted stale in the
       interim.
 
 ## Codex SSOTs
@@ -183,3 +191,15 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   reclassification "happens in place," no separate wrapping plan doc needed) rather than authoring a fresh 10-100-todo
   AO plan around a 2-todo scope. Todo 1 closed (design resolved); todo 2 (freshness re-check before flip-on) stays open,
   now dispatch-eligible directly from this doc.
+- **2026-08-08 (slot 16)**: dispatched the (then-only) open todo ("once the mechanism ships, re-run..."), but it was not
+  actually actionable — grep-verified `agents/RULES.md` has no `context_scope` mention and no new AO plan/commit
+  implementing the STEP 0 instruction exists, so the mechanism the todo depends on was never shipped; only the DESIGN
+  decision (the checked todo above) was made. Attempted the blast-radius precondition check
+  (`generate_context_scope_inventory.py`) directly on this host — it did not complete within 2 minutes (per-doc
+  `git log` subprocess over ~650 docs is slow, not a memory issue; no orphan process left running, confirmed via
+  `pgrep`). Falling back to the last real measurement cited above (2026-08-01: 222/647 `UP_TO_DATE`, ~34%) is enough on
+  its own to show flipping enforcement on now would be premature regardless of whether the RULES.md line ships. Split
+  the remaining work into two explicit todos: actually ship the STEP 0 line + re-verify blast-radius coverage (new),
+  then the original freshness re-check (unchanged, now correctly gated behind the new one). Skipping this task — the
+  original todo still isn't actionable — so the dispatcher can hand out the newly-split, genuinely-ready implementation
+  todo instead.
