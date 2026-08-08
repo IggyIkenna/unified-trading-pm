@@ -174,10 +174,52 @@ close by citation once batch9 ships.
       rather than attempting it inline. **Chainlink/Pyth (the other half of this doc's original combined scope) NOT
       researched by this pass** — `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`'s combined todo still needs
       that half before it can ship; this checkbox closes only the Aave/Alchemy portion.
-- [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
+- [x] ✅ [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
       item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
-      (market-tick-data-service) **Same extraction/citation as the Aave item above —
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`, status: active.**
+      (market-tick-data-service) **RESEARCHED (2026-08-08) — Chainlink: same as Aave, NOT obtainable on success, no
+      single scalar. Pyth: DIFFERENT — obtainable and already in local scope, but currently discarded, including one
+      concrete case where the synthesized 200 is provably wrong.** **Chainlink** (`oracle_prices_handler.py:590-623`
+      `_query_chain_feeds` → `_query_chainlink_feed:861-900`): queries go through `web3.eth.call(...)` — the SAME
+      transport as Aave's `.call()` (`Web3.HTTPProvider.make_request()` → `make_post_request()`, which does
+      `response.raise_for_status(); return response.content` and discards the `requests.Response`/`.status_code` on the
+      success path). So identically to Aave: **not obtainable on a clean call** (the return value is only the decoded
+      RPC result); **partially obtainable on failure** via narrowing the current broad `except Exception` (per-feed
+      swallow at line 621, chain-level swallow at `_collect_chainlink_rows:293-295`) to specifically catch
+      `requests.exceptions.HTTPError` and read `.response.status_code` — every other failure mode (JSON-RPC error on an
+      HTTP-200 response, connection/timeout) has no HTTP status by definition. **No single scalar applies** either:
+      `_query_chain_feeds` issues one independent `eth_call` **per feed** (multiple feeds per chain, e.g. 1 per
+      `_CHAINLINK_FEEDS_BY_CHAIN[chain]` entry) plus a separate `get_block_by_timestamp` call for block resolution —
+      same "N independent calls" shape as Aave's 6-reserves-per-oracle-call, just chain-dependent width instead of a
+      fixed 6. **A parallel correctness nuance to the Aave per-reserve swallow**: `_query_chain_feeds`'s per-feed
+      `except Exception` (line 621) logs and continues on ANY feed failure without surfacing it — if every feed on a
+      chain fails via RPC error, the chain still reaches `_record_chainlink_empty`'s clean path
+      (`clean_fetch_evidence(source="chainlink", ...)`, hardcoded `http_status=200`) with no way to distinguish
+      "genuinely queried, all returned no answer" from "every feed errored and was silently swallowed" — mirrors the
+      Aave DIAG's proposed alternative (classify+thread the caught exception type, or surface per-feed exception counts
+      up so the empty-path recorder can tell the two cases apart). Out of scope to fix inline (read-only DIAG); filed as
+      the concrete next step below. **Pyth** (`oracle_prices_handler.py:670-760` `_hermes_latest_get` /
+      `_fetch_pyth_prices` / `_fetch_pyth_prices_at_timestamp`): structurally DIFFERENT from Chainlink/Aave — this is a
+      real REST call (`aiohttp.ClientSession().get()` to `hermes.pyth.network`), not an on-chain RPC. **The HTTP status
+      IS obtainable and already IN LOCAL SCOPE at the fetch call site**: `_hermes_latest_get` literally returns
+      `(status, body_text, json_or_None)` (line 670-680: `resp.status`), and `_fetch_pyth_prices_at_timestamp` reads
+      `resp.status` directly (line 742/747). On a non-200, the status is embedded in the raised
+      `RuntimeError(f"PYTH_HERMES_HTTP_{status}: ...")` message (string, not a clean attribute) — a genuine transport
+      error (`aiohttp.ClientError`/`OSError`/`TimeoutError`) is re-raised untouched. **Both routes to `record_failed`**
+      via `_collect_pyth_rows`'s `except Exception` (line 329-331) → `_emit_pyth_manifest`'s `pyth_error is not None`
+      branch (line 542-550) — so the error path is fine; the clean-EMPTY path is where the fidelity gap (and one real
+      correctness wrinkle) lives: `_emit_pyth_manifest`'s `record_zero_rows` call (line 566-572, reached when
+      `pyth_feed_counts` is empty and `pyth_error is None`) passes **no `fetch_evidence`**, so it falls through to the
+      generic `clean_fetch_evidence()` synthesized 200 same as everywhere else — **discarding a real status that WAS
+      already fetched**, unlike Chainlink/Aave where there's genuinely nothing to discard. **Concrete correctness
+      wrinkle**: `_fetch_pyth_prices_at_timestamp` returns `[]` (not an error) on a Hermes **404** ("no data at this
+      timestamp", line 742-746) — that `[]` flows through to the same `record_zero_rows` clean-empty path, so the
+      synthesized `http_status=200` is **provably wrong** in that specific case (the real status was 404, honestly a
+      clean "nothing published at this instant" rather than a server error, but still not 200). **Proposed fix** (not
+      attempted here, read-only DIAG): widen `_fetch_pyth_prices`/`_fetch_pyth_prices_at_timestamp`'s return signature
+      to also carry the resolved `http_status` (200 on the normal empty-after-filter path, 404 on the historical no-data
+      case) and thread it into `_emit_pyth_manifest`'s `record_zero_rows` via
+      `build_fetch_evidence(http_status=..., source="pyth_hermes")` — simpler than the Chainlink/Aave case since Pyth
+      already has the real scalar in hand, this is purely a threading exercise, no new exception-narrowing needed.
 - [x] ✅ [CODE] P2. **Subgraph-HTTP family — thread real status through the direct `async_post_to_subgraph` callers**
       (verified 2 real callers today: `dex_swaps_handler.py`, `liquidations_handler.py` — RE-VERIFY this count at
       dispatch time, don't trust it stale) by widening `async_post_to_subgraph`'s return to `(payload, http_status)` and
@@ -274,3 +316,20 @@ close by citation once batch9 ships.
   question, filed as the concrete next step, not attempted inline — read-only DIAG scope). Chainlink/Pyth (the doc's
   other extracted half) NOT researched by this pass — `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`'s
   combined todo still needs that half.
+- **defi_clean_path_fetch_evidence_fidelity_scope-002 dispatch (slot-2, 2026-08-08)**: completed the Chainlink/Pyth DIAG
+  item (checkbox 3) — traced `oracle_prices_handler.py`'s Chainlink (`_query_chain_feeds`/`_query_chainlink_feed`) and
+  Pyth (`_hermes_latest_get`/`_fetch_pyth_prices*`) legs. **Chainlink**: identical shape to Aave — routes through
+  `web3.eth.call()` → the same `HTTPProvider.make_request()` transport, so HTTP status is not obtainable on success,
+  only partially on failure (narrow `except Exception` to `requests.exceptions.HTTPError`), and no single scalar applies
+  (one independent `eth_call` per feed, shard-isolated). Also surfaced a parallel correctness nuance to Aave's:
+  `_query_chain_feeds`'s per-feed swallow means an all-feeds-errored chain still reaches the clean-empty path with a
+  fake 200, same aggregate-zero ambiguity as Aave's per-reserve case. **Pyth**: genuinely different — a real REST call
+  (`aiohttp` to Hermes) where the HTTP status IS already in local scope at fetch time, but is currently discarded on the
+  clean-empty `record_zero_rows` path; found one concrete case where this is actively wrong, not just imprecise —
+  `_fetch_pyth_prices_at_timestamp` returns `[]` on a Hermes 404 (no data at that timestamp) and that flows to the same
+  clean-empty path that synthesizes a fake 200. Proposed fix (not attempted, read-only DIAG): thread the real
+  `resp.status` through the fetch functions' return signature into `build_fetch_evidence(http_status=...)` at the
+  `record_zero_rows` call site — a pure threading exercise for Pyth (status already in hand), unlike Chainlink/Aave
+  which need the exception-classification alternative instead. Both families now have written findings per
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`'s "Done when" — flipping that duplicate checkbox by citation
+  in the same turn.
