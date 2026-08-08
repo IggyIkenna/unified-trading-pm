@@ -825,6 +825,26 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
+### 2026-08-08T00:18Z — sustained Transfermarkt API outage; VM still cycling (slot 14)
+
+**VM `tm-backfill-20260807-233040` RUNNING at 00:18Z** (48+ min since first 502 at 23:34Z). API is returning 502 on
+`competitions/standings` continuously. Service handles each `attempted_failed` date by exhausting its 10-attempt retry
+window (~9 min), writing `attempted_failed` to the manifest, then moving on — no outer exit on per-date exhaustion.
+
+**Progress as of 00:18Z:** 5 date-batches cycled (~45 min × 1 date/9 min). Zero captures. `attempted_failed` cells are
+being re-stamped as `attempted_failed` for each date processed.
+
+**Path forward:** VM will continue cycling through all `attempted_failed` dates. Either:
+
+- **(A) API recovers mid-run** → remaining dates capture successfully; VM exits 0; run measurement (script inline
+  above); if `attempted_failed < 256` → flip P2 checkbox + `docs(plans):` commit + POST `/api/slots/14/done`.
+- **(B) API stays down; VM cycles to completion** → VM exits (likely exit_code=0 having processed all dates); run
+  measurement expecting `attempted_failed ≈ 256`; wait 20–30 min for API recovery; re-launch:
+  `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`
+  (idempotent — skip-fresh re-attempts `attempted_failed` cells).
+
+**Do NOT launch a new VM while `tm-backfill-20260807-233040` is still RUNNING** — singleton lock will reject it.
+
 ## Codex SSOTs
 
 - `/cursor-configs/skills/ag-closeout-audit/SKILL.md` — the full Phase 0-3 procedure this batch executes.
