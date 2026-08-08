@@ -745,7 +745,6 @@ SPORTS:
   # Common data types across all SPORTS venues
   common_data_types:
     - odds
-    - markets
 
   venues:
     POLYMARKET:
@@ -756,9 +755,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -773,9 +769,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -790,9 +783,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal (derived from raw odds)
@@ -807,9 +797,6 @@ SPORTS:
       folders: [markets]
       data_types:
         - odds
-        - markets
-        - outcomes
-        - settlements
         - odds_snapshot # LOCF sample of odds (analog of book_snapshot_5)
         - odds_movement # OHLC of line movement per event horizon
         - arbitrage_opportunity # Cross-venue arb signal
