@@ -489,12 +489,28 @@ achieved by exclusion, not canonicalisation.**
       work was real, corrected to `01c3dbbab9`/`79c4a72737`/`b7e41849d6` (each verified to exist first). Checker fixed
       to fetch once on the miss path; **baseline ratcheted 8 -> 0**, verified 2,549 citations / 0 unresolvable.
 
-- [ ] [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
+- [x] ✅ [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
       screened 47 test-touching commits for NET assertion loss + added xfail/skip. That shape is blind to a commit which
       DELETES a strong assertion and ADDS a weak one — it nets zero and never surfaces. Treat the sweep's result as "no
       net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
       (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
-      enough. **Done when**: the decision is recorded, or the semantic check exists.
+      enough. **Done when**: the decision is recorded, or the semantic check exists. — **DONE 2026-08-08 (slot 26)**.
+      Built the semantic check — `unified-trading-pm@\<pending\>`
+      `scripts/dev/find_replaced_test_assertions.py` — a stdlib-only, per-repo diff scanner that flags test-file hunks
+      where an `assert` line OR a `@pytest.mark.parametrize` data-row was replaced (removed+added, not identical). A
+      first version matching only literal `assert` lines was tested against the sweep's own seed commit
+      (`market-tick-data-service@85423040`) and **missed it** — that commit swaps a parametrize tuple row
+      (`("ODDS_API", ...)` → `("PINNACLE", ...)`), no `assert` line touched at all — so the matcher was widened to also
+      catch replaced parenthesized/quoted data-row literals. Re-validated after widening: correctly flags the seed
+      commit, and produces zero false positives on 3 of the sweep's confirmed-legitimate commits
+      (`market-tick-data-service@fc704195`, `@a897ef60`, `unified-api-contracts@05a709fd`). **Decision: advisory only,
+      NOT a QG gate** — deliberately not wired into `quality-gates.sh`. Rationale, backed by the P1 sweep's own data:
+      of 6 commits its pattern-match flagged, only 1 was a genuine weakening; the other 5 were legitimate test
+      evolution (behaviour intentionally changed, source deleted alongside tests, honest xfails). Distinguishing
+      "weakened" from "evolved" requires reading the surrounding test + commit intent — a human/review judgment call,
+      not a mechanizable one (widening the matcher to catch data-row swaps also widens the false-positive surface, by
+      design — the tool narrows the haystack for a human reader, it never renders a verdict). Recommend: run it ad hoc
+      during future test-weakening sweeps (an input to the manual read), never as an automated blocking gate.
 
 ## Codex SSOTs
 
