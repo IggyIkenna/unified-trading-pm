@@ -944,3 +944,30 @@ rule (durable = committed AND pushed, not just "still true in chat").
 - **NEXT ACTION (fresh session)**: same as the prior checkpoint's NEXT ACTION above — dedup-check via `ps -ef`, then
   `kill -0 703695` / `kill -0 703746` (or freshly-identified PIDs) for liveness, re-arm only if genuinely zero processes
   found.
+
+### 2026-08-08T~17:48Z — slot 6, same session (703695/703746 lineage) — extended pre-compact checkpoint, one new operational lesson
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Same single healthy watcher/heartbeat pair (`703695`/`703746`) survived a
+further ~4.5h stretch since the last checkpoint with **zero re-arms and zero dual-watcher recurrences** (confirmed
+`ps -ef` process count == 4 at every check this entire stretch). The `kill -0 <PID>`-based liveness discipline continues
+to hold with no exceptions.
+
+**New operational lesson — AO server (`localhost:8765`) transient unavailability is expected under shared-host load, not
+a real outage**: this stretch hit several `curl` failures against the local AO server — two
+`Failed to connect... Couldn't connect to server` (connection refused) and three `Operation timed out` — each resolved
+cleanly on a single retry within seconds (no server restart, no escalation needed). One heartbeat call also surfaced a
+`worker_alive=false` liveness-wedge flag from the AO's own main-agent health check (part of a "5-slot wedge cluster"
+window ~14:58-14:59Z); the next successful heartbeat cleared it — no separate remediation was needed. **Takeaway for
+future sessions**: treat a single connection-refused/timeout against `localhost:8765` as transient and retry once (with
+a slightly longer `-m` timeout) before concluding the server is down or escalating; do not treat it as blocking the
+monitoring loop.
+
+**Fleet trajectory this stretch**: multiple full drain/refill cycles observed (152→139→163→149→...), oscillating roughly
+139-163 VMs the entire stretch, never reaching 0. Singleton lock still held; operator keep-waiting decision unchanged,
+no `--force`. No unrelated findings — noted in passing that another slot filed
+`plans/active/issues/skip_current_task_park_now_500_error_2026_08_08.md` (a `skip-current-task` `park_now=true` 500,
+unrelated to this task's `/heartbeat`/`/messages` endpoints) — not actioned, not this task's scope.
+
+- **NEXT ACTION (fresh session)**: same as the prior checkpoints' NEXT ACTION above — dedup-check via `ps -ef`, then
+  `kill -0 703695` / `kill -0 703746` (or freshly-identified PIDs) for liveness, re-arm only if genuinely zero processes
+  found. If a `curl` against `localhost:8765` fails once, retry before treating it as a real outage (see lesson above).
