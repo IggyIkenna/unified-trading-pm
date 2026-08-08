@@ -250,6 +250,84 @@ print('absent')
 " 2>/dev/null || echo ""
 }
 
+# When GitHub confirms `busy: true` for a runner, `unit_active_seconds` (systemd unit/PROCESS
+# uptime) is NOT a reliable proxy for "how long has the CURRENT JOB been running" -- found live
+# 2026-08-08: this JIT-ephemeral process does not always exit/re-register between jobs (contrary
+# to the "one job per process" design assumption elsewhere in this file: NRestarts stayed flat
+# across several distinct jobs on the same PID). execution-service/glue-1 paged "wedged, active
+# 3.2h" while its OWN job history showed a ~3h9m gap with ZERO jobs assigned, then several
+# short (1-3 min) jobs landing right before the page fired -- the process had been alive 3.2h,
+# but the CURRENT job was only minutes old. Resolves the actual in-progress job's own
+# `started_at` via the Actions API so is_wedged() can measure job age, not process age. Echoes
+# epoch seconds since that job started, or "" if no matching in-progress job is found (API
+# hiccup, runner_name mismatch, or the "busy" job already completed between the two checks) --
+# callers must NOT treat "" as "not wedged", only as "fall back to the coarser signal".
+current_job_started_epoch() {
+  local unit="$1" owner_repo owner repo inst pool idx host runner_name token
+  owner_repo="$(unit_owner_repo "$unit")"
+  [ -n "$owner_repo" ] || { echo ""; return; }
+  owner="${owner_repo%%/*}"
+  repo="${owner_repo#*/}"
+  inst="${unit#*@}"; inst="${inst%.service}"
+  pool="${inst%-*}"; idx="${inst##*-}"
+  host="$(hostname -s 2>/dev/null || echo "")"
+  [ -n "$host" ] || { echo ""; return; }
+  runner_name="${pool}-${host}-${idx}"
+  token="$(cached_gh_token)"
+  [ -n "$token" ] || { echo ""; return; }
+  # Bounded to the 20 most-recent in-progress runs -- a single repo's glue pool realistically
+  # never has more in-flight at once; an unmatched scan degrades to "" (caller falls back to
+  # unit_active_seconds), it never silently clears a real wedge.
+  OWNER="$owner" REPO="$repo" RUNNER_NAME="$runner_name" TOKEN="$token" python3 -c "
+import json, os, subprocess, sys
+
+owner, repo, runner_name, token = os.environ['OWNER'], os.environ['REPO'], os.environ['RUNNER_NAME'], os.environ['TOKEN']
+
+
+def api(path):
+    r = subprocess.run(
+        ['curl', '-sf', '-H', f'Authorization: Bearer {token}',
+         '-H', 'Accept: application/vnd.github+json',
+         f'https://api.github.com/repos/{owner}/{repo}{path}'],
+        capture_output=True, text=True, timeout=10,
+    )
+    if r.returncode != 0 or not r.stdout:
+        return None
+    try:
+        return json.loads(r.stdout)
+    except Exception:
+        return None
+
+
+runs = api('/actions/runs?status=in_progress&per_page=20')
+if not runs:
+    print('')
+    sys.exit(0)
+for run in runs.get('workflow_runs', []):
+    jobs = api(f\"/actions/runs/{run['id']}/jobs\")
+    if not jobs:
+        continue
+    for j in jobs.get('jobs', []):
+        if j.get('runner_name') == runner_name and j.get('status') == 'in_progress' and j.get('started_at'):
+            print(j['started_at'])
+            sys.exit(0)
+print('')
+" 2>/dev/null || echo ""
+}
+
+# Seconds since the CURRENT job on <unit-name> started, per current_job_started_epoch() --
+# "" (not 0) when unresolvable, so callers can distinguish "confirmed short-running" from
+# "couldn't determine, don't trust this".
+job_active_seconds() {
+  local unit="$1" started_at epoch now
+  started_at="$(current_job_started_epoch "$unit")"
+  [ -z "$started_at" ] && { echo ""; return; }
+  epoch="$(date -d "$started_at" +%s 2>/dev/null || echo 0)"
+  [ "${epoch:-0}" -eq 0 ] && { echo ""; return; }
+  now="$(date +%s)"
+  echo $(( now - epoch ))
+}
+
 # <unit-name> is wedged if it's a JIT-ephemeral glue-* instance (never writer-*, those are
 # long-lived by design) that's been continuously active well past any legitimate single job
 # AND is not simply idle waiting for its next job (2026-08-06 fix -- live false-positive:
@@ -260,7 +338,7 @@ print('absent')
 # "Running job: ..." as its last log line, a genuinely different signature this now
 # distinguishes instead of conflating).
 is_wedged() {
-  local unit="$1" active_state busy
+  local unit="$1" active_state busy job_sec
   case "$unit" in
     *@glue-*) : ;;      # JIT-ephemeral pool -- eligible
     *) return 1 ;;      # writer-* or anything else -- long-lived by design, never wedged
@@ -273,7 +351,16 @@ is_wedged() {
   busy="$(runner_busy_status "$unit")"
   case "$busy" in
     idle) return 1 ;;    # GitHub confirms no job assigned -- healthy, never wedged
-    busy) return 0 ;;    # GitHub confirms a job has been running this whole window -- wedged
+    busy)
+      # 2026-08-08 fix: measure the ACTUAL current job's age, not process uptime -- see
+      # current_job_started_epoch()'s comment for the false-positive this closes.
+      job_sec="$(job_active_seconds "$unit")"
+      if [ -n "$job_sec" ]; then
+        [ "$job_sec" -ge "$WEDGED_THRESHOLD_SEC" ]
+        return $?
+      fi
+      return 0   # job-level lookup inconclusive -- fall back to the coarser process-uptime signal
+      ;;
     absent) return 0 ;;  # GitHub already stopped tracking this runner -- the 2026-08-05 signature
     *) ;;                # inconclusive ("") -- fall back to the local journal heuristic below
   esac
@@ -382,9 +469,21 @@ for unit in "${currently_wedged[@]}"; do
     active_sec="$(unit_active_seconds "$unit")"
     active_hr="$(awk -v s="$active_sec" 'BEGIN{printf "%.1f", s/3600}')"
     mem_mb="$(awk -v b="$(systemctl show "$unit" -p MemoryCurrent --value 2>/dev/null || echo 0)" 'BEGIN{printf "%.0f", (b+0)/1024/1024}')"
-    log "NEW wedge: ${unit} (active ${active_hr}h, ${mem_mb}MB) -- paging"
+    # 2026-08-08: prefer the resolved job's own age for the alert copy when available -- it's the
+    # signal is_wedged() actually keyed on for a busy=true verdict, and reporting process uptime
+    # instead (which can be much longer, e.g. a long-idle process that just picked up a fresh
+    # short job) is what produced the misleading "active 3.2h" page for a job that was actually
+    # minutes old. Falls back to process uptime only when the job-level lookup was inconclusive.
+    job_sec="$(job_active_seconds "$unit" 2>/dev/null || echo "")"
+    if [ -n "$job_sec" ]; then
+      job_hr="$(awk -v s="$job_sec" 'BEGIN{printf "%.1f", s/3600}')"
+      duration_note="current job active **${job_hr}h** (process itself up ${active_hr}h)"
+    else
+      duration_note="process continuously active for **${active_hr}h** (current job's own start time not resolvable)"
+    fi
+    log "NEW wedge: ${unit} (${duration_note}, ${mem_mb}MB) -- paging"
     if dispatch_alert \
-      "\`${unit}\` on \`${THIS_INSTANCE_ID}\` has been continuously active for **${active_hr}h** (>${WEDGED_THRESHOLD_SEC}s threshold, ${mem_mb}MB resident) -- a JIT glue-runner should cycle every job. This is very likely a hung job holding the process alive (Restart=always never fires because it never exits) rather than a slow one. \`systemctl restart ${unit}\` re-registers a fresh JIT token; check GitHub's own runner list for this repo first (\`gh api repos/<owner>/<repo>/actions/runners\`) -- an empty list confirms GitHub has already abandoned tracking this run and nothing else will unstick it." \
+      "\`${unit}\` on \`${THIS_INSTANCE_ID}\` has ${duration_note} (>${WEDGED_THRESHOLD_SEC}s threshold, ${mem_mb}MB resident) -- a JIT glue-runner should cycle every job. This is very likely a hung job holding the process alive (Restart=always never fires because it never exits) rather than a slow one. \`systemctl restart ${unit}\` re-registers a fresh JIT token; check GitHub's own runner list for this repo first (\`gh api repos/<owner>/<repo>/actions/runners\`) -- an empty list confirms GitHub has already abandoned tracking this run and nothing else will unstick it." \
       "CRITICAL" \
       "$key" \
       "false"; then
