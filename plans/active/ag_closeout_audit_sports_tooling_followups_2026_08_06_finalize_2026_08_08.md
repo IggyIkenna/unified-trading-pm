@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit, sports, plan-hygiene]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -47,7 +47,7 @@ source: >-
   triggered.
 context_scope:
   [
-    /plans/active/issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
@@ -59,18 +59,30 @@ Machine-held via `depends_on` + `gate_on_depends: true` until both of
 
 ## Todos
 
-- [ ] [REVIEW] P3. **Reconcile `issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md`'s checkboxes** against
-      whatever shipped — flip finding 1's `[CI] P3` and finding 2's `[PROCESS] P3` todos to `- [x]` citing the landing
-      commit(s) (script fix + re-run confirming the superseded doc drops out of orphan count; batch9's truncated
+- [x] ✅ [REVIEW] P3. **Reconcile `issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md`'s checkboxes**
+      against whatever shipped — flip finding 1's `[CI] P3` and finding 2's `[PROCESS] P3` todos to `- [x]` citing the
+      landing commit(s) (script fix + re-run confirming the superseded doc drops out of orphan count; batch9's truncated
       Deferred citations completed or explicitly retired), confirm no residual work was missed, then run the standard
       6-step archival ritual (migrate any DEFERRED items, banner, codex-alignment check, corpus-wide referrer fixup,
       clear lock) since this is a self-contained 2-finding doc with no other source docs to reconcile. If real work
       remains after both todos land, leave the source doc active and note what's still open here instead. Repo:
       unified-trading-pm. Done-when: both source-doc checkboxes are `[x]` with commit citations, and either the source
       doc is archived (banner + referrers fixed) or this todo states exactly what's still open and why archival didn't
-      happen.
+      happen. — Both checkboxes were already `[x]` with commit citations (`a969d9ba8`, `a72c755c3`) when this finalize
+      task started; independently re-verified live (re-ran `check_ag_closeout_linkage.py` — superseded doc no longer an
+      orphan; grepped batch9 — zero `…`-truncated bullets remain). No residual work found. Source doc archived —
+      unified-trading-pm@52ee40038.
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-08**: Authored alongside the source doc's `assigned_vm: NA` -> `planning`
   reclassification, per the standing finalize-plan-coverage rule.
+- **slot-8 2026-08-08**: Dependency gate satisfied (both source-doc todos were already `[x]` with commit citations).
+  Independently re-verified both live rather than trusting the citations alone: re-ran `check_ag_closeout_linkage.py`
+  (confirmed the previously-flagged superseded doc no longer appears as an orphan) and grepped
+  `sports_satellite_ao_dispatch_batch9_2026_08_04.md` for `…` (zero remaining). No residual work found. Source doc
+  archived to `plans/archive/2026_08/issues/` — `unified-trading-pm@52ee40038`. Codex-alignment check: no new durable
+  contract from either finding (both are mechanical bug fixes mirroring an already-established sibling-script pattern,
+  `EXCLUDED_STATUS`) — nothing to migrate to codex. This finalize plan now has 0 open todos and no lock, so it archives
+  in the same session per plan-completion-and-archival-discipline's "archive immediately" rule — this checkbox-flip
+  commit and the follow-up `git mv` are kept separate per RULES.md's never-combine rule.
