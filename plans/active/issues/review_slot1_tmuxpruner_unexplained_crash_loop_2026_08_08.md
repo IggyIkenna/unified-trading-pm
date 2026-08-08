@@ -1,0 +1,101 @@
+---
+doc_type: issue
+title:
+  Slot 1 (review role) crash-looping via unexplained TmuxPruner kills, ~20 of 22 in 2h with no context_recycle_requested
+summary: >-
+  Review-craft investigation (2026-08-08, ~14:30-16:30Z window) found slot 1's `agentkeeper_review_succeeded` events
+  paired almost 1:1 with `tmux_session_lost` (TmuxPruner-attributed, externally-killed) — 22 pairs in ~2h — but only 2
+  of the 22 deaths were preceded by a genuine `context_recycle_requested` event. The other ~20 are unexplained kills,
+  not voluntary RECYCLE exits, meaning review continuity is fragmenting into many short-lived (1-6 min) sessions and
+  burning real spawn overhead continuously. Checked against the 3 event types behind the previously-tracked fleet-wide
+  post-spawn wedge pattern (`forced_compact_ineffective`, `slot_wedged_killed_for_resume`, `worker_kick_failed`) — zero
+  hits for slot 1 on any of the 3, so this looks like a different mechanism, though a shared deeper root cause (e.g.
+  host-level contention, per prior review/main joint findings on the tardis wedge cluster) cannot be ruled out without
+  reading TmuxPruner/keeper source directly.
+status: open
+nature: issue
+asset_group: [ao]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: [agent-orchestrator, tmux, review-role, crash-loop, live-incident, spawn-overhead]
+related:
+  - /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md
+  - /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
+created: 2026-08-08
+author: agt-22de53 (main), relaying a review-craft finding (msg 4310, from_role review)
+parent_epic: infrastructure_master
+priority: P1
+source: >-
+  Review-craft session, dispatched on unrelated work, independently noticed the pattern while investigating slot 1's own
+  boot history and reported it to main via chat (msg 4310, 2026-08-08T16:36:22Z) rather than filing directly —
+  doc-authoring/backlog is outside review's scope per its own role definition.
+assigned_vm: NA
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
+locked_by:
+resolved_by:
+last_updated: 2026-08-08
+locked_since:
+context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/state_store/cooldown.py]
+---
+
+# Slot 1 (review role) crash-looping via unexplained TmuxPruner kills
+
+## What was found
+
+Reporter (review craft, slot unspecified in the message, investigating slot 1's own history) queried
+`GET /api/activity?slot=1` for the window 14:30-16:30Z on 2026-08-08 and found:
+
+- 22x `agentkeeper_review_succeeded` events, paired almost 1:1 with 22x `tmux_session_lost` events (TmuxPruner
+  attribution — externally-killed, not a voluntary exit).
+- Of those 22 death events, only **2** were immediately preceded by a genuine `context_recycle_requested` event (the
+  sanctioned self-compact/RECYCLE exit path). The remaining **~20** have no such precursor — unexplained kills.
+- Cross-checked against the 3 event types known to drive the separately-tracked fleet-wide post-spawn wedge pattern
+  (`forced_compact_ineffective`, `slot_wedged_killed_for_resume`, `worker_kick_failed`): **zero hits** for slot 1 on any
+  of the 3 in this window. This suggests a distinct mechanism from that cluster, not a re-occurrence of it — though a
+  shared deeper root cause (e.g. host-level resource contention) has not been ruled out; nobody has read
+  TmuxPruner/keeper source or captured a live pane at the moment of death yet.
+
+**Compounding, likely-related bug found in the same investigation**: ~6 of ~14 `slot_boot` cycles for slot 1 in the same
+window hit `boot_read_unconfirmed` (428, missing `worker.md`) on the first `/boot` attempt — see
+`/plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md` (Progress Log updated 2026-08-08 with
+this same finding). Net effect of both bugs together: review continuity is fragmenting into many short-lived (often 1-6
+min) sessions, which also explains the volume of distinct short-lived agent ids seen in `review-agent-checkpoint.md`'s
+own Tick history.
+
+## Why it matters
+
+- Continuous spawn overhead: ~22 kill/respawn cycles in 2h on a single slot is real, ongoing waste (compute + boot
+  round-trips), not a one-off.
+- Degrades review quality/continuity: short-lived sessions cannot build up the multi-hour context a thorough review pass
+  benefits from, and each restart re-pays the (separately buggy) boot-read-confirmation cost above.
+- Unknown root cause: without keeper/TmuxPruner source inspection or a live pane capture at the moment of death, it is
+  not yet known whether this is a liveness-probe false-positive, a resource-pressure kill, or something else.
+
+## Todos
+
+- [ ] [BACKEND] P1. Read `TmuxPruner`'s kill logic (and whatever emits `tmux_session_lost`) in the agent-orchestrator
+      server source and determine why it is concluding slot 1's tmux session is lost roughly every 5-10 minutes when the
+      session is, in the large majority of cases, not exiting voluntarily (no preceding `context_recycle_requested`).
+      Check specifically whether this is a liveness-probe timing/false-positive issue (e.g. a heartbeat threshold too
+      tight for review-craft's actual work cadence) versus a genuine external kill (resource pressure, OOM, a supervisor
+      restart). Repo: agent-orchestrator.
+- [ ] [BACKEND] P2. If the root cause is a false-positive liveness probe: fix the threshold/detection logic. If it is a
+      genuine resource-pressure kill: correlate against host memory/CPU metrics for the same window and file/link to the
+      appropriate host-capacity issue if one already exists (check
+      `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` first for a possible match
+      before filing new). Repo: agent-orchestrator.
+- [ ] [REVIEW] P3. Once a fix lands, independently re-verify via `GET /api/activity?slot=1` (or whichever slot is
+      currently the review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding
+      `context_recycle_requested` has dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip
+      only).
+
+## Progress log
+
+- 2026-08-08 (main agt-22de53): Filed from a review-craft chat report (msg 4310) that review declined to file itself
+  (doc-authoring is outside review's scope). Not independently re-verified against `/api/activity` by main before filing
+  — relaying the reporter's evidence as given, since it was already a direct, timestamped `/api/activity` query result,
+  not a self-report needing corroboration. Cross-linked the compounding `boot_read_unconfirmed` finding into the
+  existing `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md` doc instead of duplicating it here.

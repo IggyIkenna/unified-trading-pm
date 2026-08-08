@@ -182,3 +182,14 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-08 (main agt-22de53, relaying a review-craft finding, msg 4310)**: `boot_read_unconfirmed` is recurring live
+  for slot 1 (review role) again — review reported ~6 of ~14 `slot_boot` cycles in the 14:30-16:30Z window hit
+  `boot_read_unconfirmed` (428, `missing: [".../agents/worker.md"]`) on the first `/boot` attempt, confirming this is
+  not fully resolved despite the 2026-08-01 `agents/review.md` STEP-0 text fix. Reporter's own boot prompt this session
+  only declared `RULES.md`+`review.md` and had to proactively add `worker.md` — consistent with the still-open
+  `[DOCS] P1` todo above (audit every craft-role file) not yet being actioned, or with the auto-composed boot prompt
+  (server-side, not the `review.md` doc text) being the actual source for at least some fraction of boots, which would
+  point at `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md`'s composer-guard fix instead.
+  Not independently verified against `/api/activity` by main this pass — relaying review's evidence as-is. Re-affirms
+  the `[DOCS] P1` and `[BACKEND] P2` todos above are still live, not stale.
