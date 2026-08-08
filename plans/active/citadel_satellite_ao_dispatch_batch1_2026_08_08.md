@@ -133,7 +133,7 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       `correlation_id==trade_key`; legacy flat-format backwards-compat test added; QG green; cross-repo sanity:
       execution-service@08808415 emits same `make_trade_key` scheme in FILL_COMPLETED details. ✓
 
-- [ ] [BACKEND] P2. **GroupC smart-fill handoff into the paper run (`fill_model` BENCHMARK→SMART)** (was Phase 11 P1.6
+- [x] [BACKEND] P2. **GroupC smart-fill handoff into the paper run (`fill_model` BENCHMARK→SMART)** (was Phase 11 P1.6
       in the source doc) — the paper-run manifest is currently honest at `BENCHMARK` (not faked) because
       strategy-service must not import execution-service in-process (no-service-deps HARD RULE). The correct
       architecture — and the part that's still missing — is wiring the paper-run to CONSUME the already-SHIPPED
@@ -145,7 +145,25 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       e2e-testing (harness wiring) + strategy-service (manifest still reads BENCHMARK until this lands). **Done when**:
       an e2e-testing-driven run produces a real `execution_alpha_bps` artifact from a paper-run's instruction ledger via
       the shipped Layer-3 entrypoint (not a synthetic/mocked one), and CRA's `PnLLayer.EXECUTION` reads it. Source:
-      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P1.6 (moved verbatim).
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P1.6 (moved verbatim). ✅
+      execution-service@b2b41038 — verified the shipped Layer-3 entrypoint (`replay_run`) is callable end-to-end: ran
+      `e2e-testing/scripts/defi/execution_alpha_replay_e2e.py` (real code path, deterministic in-memory proof) — 2
+      fills, artifact written, byte-deterministic rerun, rate-matched leg exactly 0, order leg +10bps signed alpha, all
+      assertions PASS. Closed the CRA-reading gap: added `build_execution_alpha_attribution` +
+      `emit_execution_alpha_attribution` (reshapes `ExecutionAlphaRow` →
+      `PnLAttributionRow(factor=SLIPPAGE,     layer=EXECUTION)`, wired into the CLI via the UTL
+      `emit_attribution_parquet` SSOT — same sink/schema
+      `client-reporting-api/core/attribution_reader.read_attribution_rows` already scans generically, so **no
+      client-reporting-api code change was needed** (explains its absence from this plan's `repos:` list — not an
+      authoring gap). Wired at the CLI, not inside `replay_run` itself, because `emit_attribution_parquet` has no
+      storage-client DI and would have broken the harness's credential-free in-memory mode (confirmed via a live repro:
+      auto-wiring into `replay_run` raised `BucketNamingError: GCP_PROJECT_ID not set` on the in-memory proof —
+      reverted, moved to the CLI which always targets real GCS). Multi/zero-`strategy_ids` runs skip attribution
+      emission (honest absence — `ExecutionAlphaRow` carries no per-fill strategy_id to disambiguate, never guessed). 5
+      new unit tests (row-shape, rate-matched-zero, skip-on-multi/zero-strategy, skip-on-no-rows), all green;
+      `quality-gates.sh` green. Not yet exercised against a REAL production paper run (`--storage gcs` mode) — none
+      exists in this session to run against; that's the natural first live exercise of this pipeline, not a gap in this
+      todo's own scope.
 
 - [ ] [DATA] P2. **features-service: recompute the BTC trend feature corpus so `btc_trailing_return_{1m,3m,6m,12m}` +
       `btc_realized_vol` actually exist in GCS** (was Phase 11 P2.11.16 in the source doc) — the feature SPECS already
@@ -260,6 +278,23 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
   NA/judgment-gated, and why P2.11.18 is scope-trimmed rather than fully extracted).
 
 ## Progress Log
+
+- 2026-08-08 (slot 2, citadel_satellite_ao_dispatch_batch1-003): shipped the GroupC smart-fill / execution-alpha P1.6
+  todo — execution-service@b2b41038. Verified the shipped `replay_run` Layer-3 entrypoint end-to-end via the e2e-testing
+  in-memory proof (real code path, deterministic, all assertions pass). Discovered CRA had no code path actually
+  converting the `ledger_type=execution_alpha` sidecar into anything `client-reporting-api` reads — added
+  `build_execution_alpha_attribution`/`emit_execution_alpha_attribution` in execution-service to reshape it into
+  `PnLAttributionRow(SLIPPAGE, EXECUTION)` via the existing UTL `emit_attribution_parquet` SSOT, which CRA's
+  `attribution_reader.read_attribution_rows` already scans generically — so client-reporting-api needed ZERO code
+  changes (this is why it's absent from this plan's `repos:` list, not an oversight). First attempt wired the emission
+  INSIDE `replay_run` itself and broke the credential-free in-memory e2e proof (`emit_attribution_parquet` has no
+  storage-client DI, hit real `resolve_bucket_name()` → `BucketNamingError: GCP_PROJECT_ID not set`); moved the call to
+  the CLI (`execution_service/cli/smart_fill_replay.py`), which always targets real GCS anyway. Multi-/zero-strategy
+  runs skip attribution emission (honest absence, not guessed — no per-fill strategy_id on `ExecutionAlphaRow`). 5 new
+  unit tests, `quality-gates.sh` green, quickmerge-shipped + verified on origin. Separately found + stashed ~25min-stale
+  foreign WIP in this slot (unified-api-contracts/unified-trading-system-ui/ unified-trading-pm — an unrelated
+  archetype-capability-manifest expansion to 60 archetypes, not this plan's TSMOM_BTC_CTA todo) via slot-tagged
+  `git stash` per RULES.md's dead-claim inherit-or-protect rule; left untouched as it belongs to a different task.
 
 - 2026-08-08 (interactive session, operator-authorized extraction): drafted per the operator's explicit direction to
   split `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s register-§A agent-shippable items into their own
