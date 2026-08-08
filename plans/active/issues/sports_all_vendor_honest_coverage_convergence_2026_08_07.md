@@ -769,3 +769,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   Reason Taxonomy § principle 3, `cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` per-vendor
   audit step 6) — pushed `304041840e`. This closes the last standing item from the operator's original big-picture asks
   for this session.
+- **2026-08-08T11:31Z** — FIXTURE_STATS +14 days (`last_completed_date=2025-08-29`, fresh `11:27:41Z`) — smaller jump
+  this tick but still steady. odds smallchunk5: still chunk 18 (~70 min this pass now), 20 OOMs total (up from 16),
+  actively logging as recently as ~2 min ago — no hang signature, continuing normal self-recovery. Both healthy, no
+  intervention.
