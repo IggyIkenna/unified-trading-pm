@@ -789,6 +789,18 @@ speed-note (both deferred optimisations, non-blocking).
   data_type. `native_staking_rates` confirmed genuinely still unscheduled (fresh grep, same file) — left flagged. Todo
   stays `[ ]` open (the MVP-scope confirmation for the remaining ~10 scaffolds is unchanged, genuinely still needs the
   operator). Aggregator-routes todo and the MVP-triage question itself not touched.
+- **na-corpus-digest-closeout 2026-08-08, reconciliation**: this question was answered TWICE the same day by two
+  independent passes that didn't know about each other — this round5 entry (keep distinct, precedent-based) vs. a live
+  interactive operator session that same day, asked directly with live volume data (aggregator_route currently 0
+  captured rows), which picked "fold into an existing bucket for now" reasoning that a dedicated bucket for an empty
+  stream is premature. Reconciled (operator unavailable to re-ask, `/autonomous` in effect): **keeping distinct**, i.e.
+  this entry's original resolution stands, for a reason neither pass had in view — the redirect cost is symmetric either
+  way (`aggregator_route_handler` already writes to its own `aggregator-routes` bucket today; "fold" doesn't avoid a
+  redirect, it just redirects to a shared bucket instead of a dedicated one), so the "cheap because nothing to migrate
+  yet" premise behind "fold in" doesn't actually differentiate the two options — and keeping distinct preserves
+  consistency with the identical gas-fees/liquidations precedent already applied twice in this same doc. Flagged in the
+  NA-corpus digest artifact for the operator to override if they disagree; this is the lower-conviction of the two
+  answers, not a confident close.
 - **round5-na-digest-defi 2026-08-08**: resolved the aggregator-routes bucket-architecture question (redirect todo's
   operator-decision clause) — keep it a distinct, separately-migrated bucket (9th migrator spec), same precedent this
   doc already applied to gas-fees (7th)/liquidations (8th): a confirmed-distinct canonical data_type
