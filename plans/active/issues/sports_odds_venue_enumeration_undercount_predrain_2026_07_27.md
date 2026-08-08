@@ -11,7 +11,7 @@ summary: >-
   venues / 561,260 rows the plan's mapping-ruling todo (todo 1) and its two Move-the-GCS-objects todos enumerate
   (BETFAIR_EX_UK, BETFAIR_EX_EU, SMARKETS, MATCHBOOK, BETFAIR_SB_UK, BETMGM, bare BETFAIR, ODDS_API, PINNACLE).
   Per-venue figures also diverge sharply from the plan's own cited numbers for the same venues it DID enumerate — e.g.
-  PINNACLE: plan says "32,616 rows", live manifest shows 4,887,512 for PINNACLE alone. At least ~19 additional bookmaker
+  PINNACLE: plan says "32,616 rows", live manifest shows 4,887,512 for PINNACLE alone. At least ~21 additional bookmaker
   venues (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER, DRAFTKINGS, UNIBET_UK,
   SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY, UNIBET_EU) carry
   substantial instrument_type=odds row_count and are absent from the plan's venue→class mapping entirely. If the plan's
