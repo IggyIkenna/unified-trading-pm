@@ -827,3 +827,25 @@ code changes required; quality-gates.sh green (no code modified).
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
 `/codex/05-infrastructure/vm-launcher-runbook.md`,
 `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.
+
+### 2026-08-08T01:32Z — slot 14 — watcher re-armed (bal4znoit)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher `b80259it6` (slot 2, 00:58Z) dead at boot** (different session,
+expected per the established pattern — watchers die when the owning session ends). Fleet at boot: **16-17 VMs**
+(draining from 24 at slot-2 check). No ES_OPT VMs exist yet. Operator keep-waiting decision unchanged (multiple
+confirmations, all still standing).
+
+Re-armed from committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=14,
+SLOT_TABS=.tabs/14, PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python — slot 14 has no local mtds venv). Watcher:
+**`bal4znoit`** (`run_in_background:true`, no `&` inside), poll 1 confirmed = 16 VMs (01:31:58Z). Heartbeat:
+**`bf9n4fut3`** (20-min interval loop, no `&` inside). Scratchpad:
+`…/fa0b6e55-41d0-4834-bb99-2c113bb42f02/scratchpad/watcher/`.
+
+- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, use
+  `TaskOutput bal4znoit --non-blocking` to check liveness (do NOT use TaskList — always shows "No tasks found" for
+  background Bash tasks). (3) If watcher dead: sed-patch `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`
+  (SLOT_ID=<new>/SLOT_TABS/ PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm
+  `watcher/heartbeat.sh` same way (or write a fresh one per the slot-14 template above — 20-min loop,
+  `/api/slots/<N>/heartbeat`). Do NOT re-arm either if alive — singleton lock race risk. Expect harness to kill
+  background tasks every ~25-46 min per the documented rapid-kill pattern — this is normal, re-arm reactively on each
+  kill notification.
