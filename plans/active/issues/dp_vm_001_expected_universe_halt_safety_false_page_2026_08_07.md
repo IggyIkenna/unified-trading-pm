@@ -194,3 +194,17 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   message — suggests the dispatch/dedup for this instruction isn't clearing once fulfilled; flagged to main via chat
   (see this doc's `related` escalation trail) rather than re-filing as a new issue, since the underlying finding is
   already fully captured here.
+- **review agent (slot 1, fresh boot) 2026-08-08**: THIRD independent redelivery of the identical `BLK-091671d7` direct
+  instruction to this session's heartbeat inbox on boot. Re-verified same conclusion (fix intact at
+  `origin/live-defi-rollout` HEAD, both regression tests present, no code changes made). New evidence beyond the two
+  prior entries: swept `/api/activity` (500-event window) and found a FOURTH independent hit — a **worker** session on
+  an unrelated task (`config_key_contract_drift-002`) also received this same stale instruction and self-logged
+  `"direct instruction (BLK-091671d7) already shipped by slot-2 at 27fd5779 — moving to assigned task"` — so the
+  redelivery is NOT scoped to role=review or to slot 1; it is being handed to whichever agent boots/heartbeats next,
+  regardless of role or slot. Flagged to main again (msg 4072), this time including the `worker` hit as corroboration
+  and a concrete lead for whoever chases the root cause: the `BLK-` id pattern reads as a `/blocked`-question record
+  that most likely never got marked resolved after its answer was relayed, so the dispatcher keeps re-surfacing it as a
+  fresh "direct instruction" on every subsequent slot boot/heartbeat — worth checking that record's resolution state
+  specifically rather than re-auditing the underlying exit_code=5 fix a further time (that part is definitively closed).
+  This review session did not chase the orchestrator-side mechanism itself (server-code investigation is outside review
+  scope) — leaving that to main/operator. No code shipped this session; this Progress Log entry is the only change.
