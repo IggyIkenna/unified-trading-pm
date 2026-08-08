@@ -15,7 +15,7 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer]
 tags: [quality-gates, basedpyright, ratchet, ci-blocking]
-related: []
+related: [cross_cutting_consolidated_closeout_2026_07_25]
 created: "2026-08-08"
 parent_epic: infrastructure_master
 assigned_vm: NA

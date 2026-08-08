@@ -21,6 +21,7 @@ related:
     /plans/active/content_derived_backlog_task_ids_2026_08_08.md,
     /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    ao_consolidated_closeout_2026_07_25,
   ]
 created: 2026-08-08
 last_updated: "2026-08-08"

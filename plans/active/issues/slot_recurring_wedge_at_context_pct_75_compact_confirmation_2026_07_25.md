@@ -48,7 +48,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -68,7 +68,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/context_lifecycle.py,
     agent-orchestrator/server/worker_liveness/__init__.py,

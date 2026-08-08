@@ -770,6 +770,27 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       doc's own earlier Recommendation §3 update: "✅ DONE 2026-07-24 ... CARRY_FUNDING_DISPERSION (78 rows) ...
       DEFI_LP_CONCENTRATED/_POOL/_VAULT (3 rows each) all confirmed firing cleanly, zero silent-degradation found." This
       checkbox predated that confirmation and was never flipped.
+- [ ] [OPERATOR] P2. **Design decision: live liquidation-candidate feed integration** (`LIQUIDATION_CAPTURE` +
+      `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, both currently `_ALLOWED_EMPTY_ARCHETYPES`). Per the "Scope of the real,
+      unbuilt integration" section above: no live third-party liquidation-candidate feed exists anywhere in the
+      workspace (exhaustively confirmed 2026-07-24) — this is a design-class, multi-repo, multi-day build spanning
+      market-tick-data-service (fork `position_data_handler.py` to sort by `healthFactor` ascending + run on a
+      live/high-frequency cadence via the UTL `EventTransport` facade), features-service (a new dynamically-keyed
+      `liq_candidate_*_<id>` calculator — an unprecedented per-candidate feature-naming shape needing its own design
+      call), and strategy-service (a live params-mutation path on `V2EngineOrchestrator`/`BaseArchetypeEngineV2`, which
+      today sets `self.params` once and never rewrites it). Needs a human to pick the design direction (push-on-tick vs.
+      pollable candidate registry) before this can be scoped as an AO-dispatchable todo — converted from prose to a
+      tracked item per the workspace's "every follow-up is a todo" rule; still open, not yet actioned (previously noted
+      as "incidental, not actioned" by na-eligibility-audit 2026-08-06).
+- [ ] [OPERATOR] P2. **Design decision: `RecursiveLoopOrchestrator` translation layer** for
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` (both currently `_ALLOWED_EMPTY_ARCHETYPES`, gated
+      on `staking_yield_enabled=false`). Per the "orchestrator-stub: exhaustive investigation, scoped not built" section
+      above: `RecursiveLoopOrchestrator` has no caller for ANY archetype today, and `RecursiveLoopRequest` is
+      schema-incompatible with `AtomicInstruction`/`AtomicLeg`, so a real caller needs an explicit translation layer,
+      not a registry-case addition. Also needs a numeric LTV-per-lending-market-mode resolution, a recursion-depth
+      policy, and (Family 2) a perp-hedge sizing formula — three real trading-parameter design decisions on a leveraged
+      DeFi money-path archetype. Converted from prose to a tracked item per the workspace's "every follow-up is a todo"
+      rule; still open, not yet actioned.
 
 ## Progress Log
 

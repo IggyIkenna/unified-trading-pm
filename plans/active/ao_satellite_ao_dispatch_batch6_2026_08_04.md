@@ -183,7 +183,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       (peer-vs-operator reply routing) — a different section, re-grep before starting regardless.** **Done when**: the
       diff lands in `agents/review.md` step 3d citing a checked progress signal, not just session state; the next
       long-dirty escalation cites it; operator sign-off is recorded in the source doc's Progress Log before the diff
-      ships. Source: `/plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md` (its
+      ships. Source: `/plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md` (its
       2 remaining items — its 1st item was a same-doc stale-checkbox correction, fixed directly by this audit run, not
       drafted here). Repo: unified-trading-pm. — unified-trading-pm@c6fde000a
 

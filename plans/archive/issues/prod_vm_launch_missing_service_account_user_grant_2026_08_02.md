@@ -24,7 +24,7 @@ related:
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/archive/issues/sports_fixture_events_refetch_progress_2026_07_25.md,
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
   ]
 created: 2026-08-02
 author: unknown
@@ -48,7 +48,7 @@ context_scope:
   [
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,
   ]
 ---
@@ -181,7 +181,7 @@ workaround is written down for whoever hits it next before the grant lands.
   command + verification given), so it was evaluated as a RECLASSIFY candidate. Conflict-check
   (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) against active
   `assigned_vm: planning` docs in the same `parent_epic: infrastructure_master` surfaced a genuine conflict:
-  `/plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` (P0,
+  `/plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` (P0,
   `sequential: true`, actively dispatched) is mid-flight on the SAME two identities (`uts-prd-sa` and the default
   compute SA) and explicitly frames the default compute SA's broad, unconditional, project-wide grant set (incl.
   `roles/storage.admin` + `roles/iam.serviceAccountTokenCreator`) as "a bigger live exposure than the original god-SA

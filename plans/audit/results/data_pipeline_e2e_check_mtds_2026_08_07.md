@@ -18,7 +18,7 @@ tags: [pipeline-e2e-check, data_pipeline_e2e_check_mtds, cefi, tardis-contention
 related:
   [
     /plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
-    /plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
+    /plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
   ]
 created: 2026-08-08
 audited_scope: "data_pipeline_e2e_check_mtds real-VM force/skip/live pipeline check for day=2026-08-07, cefi-headline"
@@ -90,7 +90,7 @@ Verification of the guard's own CAP-EXEMPT-venue correctness (a standing gap fla
 this run's evidence: COINBASE-CDE (CAP-EXEMPT) passed cleanly with zero guard refusals despite the concurrent Tardis VM,
 while every genuine Tardis venue was correctly refused — both halves of the 2026-07-28 fix confirmed live. Full
 writeup + a new follow-up (checker aborts the whole run on exhausted guard-refusal retries instead of a per-cell skip)
-on `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`
+on `/plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`
 (unified-trading-pm@476cbd294).
 
 **No 3rd Phase-1 VM was launched** — the contending production VM was still running when attempt 2 aborted, so a retry
@@ -147,7 +147,7 @@ pending a Phase-1 retry outside the current Tardis-contention window.
    `/plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`.
 2. **Tardis-contention verification + new checker-resilience follow-up** — `unified-trading-pm@476cbd294`, closed the
    standing P3 verification gap on
-   `/plans/active/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md` and added a new P1
+   `/plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md` and added a new P1
    follow-up (checker aborts the whole run instead of skipping one contended cell).
 
 ## Bottom line for cefi (this role's headline)

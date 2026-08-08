@@ -765,7 +765,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   action needed** — but noting here so a future tick doesn't mistake this for a live regression and attempt to re-purge
   rows that will just regenerate on the next full sweep. **No retype script run, no manifest purge performed** — nothing
   was found wrong to fix. Shipped the one genuine deliverable: two small codex/skill-doc additions codifying the
-  "blank-reason-is-a-code-smell" principle for future vendors (`codex/02-data/honest-absence-downstream-handling.md`
+  "blank-reason-is-a-code-smell" principle for future vendors (`/codex/02-data/honest-absence-downstream-handling.md`
   Reason Taxonomy § principle 3, `cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` per-vendor
   audit step 6) — pushed `304041840e`. This closes the last standing item from the operator's original big-picture asks
   for this session.
