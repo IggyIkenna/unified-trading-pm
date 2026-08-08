@@ -961,3 +961,12 @@ push) was independently fixed later at `unified-trading-pm@f93a618e6c` (2026-07-
 `origin/live-defi-rollout`. No new decision made; this doc was simply never caught up to the SSOT doc's own resolution
 across ~5 prior na-eligibility-audit passes that classified it "KEEP-NA valid" without re-checking the SSOT's
 frontmatter. No `assigned_vm` change (doc has other genuinely open operator-gated items).
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 7th+ consecutive pass, unchanged.
+Re-read all 10 open items against today's 9 operator-Q&A precedents (IAM self-service, D16 carve, S5.1 tiering,
+context_scope default, escalation-N days, reversibility-qualified deletes, Option-B retirement, AWS lower-stakes,
+sibling-precedent self-service) — none apply. STEP 2d stays blocked on the digest-drift-sweep dormant-cascade
+investigation (itself open-ended, unchanged); the bare-host bootstrap leg stays structurally blocked (needs a real VM,
+not a container); the 4 VERIFY billing/utilization items stay KEEP-NA-STALE (already tracked in
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md`/`batch5_2026_08_02.md`, both active); the slot-concurrency item is
+cross-tranche (`ao`, not `ci`) per batch6's own same-day finding, out of scope here; the org-migration REVIEW stays
+explicitly not-recommended. No `assigned_vm` change.

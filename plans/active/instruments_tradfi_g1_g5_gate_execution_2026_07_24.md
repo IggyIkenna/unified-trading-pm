@@ -686,3 +686,15 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   correctly stays NA pending that check, not flagged for extraction yet. `assigned_vm` unchanged (doc-level RECLASSIFY
   does not apply -- the top-level Gated-Phase-2 rollup and ICE BLOCKED-CREDENTIALS items remain genuinely
   operator/credential-gated).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: **KEEP-NA at doc level, confirmed — but one item now
+  matches a fresh same-day precedent, flagged for extraction, not a whole-doc flip.** Re-read all 5 open items against
+  today's 9 operator-Q&A rulings. The ICE-Databento parquet GCS-cleanup item (P3, "RULED 2026-08-07 ... GO AHEAD,
+  conditional on ... twin-verify still required before delete") now matches today's ruling 6 precisely: the operator's
+  own GO-AHEAD already covers the delete itself; the sole remaining gate (twin-verify 0 consumers + a fresh
+  reversibility check) is exactly the class ruling 6 describes as agent-executable. **Not flipping this doc's
+  `assigned_vm`** — the HARD RULE is whole-doc-only, and 3 other open items remain genuinely gated (the top-level
+  Gated-Phase-2 rollup; the residual 2-leg catalogue purge, which still needs its OWN NEW operator confirmation, so
+  ruling 6 does not reach it; ICE BLOCKED-CREDENTIALS). A single-item carve-out is `/ag-closeout-audit`'s Phase-3
+  mechanism, not this skill's whole-doc reclassification — recording the match here so the next satellite-batch author
+  (who already missed the sibling G1-retirement-purge extraction per the marker above) picks up both together. No
+  `assigned_vm` change.

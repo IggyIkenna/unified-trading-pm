@@ -106,3 +106,12 @@ eliminate the race under sustained high commit velocity — which is what today'
       sessions currently shipping concurrently), confirm SIT completes an uninterrupted round and both repos' streak
       resets to 0; if it does NOT reset even once LDR is quiet for one full round-trip window, that would indicate a
       DIFFERENT, currently-masked bug and warrants fresh investigation (not assumed to be this same treadmill).
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — this doc was filed hours before this
+sweep and self-describes as a still-live, unresolved condition (todo 2 explicitly gates on "once LDR goes quiet,"
+unconfirmed). Todo 1 (fix the dedup-key cooldown logic) reads bounded in isolation, but dispatching a change to the
+alerting mechanism actively instrumenting a live, hours-old incident carries real risk of masking the ongoing diagnosis
+— the same "too hot to batch while live" posture this tranche applies to comparable same-day continuation docs (e.g.
+`pytest_timeout_60s_flaky_under_contention_continued2/3`, parked live-incident in batch6 D6-16/D6-17). Checked today's 9
+precedents; none apply. Revisit once todo 2's "LDR quiet" precondition is confirmed. No `assigned_vm` change.

@@ -280,3 +280,12 @@ a duplicate-dispatch case (both are NA) so it doesn't change either doc's verdic
   yet in context_scope), now 6 entries.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — OPERATOR-DECISION auth design, 4 candidate directions unadopted
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — the head `[OPERATOR-DECISION]` item
+resolved TODAY (option (b)), which unblocks but does not itself dispatch the 2 remaining implementation todos. Checked
+all 9 of today's operator-Q&A precedents: this is explicitly NOT an IAM/permissions gap (the doc's own "Why this is NOT
+an IAM/permissions problem" section rules that out by name — it is an authentication/credential-resolution defect, not
+a missing grant); no other ruling matches either. Held at KEEP-NA on the merits regardless: this is shared-credential-
+resolution infrastructure on the exact host every AO worker slot boots from, spans two repos (one, `agent-orchestrator`,
+outside this session's own repo scope), and a bad change risks breaking credential resolution for the entire
+dispatching fleet — the same "too_large_or_risky" bar this tranche already applies to comparably shared-critical-path
+infra (`base-service.sh`, the CI VM's own concurrency governor). No `assigned_vm` change.

@@ -223,3 +223,9 @@ false-[x] risk). No RECLASSIFY candidates.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator judgment item, P3 extraction in draft batch4
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE (already-duplicated), confirmed — the sole
+remaining open item (delete `scripts/dev/hooks/pre-push-strict-quickmerge.sh` + repoint its 4 referrers) is a genuinely
+bounded, deterministic deletion task and was considered as a RECLASSIFY candidate on its own merits. Conflict-check:
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 owns this exact file (verbatim claim) and is now `status: active`
+(not draft) — a live, current claim. Flipping this doc's copy would draft a competing todo against an already-dispatched
+claim. Stays NA on citation; no `assigned_vm` change.

@@ -963,3 +963,12 @@ pool dead):
   multi-job-one-run fires both.
 - `build_report()` now produces distinct STARVED vs STALLED sections; healthy message names both thresholds so silence
   is falsifiable.
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — checked both residual open items
+against today's 9 operator-Q&A precedents; none apply. The `[REVIEW] P2` allowlist cross-check stays KEEP-NA-STALE
+(already-duplicated) — still gated on its own prerequisite todo being actioned first AND independently tracked in
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s own `[REVIEW] P2` item. The `[SCRIPT] P1` automation-gap item flagged
+2026-08-07 as a possible RECLASSIFY candidate was in fact already shipped via
+`ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 3 (`unified-trading-pm@b073c47f9`) — its write-up already lives in
+this doc's own 2026-08-08 Progress Log entry; the checkbox itself should be flipped `[x]` by whoever next lands a
+commit here (stale-checkbox correction, not a fresh dispatch). No `assigned_vm` change; this remains an
+actively-evolving P0 incident doc with a live operator-set allowlist posture.

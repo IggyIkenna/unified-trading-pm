@@ -389,3 +389,10 @@ content/todo change — confirmed via `git show 50b8643dc`. `locked_by: live-def
 own "operator sign-off required, not an autonomous ship" text still govern; [B] stays blocked-on-[A]; the 2 struck items
 remain correctly ruled-out (not open work); the extracted/stale sub-clause still cites its done-elsewhere commits. No
 `assigned_vm` change.
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — item [A] itself now carries a fresh
+2026-08-08 operator interaction (see the todo's own "operator ruling 2026-08-08" entry): the operator was walked through
+the exact keying mechanism and 3 candidate implementations, and explicitly declined to sign off this session. This is
+the clearest possible confirmation [A] stays a genuine, current operator-gated decision. [B] stays blocked on [A]; the
+2 struck-through items remain ruled-out; the extracted item's remaining design-call clause was RULED 2026-08-07 (yes)
+but still needs its own bounded-outcome scoping. `locked_by: live-defi-rollout` unchanged. Checked today's 9 precedents;
+none apply (this is a live, dated, same-day operator decision-in-progress). No `assigned_vm` change.

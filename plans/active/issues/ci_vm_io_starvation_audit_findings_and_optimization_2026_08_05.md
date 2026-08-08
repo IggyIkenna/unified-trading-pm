@@ -800,3 +800,16 @@ todo" (already true — `self_hosted_runner_public_repo_revert_2026_08_05.md` to
 was already correctly `ubuntu-latest` through the revert). 13 remain genuinely open — operator-gated, judgment-call, or
 duplicate-tracked-elsewhere-so-not-closable-here (item 6, "Complete public-repo migration," and item 9, "Cut
 sibling-clone I/O," are cross-referenced in sibling NA docs, not done). No `assigned_vm` change.
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-derived the open-item count fresh
+and cross-checked `/ag-closeout-audit ci`'s own fresh same-day 42-agent sweep
+(`plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md`), which independently classified this doc
+`orphaned_never_touched` and extracted exactly ONE item as AO-eligible — the time-gated job-minutes re-measurement —
+now claimed by `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 1 (dispatched, `status: active`); flipping this
+doc's own copy of that item would create a competing dispatch path, so it stays KEEP-NA-STALE (already-claimed) on
+citation. The remaining open items (investigate CI volume; the `[OPERATOR]`-tagged fork-PR-approval item, itself
+carrying a fresh 2026-08-08 operator ruling to defer both sub-parts; re-baseline `qg_resource_baseline.json`; stagger
+the promote-fleet fan-out; the fleet-wide concurrency cap, deferred by the same sweep as D6-22, a genuine judgment call
+per its own 2 prior na-eligibility-audit verdicts; cut sibling-clone I/O; reap the governor marker-file leak; decide
+`content-gate`'s runner; update 3 stale codex docs) were each checked against today's 9 operator-Q&A precedents — none
+apply. Deferring to the same-day sibling audit's judgment on AO-eligibility rather than re-litigating in a second pass
+the same day. No `assigned_vm` change.

@@ -715,3 +715,11 @@ fleet-wide tag-minting judgment call, unruled F4 cron disposition, unresolved `s
 call). 1 (the F3 `cascade-qg-ordering.yml`/`sit-gate.yml` success-reporting remainder) was already extracted into
 `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (status: active) but this doc's own checkbox carried no back-citation —
 added one. No `assigned_vm` change.
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-read all 5 remaining open items
+against today's 9 operator-Q&A precedents; none apply. F1 (kill-switch) stays TIME-GATED on execution-service handling
+live order flow, unchanged. The "reconcile ~4 weeks of missing tags" item and the F3 success-reporting remainder stay
+KEEP-NA-STALE (already-duplicated in `ci_satellite_ao_dispatch_batch1_2026_07_26.md` / `batch5_2026_08_02.md`
+respectively, both cited in place). The F4 vacuous-crons item bundles a plausibly-bounded sub-part (disable 4 named
+no-op crons) with a genuinely open-ended sub-part (`digest-drift-sweep`'s non-convergence, itself gated on the dormant-
+cascade investigation) — not split out or reclassified here. The `sit_validated_workspace_digest` item ("close the gap,
+or document why safe to drop") is a genuine design call, not a checkable fact. No `assigned_vm` change.
