@@ -96,6 +96,29 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   purpose (e.g. a different tool consumes it, or it's scoped to a specific IDE/agent that isn't Cursor). Other: operator
   can type a custom answer.
 
+  **CORRECTION (round5 ao investigation, 2026-08-08) — the "nothing reads from it" premise behind Option A is FALSE; a
+  live CI consumer exists and was missed by all 4 prior read-only passes.**
+  `.github/workflows/rules-alignment-agent.yml` ("Rules Alignment Agent") triggers on every push to `main` touching
+  `plans/active/**` and its entire job is to search `cursor-rules/` for `.mdc` coverage of new plan constraints and
+  auto-create missing ones there
+  (`bash scripts/quickmerge.sh "chore: add cursor rules for new plan constraints" --files ...`) — its own header
+  comment: "Keeps PM plans and cursor rules in sync automatically." Confirmed this workflow is genuinely LIVE, not
+  stale/disabled: `gh run list --workflow=rules-alignment-agent.yml` shows it firing every ~15-20min (matching
+  quickmerge promotion cadence) with `completed/success` on EVERY run through 2026-08-08 08:34 UTC, i.e. running today,
+  well after the 2026-08-02 archival. Two real prior commits exist from this exact workflow (`92d0db96fa`, `0c52685ee2`,
+  author `Rules Alignment Agent <rules-alignment-agent@ci.local>`) — but BOTH predate the archival (2026-06-03/04); zero
+  such commits have landed since 2026-08-02 despite the workflow running successfully dozens of times against a target
+  directory that no longer exists at its expected path. Spot-checked one recent full run log
+  (`gh run view 31248707115 --log`) for errors — found none; the haiku-4-5 sub-agent appears to be gracefully no-op'ing
+  (finding nothing worth flagging) rather than crashing, but this is inferred from absence of error output, not proven.
+  **This changes the calculus materially**: the archival that already happened (see the docs-reconcile/na-eligibility
+  Progress Log entries below) was made on the stated premise that no live consumer existed — that premise was wrong.
+  Whether the right fix is (i) restore `cursor-rules/` so this workflow has a real target again, (ii) retarget/retire
+  the workflow now that its target moved to `.cursor/rules/`, or (iii) confirm the graceful-no-op is intentional and
+  leave both as-is, is a genuine operator call this investigation should NOT make unilaterally — NOT resolving this
+  item, re-flagging it with materially new evidence instead of the closer-to-moot framing the 2026-08-03/06 entries left
+  it in.
+
 ## 🚧 BLOCKED-OPERATOR-DECISION 2 — locked doc's broken `source:` field
 
 - [ ] [DOCS] P3. **Fix (or authorize fixing) the broken `source:` frontmatter entry in

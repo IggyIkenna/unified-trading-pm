@@ -75,13 +75,25 @@ context_scope:
       temporarily commented out one at a time (or just log the actual rendered row), to determine exactly which of the 7
       columns still match their hand-seeded `E2E_DEEPSEEK_ACCT_*` values vs which now read live-poller-computed values
       instead.
-- [ ] 2. [INFRA] P3. Decide the fix direction (operator call, not unilateral): (a) disable `DeepSeekUsagePoller` in the
-      e2e backend entirely (`run-e2e-backend.sh` / `ORCHESTRATOR_MODE=mock`-equivalent env gate), restoring the spec's
-      original "hand-seeded values are stable" design intent, or (b) accept the poller runs and rewrite the test's
-      expectations to assert against genuinely live-computed values (fragile — depends on the E2E-DONE fixture's own
-      turn_count staying in sync, and stops testing the "hand-seeded blob" code path at all), or (c) seed a DIFFERENT
-      hand-seeded blob shape that survives the merge (e.g. give `deepseek-v4-pro-demo` a real transcript file
-      discoverable by the sweep, matching what it actually re-derives).
+- [x] 2. [INFRA] P3. ✅ **DIRECTION DECIDED (round5 ao investigation) — option (a): disable `DeepSeekUsagePoller` in the
+      e2e backend.** Blast-radius check performed before recommending (the missing input the original "operator call"
+      framing lacked): grepped every `dashboard/tests/e2e/*.spec.ts` for any reference to the poller/live sweep behavior
+      — `deepseek-per-turn-metrics.spec.ts` (this doc's own failing spec) is the ONLY one that touches it.
+      `deepseek-wallet-reconciliation.spec.ts` (the spec the sibling doc's now-superseded "async-poller-vs-test-timeout
+      race" hypothesis bundled alongside this one) reads directly from `seed_e2e_state.py`-seeded
+      `deepseek_message_usage`/top-up rows, not from a live poller sweep — confirmed by reading its fixture doc-comment
+      and assertions directly; it does not need the poller to tick at all. The poller starts unconditionally in
+      `server/server.py:234` with no existing e2e-mode gate. So option (a) has zero known cross-spec blast radius, and
+      it's also the ONLY option that restores this exact test's own original stated design assumption ("this e2e backend
+      has no live DeepSeekUsagePoller tick to derive it from real transcripts") rather than working around its violation
+      — option (b) was already self-flagged fragile by this doc's own text, and (c) adds a transcript-file-freshness
+      dependency neither existing option carries. **Remaining work** (out of scope for this unified-trading-pm-only
+      investigation pass — needs an `agent-orchestrator` code change): add the e2e-mode gate (`run-e2e-backend.sh` env
+      var, checked in `server.py` before constructing `DeepSeekUsagePoller`), verify the full spec goes green, ship via
+      `agent-orchestrator`'s own quality-gates.sh + quickmerge. Todo 1's per-column blast-radius check WITHIN the
+      failing spec itself (which of the 7 hand-seeded columns currently mismatch) is unaffected by this finding and
+      remains open below — this decision doesn't need that answer, but the eventual fix-implementer may still want it
+      for the regression-test writeup.
 - [ ] 3. [INFRA] P3. Implement the chosen fix; the currently-known workaround this session used elsewhere
       (`agent-orchestrator@<TBD — see deepseek_flash_ab_routing_test_2026_08_05.md's Progress Log>`) was to give NEW
       TaskUsageRow fixture rows a distinct, non-colliding `account_id` — that pattern does NOT help pre-existing rows
