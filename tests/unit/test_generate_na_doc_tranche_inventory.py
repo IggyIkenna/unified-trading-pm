@@ -29,6 +29,7 @@ file read at all):
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -351,3 +352,219 @@ def test_owned_only_without_specific_tranche_errors(monkeypatch, tmp_path):
     monkeypatch.setattr(MOD, "PM", tmp_path)
     with pytest.raises(SystemExit):
         MOD.main(["--tranche", "all", "--owned-only", "--json"])
+
+
+# ---------------------------------------------------------------------------
+# Content-hash (frontmatter-blind) incremental mode
+# Covers: na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md
+# ---------------------------------------------------------------------------
+
+_BODY_ONLY = "\n# Test doc\n\n- [ ] open todo\n"
+_FM_BASE = (
+    "---\n"
+    "doc_type: issue\n"
+    'title: "hash test"\n'
+    "summary: fixture\n"
+    "status: open\n"
+    "nature: issue\n"
+    "asset_group: [infrastructure]\n"
+    "stage: [meta]\n"
+    "repos: []\n"
+    "scope: [engineer]\n"
+    "tags: []\n"
+    "related: []\n"
+    'created: "2026-08-01"\n'
+    "parent_epic: infrastructure_master\n"
+    "assigned_vm: NA\n"
+    "execution_scope: local-only\n"
+    "priority: P3\n"
+    "estimate_class: refactor\n"
+    "estimate_baseline_ai_days: 0.1\n"
+    "estimate_calibrated_ai_days: 0.1\n"
+    "assigned_role: infra\n"
+    "drift_direction: none\n"
+    "depends_on: []\n"
+    "resolved_by:\n"
+    "locked_by:\n"
+    "supersedes:\n"
+    "superseded_by:\n"
+    "---"
+)
+_FM_WITH_SCOPE = _FM_BASE.replace("---\n", "---\n", 1).replace(
+    "depends_on: []\n",
+    "depends_on: []\n"
+    "context_scope: [scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]\n",
+)
+
+
+def _make_doc_text(body: str, marker_hash: str | None = None) -> str:
+    """Build a full doc string with optional verdict marker embedding a body-hash."""
+    marker = ""
+    if marker_hash is not None:
+        marker = (
+            f"\n\n## Progress Log\n\n"
+            f"- **na-eligibility-audit 2026-08-08 (infra tranche)**: "
+            f"KEEP-NA, valid — fixture (body-hash={marker_hash})\n"
+        )
+    return _FM_BASE + body + marker
+
+
+def _write_doc_text(root: Path, rel: str, text: str) -> Path:
+    p = root / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def _run_incremental_json(monkeypatch, tmp_path: Path) -> list[dict]:
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = MOD.main(["--incremental", "--json"])
+    assert rc == 0
+    return json.loads(buf.getvalue())
+
+
+def test_body_hash_stable_across_frontmatter_only_change():
+    """_compute_body_hash is frontmatter-blind: adding context_scope: leaves the hash unchanged.
+
+    This is the core invariant that makes the incremental-skip scheme immune to future
+    frontmatter-only maintenance skills (context-scout, docs-reconciler, etc.).
+    """
+    text_before = _FM_BASE + _BODY_ONLY
+    text_after = _FM_WITH_SCOPE + _BODY_ONLY
+    assert MOD._compute_body_hash(text_before) == MOD._compute_body_hash(text_after)
+
+
+def test_body_hash_changes_when_body_changes():
+    """_compute_body_hash produces a different value when the document body (not frontmatter) changes."""
+    text_original = _FM_BASE + _BODY_ONLY
+    text_changed = _FM_BASE + _BODY_ONLY + "- [ ] one more todo added to body\n"
+    assert MOD._compute_body_hash(text_original) != MOD._compute_body_hash(text_changed)
+
+
+def test_parse_marker_hash_returns_none_when_no_marker():
+    """_parse_marker_hash returns None for a doc that has no verdict marker at all."""
+    assert MOD._parse_marker_hash(_FM_BASE + _BODY_ONLY) is None
+
+
+def test_parse_marker_hash_returns_none_for_old_format_marker():
+    """_parse_marker_hash returns None for the pre-hash marker format (no body-hash token)."""
+    text = (
+        _FM_BASE
+        + _BODY_ONLY
+        + "\n- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — reason\n"
+    )
+    assert MOD._parse_marker_hash(text) is None
+
+
+def test_parse_marker_hash_extracts_hash():
+    """_parse_marker_hash correctly extracts the body-hash from a new-format marker."""
+    body_hash = hashlib.sha256(b"body text").hexdigest()[:12]
+    text = (
+        _FM_BASE
+        + _BODY_ONLY
+        + f"\n- **na-eligibility-audit 2026-08-08 (infra tranche)**: KEEP-NA (body-hash={body_hash})\n"
+    )
+    assert MOD._parse_marker_hash(text) == body_hash
+
+
+def test_incremental_skip_true_when_hash_matches(monkeypatch, tmp_path):
+    """--incremental sets incremental_skip=True when the marker's body-hash matches the current body."""
+    body_hash = MOD._compute_body_hash(_FM_BASE + _BODY_ONLY)
+    text = _make_doc_text(_BODY_ONLY, marker_hash=body_hash)
+    _write_doc_text(tmp_path, "plans/active/issues/hash_match_doc_2026_08_08.md", text)
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    records = _run_incremental_json(monkeypatch, tmp_path)
+    assert len(records) == 1
+    assert records[0]["incremental_skip"] is True
+    assert records[0]["body_hash"] == body_hash
+
+
+def test_incremental_skip_false_when_body_changed_since_marker(monkeypatch, tmp_path):
+    """--incremental sets incremental_skip=False when the body has changed since the marker hash was recorded."""
+    old_body = "\n# Old body\n\n- [ ] original todo\n"
+    old_hash = MOD._compute_body_hash(_FM_BASE + old_body)
+    # Body was then changed (new todo added) after the marker was written
+    new_body = old_body + "- [ ] additional todo added after verdict\n"
+    text = _make_doc_text(new_body, marker_hash=old_hash)
+    _write_doc_text(tmp_path, "plans/active/issues/body_changed_doc_2026_08_08.md", text)
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    records = _run_incremental_json(monkeypatch, tmp_path)
+    assert len(records) == 1
+    assert records[0]["incremental_skip"] is False
+
+
+def test_incremental_skip_false_when_no_hash_marker(monkeypatch, tmp_path):
+    """--incremental sets incremental_skip=False for old-format markers (no body-hash token).
+
+    Old markers (pre-hash-scheme) require a fresh verdict to update the marker with a hash;
+    they must never be silently skipped just because they have a date-based marker.
+    """
+    text = (
+        _make_doc_text(_BODY_ONLY, marker_hash=None).rstrip()
+        + "\n\n- **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — reason\n"
+    )
+    _write_doc_text(tmp_path, "plans/active/issues/old_marker_doc_2026_08_08.md", text)
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    records = _run_incremental_json(monkeypatch, tmp_path)
+    assert len(records) == 1
+    assert records[0]["incremental_skip"] is False
+
+
+def test_body_hash_emitted_without_incremental_flag(monkeypatch, tmp_path):
+    """body_hash is always present in JSON output, even without --incremental, so the skill can
+    write the hash token to the marker after a Phase-1 verdict without needing a second flag."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/body_hash_always_doc_2026_08_08.md",
+        title="body_hash always",
+        asset_group="infrastructure",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    records = _run_json()
+    assert len(records) == 1
+    assert "body_hash" in records[0]
+    assert len(records[0]["body_hash"]) == 12  # 12-hex-char SHA256 prefix
+    assert "incremental_skip" not in records[0]
+
+
+def test_incremental_skip_is_frontmatter_blind_for_real_measurement_docs():
+    """Verify the 5 docs from the measurement table: a context_scope:-only addition does not
+    change the body hash, confirming that -- once these docs have their markers updated with
+    hashes -- they will correctly report as incremental_skip=True after a context-scout pass.
+
+    This test does NOT require the docs to currently carry hashed markers; it simply validates
+    the key property (_compute_body_hash is frontmatter-blind) against real doc content.
+    Source: na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md
+    measurement table (5 false-positive docs from the 2026-08-03 infra-tranche run).
+    """
+    pm = REPO_ROOT
+    docs = [
+        pm / "plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md",
+        pm / "plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md",
+        pm / "plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md",
+    ]
+    archive_docs = [
+        pm / "plans/archive/issues/prod_vm_launch_missing_service_account_user_grant_2026_08_02.md",
+        pm / "plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md",
+    ]
+    for path in docs + archive_docs:
+        if not path.exists():
+            pytest.skip(f"Measurement doc not found (may have been archived): {path.name}")
+        text = path.read_text(encoding="utf-8")
+        # Simulate a context_scope: backfill by inserting one field into the frontmatter
+        _scope_line = "\ncontext_scope: [scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]"
+        text_with_scope = text.replace("\ndepends_on:", _scope_line + "\ndepends_on:", 1)
+        if text_with_scope == text:
+            # depends_on not present; inject before another reliable frontmatter field
+            text_with_scope = text.replace("\nassigned_role:", _scope_line + "\nassigned_role:", 1)
+        original_hash = MOD._compute_body_hash(text)
+        modified_hash = MOD._compute_body_hash(text_with_scope)
+        assert original_hash == modified_hash, (
+            f"{path.name}: body hash changed after frontmatter-only edit — "
+            f"_compute_body_hash is not correctly stripping frontmatter"
+        )

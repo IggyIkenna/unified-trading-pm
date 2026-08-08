@@ -31,6 +31,7 @@ the sibling script's identical bug, already fixed there).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import re
@@ -139,6 +140,63 @@ DATA_EPICS = {
 # the regex missed" failure class this script exists to avoid).
 CHECKBOX_RE = re.compile(r"^\s*[-*]\s*\[ \]", re.MULTILINE)
 
+# Matches a verdict marker that has an embedded body-hash written by the na-eligibility-audit skill.
+# The skill writes the hash as `(body-hash=<hex>)` somewhere on the same line as the marker keyword.
+# Handles both marker spellings (na-eligibility-audit and the older na_docs_validity_and_ao_...).
+_BODY_HASH_IN_MARKER_RE = re.compile(
+    r"na[-_](?:eligibility[-_]audit|docs_validity_and_ao_eligibility_audit)\b"
+    r"[^\n]*?"
+    r"\(body-hash=([0-9a-f]{12,64})\)",
+    re.IGNORECASE,
+)
+
+# Strips the entire Progress Log section (heading + all entries) before hashing. The Progress
+# Log is audit infrastructure -- it is written by na-eligibility-audit and context-scout, not
+# by doc authors -- and it must not affect the body hash. Stripping the SECTION (not just
+# verdict marker lines) also handles the case where the skill creates a fresh Progress Log
+# heading when none existed before, which would otherwise leave a residual section header after
+# marker-only stripping.
+_PROGRESS_LOG_SECTION_RE = re.compile(
+    r"^## Progress Log\s*$.*",
+    re.MULTILINE | re.DOTALL,
+)
+
+# Defense-in-depth: also strip stray verdict marker lines that appear outside the Progress Log
+# section (non-standard but theoretically possible). Kept separate from the section strip so
+# that the two concerns are independently comprehensible.
+_VERDICT_MARKER_LINE_RE = re.compile(
+    r"^[^\n]*\bna[-_](?:eligibility[-_]audit|docs_validity_and_ao_eligibility_audit)\b[^\n]*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+
+def _compute_body_hash(text: str) -> str:
+    """SHA256 (first 12 hex chars) of the doc's significant content, with three layers stripped:
+
+    1. YAML frontmatter (--- block) -- immune to any frontmatter-only maintenance commit
+       (context-scout adding context_scope:, docs-reconciler touching last_updated:, etc.).
+    2. Progress Log section (## Progress Log heading and everything after it) -- the Progress
+       Log is audit infrastructure; excluding it prevents the skill's own verdict-marker writes
+       from changing the hash and re-triggering the doc on the next incremental run.
+    3. Stray verdict marker lines outside the Progress Log (defense in depth).
+    Trailing whitespace is normalised so that a blank-line difference between before/after the
+    Progress Log section does not produce a spurious hash change.
+    """
+    _, body = ds.parse_frontmatter(text)
+    body_content = _PROGRESS_LOG_SECTION_RE.sub("", body)
+    body_content = _VERDICT_MARKER_LINE_RE.sub("", body_content)
+    return hashlib.sha256(body_content.rstrip().encode()).hexdigest()[:12]
+
+
+def _parse_marker_hash(text: str) -> str | None:
+    """Return the body-hash embedded in the most recent verdict marker, or None.
+
+    Returns None when the doc has no marker at all, or when the marker was written
+    before this hash scheme was introduced (old markers carry no body-hash token).
+    """
+    m = _BODY_HASH_IN_MARKER_RE.search(text)
+    return m.group(1) if m else None
+
 
 def _iter_docs() -> list[Path]:
     seen: set[Path] = set()
@@ -161,6 +219,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="filter to docs this --tranche OWNS (writes the verdict marker for) -- requires --tranche != all",
     )
+    parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help=(
+            "emit 'incremental_skip' per record (JSON) and a skip-count summary (text). A doc is "
+            "skippable when its verdict marker carries a body-hash token that matches the current "
+            "frontmatter-blind body hash -- indicating only frontmatter changed since the last verdict. "
+            "Docs whose markers predate this hash scheme (no body-hash token) are always in scope."
+        ),
+    )
     args = parser.parse_args(argv)
     if args.owned_only and args.tranche == "all":
         parser.error("--owned-only requires --tranche to name a specific tranche, not 'all'")
@@ -168,8 +236,9 @@ def main(argv: list[str] | None = None) -> int:
     records = []
     for path in _iter_docs():
         rel = path.relative_to(PM).as_posix()
+        text = path.read_text(encoding="utf-8", errors="replace")
         try:
-            fm, _ = ds.parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+            fm, _body = ds.parse_frontmatter(text)
         except yaml.YAMLError:
             continue
         if fm is None:
@@ -187,7 +256,8 @@ def main(argv: list[str] | None = None) -> int:
         parent_epic = fm.get("parent_epic") or ""
         basename = path.name
 
-        open_todos = len(CHECKBOX_RE.findall(path.read_text(encoding="utf-8", errors="replace")))
+        open_todos = len(CHECKBOX_RE.findall(text))
+        body_hash = _compute_body_hash(text)
 
         tranches: list[str] = []
         for ag in AGS:
@@ -225,18 +295,21 @@ def main(argv: list[str] | None = None) -> int:
                 tranches.append(epic_tranche)
 
         doc_tranches = tranches or ["UNCLASSIFIED"]
-        records.append(
-            {
-                "path": rel,
-                "basename": basename,
-                "doc_type": fm.get("doc_type"),
-                "asset_group": asset_group,
-                "parent_epic": parent_epic,
-                "open_todos": open_todos,
-                "tranches": doc_tranches,
-                "owning_tranche": owning_tranche(parent_epic, doc_tranches),
-            }
-        )
+        record: dict[str, object] = {
+            "path": rel,
+            "basename": basename,
+            "doc_type": fm.get("doc_type"),
+            "asset_group": asset_group,
+            "parent_epic": parent_epic,
+            "open_todos": open_todos,
+            "tranches": doc_tranches,
+            "owning_tranche": owning_tranche(parent_epic, doc_tranches),
+            "body_hash": body_hash,
+        }
+        if args.incremental:
+            marker_hash = _parse_marker_hash(text)
+            record["incremental_skip"] = bool(marker_hash and marker_hash == body_hash)
+        records.append(record)
 
     if args.tranche != "all":
         records = [r for r in records if args.tranche in r["tranches"]]
@@ -257,7 +330,15 @@ def main(argv: list[str] | None = None) -> int:
 
     total_docs = len(records)
     total_zero = sum(1 for r in records if r["open_todos"] == 0)
-    print(f"Total NA+active/open docs: {total_docs}  (zero-open-todo: {total_zero})")
+    if args.incremental:
+        n_skipped = sum(1 for r in records if r.get("incremental_skip"))
+        n_in_scope = total_docs - n_skipped
+        print(
+            f"Total NA+active/open docs: {total_docs}  "
+            f"(incremental: {n_skipped} skipped / {n_in_scope} in scope)"
+        )
+    else:
+        print(f"Total NA+active/open docs: {total_docs}  (zero-open-todo: {total_zero})")
     for t in tranches_with_unclassified:
         docs = by_tranche.get(t, [])
         zero = sum(1 for r in docs if r["open_todos"] == 0)
