@@ -103,6 +103,19 @@ actually go to zero, did the PR it was supposed to merge actually merge. Read th
 if the outcome doesn't match a green conclusion — that mismatch (green run, wrong/no outcome) is a bug class of its own,
 not a lower-priority one.
 
+**A `success` conclusion that DID post is still not proof the condition is quiet — check whether it posted the SAME
+verdict it computed, or a dedup/cooldown suppressed the post.** Found live 2026-08-08: `sit-gate-stuck-detector.yml` ran
+`success` at its scheduled tick and its own log showed the correct internal verdict (`unified-api-contracts` 8 straight
+blocked ticks, `market-tick-data-service` climbing 4→6) — but the `notify/send-notification` step logged
+`Dedup decision: should_post=false (key 'sit_gate_stuck' last posted 56m ago < 60m cooldown — suppressed)`, so nothing
+reached Slack even though the condition was measurably WORSENING, not just repeating. A monitor's own last-posted Slack
+message is therefore not ground truth for "is this still happening" either — when a monitor's job is to detect a
+streak/count that can climb, re-run the underlying detector script directly (most standing monitors have one under
+`scripts/cicd/` or `scripts/self-hosted-runners/` — check the workflow's own `run:` step for what it invokes) rather
+than trusting silence in the channel.
+`plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md` has the full incident and a queued
+fix for the dedup key itself.
+
 ## 0c. Host/VM-dispatched monitors — invisible to the GH Actions catalog, enumerate them separately
 
 **This section exists because of a real failure**: a sweep declared "30 minutes quiet" using only §0b's catalog-derived
