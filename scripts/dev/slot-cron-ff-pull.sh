@@ -394,6 +394,49 @@ _refresh_independent_clone_ref() {
         "+refs/remotes/origin/${int_branch}:refs/remotes/origin/${int_branch}" 2>/dev/null
 }
 
+# Live heartbeat on .agent-claim's mtime (candidate fix 1,
+# multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md, operator-ruled
+# 2026-08-08 "build a collision-warning mechanism — WARN, never refuse"). The claim file's own
+# `expires_at` JSON field is already a liveness signal, but it is bumped ONLY over the network by
+# an AO-dispatched worker's own /heartbeat call (worktree_claim.refresh_expiry, agent-orchestrator
+# server/routes/slots_worker.py) — an interactive session never heartbeats at all (flat 12h TTL from
+# claim-interactive), so nothing refreshes it for the exact case (an operator sharing a slot) this
+# fix targets. Touching the FILE's mtime is a separate, purely LOCAL, no-network signal: this cron
+# already runs every 5 min on every slot host (VM + operator laptops, per per-tab-worktrees.md), so a
+# future session-start collision check (candidate fix 2) can `stat` the mtime alone to tell
+# claimed-and-alive from claimed-and-abandoned, with no AO API round-trip required.
+#
+# Touching unconditionally every tick would make the mtime track "the cron ran on this host", not
+# "this slot's session is alive" — a --all-slots sweep visits every slot dir regardless of whether
+# its claimant is still running, which would defeat the entire point. So the touch is gated on the
+# SAME discriminator agent-orchestrator's own FM8 liveness check already uses server-side
+# (worktree_clean_check/_liveness.py's has_session_fn): the claim's own tmux_session must resolve to
+# a tmux session that is actually alive ON THIS HOST right now. A dead session, an expired/malformed
+# claim, or an interactive claim with no tmux_session (the `req.tmux_session` default is "") leaves
+# the file untouched — its mtime keeps aging exactly as an abandoned claim should. Never rewrites the
+# claim's JSON content (expires_at / agent_id / etc. stay exactly as the AO server wrote them) — mtime
+# only.
+_refresh_agent_claim_heartbeat() {
+    local slot_dir="$1" claim_file tmux_session
+    claim_file="${slot_dir%/}/.agent-claim"
+    [[ -f "${claim_file}" ]] || return 0
+    command -v tmux >/dev/null 2>&1 || return 0
+    tmux_session=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get('tmux_session', '') or '')
+except Exception:
+    print('')
+" "${claim_file}" 2>/dev/null || echo "")
+    [[ -n "${tmux_session}" ]] || return 0
+    if tmux has-session -t "${tmux_session}" 2>/dev/null; then
+        touch "${claim_file}" 2>/dev/null \
+            && log_quiet "[claim-heartbeat] $(basename "${slot_dir%/}") — .agent-claim mtime refreshed (tmux session '${tmux_session}' alive)"
+    fi
+    return 0
+}
+
 ff_one() {
     local repo_dir="$1"
     local do_fetch="${2:-1}"
@@ -764,6 +807,9 @@ walk_slot() {
     local slot_dir="$1"
     local do_fetch="${2:-1}"
     local count=0
+    # Once per slot (not per-repo) — see the function's own comment for the full rationale.
+    # No-op (returns 0 immediately) for the main-workspace pseudo-slot, which has no .agent-claim.
+    [[ "${DRY_RUN}" -eq 1 ]] || _refresh_agent_claim_heartbeat "${slot_dir}"
     for d in "${slot_dir}"/*/; do
         [[ -d "${d}" ]] || continue
         [[ -d "${d}.git" || -f "${d}.git" ]] || continue
