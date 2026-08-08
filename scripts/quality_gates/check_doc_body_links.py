@@ -16,6 +16,12 @@ checks existence for any target that is a relative path ending in `.md`/`.mdc`. 
 (http(s)://, mailto:, vscode-webview://, ...) and anchor-only (`#foo`) targets are skipped — not
 corpus-relative doc links.
 
+Also extracts the corpus's other dominant citation convention: a bare backtick-quoted path starting
+with `codex/` or `/codex/`, e.g. "SSOT: `codex/foo/bar.md`" — narrower first cut of the P1 broken-link
+gap filed in doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md (the codex/-prefixed
+subset only; other backtick-cited trees like plans/ are left for a later pass). Reuses `_resolve()`
+unchanged.
+
 Resolution mirrors validate_doc_references()'s three tiers: relative to the referencing doc's own
 directory, relative to the PM root, then a plans/archive/** basename fallback (a doc that graduated
 to archive is a normal lifecycle event, not breakage). A fourth, final tier: a relative link that
@@ -49,6 +55,7 @@ PM = Path(__file__).resolve().parents[2]
 LINK_BASELINE = Path(__file__).resolve().parent / "doc_body_link_baseline.yaml"
 
 _LINK_RE = re.compile(r'\[[^\]\n]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
+_BACKTICK_CODEX_RE = re.compile(r"`(/?codex/[^`\s*]+\.(?:md|mdc))`")
 _FENCE_RE = re.compile(r"^\s*```")
 _URI_SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.\-]*://")
 
@@ -92,10 +99,14 @@ def _body_without_fences(text: str) -> str:
 
 
 def _extract_links(text: str) -> list[tuple[int, str]]:
-    """Return (1-based line number, target) for every markdown link target in text."""
+    """Return (1-based line number, target) for every markdown link target in text — real
+    `[text](target)` links plus backtick-quoted `codex/`/`/codex/` path citations (the corpus's
+    other dominant cross-reference convention)."""
     out: list[tuple[int, str]] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
         for m in _LINK_RE.finditer(line):
+            out.append((lineno, m.group(1)))
+        for m in _BACKTICK_CODEX_RE.finditer(line):
             out.append((lineno, m.group(1)))
     return out
 
