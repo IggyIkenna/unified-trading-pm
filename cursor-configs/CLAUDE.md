@@ -60,9 +60,11 @@ UAC-internal.
 - **Ship via `bash scripts/quickmerge.sh "msg" --agent --files '<paths>'`** — always `--agent`, scope `--files` by name.
   **CODE reaches the integration branch ONLY via quickmerge** (a raw `git push` of code is BANNED — it dodges the dep
   gates + early-exits on a clean tree so commits pile up behind main). Closed carve-out direct pushes: (1) dirty-deps;
-  (2) the FF-pull-in & cross-repo PM `docs(plans):` flip; (3) PM `scripts/**` & any `.github/**` change that must reach
-  `main` to unblock the pipeline. Machine guard: `Quickmerge:` trailer + `check_strict_quickmerge.py` pre-push hook;
-  per-repo `quickmerge.sh` are SYMLINKS to the PM SSOT.
+  (2) the FF-pull-in & cross-repo PM `docs(plans):` flip; (3) any repo's `scripts/**` & any `.github/**` change that
+  must reach `main` to unblock the pipeline (D16, operator-ruled 2026-08-08 — all-repos, matching what
+  `check_strict_quickmerge.py`'s repo-agnostic `CARVE_PREFIX` already did in practice; was mis-stated as "PM
+  scripts/**"). Machine guard: `Quickmerge:` trailer + `check_strict_quickmerge.py` pre-push hook; per-repo
+  `quickmerge.sh` are SYMLINKS to the PM SSOT.
 - **Quality gates BEFORE COMMIT — the commit is the per-repo quality boundary (HARD RULE)**: commit only from a
   `quality-gates.sh`-green tree (not just prek). **QG-sweep batching** — gate once over a batch → per-unit commits;
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →

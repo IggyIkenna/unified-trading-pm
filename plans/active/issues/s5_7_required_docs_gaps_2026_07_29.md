@@ -98,19 +98,31 @@ required-docs **presence**) — recorded here so the Phase-5 audit output is tra
 Operator/main scoping call (not an AO-dispatchable bounded todo — "which repos need which docs" is a judgment call per
 the dispatch-scope-eligibility ruling):
 
-- [ ] [DOCS] P2. **Tier the S5.1 required-docs set by repo type** — split into "data-writing service" (keeps GCS_PATHS +
-      SCHEMA_VALIDATION) vs "compute/orchestration/test/infra" (GCS_PATHS + SCHEMA_VALIDATION become N/A, marked
-      explicitly not-applicable rather than missing). Codify the tiering in
-      `/codex/06-coding-standards/documentation-standards.md` § S5.1. (repo: unified-trading-pm) — OPERATOR/main scoping
-      decision first.
-- [ ] [DOCS] P2. **Fill the genuine data-service gaps** once tiering is decided: market-data-processing-service
+- [x] ✅ [DOCS] P2. **DECIDED + DONE 2026-08-08 — Tier the S5.1 required-docs set by repo type.** OPERATOR RULING: yes,
+      tier it — non-data-writing repos (`agent-orchestrator`, `e2e-testing`, `system-integration-tests`,
+      `ibkr-gateway-infra`, `batch-live-reconciliation-service`) mark `GCS_PATHS.md`/`SCHEMA_VALIDATION.md` as
+      not-applicable instead of missing; every other repo keeps the full S5.1 set. Codified in
+      `/codex/06-coding-standards/documentation-standards.md` new § S5.1a (+ S5.7/S5.10 cross-refs updated to match).
+      (repo: unified-trading-pm)
+- [ ] [DOCS] P2. **Fill the genuine data-service gaps** now that tiering is decided: market-data-processing-service
       `DEPLOYMENT_GUIDE.md` + `TESTING.md` (real service, docs genuinely absent). (repo: market-data-processing-service)
-- [ ] [DOCS] P3. **Reconcile instruments-service's reorganized docs against the S5.1 filename set** — either add thin
-      redirect stubs at the canonical filenames pointing at the reorganized docs, or update S5.1 to accept the
-      reorganized layout. (repo: instruments-service, unified-trading-pm)
+- [x] ✅ [DOCS] P3. **DECIDED + DONE 2026-08-08 — Reconcile instruments-service's reorganized docs against the S5.1
+      filename set.** OPERATOR RULING: add thin redirect stubs at the canonical filenames pointing at the reorganized
+      docs. Added 6 stub files under `instruments-service/docs/` (`ARCHITECTURE.md` → `ADAPTER_ARCHITECTURE.md`;
+      `CONFIGURATION.md` → `SETUP_GUIDE.md` §4-6; `GCS_PATHS.md` → `SETUP_GUIDE.md` §7.1 + `ADAPTER_ARCHITECTURE.md`'s
+      storage/bucket-resolution section; `DEPLOYMENT_GUIDE.md` → `SETUP_GUIDE.md` §2/§9; `TESTING.md` → `SETUP_GUIDE.md`
+      §8; `SCHEMA_VALIDATION.md` → `ADAPTER_ARCHITECTURE.md`'s schema-validation stage +
+      `/codex/02-data/schema-governance.md`), each pointing at the real reorganized content per S5.11's redirect-doc
+      template. (repo: instruments-service)
 
 ## Progress Log
 
+- **2026-08-08 (operator Q&A round5, infra tranche, items 76/77)**: Operator ruled both open scoping questions in one
+  session — (76) tier S5.1 by repo type: yes; (77) instruments-service reorg vs S5.1 filenames: thin redirect stubs.
+  Flipped both todos above to done with the ruling + evidence. The remaining open todo ("fill the genuine
+  market-data-processing-service gaps") is now a bounded, worker-determinable doc-writing task (no longer scoping
+  judgment) — worth a fresh RECLASSIFY look in a future na-eligibility-audit pass, not actioned this run (out of this
+  session's scope).
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-07-30. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 3, matching. All 3 todos remain gated on the same operator/main scoping decision (should S5.1
   tier its required-docs set by repo type) explicitly named in the doc's own text; only context-scout scope refreshes

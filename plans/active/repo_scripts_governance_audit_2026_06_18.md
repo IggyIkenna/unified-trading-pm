@@ -220,12 +220,17 @@ a verdict). Heaviest:
 
 ## Phase 3 — D16 strict-quickmerge carve scope [P2]
 
-- [ ] [SCRIPT] P2. Decide + implement the `scripts/` provenance-carve scope, informed by Phase 1 (how often service-repo
-      scripts are legitimately direct-pushed during migrations): - **PM-only** → make `check_strict_quickmerge.py`
-      repo-aware (carve `scripts/` for PM; treat a service repo's `scripts/*.py` as gated source needing the
-      `Quickmerge:` trailer) + update CLAUDE.md carve #3 to match. - **all-repos** → update CLAUDE.md carve #3 to "any
-      repo's `scripts/**`" so the doc matches the current code. Keep `tests/` exempt either way (it's caught in staging
-      via pytest). Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **DECIDED + DONE 2026-08-08 — operator ruling: all-repos.** Extend the carve to all-repos
+      formally, matching what `check_strict_quickmerge.py`'s `CARVE_PREFIX` already does in practice. Confirmed by
+      reading the actual current code: `CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")`
+      (`scripts/cicd/check_strict_quickmerge.py:52`) is a bare path-prefix match with zero repo-awareness — each repo's
+      own pre-push hook/CI run of this script operates on ITS OWN relative commit paths, so `scripts/` is already carved
+      out uniformly for every repo's own commit range, not scoped to PM. No code change needed (the decision matches
+      existing behavior); updated the prose that mis-stated it as "PM `scripts/**`" to match reality:
+      `/codex/08-workflows/ci-cd-flow.md` § "Strict quickmerge" carve-out item 3, `cursor-configs/CLAUDE.md`'s Git
+      discipline carve #3, and `check_strict_quickmerge.py`'s own module docstring (which had the same "PM scripts"
+      framing). Keep `tests/` exempt either way (it's caught in staging via pytest) — unchanged, no code touched
+      `tests/`. Repo: unified-trading-pm.
 
 ## Codex SSOT updates
 
@@ -248,6 +253,15 @@ a verdict). Heaviest:
 
 ## Progress Log
 
+- **2026-08-08 (operator Q&A round5, infra tranche, item 79)**: Operator ruled the D16 carve scope: all-repos, matching
+  what `check_strict_quickmerge.py`'s `CARVE_PREFIX` already does in practice. Read the actual current `CARVE_PREFIX`
+  logic (`scripts/cicd/check_strict_quickmerge.py:52`) before closing — confirmed it's a bare path-prefix match with no
+  repo-awareness, so the code already behaved all-repos; only the codex/CLAUDE.md prose (mis-stated as "PM scripts/**")
+  needed correcting, not the code. Flipped the Phase-3 todo to done; updated `/codex/08-workflows/ci-cd-flow.md`,
+  `cursor-configs/CLAUDE.md`, and the script's own module docstring to match. This was one of the 2 items this doc's
+  Progress Log previously cited as operator-gated (per `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+  BLOCKED-OPERATOR-DECISION section) — that citation is now stale for this item specifically; the doc's other
+  operator-gated item + the folded-in `[SCRIPT] P1` condition-block are untouched by this session.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-02. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 8, matching. Mixed shape unchanged: 2 items operator-gated (cited in
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s BLOCKED-OPERATOR-DECISION section), the folded-in `[SCRIPT] P1`

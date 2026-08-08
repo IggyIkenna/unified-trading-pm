@@ -805,8 +805,13 @@ early-exits "nothing to commit" on a clean tree — silently piles commits on LD
 
 1. **Dirty-deps** — a dep repo dirty mid-edit → commit+push the dep directly to LDR (never quickmerge with dirty deps).
 2. **FF-pull-in** + the **cross-repo PM plan-flip** (`docs(plans):`).
-3. **PM `scripts/**` + any repo's `.github/**` workflow** change that must reach `main` to unblock the pipeline (the
-   chicken-and-egg — a corrected gate can't pass through the gate it's fixing); operator/admin authority.
+3. **Any repo's `scripts/**` + any repo's `.github/**` workflow** change that must reach `main` to unblock the pipeline
+   (the chicken-and-egg — a corrected gate can't pass through the gate it's fixing); operator/admin authority.
+   **All-repos, not PM-only (D16, operator-ruled 2026-08-08)**: `check_strict_quickmerge.py`'s
+   `CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")` is a bare path-prefix match with no
+   repo-awareness — it already carves `scripts/` for EVERY repo's own commit range, not just PM's. This prose used to
+   read "PM `scripts/**`" as if the carve were PM-specific; corrected to match the code's actual (and now formally
+   ratified) all-repos behavior. `repo_scripts_governance_audit_2026_06_18.md` Phase 3 D16 decision.
 
 Everything else is HARD-blocked. **Enforcement — the machine guard is LIVE**: quickmerge stamps a
 `Quickmerge: agent|human` lineage trailer on every commit it ships; `scripts/cicd/check_strict_quickmerge.py` flags a
