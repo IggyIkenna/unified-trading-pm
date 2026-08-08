@@ -663,6 +663,32 @@ absorb the actual remediation work.
 
 ## Progress Log
 
+- **2026-08-08T~22:45Z (slot 9, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-004`) — task
+  CANCELLED mid-session by the msg-4352 review finding above; work NOT shipped, but 2 real bugs found in candidate 1
+  (`531a07d8` lineage) are worth carrying into whoever does the 3-way diff.** Before the cancellation landed, this
+  session had already rebased `wip-preserve/orchestrator-slot-6-531a07d8` onto current `live-defi-rollout` HEAD
+  (local-only commit, never pushed — not one of the 3 candidates listed above) and run full `quality-gates.sh` against
+  it. First full run: 240 failed / 211 errors, all bare-file pytest COLLECTION errors (not real test failures) —
+  root-caused to a real bug in the candidate itself, not host contention (verified via a clean-tree parent-commit QG
+  comparison first, which was fully green): `dex_swaps_handler.py` imports `_SubgraphStalledHeadError`,
+  `probe_subgraph_head_and_raise_if_stale`, `record_stalled_head_empty`, `_is_subgraph_head_stale` from
+  `_dex_swaps_queries.py`, but that file's file-size-compliance extraction to the new `_dex_swaps_stalled_head.py`
+  module was never finished — the re-export comment ("Re-imported from _dex_swaps_stalled_head.py") was left with NO
+  actual import statement under it, so any import of `market_tick_data_service.cli.handlers` (eager via
+  `cli/handlers/__init__.py` → `dex_swaps_handler.py`) raised `ImportError` and broke collection fleet-wide for ~127
+  unrelated test files. After adding the missing re-export + `__all__` entries, a second real bug surfaced:
+  `probe_subgraph_head_and_raise_if_stale` (`_dex_swaps_stalled_head.py`) calls
+  `data = await handler._execute_subgraph_query(...)` without unpacking — `_execute_subgraph_query`'s actual signature
+  returns `tuple[dict | None, int]` (`data, http_status`, confirmed at `dex_swaps_handler.py:672` and both other call
+  sites at lines 585/610), so `data.get("_meta")` raised `AttributeError: 'tuple' object has no attribute 'get'` on the
+  one direct test of this path
+  (`test_dex_swaps_handler_coverage.py::test_collect_protocol_chain_stops_on_empty_first_page`). With both fixes, full
+  QG went from 240 failed/211 errors → 1 failed/10153 passed → (fix 2) queued for a final green re-run when the
+  cancellation landed. Both bugs are almost certainly present in whichever of the 3 documented candidates shares this
+  lineage (verify per-candidate before landing any of them — don't assume candidates 2/3 are clean just because they're
+  independent re-implementations of the same feature). Reverted this session's 2 touched files (`git restore`, no
+  reset/checkout) per the cancelled-task protocol; the local rebase commit was never pushed and carries no risk to
+  `origin/live-defi-rollout`. Repo: market-tick-data-service (local-only, unshipped) + unified-trading-pm (this note).
 - **2026-08-03 (data_pipeline_failure escalation worker, agt-e2a77a, slot 11) — same static backlog, no new root cause,
   no code change.** Dispatched off another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for
   `(asset_group=defi, data_type=dex_pool_swaps)`: 1494 attempted_failed cells of 4,618,154 attempted, framed by the
