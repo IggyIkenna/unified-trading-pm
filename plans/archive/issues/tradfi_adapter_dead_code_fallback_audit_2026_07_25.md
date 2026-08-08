@@ -326,12 +326,14 @@ stale/degraded trading data) — worth tightening but far lower severity than E-
       2026-08-08 (ao round-5 apply session item 14) they do not remember ruling on this: "Do not remember - treat as
       unruled."** The underlying architecture question remains genuinely open, tracked as a fresh `[OPERATOR]` todo in
       `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`. The shipped change
-      itself (STATUS-docstring-only, no behavior change) is NOT reverted. Original text preserved below. (Finding E-1):
-      all 6 venue adapters (`cme_adapter.py`, `cboe_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py`,
-      `ice_adapter.py`, `fx_adapter.py`) + shared `ibkr_tradfi.py` base remain registered+tested but excluded by both
-      the `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the UAC-capability-declarations manual-HTTP gate — ~~ruling
-      was NOT to bridge the two vocabulary gates~~ (unsourced, see correction above). Added STATUS documentation at both
-      gate sites (`execution-service/execution_service/utils/nautilus_compatibility.py`'s `NAUTILUS_UNSUPPORTED_VENUES`,
+      itself (STATUS-docstring-only, no behavior change) is NOT reverted. Original text preserved below. (Finding
+      E-1): all 6 venue adapters (`cme_adapter.py`, `cboe_adapter.py`,
+      `nasdaq_adapter.py`, `nyse_adapter.py`, `ice_adapter.py`, `fx_adapter.py`) + shared `ibkr_tradfi.py` base remain
+      registered+tested but excluded by both the `NAUTILUS_UNSUPPORTED_VENUES` strategy gate and the
+      UAC-capability-declarations manual-HTTP gate — ~~ruling was NOT to bridge the two vocabulary gates~~ (unsourced,
+      see correction above). Added STATUS
+      documentation at both gate sites (`execution-service/execution_service/utils/nautilus_compatibility.py`'s
+      `NAUTILUS_UNSUPPORTED_VENUES`,
       `unified-api-contracts/unified_api_contracts/registry/capability_declarations/     _tradfi.py`'s module docstring)
       plus the `TRADFI_VENUES` registration site (`execution-service/execution_service/trade_execution/factory.py`) and
       the shared base's own module docstring (`ibkr_tradfi.py`), each cross-referencing this finding and this same plan
