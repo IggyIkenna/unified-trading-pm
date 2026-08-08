@@ -729,3 +729,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T10:07Z** — FIXTURE_STATS +49 days (`last_completed_date=2025-04-07`, fresh `10:06:41Z`). odds
   smallchunk5: chunk 17/451 (`2020-08-25`), zero OOMs — chunk 18 (2 of the 3 prior hang occurrences happened there)
   starts next. Watching closely next tick.
+- **2026-08-08T10:29Z — smallchunk5 SURVIVED entering chunk 18, no 4th occurrence.** FIXTURE_STATS +34 days
+  (`last_completed_date=2025-05-11`, fresh `10:28:32Z`), close to convergence. odds smallchunk5: 4 leagues attempted in
+  chunk 18 (`EPL, LA_LIGA, BUNDESLIGA, SERIE_A`), 3 OOMs total (up from 0) with normal self-recovery, actively logging
+  as recently as 25s ago. Both healthy, no intervention. Continuing to watch until clearly past chunk 18.
