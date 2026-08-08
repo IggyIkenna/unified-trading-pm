@@ -797,3 +797,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `mtds-backfill-odds-smallchunk6-20260808` (guard passed, confirmed RUNNING). Full detail + updated Timeline table:
   `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`@`179166cf88` (also resolved a git stash conflict
   with a concurrent na-eligibility-audit entry on that doc — both pieces of content preserved).
+- **2026-08-08T14:02Z** — FIXTURE_STATS still chunk 24/26 (`2026-02-05→2026-05-05`), `last_completed_date=2026-04-09`
+  fresh — **2 chunks remain (25, 26)**. odds smallchunk6: chunk 4/451 (`2020-06-21`), zero OOMs, healthy skip-fast pace.
+  Both healthy, no intervention.
