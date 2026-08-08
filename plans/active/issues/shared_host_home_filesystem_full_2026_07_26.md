@@ -107,6 +107,32 @@ specific to any one task.
       `/home/ubuntu/tmp/` (413M, generic — lower confidence than the named slot dirs) before proposing any action on
       either.
 
+## Orphaned manifest-consolidator scratch on the orchestrator VM (found 2026-08-08)
+
+**175G — a third of everything in use on the AO VM root — was abandoned manifest-consolidator scratch, and nothing
+reclaims it.** Found while diagnosing an unrelated "AO is overloaded" report. Three dirs under `/home/ubuntu/tmp`
+(`manifest-consolidate-{eph5a0bh,1g6s1s8z,zuntwmoh}`, 59G/59G/57G, mtime 2026-08-05), all quiescent for 3 days: `lsof
++D` empty, no `manifest.consolidat` process, 0 files modified since 2026-08-06. Contents were
+`duckdb_temp_storage_DEFAULT-*.tmp` spill files plus ~380 intermediate `shards/*.parquet` and a `legacy_seed/` dir —
+working set, not output (the real manifest lands in GCS). Removed 2026-08-08: root went **533G used / 145G free (79%)
+-> 359G used / 319G free (54%)**.
+
+**Why this is a standing bug, not a completed cleanup**: per `/codex/05-infrastructure/manifest-consolidator-ssot.md`
+the consolidator runs on Cloud Run / Batch-Fargate, NOT a VM, so scratch of this shape should not accumulate on the
+orchestrator box at all and nothing owns cleaning it. It will silently refill. A full root WEDGED the orchestrator once
+already (2026-06-28), which is why `setup-tab-worktrees.sh` carries a slot cap at all. Note also that agents can DETECT
+but not clear this: `block_destructive_commands.py` correctly refuses recursive `rm` regardless of reversibility, so
+this needs automation rather than an agent noticing.
+
+- [ ] [INFRA] P2. **Find what writes `manifest-consolidate-*` scratch to the orchestrator VM and stop it, or give it a
+      reaper.** Either something runs the consolidator on the VM (find and fix) or a VM-side helper legitimately spills
+      there and needs a TTL sweep. Done-when: no new `manifest-consolidate-*` dir appears over a 7-day window, OR a
+      reaper deletes any such dir older than 48h with zero holding process. Evidence: 175G across 3 dirs, 2026-08-08.
+      (repo: identify the writer first)
+- [ ] [INFRA] P3. **Add a free-space alert for the orchestrator VM root.** Both the 2026-06-28 wedge and this 175G find
+      were caught by a human looking, not a monitor. Suggest paging under 60G free. Done-when: the alert exists and has
+      fired once in test. (repo: agent-orchestrator)
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — read-only audit first + ownership/purpose
