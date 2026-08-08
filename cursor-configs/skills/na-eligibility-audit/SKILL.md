@@ -106,9 +106,18 @@ scope, grep its own body for a dated `na-eligibility-audit YYYY-MM-DD` (or the e
 `na_docs_validity_and_ao_eligibility_audit` Progress Log precedent) verdict marker. Skip a doc from Phase 1 when BOTH
 hold: (a) it carries such a marker, and (b) the doc's `last_updated` frontmatter (or, if absent, its git last-commit
 date) is NOT newer than that marker's date — nothing has changed since it was last verdicted. A doc with no marker, or
-edited since its last marker, is in scope. **A full unscoped run** (no incremental filter) is still the right call after
-a long gap or before a `--update-baseline` on the ratchet — just expect it to look like the proven plan's own first
-session (dozens of sub-agents, multi-hour).
+edited since its last marker, is in scope. **Interim mitigation for date-fallback false-positives (until the
+content-hash SCRIPT ships):** when a doc enters scope only because condition (b) failed — it HAS a prior marker but its
+`last_updated`/git-date is newer — verify the actual diff before handing it to Phase 1: find the marker commit via
+`git log --oneline -- <doc-path>` to identify the SHA at or after the marker date, then run
+`git diff <marker-sha>..HEAD -- <doc-path>`. If the diff touches ONLY frontmatter fields (`context_scope:`,
+`last_updated:`, `status:`, etc.) and zero body lines, treat the doc as unchanged and skip it from Phase 1 — a
+frontmatter-only commit is not a substantive re-assessment trigger and is the confirmed false-positive class documented
+in `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`. A real body edit
+(new or changed todo text, Progress Log entry, verdict section update, or any prose change) keeps the doc in scope
+normally. This manual check is unnecessary once the content-hash SCRIPT is live. **A full unscoped run** (no incremental
+filter) is still the right call after a long gap or before a `--update-baseline` on the ratchet — just expect it to look
+like the proven plan's own first session (dozens of sub-agents, multi-hour).
 
 Report the Phase-0 split up front: total in-tranche docs, already-verdicted-and-unchanged (skipped), in scope this run.
 
