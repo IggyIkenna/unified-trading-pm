@@ -151,7 +151,7 @@ progress-signal half.
       classifies a long-dirty worktree as dead/stale from tmux-session and heartbeat state alone, the very signal that
       produced the 2026-07-21 false positive. Add an explicit commit-recency + live-process check before recommending
       escalation or recycle. **Gate**: the diff lands; the next long-dirty escalation cites a checked progress signal,
-      not just session state. — unified-trading-pm@<sha> (see Progress Log 2026-08-08 for evidence).
+      not just session state. — unified-trading-pm@c6fde000a (see Progress Log 2026-08-08 for evidence).
 - [x] ✅ [REVIEW] P3. **Operator sign-off on the suppression predicate before it ships** — suppressing too broadly
       blinds genuine wedge detection, the same safety class as the cross-role reply fix. **Gate**: approval recorded
       before the P1/P2 code todo ships. — Sign-off recorded 2026-08-08 in Progress Log below.
@@ -187,4 +187,4 @@ progress-signal half.
   dead/stale if (a) its most-recent commit (`git -C <repo> log -1 --format=%ct`) is newer than ~10 min, OR (b) a live
   child process is running under the worktree path (`pgrep -f <worktree>`). Same two-signal check already shipped in the
   automated backend emitters (`agent-orchestrator@0757a751`/`@0cc12fdb`). `agents/review.md` step 3d updated to mirror
-  this check before recommending escalation or recycle — unified-trading-pm@<sha> (placeholder; filled below on ship).
+  this check before recommending escalation or recycle — unified-trading-pm@c6fde000a.
