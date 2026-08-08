@@ -124,11 +124,13 @@ that drafted todo 9 sourced only from the (stale) divergence doc, not from the (
 
 ## Todos
 
-- [ ] [CODE] P3. **Delete the dead `notify-slack.yml` copies** in `execution-service` and `strategy-service` (zero local
-      callers confirmed via `grep -rn "uses:.*notify-slack" .github/workflows/*.yml`) — same pattern as
-      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 6's other 22 deletions. Verify no other
-      local caller was missed before deleting (todo 6's own precedent: full `.github/workflows/` grep, not just the
-      obvious candidates). (repo: execution-service, strategy-service)
+- [x] ✅ [CODE] P3. **Delete the dead `notify-slack.yml` copies** in `execution-service` and `strategy-service` (zero
+      local callers confirmed via `grep -rn "uses:.*notify-slack" .github/workflows/*.yml`) — same pattern as
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 6's other 22 deletions. **Done same
+      session**: `execution-service@9fbe2a42`, `strategy-service@92841614`. Surfaced as a blocking
+      `workflow-template-parity` QG failure on `unified-trading-pm` once the template's SC2015 fix made their
+      (previously template-matching, un-fixed) stale content newly diverge — fixed inline rather than deferred, since it
+      was directly blocking this session's own shipping. (repo: execution-service, strategy-service)
 
 ## Progress Log
 
@@ -136,3 +138,7 @@ that drafted todo 9 sourced only from the (stale) divergence doc, not from the (
   before any push. Reverted the incorrect 20-repo resurrection + 2 zombie-repo updates; kept the 2 legitimate fixes
   (`unified-trading-pm@f5fe2372e`, `deployment-service@00a23128`). Filed this doc + flipped todo 9 with the corrected
   scope in the same session.
+- **slot-24 (cicd) 2026-08-08T23:20Z**: The `execution-service`/`strategy-service` zombie copies turned into a blocking
+  `workflow-template-parity` QG failure on `unified-trading-pm` (their stale content, previously matching the un-fixed
+  template so no drift showed, newly diverged once the template got today's SC2015 fix) — fixed inline by deleting both,
+  closing the sole open todo above in the same session.
