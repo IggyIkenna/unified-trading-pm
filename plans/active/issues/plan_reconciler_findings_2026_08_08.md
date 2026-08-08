@@ -53,11 +53,66 @@ context_scope:
 
 ## Flips verified
 
-(populated as STEP 4/5 confirm items)
+1. **`data_completion_cefi_2026_07_15.md` E8** (legacy CeFi bucket delete) — independently confirmed via sibling doc's
+   cited Cloud Audit Log entry (`storage.buckets.delete` 2026-07-14T11:02:29Z). Flipped `[x]` — prevents a worker
+   re-attempting an already-completed irreversible delete. unified-trading-pm@243d9b6e6.
+2. **`orphaned_wip_slot12_slot8_recovery_2026_08_04.md` todo 2** (slot-8 stranded sha, "MOOT" claim) — independently
+   re-verified myself via `git merge-base --is-ancestor`: `b0909a5e` IS on `origin/live-defi-rollout`, `bd0e231f` is
+   NOT. Flipped `[x]`. unified-trading-pm@243d9b6e6.
+
+## Archived (verified-done, unlocked, non-grace)
+
+1. **`mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`** — all 5 todos `[x]` with hard evidence (2 QG
+   checkers shipped+wired, `PLAN_FORMAT.md` §8c documents one of them, source doc corrected). Found + fixed a latent
+   gate bug along the way: `locked_by: ""` (literal empty-string quotes) false-trips `check-locked-plan-deletion.sh`'s
+   naive grep parser as "locked" even though it's semantically unlocked — normalized to true-blank in a prior commit
+   before the archival mv (5 other active docs carry the same `locked_by: ""` pattern and would hit the same false
+   gate-trip on their own eventual archival — filed below). Fixed 5 corpus referrers' now-stale
+   `/plans/active/issues/...` citations to the new `/plans/archive/2026_08/...` path; one referrer
+   (`tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`) is grace-protected and its 2 citations stay
+   dangling until a future run can fix them — `check_reference_paths.py`'s ratchet still passes (84 ≤ baseline 86).
+   unified-trading-pm@556dc00f3, @378d3b5dc.
+2. **`dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md`** — both todos done, 0 remaining
+   `attempted_failed` rows verified. unified-trading-pm@f44dfadd4.
+3. **`sports_index_recency_masked_captured_atoms_2026_07_13.md`** — all 7 todos done, doc's own 2026-08-05 Progress Log
+   already said "this closes the last open todo" but `status:` was never flipped. Both #2 and #3 were masked archive
+   candidates until the `locked_by: ""` normalization (same latent gate bug — 6 active docs total carried this pattern;
+   all 6 now normalized, see Hygiene fixes). unified-trading-pm@ad137ae4e, @f44dfadd4.
+
+**Latent bug found + fixed**: `locked_by: ""` (literal empty-string quotes, not truly blank) false-trips
+`scripts/hooks/check-locked-plan-deletion.sh`'s naive `grep -oP '^\s*locked_by:\s*\K.*'` parser as "locked" — the
+extracted string is 2 quote characters, non-empty to bash, even though the doc was never actually locked. This only
+surfaces when a doc carrying this pattern is archived (checked HEAD content, not just current state) or run through
+`check_archive_candidates.sh` (which correctly reads it as empty and returns the doc as a candidate — the two checks
+disagree). All 6 corpus instances found + normalized to true-blank this run.
 
 ## Contradictions
 
-(populated as STEP 4 confirms items)
+1. **[FIXED] Stale "🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation" banner, 5 epics.** `infrastructure_master.md`,
+   `strategy_master.md`, `execution_master.md`, `orchestrator_master.md`, `features_and_ml_master.md` all carried an
+   identical banner blocking concurrent slots from touching strategy risk-eval/ml-registry/features-builder-registry
+   surfaces "until those phase plans land." All 4 referenced phase plans (`utl_reuse_phase0/1/3/4_*_2026_07_13`) were
+   independently verified archived (`find` confirms). `infrastructure_master.md`'s own body already carried an open
+   `[VERIFY] P1` todo (folded in 2026-07-15, still open as of 2026-07-27) explicitly naming all 5 files and instructing
+   this exact removal. Evidence: 5 epic-cluster hunters (infra_1/2/3/5/6) + 1 epic-vs-epic hunter (epics_2)
+   independently surfaced this. Fixed: banner removed from all 5 files, todo flipped `[x]` with evidence —
+   unified-trading-pm@ad1a887ae.
+2. **[FIXED] Operator ruling not mirrored across 2 days** — `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo
+   5 still posed "place a real order on the live Kalshi exchange" as an open option 2 days after
+   `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md` recorded an explicit operator "NO — do not touch the
+   live exchange" ruling; the source doc's own na-eligibility- audit had already flagged the sync gap. Ruled-out in
+   place, citing the source ruling. unified-trading-pm@8cda7d1d6.
+3. **[FIXED] Stale BLOCKED-OPERATOR clause co-located with its own resolving ruling** —
+   `deribit_combo_perpetual_partition_move_2026_07_21.md`'s P2 todo asserted, in the same bullet, both "RULED
+   2026-08-06: proceed now" and "BLOCKED-OPERATOR — genuine sign-off decision" — the sign-off IS the ruling. Removed the
+   stale clause; left the checkbox open since no Progress Log entry evidences the `--apply` actually ran.
+   unified-trading-pm@8cda7d1d6.
+4. **[FLAGGED, not fixed]** `crypto_alpha_research_2026_07_24.md`'s 16 permanently-operator-gated items carry no
+   `BLOCKED-OPERATOR-DECISION` marker on their own checkbox lines (only in the surrounding prose) — a parser-blind- spot
+   risk (the dispatch parser reads only each todo's own line). Currently inert (`assigned_vm: NA`); the identical gap
+   was found live-dispatchable in a sibling doc this run (`l2_book_microstructure_capture_2026_07_13.md`, already fixed
+   there). Did not attempt the precise 16-of-21 checkbox mapping myself under time pressure — added a prominent warning
+   instead, gating any future reclassification to `planning` on doing that mapping first. unified-trading-pm@8cda7d1d6.
 
 ## Doc-drift
 
@@ -65,11 +120,91 @@ context_scope:
 
 ## Hygiene fixes
 
-(populated as STEP 5 applies mechanical fixes)
+1. **6 stale "archive-candidate audit" banners** claiming a follow-up "was never converted to a tracked todo" while a
+   real `- [ ]` Follow-ups todo answering that exact complaint sat directly above it (added same day, slightly out of
+   sync) — corrected in: `bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`,
+   `features_delta_one_instrument_type_filter_stg_bucket_404_and_swing_outcome_targets_dispatch_gap_2026_08_03.md`,
+   `features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`,
+   `tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`,
+   `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md`,
+   `tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`. unified-trading-pm@b00ac5732.
 
 ## Filed
 
-(populated as STEP 6 routes items)
+### Big findings — data-pipeline-correctness-adjacent, routed to operator via `/blocked`
+
+- [ ] [OPERATOR] P1. **Has the TradFi Massive estate (~1.7M GCS objects) actually been purged, or not?**
+      `plans/epics/tradfi_master.md:181-183` contradicts itself in two adjacent sentences: "the Massive estate was
+      PURGED 2026-07-21 (1,701,422 objects → 0, accepted permanent loss)" vs. the very next sentence, "historical
+      `pipeline_mode=batch_massive/` objects retain recognition only until the **separate gated** GCS purge" (implying
+      NOT yet done). Corroborated as NOT-yet-done by
+      `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md:121-124,145-146` (purge is a future
+      `[GATE]` step needing "operator go", explicitly a prod-data hard-stop) and
+      `plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md:195-196` ("unchanged from batch1-6... stays
+      deferred as one unit"). The epic's own object count (1,701,422) also matches neither of
+      `tradfi_canonical_path_migration_design_2026_07_19.md`'s own tables (1,469,325 / 1,696,166). This is a real
+      prod-bucket-delete question — I did not attempt to resolve it by picking a side from prose (per delete-safety HARD
+      RULE, a live GCS state check is warranted, not a doc-reconciliation guess).
+- [ ] [OPERATOR] P1. **Is DeFi `collect-dex-pools`/`collect-dex-swaps` live capture currently STOPPED or RUNNING?**
+      `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md:68,195,338` (last touched 2026-08-06) says
+      ALL DeFi capture is STOPPED, with `collect-dex-pools` gated-paused behind Track-8 and its own "RESUME the stopped
+      DeFi capture VMs/crons" todo still unchecked — vs.
+      `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md:493` (dated 2026-08-05, one day
+      EARLIER) confirming `launch-defi-forward-poll.sh --operation collect-dex-pools` runs live via Cloud Scheduler on a
+      `*/5` cadence, with zero mention of any stop-order. Neither doc cross-references the other. Affects which
+      collectors are actually live — a genuine data-correctness question, not resolvable from docs alone.
+
+### Codex-drift — 9 findings, routed per "codex updates are in-scope but never autonomous"
+
+The codex-alignment spot-check hunter checked the 12 highest-traffic codex docs against their most substantive citing
+plans; 9 of 12 showed drift (codex-side stale in most cases). Per plan_reconciler's own rule, a codex/SSOT edit is only
+ever applied after an explicit operator ruling — filed here, not edited:
+
+- [ ] [OPERATOR] P2. `codex/05-infrastructure/vm-launcher-runbook.md:564` claims a preempted backfill VM is
+      "auto-relaunched by `RelaunchPreemptedVm`" — but `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s
+      Progress Log shows the cefi sharded-backfill launcher died 5× in 8 days with ZERO automatic relaunch each time
+      (already escalated to the operator separately). Codex overstates a capability that doesn't exist for this
+      launcher.
+- [ ] [OPERATOR] P3. `codex/06-coding-standards/quality-gates.md:3248` calls the RAM-pressure abort-monitor "(planned)"
+      — it shipped 2026-07-27 (`761edd205`), 11+ days ago (`qg_host_adaptive_resource_governor_2026_07_14.md`).
+- [ ] [OPERATOR] P3. `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documents
+      exactly 3 conflict-check surfaces; a measured 4th real surface slips through (fix todo open since 2026-08-06 in
+      `na_and_ag_closeout_audit_population_overlap_2026_07_31.md`).
+- [ ] [OPERATOR] P3. `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table says
+      `plan_reconciler` (this very role) runs "daily 01:00 UTC, opus" — current reality is sharded-by-tranche,
+      hourly-retry-until-capacity, sonnet (per `daily_trading_analyst_llm_job_design_2026_07_29.md`'s 07-28/29 rulings
+      and this dispatch's own MODEL=claude-sonnet-5). Self-referential — worth fixing since it's the SSOT for how this
+      role is supposed to be scheduled.
+- [ ] [OPERATOR] P3. `codex/12-agent-workflow/plan-completion-and-archival-discipline.md` self-declares
+      `authoritative_for` the archival ritual, but the real "never combine flip+`git mv`" rule lives only in
+      `agents/RULES.md`; 10+ plans miscite the source.
+- [ ] [OPERATOR] P3. `codex/02-data/pipeline-mode-partition.md:252-254` still tags the M4 live read-path resolver
+      `[GATED — rides M1-BREAKING]` though M1 landed and M4 itself was verified shipped 2026-07-12 — the adjacent M1 tag
+      was fixed 2026-08-04 but M4's was missed in the same edit.
+- [ ] [OPERATOR] P3. `codex/02-data/honest-coverage-model.md` CK3 table shows cefi Layer-1 at a superseded 79.55% figure
+      (07-03, superseded 07-07 and again 07-12) — other asset_group rows got updated 2026-07-28, cefi's didn't.
+- [ ] [OPERATOR] P3. `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3/§3a — PLAN-side staleness, codex is
+      fine here: `bucket_estate_consolidation_closeout_2026_07_24.md` repeatedly quotes only half the delete rule and
+      declares an `ml-models-store` delete "categorically human-only" without ever running the §3a
+      fresh-retention-seconds check. No incorrect action has occurred (independently blocked by an unrelated IAM gap
+      too) — flagging the plan's mischaracterization, not a codex fix.
+- [ ] [OPERATOR] P3. **Grace-protected this run, skip until it clears.** `codex/08-workflows/ci-cd-flow.md:882,887-892`
+      describes semver PATCH bumps as commit-label-driven — structurally unreachable for weeks under squash-promote
+      (every `main` commit is `chore(promote):`), just replaced with content-based detection
+      (`semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`, fix landed 2026-08-07 18:33-20:59Z, codex last
+      touched 08-06).
+
+### Other filed follow-ups
+
+- [ ] [SCRIPT] P3. Extend `check-locked-plan-deletion.sh`'s `locked_by` parser to treat a literal `""`/`''` value as
+      empty (currently a naive `grep -oP` extracts the quote characters themselves as a non-empty string) — found via 6
+      real corpus instances this run, all now individually normalized, but the parser bug itself is unfixed and will
+      recur on any future doc authored with `locked_by: ""` instead of a true-blank value.
+- [ ] [REVIEW] P3. Live-check whether `market-tick-data-service`'s VM `fts-backfill-20260806-012831`
+      (`sports_closeout_track_s2_foldin_2026_07_25.md` todo, "RELAUNCHED 2026-08-06") has since completed —
+      last-observed state (2026-08-06) was "still RUNNING, no exit signal"; ~2 days have passed as of this run
+      (2026-08-08) so it has almost certainly resolved one way or the other by now, but I have no VM/cloud read access
+      from this role to confirm.
 
 ## Archive candidates (operator review)
 
@@ -83,7 +218,12 @@ context_scope:
 
 ## Refuted (dropped by verify)
 
-(populated as STEP 4 refutes candidates)
+1. **cefi_master hunter's hedged P1** (`cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s VENUES list
+   silently dropping UPBIT/BINANCE-SPOT/COINBASE-SPOT via `_filter_spot_only_venues`) — **REFUTED** by direct code read:
+   `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` does not reference
+   `shard_distribution.py`/`_get_tardis_access_mode`/`ShardDistribution` anywhere — it's a bash launcher that builds its
+   VENUES string directly with no dependency on that Python filter, which is scoped to a completely different code path
+   (`service == "market-tick-data-handler"`). The hunter correctly hedged this as unconfirmed; it does not hold up.
 
 ## Coverage (hunters / batches / docs)
 
