@@ -1,0 +1,18 @@
+# Shrinking-ratchet baseline for the AO todo dispatchability delta
+# (check_ao_todo_dispatchability_delta.py).
+#
+# MEASURES (per assigned_vm:planning doc):
+#   total_non_dispatchable:    sum of (disk_open - dispatchable) across all AO docs.
+#   zero_dispatchable_docs:    count of AO docs with disk_open > 0 but dispatchable == 0.
+#   undeclared_non_dispatchable: todos excluded by regen's parser but with no BLOCKED-*/
+#                              [BLOCKED]/[DEFERRED]/permanent-marker declaration on the
+#                              todo's first line — likely accidental exclusions.
+#
+# NEVER hand-raise these numbers to silence a run that found the corpus grew.
+# Only --baseline-write after a genuine corpus shrink (confirmed fixes to the accidental
+# exclusions or intentional retirements of blocked todos).
+#
+# See: plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md
+total_non_dispatchable: 43
+undeclared_non_dispatchable: 31
+zero_dispatchable_docs: 23
