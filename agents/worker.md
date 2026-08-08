@@ -313,6 +313,25 @@ pane-scan + the watchdog; this self-report only covers the still-actionable tool
 The progress response may include `messages: [...]` — these are from the operator or main agent. Read them and act
 accordingly.
 
+**Ack a one-shot "Direct instruction from main" the moment you confirm it's already done (codified 2026-08-08,
+`ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08`).** These free-text sends have no
+live condition to keep re-checking — they either got done or they didn't — but the delivery primitive itself has no
+early-exit: without an explicit close, the SAME instruction re-delivers to every future fresh session on your slot
+(a respawn, a task-boundary reset) for up to `slot_message_max_redeliveries` (default 30) sessions, even long after
+the ask was independently fulfilled or found moot. If you read one of these and determine (by checking the cited
+evidence — a SHA, a plan checkbox, a live API state) that it's already fulfilled or stale, close it immediately
+instead of just moving on silently:
+
+```bash
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/messages/<message_id>/ack
+```
+
+`<message_id>` is the numeric id on the message object in the `/progress`/`/heartbeat`/`/boot` response's
+`messages[]` array. This is idempotent (already-answered or unknown ids just 404, safe to retry) and stops the
+message reappearing on your NEXT fresh session — it is NOT needed for recurring/standing notices (git-health nags,
+operator broadcasts tied to a live condition) that SHOULD keep re-showing until the underlying condition actually
+clears; only close a genuinely one-shot ask you've verified is done.
+
 ### 4) BLOCKED — if you hit ambiguity you can't resolve
 
 ```bash

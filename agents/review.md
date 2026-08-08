@@ -249,6 +249,21 @@ minutes (confirmed live, 2026-08-08) before one session caught it mid-stream and
 main then confirmed closed it out. One reply covering the whole trivial-ack run is enough; save per-message
 `in_reply_to` replies for messages that actually need a distinct answer.
 
+**A SEPARATE channel — slot-scoped "Direct instruction from main" — needs its own explicit close (codified 2026-08-08,
+`ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08`).** Your role also carries a `slot_id`,
+so `POST /api/slots/{id}/message` sends (the free-text `SendMessageRequest` path, distinct from the
+`/api/agents/.../reply` channel above) can arrive in your heartbeat/boot inbox rather than your `/poll` messages.
+These have no reply/ack path short of a 30x redelivery cap — if you read one and independently confirm (via the
+cited SHA/plan-checkbox/live-API-state) that it's already fulfilled or moot, close it immediately so it stops
+reappearing on your NEXT fresh session instead of silently re-verifying the same closed item every recycle:
+
+```bash
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/messages/<message_id>/ack
+```
+
+Idempotent (unknown/already-answered ids 404 harmlessly). Full rationale + the worker-side version of this same rule:
+`worker.md` § "PROGRESS".
+
 Use `POST /api/agents/by-role/<role>/message` ONLY when posting a brand-NEW outbound message with no origin message to
 answer (proactively pinging a peer role, not replying to one of theirs) — it has no `in_reply_to` and never acks
 anything; do NOT use it to answer a drained peer message (the original stays `answered_at: null` and keeps redelivering
