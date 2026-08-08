@@ -657,6 +657,9 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       2026-07-21, most of the list resolved itself), and bug #2 (`REPO_NAME` vs `_REPO_NAME`) is already verified "NOT A
       BUG — never reproduced" in that same section. Independently corroborated by
       `issues/ag_closeout_audit_ui_parked_2026_08_07.md` Finding 3, which found this exact stale-read on the same day.
+      This checkbox itself was pre-flipped 2026-08-07 by the na-eligibility-audit pass (unified-trading-pm@2b8073083);
+      `ui_satellite_ao_dispatch_batch1`'s own todo 2 independently confirmed the same closure and additionally fixed the
+      cross-referenced issue doc's stale `#1` item (confirmed-dead-semver-agent finding) — unified-trading-pm@d2094b791.
 - [x] ✅ [REVIEW] P2. Fix the 5 `dual-cloud-image-builds.md` drifts (registry name, tag convention, trigger/project
       naming, canonical-trigger claim, empty-manifest provenance). Post-phase codex audit. **DONE 2026-08-08**
       (`ui_satellite_ao_dispatch_batch1-003`): all 5 fixed with fresh live evidence (GCP `gcloud artifacts`/
