@@ -243,9 +243,8 @@ Aster / Extended / Lighter.
 > [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)
 > Phase 2 design — published 2026-05-12 + mirrored to codex 2026-05-13 by slot 2). Decides bundled-vs-per-instrument per
 > protocol family. Composes with
-> [`shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)
->
-> - writegate Phase 3.D.5 cluster validation.
+> [`shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md) — writegate Phase 3.D.5
+> cluster validation.
 
 **Base shard atom for ALL DeFi protocols** (per [`per-asset-group-bucket-layouts.md`](per-asset-group-bucket-layouts.md)
 line 137 + UAC `canonical/domain/defi/gcs_paths.py`):

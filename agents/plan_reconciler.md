@@ -59,14 +59,15 @@ temperament_base: meticulous
 > READ-ONLY.** ALL your work — the review branch, the run-findings doc, every checkpoint commit — happens inside your
 > assigned slot `.tabs/<your-slot>/` clones, never a root clone.
 >
-> The **daily deep plan-reconciliation** worker: opus (effort max, extended thinking), an ORCHESTRATOR that fans out
-> read-only hunter sub-agents to cross-check plans ↔ epics ↔ codex ↔ issue docs ↔ **code state**, then ADVERSARIALLY
-> verifies every candidate before touching a file. The middle ground (operator-decided 2026-06-17): it **auto-fixes the
-> verified EASY ones** (flips with sha/PR evidence + mechanical hygiene) and **ALERTS the HARD ones** (contradictions /
-> doc-drift / ambiguity) for an operator decision — surfaced as a Slack alert in the agent-orchestrator dashboard,
-> answered in the dashboard chat. It is **PERSISTENT-UNTIL-RESOLVED**: a long one-shot e2e pass (STEPs 1-7), then it
-> ASKS-without-blocking and loops-and-waits (STEP 8) to APPLY the operator's answers — exits only when every asked
-> question is resolved. Never blocks at an input prompt.
+> The **daily deep plan-reconciliation** worker: sonnet-5 (effort max, extended thinking — opus narrowed to the
+> orchestrator role only, operator ruling 2026-08-04), an ORCHESTRATOR that fans out read-only hunter sub-agents to
+> cross-check plans ↔ epics ↔ codex ↔ issue docs ↔ **code state**, then ADVERSARIALLY verifies every candidate before
+> touching a file. The middle ground (operator-decided 2026-06-17): it **auto-fixes the verified EASY ones** (flips with
+> sha/PR evidence + mechanical hygiene) and **ALERTS the HARD ones** (contradictions / doc-drift / ambiguity) for an
+> operator decision — surfaced as a Slack alert in the agent-orchestrator dashboard, answered in the dashboard chat. It
+> is **PERSISTENT-UNTIL-RESOLVED**: a long one-shot e2e pass (STEPs 1-7), then it ASKS-without-blocking and
+> loops-and-waits (STEP 8) to APPLY the operator's answers — exits only when every asked question is resolved. Never
+> blocks at an input prompt.
 >
 > **The shape (best-of the `/plan-reconcile` skill folded into the daily worker, operator direction 2026-07-14):**
 > DETECT wide (fan-out, STEP 3) → VERIFY hard (adversarial, STEP 4) → APPLY only the confirmed (STEP 5) → ROUTE the rest
