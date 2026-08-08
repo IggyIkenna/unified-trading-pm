@@ -109,14 +109,14 @@ Both were established by reading the code, and both are silent — neither raise
       supplies. This is hazard 1's real blast radius and every later phase depends on it being complete, not sampled.
       Done-when: every endpoint in both route files classified echoed/not-echoed, recorded in this plan's Progress Log.
       (repo: agent-orchestrator)
-- [ ] [BACKEND] P1. **Add `_make_content_task_id(plan_ref, brief, occurrence)`** next to the existing `_make_task_id`
+- [x] ✅ [BACKEND] P1. **Add `_make_content_task_id(plan_ref, brief, occurrence)`** next to the existing `_make_task_id`
       (`regen_backlog_from_plan.py:1556`), returning
       `f"{slug}-{sha256(f'{plan_ref}|{brief}|{occurrence}').hexdigest()[:N]}"`. **The hash input MUST include
       `occurrence`** — `_group_plan_tasks_by_brief`'s own docstring (`:1587-1596`) documents that two genuinely
       different todos in one plan can hard-wrap to a byte-identical first physical line; a `sha256(brief)`-only id
       collides for exactly that documented case and would ship a NEW id-collision bug on day one. `N` is an explicit
       named constant with a test, not a borrowed value — see the next todo. Do NOT yet change any call site. (repo:
-      agent-orchestrator)
+      agent-orchestrator) — agent-orchestrator@e0f107a
 - [ ] [BACKEND] P2. **Pin the truncation length with a measured collision-probability test.** The `RB-<hex8>`/
       `sjr-<hex8>` precedent (`orm.py:991, :1036`) is a different id namespace and its 8 chars must not be assumed
       transferable. Assert the birthday bound at this corpus's real scale (~2,187 backlog rows today, ~90/tick regen)
@@ -254,3 +254,12 @@ Both were established by reading the code, and both are silent — neither raise
   `routes/backlog.py` — task_id there is a PATH parameter (server-resolved), not a client-echoed body field. Separately,
   `routes/backlog.py` has body-task_id endpoints (`/reconcile-brief`, `/reopen`, `/park/mark-done`) but those are
   backlog-operator endpoints, not worker-facing; included here for completeness of the namespace scan.
+
+- **2026-08-08 (slot 3, content_derived_backlog_task_ids-002)**: Added
+  `_make_content_task_id(plan_ref, brief, occurrence)` and `_CONTENT_ID_HEX_CHARS = 12` to
+  `server/regen_backlog_from_plan.py` (next to `_make_task_id`). Returns
+  `f"{slug}-{sha256(plan_ref|brief|occurrence)[:12]}"`. `occurrence` included in hash per plan requirement
+  (brief-collision hazard documented in `_group_plan_tasks_by_brief`). Added 5 tests in
+  `tests/test_regen_backlog_from_plan.py` covering format, occurrence-differentiation, determinism, plan_ref-in-hash,
+  and `_CONTENT_ID_HEX_CHARS` minimum floor. No call sites changed. QG: 2732 passed. Evidence:
+  agent-orchestrator@ac36202 (feat) + e0f107a (pyright fix, both verified on origin/live-defi-rollout).
