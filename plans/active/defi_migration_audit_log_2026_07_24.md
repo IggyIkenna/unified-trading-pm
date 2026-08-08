@@ -389,9 +389,15 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       yield + native_staking_rates for carry_staked_basis) → BLOCKED-CREDENTIALS source-ask~~ — revised triage:
       eigenlayer_rewards + the aggregate native_staking_rates are code-complete and need only a Cloud Scheduler job
       wired to start producing (no credential); only the per-validator native_staking_rates breakdown needs a free-tier
-      `helius-api-key` self-signup; the rest → confirm in/out of MVP scope. Each gets a migrator spec ONLY once it
-      produces data. Repo: market-tick-data-service + UAC. Owner: vm-defi. parent_epic: defi_master. Provenance: slot-2
-      coverage matrix 2026-06-09.
+      `helius-api-key` self-signup; the rest → confirm in/out of MVP scope. _*Correction 2026-08-08:
+      `eigenlayer_rewards` HALF of the "still needs scheduling" framing is stale —
+      `deployment-service/terraform/gcp/defi_collection_scheduler.tf` has had a live `collect-eigenlayer-rewards` Cloud
+      Scheduler cron (`45 1 * * *`) since `7b1490f7` (2026-04-25, "wire 11 daily DeFi collect-* Cloud Run Jobs +
+      Scheduler crons"), confirmed still present live 2026-08-08 — no scheduling gap remains for this data_type.
+      `native_staking_rates` genuinely still has NO scheduler entry in that same file (confirmed via a fresh grep
+      2026-08-08) — that half of the claim holds._* Each gets a migrator spec ONLY once it produces data. Repo:
+      market-tick-data-service + UAC. Owner: vm-defi. parent_epic: defi_master. Provenance: slot-2 coverage matrix
+      2026-06-09.
 
 ### 🗑️ DeFi ORPHAN-COVERAGE DRILLDOWN — GCS data NOT covered by the migrator + delete-after plan (slot-2, 2026-06-08)
 
@@ -766,3 +772,9 @@ speed-note (both deferred optimisations, non-blocking).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added dex_swaps_handler.py/canonical_write.py,
   the real handler + writer touched by the open P1 bucket-redirect todo.
+- **2026-08-08 (doc-hygiene, digest close-out)**: Corrected the "DeFi collection gaps" retriage todo's stale
+  `eigenlayer_rewards` scheduling claim — verified live `deployment-service/terraform/gcp/defi_collection_scheduler.tf`
+  has had a `collect-eigenlayer-rewards` cron since `7b1490f7` (2026-04-25); no scheduling gap remains for that
+  data_type. `native_staking_rates` confirmed genuinely still unscheduled (fresh grep, same file) — left flagged. Todo
+  stays `[ ]` open (the MVP-scope confirmation for the remaining ~10 scaffolds is unchanged, genuinely still needs the
+  operator). Aggregator-routes todo and the MVP-triage question itself not touched.
