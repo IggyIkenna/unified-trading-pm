@@ -32,11 +32,12 @@
 Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes (ground
 truth: `agent-orchestrator/server/model_tier.py`). **`opus-required` = ZERO categories** — opus is now manual-only
 (cross-repo/trading/sizing dropped 2026-07-23/08-04; main dropped 2026-08-07 — `main.md` sonnet+`default`).
-**`sonnet_variant: light|default` (2026-08-04) picks sonnet-4.6 vs sonnet-5** — light is the default (target ≥80% of AO
-dispatch); default is for harder work + escalation + CI, always. Every `assigned_vm: planning` plan defaults to
-`effort: max`. **Effort default (2026-07-22)**: no declared tier → todo-count-derived (`xhigh`/`max` past
-`LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check
-every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
+**`sonnet_variant: light|default` picks sonnet-4.6 vs sonnet-5** — **sonnet-5 is the default for EVERYTHING**
+(2026-08-08 ruling INVERTING 2026-08-04's ≥80%-light target: 5 is smarter, 1M-vs-200K context AND cheaper through end of
+Aug 2026); `light` is an explicit opt-in nothing declares — re-check pricing before re-arming it. Every
+`assigned_vm: planning` plan defaults to `effort: max`. **Effort default (2026-07-22)**: no declared tier →
+todo-count-derived (`xhigh`/`max` past `LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST
+set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
 `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
