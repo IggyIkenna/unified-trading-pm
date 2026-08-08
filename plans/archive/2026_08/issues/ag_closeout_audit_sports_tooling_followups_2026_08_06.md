@@ -23,7 +23,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
     /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md,
+    /plans/archive/2026_08/ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md,
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"
