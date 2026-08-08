@@ -127,12 +127,12 @@ below rather than duplicated here.
 
 ## Todos
 
-- [ ] [DOCS] P2. **Mirror the already-shipped peer-vs-operator reply-routing branch from `agents/main.md` STEP 2B into
-      `agents/review.md` STEP 2** (currently the old unconditional "for each message... POST your reply" pattern with no
-      `in_reply_to`/`from_role` branching — the source doc's own cited line numbers have drifted, content-search for the
-      phrase instead). Document that `/reply` with `in_reply_to` set is the preferred path for answering ANY drained
-      message regardless of `from_role` (operator or review's own role → own-thread ack as before; a genuine peer role →
-      `/reply` auto-cross-routes to that peer's thread + tmux nudge, backend behavior already live since
+- [x] ✅ [DOCS] P2. **Mirror the already-shipped peer-vs-operator reply-routing branch from `agents/main.md` STEP 2B
+      into `agents/review.md` STEP 2** (currently the old unconditional "for each message... POST your reply" pattern
+      with no `in_reply_to`/`from_role` branching — the source doc's own cited line numbers have drifted, content-search
+      for the phrase instead). Document that `/reply` with `in_reply_to` set is the preferred path for answering ANY
+      drained message regardless of `from_role` (operator or review's own role → own-thread ack as before; a genuine
+      peer role → `/reply` auto-cross-routes to that peer's thread + tmux nudge, backend behavior already live since
       `agent-orchestrator@738b2d3`), and that `POST /api/agents/by-role/<role>/message` remains reserved for brand-new
       outbound-only pings (no `in_reply_to`, never acks, redelivers until the ~30-cap). Docs-only change; does not touch
       `server/routes/agents.py`. **Done when**: `agents/review.md` STEP 2's text and curl example describe the same
@@ -141,7 +141,7 @@ below rather than duplicated here.
       is flipped `[x]` with the shipping commit sha cited in the same turn. Source:
       `/plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` (its
       4th, docs-only item — its P1 backend-routing-code item and P3 operator-sign-off item are explicitly self-gated in
-      the source doc and NOT in scope here). Repo: unified-trading-pm.
+      the source doc and NOT in scope here). Repo: unified-trading-pm. — unified-trading-pm@ea5d699c9
 
 - [ ] [REVIEW] P2. **Close out `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` — pure bookkeeping, no new
       investigation.** Flip its remaining `[OPERATOR] P2` (line ~225) and `[REVIEW] P2` (line ~232) checkboxes to
