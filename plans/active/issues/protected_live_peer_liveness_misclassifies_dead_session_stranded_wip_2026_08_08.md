@@ -86,11 +86,21 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
 
 ## Todos
 
-- [ ] [BACKEND] P1. Read `agent-orchestrator/server/dirty_state.py` (or wherever `slot_dirty_state_resolved` /
+- [x] ✅ [BACKEND] P1. Read `agent-orchestrator/server/dirty_state.py` (or wherever `slot_dirty_state_resolved` /
       `protected_live_peer` classification lives) and confirm whether the liveness check incorporates the slot's own
       `tmux_session_lost`/`slot_resume_exhausted`/`spawn_retry_cap_reached` activity events, or reads a separate/stale
       liveness signal. Fix so a slot with `slot_resume_exhausted` logged AFTER the dirty-state check's reference
-      timestamp is never classified `liveness:live`.
+      timestamp is never classified `liveness:live`. — agent-orchestrator@07894aa. Confirmed: `classify_maker_liveness`
+      (`server/worktree_clean_check/_liveness.py`) never read those activity events — its `_triangulate` step only
+      cross-checked `SlotRow.last_ping` recency (`_default_worker_alive`, 180s window) and a live `/proc/<pid>/cwd`
+      match (`_default_proc_cwd_live`), a genuinely stale/separate signal set. Root cause: a doomed `--resume` attempt
+      can send exactly one `/heartbeat` (refreshing `last_ping`) moments before dying again, so a claim-based
+      dead/absent verdict got overridden to `live` by a ping that was already stale by the time the next sweep tick read
+      it. Fix: `_default_worker_alive` now also queries `activity_log` for
+      `tmux_session_lost`/`slot_resume_exhausted`/`spawn_retry_cap_reached` rows for the SAME slot with `ts > last_ping`
+      — if one exists, the ping is proven stale and the function returns `False` regardless of the raw window check.
+      Added 4 regression tests (one per death-event type + one predates-ping negative case) to
+      `tests/test_dirty_state_resolution.py`. Full `quality-gates.sh` green (2827 passed).
 - [ ] [BACKEND] P2. Add a reconciliation path for orphaned dirty state in a repo the CURRENT fresh session on that slot
       isn't using — either surface it in the blocked/review queue for a worker to explicitly inherit, or extend the idle
       path to detect+flag (not silently ignore) pre-existing dirty state in sibling repos on the same slot.
