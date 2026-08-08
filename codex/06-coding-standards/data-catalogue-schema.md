@@ -2,27 +2,43 @@
 doc_type: codex-ssot
 title: Data Catalogue Schema Standard
 summary:
-  Data-catalogue.*.yaml schema standard enforced by the instruments-service catalogue_updater — the required-field set
-  (dataset_id, category, service_owner, schema_ref, gcp_path/aws_path, partition_keys, format, retention_days,
-  last_updated, row_count_last_batch, status), the category + status enums, and the auto-update contract for
-  last_updated/row_count. (Overlaps /codex/02-data/data-catalogue-schema.md, which owns the SSOT claim.)
-status: current
+  "Redirect stub — SUPERSEDED 2026-08-08 (docs-reconcile). Describes a dataset_id/category/schema_ref/catalogue_updater
+  contract verified absent from the workspace; the live `data-catalogue.*.yaml` shape is documented at
+  /codex/02-data/service-shard-status-catalogue.md."
+status: superseded
+superseded_by: /codex/02-data/service-shard-status-catalogue.md
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
 tags: [data-catalogue, catalogue, data-pipeline, instruments, manifest, data-status, uac]
-related: [/codex/02-data/data-catalogue-schema.md, /codex/02-data/availability-manifest-and-data-status.md]
+related: [/codex/02-data/service-shard-status-catalogue.md, /codex/02-data/data-catalogue-schema.md]
 created: 2026-03-27
-authoritative_for: [duplicate view — canonical is /codex/02-data/data-catalogue-schema.md (consolidation pending)]
+authoritative_for:
+  [redirect stub — live data-catalogue.*.yaml schema SSOT is /codex/02-data/service-shard-status-catalogue.md]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-08-08
 code_refs:
 ---
 
 # Data Catalogue Schema Standard
+
+> # ⛔ SUPERSEDED 2026-08-08 (docs-reconcile autonomous sweep) — THIS DOCUMENT DESCRIBES A SYSTEM THAT DOES NOT EXIST.
+>
+> **Live SSOT for the `data-catalogue.*.yaml` files:
+> [`/codex/02-data/service-shard-status-catalogue.md`](../02-data/service-shard-status-catalogue.md).** Everything below
+> is retained for history only. Do not build a reader, writer, validator, or QG step against it.
+>
+> This doc's own frontmatter already flagged itself as a non-canonical "duplicate view" of
+> `/codex/02-data/data-catalogue-schema.md` (consolidation pending) — that canonical doc was itself marked
+> `status: superseded` on 2026-07-20 because every component it named (`ManifestWriter`, `ManifestReader`,
+> `catalogue_updater.py`) was verified absent from the workspace. This doc names the exact same fictional contract
+> (`instruments_service.catalogue_updater`, `update_catalogue_entry()`, a `dc-schema-check` QG step,
+> `dc-catalogue-format-standard`) — a corpus-wide grep on 2026-08-08 confirms none of these four symbols exist anywhere
+> in the workspace outside this doc's own prose. The consolidation is now resolved: this doc supersedes to the same live
+> SSOT its twin already points to.
 
 This document defines the canonical schema for all `data-catalogue-*.yaml` files across the unified trading system.
 Every dataset entry in every service catalogue file must conform to this schema. The schema is enforced by the
