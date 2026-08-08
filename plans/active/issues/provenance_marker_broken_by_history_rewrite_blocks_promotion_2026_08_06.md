@@ -63,13 +63,13 @@ related:
 created: 2026-08-06
 last_updated: "2026-08-07"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.5
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source: "surfaced while diagnosing instruments-service PR #1084 (497c4f5e provenance-blocked), 2026-08-06"
@@ -391,3 +391,22 @@ Two reasons, mirroring the UTL-34-bypass precedent
   afterward: only `instruments-service` remains in the `promotion lag > 60m` list (a parallel agent's identical-pattern
   sweep, tracked separately) — `market-data-processing-service` no longer appears anywhere in the output. This doc's
   MDPS thread is now fully resolved (provenance-clean, promoted, self-healing marker going forward).
+- **na-eligibility-audit 2026-08-08**: Phase 2/3 — re-verified whole-doc bar: the sole remaining open todo (audit
+  whether any OTHER repo has a `chore(promote)` merge predating the 2026-08-05T11:24:53Z rewrite outside the confirmed
+  5-repo set) is a precisely-scoped, determinable fact-check (a checkable "is the blast radius exactly these 3, or
+  wider" question, not an open-ended "what should X be"), correctly formatted `[DEVOPS] P2.` already. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) run against (a) every
+  `status: active`/`assigned_vm: planning` plan in `parent_epic: infrastructure_master`, (b) sibling `ci`
+  batch/finalize docs (`ci_satellite_ao_dispatch_batch{1,4,5}*`), (c)
+  `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` (independently found this doc's 2 open `[DEVOPS]` todos "real,
+  undispatched, worker-scoped-with-context work" and recommended only an `asset_group` retag — milestone-only, not a
+  conflicting duplicate claim) — zero prior claim on this exact audit found, CLEAR. Corrected `assigned_role: devops`
+  (not a valid `agents/*.md` `role:` value — `docspec.py`'s role-registry check would HARD-fail it) → `cicd` (matches
+  `agents/cicd.md`). Flipped `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`.
+  **Big finding, out of this doc's scope**: grepped the corpus and found 15 active docs total still carry the same
+  invalid `assigned_role: devops` value (this doc + the sibling
+  `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md` were 2 of them) — worth a dedicated
+  corpus-wide retag pass, not fixed here beyond this doc's own frontmatter. **No finalize twin authored** — verified
+  against `scripts/quality_gates/check_finalize_plan_coverage.py` directly: it globs only `plans/active/*.md` (not the
+  `issues/` subdirectory this doc lives in) AND separately exempts any plan with ≤1 open todo (this doc has exactly
+  1) — clears both the structural and content exemptions task_template.md §4 documents.
