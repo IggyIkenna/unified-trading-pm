@@ -133,15 +133,17 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
       codex at `/codex/05-infrastructure/agent-orchestrator-api-host.md` (full threshold table + allowlist + BQ
       `watchdog_kill_events` schema) and `/codex/05-infrastructure/deployment-observability.md` — so the "if it isn't
       documented, write it into codex" half of the 2026-08-06 ruling needed no action.
-- [ ] [OPERATOR] P2. **Close the one verified gap: the LIVE systemd unit is missing the kill-event dual-write env
-      vars.** The 2026-08-06 SSM check above enumerated the live unit's full `Environment=` set and neither
-      `RW_DEPLOYMENT_API_URL` nor `RW_VM_NAME` is present, though both are in this repo's unit file since
-      `unified-trading-pm@7f324271b`. Effect: the watchdog **enforces correctly but its kills are invisible** in
-      deployment-ui, because the dual-write to `watchdog_kill_events` never fires. Needs root
-      (`systemctl     daemon-reload && systemctl restart resource-watchdog`), which agent slots do not have. This is the
-      SAME action already tracked as the open `[OPERATOR] P2` in
-      `/plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md` — recorded here only because this pass
-      produced fresh live evidence that it is still genuinely open; do the work THERE, not twice.
+- [x] [OPERATOR] P2. ✅ **STALE-CHECKBOX FIX (round5 ao investigation) — the linked doc's identical action is now done,
+      catching this citing checkbox up to reality, not a new decision.** The action this todo pointed at —
+      `/plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md`'s `[INFRA] P2` item (systemd
+      `Environment=RW_DEPLOYMENT_API_URL=.../RW_VM_NAME=...` +
+      `systemctl daemon-reload && systemctl restart     resource-watchdog`) — is confirmed `[x]` done there: "RULED
+      2026-08-06 (operator): approved, AO-dispatchable to a session/worker with root on the planning VM... applied via
+      SSM (slot-5, 2026-08-07): env vars added to live unit, live script updated from repo (08f6a9571),
+      daemon-reload+restart applied. E2E verified: kill row `{"vm_name":"ip-172-31-5-118","killed":true}` confirmed in
+      deployment-api." That source doc is now `status:     archived`
+      (`plans/archive/2026_08/watchdog_kill_events_deployment_gaps_2026_08_05.md`). This doc's own todo explicitly said
+      "do the work THERE, not twice" — the work landed there; nothing left to do here.
 - [ ] [DIAG] P2. Best-effort: root-cause today's specific 49.3G/16G-swap peak more precisely if feasible (aggregate
       oversubscription vs. a specific process that had already exited/rotated out by ~14:40Z) -- would sharpen whether
       option 1 or 2 above is the better fix. Not gating.
