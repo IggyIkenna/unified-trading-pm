@@ -247,7 +247,7 @@ close by citation once batch9 ships.
       already succeeded with a genuine 2xx. So "worse of the two" is invariant-backed to always collapse to the trivial
       constant `http_status=200`, `source="subgraph+snapshot"` on this code path — zero schema change needed to UAC's
       `FetchEvidence` (`build_fetch_evidence()` already accepts `http_status: int | None`).
-- [ ] [SCRIPT] P2. **Thread the resolved constant through `governance_proposals_handler.py`'s clean-path
+- [x] ✅ [SCRIPT] P2. **Thread the resolved constant through `governance_proposals_handler.py`'s clean-path
       `record_zero_rows` call** (`_write_or_empty`, market-tick-data-service): build a `FetchEvidence` via UAC's
       `build_fetch_evidence(http_status=200, ...)`
       (`unified_api_contracts/canonical/crosscutting/honest_coverage.py:507`) with `source="subgraph+snapshot"` and pass
@@ -257,7 +257,12 @@ close by citation once batch9 ships.
       invariant above proves it can never be anything else on this path today; if `_fetch_both_sources` is ever changed
       to tolerate a partial failure (e.g. one source optional), this call site is where a real non-200 would need to
       start flowing through. **Done when**: a test asserts the recorded `FetchEvidence.source == "subgraph+snapshot"`
-      and `http_status == 200` on the governance clean-empty path; existing behavior/tests otherwise unchanged.
+      and `http_status == 200` on the governance clean-empty path; existing behavior/tests otherwise unchanged. **DONE
+      (2026-08-08)** — market-tick-data-service@89bc8c75: `_write_or_empty` now builds `evidence` via
+      `build_fetch_evidence(source=_GOVERNANCE_SOURCE, endpoint=f"{protocol_id}:ETHEREUM:{_DATA_TYPE}:{target_date.isoformat()}",     attempted_at=attempted_at, rows_in_response=0, http_status=200, response_received=True)`
+      and passes it as `record_zero_rows(..., fetch_evidence=evidence)`; new test
+      `test_empty_rows_records_explicit_fetch_evidence` asserts `evidence.source == "subgraph+snapshot"` and
+      `evidence.http_status == 200`; full unit suite (49 tests across both governance test files) + repo QG green.
 
 ## Codex SSOTs
 
