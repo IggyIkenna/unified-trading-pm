@@ -37,8 +37,8 @@ parent_epic: infrastructure_master
 source: >-
   Operator flagged early STOPPING state. slot-17 confirmed via gcloud compute instances describe + gcloud logging read
   audit trail + GCS probe (probe_cefi_perp_funding_raw_coverage.py 2026-06-05→08-05).
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: fix
 estimate_class: bug
 estimate_baseline: 0.5
@@ -126,7 +126,15 @@ before launch.
 
 ## Action items
 
-- [ ] [OPERATOR] P0. **Diagnose root cause of double-insert + deletion pattern.** Check if the Tardis concurrency guard
+> **NOT genuinely `[OPERATOR]`-gated (na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08).** Applying
+> `plans/active/task_template.md` finding U's positive test: `[OPERATOR]` is for (i) a business/spend/value judgment
+> with no data-derivable answer, (ii) a credential/access-only gate, or (iii) a whole-bucket destroy / failed
+> reversibility check. Diagnosing which process (Tardis concurrency guard vs. zombie watchdog) deleted these VMs is
+> none of those — it's a bounded, worker-determinable investigation (read the two named scripts + `gcloud logging
+> read` the prior VM's audit trail, the exact method this doc's own author already used above). Retagged `[INFRA]`;
+> whole-doc flipped `assigned_vm: NA -> planning` since all 3 remaining open items are now worker-determinable.
+
+- [ ] [INFRA] P0. **Diagnose root cause of double-insert + deletion pattern.** Check if the Tardis concurrency guard
       (`tardis-concurrency-guard.sh`) is triggering on double-launch and killing both instances. Check if the zombie
       watchdog (`exit_code_fleet_monitor`) has a `vm.delete` path that fires on concurrency violations. Confirm whether
       `cefi-fwd-20260806-065837`'s early termination at 12/75 days was also a deletion (check its audit log the same
@@ -148,3 +156,17 @@ before launch.
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
       instrument IDs when `has_instruments=True` (or treat `_expected_atoms = {}` as "no filter" in
       `_apply_preflight_skip_filter` to disable skip when no instrument filter is active).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm` `NA -> planning`. All 3
+  remaining open items are worker-determinable: the `[OPERATOR]` P0 diagnostic item does not meet
+  `task_template.md` finding U's test (no business/spend judgment, no credential gate, no destructive-delete
+  decision — it's a bounded code+log investigation) and is retagged `[INFRA]`; the `[DATA]` P1 GCS-probe re-check and
+  `[CODE]` P2 fix (root cause + exact missing branch already identified at `venue_fetch.py:526-552`) were already
+  correctly worker-scoped. Conflict-check clear: grepped `plans/active/*.md` for `cefi-fwd-20260808`,
+  `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, and `_check_instruments_available` — zero hits; not referenced in
+  `cefi_consolidated_closeout_2026_07_18.md`; not claimed by any `cefi_satellite_ao_dispatch_batch*`/finalize doc,
+  including the freshest one (`cefi_satellite_ao_dispatch_batch10_2026_08_08.md`, drafted 01:18 UTC / activated 04:04
+  UTC — hours before this incident's 11:04 UTC VM launch, so it couldn't have covered it). Companion finalize:
+  `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08.md`.

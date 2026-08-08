@@ -162,3 +162,9 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   pass — this was a documentation-question audit, not an implementation dispatch. The sibling doc
   `plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` (2 more
   launchers with the same defect class) follows the same reasoning once picked up.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid - per the HARD RULE, `assigned_vm`
+  flips WHOLE-DOC only, and todo 8 (S3-b, sports dual entrypoint) remains an explicit, un-superseded design
+  adjudication ("Do NOT silently delete... operator/design adjudication") — one genuine judgment call among the 4
+  open items blocks the whole-doc flip even though todos 1-3 are now correctly declassified/bounded (per the same-day
+  round5 pass above). Doc stays NA in full; todos 1-3 are ready for dispatch the moment todo 8 is resolved or split
+  out, but that split is not performed here since it changes doc structure beyond a citation/marker touch.

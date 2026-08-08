@@ -231,3 +231,12 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
   `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md`, the source of the 2026-08-07 corpus-wide
   census now cited 3 times in this doc's own text (todo 2's completion note, Evidence §2, and the Progress Log entry
   above); the prior 4 entries re-verified, still resolve, unchanged.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid - the sole open todo still bundles an
+  untraced writer-side classification root-cause with the (now-blocked-on-that-root-cause) backfill/reclassify
+  migration and the DERIBIT-specific Script-1 re-run; "find the writer-side bug" has no stated done-when a worker can
+  hit deterministically. No cheat-sheet precedent from today's rulings applies (not an IAM/credential gate, not a
+  reversibility-qualified delete, not a self-service script-flag gap). Independently corroborated by
+  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — human-only" section (same-day, separate
+  `/ag-closeout-audit` run): "the root-cause item is open-ended investigation into an untraced adapter/code path with
+  no stated done-when beyond 'find the bug.'" Reaffirms 4 prior passes (2026-07-30, 2026-08-04, 2026-08-06,
+  2026-08-07).

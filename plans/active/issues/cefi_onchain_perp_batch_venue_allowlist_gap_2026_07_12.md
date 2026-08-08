@@ -34,7 +34,7 @@ source:
     slot-2 2026-07-12,
     slot-4 2026-07-12,
   ]
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -499,3 +499,16 @@ and burn SPOT spend for nothing.
   to resolved and filed a `[VERIFY]` re-launch todo (the actual multi-day backfill VM launch + manifest verification —
   not run this session, since the operator's answer authorized re-probing, not launching a real multi-hour SPOT VM).
   Doc stays `assigned_vm: NA` for now — the new VERIFY todo is a real infra action a future dispatch can pick up.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm` `NA -> planning`. Sole
+  open item (`[VERIFY]` P1, re-launch LIGHTER-ZKSYNC `derivative_ticker` + confirm real rows) is now
+  bounded/deterministic — the entitlement gap that previously required an operator/credential decision was resolved
+  and re-probed live earlier the same day (see the "na-corpus-digest-closeout 2026-08-08 (item 31)" entry above,
+  commit `a5a97cf4`, 13:34+01:00). Conflict-check: (a) `parent_epic: cefi_master` — no other active
+  `assigned_vm: planning` plan covers this exact re-launch; (b) no `cefi_satellite_ao_dispatch_batch*`/finalize doc
+  claims it; (c) `cefi_consolidated_closeout_2026_07_18.md` line 329 still reads "BLOCKED-CREDENTIALS, scaffold
+  correct" — stale, predates this session's resolution, not a competing claim (citation fix left as a follow-up, out
+  of this sweep's scope). **Note**: `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — operator-gated"
+  section also still lists this doc as credential/operator-gated — that verdict was drafted 01:18 UTC / activated
+  04:04 UTC, ~8-11h BEFORE this doc's own entitlement-resolution commit (`a5a97cf4`, 12:34 UTC), so it is stale, not
+  a live conflict; batch10 carries no todo actually claiming this doc's ground (it deferred rather than dispatched
+  it). Companion finalize: `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md`.
