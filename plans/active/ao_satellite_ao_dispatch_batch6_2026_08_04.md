@@ -234,17 +234,22 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item — its 2nd item is
       an explicit operator/design-owner decision, stays open/NA). Repo: unified-trading-pm.
 
-- [ ] [BACKEND] P2. **Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time** — for
-      each of (`unified-trading-library c927ec58`, `unified-api-contracts 06c8e90b`, `deployment-service 0e62096f`):
-      `git fetch origin 'refs/wip-preserve/*:refs/remotes/origin/wip-preserve/*'`, confirm the slot-12 wip-preserve ref
-      still resolves to the SHA and is NOT an ancestor of `origin/live-defi-rollout`; cherry-pick (or format-patch/
-      `git am`, or re-derive if it conflicts) onto a fresh LDR-tip branch; run repo `bash scripts/quality-gates.sh`
-      green; ship via
-      `bash scripts/quickmerge.sh "<original subject> (rescue orphaned slot-12 WIP)" --agent --files     '<files>'`.
-      Zero data-loss risk (all wip-preserve-safety-netted); each commit independently re-verified as a real orphan (not
-      ancestor of LDR) by 2 independent checkers before this run. **Done when**: all 3 commits (or their re-derived
-      equivalents) are ancestors of `origin/live-defi-rollout`, each with a fresh green QG run. Source:
-      `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its 1st item only — items 2/3 are
+- [x] ✅ [BACKEND] P2. **Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time —
+      MOOT, all 3 already independently landed under fresh SHAs before this run.** For each of
+      (`unified-trading-library c927ec58`, `unified-api-contracts 06c8e90b`, `deployment-service 0e62096f`): fetched
+      `refs/wip-preserve/*`, re-confirmed each SHA still NOT an ancestor of `origin/live-defi-rollout` (orphan status
+      held), then content-diffed each against current LDR tip instead of blind-cherry-picking: -
+      `unified-trading-library c927ec58` (point_in_time.py docstring `lst_staking_yields`→`lst_yields`) — byte-identical
+      file-change already on LDR as `unified-trading-library@60c840f2` ("... (rescue orphaned slot-12 WIP)" +
+      `Quickmerge:       agent` trailer — a prior rescue attempt landed this exact patch under a fresh SHA). -
+      `unified-api-contracts 06c8e90b` (AAVE-PLASMA phase pipeline→live) — same outcome (`"AAVE-PLASMA": "live"` in
+      `defi_venues.py`) already on LDR as `unified-api-contracts@06c54fee` ("feat(defi): flip AAVE-PLASMA venue phase
+      pipeline to live", dated 2026-08-01, independently authored). - `deployment-service 0e62096f` (fastapi/starlette
+      cap-lift) — identical `pyproject.toml`/`uv.lock` state (fastapi>=0.137, starlette 1.3.1) already on LDR as
+      `deployment-service@eff55ae7` ("chore(deps): lift fastapi/starlette caps to fastapi>=0.137/starlette>=1.3.1", same
+      commit subject). **Done when** (outcome-defined, per the source issue doc's own reasoning) — all 3 commits'
+      CONTENT is an ancestor of `origin/live-defi-rollout` under some SHA: MET for all 3, no rescue action needed.
+      Source: `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its 1st item only — items 2/3 are
       conditionally gated on a main-agent confirmation this run could not re-verify, see Deferred). Repo:
       unified-trading-library, unified-api-contracts, deployment-service.
 
