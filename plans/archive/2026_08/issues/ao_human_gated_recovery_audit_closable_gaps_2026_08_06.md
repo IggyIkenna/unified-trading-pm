@@ -24,7 +24,7 @@ summary: >-
   — not saturated, but non-fleet processes (deployment-service/wave_launcher.py, ad-hoc migration scripts) compete on
   the same box as the 16-17 fleet slots, a believable contributor to observed worker stalls even with no single process
   starved.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-06 (/ag-closeout-audit ao) -- was [meta]; content is entirely agent-orchestrator's
@@ -44,7 +44,7 @@ execution_scope: local-only
 priority: P2
 parent_epic: orchestrator_master
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@bc37d03, agent-orchestrator@53492cb
 depends_on: []
 locked_by:
 locked_since:
@@ -58,6 +58,10 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-08 — RESOLVED** (all 3 todos `[x]`, unlocked; status flipped from `open` to `resolved` — content
+> verified complete, not just checkbox count). Archived via `ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`
+> todo 4.
 
 # AO human-vs-auto-recover audit — two closable watchdog gaps (account layer already fully automatic)
 
@@ -114,14 +118,18 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
       mirroring the existing spawn-success-resets-fields tests. Also correct `notify_spawn_failed`'s alert text so it no
       longer implies a dead end when Trigger-3 will, in practice, usually recover the slot ~15 min later. ✅
       agent-orchestrator@bc37d03 (2026-08-06, slot-4).
-- [ ] [SCRIPT] P2. **agent-orchestrator** — audit every sub-mechanism inside `_tick_once()` that currently sits AFTER
+- [x] [SCRIPT] P2. **agent-orchestrator** — audit every sub-mechanism inside `_tick_once()` that currently sits AFTER
       the daily-kill-cap early-return; move the ones that are cleanup/reconcile (not a NEW kill decision — same
       rationale as the already-fixed `_sweep_dirty_slots`/`_sweep_unpushed_slots`) ahead of the cap check, starting with
       orphan-session reclaim (whose own comment already states it isn't a kill). For the ones that genuinely ARE
       new-kill triggers (the 5 live triggers), decide deliberately whether they should also survive a cap-hit day or
       correctly stay gated — don't leave the boundary implicit. Fix the stale "default 20" docstring to match the live
       default (50, config.py:1090) in the same commit. Update `notify_watchdog_kill`'s cap-hit alert text to disclose
-      which mechanisms actually go dormant.
+      which mechanisms actually go dormant. ✅ `agent-orchestrator@bc37d03` (reorder + docstring fix) +
+      `agent-orchestrator@53492cb` (alert-text disclosure + `test_tick_daily_cap_still_runs_orphan_session_reclaim`
+      regression test). Both confirmed ancestors of `origin/live-defi-rollout`; diffs independently re-verified against
+      this exact description in `ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md`'s Progress Log (todo 1,
+      2026-08-08) and the named test re-run PASSED.
 - [x] [DOC] P3. ✅ **RESOLVED (round5 ao investigation) — already answered by the standing codex HARD RULE, no new
       ruling needed.** The question as posed presupposes no rule bars this yet; it already does, unconditionally (not
       just "during full-fleet hours"). `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy COMPUTE/MEMORY on the
@@ -158,10 +166,18 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
   apply — this doc stays the live tracking home until batch7 activates. Third item ([DOC] P3) is an explicit operator
   question, unchanged.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE, already-duplicated — citation fix only,
-  not a reclassification. `ao_satellite_ao_dispatch_batch7_2026_08_06.md` is now `status: active` / `assigned_vm:
-  planning` (activated since the 2026-08-07 marker), and its todo 3 (`_tick_once()` reorder + stale-docstring fix) is
-  still open there with the identical scope this doc's own `[SCRIPT] P2` item describes — verified verbatim, not
-  inferred. This doc's remaining `[SCRIPT] P2` item now genuinely satisfies the already-duplicated criterion; leaving
-  `assigned_vm: NA` unchanged here (flipping would dispatch a competing duplicate) and pointing any future toucher to
-  batch7 todo 3 as the live dispatch home. The sole remaining item that is actually THIS doc's own is the `[DOC] P3`
-  operator question, unchanged.
+  not a reclassification. `ao_satellite_ao_dispatch_batch7_2026_08_06.md` is now `status: active` /
+  `assigned_vm: planning` (activated since the 2026-08-07 marker), and its todo 3 (`_tick_once()` reorder +
+  stale-docstring fix) is still open there with the identical scope this doc's own `[SCRIPT] P2` item describes —
+  verified verbatim, not inferred. This doc's remaining `[SCRIPT] P2` item now genuinely satisfies the
+  already-duplicated criterion; leaving `assigned_vm: NA` unchanged here (flipping would dispatch a competing duplicate)
+  and pointing any future toucher to batch7 todo 3 as the live dispatch home. The sole remaining item that is actually
+  THIS doc's own is the `[DOC] P3` operator question, unchanged.
+
+- **2026-08-08 (slot 18, `review`, dispatch `ao_satellite_ao_dispatch_batch7_finalize-003`, reconciling
+  `ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md` todo 2)**: flipped this doc's 2nd item (`_tick_once()`
+  reorder + docstring/alert-text fix) to `[x]` — the underlying code (`agent-orchestrator@bc37d03` +
+  `agent-orchestrator@53492cb`) landed and was independently re-verified against `origin/live-defi-rollout` and the
+  named regression test today (finalize plan todo 1), but the flip back into THIS source doc's own checkbox had not yet
+  happened. All 3 items are now `[x]` — status flipped `open` → `resolved`. Proceeding to the finalize plan's todo 4
+  (archive candidates check).

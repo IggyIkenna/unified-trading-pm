@@ -20,7 +20,7 @@ summary: >-
   the old single-shot bar) instead of the 1st (~90min); and add a new passive (no new dispatch, same read-only `gh`-CLI
   probe as the live watchdog) reconcile pass that keeps checking a TERMINAL `unresolved` row for 24h after it gave up
   and flips it back to `resolved` (tagged `_reconciled`) if the wall cleared some other way. Also revisits
-  `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`'s "CI-wall re-escalation cap
+  `/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`'s "CI-wall re-escalation cap
   (defensible judgment bar) — no action" finding from the day before: that judgment was made without the live evidence
   this session surfaced (rows that visibly never self-correct), so it is superseded here rather than left standing as a
   contradicting "no action needed" claim.
@@ -36,7 +36,7 @@ related:
   [
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md,
+    /plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md,
     /plans/archive/issues/escalation_watchdog_stale_merged_pr_false_unresolved_2026_08_06.md,
   ]
 created: 2026-08-07
@@ -72,17 +72,15 @@ context_scope:
   ]
 ---
 
-<<<<<<<< HEAD:plans/archive/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md
 > **🗄️ ARCHIVED 2026-08-07** (interactive session, same-session archival) — filed and fully resolved in-session (all
 > `## Todos` `[x]`, `status: resolved` already set, no `locked_by`); archived immediately per the 6-step ritual —
 > `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — rather than left for a later sweep to catch
 > (this doc was itself one of 5 live `check_terminal_status_archived.py` violations, contributing to the very
 > `quality-gates-v2` hard-failure a freshly-dispatched `ldr_qg_failure` escalation worker was about to have to diagnose
-> on unified-trading-pm's behalf).
-========
-> **🟢 ARCHIVED 2026-08-07 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by cicd wall-resolution
-> (`agt-6f2b99`) as part of the `check_terminal_status_archived` ratchet fix.
->>>>>>>> e7259bdc8 (docs(plans): fix plan-hygiene ratchet regressions blocking quality-gates-v2):plans/archive/2026_08/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md
+> on unified-trading-pm's behalf). Re-confirmed **🟢 ARCHIVED 2026-08-07 — RESOLVED** (status: resolved, 0 open todos,
+> unlocked) by a separate cicd wall-resolution pass (`agt-6f2b99`) as part of the `check_terminal_status_archived`
+> ratchet fix — both archival events agree on the same terminal state; this banner was left holding raw unresolved
+> merge-conflict markers from that duplicate landing until a slot-18 `review` pass caught and cleaned it 2026-08-08.
 
 # Escalation watchdog retune: try harder before giving up, page later, and stop leaving `unresolved` rows stuck forever
 
@@ -109,10 +107,10 @@ Three separate, compounding issues in `server/escalation.py`:
    `notify_escalation_unresolved` on every `will_reescalate` path, gated only by a 3h cooldown, not by how many attempts
    had actually failed) — so a wall that would clear on retry #2 or #3 still generated a CRITICAL page on attempt #1.
 
-This also revisits `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`, filed one day
-earlier, which classified "CI-wall re-escalation cap" as **"defensible judgment bar — no action."** That audit did not
-have the live dashboard evidence this session did (two rows that visibly never self-corrected); superseded in that doc
-via a strikethrough + pointer here so a future reader doesn't take the earlier "no action" line as still current.
+This also revisits `/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`, filed one
+day earlier, which classified "CI-wall re-escalation cap" as **"defensible judgment bar — no action."** That audit did
+not have the live dashboard evidence this session did (two rows that visibly never self-corrected); superseded in that
+doc via a strikethrough + pointer here so a future reader doesn't take the earlier "no action" line as still current.
 
 ## Fix
 
@@ -154,7 +152,7 @@ flips-to-resolved-within-window, still-red-left-alone, past-window-skipped). All
 - [x] ✅ [DEVOPS] P1. Regression tests added/updated in `tests/test_escalation.py`; full `quality-gates.sh --no-fix`
       green before shipping (ruff, basedpyright, pytest).
 - [x] ✅ [DOCS] P2. Cross-referenced the superseded judgment in
-      `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`.
+      `/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`.
 - [x] ✅ [DEVOPS] P1. Live-verification-caught follow-up bug fixed: `agent-orchestrator@37cd533` — see Progress Log.
 - [x] ✅ [DEVOPS] P1. One-time historical backfill run (operator-chosen scope: last 7 days) — 161 of 238 all-time
       `unresolved` rows reconciled to `resolved` fleet-wide (77 remain, genuinely still-broken or outside the 7-day

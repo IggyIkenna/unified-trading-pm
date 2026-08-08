@@ -72,14 +72,19 @@ source: >-
       stated. ✅ VERIFIED — all 3 batch-7 done-claims re-checked against reality (commits confirmed on origin, diffs
       match claims, named regression tests re-run directly and pass); no discrepancies found. See Progress Log for
       per-todo evidence.
-- [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
+- [x] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       7 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of:
       `/plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md` (its first 2 items — leave
       its 3rd item, the unscoped circuit-breaker fork, untouched) and
-      `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 1st + 2nd items — leave its
-      3rd item, the operator-decision ask, untouched). **Done when**: both flips are committed with the `docs(plans):`
-      prefix and cite the real commit sha(s).
+      `/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 1st + 2nd items —
+      leave its 3rd item, the operator-decision ask, untouched). **Done when**: both flips are committed with the
+      `docs(plans):` prefix and cite the real commit sha(s). ✅
+      `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md` items 1-2 were already `[x]` (flipped earlier,
+      `unified-trading-pm@fdaaa3d7b`) and `ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` item 1 was already
+      `[x]` (`unified-trading-pm@199a73ed6`) — but item 2 (`_tick_once()` reorder) had NOT been flipped back even though
+      its code (`agent-orchestrator@bc37d03`+`53492cb`) landed and was verified in todo 1 above. Flipped it now (same
+      commit as this checkbox); both source docs' named items are fully reconciled.
 - [x] [INFRA] P0. **Re-check the conflict-gated declined item's gate and spin it into batch 8 if it has cleared.** The
       gated item: `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s 1st item (LDR-triggered `quality-gates-v2`
       template extension) was parked because it targets the same files as
@@ -100,7 +105,7 @@ source: >-
       (`plans/archive/2026_08/issues/agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`, banner "🟢 ARCHIVED
       2026-08-07 — RESOLVED") by a separate `check_archive_candidates` ratchet-fix pass — so there is nothing left to
       extract into batch 8.
-- [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** Re-check
+- [x] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** Re-check
       both source docs named in todo 2 above for whether their OTHER (non-batched, deferred) items are also closed
       before archiving — `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s 3rd item and
       `ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`'s 3rd item are NOT covered by this batch and must keep
@@ -108,7 +113,21 @@ source: >-
       codex-alignment check → fix every referrer's path corpus-wide → clear the lock) on any doc that IS fully done.
       **Done when**: `grep -rl <slug> plans/ codex/` returns only the archived copy's own path for each archived doc,
       and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero NEW hard failures (compare against the
-      baseline recorded at this finalize plan's authoring time).
+      baseline recorded at this finalize plan's authoring time). ✅
+      **`ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md` stays OPEN** — its 3rd item (`[INFRA] P3`, the
+      unscoped turn-count circuit breaker) is still `[ ]`, so it does NOT reach zero open todos; correctly excluded
+      (todo 2's own instruction). **`ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` ARCHIVED** — its 3rd
+      item was already `[x]` (resolved, an operator-question closed by standing codex rule) and its 2nd item was flipped
+      `[x]` in todo 2 above, so it reached zero open todos: filled `resolved_by`, flipped `status: open → resolved`,
+      added the ARCHIVED banner, `git mv`'d to
+      `/plans/archive/2026_08/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md`, repointed all 7
+      corpus-wide referrer paths (this plan, the batch7 source plan ×3, and the archived
+      `escalation_watchdog_retune_and_reconcile_2026_08_07.md` ×3) from the old active path to the new archive path, and
+      ran a codex-alignment fix on `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (stale "20 kills"
+      cap + "dormant until manual reset" text corrected to the live default of 50 and the actual post-fix behavior —
+      only the 5 live kill triggers go dormant on cap-hit, sweep/reclaim/reconcile mechanisms keep running). No DEFERRED
+      items existed on the archived doc. `grep -rl ao_human_gated_recovery_audit_closable_gaps_2026_08_06 plans/ codex/`
+      returns only the new archived path. Hygiene-sweep verification recorded in the Progress Log.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md`, migrate any still-open Deferred item into batch 8
       (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_08/`,
