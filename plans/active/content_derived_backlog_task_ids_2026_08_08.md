@@ -128,12 +128,12 @@ Both were established by reading the code, and both are silent — neither raise
       wider check (`routes/backlog.py:638-639`); carry that into the minting path. After this lands, a freed positional
       slot can never be reassigned, because nothing new is positional. (repo: agent-orchestrator) —
       agent-orchestrator@ba6eff5
-- [ ] [BACKEND] P2. **Rewrite the two guard tests to inject their collision at the DB layer.**
+- [x] ✅ [BACKEND] P2. **Rewrite the two guard tests to inject their collision at the DB layer.**
       `test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`
       (`tests/test_regen_backlog_from_plan.py:3249`) and `test_sync_refuses_to_reset_a_done_row_on_id_reuse` (`:3300`)
       manufacture a positional collision through normal minting — which becomes unreachable after the previous todo.
       Inject directly so both keep testing the guard in isolation rather than silently becoming vacuous. (repo:
-      agent-orchestrator)
+      agent-orchestrator) — agent-orchestrator@a746e83
 - [ ] [BACKEND] P2. **Record the guard disposition in `sync_backlog_to_db`'s docstring.** Ruling: **KEEP** the
       sibling-reset guard (`bootstrap.py:747-806`) as defence-in-depth — Phase 1 removes its position-shift trigger but
       not a hand-edited `backlog.yaml` or a bug in the new minting's own collision check. **KEEP** the NULL-`brief_hash`
@@ -297,3 +297,15 @@ Both were established by reading the code, and both are silent — neither raise
   Shipped in the SAME commit as the todo above (both were `git add`-staged together since the QG-red fix was a hard
   precondition for shipping anything from this repo on this host). Evidence: agent-orchestrator@ba6eff5 (verified on
   origin/live-defi-rollout; QG PASSED 2767/2767 on this exact SHA before quickmerge).
+
+- **2026-08-08 (slot 21, content_derived_backlog_task_ids-005)**: Rewrote both guard-test docstrings
+  (`test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`,
+  `test_sync_refuses_to_reset_a_done_row_on_id_reuse`). On inspection both tests already inject their id collision
+  mechanically at the DB layer (hand-built `TaskRow` + `BacklogTask` sharing an id, no call through `_make_task_id`/
+  `_make_content_task_id`/minting) — the gap was that their docstrings still narrated the OLD "freed positional slot
+  reused by normal minting" production scenario, which Phase 1 (previous todo, `agent-orchestrator@ba6eff5`) closed.
+  Rewrote both to frame the injection as deliberate/DB-layer, explicitly noting the guard remains meaningful against
+  other collision sources (hand-edited `backlog.yaml`, a bug in the new minting collision check) so a future reader
+  doesn't mistake the tests (or the guard itself) for testing something now-unreachable and remove them as vacuous. No
+  production code changed; test-only docstring edit. QG: 2756 passed, 2 skipped (full suite, basedpyright clean).
+  Evidence: agent-orchestrator@a746e83 (verified ancestor of origin/live-defi-rollout before `/done`).
