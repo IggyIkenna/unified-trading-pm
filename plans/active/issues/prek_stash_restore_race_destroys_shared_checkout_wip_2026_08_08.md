@@ -38,6 +38,7 @@ supersedes:
 superseded_by:
 source: >-
   Hit three times while shipping the AO context-probe fix (2026-08-08 interactive session, slot 1).
+depends_on: []
 ---
 
 # prek stash/restore race destroys uncommitted WIP on a shared checkout

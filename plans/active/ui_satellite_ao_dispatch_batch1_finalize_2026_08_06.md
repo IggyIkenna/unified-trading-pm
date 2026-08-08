@@ -85,18 +85,18 @@ source: >-
       sha, and either is left unflipped only with a stated reason. Repo: unified-trading-pm.
 
       **DONE 2026-08-08**: all 3 boxes across the 2 source docs were already `[x]` (flipped by the batch-1 todos
-              themselves per their own "Done when" clauses), so this pass focused on sha-verification + citation completeness:
-              (1) `data_status_cell_grid_rearchitecture_2026_07_18.md` todo 1 already cites `deployment-api@8a36931` —
-              verified ancestor of `origin/live-defi-rollout`. (2) `artifact_pipeline_observability_2026_07_17.md` Phase 5's
-              2nd item (dual-cloud-image-builds drift fix) already cites `unified-trading-pm@dab5f0273` — verified ancestor.
-              (3) `artifact_pipeline_observability_2026_07_17.md` Phase 5's 1st item (line 652, stale issue-filing checkbox)
-              was `[x]` but cited only "na-eligibility-audit", no batch-1 sha — root-caused: that checkbox was independently
-              pre-flipped 2026-08-07 by a na-eligibility-audit pass (`unified-trading-pm@2b8073083`, verified ancestor) one
-              day BEFORE batch-1's own todo 2 shipped (`unified-trading-pm@d2094b791`, verified ancestor) fixing the
-              cross-referenced issue doc's stale `#1` item; added both shas as an explicit citation so the checkbox properly
-              reflects both closures rather than crediting only the earlier one. All 3 shas verified via
-              `git merge-base --is-ancestor <sha> origin/live-defi-rollout` before citing (none copied blind). — this plan's
-              own reconciliation commit.
+                      themselves per their own "Done when" clauses), so this pass focused on sha-verification + citation completeness:
+                      (1) `data_status_cell_grid_rearchitecture_2026_07_18.md` todo 1 already cites `deployment-api@8a36931` —
+                      verified ancestor of `origin/live-defi-rollout`. (2) `artifact_pipeline_observability_2026_07_17.md` Phase 5's
+                      2nd item (dual-cloud-image-builds drift fix) already cites `unified-trading-pm@dab5f0273` — verified ancestor.
+                      (3) `artifact_pipeline_observability_2026_07_17.md` Phase 5's 1st item (line 652, stale issue-filing checkbox)
+                      was `[x]` but cited only "na-eligibility-audit", no batch-1 sha — root-caused: that checkbox was independently
+                      pre-flipped 2026-08-07 by a na-eligibility-audit pass (`unified-trading-pm@2b8073083`, verified ancestor) one
+                      day BEFORE batch-1's own todo 2 shipped (`unified-trading-pm@d2094b791`, verified ancestor) fixing the
+                      cross-referenced issue doc's stale `#1` item; added both shas as an explicit citation so the checkbox properly
+                      reflects both closures rather than crediting only the earlier one. All 3 shas verified via
+                      `git merge-base --is-ancestor <sha> origin/live-defi-rollout` before citing (none copied blind). — this plan's
+                      own reconciliation commit.
 
 - [ ] [REVIEW] P1. **Re-check all 11 of batch 1's `## Deferred` items for resolution.** Batch 1 found zero
       conflict-gated items (the tranche's first batch has nothing yet to conflict with), so this step is broader than
