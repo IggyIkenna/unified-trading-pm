@@ -74,12 +74,13 @@ source: >-
 depends_on: []
 ---
 
-> **🟡 IN-FLIGHT 2026-08-08 ~01:38 UTC — slot-7 running in tmux `orch-slot-7:backfill` (harness-kill-proof). Rolling
-> boundary 2026-04-10 (7 chunks: 2020-06-06..2026-04-09). Chunk 1/7 VM `expected-universe-v2-sports-20260808-013813`
-> RUNNING (2020-06-06..2020-12-31). Tarball fresh (no LC_TARBALL_FRESHNESS warn needed). Resume:
-> `tmux capture-pane -t "orch-slot-7:backfill" -p -S -20` or
+> **🟡 IN-FLIGHT 2026-08-08 ~02:00 UTC — slot-9 running in tmux `orch-slot-9:backfill` (harness-kill-proof). Rolling
+> boundary 2026-04-10 (7 chunks: 2020-06-06..2026-04-09). Chunk 1/7 EXIT_STATUS=0 ✅. Chunk 2/7 VM
+> `expected-universe-v2-sports-20260808-015906` RUNNING (2021-01-01..2021-12-31) — partially seeded (~1M rows/retry,
+> ~14+ retries so far across prior sessions). Chunks 3-7 pending. All 4 tarballs current (f3063b98). Resume:
+> `tmux capture-pane -t "orch-slot-9:backfill" -p -S -20` or
 > `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'`. If tmux window gone: re-run
-> `tmux new-window -t orch-slot-7 -n backfill && tmux send-keys -t orch-slot-7:backfill "cd /home/ubuntu/unified-trading-system-repos/.tabs/7/deployment-service && bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports 2>&1 | tee /tmp/backfill-slot7.log" Enter`.**
+> `tmux new-window -t orch-slot-9 -n backfill && tmux send-keys -t orch-slot-9:backfill "cd /home/ubuntu/unified-trading-system-repos/.tabs/9/deployment-service && LC_TARBALL_FRESHNESS=warn bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports 2>&1 | tee /tmp/backfill-slot9.log" Enter`.**
 
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 
