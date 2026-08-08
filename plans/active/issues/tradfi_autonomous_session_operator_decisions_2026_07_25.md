@@ -360,21 +360,25 @@ matches what already happened — no further action needed.
       reverse-translation code itself still needs building before the Phase-D MVP backfill readiness gate actually
       clears. Not fully closed — the remaining build step is real work, not a decision.
 - [ ] [PM] P2. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — items 5, 7, 8 answered below;
-      items 1, 2, 3, 4, 6, 9 all closed/corrected/applied 2026-08-07 (see their own todos above).** Of the 9 original
-      items, only item 6 still needs the operator's attention (a standing ruling this session's own [WORKER REC]
-      initially missed — see item 6's note above). - **Item 5 — RULED: Option A, flip all 8 draft tradfi AO plans to
-      active** (not the worker-recommended narrower Option B). Operator's literal instruction was unqualified "flip to
-      active" — taking the plain reading (all 8), not the smaller-blast-radius subset. **Flagging for visibility, not
-      re-asking**: the worker's own caution was that this lands 49 todos on the fleet at once alongside batch3's 9 — if
-      that's not what was intended, say so and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` +
-      its finalize per Option B instead. Propagation not yet executed (flip each of the 8 plans' `status: draft` →
-      `active` frontmatter) — ready to execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated
-      safe-idempotent justification to `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard
-      launch sub-item (cite `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns,
-      name the launcher + a shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed —
-      ready to execute. - **Item 8 — RULED, conditional: operator said fold/archive IF the doc's todos are mostly done —
-      condition IS met** (1 open todo, near-complete, per the doc's own item-8 analysis). **Important**: the worker's
-      own Option-B recommendation argued to KEEP it specifically because it's the tranche's aggregator/linkage anchor
+      items 1, 2, 3, 4, 6, 9 all closed/corrected/applied 2026-08-07 (see their own todos above).** **(CORRECTED
+      2026-08-08, na-eligibility-audit: the clause below previously said "only item 6 still needs the operator's
+      attention" — stale leftover phrasing from before item 6 was itself resolved the same day, see item 6's own `[x]`
+      "OVERRIDDEN 2026-08-07, retag applied" checkbox above.)** Of the 9 original items, every decision is now made
+      (1/2/3/4/6/9 closed/corrected/applied; 5/7/8 ruled directly below) — the sole remaining work on THIS checkbox is
+      propagation of the 3 already-ruled items 5/7/8 into their target files (none of it is a further operator
+      decision). - **Item 5 — RULED: Option A, flip all 8 draft tradfi AO plans to active** (not the worker-recommended
+      narrower Option B). Operator's literal instruction was unqualified "flip to active" — taking the plain reading
+      (all 8), not the smaller-blast-radius subset. **Flagging for visibility, not re-asking**: the worker's own caution
+      was that this lands 49 todos on the fleet at once alongside batch3's 9 — if that's not what was intended, say so
+      and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its finalize per Option B instead.
+      Propagation not yet executed (flip each of the 8 plans' `status: draft` → `active` frontmatter) — ready to
+      execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated safe-idempotent justification to
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard launch sub-item (cite
+      `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns, name the launcher + a
+      shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed — ready to execute. -
+      **Item 8 — RULED, conditional: operator said fold/archive IF the doc's todos are mostly done — condition IS met**
+      (1 open todo, near-complete, per the doc's own item-8 analysis). **Important**: the worker's own Option-B
+      recommendation argued to KEEP it specifically because it's the tranche's aggregator/linkage anchor
       (`check_ag_closeout_linkage.py` resolves against its aggregated-source list) — archiving without re-homing that
       role would orphan the linkage. Applying the operator's literal instruction safely means **Option C**, not a bare
       archive: fold the remnant into `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` (where
@@ -478,3 +482,15 @@ every day narrows or closes it permanently.
   sign-off recorded, wasn't actually needed; 6: not retagged, flagged back to the operator instead; 9: nothing to do,
   already done) — item 6 is the only one still needing operator attention, the standing 2026-07-26 ruling was left in
   place pending that.
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid — 1 open todo (down from
+  the 08-06 marker's "2", since the meta-todo closed 08-07), stale internal contradiction fixed.** Re-read fresh per
+  task brief (doc was edited 2026-08-07, after the 08-06 marker). The sole open todo (the items-5/7/8 propagation
+  checkbox) itself said "only item 6 still needs the operator's attention" while item 6's own checkbox on the SAME doc
+  was already `[x]` closed the same day — leftover phrasing from an earlier edit pass, corrected inline (see the
+  "CORRECTED 2026-08-08" note on that todo). The open todo bundles propagation of 3 fully-RULED-but-unexecuted items (5:
+  flip 8 plans' frontmatter draft->active; 7: add a safe-idempotent-justification text block to one named plan
+  line-range; 8: fold a doc remnant into an archive + re-verify 0 orphans) spanning different target files/repos —
+  tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (no undecided judgment remains in any of the 3) but NOT promoted to RECLASSIFY
+  this pass since the bundle needs decomposing into 3 discrete todos first (a whole-checkbox flip as-is would dispatch a
+  3-target compound action, not a single worker-determinable outcome). Recommend a follow-up pass splits items 5/7/8
+  into their own checkboxes before considering extraction. `assigned_vm` unchanged.

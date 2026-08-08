@@ -147,3 +147,8 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   staying NA until that already-filed conflict resolves (reclassify/dedupe/re-affirm), rather than re-filing a duplicate
   conflict record here.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, confirmed -- re-verified,
+  unchanged.** 2 open todos re-read end-to-end; count reconciled (2/2). Independently re-checked the 08-07 marker's
+  conflict citation: `governance_sweep_deferred_followups_2026_08_06.md`'s item 5/6 (naming this exact doc) and its
+  target `[DIAG] P2` todo are both still present and still open. Per the never-re-litigate-a-cited-conflict rule,
+  preserved KEEP-NA rather than re-deriving. Todo 2 remains sequenced behind todo 1. Nothing to reclassify.

@@ -259,3 +259,10 @@ here.
   features-volatility launch, realized_vol wiring, VIX sub-todo) and 3 P3 backtest items (gated on master Group-F
   harness) remain genuinely open engineering/design-risk work, not mis-defaulted NA. `locked_by: live-defi-rollout`
   blocks archival only, not reclassification -- noted, not acted on. Doc stays NA.
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid -- confirmed via git log
+  the only commits since 2026-07-31 are context-scout/frontmatter touches (no content change).** All 7 open todos
+  re-read; count reconciled (7/7). One item (realized_vol feature-group CLI wiring -- 4 named concrete steps: registry
+  entry, data-load path, dispatch branch, unit tests) reads closer to a bounded application-code task than its siblings
+  on independent merits, but the fresh 08-07 marker already itemized and re-affirmed it as genuine, unblocked
+  engineering work (only a single-day smoke has ever landed for the sibling P0 items, real multi-file risk) -- not
+  overridden this pass. Doc stays NA.
