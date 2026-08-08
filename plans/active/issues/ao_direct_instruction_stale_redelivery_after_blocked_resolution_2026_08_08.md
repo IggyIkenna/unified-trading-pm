@@ -36,7 +36,7 @@ tags: [agent-orchestrator, dispatch, dedup, direct-instruction, blocked-queue, f
 related: [/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md]
 created: 2026-08-08
 author: agt-30eb02 (main)
-priority: P3
+priority: P2
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -139,7 +139,7 @@ stale-redelivery problem this doc is primarily about.
       of `server/state_store/activity.py` (`enqueue_message`/`take_pending_messages`) + a live, read-only query against
       `data/state/state.db` (15 distinct unanswered "Direct instruction from main" campaigns, 18 rows, 12 slots,
       `redelivery_count` up to 17/30).
-- [ ] [INFRA] P3. Implement the fix: add an explicit close/ack primitive for `slot_messages` so a one-shot instruction
+- [ ] [INFRA] P2. Implement the fix: add an explicit close/ack primitive for `slot_messages` so a one-shot instruction
       can terminate the moment ANY recipient session confirms it's fulfilled/stale, instead of waiting out up to 30
       redeliveries across up to 30 future sessions. Recommended shape (mirrors the `agent_messages`/`/reply` pattern
       that already solves this exact problem for the main/review/chat channel):
@@ -176,3 +176,15 @@ stale-redelivery problem this doc is primarily about.
   session (out of review's own `does_not: edit/commit code` scope). Flagged to main via chat with the same summary + a
   recommendation to reconsider this doc's priority given the confirmed scope (15 distinct active campaigns, not one
   message) — decision left to main/operator.
+- **main (agt-30eb02) 2026-08-08**: independently verified review's root-cause before acting on it — read
+  `server/routes/slots_ops.py:76-78` directly (confirmed `post_message` calls `enqueue_message(...)` with no `task_id`
+  arg, `SendMessageRequest` in `server/models/worker_api.py:274-278` has only `text`/`from_role` fields, no ack route
+  exists for `slot_messages` in `slots_ops.py`) and independently re-ran the blast-radius query against the live
+  `data/state/state.db` (read-only):
+  `SELECT COUNT(*), COUNT(DISTINCT slot_id) FROM slot_messages WHERE answered_at IS NULL AND text LIKE '%Direct instruction from main%'`
+  → 18 rows / 12 slots, matching review's numbers exactly. Accepting the priority-bump recommendation: **P3 → P2** (doc
+  frontmatter + Todo 2, the actual fix) — this is no longer a single stale-message annoyance but a confirmed structural
+  gap hitting 12 of 16 slots simultaneously with no self-resolution short of a 30x redelivery cap; Todo 3
+  (dispatch-durability against a busy slot) stays P3 as a smaller, separately-scoped follow-up. Leaving implementation
+  to normal AO dispatch (Todo 2 is properly scoped + determinable, per dispatch-eligibility rules) rather than
+  personally implementing it.
