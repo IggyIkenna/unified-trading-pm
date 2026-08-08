@@ -118,7 +118,9 @@ inline fixes (per the 2026-07-29 P3 census's own conclusion: "revisit if/when on
       market-tick-data-service@6ddb0374 (peer slot-8).
 - [x] ✅ [DATA] P2. Add `record_vm_progress` checkpoint to
       `sports/league_id_relocation/migrate_sports_casing_2026_07_22.py`, same pattern —
-      market-tick-data-service@c98e0abb.
+      market-tick-data-service@486c61b2 (sha corrected 2026-08-08 — the prior citation `c98e0abb` was an unrelated
+      test-fix commit by the same slot; the actual checkpoint commit is `486c61b2`, verified via `git log --follow` on
+      the script + `git blame` on the added lines, both confirmed ancestors of `origin/live-defi-rollout`).
 - [ ] [DATA] P2. Add `record_vm_progress` checkpoint to
       `sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`, same pattern. Repo:
       market-tick-data-service.

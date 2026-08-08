@@ -245,7 +245,21 @@ plan + verifying the `done_sha`, never from the row's status alone.
       `done` row — the false-done state has already been superseded by honest re-dispatch. No REOPEN (would collide with
       slot 17's in-flight work on an already-correctly-queued task) or FLIP (would falsely mark unmet steps 1/3/4 done)
       was warranted or performed; this item only needed its tracker checkbox resolved with the verification trail above.
-- [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`)
+- [x] ✅ [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`) — **verified 2026-08-08
+      (slot 30): no REOPEN or FLIP action needed on the backlog row — already self-corrected**, same
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every item above.
+      `GET     /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null` (not `done`). But
+      verifying the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md` line
+      119-121, the `migrate_sports_casing_2026_07_22.py` checkpoint todo) surfaced a genuine **citation defect**: the
+      checkbox was already correctly `[x]` and the checkpoint code genuinely exists (`record_vm_progress` import + call
+      confirmed present in the script), but the cited sha `c98e0abb` is a real, on-origin commit that has NOTHING to do
+      with this todo — it's an unrelated `market-tick-data-service` test fix
+      (`fix(tests): update DEFI shard count 2828→2856…`, same slot-16, ~30 min later). The real checkpoint commit is
+      `486c61b2` (`feat(sports): add record_vm_progress checkpoint to migrate_sports_casing_2026_07_22.py`, slot-16,
+      2026-08-05T05:44:34Z — confirmed via `git log --follow` on the script + `git blame` on the added lines, both
+      ancestors of `origin/live-defi-rollout`). Fixed the citation in the plan doc itself (same-file findings-triage
+      fix). No REOPEN (would re-open genuinely-done work) or FLIP (already flipped, honestly, just mis-cited) was
+      warranted; this item needed a citation fix, not a status change.
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-009` (`done_sha=6ddb0374`)
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-010` (`done_sha=6ddb0374` — **same sha as -009**;
       check whether one commit legitimately closed both or whether a shared sha was copied across rows)
@@ -385,3 +399,12 @@ plan + verifying the `done_sha`, never from the row's status alone.
   still gated"), and the checkbox there is correctly still `- [ ]`. The live backlog row for this id is now a fresh
   in-flight dispatch to slot 17, not a stale `done` row — the false-done state has already self-corrected. See the
   checklist item above for the full trail.
+
+- **2026-08-08 (slot 30, backend_engineer)**: Verdict on `mtds_migrate_executor_progress_checkpoint_gap-008`
+  (`done_sha=c98e0abb` at audit time): **no REOPEN or FLIP action needed on the backlog row** — same self-correcting
+  positional-id pattern as the 8 items above (`GET /api/backlog` shows `status: "queued"`, `done_sha: null`). Verifying
+  the cited plan checkbox surfaced a real citation defect instead: `c98e0abb` is a genuine on-origin commit but an
+  unrelated test fix, not the checkpoint work. The checkpoint itself is real and the checkbox was already honestly `[x]`
+  — corrected the citation to the actual commit `486c61b2` in
+  `mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md` (same-file findings-triage fix). See the checklist item
+  above for the full trail.
