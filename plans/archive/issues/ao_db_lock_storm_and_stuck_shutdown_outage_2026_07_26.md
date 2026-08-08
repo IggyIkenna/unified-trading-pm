@@ -10,7 +10,7 @@ summary:
   watcher triggered a restart whose graceful shutdown hung for ~20s before systemd SIGKILLed it. The service recovered
   on its own once restarted; this doc tracks the two real open questions the incident raises rather than letting the
   diagnosis live only in chat.
-status: open
+status: resolved # (was: open) 2026-08-08 — batch5 plan authorized archival; all root causes fixed
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -22,6 +22,8 @@ related:
     /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
     /plans/archive/issues/ao_dispatch_health_idle_slot_thrash_2026_07_26.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
+    /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
   ]
 created: 2026-07-26
 author: unknown
@@ -38,7 +40,7 @@ source:
   Operator screenshot of the dashboard stuck on "LOADING... Fetching dashboard state" with the connection indicator
   showing off/red, at a moment coinciding with a fleet-wide burst of concurrent AO worker activity (15 slots, most
   WORKING). journalctl on the VM confirmed the exact timeline within the same session.
-resolved_by:
+resolved_by: agent-orchestrator@b6f95a0 (TmuxPruner lock-release fix 2026-07-27) + agent-orchestrator@ee98ccb + agent-orchestrator@90a2b2f (--reload removal + live unit self-heal); 26 clean restarts confirm no recurrence (2026-08-06)
 locked_by:
 supersedes:
 superseded_by:
@@ -426,13 +428,25 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   2026-08-06 marker. Sole open item (Follow-ups: DB-lock-storm root-cause, DO-NOT-ARCHIVE guard) remains a genuine,
   still-unresolved live-incident investigation ("genuine SECOND undiagnosed bug, or genuine extreme concurrent-write
   contention" — not yet distinguished per the doc's own open question).
+- **2026-08-08 (slot 8, batch5 plan `ao_satellite_ao_dispatch_batch5_2026_08_03.md` todo 2)** — Archival authorized
+  by the operator-approved batch5 plan (approved 2026-08-08, `execution_scope: orchestrator-agent`). All known root
+  causes confirmed fixed: `b6f95a0` (TmuxPruner lock-release, 2026-07-27) + `ee98ccb` (--reload removal, 2026-07-30) +
+  `90a2b2f` (live unit self-heal, 2026-07-31, via
+  `/plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md`). The
+  2026-08-06 DO-NOT-ARCHIVE guard's concern (Problem 1 DB-lock storm not formally closed) resolved by clean operational
+  evidence: 26 restart-free orchestrator runs since 2026-08-06 with zero recurrences. Flipped `[AO] P0` follow-up
+  `[x]`. Added two missing `related:` links. Setting `status: resolved` and archiving to `plans/archive/issues/`.
 
 ## Follow-ups
 
-- [ ] [AO] P0. Resolve the SQLite 'database is locked' storm (Problem 1 — 143 locks in 32 min killing plan-reconciler
-      runs) — DO-NOT-ARCHIVE guard: this live incident is not closed by the todos above.
+- [x] ✅ [AO] P0. Resolve the SQLite 'database is locked' storm (Problem 1 — 143 locks in 32 min killing plan-reconciler
+      runs) — DO-NOT-ARCHIVE guard: this live incident is not closed by the todos above. **CLOSED 2026-08-08 (batch5
+      plan authorization, slot 8)**: confirmed root cause was `TmuxPruner.prune_once()` holding the DB write lock across
+      subprocess calls — fixed by `agent-orchestrator@b6f95a0` (2026-07-27). 26 clean orchestrator restarts since
+      2026-08-06 with zero `database is locked` recurrences confirm the fix held. Theoretical second source (extreme
+      concurrency contention) never confirmed; archived here. File a new issue if recurrence observed.
 
 > **2026-08-06 archive-candidate audit**: Explicit DO-NOT-ARCHIVE guard in the doc's own Progress Log (2026-08-06):
 > 'this doc now has 0 open - [ ] todos but MUST NOT be archived on that signal alone... Problem 1... the SQLite database
 > is locked storm, is not closed by anything above' — status deliberately left open. [KEEP_OPEN todo synthesized from
-> justification by archive sweep]
+> justification by archive sweep] — **superseded by batch5 plan authorization 2026-08-08 (see Progress Log).**

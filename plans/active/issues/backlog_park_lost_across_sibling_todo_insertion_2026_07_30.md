@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [agent-orchestrator, backlog, park, prerequisites, regen, dispatch-thrash]
 related:
   [
-    /plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
+    /plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-30
@@ -41,7 +41,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
+    /plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
     /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
     agent-orchestrator/server/regen_backlog_from_plan.py,
   ]

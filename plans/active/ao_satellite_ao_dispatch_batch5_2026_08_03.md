@@ -143,7 +143,7 @@ below rather than duplicated here.
       4th, docs-only item — its P1 backend-routing-code item and P3 operator-sign-off item are explicitly self-gated in
       the source doc and NOT in scope here). Repo: unified-trading-pm. — unified-trading-pm@ea5d699c9
 
-- [ ] [REVIEW] P2. **Close out `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` — pure bookkeeping, no new
+- [x] ✅ [REVIEW] P2. **Close out `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` — pure bookkeeping, no new
       investigation.** Flip its remaining `[OPERATOR] P2` (line ~225) and `[REVIEW] P2` (line ~232) checkboxes to
       `- [x] ✅`, citing `agent-orchestrator@90a2b2f` and
       `/plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md` as the
@@ -158,7 +158,7 @@ below rather than duplicated here.
       bucket now that it's closed, not just retagged — see the file-adjacency rule above, land this BEFORE todo 3).
       **Done when**: the doc reads `status: resolved`, both checkboxes `[x]` with the citations above, lives at
       `plans/archive/issues/`, and `grep -rl ao_db_lock_storm_and_stuck_shutdown_outage plans/ codex/` returns only the
-      archived path. Source: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo:
+      archived path. Source: `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo:
       unified-trading-pm.
 
 - [ ] [DOCS] P3. **Close `ao_tranche_full_content_audit_findings_2026_07_31.md`'s §3 (duplicate-doc merge) and §4 (stale
