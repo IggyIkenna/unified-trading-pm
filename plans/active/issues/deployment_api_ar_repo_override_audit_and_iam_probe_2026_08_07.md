@@ -18,15 +18,15 @@ scope: [engineer, admin]
 tags: [ci-cd, deploy-chain, iam, artifact-registry, cloud-run, follow-up]
 related: [/plans/archive/2026_08/issues/deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07.md]
 created: 2026-08-07
-last_updated: "2026-08-07"
+last_updated: "2026-08-08"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
-assigned_role: devops
+assigned_role: infra
 resolved_by:
 drift_direction: advance-code
 depends_on: []
@@ -60,3 +60,31 @@ context_scope: [/plans/archive/2026_08/issues/deploy_api_cloud_run_deploy_iam_an
 
 - **2026-08-07**: migrated forward from the parent issue doc during its archival (both bugs the parent tracked are
   fixed + live-verified; these two items were explicitly flagged there as not yet chased).
+
+- **na-eligibility-audit 2026-08-08 (Phase 2/3, sub-agent conflict-check + apply)**: **RECLASSIFY, applied.**
+  Re-verified the whole-doc bar: todo 1 is a precisely-scoped audit with a stated done-when (compare each remaining
+  service's `cloudbuild.yaml` `_REGISTRY_REPO` against what `_get_ar_repo_name()` computes; a mismatch is a finding).
+  Todo 2 names a concrete, already-shipped analog to mirror (`alerting_service/notifiers/pagerduty.py`'s
+  `lru_cache`-wrapped capability probe, fixed earlier in the same deploy-chain chase) and a concrete technical target
+  (verify `run.developer`-class permissions on deployment-api's own runtime SA at startup, fail loud before a live 502
+  discovers the gap) — a scoped code change with a known pattern to follow, not an open design question. Neither item
+  needs a judgment call resolved first. Ran the shared conflict-check protocol
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3): grepped every `status: active`,
+  `assigned_vm: planning` doc under `parent_epic: infrastructure_master` (and corpus-wide) for
+  `_AR_REPO_OVERRIDES`/`_get_ar_repo_name`/`run.developer` — the only other hit,
+  `bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`, is about the GCP **default
+  compute SA**'s project-wide IAM roles across 155 VM launchers (a completely different mechanism/target: deployment-api
+  never appears in it) — topically adjacent (both IAM-flavored), not a real claim on the same ground. No sibling
+  batch/finalize doc or consolidated-closeout doc references `deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07`
+  either. Verdict: clear. Applied: `assigned_vm: NA` -> `planning`, `execution_scope: local-only` ->
+  `orchestrator-agent`. **Also fixed a pre-existing frontmatter defect while in the doc**: `assigned_role: devops` was
+  not a valid role — `devops` does not exist in the live `agents/*.md` registry (valid roles: `ag_closeout_auditor`,
+  `backend_engineer`, `cefi_mtds_smoke_tester`, `cefi_reconciliation_auditor`, `cicd`, `conflict_resolver`,
+  `context_scout_auditor`, `data_engineering`, `data_pipeline_failure`, `docs_reconciler`, `infra`, `main`, `monitor`,
+  `na_eligibility_auditor`, `plan_health`, `plan_reconciler`, `quant_dev`, `review`, `ui_developer`, `worker`) — corrected
+  to `infra`, matching both open todos' `[INFRA]` tag per `task_template.md` §3's `[TAG]` -> craft-role mapping. **No
+  separate finalize-plan twin authored**: `scripts/quality_gates/check_finalize_plan_coverage.py::_find_violations`
+  scans `plans/active/*.md` only (non-recursive), never `plans/active/issues/*.md` (confirmed by direct code read) —
+  this doc, `doc_type: issue` in `plans/active/issues/`, is structurally outside that gate's scanned population, same
+  as ~110 other live `assigned_vm: planning` issue docs in this corpus with no finalize-plan companion. Archival will be
+  handled directly once both todos clear.

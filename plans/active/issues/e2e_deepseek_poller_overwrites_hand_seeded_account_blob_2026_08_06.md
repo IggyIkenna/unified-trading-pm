@@ -32,10 +32,14 @@ scope: [engineer]
 stage: [meta]
 repos: [agent-orchestrator]
 tags: [agent-orchestrator, e2e, playwright, deepseek, test-reliability, fixture-drift]
-related: [/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md]
+related:
+  [
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md,
+  ]
 created: 2026-08-06
 author: agent
-last_updated: 2026-08-06
+last_updated: 2026-08-08
 priority: P3
 parent_epic: orchestrator_master
 source:
@@ -95,3 +99,11 @@ context_scope:
   (`deepseek_usage_poller.py`), the failing spec (`deepseek-per-turn-metrics.spec.ts`), the e2e-backend launcher named
   as fix-direction (a) in todo 2 (`run-e2e-backend.sh`), and the sibling doc already in `related:` that hit the same
   locator bug in the same session (`deepseek_flash_ab_routing_test_2026_08_05.md`).
+
+- **na-eligibility-audit 2026-08-08 (cross-link only, via the sibling doc's conflict-check)**: added
+  `ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` to `related:` — that doc's own todo 1 (bundling
+  `deepseek-per-turn-metrics.spec.ts` + `deepseek-wallet-reconciliation.spec.ts` under an unconfirmed
+  async-poller-vs-test-timeout race hypothesis) was found to conflict with THIS doc's already-confirmed, more specific
+  root cause (the poller unconditionally overwrites the hand-seeded blob on every tick, not a race) during that doc's
+  na-eligibility-audit conflict-check pass. No content change here — this doc's own KEEP-NA verdict (2026-08-07) stands
+  unchanged; a future worker on either doc should read both before acting on `deepseek-per-turn-metrics.spec.ts`.
