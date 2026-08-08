@@ -667,6 +667,25 @@ blocked-model-variant MM engines + 2 sta...
   Tier-3 (PREDICTION + ML_LEAN + 2 standalone training todos, blocked-model-variant, needing an operator-scheduled VM
   run) / 1 contingent doc-update. None are bounded single-worker mechanical tasks the operator's backfill-authorization
   gate doesn't cover.
+- **operator ruling 2026-08-08** (NA-corpus blocker digest, cross-cutting round 5, id=63): explicit go still WITHHELD —
+  do NOT authorize the L5 book-replay backfill yet. Checked whether the L5 order-book replay data / honest-coverage
+  manifest is actually properly set up for MARKET_MAKING_PASSIVE_SPREAD + MARKET_MAKING_INVENTORY_SKEW's 9-venue
+  `book_snapshot_5` universe (Binance-FUTURES/SPOT, OKX-FUTURES/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT, Upbit per
+  `l2_book_microstructure_capture_2026_07_13.md:75-76`) — **it is NOT ready, so this stays a properly-scoped blocked
+  prerequisite, not a bare unresolved question.** Concrete gaps found: (1) 4 of the 9 venues (BINANCE-SPOT, OKX-FUTURES,
+  OKX-SPOT, UPBIT) have no LIVE `book_snapshot_5` capture at all — batch/Tardis-only
+  (`l2_book_microstructure_capture_2026_07_13.md:106-110`); (2) an open, unretired schema-contract bug
+  (`plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`, status `open`) left
+  a real `attempted_failed` backlog (~300K rows, most-recently-measured 27.8% attempted_failed) across nearly all CeFi
+  venues for exactly this data_type — code-fixed but the historical backlog is explicitly NOT retroactively cleared,
+  needs its own idempotent backfill re-attempt first; (3) UPBIT (one of the 9 target venues) has a total outage — zero
+  captured `book_snapshot_5`/`trades` since 2026-05-25, still `open`/`BLOCKED-CREDENTIALS` as of 2026-08-06
+  (`plans/active/issues/upbit_cefi_data_gap_may_2026_2026_08_04.md`). **Prerequisite before re-asking for the backfill
+  go-ahead**: (a) clear the book_snapshot_5 schema-contract backlog re-attempt, (b) resolve the UPBIT outage or
+  explicitly scope it out of the initial backtest universe, (c) decide whether to backfill only the 5
+  already-live-capturing venues first or wait for all 9. No todo/status changed — the doc's existing "no backfill
+  authorised" framing already correctly reflects this; this entry documents WHY with evidence instead of leaving it a
+  bare unresolved question.
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 
