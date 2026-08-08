@@ -157,15 +157,19 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (its sole
       remaining item — GATED-prefix cleared 2026-08-03, see that doc's own inline note). Repo: agent-orchestrator.
 
-- [ ] [BACKEND] P3. **On re-dispatch, clear/invalidate the prior owner's slot-side `current_task`** (and log a warning
-      naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the double-
-      dispatch condition observable instead of something main has to catch by pane inspection. **See this plan's
+- [x] ✅ [BACKEND] P3. **On re-dispatch, clear/invalidate the prior owner's slot-side `current_task`** (and log a
+      warning naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the
+      double- dispatch condition observable instead of something main has to catch by pane inspection. **See this plan's
       file-adjacency rule #1 before starting.** **Done when**: a regression test proves a re-dispatched task's prior
       slot no longer reports it as `current_task`, and the loud log line fires; full `agent-orchestrator`
       `quality-gates.sh` green. Source:
       `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (its 2nd `[BACKEND] P3`
       item ONLY — the 3rd item, `/done` idempotency, stays conflict-gated against 3 other open docs sharing the same
-      mechanism, see Deferred). Repo: agent-orchestrator.
+      mechanism, see Deferred). Repo: agent-orchestrator. — **agent-orchestrator@82578c3** (`assign_task_to_slot` in
+      `server/state_store/slots.py` now clears a DIFFERENT slot's stale `current_task` before assigning the task to a
+      new slot, logging `orchestrator.state_store.logger.warning(...)` naming both slot ids + the task_id;
+      `tests/test_redispatch_clears_stale_owner.py` covers the collision case, the no-prior-owner no-op, and the
+      same-slot-reclaims-itself no-op; full `quality-gates.sh` 2799 passed, 2 skipped).
 
 - [x] ✅ [DOCS] P2. **Mirror the shipped liveness-by-progress check into the review-role wedge/escalation heuristic,
       then record operator sign-off.** `agents/review.md` step 3d still classifies a long-dirty worktree as dead/stale
