@@ -191,9 +191,19 @@ before launch.
       `--force --force-download --data-types derivative_ticker`. All 4 tarballs rebuilt with CORRECT structure:
       `tar czf tarball.tar.gz -C "$repo_path" "${EXCLUDES[@]}" .` (verified `./pyproject.toml at root: 1`). MTDS
       launched 2026-08-08T12:34:45Z with `--force --data-types derivative_ticker` (serial port confirmed). Runtime
-      estimate: ~18-24h for 62 days × 6 venues. **RUNNING with MTDS active.**
-- [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally. Only then re-dispatch
-      task `-011` (corpus recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage.
+      estimate: **~18-24h was too optimistic** — actual measured throughput at 25h elapsed is ~0.68 days/hour (17 days
+      written / 25h), giving a **revised total of ~90h** (~3.75 days, ~65h remaining as of 2026-08-09T13:45Z). GCS tee
+      heartbeats (gcloud scopes firing every ~60s on the serial port) confirmed no stall at 17:06Z. VM is **RUNNING**.
+- [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally (~2026-08-12T05:00Z
+      estimated based on 0.68 days/hour throughput measured at 25h elapsed). Only then re-dispatch task `-011` (corpus
+      recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage. **GCS spot-check prefix** (for
+      mid-run progress only, NOT the final gate): bucket=`market-data-tick-cefi-prd-central-element-323112` (via
+      `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="cefi")`),
+      prefix=`raw_tick_data/by_date/     day={day:%Y-%m-%d}/pipeline_mode=batch_tardis/asset_group=cefi/venue={venue}/instrument_type=perpetual/     data_type=derivative_ticker/`.
+      Use the `probe_cefi_perp_funding_raw_coverage.py` script for the final gate only. **Frontier at 2026-08-09T13:45Z
+      (25h elapsed)**: all 6 venues complete through 2026-06-22; 06-23 in-progress (OKX-SWAP at 146/~340); 06-19 and
+      06-20 are 0 across all venues (possible Tardis archive gap or date order — investigate if still 0 after VM
+      terminates); pre-existing remnants on 06-24/06-25 (BYBIT/OKX/KRAKEN ~3 objects each) are NOT from this VM.
 - [ ] [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
       branch that populates `venue_instrument_ids` from IS data. When IS data IS available, `venue_instrument_ids` stays
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
@@ -216,7 +226,13 @@ before launch.
   finding U's test (no business/spend judgment, no credential gate, no destructive-delete decision — it's a bounded
   code+log investigation) and is retagged `[INFRA]`; the `[DATA]` P1 GCS-probe re-check and `[CODE]` P2 fix (root
   cause + exact missing branch already identified at `venue_fetch.py:526-552`) were already correctly worker-scoped.
-  Conflict-check clear: grepped `plans/active/*.md` for `cefi-fwd-20260808`, `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, and
+- **VM-4 progress measurement (slot-17, 2026-08-09)**: GCS spot-check at ~25h elapsed confirms data is being written
+  (NOT stalled). Frontier: all 6 venues complete through 2026-06-22 (BINANCE-FUTURES ~556/day, BYBIT ~475, OKX ~340,
+  KRAKEN ~252, BITGET ~478, BITFINEX ~58). 06-23 in-progress (OKX at 146). 06-19/06-20 are 0 across all venues — unknown
+  if Tardis gap or processing order (monitor after termination). Pre-existing remnants (BYBIT/OKX/KRAKEN ~3 objects on
+  06-24/06-25) are NOT from VM-4. Revised ETA: ~0.68 days/hour → total ~90h (~2026-08-12T05:00Z). 18-24h original
+  estimate was 4× too low. GCS tee heartbeats confirmed live at 17:06Z (serial port). Conflict-check clear: grepped
+  `plans/active/*.md` for `cefi-fwd-20260808`, `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, and
   `_check_instruments_available` — zero hits; not referenced in `cefi_consolidated_closeout_2026_07_18.md`; not claimed
   by any `cefi_satellite_ao_dispatch_batch*`/finalize doc, including the freshest one
   (`cefi_satellite_ao_dispatch_batch10_2026_08_08.md`, drafted 01:18 UTC / activated 04:04 UTC — hours before this
