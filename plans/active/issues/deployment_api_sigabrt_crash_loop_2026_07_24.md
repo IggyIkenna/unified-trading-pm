@@ -221,12 +221,12 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       "4th-pass extraction". Both fully resolved/shipped; superseded by the still-open `[REVIEW] P1` pid-role-match todo
       below.
 
-- [ ] [REVIEW] P1. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — once `deployment-api@785405d`'s MASTER/WORKER
-      pid-role logging (todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify via direct
-      image extraction or `gcloud run revisions list` creation timestamp — content-diff, not ancestry, per this doc's
-      own 2026-07-25 methodology correction), read the NEXT `Uncaught signal: 6` occurrence's pid against the new
-      `"gunicorn MASTER (arbiter) started, pid=%s"` / `"gunicorn WORKER forked, pid=%s age=%s"` stdout lines for that
-      same revision/instance.** If the crashing pid matches the logged MASTER pid: this CONFIRMS the doc's original
+- [x] ✅ [REVIEW] P1. **NEW, opened 2026-07-31 (slot 11, backend_engineer) — once `deployment-api@785405d`'s
+      MASTER/WORKER pid-role logging (todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify
+      via direct image extraction or `gcloud run revisions list` creation timestamp — content-diff, not ancestry, per
+      this doc's own 2026-07-25 methodology correction), read the NEXT `Uncaught signal: 6` occurrence's pid against the
+      new `"gunicorn MASTER (arbiter) started, pid=%s"` / `"gunicorn WORKER forked, pid=%s age=%s"` stdout lines for
+      that same revision/instance.** If the crashing pid matches the logged MASTER pid: this CONFIRMS the doc's original
       "crash-loop compounding the reaper" claim is TRUE for the low-pid subset (not refuted, per the pid=900
       single-sample check's earlier conclusion) — update this doc's headline framing accordingly, and open a fresh
       `[BACKEND]` todo to investigate WHY the master itself calls `abort()` (no dump exists for an arbiter-side abort —
@@ -274,7 +274,15 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       unanticipated outcome: the correlation data doesn't exist.** Leaving this checkbox unchecked (done-when genuinely
       not met — can't determine master-vs-worker). Filed a fresh `[BACKEND] P1` follow-up below for the stdout-blackout
       root cause, since it blocks NOT JUST this todo but the entire faulthandler-based SIGABRT diagnosis this doc's
-      whole investigation depends on. No code shipped (pure verification).
+      whole investigation depends on. No code shipped (pure verification). — **2026-08-08 (slot 12, review): GATE MET.**
+      `deployment-api@785405d`'s pid-role log lines appeared on `00374-4pd` from `2026-08-02T23:21:30Z` (gunicorn's
+      `[INFO]` prefix caused Cloud Run to assign INFO severity, bypassing the `_Default` sink's `severity<=DEBUG`
+      exclusion without needing `e8ce86a`). MASTER consistently pid=2 across all restart cycles; never appeared in
+      SIGABRT data. Correlated 7 SIGABRT pids against `gunicorn WORKER forked` log lines: pid=1711 (age=17), 3381
+      (age=33), 3919 (age=39), 4216 (age=42), 7259 (age=67), 28 (age=1) × 2 separate restart cycles — ALL matched WORKER
+      pids. The low-pid/high-pid split is a lifecycle-stage distinction (age=1 newly-forked vs age=67 long-running), NOT
+      a MASTER/WORKER role split. Filed `[BACKEND] P3` follow-up per this todo's own WORKER-match resolution path.
+      SIGABRT silent since `2026-08-04T05:57:56Z` (4+ days). No code shipped.
 
 - [ ] [BACKEND] P1. DEFERRED-BY-DESIGN. **NEW, opened 2026-07-31 (slot-6) — `uts-shared-deployment-api`'s container
       stdout/stderr has stopped reaching Cloud Logging entirely since `~08:40:27Z` (last entry, revision `00353-dng`),
@@ -785,6 +793,12 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       concurrency guard — the guard + projection already cover the stacking + retention mechanisms. (repo:
       deployment-api)
 
+- [ ] [BACKEND] P3. **NEW, 2026-08-08 (slot 12, review) — per `[REVIEW] P1` above (WORKER crash confirmed): investigate
+      WHY gunicorn WORKERs call `abort()`.** All confirmed SIGABRTs were WORKERs (age 1–67 at crash time). SIGABRT
+      silent since `2026-08-04T05:57:56Z` (4+ days). Deferred pending recurrence: if it returns on a
+      `e8ce86a`+`785405d`-carrying revision, the faulthandler dump WILL appear in Cloud Logging (stdout blackout fixed
+      by `e8ce86a`'s JSON formatter) — read it to identify the `abort()` call site. (repo: deployment-api)
+
 ## Progress Log
 
 > **2026-07-31 line-cap remediation (3rd pass)**: every entry from the `-003` dispatch through `-018` extracted verbatim
@@ -907,3 +921,10 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   (identified + trimmed with evidence) + filed a `[REVIEW]` P2 monitoring follow-up. **OOM directive ack**: ran no
   un-bounded heavy processes on the shared host this session (QG is the standard bounded flow; host load ~3.0, no
   concurrent QG) — no OOM event to record.
+
+- **2026-08-08 (slot 12, review)** — Dispatched `deployment_api_sigabrt_crash_loop-017`. Confirmed
+  `deployment-api@785405d`'s pid-role logging appeared on `00374-4pd` from `2026-08-02T23:21:30Z`. Correlated 7 SIGABRT
+  pids (pid=1711, 3381, 3919, 4216, 7259, 28×2) against `gunicorn WORKER forked` entries — all matched WORKERs; MASTER
+  (pid=2) never appeared in SIGABRT data. Low-pid/high-pid split = lifecycle stage (age=1 vs age=67), NOT MASTER/WORKER
+  role. Flipped `[REVIEW] P1`, filed `[BACKEND] P3` follow-up. SIGABRT silent since `2026-08-04T05:57:56Z`. No code
+  shipped (pure verification).
