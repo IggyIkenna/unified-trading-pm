@@ -34,8 +34,8 @@ created: 2026-07-24
 author: unknown
 last_updated: "2026-08-08"
 parent_epic: defi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -268,23 +268,30 @@ for the standing recommendation and the open operator ask.
       objects un-deleted and unregistered** — the delete-the-legacy-copies decision is a distinct, later todo gated on
       finding T's fresh `gcs_bucket_soft_delete_retention_seconds()` reversibility check (or explicit operator
       sign-off), not this one.
-- [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
-      is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.
-      **SCOPE NARROWED 2026-08-02**: the fold ITSELF no longer needs a migration plan — it was executed directly and to
-      completion via batch6 (see the closed `[DATA] P1` above). What genuinely remains for this todo is only the
-      **delete-the-legacy-copies** phase the fold todo deliberately left out of scope: the 5,332 legacy composite-venue
-      objects are still present, un-deleted and unregistered, alongside their 324,867 verified canonical twins. **Part
-      (2), delete-authorization: ANSWERED 2026-08-08** — see the "2026-08-08 update" section above. A fresh, same-run
-      `gcs_bucket_soft_delete_retention_seconds("market-data-tick-defi-prd-central-element-323112")` check returned
-      `604800` (qualifies, ≥604800s), and Part 5 twin-coverage is already 100% content-verified per the closed fold todo
-      above — both §3a conditions clear, so the delete is agent-executable without operator sign-off once dispatched as
-      its own todo (tag it `[SCRIPT] P1`, re-check retention fresh at execution time, never reuse this citation). **Part
-      (1), plan-destination: still OPEN, operator ask.** Recommendation (not a forced flip): this workspace's default is
-      a human/NA plan (`assigned_vm: NA`) unless the operator states otherwise — a short bounded plan citing this issue
-      doc + the 2026-08-08 retention evidence would suffice, given the delete itself is now a single well-scoped
-      `[SCRIPT] P1` step rather than an open design question. Left open here for the operator's visibility/final call
-      rather than force-flipped, since plan-destination is explicitly an operator decision per CLAUDE.md ("ASK BEFORE
-      CREATING (HARD RULE)").
+- [x] N. ✅ [PM] P2. **Part (1), plan-destination: RESOLVED 2026-08-08 (operator ruling) -- AO-dispatched plan.**
+      `assigned_vm` flipped `NA`->`planning` / `execution_scope` flipped `local-only`->`orchestrator-agent` in this
+      doc's frontmatter above -- this issue doc IS the dispatch unit (no separate wrapper plan authored): the remaining
+      scope is a single well-scoped `[SCRIPT] P1` delete step (below), so per `task_template.md`'s
+      finalize-plan-coverage rule ("skip only for... a genuinely single-todo plan where archival is trivial enough to
+      fold into that one todo's own done-when") no companion `_finalize` plan is needed -- archival folds into the
+      delete todo's own done-when. Part (2), delete-authorization, was already ANSWERED 2026-08-08 (see the "2026-08-08
+      update" section above -- fresh `gcs_bucket_soft_delete_retention_seconds()`=604800 qualifies + Part 5
+      twin-coverage 100% content-verified).
+- [ ] [SCRIPT] P1. **Execute the delete of the 5,332 legacy composite-venue objects** in
+      `market-data-tick-defi-prd-central-element-323112` (per-venue prefixes under
+      `raw_tick_data/by_date/day=*/asset_group=defi/venue={V}/` for V in {AAVEV3-ETHEREUM, CURVE-ETHEREUM,
+      ETHENA-ETHEREUM, ETHERFI-ETHEREUM, LIDO-ETHEREUM, MORPHO-ETHEREUM, UNISWAPV2-ETHEREUM, UNISWAPV3-ETHEREUM,
+      UNISWAPV4-ETHEREUM}) now that both §3a conditions are cleared (Part 5 twin-coverage 100% content-verified,
+      324,867/324,867 canonical objects + manifest rows registered via the batch6 fold; fresh 2026-08-08
+      `gcs_bucket_soft_delete_retention_seconds()`=604800 qualifies, >=604800s). Self-justified per `task_template.md`
+      finding T (path (c), reversibility-verified) -- **re-run the retention check FRESH in the SAME execution before
+      deleting** (never reuse this doc's 2026-08-08 citation, per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a's "fresh means queried in the same execution as
+      the delete" rule). Use UTL `gcs_delete_object`/`gcs_conditional_delete` per-object, never subprocess
+      `gcloud`/`gsutil`. Done-when: a bounded listing (scoped to the 9 known composite-venue prefixes, NOT a fresh
+      whole-corpus walk) confirms 0 objects remain at those prefixes, and a spot-check confirms the 324,867 canonical
+      twins are unaffected. This todo's own completion is this doc's archival trigger (no separate finalize plan, per
+      the note above).
 
 ## Progress Log
 
