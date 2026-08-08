@@ -321,19 +321,31 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       migration). Shipped `unified-trading-pm@54b6fa6945`, independently verified via
       `git show origin/live-defi-rollout:     scripts/workflow-templates/main-backmerge-to-ldr.yml` (path does not
       exist) and the header comment no longer listing the 4 it used to.
-- [ ] 8. [INFRA] P2. **Fleet-wide dangling-reference re-sweep, same technique as
-      `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 23** — after todos 3-7 land, run
-      `grep -rln "uses:.*unified-trading-pm/.github/" --include="*.yml"` across the whole fleet one more time (excluding
-      stale/worktree noise) to catch any OTHER caller class this plan's own todos might have missed (the precedent for
-      this exact miss is todo 23 itself — the original extraction's `uses:` sweep only checked 2 caller files per repo
-      and missed `agent-audit.yml` + composite-action consumers). Done-when: zero unexpected
-      `unified-trading-pm/.github/` hits remain for any of the 9 converted files.
-- [ ] 9. [DOC] P2. **Update `/codex/08-workflows/ci-cd-flow.md`** — extend the existing "Host moved to
-      `unified-trading-ci` (2026-08-06)" note (added by the prior plan) to state that the SAME hosting model now covers
-      this second class of workflow (list the 9 file names), and that `rollout-workflow-templates.sh`'s role is now
-      limited to whatever remains genuinely templated (the UI-only tier + any future thin-caller-stub propagation), not
-      full-content duplication. Done-when: the doc accurately describes the POST-this-plan state, not a mid-migration
-      one.
+- [x] ✅ 8. [INFRA] P2. **Fleet-wide dangling-reference re-sweep — DONE 2026-08-08.** Ran
+      `grep -rln "uses:.*unified-trading-pm/.github/"` (plus a broader path-substring sweep, not just `uses:` lines, and
+      across `.yml`/`.yaml`/`.sh`/`.py`/`.md`, not just workflow files) across all 24 fleet repos + PM itself, excluding
+      `.claude/worktrees/` and `stale-pre-history-rewrite` noise, for all 9 converted files (`image-build-gate.yml`,
+      `quality-gates-v2.yml` from the prior `shared_ci_workflow_repo_extraction_2026_08_06.md` migration, plus this
+      plan's `version-registry-notify.yml`, `main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`,
+      `request-major-bump.yml`, `staging-backmerge-to-ldr.yml`, `update-dependency-version.yml`, `semver-agent.yml`).
+      **Result: zero unexpected hits.** The only `unified-trading-pm/.github/` matches found were PM's own
+      `agent-audit.yml`/`hosted-baseline/agent-audit.yml` (both reference `python-quality-gates-v2.yml`, not one of
+      the 9) and `cassette-drift-check.yml`/`removed-symbols-workspace-sweep.yml` (both reference the `persist-event`
+      composite action, not one of the 9) — genuine still-alive self-references, not dangling. Also checked PM's own
+      docs/scripts for lingering references to the 7 deleted `scripts/workflow-templates/*.yml(.tmpl)` template sources
+      (todo 7): zero hits outside `plans/archive/`. Unlike todo 23's precedent (which missed `agent-audit.yml` +
+      composite-action consumers because its sweep only checked 2 caller files per repo), this sweep intentionally
+      checked ALL file types and found no equivalent miss for this plan's 9 files.
+- [x] ✅ 9. [DOC] P2. **Update `/codex/08-workflows/ci-cd-flow.md` — DONE 2026-08-08.** Added a "Second wave — the rest
+      of the flat-copy fleet templates moved too (2026-08-07/08)" paragraph right after the existing "Host moved to
+      `unified-trading-ci` (2026-08-06)" note, listing all 7 newly-hosted files (`version-registry-notify.yml`,
+      `main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`, `request-major-bump.yml`,
+      `staging-backmerge-to-ldr.yml`, `update-dependency-version.yml`, `semver-agent.yml`), the
+      `self_hosted_runner_labels` + `repo_name`/`source_dir`/`version_source` input shapes, the PM exception (3 files
+      kept local/customized), the `notify-slack.yml` cascade-deletion consequence, and what
+      `rollout-workflow-templates.sh` is now scoped to (`image-build-gate.yml` + `quality-gates-v2.yml.tmpl` as
+      already-converted stubs, `notify-slack.yml` as the still-canonical full-content file, `staging-lock-check.yml` as
+      the deliberately-not-yet-converted file pending todo 11). Describes the POST-this-plan state, not mid-migration.
 - [ ] 10. [INFRA] P3. _(stretch, optional)_ **Add a branch-protection / visibility-change alert on
       `unified-trading-ci`** — given this plan makes it fleet-critical (11 reusable workflows/actions hosted there once
       this plan + the prior one both ship), consider whether the same accidental-private-flip class of incident that

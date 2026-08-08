@@ -382,3 +382,27 @@ now — it is genuinely waiting on external VM/infra state, not idle from neglec
   are UNAFFECTED and continuing normally. `dex_swaps` itself remains additionally gated on the rebuild VM's genuine
   completion (unaffected by this, separately tracked) — so this auth gap is not yet the active blocker, but WILL become
   one the moment the rebuild VM finishes, unless resolved first.
+- **`dex_swaps` relaunched 2026-08-08 ~03:20 UTC — reconsidered the wait-for-rebuild-VM-termination gate as overly
+  conservative.** The rebuild VM (`canonical-migration-defi-rebuild-20260806-223130`) is still genuinely RUNNING (~54%
+  through its 2020-2026 date range at last check, `date=2023-10-08`), not finished — but `rate_indices` already PROVED
+  this exact operation class (a `ManifestWriter(..., per_vm_shards=True)` fold script, writing to its own namespaced
+  per-VM shard, never touching the consolidated index directly) is safe to run in parallel with the rebuild VM: it
+  launched and completed twice this session while the rebuild was actively writing, with zero issues. The original "wait
+  for full termination" caution was calibrated for the `--allow-stale-fallback` disaster earlier in this saga (a
+  genuinely different risk: a full manifest-index-REWRITE racing the rebuild), not for a normal per-VM-shard fold read —
+  that distinction got blurred when the caution was first written and never revisited once `rate_indices` proved the
+  pattern safe. Operator concurred (explicit ask to unblock now, gcloud CLI's own auth fixed live for exactly this
+  purpose). **Operator gcloud CLI auth**: diagnosed as an org-level (`odum-research.com`) reauth policy specifically
+  gating Compute/Scheduler-scope commands (a plain `gcloud projects describe` kept working throughout;
+  `gcloud compute`/`gcloud scheduler` needed fresh interactive MFA) — NOT a broken credential. Python/ADC-based work was
+  unaffected the whole time (confirms the policy is CLI-session-scoped, not account-wide). Durable fix (a
+  service-account key for `cloudstorage@central-element-323112.iam.gserviceaccount.com`, already registered but not
+  locally activated) was identified but deferred — operator chose to re-auth on-demand instead. Also hit two genuine,
+  unrelated local network connectivity blips mid-session (`ConnectTimeoutError` to `storage.googleapis.com` and
+  separately `compute.googleapis.com`, both resolved on retry within minutes) — a first launch attempt's log came back
+  empty/PID-not-found, most likely killed as a side effect of its parent command being moved to the harness's own
+  background-timeout handling rather than a real script failure; relaunched cleanly in an isolated `nohup ... & disown`
+  and confirmed genuinely alive via `ps`. **VM launch in progress as of this checkpoint — not yet confirmed complete.**
+  Watchdog to arm on resume: `kill -0 27709` (or re-verify by launcher log content; the PID may not survive a session
+  restart, in which case check `gcloud compute instances list --filter= "name~'^backfill-defi-legacy-datatype-fold-'"`
+  directly for a running instance instead of trusting the PID).
