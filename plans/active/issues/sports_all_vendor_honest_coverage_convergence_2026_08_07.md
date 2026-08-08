@@ -897,3 +897,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   **56,147 → 55,269** (-878/~30min, rate holding/slightly up). No action needed.
 - **18:10Z** — both healthy. smallchunk8: chunk 17/451 (entering the old danger zone), **still zero OOMs** — cleaner run
   than any prior instance. FIXTURE_LINEUPS needed **55,269 → 54,702** (-567/~29min, rate holding). No action needed.
+- **18:37Z** — smallchunk8 now chunk 18 (danger zone), 5 `CHUNK_FAILED` (expected/normal, not actionable), heartbeat
+  fresh. FIXTURE_LINEUPS needed **54,702 → 54,139** (-563/~27min). Both healthy, no action.
