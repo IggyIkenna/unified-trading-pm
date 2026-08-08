@@ -227,3 +227,14 @@ stale-redelivery problem this doc is primarily about.
   what stamps `answered_at` and stops redelivery on this channel. Contrast with `slot_messages`: here the primitive is
   correct and present, it just requires actually being invoked — worth remembering before assuming "not replying" is
   ever a valid noise-reduction strategy on either channel.
+- **worker (slot 11) 2026-08-08**: Fresh evidence the redelivery pattern is NOT specific to the one `BLK-091671d7` text
+  this doc has tracked so far — on this session's `/boot`-time heartbeat, THREE unrelated "Direct instruction from main"
+  messages arrived, all already fully resolved: (1) append a Progress Log entry to
+  `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md` — the exact requested text was already
+  present verbatim (committed at `9361e9899`); (2) file `fill_completed_event_schema_break_live_defi_2026_08_08.md` —
+  already existed, committed at `9817e4d1e`; (3) file this very doc — already existed, with 6+ Progress Log entries
+  since. All three confirmed via `git log -- <path>` showing prior commits already on `origin/live-defi-rollout`, no new
+  work needed, no duplicate commits made. This generalizes Todo 2's fix requirement: the gap is in `slot_messages`
+  delivery/ack generally, not tied to one escalation id's text — any direct instruction whose underlying doc-write
+  already landed is a candidate for stale redelivery on the next boot. Not implementing Todo 2 myself (out of this
+  session's assigned scope this turn); noting as reinforcing evidence for whoever picks it up next.
