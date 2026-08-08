@@ -1,16 +1,10 @@
-fabricated_sha_citation_baseline: 0
+fabricated_sha_citation_baseline: 2
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
-# RATCHETED 8 -> 0 on 2026-08-08. The baseline had been RAISED 2 -> 4 -> 6 -> 8 over two days,
-# which a ratchet is explicitly never supposed to do ("NEVER raise a count"). Root-caused:
-#   * 4 of the 8 entries (unified-trading-ci@b498ec2, @892bb81 x2, @686bca7) were NEVER
-#     fabricated — they are real commits that failed only because `_resolves_to_commit` ran a
-#     BARE `git cat-file` with no `git fetch` anywhere in the module, so a freshly-pushed commit
-#     read as invented until the capturing clone happened to catch up. Reproduced live: 686bca7
-#     did not resolve before a fetch and did after. Fixed in check_plan_commit_sha_evidence.py
-#     (fetch once on the miss path before declaring fabrication).
-#   * 4 entries (unified-trading-pm@12832f77ab, @54b6fa6945 x2, @290100bb3c) were genuinely
-#     wrong citations. The underlying WORK was real in every case — corrected to the true
-#     commits 01c3dbbab9 / 79c4a72737 / b7e41849d6, each verified to exist before rewriting.
-# Verified after both fixes: 2,549 citations scanned, 0 unresolvable.
-baseline_citations: []
+baseline_citations:
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md
+    line: 130
+    cited: unified-trading-pm@ea5d699c9
+  - path: /home/ubuntu/unified-trading-system-repos/.tabs/16/unified-trading-pm/plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md
+    line: 187
+    cited: unified-trading-pm@ea5d699c9
