@@ -288,11 +288,11 @@ achieved by exclusion, not canonicalisation.**
       `unified-api-contracts@b27717b8` — registered `TRADES_INPLAY` in `SOURCE_PRIORITY` (`odds_api`); (3)
       `instruments-service@869f1ce7` — one-off restamp script added + ran against prod: 2,490/2,490 rows restamped,
       re-verified GREEN (0 remaining); test updated for correct `trades_inplay` resolution.
-- [ ] [CODE] P1. **Correct the false UAC exception comment.** `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` in
+- [x] ✅ [CODE] P1. **Correct the false UAC exception comment.** `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` in
       `market_data_categories.py` asserts uppercase `ODDS` is "4 stale capture_status=empty_confirmed/row_count=0
       manifest rows with zero backing GCS content". The live manifest shows **6,306 `captured` rows** spanning
       2020-06-05 → 2026-04-14. Fix the comment to state what is actually true; the set itself is retired by the
-      lowercase merge above.
+      lowercase merge above. — unified-api-contracts@54e7e64d (slot-3, 2026-08-08; checkbox flip slot-14)
 - [ ] [CODE] P1. **Reconcile UAC's two contradictory odds-feature upstream registries.** For the SAME calculator,
       `required_inputs.py::odds_calculator` declares `ODDS_HORIZON_BUCKET` only and says footystats `ODDS` was "removed
       2026-06-25 — MTDS/odds-api owns raw odds", while `feature_upstream.py::odds_calculator` declares footystats `ODDS`
