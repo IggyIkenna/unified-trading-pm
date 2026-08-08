@@ -738,12 +738,14 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       `RULES_DIRECTIONAL_EVENT_SETTLED` (9 rows) and `MARKET_MAKING_EVENT_SETTLED` (6 rows): stay `xfail` — genuinely
       need real per-row rule DSL strings / real per-exchange instrument IDs only the operator has; not derivable, not
       guessed.
-- [ ] [SCRIPT] P1. **`RULES_DIRECTIONAL_CONTINUOUS` (19 rows) — build reversion-exit support in the rule engine** (per
-      the 2026-08-08 ruling above): the engine today is a single static-threshold long/short rule with no
+- [x] ✅ [SCRIPT] P1. **`RULES_DIRECTIONAL_CONTINUOUS` (19 rows) — build reversion-exit support in the rule engine**
+      (per the 2026-08-08 ruling above): the engine today is a single static-threshold long/short rule with no
       exit-on-reversion concept; the catalog's `entry_zscore`/`exit_zscore`/`window_size`/`signal` config needs a real
       engine-level mechanism to enter at `entry_zscore`, hold, and exit at `exit_zscore` (mean-reversion, not a second
       independent threshold rule). A genuine build task, not a config rename — scope the engine change before
-      estimating.
+      estimating. — strategy-service@4e3262d70 (dual-mode engine: z-score reversion mode + legacy rule mode;
+      `signal`/`entry_zscore`/`exit_zscore` wired for all 19 catalog rows + 8 v5 slot-table rows; 18 regression tests;
+      QG green)
 - [x] ✅ [SCRIPT] P2. **`ML_DIRECTIONAL_EVENT_SETTLED` (15 rows) — wire `outcome_order` for all 4 market types** (per
       the 2026-08-08 ruling above): `1X2`/`halftime_1x2` → `"home,draw,away"` (3-way), `match_winner`/`moneyline` →
       `"home,away"` (2-way) — the same convention the existing test fixture already uses for 2 of the 4 market types,
