@@ -656,3 +656,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   SUPER_LIG, GREEK_SUPER_LEAGUE, SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, ALLSVENSKAN, and others per the
   earlier per-league tally) — expect SOME OOMs to resume there, but a materially shorter pass than the original ordeal.
   Not alarming if it happens; logging the expectation now so it reads as anticipated, not a new incident.
+- **2026-08-08T04:38Z** — FIXTURE_STATS +47 days (`last_completed_date=2023-10-20`, fresh `04:37:30Z`), steady. odds
+  smallchunk3: **now in chunk 18** (`2020-08-30→2020-09-03`, the known season-opener week), 4 leagues attempted so far
+  (EPL, LA_LIGA, BUNDESLIGA, SERIE_A), **zero OOMs** — confirms the skip-fast-for-already-captured-leagues hypothesis
+  from last tick, materially better than smallchunk2's original 55% OOM rate on this same chunk. Watching for it to
+  clear; not alarming if OOMs do appear on the previously-`attempted_failed` leagues later in this chunk.
