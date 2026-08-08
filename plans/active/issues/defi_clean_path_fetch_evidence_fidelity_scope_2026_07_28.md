@@ -153,7 +153,7 @@ below is explicitly gated on a human design call) — a future triage pass shoul
       establishing the pattern for OTHER subgraph-HTTP helpers (`_run_subgraph_http` in `evm_defi_collectors.py`,
       `governance_adapter.py`'s inline `session.post`, etc.), each of which needs its OWN per-file widen (not a shared
       helper) — re-scope this todo to the actual highest-value single file once picked up, don't attempt all of them in
-      one dispatch. (market-tick-data-service) — market-tick-data-service@b16c9f69 · QG green · 2026-08-07
+      one dispatch. (market-tick-data-service) — market-tick-data-service@17aed396 · QG green · 2026-08-07
 - [ ] [LOCAL] P2. **`governance_proposals_handler.py`'s dual-source merge — resolve the "report which source's status"
       design question** (subgraph + Snapshot are two independent fetches per call; there is no single scalar "the" HTTP
       status once both are queried and merged) as a human/local decision FIRST (per
