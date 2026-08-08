@@ -29,6 +29,7 @@ source: >-
   violation in files the deletion never touched.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 > **🗄️ ARCHIVED 2026-08-08** — sole todo done, baseline verified back to `66` via `check_no_empty_string_fallback.py`.

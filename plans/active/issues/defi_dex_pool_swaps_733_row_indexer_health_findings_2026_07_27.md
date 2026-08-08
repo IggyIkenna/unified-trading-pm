@@ -644,6 +644,15 @@ absorb the actual remediation work.
       the subgraph returns 0 rows AND its head is stale — this stops fresh `attempted_failed` rows from accumulating on
       every backfill re-run. PANCAKESWAP_V3/BSC is the first confirmed case; the detection should be generic enough to
       catch future occurrences on other high-throughput chains. Repo: market-tick-data-service, unified-api-contracts.
+- [ ] [DATA] P2. **Land the stranded MTDS commit for the frozen-indexer-head fix.** The P2 todo above shipped only the
+      UAC half (`unified-api-contracts@2d74b345`, `EXPECTED_SUBGRAPH_STALLED_HEAD`); the MTDS half
+      (`market-tick-data-service@531a07d8`, `_dex_swaps_stalled_head.py` + wiring, 49 tests pass) is a real commit but
+      never reached `live-defi-rollout` — it is stranded on `wip-preserve/orchestrator-slot-6-531a07d8`, blocked on
+      pre-existing QG failures (RB-04b8981e). context-scout re-verified 2026-08-05 and 2026-08-07 that
+      `_dex_swaps_stalled_head.py` still does not exist in this worktree's `dex_swaps_handler.py` tree — the checked-off
+      P2 todo above is DONE for the investigation/UAC-schema half only, not for the actual MTDS fix landing. Quickmerge
+      the stranded branch once RB-04b8981e clears; re-verify `_dex_swaps_stalled_head.py` exists and QG is green before
+      flipping this todo.
 
 ## Progress Log
 

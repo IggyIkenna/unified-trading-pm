@@ -27,6 +27,7 @@ related:
     /plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    ao_consolidated_closeout_2026_07_25,
   ]
 created: 2026-08-08
 parent_epic: orchestrator_master
