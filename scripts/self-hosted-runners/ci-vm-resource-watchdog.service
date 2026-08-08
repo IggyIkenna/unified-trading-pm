@@ -1,0 +1,23 @@
+# ci-vm-resource-watchdog.service — oneshot; pages #ci-failures only when the CI VM's own
+# hourly resource-history window shows a genuine box-down risk (real OOM-kill, or sustained
+# near-saturation swap/load+iowait) — never on a tolerated temporary burst.
+#
+# Epic: infrastructure_master
+# Lifecycle: permanent   Delete-when: NA
+#
+# Driven by ci-vm-resource-watchdog.timer. Reads resource-history-sampler's own on-disk JSONL
+# log (already installed, ci_vm_exposure_remediation_2026_08_06.md todo 2) -- adds no new
+# instrumentation.
+[Unit]
+Description=Hourly CI-VM resource-strain check (pages only on genuine box-down risk)
+
+[Service]
+Type=oneshot
+User=ubuntu
+# Same file the github-glue-runner@.service template loads (0600 root:root) -- see
+# glue-runner-crash-loop-watchdog.service's own comment for why this has to be an
+# EnvironmentFile= directive (read at root before the User=ubuntu privilege drop) rather than
+# a plain sed-parse from the unit's own unprivileged user.
+EnvironmentFile=-/etc/github-glue-runner.env
+ExecStart=/usr/local/sbin/ci-vm-resource-watchdog.sh
+Restart=no
