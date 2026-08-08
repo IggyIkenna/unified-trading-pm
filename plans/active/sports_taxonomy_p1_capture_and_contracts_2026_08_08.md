@@ -318,9 +318,13 @@ achieved by exclusion, not canonicalisation.**
       `pipeline_mode=…/asset_group=…/venue={BOOKMAKER}/instrument_type=…/data_type=…/league_id=…` — wrong axis name,
       missing two segments; (c) it documents 8 data types and never documents `trades`/`trades_inplay`, the largest
       population in the estate. Rewrite against the new model rather than patching. ✅ unified-trading-pm@69db5f8ed
-- [ ] [DOCS] P1. **Reaffirm the 2020-06 floor against the P4 backfill** in `/codex/02-data/sports-2020-06-data-floor.md`
-      — no change expected, but state explicitly that the floor governs the derived-layer backfill and the C3 pre-launch
-      corpus disposition, so the next reader does not re-open it.
+- [x] ✅ [DOCS] P1. **Reaffirm the 2020-06 floor against the P4 backfill** in
+      `/codex/02-data/sports-2020-06-data-floor.md` — no change expected, but state explicitly that the floor governs
+      the derived-layer backfill and the C3 pre-launch corpus disposition, so the next reader does not re-open it. —
+      **DONE 2026-08-08 (slot 11, data_engineering)**: added "Reaffirmed against the P4 derived-layer backfill" section
+      — confirms no change to the floor date/window, states explicitly the floor governs both P4's backfill start-date
+      and the C3 corpus disposition (delete per the standing wipe ruling, not reopened as a 2018-extension choice).
+      unified-trading-pm@\<pending\>
 
 ### Added 2026-08-08 (operator, mid-flight) — collapse the remaining derived data_types onto `odds` + axes
 
@@ -509,3 +513,10 @@ redo, which is exactly why it was split out.
   Codex note already in `/codex/02-data/sports-data-types-catalog.md` lines 183-185, 200-201: "ML labels come from IS
   `fixtures_outcomes`/`matches`, not from the retired types." Session ended before the checkbox was flipped; flipping
   now.
+- **2026-08-08 (slot 11, data_engineering)** — Block B [DOCS] P1 (reaffirm 2020-06 floor against P4 backfill) flipped.
+  Added a "Reaffirmed against the P4 derived-layer backfill" section to `/codex/02-data/sports-2020-06-data-floor.md`:
+  no change to the floor date/window, but states explicitly that (1) the floor's `START_DATE` clamp governs P4's
+  `odds_snapshot`/`odds_movement`/arbitrage/`horizon` backfill launchers, same as every other sports launcher already
+  enumerated in the enforcement surface, and (2) the P4 C3 pre-launch corpus disposition (10,345 objects) is settled by
+  this doc's standing supersession of the 2018 coverage-window-extension option, not a fresh decision — P4 cites this
+  doc rather than re-litigating.
