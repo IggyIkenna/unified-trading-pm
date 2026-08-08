@@ -55,6 +55,11 @@ FAILED=0
 while IFS= read -r plan_file; do
     [[ -z "$plan_file" ]] && continue
     LOCKED_BY=$(git show "HEAD:$plan_file" 2>/dev/null | grep -oP '^\s*locked_by:\s*\K.*' | head -1 || :)
+    # A literal `""`/`''` value is a true-blank authored with quotes, not a real lock —
+    # the naive grep above extracts the quote characters themselves, which bash sees as
+    # non-empty. Normalize before the emptiness check (2026-08-08, 6 real corpus
+    # instances found false-tripping this gate on otherwise-unlocked docs).
+    [[ "$LOCKED_BY" == '""' || "$LOCKED_BY" == "''" ]] && LOCKED_BY=""
     if [[ -n "$LOCKED_BY" ]] && ! grep -q '\[unlock-plan\]' <<<"$COMMIT_MSG"; then
         echo "❌ BLOCKED: $plan_file is locked by '$LOCKED_BY'."
         echo "   To delete a locked plan, include [unlock-plan] in your commit message."
