@@ -645,15 +645,21 @@ absorb the actual remediation work.
       the subgraph returns 0 rows AND its head is stale — this stops fresh `attempted_failed` rows from accumulating on
       every backfill re-run. PANCAKESWAP_V3/BSC is the first confirmed case; the detection should be generic enough to
       catch future occurrences on other high-throughput chains. Repo: market-tick-data-service, unified-api-contracts.
-- [ ] [DATA] P2. **Land the stranded MTDS commit for the frozen-indexer-head fix.** The P2 todo above shipped only the
-      UAC half (`unified-api-contracts@2d74b345`, `EXPECTED_SUBGRAPH_STALLED_HEAD`); the MTDS half
-      (`market-tick-data-service@531a07d8`, `_dex_swaps_stalled_head.py` + wiring, 49 tests pass) is a real commit but
-      never reached `live-defi-rollout` — it is stranded on `wip-preserve/orchestrator-slot-6-531a07d8`, blocked on
-      pre-existing QG failures (RB-04b8981e). context-scout re-verified 2026-08-05 and 2026-08-07 that
-      `_dex_swaps_stalled_head.py` still does not exist in this worktree's `dex_swaps_handler.py` tree — the checked-off
-      P2 todo above is DONE for the investigation/UAC-schema half only, not for the actual MTDS fix landing. Quickmerge
-      the stranded branch once RB-04b8981e clears; re-verify `_dex_swaps_stalled_head.py` exists and QG is green before
-      flipping this todo.
+- [ ] [DATA] P2. **Land the stranded MTDS commit for the frozen-indexer-head fix — now THREE duplicate candidates, none
+      landed (review finding, msg 4352, ~22:22Z).** The P2 todo above shipped only the UAC half
+      (`unified-api-contracts@2d74b345`, `EXPECTED_SUBGRAPH_STALLED_HEAD`); the MTDS half has been independently
+      re-implemented 3 separate times, none reaching `live-defi-rollout`: 1. `market-tick-data-service@531a07d8`
+      (slot-6, Aug 5) — preserved on `wip-preserve/orchestrator-slot-6-531a07d8`, this doc's originally-cited
+      candidate. 2. `market-tick-data-service@3f11a8d6` (slot-6, Aug 5, same day) — was sitting UNPROTECTED as slot 19's
+      live `live-defi-rollout` HEAD (not on any preserve ref, not reachable from origin) until main pushed it to
+      `wip-preserve/orchestrator-slot-19-3f11a8d6` ~22:23Z 2026-08-08 as safety insurance — see progress log. 3.
+      `market-tick-data-service@8c5421ea` (slot-5, Aug 7) — independent later attempt, already safe on
+      `origin/slot5-stalled-head-test` but undocumented until now. `GET /api/repo-blockers` shows NO open blocker for
+      market-tick-data-service currently — RB-04b8981e (this doc's cited QG-red condition) is not in the live open list,
+      meaning the original landing blocker may have already cleared. Next steps: (a) diff the 3 candidates for real
+      differences and pick the best, (b) run a fresh QG pass to confirm blocker-clear status, (c) land the chosen one
+      via quickmerge, (d) close this todo so a 4th duplicate isn't built by a future session that doesn't know about the
+      other 2.
 
 ## Progress Log
 
@@ -738,3 +744,14 @@ absorb the actual remediation work.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged —
   `_dex_swaps_stalled_head.py` still not landed in this worktree; only intervening commit was an unrelated referrer-path
   fix from a sibling doc's archival.
+- **2026-08-08 ~22:23Z (main agt-22de53, relaying review msg 4352)**: review (agt-ab948d, slot 1) found this exact fix
+  had been independently re-implemented a 2nd and 3rd time — `market-tick-data-service@3f11a8d6` (slot-6, Aug 5) and
+  `@8c5421ea` (slot-5, Aug 7) — neither known to this doc. `3f11a8d6` was flagged as genuinely at risk: sitting as slot
+  19's live `live-defi-rollout` HEAD with no preserve ref and not reachable from origin, meaning a slot 19 reset/recycle
+  could have silently lost it. Main independently verified via `git log`/`git rev-parse` in slot 19's worktree (clean
+  tree, `3f11a8d6` confirmed HEAD) and immediately pushed it to `wip-preserve/orchestrator-slot-19-3f11a8d6` on origin
+  as cheap insurance — no diffing/landing decision made, purely a loss-prevention backup matching the existing
+  `wip-preserve/orchestrator-slot-6-531a07d8` naming convention. `8c5421ea` was already safe on
+  `origin/slot5-stalled-head-test`, no action needed there. Updated the todo above with all 3 candidates and review's
+  finding that `RB-04b8981e` no longer appears in the live open repo-blockers list (possible landing-blocker clear) —
+  actual diff/pick/land work left for whoever picks up the todo next, not attempted by main.
