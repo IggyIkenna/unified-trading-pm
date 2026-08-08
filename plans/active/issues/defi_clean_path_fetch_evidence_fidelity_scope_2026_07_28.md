@@ -141,10 +141,14 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 - [ ] [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
       Alchemy RPC batch client `_aave_oracle_collection.py` uses. If not, this family cannot be closed the same way as
       the HTTP-subgraph family — report that and propose the alternative (RPC-level error code? nothing to thread?)
-      rather than guessing. Read-only research, no code change. (market-tick-data-service)
+      rather than guessing. Read-only research, no code change. (market-tick-data-service) **Extracted verbatim (both
+      this item and the Chainlink/Pyth item below, combined into one todo) into
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179` (status: active, `Source:` cites this doc by name) — do
+      not reclassify this doc on this item's account; close this checkbox by citation once batch9's todo ships.**
 - [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
       item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
-      (market-tick-data-service)
+      (market-tick-data-service) **Same extraction/citation as the Aave item above —
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`, status: active.**
 - [x] ✅ [CODE] P2. **Subgraph-HTTP family — thread real status through the direct `async_post_to_subgraph` callers**
       (verified 2 real callers today: `dex_swaps_handler.py`, `liquidations_handler.py` — RE-VERIFY this count at
       dispatch time, don't trust it stale) by widening `async_post_to_subgraph`'s return to `(payload, http_status)` and
@@ -189,3 +193,11 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — item 5 (governance dual-source merge) remains an
   unresolved human design decision blocking whole-doc reclassify; items 2-3 partially duplicated in active batch9 (not
   yet actioned there either).
+- **na-eligibility-audit 2026-08-08** (tranche=defi): KEEP-NA valid — re-read end to end. Independently re-verified the
+  2026-08-07 note's "partially duplicated" framing: items 2-3 are actually a FULL verbatim duplicate (both research
+  questions, merged into one combined todo, explicit `Source:` citation) in
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`, `status: active` — this is KEEP-NA-STALE (already-
+  duplicated) for those two items specifically; citations added inline on both checkboxes above. Item 5 (governance
+  dual-source merge design question) remains the genuine unresolved human decision keeping the whole doc
+  `assigned_vm: NA` — it has no active-batch coverage and still needs the (report-per-source / worse-of-two /
+  track-both) call made before any CODE todo can be filed against it. Doc stays `assigned_vm: NA`.

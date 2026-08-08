@@ -189,3 +189,8 @@ this doc. ✓
   script + linkage gate cross-check) + Phase 1 (12-agent Workflow classification of all never-cited candidates) + Phase
   2 (this synthesis) complete. Phase 3: no batch11 drafted (thin pool, see decision above). 6 findings parked, ledger
   reconciled.
+- **na-eligibility-audit 2026-08-08** (tranche=defi): KEEP-NA valid — 0 checkboxes (audit-report doc), same pattern as
+  the 08-06/08-07 sibling docs. Content re-read end to end; all 6 findings are either informational or already carry
+  their own gating (2 AO-eligible batch11 candidates not yet dispatched, 1 time-gated, 2 informational carry-forwards
+  belonging to other tranches' write remit, 1 clean orthogonality note). No action for na-eligibility-audit here — this
+  doc's own domain is `/ag-closeout-audit`'s orphan-detection tracking, not a todo list this skill dispatches from.

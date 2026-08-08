@@ -157,13 +157,17 @@ same day) before being drafted here.
       `/codex/02-data/canonical-cutover-register.md` §2). Repo: unified-trading-pm. Source:
       `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` (Todo 5). Done when: the checkbox is flipped
       `[x]` with the batch2/commit citation inline.
-- [ ] [DOC] P2. **Bring `lst_rate_honest_coverage_2026_07_21.md` under the 1000L hard line cap**: extract the
-      VM-monitoring history block into a companion archive doc, then flip the 3 specific stale checkboxes this unblocks
-      (Phase 6 A2 staking leg, Phase 6 recursive-staking borrow leg — checkbox state only, not the underlying build —
-      and Phase 3 sample-download test), per `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`'s
-      Todo1+Todo2. Repo: unified-trading-pm. Source: `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`
-      (Todo1+Todo2, combined — sequentially dependent on the same file). Done when: the plan is verified under 1000L via
-      `check_line_caps.sh` and all 3 named checkboxes are flipped with citations.
+- [x] ✅ [DOC] P2. **DONE 2026-08-08 (na-eligibility-audit, defi tranche)** — both stated "done when" conditions are now
+      satisfied, via a different mechanism than originally scoped: this todo's premise (source doc over the 1000L hard
+      cap, needing the VM-monitoring-history extraction to get under it) was stale — an unrelated 2026-08-05 trim
+      (`4718f3532`) had already brought it under cap (986L then, 998L now) before this todo was even drafted.
+      na-eligibility-audit empirically verified (scratch-copy + `check_line_caps.sh`) that flipping the 3 named
+      checkboxes directly (no extraction needed) keeps the file at 998L, and applied it to
+      `plans/active/lst_rate_honest_coverage_2026_07_21.md` — both `check_line_caps.sh` passes AND all 3 named
+      checkboxes (Phase 6 A2 staking leg, Phase 6 recursive-staking borrow leg, Phase 3 sample-download test) are
+      flipped with citations. Full trail: `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 2. The
+      VM-monitoring-history extraction itself remains a real but now-decoupled, non-blocking SOFT-cap (500L) hygiene
+      item — tracked as that same issue doc's Todo 1 (downgraded P2→P3, `assigned_vm: NA`, not re-drafted here).
 - [x] ✅ [INFRA] P1. **Relaunch the stalled `mtds-dex-swaps-backfill-3` VM** with `--start 2025-12-15 --end 2026-07-21`
       (no `--force`) — per the 2026-08-06 operator ruling this is now AO-dispatchable, no longer gated on the OOM
       root-cause investigation. **Safe-idempotent justification: standard backfill relaunch, SPOT, skip-if-captured, no
