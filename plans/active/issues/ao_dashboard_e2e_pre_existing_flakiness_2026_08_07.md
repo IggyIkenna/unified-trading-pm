@@ -174,3 +174,25 @@ shipped independently or these findings would still be sitting entirely undocume
   `quality-gates.sh` skips dashboard checks when node_modules is absent and still passes. Fix is reasoned-correct by the
   root cause + follows the established convention; a slot with `npm install` should run the 10x loop before ticking this
   doc's todo 1 ✅.
+- **ao_satellite_ao_dispatch_batch8-002 2026-08-08**: Root-cause verdict written for `worker-chat.spec.ts`.
+  **PRIMARY ROOT CAUSE — `read -r -t 5` partial-input race (~20% failure rate per message send), CONFIRMED**:
+  `tmux_spawn.submit_to_pane()` sends literal text via `tmux send-keys -l` at time T, sleeps 1 s, then sends `C-m`
+  (Enter) at T+1 s. `fake_worker_pane.sh` runs `IFS= read -r -t 5 line` in a while loop. When text arrives in the last
+  ~1 s of the 5 s read window (T_read_start + 4 s < T_text_arrival < T_read_start + 5 s), `read -r -t` fires on timeout
+  BEFORE `C-m` arrives. Bash's `read -r -t` on timeout with partial input in the pty buffer CONSUMES the partial line
+  into `$line` and exits >128 — the text is gone from the buffer. The `elif [[ $? -gt 128 ]]; then continue` branch
+  discards it. `C-m` arrives later on the NEXT `read -r -t 5` call as a bare newline → empty `$line` → script appends
+  `worker received: ` (empty) to the transcript → `await expect(…).toContainText("worker received: ${message}", {
+  timeout: 15000 })` times out → FAIL. Both failing tests (desktop line 48, mobile fleet line 101) use this path; the
+  "mobile agents role-chat" test (line 85) does NOT (it uses `/api/agents/by-role/main/message`, no tmux) and passes
+  consistently.
+  **SECONDARY — no startup-timing readiness guarantee**: `run-e2e-backend-chat.sh` had no wait between `tmux
+  new-session` and uvicorn start, so Playwright's healthz check did NOT guarantee the pane had entered `read` mode.
+  For the primary race, `pane_input_pending()` always returns `""` for a bare bash shell (no Claude TUI patterns), so
+  `submit_to_pane` always returns True after 2 s regardless of whether the pane actually received the message.
+  **Fix landed — `agent-orchestrator` files**: (1) `fake_worker_pane.sh`: `ORPHAN_CHECK_INTERVAL_SECONDS` 5→300 (race
+  window 20%→0.3%); `touch "${TRANSCRIPT}.ready"` written just before the while loop as a startup sentinel.
+  (2) `run-e2e-backend-chat.sh`: `rm -f "${TRANSCRIPT_PATH}.ready"` at startup to clear stale sentinel; after `tmux
+  new-session`, polls for `"${TRANSCRIPT_PATH}.ready"` at 50 ms intervals (10 s hard deadline) before starting uvicorn
+  — Playwright's healthz wait now transitively guarantees the pane is in `read` mode when the first test message
+  arrives. 10x stability loop NOT run — `dashboard/node_modules` absent in this environment (same caveat as todo 1).
