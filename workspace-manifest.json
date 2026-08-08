@@ -78,10 +78,10 @@
     "instruments-service": "0.1.0",
     "market-tick-data-service": "0.111.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.101.2",
-    "unified-trading-library": "0.76.1",
+    "unified-api-contracts": "0.101.3",
+    "unified-trading-library": "0.76.2",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.26.2",
+    "market-data-processing-service": "0.26.3",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.100.1",
     "greeks-service": "0.18.13",
@@ -2225,18 +2225,18 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.76.2.dev1+geffe71c44",
-      "published_at": "2026-08-08T12:15:32Z",
+      "version": "0.76.2.dev2+gf760b8b62",
+      "published_at": "2026-08-08T21:21:05Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.101.2.dev1+g7b05b5d44",
-      "published_at": "2026-08-08T17:36:19Z",
+      "version": "0.101.3.dev1+g72e345ae4",
+      "published_at": "2026-08-08T22:04:07Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.98.2.dev6+g442a67c64",
-      "published_at": "2026-08-08T14:49:37Z",
+      "version": "0.98.2.dev8+g389472ce1",
+      "published_at": "2026-08-08T21:30:06Z",
       "registry": "artifact-registry"
     }
   }
