@@ -926,3 +926,20 @@ the fix and that has worked correctly since.
   watcher processes: re-arm from committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch
   SLOT_ID/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside; re-arm heartbeat the same way. (5) Do NOT re-arm
   if a live single pair already exists — that is exactly how this race started.
+
+### 2026-08-08T~13:21Z — slot 6, same session (703695/703746 lineage) — pre-compact checkpoint, no new incidents
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Single healthy watcher/heartbeat pair (`703695`/`703746`) survived this
+entire session with **zero re-arms and zero dual-watcher recurrences** — the `kill -0 <PID>`-based liveness discipline
+from the prior checkpoint held up across ~2.5h of periodic `ScheduleWakeup`-paced checks (confirmed `ps -ef` process
+count == 4 = exactly one pair, no duplicates, at every check this session).
+
+**Fleet trajectory this session**: 107→105 (slow drain) → new campaign wave launched, climbed 104→155 → plateaued
+~153-154 for the last ~40 min as of this checkpoint (poll 73, 13:18:13Z). Singleton lock still held; operator
+keep-waiting decision unchanged, no `--force`. No new lessons beyond the prior checkpoint's dedup/liveness fix — this
+entry exists solely to timestamp a clean continuation before context compaction, per the pre-compact ritual's cardinal
+rule (durable = committed AND pushed, not just "still true in chat").
+
+- **NEXT ACTION (fresh session)**: same as the prior checkpoint's NEXT ACTION above — dedup-check via `ps -ef`, then
+  `kill -0 703695` / `kill -0 703746` (or freshly-identified PIDs) for liveness, re-arm only if genuinely zero processes
+  found.
