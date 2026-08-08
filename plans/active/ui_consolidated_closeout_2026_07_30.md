@@ -32,7 +32,7 @@ related:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-08-07"
+last_updated: "2026-08-08"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -268,3 +268,24 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   accurately self-tracked as partially done (`/ag-closeout-audit ui` has now run twice, 08-06/08-07;
   `/plan-reconcile ui` genuinely has not run yet) — correctly still unchecked, not stale. No reclassification, no
   citation fix, no archival warranted.
+- **ag_closeout_auditor 2026-08-08 (ui tranche, dispatch agt-a0f1b7, slot 11)**: third `/ag-closeout-audit ui` run.
+  Candidate set grew 12→13 (new member: 2026-08-07's own parked-findings doc, self-classified
+  `archivable_after_planned_work` — its recommendations already fully folded into this doc's P2 todo #5 and batch1's
+  standing approval gate). Orphan count 9 of 13 (flat vs 2026-08-07's 9 of 12 in raw count; the +1 denominator landed
+  non-orphaned, so the tranche's orphan rate improved slightly). A 2026-08-07 operator-rulings commit
+  (`unified-trading-pm@f9672e180`) closed 2 items relevant to this tranche:
+  `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 investigation (fully resolved, confirmed live) and both of
+  `cost_observability_deferred_followups_2026_07_10.md`'s operator-gated items (AWS CUR backfill closed final;
+  business-context/asset_group enrichment ruled to proceed). Per this skill's own taxonomy a ruled item "becomes a
+  normal batch candidate," but a dedicated scoping check found the enrichment item is NOT safely bounded as one AO todo
+  (176 VM launcher scripts, only ~9 through the shared label-injection choke point, a directly-analogous 2026-08-06
+  operator ruling on a sibling infra-tranche issue already declined to treat a near-identical file count as one todo) —
+  deferred with full evidence rather than drafted blind. Drafted `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (1
+  conflict-cleared todo: the source doc's other 4 "unscheduled P3" items, combined per the same-file concurrency rule) +
+  gated finalize — pending operator approval, independent of batch1. Also found:
+  `artifact_pipeline_observability_2026_07_17.md` carries an 11th genuinely-open item (a prose-only "Still open"
+  sentence trailing an `[x]`-checked parent bullet, line 683) that 2 prior audit passes and the doc's own
+  na-eligibility-audit pass all missed — not fixed here (outside this skill's write-scope for a non-covering candidate
+  doc), flagged for na-eligibility-audit's next pass. **Batch1 is still `status: draft`, unapproved, 3 audit runs
+  (08-06/07/08) without operator action** — remains the top recommendation. Full write-up:
+  `issues/ag_closeout_audit_ui_parked_2026_08_08.md`.
