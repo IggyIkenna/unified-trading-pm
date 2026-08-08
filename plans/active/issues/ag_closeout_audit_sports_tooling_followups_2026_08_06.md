@@ -71,7 +71,7 @@ should be excluded from orphan candidacy, same as `resolved`/`archived`.
       `scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py` already excludes them (`EXCLUDED_STATUS`); then
       re-run the gate and confirm the superseded sports doc drops out. Source: this issue doc. Done when: the gate's
       orphan count excludes superseded-status docs and the previously-flagged superseded doc no longer appears. —
-      unified-trading-pm@a969d9ba8 (EXCLUDED_STATUS added; baseline lowered 69→49; superseded doc no longer flagged)
+      unified-trading-pm@0bd6a09bb (EXCLUDED_STATUS added; baseline lowered 69→49; superseded doc no longer flagged)
 
 ## Finding 2 — batch9 Deferred citations truncated mid-sentence
 
@@ -110,3 +110,13 @@ to re-derive them.
   (better fit — a plan-hygiene script fix + a doc-citation completion, not data-pipeline work; validated against the
   live `agents/infra.md` registry entry). Companion finalize twin:
   `ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md`.
+- **finalize reconciliation, slot-16, 2026-08-08**: Verified both flips against the live commits. Finding 1's cited SHA
+  `a969d9ba8` was WRONG — that commit only touches `scripts/quality_gates/plan_commit_sha_evidence_baseline.yaml`
+  (an unrelated evidence-baseline ratchet, same commit-message subject coincidentally reused); the real fix landed in
+  `0bd6a09bb` (`scripts/plan-hygiene/check_ag_closeout_linkage.py` gains `EXCLUDED_STATUS`, baseline
+  `ag_closeout_linkage_baseline.yaml` 69→49). Corrected the citation above. Live re-run of
+  `check_ag_closeout_linkage.py` confirms `instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md` no
+  longer appears in the orphan list (7 orphans vs baseline 49, all unrelated new docs). Finding 2's citation
+  `a72c755c3` verified correct (touches both this doc and batch9 directly); live grep confirms zero `…`-terminated
+  Deferred bullets remain in `sports_satellite_ao_dispatch_batch9_2026_08_04.md`. No residual work remains — both
+  findings fully closed. Archiving per the standard 6-step ritual.
