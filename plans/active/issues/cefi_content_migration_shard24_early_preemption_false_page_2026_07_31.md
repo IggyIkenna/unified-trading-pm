@@ -211,3 +211,16 @@ someone checks.
   required — the original `[OPERATOR]` tag reflected the filer's uncertainty about the redeploy command, not a
   genuine business/judgment gate. Item 2 (relaunch shard 24 a 3rd time) is now unblocked in principle but out of this
   pass's scope (a fresh relaunch decision/action, not a documentation question).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA — CONFLICT found, not flipped. Item 2's own
+  text ("No `[OPERATOR]` gate needed for the relaunch action itself once the budget genuinely resets... ordinary
+  backfill relaunch, AO-dispatchable by default") plus the round5 entry directly above (item 1's redeploy gate
+  cleared) together look like a RECLASSIFY match on first read. But the mandatory sibling-batch conflict-check (§3b)
+  found `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (active, `assigned_vm: planning`, today's full-corpus cefi
+  re-audit) explicitly lists this exact doc under "Deferred — operator": "item 1 is `[OPERATOR]`-tagged by its own
+  author (no safe deterministic rebuild command identified for a live UI-serving prod Cloud Run service)" — reasoning
+  that predates or is otherwise inconsistent with this doc's own round5 resolution of item 1 above. Per the shared
+  conflict-check protocol, a same-day sibling batch doc's live classification of this doc is a conflict signal, not
+  something this sweep should unilaterally override by flipping `assigned_vm` — batch10's characterization needs
+  reconciling against this doc's own later Progress Log first (out of scope for this pass). Doc stays `assigned_vm:
+  NA`. Flagging for the next `/ag-closeout-audit cefi` or `/na-eligibility-audit` pass to reconcile once batch10's
+  own state is re-read.

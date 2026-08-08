@@ -30,7 +30,8 @@ source: >-
   here after that plan (and its execution-log child) became hard-blocked from any edit by the line-cap gate.
 resolved_by:
 locked_by:
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: data_engineering
 code_refs:
   [
     instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py,
@@ -576,3 +577,21 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   soft-delete retention = 604800s, meets the 7-day floor) — the sole todo's operator gate is lifted; see the todo's
   own annotation above. Doc stays `assigned_vm: NA` (the actual multi-VM resume sequence itself wasn't executed in
   this pass) but is no longer an operator QUESTION — it's ordinary infra work awaiting dispatch.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning`
+  (added `assigned_role: data_engineering` — field was previously absent). The round5-cefi-question-resolution entry
+  directly above already did the substantive work this flip completes: the sole open todo's `[OPERATOR]` gate was
+  lifted via a fresh, same-run `gcs_bucket_soft_delete_retention_seconds()` check (604800s, meets the 7-day floor),
+  matching today's cheat-sheet ruling #6 (reversibility-qualified prod-bucket renames are agent-executable after a
+  fresh soft-delete check) precisely — the todo itself is a named-venue (EXTENDED-STARKNET/LIGHTER-ZKSYNC/BYBIT-SPOT/
+  COINBASE-FUTURES), named-scope (~2,962 objects, zero-collision-verified per Finding 10), already-proven-safe
+  (`cefi-late-renames` category exercised twice successfully, Finding 7/8/10) rename sequence with an explicit
+  done-when (loop-until-dry clean + `verify_cefi_canonical_4surface_2026_07_20.py` + archival) — bounded and
+  worker-determinable, not a judgment call. Conflict-check: (a) grepped `plans/active/` for other
+  `parent_epic: cefi_master` `assigned_vm: planning` docs — none cover the residual-rename resume sequence itself;
+  (b) `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`/`batch10_2026_08_08.md` cite this doc only for the SEPARATE
+  Finding 8/10 HYPERLIQUID/ASTER collision-investigation todo (already independently dispatched as its own batch10
+  `[DATA] P2` todo, read-only, does not touch the 2,962-object safe-residual rename) — no overlap with this doc's own
+  P1 todo; `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (matched a "safe residual" text grep)
+  is an unrelated F1-N9 consistency-remediation doc, no shared scope; (c)
+  `cefi_consolidated_closeout_2026_07_18.md` does not reference this doc's resume-migration item. Clear. Companion
+  finalize plan: `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.

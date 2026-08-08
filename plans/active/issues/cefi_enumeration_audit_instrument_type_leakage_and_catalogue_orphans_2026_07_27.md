@@ -331,3 +331,15 @@ adjacent axis the same script happens to also report). **Both findings investiga
   waiting for now exists; see the P2 todo's annotation above. The migration script itself (BITGET-FUTURES shape not
   yet characterized) still needs to be written — this pass only removed the operator gate, it did not implement or
   apply the migration.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA — CONFLICT found, not flipped. The round5
+  entry directly above (reversibility-verified, delete-safety gate lifted, matches today's cheat-sheet ruling #6)
+  looks like a RECLASSIFY match on first read. But the mandatory sibling-batch conflict-check (§3b/c) found
+  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (active, `assigned_vm: planning`, today's full-corpus cefi
+  re-audit) explicitly lists this exact doc under "Deferred — operator": "remaining item(s) need an operator decision
+  on catalogue-orphan disposition; not a checkable-fact audit" — reasoning that is now stale against this doc's own
+  round5 resolution above (the operator gate was the P2 todo's ONLY blocker, and it's lifted). Per the shared
+  conflict-check protocol, a same-day sibling batch doc's live classification of this doc is a conflict signal to
+  flag and defer, not override unilaterally — batch10's characterization needs reconciling against this doc's own
+  later Progress Log first (out of scope for this pass; same pattern found on
+  `cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md` this same sweep). Doc stays
+  `assigned_vm: NA`. Flagging for the next `/ag-closeout-audit cefi` or `/na-eligibility-audit` pass.

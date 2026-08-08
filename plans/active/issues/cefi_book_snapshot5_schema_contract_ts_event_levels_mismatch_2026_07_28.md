@@ -888,3 +888,10 @@ against the reproduction script.
   duplicate/near-duplicate dispatch of the already-fully-investigated static-backlog condition. Session cost: doc read +
   git-ancestor batch check (7 commits) + this Progress Log append, no GCS read, no code change, no VM launch. Pinging
   `dp-fleet-monitor` (authoring slot) with this outcome.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — both remaining open todos ([SERVICE]
+  P3 features-service `l2_book_checkpoints`-shape reader gap; [SERVICE] P2 `_classify_tardis_error` truncation
+  observability question) are explicit, self-declared design/maintainer-judgment calls between two engineering
+  approaches, not checkable facts. None of today's 9 generalizable rulings apply to either. Independently corroborated
+  by `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (active, `assigned_vm: planning`, today's full-corpus cefi
+  re-audit), which lists this exact doc under "Deferred — human-only": "2 self-declared design/maintainer-judgment
+  calls (choosing between two engineering approaches for the schema contract)." No reclassification.
