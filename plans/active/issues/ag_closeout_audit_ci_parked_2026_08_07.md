@@ -1,13 +1,16 @@
 ---
 doc_type: issue
-title: ag-closeout-audit ci parked findings — 2026-08-07 (INTERIM — Phase 1 in flight)
+title: ag-closeout-audit ci parked findings — 2026-08-07 (SUPERSEDED — see 2026-08-08 final report)
 summary: >-
   Parked findings from the scheduled ag_closeout_auditor run (2026-08-07, tranche=ci, slot 4), captured mid-run via
   /pre-compact before Phase 1's 46-agent classification Workflow (run wf_1f04b9b2-680) returned. 4 findings so far, all
   from Phase 0 discovery: 6 docs dual-tagged [ci, infrastructure] (informational, not ci's to unilaterally retag), 1 doc
   dual-tagged [sports, ci] (informational, sports-owned), 1 asset_group:[meta] doc that reads ci-scoped (fold-in
-  candidate), and a check_ag_closeout_linkage.py ratchet regression observation (71 vs baseline 69). This doc will be
-  APPENDED (not replaced) once Phase 1/2/3 complete with the full orphan-count report and any batch6 draft.
+  candidate), and a check_ag_closeout_linkage.py ratchet regression observation (71 vs baseline 69). **SUPERSEDED
+  2026-08-08**: `wf_1f04b9b2-680` was not resumable cross-session, so the 2026-08-08 run re-derived the candidate set
+  fresh and completed Phase 1-3 in `ag_closeout_audit_ci_parked_2026_08_08.md`, which carries the full orphan-count
+  report + the resulting `ci_satellite_ao_dispatch_batch6_2026_08_08.md` draft. All 4 findings below are re-confirmed
+  unchanged there.
 status: open
 nature: issue
 asset_group: [ci]
@@ -27,11 +30,12 @@ created: 2026-08-07
 parent_epic: infrastructure_master
 assigned_vm: NA
 priority: P3
-last_updated: 2026-08-07
+last_updated: 2026-08-08
 source: >-
   ag_closeout_auditor scheduled run 2026-08-07 (tranche=ci, slot 4, DISPATCH_ID=agt-d12c5d) — captured mid-run by
   /pre-compact ritual while Phase 1's Workflow (run wf_1f04b9b2-680, 46 candidate docs) was still executing.
-resolved_by:
+resolved_by: ag_closeout_audit_ci_parked_2026_08_08
+superseded_by: ag_closeout_audit_ci_parked_2026_08_08
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: none
