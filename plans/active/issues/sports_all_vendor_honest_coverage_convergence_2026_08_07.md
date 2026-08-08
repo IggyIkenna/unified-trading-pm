@@ -685,3 +685,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   chunk 18, where both prior deaths' real-fetch load was heaviest). FIXTURE_STATS jumped **98 days**
   (`last_completed_date=2024-03-15`, fresh `05:55:28Z`) — steadily accelerating toward chunk 26/26. Both healthy, no
   intervention.
+- **2026-08-08T06:24Z** — FIXTURE_STATS +34 days (`last_completed_date=2024-04-18`, fresh `06:23:27Z`), steady. odds
+  smallchunk4: chunk 10/451 now (`2020-07-21`), up from chunk 4, ~5min/chunk pace, zero OOMs — still no third
+  occurrence, 8 chunks remaining before reaching chunk 18's known danger zone. Both healthy, no intervention.
