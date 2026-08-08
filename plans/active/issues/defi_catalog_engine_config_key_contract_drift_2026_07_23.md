@@ -749,10 +749,12 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       `"home,away"` (2-way) — the same convention the existing test fixture already uses for 2 of the 4 market types,
       promoted to the production catalog and extended to cover the other 2. Verify against the real upstream ML model's
       `predicted_class` indexing before shipping (money-path archetype). — strategy-service@2667e967d
-- [ ] [SCRIPT] P2. **`VOL_TRADING_OPTIONS` (14 rows) — wire the ATM-straddle strike/expiry resolver** (per the
+- [x] ✅ [SCRIPT] P2. **`VOL_TRADING_OPTIONS` (14 rows) — wire the ATM-straddle strike/expiry resolver** (per the
       2026-08-08 ruling above): select the strike nearest to spot (at-the-money) and the nearest weekly expiry with ≥ 7
       days to expiry; resolve `call_instrument`/`put_instrument` from that pair. Same class of gap as
-      `CARRY_STAKED_BASIS_DATED`'s dated-contract resolver — reuse that pattern if applicable.
+      `CARRY_STAKED_BASIS_DATED`'s dated-contract resolver — reuse that pattern if applicable. —
+      strategy-service@4b9e01fbf (atm_straddle_resolver.py pure-function resolver; options.py wired; VOL_SURFACE_BTC
+      slot missing underlying/venue fixed; systemic test xfail removed; resolver unit tests added; QG green)
 - [x] ✅ [SCRIPT] P2. **Sweep the remaining 7 already-drivable archetypes** — `CARRY_FUNDING_DISPERSION`,
       `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT` remain fully unchecked against either catalog surface for
       the same config-key-contract drift bug class this doc found everywhere else. **na-eligibility-audit 2026-08-01:
