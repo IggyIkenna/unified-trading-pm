@@ -779,3 +779,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T12:15Z** — FIXTURE_STATS +25 days (`last_completed_date=2025-10-17`, fresh `12:15:18Z`), steady. odds
   smallchunk5: chunk 20/451 (`2020-09-09`), zero new OOMs since clearing chunk 18 (still 24 total). Both healthy, no
   intervention.
+- **2026-08-08T12:37Z** — FIXTURE_STATS +18 days (`last_completed_date=2025-11-04`, fresh `12:37:03Z`), steady. odds
+  smallchunk5: chunk 22/451 (`2020-09-19`), zero new OOMs (still 24 total). Both healthy, no intervention.
