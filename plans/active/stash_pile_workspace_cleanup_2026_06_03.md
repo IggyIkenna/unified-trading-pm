@@ -151,27 +151,49 @@ surface — do not auto-drop — genuine WIP.
 > `vm-orchestrator` are not real dispatch targets under the current central-orchestrator + role-based-dispatch model
 > (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`). A dispatcher should instead run the sweep
 > per SLOT on the current fleet (per-slot worktrees, `codex/05-infrastructure/per-tab- worktrees.md`), not per named
-> epic VM. Annotation only — the todo list below is left as-is (no re-targeting performed in this pass; re-scoping the
-> fan-out is a judgment call, not a mechanical sync).
+> epic VM.
+>
+> **RESOLVED 2026-08-08 — ruling applied.** The re-scoping judgment call this annotation flagged was already decided
+> (2026-07-28, option B) in `/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md` § 4: "Retire
+> Phase 3 entirely: mark the 10 `vm-*` rows VOID ('the hosts they name no longer exist'), keep only the still-real
+> laptop/VM sweeps... since that model is equally retired." That ruling was recorded but never executed (out of the
+> ruling session's own assigned-file scope) — executed here: the 10 `vm-*` rows below are marked VOID, and Phase 4's
+> `tab/<op>/<N>`-branch step is rewritten to the current per-slot model.
 
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-defi**; commit report. — owner: vm-defi
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-cefi**; commit report. — owner: vm-cefi
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-tradfi**; commit report. — owner: vm-tradfi
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-sports**; commit report. — owner: vm-sports
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-prediction**; commit report. — owner: vm-prediction
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-ml**; commit report. — owner: vm-ml
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-trading-core**; commit report. — owner: vm-trading-core
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-operator-ops**; commit report. — owner: vm-operator-ops
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-cross-cutting**; commit report. — owner: vm-cross-cutting
-- [ ] [INFRA] P3. Run stash audit + conservative sweep on **vm-orchestrator**; commit report. — owner: vm-orchestrator
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-defi` is not a real dispatch target under the
+      single-VM/role-based-dispatch architecture; the per-epic-VM topology this row targeted no longer exists. Per
+      `infra_plan_reconcile_parked_decisions_2026_07_26.md` § 4 ruling (option B, 2026-07-28). — owner: n/a (host
+      retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-cefi`, same VOID reasoning as `vm-defi` above. — owner: n/a (host
+      retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-tradfi`, same VOID reasoning as `vm-defi` above. — owner: n/a (host
+      retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-sports`, same VOID reasoning as `vm-defi` above. — owner: n/a (host
+      retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-prediction`, same VOID reasoning as `vm-defi` above. — owner: n/a (host
+      retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-ml`, same VOID reasoning as `vm-defi` above. — owner: n/a (host retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-trading-core`, same VOID reasoning as `vm-defi` above. — owner: n/a (host
+      retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-operator-ops`, same VOID reasoning as `vm-defi` above. — owner: n/a (host
+      retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-cross-cutting`, same VOID reasoning as `vm-defi` above. — owner: n/a
+      (host retired)
+- [x] ✅ [INFRA] P3. **VOID 2026-08-08** — `vm-orchestrator`, same VOID reasoning as `vm-defi` above. — owner: n/a (host
+      retired)
 - [ ] [INFRA] P3. Run stash audit + conservative sweep on **Ikenna laptop**; commit report. — owner: ikenna-laptop
 - [ ] [INFRA] P3. Run stash audit + conservative sweep on **Harsh laptop**; commit report. — owner: harsh-laptop
 
 ### Phase 4 — owner review of genuine-WIP survivors + final purge
 
-- [ ] [INFRA] P3. Aggregate all per-host reports; for each genuine-WIP survivor, ping its branch owner to decide drop vs
-      inherit-and-commit (`chore(orphan-wip)` onto its own `tab/<op>/<N>` branch). Owners resolve within the
-      confirmation window. — owner: planning-host
+- [ ] [INFRA] P3. **Rewritten 2026-08-08 per the `infra_plan_reconcile_parked_decisions_2026_07_26.md` § 4 ruling
+      (option B) — the `tab/<op>/<N>` branch model is retired, same as Phase 3's targets.** Aggregate all per-host
+      reports; for each genuine-WIP survivor, ping its branch owner to decide drop vs. inherit-and-commit. Under the
+      current Path-B model (`/codex/05-infrastructure/per-tab-worktrees.md`), each slot is a `git clone --reference`
+      checked out directly on `live-defi-rollout` — there is no per-tab branch to inherit onto. "Inherit" now means
+      committing directly onto the slot's own LDR checkout, **liveness-gated per the HARD RULE**: a dead claim (no live
+      session, mtime on the WIP ≥120s stale) → inherit + commit onto that checkout; a live claim (mtime <120s) →
+      PROTECT, do not touch. Owners resolve within the confirmation window. — owner: planning-host
 - [ ] [INFRA] P3. After the ~1-week confirmation window (target **2026-06-10**), per host: if no restore was requested,
       purge that host's archive —
       `git for-each-ref refs/stash-archive/ --format='%(refname)' | xargs -n1 git update-ref -d` then
@@ -190,6 +212,14 @@ surface — do not auto-drop — genuine WIP.
 
 ## Progress Log
 
+- **infra-tranche NA-question resolution 2026-08-08**: executed the standing ruling from
+  `/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md` § 4 (option B, ratified 2026-07-28 but
+  never applied — "out of this file's assigned scope to execute" at the time). Voided the 10 `vm-*` Phase-3 rows
+  (per-epic-VM topology retired, hosts don't exist under the single-VM/role-based-dispatch model) and rewrote Phase 4's
+  owner-review todo to the current per-slot `live-defi-rollout` checkout model (liveness-gated), replacing the retired
+  `tab/<op>/<N>`-branch inherit-and-commit step. Phase 3 now has 2 real open todos (the two laptop sweeps) instead of
+  12; Phase 4/5 unaffected in scope, only in mechanism. Did not touch Phase 1/2 (unrelated, already tracked
+  cross-references to `infra_satellite_ao_dispatch_batch1_2026_07_26.md` stand).
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA-STALE, unchanged — re-read end-to-end;
   `grep -cE '^- \[ \]'` = 17, matching the 2026-08-02 verdict's count. The 3 items already cross-referenced into
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md` remain correctly cited and still not done there (re-checked, no
