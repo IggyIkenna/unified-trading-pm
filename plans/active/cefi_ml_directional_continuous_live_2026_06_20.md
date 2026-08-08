@@ -128,6 +128,7 @@ context_scope:
       (doc-reconciliation verify-rerun-2, finding 36): flipped `[x]`→`[ ]` — the nested detail immediately below and the
       Success criteria section (further down this doc) both admit the 2-year config-grid run has NOT been executed; only
       the architecture-verification half of this gate is actually done.** (was: `- [x]`)
+
   > **Partial PASS — architecture verified; grid run pending operator scheduling (2026-06-12, slot-6)**:
   >
   > - ✅ **batch=live, same code path, no standalone engine**: `ML_DIRECTIONAL_CONTINUOUS` is wired in
@@ -144,6 +145,48 @@ context_scope:
   >   (~8-12h, same shape as DeFi grid runs)**; **(3) GCS parquet output inspection** — no GCS output at
   >   `strategy-store-*/backtest_results/strategy_id=ML_DIRECTIONAL_CONTINUOUS/` yet. This grid run is an operator-only
   >   scheduling action per the "Plans Run To Actual Completion" HARD RULE.
+
+  > **RULED (operator, 2026-08-08)**: schedule the grid run, BUT gated on first verifying features/MTDS/MDPS data is
+  > actually available for OKX+Binance+Bybit across the real 2-year window (`run_2yr_config_grid_backtest.py`'s own
+  > example invocation uses `--start 2024-01-01 --end 2026-05-01`, i.e. the window is ~2024-01-01→present).
+  > **Investigated 2026-08-08 (na-corpus-digest-closeout, grep-based against manifest/honest-coverage state — no new
+  > full-corpus GCS walk run)**: coverage is **NOT CONFIRMED for this window** — do not schedule yet.
+  >
+  > - The only honest-coverage number on record is an **aggregate over the FULL registered CeFi history** (back to
+  >   ~2019-2020), not scoped to 2024-2026: **44.96%** pre-backfill baseline (2026-07-27,
+  >   `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`), reopening the previously-archived **50.79%**
+  >   "honest-done" verdict (`plans/archive/2026_07/cefi_completion_program_2026_07_15.md`) — both numbers span every
+  >   MVP CeFi venue (OKX-SPOT/-SWAP/-FUTURES, BINANCE-SPOT/-FUTURES, BYBIT included) combined, not broken out per venue
+  >   or per date-window.
+  > - The mechanism that would produce a **fresh, confirmed** number — the POST-BACKFILL `/data-pipeline-check-mtds`
+  >   gate in `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (todos -004/-005) — is **still blocked** as of
+  >   2026-08-08: the chronological historical backfill it's gated on has failed/preempted **7 times across 12 days**
+  >   (2026-07-27→08-06) and is currently at only `last_completed_date=2019-10-21` of a `2019-01-01..2026-08-01` target
+  >   span (~10.7% through), per that plan's own Progress Log. That backfill works chronologically from **2019 forward**
+  >   — it has not yet reached anywhere near 2024, so its completion (or lack thereof) says nothing directly about
+  >   whether 2024-2026 specifically is captured; it just means **no fresh aggregate re-measurement exists yet either
+  >   way**.
+  > - The one existing single-day snapshot inside the window (`data_pipeline_e2e_check_mtds_2026_03_15.md`, run
+  >   2026-03-15) shows BINANCE-SPOT/BINANCE-FUTURES/BYBIT `trades`/`book_snapshot_5` all `failed` — but that failure is
+  >   **root-caused to a launcher/guard bug**
+  >   (`issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`, "not a data-correctness
+  >   regression"), so it is **not usable evidence** either way about the underlying capture state for that date.
+  > - **Conclusion: coverage for the required 2024-01-01→present / OKX+Binance+Bybit window is neither confirmed present
+  >   nor confirmed absent** — no window-scoped measurement exists. Per the operator's own gating condition ("only
+  >   schedule once coverage is confirmed"), **the grid run stays NOT schedulable.** Filed the specific prerequisite as
+  >   a new todo below (a narrow, window-scoped honest-coverage check — NOT contingent on the unrelated full 2019-2026
+  >   chronological backfill finishing).
+
+- [ ] [DATA] P1. **Blocking prerequisite for the grid-run schedule todo above**: run a **window-scoped** honest-coverage
+      measurement (`instruments-service/scripts/measure_honest_coverage.py --asset-group cefi`, or a targeted
+      `/data-pipeline-check-mtds` day-sample across 2024-2026) restricted to **OKX-SPOT/-SWAP/-FUTURES,
+      BINANCE-SPOT/-FUTURES, BYBIT** over **2024-01-01→present** specifically — this is deliberately narrower and faster
+      than the stalled full-history 2019-2026 chronological backfill in
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (that gate should NOT be a prerequisite for this one;
+      they are different questions). **Done when**: a coverage % for exactly this venue set + window is cited in this
+      plan's Progress Log, with `attempted_failed`/`expected_unattempted` breakdown. If the % is materially below
+      complete, file the specific gap (which venue/data_type/date ranges) as its own blocking issue before the grid run
+      todo above is marked schedulable.
 
 ## Model-improvement backlog (deferred — not blocking the live loop)
 
@@ -212,3 +255,15 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — remaining items are a permanent
   human-only ≥7-day live-capital cutover hard-stop (2026-07-28 operator gate) plus judgment-gated follow-ons; consistent
   with 2 prior 2026-07-30 passes (cefi+defi tranches).
+- **na-corpus-digest-closeout 2026-08-08 (item 26 — backtest-fidelity gate)**: operator ruled "schedule it, but gated on
+  verifying data coverage first." Investigated: no window-scoped (2024-01-01→present, OKX+Binance+Bybit) honest-coverage
+  measurement exists — only a full-history (~2019-2026) aggregate (44.96%/50.79%, both well below complete) whose
+  refresh mechanism is itself blocked on an unrelated, chronologically-far-off (~2019-10, ~10.7% done) backfill; the one
+  in-window snapshot check is contaminated by a known launcher bug, not usable as evidence. Coverage is therefore **not
+  confirmed** — grid run stays NOT schedulable. Filed a new `[DATA] P1` todo for the narrow, window-scoped check that
+  would actually answer this (deliberately decoupled from the stalled full-history backfill gate). No data-pipeline
+  correctness violation created — this is a "cannot confirm yet" finding, not a fabricated pass.
+- **na-corpus-digest-closeout 2026-08-08 (item 32 — wallet keys / kill-switch arming)**: operator answer: "Not yet —
+  stays pending, permanent hard-stop until operator says otherwise." Doc status re-confirmed accurate as-is (the
+  "Reviewed 2026-07-28" note above already states this is a PERMANENT hard-stop, not retagged/unlocked) — no change
+  needed.
