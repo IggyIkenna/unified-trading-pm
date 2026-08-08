@@ -208,7 +208,25 @@ plan + verifying the `done_sha`, never from the row's status alone.
       (would re-open work that's already honestly open, not done) or FLIP (would falsely mark an un-executed migration
       done) was warranted or performed; this item only needed its tracker checkbox resolved with the verification trail
       above.
-- [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`)
+- [x] ✅ [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`) — **verified 2026-08-08
+      (slot 15): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected**, same `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as the items
+      above. `GET /api/backlog` for this exact id now returns `status: "done"`,
+      `done_sha: "no-code:gate-still-unmet-verified"` (not `45b5112e7`), `dispatched_to: 9`,
+      `done_at: 2026-08-08T15:05:57Z` — a different slot already re-ran this exact investigation after the 03:15 UTC
+      audit snapshot and closed it honestly. The backlog title/brief ("**NEW 2026-08-04.** Once…") matches the P1 todo
+      at line ~300 of the cited plan (`plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md`):
+      "Once `cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`'s backfill … completes and is
+      manifest-verified: re-run `run_cefi_perp_funding_corpus.py` … then verify `funding_window()` returns non-empty
+      observations." That todo's checkbox is correctly still `- [ ]` — cross-checked both halves of the gate: (1) the
+      dependency doc IS archived (`plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, "🟢
+      ARCHIVED 2026-08-07 — all 3 todos done"), so the RAW backfill landed, but (2) this todo's own SECOND half —
+      re-running the funding corpus script + verifying `funding_window()` — has not happened yet; the plan's own
+      "Deferred after 2026-08-08" section confirms the corpus recompute is still gated on VM `cefi-fwd-20260808-123230`
+      (launched 12:32:30Z, ~18-24h remaining as of the last Progress Log entry) plus a GCS probe, neither done as of
+      this check. So the false-done state the 03:15 UTC audit snapshot captured (backlog row `done` citing a stale sha,
+      plan checkbox honestly open) was correctly re-verified and closed by slot 9 with no code needed — nothing further
+      to do here.
 - [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-014` (`done_sha=b78ec6e7c`)
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`)
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-009` (`done_sha=6ddb0374`)
