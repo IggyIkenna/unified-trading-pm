@@ -63,11 +63,12 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify every batch-6 done-claim against reality, not against its checkbox** — for each of the 10
+- [x] ✅ [REVIEW] P0. **Re-verify every batch-6 done-claim against reality, not against its checkbox** — for each of the 10
       todos in `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, re-run `git show --stat <sha>` for every
       cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
       own stated done-when check where it is a command. **Done when**: all 10 verified, and any claim whose evidence
-      does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
+      does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated. —
+      **All 10 verified 2026-08-08, zero discrepancies** (see Progress Log below for the per-todo evidence).
 - [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       6 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of: `ao_open_issues_consolidated_close_out_2026_07_17.md` (Phase-8 items 5+6 only),
@@ -117,3 +118,44 @@ source: >-
   gates → archive sources → archive self) and several touch the same files. Ships `status: active` per the skill's
   2026-07-30 finding (`gate_on_depends` already holds every task; no separate draft-gate needed).
 - **context-scout 2026-08-05**: populated context_scope (5 entries).
+- **2026-08-08 (ao_satellite_ao_dispatch_batch6_finalize-001, slot-5)**: Todo 1 done — re-verified all 10 batch-6
+  done-claims against reality (fresh-pulled every touched repo to `origin/live-defi-rollout` first; zero discrepancies):
+  1. `unified-trading-pm@4f5a1e6ba` — `git show --stat` confirmed; diff content matches the claimed Phase-8 measurement
+     numbers (tmux_session_lost 189→645 events/2-day-window, stale-dispatch 6==6) exactly.
+  2. `unified-trading-pm@79565c404` — `git show --stat` confirmed; diff adds the exact 3 disposition-marker bullets
+     claimed (CANCELLED/SUPERSEDED, DEFERRED-BY-DESIGN, BLOCKED-ON:\<ref\>); cross-checked `server/verify.py` and
+     confirmed `_ADDED_BLOCKED_LINE_RE` genuinely exists at line 639.
+  3. Source doc `plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` read
+     in full — confirms `status: resolved`, `agent-orchestrator@23bd0b3` shipped both halves (priority_override-vs-
+     auto_unpark__ docs + `park_now`/`manual_park` wiring), matching the CLOSED claim exactly.
+  4. `agent-orchestrator@82578c3` — `git show --stat` confirmed (`server/state_store/slots.py` +
+     `tests/test_redispatch_clears_stale_owner.py`); **re-ran the named test live**: `pytest
+     tests/test_redispatch_clears_stale_owner.py` → 3 passed.
+  5. `unified-trading-pm@c6fde000a` — `git show --stat` confirmed; diff matches current `agents/review.md` step 3d
+     content verbatim (liveness-by-progress check added). Source doc
+     `plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md` confirms all 3 todos
+     `[x]`, including the `[REVIEW] P3` operator sign-off recorded 2026-08-08 in that doc's own Progress Log.
+  6. `agent-orchestrator@6166269` — `git show --stat` confirmed; `_REGISTER_POLL_ROLES = {"review", "main", "monitor"}`
+     confirmed live in `server/prompts.py:99`, guarding both the STEP 0 and STEP 2/3 branches per the diff.
+     **Re-ran the named tests live**: `pytest -k "test_register_poll_role_gets_slotless_shape_even_with_slot_id or
+     test_one_shot_lifecycle_role_unaffected_by_register_poll_guard"` → 4 passed, 2 skipped (the parametrized 3-role
+     case + the one-shot-role case).
+  7. `agent-orchestrator@41da3e578` — `git show --stat` confirmed (`server/routes/slots_worker.py` +
+     `tests/test_done_empty_sha_gate.py`). **Re-ran the named test live**: `pytest tests/test_done_empty_sha_gate.py` →
+     3 passed.
+  8. Source doc `plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` read in full —
+     confirms `status: resolved`, todo marked MOOT 2026-08-05 (VM `i-0dd9812a96cdda5dc` confirmed terminated
+     2026-08-03, not replaced), matching the MOOT claim exactly.
+  9. `unified-trading-pm@c2083029d` — `git show --stat` confirmed; diff adds surface (d) to
+     `ao-dispatch-batch-naming-and-conflict-check.md` § 3 exactly as claimed, wiring both skills' conflict-check
+     sections.
+  10. Orphan-rescue claim across 3 repos — all content-diffed byte-for-byte against the claimed landed SHA (not
+      cherry-picked, matching the doc's own reasoning): `unified-trading-library c927ec58` vs `60c840f2`
+      (`point_in_time.py`) — **byte-identical**. `unified-api-contracts 06c8e90b` vs `06c54fee`
+      (`defi_venues.py`) — functionally identical (`"AAVE-PLASMA": "live"` present in both; comments differ, exactly
+      as the claim itself states "independently authored" rather than byte-identical). `deployment-service 0e62096f`
+      vs `eff55ae7` (`pyproject.toml` + `uv.lock`) — **byte-identical**. All 3 confirmed still orphan (not ancestors of
+      `origin/live-defi-rollout` under their original SHAs) while their landed counterparts ARE ancestors — matches the
+      "no rescue action needed" verdict exactly.
+
+  **Verdict: zero re-opened todos.** Every one of batch6's 10 `[x]` claims holds up under independent re-verification.
