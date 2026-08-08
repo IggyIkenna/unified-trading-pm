@@ -241,7 +241,13 @@ curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/reply \
   }"
 ```
 
-(omit `in_reply_to` only if you genuinely mean to ack the whole drained batch at once instead of one message.)
+(omit `in_reply_to` only if you genuinely mean to ack the whole drained batch at once instead of one message.) **Prefer
+the batched form whenever several drained messages are all simple/trivial acks** (bare "Ack.", "Thanks!", one-line
+confirmations with nothing to add) — replying to each individually compounds fast when the other side mirrors the same
+per-message habit: two review-role agents individually 1:1-acking main produced ~40 near-empty messages in under 3
+minutes (confirmed live, 2026-08-08) before one session caught it mid-stream and switched to a single batch reply, which
+main then confirmed closed it out. One reply covering the whole trivial-ack run is enough; save per-message
+`in_reply_to` replies for messages that actually need a distinct answer.
 
 Use `POST /api/agents/by-role/<role>/message` ONLY when posting a brand-NEW outbound message with no origin message to
 answer (proactively pinging a peer role, not replying to one of theirs) — it has no `in_reply_to` and never acks
