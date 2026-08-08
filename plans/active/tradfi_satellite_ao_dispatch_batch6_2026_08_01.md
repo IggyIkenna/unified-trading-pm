@@ -971,3 +971,21 @@ unrelated to this task's `/heartbeat`/`/messages` endpoints) — not actioned, n
 - **NEXT ACTION (fresh session)**: same as the prior checkpoints' NEXT ACTION above — dedup-check via `ps -ef`, then
   `kill -0 703695` / `kill -0 703746` (or freshly-identified PIDs) for liveness, re-arm only if genuinely zero processes
   found. If a `curl` against `localhost:8765` fails once, retry before treating it as a real outage (see lesson above).
+
+### 2026-08-08T~18:22Z — slot 6, task `tradfi_satellite_ao_dispatch_batch6-002` (todo #2) — pre-compact checkpoint
+
+Continued monitoring since the `e4f8070d4` checkpoint; watcher `703695`/heartbeat `703746` still the sole surviving
+pair, alive throughout (`ps -ef` dedup-checked repeatedly, always exactly one script match). Fleet drained further:
+142→134 VMs over this stretch per the watcher's own log (`poll 121`→`poll 133`, continuous fine-grained movement, no
+plateau). Singleton lock still held; operator keep-waiting decision unchanged, no `--force`.
+
+**New lesson**: when diagnosing an apparent stall from a watcher log's last-entry timestamp, don't assume a
+`ScheduleWakeup` confirmation's stated future wake time ("Next wakeup scheduled for HH:MM") is "now" — it is the
+_future_ fire time, not the current time. Run `date -u` directly before concluding a log gap is stale; a false "26
+minutes since last poll" alarm this session was actually a ~90-second-old log entry once real UTC time was checked.
+
+- Step 1: git clean, `ahead=0`/`behind=0`; scratchpad (`es_opt_watcher_slot6.sh`/`heartbeat.sh`/`es_opt_watcher.log`/
+  `manifest_query.py`) unchanged except the log growing as expected; no secrets; no new dangling refs beyond the
+  expected historical checkpoint entries already in this file.
+- **NEXT ACTION (fresh session)**: same as above — dedup-check via `ps -ef`, then `kill -0 703695`/`kill -0 703746` for
+  liveness before any re-arm; if diagnosing a possible stall from log timestamps, `date -u` first.
