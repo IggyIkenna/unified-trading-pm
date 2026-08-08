@@ -194,12 +194,12 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
       2026-08-08 (id=58, operator-directed relevance check before ruling)**: operator suspected this AWS CodeBuild
       resource might be MOOT given the trading-infra GCP shift ("AWS scoped down to just CI self-hosted runners + AO") —
       investigated before ruling. **Verdict: NOT moot, still live and load-bearing.** Evidence:
-      `codex/05-infrastructure/dual-cloud-image-builds.md` (`status: current`) is the SSOT for a dual-cloud image-build
+      `/codex/05-infrastructure/dual-cloud-image-builds.md` (`status: current`) is the SSOT for a dual-cloud image-build
       flow where GCP Cloud Build + this exact AWS CodeBuild fleet (18 projects) fire in parallel on every `qg-passed`
       dispatch, and **both clouds must pass before a staging→main promote PR merges** (`image-build-gate.yml` →
       `image-build-validate.yml` gate job) — this is a live CI hard-gate, not a dormant resource.
       `.github/workflows/cloud-build-router-aws.yml` was actively touched as recently as 2026-08-07 (same-day as this
-      audit -1). `codex/11-project-management/dual-cloud-cost-ops-playbook.md` frames the AWS side as a deliberate
+      audit -1). `/codex/11-project-management/dual-cloud-cost-ops-playbook.md` frames the AWS side as a deliberate
       "GCP-primary/AWS-backup" resilience posture, not a leftover — the CodeBuild fleet is exactly the mechanism that
       keeps that backup posture real (an AWS-buildable image on standby). Conclusion: the D1-D4 rows stay genuinely open
       and operator-gated as before; nothing closes as moot. No ruling was fabricated for D1-D4 itself — it remains a

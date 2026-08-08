@@ -10,7 +10,8 @@ status: active
 nature: process
 asset_group: [cefi]
 stage: [strategy]
-repos: [unified-trading-pm, instruments-service, strategy-service, deployment-service, batch-live-reconciliation-service]
+repos:
+  [unified-trading-pm, instruments-service, strategy-service, deployment-service, batch-live-reconciliation-service]
 scope: [engineer]
 tags: [paper-trading, determinism, live-batch-symmetry, cefi, close-out, archival]
 related:
@@ -18,6 +19,7 @@ related:
     /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -60,18 +62,18 @@ context_scope:
 
 - [ ] [REVIEW] P1. **Re-verify the venue-scoped completeness check ran and the correct branch was taken.** Confirm the
       source doc's `[DIAG] P1` todo cites a real completeness verdict for exactly BINANCE-FUTURES/ASTER/OKX-FUTURES
-      (repo@sha or script-output citation), and that the doc's stated branch logic was actually followed: clean →
-      paper VM launched; gaps found → a new blocking data-completeness issue was filed (cite its filename). Repo:
+      (repo@sha or script-output citation), and that the doc's stated branch logic was actually followed: clean → paper
+      VM launched; gaps found → a new blocking data-completeness issue was filed (cite its filename). Repo:
       unified-trading-pm. **Done when**: the branch taken is confirmed with evidence in this plan's Progress Log.
-- [ ] [REVIEW] P1. **If the paper VM was launched: confirm cost-control + P1.2 unblocked.** Verify the VM was spun
-      down deliberately per the operator's explicit instruction (not left running for days) — cite the launch and
-      shutdown timestamps/evidence. Confirm `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s
-      `[DATA] P1.2` todo was re-attempted against the new ledger and its outcome recorded (pass or a fresh blocker).
-      Repo: unified-trading-pm. **Done when**: VM lifecycle evidence + P1.2's outcome are both cited, or (if the gap
-      branch was taken instead) this todo is marked not-applicable with a one-line note why.
-- [ ] [DOC] P2. **Archive `plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`**
-      via the standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked
-      → add the archive banner → run the codex-alignment check → grep the corpus for every referrer of
+- [ ] [REVIEW] P1. **If the paper VM was launched: confirm cost-control + P1.2 unblocked.** Verify the VM was spun down
+      deliberately per the operator's explicit instruction (not left running for days) — cite the launch and shutdown
+      timestamps/evidence. Confirm `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s `[DATA] P1.2`
+      todo was re-attempted against the new ledger and its outcome recorded (pass or a fresh blocker). Repo:
+      unified-trading-pm. **Done when**: VM lifecycle evidence + P1.2's outcome are both cited, or (if the gap branch
+      was taken instead) this todo is marked not-applicable with a one-line note why.
+- [ ] [DOC] P2. **Archive `plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`** via
+      the standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add
+      the archive banner → run the codex-alignment check → grep the corpus for every referrer of
       `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31` and fix each path to point at the archived
       location → clear `locked_by` (already empty, confirm). **Done when**: the doc is moved to
       `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and this finalize doc itself gets

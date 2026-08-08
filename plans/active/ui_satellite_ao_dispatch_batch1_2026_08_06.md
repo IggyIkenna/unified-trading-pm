@@ -44,6 +44,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.1
 estimate_calibrated_ai_days: 0.9
 assigned_role: ui_developer
+effort: max
 drift_direction: advance-code
 locked_by:
 locked_since:

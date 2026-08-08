@@ -28,7 +28,11 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, incident, cgroup, memory-cap, systemd, api-outage, instance-resize, bootstrap_vm]
-related: [/plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md]
+related:
+  [
+    /plans/archive/issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: "2026-07-30"
 author: unknown
 last_updated: "2026-07-30"

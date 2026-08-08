@@ -17,6 +17,7 @@ related:
     /plans/active/issues/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md,
     /plans/epics/orchestrator_master.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -55,17 +56,17 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P3. **Verify the root-cause claim is evidence-backed, not asserted.** Confirm the parent doc's
-      done-when was actually met: either a named root cause with live evidence (AutoSpawn scheduling/concurrency
-      code citation + a reproduced timing gap), or a documented decision with a 10+-sample dataset showing the
-      original 2 data points were not representative. **Done when**: the evidence trail is independently checked,
-      not just the parent doc's own claim taken at face value. Repo: unified-trading-pm.
+- [ ] [REVIEW] P3. **Verify the root-cause claim is evidence-backed, not asserted.** Confirm the parent doc's done-when
+      was actually met: either a named root cause with live evidence (AutoSpawn scheduling/concurrency code citation + a
+      reproduced timing gap), or a documented decision with a 10+-sample dataset showing the original 2 data points were
+      not representative. **Done when**: the evidence trail is independently checked, not just the parent doc's own
+      claim taken at face value. Repo: unified-trading-pm.
 - [ ] [DOCS] P3. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08` and repoint every referrer; clear any lock if set.
-      Then physically move the parent doc under `plans/archive/2026_08/`. **Done when**: `bash
-      scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows no NEW
-      dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
+      Then physically move the parent doc under `plans/archive/2026_08/`. **Done when**:
+      `bash     scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows
+      no NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
       doc. Repo: unified-trading-pm.
 
 ## Codex SSOTs
@@ -77,5 +78,5 @@ source: >-
 ## Progress Log
 
 - **2026-08-08**: Drafted alongside the parent doc's `na-eligibility-audit round7 RECLASSIFY` flip from
-  `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually
-  dispatching via `depends_on` + `gate_on_depends: true` until the parent doc's sole todo is done.
+  `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually dispatching
+  via `depends_on` + `gate_on_depends: true` until the parent doc's sole todo is done.

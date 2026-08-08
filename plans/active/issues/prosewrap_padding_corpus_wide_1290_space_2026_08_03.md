@@ -19,7 +19,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [prettier, prosewrap, tooling, plan-hygiene, cosmetic, corpus-cleanup]
-related: [/plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md]
+related:
+  [
+    /plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-08-03
 author: unknown
 parent_epic: infrastructure_master

@@ -18,6 +18,7 @@ related:
     /plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md,
     /plans/epics/agent_operating_framework_master.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -65,18 +66,19 @@ source: >-
 - [ ] [REVIEW] P2. **Confirm the baseline was seeded via `--update-baseline` immediately after landing (not shipped
       zero-tolerance day one), matching how the original markdown-link checker itself was seeded 2026-07-23.** Check
       `scripts/quality_gates/doc_body_link_baseline.yaml` for a fresh `codex/`-prefix entry set consistent with the
-      parent doc's own stated seeding intent. **Done when**: confirmed present, or the discrepancy is recorded.
-      Repo: unified-trading-pm.
+      parent doc's own stated seeding intent. **Done when**: confirmed present, or the discrepancy is recorded. Repo:
+      unified-trading-pm.
 - [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
       remain; add the archival banner + set `status: complete`; grep the corpus for
-      `doc_body_link_checker_blind_to_backtick_citations_2026_08_02` and repoint every referrer (the 5 digest-only
-      docs identified at reclassify time: `ag_closeout_audit_rollout_2026_07_25.md`,
+      `doc_body_link_checker_blind_to_backtick_citations_2026_08_02` and repoint every referrer (the 5 digest-only docs
+      identified at reclassify time: `ag_closeout_audit_rollout_2026_07_25.md`,
       `ao_satellite_ao_dispatch_batch3_2026_07_31.md`, `cross_cutting_consolidated_closeout_2026_07_25.md`,
       `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md`, plus
-      any new ones found live); clear any lock if set (confirm rather than assume). Then physically move the parent
-      doc under `plans/archive/2026_08/`. **Done when**: `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci
-      --no-regen` is 0 hard, `check_reference_paths.py` shows no NEW dangling reference above its baseline, and
-      `regenerate_active_plan_inventory.py` reports 0 orphans for this doc. Repo: unified-trading-pm.
+      any new ones found live); clear any lock if set (confirm rather than assume). Then physically move the parent doc
+      under `plans/archive/2026_08/`. **Done when**:
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci     --no-regen` is 0 hard, `check_reference_paths.py` shows
+      no NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
+      doc. Repo: unified-trading-pm.
 
 ## Codex SSOTs
 
@@ -87,5 +89,5 @@ source: >-
 ## Progress Log
 
 - **2026-08-08**: Drafted alongside the parent doc's `na-eligibility-audit round7 RECLASSIFY` flip from
-  `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually
-  dispatching via `depends_on` + `gate_on_depends: true` until the parent doc's 2 todos are done.
+  `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually dispatching
+  via `depends_on` + `gate_on_depends: true` until the parent doc's 2 todos are done.

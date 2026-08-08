@@ -51,6 +51,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.4
 estimate_calibrated_ai_days: 1.1
 assigned_role: ui_developer
+effort: max
 drift_direction: advance-code
 locked_by:
 locked_since:
@@ -79,8 +80,8 @@ source: >-
 > **`status: active` — operator-approved 2026-08-08, ingested/dispatched.** Drafted autonomously 2026-08-08 by the
 > scheduled `ag_closeout_auditor` role; a fresh conflict-check re-verified the original Phase 3 clearance still held
 > before dispatch — see `## Operator approval gate` at the bottom for what approving this batch meant, and the Progress
-> Log for the re-check. **Independent of batch 1** (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`, flipped `active`
-> in the same operator-approval pass) — the two batches' todos touch disjoint files, no collision.
+> Log for the re-check. **Independent of batch 1** (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`, flipped `active` in
+> the same operator-approval pass) — the two batches' todos touch disjoint files, no collision.
 
 ## Why this plan exists (the coverage gap, measured)
 

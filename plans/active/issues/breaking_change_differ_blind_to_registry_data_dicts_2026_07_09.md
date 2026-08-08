@@ -37,6 +37,7 @@ related:
     /plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/integration-testing-layers.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-09
 author: unknown
@@ -208,7 +209,7 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       GREEN on consumer QG for at minimum `instruments-service` (the confirmed real consumer; extend to other UAC
       consumers -- MTDS, features-service, execution-service -- if the same registry-drift class is shown to affect
       them) before the promote PR can merge. Land as a new job in UAC's own promote-gate workflow (mirrors the existing
-      dual-cloud image-build gate pattern in `codex/05-infrastructure/dual-cloud-image-builds.md` -- both clouds must
+      dual-cloud image-build gate pattern in `/codex/05-infrastructure/dual-cloud-image-builds.md` -- both clouds must
       pass before merge; this adds a third required signal, consumer QG, scoped to registry-touching changes only so it
       does not fire on every UAC change). SSOT once shipped: update `/codex/08-workflows/ci-cd-flow.md`'s
       breaking-differ section (already documents registry-data-constant tracking per this doc's earlier fix) to also

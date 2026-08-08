@@ -34,6 +34,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.08
 assigned_role: docs_reconciler
+effort: max
 sequential: true
 drift_direction: advance-code
 depends_on: [tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08]
@@ -41,9 +42,9 @@ gate_on_depends: true
 source: >-
   Authored alongside the 2026-08-08 na-eligibility-audit round7 RECLASSIFY sweep's flip of
   issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md (NA → planning), per
-  plans/active/task_template.md §4's finalize-plan-coverage rule and the retroactive-reclassification naming
-  convention in /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md §1(b). Placed directly
-  under plans/active/ (not plans/active/issues/) because doc_type: plan must match its path-derived type.
+  plans/active/task_template.md §4's finalize-plan-coverage rule and the retroactive-reclassification naming convention
+  in /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md §1(b). Placed directly under
+  plans/active/ (not plans/active/issues/) because doc_type: plan must match its path-derived type.
 context_scope:
   [
     /plans/active/issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md,
@@ -58,10 +59,10 @@ superseded_by:
 
 # tradfi line-cap-blocks-marker — finalize
 
-> **🔒 GATED, not draft.**
-> `depends_on: [tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08]` + `gate_on_depends: true`
-> holds every todo below until that doc's own extraction todo is `done`. Authored `status: active` (not `draft`) per the
-> established no-double-gate precedent used by every other batch/finalize pair in this tranche.
+> **🔒 GATED, not draft.** `depends_on: [tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08]` +
+> `gate_on_depends: true` holds every todo below until that doc's own extraction todo is `done`. Authored
+> `status: active` (not `draft`) per the established no-double-gate precedent used by every other batch/finalize pair in
+> this tranche.
 
 ## Todos
 
@@ -70,19 +71,21 @@ superseded_by:
       under the 500-line soft cap (`wc -l`); (b) `bash scripts/plan-hygiene/check_line_caps.sh` (or its scoped-mode
       invocation) passes clean on the target doc; (c) the extracted archive doc
       (`plans/archive/2026_08/tradfi_unreachable_databento_data_types_history_2026_08.md` or whatever path the worker
-      used) carries the extracted sections verbatim, `status: complete`, `nature: record`, 0 open todos; (d) the
-      target doc's own open `[DESIGN] P2` todo (line ~247 pre-extraction, "RULED 2026-08-07 — YES, build it,
-      MDPS-owned") is textually unchanged by the extraction; (e) the `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_
-      2026_07_27.md` cross-reference was added to the target doc's `related:` list; (f) the cross-doc conflict finding
-      from the source issue doc's "What I found" section (the `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_
-      07_27.md` overlap — ~90% duplicate-work risk, the `futures_chain`-grain CBOE/vix_features question) is recorded
-      as a dated Progress Log entry on the now-under-cap target doc, not just in the source issue doc. **Done when**:
-      all six checks above pass, cited with evidence (line counts, gate output, exact archive path).
-- [ ] [DOC] P3. **Archive the source issue doc** (`tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_
-      08_08.md`) via the standard 6-step ritual once todo 1 confirms the extraction is genuinely complete: add the
-      archive banner → grep the corpus for every referrer and repoint each to the archived path → clear `locked_by`
-      (already empty) → move to `plans/archive/2026_08/issues/`. **Done when**: the doc is archived, every corpus
-      referrer resolves, and `check_reference_paths.py` has not regressed.
+      used) carries the extracted sections verbatim, `status: complete`, `nature: record`, 0 open todos; (d) the target
+      doc's own open `[DESIGN] P2` todo (line ~247 pre-extraction, "RULED 2026-08-07 — YES, build it, MDPS-owned") is
+      textually unchanged by the extraction; (e) the
+      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_     2026_07_27.md` cross-reference was added to the target doc's
+      `related:` list; (f) the cross-doc conflict finding from the source issue doc's "What I found" section (the
+      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_     07_27.md` overlap — ~90% duplicate-work risk, the
+      `futures_chain`-grain CBOE/vix_features question) is recorded as a dated Progress Log entry on the now-under-cap
+      target doc, not just in the source issue doc. **Done when**: all six checks above pass, cited with evidence (line
+      counts, gate output, exact archive path).
+- [ ] [DOC] P3. **Archive the source issue doc**
+      (`tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_     08_08.md`) via the standard 6-step
+      ritual once todo 1 confirms the extraction is genuinely complete: add the archive banner → grep the corpus for
+      every referrer and repoint each to the archived path → clear `locked_by` (already empty) → move to
+      `plans/archive/2026_08/issues/`. **Done when**: the doc is archived, every corpus referrer resolves, and
+      `check_reference_paths.py` has not regressed.
 
 ## Codex SSOTs
 

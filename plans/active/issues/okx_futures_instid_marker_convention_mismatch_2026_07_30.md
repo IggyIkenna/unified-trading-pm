@@ -65,6 +65,7 @@ related:
   [
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 author: unknown

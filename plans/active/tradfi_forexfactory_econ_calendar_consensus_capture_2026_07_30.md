@@ -35,6 +35,7 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
 assigned_role: data_engineering
+effort: xhigh
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -215,14 +216,14 @@ generalizing (e.g. "how to safely integrate a scraped, rate-limited third-party 
 
 ## Progress Log
 
-- **2026-08-08 (draft-flip conflict-check session)**: Reviewed against today's operator authorization to flip
-  draft AO plans to active where genuinely gate-clear. This doc is NOT that class of draft — `depends_on: []` so there
-  is no dependency gate to clear, but the absence of a dependency gate doesn't make this an approval-pending draft
-  either: `nature: design`, and this doc's OWN 2026-07-30 authoring Progress Log entry (below) states
+- **2026-08-08 (draft-flip conflict-check session)**: Reviewed against today's operator authorization to flip draft AO
+  plans to active where genuinely gate-clear. This doc is NOT that class of draft — `depends_on: []` so there is no
+  dependency gate to clear, but the absence of a dependency gate doesn't make this an approval-pending draft either:
+  `nature: design`, and this doc's OWN 2026-07-30 authoring Progress Log entry (below) states
   `status: draft`/`assigned_vm: NA` was the operator's EXPLICIT choice — "human plan, not AO-dispatched" — not a
-  default. The remaining open todos still carry genuine unresolved engineering/design judgment calls (todo 4: how to
-  get past ForexFactory's Cloudflare Managed Challenge — a stealth/anti-detection headless browser vs. a paid
-  unblocking proxy — and how `actual_value` gets sourced at all given the JSON feed never carries it, HTML-only and
+  default. The remaining open todos still carry genuine unresolved engineering/design judgment calls (todo 4: how to get
+  past ForexFactory's Cloudflare Managed Challenge — a stealth/anti-detection headless browser vs. a paid unblocking
+  proxy — and how `actual_value` gets sourced at all given the JSON feed never carries it, HTML-only and
   challenge-gated), not a checkable/bounded outcome a dispatched worker could resolve alone (task_template.md §4
   "bounded outcome only"). **Not flipped** — stays `assigned_vm: NA` / `status: draft` pending an operator/human design
   decision on the scraping approach.

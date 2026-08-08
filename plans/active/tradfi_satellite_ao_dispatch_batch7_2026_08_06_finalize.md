@@ -45,6 +45,7 @@ source: >-
   agt-7d91ed, slot 3), per task_template.md section 4's finalize-plan-coverage rule — every AO-dispatched plan needs a
   companion gated finalize plan, mirroring the tradfi batch1-6 precedent.
 assigned_role: data_engineering
+effort: max
 sequential: true
 drift_direction: advance-code
 context_scope:

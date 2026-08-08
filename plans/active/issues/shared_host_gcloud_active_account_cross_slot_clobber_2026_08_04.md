@@ -30,6 +30,7 @@ related:
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
 author: unknown
@@ -172,13 +173,13 @@ Two independent fix directions, either or both:
   multi-agent-safety-critical shared bootstrap infra with an undecided architecture choice; todo 3 (document) alone
   doesn't clear the whole-doc bar.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: considered for RECLASSIFY -- today's
-  round5-cross-cutting-audit entry on this doc's own "Recommended decision" resolved the prior blocker
-  ("no operator decision needed... resolution is to implement BOTH options"), which on its face clears the
-  2026-08-04/08-06 KEEP-NA rationale ("needing a direction decision first"). **Held, not flipped**: this doc's
-  own subject (a shared-host `gcloud` active-account race across ALL concurrent AO slots) closely overlaps
-  `plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (already cites this doc in
-  its own `context_scope`) -- a related but distinct root cause (GH Actions WIF job auth vs multi-slot `gcloud
-  config set account` races) proposing the same class of fix (per-invocation identity pinning / named configs)
+  round5-cross-cutting-audit entry on this doc's own "Recommended decision" resolved the prior blocker ("no operator
+  decision needed... resolution is to implement BOTH options"), which on its face clears the 2026-08-04/08-06 KEEP-NA
+  rationale ("needing a direction decision first"). **Held, not flipped**: this doc's own subject (a shared-host
+  `gcloud` active-account race across ALL concurrent AO slots) closely overlaps
+  `plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (already cites this doc in its
+  own `context_scope`) -- a related but distinct root cause (GH Actions WIF job auth vs multi-slot
+  `gcloud config set account` races) proposing the same class of fix (per-invocation identity pinning / named configs)
   against the SAME shared `~/.config/gcloud` mutable state. Per the conflict-check protocol's caution on
-  closely-adjacent claims, staying `assigned_vm: NA` and flagging the overlap rather than guessing which doc
-  should own the shared-gcloud-identity fix space.
+  closely-adjacent claims, staying `assigned_vm: NA` and flagging the overlap rather than guessing which doc should own
+  the shared-gcloud-identity fix space.

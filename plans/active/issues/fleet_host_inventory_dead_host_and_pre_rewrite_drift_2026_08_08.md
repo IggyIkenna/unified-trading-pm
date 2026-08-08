@@ -24,6 +24,7 @@ related:
   [
     /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-08
 parent_epic: orchestrator_master

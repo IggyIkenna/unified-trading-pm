@@ -30,7 +30,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [gitignore, sync-script, destructive, tooling-bug, template-drift, near-miss]
-related: []
+related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]
 created: 2026-07-27
 author: unknown
 priority: P2

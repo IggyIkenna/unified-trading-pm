@@ -121,7 +121,7 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   `[DIAG] P1` venue-scoped completeness check. Full unfiltered `measure_honest_coverage.py --asset-group cefi` run was
   attempted first (per the todo's primary suggestion) but was externally killed on the shared host before completing
   (10.28M-row full cefi manifest read — heavy, matches the class of incident
-  `codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-compute-on-shared-host rule warns against); switched to the
+  `/codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-compute-on-shared-host rule warns against); switched to the
   lighter, targeted `read_availability_index(columns=, filters=[("venue","in",[...])])` row-group-pushdown read (the
   todo's own stated alternative — "a targeted IS/MTDS spot-check") which completed cleanly and answers the exact 3-venue
   question without a whole-corpus walk.

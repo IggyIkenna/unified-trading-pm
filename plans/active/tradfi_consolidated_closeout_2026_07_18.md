@@ -93,6 +93,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
+effort: xhigh
 context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,

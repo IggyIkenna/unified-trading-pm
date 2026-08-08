@@ -2,11 +2,10 @@
 doc_type: plan
 title: Finalize — defi A_TOKEN/DEBT_TOKEN instrument_type-alias + oracle_prices validity fix close-out
 summary: >-
-  Gated finalize companion for
-  issues/defi_expected_unattempted_backlog_1m_2026_07_03.md (reclassified NA→planning, na-eligibility-audit round7
-  RECLASSIFY sweep, 2026-08-08) — re-verifies the `_INSTRUMENT_TYPE_ALIASES` + `PROTOCOL_CAPABILITIES` widening build's
-  evidence, confirms the dead `venue_mapping.DataTypeConfig` cleanup landed, then archives both docs per
-  plan-completion-and-archival-discipline once every todo is done.
+  Gated finalize companion for issues/defi_expected_unattempted_backlog_1m_2026_07_03.md (reclassified NA→planning,
+  na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08) — re-verifies the `_INSTRUMENT_TYPE_ALIASES` +
+  `PROTOCOL_CAPABILITIES` widening build's evidence, confirms the dead `venue_mapping.DataTypeConfig` cleanup landed,
+  then archives both docs per plan-completion-and-archival-discipline once every todo is done.
 status: active
 nature: process
 asset_group: [defi]
@@ -17,6 +16,7 @@ tags: [defi, manifest, expected-unattempted, instrument-type-alias, finalize, ar
 related:
   [
     /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -50,8 +50,8 @@ context_scope:
 
 # Finalize — defi A_TOKEN/DEBT_TOKEN instrument_type-alias + oracle_prices validity fix close-out
 
-Machine-held (`gate_on_depends: true`) until every todo in
-`issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` is done. Do not start manually before then.
+Machine-held (`gate_on_depends: true`) until every todo in `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`
+is done. Do not start manually before then.
 
 ## Todos
 
@@ -64,8 +64,8 @@ Machine-held (`gate_on_depends: true`) until every todo in
       frozenset containing `oracle_prices`; (4) a new regression test asserts the previous unmapped-fallback bug
       (`--data-types perp_trades` over-fanning A_TOKEN/DEBT_TOKEN venues, the 2026-07-16 finding) no longer reproduces;
       (5) the now-confirmed-dead `venue_mapping.DataTypeConfig` + its one unit test were deleted per the source doc's
-      own follow-up note (only if that deletion sub-step was actually attempted — the source todo scopes it as a
-      "do not do in this todo" follow-up, so its absence is not itself a finding). Done-when: all applicable points
+      own follow-up note (only if that deletion sub-step was actually attempted — the source todo scopes it as a "do not
+      do in this todo" follow-up, so its absence is not itself a finding). Done-when: all applicable points
       independently re-verified with cited evidence; any mis-citation found is corrected in the source doc directly.
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
@@ -79,5 +79,5 @@ Machine-held (`gate_on_depends: true`) until every todo in
 
 ## Progress Log
 
-- **2026-08-08 (na-eligibility-audit round7 RECLASSIFY sweep)**: finalize plan authored alongside the RECLASSIFY flip
-  of the source issue doc, per `task_template.md`'s finalize-plan-coverage rule.
+- **2026-08-08 (na-eligibility-audit round7 RECLASSIFY sweep)**: finalize plan authored alongside the RECLASSIFY flip of
+  the source issue doc, per `task_template.md`'s finalize-plan-coverage rule.

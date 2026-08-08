@@ -9,7 +9,7 @@ summary: >-
   verification split (one reviewer UPHELD it as a genuine collision, one found it NOT CONFIRMED as a hub-and-spoke
   false-positive) — parked rather than unilaterally resolved either way, since `authoritative_for` topic ownership is an
   authority call this skill never auto-decides, in any mode.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -26,7 +26,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
-resolved_by:
+resolved_by: cicd-agt-9bdc09-2026-08-08
 locked_by:
 locked_since:
 context_scope:
@@ -53,9 +53,9 @@ near-mechanical choice — see "Why this needed a human anyway" below.
 ## 🚧 BLOCKED-OPERATOR-DECISION 1 — prediction shard-atom `authoritative_for` overlap
 
 - [x] ✅ [DOCS] P2. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 10: "Drop it, defer to the hub
-      doc").** Should `prediction-schema-paths.md` and `prediction-batch-live.md` keep "shard atom" phrasing in
-      their own `authoritative_for:` field, given both already defer to a third hub doc in their body text? Trimmed
-      from both spoke docs, added to the hub doc (`availability-manifest-and-data-status.md`) instead.
+      doc").** Should `prediction-schema-paths.md` and `prediction-batch-live.md` keep "shard atom" phrasing in their
+      own `authoritative_for:` field, given both already defer to a third hub doc in their body text? Trimmed from both
+      spoke docs, added to the hub doc (`availability-manifest-and-data-status.md`) instead.
 
   Verified facts (not in question):
   - `/codex/02-data/prediction-schema-paths.md` (`status: current`) declares
@@ -114,3 +114,7 @@ near-mechanical choice — see "Why this needed a human anyway" below.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-08 (cicd escalation agt-9bdc09, archive-candidates ratchet cleanup)**: sole todo already closed 2026-08-08
+  (operator ruling, ao round-5 apply item 10). No open todos remain and no other doc claims reconciliation ownership of
+  this one — archiving now per the 6-step ritual (`status: resolved`, `git mv` to `plans/archive/2026_08/issues/`,
+  referrer path fixed in `ao_round5_apply_session_operator_qa_index_2026_08_08.md`).

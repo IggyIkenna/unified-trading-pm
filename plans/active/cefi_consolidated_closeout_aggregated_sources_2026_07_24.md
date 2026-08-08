@@ -417,7 +417,7 @@ context_scope:
     2026-07-30).
   - [`plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`](/plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)
+  - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/archive/2026_08/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md`](/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md)
     — 0 open todos (status: resolved, archived 2026-07-27 — UAC-side retirement shipped

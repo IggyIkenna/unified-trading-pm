@@ -15,7 +15,11 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, fleet-health, memory-exhaustion, shared-host, recurring-incident]
-related: [/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md]
+related:
+  [
+    /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-08-02
 author: unknown
 parent_epic: orchestrator_master

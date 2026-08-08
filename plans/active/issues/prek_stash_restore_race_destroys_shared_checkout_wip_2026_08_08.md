@@ -18,6 +18,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-08
 last_updated: "2026-08-08"

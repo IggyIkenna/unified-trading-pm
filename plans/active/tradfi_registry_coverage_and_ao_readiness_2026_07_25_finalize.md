@@ -55,6 +55,7 @@ source: >-
   AO-batch extractions — this doc exists because the design explicitly asked for it, not because the strict
   AO-dispatched finalize-plan-coverage rule mechanically requires it for a plan that stays NA).
 assigned_role: data_engineering
+effort: xhigh
 sequential: true
 drift_direction: none
 ---
@@ -114,16 +115,16 @@ drift_direction: none
 
 - **2026-08-08 (draft-flip conflict-check session)**: This finalize plan is gated via
   `depends_on: [tradfi_registry_coverage_and_ao_readiness_2026_07_25]` + `gate_on_depends: true` on its target plan
-  being fully closed. Checked the target during this same session: it is still `assigned_vm: NA` / `status: draft`
-  with real open todos in both Phase A2 and Phase C, because ITS OWN `depends_on` prerequisites
+  being fully closed. Checked the target during this same session: it is still `assigned_vm: NA` / `status: draft` with
+  real open todos in both Phase A2 and Phase C, because ITS OWN `depends_on` prerequisites
   (`tradfi_manifest_content_recovery_completion_2026_07_24`, `tradfi_backfill_throughput_followups_2026_07_24`) are
   still open — see that doc's own 2026-08-08 Progress Log entry for the full evidence. Did not find the literal
   "finalize plan ships `active` from the start once its gate clears" wording in `task_template.md` §4 — the applicable
   written rule there is the general "every AO-dispatched plan needs a gated finalize plan" convention, and this
-  finalize's own frontmatter comment already states its `gate_on_depends: true` is documentation-only while both
-  plans stay `assigned_vm: NA` (a real dispatch hold only if both were ever flipped to `planning` together). Moot
-  either way here: the target itself is not gate-clear yet, so there is nothing for this finalize to reconcile or
-  archive. **Not flipped** — stays `assigned_vm: NA` / `status: draft`.
+  finalize's own frontmatter comment already states its `gate_on_depends: true` is documentation-only while both plans
+  stay `assigned_vm: NA` (a real dispatch hold only if both were ever flipped to `planning` together). Moot either way
+  here: the target itself is not gate-clear yet, so there is nothing for this finalize to reconcile or archive. **Not
+  flipped** — stays `assigned_vm: NA` / `status: draft`.
 
 ## Codex SSOTs
 

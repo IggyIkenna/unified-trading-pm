@@ -4,8 +4,8 @@ title: quality-gates.sh / quickmerge.sh timing baseline — finalize
 summary: >-
   Gated closeout for `quality_gates_quickmerge_timing_baseline_2026_07_31.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 5 of that doc's remaining todos (the CONFLICT-DEFERRED
-  `check_pm_script_path_refs.py` digest pointer aside — that one ships via `ci_satellite_ao_dispatch_batch6`, not
-  here) are done. Confirms the Phase-2 planning-vm concurrent-load numbers were actually captured before archiving.
+  `check_pm_script_path_refs.py` digest pointer aside — that one ships via `ci_satellite_ao_dispatch_batch6`, not here)
+  are done. Confirms the Phase-2 planning-vm concurrent-load numbers were actually captured before archiving.
 status: active
 nature: process
 asset_group: [infrastructure]
@@ -18,6 +18,7 @@ related:
     /plans/active/quality_gates_quickmerge_timing_baseline_2026_07_31.md,
     /plans/epics/orchestrator_master.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -51,34 +52,34 @@ source: >-
 
 # quality-gates.sh / quickmerge.sh timing baseline — finalize
 
-> **Machine-gated on `quality_gates_quickmerge_timing_baseline_2026_07_31.md`** (`depends_on` + `gate_on_depends:
-> true`) — the dispatcher will not queue any todo below until the parent doc's remaining real todos are `done`. The
+> **Machine-gated on `quality_gates_quickmerge_timing_baseline_2026_07_31.md`** (`depends_on` + `gate_on_depends: true`)
+> — the dispatcher will not queue any todo below until the parent doc's remaining real todos are `done`. The
 > `check_pm_script_path_refs.py` optimization item on the parent doc is a non-checkbox digest pointer to
 > `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 — do not wait on it here, it ships via that plan.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Confirm Phase 2's planning-vm concurrent-load numbers were actually captured, not skipped.**
-      The parent doc's own frontmatter notes Phase 2 was `BLOCKED-OPERATOR-DECISION` on access mechanism until the
-      2026-08-08 round5 investigation ruled AO-dispatch; verify a real second results table (same shape as Phase
-      1's) exists with a stated concurrent-agent-count. **Done when**: the table is cited here with a link/quote,
-      not assumed done because the todo is checked. Repo: unified-trading-pm.
-- [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
-      remain (the digest-pointer line does not count as open — it is intentionally non-checkbox); add the archival
-      banner + set `status: complete`; grep the corpus for `quality_gates_quickmerge_timing_baseline_2026_07_31` and
-      repoint every referrer; clear any lock if set. Then physically move the parent doc under
-      `plans/archive/2026_08/`. **Done when**: `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0
-      hard, `check_reference_paths.py` shows no NEW dangling reference above its baseline, and
-      `regenerate_active_plan_inventory.py` reports 0 orphans for this doc. Repo: unified-trading-pm.
+- [ ] [REVIEW] P2. **Confirm Phase 2's planning-vm concurrent-load numbers were actually captured, not skipped.** The
+      parent doc's own frontmatter notes Phase 2 was `BLOCKED-OPERATOR-DECISION` on access mechanism until the
+      2026-08-08 round5 investigation ruled AO-dispatch; verify a real second results table (same shape as Phase 1's)
+      exists with a stated concurrent-agent-count. **Done when**: the table is cited here with a link/quote, not assumed
+      done because the todo is checked. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos remain
+      (the digest-pointer line does not count as open — it is intentionally non-checkbox); add the archival banner + set
+      `status: complete`; grep the corpus for `quality_gates_quickmerge_timing_baseline_2026_07_31` and repoint every
+      referrer; clear any lock if set. Then physically move the parent doc under `plans/archive/2026_08/`. **Done
+      when**: `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py`
+      shows no NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans
+      for this doc. Repo: unified-trading-pm.
 
 ## Codex SSOTs
 
 `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (6-step ritual) ·
-`/codex/06-coding-standards/quality-gates.md` · `plans/PLAN_FORMAT.md` ·
-`plans/active/task_template.md` §4 (finalize-plan-coverage rule)
+`/codex/06-coding-standards/quality-gates.md` · `plans/PLAN_FORMAT.md` · `plans/active/task_template.md` §4
+(finalize-plan-coverage rule)
 
 ## Progress Log
 
 - **2026-08-08**: Drafted alongside the parent doc's `na-eligibility-audit round7 RECLASSIFY` flip from
-  `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually
-  dispatching via `depends_on` + `gate_on_depends: true` until the parent doc's remaining todos are done.
+  `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually dispatching
+  via `depends_on` + `gate_on_depends: true` until the parent doc's remaining todos are done.

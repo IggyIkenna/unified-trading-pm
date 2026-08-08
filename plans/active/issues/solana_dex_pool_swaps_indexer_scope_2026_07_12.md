@@ -124,6 +124,11 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
       (`assigned_vm: planning`, 5 todos, `sequential: true`) + its gated companion
       `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`. The indexer itself is not built yet (that
       plan's own scope); this doc's sole open item is now closed by citation.
+- [ ] [DOCS] P3. **Archive this scoping doc** once `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md` +
+      `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md` complete — the finalize plan's own
+      reconciliation todo owns this closure (see the 2026-08-08 Progress Log entry below); this todo just makes that
+      already-stated intent a tracked item instead of prose, per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2.
 
 ## Progress Log
 
@@ -146,5 +151,5 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 open todos (the sole item was closed
   by citation today via `round5-na-digest-defi 2026-08-08`, operator ruling "prioritize it now": the dedicated
   implementation plan `solana_dex_pool_swaps_indexer_2026_08_08.md` was authored, `assigned_vm: planning`, gated
-  finalize companion included). This scoping doc's own work is done; the real dispatchable build lives in that new
-  plan pair, not here. Not archived this pass. Nothing to reclassify.
+  finalize companion included). This scoping doc's own work is done; the real dispatchable build lives in that new plan
+  pair, not here. Not archived this pass. Nothing to reclassify.

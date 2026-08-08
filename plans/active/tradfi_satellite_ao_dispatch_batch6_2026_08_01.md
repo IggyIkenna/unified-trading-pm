@@ -71,6 +71,7 @@ source: >-
   live-verified CLEAR via `gcloud compute instances list` — 0 `tradfi-bf-*`/`fred-full-*` instances running as of
   2026-08-01).
 assigned_role: data_engineering
+effort: max
 sequential: false
 drift_direction: advance-code
 context_scope:

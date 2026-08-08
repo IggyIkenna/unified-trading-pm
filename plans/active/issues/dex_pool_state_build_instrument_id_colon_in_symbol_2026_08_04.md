@@ -13,7 +13,12 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [defi, dex-pools, instrument-id, build-instrument-id, colon-in-symbol, manifest-hygiene]
-related: [mvp_backfill_defi_onchain_v10_2026_06_27, defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27]
+related:
+  [
+    mvp_backfill_defi_onchain_v10_2026_06_27,
+    defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 created: 2026-08-04
 parent_epic: defi_master
 priority: P2

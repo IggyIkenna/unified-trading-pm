@@ -18,7 +18,7 @@ summary: >-
   check stays red. Net effect: under the branch's current contention level, a scoped, unrelated, fully-green docs fix
   cannot land via quickmerge whenever it loses even one push-race during its run — reproduced twice in a row this
   session (commits 910b8f554 and ad30b8181/b887138, both otherwise-clean docs-only changes to
-  codex/06-coding-standards/data-catalogue-schema.md + codex/02-data/service-shard-status-catalogue.md).
+  /codex/06-coding-standards/data-catalogue-schema.md + /codex/02-data/service-shard-status-catalogue.md).
 status: open
 nature: issue
 asset_group: [meta]

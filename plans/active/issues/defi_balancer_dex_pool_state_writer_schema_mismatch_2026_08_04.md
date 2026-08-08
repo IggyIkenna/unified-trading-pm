@@ -33,6 +33,7 @@ related:
   [
     /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-04"
 author: unknown
@@ -268,10 +269,10 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
     in `plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (the exact doc already tracking
     this registry's convergence fallout).
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — content changed materially since the 2026-08-06
-  audit (todos 1-4 + the item-4 audit shipped same-day, `market-tick-data-service@2f7d7840`), re-read end to end. Only
-  2 open items remain: a P3 dead-code deletion (`_parse_curve`, confirmed unreferenced/latent-bug-carrying — bounded
-  and mechanical in isolation, tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE at lower confidence per this skill's own
-  guidance for a single bounded item inside an otherwise-NA doc) and a P3 `[HUMAN]` historical-backfill decision
-  (explicit human-only per this doc's own "Why NA" framing, unchanged by the writer fix landing go-forward-only). Held
-  at doc-level KEEP-NA per the same precedent the 2026-08-06 audit already established for this exact doc (item-4
-  case) rather than split for one small item. Doc stays `assigned_vm: NA`.
+  audit (todos 1-4 + the item-4 audit shipped same-day, `market-tick-data-service@2f7d7840`), re-read end to end. Only 2
+  open items remain: a P3 dead-code deletion (`_parse_curve`, confirmed unreferenced/latent-bug-carrying — bounded and
+  mechanical in isolation, tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE at lower confidence per this skill's own guidance for
+  a single bounded item inside an otherwise-NA doc) and a P3 `[HUMAN]` historical-backfill decision (explicit human-only
+  per this doc's own "Why NA" framing, unchanged by the writer fix landing go-forward-only). Held at doc-level KEEP-NA
+  per the same precedent the 2026-08-06 audit already established for this exact doc (item-4 case) rather than split for
+  one small item. Doc stays `assigned_vm: NA`.

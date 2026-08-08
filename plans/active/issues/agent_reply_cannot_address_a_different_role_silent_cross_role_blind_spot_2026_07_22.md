@@ -200,6 +200,10 @@ too large.
       file outside that todo's declared scope. **Gate**: same as the main.md item above, applied to review.md. —
       **SHIPPED** `unified-trading-pm@ea5d699c9` (slot 13, 2026-08-08): `agents/review.md` STEP 2 item #2 now describes
       the same cross-role auto-routing `/reply` branch `agents/main.md` STEP 2B already describes.
+- [ ] [DOCS] P3. **Archive this doc** once `/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2
+      (its reconciliation + archival step, gated behind batch5's own activation) runs — see the 2026-08-08 Progress Log
+      entry below for why this doc is not self-archiving. This todo just makes that already-stated intent a tracked item
+      instead of prose, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2.
 
 ## Progress Log
 

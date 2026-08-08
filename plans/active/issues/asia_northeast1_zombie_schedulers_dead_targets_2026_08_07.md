@@ -38,6 +38,7 @@ related:
   [
     /plans/active/infra_health_audit_findings_fix_2026_08_07.md,
     /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-07
 last_updated: 2026-08-07

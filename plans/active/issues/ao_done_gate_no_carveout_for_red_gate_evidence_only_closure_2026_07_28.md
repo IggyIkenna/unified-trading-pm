@@ -28,6 +28,7 @@ related:
     /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-28
 author: unknown

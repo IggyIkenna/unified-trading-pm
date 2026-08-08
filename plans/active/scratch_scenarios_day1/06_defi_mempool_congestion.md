@@ -13,16 +13,17 @@
 
 Three categories of real-world incident shape this scenario. (1) **Ethereum mainnet 2023-Q3 / 2023-Q4 sandwich-bot
 domination** — post-Merge, sandwich + back-running bots routinely captured 5-30 bps from un-protected swaps on Uniswap
-V3; aggregate MEV extracted from public-mempool swaps tracked by `eigenphi.io` peaked at ~$5M / week during memecoin
+V3; aggregate MEV extracted from public-mempool swaps tracked by `eigenphi.io` peaked at
+~$5M / week during memecoin
 frenzies. (2) **Flashbots Protect emergence (2022-Q4 onwards)** — `rpc.flashbots.net` became the default sandwich
-mitigation for any swap ≥ $10k notional, but adoption is partial; transactions submitted via public
-`eth_sendRawTransaction` remain sandwich-vulnerable. (3) **Arbitrum 2024-Q1 sequencer outage** (2024-01-15, ~78 min) +
-the broader pattern of L2-sequencer queue backlogs during high-volume mint events — txs sit pending in sequencer queue
-while the chain liveness probe still returns OK, so a chain-RPC-outage scenario would NOT catch this failure mode. (4)
-**Continuous baseline**: Etherscan publishes `mean_inclusion_block_count` per hour; baseline ranges 1-2 blocks (12-24s)
-on mainnet, spiking to 10-30 blocks (~120-360s) during NFT mints / airdrop claims / liquidation cascades. This scenario
-captures the upper envelope of that distribution as the worst-case operational stress test for the May-23 archetypes'
-tx-submission paths.
+mitigation for any swap ≥ $10k
+notional, but adoption is partial; transactions submitted via public `eth_sendRawTransaction` remain
+sandwich-vulnerable. (3) **Arbitrum 2024-Q1 sequencer outage** (2024-01-15, ~78 min) + the broader pattern of
+L2-sequencer queue backlogs during high-volume mint events — txs sit pending in sequencer queue while the chain liveness
+probe still returns OK, so a chain-RPC-outage scenario would NOT catch this failure mode. (4) **Continuous baseline**:
+Etherscan publishes `mean_inclusion_block_count` per hour; baseline ranges 1-2 blocks (12-24s) on mainnet, spiking to
+10-30 blocks (~120-360s) during NFT mints / airdrop claims / liquidation cascades. This scenario captures the upper
+envelope of that distribution as the worst-case operational stress test for the May-23 archetypes' tx-submission paths.
 
 ### Trigger condition (synthetic injection)
 
@@ -58,7 +59,7 @@ At wall-clock `T+N` seconds (`N` = scenario start offset, default 60), for the c
 The injection is correlation-id-tagged `synthetic=true` per UAC scenario contract Phase 1.B. Mempool watch + Flashbots
 Protect submission paths are NOT short-circuited; the scenario tests the system's behaviour AS IF Flashbots Protect
 failed for these specific txs (worst-case: private-mempool path unreachable, falls through to public mempool per
-`codex/04-architecture/mev-protection.md` "Operational Run-Book" item 3) OR AS IF a non-Flashbots chain (Arbitrum / L2s
+`/codex/04-architecture/mev-protection.md` "Operational Run-Book" item 3) OR AS IF a non-Flashbots chain (Arbitrum / L2s
 — `NoProtectionProvider` per the MEV codex doc § "Provider Selection" table).
 
 ### Observable signature (in event stream + dashboards)
@@ -69,7 +70,7 @@ failed for these specific txs (worst-case: private-mempool path unreachable, fal
   (12s → 60s on mainnet; 1s → 5s on Arbitrum). Emitter is features-onchain `chain_mempool_latency` feature.
 - `pending_tx` count > `inflight_tx_limit` threshold per archetype (default 5 simultaneous): autonomous-recovery state
   machine transitions to `mempool_congested` state in risk-and-exposure-service rule evaluator. **FOLLOW-UP** P2: no
-  explicit `mempool_congested` named state in current `codex/04-architecture/autonomous-recovery-matrix.md`; closest
+  explicit `mempool_congested` named state in current `/codex/04-architecture/autonomous-recovery-matrix.md`; closest
   analog is `chain_data_stale` (used by RPC-outage scenario). Suggested follow-up: extend the autonomous-recovery
   state-machine taxonomy to include `mempool_congested` distinct from `chain_data_stale` (chain is live + responsive,
   but our txs are stuck). Plan to capture: `disaster_recovery_circuit_breakers_2026_05_10.md` Phase 4.
@@ -77,9 +78,10 @@ failed for these specific txs (worst-case: private-mempool path unreachable, fal
   `CANCEL_LOST_RACE` fires from execution-service `OrderRecoveryEngine`. Aggregate `cancel_lost_rate_bps` over the
   rolling 5min window crosses 8000 bps (80%) during the synthetic congestion.
 - MEV-sandwich-loss feature spike (sandwich variant only): completed Uniswap swap fills emit a `realised_slippage_bps`
-  per fill; the rolling distribution shifts from baseline (~5 bps p50, ~15 bps p99) to scenario distribution
-  (~`loss_target_bps` p50 = 50 bps p50, ~100 bps p99). Emitter is execution-service `SwapHandler` post-fill measurement.
-- `MEV_DETECTED` event (sandwich variant only): per `codex/04-architecture/mev-protection.md:376-389` (sandwich pattern
+  per fill; the rolling distribution shifts from baseline (~5 bps p50, ~~15 bps p99) to scenario distribution
+  (~~`loss_target_bps` p50 = 50 bps p50, ~100 bps p99). Emitter is execution-service `SwapHandler` post-fill
+  measurement.
+- `MEV_DETECTED` event (sandwich variant only): per `/codex/04-architecture/mev-protection.md:376-389` (sandwich pattern
   detection — "tx pair with same `tx_recipient` flanking ours within ±2 blocks + opposite direction"), the mempool
   watcher emits a typed `MEV_DETECTED` event per detected sandwich; the breaker state machine consumes this event per
   the DR plan Phase 8 taxonomy.
@@ -168,8 +170,8 @@ For the **inventory-imbalance escalation** (arbitrage variant on `INVENTORY_IMBA
 - `retry_policy`: `"none"`
 - `auto_disarm_after_seconds`: `None`
 
-**Composes with `codex/04-architecture/mev-protection.md`** § "MEV-driven breaker trigger" (lines 376-394): the existing
-`MEV_DETECTED` event already feeds the breaker state machine with `BreakerAction.BLOCK_NEW` +
+**Composes with `/codex/04-architecture/mev-protection.md`** § "MEV-driven breaker trigger" (lines 376-394): the
+existing `MEV_DETECTED` event already feeds the breaker state machine with `BreakerAction.BLOCK_NEW` +
 `BreakerRecoveryMode.AUTO_COOLDOWN`. The suggested NEW `MEV_SANDWICH_LOSS_BPS` breaker is the **threshold-based
 codification** of that event-driven trigger so the breaker can also fire on **passive observation of realised loss**
 (post-fill measurement) not only on **mempool-watch pattern detection** (pre-confirmation). Operationally — if Flashbots
@@ -267,7 +269,7 @@ this scenario standalone — the composite is captured as a Phase 4 follow-up to
   CIRCUIT_BREAKER_OPEN), propose `MEV_SANDWICH_DETECTED` + `MEMPOOL_CONGESTION_DETECTED` as new alert codes on the next
   `alerting/codes.py` ratchet. Plan to capture: `risk_simulations_limits_alerting_2026_05_10.md` Phase 1.E (alert-code
   closed-set extension).
-- **FOLLOW-UP** P2: `codex/04-architecture/autonomous-recovery-matrix.md` named-state taxonomy does NOT include
+- **FOLLOW-UP** P2: `/codex/04-architecture/autonomous-recovery-matrix.md` named-state taxonomy does NOT include
   `mempool_congested` distinct from `chain_data_stale`. Suggested addition (`mempool_congested` — chain is live +
   responsive but our submitted txs are stuck) since the operator response is materially different (chain-RPC-outage →
   wait + monitor RPC health; mempool-congestion → bid up gas / route to Flashbots / scale down clip size). Plan to

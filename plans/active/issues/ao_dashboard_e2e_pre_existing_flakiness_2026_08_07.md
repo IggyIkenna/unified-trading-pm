@@ -27,6 +27,7 @@ related:
     /plans/archive/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md,
     /codex/06-coding-standards/ui-testing-layers.md,
     /plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-07"
 author: ikennaigboaka [interactive session]

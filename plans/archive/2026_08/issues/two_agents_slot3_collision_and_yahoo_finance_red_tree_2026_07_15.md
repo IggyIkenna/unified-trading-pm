@@ -7,7 +7,7 @@ summary:
   UAC edit into uac@fec3f110, and its YAHOO_FINANCE removal broke instruments-service QG (test_silent_absent_fixes.py
   fixture + stale tradfi golden) — fleet-blocking for all IS commits. Operator-visibility issue — needs one slot-3
   session halted or explicit file ownership; the red IS tree needs the fec3f110 fallout fixed.
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -37,7 +37,7 @@ supersedes:
 superseded_by:
 depends_on:
 source: CeFi completion program /autonomous session (slot-3, 2026-07-15T14:36Z) + this session's 2026-07-16 recurrence
-resolved_by:
+resolved_by: cicd-agt-9bdc09-2026-08-08
 context_scope:
   [
     scripts/quickmerge.sh,
@@ -219,3 +219,7 @@ is not complete until the counterpart's files build again, not just until your o
 - **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; sole open item
   (`[OPERATOR] P2`, each-slot-ONE-agent / file-ownership policy) remains an unresolved operator policy decision the doc
   itself declines to make. Unchanged since the 2026-08-06 marker.
+- **2026-08-08 (cicd escalation agt-9bdc09, archive-candidates ratchet cleanup)**: the `[OPERATOR] P2` item was resolved
+  the same day (ao round-5 apply session item 15 — see the Follow-ups section above) and no other doc claims
+  reconciliation ownership of this one. All todos are `[x]`, no `locked_by` — archiving now per the 6-step ritual
+  (`status: resolved`, `git mv` to `plans/archive/2026_08/issues/`, referrer paths fixed corpus-wide).

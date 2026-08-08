@@ -40,6 +40,7 @@ related:
     plans/archive/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md,
     plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
     plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-21"
 author: unknown

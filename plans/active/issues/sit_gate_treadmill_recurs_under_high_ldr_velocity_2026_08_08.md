@@ -35,6 +35,7 @@ related:
   [
     /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-08
 author: claude (interactive session, /ci-reconcile)
@@ -106,6 +107,7 @@ eliminate the race under sustained high commit velocity — which is what today'
       sessions currently shipping concurrently), confirm SIT completes an uninterrupted round and both repos' streak
       resets to 0; if it does NOT reset even once LDR is quiet for one full round-trip window, that would indicate a
       DIFFERENT, currently-masked bug and warrants fresh investigation (not assumed to be this same treadmill).
+
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — this doc was filed hours before this

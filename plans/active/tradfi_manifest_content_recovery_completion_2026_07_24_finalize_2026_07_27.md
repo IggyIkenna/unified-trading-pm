@@ -43,6 +43,7 @@ source: >-
   its remaining open todos are bounded/deterministic and conflict-free against currently-active AO plans; this finalize
   doc closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: data_engineering
+effort: max
 drift_direction: advance-code
 context_scope:
   [
