@@ -644,3 +644,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   skip-fast dates — matches the earlier bootstrap-cost pattern seen on smallchunk2), zero OOMs so far (expected —
   skip-fast dates need minimal memory). At this pace, ETA to reach chunk 26 (`2020-10-09`, where real new work resumes
   past smallchunk2's last confirmed progress) is roughly another ~1h20m. Both VMs healthy, no intervention.
+- **2026-08-08T03:43Z** — FIXTURE_STATS +72 days (`last_completed_date=2023-08-04`, fresh `03:41:29Z`), steady. odds
+  smallchunk3: chunk 13/451 now (`2020-08-05`), up from chunk 7 — pace holding at ~4.5min/chunk, zero OOMs. ~13 chunks
+  (~58 min) remaining to reach chunk 26. Both healthy, no intervention.
