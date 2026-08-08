@@ -78,7 +78,7 @@
     "instruments-service": "0.1.0",
     "market-tick-data-service": "0.110.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.100.1",
+    "unified-api-contracts": "0.101.1",
     "unified-trading-library": "0.76.1",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.26.1",
@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
@@ -2230,8 +2230,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.100.1",
-      "published_at": "2026-08-08T14:51:29Z",
+      "version": "0.101.1",
+      "published_at": "2026-08-08T17:04:16Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
