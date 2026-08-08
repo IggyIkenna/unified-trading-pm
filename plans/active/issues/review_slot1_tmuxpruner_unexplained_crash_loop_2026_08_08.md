@@ -76,17 +76,17 @@ own Tick history.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Read `TmuxPruner`'s kill logic (and whatever emits `tmux_session_lost`) in the agent-orchestrator
+- [x] ✅ [BACKEND] P1. Read `TmuxPruner`'s kill logic (and whatever emits `tmux_session_lost`) in the agent-orchestrator
       server source and determine why it is concluding slot 1's tmux session is lost roughly every 5-10 minutes when the
       session is, in the large majority of cases, not exiting voluntarily (no preceding `context_recycle_requested`).
       Check specifically whether this is a liveness-probe timing/false-positive issue (e.g. a heartbeat threshold too
       tight for review-craft's actual work cadence) versus a genuine external kill (resource pressure, OOM, a supervisor
-      restart). Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. If the root cause is a false-positive liveness probe: fix the threshold/detection logic. If it is a
-      genuine resource-pressure kill: correlate against host memory/CPU metrics for the same window and file/link to the
-      appropriate host-capacity issue if one already exists (check
+      restart). Repo: agent-orchestrator. — agent-orchestrator@e32d962 + Progress Log entry below.
+- [x] ✅ [BACKEND] P2. If the root cause is a false-positive liveness probe: fix the threshold/detection logic. If it is
+      a genuine resource-pressure kill: correlate against host memory/CPU metrics for the same window and file/link to
+      the appropriate host-capacity issue if one already exists (check
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` first for a possible match
-      before filing new). Repo: agent-orchestrator.
+      before filing new). Repo: agent-orchestrator. — agent-orchestrator@e32d962 + Progress Log entry below.
 - [ ] [REVIEW] P3. Once a fix lands, independently re-verify via `GET /api/activity?slot=1` (or whichever slot is
       currently the review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding
       `context_recycle_requested` has dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip
@@ -215,3 +215,33 @@ own Tick history.
   ongoing fleet-availability cost) this crossed the bar for a direct main-agent fix rather than just relaying — not a
   new-plan-creation decision (which defaults to human per the ASK-BEFORE-CREATING HARD RULE), just correcting an
   existing bounded, already-P1, already-approved investigation todo's dispatch eligibility.
+- 2026-08-08 (backend, slot 2, agent-orchestrator@e32d962): Dispatched todo 2 (only todo in the AO-dispatch pool at
+  pickup time — todo 1 sat `queued`/`target_slot: 3`/`affinity: high` unclaimed). Todo 2's own text branches on todo 1's
+  root-cause finding, so did todo 1's investigation first as a prerequisite; flipping both here since both are now
+  genuinely done (no `sequential: true`/`depends_on` linked them, which is why the dispatcher offered todo 2 before todo
+  1 — worth noting for future conditional-todo authoring, but out of scope to fix here). **Root cause (todo 1)**:
+  `tmux_session_lost` is emitted ONLY by `TmuxPruner.prune_once()` (`server/tmux_pruner.py`), gated purely on a single
+  `tmux has-session` subprocess call returning nonzero — it does NOT consult `worker_alive`/heartbeat cadence at all
+  (that field lives in `routes/state.py`/`stale_dispatch.py`, never read by TmuxPruner). Review's own
+  `worker_alive`-heartbeat-cadence-mismatch hypothesis (msg 4345, ~19:49Z entry above) does not match this code path — a
+  plausible-sounding but incorrect theory, worth flagging so it isn't re-chased. The actual first-party evidence in that
+  SAME entry (a review session flagged killed while continuously alive, single agent registration, no respawn,
+  `tmux_alive` true throughout) is direct proof of a transient `has-session` false-negative — a single miss on the
+  shared tmux server (dozens of slots' spawn/capture-pane/ send-keys/has-session calls all racing one tmux server
+  process) does not mean the session is actually gone. **Fix (todo 2, false-positive branch)**:
+  `TmuxPruner._confirm_session_dead()` now requires a second `has-session` miss (0.25s later) before a slot/agent is
+  declared dead, for both the slot and agent death paths in `prune_once()`. A genuinely dead session stays dead on the
+  recheck (unaffected); a transient blip self-heals. Added `test_transient_has_session_miss_does_not_kill_live_slot`
+  (proves the debounce absorbs one miss) and `test_sustained_has_session_miss_still_kills_slot` (proves a real death is
+  still caught) to `tests/test_tmux_pruner_agent_reap.py`. Full local QG green (2823 passed). **Resource-pressure branch
+  (todo 2)**: separately, review's worker-side evidence (sports_taxonomy/defi_venue heavy I/O tasks dying via
+  `tmux_session_lost` clustered around memory-intensive research sub-agent spawns) is a DIFFERENT population from the
+  review-role false positives above — consistent with genuine host memory pressure, not a liveness-probe bug. That
+  population is already tracked (matches the "simultaneous tmux-session loss on slots 1/5/10" signature) in
+  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` (open, P1) — no new issue doc
+  filed, per todo 2's own instruction to check that doc first. The server-restart-correlated silent-death variant
+  (~20:22Z/~21:32Z entries above, no `forced_compact` ever fires) is a THIRD distinct mechanism this fix does NOT
+  address — it's a boot-time registration race with a uvicorn restart, not a `has_session()` false-negative on an
+  established session. Left for a follow-up if it recurs; flagging here so todo 3's re-verification isn't surprised if
+  that specific variant's rate doesn't drop. Todo 3 (independent re-verification via `/api/activity?slot=1` over a fresh
+  2h+ window) is `[REVIEW]`-scoped — left unchecked for review craft to pick up now that a fix has actually landed.
