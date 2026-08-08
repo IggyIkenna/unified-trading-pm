@@ -800,3 +800,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T14:02Z** — FIXTURE_STATS still chunk 24/26 (`2026-02-05→2026-05-05`), `last_completed_date=2026-04-09`
   fresh — **2 chunks remain (25, 26)**. odds smallchunk6: chunk 4/451 (`2020-06-21`), zero OOMs, healthy skip-fast pace.
   Both healthy, no intervention.
+- **2026-08-08T14:19Z — FIXTURE_STATS entered chunk 25/26, the LAST chunk before it.** Chunk 24 completed `14:12:30Z`,
+  now in chunk 25 (`2026-05-06→2026-08-03`) — only chunk 26 remains after this. odds smallchunk6: chunk 8/451
+  (`2020-07-11`), zero OOMs, healthy. Both healthy, no intervention. Watching very closely next tick for FIXTURE_STATS's
+  genuine convergence.
