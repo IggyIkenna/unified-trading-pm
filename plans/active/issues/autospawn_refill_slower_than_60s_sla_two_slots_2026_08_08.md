@@ -33,8 +33,8 @@ related:
   ]
 created: 2026-08-08
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 assigned_role: backend_engineer
 drift_direction: advance-code
@@ -93,3 +93,16 @@ impact — both are self-healing idle-capacity gaps, not silent failures.
       live data points, not historical. Done-when: either a confirmed root cause + fix, or a decision that current
       behavior degrades within an acceptable bound with evidence from a larger sample (10+ observed refills, incl. at
       least one multi-slot simultaneous batch) showing this was not representative.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY -> `assigned_vm: planning`. Sole open
+  item (`[BACKEND] P2`, root-cause the AutoSpawn refill SLA gap, now 3 data points incl. a 5-slot simultaneous
+  context-wedge batch) is a single, bounded live investigation with a concrete "Done when" (confirmed root cause +
+  fix, or a decision with evidence from a larger sample) -- the same read-only-SSM-against-`/api/state`/activity_log
+  investigation pattern this tranche's workers already run routinely (see e.g.
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own AF-series investigations). No judgment call, no
+  design fork. Conflict-check clear: grepped `plans/active/*.md` for "AutoSpawn refill"/"refill.*SLA" -- zero hits
+  outside this doc. `execution_scope: local-only -> orchestrator-agent`, `assigned_role: backend_engineer`
+  (unchanged, already correct). Companion gated finalize:
+  `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08.md`.

@@ -18,8 +18,8 @@ tags: [backend, agent-orchestrator, one-shot-dispatch, idle-reap, session-owners
 related: []
 created: 2026-08-08
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 assigned_role: backend_engineer
 drift_direction: advance-code
@@ -93,3 +93,15 @@ is an ancestor of `origin/live-defi-rollout`) is a stronger correctness signal t
       evidence (a verified git commit ancestor of origin) is a stronger signal of legitimacy than session-ownership
       bookkeeping. Reproduce via a one-shot dispatch that includes a `ScheduleWakeup` gap long enough to trigger
       idle-reap (both confirmed instances tonight were ~2-3h span dispatches). (repo: agent-orchestrator)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY -> `assigned_vm: planning`. Sole open
+  item (`[BACKEND] P1`) is a bounded backend bug fix with a confirmed root cause (idle-reap watchdog reclassifying
+  a slot mid-`ScheduleWakeup`-gap, verified live twice the same day) and a concrete repro recipe already stated
+  in-doc ("reproduce via a one-shot dispatch that includes a `ScheduleWakeup` gap long enough to trigger
+  idle-reap"). No design fork requiring an operator -- both candidate fixes named in-doc are complementary, not
+  competing, and the todo does not ask for a choice between them. Conflict-check clear: grepped `plans/active/*.md`
+  for "idle-reap"/"ScheduleWakeup"/"session-ownership desync" -- zero hits outside this doc. `execution_scope:
+  local-only -> orchestrator-agent`. Companion gated finalize:
+  `one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md`.

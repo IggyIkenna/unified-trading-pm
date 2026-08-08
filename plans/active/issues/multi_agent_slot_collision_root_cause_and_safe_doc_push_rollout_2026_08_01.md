@@ -49,9 +49,12 @@ source: >-
   same window: this session (via safe-doc-push.sh) and harshkantariya [slot-1·harsh_pc]'s session (context-scout
   backfill batches 1-5, na-eligibility-audit sweeps, the batch2->batch4 rename fix, and a prettier-corruption fix — all
   independently verified correct and already on origin).
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: infra
+estimate_baseline_ai_days: 1.5
+estimate_calibrated_ai_days: 1.2
+assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -235,3 +238,14 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The
+  2026-08-08 operator ruling (ao round-5 apply item 15, "build a collision-warning mechanism, WARN not refuse")
+  unblocked the 2 `[SCRIPT]` design-fork todos (live `.agent-claim` heartbeat + session-start collision warning) —
+  both now state "UNBLOCKED... ready for dispatch" in-doc. Combined with the already-scoped rename-corruption fix
+  (`[SCRIPT] P1`, concrete fix sketch + done-when already written) and the `[DOCS] P2` codex/CLAUDE.md fold-in, all
+  4 remaining open items are now bounded implementation work with no outstanding judgment call. Conflict-check
+  clear: grepped `plans/active/*.md` for the `.agent-claim` heartbeat / session-start-collision mechanism and the
+  rename-corruption bug — zero hits outside this doc and its own sibling
+  `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md` (which explicitly defers the mechanism build
+  to THIS doc, not a competing claim). `assigned_role: infra` (added, matches content). Companion gated finalize:
+  `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`.
