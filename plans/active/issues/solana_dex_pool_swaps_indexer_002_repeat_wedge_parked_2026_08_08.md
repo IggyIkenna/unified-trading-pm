@@ -121,3 +121,21 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
   triggered rather than an inherent property of this task's workload; todo 3's rescoping question is also informed — the
   actual indexer work (the fetch+decode implementation) completed in one normal session with no sign of being oversized.
   Leaving both open for BACKEND/OPERATOR to close with full context once todo 1's root cause lands.
+- 2026-08-08 ~18:16Z (slot-7, fresh boot): a SECOND slot-7 respawn (distinct from the 17:58:17Z wedge instance in the
+  table above) was independently dispatched this exact task via `already_in_progress: true` in the same narrow pre-park
+  landing window as slot-33's occurrence above. Unaware of slot-33's concurrent work, this session independently
+  implemented the identical capability from scratch (own module layout: `cli/handlers/_orca_whirlpool_swap_decoder.py` +
+  a real captured-transaction fixture, vs. slot-33's `scripts/_orca_swap_decoder.py` +
+  `scripts/_dex_swap_tx_helpers.py`) and reached a fully working, quality-gates-clean, basedpyright-strict-clean local
+  commit before discovering — only at push time, via a branch-drift rejection — that slot-33 had already landed
+  `market-tick-data-service@3619f9e2` for the SAME plan todo minutes earlier. No git conflict occurred (the two
+  implementations used disjoint file paths), so this could have silently shipped as duplicate/competing code for the
+  same capability had the branch-drift check not caught it. Recovered cleanly: soft-reset + stashed the redundant local
+  commit (`orchestrator-slot-7-solana_dex_pool_swaps_indexer-002-superseded-by-mtds@3619f9e2` in this slot's
+  market-tick-data-service stash), fast-forwarded to origin's shipped version, filed this entry, and returned the task
+  via `/skip-current-task` (reason: duplicate — already completed). **New information beyond the slot-33 entry above**:
+  this proves the same-task race in the ~18:02Z park-landing window duplicated a FULL unit of engineering work across
+  two slots simultaneously (not just repeat wedge/crash-loop cycles) — a second, higher-cost failure mode of the same
+  underlying gap (a dispatched-but-not-yet-`done` task isn't excluded from being handed to a second free slot). Relevant
+  to todo 2's `skip-current-task` gap discussion: the fix there should also cover "already dispatched to another live
+  slot," not just "repeat-skipped," since this case never skipped once before duplicating.
