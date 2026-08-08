@@ -189,3 +189,10 @@ of a venue-day outage.
   adversarially-confirmed architecture gaps. The closest-to-bounded residual item (Stage-0 classify-and-log) spans 3
   repos and sits inside a design surface the doc's own author has twice declared not-ready — kept bundled under NA
   rather than split out unilaterally.
+- **na-eligibility-audit 2026-08-08** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-07-30 verdict. In
+  scope this run only because the Stage-0 `[DATA] P2` todo's manifest+read-side half shipped
+  (`market-tick-data-service@4bd7e87e`, 2026-08-07) and flipped `[x]` — that closes the "closest-to-bounded residual
+  item" the 2026-08-06 marker flagged, it does not open a new one. 2 open todos remain, both correctly NA: `[DESIGN] P1`
+  (close the 3 §5 architecture gaps — GENUINE_WORK, a real design/judgment call, not worker-determinable) and
+  `[DATA] P3` (Stage 2 schema v10 backfill — DEPENDENCY_BLOCKED on Stage 1 write-enforce, which is itself blocked on the
+  same `[DESIGN] P1` gap-closure, plus the separate v2 dedup `--apply` landing). Neither clears the bounded-outcome bar.

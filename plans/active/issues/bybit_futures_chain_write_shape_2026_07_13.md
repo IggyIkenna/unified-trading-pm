@@ -141,6 +141,16 @@ workspace).
       "sample-based, not exhaustive" caveat is now closed. Read-only — no GCS objects modified. Actual cleanup of the
       490 pure-duplicate objects stays BLOCKED-OPERATOR-DECISION per the original scope.
 
+- [ ] [OPERATOR] P3. **Cleanup decision for the 490 confirmed pure-duplicate BYBIT `futures_chain` shape-2 objects**
+      (flat rows ⊆ their hive-form counterpart, per the full-scope verification above — audit parquet
+      `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet`). BLOCKED-OPERATOR-DECISION per the
+      original scope (delete-vs-keep was never proposed/approved; the P1 verification above only classified the objects,
+      it did not decide their fate). **Done when**: operator rules delete-490-duplicates vs. leave-as-is; if delete,
+      execute per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (never a raw `gsutil`/`gcloud     storage`
+      delete). Tracked as an explicit todo (`na-eligibility-audit` 2026-08-08) so this decision doesn't read as "0 open
+      work" now that both prior checkboxes are `[x]` — the 2026-08-07 context-scout note already flagged this gap in
+      prose; this converts it to a trackable item per CLAUDE.md's "every follow-up is a todo, never prose" rule.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA-STALE, citation corrected - the owning plan
@@ -197,3 +207,11 @@ workspace).
 - **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added the audit script
   (`audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py`) now that both tracked todos are `[x]` and the remaining
   substantive work is the operator-gated cleanup decision over the 490 confirmed-duplicate objects it classified.
+- **na-eligibility-audit 2026-08-08** (tranche=cefi, autonomous): KEEP-NA, valid — genuinely operator-gated (delete vs.
+  keep 490 confirmed-duplicate GCS objects), correctly NOT bounded/deterministic for an AO worker. In scope this run
+  because both prior todos flipped `[x]` on 2026-08-06, leaving the doc showing 0 open checkboxes while the 2026-08-07
+  context-scout note (and the P1 item's own text) already flagged a real prose-only remaining decision — the exact
+  "prose-only remaining work" trap this skill watches for. Added an explicit `[OPERATOR] P3` todo above capturing that
+  decision (with a Done-when and the delete-safety-protocol cite) instead of leaving it as prose, so the doc no longer
+  misreads as fully resolved to a future archive-candidate sweep. `locked_by: live-defi-rollout` unchanged — no archival
+  action taken or implied.

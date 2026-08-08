@@ -675,3 +675,22 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
   (monitoring-only impact, not data-loss) — worth a look at `mtds_chunk_loop.sh`'s `PROGRESS.json` upload call next time
   someone touches that script, since a future session trusting `PROGRESS.json` alone (without the run.log cross-check
   this doc's rule-1b guidance already recommends) would wrongly conclude this VM has been stuck since 19:22Z.
+- **na-eligibility-audit 2026-08-08** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms the 2026-08-07 verdict. In
+  scope this run because two new findings landed after that marker (the 2026-08-07T21:22Z 55%-OOM-rate data point and
+  the T23:47Z `PROGRESS.json` upload-stopped finding), neither changes the doc's core status. 2 open todos now: the
+  original P1 native-memory root-cause investigation (GENUINE_WORK — real profiling/design work, credits confirmed
+  cleared, not worker-determinable-by-fiat) and a new `[SCRIPT] P3` added this run for the `PROGRESS.json` upload bug
+  (GENUINE_WORK, bounded/deterministic on its own, but does not flip the whole doc — the P1 item is still open judgment
+  work, and `assigned_vm` flips at the whole-doc level). Converted the T23:47Z prose "worth a look next time" note into
+  that tracked todo per CLAUDE.md's "every follow-up is a todo, never prose" rule. No archival — doc is a live,
+  still-active investigation.
+
+- [ ] [SCRIPT] P3. **Root-cause + fix `mtds_chunk_loop.sh`'s `PROGRESS.json` GCS upload call** — confirmed silently
+      stopped firing after chunk 17 on `mtds-backfill-odds-smallchunk2-20260807` while `run.log`'s own
+      `PROGRESS:     chunk=N` lines kept advancing normally through at least chunk 21 (2026-08-07T23:47Z finding above).
+      Monitoring-only impact today (no data loss — `run.log` is the reliable cross-check per this doc's own rule-1b
+      guidance), but a future session trusting `PROGRESS.json` alone would misdiagnose a healthy VM as stalled. Tracked
+      as an explicit todo (`na-eligibility-audit` 2026-08-08) rather than left as a prose "worth a look next time" note.
+      **Done when**: the upload call's failure mode is identified (e.g. a swallowed exception, a once-per-VM-lifetime
+      guard misfiring, a stale path) and fixed, with a regression check that `PROGRESS.json` keeps advancing across ≥20
+      consecutive chunks on a fresh run. Repo: deployment-service.
