@@ -708,3 +708,15 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   launcher refuses a 2nd concurrent AF VM by design) — but confirmed via live AO backlog that 3 workers (slots 5, 7, 12)
   are already actively dispatched on `sports_taxonomy_p1`'s remaining P0 todos in parallel with this campaign, so
   parallelism is already maximized where it's genuinely available. No action needed on this doc from that finding.
+- **2026-08-08T08:40Z — THIRD occurrence of odds smallchunk deletion, pattern now definitively confirmed.**
+  `mtds-backfill-odds-smallchunk4-20260808` was gone from `gcloud compute instances list` entirely. Confirmed via
+  `gcloud compute operations list`: `delete` op at `08:27:34Z`. `run.log` last real line `08:11:46Z` (mid-chunk-18,
+  `AUSTRIAN_BUNDESLIGA`, RSS=24.4GiB — a third, very different RSS value, ruling out a memory-threshold trigger),
+  heartbeat blob last update `08:11:31Z` — ~16 min silent gap, consistent with the prior two (~19min, ~20-21min). Same
+  signature as before: no exit_code, no Traceback, no CHUNK_FAILED — a real hang, correctly caught by the watchdog.
+  Updated `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` in full (timeline table, bumped P2→P1,
+  closed the "if a third occurrence" todo, opened a new one flagging the actual blocker for live diagnosis: this
+  session's `gcloud compute ssh` via IAP is unauthorized, so catching a live hang with `py-spy`/`strace` isn't currently
+  possible from here — needs a session/operator with working SSH access). No data loss — durable progress through chunk
+  17 + partial chunk 18. Relaunched as **`mtds-backfill-odds-smallchunk5-20260808`** (guard passed, RUNNING).
+  FIXTURE_STATS unaffected, continuing healthy.
