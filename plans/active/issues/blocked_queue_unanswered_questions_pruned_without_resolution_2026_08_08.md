@@ -133,3 +133,12 @@ explicitly expired-with-signal.
   already records the observation inline; this doc promotes it to tracked, actionable work per the workspace's
   findings-closure HARD RULE (a chat/log-only observation is not closure). No investigation performed yet — both todos
   above are unstarted.
+- 2026-08-08 (slot 9): Additional data point for whoever picks up the `[BACKEND]` todos — `BLK-ce0fe830` (this doc's own
+  trigger) was re-checked via `GET /api/state` across ~13 consecutive `/heartbeat` cycles between `created_at`
+  `18:41:32Z` and `19:25:42Z` (~44 min elapsed). Unlike its 3 predecessors (which vanished before an answer landed, some
+  apparently within a similar or shorter window), `BLK-ce0fe830` stayed present with `answered_at: null` the entire time
+  — no pruning observed in this window. This doesn't resolve the question of what removes unanswered entries, but it's
+  evidence against a short fixed-TTL-per-entry theory (this one outlived at least 44 min without being pruned) —
+  consistent with a size-cap/LRU-style eviction (65-66 entries observed live) or some other non-time-uniform mechanism.
+  Worth checking entry count/ordering effects, not just age, when doing the `[BACKEND]` code read. No action taken on
+  the task itself — still correctly parked, no autonomous unlock, no re-filing.
