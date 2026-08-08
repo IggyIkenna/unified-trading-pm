@@ -192,7 +192,7 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       `quality-gates.sh` is green. — execution-service@507093de QG green; test_execute_swap_jupiter PASSED confirming
       JUPITER-SOLANA routes to JupiterConnector.execute_swap()
 
-- [ ] [BACKEND] P2. **market-tick-data-service: wire `OnChainEventPoller`'s Aave-liquidation path into a real live
+- [x] [BACKEND] P2. **market-tick-data-service: wire `OnChainEventPoller`'s Aave-liquidation path into a real live
       connector — Uniswap-Swap-topic half deliberately excluded.** Create
       `market_tick_data_service/live/connectors/aave_liquidations_ethereum_ws.py`, mirroring `curve_defi_ws.py`'s
       polling-`WSFeedConnector` wrapper pattern: internally construct
@@ -211,7 +211,10 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       `eth_getLogs` topic filter for Uniswap swaps would reintroduce exactly the anti-pattern that connector's own
       docstring documents avoiding. Done-when: `market-tick-data-service` `quality-gates.sh` green and a targeted test
       (mocking a log payload shaped like `OnChainEventPoller`'s existing tests) confirms the new connector registers
-      under `AAVE_V3-ETHEREUM` and yields a `ReceivedTick` with `data_type="liquidations"`.
+      under `AAVE_V3-ETHEREUM` and yields a `ReceivedTick` with `data_type="liquidations"`. 5. ✅
+      market-tick-data-service@73abd655 — `aave_liquidations_ethereum_ws.py` created; `OnChainEventPoller` wrapped with
+      `topics=[_AAVE_LIQUIDATION_TOPIC]`; registered under `AAVE_V3-ETHEREUM` (`overwrite=True`); 20 unit tests green;
+      QG green.
 
 - [ ] [DOC] P3. **Close out the audit doc + refresh the Solana-DeFi codex SSOT.** In
       `plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md` §6, flip the two now-superseded checkboxes
