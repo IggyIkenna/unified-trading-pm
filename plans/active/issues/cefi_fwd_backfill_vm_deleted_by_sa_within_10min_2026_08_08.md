@@ -299,3 +299,6 @@ before launch.
 - **VM-4 progress update (slot-17, ~2026-08-09, ~62h elapsed)**: 07-03 COMPLETE (BIN=572, BYB=498, OKX=358, KRA=250,
   BITGET=499, BITFINEX=58 — OKX still writing at check but all others done). 07-04 OPENED (BIN=86; all others 0). ~28
   days done of 62 (~45%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~66h elapsed)**: 07-04 COMPLETE (BIN=572, BYB=498, OKX=358, KRA=250,
+  BITGET=499, BITFINEX=58 — OKX still writing at check but all others done). 07-05 OPENED (BIN=95; all others 0). ~29
+  days done of 62 (~47%). ETA ~2026-08-12T05:00Z unchanged.
