@@ -131,6 +131,15 @@ disagree). All 6 corpus instances found + normalized to true-blank this run.
 
 ## Filed
 
+**Both `/blocked` questions below were answered by main during this run** (BLK-5583f6d2, BLK-c60f4898 — both "A,
+confirmed correct"). Neither required reversing anything already done. For BLK-5583f6d2, main additionally ran live
+`gcloud scheduler jobs` verification on the DeFi capture-status item (this role has no cloud read access) and found
+neither doc's binary framing holds — capture is PARTIALLY live (daily `dex_swaps` cron enabled, `dex_pools` cron + both
+5-min forward-fill jobs paused); main dispatched that evidence as a small addendum task to slot 4 (not duplicated here
+to avoid a same-file double-edit). The TradFi Massive-purge item (below) remains open, explicitly needing "a proper
+bounded reconciliation check, not an ad-hoc bucket walk, per single-walk discipline" per main's answer — still routed to
+the operator, not resolved by this run.
+
 ### Big findings — data-pipeline-correctness-adjacent, routed to operator via `/blocked`
 
 - [ ] [OPERATOR] P1. **Has the TradFi Massive estate (~1.7M GCS objects) actually been purged, or not?**
