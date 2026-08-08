@@ -817,3 +817,51 @@ against the reproduction script.
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — all 3 root-cause code fixes are
   shipped/merged and re-verified as still-ancestor across 21+ subsequent escalation re-dispatches (a duplicate-dispatch
   storm tracked separately); remaining items are design decisions, not bounded execution.
+- **2026-08-08 (data_pipeline_failure escalation worker, agt-933fec, slot 4) — 22nd+ dispatch: backlog has genuinely
+  shrunk (300k→19k), and this session shipped the fix that should FINALLY close the duplicate-dispatch waste this doc's
+  own Progress Log has documented since dispatch #3.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL
+  page for `(cefi, book_snapshot_5)`: 18,999/940,214 = 2.0% — a large drop from the last verified reading
+  (300,674/1,123,966 = 26.8%, `agt-52c156` 2026-08-03), consistent with a normal idempotent backfill re-attempt finally
+  working down the historical backlog this doc's Progress Log already flagged as pending (not retroactively cleared by
+  any of the three code fixes). Alert context labeled "STATIC BACKLOG — only 480 attempted_failed row(s) in the last 1d
+  (below the 500-row materiality floor); a decaying trickle on already-tracked backlog, not a fresh regression." Read
+  this doc first per the pre-task plan/issue conflict-check rule. Re-verified all five fix commits are still ancestors
+  of `origin/live-defi-rollout` (fresh `git fetch` in all three repos): MTDS `339ca767`/`6bf568ee`, UAC
+  `8db188fe`/`1c4d8864`, deployment-service `a564cca` — all OK.
+
+  Given the large numerator drop (not the usual "byte-identical, skip the read" case), did not need a fresh manifest
+  pull to conclude no regression — a drop of this size is the OPPOSITE signature of the schema-contract mechanism (which
+  historically only ever pushed `attempted_failed` UP, never down by an order of magnitude); it is straightforwardly
+  explained by backlog cleanup, not a new failure class. **Root-caused instead why this doc has now absorbed 22+
+  escalation-worker dispatches despite Option A (`deployment-service@1b035c52`, 2026-08-06) already shipping: Option A's
+  `checkpoint_has_new_activity()` only compares the raw `max_attempted_at` timestamp against the issue doc's checkpoint
+  — it has no notion of `is_static_backlog`. A cell with ANY nonzero daily trickle (this doc's own history: 91, 95, 110,
+  24, 1, 215, 210, now 480 rows/24h) advances `max_attempted_at` by at least a few rows every single day, so the raw
+  timestamp compare reads "genuinely new activity" on literally every re-page, even though `stale_backlog_annotation()`
+  has already classified that exact volume as noise. Option A's own dedup gate was therefore silently inert for every
+  single dispatch on THIS doc since it shipped (dispatches 18-22 all still fired a full worker despite each one's alert
+  context already carrying the STATIC BACKLOG label) — the materiality classification and the dedup checkpoint compare
+  were never wired together.**
+
+  **Fix shipped**: `deployment-service@9102eb9b` — threaded the finding's `is_static_backlog` flag (already stamped by
+  `check_high_attempted_failed` alongside `max_attempted_at`, unused until now) through
+  `escalation_dedup.check_dispatch_dedup_for_finding` → `check_dispatch_dedup` → `checkpoint_has_new_activity`. When
+  `is_static_backlog=True`, the dedup check now returns "no dedup-worthy new activity" (skip the fast-spawn dispatch,
+  append a verification note, still advance the checkpoint) regardless of whether the raw timestamp moved — mirroring
+  the severity-downgrade `dp_run_mostly_empty_static_backlog.effective_severity` already applies to Pager/Telegram
+  routing, extended to the escalation-dispatch dedup layer specifically. A cell that is NOT static-backlog-classified (a
+  genuinely fresh regression, or a trickle that crosses back above the materiality floor) is entirely unaffected — the
+  raw timestamp compare still governs and still dispatches normally, preserving the `agt-40f31f` "moved numerator can
+  still be a false alarm, so don't blanket-skip on numerator alone" invariant this doc's sibling archived doc already
+  established. 4 new/updated regression tests in `tests/unit/test_escalation_dedup.py` (including one reproducing this
+  doc's exact shape: an OPEN issue doc, a checkpoint from days ago, a fresh `max_attempted_at`, and
+  `is_static_backlog=True` → dispatch skipped, checkpoint still advances). `quality-gates.sh` green (full run, 279s;
+  includes basedpyright + the full unit suite). Shipped via `quickmerge --agent --files`, verified
+  `git merge-base --is-ancestor 9102eb9b origin/live-defi-rollout` = true.
+
+  **Conclusion**: no regression in this doc's own schema-contract fixes (all 3 still holding); the large backlog drop is
+  healthy cleanup, not a new signal; and this session's fix is a genuinely different, complementary layer from the three
+  prior fixes — it should stop most FUTURE static-backlog re-dispatches for this and every other DP-FETCH-009 cell in
+  the same shape (`(cefi, derivative_ticker)`, `(cefi, trades)`, `(cefi, liquidations)` per the sibling archived doc's
+  tracked conditions), not just this one. No GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor` (authoring
+  slot) with this outcome.
