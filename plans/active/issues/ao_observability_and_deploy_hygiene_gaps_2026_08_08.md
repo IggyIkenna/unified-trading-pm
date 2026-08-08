@@ -82,8 +82,40 @@ source: ['interactive session 2026-08-08 — operator: "did you fix all these so
 | watchdog kills today       | 3, flapping=true | **0, flapping=false**             |
 | failed systemd units       | 2                | 1 (`audit-false-done`, by design) |
 
+## Second slot tranche + the constraint FLIP (2026-08-08 ~13:10 UTC)
+
+Operator approved a second tranche on the measured-RAM argument ("RAM is the real limit… CPU oversubscription is fine,
+most work is I/O"). Slots 22-33 provisioned, **11 of 12 clean**; slot 30 failed mid-clone on the same
+`git clone --reference` core-dump that hit slot 17 in tranche 1 (memory was NOT the cause — 23G free), and is tracked as
+a todo below. Orchestrator restarted: `seed_worker_slots_from_tabs: registered 32 worker slot(s)`. Cost was small — disk
+57% -> 58% (291G free), RAM 5G -> 6G used of 30G.
+
+**The binding constraint has now FLIPPED.** With 32 configured worker slots the clamp is `min(15, 32-7) = 15`, so the
+`AutoSpawn fleet cap … CLAMPED` warning stopped firing entirely (0 occurrences since the restart, against one per tick
+before). Slot count is no longer the ceiling — **`ORCHESTRATOR_FLEET_WORKER_CAP=15` is**. This is exactly the state
+agent-orchestrator@f1558bc's observability was built to make legible: raising that knob used to be inert, and now it is
+the ONLY lever that matters. See the P1 todo below.
+
 ## Todos
 
+- [ ] [OPERATOR] P1. **Raise `ORCHESTRATOR_FLEET_WORKER_CAP` above 15 — it is now the ONLY thing capping the fleet.**
+      After the 2026-08-08 tranches the clamp is `min(15, 32-7=25) = 15`, so 25 slots of real capacity sit behind a knob
+      set to 15. Measured headroom at 34 registered slots / 14 live sessions: **RAM 6G used of 30G (23G avail)** at
+      ~0.4-0.5G per worker, so 25 concurrent workers is roughly 12.5G — comfortably inside budget; disk 58% with 291G
+      free; host load ~4 on 8 cores with work that is mostly I/O-bound (operator ruling 2026-08-08: CPU oversubscription
+      acceptable, RAM is the constraint to respect). Lives in `.env.local` on the central VM
+      (`fleet_worker_cap_override` / `ORCHESTRATOR_FLEET_WORKER_CAP`), so it needs a VM-side edit + orchestrator
+      restart, NOT a code change. **Recommended: raise to 25** and watch RAM across one full tick cycle before going
+      further. `[OPERATOR]` because it is a deliberate capacity/spend decision on live infra, not a bounded defect — the
+      arithmetic and the headroom evidence are settled, only the ruling is outstanding. (repo: agent-orchestrator, VM
+      config)
+- [ ] [BACKEND] P3. **Re-run `setup-tab-worktrees.sh --add-slot 30` — it holds 25 of 27 repos.** Failed mid-clone on the
+      same `git clone --reference … Aborted (core dumped)` that hit slot 17 in tranche 1; both times a plain idempotent
+      re-run of the same command completed it (slot 17 went 17 -> 27 repos that way), and memory was NOT the cause on
+      either occasion (23G free). The installer is skip-if-exists, so the re-run only fetches what is missing. Worth a
+      look at WHY `git clone --reference` core-dumps roughly once per tranche — twice in ~16 clones is not a fluke, and
+      a fresh slot that silently lands short of the manifest will quarantine on its first spawn rather than fail loudly.
+      (repo: unified-trading-pm)
 - [x] ✅ [BACKEND] P2. **`ao-self-pull.sh` silently stops auto-deploying when an UNTRACKED file appears** — FIXED
       agent-orchestrator@2c08afd85. Gate now uses `--porcelain -uno` (TRACKED changes only). An untracked file cannot be
       blown away by a fast-forward merge, so there is no uncommitted WORK to protect — this gate's entire stated purpose
@@ -160,3 +192,40 @@ self-pull fix touches the fleet's only auto-deploy path so it wants its own gate
 drive-by. Corrected two earlier mis-reads during the session: the "12 failing glue units" are disabled-and-inert not
 failing, and the "33 vs 27 repos" gap between old and new slots is leftover `*.stale-pre-history-rewrite-*` dirs, i.e.
 the new slots are cleaner.
+
+## Deferred work after 2026-08-08
+
+| item                                              | state / why deferred                                                                                                                                    | blocked on                                                 |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Raise `ORCHESTRATOR_FLEET_WORKER_CAP` 15 -> 25    | **Operator-owned.** Arithmetic + RAM headroom are settled and evidenced; only the capacity/spend ruling is outstanding. This is now the ONLY fleet cap. | an operator ruling (then a VM `.env.local` edit + restart) |
+| Slot 30 re-run (25 of 27 repos)                   | **Not done.** One idempotent `--add-slot 30` finishes it; same core-dump that hit slot 17, which a re-run cleared.                                      | nobody — pick it up                                        |
+| Stash verifier (hundreds of stashes, 20 slots)    | **Not done.** Needs a content-identity verifier before any discard; discarding foreign WIP is a hard rule and hook-blocked.                             | nobody — but needs the verifier built first                |
+| Content-stable task IDs (`_make_content_task_id`) | **Not done, NOT MINE.** Built-but-unwired by another agent (agent-orchestrator@ac36202/@e0f107a). Deliberately not touched to avoid collision.          | the other agent finishing the wiring                       |
+| Glue-runner two-pool deployment                   | **Operator-owned.** Units retired; the deployment itself is a cost/architecture call per the archived CI-cost plan.                                     | an operator decision                                       |
+
+**Recommended NEXT item: raise the fleet cap.** Every other lever in this session has already been pulled — 32 slots are
+provisioned and registered, the off-by-one is corrected, and the context-saturation kill loop is fixed. The cap is the
+single remaining thing standing between the fleet and using capacity that already exists and is already paid for.
+
+## Lessons (would otherwise be re-learned the hard way)
+
+- **`systemctl --failed` undercounts.** The glue units were disabled, so 51 broken units showed as ZERO failures while
+  one by-design detector showed as the only failure. "Failed unit count" is not a health metric; enumerate and check
+  `is-enabled` + `ExecStart` target existence.
+- **A telemetry unit's own cgroup caps are scale-coupled.** `process-category-sampler` had
+  `TasksMax=50`/`MemoryMax=256M` sized when the fleet was small; it enumerates every process, so it failed harder as
+  slots were added — and failed SILENTLY into `--failed` for a day. Any per-process sampler needs caps that scale with
+  the fleet, or it dies exactly when it is most needed.
+- **Raising one cap exposes the next.** TasksMax 50 -> 256 turned "can't start new thread" into a MemoryMax-pinned,
+  swapping timeout. Re-measure after each cap change rather than assuming the first fix was the fix.
+- **`git status --porcelain` is the wrong dirty test for a deploy gate.** Untracked files cannot be lost to a
+  fast-forward; `-uno` is the correct predicate. The 2026-07-29 fix patched two filenames and the class recurred within
+  ten days — a strong argument for fixing predicates rather than instances.
+- **Re-run an audit before triaging its findings.** false-done went 26 -> 1 with no action taken; 25 were same-day
+  in-flight flips. Triaging the stale snapshot would have burned hours on already-resolved rows.
+- **A "false-done" can be a mapping artifact with BOTH sides correct.** Positional task IDs mean a DB row and a checkbox
+  can each be individually right while disagreeing. Neither flip nor reopen — verify the underlying work.
+- **`git clone --reference` core-dumps ~1 in 16 clones here.** Not memory (23G free both times). A plain re-run clears
+  it, but a short slot fails at first spawn rather than at provision time.
+- **Ground truth is tmux, not the DB.** A slot table read mid-churn showed 7 working / 6 killed while `tmux ls` showed
+  12 live sessions. Always cross-check fleet-fill claims against `tmux ls`.
