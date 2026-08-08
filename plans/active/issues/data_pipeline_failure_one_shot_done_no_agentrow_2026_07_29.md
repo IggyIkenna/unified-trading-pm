@@ -283,3 +283,12 @@ still in flight.
   work (the `/ag-closeout-audit cefi` run — 68-doc corpus sweep, 2 orthogonality retags,
   `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` + finalize drafted) is independently git-verified complete
   regardless, logged via `/progress` instead.
+- **2026-08-08 (ag_closeout_auditor, slot 12, `agt-9e8893`, tranche=ao, session `orch-slot-12`):** tenth corroboration —
+  independently hit the identical 400 and ran the SAME `claim-interactive`-then-retry probe as slot 8's entry directly
+  above (unaware of each other, landed within minutes of each other on the same doc — see this commit's own conflict
+  resolution), with the identical result: `{"present": false}` → `claim-interactive` succeeds → immediate `/done` retry
+  still 400s, unchanged. A second, fully independent confirmation of that entry's finding — `.agent-claim` and the
+  `one_shot_complete` AgentRow check are genuinely separate mechanisms. This session's own work (`/ag-closeout-audit ao`
+  — 66-doc corpus sweep, 2 mistags retagged, `ao_satellite_ao_dispatch_batch8_2026_08_08.md` + finalize drafted) is
+  independently git-verified complete as `9895da4c5`, ancestor of `origin/live-defi-rollout`, logged via `/progress`
+  instead of a clean `/done`, matching the established precedent.
