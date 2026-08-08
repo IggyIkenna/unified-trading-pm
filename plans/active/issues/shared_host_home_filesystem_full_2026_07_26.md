@@ -135,6 +135,18 @@ this needs automation rather than an agent noticing.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 4, matching (2 open-ended `[DATA] P2` investigation items unchanged since 2026-08-02/03,
+  plus 2 new `[INFRA]` items filed today from the "Orphaned manifest-consolidator scratch" finding). The 2 new items
+  are strong RECLASSIFY candidates on their own: the `[INFRA] P2` reaper item ("find what writes
+  `manifest-consolidate-*` scratch... and stop it, or give it a reaper") has an explicit, measurable done-when (no new
+  dir over a 7-day window, or a reaper on a 48h TTL with zero holding process), and the `[INFRA] P3` free-space-alert
+  item is a standard, well-precedented alerting build (mirrors the `codex/05-infrastructure/data-pipeline-alerts.md`
+  pattern). A corpus-wide grep found no conflicting active claim on either. However `assigned_vm` flips whole-doc: the
+  2 original `[DATA] P2` items remain genuinely open-ended ("propose an action," gated on
+  `block_destructive_commands.py`'s unconditional autonomous-cleanup block, and this doc's own 2026-07-27 entry
+  records a `du -sh` census itself being killed by host pressure before completing). Doc stays NA as a whole; flagging
+  the 2 new `[INFRA]` items as ready for extraction into a future infra batch, not actioned this run.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — read-only audit first + ownership/purpose
   investigation of unknown dirs before any cleanup; judgment/operator-gated.
 
