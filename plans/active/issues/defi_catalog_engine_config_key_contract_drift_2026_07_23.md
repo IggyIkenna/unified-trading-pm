@@ -744,11 +744,11 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       engine-level mechanism to enter at `entry_zscore`, hold, and exit at `exit_zscore` (mean-reversion, not a second
       independent threshold rule). A genuine build task, not a config rename — scope the engine change before
       estimating.
-- [ ] [SCRIPT] P2. **`ML_DIRECTIONAL_EVENT_SETTLED` (15 rows) — wire `outcome_order` for all 4 market types** (per the
-      2026-08-08 ruling above): `1X2`/`halftime_1x2` → `"home,draw,away"` (3-way), `match_winner`/`moneyline` →
+- [x] ✅ [SCRIPT] P2. **`ML_DIRECTIONAL_EVENT_SETTLED` (15 rows) — wire `outcome_order` for all 4 market types** (per
+      the 2026-08-08 ruling above): `1X2`/`halftime_1x2` → `"home,draw,away"` (3-way), `match_winner`/`moneyline` →
       `"home,away"` (2-way) — the same convention the existing test fixture already uses for 2 of the 4 market types,
       promoted to the production catalog and extended to cover the other 2. Verify against the real upstream ML model's
-      `predicted_class` indexing before shipping (money-path archetype).
+      `predicted_class` indexing before shipping (money-path archetype). — strategy-service@2667e967d
 - [ ] [SCRIPT] P2. **`VOL_TRADING_OPTIONS` (14 rows) — wire the ATM-straddle strike/expiry resolver** (per the
       2026-08-08 ruling above): select the strike nearest to spot (at-the-money) and the nearest weekly expiry with ≥ 7
       days to expiry; resolve `call_instrument`/`put_instrument` from that pair. Same class of gap as
