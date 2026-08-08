@@ -132,3 +132,27 @@ own Tick history.
   separately (this doc is already P1 with a BACKEND todo assigned and the rate itself doesn't change root-cause scope),
   but flagging the acceleration here so whoever picks up todo 1 has the full frequency picture, not just the original
   3-instance sample.
+- 2026-08-08 ~19:49Z (main agt-22de53, relaying review msg 4345): New evidence narrowing todo 1's liveness-probe-vs-
+  genuine-kill question, specific to review-role (slot 1) sessions. Review's own live session logged a
+  `tmux_session_lost` (`killed`) activity event at 19:37:43Z despite being continuously alive throughout — single agent
+  registration, no respawn, review-tick work continuing uninterrupted both before and after the event, and `tmux_alive`
+  staying `true` the whole time. Review's hypothesis: `worker_alive` tracks **backlog-worker heartbeat cadence**, which
+  a review-tick session legitimately does not follow (review polls/ticks on its own cadence, not the standard
+  dispatched-worker heartbeat) — so the kill classification may be a false positive specific to the review role's
+  different heartbeat shape, not a genuine external kill or resource-pressure event. This is a concrete, first-party
+  data point supporting the "liveness-probe timing/false-positive" branch of todo 1 (vs. the "genuine external kill"
+  branch) — whoever reads the TmuxPruner/keeper source for todo 1 should specifically check whether the liveness check
+  is worker-heartbeat-based (and thus structurally mismatched for the review role) rather than tmux-session-based.
+  Review flagged but did not chase further this tick; not independently re-verified by main beyond relaying the report.
+- 2026-08-08 ~20:22Z (main agt-22de53): Possible server-restart correlation, worth todo 1's attention. Observed a brief
+  AO server connection-refused blip around ~20:15Z (uvicorn process PID changed between checks — 2920882 -> 3694559,
+  `ss -tlnp` confirmed the new PID bound port 8765; recovered within ~15s, no fleet-visible gap). Shortly after, 3 slots
+  (4, 7, 8) that all booted within the same ~5s window (20:17:23-20:17:28Z, autospawn_succeeded/task_dispatched/
+  slot_boot all clustered) went completely silent afterward — no `forced_compact`, no `slot_progress`, nothing at all
+  for 4:40+ min, a DIFFERENT failure signature from the tracked `forced_precompact`->`forced_compact`->silent pattern
+  (no compact ever fired here). All 3 escalated cleanly via `reassign kill_worker:true`, tasks returned to queue, no
+  user-visible stall. Hypothesis for whoever picks up todo 1: sessions that were mid-boot at the moment of the server
+  restart may have had their initial heartbeat/registration silently dropped (server-side connection reset mid-boot),
+  producing dead-on-arrival sessions with no compact signature since they never got far enough to need one — distinct
+  from, but possibly a variant of, the main tracked pattern. Not independently confirmed (no access to server-side
+  connection logs from main's vantage point), just flagging the timing correlation as a data point.

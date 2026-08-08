@@ -185,11 +185,12 @@ def _render_archetype(entry: dict[str, object]) -> str:
     cells = list(entry["cells"])  # type: ignore[arg-type]
     cell_blocks = ",\n".join(_render_cell(archetype_id, cell) for cell in cells)
     uses_rolling = "true" if bool(entry["uses_rolling_futures"]) else "false"
+    cells_body = f"\n{cell_blocks},\n  " if cell_blocks else ""
     return (
         f"const {const}: ArchetypeCoverage = {{\n"
         f"  archetype: {_ts_string_literal(archetype_id)},\n"
         f"  usesRollingFutures: {uses_rolling},\n"
-        f"  cells: [\n{cell_blocks},\n  ],\n"
+        f"  cells: [{cells_body}],\n"
         "};\n"
     )
 

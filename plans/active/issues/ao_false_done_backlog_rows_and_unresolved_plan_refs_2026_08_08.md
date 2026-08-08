@@ -184,25 +184,162 @@ plan + verifying the `done_sha`, never from the row's status alone.
       matches `f79fbded3` exactly. No REOPEN (would re-open genuinely, freshly-verified-done work) or FLIP (already
       flipped, honestly) was warranted or performed; this item only needed its tracker checkbox resolved with the
       verification trail above.
-- [ ] [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
-      `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose
-- [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`)
-- [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-014` (`done_sha=b78ec6e7c`)
-- [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`)
-- [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-009` (`done_sha=6ddb0374`)
-- [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-010` (`done_sha=6ddb0374` — **same sha as -009**;
-      check whether one commit legitimately closed both or whether a shared sha was copied across rows)
-- [ ] [BACKEND] P2. `deployment_scripts_bucket_soft_delete_retention_drift-002` (`done_sha=97d37ce57`) — explicitly
-      dated "Final drain confirmation on/after 2026-08-09", i.e. **not due yet**; likely REOPEN, not FLIP
-- [ ] [BACKEND] P2. `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025` (`done_sha=0e9185d2c`) —
-      round-8 launch across 8 shards; verify launch evidence before flipping
+- [x] ✅ [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
+      `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose — **verified
+      2026-08-08 (slot 12): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected.** `GET /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null`,
+      `dispatched_to: null` (NOT `done`), same self-correcting
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as the 6 items above; a full scan
+      of the live 2,429-row backlog found zero rows anywhere still carrying `done_sha=976786c5`. `976786c5`
+      (`market-tick-data-service`, slot-8, 2026-08-04) is a real, on-origin commit — confirmed via
+      `unified-trading-pm@c85fb2eb1`'s same-turn plan-flip commit — but it only built + shipped the migration SCRIPT
+      (`migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`); the dry-run itself was explicitly never
+      executed, and that same slot-8 commit deliberately left the plan-level P2 checkbox open ("Plan- level P2 checkbox
+      stays open (gated on the full migration, not just the script)"). Verified against the REAL object count per this
+      item's own instruction, not just the prose: read the cited plan
+      (`plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` line 138) — still honestly `- [ ]`, "Done when: a
+      fresh census of `instruments-store-sports-prd` returns 0 objects carrying the contaminated vocabulary" — and the
+      split sub-todos in `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`: todo 2
+      (build+dry-run) is `[x]` but explicitly documents the dry-run was NOT run; todo 3 ("Apply the migration to prod,
+      gated on todo 2's dry-run review") is still `- [ ]`. No object has actually moved — the 9,733-object count is
+      unchanged from its 2026-07-20 census. So the false-done state the 03:15 UTC audit snapshot captured (backlog row
+      `done` citing a script-build sha, plan checkbox honestly still open) has already self-corrected: the live backlog
+      row for this exact id is back to `queued`/`done_sha: null`, matching the plan's own honest open state. No REOPEN
+      (would re-open work that's already honestly open, not done) or FLIP (would falsely mark an un-executed migration
+      done) was warranted or performed; this item only needed its tracker checkbox resolved with the verification trail
+      above.
+- [x] ✅ [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`) — **verified 2026-08-08
+      (slot 15): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected**, same `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as the items
+      above. `GET /api/backlog` for this exact id now returns `status: "done"`,
+      `done_sha: "no-code:gate-still-unmet-verified"` (not `45b5112e7`), `dispatched_to: 9`,
+      `done_at: 2026-08-08T15:05:57Z` — a different slot already re-ran this exact investigation after the 03:15 UTC
+      audit snapshot and closed it honestly. The backlog title/brief ("**NEW 2026-08-04.** Once…") matches the P1 todo
+      at line ~300 of the cited plan (`plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md`):
+      "Once `cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`'s backfill … completes and is
+      manifest-verified: re-run `run_cefi_perp_funding_corpus.py` … then verify `funding_window()` returns non-empty
+      observations." That todo's checkbox is correctly still `- [ ]` — cross-checked both halves of the gate: (1) the
+      dependency doc IS archived (`plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, "🟢
+      ARCHIVED 2026-08-07 — all 3 todos done"), so the RAW backfill landed, but (2) this todo's own SECOND half —
+      re-running the funding corpus script + verifying `funding_window()` — has not happened yet; the plan's own
+      "Deferred after 2026-08-08" section confirms the corpus recompute is still gated on VM `cefi-fwd-20260808-123230`
+      (launched 12:32:30Z, ~18-24h remaining as of the last Progress Log entry) plus a GCS probe, neither done as of
+      this check. So the false-done state the 03:15 UTC audit snapshot captured (backlog row `done` citing a stale sha,
+      plan checkbox honestly open) was correctly re-verified and closed by slot 9 with no code needed — nothing further
+      to do here.
+- [x] ✅ [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-014` (`done_sha=b78ec6e7c`) — **verified 2026-08-08
+      (slot 27): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected.** `GET /api/backlog` for this exact id currently returns `status: "dispatched"`,
+      `dispatched_to: 17`, `done_sha: null` (NOT `done`), same self-correcting
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every item above. `b78ec6e7c`
+      (slot-9, 2026-08-04T12:52:21Z) IS a real, on-origin commit — confirmed ancestor of `origin/live-defi-rollout` —
+      and its diff + Progress Log entry ("slot-9 2026-08-04 ~12:39Z … Step 2 DONE. Steps 1/3/4 still gated") show it
+      genuinely completed only STEP 2 of the 4-step sequenced P1 cleanup at line 330 (the 42 corrupted
+      `venue=<bare>`/`chain=FUTURES` manifest rows — 42 CAS-dropped, consolidator resumed) while explicitly leaving
+      steps 1/3/4 gated; the commit never claimed the todo itself was done, so the 03:15 UTC audit's `false_done` flag
+      (backlog row `done` citing this sha, checkbox honestly `- [ ]`) was a real Half-2 miss at the time. Cross-checked
+      the cited plan (`plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md` line 330): the todo
+      is still correctly `- [ ]` — steps 1 (corpus re-run/schedule confirmed fresh) and 3/4 (physical GCS duplicate
+      cleanup, HYPERLIQUID residual root-cause) remain open per the doc's own body. The live backlog id now points at a
+      fresh dispatch (slot 17, `dispatched_at: 2026-08-08T10:55:22Z`) actively working the same title, not a stale
+      `done` row — the false-done state has already been superseded by honest re-dispatch. No REOPEN (would collide with
+      slot 17's in-flight work on an already-correctly-queued task) or FLIP (would falsely mark unmet steps 1/3/4 done)
+      was warranted or performed; this item only needed its tracker checkbox resolved with the verification trail above.
+- [x] ✅ [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`) — **verified 2026-08-08
+      (slot 30): no REOPEN or FLIP action needed on the backlog row — already self-corrected**, same
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every item above.
+      `GET     /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null` (not `done`). But
+      verifying the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md` line
+      119-121, the `migrate_sports_casing_2026_07_22.py` checkpoint todo) surfaced a genuine **citation defect**: the
+      checkbox was already correctly `[x]` and the checkpoint code genuinely exists (`record_vm_progress` import + call
+      confirmed present in the script), but the cited sha `c98e0abb` is a real, on-origin commit that has NOTHING to do
+      with this todo — it's an unrelated `market-tick-data-service` test fix
+      (`fix(tests): update DEFI shard count 2828→2856…`, same slot-16, ~30 min later). The real checkpoint commit is
+      `486c61b2` (`feat(sports): add record_vm_progress checkpoint to migrate_sports_casing_2026_07_22.py`, slot-16,
+      2026-08-05T05:44:34Z — confirmed via `git log --follow` on the script + `git blame` on the added lines, both
+      ancestors of `origin/live-defi-rollout`). Fixed the citation in the plan doc itself (same-file findings-triage
+      fix). No REOPEN (would re-open genuinely-done work) or FLIP (already flipped, honestly, just mis-cited) was
+      warranted; this item needed a citation fix, not a status change.
+- [x] ✅ [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-009` (`done_sha=6ddb0374`) — **verified 2026-08-08
+      (slot 7): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected.** `GET /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null` (not
+      `done`), same self-correcting `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as
+      every item above. `6ddb0374` is a real, on-origin commit
+      (`feat(mtds): add record_vm_progress checkpoint to migrate_sports_casing_revert_2026_07_27.py`, slot-8,
+      2026-08-05T04:45:50Z, confirmed ancestor of `origin/live-defi-rollout`) that genuinely added the checkpoint:
+      `record_vm_progress` is imported and called (gated on the per-day `Counter` reaching zero) in
+      `market-tick-data-service/scripts/sports/k1k2_casing_revert_2026_07_27/migrate_sports_casing_revert_2026_07_27.py`.
+      Read the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md`, Category
+      A): the corresponding todo is correctly `[x]` ✅ and already cites `6ddb0374` accurately — no citation defect here
+      (unlike -008's `c98e0abb` mis-citation). So the false-done state the 03:15 UTC audit snapshot captured (backlog
+      row `done`, checkbox possibly not yet flipped at that instant) has already been corrected — both the backlog row
+      (back to `queued`/`done_sha: null`) and the plan checkbox (honestly `[x]` with an accurate citation) are
+      consistent. No REOPEN (would re-open genuinely-done work) or FLIP (already flipped, honestly) was warranted or
+      performed; this item only needed its tracker checkbox resolved with the verification trail above.
+- [x] ✅ [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-010` (`done_sha=6ddb0374` at audit time — **same
+      sha as -009**) — **verified 2026-08-08 (slot 9): no REOPEN or FLIP action needed or possible — the row this audit
+      item names has already self-corrected**, same self-correcting
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every item above.
+      `GET /api/backlog` for this exact id currently returns `status: "queued"`, `done_sha: null` (not `done`),
+      `brief: "[DATA] P2. Add \`record_vm_progress\` checkpoint
+      to"` — matching the     THIRD, still-open Category-A todo (`migrate_sports_league_id_casing_2026_07_21.py`), not the first     (`migrate_sports_casing_revert_2026_07_27.py`, already correctly claimed by -009's `6ddb0374`). Resolved slot 7's     scoping question: confirmed via `GET
+      /api/backlog`that -010's own`done_sha=6ddb0374`citation from the 03:15 UTC     audit snapshot WAS a copied-sha defect (the row never legitimately closed on that sha) — but the backlog has     already self-corrected past it (back to`queued`/`done_sha:
+      null`), so there is nothing left to fix on the row     itself. Verified the underlying checkpoint work genuinely is NOT done, confirming the plan checkbox's honesty:     `git
+      log -1 origin/live-defi-rollout --
+      scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`     shows the file's last touch was an unrelated commit (`1970ef45`, defi gas-fees/casing script batch), and     `grep
+      -n
+      record_vm_progress`against that script at`origin/live-defi-rollout` returns zero hits — no checkpoint     exists. Cross-checked the cited plan (`plans/active/issues/mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md`    line 124): the third todo is correctly still`-
+      [
+      ]`, consistent with both the live backlog (queued, real     unstarted work) and the script (no checkpoint present). No REOPEN (nothing `done`to reopen) or FLIP (work     genuinely isn't done) was warranted or performed; this item only needed its tracker checkbox resolved with the     verification trail above — the real checkpoint work stays live in the backlog as task    `mtds_migrate_executor_progress_checkpoint_gap-010`
+      for a future data_engineering dispatch.
+- [x] ✅ [BACKEND] P2. `deployment_scripts_bucket_soft_delete_retention_drift-002` (`done_sha=97d37ce57`) — **verified
+      2026-08-08 (slot 7): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected**, same `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every
+      item above. `GET /api/backlog` (2,429 rows) has zero rows currently holding the id
+      `deployment_scripts_bucket_soft_delete_retention_drift-002` (only the unrelated `-001` orphan,
+      `done_sha=2e9c249d7`, survives under this doc family). `97d37ce57` is a real, on-origin commit
+      (`docs(plans): exact - [x] brief match for 08-06 pre-gate verification flip…`, slot-6, 2026-08-06T14:33:53Z) that
+      flipped the PRE-GATE checkpoint todo (line 104: "Final drain confirmation on/after 2026-08-09" — **VERIFIED
+      2026-08-06 (slot-6, infra, PRE-GATE): NOT yet drained**, 98.6% bloat_pct vs done-when ≤9%, explicitly recorded as
+      "records the 08-06 verification cycle, NOT the final drain"), not the real final-drain todo — a legitimate,
+      honestly-documented interim checkpoint, not an over-claim. Read the cited plan
+      (`plans/active/issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`): line 104 is correctly
+      `[x]` matching `97d37ce57` exactly, and the REAL final-drain todo (line 114, same title, separate checkbox) is
+      correctly still `- [ ]` with a `DEFERRED-BY-DESIGN` marker gating it to on/after 2026-08-09 (today is 2026-08-08 —
+      not due yet, confirming this audit item's own "likely REOPEN, not FLIP" hunch was half right: the gate is
+      genuinely unmet, but there is no live `done` backlog row left to REOPEN either). No REOPEN (nothing currently
+      `done` to reopen) or FLIP (already flipped, honestly, on the correct pre-gate todo) was warranted or performed;
+      this item only needed its tracker checkbox resolved with the verification trail above.
+- [x] ✅ [BACKEND] P2. `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025`
+      (`done_sha=0e9185d2c`) — **verified 2026-08-08 (slot 20): no REOPEN or FLIP action needed — the plan checkbox
+      already honestly matches the sha.** `0e9185d2c` (`unified-trading-pm`, slot-11, 2026-08-07T19:22:15Z, confirmed
+      ancestor of `origin/live-defi-rollout`) is the **twelfth** dispatch of the time-gated "Round-8 ACTUAL LAUNCH" todo
+      in `plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`
+      (line 868) — it did NOT launch any VMs (its own text: "UTC=2026-08-07T19:12Z (NOT ≥ 2026-08-08T00:00Z...) ... No
+      VMs launched"), it correctly deferred (all 8 shards were AT/OVER the `≤2/(vm-prefix,day)` budget cap) and added a
+      gated follow-up todo (line 888, `-026` in the backlog, still genuinely `- [ ]`/`queued`). The checkbox this sha
+      touched is `[x]` — consistent with the doc's own established pattern (11 prior "Nth deferred" todos, lines
+      688-841, all correctly checked done-as-correctly-deferred, not done-as-launched) — so this was never a false-done
+      in truth: "done" here means "this dispatch cycle completed (by deferring honestly)", not "shards launched".
+      **Adjacent finding while verifying**: the Cloud Scheduler job meant to auto-flip the `-026` gating prereq
+      (`cefi-round8-midnight-prereq-flip`) fired at its scheduled 2026-08-08T00:01:00Z time but FAILED
+      (`gcloud scheduler jobs describe cefi-round8-midnight-prereq-flip --location=asia-northeast1     --project=central-element-323112`
+      → `status.code=2`, i.e. UNKNOWN/unreachable) — its `httpTarget.uri` is
+      `http://13.113.200.22:8765/api/prerequisites/...`, the orchestrator VM's PUBLIC EIP on port 8765, which has NO
+      inbound firewall rule (confirmed workspace-wide convention: `/check-agent-orchestrator` skill exists specifically
+      because "VM:8765 has no inbound rule"). Its cron (`1 0 8 8 *`) next fires **2027-08-08** — this prereq is now
+      stuck false indefinitely, permanently blocking `-026` unless someone manually flips it or fixes the job. Filed as
+      a tracked todo in the cefi plan doc itself (see that doc's new Follow-ups todo) rather than fixed inline here —
+      root-causing/redesigning the flip mechanism is out of scope for this verification-only item.
 
 ## Follow-ups
 
-- [ ] [BACKEND] P2. **Characterise the 1,013 `unresolved` rows.** Confirm the expected explanation (rows whose plan was
-      archived, so `plan_ref` no longer resolves at `origin/live-defi-rollout`) actually accounts for the bulk, and
+- [x] ✅ [BACKEND] P2. **Characterise the 1,013 `unresolved` rows.** Confirm the expected explanation (rows whose plan
+      was archived, so `plan_ref` no longer resolves at `origin/live-defi-rollout`) actually accounts for the bulk, and
       report the residue that does NOT. A row that is `done` and unresolvable is invisible to this audit forever, so a
-      large unexplained residue is a silent-blindspot, not bookkeeping noise. Report the split; do not bulk-mutate.
+      large unexplained residue is a silent-blindspot, not bookkeeping noise. Report the split; do not bulk-mutate. —
+      **verified 2026-08-08 (slot 22): expected explanation accounts for 100% of the bulk, zero unexplained residue.**
+      Full trail in the Progress Log below.
 - [ ] [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows.**
       `regen_positional_task_ids_not_content_stable_2026_07_17.md` already shipped `agent-orchestrator@aaa2db8` to bound
       this tail and the count still moves — re-measure, and confirm every remaining unhashed row is a `done` row (which
@@ -297,6 +434,18 @@ plan + verifying the `done_sha`, never from the row's status alone.
   the plan checkbox already reflect the honest state; nothing to correct. See the checklist item above for the full
   trail.
 
+- **2026-08-08 (slot 12, backend_engineer)**: Verdict on `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5` at
+  audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting positional-id pattern as the 6
+  items above. `GET /api/backlog` (2,429 rows) has zero rows with `done_sha=976786c5` anywhere, and this exact id is now
+  `status: "queued"`, `done_sha: null`. `976786c5` (market-tick-data-service, slot-8, 2026-08-04) only built + shipped
+  the migration SCRIPT — the dry-run was never executed and that same commit's own plan-flip explicitly left the
+  plan-level checkbox open. Verified against the real object count per this item's instruction, not just prose: the
+  cited plan (`sports_closeout_track_x_hygiene_2026_07_25.md` line 138) is still honestly `- [ ]`, and the issue doc's
+  own gated "Apply the migration to prod" sub-todo
+  (`sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`) is still `- [ ]` — no object has actually
+  moved, the 9,733-object count is unchanged. Both the backlog and the plan checkbox already reflect the honest open
+  state; nothing to correct. See the checklist item above for the full trail.
+
 - **2026-08-08 (slot 18, backend_engineer)**: Verdict on `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`
   at audit time): **no REOPEN or FLIP action needed or possible** — already self-corrected by a different session
   (slot-10) before this task was picked up, same self-correcting positional-id pattern as the 5 items above.
@@ -306,3 +455,66 @@ plan + verifying the `done_sha`, never from the row's status alone.
   VM freshly re-verified RUNNING with a clean run.log. The plan checkbox at
   `infra_capture_and_devops_leftovers_2026_07_06.md` line 292 is correctly `[x]` ✅ and matches `f79fbded3` exactly.
   Nothing to correct. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 27, backend_engineer)**: Verdict on `defi_cefi_venue_chain_axis_contamination-014`
+  (`done_sha=b78ec6e7c` at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting
+  positional-id pattern as the 7 items above. `GET /api/backlog` shows this exact id is currently
+  `status: "dispatched"`, `dispatched_to: 17`, `done_sha: null` (not `done`). `b78ec6e7c` (slot-9, 2026-08-04) was a
+  genuine false-done AT THE TIME: it only completed step 2 of the 4-step sequenced P1 cleanup at line 330 of
+  `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` (its own Progress Log entry says "Step 2 DONE. Steps 1/3/4
+  still gated"), and the checkbox there is correctly still `- [ ]`. The live backlog row for this id is now a fresh
+  in-flight dispatch to slot 17, not a stale `done` row — the false-done state has already self-corrected. See the
+  checklist item above for the full trail.
+
+- **2026-08-08 (slot 30, backend_engineer)**: Verdict on `mtds_migrate_executor_progress_checkpoint_gap-008`
+  (`done_sha=c98e0abb` at audit time): **no REOPEN or FLIP action needed on the backlog row** — same self-correcting
+  positional-id pattern as the 8 items above (`GET /api/backlog` shows `status: "queued"`, `done_sha: null`). Verifying
+  the cited plan checkbox surfaced a real citation defect instead: `c98e0abb` is a genuine on-origin commit but an
+  unrelated test fix, not the checkpoint work. The checkpoint itself is real and the checkbox was already honestly `[x]`
+  — corrected the citation to the actual commit `486c61b2` in
+  `mtds_migrate_executor_progress_checkpoint_gap_2026_08_04.md` (same-file findings-triage fix). See the checklist item
+  above for the full trail.
+
+- **2026-08-08 (slot 9, backend_engineer)**: Verdict on `mtds_migrate_executor_progress_checkpoint_gap-010`
+  (`done_sha=6ddb0374` at audit time, same sha as -009): **no REOPEN or FLIP action needed or possible** — same
+  self-correcting positional-id pattern as the 9 items above. Resolved slot 7's open scoping question:
+  `GET /api/backlog` confirms -010's brief matches the THIRD Category-A todo
+  (`migrate_sports_league_id_casing_2026_07_21.py`), so the audit-time `6ddb0374` citation (which actually belongs to
+  -009's script) was genuinely a copied-sha defect — but the backlog row has already self-corrected to
+  `status: "queued"`, `done_sha: null`, so there is no live false-done state left to fix. Confirmed the underlying work
+  genuinely isn't done: zero `record_vm_progress` hits in `migrate_sports_league_id_casing_2026_07_21.py` at
+  `origin/live-defi-rollout`, matching the plan's own still-open checkbox (line 124). No REOPEN or FLIP performed; the
+  real checkpoint work remains correctly queued as its own backlog task. See the checklist item above for the full
+  trail.
+
+- **2026-08-08 (slot 7, backend_engineer)**: Verdict on `deployment_scripts_bucket_soft_delete_retention_drift-002`
+  (`done_sha=97d37ce57` at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting
+  positional-id pattern as the 10 items above. `GET /api/backlog` (2,429 rows) shows zero rows currently holding this
+  exact id. `97d37ce57` (slot-6, 2026-08-06) is a real commit that flipped the PRE-GATE verification checkpoint (line
+  104), a legitimate interim checkpoint distinct from the REAL final-drain todo (line 114, same title, separate
+  checkbox) — both are correctly stated in the plan doc: line 104 `[x]` matches `97d37ce57` exactly, line 114 is
+  correctly still `- [ ]` and `DEFERRED-BY-DESIGN`-gated to on/after 2026-08-09 (not due yet as of today, 2026-08-08).
+  Nothing to correct on either the backlog row (already gone/self-corrected) or the plan checkbox (already honest). See
+  the checklist item above for the full trail.
+
+- **2026-08-08 (slot 22, backend_engineer)**: Follow-up — **Characterise the 1,013 `unresolved` rows.** Ran
+  `audit_false_done.py --json` live against the actual production `state.db` (`agent-orchestrator/data/state/state.db`,
+  224MB, on the orchestrator VM itself — this slot runs ON that VM, so no SSM hop was needed) with `--pm` pointed at a
+  fresh `origin/live-defi-rollout` fetch (ref `0f6635534`). Live counts have moved since the 03:15 UTC snapshot
+  (expected, ongoing churn): `false_done=3` (down from 14 — the other 11 already self-corrected per the checklist items
+  above), `honest=745`, `UNAUDITABLE=11`, **`unresolved=1042`** (up from 1,013). **Characterisation**: for each of the
+  1,042 unresolved `task_id`s, pulled its `plan_ref` from `state.db`, then checked whether that path's basename appears
+  anywhere under `plans/archive/` at `origin/live-defi-rollout` (via `git ls-tree -r --name-only`, 2,768 archive files
+  indexed) — i.e., whether the row's plan doc was genuinely archived (the audit script's own hypothesis) rather than
+  broken/mis-cited. Result: **1,042 / 1,042 (100%) matched an archived file by basename — zero residue.** Spot-checked 3
+  random samples with `git show origin/live-defi-rollout:<literal plan_ref>` (confirmed each fails to resolve, as the
+  audit found) cross-referenced against the matching archive path (confirmed each exists, e.g.
+  `plans/active/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` →
+  `plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`) — all 3 confirmed genuine
+  archival, not coincidence. Caveat noted for rigor: 15 basenames are duplicated across the archive tree (e.g. two
+  different `api_host_chronic_impairment_2026_05_29.md` docs in different month folders) — a basename-only match can't
+  distinguish which specific archived copy a row's original doc became in that rare case, but it does not change the
+  headline finding (still a real archived doc either way, not a broken/dangling `plan_ref`). **Verdict: the expected
+  explanation fully accounts for the unresolved bucket — this is bookkeeping noise from normal plan-archival lifecycle,
+  not a silent blindspot.** No bulk-mutation performed (per the todo's own instruction); this is a report-only finding,
+  no code shipped, no backlog rows touched.

@@ -27,15 +27,15 @@ repeatable, `/`-invocable, tranche-parameterized skill — the same treatment `/
 detection. Where that skill asks "is anything uncovered?", this skill asks a different question about a DIFFERENT,
 population that in practice OVERLAPS `/ag-closeout-audit`'s: **"of the docs that already have an owner
 (`assigned_vm: NA`), is that self-classification still correct?"** Operator ruling 2026-08-08 (ao round-5,
-`na_and_ag_closeout_audit_population_overlap_2026_07_31.md`): `generate_ag_closeout_audit_candidates.py`
-deliberately does NOT exclude `assigned_vm: NA` docs from its candidate population -- keep it that way, since a
-never-cited NA doc might genuinely be a mis-tracked orphan this skill alone wouldn't catch. So an `assigned_vm: NA`,
+`na_and_ag_closeout_audit_population_overlap_2026_07_31.md`): `generate_ag_closeout_audit_candidates.py` deliberately
+does NOT exclude `assigned_vm: NA` docs from its candidate population -- keep it that way, since a never-cited NA doc
+might genuinely be a mis-tracked orphan this skill alone wouldn't catch. So an `assigned_vm: NA`,
 `status: active`/`open` doc is NOT by definition safe from `/ag-closeout-audit` -- the two skills' populations can
 legitimately claim the same doc, and the 4th conflict-check surface
-(`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) is the load-bearing mechanism
-that prevents a double-dispatch, not population disjointness. Sampling the NA population has repeatedly found it is
-a genuine mix, not a monolith: real evidenced judgment work (majority), stale-but-harmless duplication, and
-genuinely mis-defaulted AO-eligible content.
+(`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) is the load-bearing mechanism that
+prevents a double-dispatch, not population disjointness. Sampling the NA population has repeatedly found it is a genuine
+mix, not a monolith: real evidenced judgment work (majority), stale-but-harmless duplication, and genuinely
+mis-defaulted AO-eligible content.
 
 **Out of scope** (route there instead of duplicating): orphan detection with no active covering plan
 (`/ag-closeout-audit`'s corpus); corpus-wide contradiction/false-unchecked-checkbox sweeps across the WHOLE corpus
@@ -236,10 +236,13 @@ whatever the doc's own prose claims.
 
 For every doc verdicted RECLASSIFY in Phase 1, run the shared conflict-check protocol
 (`ao-dispatch-batch-naming-and-conflict-check.md` § 3) against every currently-active `assigned_vm: planning` plan in
-the same `parent_epic`, any sibling batch/finalize doc drafted earlier in this same run, and the tranche's own
-consolidated-closeout doc. Clear → proceed to Phase 3. Conflict → do NOT flip; file the conflicted item in the run's
-Deferred/parked list for an explicit operator ruling, same as `/ag-closeout-audit`'s sports-batch3 precedent (23 of 25
-candidates held back there over exactly this check).
+the same `parent_epic`, any sibling batch/finalize doc drafted earlier in this same run, the tranche's own
+consolidated-closeout doc, **and the 4th surface** — any `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for
+the same tranche from a PRIOR `/ag-closeout-audit` or `/na-eligibility-audit` run, not just this one; grep its
+`Source:`/`## Deferred`/`## Already covered` citations for the candidate doc's path before flipping. Clear → proceed to
+Phase 3. Conflict → do NOT flip; file the conflicted item in the run's Deferred/parked list for an explicit operator
+ruling, same as `/ag-closeout-audit`'s sports-batch3 precedent (23 of 25 candidates held back there over exactly this
+check).
 
 ## Phase 3 — apply
 

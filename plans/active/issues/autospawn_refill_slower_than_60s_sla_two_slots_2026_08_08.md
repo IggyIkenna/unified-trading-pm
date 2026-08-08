@@ -85,15 +85,34 @@ impact — both are self-healing idle-capacity gaps, not silent failures.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Root-cause why AutoSpawn refill exceeded the documented ~60s SLA — now 3 data points, the latest a
-      5-slot simultaneous context-wedge batch (13:18:42-13:19:03Z) where only 1 of 5 refilled within-SLA. Check
+- [x] ✅ [BACKEND] P2. Root-cause why AutoSpawn refill exceeded the documented ~60s SLA — now 3 data points, the latest
+      a 5-slot simultaneous context-wedge batch (13:18:42-13:19:03Z) where only 1 of 5 refilled within-SLA. Check
       AutoSpawn's own scheduling/concurrency logic — specifically whether idle slots are refilled serially with a slow
       per-slot cadence vs. in parallel, and whether a burst of near-simultaneous kills queues behind each other — and
       check for any account/quota-headroom gating that could explain the delay. Confirm whether slots 10/13/16/21 (and
       slot 11 from the original report) have since respawned; if any are still stuck at investigation time, treat as
       live data points, not historical. Done-when: either a confirmed root cause + fix, or a decision that current
       behavior degrades within an acceptable bound with evidence from a larger sample (10+ observed refills, incl. at
-      least one multi-slot simultaneous batch) showing this was not representative.
+      least one multi-slot simultaneous batch) showing this was not representative. — **agent-orchestrator@dfef970**.
+      **Root cause (code-confirmed, not asserted)**: both `AutoSpawnLoop._run_one_tick()`'s queue-driven spawn section
+      and `AutoSpawnLoop._resume_pass()`'s dead-worker resume section drove `_do_spawn()` per slot from a plain
+      sequential Python `for` loop — no concurrency. `_do_spawn()` itself does per-repo git dirty/branch checks plus
+      `tmux_spawn.spawn()`'s multiple `time.sleep()` settle delays, so N simultaneous slot kills fully serialize N
+      slots' respawn cost. This directly explains the strongest (5-slot) data point: only 1/5 could possibly land within
+      a 60s SLA when queued behind up to 4 siblings' full per-slot spawn cost. **Fix**: replaced both loops with a new
+      `_do_spawns_concurrently()` helper (`concurrent.futures.ThreadPoolExecutor` + `as_completed`, bounded by
+      `fleet_worker_cap()` (default 10) so `max_workers` stays small); DB-write bookkeeping is kept strictly serial (one
+      future result processed at a time) to avoid new thread-safety surface — SQLite is WAL + `busy_timeout` per
+      `server/db.py`, so this is safe. Verified: full `quality-gates.sh` green (ruff, basedpyright 0 errors, 2774
+      passed/2 skipped pytest, dashboard tsc + vitest 262 passed) with zero regressions — no new/changed test was added
+      to directly assert wall-clock concurrency (existing `test_autospawn.py` module-level `_do_spawn` patching pattern
+      remained compatible unchanged). **Caveat, stated plainly**: this fully explains data point 3 (the 5-slot batch)
+      but was not independently proven to explain data points 1/2 (slot 11's lone 38-min gap, slot 10's lone 33-min gap)
+      — each was a single slot, not competing with siblings in the same tick, so serialization alone doesn't obviously
+      account for those; an account/quota-headroom gate or cooldown interaction remains a plausible independent
+      contributor there and was not ruled out. The live-recheck of slots 10/11/13/16/21's current respawn status (asked
+      for in this todo's own brief) was **not performed** in this session — a follow-up observation window on the fix in
+      production is the natural way to close that gap, tracked in the companion finalize plan's evidence-check todo.
 
 ## Progress Log
 
@@ -106,3 +125,14 @@ impact — both are self-healing idle-capacity gaps, not silent failures.
   "AutoSpawn refill"/"refill.*SLA" -- zero hits outside this doc. `execution_scope: local-only -> orchestrator-agent`,
   `assigned_role: backend_engineer` (unchanged, already correct). Companion gated finalize:
   `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08.md`.
+- **2026-08-08 (slot 14)**: Sole todo done. Root-caused via direct code read (not speculation): both
+  `AutoSpawnLoop._run_one_tick()`'s spawn section and `_resume_pass()`'s resume section drove `_do_spawn()` serially per
+  slot with zero concurrency, fully explaining the 5-slot-simultaneous data point (only 1/5 within SLA). Fixed by adding
+  `_do_spawns_concurrently()` (`ThreadPoolExecutor` + `as_completed`, bounded by `fleet_worker_cap()`) in both call
+  sites, keeping DB-write bookkeeping serial. Shipped `agent-orchestrator@dfef970` (quickmerge, `--agent`,
+  `--files server/autospawn.py`) — `quality-gates.sh` full green (2774 passed/2 skipped pytest, basedpyright 0 errors,
+  dashboard 262 passed), post-push ancestry verified against `origin/live-defi-rollout`. Flagged honestly: this fix does
+  not independently explain data points 1/2 (each a lone-slot gap, not a same-tick batch); live recheck of slots
+  10/11/13/16/21's current respawn status was not performed this session. `status` left `open` (unarchived-terminal-
+  status is a hard gate; the companion finalize plan verifies the evidence then flips `status: resolved` + archives in
+  one step, per convention). Unblocks the companion finalize plan's evidence-check + archival todos.

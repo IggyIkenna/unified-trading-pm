@@ -292,10 +292,10 @@ Both were established by reading the code, and both are silent — neither raise
   test-isolation gap (fixture session names like `orch-slot-9` collide with REAL slot config dirs on this shared 18-slot
   host, so an unmocked `context_probe.context_used_pct()` read genuine transcript data instead of `None`; invisible on
   CI's ephemeral runner). Fixed by mocking it in both files' worker-path fixtures. Full details + the root-cause
-  diagnosis: `/plans/active/issues/agent_orchestrator_local_qg_red_context_lifecycle_worker_liveness_2026_08_08.md`.
-  Shipped in the SAME commit as the todo above (both were `git add`-staged together since the QG-red fix was a hard
-  precondition for shipping anything from this repo on this host). Evidence: agent-orchestrator@ba6eff5 (verified on
-  origin/live-defi-rollout; QG PASSED 2767/2767 on this exact SHA before quickmerge).
+  diagnosis: `/plans/archive/issues/agent_orchestrator_local_qg_red_context_lifecycle_worker_liveness_2026_08_08.md`
+  (archived since). Shipped in the SAME commit as the todo above (both were `git add`-staged together since the QG-red
+  fix was a hard precondition for shipping anything from this repo on this host). Evidence: agent-orchestrator@ba6eff5
+  (verified on origin/live-defi-rollout; QG PASSED 2767/2767 on this exact SHA before quickmerge).
 
 - **2026-08-08 (slot 21, content_derived_backlog_task_ids-005)**: Rewrote both guard-test docstrings
   (`test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`,

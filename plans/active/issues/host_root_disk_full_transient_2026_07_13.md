@@ -120,36 +120,54 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
       150-200G `.venv` footprint could shrink dramatically for free; (c) if hardlink-dedup can't be made to work
       cross-slot, a liveness-aware per-slot `.venv` prune (idle-slot detection, same pattern as the VM-collision guard)
       is the real fix for driver #2, not a blanket cron.
-- [ ] [INFRA] P2. **Follow-on: schedule the uv-cache prune cron + investigate cross-slot `.venv` dedup** — (a)
-      ~~operator runs `install-prune-uv-cache-cron.sh`~~ **DONE 2026-08-07** — operator ran it directly on the AO
+- [ ] [INFRA] P2. **Remaining scope narrowed to the fix-build step only** (reconciled against
+      `infra_satellite_ao_dispatch_batch6_2026_08_02.md@88668b743`'s hardlink-dedup investigation, its `[INFRA] P3`
+      todo, DONE 2026-08-08). (a) ~~operator runs `install-prune-uv-cache-cron.sh`~~ **DONE 2026-08-07**, correctly
+      `[OPERATOR]`-gated at the time (no crontab-write permission for this account) — operator ran it directly on the AO
       orchestrator VM (`ip-172-31-5-118`, via `ssh agent-orchestrator-vm`); registered `0 */6 * * *` (every 6h, matches
       the script's default cadence), replacing a stale differing entry. Confirmed via
-      `crontab -l | grep prune-uv-cache`. **(b) INVESTIGATED 2026-08-08 — see dated finding below (root cause + verdict:
-      FIXABLE but regression trigger not conclusively isolated by read-only investigation; needs a live-tracing
-      follow-up before a fix can be written).** **(c) remains open** — a liveness-aware per-slot `.venv` prune, gated on
-      whether a future live-tracing pass concludes cross-slot dedup genuinely can't be restored; out of this
-      investigation's scope (explicitly excluded — it was read-only, no prune tooling built/deployed).
+      `crontab -l | grep prune-uv-cache`. **(b) INVESTIGATED 2026-08-08, DONE** — batch6's read-only investigation
+      confirmed a fleet-wide (1,800/1,800 sampled `.so` files, all 16 slots) cache→venv hardlink-dedup regression;
+      verdict **FIXABLE, not yet fixed**, with a concrete leading-candidate fix on record: `scripts/setup.sh` never
+      exports `UV_LINK_MODE`/`UV_CACHE_DIR` itself (relies entirely on inherited env) — add explicit
+      `export UV_CACHE_DIR=...; export UV_LINK_MODE=hardlink` directly inside `scripts/setup.sh` (matching
+      `base-service.sh`'s derivation), then re-run `setup.sh` for one repo in one slot and verify `nlink>1` on a shared
+      file before rolling fleet-wide. That fix-build + single-repo verification is a repo-local script edit with no
+      cron/host-level permission required — **no `[OPERATOR]` tag needed** on it (only sub-item (a) above was ever
+      operator-gated, and it is already done). **(c) remains the fallback** — a liveness-aware per-slot `.venv` prune,
+      only if the setup.sh fix above doesn't restore dedup; not yet built, out of batch6's read-only-investigation scope
+      either way.
 
 ## Progress Log
 
+- **infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md@infra_satellite_ao_dispatch_batch6_finalize-002,
+  2026-08-08**: reconciled this doc's `[INFRA] P2` todo against
+  `infra_satellite_ao_dispatch_batch6_2026_08_02.md@88668b743`'s hardlink-dedup investigation (verdict: FIXABLE, not yet
+  fixed — concrete leading-candidate fix identified but not built, per batch6's explicit read-only-investigation scope
+  exclusion on building/deploying prune tooling). Per the finalize plan's own reconciliation instruction: checkbox left
+  OPEN (a concrete fix was identified, just not yet built) and its text narrowed to the remaining fix-build step only
+  (add `UV_LINK_MODE`/`UV_CACHE_DIR` exports to `scripts/setup.sh` + single-repo `nlink>1` verification), dropping the
+  now-done (a)/(b) framing. Confirmed the cron-install sub-item (a) is correctly `[OPERATOR]`-gated (it was, and is
+  already done) and that no `[OPERATOR]` tag is needed on the new narrowed fix-build scope (a repo-local script edit, no
+  cron/host permission required). Doc keeps its own operator-gated-by- history remainder — `assigned_vm: NA` unchanged,
+  NOT an archival candidate this round (confirms the finalize plan's own stated expectation).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid. The sole open todo (2, bundling
-  sub-items a/b/c) is unchanged in count (`grep -cE '^- \[ \]'` = 1) but its content moved substantially today: (a)
-  DONE (operator ran the cron installer 2026-08-07); (b) INVESTIGATED today by
-  `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s own `[INFRA] P3` todo (also `[x]` DONE today,
-  cross-referenced back to this doc) — root cause confirmed (fleet-wide zero cache→venv hardlink dedup,
-  `scripts/setup.sh` never exporting `UV_LINK_MODE`/`UV_CACHE_DIR` itself is the leading candidate) but the
-  investigating agent's own text explicitly declines to treat the fix as ready-to-dispatch as-is: "the exact
-  regression trigger needs a live-tracing follow-up (out of this read-only investigation's scope)... Recommended next
-  step (not this task's to do — a separate, properly-scoped follow-up)." That self-assessment from the same-day
-  investigating worker is a stronger signal than a generic "looks bounded" read — a worker already closest to the
-  problem judged it not yet dispatchable without further scoping. (c) remains an explicit fallback contingent on (b)'s
-  live-tracing outcome. Net: this doc's own literal remaining todo (c, the liveness-aware prune) is still genuinely
-  gated on a not-yet-done follow-up investigation, so it does not clear the bounded/deterministic bar today — but the
-  concrete 2-step fix now on record (add `UV_LINK_MODE=hardlink`/`UV_CACHE_DIR` exports directly to `scripts/setup.sh`,
-  verify via an `nlink>1` check on one repo) is a strong RECLASSIFY-candidate for a fresh, properly-scoped dispatch
-  once that live-tracing step lands — flagging, not actioned this run (consistent with this doc's own established
-  practice, e.g. the 2026-08-07 marker's identical "flagging as a RECLASSIFY-candidate... not actioned this run").
-  `assigned_vm: NA` correct.
+  sub-items a/b/c) is unchanged in count (`grep -cE '^- \[ \]'` = 1) but its content moved substantially today: (a) DONE
+  (operator ran the cron installer 2026-08-07); (b) INVESTIGATED today by
+  `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s own `[INFRA] P3` todo (also `[x]` DONE today, cross-referenced
+  back to this doc) — root cause confirmed (fleet-wide zero cache→venv hardlink dedup, `scripts/setup.sh` never
+  exporting `UV_LINK_MODE`/`UV_CACHE_DIR` itself is the leading candidate) but the investigating agent's own text
+  explicitly declines to treat the fix as ready-to-dispatch as-is: "the exact regression trigger needs a live-tracing
+  follow-up (out of this read-only investigation's scope)... Recommended next step (not this task's to do — a separate,
+  properly-scoped follow-up)." That self-assessment from the same-day investigating worker is a stronger signal than a
+  generic "looks bounded" read — a worker already closest to the problem judged it not yet dispatchable without further
+  scoping. (c) remains an explicit fallback contingent on (b)'s live-tracing outcome. Net: this doc's own literal
+  remaining todo (c, the liveness-aware prune) is still genuinely gated on a not-yet-done follow-up investigation, so it
+  does not clear the bounded/deterministic bar today — but the concrete 2-step fix now on record (add
+  `UV_LINK_MODE=hardlink`/`UV_CACHE_DIR` exports directly to `scripts/setup.sh`, verify via an `nlink>1` check on one
+  repo) is a strong RECLASSIFY-candidate for a fresh, properly-scoped dispatch once that live-tracing step lands —
+  flagging, not actioned this run (consistent with this doc's own established practice, e.g. the 2026-08-07 marker's
+  identical "flagging as a RECLASSIFY-candidate... not actioned this run"). `assigned_vm: NA` correct.
 - **2026-08-08 (infra, `infra_satellite_ao_dispatch_batch6-001`, root-cause investigation of sub-item (b)).** **Root
   cause: CONFIRMED REGRESSION to zero cache→venv hardlink dedup, fleet-wide — not a cache-keying mismatch, not a
   cross-filesystem fallback.** Read-only investigation, no `.venv` modified anywhere, no fresh installs triggered.

@@ -63,13 +63,20 @@ skill's no-double-gate mechanism).
 
 ## Todos
 
-- [ ] [REVIEW] P3. **Reconcile
-      `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`'s todos 1-2.**
+- [x] ✅ SUPERSEDED-BY-EVENTS 2026-08-07 (pre-empted by an earlier operator ruling) — [REVIEW] P3. ~~Reconcile
+      `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`'s todos 1-2.
       Once batch7's content-hash (todo 1) and SKILL.md-update (todo 2) todos ship, flip both of that source doc's
-      `- [ ] [SCRIPT] P3` / `- [ ] [DOCS] P3` checkboxes to `[x]`, citing the batch7 commit SHA(s). Both of that doc's
-      todos are consumed by this batch — if flipping both leaves it with zero open checkboxes and no other
-      operator-gated remainder, treat it as an archival candidate (confirm via `check_archive_candidates.sh` or a direct
-      re-read) rather than leaving it stranded `active`/`open` with nothing left to do. (repo: unified-trading-pm)
+      `- [ ] [SCRIPT] P3` / `- [ ] [DOCS] P3` checkboxes to `[x]`, citing the batch7 commit SHA(s).~~ This todo's own
+      premise (flip-on-ship, citing batch7's shipped SHAs) never triggered: a SEPARATE, earlier 2026-08-07 operator
+      ruling ("less work and edits, still correct" — recorded in commit d1d36f012) citation-closed both of the source
+      doc's todos as duplicates of batch7's own (then-still-`draft`) todos, one day before batch7's todos actually
+      shipped (2026-08-08). Both source-doc checkboxes were flipped `[x]` on that basis (Option A: cite the batch7 plan,
+      don't re-do the work here) — not by citing shipped SHAs, since none existed yet at ruling time. With both
+      checkboxes closed and no other operator-gated remainder, the source doc was archived the same day
+      (unified-trading-pm@70d750e74, per the standard 6-step ritual) to
+      `/plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`
+      — confirmed present there, `status: resolved`, both todos `[x]`. Nothing left for this todo to do. (repo:
+      unified-trading-pm)
 - [x] ✅ SUPERSEDED-BY-EVENTS 2026-08-08 (cicd wall-fix pass) — [REVIEW] P3. ~~Reconcile
       `issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`'s sole todo — narrow, do NOT
       close.~~ This todo's own premise (the (a)/(b) structural decision stays open, source doc not archival-eligible
@@ -99,3 +106,10 @@ skill's no-double-gate mechanism).
 - **2026-08-04** — Authored alongside `infra_satellite_ao_dispatch_batch7_2026_08_04.md` by `/ag-closeout-audit infra`
   (autonomous mode, scheduled daily run, slot 10).
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (2 entries), still accurate.
+- **2026-08-08 (review, slot 22)** — Todo 1 flipped `SUPERSEDED-BY-EVENTS`: verified
+  `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md` was already
+  citation-closed + archived a day BEFORE batch7's own todos shipped (2026-08-07 operator ruling, commit d1d36f012, then
+  archived via unified-trading-pm@70d750e74) — this todo's flip-on-ship premise never applied. Both of batch7's own
+  todos (1, 2) and the finalize plan's todo 2 (deployment_service_live_event_log) were already `[x]` before this
+  session; with all three now closed, todo 3 (archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md`) is unblocked
+  for the next dispatch (out of scope for this task — a separate `[DOC]`-tagged todo).

@@ -15,7 +15,7 @@ summary: >-
   this specific task shape. No server log was reachable from the worker slot to capture the actual traceback (uvicorn
   process 2088889 on the shared host pipes to fds with no readable log-file path found from .tabs/16) -- a fix needs to
   run locally against the live DB/backlog to get the real stack trace, not guess from code reading alone.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -35,10 +35,15 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 estimate_class: refactor
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@55aedc9
 locked_by:
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-08** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-immediately rule. Root cause found + fixed: `resolved_by: agent-orchestrator@55aedc9`. See the Progress Log
+> below for the full root-cause writeup.
 
 # `skip-current-task` 500s when `park_now: true`
 
@@ -88,8 +93,37 @@ whatever it calls). Since the plain-skip path already covers the immediate need 
 urgent/blocking — but it's a real defect in a documented, intentionally-built recovery mechanism and should not silently
 sit broken.
 
-- [ ] [BACKEND] P2. Reproduce `POST /api/slots/{N}/skip-current-task` with `park_now: true` against a live dispatched
+- [x] ✅ [BACKEND] P2. Reproduce `POST /api/slots/{N}/skip-current-task` with `park_now: true` against a live dispatched
       task, capture the actual traceback (run the server with stdout visible, or add temporary exception logging), and
       fix the root cause in `server/auto_park.py:manual_park` (or its callees `park_condition_name`/
       `ss.set_prerequisite`/`ss.mark_parked`) so a durable park via `skip-current-task {"park_now": true}` succeeds.
-      (repo: agent-orchestrator)
+      (repo: agent-orchestrator) — agent-orchestrator@55aedc9
+
+## Progress Log
+
+**2026-08-08 (slot-18)**: Reproduced in an ISOLATED harness (own `.tabs/18` state.db + a scratch copy of `backlog.yaml`,
+never the live production DB/backlog.yaml) that ran `register_cooldown()` immediately followed by
+`auto_park.manual_park()` in the same DB transaction — exactly what `skip_current_task`'s `park_now=True` branch does.
+Got the real traceback: `sqlalchemy.exc.IntegrityError: UNIQUE constraint failed: dispatch_cooldowns.key`.
+
+Root cause: `register_cooldown()` (`server/state_store/cooldown.py`) builds a brand-new `CooldownRow` and calls
+`session.merge(merged)` but never flushes. The session factory runs `autoflush=False`, so on a task's FIRST
+GATED/BLOCKED/PARKED decline (no prior row — exactly the case `park_now=True` is meant to handle, since it bypasses the
+N-skip threshold), the merged row stays pending/unflushed and invisible to `session.get()`. Moments later in the SAME
+transaction, `manual_park` → `mark_parked()` calls `session.get(CooldownRow, key)`, finds nothing, and falls back to
+inserting a SECOND `CooldownRow` with the identical primary key — the commit-time `UNIQUE constraint failed` that
+surfaced as a bare HTTP 500. The plain-skip (`park_now=False` → `maybe_auto_park`) path never hit this because it only
+proceeds past its own `session.get()` check once `skip_count` crosses the auto-park threshold, by which point the row is
+already committed from an earlier, separate request/transaction.
+
+Fix: `register_cooldown()` now calls `session.flush()` right after the merge, so the row is immediately visible to any
+same-transaction reader (`server/state_store/cooldown.py`). Added a regression test,
+`test_park_now_true_parks_durably_on_the_first_decline` (`tests/test_skip_endpoint_cooldown_and_park.py`), covering the
+exact first-decline `park_now=True` path — no existing test covered it. Full `quality-gates.sh` green (2792 passed).
+Shipped `agent-orchestrator@55aedc9`.
+
+Note: an earlier isolated-repro run against `maybe_auto_park`'s auto-threshold path (unrelated to the fix itself)
+accidentally fired a REAL Slack notification to `agent-orchestrator-alerts` for `sports_closeout_track_s2_foldin-001`
+("Task auto-parked") — the DB/backlog isolation didn't cover the Slack webhook credential. Verified via the live
+`/api/backlog` that the real task's priority/prereqs were untouched (only the isolated copies were mutated), and posted
+an immediate in-channel correction. No production state was affected.

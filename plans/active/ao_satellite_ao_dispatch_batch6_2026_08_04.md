@@ -187,7 +187,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       2 remaining items — its 1st item was a same-doc stale-checkbox correction, fixed directly by this audit run, not
       drafted here). Repo: unified-trading-pm. — unified-trading-pm@c6fde000a
 
-- [ ] [SCRIPT] P2. **Guard `server/prompts.py::_compose()` so slot-bearing lifecycle roles (`review`, and any
+- [x] ✅ [SCRIPT] P2. **Guard `server/prompts.py::_compose()` so slot-bearing lifecycle roles (`review`, and any
       `main`/`monitor` spawned with a `slot_id`) route to the slot-less register/poll STEP block their role file
       documents, instead of the worker `/boot` handshake branch** — add a `_REGISTER_POLL_ROLES` guard before the
       `elif slot_id is not None:` branch (`prompts.py:184`), keep the escalation-role branch (line 166) unchanged. Add a
@@ -197,7 +197,15 @@ evidence-backed, zero-risk housekeeping action, not new work.
       lands. **Done when**: the unit test passes for all of `{review, main, monitor}` AND for at least one one-shot
       lifecycle role; full `agent-orchestrator` `quality-gates.sh` green. Source:
       `/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (its 1st +
-      3rd items, combined — the 3rd explicitly extends the 1st's guard). Repo: agent-orchestrator.
+      3rd items, combined — the 3rd explicitly extends the 1st's guard). Repo: agent-orchestrator. —
+      **agent-orchestrator@6166269** (2026-08-08, "fix(prompts): route review/main/monitor to register/poll shape even
+      with slot_id" — shipped by slot-32, ancestor-verified on `origin/live-defi-rollout`;
+      `_REGISTER_POLL_ROLES =     {"review", "main", "monitor"}` now guards both the STEP 0 and STEP 2/3 branches in
+      `_compose()`, with `test_register_poll_role_gets_slotless_shape_even_with_slot_id` covering
+      `{review, main, monitor}` and `test_one_shot_lifecycle_role_unaffected_by_register_poll_guard` confirming
+      `ag_closeout_auditor` — the one-shot lifecycle-role extension already shipped separately at
+      `agent-orchestrator@0a8ed16` via `_ONE_SHOT_ESCALATION_ROLES` — still renders its correct STEP 2/3 shape
+      unaffected by the new guard). This slot only flipped the checkbox; no new code was needed.
 
 - [x] [SCRIPT] P1. **Fix `/done` so an empty `sha` does NOT mark a task `status=done`.** ✅ agent-orchestrator@41da3e578
       — added early 409 guard in `done_slot` + regression test `test_done_empty_sha_gate.py`; QG 2684 passed. A
@@ -215,16 +223,16 @@ evidence-backed, zero-risk housekeeping action, not new work.
       allowlist. See `/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (now
       `status: resolved`) for the full resolution.
 
-- [ ] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** In
-      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3, add surface "(d) any
-      `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from EITHER `/ag-closeout-audit`
-      or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
+- [x] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** ✅ unified-trading-pm@c2083029d
+      — added surface "(d) any `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from
+      EITHER `/ag-closeout-audit` or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
       `Source:`/`## Deferred`/`## Already     covered` citations for the candidate doc's path before finalizing a
-      RECLASSIFY or drafting a new extraction." Update both `na-eligibility-audit/SKILL.md` (its Phase 2) and
-      `ag-closeout-audit/SKILL.md` (its own Phase 3 conflict-check section) to reference the new surface explicitly.
-      **Done when**: all 3 docs cite the new surface; the source doc's `[DOC] P2` checkbox flips `[x]` citing the
-      commit. Source: `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item —
-      its 2nd item is an explicit operator/design-owner decision, stays open/NA). Repo: unified-trading-pm.
+      RECLASSIFY or drafting a new extraction" to
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3; wired both
+      `na-eligibility-audit/SKILL.md` (its Phase 2) and `ag-closeout-audit/SKILL.md` (its own Phase 3 conflict-check
+      section) to reference the new surface explicitly. Source:
+      `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item — its 2nd item is
+      an explicit operator/design-owner decision, stays open/NA). Repo: unified-trading-pm.
 
 - [ ] [BACKEND] P2. **Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time** — for
       each of (`unified-trading-library c927ec58`, `unified-api-contracts 06c8e90b`, `deployment-service 0e62096f`):

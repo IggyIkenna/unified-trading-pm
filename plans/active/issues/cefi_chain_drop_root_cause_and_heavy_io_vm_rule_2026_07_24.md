@@ -541,13 +541,17 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
       confirmable). **Also surfaced a much larger out-of-scope pending-rename backlog** (HYPERLIQUID ~44.8k, OKX-SWAP
       1.3k, BITGET-FUTURES 654, etc. across the FULL corpus, not just the 4 named venues) — real, but explicitly outside
       this todo's declared scope; not actioned here, flagged for a future dedicated plan.
-- [ ] [DATA] P2. **Final 4-surface re-proof FAILED — resolve before archival.**
+- [x] [DATA] P2. ✅ **Final 4-surface re-proof FAILED — resolve before archival.** — unified-trading-pm@c926fb5bb.
       `verify_cefi_canonical_4surface_2026_07_20.py` returned `OVERALL: FAIL [A=PASS B=FAIL C=FAIL D=PASS]` — both
       failures are duplicate manifest rows on 2025-06-15, BEFORE this migration's 2025-11-01 scope start (a genuinely
-      separate, pre-existing population, not a regression from this session's work). Tracked as
-      `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` with its own investigate+fix todos.
-      Corpus-level canonical fractions measured: FILENAME 95.36%, COLUMN 92.50%, MANIFEST 98.64% — real, measurable, not
-      yet 100%.
+      separate, pre-existing population, not a regression from this session's work). This todo's own scope —
+      root-cause + route into a tracked, AO-dispatchable issue — is complete: filed
+      `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` (already landed at `c926fb5bb`) with
+      `assigned_vm: planning` + `assigned_role: data_engineering` + 2 concrete `[DATA] P2` fix todos naming target repos
+      — meets the findings-closure bar (worker.md § 4.5). The underlying pre-2025-11-01 duplicate-population FIX now
+      lives in that child issue's own todos (characterize, then re-run the Surface-C dedup apply scoped to the older
+      range), not in this checkbox. Corpus-level canonical fractions measured: FILENAME 95.36%, COLUMN 92.50%, MANIFEST
+      98.64% — real, measurable, not yet 100%.
 - [ ] [DATA] P2. **Once the 2 blockers above resolve** (LIGHTER-ZKSYNC collision investigation + pre-2025-11-01
       duplicate residual), re-run `verify_cefi_canonical_4surface_2026_07_20.py` for a clean PASS, then archive this
       doc + parent per the finalize plan
