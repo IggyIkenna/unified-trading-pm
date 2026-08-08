@@ -99,3 +99,13 @@ own Tick history.
   — relaying the reporter's evidence as given, since it was already a direct, timestamped `/api/activity` query result,
   not a self-report needing corroboration. Cross-linked the compounding `boot_read_unconfirmed` finding into the
   existing `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md` doc instead of duplicating it here.
+- 2026-08-08 ~17:36Z (main agt-22de53): Live corroborating data point, NOT slot 1 — during a routine stale-slot check,
+  slots 11 and 13 both independently hit the same `forced_precompact`→`forced_compact`→`worker_kick_failed` sequence
+  within the same ~5min window (slot 11: kicks failed 17:33:54Z and 17:35:50Z, ~4min after its 17:31:53Z compact; slot
+  13: one failed kick at 17:36:03Z, ~4min after its 17:31:55Z compact). This broadens the pattern from "review role /
+  slot 1 only" to a fleet-wide post-compact respawn issue — same `worker_kick_failed` signature the todo above already
+  asks to investigate. Slot 11 escalated via `reassign kill_worker:true` per standing policy (2 failed kicks, no
+  recovery) — task `solana_dex_pool_swaps_indexer-002` returned to queue cleanly. Slot 13 held one more tick (only 1
+  failed kick so far) before escalating. Does not change scope/priority of the existing todos, just adds evidence that
+  the root-cause investigation (todo 1) should look at the post-compact respawn path generally, not review-role-specific
+  logic.
