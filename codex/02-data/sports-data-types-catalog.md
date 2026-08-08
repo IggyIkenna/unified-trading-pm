@@ -246,8 +246,9 @@ Never inline `gs://...` strings — QG STEP 5.69 enforces. See `/codex/02-data/b
 All 32 venues are in `VENUES_BY_ASSET_GROUP["sports"]` (landed `unified-api-contracts@05a709fd`). Every venue resolves
 all 5 classification dicts: `SportsVenueType`, auth method, instrument-type set, fee model, alpha profile.
 
-**Exchange venues** (`SportsVenueType.EXCHANGE`, `executable=True` pending credentials): `BETFAIR_EX_UK`,
-`BETFAIR_EX_EU`, `BETFAIR_EX_AU`, `SMARKETS`, `MATCHBOOK`
+**Exchange venues** (`SportsVenueType.EXCHANGE`, `executable=False` pending credentials — per the `executable` predicate
+above, no exchange-type venue has a complete adapter as of 2026-08-08): `BETFAIR_EX_UK`, `BETFAIR_EX_EU`,
+`BETFAIR_EX_AU`, `SMARKETS`, `MATCHBOOK`
 
 **Fixed-odds sportsbooks** (`executable=False` unless direct adapter exists): `PINNACLE`, `BET365`, `BETWAY`,
 `WILLIAM_HILL`, `BWIN`, `UNIBET_EU`, `UNIBET_UK`, `CORAL`, `FANDUEL`, `DRAFTKINGS`, `BETMGM`, `CAESARS`, `POINTSBET_US`,
