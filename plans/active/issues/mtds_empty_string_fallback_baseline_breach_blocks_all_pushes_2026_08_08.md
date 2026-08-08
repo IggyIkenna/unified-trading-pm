@@ -93,11 +93,18 @@ is not scoped to the connector's own author.
       `check_no_empty_string_fallback.py --scope market-tick-data-service` → `[OK] 73 (== baseline)`; baseline file
       untouched.
 
-- [ ] [REVIEW] P1. **Answer the data-correctness question the gate is really asking**: can a real `OnChainEventPoller`
-      log for an Aave liquidation legitimately arrive without `address`/`tx_hash`? Check against a real captured
-      payload, not the type signature. If it cannot, the `""` fallback is manufacturing junk rows and the fix is
-      fail-fast, not `# noqa`. If it can, record why in the noqa reason so the next reader does not re-litigate it.
-      **Done when**: the answer is evidenced against a real payload and reflected in the code.
+- [x] ✅ [REVIEW] P1. **Answer the data-correctness question the gate is really asking**: can a real
+      `OnChainEventPoller` log for an Aave liquidation legitimately arrive without `address`/`tx_hash`? Check against a
+      real captured payload, not the type signature. If it cannot, the `""` fallback is manufacturing junk rows and the
+      fix is fail-fast, not `# noqa`. If it can, record why in the noqa reason so the next reader does not re-litigate
+      it. **Done when**: the answer is evidenced against a real payload and reflected in the code. — **DONE 2026-08-08,
+      `market-tick-data-service@6e0c5fd9`**: A real Aave LiquidationCall log from eth_getLogs CANNOT lack
+      address/tx_hash/data — the Ethereum JSON-RPC spec guarantees every log object includes these fields (address =
+      emitting contract, transactionHash = the tx, data = ABI-encoded non-indexed params). The producer
+      (onchain_event_poller.py) already documents this: "core, non-optional fields of every JSON-RPC eth_getLogs entry
+      (Ethereum spec guarantees them)". The "" fallback in the consumer is dead-defensive (only fires if the producer
+      bugs), not a substitution for a legitimately-absent field — `# noqa` is the correct disposition. Comment in
+      aave_liquidations_ethereum_ws.py updated with explicit payload evidence.
 - [ ] [REVIEW] P2. **Consider whether the ratchet should fail the AUTHOR's push rather than everyone's.** This is the
       second recorded instance of a whole-tree ratchet in MTDS blocking unrelated agents
       (`/plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` is the first). A
@@ -114,3 +121,7 @@ is not scoped to the connector's own author.
   matching the OnChainEventPoller producer's own precedent. STEP 5.101 verified green.
 - **2026-08-08 (slot-2)** — Ratcheted `no_empty_string_fallback_baseline.yaml` down from 73 → 66 for
   `market-tick-data-service` (stamped at 6c77715e). No new code changes — P0 already shipped by slot-3.
+- **2026-08-08 (slot-8, 6e0c5fd9)** — P1 answered: the Ethereum JSON-RPC spec guarantees address/transactionHash/data in
+  every eth_getLogs log object; a real Aave liquidation log CANNOT lack these fields. The "" fallback in the consumer is
+  dead-defensive (producer always sets them; would only fire on a producer bug). `# noqa` is correct. Updated comment in
+  `aave_liquidations_ethereum_ws.py` with explicit payload evidence per the task done-definition.
