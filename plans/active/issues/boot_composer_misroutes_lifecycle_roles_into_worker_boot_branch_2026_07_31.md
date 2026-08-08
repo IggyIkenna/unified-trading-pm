@@ -138,12 +138,17 @@ render the register/poll STEP block even when `slot_id` is provided.
 
 # Follow-up todos
 
-- [ ] [SCRIPT] P2. Make `server/prompts.py::_compose()` route lifecycle roles (`review`/`main`/`monitor`) to the
+- [x] ✅ [SCRIPT] P2. Make `server/prompts.py::_compose()` route lifecycle roles (`review`/`main`/`monitor`) to the
       slot-less register/poll STEP block even when a `slot_id` is present — add a `_REGISTER_POLL_ROLES` guard before
       the `elif slot_id is not None:` branch (prompts.py:184); keep the escalation-role branch (line 166) unchanged. Add
       a `_compose()` unit test asserting review/main/monitor render the register/poll block with `slot_id` set. Verify
       no downstream consumer in `ensure_review_agents` depends on the boot-prompt slot_id. Cite
       `plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` in the commit.
+      — **SHIPPED `agent-orchestrator@6166269`** ("composer-guard fix routing review/main/monitor to register/poll
+      shape", landed 2026-08-08T19:35:33Z). Review-verified holding: a fresh slot-1 review boot at ~22:53Z
+      (`agt-e817dd`) went through `POST /api/agents/register` cleanly on the first attempt, no `/api/slots/1/boot` call
+      at all; `/api/activity` shows zero `boot_read_unconfirmed` events for slot 1 since 18:07:28Z (1.5h before the fix
+      landed) through ~22:58Z (~3.3h clean vs. the prior ~6-of-14 boot cycles hitting it same-day pre-fix).
 
 # 2026-07-31 (main-orchestrator) — SEVERITY ESCALATION: auditor variant causes SILENT DATA LOSS, and the fix set is incomplete
 
