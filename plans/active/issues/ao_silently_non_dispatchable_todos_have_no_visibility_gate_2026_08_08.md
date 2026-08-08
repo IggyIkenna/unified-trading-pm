@@ -106,7 +106,13 @@ gated on an upstream whose remaining todos are all silently excluded will read t
       **Done when**: the gate is wired into `scripts/quality-gates.sh` with a baseline YAML, its own unit test covering
       the four known trigger shapes, and a MEASURED report of the 47 split into declared-intentional vs accidental —
       with the accidental ones either fixed or filed. Repo: unified-trading-pm (gate), agent-orchestrator (parser import
-      path only, no parser change required).
+      path only, no parser change required). **Fold in while you are in that file** (found 2026-08-08, same session, too
+      small for its own doc): `agent-orchestrator/server/server.py:239` comments the plan-regen loop as running "every
+      6h", but `PlanRegenLoop` is constructed with no `interval_seconds` so it takes
+      `DEFAULT_PLAN_REGEN_INTERVAL_SECONDS = 1800` (30 min) unless `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` overrides
+      it on the VM. Read the VM's live env, then correct the comment to the real value — a wrong cadence in the comment
+      directly misleads anyone reasoning about how long a plan edit takes to reach the backlog, which is this issue's
+      whole subject.
 
 ## Progress Log
 
