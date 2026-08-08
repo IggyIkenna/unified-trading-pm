@@ -103,7 +103,7 @@ defect (phantom-venue emission) without touching a registry other code may depen
 ## Todos
 
 - [x] [CODE] P2. Canonicalise `venue_label` + dedup emitted `(chain, venue)` pairs in `_yield_v2_defi_pre_launch_rows` —
-      `instruments-service` (this session, uncommitted pending QG/quickmerge).
+      `instruments-service@2b2e9f124`, QG-verified + regression test added.
 - [ ] [OPERATOR] P2. Purge/re-key the 46,300 bare-`AAVEV3` `empty_confirmed` manifest rows via the human-gated `--apply`
       delete path (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), after confirming no twin-exists
       collision against real `AAVE_V3`-ETHEREUM pre-launch rows for the same 2018-01-01..2023-01-26 window.
@@ -115,5 +115,7 @@ defect (phantom-venue emission) without touching a registry other code may depen
 
 - **2026-08-08 (interactive session, `/autonomous`)**: sub-agent root-caused (see Finding); this session applied the
   code fix + regression test directly (bounded, low-risk, mirrors an already-shipped identical fix in the same file)
-  rather than only filing the finding, per the operator's "finish everything" directive. QG + quickmerge pending as of
-  this entry — see the parent tracker doc's Progress Log for the shipped SHA once landed.
+  rather than only filing the finding, per the operator's "finish everything" directive. Shipped
+  `instruments-service@2b2e9f124` (QG-green, `test_defi_v2_pre_launch_alias_key_not_duplicated` added). Remaining work
+  is genuinely open (not this session's to do): the `[OPERATOR]`-gated historical row purge, and the `[DESIGN]` question
+  on `PROTOCOL_LAUNCH_DATES`'s alias-key pattern — status stays `open`, not `resolved`, until both clear.
