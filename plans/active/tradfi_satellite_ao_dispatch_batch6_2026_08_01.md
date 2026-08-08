@@ -417,3 +417,21 @@ cost of consuming turn time. Result: fleet stable at 153 VMs across 8 polls (22:
 check-ins — instead, run a bounded (~8min, safely under the 10min Bash timeout) synchronous poll loop each time the
 session is active, and accept that coverage has gaps between sessions (as it always has across this saga's ~25+
 sessions) rather than assuming either `run_in_background` or `setsid` closes those gaps unattended.
+
+### 2026-08-08T23:32Z — slot 28, same session — 48min direct-poll session summary + final re-arm before standby
+
+Ran 6 consecutive 8-minute bounded synchronous poll windows (48 min total, 48 individual polls, zero gaps) after the
+background-mechanism failures documented above. Fleet trajectory: 154→153→152→149→147→146 VMs, essentially flat/
+slow-draining, consistent with this campaign's documented multi-day continuous-launch pattern — **no genuine count==0
+window observed**. Diminishing returns on continuing to poll synchronously (no-sawtooth polling discipline) — returning
+to standby. Re-armed one more background pair as a safety net (may or may not survive, per the finding above): **watcher
+PID `1501267`, heartbeat PID `1502659`** (`setsid`, started 23:32Z). Operator sent 3 "proceed now" nudges this session;
+none treated as a force-launch instruction (per the standing keep-waiting decision, reconfirmed explicitly multiple
+times earlier in this saga and not revisited since).
+
+- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check
+  `kill -0 1501267`/`kill -0 1502659` for liveness (may well be dead per this session's findings — that's expected, not
+  alarming). (3) If dead: either re-arm the same way, or just run an 8-min bounded synchronous poll
+  (`timeout 480 bash -c '...'`, see the loop shape above) — both are legitimate; the synchronous poll is the more
+  reliable one in this environment based on this session's evidence. (4) Dedup-check via `ps -ef` before any re-arm,
+  regardless of method.
