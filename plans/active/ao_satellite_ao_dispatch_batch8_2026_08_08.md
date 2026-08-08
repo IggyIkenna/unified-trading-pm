@@ -151,7 +151,7 @@ agent-orchestrator's own dashboard — the `cross-cutting` half was redundant, d
 
 ## Todos
 
-- [ ] [TEST] P2. **Root-cause `deepseek-per-turn-metrics.spec.ts`'s intermittent failures AND confirm the
+- [x] [TEST] P2. ✅ **Root-cause `deepseek-per-turn-metrics.spec.ts`'s intermittent failures AND confirm the
       `DeepSeekUsagePoller` fixture-overwrite blast radius — one combined todo since both target the same file with an
       overlapping root-cause hypothesis.** First check whether these are the same underlying bug: does the poller's
       `_sweep_account` tick (confirmed to unconditionally overwrite the hand-seeded
@@ -307,3 +307,19 @@ isolation does NOT cover", `/codex/12-agent-workflow/plan-completion-and-archiva
   IS the final-version content, IS recoverable via `git stash list` + `git stash pop`. Full verdict recorded in source
   doc Progress Log (`/plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`).
   No mitigation code changed (operator-gated per Deferred).
+- **2026-08-08 (slot 2, ao_satellite_ao_dispatch_batch8-001)** — Todo 1 ✅. **Verdicts:**
+  `deepseek-per-turn-metrics.spec.ts`: CONFIRMED same root cause as
+  `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`'s already-confirmed
+  mechanism — `DeepSeekUsagePoller._sweep_account` unconditionally overwrites all 7 Accounts-panel columns after a 30 s
+  startup delay (not a race — deterministic overwrite). Blast-radius table confirmed (all 7 columns; specific
+  post-overwrite values derived from static analysis + fixture inventory). Hard stop applied — no non-disabling
+  mitigation can restore hand-seeded values after overwrite; fix direction already decided and recorded in source doc
+  todo 2 ✅ (disable poller in e2e backend); implementation remains in source doc todo 3 (operator-authorized,
+  deferred). `deepseek-wallet-reconciliation.spec.ts`: CONFIRMED different root cause — async panel-data-fetch timing
+  (NOT the poller; spec reads seeded `deepseek_message_usage`/top-up rows directly; `DeepSeekBalancePoller` skips
+  accounts without `oauth_token_env_file`). Non-disabling mitigation landed: `{ timeout: 10_000 }` on first data
+  assertion (standard cold-start convention per `critical-health.spec.ts`) — `agent-orchestrator@343501a`. 10x stability
+  loop NOT run (`dashboard/node_modules` absent; QG skips dashboard checks when node_modules absent, still passes).
+  Codex convention documented: `ui-testing-layers.md` § "agent-orchestrator e2e: background-poller vs. fixture-data
+  interaction" — `unified-trading-pm@88693651d`. Source docs' Progress Logs updated same turn. `agent-orchestrator` QG
+  green (2711 passed, 2 skipped; dashboard skipped — node_modules absent).
