@@ -21,8 +21,36 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
+
+# Mirrors unified-trading-pm/scripts/hooks/prettier-autostage.sh's version guard —
+# prettier <3.9.5 corrupts content under this workspace's config (see
+# prettier_emphasis_mangling_corpus_corruption_2026_07_14.md). Pin the same floor here.
+_PRETTIER_MIN_VERSION = "3.9.5"
+
+
+def _prettier_version_ok(version: str) -> bool:
+    try:
+        parts = tuple(int(p) for p in version.strip().split(".")[:3])
+    except ValueError:
+        return False
+    floor = tuple(int(p) for p in _PRETTIER_MIN_VERSION.split("."))
+    return parts >= floor
+
+
+def _resolve_prettier(ui_repo_root: Path) -> list[str] | None:
+    local = ui_repo_root / "node_modules" / ".bin" / "prettier"
+    if local.is_file():
+        probe = subprocess.run([str(local), "--version"], capture_output=True, text=True, check=False)
+        if probe.returncode == 0 and _prettier_version_ok(probe.stdout):
+            return [str(local)]
+    if shutil.which("npx"):
+        return ["npx", "-y", f"prettier@{_PRETTIER_MIN_VERSION}"]
+    return None
+
 
 MANIFEST_REL = Path(
     "unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json"
@@ -264,6 +292,36 @@ def render_coverage_ts(manifest: dict[str, object], enum_archetype_ids: list[str
     return _HEADER + archetype_blocks + stub_section + "\n" + footer
 
 
+def _format_ts(text: str, ui_repo_root: Path) -> str:
+    """Run the raw generator output through prettier so it matches the committed,
+    hook-formatted file byte-for-byte. Without this, ``--check`` compares an
+    unformatted render against a prettier-formatted commit and reports drift on
+    every run, even when the manifest and coverage.ts are semantically in sync.
+    """
+
+    cmd = _resolve_prettier(ui_repo_root)
+    if cmd is None:
+        sys.stderr.write(
+            f"WARN: no prettier >={_PRETTIER_MIN_VERSION} available; comparing/writing unformatted output.\n"
+        )
+        return text
+    result = subprocess.run(
+        [*cmd, "--stdin-filepath", str(COVERAGE_TS_REL.name)],
+        input=text,
+        capture_output=True,
+        text=True,
+        cwd=ui_repo_root,
+        check=False,
+    )
+    if result.returncode != 0:
+        sys.stderr.write(
+            f"WARN: prettier formatting failed (exit {result.returncode}); comparing/writing unformatted output.\n"
+            f"{result.stderr}\n"
+        )
+        return text
+    return result.stdout
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace-root", required=True, help="workspace root directory")
@@ -286,6 +344,8 @@ def main() -> int:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     enum_archetype_ids = _read_enum_archetype_ids(enums_ts_path)
     rendered = render_coverage_ts(manifest, enum_archetype_ids)
+    ui_repo_root = workspace / COVERAGE_TS_REL.parts[0]
+    rendered = _format_ts(rendered, ui_repo_root)
 
     if args.write:
         coverage_ts_path.write_text(rendered, encoding="utf-8")
