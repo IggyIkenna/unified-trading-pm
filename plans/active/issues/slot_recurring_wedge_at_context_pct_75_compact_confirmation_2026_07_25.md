@@ -343,3 +343,37 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
       rises, which is the safe direction, but a model whose sessions never run long keeps an under-estimated window and
       will compact earlier than necessary. `learned_context_windows.json` sits next to `state.db`; deleting it is safe
       and forces re-learning from the priors.
+
+- **2026-08-08 — SECOND defect found and fixed while shipping the first; caught by testing, not by review.** The
+  learned-window logic in `c6e6d982a` treated any high-water mark as the model's ceiling. Testing the local port against
+  a REAL session (not a fixture) exposed the flaw immediately: a fresh registry saw ONE in-flight `claude-opus-5`
+  session at 222,121 tokens and reported **97% full when the truth was ~22%** — the mirror image of the original bug,
+  and it would force a compaction immediately and forever after. It was live for ~17 minutes, and the cache proves it
+  was not hypothetical: the deployed buggy version had already written
+  `"claude-sonnet-5": {"watermark_tokens": 355496}`, which would have force-compacted a sonnet-5 worker at a real ~30%.
+  **One session reaching N proves the window is AT LEAST N, never that it stops there.** A watermark now becomes a
+  window estimate only once observations CLUSTER near it (3 hits within 5%); exceeding it resets the hit count, since a
+  higher ceiling voids the earlier saturation evidence. Shipped `agent-orchestrator@9b269c0ce`, redeployed 13:27:26 UTC,
+  stale cache reset. Cold-start verified in-process: opus-5 -> 1,000,000, sonnet-4-6 -> 200,000, and one 222,121
+  observation leaves opus-5 at 1,000,000.
+- **ACCEPTANCE TEST PASSED — the distribution moved DOWN, which is what this doc demanded.** Pre-fix baseline over 3h:
+  29 wedges (~9.7/hr) with forces at `100 x28 · 99 x5 · 97 x5 · 96 x5 · 93 x4 · 95 x3 · 94 x3 · 91 x3` — **nothing below
+  91**. Seven seconds after redeploy:
+
+  ```
+  13:27:33 FORCED /pre-compact on orch-slot-5 (worker): pct=66 submitted=True
+  13:28:39 FORCED /compact     on orch-slot-5 (worker): pct=66 submitted=True (post-precompact)
+  ```
+
+  A force at **pct=66** was structurally unreachable before. The other half of the acceptance test — "a non-null pct is
+  actually observable at mid-range" — also passes: slot pcts now read `66 · 55 · 48 · 48 · 47 · 45 · 20 · 0` across the
+  fleet, where previously only a pane at 91-100 ever produced a number at all.
+
+- **Local watcher ported** — `unified-trading-pm@8bff8f5792` gives `scripts/dev/precompact-watcher.py` the same measured
+  signal and learned window (it had both original defects: pane-only, and a hardcoded 1M divisor). Verified end-to-end
+  against a real local session: the cwd encoding resolves to the true project dir, and the reading is 24% for a
+  `claude-opus-5` session at 239,867 tokens.
+- **Process finding, filed separately**: this session lost the same working file THREE times to concurrent prek
+  stash/restore cycles in the shared checkout — silently, with no stash entry and a clean `git status`. Recovered only
+  from a scratchpad backup. See
+  `/plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`.
