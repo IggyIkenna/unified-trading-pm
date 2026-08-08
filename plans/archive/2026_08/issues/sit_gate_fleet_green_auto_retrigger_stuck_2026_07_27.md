@@ -49,7 +49,7 @@ context_scope:
     unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml,
     system-integration-tests/.github/workflows/full-workspace-sit.yml,
     unified-trading-pm/scripts/quality-gates-base/tests/test-sit-fleet-green-auto-retrigger.sh,
-    /plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
+    /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
   ]
 assigned_vm: planning

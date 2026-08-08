@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [defi, perp-daily-ctx, perp-funding, hyperliquid, mark-price, honest-absence, forward-gap, live-writer-gap]
 related:
   [
-    /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
+    /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
   ]
 created: "2026-08-04"
@@ -53,7 +53,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
     market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py,
     strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
-    /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
+    /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
   ]
 ---
 

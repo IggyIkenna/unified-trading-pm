@@ -40,7 +40,7 @@ related:
     /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
     /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
-    /plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
+    /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-04"
