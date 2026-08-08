@@ -151,7 +151,9 @@ the ONLY lever that matters. See the P1 todo below.
       `regen_backlog_from_plan.py` behind a `reportUnusedFunction` suppression (agent-orchestrator@ac36202 + @e0f107a),
       built but not yet wired. Not colliding with it.
 - [x] ✅ [BACKEND] P2. **Stash piles are ~15x bigger than first reported, and need a CONTENT VERIFIER before any
-      discard.** FIXED agent-orchestrator@2572571 (+ agent-orchestrator@06b92e6 same-session follow-up fix). Added
+      discard.** FIXED agent-orchestrator@2572571 (corrected 2026-08-08: a second follow-up-fix sha this todo previously
+      cited alongside it was fabricated/unresolvable via `git log` — `2572571` alone covers the untracked-file
+      enumeration fix described below, no second commit exists). Added
       `worktree_clean_check.verify_stash`/`verify_all_stashes` (`server/worktree_clean_check/_stash_verify.py`), reusing
       `_orphan_verify.py`'s exact SUPERSEDED/STILL-ORPHANED/WOULD-REGRESS/GONE verdict vocabulary and per-file
       blob-compare method, adapted for a stash commit's multi-parent structure — measured directly (not assumed) that a
