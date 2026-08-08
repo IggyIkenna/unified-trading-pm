@@ -22,6 +22,8 @@ related:
     /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
     /plans/archive/issues/ao_dispatch_health_idle_slot_thrash_2026_07_26.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
+    /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
   ]
 created: 2026-07-26
 author: unknown
@@ -259,19 +261,19 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       restarts is a real sample, not a quiet window.
 
       **Stated limitation — do not over-read this as a before/after comparison.** This VM's journald retention is only
-                                          ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
-                                          journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
-                                          silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
-                                          the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
-                                          terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
-                                          (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
-                                          `--since` older than retention produces a confident-looking zero that means nothing.
+                                              ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
+                                              journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
+                                              silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
+                                              the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
+                                              terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
+                                              (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
+                                              `--since` older than retention produces a confident-looking zero that means nothing.
 
-                                          **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
-                                          restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
-                                          glance against
-                                          `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
-                                          Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
+                                              **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
+                                              restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
+                                              glance against
+                                              `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
+                                              Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
 
 - [x] ✅ [BACKEND] P2. **Second, independent contributing-latency finding + fix, 2026-07-30** (downstream of Problem 1
       above, NOT a duplicate of the `--reload`/`ee98ccb` finding two todos up — both are real, `ee98ccb` is the one that
@@ -426,6 +428,18 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   2026-08-06 marker. Sole open item (Follow-ups: DB-lock-storm root-cause, DO-NOT-ARCHIVE guard) remains a genuine,
   still-unresolved live-incident investigation ("genuine SECOND undiagnosed bug, or genuine extreme concurrent-write
   contention" — not yet distinguished per the doc's own open question).
+
+- **2026-08-08 (slot-10, `[REVIEW]` bookkeeping dispatch, `ao_satellite_ao_dispatch_batch5-002`)**: Dispatched to flip
+  the `[OPERATOR] P2` and `[REVIEW] P2` checkboxes and archive this doc, per the batch5 plan's todo 2 (drafted
+  2026-08-03). Found both checkboxes already `[x]` — they were closed by other sessions on 2026-08-06, before this doc's
+  own `/plan-reconcile ao` pass that same day added the DO-NOT-ARCHIVE guard below them (Problem 1, the SQLite lock
+  storm, still open). The batch5 todo's archival instruction therefore predates and is superseded by this doc's own
+  more-recent, explicit guard — **did not archive, did not set `status: resolved`**. Performed only the safe subset of
+  the requested bookkeeping: added the operator-fix doc
+  (`/plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md`) and the
+  backlog-park follow-up (`/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md`) to
+  `related:` as the todo asked. No new investigation performed into Problem 1 (out of this bookkeeping-only dispatch's
+  scope) — the Follow-ups guard and its `[AO] P0` todo stand as the reason this doc stays open and un-archived.
 
 ## Follow-ups
 
