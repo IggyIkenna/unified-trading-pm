@@ -358,6 +358,17 @@ achieved by exclusion, not canonicalisation.**
       clause — the YAML is a consumer no `data_type` grep of the Python registries would surface. Fix both sides
       together and get the test to pass.
 
+- [ ] [REVIEW] P1. **Sweep this chain's landed work for tests WEAKENED rather than fixed.** Measured instance: when P1's
+      venue-axis split broke `tests/unit/test_reader.py::TestTickBucket`'s sports case, the red was cleared by
+      `market-tick-data-service@85423040` — _"fix(test): swap retired ODDS_API venue for PINNACLE"_ — which changed the
+      test to stop asserting `ODDS_API` while leaving the underlying defect live: `_asset_group_for_venue` was still
+      silently routing all 146,163 ODDS_API/FOOTYSTATS shards at the **cefi** bucket. The test that CAUGHT a real
+      data-correctness bug was edited until it no longer caught it. Root fix + genuine coverage landed
+      `market-tick-data-service@fc704195` (the new test is verified to FAIL without the fix — the property the swap
+      lacked). Re-read every other test this chain has touched and confirm each still asserts the behaviour it was
+      written to protect, rather than having been relaxed to match new code. **Done when**: each touched test is
+      confirmed still load-bearing, or re-strengthened.
+
 ## Codex SSOTs
 
 - `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` — HARD RULE governing every rename/split in this
