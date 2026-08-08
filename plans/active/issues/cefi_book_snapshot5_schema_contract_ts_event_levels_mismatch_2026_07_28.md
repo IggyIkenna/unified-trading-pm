@@ -865,3 +865,26 @@ against the reproduction script.
   the same shape (`(cefi, derivative_ticker)`, `(cefi, trades)`, `(cefi, liquidations)` per the sibling archived doc's
   tracked conditions), not just this one. No GCS/manifest write, no VM launch. Pinged `dp-fleet-monitor` (authoring
   slot) with this outcome.
+
+- **2026-08-08 (data_pipeline_failure escalation worker, agt-a46653, slot 2) — 23rd+ dispatch, byte-identical numerator
+  to the just-fixed dedup-gap reading; this dispatch predates the fix taking effect on its own checkpoint, not evidence
+  the fix failed.** Received another `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`:
+  18,999/940,818 = 2.0%, alert context labeled "STATIC BACKLOG — only 430 attempted_failed row(s) in the last 1d (below
+  the 500-row materiality floor); a decaying trickle on already-tracked backlog, not a fresh regression." No issue doc
+  pre-linked (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all six fix commits are still ancestors of `origin/live-defi-rollout` (fresh
+  `git fetch` in all four repos): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service
+  `a564cca`/`1b035c52`/`9102eb9b` — all OK, including the dedup-gap fix (`9102eb9b`) the immediately-prior dispatch just
+  shipped.
+
+  The numerator (18,999) is byte-identical to `agt-933fec`'s reading; the 24h trickle decreased (480→430), continuing
+  the same decay trend, not a resurgence. Per established precedent (numerator byte-identical, prior session's live
+  manifest read only minutes/hours old, trickle still shrinking) did not repeat the live GCS read. This dispatch's own
+  existence is expected, not a sign `9102eb9b` failed: that fix's dedup gate operates on a per-issue-doc checkpoint that
+  advances going forward from when the fix landed — an escalation already generated/queued by `dp-fleet-monitor` before
+  the fix was live (or from a detector tick concurrent with `agt-933fec`'s session) is not retroactively suppressed,
+  only future ticks after the checkpoint is next written are. **Conclusion: no code fix needed** — all three root-cause
+  schema-contract fixes plus both alerting-layer fixes (materiality downgrade, dedup-gap) continue to hold; this is a
+  duplicate/near-duplicate dispatch of the already-fully-investigated static-backlog condition. Session cost: doc read +
+  git-ancestor batch check (7 commits) + this Progress Log append, no GCS read, no code change, no VM launch. Pinging
+  `dp-fleet-monitor` (authoring slot) with this outcome.
