@@ -72,7 +72,7 @@ context_scope:
       `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s `[DATA] P1.2` todo was re-attempted
       against the new ledger and its outcome recorded (pass or a fresh blocker). Repo: unified-trading-pm. **Done
       when**: VM lifecycle evidence + P1.2's outcome are both cited, or (if the gap branch was taken instead) this todo
-      is marked not-applicable with a one-line note why. — unified-trading-pm@TBD (not-applicable, verified).
+      is marked not-applicable with a one-line note why. — unified-trading-pm@c85dbb4fc (not-applicable, verified).
 - [ ] [DOC] P2. **Archive `plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`** via
       the standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add
       the archive banner → run the codex-alignment check → grep the corpus for every referrer of
