@@ -79,7 +79,7 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/heartbeat \
   -d '{"context_used_pct": 5, "message": "boot-started (reading role files)"}'
 ```
 
-**STEP 1 — READ (read-only) the canonical files, in order**, from the root PM clone:
+**STEP 1 — READ (read-only) the canonical files**, from the root PM clone:
 
 1. `unified-trading-pm/agents/RULES.md` — worktree contract, git workflow (named-file staging, FF-push cadence),
    plan-flip discipline, QG entrypoint, the 8 code rules, findings triage, sub-agent spawning. Internalize it before
@@ -87,6 +87,25 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/heartbeat \
 2. `unified-trading-pm/agents/worker.md` — this file (the `/boot` loop, heartbeat, plan-flip).
 3. Your craft file if your `slot_role` / task `assigned_role` names one
    (`unified-trading-pm/agents/<assigned_role>.md`).
+
+**Issue all of these Read calls in ONE turn, not one Read-then-wait-then-Read turn per file** (measured, fleet-wide,
+`ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`: sampled real sessions show this exact 3-file
+boot-sequence read done as 3 separate sequential turns — the pattern that starts every session unbatched tends to stay
+unbatched for the rest of it, and turn count is the direct cost/quota multiplier since every turn resends the whole
+accumulated conversation as a cache-read). "In order" above names which file to internalize first conceptually — it is
+NOT an instruction to fetch them one tool-call-per-turn. Concrete worked example — a single tool-call batch equivalent
+to (pseudocode, adapt to your actual tool-call syntax):
+
+```
+Read(unified-trading-pm/agents/RULES.md)
+Read(unified-trading-pm/agents/worker.md)
+Read(unified-trading-pm/agents/<assigned_role>.md)   # only if slot_role/assigned_role names one
+```
+
+— three (or two) independent Read calls, ZERO dependencies between them, dispatched together as one turn's tool-call
+set, not three round trips. This same batch-independent-lookups-in-one-turn discipline applies for the rest of the
+session too (CLAUDE.md § "Doing tasks" already states the general principle once; this is the concrete instance every
+worker hits first, at boot, before anything else).
 
 These reads are READ-ONLY. You WRITE and run work ONLY inside your assigned `.tabs/<your-slot>/` slot.
 
