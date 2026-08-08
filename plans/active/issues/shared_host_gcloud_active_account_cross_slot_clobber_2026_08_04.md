@@ -109,6 +109,9 @@ recurrence and is itself exactly the kind of cross-slot-clobbering action that c
 
 ## Recommended decision
 
+**round5-cross-cutting-audit 2026-08-08**: no operator decision needed — this workspace has direct precedent for
+per-slot isolated config (git-identity pattern, per-tab-worktrees.md); resolution is to implement BOTH options below.
+
 Two independent fix directions, either or both:
 
 - [ ] [INFRA] P2. Stop launcher scripts (and any script invoking `gcloud`) from depending on the ambient/global active
