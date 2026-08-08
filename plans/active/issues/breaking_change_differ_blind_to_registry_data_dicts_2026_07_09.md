@@ -191,13 +191,28 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       to `system-integration-tests` and resolve the `strict=False` xfail on
       `test_venue_to_tardis_matches_inverted_venue_mapping`. (repo: system-integration-tests) — shipped
       `unified-api-contracts@e34afc1d` (invariant test) + `system-integration-tests@67db4da` (wiring + xfail fix).
-- [ ] [DESIGN] P2. Decide whether provider (UAC) registry-change promotes should fan out consumer QG (≥ IS) as a gate;
-      spec it or explicitly defer with rationale. (repo: unified-trading-pm) — OUT OF SCOPE for this closure; parked as
-      Deferred **E8** / operator question 1 in `ci_satellite_ao_dispatch_batch2_2026_07_29.md`. **na-eligibility-audit
-      2026-08-03**: `ci_satellite_ao_dispatch_batch2_2026_07_29.md` is now archived (2026-07-31, all 14 todos + all 15
-      Deferred items verified before archival) — but its own ARCHIVED banner explicitly confirms E8 (this exact item)
-      remains a LIVE OPEN item/operator question in its own source doc (i.e., here), not resolved by that plan's
-      archival. Still genuinely open — not closing.
+- [x] ✅ [DESIGN] P2. **RESOLVED 2026-08-08 -- operator ruling: YES, add the consumer QG gate.** Decide whether provider
+      (UAC) registry-change promotes should fan out consumer QG (>= IS) as a gate; spec it or explicitly defer with
+      rationale. (repo: unified-trading-pm) -- was OUT OF SCOPE for the original closure; parked as Deferred **E8** /
+      operator question 1 in `ci_satellite_ao_dispatch_batch2_2026_07_29.md` (now archived). **operator ruling
+      2026-08-08**: yes -- a provider (UAC) registry-change promote MUST fan out and run consumer QG (at minimum
+      instruments-service, the confirmed consumer per this doc's own downstream-symptom cross-reference to
+      `/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`) as a gate, not an
+      explicitly-deferred no-op -- this closes the exact class of gap this doc exists to fix (a registry-data-dict
+      change landing on `main` with nothing catching the downstream break before IS's own QG did, live). Design decision
+      closed; the mechanical spec + implementation is the new todo below.
+- [ ] [SCRIPT] P2. **NEW 2026-08-08 -- implement the consumer-QG promote fan-out per the ruling above.** Scope: on a
+      `unified-api-contracts` (UAC) staging->main promote that touches a registry/data-dict module (the same class of
+      change `detect_breaking_change.py` already tracks per this doc's fix -- venue/capability/instrument-type
+      constants, not just exports/enums/routes/annotations), the promote gate must additionally dispatch and require
+      GREEN on consumer QG for at minimum `instruments-service` (the confirmed real consumer; extend to other UAC
+      consumers -- MTDS, features-service, execution-service -- if the same registry-drift class is shown to affect
+      them) before the promote PR can merge. Land as a new job in UAC's own promote-gate workflow (mirrors the existing
+      dual-cloud image-build gate pattern in `codex/05-infrastructure/dual-cloud-image-builds.md` -- both clouds must
+      pass before merge; this adds a third required signal, consumer QG, scoped to registry-touching changes only so it
+      does not fire on every UAC change). SSOT once shipped: update `/codex/08-workflows/ci-cd-flow.md`'s
+      breaking-differ section (already documents registry-data-constant tracking per this doc's earlier fix) to also
+      document the new consumer-QG fan-out gate.
 - [x] ✅ [DOCS] P2. Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md` to document
       registry-data-constant tracking (remove the implicit "only exports/enums/routes/annotations" mental model). (repo:
       unified-trading-pm) — shipped `unified-trading-pm@5607023a2`. **Citation corrected 2026-07-31** — see note above.
