@@ -11,7 +11,7 @@ summary: >-
   real commission-charging exchange with 5,626 captured shards — so its commission is not modelled on any arb leg,
   overstating net edge. Shipped as a standalone fast fix ahead of the taxonomy chain (operator ruling 2026-08-08) since
   neither depends on the rename work and both are live-capital exposure.
-status: active
+status: complete # (was: active) 2026-08-08 — all 8 todos done, archived via the standard 6-step ritual
 nature: process
 asset_group: [sports]
 stage: [strategy]
@@ -51,6 +51,13 @@ source: ["sports venue/data-type audit, 2026-08-08 interactive session — opera
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-08.** All 8 todos done; finalize twin
+> (`plans/archive/2026_08/sports_arb_operator_group_and_commission_bugfix_2026_08_08_finalize.md`) independently
+> re-verified all 4 measured failures against merged code, reconciled the taxonomy-chain prerequisite references, and
+> measured the blast radius at zero (no historical alpha was this bug — the buggy code paths are structurally
+> unreachable from both the backtest and the current paper-trade path), then archived this doc alongside itself.
+> Superseded by nothing — the fix is permanent record in `unified-api-contracts` git history.
 
 # Sports arb engine — two live money bugs
 

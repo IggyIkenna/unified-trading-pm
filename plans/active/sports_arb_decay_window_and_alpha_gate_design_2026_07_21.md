@@ -63,9 +63,11 @@ context_scope:
 > `arbitrage_opportunity` moves out of the market-data layer into signals/features with a multi-venue key — see
 > `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` — which is where this decay series will live; (2) the
 > same-operator guard was measured BROKEN on canonical venue values
-> (`arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU'])` returned True), so any baseline computed before
-> `/plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md` lands may contain fake arbs and must be
-> recomputed on the corrected population.
+> (`arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU'])` returned True) and has since been FIXED + ARCHIVED —
+> `/plans/archive/2026_08/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`. Its finalize twin measured the
+> historical blast radius at ZERO (no arb in the paper-trade/backtest record ever hit the buggy same-operator-group or
+> unmodelled-SMARKETS-commission paths), so **no baseline recomputation is needed here** — this decay series' existing
+> baseline is already computed on the corrected-equivalent population.
 
 # Sports arb-decay-window analysis + paper-trade alpha gate — design spec
 

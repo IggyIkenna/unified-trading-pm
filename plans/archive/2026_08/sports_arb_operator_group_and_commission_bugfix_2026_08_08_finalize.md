@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends until all 8 of that plan's todos are done. Reconciles the shipped fix evidence back into the sports
   taxonomy chain's P1/P3 docs (which both reference this fix as a prerequisite), lands the blast-radius count as a
   tracked follow-up if non-zero, then runs the standard 6-step archival ritual.
-status: active
+status: complete # (was: active) 2026-08-08 — all 4 todos done, archived via the standard 6-step ritual
 nature: process
 asset_group: [sports]
 stage: [strategy]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [sports, arbitrage, finalize, archival]
 related:
   [
-    /plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md,
+    /plans/archive/2026_08/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md,
     /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
   ]
@@ -38,7 +38,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md,
+    /plans/archive/2026_08/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md,
     /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -47,6 +47,10 @@ source: >-
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-08.** All 4 todos done: independent re-verification of the fix (todo 1), taxonomy-chain
+> prerequisite reconciliation (todo 2), measured-zero blast radius (todo 3), and this archival itself (todo 4) —
+> alongside `sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`, archived in the same commit.
 
 # Sports arb operator-group + commission bugfix — finalize
 
@@ -120,3 +124,11 @@ locked_since:
   emitted. No historical alpha was this bug. No baseline recomputation needed for
   `/plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`. Measured zero recorded per todo
   done_definition ("a measured zero is a result, not a skip").
+- **2026-08-08** — Todo 4 ([DOC] P2 archive), part 2/2: banners + `status: complete` added to both this doc and the
+  source plan; the 3 referrer files found in part 1/2 (`sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`,
+  `sports_predictions_live_mode_activation_readiness_2026_07_21.md`,
+  `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`) repointed to `/plans/archive/2026_08/…` with their stale
+  forward-looking framing ("may contain fake arbs... must be recomputed", "blocked on... fixed by") updated to
+  past-tense/resolved — the facts they cited (guard measured broken, now fixed; blast radius zero) remain historical
+  record in this doc's own Progress Log, no separate codex migration needed for a one-time bugfix narrative. Both this
+  doc and the source plan `git mv`'d to `plans/archive/2026_08/` in this same commit.
