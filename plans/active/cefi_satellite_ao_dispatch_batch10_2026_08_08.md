@@ -111,16 +111,12 @@ context_scope:
 
 ## Todos
 
-- [ ] [DOC] P1. **Reconcile Phase C of `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` against its
-      now-resolved gating investigation.** Phase C was gated on
-      `plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`, which is now `status: resolved`
-      (2026-08-07) with conclusion CF-11: "no unexpected data loss beyond already-scoped out-of-canonical legacy data."
-      Read the archived gate doc's actual conclusion in full, then either (a) flip Phase C to DONE-BY-FAIT-ACCOMPLI in
-      this doc citing CF-11, or (b) if closer reading finds a genuine residual gap CF-11 didn't cover, re-scope Phase C
-      explicitly rather than silently closing it. Source:
-      `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (Phase C). **Done when**: Phase C's
-      checkbox/status text no longer describes the gate as "unresolved" and instead cites the archived issue's actual
-      conclusion (either closing it or stating the residual gap found).
+- [x] ✅ [DOC] P1. **DONE 2026-08-08.** Read the archived gate doc's conclusion in full: CF-11's normalization-aware
+      comparison found 59,488/96,338 eligible legacy cells not covered in current `-prd`, decomposing entirely into
+      pre-canonical-era 2019+ data, pre-CF-11 empty-itype/dtype ghost rows, and already-tracked Era-B chain-form rows —
+      no residual gap. Flipped Phase C in `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` to
+      DONE-BY-FAIT-ACCOMPLI citing CF-11's actual conclusion (option (a) — no genuine residual gap found on closer
+      reading). Source: `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (Phase C).
 - [ ] [DATA] P2. **Read-only investigate the ~1104 genuine HYPERLIQUID(660)/ASTER(444) wire-vs-canonical filename
       collisions on the 6 flagged dates** (2025-11-01, 2025-11-02, 2026-01-01, 2026-01-02, 2026-01-03, 2026-07-11) named
       in `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 8/10. Sample-compare row counts
@@ -339,12 +335,12 @@ context_scope:
 - **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check re-verified Phase
   3's original clearance: (a) no `cefi_master` sibling batch drafted after this one exists (batch9 remains the only
   other active cefi batch, already accounted for in this doc's own drafting); (b) no new active
-  `parent_epic: cefi_master` claim on any of the 6 todos' target files/mechanisms found; (c) `cefi_consolidated_closeout`
-  unchanged since this batch's drafting. `locked_by` unset. **Independently corroborated**: the same-day re-confirmation
-  pass immediately above reached the identical zero-material-change conclusion via its own independent method (fresh
-  git-log diff since drafting + a full 9-tranche Orthogonality re-check), reinforcing this flip's basis. **Two
-  informational, non-blocking findings surfaced by this operator-approval re-check, outside the formal 3-surface
-  protocol's scope (cross-`parent_epic`) so not treated as conflicts**: (1) todo 3's target VM
+  `parent_epic: cefi_master` claim on any of the 6 todos' target files/mechanisms found; (c)
+  `cefi_consolidated_closeout` unchanged since this batch's drafting. `locked_by` unset. **Independently corroborated**:
+  the same-day re-confirmation pass immediately above reached the identical zero-material-change conclusion via its own
+  independent method (fresh git-log diff since drafting + a full 9-tranche Orthogonality re-check), reinforcing this
+  flip's basis. **Two informational, non-blocking findings surfaced by this operator-approval re-check, outside the
+  formal 3-surface protocol's scope (cross-`parent_epic`) so not treated as conflicts**: (1) todo 3's target VM
   `mdps-backfill-cefi-20260807-130321` is ALSO named in an open `[SCRIPT] P1` todo in
   `infra_health_audit_findings_fix_2026_08_07.md` (`parent_epic: observability_master`, `assigned_vm: NA`) — that todo's
   payload (verify the launcher's preemption-recovery contract fired, fix fleet-wide if not) is complementary rather than

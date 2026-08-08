@@ -985,3 +985,15 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-08T04:38Z** — FIXTURE_STATS +47 days (`last_completed_date=2023-10-20`, fresh `04:37:30Z`). smallchunk3 now
   in chunk 18, 4 leagues attempted, zero OOMs so far — confirms the skip-fast hypothesis. Full detail:
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`8c7d3249ac`.
+- **2026-08-08T05:05Z** — FIXTURE_STATS +49 days (`last_completed_date=2023-12-08`, fresh `05:04:33Z`). smallchunk3
+  still chunk 18, 10 leagues attempted, zero OOMs. Both healthy.
+- **2026-08-08T05:33Z — MAJOR: smallchunk3 also died (2nd occurrence of a genuine silent-hang-then-watchdog-kill
+  pattern, distinct from OOM).** Not OOM, not a graceful self-delete — heartbeat blob itself stopped updating
+  (`05:06:23Z`) confirming a real hang, correctly caught by `vm_zombie_watchdog.py` (`delete` at `05:26:25Z`). New
+  issue: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`. No data loss. Relaunched as
+  `mtds-backfill-odds-smallchunk4-20260808`. FIXTURE_STATS unaffected. Full detail:
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`4d57ad99b8`.
+- **2026-08-08T05:57Z** — smallchunk4 confirmed booted + healthy (chunk 4/451, zero OOMs). FIXTURE_STATS jumped 98 days
+  (`last_completed_date=2024-03-15`, fresh `05:55:28Z`). Both healthy.
+- **2026-08-08T06:24Z** — FIXTURE_STATS +34 days (`last_completed_date=2024-04-18`, fresh `06:23:27Z`). smallchunk4
+  chunk 10/451 (`2020-07-21`), zero OOMs, no 3rd hang occurrence yet. Both healthy.

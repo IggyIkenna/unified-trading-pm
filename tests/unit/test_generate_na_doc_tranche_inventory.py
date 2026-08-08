@@ -351,3 +351,197 @@ def test_owned_only_without_specific_tranche_errors(monkeypatch, tmp_path):
     monkeypatch.setattr(MOD, "PM", tmp_path)
     with pytest.raises(SystemExit):
         MOD.main(["--tranche", "all", "--owned-only", "--json"])
+
+
+# ---------------------------------------------------------------------------
+# Content-hash (frontmatter-blind) incremental-skip tests
+#
+# Covers the fix from
+# plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md:
+# a context_scope: or other frontmatter-only backfill commit must NOT force a
+# Phase-1 re-read on the next na-eligibility-audit run.
+# ---------------------------------------------------------------------------
+
+# Body template already includes a Progress Log section so tests can append individual marker
+# lines without the section header itself changing the hash.
+_BODY_TMPL = """
+# {title}
+
+Fixture body — only this section matters for body_content_hash.
+
+- [ ] open todo
+
+## Progress Log
+"""
+
+_FM_TMPL = """---
+doc_type: issue
+title: "{title}"
+summary: test fixture
+status: open
+nature: issue
+asset_group: [infrastructure]
+stage: [meta]
+repos: []
+scope: [engineer]
+tags: []
+related: []
+created: "2026-07-01"
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.1
+estimate_calibrated_ai_days: 0.1
+assigned_role: infra
+drift_direction: none
+depends_on: []
+{extra_fm}---
+{body}"""
+
+
+def _write_hash_doc(
+    root: Path,
+    name: str,
+    *,
+    title: str = "hash test doc",
+    extra_fm: str = "",
+    body: str | None = None,
+    progress_log: str = "",
+) -> Path:
+    """Write a synthetic NA doc with optional verdict marker in the body."""
+    resolved_body = (body if body is not None else _BODY_TMPL.format(title=title)) + progress_log
+    p = root / "plans" / "active" / "issues" / name
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(
+        _FM_TMPL.format(title=title, extra_fm=extra_fm, body=resolved_body),
+        encoding="utf-8",
+    )
+    return p
+
+
+def _hash_record(records: list[dict], basename: str) -> dict:
+    for r in records:
+        if r["basename"] == basename:
+            return r
+    raise AssertionError(f"{basename} not found in records")
+
+
+def test_strip_frontmatter_removes_yaml_block():
+    """strip_frontmatter must return only the body, not the --- delimiters or YAML."""
+    text = "---\ntitle: foo\nstatus: open\n---\n# Heading\n\nbody here\n"
+    body = MOD.strip_frontmatter(text)
+    assert "title: foo" not in body
+    assert "# Heading" in body
+    assert body.startswith("# Heading") or body.startswith("\n# Heading")
+
+
+def test_strip_frontmatter_no_frontmatter_returns_unchanged():
+    """A doc without a --- delimiter must be returned as-is."""
+    text = "# No frontmatter\n\nPlain body.\n"
+    assert MOD.strip_frontmatter(text) == text
+
+
+def test_body_content_hash_stable_across_frontmatter_change():
+    """The hash of two docs that differ only in frontmatter must be identical.
+
+    This is the core invariant: a context_scope: backfill must NOT change the hash.
+    """
+    base = "---\ntitle: doc\nstatus: open\n---\n# Body\n\n- [ ] todo\n"
+    with_extra_fm = "---\ntitle: doc\nstatus: open\ncontext_scope: [/some/path]\n---\n# Body\n\n- [ ] todo\n"
+    assert MOD.body_content_hash(base) == MOD.body_content_hash(with_extra_fm)
+
+
+def test_body_content_hash_differs_on_body_change():
+    """A doc whose body content changed must produce a different hash."""
+    v1 = "---\ntitle: doc\n---\n# Body\n\n- [ ] original todo\n"
+    v2 = "---\ntitle: doc\n---\n# Body\n\n- [ ] original todo\n- [ ] new todo added\n"
+    assert MOD.body_content_hash(v1) != MOD.body_content_hash(v2)
+
+
+def test_incremental_skip_true_when_stored_hash_matches(monkeypatch, tmp_path):
+    """A doc with a [body-hash:…] marker whose stored hash equals the current body hash
+    must report incremental_skip=True — the primary (no-git) skip path.
+
+    This is the exact false-positive class from the measurement table: a doc that has
+    a verdict marker and only received a frontmatter backfill since then should be
+    reported as skippable so Phase 1 does not re-read it.
+
+    The fixture already includes a '## Progress Log' section so that only the verdict
+    marker LINE itself is appended — which body_content_hash strips — meaning the hash
+    is stable across the write.  This mirrors the realistic scenario where the Progress
+    Log section pre-exists and only the marker entry is added.
+    """
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    # Base doc already has a '## Progress Log' section (no marker lines yet).
+    doc = _write_hash_doc(tmp_path, "skip_hash_match_2026_07_01.md", title="skip by hash")
+    # Compute hash of the doc before any marker is written.
+    # body_content_hash strips verdict-marker lines, so this is the stable hash.
+    current = MOD.body_content_hash(doc.read_text(encoding="utf-8"))
+    # Append just the verdict marker LINE (section header already present in fixture).
+    # In production the skill does exactly this: appends one Progress Log entry.
+    marker_line = f"- **na-eligibility-audit 2026-08-01** [body-hash:{current}]: KEEP-NA, valid — test\n"
+    doc.write_text(doc.read_text(encoding="utf-8") + marker_line, encoding="utf-8")
+
+    records = _run_json()
+    rec = _hash_record(records, "skip_hash_match_2026_07_01.md")
+    assert rec["incremental_skip"] is True, f"expected skip; stored={current}, current={rec['body_content_hash']}"
+    assert rec["verdict_marker_date"] == "2026-08-01"
+
+
+def test_incremental_skip_false_when_body_changed_after_marker(monkeypatch, tmp_path):
+    """A doc whose body changed after the verdict marker must report incremental_skip=False
+    even though a [body-hash:…] is present — the stored hash no longer matches.
+    """
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    doc = _write_hash_doc(tmp_path, "no_skip_body_changed_2026_07_01.md", title="body changed")
+    # Compute a STALE hash (of a different body).
+    stale_hash = MOD.body_content_hash("---\n---\nstale body content\n")
+    marker = f"\n## Progress Log\n\n- **na-eligibility-audit 2026-08-01** [body-hash:{stale_hash}]: KEEP-NA, valid\n"
+    doc.write_text(doc.read_text(encoding="utf-8") + marker, encoding="utf-8")
+
+    records = _run_json()
+    rec = _hash_record(records, "no_skip_body_changed_2026_07_01.md")
+    assert rec["incremental_skip"] is False
+
+
+def test_incremental_skip_false_when_no_marker(monkeypatch, tmp_path):
+    """A doc with no verdict marker at all is always in-scope (incremental_skip=False)."""
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    _write_hash_doc(tmp_path, "no_marker_2026_07_01.md", title="no marker doc")
+
+    records = _run_json()
+    rec = _hash_record(records, "no_marker_2026_07_01.md")
+    assert rec["incremental_skip"] is False
+    assert rec["verdict_marker_date"] is None
+
+
+def test_incremental_skip_false_when_marker_has_no_hash_and_no_git(monkeypatch, tmp_path):
+    """A doc with an old-style marker (no [body-hash:…]) and no git history available
+    must fall back to incremental_skip=False — in-scope, safe to re-read.
+
+    In the unit-test context, tmp_path has no git repo, so the git fallback returns
+    None and the doc is conservatively flagged as in-scope (not skipped).
+    """
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    marker = "\n## Progress Log\n\n- **na-eligibility-audit 2026-08-01**: KEEP-NA, valid — old format\n"
+    _write_hash_doc(tmp_path, "old_marker_no_hash_2026_07_01.md", title="old marker", progress_log=marker)
+
+    records = _run_json()
+    rec = _hash_record(records, "old_marker_no_hash_2026_07_01.md")
+    assert rec["incremental_skip"] is False
+    assert rec["verdict_marker_date"] == "2026-08-01"
+
+
+def test_body_content_hash_field_always_present_in_json(monkeypatch, tmp_path):
+    """body_content_hash must be present on every record in --json output."""
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+    _write_hash_doc(tmp_path, "hash_field_check_2026_07_01.md", title="hash field check")
+
+    records = _run_json()
+    for r in records:
+        assert "body_content_hash" in r, f"missing body_content_hash on {r['basename']}"
+        assert isinstance(r["body_content_hash"], str) and len(r["body_content_hash"]) == 16
+        assert "incremental_skip" in r
+        assert isinstance(r["incremental_skip"], bool)

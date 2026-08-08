@@ -117,29 +117,31 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
       published rate turns out to differ, ship `0.02` anyway and file a follow-up `- [ ]` todo with the corrected figure
       — do NOT stall the fix on a rate lookup, since an unmodelled commission (today's state) is strictly worse than a
       slightly-wrong one.
-- [ ] [CODE] P1. **Reconcile the phantom regional venues** (`betfair_ex_au`, `unibet_fr/nl/se`, `ladbrokes_au`,
-      `williamhill_us`, `winamax_fr/de`, `leovegas_se`). **Decision rule PRE-SPECIFIED, no judgment call**: a venue
-      stays only if it appears in the live prod sports manifest's `venue` column OR in `SPORTS_VENUE_FOLD`'s key set;
-      otherwise DELETE the entry. Measured today, none of the nine appear in either — so the expected outcome is nine
-      deletions. Re-measure at run time and report the actual counts; no shims, workspace rule is delete deprecated
-      code.
-- [ ] [TEST] P0. **Regression test asserting the exact measured failures above now pass**:
+- [x] [CODE] P1. ✅ **Reconcile the phantom regional venues** (`betfair_ex_au`, `unibet_fr/nl/se`, `ladbrokes_au`,
+      `williamhill_us`, `winamax_fr/de`, `leovegas_se`). Re-measured at run time: none of the 9 appear in
+      `VENUES_BY_ASSET_GROUP["sports"]` nor in `SPORTS_VENUE_FOLD` key set (`{"ladbrokes_uk", "sport888"}` only); all 9
+      deleted. `UNIBET_UK` retained (confirmed distinct bookmaker with UAC constant + real shards). Singleton/empty
+      operator groups (LEOVEGAS, LADBROKES, WILLIAMHILL, WINAMAX) removed as redundant with identity fallback. —
+      unified-api-contracts@1a96c482
+- [x] [TEST] P0. ✅ **Regression test asserting the exact measured failures above now pass**:
       `arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU']) is False`,
       `arb_legs_are_independent(['UNIBET_UK','UNIBET']) is False`, `get_operator('BETFAIR_EX_UK') == 'BETFAIR'`, and a
       SMARKETS leg producing a non-zero expected commission. Test the CANONICAL uppercase spellings specifically — a
-      test written in lowercase would have passed against the broken code and is exactly why this shipped.
-- [ ] [TEST] P1. **Property test: every venue in `SPORTS_BET_PLACEMENT_VENUES` resolves through `get_operator()` without
-      falling through to the identity default unless it is genuinely a standalone operator.** This is the guard that
-      stops the next venue addition from silently reintroducing the bug.
-- [ ] [REVIEW] P1. **Audit `arbitrage_detector.py`'s call site for any other casing assumption.**
+      test written in lowercase would have passed against the broken code and is exactly why this shipped. —
+      unified-api-contracts@968237b8
+- [x] [TEST] P1. ✅ **Property test: every venue in `SPORTS_BET_PLACEMENT_VENUES` resolves through `get_operator()`
+      without falling through to the identity default unless it is genuinely a standalone operator.** This is the guard
+      that stops the next venue addition from silently reintroducing the bug. — unified-api-contracts@446c2cb3
+- [x] [REVIEW] P1. ✅ **Audit `arbitrage_detector.py`'s call site for any other casing assumption.**
       `_find_best_odds_per_outcome` passes `entry["bookmaker"]` straight into `arb_legs_are_independent`; confirm what
       casing the live market dict actually carries end-to-end (read the producer, do not assume), and record the
-      finding. Grep-then-READ — a zero-hit grep is not evidence here.
-- [ ] [SCRIPT] P1. **Quantify the blast radius**: over the paper-trade / backtest record, count how many detected arbs
-      had all legs within one operator group (i.e. would have been rejected by the fixed guard) and how many carried a
-      SMARKETS leg. This tells us whether any historical "alpha" was this bug. Report the counts in the Progress Log; if
-      the count is non-zero, file a follow-up `- [ ]` todo against the arb-decay/alpha-gate design plan so its baseline
-      is recomputed on the corrected population.
+      finding. Grep-then-READ — a zero-hit grep is not evidence here. — see Progress Log 2026-08-08 (casing UPPERCASE,
+      no bug).
+- [x] [SCRIPT] P1. ✅ **Quantify the blast radius**: over the paper-trade / backtest record, count how many detected
+      arbs had all legs within one operator group (i.e. would have been rejected by the fixed guard) and how many
+      carried a SMARKETS leg. This tells us whether any historical "alpha" was this bug. Report the counts in the
+      Progress Log; if the count is non-zero, file a follow-up `- [ ]` todo against the arb-decay/alpha-gate design plan
+      so its baseline is recomputed on the corrected population. — see Progress Log 2026-08-08 (blast radius 0).
 
 ## Codex SSOTs
 
@@ -160,3 +162,44 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
   `registry.venue_constants`, equals `"SMARKETS"` — the canonical uppercase form production data emits) added to
   `EXCHANGE_VENUES` and `EXCHANGE_COMMISSION_RATES` at `0.02`. Commission rate source verified: smarkets.com standard
   commission is 2% on net winnings, matching the operator pre-specified value.
+- **2026-08-08** — Todo 5 ([TEST] P0 regression tests) shipped in unified-api-contracts@968237b8. Twelve assertions
+  across three test classes: `TestArbLegIndependenceBug1Regression` tests exact measured uppercase failures
+  (BETFAIR_EX_UK/EU pair, UNIBET_UK/UNIBET pair, three-leg same-group rejection) + genuine independence pass;
+  `TestGetOperatorBug1Regression` tests operator mapping for canonical and lowercase inputs + identity fallback;
+  `TestSmarketsCommissionBug2Regression` confirms SMARKETS ∈ EXCHANGE_VENUES and EXCHANGE_COMMISSION_RATES[SMARKETS] ==
+  0.02. QG green, SHA verified ancestor of origin/live-defi-rollout.
+- **2026-08-08** — Todo 4 ([CODE] P1 phantom venue reconciliation) shipped in unified-api-contracts@1a96c482.
+  Re-measured at run time against VENUES_BY_ASSET_GROUP["sports"] and SPORTS_VENUE_FOLD key set: all 9 phantom venues
+  absent (betfair_ex_au, unibet_fr/nl/se, ladbrokes_au, williamhill_us, winamax_fr/de, leovegas_se — 0 manifest rows
+  each). All 9 deleted. UNIBET_UK retained (confirmed distinct bookmaker, real shards, UAC constant UNIBET_UK added in
+  taxonomy P1) and upgraded from string literal to constant import. LEOVEGAS/LADBROKES/WILLIAMHILL/WINAMAX operator
+  groups (which became singleton or empty after phantom deletion) removed entirely — redundant with get_operator()
+  identity fallback. QG green.
+- **2026-08-08** — Todo 6 ([TEST] P1 property test) shipped in unified-api-contracts@446c2cb3. Added
+  `TestGetOperatorPropertyAllBetPlacementVenues` to `tests/unit/sports/test_arb_config.py`. Single parametric test
+  iterates all SPORTS_BET_PLACEMENT_VENUES (70+ venues across exchanges, prediction markets, bookmaker API, bookmaker
+  web): builds expected mapping from OPERATOR_GROUP_VENUES, then asserts each venue resolves correctly — declared group
+  members to their group, standalone venues to themselves (identity is expected). Both failure modes covered: a grouped
+  venue silently falling through to identity, or a standalone venue unexpectedly mapping to a non-identity result. QG
+  green, SHA verified ancestor of origin/live-defi-rollout.
+- **2026-08-08** — Todo 7 ([REVIEW] P1 casing audit) — end-to-end casing trace confirms UPPERCASE throughout the live
+  path. MTDS applies SPORTS_VENUE_FOLD → canonical UPPERCASE venue keys in the `persist-sports-odds-features` payload.
+  FSS `process_sports_record()` passes payload fields through verbatim (orchestrator.py:149-151); `bookmaker_key`
+  emerges UPPERCASE. Strategy's `_build_market_from_feature_vector()` reads `feature_vector.get("bookmaker_key", "FSS")`
+  without any case transform → UPPERCASE (e.g. `"BETFAIR_EX_UK"`). `entry["bookmaker"]` in the live market dict =
+  **UPPERCASE**. `_expected_commission_pct()` at line 129 (`if bookmaker not in EXCHANGE_VENUES`) correctly matches
+  against the UPPERCASE `EXCHANGE_VENUES` constants — **no casing bug**. Structural note: as established in todo 8
+  (blast radius), the current paper-trade path builds single-bookmaker markets so `arb_legs_are_independent` returns
+  False and `_expected_commission_pct()` is structurally unreachable regardless. The casing confirmation applies to the
+  future multi-bookmaker aggregation path — it will also be safe. No code fix needed.
+- **2026-08-08** — Todo 8 ([SCRIPT] P1 blast radius) — counts: **same-operator-group arbs = 0; SMARKETS arbs = 0**. Two
+  structural reasons neither bug was ever triggered in the paper-trade / backtest record: (1) Backtest
+  (`SportsArbDutchingEngine`, venues: pinnacle / bet365 / betfair): neither `arb_legs_are_independent()` nor
+  `_expected_commission_pct()` is called by that engine — the buggy code paths are structurally unreachable from the
+  dutching backtest. Venues confirmed fully independent post-fix: each maps to its own identity operator. (2)
+  Paper-trade (`SportsFeatureSubscriber`): `_parse_feature_vector` builds a market from a single FSS vector with one
+  `bookmaker_key` — all outcome entries share the same bookmaker, so `arb_legs_are_independent([bk, bk, bk])` correctly
+  returns False and no arb signal is ever emitted. The Bug 1 casing defect is structurally unreachable through this
+  path. Verified by executing `detect_sports_arbitrage` on single-bookmaker markets for BETFAIR_EX_UK, BETFAIR_EX_EU,
+  and SMARKETS — all returned 0 signals as expected. **No baseline recomputation needed for the alpha-gate design
+  plan.**

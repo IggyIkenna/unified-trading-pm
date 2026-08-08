@@ -178,33 +178,87 @@ achieved by exclusion, not canonicalisation.**
 
 ## Block B — contracts (P0/P1, after Block A's diagnosis, parallel within the block)
 
-- [ ] [CODE] P0. **Split the venue axis in UAC**: `venue` = the book whose price it is; a NEW `executable` predicate
+- [x] ✅ [CODE] P0. **Split the venue axis in UAC**: `venue` = the book whose price it is; a NEW `executable` predicate
       derived from `VENUE_TO_ADAPTER_KEY` (true only when a real adapter key exists, not `__no_adapter_yet__`). Remove
       `ODDS_API` and `FOOTYSTATS` from `VENUES_BY_ASSET_GROUP["sports"]`. Promote the 21 currently-excepted fan-out
       bookmakers INTO the canonical set — under the new model they are legitimate venues, so
       `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` should shrink toward empty rather than grow. Every venue in the
       set must resolve a `SportsVenueType`, an auth method, an instrument-type set, a fee model and an alpha profile —
-      SMARKETS currently resolves NONE of these despite being canonical, and that gap must close here.
-- [ ] [CODE] P0. **Make bare `BETFAIR` an operator-group parent, not a venue.** Remove it from the data-axis venue set;
+      SMARKETS currently resolves NONE of these despite being canonical, and that gap must close here. — **DONE
+      2026-08-08 (data_engineering, agt-9e871f, slot 8)** — `unified-api-contracts@05a709fd`. Added
+      `venue_adapter_keys.is_venue_executable()`. Removed ODDS_API from the venue axis (it's a source; also dropped its
+      now-stale `VENUE_TO_ADAPTER_KEY`/`VENUE_DATA_TYPE_CAPABILITIES`/`EXPECTED_COVERAGE_BY_ASSET_GROUP` entries + 2
+      hardcoded test assertions). FOOTYSTATS was never in `VENUES_BY_ASSET_GROUP` (only in the noncanonical-exception
+      set) so there was nothing to remove there; confirmed it stays excepted for its own unrelated two-registry-
+      disjointness reason. Promoted all 22 real bookmakers from `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS`
+      (measured count, not the todo's approximate "21" — FOOTYSTATS is the 23rd, non-bookmaker member) — added
+      `UNIBET_EU`/`UNIBET_UK` as new venue constants (didn't exist yet). Every venue in the resulting 32-member
+      `VENUES_BY_ASSET_GROUP["sports"]` now resolves all 5 classification dicts (verified via direct import, zero gaps)
+      — closed SMARKETS (added to `SPORTS_EXCHANGE_VENUES` + an explicit `SPORTS_AUTH_MAP` entry) and the same
+      pre-existing gap on `BETFAIR_EX_UK`/`BETFAIR_EX_EU` (auth only). Also fixed an adjacent pre-existing bug: SMARKETS
+      was in `registry/__init__.py`'s `__all__` since 2026-07-30 but never actually imported (would have broken any
+      direct `from unified_api_contracts.registry import SMARKETS`). Full `quality-gates.sh` green (12528 passed) after
+      2 rebases onto concurrent slots' commits to the same plan (arb-operator-group bugfix, horizon-axis todo) — no
+      conflicts.
+- [x] [CODE] P0. **Make bare `BETFAIR` an operator-group parent, not a venue.** Remove it from the data-axis venue set;
       add a real venue→operator hierarchy in UAC that `BETFAIR_EX_UK`/`EX_EU`/`SB_UK` roll up to. Coordinate with
       `/plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`, which ships the consuming fix FIRST
       — this todo must not regress that fix; if the bugfix already added the hierarchy, extend it rather than
-      duplicating it.
+      duplicating it. 5. ✅ unified-api-contracts@49e83239 — removed BETFAIR from SPORTS_EXCHANGE_VENUES,
+      VENUES_BY_ASSET_GROUP["sports"], VENUE_DATA_TYPE_CAPABILITIES, and representative_sample.py; updated 5 test files
+      (test_sports_schemas, test_venue_context_integration, test_instrument_generator, representative_sample) to use
+      BETFAIR_EX_UK as the canonical data-axis exchange representative; hierarchy already in place via arb bugfix
+      (OPERATOR_GROUP_VENUES@b9a0be80); QG green (12533 passed).
 - [ ] [CODE] P0. **Collapse the raw odds vocabulary to a single lowercase `odds`.** `trades` → `odds`; footystats
       `ODDS`/`odds` → `odds`; the two populations stay distinguishable via the existing `source` column (`odds_api` vs
       `footystats`), which is exactly the axis that should carry that distinction. Add an `in_play` boolean column
       (derivable from `bm_minutes_to_kickoff < 0`) and retire `trades_inplay`. Re-reserve `trades` for genuine matched
-      volume with ZERO current producers.
-- [ ] [CODE] P0. **Add a first-class `horizon` axis** to the manifest/shard contract and stop overloading `timeframe`.
-      `timeframe` reverts to meaning candle grain only. `odds_horizon_bucket` stops being a data_type and becomes `odds`
-      at a horizon. Enumerate every reader of the current `timeframe` column BEFORE changing it (see the rename process
-      rule below) — MDPS, the features loader's `_ODDS_BUCKETED_PREFIXES` path match, and the honest-coverage rollup all
-      read it.
+      volume with ZERO current producers. **Consumer inventory** (per
+      `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md`): UAC `market_data_categories.py`
+      (DATA_TYPES_BY_ASSET_GROUP, FREQUENCY_MAP, CONTRACT_REGISTRY, `_is_consumable_trades_blob` matches FILENAME not
+      data_type column — grep misses it); MTDS `odds_api_adapter.py` (writer); MDPS `canonical_writer.py` +
+      `_process_one_category`; IS `enumerate_expected_universe.py`; features-service reads `odds_horizon_bucket` shards
+      by GCS path prefix via `_ODDS_BUCKETED_PREFIXES` (NOT data_type column — a data_type rename does NOT find it);
+      ml-service `sports_feature_loader._ODDS_BUCKETED_PREFIXES` (same); deployment-api distinct_values +
+      honest-coverage rollup. Full exhaustive enumeration: P2 `[REVIEW] P0`.
+- [x] ✅ [CODE] P0. **Add a first-class `horizon` axis** to the manifest/shard contract and stop overloading
+      `timeframe`. `timeframe` reverts to meaning candle grain only. `odds_horizon_bucket` stops being a data_type and
+      becomes `odds` at a horizon. Enumerate every reader of the current `timeframe` column BEFORE changing it (see the
+      rename process rule below) — MDPS, the features loader's `_ODDS_BUCKETED_PREFIXES` path match, and the
+      honest-coverage rollup all read it. — **LANDED 2026-08-08 (slot 3, data_engineering)**:
+      `unified-api-contracts@685b288a` adds `SPORTS_HORIZONS` (T-24h..T-0) as the SSOT horizon vocabulary, separate from
+      `TIMEFRAMES`/`timeframe` (candle grain only), plus `is_valid_horizon()`. Registers a NEW, additive
+      `SPORTS_ODDS_HORIZON_BUCKET` SchemaContract at `CONTRACT_REGISTRY[("sports","odds","odds_horizon_bucket")]` — this
+      data_type had NO contract at all before — with `horizon` as a required column, instead of bolting an optional
+      column onto `SPORTS_ODDS_TRADES` (confirmed that breaks `validate_dataframe` for every currently-shipping
+      unbucketed row — the same `validate_dataframe` ignores `nullable`/`required` footgun `broker`/`client` were
+      removed for on this exact contract). Added the `("sports","odds")` → `odds_horizon_bucket` entry to
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`. 42/42 UAC sports-contract unit tests green; full UAC QG green.
+      `market-data-processing-service@3e0fb852` wires `SportsBucketAssignmentAdapter.TIER1_HORIZONS`'s bucket NAMES to
+      the new UAC SSOT with a module-load drift-guard assertion (this adapter is the sole writer of horizon-bucketed
+      rows) — calibration values (target_minutes/staleness_cap) stay local, only the name vocabulary moved. No behavior
+      change; 80/80 bucket-adapter unit tests green; full MDPS QG green. **Readers enumerated but NOT changed this
+      phase** (contracts-only, no GCS/manifest mutation, per the plan header):
+      `features-service/features_service/sports/data/gcs_reader.py` (`_BUCKETED_ODDS_*_PREFIX`,
+      `read_bucketed_odds`/`read_odds_at_horizon`, physical column `horizon_name`) and the honest-coverage rollup
+      (deployment-api `_distinct_values.py`) both still read the CURRENT `timeframe`-carries-horizon manifest shape —
+      neither repo is in this plan's `repos:` list, and the physical `AvailabilityRecord.timeframe` column lives in
+      `unified-trading-library`, also out of this plan's `repos:` list. The P1 phase header is explicit ("mutates NO GCS
+      object and NO manifest row... lands contracts and writer behaviour only, so the migration phase has a settled
+      target to migrate toward") — the physical manifest-column split (UTL) and the reader updates (features-service,
+      deployment-api) are P2/P3 scope once the data re-stamp actually happens. Flagging here so P2 picks up: UTL
+      `AvailabilityRecord.timeframe` needs the physical split, and the two readers above need to switch to the new
+      `horizon` column once the writer stamps it.
 - [ ] [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
       OVERTURNS `/codex/02-data/sports-data-types-catalog.md`'s "legitimately coexist; do NOT merge". Blast radius is
       the WHOLE 19-token IS reference vocabulary (`FIXTURES`, `MATCHES`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`,
       `TEAMS`, `XG`, …) — not just `ODDS`. Land the CONTRACT here; the data re-stamp is P2 and is gated on the in-flight
-      API-Football campaign.
+      API-Football campaign. **Consumer inventory** (per codex rename rule): UAC `data_type_capability.py`,
+      `schema_spec.py`, `sports_league_entity_coverage.py`, `_source_priority_data.py`, `_honest_coverage_logic.py`
+      (`SCHEDULE_DEFINING_DATA_TYPES` frozenset), `availability_semantics.py`, `required_window_registry.py`,
+      `league_data.py`, `feature_upstream.py` — all carry uppercase IS tokens; IS scripts
+      `enumerate_expected_universe.py` + `build_instrument_catalogue.py`; every features-service/ml-service loader
+      keying on uppercase IS entity names. Full enumeration: P2 `[REVIEW] P0`.
 - [ ] [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
       property of the VENUE (UAC `SportsVenueType` already encodes it), so stamping it per-instrument is redundant.
       Derive at read time. This also resolves
@@ -212,6 +266,10 @@ achieved by exclusion, not canonicalisation.**
       bookmakers" todo mechanically, with no per-venue operator judgment. NOTE the count discrepancy: that doc says 19,
       the live manifest says **21** venues still carrying only the pre-fork `odds` token. **PRE-SPECIFIED**: the live
       prod manifest is authoritative; re-measure it and correct the issue doc's figure, do not reconcile by discussion.
+      **Consumer inventory** (per codex rename rule): UAC `market_data_categories.py`
+      `INSTRUMENT_TYPES_BY_ASSET_GROUP["sports"]` + CONTRACT_REGISTRY keys (`exchange_odds`/`fixed_odds` entries,
+      ~L960-1011); MTDS (reads instrument_type keys from UAC registry); manifest rows carrying
+      `instrument_type=exchange_odds`/`fixed_odds`. Full enumeration: P2 `[REVIEW] P0`.
 - [ ] [CODE] P1. **Delete `markets`, `outcomes` and `settlements`** from `DATA_TYPES_BY_ASSET_GROUP["sports"]` — 0 rows
       ever written, pure phantom declarations. Record in codex that ML labels come from IS `fixtures_outcomes` /
       `matches` (post-lowercasing), so the real label lineage is documented rather than implied by a path that was never
@@ -232,25 +290,31 @@ achieved by exclusion, not canonicalisation.**
       `required_inputs.py::odds_calculator` declares `ODDS_HORIZON_BUCKET` only and says footystats `ODDS` was "removed
       2026-06-25 — MTDS/odds-api owns raw odds", while `feature_upstream.py::odds_calculator` declares footystats `ODDS`
       as REQUIRED. Pick one, make the other derive from it, and add a test that the two can never diverge again.
-- [ ] [DOCS] P0. **Author the codex rename/split process rule** (operator ruling 2026-08-08, resolves
+- [x] ✅ [DOCS] P0. **Author the codex rename/split process rule** (operator ruling 2026-08-08, resolves
       `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`): an entity rename or
       split MUST enumerate and migrate every consumer in the SAME change. Then APPLY it to this chain — every rename
       todo above must carry its enumerated consumer list before P2 executes. The rule is validated by its first real
-      use, not written abstractly.
-- [ ] [DOCS] P0. **Put a SUPERSEDED banner on `/codex/02-data/sports-data-types-catalog.md`** and correct it. Three
+      use, not written abstractly. ✅ Rule authored at
+      `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md`; consumer inventories added to each rename
+      todo (trades→odds, horizon/timeframe, lowercase-merge, exchange_odds/fixed_odds); issue doc `[PROCESS] P1`
+      resolved. — unified-trading-pm
+- [x] ✅ [DOCS] P0. **Put a SUPERSEDED banner on `/codex/02-data/sports-data-types-catalog.md`** and correct it. Three
       things in it are now wrong or stale: (a) the "IS `ODDS` and MTDS types legitimately coexist; do NOT merge" ruling
       is OVERTURNED; (b) its GCS path convention documents `asset_group=sports/source={BOOKMAKER}/data_type=…` while
       production actually writes
       `pipeline_mode=…/asset_group=…/venue={BOOKMAKER}/instrument_type=…/data_type=…/league_id=…` — wrong axis name,
       missing two segments; (c) it documents 8 data types and never documents `trades`/`trades_inplay`, the largest
-      population in the estate. Rewrite against the new model rather than patching.
+      population in the estate. Rewrite against the new model rather than patching. ✅ unified-trading-pm@69db5f8ed
 - [ ] [DOCS] P1. **Reaffirm the 2020-06 floor against the P4 backfill** in `/codex/02-data/sports-2020-06-data-floor.md`
       — no change expected, but state explicitly that the floor governs the derived-layer backfill and the C3 pre-launch
       corpus disposition, so the next reader does not re-open it.
 
 ## Codex SSOTs
 
-- `/codex/02-data/sports-data-types-catalog.md` — being superseded by this phase.
+- `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` — HARD RULE governing every rename/split in this
+  chain; authored by this plan's [DOCS] P0.
+- `/codex/02-data/sports-data-types-catalog.md` — **rewritten 2026-08-08** (unified-trading-pm@69db5f8ed); now documents
+  the target model.
 - `/codex/02-data/sports-2020-06-data-floor.md` — the floor; unchanged, reaffirmed.
 - `/codex/02-data/availability-manifest-and-data-status.md` — shard atom must be identical across
   writer/manifest/status/gate/UI; the `horizon` axis addition must satisfy this.
@@ -282,3 +346,22 @@ achieved by exclusion, not canonicalisation.**
   `capture_status=captured` rows** for `data_type=trades`, ALL with `row_count > 0`, sum = **9,154**; source=`odds_api`.
   Post-outage capture confirmed for 13 dates spanning 2026-07-25 → 2026-08-07 (2026-08-04 gap consistent with prior
   note). Not the silent-zero pattern — this is genuine captured data. All 3 Block A todos now ✅.
+- **2026-08-08 (slot 3, data_engineering)** — Block B "first-class horizon axis" todo flipped.
+  `unified-api-contracts@685b288a` + `market-data-processing-service@3e0fb852`. See the todo's own note above for the
+  full design + rationale (the `validate_dataframe`-ignores-`required` footgun, the new additive
+  `SPORTS_ODDS_HORIZON_BUCKET` contract, the MDPS SSOT-drift-guard wiring). Both repos' full QG green. Deferred to P2/P3
+  (out of this plan's `repos:` — UTL/features-service/deployment-api): the physical `AvailabilityRecord.timeframe`
+  manifest-column split, and switching `gcs_reader.py`/the honest-coverage rollup to read the new `horizon` axis.
+- **2026-08-08 (slot 11, backend_engineer)** — Block B [DOCS] P0 (rename/split process rule) flipped. Codex doc
+  confirmed at `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` (authored in the plan-authoring
+  commit). Applied to this chain: consumer inventories added to todos 3 (trades→odds), 5 (lowercase merge), and 6
+  (exchange_odds/fixed_odds); todo 4 (horizon/timeframe) already carried its consumer list. Key non-obvious consumer
+  across all four renames: features-service/ml-service `_ODDS_BUCKETED_PREFIXES` binds by GCS path prefix, not by
+  data_type column — a data_type grep misses it entirely. Issue doc `[PROCESS] P1` also resolved.
+- **2026-08-08 (slot 2, data_engineering)** — Block B [DOCS] P0 (sports-data-types-catalog rewrite) flipped. Rewrote
+  `/codex/02-data/sports-data-types-catalog.md` in full against the 2026-08-08 operator ruling: (a) "do NOT merge"
+  overturned — doc now states vocabulary merges to ONE lowercase `odds` with `in_play`+`horizon` columns; (b) GCS path
+  corrected to `venue=` (not `source=`) with `pipeline_mode=` and `instrument_type=` segments; (c) `trades` (375k
+  shards), `trades_inplay`, and all retired types now documented; (d) `markets`/ `outcomes`/`settlements` marked RETIRED
+  (0 rows ever written); (e) 32-member venue axis, `executable` predicate, BETFAIR operator-group parent, and MDPS
+  staleness guard documented. Shipped: unified-trading-pm@69db5f8ed.

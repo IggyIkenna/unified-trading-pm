@@ -176,28 +176,29 @@ step.
       `gs://deployment-scripts-central-element-323112/vm-logs/` and
       `.../canonical-migration-candle-census/20260803-144337/`.
 
-## Phase C — E4b: legacy→canonical gap-fill (additive, VM-scale) — 🔴 CANNOT-RUN-AS-WRITTEN
+## Phase C — E4b: legacy→canonical gap-fill (additive, VM-scale) — ✅ DONE-BY-FAIT-ACCOMPLI (2026-08-08)
 
-- [ ] [DATA] P1. **🔴 CANNOT-RUN-AS-WRITTEN (2026-07-28, slot-3, data_engineering)**: the source bucket
-      `market-data-tick-cefi-central-element-323112` this phase's `--also-legacy` flag reads from **no longer exists** —
-      `gcloud storage buckets describe` returns 404; Cloud Audit Logs confirm `storage.buckets.delete` by
-      `ikenna@odum-research.com` at `2026-07-14T11:02:29Z`, well before this plan (or its L3 predecessor) was authored.
-      Full evidence: `plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. Do NOT dispatch
-      this phase as written — `launch-canonical-migration-vm.sh cefi ... --also-legacy` will fail immediately against
-      the now-nonexistent bucket. **Gated on the linked issue doc's migration-before-delete verification** (attempted
-      read-only via the pre-migration snapshot's manifest index — INCONCLUSIVE, naive tuple-diff is unreliable per the
-      same false-phantom normalization bug class already found in
-      `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`; a proper CF-11-style normalized comparison is
-      still needed). Once that verification lands: if it confirms the legacy-only cells were already migrated before
-      deletion, this phase is DONE-BY-FAIT-ACCOMPLI (nothing left to gap-fill) — flip with that citation. If it finds a
-      genuine residual gap, this phase must be RE-SCOPED to a from-snapshot restore (there is no live bucket left to
-      `--also-legacy` read from) rather than run as currently written. ~~The 5,233-cell legacy-only gap-fill:
+- [x] ✅ [DATA] P1. **DONE-BY-FAIT-ACCOMPLI 2026-08-08** (slot-8, `cefi_satellite_ao_dispatch_batch10`), citing the
+      now-resolved gating investigation `plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`
+      (`status: resolved` 2026-08-07, conclusion CF-11). That doc's final todo ran the proper normalization-aware CF-11
+      covered-keys comparison between the pre-migration snapshot's manifest index (96,560 unique captured cells,
+      2026-05-16) and the current `-prd` manifest: 36,850 covered (38.3%), 59,488 not covered (61.7%). The 59,488
+      uncovered cells decompose entirely into (a) pre-canonical-era 2019+ data (DERIBIT/BYBIT/BINANCE-FUTURES/etc., out
+      of the canonical-`-prd` migration's own scope), (b) 12,900 pre-CF-11 empty-`itype`/`dtype` ghost rows (not real
+      cells), and (c) Era-B legacy chain-form rows in the `itype` column (already-tracked, separately-scoped class) —
+      **no residual gap the `--also-legacy` gap-fill in this phase was meant to close.** Explicit conclusion from that
+      investigation: "no unexpected data loss from the 2026-07-14 deletion beyond what was already scoped as
+      out-of-canonical-scope legacy data." Since the source bucket `market-data-tick-cefi-central-element-323112` this
+      phase's `--also-legacy` flag would read from no longer exists (deleted 2026-07-14, confirmed 404) and the
+      investigation it was gated on found nothing left to gap-fill, this phase is closed by fait-accompli — the original
+      `--also-legacy` VM launch below is superseded, not executed. ~~The 5,233-cell legacy-only gap-fill:
       `MIGRATION_EXTRA_ARGS="--also-legacy" bash launch-canonical-migration-vm.sh cefi <start> <end> full` (bare `cefi`
       category — additive-only, no `--drop-stale` in this phase; `--also-legacy` reads the legacy
       `market-data-tick-cefi` bucket as an additional source and copies any still-missing cell forward to canonical).
       Shard/bigger-mem: the 1.9M legacy-object listing previously stalled an `e2-standard-4` (use
       `MACHINE_TYPE=e2-standard-16` or shard the date range across multiple VMs). Done when: a fresh legacy-only-cells
-      count reads 0 (was 5,233).~~ (original scope, kept for history — source bucket is gone, cannot execute verbatim)
+      count reads 0 (was 5,233).~~ (original scope, kept for history — source bucket is gone, superseded by the CF-11
+      finding above, not executed)
 
 ## Phase D — E5: manifest `_index` rebuild — UNBLOCKED 2026-07-28 (slot-2), ready to dispatch
 
@@ -318,3 +319,11 @@ todo's isolated wording. No reclassification.
   one of this doc's context_scope entries. All 6 (Phase C's gate doc, Phase D's `rebuild_cefi_manifest.py`, Phase E's
   `cf_manifest_audit.py` + audit-instructions doc, the vm-launcher runbook, and the parent L3 plan) re-verified
   resolving.
+- **2026-08-08 (slot-8, `cefi_satellite_ao_dispatch_batch10` todo 1, data_engineering)** — Phase C's gate,
+  `plans/archive/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`, resolved 2026-08-07 with conclusion
+  CF-11: the proper normalization-aware comparison found 59,488/96,338 eligible legacy cells not covered in current
+  `-prd`, all decomposing into pre-canonical-era 2019+ data, pre-CF-11 empty-itype/dtype ghost rows, or already-tracked
+  Era-B chain-form rows — "no unexpected data loss ... beyond what was already scoped as out-of-canonical-scope legacy
+  data." Flipped Phase C to DONE-BY-FAIT-ACCOMPLI citing that conclusion — no residual gap-fill work remains, and the
+  source bucket the original `--also-legacy` step would read from is gone anyway (confirmed 404, deleted 2026-07-14).
+  Phases D/E remain open, unaffected by this change (they don't touch the legacy bucket).

@@ -2,9 +2,14 @@
 
 The monitor's whole reason to exist is the incident where a 16h total `glue`-pool collapse
 surfaced NO alert at all (silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md). These
-tests cover the "cheapest honest signal" contract from that issue doc: a `glue`-labelled job
-queued past the threshold pages ONLY when the pool is genuinely idle (zero glue jobs in progress)
-— a busy-but-alive pool must never be misread as starved, and a healthy pool must fire nothing.
+tests cover the "cheapest honest signal" contract from that issue doc.
+
+Two detection modes tested:
+  Mode 1 (STARVED): a `glue`-labelled job queued past threshold pages ONLY when the pool is
+    genuinely idle (zero glue jobs in progress) — a busy-but-alive pool must never be misread.
+  Mode 2 (STALLED): an `in_progress` workflow run has individual glue jobs still `queued` past
+    the busy-queued threshold — pool oversubscribed, lone runner tied up. Root incident: 2026-08-03
+    instruments-service run 30800087100 (1h45m stall, invisible to mode 1).
 """
 
 from __future__ import annotations
@@ -129,28 +134,93 @@ def test_multiple_starved_jobs_across_runs() -> None:
     assert len(starved) == 3
 
 
+# ── find_stalled_glue_jobs — mode 2 (pool oversubscribed) ───────────────────────────────────────
+
+
+def test_stalled_case_fires_when_in_progress_run_has_aged_queued_glue_job() -> None:
+    """Mode 2 synthetic case from the Done-when: queued-behind-busy case fires exactly one alert."""
+    created_at = (NOW - dt.timedelta(minutes=130)).isoformat().replace("+00:00", "Z")
+    run = _run(42, created_at, "quality-gates-v2")
+    queued_glue = [_job("QG slice (tests)", status="queued")]
+    stalled = GPS.find_stalled_glue_jobs([(run, queued_glue)], busy_queued_min=120.0, now=NOW)
+    assert len(stalled) == 1
+    assert stalled[0]["run_id"] == 42
+    assert stalled[0]["age_min"] == 130.0
+
+
+def test_stalled_case_fires_nothing_when_under_busy_queued_threshold() -> None:
+    """Normally-queued job (well under 120m) must not page — short delays are routine."""
+    created_at = (NOW - dt.timedelta(minutes=10)).isoformat().replace("+00:00", "Z")
+    run = _run(43, created_at, "quality-gates-v2")
+    queued_glue = [_job("QG slice (tests)", status="queued")]
+    stalled = GPS.find_stalled_glue_jobs([(run, queued_glue)], busy_queued_min=120.0, now=NOW)
+    assert stalled == []
+
+
+def test_stalled_case_fires_nothing_when_no_queued_glue_jobs() -> None:
+    """An in_progress run with all glue jobs running should not fire mode 2."""
+    created_at = (NOW - dt.timedelta(minutes=200)).isoformat().replace("+00:00", "Z")
+    run = _run(44, created_at, "quality-gates-v2")
+    in_progress_glue = [_job("QG slice (tests)", status="in_progress")]
+    stalled = GPS.find_stalled_glue_jobs([(run, in_progress_glue)], busy_queued_min=120.0, now=NOW)
+    assert stalled == []
+
+
+def test_stalled_ignores_run_with_unparseable_created_at() -> None:
+    run = {"id": 45, "name": "x", "html_url": "", "created_at": "bad-ts"}
+    stalled = GPS.find_stalled_glue_jobs([(run, [_job("job")])], busy_queued_min=120.0, now=NOW)
+    assert stalled == []
+
+
+def test_stalled_fires_multiple_jobs_in_one_run() -> None:
+    created_at = (NOW - dt.timedelta(minutes=150)).isoformat().replace("+00:00", "Z")
+    run = _run(46, created_at)
+    queued_glue = [_job("QG slice (tests)", status="queued"), _job("QG slice (checks)", status="queued")]
+    stalled = GPS.find_stalled_glue_jobs([(run, queued_glue)], busy_queued_min=120.0, now=NOW)
+    assert len(stalled) == 2
+
+
 # ── build_report ──────────────────────────────────────────────────────────────────────────────
 
 
 def test_build_report_healthy_names_no_alert() -> None:
-    report = GPS.build_report([], threshold_min=20.0)
+    report = GPS.build_report([], [], threshold_min=20.0, busy_queued_min=120.0)
     assert "healthy" in report
     assert "starved" not in report.lower()
+    assert "stalled" not in report.lower()
 
 
 def test_build_report_starved_names_the_job_and_age() -> None:
     starved = [{"run_id": 1, "run_name": "x", "job_name": "build", "html_url": "https://x", "age_min": 45.0}]
-    report = GPS.build_report(starved, threshold_min=20.0)
+    report = GPS.build_report(starved, [], threshold_min=20.0, busy_queued_min=120.0)
     assert "starved" in report.lower()
     assert "build" in report
     assert "45.0" in report
+
+
+def test_build_report_stalled_names_the_job_and_age() -> None:
+    stalled = [
+        {"run_id": 2, "run_name": "qg", "job_name": "QG slice (tests)", "html_url": "https://y", "age_min": 130.0}
+    ]
+    report = GPS.build_report([], stalled, threshold_min=20.0, busy_queued_min=120.0)
+    assert "stalled" in report.lower()
+    assert "QG slice (tests)" in report
+    assert "130.0" in report
+
+
+def test_build_report_both_modes_present_when_both_fire() -> None:
+    starved = [{"run_id": 1, "run_name": "x", "job_name": "build", "html_url": "", "age_min": 45.0}]
+    stalled = [{"run_id": 2, "run_name": "qg", "job_name": "QG slice", "html_url": "", "age_min": 130.0}]
+    report = GPS.build_report(starved, stalled, threshold_min=20.0, busy_queued_min=120.0)
+    assert "starved" in report.lower()
+    assert "stalled" in report.lower()
 
 
 def test_build_report_truncates_at_ten_and_says_how_many_more() -> None:
     starved = [
         {"run_id": i, "run_name": "x", "job_name": f"job-{i}", "html_url": "", "age_min": 30.0} for i in range(13)
     ]
-    report = GPS.build_report(starved, threshold_min=20.0)
+    report = GPS.build_report(starved, [], threshold_min=20.0, busy_queued_min=120.0)
     assert "3 more" in report
 
 

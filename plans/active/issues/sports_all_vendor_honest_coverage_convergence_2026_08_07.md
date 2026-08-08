@@ -661,3 +661,33 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (EPL, LA_LIGA, BUNDESLIGA, SERIE_A), **zero OOMs** — confirms the skip-fast-for-already-captured-leagues hypothesis
   from last tick, materially better than smallchunk2's original 55% OOM rate on this same chunk. Watching for it to
   clear; not alarming if OOMs do appear on the previously-`attempted_failed` leagues later in this chunk.
+- **2026-08-08T05:05Z** — FIXTURE_STATS +49 days (`last_completed_date=2023-12-08`, fresh `05:04:33Z`), steady. odds
+  smallchunk3: still in chunk 18, now **10 distinct leagues attempted, still zero OOMs** (~46 min into this chunk) — the
+  skip-fast-plus-partial-real-fetch pattern is holding cleanly, just at the usual ~4.5min/league bootstrap-bound pace
+  rather than a faster-than-normal clip; the real win is avoiding the wasted OOM-restart cycles entirely. Both healthy,
+  no intervention.
+- **2026-08-08T05:33Z — MAJOR (recurring): `smallchunk3` also died, second occurrence of the identical
+  silent-hang-then-watchdog-kill pattern. New issue doc filed.** `smallchunk3` was gone from
+  `gcloud compute instances list` entirely — not OOM (last RSS=8.6GiB, well below the ~28-31GiB OOM range), not the VM's
+  own graceful self-delete (no terminal `exit_code=` line). `run.log` went silent at `05:05:17Z` (mid-chunk-18,
+  `SCOTTISH_PREMIERSHIP` real-fetch), **the heartbeat blob itself also stopped updating** (`05:06:23Z`, confirmed via
+  `gcloud storage ls -L`) — ruling out a watchdog false-positive against a still-alive VM (the documented 2026-07-18
+  API-Football precedent) and pointing instead to a genuine ~20-minute hang that `vm_zombie_watchdog.py` correctly
+  caught and killed (`delete` op at `05:26:25Z`). This is the SAME signature as `smallchunk2`'s death earlier this
+  session (~19 min silent gap there too). Filed as a proper new issue since it's now a confirmed-recurring pattern, not
+  investigated to root cause yet (would need to catch a live hang in progress via `py-spy`/`strace`, not post-mortem):
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`. No data loss — chunk 18's progress through
+  `SCOTTISH_PREMIERSHIP` (10 leagues) is durable. Relaunched as **`mtds-backfill-odds-smallchunk4-20260808`** (guard
+  passed, RUNNING, tarballs fresh); not yet verified booted this tick (checked too soon after launch — startup script
+  was still extracting tarballs). FIXTURE_STATS unaffected, continuing healthy.
+- **2026-08-08T05:57Z — smallchunk4 confirmed booted + healthy.** Chunk 4/451 (`2020-06-21`), zero OOMs, correctly
+  skip-fasting through already-covered ground same as prior relaunches — no third occurrence yet (it's still well before
+  chunk 18, where both prior deaths' real-fetch load was heaviest). FIXTURE_STATS jumped **98 days**
+  (`last_completed_date=2024-03-15`, fresh `05:55:28Z`) — steadily accelerating toward chunk 26/26. Both healthy, no
+  intervention.
+- **2026-08-08T06:24Z** — FIXTURE_STATS +34 days (`last_completed_date=2024-04-18`, fresh `06:23:27Z`), steady. odds
+  smallchunk4: chunk 10/451 now (`2020-07-21`), up from chunk 4, ~5min/chunk pace, zero OOMs — still no third
+  occurrence, 8 chunks remaining before reaching chunk 18's known danger zone. Both healthy, no intervention.
+- **2026-08-08T06:52Z** — FIXTURE_STATS +30 days (`last_completed_date=2024-05-18`, fresh `06:50:26Z`), steady. odds
+  smallchunk4: chunk 15/451 now (`2020-08-15`), zero OOMs, ~5min/chunk pace holding — 3 chunks remaining before
+  chunk 18. Both healthy, no intervention.

@@ -1,0 +1,22 @@
+# ci-vm-resource-watchdog.timer — check every 60 minutes for CI-VM resource-strain that
+# would risk genuinely bringing the box down (operator directive, 2026-08-08: "temp spikes
+# are ok... unless it would literally bring down the box").
+#
+# Epic: infrastructure_master
+# Lifecycle: permanent   Delete-when: NA
+#
+# 60-min cadence matches the operator's own ask -- deliberately coarser than the 5-min
+# crash-loop watchdog: this checks a rolling HOUR of resource-history samples (already at 5s
+# resolution, so no signal is lost between ticks), not point-in-time process liveness.
+# Persistent=true so a rebooted VM checks promptly rather than waiting out the full hour.
+[Unit]
+Description=Hourly CI-VM resource-strain check
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=60min
+Persistent=true
+Unit=ci-vm-resource-watchdog.service
+
+[Install]
+WantedBy=timers.target

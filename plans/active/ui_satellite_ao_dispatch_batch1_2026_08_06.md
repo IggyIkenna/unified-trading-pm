@@ -106,7 +106,7 @@ AND conflict-clear today.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Measure + profile the cell-grid build's memory footprint.** Instrument `deployment-api`'s
+- [x] ✅ [BACKEND] P1. **Measure + profile the cell-grid build's memory footprint.** Instrument `deployment-api`'s
       cell-grid endpoint/build path to confirm, with real numbers, the per-service memory growth pattern this source
       doc's OOM root-cause claim describes (repeated deployment-api OOMs reading the whole manifest for full-history
       date-range windows — re-confirmed live-code-accurate as of a 2026-07-22 trace in the source doc). This is the
@@ -116,7 +116,7 @@ AND conflict-clear today.
       un-dispatched pending the design call this todo's own output should inform. **Done when**: a measured
       memory-footprint number/curve (e.g. peak RSS vs date-range-width, or manifest bytes read vs range) is recorded in
       the source doc's own Progress Log, and its own todo 1 checkbox is flipped citing this evidence. Repo:
-      deployment-api. Source: `data_status_cell_grid_rearchitecture_2026_07_18.md`.
+      deployment-api. Source: `data_status_cell_grid_rearchitecture_2026_07_18.md`. — deployment-api@8a36931
 
 - [ ] [REVIEW] P2. **CORRECTED 2026-08-07 (was: "file a new artifact-pipeline metadata-gaps issue doc" — stale, would
       have created a duplicate; see below) — reconcile the source doc's stale Phase-5 issue-filing checkbox + fix the

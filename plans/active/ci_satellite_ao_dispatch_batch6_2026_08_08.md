@@ -131,7 +131,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       by any covering doc (batch4's "Already covered" claim for this doc was stale/unsubstantiated — re-verified this
       run: batch2 is archived with zero mentions, and this doc's own frontmatter is `assigned_vm: NA`, not `planning`).
 
-- [ ] 3. [SCRIPT] P1. **Generalize glue-pool-starvation detection to catch a `quality-gates-v2` run stuck `queued`
+- [x] 3. ✅ [SCRIPT] P1. **Generalize glue-pool-starvation detection to catch a `quality-gates-v2` run stuck `queued`
       behind a busy self-hosted runner, and confirm whether `glue-runner-crash-loop-watchdog.sh` actually paged for the
       2026-08-05 89-restart `agent-orchestrator` crash-loop.** Two sub-items from the same source doc, combined into one
       todo per the same-file-contention note (both write to that doc's Progress Log). (a) Neither
@@ -148,7 +148,11 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       (`## Follow-up` [SCRIPT] P1 + the 2026-08-05 Progress Log "Not done / follow-up" item 3) — never cited by any
       covering doc (its sibling `## Follow-up` [REVIEW] P2 item — the `deployment-api` allowlist removal — IS already
       done via `ci_satellite_ao_dispatch_batch4_2026_07_31.md`; only the checkbox in the source doc itself is stale,
-      left for this batch's finalize plan to reconcile, not re-done here).
+      left for this batch's finalize plan to reconcile, not re-done here). unified-trading-pm@b073c47f9 — (a)
+      `find_stalled_glue_jobs()` + `--busy-queued-min 120` + `--repos-file` fleet sweep added to
+      `glue_pool_starvation_monitor.py`; 5 new regression tests; workflow timeout 5→10m; (b) watchdog did NOT page — bug
+      confirmed in watchdog comment lines 309–321 (fixed 2026-08-05). Both recorded in source doc Progress Log
+      2026-08-08.
 
 - [ ] 4. [INFRA] P3. **Audit which of this repo's standing, schedule-active CI monitors lack a state-diffed
       recovery/all-clear post, and add the already-3×-precedented `branch-health.yml` recovery-job pattern (cached
@@ -349,9 +353,9 @@ contention to the smallest fully-decided edit) rather than needing a fresh rulin
   and 08-07's interrupted attempt) each found zero, largely because today's candidate set includes 5 docs created
   2026-08-07 (after every prior sweep ran) plus finer-grained per-item scrutiny of docs previously judged wholesale
   "orphaned_partial_coverage" that surfaced individually-uncovered sub-items batch1/4/5 never extracted.
-- **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check re-verified
-  Phase 3's original clearance: (a) no `ci`/`infrastructure_master` sibling batch drafted after this one exists; (b) no
-  active `parent_epic: infrastructure_master` `assigned_vm: planning` plan claims the same target files as any of the
-  12 todos (spot-checked the 3-way `scripts/workflow-templates/` contention, the glue-starvation-monitor targets, and
-  the stranded-branch rebase — all still clean); (c) no `ci_consolidated_closeout` doc exists for this tranche to check
+- **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check re-verified Phase
+  3's original clearance: (a) no `ci`/`infrastructure_master` sibling batch drafted after this one exists; (b) no active
+  `parent_epic: infrastructure_master` `assigned_vm: planning` plan claims the same target files as any of the 12 todos
+  (spot-checked the 3-way `scripts/workflow-templates/` contention, the glue-starvation-monitor targets, and the
+  stranded-branch rebase — all still clean); (c) no `ci_consolidated_closeout` doc exists for this tranche to check
   against. `locked_by` unset. Dispatching.
