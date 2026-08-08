@@ -294,13 +294,13 @@ achieved by exclusion, not canonicalisation.**
       `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md`; consumer inventories added to each rename
       todo (trades→odds, horizon/timeframe, lowercase-merge, exchange_odds/fixed_odds); issue doc `[PROCESS] P1`
       resolved. — unified-trading-pm
-- [ ] [DOCS] P0. **Put a SUPERSEDED banner on `/codex/02-data/sports-data-types-catalog.md`** and correct it. Three
+- [x] ✅ [DOCS] P0. **Put a SUPERSEDED banner on `/codex/02-data/sports-data-types-catalog.md`** and correct it. Three
       things in it are now wrong or stale: (a) the "IS `ODDS` and MTDS types legitimately coexist; do NOT merge" ruling
       is OVERTURNED; (b) its GCS path convention documents `asset_group=sports/source={BOOKMAKER}/data_type=…` while
       production actually writes
       `pipeline_mode=…/asset_group=…/venue={BOOKMAKER}/instrument_type=…/data_type=…/league_id=…` — wrong axis name,
       missing two segments; (c) it documents 8 data types and never documents `trades`/`trades_inplay`, the largest
-      population in the estate. Rewrite against the new model rather than patching.
+      population in the estate. Rewrite against the new model rather than patching. ✅ unified-trading-pm@69db5f8ed
 - [ ] [DOCS] P1. **Reaffirm the 2020-06 floor against the P4 backfill** in `/codex/02-data/sports-2020-06-data-floor.md`
       — no change expected, but state explicitly that the floor governs the derived-layer backfill and the C3 pre-launch
       corpus disposition, so the next reader does not re-open it.
@@ -309,7 +309,8 @@ achieved by exclusion, not canonicalisation.**
 
 - `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` — HARD RULE governing every rename/split in this
   chain; authored by this plan's [DOCS] P0.
-- `/codex/02-data/sports-data-types-catalog.md` — being superseded by this phase.
+- `/codex/02-data/sports-data-types-catalog.md` — **rewritten 2026-08-08** (unified-trading-pm@69db5f8ed); now documents
+  the target model.
 - `/codex/02-data/sports-2020-06-data-floor.md` — the floor; unchanged, reaffirmed.
 - `/codex/02-data/availability-manifest-and-data-status.md` — shard atom must be identical across
   writer/manifest/status/gate/UI; the `horizon` axis addition must satisfy this.
@@ -353,3 +354,10 @@ achieved by exclusion, not canonicalisation.**
   (exchange_odds/fixed_odds); todo 4 (horizon/timeframe) already carried its consumer list. Key non-obvious consumer
   across all four renames: features-service/ml-service `_ODDS_BUCKETED_PREFIXES` binds by GCS path prefix, not by
   data_type column — a data_type grep misses it entirely. Issue doc `[PROCESS] P1` also resolved.
+- **2026-08-08 (slot 2, data_engineering)** — Block B [DOCS] P0 (sports-data-types-catalog rewrite) flipped. Rewrote
+  `/codex/02-data/sports-data-types-catalog.md` in full against the 2026-08-08 operator ruling: (a) "do NOT merge"
+  overturned — doc now states vocabulary merges to ONE lowercase `odds` with `in_play`+`horizon` columns; (b) GCS path
+  corrected to `venue=` (not `source=`) with `pipeline_mode=` and `instrument_type=` segments; (c) `trades` (375k
+  shards), `trades_inplay`, and all retired types now documented; (d) `markets`/ `outcomes`/`settlements` marked RETIRED
+  (0 rows ever written); (e) 32-member venue axis, `executable` predicate, BETFAIR operator-group parent, and MDPS
+  staleness guard documented. Shipped: unified-trading-pm@69db5f8ed.
