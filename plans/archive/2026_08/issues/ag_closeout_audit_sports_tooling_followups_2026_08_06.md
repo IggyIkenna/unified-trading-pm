@@ -10,7 +10,7 @@ summary: >-
   sports_satellite_ao_dispatch_batch9_2026_08_04.md are truncated mid-sentence with a trailing "…", making the 08-04
   conflict-claims not fully recoverable from the record — this run re-verified each affected item live, but the record
   itself should be completed or explicitly retired.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, ci]
 stage: [meta]
@@ -40,7 +40,7 @@ depends_on: []
 source: >-
   /ag-closeout-audit sports tranche run, 2026-08-06 (agt-7b0c34, slot-13) — the run's two residual tooling observations,
   filed per the pre-compact ritual (findings become - [ ] todos, never prose-only).
-resolved_by:
+resolved_by: "unified-trading-pm@a969d9ba8 (Finding 1), unified-trading-pm@a72c755c3 (Finding 2), live-defi-rollout"
 locked_by:
 locked_since:
 context_scope:
@@ -51,6 +51,12 @@ context_scope:
     /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-08 — RESOLVED** (status: resolved, 0 open todos, unlocked). Both findings verified live:
+> `check_ag_closeout_linkage.py` re-run confirms the previously-flagged superseded doc no longer appears as an orphan
+> (`unified-trading-pm@a969d9ba8`); zero `…`-truncated Deferred bullets remain in
+> `sports_satellite_ao_dispatch_batch9_2026_08_04.md` (`unified-trading-pm@a72c755c3`). Archived by
+> `ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md`'s reconciliation todo.
 
 # ag-closeout-audit sports tooling follow-ups (2026-08-06)
 
