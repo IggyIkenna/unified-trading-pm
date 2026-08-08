@@ -319,10 +319,25 @@ achieved by exclusion, not canonicalisation.**
       rows ever written, pure phantom declarations. Record in codex that ML labels come from IS `fixtures_outcomes` /
       `matches` (post-lowercasing), so the real label lineage is documented rather than implied by a path that was never
       built. — unified-api-contracts@975f0191
-- [ ] [CODE] P1. **Purge the cross-AG bleed from the sports denominator.** `KALSHI` carries 20,785 `empty_confirmed`
+- [x] ✅ [CODE] P1. **Purge the cross-AG bleed from the sports denominator.** `KALSHI` carries 20,785 `empty_confirmed`
       `trades` rows sourced `polymarket_clob`, spanning 2020-06-06 → 2026-05-21 — prediction-market venues seeded into
       the sports expected-universe. Stop the seeding at the enumerator, and retire
-      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED` once it is genuinely empty. Manifest-row cleanup is P2.
+      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED` once it is genuinely empty. Manifest-row cleanup is P2. — **DONE 2026-08-08
+      (slot 4, data_engineering)**: `unified-api-contracts@e5dd8faf`. Re-investigated "stop the seeding at the
+      enumerator" against live code: `VENUES_BY_ASSET_GROUP["sports"]`, `expected_coverage.py`'s `_SPORTS` dict, and
+      IS's `venue_core.get_venues_for_asset_groups` SPORTS branch are ALL already clean — none seed
+      KALSHI/prediction-market venues into sports today. The archived root-cause doc
+      (`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`) already
+      classified the 20,785 rows as **classification (b) — a dormant legacy artifact** (all `written_at` cluster in one
+      80s window from `rebuild_sports_manifest_v9.py`'s 2026-07-13 re-stamp of pre-existing rows, not a live write), and
+      `sports_satellite_ao_dispatch_batch3_2026_07_25.md`'s tracking todo was DONE + archived 2026-07-31 — so there is
+      no live enumerator bug left to fix. The only stale artifact was `market_data_categories.py`'s own comment above
+      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED`, which still claimed "root-cause classification remains open" — corrected
+      it to cite the closed classification and the no-live-seeding-path finding. **Did NOT retire
+      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED`** — the todo's own condition ("once it is genuinely empty") isn't met yet;
+      the 20,785 manifest rows still exist and retiring now would make the deployment-api distinct-values panel falsely
+      reflag them. Retirement stays gated on the P2 manifest-row purge (`sports_taxonomy_p2_migration_2026_08_08.md` P0
+      todo, line 142). No enumerator code change was needed or made.
 - [x] ✅ [CODE] P1. **Stop instruments-service writing into the MTDS tick manifest with a blank venue.** 2,490 rows
       (`service_name=instruments-service`, `venue=""`: 1,106 `odds_horizon_bucket` + 1,273 `trades` + 111
       `trades_inplay`). Find the writer, fix the attribution or stop the write. Row cleanup is P2. — **LANDED 2026-08-03
