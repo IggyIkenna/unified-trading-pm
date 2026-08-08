@@ -20,7 +20,11 @@ related:
     /codex/12-agent-workflow/canonical-plan-flow.md,
   ]
 created: 2026-05-21
-authoritative_for: [claude CLI multi-account headless setup-token authentication]
+authoritative_for:
+  [
+    claude CLI multi-account headless setup-token authentication,
+    setup-token scope limits (subscription tier is not readable),
+  ]
 referenced_by:
   [
     /codex/04-architecture/agent-orchestrator-overview.md,
@@ -32,7 +36,7 @@ referenced_by:
   ]
 owner:
 last_reviewed:
-code_refs:
+code_refs: [agent-orchestrator/server/accounts.py, agent-orchestrator/server/usage_tracker.py]
 ---
 
 # Claude CLI Multi-Account Headless Authentication (SSOT)
@@ -435,6 +439,37 @@ requires a full-scope browser-login `.credentials.json`. The headless token-auth
 `CLAUDE_CODE_OAUTH_TOKEN` works with `claude -p` (headless) and with interactive sessions **when the onboarding seed is
 in place** (see above). It does NOT work with bare mode (`claude --bare`) or Remote Control sessions — those have their
 own auth paths the operator doesn't currently use.
+
+## Scope limitation: the token cannot read its own subscription tier (measured 2026-08-08)
+
+**A setup-token cannot tell you which plan the account is on.** So `AccountDef.tier` in `accounts.json` is
+operator-DECLARED and permanently unverifiable — a downgrade is invisible to every automated path. Do not add code that
+claims to detect the tier; it has been probed and the paths are closed:
+
+| Probe                                | Result                                                                                                                                                         |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /v1/messages` response headers | No plan/tier/limit header. `anthropic-ratelimit-unified-*` is NORMALISED 0-1 utilisation — a Pro account at 27% and a max20 account at 27% are byte-identical. |
+| `GET /api/oauth/profile`             | **403** — `OAuth token does not meet scope requirement any_of(user:profile, user:office)`. `claude setup-token` does not mint those scopes.                    |
+| `GET /api/claude_cli_profile`        | **403** — `OAuth authentication is currently not allowed for this endpoint.`                                                                                   |
+| `GET /v1/organizations/me`           | **403** — `Authentication method not allowed for this endpoint.`                                                                                               |
+| `claude /usage` TUI                  | Untested — the bars never rendered in a local probe. Unknown whether the panel names the plan.                                                                 |
+
+**The one usable signal** is `anthropic-ratelimit-unified-upgrade-paths` (observed `upgrade_plan`): an account already
+on a top tier has nothing to upgrade to, so being offered an upgrade suggests the declared tier is stale. It is a HINT
+with real false-positive modes and is deliberately one-directional — see `tier_contradicted_by_upgrade_paths` in
+`agent-orchestrator/server/accounts.py` for the full caveat list. It rides mostly on a **429**, which
+`fetch_usage_via_api`'s `raise_for_status()` discards, so the poller reads it off the exception's response.
+
+**Consequences for anything that touches tier:**
+
+- Correct a tier via `POST /api/accounts/{id}/tier` (or the dashboard's tier badge, which is styled as declared-not-
+  verified precisely because of this section). It writes `accounts.json` **and** the live `AccountRow` — a DB-only write
+  silently reverts, because `bootstrap.sync_accounts_to_db` re-reads the file on every boot.
+- Change `weekly_msg_limit` in the same edit. It is the denominator the poller uses to derive msgs-used from the API's
+  percentage, so a stale limit keeps that figure wrong even once the tier badge is right.
+- Regression cover: `dashboard/tests/e2e/tier-editor.spec.ts` (own backend pair; boots against a disposable copy of
+  `accounts.mock.json` because the endpoint rewrites the accounts file for real) +
+  `tests/test_account_tier_declared.py`.
 
 ## June 15, 2026 policy change (watch)
 

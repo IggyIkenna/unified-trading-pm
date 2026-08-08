@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [gcp, terraform, drift, soft-delete, deployment-scripts]
 related:
   [
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-07-31"
@@ -42,7 +42,7 @@ locked_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     deployment-service/terraform/gcp/main.tf,
   ]

@@ -145,6 +145,19 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
       citations rewritten with the real SHAs (`41372139` for item 1, `00c2cfe4` for item 2) and an explicit correction
       note. Repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **RECURRENCE 2026-08-08 — the baseline was RAISED again (0 -> 2) instead of the citations being
+      corrected.** `35e99e4ba3` had ratcheted `fabricated_sha_citation_baseline` to 0 with `baseline_citations: []`;
+      `unified-trading-pm@a969d9ba8b` (slot-16, 2026-08-08) re-raised it to 2. Both new entries cite the SAME
+      `unified-trading-pm@ea5d699c9`, at `plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md:130` and
+      `plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md:187`.
+      MEASURED 2026-08-08 after a fresh `git fetch origin`: `git cat-file -t ea5d699c9` -> UNRESOLVABLE, so these are
+      genuinely wrong citations, NOT the fetch-miss false positive that `35e99e4ba3` fixed in the checker itself. Per
+      the standing ratchet rule (baselines only go DOWN) the fix is per-doc archaeology on what each todo actually
+      shipped — `git log -S`/`--grep` in the cited repo — then rewrite the citation with the real SHA. **Done when**:
+      both citations resolve via `git cat-file -t`, `fabricated_sha_citation_baseline: 0` with `baseline_citations: []`,
+      and `python scripts/quality_gates/check_plan_commit_sha_evidence.py` reports 0 unresolvable. If a citation's
+      underlying work turns out never to have landed, un-flip that todo instead of inventing a SHA. Repo:
+      unified-trading-pm.
 
 ## Progress Log
 
@@ -193,3 +206,9 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
   `depends_on`, single-file QG-script extension, not dispatch-critical-path machinery). Conflict-check cleared (no
   overlapping claim in `parent_epic: agent_operating_framework_master`). `assigned_role` was unset; filled `infra`
   (PM-repo QG-tooling scope).
+
+- **2026-08-08 (slot 3, interactive)** — Reopened with one todo: the ratchet was re-raised 0 -> 2 by `a969d9ba8b` the
+  same day `35e99e4ba3` brought it to 0. Verified the cited `ea5d699c9` is genuinely unresolvable after a fresh
+  `git fetch origin` (so it is not the checker-side fetch-miss this doc already fixed), which makes it the same
+  raise-instead-of-correct pattern this issue exists to stop. Not fixed inline: correcting it needs per-doc archaeology
+  in two docs owned by another slot, so it is tracked as a dispatchable todo rather than done here.

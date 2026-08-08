@@ -42,7 +42,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py,
     features-service/features_service/sports/calculators/odds_columns.py,
     strategy-service/strategy_service/adapters/sports_feature_subscriber.py,
-    /plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
+    /plans/archive/2026_08/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
   ]
 ---
 

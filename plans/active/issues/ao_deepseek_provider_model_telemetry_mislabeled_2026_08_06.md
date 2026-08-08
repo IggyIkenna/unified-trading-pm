@@ -112,10 +112,15 @@ and nothing on the server side catches the mismatch.
       `boot_slot()`'s upsert_slot + slot_boot activity-log call (slots_worker.py); 7 new unit tests in
       `tests/test_boot_deepseek_model_telemetry.py` cover deepseek-flash/pro/no-variant + anthropic-preserved +
       unknown-account regression; full quality-gates.sh green (2614 passed).
-- [ ] [DOC] P3. Once fixed, backfill-correct the FleetView dashboard's badge rendering (and any other consumer of
+- [x] ✅ [DOC] P3. Once fixed, backfill-correct the FleetView dashboard's badge rendering (and any other consumer of
       `SlotRow.model`, e.g. `context_history_report.py`'s `--group-by model`) to show the real value — check whether any
       of them special-case the string `"sonnet"` in a way that would break once this field starts reporting DeepSeek
-      variants.
+      variants. — agent-orchestrator (no code change): `ModelBadge` in `layout.tsx` already checks
+      `provider === "deepseek"` and renders `deepseekVariant`, never the `model` string, for DeepSeek slots;
+      `context_history_report.py` uses passthrough `ep.model or "unknown"` for `--group-by model`; `utils.ts`
+      `modelBadgeClass`/`MODEL_RANK` operate on the role registry (`RoleModel`) not slot telemetry; zero
+      `model === "sonnet"` conditional comparisons found in dashboard TS files. No breaking consumers — the eb6a763 fix
+      is safe to ship without dashboard changes (slot-9, 2026-08-08).
 - [ ] [SCRIPT] P3. Audit whether the SAME self-report-without-cross-check pattern exists for `effort`/`thinking` (both
       self-reported per `req.effort`/`req.thinking` in the same `/boot` call) — those flags may be equally meaningless
       for a non-Anthropic provider; scope only if todo 1 confirms the pattern generalizes.
@@ -140,3 +145,10 @@ and nothing on the server side catches the mismatch.
   `ag_closeout_audit_infra_parked_2026_08_07.md`, 3rd confirmed instance of the same pattern). Sibling doc
   `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` (finding 6) retagged in the same pass; the
   authoring-time default fix (Option C) tracked separately.
+- **2026-08-08 (slot-9, infra, todo -002)**: Audited all consumers of `SlotRow.model` for hardcoded `"sonnet"`
+  special-cases. Finding: NO breaking consumers. `ModelBadge` (`layout.tsx:3927-3928`) already checks
+  `provider === "deepseek"` and renders `deepseekVariant` — the `model` string is not used for DeepSeek slots.
+  `context_history_report.py` lines 328/332 use `ep.model or "unknown"` passthrough — will correctly group by
+  `"deepseek-flash"` once eb6a763 lands. `utils.ts` `modelBadgeClass`/`MODEL_RANK` reference
+  `RoleModel = "opus"|"sonnet"|"haiku"` which is the role-registry type (static per role config), not slot telemetry.
+  Zero `model === "sonnet"` conditional comparisons in dashboard TS. No code changes needed; todo -002 closed.

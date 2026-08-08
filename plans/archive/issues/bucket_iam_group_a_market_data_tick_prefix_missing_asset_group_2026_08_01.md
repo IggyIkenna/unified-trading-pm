@@ -35,7 +35,7 @@ tags: [iam, terraform, gcp, data-correctness, bucket-tiers, sequencing-hazard, m
 related:
   [
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/archive/issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md,
     /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
@@ -67,7 +67,7 @@ depends_on: []
 context_scope:
   [
     deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf,
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/archive/issues/pipeline_e2e_check_missing_env_flag_test_bucket_403_2026_08_01.md,
   ]
 ---

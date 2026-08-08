@@ -95,7 +95,10 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
       count against current HEAD (several may have moved since 2026-07-25), correct the `v2_engine_venue_buildout`
       over-count noted above, and split genuinely AO-eligible/determinable-outcome slices into a normal dispatch batch —
       leaving open-ended research/design items (e.g. capability-wizard taxonomy judgment calls) as LOCAL work per the
-      dispatch-scope-eligibility rule. Repo: unified-trading-pm.
+      dispatch-scope-eligibility rule. Repo: unified-trading-pm. **round5-cross-cutting-audit 2026-08-08**: the
+      plan-destination question (dispatch batch = `planning` or `NA`?) is answered by the standing "Plan destination —
+      ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly overrides. No live operator input
+      required to apply the default.
 
 ## Progress Log
 

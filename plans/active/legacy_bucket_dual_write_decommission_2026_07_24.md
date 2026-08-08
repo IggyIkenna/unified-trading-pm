@@ -104,6 +104,11 @@ context_scope:
       create-code-tarballs); (b) build the migration tarball into a DEDICATED bucket the prune cron doesn't touch; (c)
       skip the VM fleet — run the lower-risk local manifest path below since data is dual-written. **(MIGRATED FROM:
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      **round5-cross-cutting-audit 2026-08-08**: no fresh operator decision needed — option (a) already shipped as a
+      general mechanism (`/codex/05-infrastructure/vm-tarball-deployment.md` § "Pin-aware retention",
+      `tarball_pins.     collect_in_use_pins()`, `unified-trading-library@52ee4056` +
+      `deployment-service@4c6cef9`/`@dfd7608`). Residual: confirm this fan-out's launcher pins correctly, then
+      re-attempt.
 
 - [ ] [SCRIPT] P0. **Manifest completion belongs to the canonicalisation plans, NOT this plan.** Canonical `_index` is
       made authoritative by `defi_manifest_canonicalisation_2026_06_01.md` (defi) + the manifest v8/v9 schema

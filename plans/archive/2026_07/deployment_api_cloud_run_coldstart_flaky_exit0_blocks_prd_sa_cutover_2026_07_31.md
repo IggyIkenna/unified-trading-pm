@@ -32,7 +32,7 @@ tags: [cloud-run, reliability, cold-start, iam, bucket-tiers, sigabrt]
 related:
   [
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    /plans/active/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
+    /plans/archive/issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md,
     /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
     /plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md,
   ]

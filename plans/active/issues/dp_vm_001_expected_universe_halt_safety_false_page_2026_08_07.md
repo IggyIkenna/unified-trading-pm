@@ -69,6 +69,8 @@ source: >-
   expected-universe-v2-sports-20260807-230456 per rb_infra_relaunch.md. Root-caused live instead of relaunching (see
   Progress Log below); the main fix is already shipped (deployment-service@27fd5779) — this doc tracks the 2 minor P3
   follow-ups.
+drift_direction: advance-code
+depends_on: []
 ---
 
 # DP-VM-001 false-paged expected-universe-v2-sports halt-safety exit — root-caused + fixed
@@ -194,3 +196,31 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   message — suggests the dispatch/dedup for this instruction isn't clearing once fulfilled; flagged to main via chat
   (see this doc's `related` escalation trail) rather than re-filing as a new issue, since the underlying finding is
   already fully captured here.
+- **review agent (slot 1, fresh boot) 2026-08-08**: THIRD independent redelivery of the identical `BLK-091671d7` direct
+  instruction to this session's heartbeat inbox on boot. Re-verified same conclusion (fix intact at
+  `origin/live-defi-rollout` HEAD, both regression tests present, no code changes made). New evidence beyond the two
+  prior entries: swept `/api/activity` (500-event window) and found a FOURTH independent hit — a **worker** session on
+  an unrelated task (`config_key_contract_drift-002`) also received this same stale instruction and self-logged
+  `"direct instruction (BLK-091671d7) already shipped by slot-2 at 27fd5779 — moving to assigned task"` — so the
+  redelivery is NOT scoped to role=review or to slot 1; it is being handed to whichever agent boots/heartbeats next,
+  regardless of role or slot. Flagged to main again (msg 4072), this time including the `worker` hit as corroboration
+  and a concrete lead for whoever chases the root cause: the `BLK-` id pattern reads as a `/blocked`-question record
+  that most likely never got marked resolved after its answer was relayed, so the dispatcher keeps re-surfacing it as a
+  fresh "direct instruction" on every subsequent slot boot/heartbeat — worth checking that record's resolution state
+  specifically rather than re-auditing the underlying exit_code=5 fix a further time (that part is definitively closed).
+  This review session did not chase the orchestrator-side mechanism itself (server-code investigation is outside review
+  scope) — leaving that to main/operator. No code shipped this session; this Progress Log entry is the only change.
+- **review agent (slot 1, fresh boot #2) 2026-08-08**: FIFTH independent redelivery of the identical `BLK-091671d7`
+  instruction (message id 5866, this slot). Re-verified same conclusion once more (fix intact at
+  `origin/live-defi-rollout` HEAD, both regression tests present, no code changes made). This time chased the
+  orchestrator-side mechanism to ground: root-caused via a direct, read-only query against the live
+  `data/state/state.db` (`slot_messages` table) cross-referenced against
+  `agent-orchestrator/server/state_store/activity.py` — confirmed root cause (not a hypothesis) is a structural gap in
+  the `SlotMessageRow` delivery primitive: `POST /api/slots/{id}/message` never sets `task_id`, so every free-text
+  direct instruction falls into the "general recurring notice" bucket, which has no ack path short of a 30x redelivery
+  cap. Confirmed this is not unique to this instruction — 15 distinct "Direct instruction from main" campaigns are
+  currently unanswered fleet-wide (18 rows, 12 slots). Full detail + recommended fix now lives in
+  `/plans/active/issues/ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08.md` (updated this
+  session, its own Todo 1 flipped `[x]` with evidence). Nothing further to add here — this doc's own finding remains
+  fully closed; future redeliveries of this same stale text should be resolved by the OTHER doc's fix, not by another
+  re-verification pass here.

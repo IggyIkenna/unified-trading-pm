@@ -87,9 +87,11 @@ drift_direction: advance-code
 > 6. DEFERRED-fan-out MDPS 1h backfill 2026-04-14..04-30 + BITGET-SPOT 4h/24h candles — **unconfirmed**: broad CeFi
 >    candle-completion work landed since, but this exact date-range/timeframe ask wasn't independently verified closed.
 >    Was already self-labeled DEFERRED in the original plan — re-verify before dispatching.
-> 7. `usdc_idle_yield_apy_bps` stub disposition — **still genuinely open**: `strategy-service/.../staked_basis.py:450`
->    still hardcodes `features.get("usdc_idle_yield_apy_bps", 0.0)`, unwired to `venue_funding_yield`, no disposition
->    decision recorded anywhere. Dispatchable as-is (needs a decision: wire it up, or explicitly drop the field).
+> 7. `usdc_idle_yield_apy_bps` stub disposition — **round5-cross-cutting-audit 2026-08-08: RESOLVED, already on
+>    record.** Leave-as-0-floor is the standing disposition per
+>    `codex/09-strategy/architecture-v2/archetypes/ carry-staked-basis.md:148-150` (landed unified-trading-pm@817e5186
+>    2026-05-04, predating this plan). Wiring is a future follow-up gated on features-onchain emitting
+>    `venue_funding_yield` (not yet shipped).
 
 ## Goal
 

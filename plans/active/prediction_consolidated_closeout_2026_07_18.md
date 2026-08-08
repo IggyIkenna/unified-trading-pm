@@ -548,7 +548,7 @@ the move.
 **Sports-tagged, prediction-relevant (shared infra/scope with sports_master)** — primary tracking: `sports_master` /
 sports's own consolidated closeout plan; short digest only:
 
-- [`plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`](/plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md)
+- [`plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`](/plans/archive/2026_08/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md)
   (8 open, all `[DESIGN] P3`) — top: define the decay-window STATISTIC precisely; define the WINDOW boundaries
   (signal-time → first-leg fill vs last-leg). +6 more — see file for the rest.
 - [`plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md`](/plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md)

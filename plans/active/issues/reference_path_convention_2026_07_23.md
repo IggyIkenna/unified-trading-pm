@@ -83,13 +83,20 @@ depends_on: []
       codex-ref format, tracked in `format_count`'s baseline (raised 109→167 to cover them). **Done when**: each of the
       8 parses as valid YAML AND has the reference-path fix (re)applied, then `--update-baseline` drops `format_count`
       back down.
-- [ ] [REVIEW] P2. Reconcile the archival-mechanics inconsistency this surfaced: `plans/archive/` holds 1,564 files (so
-      plans DO get physically moved by some process), but this session's own archival work (4 sports fold-in plans,
-      2026-07-23) added a banner + `status: superseded` and left the files IN `plans/active/` — meaning 2 of those 4 are
-      still being scanned (and hard-failing) by `check_line_caps.sh`. Decide: does "archival" mean physical move (get it
-      out of the actively-scanned corpus, but then every referrer needs updating per the todo above) or
-      stay-in-place-with-banner (referrers never break, but active/ never shrinks)? Whichever is chosen, state it as the
-      SSOT rule, not two competing practices.
+- [x] [REVIEW] P2. ✅ **RESOLVED (round5 ao investigation) — already answered by an existing codex SSOT that 4+ prior
+      audit passes never cross-checked.** `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s
+      "6-step archival ritual" (itself dated 2026-07-23, the SAME day this issue was filed — plausibly why later passes
+      assumed it was still open rather than checking whether a resolving SSOT had landed same-day) already states the
+      answer unambiguously: step 5 requires updating every referrer's path corpus-wide, and step 6 requires "confirm the
+      move — the doc should now live under `plans/archive/<YYYY_MM>/`, not `plans/active/`." A dedicated section ("The
+      line-cap does NOT block archival of an already-done doc") reinforces this: "the commit must be the archival MOVE
+      itself (the `git mv` into `plans/archive/<YYYY_MM>/` plus the 6 ritual steps)." **Answer: physical move is the
+      documented convention** — the "stay-in-place-with-banner" pattern this todo observed (4 sports fold-in plans,
+      2026-07-23) is corpus DRIFT from the already-established rule, not a legitimate competing practice needing a fresh
+      ruling. Nothing to decide; the remaining work is a compliance sweep (find `status: superseded`-banner docs still
+      physically sitting in `plans/active/` and apply the real 6-step ritual, including the referrer-update step this
+      exact doc's own P3 items already partially track) — not filed as a new todo here since it's outside this specific
+      item's scope and the existing dangling-reference P3 backlog below already covers the referrer-update half.
 - [ ] [DOC] P3. **109 format violations** (baseline-seeded, `scripts/plan-hygiene/reference_paths_baseline.yaml`) — bare
       `related:` filenames the migration could not safely resolve: some are genuinely ambiguous (multiple files share
       the basename, e.g. `README.md` in ~35 places), some are genuinely dangling (target doesn't exist anywhere under

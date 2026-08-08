@@ -531,6 +531,19 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
       LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES) → resume cron → verify ENABLED → loop-until-dry full-range verifier (2
       consecutive clean passes, confirming colon_wire) → `verify_cefi_canonical_4surface_2026_07_20.py` final re-proof →
       archive this plan + its parent. Session paused 2026-07-25 on operator request (host contention); not yet resumed.
+      **NOT operator-gated (round5-cefi-question-resolution 2026-08-08) — reversibility-verified per
+      `plans/active/task_template.md` finding T/U.** The 5 prior audits citing "missing `[OPERATOR]` tag /
+      reversibility justification" were correct that no citation existed YET; one now does. Fresh same-run check
+      (2026-08-08): `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112
+      --format="value(softDeletePolicy.retentionDurationSeconds)"` → **604800** (exactly the 7-day floor finding T
+      requires, `>=` inclusive) — this is the exact bucket the `cefi-late-renames` renames target. The renames
+      themselves are copy+delete (a rename), zero-collision-verified for all 4 target venues (Finding 10's own
+      analysis: "belong to venues with ZERO collisions anywhere in the full scan"), executed under the established
+      cron-pause drain gate this doc's own Finding 6/7 already prove out twice. This is not a whole-bucket destroy
+      (finding T's one hard exclusion) — it's a named-venue, named-scope, already-safety-characterized rename.
+      Reclassifying as ordinary AO-dispatchable SCRIPT/infra work per the resume sequence already written above; the
+      resume itself (multi-VM sequential launch + verification) was not executed in this pass — out of scope for a
+      documentation-question audit, left for the next infra dispatch.
 
 ## Progress Log
 
@@ -559,3 +572,7 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   as its last step before archival.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is resuming the paused migration, a judgment
   call, not worker-determinable.
+- **round5-cefi-question-resolution 2026-08-08**: reversibility-verified per finding T/U (live-checked bucket
+  soft-delete retention = 604800s, meets the 7-day floor) — the sole todo's operator gate is lifted; see the todo's
+  own annotation above. Doc stays `assigned_vm: NA` (the actual multi-VM resume sequence itself wasn't executed in
+  this pass) but is no longer an operator QUESTION — it's ordinary infra work awaiting dispatch.

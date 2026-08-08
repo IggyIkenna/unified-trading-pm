@@ -195,10 +195,11 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
         `complete` on 2026-07-10 (27 of 28 todos confirmed `[x]` with cited runtime evidence, 1 remaining `[ ]` non-
         blocking). This tracker's directive was never reconciled against that shipped fix; no further operator decision
         needed on this item.
-  - [ ] **archive `mvp_catalogue_finalization_v10`** (0-open, done) + **fold `instruments_mtds_subset` cefi items →
-        foundation** (60 open, ⚖️ REVIEW) — both `locked_by: live-defi-rollout` → **operator unlock/sign-off REQUIRED**
-        (HARD RULE: locked-plan archival is never-autonomous; §F.4 ⚖️). _(Do before engineering so you don't work a plan
-        you're about to retire.)_
+  - [x] ✅ **archive `mvp_catalogue_finalization_v10`** + **`instruments_mtds_subset` folded** — ALREADY DONE by
+        operator action (round5-cross-cutting-audit 2026-08-08). `mvp_catalogue_finalization_v10_2026_06_27.md`:
+        status:complete, locked_by cleared 2026-07-15, archived under `plans/archive/2026_07/`.
+        `instruments_mtds_subset_consistency_remediation_2026_06_17.md`: status:complete, archived 2026-07-26. No
+        further operator ask needed.
 
 ## Stage 1 — Close the canonical manifest baseline
 
@@ -457,12 +458,17 @@ reconciling + signing off, not redoing.)_
 
 ## Stage 5 — Capture to 100% (Layer-2 — only after Layer-1 is honest)
 
-- [ ] [INFRA] P1. `data_completion` operator-gated items: ~~pyth `collect-oracle-prices` launch~~ · Live ODDS quota ·
-      ~~MANTLE paid RPC~~ · CLOB-on-chain asset_group classification (**Lighter/Pacifica/Extended-Starknet, +
-      HYPERLIQUID/ASTER — operator-confirmed 2026-07-07 same hybrid pattern: CEFI holds instrument definitions, DEFI
-      holds chain classification**, see `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`
-      Update §3) · rate-limit probe VM. **STILL OPEN (reconciled 2026-07-28)**, credential/operator-gated, not covered
-      by any archived child. **Retagged 2026-07-29**: pyth+MANTLE resolved (see struck clauses above).
+- [ ] [INFRA] P1. `data_completion` operator-gated items: ~~pyth `collect-oracle-prices` launch~~ · ~~Live ODDS quota~~
+      · ~~MANTLE paid RPC~~ · ~~rate-limit probe VM~~ · CLOB-on-chain asset_group classification (**Lighter/Pacifica/
+      Extended-Starknet, + HYPERLIQUID/ASTER — operator-confirmed 2026-07-07 same hybrid pattern: CEFI holds instrument
+      definitions, DEFI holds chain classification**, see
+      `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` Update §3) · rate-limit probe VM.
+      **STILL OPEN (reconciled 2026-07-28)**, credential/operator-gated, not covered by any archived child. **Retagged
+      2026-07-29**: pyth+MANTLE resolved (see struck clauses above). **round5-cross-cutting-audit 2026-08-08**:
+      Live-ODDS + rate-limit-probe VM also both already resolved, per the more current
+      `infra_capture_and_devops_leftovers_2026_07_06.md:292-333` (last touched 2026-08-06): Live-ODDS "RESOLVED
+      2026-07-28/29... 5,000,000-credits/month subscription, live-verified"; rate-limit-probe "RULED 2026-08-06
+      (operator): AUTHORIZED... AO-dispatchable now."
 - [x] ✅ [DATA] P1. Reconcile the DEDUP-flagged folded-in tail (from merged `path_to_100pct`) — **do not double-run**.
       **DONE — reconciled 2026-07-28 against `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md`
       (`status: complete`, own todo `[x]`, 2026-07-06, Opus slot-3).** Both DEDUP-flagged items in

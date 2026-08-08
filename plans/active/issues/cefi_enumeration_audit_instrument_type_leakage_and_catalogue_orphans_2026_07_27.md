@@ -254,6 +254,17 @@ adjacent axis the same script happens to also report). **Both findings investiga
       BITGET-FUTURES PERPETUAL (whatever its bare-symbol residual shape is, not yet characterized) — 3 venues, ~700
       still-unmigrated ids total. Follow the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py` pattern
       (backup-first, content-patch in place, `derive_row_instrument_id` as SSOT). Repo: market-tick-data-service.
+      **NOT operator-gated (round5-cefi-question-resolution 2026-08-08) — reversibility-verified per
+      `plans/active/task_template.md` finding T/U.** Fresh same-run check (2026-08-08):
+      `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112
+      --format="value(softDeletePolicy.retentionDurationSeconds)"` → **604800** (the 7-day floor finding T requires) —
+      confirmed this is the exact bucket `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`'s pattern targets
+      (`get_tick_data_bucket(None, asset_group="cefi")`, verified by reading the precedent script directly), and that
+      script's `_backup_and_write` already writes a `.backup` copy before every content-patch, ahead of the bucket-level
+      soft-delete floor. Named-venue, named-scope (~700 ids, 3 venues), not a whole-bucket destroy (finding T's one
+      hard exclusion). Reclassifying as ordinary AO-dispatchable `[DATA]` SCRIPT work; the actual migration script
+      still needs to be written (BITGET-FUTURES' bare-symbol shape is explicitly "not yet characterized") — that build
+      + apply work was not done in this pass (documentation-question audit, not an implementation dispatch).
 
 > **📤 THE P3 TODO BELOW IS EXTRACTED AND DISPATCHED ELSEWHERE — do NOT dispatch it from this doc
 > (`/na-eligibility-audit` 2026-08-02, tranche=cefi).**
@@ -315,3 +326,8 @@ adjacent axis the same script happens to also report). **Both findings investiga
   unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is a prod --apply migration with no delete-safety
   citation yet, genuine work.
+- **round5-cefi-question-resolution 2026-08-08**: reversibility-verified per finding T/U (live-checked bucket
+  soft-delete retention = 604800s on the exact target bucket) — the delete-safety citation this doc's own text was
+  waiting for now exists; see the P2 todo's annotation above. The migration script itself (BITGET-FUTURES shape not
+  yet characterized) still needs to be written — this pass only removed the operator gate, it did not implement or
+  apply the migration.

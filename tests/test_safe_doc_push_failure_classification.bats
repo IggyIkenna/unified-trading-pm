@@ -1,0 +1,100 @@
+#!/usr/bin/env bats
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
+#
+# Regression test for safe-doc-push.sh's commit-failure classifier (added 2026-08-08).
+#
+# THE BUG: the script funnelled EVERY `git commit` rejection into backoff+continue, so a
+# deterministic pre-commit content failure (plan-hygiene conflict markers / frontmatter
+# schema / terminal-status-archived / todo format / line caps) was retried 6 times and then
+# reported as "Exhausted N attempts under sustained contention -- this is transient, not a
+# defect. Re-run." Measured live during the 2026-08-08 sports canonicalisation push, where a
+# stale conflict marker and a terminal-status archival violation were both misreported as
+# transient contention. That message sends the next agent into a retry loop against something
+# that can never succeed, and buries the hook's own remedy under 6 repetitions.
+#
+# The classifier keys on prek's `- hook id: <id>` lines rather than message text, so it does
+# not drift when a hook's human-readable wording changes.
+
+setup() {
+  REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
+  SCRIPT="${REPO_ROOT}/scripts/dev/safe-doc-push.sh"
+  # Source ONLY the classifier + its allowlist out of the script, so the test never has to
+  # execute the real git/push path.
+  HARNESS="${BATS_TEST_TMPDIR}/harness.sh"
+  {
+    sed -n '/^RETRIABLE_HOOK_IDS=/,/^}/p' "$SCRIPT"
+    echo 'commit_failure_is_retriable "$1" && echo RETRIABLE || echo DETERMINISTIC'
+  } >"$HARNESS"
+}
+
+classify() {
+  printf '%s' "$1" >"${BATS_TEST_TMPDIR}/err.txt"
+  bash "$HARNESS" "${BATS_TEST_TMPDIR}/err.txt"
+}
+
+@test "plan-hygiene failure is DETERMINISTIC (the exact 2026-08-08 regression)" {
+  run classify 'Plan hygiene (staged plans + codex + runbooks).......Failed
+- hook id: plan-hygiene
+- exit code: 1
+    ❌ Conflict marker(s) in staged plans — resolve before commit
+  ❌ check_terminal_status_archived (--only): 1 violation(s) in staged files'
+  [ "$status" -eq 0 ]
+  [ "$output" = "DETERMINISTIC" ]
+}
+
+@test "branch drift alone is RETRIABLE (a genuine race the retry loop clears)" {
+  run classify 'Check branch drift (are you behind origin?).......Failed
+- hook id: check-branch-drift
+- exit code: 1
+  BRANCH DRIFT: You are 3 commit(s) behind origin/live-defi-rollout'
+  [ "$status" -eq 0 ]
+  [ "$output" = "RETRIABLE" ]
+}
+
+@test "drift PLUS a content failure is DETERMINISTIC (content must win)" {
+  # Attempt 1 of the live incident looked exactly like this: prettier-autostage skipped
+  # itself BECAUSE of drift, but plan-hygiene had also genuinely failed. Retrying cleared
+  # the drift and the content failure remained -- so the mixed case must not be retriable.
+  run classify 'Check branch drift (are you behind origin?).......Passed
+Plan hygiene.......Failed
+- hook id: plan-hygiene
+- exit code: 1
+Format with Prettier (auto-stage).......Failed
+- hook id: prettier-autostage
+- exit code: 1'
+  [ "$status" -eq 0 ]
+  [ "$output" = "DETERMINISTIC" ]
+}
+
+@test "a rejection with no parseable hook id stays RETRIABLE (preserves prior behaviour)" {
+  run classify 'error: unable to create index.lock: File exists'
+  [ "$status" -eq 0 ]
+  [ "$output" = "RETRIABLE" ]
+}
+
+@test "frontmatter-schema and todo-format hooks are DETERMINISTIC" {
+  run classify 'Plan hygiene.......Failed
+- hook id: frontmatter-schema
+- exit code: 1'
+  [ "$status" -eq 0 ]
+  [ "$output" = "DETERMINISTIC" ]
+}
+
+@test "script documents exit code 6 and still parses" {
+  run bash -n "$SCRIPT"
+  [ "$status" -eq 0 ]
+  grep -q "6 commit rejected by a pre-commit hook" "$SCRIPT"
+  grep -q "exit 6" "$SCRIPT"
+}
+
+@test "the misleading unconditional transient claim is gone from EMITTED output" {
+  # The old terminal message asserted "this is transient, not a defect" for ALL exhaustion,
+  # including deterministic content failures. It must never come back as emitted text.
+  # Scoped to non-comment lines on purpose: the fix's own explanatory comment quotes the old
+  # string verbatim as documentation, and that must stay -- a blunt whole-file grep would
+  # fail on the very comment explaining the bug.
+  run bash -c "grep -vE '^[[:space:]]*#' '$SCRIPT' | grep -c 'this is transient, not a defect' || true"
+  [ "$output" = "0" ]
+}

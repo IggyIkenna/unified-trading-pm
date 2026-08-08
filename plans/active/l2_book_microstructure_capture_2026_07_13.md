@@ -252,6 +252,26 @@ context_scope:
       since 2026-07-14 — the intentional pause is still in effect, done-condition still false. **Checkbox NOT flipped**
       (still correct). No infra touched (read-only check).
 
+      **RESOLVED — premise now stale (round5-cefi-question-resolution 2026-08-08).** The "is the pipeline dormant,
+      should it be relaunched" question no longer needs an operator answer: it already WAS relaunched, on
+      2026-07-31, and has run continuously since (confirmed via
+      `plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`, filed 2026-08-07
+      — VM `mtds-live-cefi-consolidated-20260806-163414` running all 16 shards; warm capture flowing continuously
+      since `2026-07-31T13:07Z`). The architecture also changed underneath this todo: live capture no longer writes
+      the legacy `raw_tick_data/pipeline_mode=live_*` path this todo's own checks were probing (confirmed permanently
+      empty by that same doc — it's now a retired path) — it writes an event-log spine instead
+      (`gs://central-element-323112-events/live-events/warm/cefi/`). **But todo 7's actual done-condition is still
+      false, for a different, now-precise, NON-operator reason**: live-checked 2026-08-08,
+      `gcloud storage ls "gs://central-element-323112-events/live-events/warm/cefi/"` lists exactly 4 data_types —
+      `book_snapshot_5`, `derivative_ticker`, `liquidations`, `trades` — **`depth_of_book_10` is NOT among them.** The
+      deeper-book WS connectors this plan's todo 2 shipped (`market-tick-data-service@15f5657b`) were never wired
+      into the new event-log-based live-capture dispatcher, so `depth_of_book_10` still has 0 live rows despite the
+      general pipeline being healthy again. This is now a bounded, worker-determinable `[SCRIPT]` gap (wire
+      `depth_of_book_10` into the live event-log capture path, mirroring how `book_snapshot_5`/`trades`/etc. are
+      already wired), not an operator question — checkbox correctly stays unflipped, but the blocking reason changes
+      from "ask the operator whether to relaunch" to "wire one more data_type into the already-running live
+      capture." Not fixed in this pass (documentation-question audit, not an implementation dispatch).
+
 ## Progress Log
 
 ### 2026-07-17 — slot 10 (Todo 5 re-dispatched a third time — root-caused + fixed the repeat-dispatch bug)
@@ -438,3 +458,9 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
   pipeline is alive again since 2026-07-31 (the "dormant since 06-29" framing todo 7 leans on is stale), but does NOT
   confirm depth_of_book_10 specifically (this plan's target data_type) is among the live shards — needs a narrow
   depth_of_book_10 manifest check before todo 7 is re-evaluated, not a full re-litigation.
+- **round5-cefi-question-resolution 2026-08-08**: did exactly the narrow check the 08-07 caveat flagged —
+  `gcloud storage ls "gs://central-element-323112-events/live-events/warm/cefi/"` lists 4 data_types
+  (book_snapshot_5/derivative_ticker/liquidations/trades), no `depth_of_book_10`. Todo 7 stays unflipped but the
+  "is the pipeline dormant, should it relaunch" operator-question framing is now retired — the pipeline IS alive
+  (since 2026-07-31); the remaining gap is a bounded technical one (wire `depth_of_book_10` into the new event-log
+  live-capture dispatcher). See the todo's own annotation above.

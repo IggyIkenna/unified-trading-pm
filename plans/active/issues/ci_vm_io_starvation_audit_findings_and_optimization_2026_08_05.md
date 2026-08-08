@@ -589,38 +589,31 @@ traffic to count until the migration is finished. What is certain is that their 
       `cp -al` shared-venv half: no I/O saving, and unsafe on ext4. **Supersedes** the 08-05 "shared bare repos +
       pre-built external venvs + worktree-based QG execution" todo.
 
-- [ ] [OPERATOR] P2. **Downsize the CI VM to `m8i.2xlarge` (8 vCPU / 32 GB)** once a fresh wave is measured against the
-      NOW-COMPLETE public-repo migration (the item above). **Keep 32 GB** — 29.7 GB observed slice peak plus 6 OOM kills
-      rule out 16 GB today. Re-provision the volume to the 2xlarge's sustainable ceiling (12,000 IOPS / 312 MB/s),
-      **not** 16,000/1,000. **24h usage-reduction tracking window opened 2026-08-07 (operator-set target check:
-      2026-08-08 11:00 UTC).** Two manual quiet-moment SSM snapshots were taken at revert time (below, sanity-check
-      only) — but the REAL data source for the 24h window is `resource-history-sampler.service`, already running on
-      `i-042a6332509482556` (installed `ci_vm_exposure_remediation_2026_08_06.md` todo 2, for parity with the AO box).
-      It samples **every 5 seconds** — `cpu_percent`, `load_avg_{1,5,15}m`, `ram_percent`/`ram_used_bytes`,
-      `swap_percent`, `disk_percent`, `iowait_percent` — into
-      `/opt/glue-deploy/agent-orchestrator/data/state/resource_history/YYYY-MM-DD.jsonl` (8,702 samples for 2026-08-07
-      alone as of this writing, confirmed live via SSM), mirrored off-box every 10 min by
-      `resource-history-backup.timer` — so full burst/spike resolution across the whole window is already captured,
-      survives a VM replacement, and needs no new instrumentation. Query recipe (via SSM, no dashboard needed):
-      `bash     aws ssm send-command --instance-ids i-042a6332509482556 --region ap-northeast-1 \       --document-name AWS-RunShellScript --parameters commands='[         "cd /opt/glue-deploy/agent-orchestrator/data/state/resource_history && python3 -c \"     import json, glob     rows = [json.loads(l) for f in sorted(glob.glob(\"2026-08-0[78].jsonl\")) for l in open(f)]     print(\"n_samples:\", len(rows))     print(\"max load_avg_1m:\", max(r[\"load_avg_1m\"] for r in rows))     print(\"max ram_percent:\", max(r[\"ram_percent\"] for r in rows))     print(\"max swap_percent:\", max(r[\"swap_percent\"] for r in rows))     print(\"p95 load_avg_1m:\", sorted(r[\"load_avg_1m\"] for r in rows)[int(len(rows)*0.95)])\""       ]'     `
-
-      | Reading | Before (2026-08-07 ~10:50 UTC, pre-PM-revert) | Immediately after PM revert (2026-08-07 ~11:39 UTC) |
-                  | ------- | ---------------------------------------------- | ----------------------------------------------------- |
-                  | Load avg (1/5/15m) | 0.39 / 0.90 / 1.06 | 0.02 / 0.15 / 0.36 |
-                  | RAM used / total | 2.5Gi / 30Gi | 1.9Gi / 30Gi |
-                  | Swap used | 507Mi / 15Gi | 326Mi / 15Gi |
-                  | Registered runner units (fleet-wide) | 73 (`gh api` count) | 65 (73 − PM's 8; other 7 private repos confirmed unchanged) |
-
-                  **At/after 2026-08-08 11:00 UTC**: pull the full 2026-08-07 + 2026-08-08(partial) JSONL history (query above),
-                  report max + p95 load/RAM/swap across every `ldr-to-main-promote-fleet` wave in that window (not idle
-                  snapshots), and if the picture holds against the `m8i.2xlarge` targets (8 vCPU fits per the CPU-seconds math
-                  above; keep 32 GB), proceed with the resize (stop → `aws ec2 modify-instance-attribute --instance-type
-                  m8i.2xlarge` → start → re-provision the EBS volume → start).
-
-              **Operator re-confirmed 2026-08-07 (interactive session)**: "11am utc on 8th august we can do this after
-              checking the previous 24h data" — matches the already-scoped 2026-08-08 11:00 UTC check window above exactly;
-              no change to the plan, just an explicit go-ahead for whoever executes the check + resize at that time.
-
+- [x] ✅ [OPERATOR] P2. **Downsize the CI VM to `m8i.2xlarge` (8 vCPU / 32 GB) — DONE 2026-08-08 08:24 UTC.** Executed
+      ~2.5h ahead of the formal 11:00 UTC checkpoint at operator instruction ("it's been 21 hours... should be good
+      enough to do an audit"), against a genuinely post-fix 20.6h window (since the 2026-08-07 11:39 UTC PM-revert), not
+      a partial/pre-fix one. **Audit (14,819 samples, resource-history-sampler, SSM query)**: `load_avg_1m` max **7.84**
+      / p99 3.3 / p95 1.6 / mean 0.3 — **zero of 14,819 samples exceeded 8** (the target's own vCPU count); the single
+      busiest real moment in the whole window (13:31-13:32 UTC 2026-08-07) was this same plan's own todo-4 24-repo
+      fan-out push wave, already on record. `cpu_percent` max 60.7% / p99 23.8%. `ram_percent` max 28.6% (peak absolute
+      8.8 GB of 30.8 GB) — comfortable headroom even keeping 32 GB. `swap_percent` flat at ~2% (322 MB of 15 GB) — no
+      memory pressure. `iowait_percent` max 21.8% (brief) / p99 3.3%. **Zero kernel OOM-kills**
+      (`journalctl -k --since "2026-08-07 11:39:00" | grep -ic "out of memory\|oom-killer"` = 0) in the entire post-fix
+      window. Verdict: picture holds against the target with margin; proceeded per this todo's own pre-registered
+      condition. **Pre-flight**: confirmed zero busy runners (`gh api .../actions/runners`, all 7 private repos) and
+      zero in-progress workflow runs before stopping — no live job was interrupted. **Execution**:
+      `aws ec2 stop-instances` → waited `instance-stopped` →
+      `aws ec2 modify-instance-attribute     --instance-type m8i.2xlarge` →
+      `aws ec2 modify-volume --volume-id vol-03880fe9bf1ea805b --iops 12000     --throughput 312` (from 6,000/500) →
+      `aws ec2 start-instances` → waited `instance-status-ok`. **Post-verify**: `nproc`=8, `free -h` shows 30Gi total
+      RAM (unchanged), all 9 `github-glue-runner*` systemd units survived the reboot and are `active running`
+      (`Restart=always`/`enabled` self-recovered), all 3 monitoring units (`ci-vm-resource-watchdog.timer`,
+      `resource-history-sampler.service`, `resource-history-backup.timer`) `active`, and GitHub's own API confirms every
+      runner `status: online,     busy: false` post-boot (checked
+      `agent-orchestrator`/`execution-service`/`strategy-service`). No follow-up needed; the standing
+      `ci-vm-resource-watchdog.timer` (shipped same session, see
+      `/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`) continues watching the
+      now-smaller box hourly for any regression.
 - [ ] [INFRA] P2. **Reap the governor marker-file leak** — 344 stale `running.<pid>` files accumulating ~115/day in the
       shared coordination dir any new concurrency work would build on.
 
@@ -666,6 +659,28 @@ background of that work.
 ---
 
 ## Progress Log
+
+- **2026-08-08 (interactive session)**: Also right-sized the AO/planning VM's EBS volume (`i-0c9b283b31d6b5ca7`,
+  `agent-orchestrator-vm-1`, `vol-0b4f0237fa0f5cd0f`) while auditing AWS spend more broadly — this VM is out of this
+  doc's own CI-VM scope but the same live-CloudWatch-data method applies, recorded here as the closest existing home.
+  48h of real `AWS/EBS` CloudWatch metrics (576 5-min samples, full coverage, `VolumeReadOps`/`VolumeWriteOps`/
+  `VolumeReadBytes`/`VolumeWriteBytes`) showed combined IOPS peaking at 8,429 (53% of the provisioned 16,000) and
+  combined throughput peaking at 68.9 MB/s (6.9% of the provisioned 1,000 MB/s) — even the free gp3 baseline (125 MB/s)
+  already covered 1.8x the observed peak. Live `aws ec2 modify-volume` (no downtime, gp3 supports live modification):
+  16,000 → 12,000 IOPS (1.4x the observed max), 1,000 → 200 MB/s (2.9x the observed max). Verified via
+  `describe-volumes` post-change: `Iops: 12000, Throughput: 200, State: in-use`. Estimated saving:
+  $120.00/mo →
+  $57.60/mo in IOPS+throughput charges (storage unchanged) — **~$62.40/mo**, on top of the CI-VM
+  instance-type downsize below.
+
+- **2026-08-08 (interactive session)**: Executed the downsize todo (Part 8) — see that checkbox's own evidence for the
+  full audit numbers, pre-flight, execution, and post-verify detail. Ran ~2.5h ahead of the formal 11:00 UTC checkpoint
+  at operator instruction, against a genuinely post-fix (since 2026-08-07 11:39 UTC) 20.6h window rather than a partial
+  one. `i-042a6332509482556`: `c8i.4xlarge` → `m8i.2xlarge`, volume `vol-03880fe9bf1ea805b`: 6,000/500 → 12,000 IOPS/312
+  MB/s. All 9 self-hosted runner units + all monitoring timers survived the reboot; GitHub confirms every runner back
+  `online`. The standing `ci-vm-resource-watchdog.timer` (shipped earlier the same session,
+  `/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`) now watches the smaller box hourly
+  for any regression from this resize.
 
 - **2026-08-07 (interactive session)** — Closed the public-repo migration for real: fixed `instruments-service` /
   `market-data-processing-service` (already resolved by concurrent work, confirmed via `gh run list` — both green on

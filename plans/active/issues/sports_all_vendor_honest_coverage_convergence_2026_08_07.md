@@ -708,3 +708,71 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   launcher refuses a 2nd concurrent AF VM by design) — but confirmed via live AO backlog that 3 workers (slots 5, 7, 12)
   are already actively dispatched on `sports_taxonomy_p1`'s remaining P0 todos in parallel with this campaign, so
   parallelism is already maximized where it's genuinely available. No action needed on this doc from that finding.
+- **2026-08-08T08:40Z — THIRD occurrence of odds smallchunk deletion, pattern now definitively confirmed.**
+  `mtds-backfill-odds-smallchunk4-20260808` was gone from `gcloud compute instances list` entirely. Confirmed via
+  `gcloud compute operations list`: `delete` op at `08:27:34Z`. `run.log` last real line `08:11:46Z` (mid-chunk-18,
+  `AUSTRIAN_BUNDESLIGA`, RSS=24.4GiB — a third, very different RSS value, ruling out a memory-threshold trigger),
+  heartbeat blob last update `08:11:31Z` — ~16 min silent gap, consistent with the prior two (~19min, ~20-21min). Same
+  signature as before: no exit_code, no Traceback, no CHUNK_FAILED — a real hang, correctly caught by the watchdog.
+  Updated `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` in full (timeline table, bumped P2→P1,
+  closed the "if a third occurrence" todo, opened a new one flagging the actual blocker for live diagnosis: this
+  session's `gcloud compute ssh` via IAP is unauthorized, so catching a live hang with `py-spy`/`strace` isn't currently
+  possible from here — needs a session/operator with working SSH access). No data loss — durable progress through chunk
+  17 + partial chunk 18. Relaunched as **`mtds-backfill-odds-smallchunk5-20260808`** (guard passed, RUNNING).
+  FIXTURE_STATS unaffected, continuing healthy.
+- **2026-08-08T09:13Z** — FIXTURE_STATS +86 days (`last_completed_date=2024-12-08`, fresh `09:12:35Z`), accelerating
+  well. odds smallchunk5: chunk 7/451 (`2020-07-06`), zero OOMs, healthy skip-fast pace — still well before chunk 18's
+  danger zone. Both healthy, no intervention.
+- **2026-08-08T09:40Z** — FIXTURE_STATS +71 days (`last_completed_date=2025-02-17`, fresh `09:39:39Z`), getting close to
+  convergence. odds smallchunk5: chunk 12/451 (`2020-07-31`), zero OOMs, 6 chunks remaining before chunk 18. Both
+  healthy, no intervention.
+- **2026-08-08T10:07Z** — FIXTURE_STATS +49 days (`last_completed_date=2025-04-07`, fresh `10:06:41Z`). odds
+  smallchunk5: chunk 17/451 (`2020-08-25`), zero OOMs — chunk 18 (2 of the 3 prior hang occurrences happened there)
+  starts next. Watching closely next tick.
+- **2026-08-08T10:29Z — smallchunk5 SURVIVED entering chunk 18, no 4th occurrence.** FIXTURE_STATS +34 days
+  (`last_completed_date=2025-05-11`, fresh `10:28:32Z`), close to convergence. odds smallchunk5: 4 leagues attempted in
+  chunk 18 (`EPL, LA_LIGA, BUNDESLIGA, SERIE_A`), 3 OOMs total (up from 0) with normal self-recovery, actively logging
+  as recently as 25s ago. Both healthy, no intervention. Continuing to watch until clearly past chunk 18.
+- **2026-08-08T10:51Z** — FIXTURE_STATS +70 days (`last_completed_date=2025-07-20`, fresh `10:50:24Z`), very close to
+  its 2026-08-07 target end now. odds smallchunk5: still chunk 18, 11 distinct leagues attempted (zero repeats), 8 OOMs
+  total (up from 3) with normal self-recovery, actively logging as recently as ~17s ago — no 4th occurrence. Both
+  healthy, no intervention.
+- **2026-08-08T11:13Z — operator invoked `/autonomous`, "finish everything," and left.** Continuing this loop under the
+  autonomous completion contract (`cursor-configs/AUTONOMOUS_AGENT_RULES.md`) — no change to method, just no further
+  per-tick user check-ins expected. FIXTURE_STATS +26 days (`last_completed_date=2025-08-15`, fresh `11:12:09Z`) — pace
+  has accelerated sharply the last several ticks (enrichment-only mode, mostly-covered dates), likely converging within
+  a few more ticks. odds smallchunk5: still chunk 18, 16 OOMs total (up from 8) but actively logging as recently as ~15s
+  ago — genuinely alive, no hang signature. Both healthy, no intervention. Per rule 2 of the autonomous contract, also
+  picking up the previously-parked cross-vendor honest-absence/denominator-hardening generalization ask as a scoped
+  audit + documented proposal (not a unilateral architecture change) rather than leaving it `BLOCKED-OPERATOR` — will
+  work this in as a parallel thread once the current milestone watch eases.
+- **2026-08-08T~11:35Z — CLOSED: cross-vendor denominator-hardening ask.** Background audit (footystats, open_meteo,
+  soccer_football_info, transfermarkt, understat — the 5 vendors the operator's original ask named, distinct from
+  api_football/odds_api which have their own dedicated docs, and instruments_service/mdps_odds_horizon_bucket which are
+  internal not vendors) found the generalization **already holds workspace-wide**: a fresh live census of all 9 sports
+  manifest sources shows **0% blank-`error_reason` `empty_confirmed` rows everywhere**, not just the 5 — a direct
+  downstream effect of the SFI/weather retype fixes landed earlier this session plus the other 3 vendors never having
+  had the blank-reason problem. Per-vendor dominant reason codes: footystats `EXPECTED_NO_PROVIDER_COVERAGE` 70.8%,
+  open_meteo 87.4%, SFI 85.7%, transfermarkt 92.1% (matches the original PLAYER_VALUES finding almost exactly),
+  understat 97.9%. Checked for the SFI/weather-class `expected_unattempted` structural bug in all 5: only 3 residuals
+  exist (open_meteo 384, SFI 350, understat 35), all dated `2026-08-05` through today — the already-diagnosed
+  self-resolving in-progress-cron-shard pattern, not a new backlog. One candidate that looked structural — **footystats'
+  891 `expected_unattempted` rows for CHINA_SUPER_LEAGUE + RUSSIA_PREMIER_LEAGUE** — resolved as honest, expected churn:
+  the 2026-08-07 out-of-scope purge (`footystats_purge_out_of_scope_leagues_2026_08_07.py`) removed these leagues from
+  subscription scope, and the full-history footystats backfill VM (`fs-backfill-20260807-100731`) is correctly
+  re-sweeping the entire league universe, writing fresh honestly-typed `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`
+  rows as it passes over these 2 now-descoped leagues — same as every other non-subscribed league. **Not a bug, no
+  action needed** — but noting here so a future tick doesn't mistake this for a live regression and attempt to re-purge
+  rows that will just regenerate on the next full sweep. **No retype script run, no manifest purge performed** — nothing
+  was found wrong to fix. Shipped the one genuine deliverable: two small codex/skill-doc additions codifying the
+  "blank-reason-is-a-code-smell" principle for future vendors (`/codex/02-data/honest-absence-downstream-handling.md`
+  Reason Taxonomy § principle 3, `cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` per-vendor
+  audit step 6) — pushed `304041840e`. This closes the last standing item from the operator's original big-picture asks
+  for this session.
+- **2026-08-08T11:31Z** — FIXTURE_STATS +14 days (`last_completed_date=2025-08-29`, fresh `11:27:41Z`) — smaller jump
+  this tick but still steady. odds smallchunk5: still chunk 18 (~70 min this pass now), 20 OOMs total (up from 16),
+  actively logging as recently as ~2 min ago — no hang signature, continuing normal self-recovery. Both healthy, no
+  intervention.
+- **2026-08-08T11:53Z — smallchunk5 cleared chunk 18.** Chunk 18 took `10:20:04Z→11:51:19Z` (1h31m), 24 total OOMs this
+  pass, zero hangs — now on **chunk 19/451** (`2020-09-04`), moving fast with skip-fast dates. FIXTURE_STATS +24 days
+  (`last_completed_date=2025-09-22`, fresh `11:52:30Z`), steady. Both healthy, no intervention.

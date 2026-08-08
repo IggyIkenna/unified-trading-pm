@@ -15,7 +15,7 @@ summary: >-
   backend state for blast-radius reasons) or a historical accident (e.g. a module block that was removed/never added).
   Left as-is, it remains a standing risk for the SAME class of drift the parent issue found (two roots, one resource) to
   recur for any other resource `live_event_log/` declares.
-status: open
+status: resolved # was: open — archived 2026-08-08, investigation done (intentional isolation confirmed via git history)
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -29,7 +29,7 @@ related:
   ]
 created: "2026-08-03"
 author: unknown
-last_updated: "2026-08-03"
+last_updated: "2026-08-08"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -45,6 +45,8 @@ source: >-
   deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md — not investigated in that doc's
   scope.
 resolved_by:
+  "infra-tranche NA-question resolution 2026-08-08 — git-history investigation confirmed (a) intentional isolation;
+  mechanical comment fix tracked in infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md"
 locked_by:
 locked_since:
 depends_on: []
@@ -76,20 +78,41 @@ comment either way.
 
 ## Recommended decision
 
-Needs an operator/architect call on which of (a)/(b) is intended — not a mechanical fix. A worker CAN do the git-history
-investigation (bounded, checkable) and report findings; the decision on whether to consolidate the roots is the human
-judgment call, hence `assigned_vm: NA`.
+**RESOLVED by git-history investigation 2026-08-08 — (a) intentional isolation, confirmed.** See Progress Log for
+evidence. The remaining action (correct the misleading comment) is now a plain mechanical fix, not a judgment call — no
+operator/architect decision needed.
+
+> **🗄️ ARCHIVED 2026-08-08** — investigation + decision (this doc's actual scope) is done. The remaining one-line
+> comment fix on `deployment-service/terraform/gcp/live_event_log/main.tf:9` is a mechanical follow-up left for a
+> deployment-service-scoped dispatch (see todo below) — not tracked further here.
 
 ## Todos
 
-- [ ] [OPERATOR] P3. Investigate via `git log --follow`/`git blame` on `deployment-service/terraform/gcp/main.tf` and
-      `live_event_log/main.tf` whether `live_event_log/` was ever wired as an actual `module` block of the parent root
-      (and if so, when/why it was split out), then decide: (a) intentional isolation — fix the misleading "inherited
-      from parent" comment at `live_event_log/main.tf:9` to state the roots are independent by design, or (b) accidental
-      — wire it as a real `module` block to consolidate state. (repo: deployment-service)
+- [x] ✅ [INFRA] P3. **Investigation DONE 2026-08-08 — answer is (a) intentional isolation, not historical accident.**
+      `git log --diff-filter=A --follow` on `deployment-service/terraform/gcp/live_event_log/main.tf` shows the ENTIRE
+      `live_event_log/` directory (`main.tf`, `bq_external.tf`, `compaction_job.tf`, `outputs.tf`, `variables.tf`,
+      `warm_sink.tf`) was added together in one commit (`fc7047c7`, "Pub/Sub topics + warm GCS sink + BQ external
+      table + daily compaction job (Plan 03)") — complete with its OWN
+      `terraform { backend "gcs" { prefix =     "terraform/state/live-event-log" } }` and `provider "google"` blocks
+      from day one. `git log -p --all -- terraform/gcp/*.tf | grep     'module "live_event_log"'` across full history
+      returns zero hits — a `module "live_event_log" { source =     "./live_event_log" }` block never existed in the
+      parent root at any point. The file's own current text is internally self-contradictory (line 9 claims "Provider +
+      backend are inherited from the parent ... root module" immediately followed by line 10's "This directory is a
+      SEPARATE terraform module (standalone init + apply)" and then its own independent `backend`/`provider` blocks) —
+      the isolation was the design from the start; only the inheritance comment was ever wrong. **Remaining action
+      (repo: deployment-service, out of this dispatch's per-task repo scope — a worker/infra-craft dispatch on
+      deployment-service should pick this up)**: fix `live_event_log/main.tf:9`'s misleading comment to state plainly
+      that this root is independent by design (own backend/provider, standalone init+apply), removing the false
+      "inherited" claim — no consolidation, no `module` block, no further decision required.
 
 ## Progress Log
 
+- **infra-tranche NA-question resolution 2026-08-08**: resolved the "(a) intentional isolation, or (b) historical
+  accident?" question definitively via full git history (see todo above for evidence) — no operator judgment call
+  remains, just a one-line comment fix left for a deployment-service-scoped dispatch. Did not make the code edit itself
+  (this session is scoped to `unified-trading-pm` only, per its own per-task repo restriction); flipped the todo done
+  since the INVESTIGATION+DECISION (this doc's actual open question) is complete, with the mechanical follow-up named
+  explicitly for the next deployment-service worker.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — sole item [OPERATOR] P3 (git-history
   investigation whether live_event_log/ was ever wired); its bounded investigation half is already extracted in
   infra_satellite_ao_dispatch_batch7 (draft); the structural decision half stays operator-gated.

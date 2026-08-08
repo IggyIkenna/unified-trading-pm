@@ -117,7 +117,11 @@ source: >-
       shared IAM `logs:CreateLogStream` gap and were disabled again
       (`aws_consolidator_batch_logstream_iam_gap_2026_07_16.md`). This todo's own text still frames the runbook as
       not-yet-run — it should be re-verified against current cron/rule state (not re-executed blind) rather than treated
-      as still pending from scratch.
+      as still pending from scratch. **round5-cross-cutting-audit 2026-08-08**: no operator input needed — the runbook
+      already ran with operator authorization (2026-07-16), both caveats above are independently closed/tracked. Live
+      re-check (`gcloud scheduler jobs list`, 2026-08-08): 4 of 11 mtds-collect crons currently paused again, but this
+      is a SEPARATE, already-tracked, deliberate pause pending an in-flight migration VM
+      (`defi_consolidated_closeout_2026_07_18.md` Track 8), not a runbook regression.
 - [x] ✅ [INFRA] P2. **DONE — ALREADY FIXED, stale checkbox.** **DONE 2026-08-01 (satellite-batch1 reconciliation):**
       `deployment-service@c04d4562` (2026-06-15) already added the `gcloud run jobs update --image` + async `execute`
       sync step to `deploy-shared.sh` ("[3/3] Sync data-status rollup Job to the new image") — landed 3 days after this

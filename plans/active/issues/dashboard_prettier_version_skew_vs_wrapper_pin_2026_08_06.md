@@ -61,14 +61,21 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Decide which side moves, then align them.** Options: (a) raise the dashboard devDependency to match
-      `PRETTIER_MIN_VERSION` (3.9.5) — simplest, but knowingly adopts the proseWrap idempotency defect that
-      `prosewrap_padding_corpus_wide_1290_space_2026_08_03` documents for 3.9.5/3.9.6, so verify that defect does not
-      affect `.ts`/`.tsx`/`.css` (it was found on markdown) before choosing it; (b) lower the wrapper's floor for
-      non-markdown file types, keeping the higher pin only where the markdown mangling it guards against actually
-      applies; (c) leave the split and document it, accepting that `npm run format` is not the sanctioned path for this
-      repo. Whichever is chosen, make `agent-orchestrator`'s `format`/`format:check` scripts and the wrapper agree, so
-      the repo's own documented command stops disagreeing with its own commit hook.
+- [x] [INFRA] P3. ✅ **DECIDED via direct empirical test (round5 ao investigation) — option (a): raise the dashboard
+      devDependency to 3.9.5.** The stated blocker on option (a) was unverified risk from the proseWrap idempotency
+      defect (`prosewrap_padding_corpus_wide_1290_space_2026_08_03`) — that defect is a markdown/mdx list-item-
+      continuation reflow bug; `proseWrap`/`--prose-wrap` is a markdown-only Prettier option, ignored entirely by the
+      TS/CSS printers. Verified directly rather than reasoned only: formatted 5 real dashboard files (`App.tsx`,
+      `FleetKpis.tsx`, `Login.tsx`, `ResourceWatchdog.tsx`, `main.tsx`, `styles.css`) with both the local 3.6.2 binary
+      and `npx prettier@3.9.5` — **byte-identical output on every file**; ran a second 3.9.5 pass over the output —
+      **zero further drift** (no idempotency defect on these file types); ran 3.9.5 with `--prose-wrap always` forced on
+      a `.tsx` file — **zero effect on output**, confirming the flag is genuinely inert outside markdown. So option (a)
+      carries NONE of the risk the "decide" framing assumed — there is no real tradeoff to adjudicate. **Remaining
+      mechanical step** (bump `agent-orchestrator/dashboard/package.json`'s `"prettier": "^3.6.2"` → `"^3.9.5"`,
+      `npm install`, confirm `format:check` clean): out of scope for this dispatch (repo-scoped to `unified-trading-pm`
+      only) — a bounded, no-longer-judgment-call follow-up for whoever next touches `agent-orchestrator`. Whichever
+      picks it up: make `agent-orchestrator`'s `format`/`format:check` scripts and the wrapper agree, so the repo's own
+      documented command stops disagreeing with its own commit hook.
 
 - [ ] [INFRA] P3. **Then decide whether the dashboard should gate on formatting at all.**
       `agent-orchestrator/scripts/quality-gates.sh` runs `tsc --noEmit` + `vitest` for the dashboard but never

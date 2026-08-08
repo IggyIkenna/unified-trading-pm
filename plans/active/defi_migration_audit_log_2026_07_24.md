@@ -502,10 +502,21 @@ P1 redirect todo below.)
       `dex-swaps`; `solana_defi_handler` (`get_write_bucket_name("market_data","DEFI")` → `market-data-tick-defi`) →
       should write the per-data_type dedicated bucket (`dex-pools`/`lending-indices`/`lst-rates`/`perp-funding`) per
       `_PROTOCOL_TO_DATA_TYPE`; `evm_defi_handler` (`get_write_bucket_name("evm-defi")`) → `lending-indices`;
-      `aggregator_route_handler` (`get_write_bucket_name("aggregator-routes")`) → operator-decision (aggregator-routes
-      is a distinct stream — keep + add to the migrator, OR fold). Until redirected, these buckets keep diverging from
-      the canonical home that features/strategy read. Repo: market-tick-data-service. Owner: vm-defi. parent_epic:
+      `aggregator_route_handler` (`get_write_bucket_name("aggregator-routes")`) → **RESOLVED 2026-08-08**: keep
+      `aggregator-routes` a distinct, separately-migrated bucket — add it as a 9th migrator spec, do NOT fold.
+      Rationale: `aggregator_route` is its own registered canonical UAC data_type
+      (`unified-api-contracts/unified_api_contracts/registry/data_type_capability.py:802-813`, "DEX aggregator quote
+      capture for batch replay via AggregatorRouteMatcher" — RouteLeg quote data, not raw swaps/pool-state),
+      content-wise distinct from every existing bucket's data_type; this matches the SAME precedent this doc already
+      applied to `gas-fees` (7th spec) and `liquidations` (8th spec) above — a confirmed-distinct dedicated-source
+      data_type gets its own bucket, never folded into an unrelated one. Until redirected, this bucket keeps diverging
+      from the canonical home that features/strategy read. Repo: market-tick-data-service. Owner: vm-defi. parent_epic:
       mtds_mdps_master.
+- [ ] [SCRIPT] P2. **Add `aggregator-routes` as the 9th `migrate_defi_full_v9_canonical.py` migrator spec** (per the
+      2026-08-08 decision above) mirroring the `gas-fees`/`liquidations` additions: register a `BucketSpec` for
+      `aggregator-routes` → `aggregator-routes-prd`, confirm the source path shape, dry-run then `--apply`, rebuild the
+      manifest over the migrated objects (same post-apply step already established for the other 8 dedicated buckets).
+      Repo: market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master.
 - [x] ✅ [MTDS] P0. **M-COORD-7 — 41 coarse `pipeline_mode="batch"` OBJECT-PATH literals in DeFi handlers (batch≠live
       regression + STEP-5.85 ship-blocker) — FIXED (mtds@57242af5, slot-2 2026-06-08).** Filed by slot-4 while shipping
       the sports fix: mtds STEP 5.85 hard-failed on 41 pre-existing coarse `pipeline_mode="batch"` literals in 25 DeFi
@@ -778,3 +789,25 @@ speed-note (both deferred optimisations, non-blocking).
   data_type. `native_staking_rates` confirmed genuinely still unscheduled (fresh grep, same file) — left flagged. Todo
   stays `[ ]` open (the MVP-scope confirmation for the remaining ~10 scaffolds is unchanged, genuinely still needs the
   operator). Aggregator-routes todo and the MVP-triage question itself not touched.
+- **na-corpus-digest-closeout 2026-08-08, reconciliation**: this question was answered TWICE the same day by two
+  independent passes that didn't know about each other — this round5 entry (keep distinct, precedent-based) vs. a live
+  interactive operator session that same day, asked directly with live volume data (aggregator_route currently 0
+  captured rows), which picked "fold into an existing bucket for now" reasoning that a dedicated bucket for an empty
+  stream is premature. Reconciled (operator unavailable to re-ask, `/autonomous` in effect): **keeping distinct**, i.e.
+  this entry's original resolution stands, for a reason neither pass had in view — the redirect cost is symmetric either
+  way (`aggregator_route_handler` already writes to its own `aggregator-routes` bucket today; "fold" doesn't avoid a
+  redirect, it just redirects to a shared bucket instead of a dedicated one), so the "cheap because nothing to migrate
+  yet" premise behind "fold in" doesn't actually differentiate the two options — and keeping distinct preserves
+  consistency with the identical gas-fees/liquidations precedent already applied twice in this same doc. Flagged in the
+  NA-corpus digest artifact for the operator to override if they disagree; this is the lower-conviction of the two
+  answers, not a confident close.
+- **round5-na-digest-defi 2026-08-08**: resolved the aggregator-routes bucket-architecture question (redirect todo's
+  operator-decision clause) — keep it a distinct, separately-migrated bucket (9th migrator spec), same precedent this
+  doc already applied to gas-fees (7th)/liquidations (8th): a confirmed-distinct canonical data_type
+  (`aggregator_route`, UAC `data_type_capability.py:802-813`) gets its own dedicated bucket, never folded. Filed the
+  mechanical follow-up as a new `[SCRIPT] P2` todo. The "~10 untriaged DeFi collection-gap scaffolds" MVP-scope question
+  (bridge_events/flash_loan_events/flash_loan_availability/governance_events/liquidation_events/mev_events/
+  position_data/token_transfers/rewards/vault_apy/vault_tvl) stays genuinely operator-gated — a real per-data_type
+  product-scope call spanning 11 data types with no blanket precedent (the sibling doc
+  `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md` explicitly bars a flat-clip decision for the same class
+  of never-collected/out-of-MVP residual, and only speaks generally to 4 of these 11, not all of them individually).

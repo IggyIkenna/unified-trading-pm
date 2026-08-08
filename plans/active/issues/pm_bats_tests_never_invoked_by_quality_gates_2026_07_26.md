@@ -151,3 +151,16 @@ framework is exactly the live-dispatch-critical-path class that stays NA even bu
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — live-dispatch-critical-path class, operator authority question
 unanswered
+
+**round5-ci-question-resolution 2026-08-08**: the "authority/scope" half of D4-10's escalated question ("should this be
+AO-dispatched or a human plan?") resolves via an existing workspace default, not a new decision — CLAUDE.md's "Plan
+destination — ASK BEFORE CREATING" HARD RULE states plainly: _"Default is human (`assigned_vm: NA`) unless the operator
+explicitly says otherwise."_ No explicit operator override exists anywhere in the corpus for this doc (batch4's own
+"Escalated to the operator" section explicitly declined to assume its own soft recommendation for the AO-dispatch
+option, citing this exact HARD RULE as why it isn't theirs to assume). So the default applies: **whoever authors the
+properly-scoped BATS-phase plan should default it to a human plan (`assigned_vm: NA`)** — matching this doc's own
+current classification, so no reclassification is needed here. This does not, on its own, authorize AO-dispatching the
+BATS-phase work itself (that still needs its own dedicated plan doc, not a silent addition here) — it only answers the
+narrow authority question so the escalation in `ci_satellite_ao_dispatch_batch4_2026_07_31.md` D4-10 stops being read as
+"unanswered." The operator can still explicitly override to AO-dispatch later if they prefer batch4's option (a); this
+resolution just supplies the default that governs absent such an override.

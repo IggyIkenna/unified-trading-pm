@@ -109,8 +109,11 @@ operator-approved wider edit.
       collector's freshness-skip to resume. `mtds-dex-swaps-backfill-3` (one of the 3-VM date-sharded fleet covering
       `2025-12-15 → 2026-07-21`) FAILED 2026-07-27 03:54 UTC with `exit_code=137` (`Killed` — OOM-shaped, same signature
       as the already-filed `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` P0, which as of 2026-08-03 is still
-      open and itself blocked on vendor-credit exhaustion investigating the root cause) and has NOT been relaunched
-      since — verified live via
+      open — **STALE as of 2026-08-08: NOT credential/vendor-credit-blocked** (both
+      `lst_rate_honest_coverage_2026_07_21.md`'s "Correction 2026-08-08" and
+      `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s 2026-08-08 na-eligibility-audit entry confirm credits
+      cleared 2026-08-03, reconfirmed 2026-08-07; the P0 is genuine native-memory-OOM profiling/design work, not a
+      credential ask) — and has NOT been relaunched since — verified live via
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill-3/run.log | tail`
       (2026-08-03). It self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`), so it no longer shows in
       `gcloud compute instances list` as a red flag — a silent 6+ day stall on its shard. Sibling VMs: `-1` completed
@@ -137,6 +140,13 @@ for the compact pointer back to this doc.
   SCRIPT-tagged todos with one explicitly `[OPERATOR]`-tagged genuine judgment call (whether/how to relaunch a stalled
   backfill VM pending an open OOM root-cause investigation); since not essentially all open work qualifies as bounded,
   the whole doc stays NA per the mixing rule. Doc stays `assigned_vm: NA`.
+- **round5-na-digest-defi 2026-08-08**: fixed a stale citation — Todo 3's "blocked on vendor-credit exhaustion" claim
+  (about the sibling `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` P0) no longer holds: both that doc's own
+  2026-08-08 na-eligibility-audit entry and `lst_rate_honest_coverage_2026_07_21.md`'s "Correction 2026-08-08" confirm
+  vendor credits were cleared 2026-08-03 (reconfirmed 2026-08-07, 14,475,834 credits remaining) — the P0 is genuine
+  native-memory-OOM profiling/design work, not a credential/vendor-credit ask. No credential top-up needed; nothing else
+  in this doc changed. The corrected round5 defi-tranche item ("vendor/cloud credits need to be topped up to unblock the
+  P0") is resolved as a stale premise, not a real operator credential ask.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-06** (tranche=defi, dispatch agt-e00d37): KEEP-NA valid — re-confirms the 2026-08-04

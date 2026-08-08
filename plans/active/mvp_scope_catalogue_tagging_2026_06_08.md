@@ -206,7 +206,13 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       concrete training-grid config), and (b) where trained-model identities get recorded (a new GCS
       manifest/UTL-`ManifestWriter`-style surface? a training-run registry table? reuse of
       `ml-service/ml_service/     training/app/core/config_loader.py`'s `TrainingGridConfig` definitions as the "all"
-      universe?). Resolve as a LOCAL/interactive design session first (per
+      (round5-cross-cutting-audit 2026-08-08: RESOLVED -- both sub-questions have live precedent: TrainingGridConfig IS
+      the could-exist bound, and ModelRegistry in unified_trading_library/ml/model_registry.py is already the live write
+      path -- narrows to ordinary wiring, no design session needed first.) "**round5-cross-cutting-audit 2026-08-08**:
+      both sub-questions have live precedent already — (a) `TrainingGridConfig` IS a concrete could-exist bound; (b)
+      `unified_trading_library/ml/model_registry.py`'s `ModelRegistry` (GCS manifest, `list_models(...)`) is already the
+      live write path, consumed by `training_orchestrator.py`. Narrows to ordinary wiring, no design session needed
+      first." universe?). Resolve as a LOCAL/interactive design session first (per
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — an open
       design call is not an AO-dispatchable todo), THEN dispatch the properly- scoped implementation against that
       decision. Repos: deployment-api, ml-service, unified-api-contracts (if the design needs a new UAC-level

@@ -1,0 +1,353 @@
+---
+doc_type: plan
+title: Move DeFi live/batch compute off AWS to GCP Cloud Run — data already lives in GCS
+summary: >-
+  execution-service and features-service run as live AWS ECS Fargate tasks (cluster uts-defi-prod, ap-northeast-1) but
+  their real data lives entirely in GCS (central-element-323112) — the same-named AWS S3 buckets are empty. This drives
+  real, ongoing cross-cloud egress (~$235/mo observed) on top of the AWS compute cost itself. Operator confirmed no real
+  trading capital is at risk (live market-data streaming only, not real-money execution), so a straightforward
+  drain-verify-cutover is safe — brief downtime is acceptable. GCP-side Cloud Run manifests for all 3 DeFi services
+  already exist and are current; this is completing an already-decided direction (GCP primary / AWS secondary), not
+  reversing one. Target: decommission all DeFi production/live/batch/monitoring compute from AWS, leaving only the CI VM
+  and AO/planning VM there, for an estimated further ~$250/month savings.
+status: active
+nature: process
+asset_group: [defi, infrastructure]
+stage: [live, execution, meta]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    features-service,
+    strategy-service,
+    unified-trading-pm,
+    unified-trading-library,
+  ]
+scope: [engineer, admin]
+tags: [aws, gcp, cloud-migration, cost, cross-cloud-egress, ecs, fargate, cloud-run, defi]
+related:
+  [
+    /plans/epics/infrastructure_master.md,
+    /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
+    /codex/04-architecture/cloud-agnostic-migration.md,
+    /codex/11-project-management/dual-cloud-cost-ops-playbook.md,
+    /codex/04-architecture/seamless-cloud-switch.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/dual-cloud-image-builds.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
+  ]
+created: "2026-08-08"
+last_updated: "2026-08-08"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 5
+estimate_calibrated_ai_days: 4
+assigned_role: infra
+drift_direction: advance-code
+depends_on: []
+sequential: true # operator directive 2026-08-08: flip to AO dispatch. Several todos have a real
+# ordering dependency this plan's own file-order encodes (todo 1's finding gates the
+# execution-service cutover; each service's deploy->verify->cutover->delete is itself
+# sequential) that same-priority concurrent dispatch would NOT respect on its own --
+# serializing the whole plan is the safe choice for a live-infra cutover, even at the cost
+# of forgoing parallelism on the doc-update todos.
+context_scope:
+  [
+    /codex/04-architecture/cloud-agnostic-migration.md,
+    /codex/11-project-management/dual-cloud-cost-ops-playbook.md,
+    /codex/04-architecture/seamless-cloud-switch.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/manifest-migration-coordination.md,
+    /codex/05-infrastructure/dual-cloud-image-builds.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    deployment-service/configs/cloud-run/execution-service.yaml,
+    deployment-service/configs/cloud-run/features-service.yaml,
+    deployment-service/configs/cloud-run/strategy-service.yaml,
+    deployment-service/configs/clusters/defi.yaml,
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+  ]
+source:
+  [
+    "operator, interactive session, 2026-08-08 — asked for an AWS cost audit, which surfaced empty AWS S3 buckets for
+    live DeFi services alongside real, populated GCS counterparts; operator confirmed no real trading capital is at risk
+    (live data streaming only) and directed migrating all DeFi production/live/batch/monitoring compute off AWS, keeping
+    only the CI VM and AO/planning VM there, targeting ~$250/mo further savings.",
+  ]
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+---
+
+# Move DeFi live/batch compute off AWS to GCP Cloud Run
+
+## Why this plan exists
+
+A routine AWS cost audit (triggered by downsizing the CI VM and AO VM earlier the same session) found `ap-northeast-1`
+EC2/EBS/ECS/Secrets-Manager/data-transfer spend far exceeding what the CI+AO VMs alone account for. Digging into
+`Amazon Elastic Container Service` costs found **two live, running ECS Fargate services** — `uts-features-service-prod`
+and `uts-execution-service-prod` (cluster `uts-defi-prod`) — both tagged `CLOUD_PROVIDER=aws`. Direct inspection found
+their designated AWS S3 buckets (`features-defi-prd-427895769566`, `execution-store-defi-427895769566`,
+`market-data-tick-defi-prd-427895769566`, `instruments-store-defi-prd-427895769566`) **completely empty (0 objects)**,
+while the same-named GCS buckets in `central-element-323112` hold real data (manifest indices, availability index,
+parquet files). `uts-strategy-service-prod` exists in the same cluster but is currently scaled to 0.
+
+**This is not a new architectural direction — it completes one already decided.** Codex SSOTs
+(`/codex/04-architecture/cloud-agnostic-migration.md`, `/codex/11-project-management/dual-cloud-cost-ops-playbook.md`)
+already state GCP is primary and AWS is secondary/DR. The AWS ECS placement traces to
+`/plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md` (a May 2026 DeFi-client-mandate + AWS-credits push),
+whose central premise — data AND compute co-located on AWS — was **never completed** (Phase 5 GCS→S3 sync and Phase 7
+dual-cloud validation were deferred at archival). The operator independently reached the same "AWS is not a live write
+target" conclusion on 2026-07-16 (see that plan's "Correction 2026-07-16" section) — this plan executes on that finding,
+three weeks later, now that the cost impact is quantified.
+
+**Good news found while scoping this**: GCP-side Cloud Run manifests for all three services already exist and are
+current — `deployment-service/configs/cloud-run/{execution-service,features-service,strategy-service}.yaml` — each
+deliberately `minScale=1/maxScale=1` (always-on, no split-brain risk from concurrent instances), pointed at
+`central-element-323112`/`asia-northeast1`, with service accounts already provisioned and the dual-cloud image pipeline
+already building GCP images for them continuously. This is a cutover, not a from-scratch build.
+
+**Risk profile, confirmed by operator 2026-08-08**: no real trading capital is at risk — current DeFi activity is live
+market-data streaming, not real-money execution. Brief downtime during cutover is acceptable. This means the
+`/codex/04-architecture/seamless-cloud-switch.md` drain/snapshot/switch mechanism (confirmed NOT IMPLEMENTED in code,
+per the research that scoped this plan) is **not required** for this migration — a straightforward
+stop-verify-cutover-decommission sequence is safe. If/when real capital goes live on this path, that mechanism (or an
+equivalent) becomes a real prerequisite for any FUTURE cross-cloud move — not this one.
+
+**Scope explicitly excludes** the CI VM (`ci-escalation-runner-vm-1`) and the AO/planning VM (`agent-orchestrator-vm-1`)
+— those stay on AWS per operator instruction, already right-sized this same session (see
+`/plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`). Provisioned-but-empty AWS
+buckets/env config may remain in place untouched — deleting them is out of scope (no cost driver, no risk from leaving
+them).
+
+## Confirmed technical facts (verified 2026-08-08, live AWS/GCP inspection — not assumed)
+
+- **Running AWS compute to migrate**: `uts-features-service-prod` (2 vCPU/4GB Fargate, running) and
+  `uts-execution-service-prod` (2 vCPU/4GB Fargate, running), cluster `uts-defi-prod`, `ap-northeast-1`.
+  `uts-strategy-service-prod` exists in the same cluster, desired/running count 0 (not currently costing compute, but
+  should be pointed at GCP before it's ever turned back on).
+- **AWS S3 buckets for these services are empty** (`list-objects-v2` → 0 `KeyCount`) — confirmed for
+  `features-defi-prd-427895769566`, `execution-store-defi-427895769566`, `market-data-tick-defi-prd-427895769566`,
+  `instruments-store-defi-prd-427895769566`, `dex-pools-prd-427895769566`. The GCP counterpart
+  (`features-defi-prd-central-element-323112`) has real data (confirmed via `gsutil ls`).
+- **No RDS/ElastiCache/ELB/EKS anywhere in `ap-northeast-1`** — every instance of those services in this AWS account is
+  in `eu-west-2`, belonging to Kapsule's unrelated `global-health-dev-aethergate` stack (confirmed by name + region +
+  zero overlap with anything `unified-trading-*`). Not in scope, not touched by this plan.
+- **`manifest-consolidator`'s 26 AWS Batch job definitions + EventBridge rules are already correctly dormant** — all 26
+  `uts-prod-consolidator-*` EventBridge rules are `DISABLED`, deliberately, per
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md` + `/codex/02-data/manifest-migration-coordination.md`: they
+  were briefly re-enabled 2026-07-16, hit an IAM gap (fixed, kept), then deliberately turned back off same-day once the
+  operator confirmed AWS has no live data to consolidate. GCP already has an equivalent-sounding live service
+  (`uts-prod-data-status-rollup-svc`, Cloud Run, `asia-northeast1`) — **todo 6 below needs to confirm this actually
+  covers the same job, not just a similar name, before deciding whether the AWS Batch definitions are safe to delete
+  outright vs. merely left dormant.**
+- **GCP Cloud Run targets already fully specified**:
+  `deployment-service/configs/cloud-run/{execution-service, features-service,strategy-service}.yaml`, each
+  `minScale=1/maxScale=1`, `CLOUD_PROVIDER=gcp`, correct project/region/ service-account, health probes wired.
+  `features-service.yaml` already documents the exact data-locality reasoning this plan is built on. **Not yet confirmed
+  live** — `gcloud run services list` did not show any of the three as an existing deployed Cloud Run service as of
+  2026-08-08 (todo 1 confirms this precisely before assuming zero state).
+- **Deploy tooling gap**: `execution-service.yaml`/`strategy-service.yaml` reference `scripts/cloud-run/deploy.sh`,
+  which does not exist in `deployment-service/scripts/cloud-run/` (only `deploy-shared.sh`, `deploy-ui.sh`,
+  `deploy-agent-orchestrator.sh`, `deploy-traffic-pin-bridge.sh`, `canary-deploy.sh` exist). `features-service` has its
+  own `scripts/cloud-run/deploy_features_service_cloud_run.sh`. Todo 2 closes this gap before any deploy attempt.
+- **Two open questions from the research pass, not yet resolved — investigate before/during cutover, not after**: (a)
+  exactly what role `execution-service`'s AWS deployment plays relative to the GCE-VM-based live-strategy-promote path
+  (`run-live.sh`/`launch-strategy-live-vm.sh` per `/codex/04-architecture/promote-workflow-architecture.md`) — a
+  standalone order-routing API those VMs call over the network, or a vestigial deployment not actually in any hot path
+  today; (b) what caused `uts-defi-prod` to go from 0 running tasks
+  (`/plans/active/artifact_pipeline_observability_2026_07_17.md`, 2026-07-17) to running (today) — no plan/issue
+  documents this scale-up. Neither blocks proceeding given the no-real-capital finding, but both should be understood
+  before the AWS side is torn down, in case either points at an automated process this plan needs to also disable.
+- **`CROSS_CLOUD_EGRESS_DETECTED` alert exists but has 0% fire rate** (per the archived May plan's own alerting
+  analysis) — it was apparently never wired into these two services, which is consistent with nobody having noticed this
+  cost driver until this session's cost audit found it empirically via CloudWatch + bucket inspection instead.
+
+## Design decisions
+
+- **Sequence by risk, cheapest-to-verify first**: `features-service` → `strategy-service` (currently 0 tasks, no cutover
+  risk, just point the eventual launch at GCP) → `execution-service` last (highest stakes even without real capital,
+  since it's the one item flagged as possibly network-called by the live GCE promote path).
+- **Verify-before-decommission, not blind-flip**: for each service, deploy to Cloud Run, confirm it reads/writes the
+  REAL (populated) GCS buckets correctly and passes health checks, THEN scale the AWS ECS service to 0 (not delete
+  immediately — keep for a short rollback window), THEN delete once confirmed stable for a few days.
+- **No `seamless-cloud-switch.md` mechanism needed for this move** (see "Why this plan exists" — operator-confirmed no
+  real capital at risk). Do not block this plan on building that mechanism; if a FUTURE cloud move involves real
+  capital, that gap should be reopened as its own todo/plan then, not solved speculatively here.
+- **Manifest-consolidator stays dormant on AWS, not migrated verbatim** — no evidence AWS-side consolidation ever had
+  live value (see confirmed facts above); the question is only whether to formally decommission the 26 AWS Batch job
+  definitions or leave them inert, gated on todo 6's finding about `uts-prod-data-status-rollup-svc` overlap.
+- **This plan does not delete the empty AWS S3 buckets or IAM/env scaffolding** — operator explicitly said these can
+  remain configured; zero cost driver, zero urgency.
+- **Update codex + the `infrastructure_master` epic's stale open todos as this ships**, not as an afterthought — the
+  epic currently carries "Operator sign-off on dual-cloud parity" (never signed off — this plan's completion IS the
+  resolution, in the opposite direction originally imagined) and "GCP bucket decommission" (the literal opposite
+  direction of this plan — needs marking superseded, not left to rot as a live-looking contradiction).
+
+## Todos
+
+- [x] ✅ [INFRA] P0. **Confirm `execution-service`'s AWS deployment's actual role** — grep `run-live.sh` /
+      `launch-strategy-live-vm.sh` / `colocated_engine.py` (per `promote-workflow-architecture.md`) for any network call
+      INTO the AWS ECS `execution-service` endpoint (a load balancer DNS name, a service-discovery lookup, an env var
+      pointing at it). Done-when: a written finding — either "the GCE live-promote path calls this AWS endpoint at
+      `<location>`, cutover must repoint it to the new GCP Cloud Run URL as part of todo 5" or "confirmed no live caller
+      references this AWS deployment; it is not in any current hot path." **FINDING (2026-08-08, slot-11)**: Confirmed
+      no live caller references the AWS ECS `uts-execution-service-prod` deployment. The GCE live-promote path
+      (`launch-strategy-live-vm.sh` → VM runs `run-live.sh` → `e2e-testing/scripts/defi/colocated_engine.py`) is a
+      **colocated in-process engine** — `colocated_engine.py` adds `execution-service` to `sys.path` and imports its
+      engine functions directly (zero-serialization, shared memory). Verified: `local-live.env` sets
+      `CLOUD_PROVIDER=gcp`, `EXECUTION_PROVIDER=copper` (Copper MPC custody — no AWS endpoint); zero hits searching for
+      AWS ALB/ELB DNS names, `EXECUTION_SERVICE_URL` env vars, or HTTP client calls from any of the three scripts or
+      their imports. The AWS ECS deployment is not in any current hot path. **Todo 5 (deploy execution-service to Cloud
+      Run) does NOT need to repoint any live caller's target URL** — there is no caller that knows the AWS ECS endpoint
+      exists. — unified-trading-pm@(see commit)
+
+- [x] ✅ [INFRA] P1. **Find what scaled `uts-defi-prod` from 0 running tasks (2026-07-17) to running (2026-08-08)** —
+      check ECS service events (`aws ecs describe-services --query services[].events`) for a scale-up timestamp/reason,
+      cross reference against any CI/CD deploy pipeline or manual `update-service --desired-count` in CloudTrail for
+      that window. Done-when: the trigger is identified (a specific deploy, a manual action, an autoscaling policy) and
+      documented here, or CloudTrail retention has already expired and that's stated explicitly as the reason it can't
+      be determined. **FINDING (2026-08-08, slot-9)**: CloudTrail (`ap-northeast-1`, retention current) shows a **manual
+      operator action** via `aws ecs update-service`: IAM user `arn:aws:iam::427895769566:user/admin_od` (operator's
+      admin account) issued `update-service --desired-count 1` for both `uts-features-service-prod` and
+      `uts-execution-service-prod` on **2026-07-26T18:56:52Z / 18:56:54Z** from IP 148.252.133.4 (AWS CLI/macOS). A
+      second call for `uts-execution-service-prod` at 22:30:19Z from IP 102.188.39.132 (same user). No CI/CD deploy
+      pipeline, autoscaling policy, or scheduled task triggered this — it was a direct manual CLI scale-up 9 days after
+      the 2026-07-17 observation of 0 running tasks. **No automated process to disable before AWS teardown.** —
+      unified-trading-pm@(see flip commit)
+
+- [ ] [INFRA] P1. **Confirm the 3 GCP Cloud Run services (`execution-service`, `features-service`, `strategy-service`)
+      are not already deployed under a name this plan's `gcloud run services list` pass missed** — re-check with
+      `--platform=managed --project=central-element-323112` across ALL regions the fleet uses (not just
+      `asia-northeast1`), and check `deployment-api`'s own service registry/database for a record of these 3 if one
+      exists. Done-when: a definitive "does not exist yet, deploying fresh" or "exists as `<name>` in `<region>`,
+      already at revision `<rev>`" statement.
+
+- [ ] [INFRA] P1. **Write `deployment-service/scripts/cloud-run/deploy.sh`** — the script `execution-service.yaml` and
+      `strategy-service.yaml` both reference under their deploy instructions but which does not exist. Base it on the
+      existing `deploy-shared.sh` pattern (same repo) and/or `deploy_features_service_cloud_run.sh`'s actual mechanics
+      (which already works for a Cloud-Run DeFi service in this same cluster shape) rather than inventing a new pattern.
+      Done-when: `bash deploy.sh --service execution-service --dry-run` (or equivalent) produces a valid
+      `gcloud run services replace` invocation without error.
+
+- [ ] [BACKEND] P1. **Deploy `features-service` to GCP Cloud Run** using
+      `deployment-service/configs/cloud-run/features-service.yaml` + its existing
+      `scripts/cloud-run/deploy_features_service_cloud_run.sh`. Done-when: the Cloud Run revision is `Ready`, its
+      `/health`/`/readiness` probes return 200, and a manual check confirms it reads from
+      `features-defi-prd-central-     element-323112` (not the empty AWS bucket) via real logs/output, not just config
+      inspection.
+
+- [ ] [INFRA] P1. **Scale `uts-features-service-prod` (AWS ECS) to 0** once the GCP deployment above is confirmed
+      healthy and has run cleanly for a real observation window (state how long you actually waited, e.g. "24h, zero
+      errors in Cloud Run logs"). Done-when: `desiredCount=0` confirmed via `describe-services`, and GCP-side logs
+      confirm it's actively serving features-service's role during that same window (not just "up", genuinely doing the
+      work).
+
+- [ ] [INFRA] P2. **Confirm `uts-prod-data-status-rollup-svc` (GCP Cloud Run) actually covers the same job as the 26
+      dormant AWS `uts-prod-manifest-consolidator-*` Batch job definitions** — read its own source/config, compare
+      against what the AWS job definitions were built to do (per-asset-group manifest consolidation:
+      market-data/instruments/features/execution/strategy × cefi/defi/tradfi/sports/prediction). Done-when: a clear
+      "yes, GCP-side already covers this — safe to delete the 26 AWS Batch job definitions + job queue" or "no, GCP does
+      something different — the AWS Batch definitions still describe uncovered work; decide whether to leave them
+      dormant (no cost either way, per confirmed facts above) or port them to GCP Cloud Run Jobs" ruling, with the
+      reasoning stated.
+
+- [ ] [INFRA] P2. **Act on the previous todo's finding** — either delete the 26 AWS Batch job definitions + the
+      `uts-prod-manifest-consolidator` job queue + the 26 disabled EventBridge rules (if confirmed redundant), or
+      explicitly close this todo as "leaving dormant, zero cost, tracked here" if porting isn't warranted. Either
+      resolution is acceptable; leaving it unresolved is not.
+
+- [ ] [BACKEND] P1. **Deploy `strategy-service` to GCP Cloud Run** using
+      `deployment-service/configs/cloud-run/strategy-service.yaml` + the `deploy.sh` built in the earlier todo.
+      Done-when: Cloud Run revision `Ready`, health probes green. (Lower cutover risk than the other two — the AWS
+      counterpart is already at 0 desired count, so this is "point future launches at GCP," not a live cutover.)
+
+- [ ] [INFRA] P2. **Delete `uts-strategy-service-prod` (AWS ECS service) and its task definition family** — since it's
+      already at 0 desired/running and the GCP replacement is confirmed deployed. Done-when: `describe-services` returns
+      nothing for this service name.
+
+- [ ] [BACKEND] P0. **Deploy `execution-service` to GCP Cloud Run** using
+      `deployment-service/configs/cloud-run/execution-service.yaml` + `deploy.sh`. This is the highest-stakes cutover in
+      this plan even without real capital at risk (per todo 1's finding on whether anything calls it) — if todo 1 found
+      a live caller, repoint that caller's target URL as PART of this same todo, not a follow-up. Done-when: Cloud Run
+      revision `Ready`, health probes green, AND (if todo 1 found a caller) that caller is confirmed hitting the new GCP
+      endpoint successfully, not the old AWS one.
+
+- [ ] [INFRA] P0. **Scale `uts-execution-service-prod` (AWS ECS) to 0** once the GCP deployment is confirmed healthy
+      over a real observation window. State the window and what was observed, same evidence bar as the features-service
+      todo above.
+
+- [ ] [INFRA] P2. **After a stable observation period on all 3 GCP deployments (state how long, minimum a few days),
+      delete the AWS-side `uts-defi-prod` ECS cluster, its 3 (now-zeroed) services, and their task definition
+      families.** Done-when: `aws ecs describe-clusters --clusters uts-defi-prod` shows 0 services / cluster deleted.
+
+- [ ] [INFRA] P3. **Check `unified-trading-dev`/`unified-trading-staging`/`unified-trading-prod` ECS clusters** (found
+      to have 0 services / 0 running tasks during this plan's scoping) — confirm they're genuinely unused leftovers (not
+      e.g. a dormant scheduled-task target) and delete if so, or state why they're being kept. Small/cheap either way
+      (empty clusters cost nothing), not urgent.
+
+- [ ] [DOC] P1. **Update `/codex/04-architecture/cloud-agnostic-migration.md` and
+      `/codex/11-project-management/dual-cloud-cost-ops-playbook.md`** to state the DeFi services' AWS ECS deployment
+      has been fully decommissioned as of this plan's completion date, superseding the May-2026 "DeFi client mandate on
+      AWS" framing — cite this plan. Done-when: both docs' `last_reviewed`/content reflect the post-migration state, not
+      the mid-2026-05 AWS-first framing.
+
+- [ ] [DOC] P1. **Resolve `/plans/epics/infrastructure_master.md`'s stale open todos**: "Operator sign-off on dual-cloud
+      parity" — close it, citing this plan as the resolution (in the opposite direction than originally scoped, but a
+      real resolution); "GCP bucket decommission" — mark explicitly superseded by this plan (the literal opposite
+      direction), don't leave both looking simultaneously live. Done-when: the epic shows both todos flipped/annotated
+      with a pointer to this plan, not silently contradicting it.
+
+- [ ] [DOC] P2. **Update `/codex/05-infrastructure/manifest-consolidator-ssot.md`** to reflect whichever outcome todo 7
+      landed on (deleted vs. deliberately-kept-dormant AWS Batch resources) — don't leave the SSOT describing AWS Batch
+      resources that no longer exist, or silent about ones that were deliberately kept.
+
+- [ ] [INFRA] P2. **Re-measure `ap-northeast-1` AWS cost after full cutover + decommission** (same Cost Explorer +
+      per-service methodology used to scope this plan: `SERVICE`/`USAGE_TYPE` group-by, filtered to
+      `REGION=ap-     northeast-1`) and confirm the realized saving against the ~$250/month target stated in this plan's
+      summary. Done-when: a real before/after monthly figure is recorded here (Progress Log), not just an assumption
+      that deleting the ECS services achieved it.
+
+## Codex SSOTs
+
+- `/codex/04-architecture/cloud-agnostic-migration.md` — GCP-primary/AWS-secondary posture; needs updating per todo 14.
+- `/codex/11-project-management/dual-cloud-cost-ops-playbook.md` — cost/ops framing; needs updating per todo 14.
+- `/codex/04-architecture/seamless-cloud-switch.md` — the NOT-IMPLEMENTED drain/switch design; explicitly not needed for
+  THIS migration (no real capital at risk) but the gap remains real for any future one.
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — needs updating per todo 15, pending todo 6/7's finding.
+- `/codex/05-infrastructure/dual-cloud-image-builds.md` — already-working GCP image pipeline this plan relies on, not
+  duplicated here.
+- `/codex/04-architecture/promote-workflow-architecture.md` — the GCE-VM live-promote path todo 1 checks against.
+
+## Progress Log
+
+- **2026-08-08 (interactive session)**: Plan filed. Scoping research (full codex/plans/issues sweep) found: no prior
+  plan covers this exact migration; the AWS placement was a deliberate-but-incomplete 2026-05 decision the operator
+  already effectively reversed on 2026-07-16; GCP Cloud Run targets for all 3 services already exist and are current;
+  manifest-consolidator's AWS Batch/EventBridge dormancy is already correct and intentional; the
+  `seamless-cloud-switch.md` safety mechanism this kind of move would normally need does not exist in code, but operator
+  confirmed no real trading capital is at risk today (live data streaming only), so it is not a blocker for this
+  specific cutover. Two open investigation items (todo 1, todo 2) carried forward rather than resolved speculatively.
+- **2026-08-08 (slot-11, AO worker — todo 1)**: Investigated `run-live.sh`, `launch-strategy-live-vm.sh`, and
+  `colocated_engine.py`. Finding: the GCE live-promote path uses a **colocated in-process engine**
+  (`e2e-testing/scripts/defi/colocated_engine.py`), which adds `execution-service` to `sys.path` and imports its code
+  directly — no HTTP call to any remote execution-service endpoint. `local-live.env` is `CLOUD_PROVIDER=gcp`,
+  `EXECUTION_PROVIDER=copper`. Grep across `execution-service`, `strategy-service`, `e2e-testing` finds zero references
+  to an AWS ALB/ELB DNS, `EXECUTION_SERVICE_URL` env var, or HTTP client calls from the live path. **Conclusion:
+  confirmed no live caller references the AWS ECS `uts-execution-service-prod` deployment; it is not in any current hot
+  path. Todo 5 (deploy execution-service to Cloud Run) requires no caller repointing.**
+- **2026-08-08 (slot-9, AO worker — todo 2)**: CloudTrail query (`ap-northeast-1`, `UpdateService` events,
+  2026-07-17→2026-08-08). Finding: the scale-up was a **manual operator action** — IAM user `admin_od`
+  (`arn:aws:iam::427895769566:user/admin_od`) issued `update-service --desired-count 1` via AWS CLI from macOS on
+  2026-07-26T18:56:52Z for `uts-features-service-prod` and 18:56:54Z for `uts-execution-service-prod` (both from IP
+  148.252.133.4). A second call for `uts-execution-service-prod` at 22:30:19Z from IP 102.188.39.132 (same user,
+  different network). No CI/CD pipeline, autoscaling policy, or scheduled task triggered the scale-up — it was a direct
+  manual CLI action 9 days after the 2026-07-17 observation. **Implication for cutover**: no automated process needs to
+  be disabled before scaling the services back to 0 and decommissioning the ECS cluster. Proceed with the remaining
+  cutover todos (3 onward) with confidence.

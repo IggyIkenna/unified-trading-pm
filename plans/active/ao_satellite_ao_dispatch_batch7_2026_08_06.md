@@ -129,7 +129,7 @@ conflict/operator/time-gated (parked below, not silently dropped).
       `/plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md` (its first 2 items only).
       Repo: agent-orchestrator, unified-trading-pm.
 
-- [ ] [SCRIPT] P2. **Reset `spawn_retry_count = 0` in the shared automatic spawn-success path so a slot's diagnostic
+- [x] [SCRIPT] P2. **Reset `spawn_retry_count = 0` in the shared automatic spawn-success path so a slot's diagnostic
       retry-with-pane-diagnosis capability isn't permanently disabled after one lifetime retry-cap trip.** In
       `agent-orchestrator/server/autospawn.py` (~lines 2086-2110, "Shared success point for ALL spawn callers"), add the
       reset alongside the other fields already cleared there (`tmux_session`/`last_spawned_at`/`account_id`/the alert
@@ -141,7 +141,10 @@ conflict/operator/time-gated (parked below, not silently dropped).
       starting.** **Done when**: the new regression test passes; full `agent-orchestrator` `quality-gates.sh` green; the
       alert text no longer overstates the dead-end. Source:
       `/plans/active/issues/ao_human_gated_recovery_audit_closable_gaps_2026_08_06.md` (its 1st item only). Repo:
-      agent-orchestrator.
+      agent-orchestrator. ✅ agent-orchestrator@bc37d03 — spawn_retry_count=0 added to shared spawn-success path
+      (autospawn.py:2146); test_do_spawn_resets_spawn_retry_count added (tests/test_autospawn.py:1367); "stays down
+      until manual respawn" text corrected to Trigger-3 auto-recovery message (worker_liveness/_auth_failover.py). QG
+      green.
 
 - [ ] [SCRIPT] P2. **Reorder `WorkerLivenessWatchdog._tick_once()`'s cleanup/reconcile sub-mechanisms ahead of the
       daily-kill-cap early-return, and fix a stale docstring.** Today `if self._daily_cap_reached(): return` sits after

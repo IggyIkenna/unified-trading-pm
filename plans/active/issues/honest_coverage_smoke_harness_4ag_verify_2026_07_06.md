@@ -205,6 +205,14 @@ numbering.)**
       resolution) still lists this as the sole remaining item. Not closing: the prerequisite plan landed but the actual
       re-run + prd/prod path reconciliation has not been done or evidenced.
 
+      **round5-cross-cutting-audit 2026-08-08: option (d) resolved — amend the task text, do NOT wait for the operator
+          to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
+          pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
+          `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
+          writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
+          text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
+          marker for a re-run.
+
 ## Evidence
 
 - Tradfi run: `WARNING tradfi catalog not available ... 404` → empty matrix. Output at

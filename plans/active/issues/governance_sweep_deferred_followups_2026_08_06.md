@@ -148,6 +148,18 @@ context_scope:
       **Done when**: each of the 6 is either reclassified (if the conflict resolves in its favor), closed as a
       stale-checkbox/duplicate correction against the doc it collides with, or explicitly re-affirmed KEEP-NA with the
       conflict cited.
+
+      **round5-cross-cutting-audit 2026-08-08: all 6 subparts now confirmed resolved, no operator ruling needed.**
+          (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
+          self-corrects the stale PR#1084 citation (current PR is #1093). (3)
+          `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
+          re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
+          `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
+          (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
+          as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
+          already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
+          corrections against the docs they collide with.
+
 - [ ] [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
       this sweep ruled the provider-pin sub-question (v5-align, recommended) but explicitly did not fabricate answers to
       the IAM-policy-drift-specific D1-D4 rows without reading them directly. (repo: unified-trading-pm)

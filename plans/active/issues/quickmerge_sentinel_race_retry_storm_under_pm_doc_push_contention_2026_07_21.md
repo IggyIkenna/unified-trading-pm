@@ -35,7 +35,7 @@ depends_on: []
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /plans/archive/issues/quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md,
     unified-trading-pm/scripts/quickmerge.sh,
   ]

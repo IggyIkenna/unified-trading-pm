@@ -665,6 +665,21 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
    the manifest, decides what to do. (Optional exception: writers MAY persist a partial parquet with the actual short
    row count IF the downstream consumer needs the rows directly — but the manifest reason is still the gate and the
    parquet schema is honest about its short row count, no NaN-fill to "complete" the day.)
+3. **A blank/generic `error_reason` on an `empty_confirmed` row is a code smell, not a valid terminal state.** Every
+   `empty_confirmed` row MUST carry a specific `EmptyConfirmedReason` (UAC
+   `unified_api_contracts.canonical.crosscutting._honest_coverage_empty_reasons.EmptyConfirmedReason`) — a blank reason
+   means the expected-absence path that produced it was under-specified, and it silently hides which of the real,
+   distinct causes (no provider coverage for this league, outside a transfer window, pre-season, etc.) actually applied.
+   Two motivating incidents: (a) the sports `soccer_football_info`/`open_meteo` **`expected_unattempted` structural
+   backlog** (2026-08-08) — a historically-seeded broader write scope left 205k+ rows per vendor genuinely never
+   attempted, fixed via `instruments-service/scripts/type_sfi_eu_no_provider_coverage_2026_06_27.py` and
+   `type_weather_eu_no_provider_coverage_2026_06_27.py`, which retype blank-reason `expected_unattempted` rows for
+   out-of-current-scope leagues to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`; (b) the Transfermarkt PLAYER_VALUES
+   investigation (2026-08-07) that traced a ~90% `empty_confirmed` rate to 91.9% `EXPECTED_NO_PROVIDER_COVERAGE` rather
+   than a generic bucket, prompting a workspace-wide audit (2026-08-08) that confirmed **0% blank-reason
+   `empty_confirmed` rows across all 9 sports manifest sources** — i.e. this principle already holds everywhere in
+   sports as of that audit; re-verify it holds before assuming so for a NEW vendor/asset_group, since the two backlog
+   incidents above both originated from a writer whose scope narrowed after the reason-seeding logic was written.
 
 > **[DELTA 2026-06-01 — codex audit status]** **Current state:** 33-reason taxonomy table above + per-source sports
 > coverage rules (Wave 3.S, `§ Per-source sports coverage rules`) + 4-state consumer-class table

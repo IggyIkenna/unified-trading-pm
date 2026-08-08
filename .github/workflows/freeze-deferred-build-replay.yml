@@ -120,8 +120,13 @@ jobs:
               echo "  WARN: download failed — skipping"; continue
             fi
             unzip -o -q "$TMP/a.zip" -d "$TMP" || { echo "  WARN: unzip failed — skipping"; continue; }
-            PAYLOAD_FILE="$(find "$TMP" -name 'payload.json' | head -1)"
-            [ -z "$PAYLOAD_FILE" ] && { echo "  WARN: no payload.json — skipping"; continue; }
+            # cloud-build-router.yml (GCP) emits payload.json; cloud-build-router-aws.yml emits
+            # payload-aws.json — same schema (repo/branch/version/commit_sha/repo_type), different
+            # filename. This search only matched the GCP name, so every deferred-aws-build-*
+            # artifact was silently un-drainable from day one (found 2026-08-08: a real deferral
+            # sat 162h, 27x past the 6h stale-guard threshold, until this exact bug was found).
+            PAYLOAD_FILE="$(find "$TMP" \( -name 'payload.json' -o -name 'payload-aws.json' \) | head -1)"
+            [ -z "$PAYLOAD_FILE" ] && { echo "  WARN: no payload.json/payload-aws.json — skipping"; continue; }
             REPO=$(jq -r '.repo' "$PAYLOAD_FILE"); BRANCH=$(jq -r '.branch' "$PAYLOAD_FILE")
             VERSION=$(jq -r '.version' "$PAYLOAD_FILE"); SHA=$(jq -r '.commit_sha' "$PAYLOAD_FILE")
             RTYPE=$(jq -r '.repo_type' "$PAYLOAD_FILE")

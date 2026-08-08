@@ -39,7 +39,7 @@ tags:
 related:
   [
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /plans/archive/issues/watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -55,12 +55,15 @@ assigned_vm: NA
 execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
-resolved_by: "AO issue-doc sweep 2026-08-06 — the standing [DEVOPS] P1 admission-semaphore todo found already shipped via unified-trading-pm's qg-host-governor.sh (flock-based, wired into base-service.sh/base-library.sh); checkbox had never been flipped."
+resolved_by:
+  "AO issue-doc sweep 2026-08-06 — the standing [DEVOPS] P1 admission-semaphore todo found already shipped via
+  unified-trading-pm's qg-host-governor.sh (flock-based, wired into base-service.sh/base-library.sh); checkbox had never
+  been flipped."
 locked_by:
 context_scope:
   [
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     scripts/quality-gates-base/base-service.sh,
@@ -145,15 +148,15 @@ is known-wrong is actively dangerous.
       `worker_kicked` events. Repo: agent-orchestrator.
 - [x] [DEVOPS] P1. **CLOSED 2026-08-06 — shipped, evidence found during the AO issue-doc sweep (checkbox was never
       flipped).** `unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh::qg_governor_acquire` implements a
-      real `flock`-based token semaphore enforcing `K=max(2, floor(cores/4))` concurrent heavy QG phases host-wide, wired
-      into both `base-service.sh` (~L788) and `base-library.sh` (L424) — the shared entry point every repo invokes.
-      Matches this todo's own done-when exactly. Original text follows. **Enforce the shared-host QG cap as an actual
-      admission gate.** Replace the advisory
-      `max(2, floor(cores/4))` guidance with a real host-level semaphore/lock around full-suite QG launches so they
-      cannot queue back-to-back and pin the host at saturation; a slot that wants to run QG waits for a slot rather than
-      launching unconditionally. **Done when**: with N slots wanting QG simultaneously, at most `max(2, floor(cores/4))`
-      run concurrently and the rest queue on the semaphore (verified by a launch test). Repo: agent-orchestrator (QG
-      launcher) — coordinate with quality-gates.sh entry point.
+      real `flock`-based token semaphore enforcing `K=max(2, floor(cores/4))` concurrent heavy QG phases host-wide,
+      wired into both `base-service.sh` (~L788) and `base-library.sh` (L424) — the shared entry point every repo
+      invokes. Matches this todo's own done-when exactly. Original text follows. **Enforce the shared-host QG cap as an
+      actual admission gate.** Replace the advisory `max(2, floor(cores/4))` guidance with a real host-level
+      semaphore/lock around full-suite QG launches so they cannot queue back-to-back and pin the host at saturation; a
+      slot that wants to run QG waits for a slot rather than launching unconditionally. **Done when**: with N slots
+      wanting QG simultaneously, at most `max(2, floor(cores/4))` run concurrently and the rest queue on the semaphore
+      (verified by a launch test). Repo: agent-orchestrator (QG launcher) — coordinate with quality-gates.sh entry
+      point.
 - [x] ✅ [DOC] P2. Document the host-saturation → false-kick → completion-stall failure mode and the two-window /
       load-aware kick contract in the orchestrator watchdog SSOT
       (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`), so future liveness tuning treats "stale

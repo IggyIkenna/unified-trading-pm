@@ -229,3 +229,45 @@ understanding the root cause to be valuable.
   MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future `/ag-closeout-audit ao` satellite-batch extraction rather than forcing a
   whole-doc flip. Blocker tags: todo1=DEPENDENCY_BLOCKED(on todo2), todo2=GENUINE_WORK/MISCLASSIFIED_LIKELY_AO_ELIGIBLE,
   todo3=DEPENDENCY_BLOCKED(on todo2)+OPERATOR_QUESTION once unblocked, todo4=DEPENDENCY_BLOCKED(on todo3).
+
+- **2026-08-08 (slot 4, ao_satellite_ao_dispatch_batch8-004)** — Deliberate minimal reproduction run (todos 1+2).
+  **Clean 2-clone setup result: DOES NOT REPRODUCE.** Two separate git clones (separate `.git` directories) of the same
+  remote were created in a throwaway scratchpad. Clone A held an uncommitted edit to `file_x.txt` (never staged). Clone
+  A then ran `git pull --rebase --autostash origin master` against a remote that had new commits not touching
+  `file_x.txt` — the edit **survived** (`file_x.txt` contained the marker after the pull, stash list was empty). A
+  second test (5 concurrent `git pull --rebase --autostash` processes in the same directory) found all concurrent
+  processes fail before reaching the autostash step: `fatal: Cannot rebase onto multiple branches` (concurrent writes
+  race `.git/FETCH_HEAD`, corrupting it). The hazard does not trigger via pure concurrent-pull in a shared checkout
+  either (git's own locking causes early failure, not silent data loss). **Conclusion: the trigger IS specific to the
+  SAME `.git` directory — but requires a more targeted race than parallel `git pull` invocations.**
+
+  **Stash-interleaving race: REPRODUCED (same `.git` directory).** Manual simulation of the mechanism: (1) Process A
+  holds uncommitted edit to `file_x.txt`. (2) Process B runs `git stash push` — stashes ALL dirty working-tree files
+  including file_x's edit; file_x reverts to HEAD ("vanishes" from working tree). `stash@{0}` = process-B-autostash. (3)
+  Process C concurrently runs `git stash push` for its own dirty file — pushes on top: now `stash@{0}` = process-C and
+  `stash@{1}` = process-B. (4) Process B runs `git stash pop` — pops `stash@{0}` (process C's entry), NOT its own.
+  Process B's stash (with file_x edit) is left as `stash@{0}` (after C's is dropped), unpopped. `file_x.txt` remains at
+  HEAD content. In the real fleet scenario, process B's quickmerge exits thinking everything is fine — the victim's edit
+  disappears from disk with no error message.
+
+  **Recoverability findings (immediate — before `git gc`):** (a) `git stash list` shows the stuck entry explicitly
+  (`stash@{0}: On master: process-B-autostash`). (b) `git stash show -p stash@{0}` shows the **FULL, FINAL** edit
+  content (not a partial/earlier version — in this controlled single-edit test). (c) `git stash pop` successfully
+  restores the edit. (d) `git fsck --unreachable` shows dangling commits/trees/blobs from the dropped stash entries,
+  providing a secondary recovery path. **Reliability verdict: HIGH if the stash was not explicitly dropped and `git gc`
+  has not run** — the content survives in the stash ref. UNRELIABLE after `git gc` (which prunes unreachable objects) or
+  if the process explicitly drops the stash. The live incident's partial-version recovery (earlier blob, not final
+  state) may reflect multiple sequential edits where only intermediate blob versions survived — this controlled test
+  involved a single edit so the final version was always current in the stash.
+
+  **What this does NOT yet establish** (todo 1, still DEPENDENCY_BLOCKED pending a live reproduction opportunity): the
+  exact timing window in which the stash interleaving occurs under real fleet load, and whether the blob is truly
+  recoverable in the file-deleted-entirely case (third/fourth live reproductions). The stash-pop-failure path (where the
+  pop exits non-zero and the stash is preserved but not applied) was also observed in this session under test
+  contamination, producing a `stash@{0}: autostash` entry that remained after a failed pop — this is consistent with the
+  `safe-doc-push.sh` false-success scenario described in the Corroborating section above.
+
+  **Todos 1+2 verdict**: Todo 2 closed here (deliberate reproduction complete; verdict recorded). Todo 1 partially
+  answered (recoverability: reliable via stash if not dropped/gc'd; final-version recovery confirmed in controlled
+  setting; partial-version risk noted for multi-edit scenarios). Full todo 1 closure still requires a live reproduction
+  opportunity per the original constraint.

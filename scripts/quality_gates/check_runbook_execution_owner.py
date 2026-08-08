@@ -37,6 +37,7 @@ Exit-code semantics: 0 = clean (≤ baseline); 1 = regression / missing fields;
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 from typing import cast
@@ -83,14 +84,41 @@ class RunbookViolation:
         return f"{self.path}: execution.{{{','.join(self.missing_fields)}}} missing or empty"
 
 
+# Exact-dirname prune set for the os.walk below (qg_owner_gate_full_workspace_rglob_walk_
+# hangs_quickmerge_2026_07_31): directories whose CONTENTS can never legitimately be a real
+# runbook, so descending into them is pure wasted I/O. This is an EXACT dirname-equality
+# check, deliberately narrower than EXCLUDED_DIRS's substring semantics below -- pruning here
+# can only ever remove work that the post-hoc EXCLUDED_DIRS filter would ALSO have discarded
+# for every file beneath it (verified empirically: byte-identical result sets against a real
+# multi-slot workspace, 80/80 files, before/after -- see the issue doc's Progress Log), so it
+# cannot introduce a classification difference. The prefix-based EXCLUDED_DIRS entries
+# (plans/archive/, archive/, context/codex/, .extra/) are intentionally NOT pruned here (they
+# aren't safe to prune by bare dirname alone) -- they still go through the unchanged post-hoc
+# filter immediately below, exactly as before.
+_PRUNE_DIRNAMES = frozenset({".venv", ".venv-workspace", "node_modules", "build", "dist", ".git"})
+
+
 def _iter_runbook_files(workspace_root: Path) -> list[Path]:
-    """Walk workspace for files matching *runbook*.md, excluding archive + build dirs."""
+    """Walk workspace for files matching *runbook*.md, excluding archive + build dirs.
+
+    Uses a pruning os.walk (not Path.rglob) so heavy directories (.venv, node_modules, ...)
+    are never descended into -- Path.rglob cannot prune, so it was fully enumerating every
+    .tabs/<slot>/<repo>/.venv tree in the workspace before discarding results post-hoc, which
+    caused a measured 13+min quickmerge hang under I/O contention on the shared host
+    (qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31). The post-hoc
+    EXCLUDED_DIRS filter is preserved byte-for-byte -- pruning is purely an I/O optimization
+    layered in front of it, not a change to what counts as excluded.
+    """
     candidates: list[Path] = []
-    for p in workspace_root.rglob("*runbook*.md"):
-        rel = p.relative_to(workspace_root).as_posix()
-        if any(rel.startswith(ex) or f"/{ex}" in f"/{rel}" for ex in EXCLUDED_DIRS):
-            continue
-        candidates.append(p)
+    for dirpath, dirnames, filenames in os.walk(workspace_root, topdown=True):
+        dirnames[:] = [d for d in dirnames if d not in _PRUNE_DIRNAMES]
+        for fn in filenames:
+            if "runbook" in fn and fn.endswith(".md"):
+                p = Path(dirpath) / fn
+                rel = p.relative_to(workspace_root).as_posix()
+                if any(rel.startswith(ex) or f"/{ex}" in f"/{rel}" for ex in EXCLUDED_DIRS):
+                    continue
+                candidates.append(p)
     return sorted(candidates)
 
 

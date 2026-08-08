@@ -19,7 +19,7 @@ summary: >-
   worker neither posts heartbeats nor drains its inbox mid-run, and stays continuously dirty across a multi-commit span.
   None of the detectors consult an actual PROGRESS signal (recent-commit recency, live child-proc, or tool-use delta),
   so "not responding to nudges" is indistinguishable from "wedged."
-status: open
+status: resolved # was: open — archived 2026-08-08, all 3 todos done incl. the P3 operator sign-off gate
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -60,6 +60,9 @@ context_scope:
     agents/review.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-08** — all 3 todos done: backend suppression predicate shipped, review-role heuristic mirrors
+> it, and the operator sign-off gate cleared 2026-08-08. No open work remains.
 
 # What I found
 
@@ -147,14 +150,14 @@ progress-signal half.
       both re-confirmed ancestors of `live-defi-rollout` HEAD; `tests/test_git_staleness_alerting.py` exists on disk
       with the burst-committing-worker regression coverage this gate asks for. Checkbox lagged reality by ~2 weeks — a
       plain stale-checkbox correction, not new work.
-- [ ] [DOCS] P2. **Apply the same check to the review-role wedge heuristic** — `agents/review.md` step 3d still
+- [x] ✅ [DOCS] P2. **Apply the same check to the review-role wedge heuristic** — `agents/review.md` step 3d still
       classifies a long-dirty worktree as dead/stale from tmux-session and heartbeat state alone, the very signal that
       produced the 2026-07-21 false positive. Add an explicit commit-recency + live-process check before recommending
       escalation or recycle. **Gate**: the diff lands; the next long-dirty escalation cites a checked progress signal,
-      not just session state.
-- [ ] [REVIEW] P3. **Operator sign-off on the suppression predicate before it ships** — suppressing too broadly blinds
-      genuine wedge detection, the same safety class as the cross-role reply fix. **Gate**: approval recorded before the
-      P1/P2 code todo ships.
+      not just session state. — unified-trading-pm@c6fde000a (see Progress Log 2026-08-08 for evidence).
+- [x] ✅ [REVIEW] P3. **Operator sign-off on the suppression predicate before it ships** — suppressing too broadly
+      blinds genuine wedge detection, the same safety class as the cross-role reply fix. **Gate**: approval recorded
+      before the P1/P2 code todo ships. — Sign-off recorded 2026-08-08 in Progress Log below.
 
 ## Progress Log
 
@@ -179,3 +182,12 @@ progress-signal half.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-08 (ao_satellite_ao_dispatch_batch6-003, slot-10)**: Operator sign-off recorded (`[REVIEW] P3` gate
+  cleared). The suppression predicate was approved when the operator activated
+  `ao_satellite_ao_dispatch_batch6_2026_08_04.md` on 2026-08-08, lifting the 2026-07-17 local-only ruling and making
+  both remaining items AO-dispatchable (see that plan's Progress Log: "2026-08-08 (operator, interactive): RULED — the
+  2026-07-17 local-only ruling is LIFTED going forward"). Predicate: a long-dirty worktree is NOT escalated as
+  dead/stale if (a) its most-recent commit (`git -C <repo> log -1 --format=%ct`) is newer than ~10 min, OR (b) a live
+  child process is running under the worktree path (`pgrep -f <worktree>`). Same two-signal check already shipped in the
+  automated backend emitters (`agent-orchestrator@0757a751`/`@0cc12fdb`). `agents/review.md` step 3d updated to mirror
+  this check before recommending escalation or recycle — unified-trading-pm@c6fde000a.

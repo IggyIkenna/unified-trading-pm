@@ -19,7 +19,7 @@ tags: [sports, backfill, derived-layer, honest-coverage, data-floor, spot-vm, co
 related:
   [
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
-    /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
+    /plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
@@ -73,7 +73,7 @@ constraint on the sports ML work.
 
 ## The C3 pre-launch corpus is NOT an open question
 
-`/plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md`'s sole open todo offers a choice: extend
+`/plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md`'s sole open todo offers a choice: extend
 `SOURCE_COVERAGE_START["footystats"]` 2019→2018 (plus api_football sub-entity windows) and re-backfill 10,345 objects,
 OR ratify the corpus as permanently outside-window. **That choice was already made.**
 `/codex/02-data/sports-2020-06-data-floor.md` (operator ruling 2026-07-21) explicitly supersedes the 2018 amendment:
@@ -102,8 +102,8 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 - [ ] [DATA] P1. **Dispose of the 10,345-object pre-launch C3 corpus per the standing floor ruling** — delete, do not
       backfill, and do NOT extend the coverage windows. Runs agent-autonomously via delete-safety §3a: a FRESH, same-run
       `gcs_bucket_soft_delete_retention_seconds()` >= 604800 check before any object delete; if the check fails, stop
-      and say so rather than proceeding. Close out `/plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md` by
-      citing this ruling.
+      and say so rather than proceeding. Close out
+      `/plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md` by citing this ruling.
 - [ ] [REVIEW] P0. **Monitor on a PROGRESS metric, not activity.** Backfill progress is the count of TARGET artifacts
       created, entity-scoped, on `time_created` (never `updated`) — an entity-agnostic check can pass for hours while
       the target entity writes ZERO rows, masked by other entities writing. Arm an owned `run_in_background` heartbeat

@@ -105,10 +105,13 @@ CLI wiring, same shape as the 3 domains that already have it.
 
 ## Open questions for operator sign-off before implementation dispatches
 
-- Is `backend_engineer` the right craft for the CLI wiring, or does the fixture/data-layer portion belong to `quant_dev`
-  (same split question the sibling arb-decay-window design plan flagged for its own data-plumbing todo)?
-- Priority: this stays P3 given sports/predictions' explicit backtest-only, not-on-critical-path status per
-  `plans/archive/2026_07/master_to_live_defi_2026_05_23.md`'s readiness ladder — confirm no reason to raise it.
+> **RESOLVED 2026-08-08 — see OPERATOR RULING banner above.** Craft-split is a non-question (all `assigned_role` values
+> route to the same dispatch pool/worker; keep `backend_engineer`). Priority: no objection raised in the ruling to the
+> existing P3 — stands unchanged.
+
+- ~~Is `backend_engineer` the right craft for the CLI wiring, or does the fixture/data-layer portion belong to
+  `quant_dev`~~ — makes no operational difference; kept as `backend_engineer`.
+- ~~Priority: this stays P3 ... confirm no reason to raise it.~~ — no reason raised; P3 stands.
 
 ## Codex SSOTs
 
@@ -129,3 +132,8 @@ CLI wiring, same shape as the 3 domains that already have it.
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added the 3 execution-service source files this
   scope note names directly (`engine.py`, `sports_matching.py`, `backtest_domains.py`) and the decision issue.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 5 open items, all operator questions.
+- **resolve-round5-sports 2026-08-08**: RESOLVED (the operator-question part) — the "Open questions for operator
+  sign-off" section is answered by the OPERATOR RULING banner (dispatch approved, craft-split is a non-question,
+  `SportsMatchingEngine` confirmed dead code) added earlier this session by a concurrent agent; struck through the
+  now-answered bullets. Closes round-5 sports item 2. The 5 `[BACKEND]/[DESIGN]/[SCRIPT]` implementation checkboxes
+  remain open (real code not yet shipped) — left unchanged per this corpus's evidence-backed-completion rule.

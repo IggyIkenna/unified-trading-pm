@@ -48,7 +48,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -68,7 +68,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/context_lifecycle.py,
     agent-orchestrator/server/worker_liveness/__init__.py,
@@ -115,6 +115,24 @@ retries hit `spawn_retry_cap` before a kick verified-submitted.
 
 ## Todos
 
+- [x] ✅ [BACKEND] P1. **A saturated session no longer burns the full retry budget before recovery** —
+      agent-orchestrator@b52dd1910, deployed + verified live. `_rearm_if_force_ineffective` re-armed a forced `/compact`
+      for `context_force_compact_wedge_after_failures` (3) x `context_force_compact_retry_after_seconds` (300s) = **15
+      minutes of a dead slot**, plus 3 more `/compact` submissions, on a session that cannot compact by construction.
+      Above `resume_fresh_context_pct` this codebase ALREADY treats a transcript as unrecoverable —
+      `resume_lifecycle.classify_dead_worker` and BOTH of `worker_liveness_watchdog`'s resume paths refuse to reload
+      one, citing the same reason this function's own docstring gives (past the hard limit every request 400s,
+      `/compact` INCLUDED, because compaction must send the whole history to summarize it). This retry loop was the last
+      place not honouring it. **Measured live 2026-08-08**: slots 5/7/8/9/11 all pinned at 100% cycling
+      `forced_compact_ineffective verdict="re-armed"` at `consecutive_ineffective=1` — two full windows short of
+      recovery — while 174 tasks were claimable and 6 dispatched. The FIRST force is still attempted (the threshold is a
+      "too full to reload" heuristic, not the model's exact limit, so a compact at 85% may work); what changed is that
+      an INEFFECTIVE force while still saturated is no longer re-armed. Sub-threshold sessions keep their full budget —
+      test-locked both directions. Activity row now carries `saturated`/`saturation_threshold_pct` so the short-circuit
+      is distinguishable from a budget-exhausted wedge. NOTE this does NOT close items 1-3 below: those are the
+      typed-but-unsubmitted confirmation, the kick-vs-respawn-cap ordering, and plateau detection — all distinct from
+      the saturation short-circuit. Evidence: `quality-gates.sh` green — 2711 python (2 new), basedpyright 0/0, tsc
+      clean, 262 vitest. (repo: agent-orchestrator)
 - [ ] [BACKEND] P2. Confirm whether the Tier-1 guided compact (or a self-issued /compact) leaves a **typed-but-
       un-submitted** `/compact` in the pane, and make the confirmation **auto-submit / self-drive past it** (mirror the
       `scripts/agent/self-compact.sh` submit path so a guided compact never strands at the confirmation). **Done when**:

@@ -299,10 +299,18 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `assigned_vm: planning` batch as a `[DOC] P3` todo citing
       `backfill_smoke_write_path_canonical_audit_2026_07_20.md` #5 (audit § 1a) as its own `Source:`. Tracked there, not
       here.
-- [ ] 6. [DATA] P3. instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`,
-      `partition={"group","day","venue"}` → `group=/day=/venue=`) and `futures_contracts` (`writers.py:377-383`, flat
-      `day=/venue=`) are in the canonical shard grammar's scope; if so they inherit todo 1's fix. Provenance: this audit
-      § 2 rows 9-10.
+- [x] ✅ 6. [DATA] P3. **STALE — already answered + already fixed, same day.** instruments-service: decide whether
+      `market_lifecycle` (`writers.py:495-501`, `partition={"group","day","venue"}` → `group=/day=/venue=`) and
+      `futures_contracts` (`writers.py:377-383`, flat `day=/venue=`) are in the canonical shard grammar's scope; if so
+      they inherit todo 1's fix. Provenance: this audit § 2 rows 9-10. **ANSWER: YES, in scope — both were fixed in the
+      SAME commit as todo 1's `instrument_availability` fix.** `plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`
+      todos 4/5 (✅, `instruments-service@a9be6ce9`) shipped `futures_contracts`'s full-hive prefix fix and
+      `market_lifecycle`'s full-hive prefix fix (`_market_lifecycle_sink_for` helper) in the same shipment as
+      `instrument_availability`'s own sink-PREFIX fix (todo 3) — that doc's own §7b sizing table explicitly enumerates
+      `market_lifecycle`/`futures_contracts` alongside `instrument_availability` as migrated together. 5 consecutive
+      na-eligibility-audit passes (07-30 through 08-07) kept this todo open as an unresolved scope-DECISION without
+      cross-checking the sibling doc that had already answered + shipped it one day later (2026-07-21). No new code
+      needed — this is a doc-catchup only. Repo: unified-trading-pm (this flip).
 
 ## Progress Log
 
@@ -327,3 +335,9 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   (doc-comment correction) is bounded but not yet claimed by any active dispatch (flagged as a future extraction
   candidate, not actioned here); todo 6 is an explicit scope-DECISION per its own prior sports-tranche audit citation.
   Doc-level assigned_vm can't split the two, so it stays NA overall.
+- **round5-cefi-question-resolution 2026-08-08**: todo 6 flipped `[x]` — the "is `market_lifecycle`/`futures_contracts`
+  in scope" question was never actually open; `plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`
+  answered YES and shipped both fixes (`instruments-service@a9be6ce9`) one day after this doc was filed, in the SAME
+  commit as todo 1's fix. 5 prior na-eligibility-audit passes cited it as an unresolved scope-decision without
+  cross-checking the sibling doc. Only todo 3 (doc-comment correction) remains genuinely open; doc stays `assigned_vm:
+  NA` pending that one bounded item being claimed.

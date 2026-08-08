@@ -83,6 +83,10 @@ COVERED_ASSET_GROUPS = tuple(sorted(docspec.ASSET_GROUP - {"meta"}))
 # a `.replace("-", "_")` transform (that alone would still miss `infra_`).
 _CLOSEOUT_FILENAME_PREFIX = {"cross-cutting": "cross_cutting", "infrastructure": "infra"}
 MAX_HOPS = 3
+# Closed/terminal statuses excluded from orphan candidacy — a superseded, resolved,
+# cancelled, or completed doc is already closed; flagging it as an unlinked orphan is noise.
+# Mirrors generate_ag_closeout_audit_candidates.py's EXCLUDED_STATUS.
+EXCLUDED_STATUS = frozenset({"archived", "cancelled", "complete", "false-positive", "resolved", "superseded"})
 
 TARGET_DIRS = ("plans/active", "plans/active/issues")
 # Where a closeout family doc can physically live — broader than TARGET_DIRS, since an
@@ -241,6 +245,8 @@ def main() -> int:
 
     violations: list[str] = []
     for path, fm in all_docs.items():
+        if fm.get("status") in EXCLUDED_STATUS:
+            continue
         ag_values = [v for v in docspec._as_list(fm.get("asset_group")) if isinstance(v, str)]
         if len(ag_values) != 1 or ag_values[0] not in COVERED_ASSET_GROUPS:
             continue

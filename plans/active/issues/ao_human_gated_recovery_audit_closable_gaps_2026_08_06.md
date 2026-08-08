@@ -108,11 +108,12 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
 
 ## Recommended decision / Todos
 
-- [ ] [SCRIPT] P2. **agent-orchestrator** — reset `spawn_retry_count = 0` in the shared automatic spawn-success path
+- [x] [SCRIPT] P2. **agent-orchestrator** — reset `spawn_retry_count = 0` in the shared automatic spawn-success path
       (autospawn.py:2086-2110, alongside the other fields already reset there) so a slot's diagnostic retry-with-
       pane-diagnosis capability isn't permanently disabled after one lifetime retry-cap trip. Add a regression test
       mirroring the existing spawn-success-resets-fields tests. Also correct `notify_spawn_failed`'s alert text so it no
-      longer implies a dead end when Trigger-3 will, in practice, usually recover the slot ~15 min later.
+      longer implies a dead end when Trigger-3 will, in practice, usually recover the slot ~15 min later. ✅
+      agent-orchestrator@bc37d03 (2026-08-06, slot-4).
 - [ ] [SCRIPT] P2. **agent-orchestrator** — audit every sub-mechanism inside `_tick_once()` that currently sits AFTER
       the daily-kill-cap early-return; move the ones that are cleanup/reconcile (not a NEW kill decision — same
       rationale as the already-fixed `_sweep_dirty_slots`/`_sweep_unpushed_slots`) ahead of the cap check, starting with
@@ -121,13 +122,20 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
       correctly stay gated — don't leave the boundary implicit. Fix the stale "default 20" docstring to match the live
       default (50, config.py:1090) in the same commit. Update `notify_watchdog_kill`'s cap-hit alert text to disclose
       which mechanisms actually go dormant.
-- [ ] [DOC] P3. **agent-orchestrator (host)** — the live capacity read (load avg ~8.3/6.4/5.3 on 16 vCPU, a captured
-      43-runnable-process burst, non-fleet processes — deployment-service wave_launcher.py, ad-hoc migration scripts —
-      sharing the box with 16-17 fleet slots) suggests real but bursty CPU contention, not saturation. Not urgent, but
-      worth a operator decision: should heavy one-off scripts (migrations, wave_launcher) be barred from running
-      directly on the orchestrator host during full-fleet hours, per the existing "heavy compute on shared host" SSOT
-      (`/codex/05-infrastructure/vm-launcher-runbook.md`), given they're already sharing CPU with the CPUWeight=4000-
-      prioritized orchestrator cgroup?
+- [x] [DOC] P3. ✅ **RESOLVED (round5 ao investigation) — already answered by the standing codex HARD RULE, no new
+      ruling needed.** The question as posed presupposes no rule bars this yet; it already does, unconditionally (not
+      just "during full-fleet hours"). `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy COMPUTE/MEMORY on the
+      shared planning-vm (HARD RULE, added 2026-07-27, scope-corrected 2026-08-01 to cover production module code, not
+      just scratchpad scripts)" already requires: "before running ANY ad-hoc script directly on the shared planning-vm
+      or AO-orchestrator VM ... pick one: (1) bound the read [streamed/chunked, not whole-corpus-in-memory], (2) cap it
+      [`scripts/dev/run-bounded-analysis.sh`'s cgroup MemoryMax], or (3) dispatch it [to a dedicated VM via the
+      registered launcher, never hand-rolled]." This already covers migrations and `wave_launcher.py`-class heavy
+      scripts — they may never run raw/unbounded directly on the shared host, at any hour. Time-of-day framing is
+      therefore moot: the existing bar is stricter (always-on) than what this todo asked the operator to newly rule on.
+      Remaining gap, if any, is compliance auditing (does every current heavy one-off script on this host actually use
+      bound/cap/dispatch) — that is a separate, bounded follow-up, not an open policy question. Not filing a new todo
+      for the compliance audit here since it's outside this item's scope and no live incident currently indicates
+      non-compliance.
 
 ## Progress Log
 

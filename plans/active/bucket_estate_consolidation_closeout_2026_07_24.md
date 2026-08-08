@@ -94,7 +94,16 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       precisely-characterized open item. Cloud Run failure alerting (55 silent failures) remains untouched — not reached
       this session, still open. Original todo: operator decides kind vs prefix; provision; repoint
       `batch_live_reconciliation_service/config.py` to the resolver; fix launcher doc; end-to-end T1 chain run; next
-      scheduled run green; wire Cloud Run failure alerting (55 silent failures).
+      scheduled run green; wire Cloud Run failure alerting (55 silent failures). **round5-cross-cutting-audit 2026-08-08
+      correction**: "operator decides kind vs prefix" is STALE — `kind="recon"` was decided+shipped 2026-07-13/14
+      (config.py:97 `resolve_bucket_name(..., kind="recon")`, live-verified). No operator input needed; remaining scope
+      is non-operator-gated multi-repo ENGINEERING work. **round5-cross-cutting-audit 2026-08-08 correction**: the
+      "operator decides kind vs prefix" framing is STALE — `kind="recon"` was decided and shipped 2026-07-13/14 (see
+      above: `cloud-providers.yaml` `recon` kind added, buckets provisioned,
+      `batch_live_reconciliation_service/config.py:97` repoints to
+      `resolve_bucket_name(cloud=cloud_name,     kind="recon")`, live-verified). No operator input needed; remaining
+      scope is non-operator-gated multi-repo ENGINEERING work (producer-chain stand-up + Cloud Run failure alerting),
+      correctly still open but not a blocker-digest question.
 - [x] ✅ [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint). **DONE 2026-07-31 —
       unified-trading-pm@\<see plan-flip commit\>.** Freshly re-verified all 3 sub-items (transcription-only for the
       DeFi trio per the 2026-07-31 corpus-wide ownership-conflict sweep's scope-fence; live citation re-derivation for
@@ -390,7 +399,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   operator kind-vs-prefix decision before it can even be scoped; ml-models-store delete P1 is a proven-safe disposition
   that is still a human-only hard stop per delete-safety-protocol.md §3.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
-- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged, only 2 open todos): recon-bucket
-  P0 remains OPERATOR_QUESTION-blocked (kind-vs-prefix decision); ml-models-store delete P1 remains OPERATOR_QUESTION
-  (fully-proven-safe disposition, but a human-only hard stop per `gcs-and-manifest-delete-safety-protocol.md` §3 —
-  agent execution is categorically excluded, not just judgment-gated).
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged, only 2 open todos):
+  recon-bucket P0 remains OPERATOR_QUESTION-blocked (kind-vs-prefix decision); ml-models-store delete P1 remains
+  OPERATOR_QUESTION (fully-proven-safe disposition, but a human-only hard stop per
+  `gcs-and-manifest-delete-safety-protocol.md` §3 — agent execution is categorically excluded, not just judgment-gated).

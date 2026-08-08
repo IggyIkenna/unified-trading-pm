@@ -171,9 +171,9 @@ evidence-backed, zero-risk housekeeping action, not new work.
       item ONLY — the 3rd item, `/done` idempotency, stays conflict-gated against 3 other open docs sharing the same
       mechanism, see Deferred). Repo: agent-orchestrator.
 
-- [ ] [DOCS] P2. **Mirror the shipped liveness-by-progress check into the review-role wedge/escalation heuristic, then
-      record operator sign-off.** `agents/review.md` step 3d still classifies a long-dirty worktree as dead/stale from
-      tmux-session and heartbeat state alone — the exact signal that produced the 2026-07-21 false positive the
+- [x] ✅ [DOCS] P2. **Mirror the shipped liveness-by-progress check into the review-role wedge/escalation heuristic,
+      then record operator sign-off.** `agents/review.md` step 3d still classifies a long-dirty worktree as dead/stale
+      from tmux-session and heartbeat state alone — the exact signal that produced the 2026-07-21 false positive the
       already-shipped backend fix (`agent-orchestrator@0757a751`/`@0cc12fdb`) addressed for the automated emitters. Add
       the same explicit commit-recency + live-process check before review recommends escalation or recycle. Then record
       explicit operator sign-off on the suppression predicate (same safety class as the cross-role reply fix) — no such
@@ -183,9 +183,9 @@ evidence-backed, zero-risk housekeeping action, not new work.
       (peer-vs-operator reply routing) — a different section, re-grep before starting regardless.** **Done when**: the
       diff lands in `agents/review.md` step 3d citing a checked progress signal, not just session state; the next
       long-dirty escalation cites it; operator sign-off is recorded in the source doc's Progress Log before the diff
-      ships. Source: `/plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md` (its
+      ships. Source: `/plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md` (its
       2 remaining items — its 1st item was a same-doc stale-checkbox correction, fixed directly by this audit run, not
-      drafted here). Repo: unified-trading-pm.
+      drafted here). Repo: unified-trading-pm. — unified-trading-pm@c6fde000a
 
 - [ ] [SCRIPT] P2. **Guard `server/prompts.py::_compose()` so slot-bearing lifecycle roles (`review`, and any
       `main`/`monitor` spawned with a `slot_id`) route to the slot-less register/poll STEP block their role file

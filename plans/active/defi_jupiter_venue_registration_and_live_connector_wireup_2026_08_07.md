@@ -229,6 +229,20 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       correct the informal "spot_trades" label to the real UAC data_type used (`dex_pool_swaps`, per todo 3). Done-when:
       both docs reflect the true post-ship state, citing real commit SHAs.
 
+- [ ] [TEST] P2. **Capture the two missing WS frame cassettes that are currently held open by `pytest.xfail`.**
+      `unified-api-contracts/tests/test_ws_cassette_coexistence.py` xfails BOTH `jupiter_solana_ws` (2026-08-07) and
+      `aave_liquidations_ethereum_ws` (2026-08-08, `unified-api-contracts@12bed42e`) because each connector landed
+      without a cassette + venue mapping. Both xfails are honestly written ("needs a real WS capture, not a fabricated
+      cassette" — the right call over inventing one), but **neither had a tracked follow-up until now**, which is how
+      disabled coverage becomes permanent. Capture real WS frames for both and remove the xfails. Do NOT fabricate a
+      cassette to close this. **Done when**: both connectors have real cassettes + venue dirs and
+      `test_ws_cassette_coexistence.py` passes with no xfail for either.
+- [ ] [REVIEW] P3. **Add the standing rule that an `xfail`/`skip` needs a tracked todo.** Found 2026-08-08 during the
+      fleet-wide "tests weakened rather than fixed" sweep: an xfail with a good reason and no remediation todo is
+      indistinguishable, six months later, from coverage that was never written. Either wire a check (every
+      `pytest.xfail`/`mark.skip` reason must cite a plan/issue slug) or record in codex why that is not worth enforcing.
+      **Done when**: the check exists, or the decision is recorded with rationale.
+
 ## Progress Log
 
 - **2026-08-07 (interactive session)**: plan authored per operator ruling on

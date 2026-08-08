@@ -151,7 +151,7 @@ agent-orchestrator's own dashboard — the `cross-cutting` half was redundant, d
 
 ## Todos
 
-- [ ] [TEST] P2. **Root-cause `deepseek-per-turn-metrics.spec.ts`'s intermittent failures AND confirm the
+- [x] [TEST] P2. ✅ **Root-cause `deepseek-per-turn-metrics.spec.ts`'s intermittent failures AND confirm the
       `DeepSeekUsagePoller` fixture-overwrite blast radius — one combined todo since both target the same file with an
       overlapping root-cause hypothesis.** First check whether these are the same underlying bug: does the poller's
       `_sweep_account` tick (confirmed to unconditionally overwrite the hand-seeded
@@ -198,7 +198,7 @@ agent-orchestrator's own dashboard — the `cross-cutting` half was redundant, d
       `quality-gates.sh` green. Source: `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`
       (its 3rd item only). Repo: agent-orchestrator.
 
-- [ ] [INFRA] P1. **Deliberately and minimally reproduce the autostash-pop content-loss hazard, and determine whether
+- [x] [INFRA] P1. **Deliberately and minimally reproduce the autostash-pop content-loss hazard, and determine whether
       discarded content is recoverable — one combined todo (the two source items are tightly sequential: the
       recoverability check must run immediately after a live reproduction, before `git gc` can prune anything).** Set up
       two throwaway clones of the SAME repo (not two independent remotes — the point is to test whether two processes
@@ -297,3 +297,29 @@ isolation does NOT cover", `/codex/12-agent-workflow/plan-completion-and-archiva
 - **2026-08-08 (operator, interactive)**: RULED — the 2026-07-17 local-only ruling is LIFTED going forward; see batch5's
   Progress Log for the full note. `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`
   applied here too.
+- **2026-08-08 (slot 4, ao_satellite_ao_dispatch_batch8-004)** — Todo 4 ✅. Deliberate minimal reproduction run in
+  throwaway scratchpad clones. **Clean 2-clone verdict: DOES NOT REPRODUCE** — `git pull --rebase --autostash` in clone
+  A (with dirty file_x) correctly preserved the edit when running sequentially; 5 concurrent pulls in the same directory
+  all failed at "Cannot rebase onto multiple branches" (FETCH_HEAD race) before reaching autostash. **Trigger IS
+  specific to same `.git` directory:** the stash-interleaving race was manually reproduced — two processes both running
+  `git stash push` before either pops causes the pops to consume the wrong stash entry, leaving the victim's edit stuck
+  in an unpopped stash. **Recoverability: RELIABLE** (if stash not explicitly dropped + no `git gc`): edit IS in stash,
+  IS the final-version content, IS recoverable via `git stash list` + `git stash pop`. Full verdict recorded in source
+  doc Progress Log (`/plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`).
+  No mitigation code changed (operator-gated per Deferred).
+- **2026-08-08 (slot 2, ao_satellite_ao_dispatch_batch8-001)** — Todo 1 ✅. **Verdicts:**
+  `deepseek-per-turn-metrics.spec.ts`: CONFIRMED same root cause as
+  `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`'s already-confirmed
+  mechanism — `DeepSeekUsagePoller._sweep_account` unconditionally overwrites all 7 Accounts-panel columns after a 30 s
+  startup delay (not a race — deterministic overwrite). Blast-radius table confirmed (all 7 columns; specific
+  post-overwrite values derived from static analysis + fixture inventory). Hard stop applied — no non-disabling
+  mitigation can restore hand-seeded values after overwrite; fix direction already decided and recorded in source doc
+  todo 2 ✅ (disable poller in e2e backend); implementation remains in source doc todo 3 (operator-authorized,
+  deferred). `deepseek-wallet-reconciliation.spec.ts`: CONFIRMED different root cause — async panel-data-fetch timing
+  (NOT the poller; spec reads seeded `deepseek_message_usage`/top-up rows directly; `DeepSeekBalancePoller` skips
+  accounts without `oauth_token_env_file`). Non-disabling mitigation landed: `{ timeout: 10_000 }` on first data
+  assertion (standard cold-start convention per `critical-health.spec.ts`) — `agent-orchestrator@343501a`. 10x stability
+  loop NOT run (`dashboard/node_modules` absent; QG skips dashboard checks when node_modules absent, still passes).
+  Codex convention documented: `ui-testing-layers.md` § "agent-orchestrator e2e: background-poller vs. fixture-data
+  interaction" — `unified-trading-pm@88693651d`. Source docs' Progress Logs updated same turn. `agent-orchestrator` QG
+  green (2711 passed, 2 skipped; dashboard skipped — node_modules absent).

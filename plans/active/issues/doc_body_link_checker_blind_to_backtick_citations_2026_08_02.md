@@ -93,16 +93,31 @@ corpus actually uses was never brought into the checker's purview.
 
 ## Options
 
-- [ ] [SCRIPT] P1. **Extend `_LINK_RE` (or add a second regex pass) to also match backtick-quoted bare paths ending in
-      `.md`/`.mdc`**, reusing the existing `_resolve()` fallback chain (doc-dir-relative -> PM-root-relative ->
-      `plans/archive/**` basename fallback) unchanged. Immediately follow with `--update-baseline` to seed whatever
-      pre-existing backtick-citation breakage surfaces as tolerated debt (mirroring how the original markdown-link
-      checker was seeded 2026-07-23) — do NOT ship this as a zero-tolerance gate on day one, that would immediately
-      hard-block every commit touching a doc with pre-existing backtick-citation rot. [Likely the right long-term fix,
-      but sizeable: needs the new violation count measured before anyone can say how large the baseline-seed will be.]
-- [ ] [SCRIPT] P2. **Alternative — narrower first cut**: only match backtick-paths that begin with `codex/` or `/codex/`
-      (the retrieval-layer-critical subset this skill's own charter cares about most), leaving plans-corpus and other
-      backtick citations for a later pass. Smaller, faster to land, doesn't fully close the gap.
+- [x] [SCRIPT] P1. ✅ **SCOPE DECIDED (round5 ao investigation) — go with P2 (narrow, below), not this broad option, for
+      the FIRST cut.** The doc's own blocker was "needs the new violation count measured before anyone can say how large
+      the baseline-seed will be" — measured directly: a read-only scan reusing `check_doc_body_links.py`'s own
+      `_resolve()`/`_is_checkable()` logic (imported, not reimplemented) against a second regex matching backtick-quoted
+      `.md`/`.mdc` paths found **14,729 distinct citations corpus-wide, 3,726 unresolved** — a baseline addition roughly
+      3× the size of the ORIGINAL markdown-link checker's entire violation count at seed time, and a material fraction
+      is placeholder/illustrative noise (angle-bracket placeholders like `<archetype>.md`/`<NN-section>/<doc>.md`,
+      generic example filenames inside `no-summary-docs.mdc`'s own illustration list like `ARCHITECTURE.md`/`DESIGN.md`)
+      that a real implementation would need real placeholder-exclusion logic to avoid drowning the baseline in false
+      positives — genuinely sizeable, exactly as flagged, not a same-day extension. Left unchecked as an implementation
+      task (still real, bounded follow-up work, not a design question) — see the codex-scoped item below for the
+      recommended first landing.
+- [ ] [SCRIPT] P2. **Recommended first cut, evidence-backed**: only match backtick-paths that begin with `codex/` or
+      `/codex/` (the retrieval-layer-critical subset this skill's own charter cares about most), leaving plans-corpus
+      and other backtick citations for a later pass (the P1 item above, once its placeholder-exclusion logic exists).
+      **Measured 2026-08-08 (round5 ao investigation)**: only 2,254 codex/-prefixed backtick citations exist
+      corpus-wide, of which just **14 are unresolved** — several of those are themselves angle-bracket/ellipsis
+      placeholders (e.g. `codex/09-strategy/architecture-v2/archetypes/<archetype>.md`, `/codex/<NN-section>/<doc>.md`,
+      `codex/.../block-list.md`), so the real broken-citation count needing a genuine fix (not just a baseline entry) is
+      likely closer to 6-8. This confirms the doc's own framing — "smaller, faster to land" — with real numbers: a
+      same-day-sized change, not an open scope question. Reuse `_resolve()` unchanged; seed
+      `doc_body_link_baseline.yaml` via `--update-baseline` immediately after landing (do not ship zero-tolerance day
+      one, matching how the original markdown-link checker itself was seeded 2026-07-23). Not implemented in this pass
+      (a shared-QG-infra code change needs its own `quality-gates.sh`-green ship + regression test, out of scope for an
+      investigation-only pass) — but the scope decision itself is no longer an open judgment call.
 - [ ] [DOCS] P3. Regardless of which script fix is chosen: once shipped, re-run `/docs-reconcile`'s Phase 0/1 against
       the newly-widened checker to catch whatever real breakage the wider scan surfaces.
 

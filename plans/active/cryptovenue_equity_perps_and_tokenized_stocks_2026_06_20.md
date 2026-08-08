@@ -159,6 +159,16 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
   > unified-api-contracts@172e8cdb + instruments-service@ff6d9750 (QG-green both; full detail + the 20-base list in
   > Progress Log 2026-07-18). **Sub-item 4 (launch the Tardis backfill) stays OPEN** — explicitly out of scope for this
   > catalogue-definition widen (operator: no MTDS backfill / prod mutation).
+  >
+  > **Round5 finding (2026-08-08): the "is it now OK to launch" question is already answered — "no MTDS backfill /
+  > prod mutation" was a scope restriction for THAT SPECIFIC catalogue-widen task, not a standing operator gate.**
+  > `plans/active/cefi_consolidated_closeout_2026_07_18.md` Track 0 already re-lists "Launch the CeFi Tardis backfill
+  > for the equity-perp window" as a plain `[SCRIPT] P1` todo (no `[OPERATOR]` tag), filed the SAME day this note was
+  > written — the closeout plan's own author already treated it as ordinary dispatchable infra work, consistent with
+  > how every other backfill in this doc's own Progress Log (Kalshi trades, `instr-backfill-tradfi-20260623`,
+  > `mdps-backfill-cefi-*`) was launched without a fresh per-launch operator ask. Sub-item 4 is AO-dispatchable SCRIPT
+  > work; the actual launch was not performed in this pass (documentation-question audit, not an implementation
+  > dispatch).
 
 ## Phase 3 — live CLOB depth (shared with the prediction-perps plan's Phase 3)
 

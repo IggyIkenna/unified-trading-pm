@@ -262,7 +262,7 @@ achieved by exclusion, not canonicalisation.**
 - [ ] [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
       property of the VENUE (UAC `SportsVenueType` already encodes it), so stamping it per-instrument is redundant.
       Derive at read time. This also resolves
-      `/plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`'s "classify 19 unmapped
+      `/plans/archive/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`'s "classify 19 unmapped
       bookmakers" todo mechanically, with no per-venue operator judgment. NOTE the count discrepancy: that doc says 19,
       the live manifest says **21** venues still carrying only the pre-fork `odds` token. **PRE-SPECIFIED**: the live
       prod manifest is authoritative; re-measure it and correct the issue doc's figure, do not reconcile by discussion.
@@ -278,18 +278,31 @@ achieved by exclusion, not canonicalisation.**
       `trades` rows sourced `polymarket_clob`, spanning 2020-06-06 → 2026-05-21 — prediction-market venues seeded into
       the sports expected-universe. Stop the seeding at the enumerator, and retire
       `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED` once it is genuinely empty. Manifest-row cleanup is P2.
-- [ ] [CODE] P1. **Stop instruments-service writing into the MTDS tick manifest with a blank venue.** 2,490 rows
+- [x] ✅ [CODE] P1. **Stop instruments-service writing into the MTDS tick manifest with a blank venue.** 2,490 rows
       (`service_name=instruments-service`, `venue=""`: 1,106 `odds_horizon_bucket` + 1,273 `trades` + 111
-      `trades_inplay`). Find the writer, fix the attribution or stop the write. Row cleanup is P2.
-- [ ] [CODE] P1. **Correct the false UAC exception comment.** `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` in
+      `trades_inplay`). Find the writer, fix the attribution or stop the write. Row cleanup is P2. — **LANDED 2026-08-03
+      (prior session, slot 12/14)**: writer = `backfill_orphan_class_e_sports.py::record_cells()` — a case-sensitivity
+      gap made lower-case GCS-path data_types miss UAC `SOURCE_PRIORITY` (upper-case-only keys), falling through to
+      `BATCH_INSTRUMENTS_SERVICE` fallback. Three-part fix: (1) `instruments-service@a722014a` — `.upper()` retry in
+      `resolve_source_and_mode()` + pipeline_mode entries for `odds_api`/`mdps_odds_horizon_bucket`; (2)
+      `unified-api-contracts@b27717b8` — registered `TRADES_INPLAY` in `SOURCE_PRIORITY` (`odds_api`); (3)
+      `instruments-service@869f1ce7` — one-off restamp script added + ran against prod: 2,490/2,490 rows restamped,
+      re-verified GREEN (0 remaining); test updated for correct `trades_inplay` resolution.
+- [x] ✅ [CODE] P1. **Correct the false UAC exception comment.** `SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE` in
       `market_data_categories.py` asserts uppercase `ODDS` is "4 stale capture_status=empty_confirmed/row_count=0
       manifest rows with zero backing GCS content". The live manifest shows **6,306 `captured` rows** spanning
       2020-06-05 → 2026-04-14. Fix the comment to state what is actually true; the set itself is retired by the
-      lowercase merge above.
-- [ ] [CODE] P1. **Reconcile UAC's two contradictory odds-feature upstream registries.** For the SAME calculator,
+      lowercase merge above. — unified-api-contracts@54e7e64d (slot-3, 2026-08-08; checkbox flip slot-14)
+- [x] ✅ [CODE] P1. **Reconcile UAC's two contradictory odds-feature upstream registries.** For the SAME calculator,
       `required_inputs.py::odds_calculator` declares `ODDS_HORIZON_BUCKET` only and says footystats `ODDS` was "removed
       2026-06-25 — MTDS/odds-api owns raw odds", while `feature_upstream.py::odds_calculator` declares footystats `ODDS`
-      as REQUIRED. Pick one, make the other derive from it, and add a test that the two can never diverge again.
+      as REQUIRED. Pick one, make the other derive from it, and add a test that the two can never diverge again. —
+      **DONE 2026-08-08 (slot 21, data_engineering)**: `unified-api-contracts@66d8ce6d`. Removed
+      `UpstreamReq(source="footystats", data_type="ODDS")` from `feature_upstream.py::odds_calculator` (the 2026-06-25
+      ruling was already in `required_inputs.py`; `feature_upstream.py` hadn't been updated). Promoted
+      `mdps_odds_horizon_bucket` to `required=True` (sole upstream). Added `TestOddsCalculatorRegistryConsistency` with
+      3 cross-registry tests: no footystats ODDS present, mdps ODDS_HORIZON_BUCKET required=True, and required
+      data_types agree between both registries. QG: ✅ ALL QUALITY GATES PASSED (335s, 12536 passed).
 - [x] ✅ [DOCS] P0. **Author the codex rename/split process rule** (operator ruling 2026-08-08, resolves
       `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md`): an entity rename or
       split MUST enumerate and migrate every consumer in the SAME change. Then APPLY it to this chain — every rename
@@ -309,6 +322,96 @@ achieved by exclusion, not canonicalisation.**
       — no change expected, but state explicitly that the floor governs the derived-layer backfill and the C3 pre-launch
       corpus disposition, so the next reader does not re-open it.
 
+### Added 2026-08-08 (operator, mid-flight) — collapse the remaining derived data_types onto `odds` + axes
+
+> Operator question that triggered this: _"what's the point of odds movement and snapshot as data types vs just being
+> manipulations of odds"_. Correct — and there is a decisive precedent this chain under-used.
+
+- [ ] [CODE] P0. **Collapse `odds_snapshot` and `odds_movement` into `data_type=odds` + the `timeframe` axis.** They are
+      not distinct data — they are a LOCF resample and an OHLC candle OF `odds`. Sports is the only asset_group that
+      mints new data_type names for its derived grains; the fleet-wide MDPS ruling (2026-07-21, recorded in
+      `registry/processed_data_dependencies.py`) is explicit: _"an MDPS manifest row's `data_type` column carries the
+      RAW source token (`trades`, `book_snapshot_5`, …) — the SAME vocabulary MTDS's raw-tick manifest rows use — with
+      the candle timeframe living in a SEPARATE `timeframe` column."_ cefi/tradfi/defi all obey it; UAC's own
+      `_RAW_TO_PROCESSED_PREFIX` even pre-declares `"odds": "odds_ohlcv"`. **The redundancy is measurable**: these rows
+      ALREADY carry the grain in `timeframe` — `odds_movement` 15m=10,300 / 1h=10,276; `odds_snapshot` 15m=9,464 /
+      1h=9,454 (live prod manifest, 2026-08-08). The data_type name restates what `timeframe` already says, so
+      collapsing loses nothing. End state: sports raw vocabulary is ONE type (`odds`) plus the `timeframe`, `horizon`
+      and `in_play` axes. Apply the codex rename rule — enumerate consumers BEFORE changing anything.
+- [ ] [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
+      (point-in-time LOCF) and `odds_movement` (OHLC bar) are different SHAPES at the same grain, so `timeframe` alone
+      cannot distinguish them once the names are gone. **PRE-SPECIFIED**: follow the fleet convention already used for
+      the cefi/tradfi candle family — the OHLC form is the candle (`odds` + `timeframe`), and the LOCF point-in-time
+      form is a distinct processed key via `_RAW_TO_PROCESSED_PREFIX` (`odds_ohlcv_*` vs a snapshot prefix), NOT a new
+      `data_type`. Confirm against `canonical_writer_shaping.mdps_data_type_key`'s real output before implementing, and
+      record the chosen keys in codex.
+- [ ] [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.**
+      `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any unrecognised venue to `"cefi"` SILENTLY.
+      When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from the canonical venue axis, that default
+      began pointing every read of their **146,163 historical shards** (ODDS_API 123,650 + FOOTYSTATS 22,513) at the
+      **CEFI bucket** — a silent wrong answer, caught only because one unit test happened to assert the sports case.
+      Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the fallback now WARN-logs), but the default
+      itself remains. Replace it with a typed raise, and sweep for other `.get(..., <default asset_group>)` lookups in
+      the same class of resolver across MTDS/MDPS/IS. Deferred from the hot-fix only to keep the blast radius off an
+      in-flight chain — a genuinely-unknown cefi venue currently relies on this default, so the raise needs its own
+      enumeration pass first.
+- [x] ✅ [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
+      — unified-trading-pm@\<pending\>, market-tick-data-service@\<pending\>. Fixed via the `ldr_qg_failure` escalation
+      (agt-fecbe9): UAC commit `1f5879fc` (2026-08-08) collapsed `odds_snapshot`/`odds_movement` out of
+      `DATA_TYPES_BY_ASSET_GROUP` but did not cascade to the YAMLs, which broke `quality-gates-v2` on
+      `live-defi-rollout` for `unified-api-contracts` (both parametrized cases:
+      `test_yaml_data_types_in_uac[unified-trading-pm]` — POLYMARKET/BETFAIR/PINNACLE/ODDS_API — and
+      `[market-tick-data-service]` — BETFAIR/PINNACLE/ODDS_API). Removed the `- odds_snapshot`/`- odds_movement`
+      per-venue list entries in both `configs/venue_data_types.yaml` files, following the same retirement-comment
+      pattern already used for the markets/outcomes/settlements deletion. `bash scripts/quality-gates.sh` in
+      unified-api-contracts now EXITs 0 (292s, full suite). Also surfaced + fixed an unrelated second wall on the same
+      gate: pip-audit flagged aiohttp 3.14.1 (PYSEC-2026-3545/3546/3547), bumped to 3.14.3 — see
+      unified-api-contracts@e092f3e9. `tests/test_data_type_canonicalization.py::test_yaml_data_types_in_uac` is ALREADY
+      failing (pre-existing, 2 params: `unified-trading-pm`, `market-tick-data-service`) on exactly these tokens —
+      `SPORTS.common_data_types: 'markets'`, `SPORTS.venues.BETFAIR: 'markets'/'outcomes'/'settlements'`,
+      `SPORTS.venues.PINNACLE: …`. Deleting them from UAC without updating the YAML makes that failure WORSE, not
+      better. This is a live worked example of the codex rename rule's "a token grep is not a sufficient enumeration"
+      clause — the YAML is a consumer no `data_type` grep of the Python registries would surface. Fix both sides
+      together and get the test to pass.
+
+- [x] ✅ [REVIEW] P1. **Sweep this chain's landed work for tests WEAKENED rather than fixed.** Measured instance: when
+      P1's venue-axis split broke `tests/unit/test_reader.py::TestTickBucket`'s sports case, the red was cleared by
+      `market-tick-data-service@85423040` — _"fix(test): swap retired ODDS_API venue for PINNACLE"_ — which changed the
+      test to stop asserting `ODDS_API` while leaving the underlying defect live: `_asset_group_for_venue` was still
+      silently routing all 146,163 ODDS_API/FOOTYSTATS shards at the **cefi** bucket. The test that CAUGHT a real
+      data-correctness bug was edited until it no longer caught it. Root fix + genuine coverage landed
+      `market-tick-data-service@fc704195` (the new test is verified to FAIL without the fix — the property the swap
+      lacked). Re-read every other test this chain has touched and confirm each still asserts the behaviour it was
+      written to protect, rather than having been relaxed to match new code. **Done when**: each touched test is
+      confirmed still load-bearing, or re-strengthened. — **DONE 2026-08-08 (fleet-wide sweep, operator-requested
+      "across the board")**. Scanned all 47 test-touching commits since 2026-08-07 across 8 repos for net assertion loss
+      / added xfail-skip; 5 flagged, then read individually: **(1) `market-tick-data-service@85423040` — CONFIRMED
+      weakening**, the seed case: swapped the failing `ODDS_API` parametrize entry for `PINNACLE` while
+      `_asset_group_for_venue` still routed 146,163 sports shards at the cefi bucket. Root-fixed + genuine coverage
+      restored `market-tick-data-service@fc704195`; their PINNACLE case kept (not reverted) and the new test verified to
+      FAIL without the fix. **(2) `unified-api-contracts@05a709fd`** — legitimate: the removed assert tested behaviour
+      ruling #2 intentionally changed, and the same commit promoted 22 bookmakers into the sentinel set (net MORE
+      coverage). **(3) `market-tick-data-service@a897ef60`** — legitimate: deleted 643 lines of SOURCE alongside the
+      tests (`databento_fetch.py` -266, `tardis_csv_transport.py` -104); the subject genuinely went away. **(4)
+      `unified-api-contracts@12bed42e` + the jupiter sibling** — honest xfails ("needs a real WS capture, not a
+      fabricated cassette") but with NO tracked remediation; now tracked in
+      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`. **(5)
+      `unified-api-contracts@8f670c45` / `market-tick-data-service@2f7d7840`** — net +3 and +11 assertions, not
+      weakening. **Then extended the sweep to the fleet-scale form of the same anti-pattern — RAISED RATCHET BASELINES**
+      (a ratchet says "NEVER raise a count"). Found `fabricated_sha_citation_baseline` raised **2 -> 4 -> 6 -> 8 in two
+      days**. Root-caused as HALF gate-bug, HALF real: 4 entries were real commits that only failed because
+      `check_plan_commit_sha_evidence.py` ran a bare `git cat-file` with NO fetch, so a freshly-pushed commit read as
+      fabricated (reproduced live on `unified-trading-ci@686bca7`); 4 were genuinely wrong citations whose underlying
+      work was real, corrected to `01c3dbbab9`/`79c4a72737`/`b7e41849d6` (each verified to exist first). Checker fixed
+      to fetch once on the miss path; **baseline ratcheted 8 -> 0**, verified 2,549 citations / 0 unresolvable.
+
+- [ ] [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
+      screened 47 test-touching commits for NET assertion loss + added xfail/skip. That shape is blind to a commit which
+      DELETES a strong assertion and ADDS a weak one — it nets zero and never surfaces. Treat the sweep's result as "no
+      net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
+      (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
+      enough. **Done when**: the decision is recorded, or the semantic check exists.
+
 ## Codex SSOTs
 
 - `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` — HARD RULE governing every rename/split in this
@@ -322,6 +425,40 @@ achieved by exclusion, not canonicalisation.**
 - `/codex/06-coding-standards/quality-gates.md` — QG-green tree is the contract.
 
 ## Progress Log
+
+### Deferred work after 2026-08-08 (interactive session checkpoint)
+
+Nothing below is uncommitted — every item is either a tracked `- [ ]` or is owned elsewhere. Kinds are separated because
+they need different responses.
+
+| item                                                                                                                 | kind                     | blocked on                                                                       |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
+| P2 migration (17 todos), P3 consumers (15), P4 backfill (9)                                                          | **Not done** — real work | P1 completing; P2 additionally on the API-Football campaign                      |
+| `markets`/`outcomes`/`settlements` YAML+UAC parity; collapse `odds_snapshot`/`odds_movement` onto `odds`+`timeframe` | **Not done**             | tracked as P0 todos in P1/P2                                                     |
+| MTDS `_asset_group_for_venue` fail-fast (default still `cefi`, now WARN-logged)                                      | **Not done**             | deliberately deferred off an in-flight chain; needs its own consumer enumeration |
+| Two WS-cassette xfails (`jupiter_solana_ws`, `aave_liquidations_ethereum_ws`)                                        | **Cannot be done yet**   | needs a real WS capture session; fabricating a cassette is explicitly banned     |
+| Sports live-trading activation                                                                                       | **Operator-owned**       | permanent hard-stop; now formally gated on this chain                            |
+| Other artifact tranches (123 open operator questions, Cross-cutting 37)                                              | **Operator-owned**       | only sports got the reconcile-then-plan treatment                                |
+
+**Recommended NEXT: let P1 finish, then release P2.** P2 is the long pole (375k-shard re-stamp) and is double-gated;
+everything else is cheaper and can follow. Do NOT start P4's backfill early — backfilling pre-migration guarantees a
+redo, which is exactly why it was split out.
+
+### Lessons carried forward (would otherwise be re-learned)
+
+- **A green panel can be produced by exclusion.** Sports read "0 non-canonical" while hiding 21 venues / ~340k shards;
+  the detector drops accepted-exceptions BEFORE enumerating. Success criterion for the chain is the exception sets
+  reaching EMPTY, never the badge count reaching zero.
+- **`quality-gates.sh` exit 0 is NOT green.** The MTDS/UAC runs exited 0 with real test failures inside; read the
+  summary line, not the exit code.
+- **A quickmerge that exits 0 has not necessarily landed.** Twice this session it exited 0 leaving work staged-only —
+  always re-verify with `git rev-list --count origin/<b>..HEAD` and a content check on origin.
+- **An autostash can silently pull your fix out from under a passing test.** `reader.py` tested green, then got stashed;
+  the tests still passed because the file was gone. Re-verify behaviour end-to-end, not just the test result.
+- **Read the producer before judging a consumer's defensive default.** The aave `# noqa` disposition and the
+  `remediate_risk_params` fix were both settled by reading the upstream contract, not by reasoning about the call site.
+- **Baselines that only ever rise are a smell, not a policy.** `fabricated_sha_citation` went 2->4->6->8 because the
+  gate itself mis-reported; the fix was to the gate, and the baseline then ratcheted to 0.
 
 - **2026-08-08** — Authored from the interactive sports venue/data-type audit (27 operator rulings). All figures above
   measured against the live prod manifest and the 2026-08-05 honest-coverage rollup, not inferred. Capture-outage block

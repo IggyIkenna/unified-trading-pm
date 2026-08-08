@@ -338,7 +338,18 @@ orchestrator-dispatched).
       `OTHER`-bucketed Kalshi rows (2026-07-12 onward, ~9,500/day, ~30 days) are worth a one-off backfill/reclassify
       pass into their correct CQG buckets, or whether forward-only correctness is sufficient (per
       `/codex/02-data/data-pipeline-correctness-hard-rule.md`'s "fix issues in FULL" bar vs the practical cost of
-      reclassifying historical manifest rows) — **operator/architect call, not a mechanical todo**.
+      reclassifying historical manifest rows). **RESOLVED (round5-cefi-question-resolution 2026-08-08) — not actually
+      an open architect call; the workspace's own HARD RULE already answers it.** The Phase 6 code fix shipped
+      2026-07-30 and has been live 9+ days (well past the "≥1 day" gate). `/codex/02-data/data-pipeline-correctness-hard-rule.md`
+      states plans/audits are "fixed in FULL (no deadline deferrals...)" — accepting forward-only correctness for a
+      known, already-diagnosed, already-measured (~30 days × ~9,500/day) mis-bucketing is precisely the kind of
+      incomplete fix that rule exists to prevent, so the default is: do the reclassify. It also qualifies as
+      self-service under `plans/active/task_template.md` finding T/U — fresh same-run check (2026-08-08):
+      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112
+      --format="value(softDeletePolicy.retentionDurationSeconds)"` → **604800** (the 7-day floor finding T requires).
+      Reclassifying as an ordinary AO-dispatchable `[DATA]` SCRIPT todo (backup-first, content-patch in place,
+      mirroring the same reclass-script pattern used elsewhere in this corpus); the actual sizing script + apply was
+      not built/run in this pass (documentation-question audit, not an implementation dispatch).
 
 ---
 
@@ -493,3 +504,9 @@ orchestrator-dispatched).
   [DESCOPED-NOT-MVP 2026-07-14] under a dated operator ruling (Kalshi/Polymarket perps); the 8th (Phase 6
   backfill-assessment) is self-labelled "operator/architect call, not a mechanical todo". Reaffirms 2 prior 2026-07-30
   passes.
+- **round5-cefi-question-resolution 2026-08-08**: Phase 6's backfill-assessment todo resolved — per
+  `/codex/02-data/data-pipeline-correctness-hard-rule.md`'s "fix in FULL" bar plus a fresh reversibility check
+  (`plans/active/task_template.md` finding T/U, target bucket soft-delete retention live-verified at 604800s), this
+  was never an open architect judgment call; see the todo's own annotation above. The 7 DESCOPED-NOT-MVP perp items
+  remain correctly parked on the standing 2026-07-14 operator ruling (that ruling itself doesn't need re-asking —
+  see this same round's Item 20 finding on the sibling doc).
