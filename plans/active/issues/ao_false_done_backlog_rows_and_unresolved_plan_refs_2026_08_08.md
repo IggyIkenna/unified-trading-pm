@@ -167,7 +167,23 @@ plan + verifying the `done_sha`, never from the row's status alone.
       checkbox), by a different session, before this task was ever picked up. No REOPEN (would re-open work that's
       already honestly open) or FLIP (would falsely mark unmet work done) was warranted or performed; this item only
       needed its tracker checkbox resolved with the verification trail above.
-- [ ] [BACKEND] P2. `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`)
+- [x] ✅ [BACKEND] P2. `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`) — **verified 2026-08-08 (slot
+      18): no REOPEN or FLIP action needed or possible — already self-corrected by a different session before this task
+      was picked up.** `GET /api/backlog` for this exact id now shows an orphaned row with a DIFFERENT
+      `done_sha=f79fbded3` (not the audit-captured `c3c65402e`), same
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as the 5 items above. `f79fbded3`
+      (slot-10, 2026-08-08T17:26:13Z,
+      `docs(plans): close infra_capture_and_devops_leftovers-001 — api_football struck (BLK-b969f5f0), live odds VM     re-verified healthy`)
+      is a real, on-origin commit that genuinely closed the plan's Live-ODDS P2 todo: (1) api_football second-source
+      wiring correctly STRUCK per operator decision B on `/blocked` `BLK-b969f5f0` (data-correctness risk — no
+      sanctioned business writing sports odds via api_football post-wipe), citing a prior 2026-08-08 false-done-audit
+      pass that had restated this as open doc-drift, not a live gap; (2) the live `odds_api` VM
+      (`mtds-live-sports-odds-api-trades-20260804-131449`) freshly confirmed RUNNING with a clean GCS run.log through
+      2026-08-08T17:23Z, zero errors, manifest shards writing every ~60s. Read the cited plan
+      (`plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` line 292): the checkbox is correctly `[x]` ✅ and
+      matches `f79fbded3` exactly. No REOPEN (would re-open genuinely, freshly-verified-done work) or FLIP (already
+      flipped, honestly) was warranted or performed; this item only needed its tracker checkbox resolved with the
+      verification trail above.
 - [ ] [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
       `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose
 - [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`)
@@ -280,3 +296,13 @@ plan + verifying the `done_sha`, never from the row's status alone.
   live backlog row for this same todo (`-015`) is correctly `queued`/`done_sha: null`, not `done`. Both the backlog and
   the plan checkbox already reflect the honest state; nothing to correct. See the checklist item above for the full
   trail.
+
+- **2026-08-08 (slot 18, backend_engineer)**: Verdict on `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`
+  at audit time): **no REOPEN or FLIP action needed or possible** — already self-corrected by a different session
+  (slot-10) before this task was picked up, same self-correcting positional-id pattern as the 5 items above.
+  `GET /api/backlog` shows this exact id now holds an orphaned row with `done_sha=f79fbded3` (not `c3c65402e`).
+  `f79fbded3` (slot-10, 2026-08-08T17:26:13Z) is a real commit that genuinely closed the cited plan's Live-ODDS P2 todo:
+  api_football second-source wiring correctly STRUCK per operator decision B on `BLK-b969f5f0`, and the live `odds_api`
+  VM freshly re-verified RUNNING with a clean run.log. The plan checkbox at
+  `infra_capture_and_devops_leftovers_2026_07_06.md` line 292 is correctly `[x]` ✅ and matches `f79fbded3` exactly.
+  Nothing to correct. See the checklist item above for the full trail.
