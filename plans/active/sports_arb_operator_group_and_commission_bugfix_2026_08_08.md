@@ -98,11 +98,12 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
 
 ## Todos
 
-- [ ] [CODE] P0. **Re-key `VENUE_OPERATOR_GROUPS` onto the UAC canonical venue constants** (uppercase, imported from
+- [x] [CODE] P0. ✅ **Re-key `VENUE_OPERATOR_GROUPS` onto the UAC canonical venue constants** (uppercase, imported from
       `registry.venue_constants`, never string literals). Keep `get_operator()`'s "unmapped venue is its own operator"
       fallback — that default is correct — but make the lookup case-insensitive (normalise via `.upper()` on entry) so
       BOTH the canonical form and any residual lowercase vendor spelling resolve to the same group. Do not simply
-      lowercase the caller: the data layer's canonical output is uppercase and the registry is the SSOT.
+      lowercase the caller: the data layer's canonical output is uppercase and the registry is the SSOT. —
+      unified-api-contracts@e080ef74
 - [ ] [CODE] P0. **Add the missing operator-group parent for Betfair.** Per operator ruling 2026-08-08, bare `BETFAIR`
       stops being a data-axis venue and becomes the operator-group PARENT that `BETFAIR_EX_UK` / `BETFAIR_EX_EU` /
       `BETFAIR_SB_UK` roll up to. Encode that hierarchy in UAC (a real venue→operator map keyed on venue constants), and
@@ -148,3 +149,8 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
 - **2026-08-08** — Authored from the interactive sports venue/data-type audit. Both bugs measured live against the
   shipped `arb_config.py` (see the table above), not inferred from reading. Operator ruled: ship standalone, ahead of
   and independent of the sports taxonomy chain.
+- **2026-08-08** — Todo 1 (re-key VENUE_OPERATOR_GROUPS) shipped in unified-api-contracts@e080ef74. Imported UAC
+  constants (BETFAIR_EX_UK/EU, BETFAIR_SB_UK, UNIBET, LEOVEGAS, LADBROKES, WILLIAMHILL) replace the previous lowercase
+  string literals; `.upper()` normalisation added to `get_operator()`. Remaining string literals in the dict
+  (BETFAIR_EX_AU, UNIBET_UK/FR/NL/SE, LADBROKES_AU, WILLIAMHILL_US, WINAMAX_FR/DE, LEOVEGAS_SE) are the phantom regional
+  venues with no UAC constant — their fate is decided by todo 4 (expected: nine deletions).
