@@ -1,0 +1,109 @@
+---
+doc_type: plan
+title: Solana ORCA/RAYDIUM dex_pool_swaps indexer — signature-walk + swap decoder + manifest write
+summary: >-
+  Build the genuine on-chain Solana swap-event indexer for ORCA/RAYDIUM dex_pool_swaps (operator ruling 2026-08-08 —
+  prioritize now), per solana_dex_pool_swaps_indexer_scope_2026_07_12.md's own scoping + "Recommended next step"
+  implementation breakdown. Multi-stage build (generalize the existing signature-index walker → per-tx fetch+decode
+  per venue → manifest write), sized brand-new (~1 AI-day per the scoping doc's own estimate).
+status: active
+nature: process
+asset_group: [defi]
+stage: [data]
+repos: [market-tick-data-service]
+scope: [engineer]
+tags: [defi, solana, dex-pool-swaps, indexer, orca, raydium, new-capability, whirlpool]
+related:
+  [
+    /plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+  ]
+created: "2026-08-08"
+last_updated: "2026-08-08"
+parent_epic: mtds_mdps_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: brand-new
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 1.0
+assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
+sequential: true
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source: >-
+  Operator ruling 2026-08-08 (na-corpus-digest round5, item 74): prioritize the ORCA/RAYDIUM dex_pool_swaps indexer
+  now. Filed per solana_dex_pool_swaps_indexer_scope_2026_07_12.md's own "Recommended next step" 5-step breakdown —
+  this plan does not build the indexer itself in that scoping session, only converts the already-scoped design into a
+  dispatchable plan.
+context_scope:
+  [
+    /plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
+    market-tick-data-service/market_tick_data_service/scripts/build_drift_v2_sig_index.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
+  ]
+---
+
+# Solana ORCA/RAYDIUM dex_pool_swaps indexer
+
+> **Scoping SSOT**: `/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md` — read it first. It
+> confirmed (code-read, not inferred) that no existing MTDS path produces ORCA/RAYDIUM swap events:
+> `SolanaDefiHandler` only captures `dex_pool_state` (periodic REST snapshots); `DexSwapsHandler`'s Solana routing
+> always resolves to no subgraph (ORCA/RAYDIUM are REST-API venues, not subgraph-indexed); the `orca_defi_ws.py` /
+> `raydium_defi_ws.py` live connectors are Jupiter-quote PRICE pollers, not swap-transaction capture. Genuinely new
+> on-chain indexer capability is needed. A reusable HALF-precedent already exists in this codebase:
+> `market_tick_data_service/scripts/build_drift_v2_sig_index.py` (657 lines) walks Helius RPC
+> `getSignaturesForAddress` for a Solana program address from HEAD backwards, chunk-flushing to GCS parts with
+> `--resume` support — avoids the OOM class this codebase hit before holding millions of signatures in RAM. It does
+> NOT fetch/decode the actual swap transaction — that is this plan's net-new scope. Program addresses are already
+> registered in UAC (`_defi_chain_data.py`): `raydium.program_id = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"`,
+> `orca.program_id = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"`.
+
+## Todos
+
+- [ ] [DATA] P0. **Generalize `build_drift_v2_sig_index.py`'s chunk-flush/resume signature-walk core to accept an
+      arbitrary program address**, so ORCA/RAYDIUM can reuse the exact same OOM-safe walk instead of a second bespoke
+      implementation. Extract the reusable core into a shared helper module (do not duplicate the walk loop). Repo:
+      market-tick-data-service. Done-when: a new unit test proves the generalized walker produces an identical
+      signature-index output for the Drift V2 program address as the original script did (no regression), plus a
+      second test exercising it against a different (ORCA) program address.
+- [ ] [DATA] P1. **Build the per-signature transaction fetch + Whirlpool (ORCA) swap-instruction decoder.** For each
+      indexed ORCA signature (from the generalized walker above), fetch the full transaction via Helius
+      `getTransaction`, decode the Whirlpool swap instruction's account + data layout into
+      `(pool, base_amount, quote_amount, side, price)`. Start here — Orca's swap instruction layout is
+      simpler/better-documented than Raydium's CLMM/CPMM variants (per the scoping doc's own recommendation). Repo:
+      market-tick-data-service. Done-when: a unit test decodes a real captured ORCA swap transaction (fixture) into
+      the expected tuple, with honest-absence (skip + log, never raise) on an unparseable/unexpected instruction
+      layout.
+- [ ] [DATA] P1. **Build the per-signature transaction fetch + Raydium swap-instruction decoder** — same shape as the
+      ORCA decoder above, branching on AMM version (legacy AMM vs CLMM vs CPMM, each with a different swap
+      instruction shape per the scoping doc). Repo: market-tick-data-service. Done-when: a unit test decodes a real
+      captured Raydium swap transaction fixture per AMM version into the expected tuple, honest-absence on an
+      unrecognized version/layout.
+- [ ] [DATA] P1. **Wire both decoders' output through `ManifestWriter.record_captured(..., data_type="dex_pool_swaps")`**
+      following the same `pipeline_mode`/honest-absence conventions the rest of this asset_group already uses (mirror
+      `dex_pool_state`'s existing `EXPECTED_PRE_VENUE_LAUNCH` pre-genesis handling). New CLI operation (e.g.
+      `--operation collect-solana-dex-pool-swaps`) or extend `SolanaDefiHandler` — follow the existing handler
+      registration pattern (`cli/main.py`). Repo: market-tick-data-service. Done-when: a full unit-test pass (walker +
+      decoders + manifest write, mocked Helius responses) writes a real `dex_pool_swaps` shard for at least one ORCA
+      and one RAYDIUM pool with correct schema, and `quality-gates.sh` is green.
+- [ ] [DATA] P2. **Backfill VM launch + G2 re-verification** — once the indexer is unit-tested green, launch a
+      bounded SPOT-VM smoke run (a few days, not full history) to prove the walker+decoder+write path against real
+      on-chain data, then re-verify `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s G2 gate now covers ORCA/RAYDIUM
+      `dex_pool_swaps` (that gate's own text currently excludes this as a known, separately-tracked gap — this todo
+      is what lets that gate's language become accurate). Repo: market-tick-data-service + deployment-service (VM
+      launch). Done-when: real `dex_pool_swaps` manifest rows exist for ORCA and RAYDIUM on at least one live day,
+      manifest-counted (not log-activity), and the G2 gate text is updated to drop the exclusion.
+
+## Progress Log
+
+- **2026-08-08 (round5-na-digest-defi apply pass, item 74)**: authored this plan per operator ruling ("prioritize it
+  now") and the source scoping doc's own 5-step implementation breakdown. `sequential: true` — the todos are a real
+  dependency chain (the generalized walker must land before either decoder can be built against it; the manifest-write
+  wiring needs both decoders; the backfill VM needs the wired write path). No indexer code built in this session, per
+  the operator's own scope for this todo (file/flip the plan, don't build the indexer inline).
