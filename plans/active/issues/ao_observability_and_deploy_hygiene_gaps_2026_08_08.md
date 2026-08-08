@@ -35,8 +35,8 @@ related:
   ]
 created: 2026-08-08
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
@@ -196,6 +196,19 @@ self-pull fix touches the fleet's only auto-deploy path so it wants its own gate
 drive-by. Corrected two earlier mis-reads during the session: the "12 failing glue units" are disabled-and-inert not
 failing, and the "33 vs 27 repos" gap between old and new slots is leftover `*.stale-pre-history-rewrite-*` dirs, i.e.
 the new slots are cleaner.
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. Re-read the
+  doc fresh (it had moved significantly since filing — self-pull fix, false-done triage, and glue-runner retirement
+  all shipped+closed by the originating/a concurrent session between this sweep's first and second pass). Of the 3
+  remaining open items: the fleet-cap raise is explicitly `[OPERATOR] P1` (capacity/spend ruling, correctly
+  non-dispatchable within a `planning` doc — coexists fine per `task_template.md`'s non-dispatchable-marker
+  convention); the slot-30 re-run (`[BACKEND] P3`) is a single idempotent command re-invocation with a named root
+  cause; the stash-content-verifier (`[BACKEND] P2`) has a concrete spec already written in-doc (reuse
+  `worktree_clean_check.verify_all_wip_preserve_refs`'s SUPERSEDED/GONE/STILL-ORPHANED verdict vocabulary) and an
+  explicit "Done when". No remaining judgment call on either bounded item. Conflict-check clear: grepped
+  `plans/active/*.md` for `ORCHESTRATOR_FLEET_WORKER_CAP`/`stash_pile_stale`/`add-slot 30` — zero hits outside this
+  doc. `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
+  `ao_observability_and_deploy_hygiene_gaps_2026_08_08_finalize_2026_08_08.md`.
 
 ## Deferred work after 2026-08-08
 

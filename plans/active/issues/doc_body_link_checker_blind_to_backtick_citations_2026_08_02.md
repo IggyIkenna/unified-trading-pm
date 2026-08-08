@@ -28,12 +28,12 @@ related: []
 created: 2026-08-02
 author: unknown
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
-estimate_baseline_ai_days:
-estimate_calibrated_ai_days:
+estimate_baseline_ai_days: 1
+estimate_calibrated_ai_days: 0.8
 resolved_by:
 locked_by:
 locked_since:
@@ -142,3 +142,17 @@ corpus actually uses was never brought into the checker's purview.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The prior
+  "genuine P1-vs-P2 scope/risk fork" that kept this KEEP-NA is now resolved — the 2026-08-08 round5 ao investigation
+  measured the P2 (narrow, `codex/`-prefix-only) option live (2,254 candidates, 14 unresolved, several of those
+  themselves placeholders) and explicitly closed the scope question ("no longer an open scope question... a
+  same-day-sized change"). The remaining 2 open items (`[SCRIPT] P2` implement + seed the baseline; `[DOCS] P3`
+  re-run `/docs-reconcile` after) are both bounded implementation/verification work with a concrete plan already
+  written out in-doc, no remaining judgment call. Conflict-check clear: grepped `plans/active/*.md` for
+  "backtick"/`codex/.*backtick`/this doc's own filename — the only hits are unrelated docs listing this issue in a
+  "referenced, discoverability" digest (`ag_closeout_audit_rollout_2026_07_25.md`,
+  `ao_satellite_ao_dispatch_batch3_2026_07_31.md`, `cross_cutting_consolidated_closeout_2026_07_25.md`,
+  `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md`), none
+  claim the implementation itself. `execution_scope: local-only → orchestrator-agent`, `assigned_role: infra`
+  (unchanged, already correct). Companion gated finalize:
+  `doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md`.

@@ -157,3 +157,11 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
   `assigned_vm: NA`, not yet an ACTIVE `planning` doc, so the strict already-duplicated (verdict 3) criterion doesn't
   apply — this doc stays the live tracking home until batch7 activates. Third item ([DOC] P3) is an explicit operator
   question, unchanged.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE, already-duplicated — citation fix only,
+  not a reclassification. `ao_satellite_ao_dispatch_batch7_2026_08_06.md` is now `status: active` / `assigned_vm:
+  planning` (activated since the 2026-08-07 marker), and its todo 3 (`_tick_once()` reorder + stale-docstring fix) is
+  still open there with the identical scope this doc's own `[SCRIPT] P2` item describes — verified verbatim, not
+  inferred. This doc's remaining `[SCRIPT] P2` item now genuinely satisfies the already-duplicated criterion; leaving
+  `assigned_vm: NA` unchanged here (flipping would dispatch a competing duplicate) and pointing any future toucher to
+  batch7 todo 3 as the live dispatch home. The sole remaining item that is actually THIS doc's own is the `[DOC] P3`
+  operator question, unchanged.
