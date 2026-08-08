@@ -1,24 +1,25 @@
 ---
 doc_type: issue
 title:
-  "MTDS sports-odds backfill VMs die twice in a row — total silence for ~18-24 min then correctly killed by the
+  "MTDS sports-odds backfill VMs die repeatedly (3x so far) — total silence for ~16-24 min then correctly killed by the
   vm-zombie-watchdog, root cause of the silence itself unconfirmed"
 summary: >-
-  Two consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`) died mid-run with the identical signature:
-  `run.log` and the heartbeat blob both go completely silent (no new lines, no heartbeat refresh) for ~18-24 minutes,
-  then `gcloud compute operations list` shows a `delete` operation. Neither death has a terminal `exit_code=` line, a
-  `Traceback`, a `CHUNK_FAILED`, or any other error marker in the persisted `run.log` — just an ordinary mid-work log
-  line (a `RESOURCE_SAMPLE` with unremarkable RSS, ~15-25% of the OOM-observed peak) followed by silence. Confirmed via
-  `deployment-service/scripts/vm/vm_zombie_watchdog.py` (`gs://deployment-scripts-{project}/vm-heartbeat/{vm}.txt`) that
-  the heartbeat blob itself also stopped updating in the same window — this is NOT a false-positive watchdog read of a
-  still-alive VM (the codebase's documented 2026-07-18 precedent for API-Football VMs), it looks like the watchdog
-  correctly caught a genuine hang and killed it as designed. What's still unconfirmed: WHY the underlying Python process
-  (or its wrapping `mtds_chunk_loop.sh`) stops emitting ANY output — no OOM kernel message, no Python exception, nothing
-  — for that specific ~20-minute window. Both occurrences happened during REAL-FETCH-heavy work (not skip-fast dates):
-  `smallchunk2` died mid-chunk-26 (past its own prior-run boundary, genuinely new ground); `smallchunk3` died
-  mid-chunk-18 (the known 2020-08-30→2020-09-03 season-opener week, mid-`SCOTTISH_PREMIERSHIP` real-fetch). No data loss
-  either time — the manifest's per-VM shard writes are durable regardless of which VM instance wrote them, and a
-  relaunch with `RESUME_FORCE=false` correctly skip-fasts through already-captured ground.
+  THREE consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`, `smallchunk4`) died mid-run with the
+  identical signature: `run.log` and the heartbeat blob both go completely silent (no new lines, no heartbeat refresh)
+  for ~18-24 minutes, then `gcloud compute operations list` shows a `delete` operation. Neither death has a terminal
+  `exit_code=` line, a `Traceback`, a `CHUNK_FAILED`, or any other error marker in the persisted `run.log` — just an
+  ordinary mid-work log line (a `RESOURCE_SAMPLE` with unremarkable RSS, ~15-25% of the OOM-observed peak) followed by
+  silence. Confirmed via `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+  (`gs://deployment-scripts-{project}/vm-heartbeat/{vm}.txt`) that the heartbeat blob itself also stopped updating in
+  the same window — this is NOT a false-positive watchdog read of a still-alive VM (the codebase's documented 2026-07-18
+  precedent for API-Football VMs), it looks like the watchdog correctly caught a genuine hang and killed it as designed.
+  What's still unconfirmed: WHY the underlying Python process (or its wrapping `mtds_chunk_loop.sh`) stops emitting ANY
+  output — no OOM kernel message, no Python exception, nothing — for that specific ~20-minute window. Both occurrences
+  happened during REAL-FETCH-heavy work (not skip-fast dates): `smallchunk2` died mid-chunk-26 (past its own prior-run
+  boundary, genuinely new ground); `smallchunk3` died mid-chunk-18 (the known 2020-08-30→2020-09-03 season-opener week,
+  mid-`SCOTTISH_PREMIERSHIP` real-fetch). No data loss either time — the manifest's per-VM shard writes are durable
+  regardless of which VM instance wrote them, and a relaunch with `RESUME_FORCE=false` correctly skip-fasts through
+  already-captured ground.
 status: open
 nature: issue
 asset_group: [sports]
@@ -33,7 +34,7 @@ related:
   ]
 created: 2026-08-08
 author: claude-agent
-priority: P2
+priority: P1
 parent_epic: infrastructure_master
 source: >-
   Found during the autonomous sports honest-coverage convergence monitoring loop (continuation of
@@ -56,12 +57,23 @@ context_scope:
   ]
 ---
 
-## Timeline (both occurrences)
+## Timeline (three occurrences now — pattern confirmed, not coincidence)
 
 | VM                                        | Last real log line                                                      | Heartbeat blob last update                                               | Delete op timestamp       | Silent gap |
 | ----------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------- | ---------- |
 | `mtds-backfill-odds-smallchunk2-20260807` | `2026-08-08T00:36:42Z` (mid-chunk-26, EPL, RSS=16.3GiB)                 | not separately checked this occurrence                                   | `00:55:20Z` / `00:56:15Z` | ~19 min    |
 | `mtds-backfill-odds-smallchunk3-20260808` | `2026-08-08T05:05:17Z` (mid-chunk-18, SCOTTISH_PREMIERSHIP, RSS=8.6GiB) | `05:06:23Z` (confirmed via `gcloud storage ls -L` on the heartbeat blob) | `05:26:25Z`               | ~20-21 min |
+| `mtds-backfill-odds-smallchunk4-20260808` | `2026-08-08T08:11:46Z` (mid-chunk-18, AUSTRIAN_BUNDESLIGA, RSS=24.4GiB) | `08:11:31Z` (confirmed via `gcloud storage ls -L`)                       | `08:27:34Z`               | ~16 min    |
+
+**New pattern confirmation from occurrence 3**: RSS at time of last log line varies widely across the three deaths
+(16.3GiB, 8.6GiB, 24.4GiB) — ruling out a fixed-memory-threshold trigger. The silent gap is consistently tight (~16-21
+min across all three) regardless of which league/RSS was active, which is the strongest signal this is the watchdog's
+`HEARTBEAT_STALE_MINUTES` threshold firing on a real, consistent-duration hang — not noise. All three deaths happened at
+or near chunk 18 specifically (chunk 26 once, chunk 18 twice) — chunk 18 is the known season-opener real-fetch-heavy
+week, so real-fetch load remains the strongest circumstantial correlate, though this same occurrence's relaunch
+(`smallchunk4`) already survived chunk 18's opening leagues cleanly before dying later in the same chunk — so it is not
+simply "chunk 18 always hangs," more like elevated real-fetch load raises the odds of hitting whatever the underlying
+trigger is.
 
 Both delete operations' `principalEmail` = `1060025368044-compute@developer.gserviceaccount.com` — the shared automation
 service account used by both the watchdog itself and every manual `gcloud` action in this workspace, so this alone
@@ -118,9 +130,17 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
 - [ ] [SCRIPT] P3. Audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have explicit connect/read
       timeouts — a hung socket with no timeout is the single most likely mechanism for "total silence, no exception, no
       OOM."
-- [ ] [SCRIPT] P3. If a third occurrence confirms the pattern, consider whether `PREFIX_IDLE_THRESHOLDS` needs an
-      `mtds-backfill-odds-` entry, OR whether the fix belongs in the fetch code's timeout handling instead — don't
-      pre-emptively loosen the watchdog threshold without more evidence, since a genuinely-hung VM SHOULD be killed.
+- [x] ✅ [SCRIPT] P1. **Third occurrence confirmed 2026-08-08T08:27Z (`smallchunk4`)** — pattern is now real, not
+      coincidence (consistent ~16-21 min silent gap across 3 independent VMs/leagues/RSS values). Per this todo's own
+      original gate, this crosses into needing a real decision rather than another quiet relaunch: relaunched once more
+      (`smallchunk5`, keeps real backfill progress moving, no data loss risk) AND flagging this as the priority P1 open
+      investigation for whoever next has the tooling to catch a live hang (this session's `gcloud compute ssh` via IAP
+      failed with "not authorized" earlier — the diagnostic step in todo 1 below needs a session/operator with working
+      SSH access, not just gcloud storage/compute API access).
+- [ ] [SCRIPT] P2. Consider whether `PREFIX_IDLE_THRESHOLDS` needs an `mtds-backfill-odds-` entry, OR whether the fix
+      belongs in the fetch code's timeout handling instead — don't pre-emptively loosen the watchdog threshold without
+      more evidence, since a genuinely-hung VM SHOULD be killed. Lower priority than todo 1 (catching a live hang) — a
+      threshold change without knowing the actual root cause risks masking a real bug instead of fixing it.
 
 ## Progress Log
 
@@ -130,3 +150,19 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   `mtds-backfill-odds-smallchunk4-20260808` to keep the backfill progressing; not investigated further this tick (would
   need to catch a live hang in progress, which requires being mid-tick exactly when it happens — noted as todo 1 above
   for the next occurrence).
+- **2026-08-08T08:40Z (autonomous session) — THIRD occurrence, pattern definitively confirmed.**
+  `mtds-backfill-odds-smallchunk4-20260808` died the same way: last real log line `08:11:46Z` (mid-chunk-18,
+  `AUSTRIAN_BUNDESLIGA`, `RSS=24.4GiB` — a THIRD different RSS value, ruling out a fixed-memory trigger), heartbeat blob
+  last updated `08:11:31Z`, `delete` op at `08:27:34Z` (~16 min gap, consistent with the prior two ~19-21 min gaps).
+  Notably `smallchunk4` had ALREADY survived chunk 18's opening leagues cleanly (4 leagues, zero OOM, confirmed in the
+  sibling convergence doc @ `4488f76c8c`) before dying later in the SAME chunk — so this isn't "chunk 18 always hangs
+  immediately," it's more like sustained real-fetch load raises hang odds over time within a session. Bumped priority
+  P2→P1 given 3 independent confirmations. Relaunched as `mtds-backfill-odds-smallchunk5-20260808` (guard passed,
+  RUNNING) — durable progress preserved through chunk 17 fully + partial chunk 18. **Real limitation hit while trying to
+  investigate further this tick**: attempted `gcloud compute ssh` via IAP to the (still-alive, at the time) VM to prep
+  for catching a future live hang, got `Error while connecting [4033: 'not authorized']` — this session's service
+  account lacks IAP-tunnel SSH permission, so live diagnosis (`py-spy`/`strace`) isn't currently possible from here even
+  if a hang is caught in the exact window. Flagging this as the blocking gap for todo 1 above: whoever picks this up
+  next needs either IAP SSH access granted to the automation service account, or to be an interactive/operator session
+  with working SSH, positioned to attach the moment a hang is suspected (heartbeat >10min stale but VM still RUNNING =
+  the window to act in, before the watchdog's own ~16-21 min kill).
