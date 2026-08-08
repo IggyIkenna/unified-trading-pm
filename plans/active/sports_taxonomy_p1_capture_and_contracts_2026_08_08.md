@@ -178,13 +178,28 @@ achieved by exclusion, not canonicalisation.**
 
 ## Block B — contracts (P0/P1, after Block A's diagnosis, parallel within the block)
 
-- [ ] [CODE] P0. **Split the venue axis in UAC**: `venue` = the book whose price it is; a NEW `executable` predicate
+- [x] ✅ [CODE] P0. **Split the venue axis in UAC**: `venue` = the book whose price it is; a NEW `executable` predicate
       derived from `VENUE_TO_ADAPTER_KEY` (true only when a real adapter key exists, not `__no_adapter_yet__`). Remove
       `ODDS_API` and `FOOTYSTATS` from `VENUES_BY_ASSET_GROUP["sports"]`. Promote the 21 currently-excepted fan-out
       bookmakers INTO the canonical set — under the new model they are legitimate venues, so
       `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` should shrink toward empty rather than grow. Every venue in the
       set must resolve a `SportsVenueType`, an auth method, an instrument-type set, a fee model and an alpha profile —
-      SMARKETS currently resolves NONE of these despite being canonical, and that gap must close here.
+      SMARKETS currently resolves NONE of these despite being canonical, and that gap must close here. — **DONE
+      2026-08-08 (data_engineering, agt-9e871f, slot 8)** — `unified-api-contracts@05a709fd`. Added
+      `venue_adapter_keys.is_venue_executable()`. Removed ODDS_API from the venue axis (it's a source; also dropped its
+      now-stale `VENUE_TO_ADAPTER_KEY`/`VENUE_DATA_TYPE_CAPABILITIES`/`EXPECTED_COVERAGE_BY_ASSET_GROUP` entries + 2
+      hardcoded test assertions). FOOTYSTATS was never in `VENUES_BY_ASSET_GROUP` (only in the noncanonical-exception
+      set) so there was nothing to remove there; confirmed it stays excepted for its own unrelated two-registry-
+      disjointness reason. Promoted all 22 real bookmakers from `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS`
+      (measured count, not the todo's approximate "21" — FOOTYSTATS is the 23rd, non-bookmaker member) — added
+      `UNIBET_EU`/`UNIBET_UK` as new venue constants (didn't exist yet). Every venue in the resulting 32-member
+      `VENUES_BY_ASSET_GROUP["sports"]` now resolves all 5 classification dicts (verified via direct import, zero gaps)
+      — closed SMARKETS (added to `SPORTS_EXCHANGE_VENUES` + an explicit `SPORTS_AUTH_MAP` entry) and the same
+      pre-existing gap on `BETFAIR_EX_UK`/`BETFAIR_EX_EU` (auth only). Also fixed an adjacent pre-existing bug: SMARKETS
+      was in `registry/__init__.py`'s `__all__` since 2026-07-30 but never actually imported (would have broken any
+      direct `from unified_api_contracts.registry import SMARKETS`). Full `quality-gates.sh` green (12528 passed) after
+      2 rebases onto concurrent slots' commits to the same plan (arb-operator-group bugfix, horizon-axis todo) — no
+      conflicts.
 - [ ] [CODE] P0. **Make bare `BETFAIR` an operator-group parent, not a venue.** Remove it from the data-axis venue set;
       add a real venue→operator hierarchy in UAC that `BETFAIR_EX_UK`/`EX_EU`/`SB_UK` roll up to. Coordinate with
       `/plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`, which ships the consuming fix FIRST
