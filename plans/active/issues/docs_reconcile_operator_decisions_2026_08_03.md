@@ -52,8 +52,10 @@ near-mechanical choice — see "Why this needed a human anyway" below.
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 1 — prediction shard-atom `authoritative_for` overlap
 
-- [ ] [DOCS] P2. **Should `prediction-schema-paths.md` and `prediction-batch-live.md` keep "shard atom" phrasing in
-      their own `authoritative_for:` field, given both already defer to a third hub doc in their body text?**
+- [x] ✅ [DOCS] P2. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 10: "Drop it, defer to the hub
+      doc").** Should `prediction-schema-paths.md` and `prediction-batch-live.md` keep "shard atom" phrasing in
+      their own `authoritative_for:` field, given both already defer to a third hub doc in their body text? Trimmed
+      from both spoke docs, added to the hub doc (`availability-manifest-and-data-status.md`) instead.
 
   Verified facts (not in question):
   - `/codex/02-data/prediction-schema-paths.md` (`status: current`) declares
