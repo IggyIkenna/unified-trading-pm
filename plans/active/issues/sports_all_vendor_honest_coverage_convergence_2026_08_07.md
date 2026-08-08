@@ -773,3 +773,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   this tick but still steady. odds smallchunk5: still chunk 18 (~70 min this pass now), 20 OOMs total (up from 16),
   actively logging as recently as ~2 min ago — no hang signature, continuing normal self-recovery. Both healthy, no
   intervention.
+- **2026-08-08T11:53Z — smallchunk5 cleared chunk 18.** Chunk 18 took `10:20:04Z→11:51:19Z` (1h31m), 24 total OOMs this
+  pass, zero hangs — now on **chunk 19/451** (`2020-09-04`), moving fast with skip-fast dates. FIXTURE_STATS +24 days
+  (`last_completed_date=2025-09-22`, fresh `11:52:30Z`), steady. Both healthy, no intervention.
