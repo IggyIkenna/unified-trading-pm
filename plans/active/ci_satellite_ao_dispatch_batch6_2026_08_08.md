@@ -170,15 +170,18 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       `issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md` (`## Still open`, sole [INFRA]
       P3 item) — never cited by any covering doc (created 2026-08-07, after every prior sweep).
 
-- [ ] 5. [INFRA] P2. **Fleet-wide sweep of `unified-trading-ci/.github/workflows/` for other reusable workflows carrying
-      the same still-self-hosted-but-now-stranded `runs-on:` pattern the 2026-08-06 `shared_ci_workflow_repo_extraction`
-      migration left behind, and fix any found.** Starting grep:
-      `grep -rn 'runs-on:.*self-hosted' unified-trading-ci/.github/workflows/`. Fix direction is the already-19×-applied
-      precedent: revert to `ubuntu-latest` for any reusable workflow whose runner registration no longer resolves
-      post-extraction. **Done when**: the sweep is complete, every genuine hit is fixed and verified via a real
-      triggered run, and the finding (fixed count, or "none found") is recorded in the source doc. Source:
-      `issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` (`## Still open` item 1, [INFRA]
-      P2) — never cited by any covering doc (created 2026-08-07).
+- [x] ✅ 5. [INFRA] P2. **Fleet-wide sweep of `unified-trading-ci/.github/workflows/` for other reusable workflows
+      carrying the same still-self-hosted-but-now-stranded `runs-on:` pattern the 2026-08-06
+      `shared_ci_workflow_repo_extraction` migration left behind, and fix any found.** — unified-trading-pm (this
+      commit). **Finding: none found.** Swept all 5 extracted files;
+      `grep -rn 'runs-on:.*self-hosted'     unified-trading-ci/.github/workflows/` → 0 hits (`image-build-validate.yml`
+      already fixed to `ubuntu-latest` pre-existing this task; `notify-slack.yml` → `ubuntu-latest`; the 2 composite
+      actions have no `runs-on:`/no self-hosted refs). `python-quality-gates-v2.yml`'s remaining
+      `self_hosted_runner_labels` reference is a parameterized input defaulting `ubuntu-latest`, used only by private
+      repos whose glue registration was never touched by the public-repo-only revert — a deliberate working canary, not
+      the stranded hardcoded pattern. No code fix needed; finding recorded in the source doc. Full evidence:
+      `issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` (`## Still open` item 1, now
+      flipped) + its Progress Log 2026-08-08 entry.
 
 - [ ] 6. [SCRIPT] P2. **Implement the operator-DEFAULT-RULED-2026-08-06 escalation-dispatch cooldown guard (option a): a
       minimum cooldown since the last `main_ci_red`/`ldr_qg_failure` dispatch for the same repo with an unchanged
