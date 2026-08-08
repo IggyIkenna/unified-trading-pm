@@ -733,3 +733,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (`last_completed_date=2025-05-11`, fresh `10:28:32Z`), close to convergence. odds smallchunk5: 4 leagues attempted in
   chunk 18 (`EPL, LA_LIGA, BUNDESLIGA, SERIE_A`), 3 OOMs total (up from 0) with normal self-recovery, actively logging
   as recently as 25s ago. Both healthy, no intervention. Continuing to watch until clearly past chunk 18.
+- **2026-08-08T10:51Z** — FIXTURE_STATS +70 days (`last_completed_date=2025-07-20`, fresh `10:50:24Z`), very close to
+  its 2026-08-07 target end now. odds smallchunk5: still chunk 18, 11 distinct leagues attempted (zero repeats), 8 OOMs
+  total (up from 3) with normal self-recovery, actively logging as recently as ~17s ago — no 4th occurrence. Both
+  healthy, no intervention.
