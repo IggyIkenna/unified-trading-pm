@@ -137,16 +137,74 @@ if [[ "${MODE}" == "init" && -z "${SLOT_COUNT}" ]]; then
     echo "ERROR: --init requires --slots <N>" >&2; exit 1
 fi
 
-# Slot cap (operator 2026-06-28): max 16 worktree slots. The 290G root cannot hold
-# more — each fully-built slot is ~25 repos x ~2G venv (~35G), so 16 already needs
-# ~150G of worktrees. Reject over-provisioning loudly rather than silently filling
-# the disk (incident 2026-06-28: a full root WEDGED the orchestrator).
-MAX_SLOTS=16
-if [[ "${MODE}" == "init" && "${SLOT_COUNT:-0}" =~ ^[0-9]+$ ]] && (( SLOT_COUNT > MAX_SLOTS )); then
-    echo "ERROR: --slots ${SLOT_COUNT} exceeds the ${MAX_SLOTS}-slot cap (290G root capacity). Use --slots ${MAX_SLOTS} or fewer." >&2; exit 1
+# Slot cap — CAPACITY-DERIVED, not a hardcoded count (rewritten 2026-08-08).
+#
+# The rule this replaces was `MAX_SLOTS=16`, justified by "the 290G root cannot hold
+# more — each fully-built slot is ~25 repos x ~2G venv (~35G)". Its INTENT is sound and
+# preserved verbatim below: reject over-provisioning loudly rather than silently filling
+# the disk (incident 2026-06-28: a full root WEDGED the orchestrator). Its two PREMISES
+# both went stale, in the same direction, and nothing re-checked them:
+#   * root is no longer 290G — the central VM measured 678G on 2026-08-08;
+#   * a slot is not ~35G — 16 real slots measured 181G total, i.e. ~11G each. The 35G
+#     figure assumed every repo carries a fully-built ~2G venv, which is not what the
+#     fleet actually looks like.
+# So the guard was refusing provisioning the disk could comfortably absorb, while a
+# hardcoded count would have gone equally stale the other way if the disk ever shrank
+# or slots ever ballooned — the failure mode the 06-28 incident actually punished.
+#
+# Now: measure free space, measure what a slot really costs on THIS host, and refuse if
+# the projection would eat into a reserve. Fail-CLOSED — an unmeasurable filesystem or a
+# missing sample falls back to the conservative historical numbers, never to "allow".
+SLOT_RESERVE_PCT="${SLOT_RESERVE_PCT:-12}"       # keep >= this % of the fs free after provisioning
+SLOT_FALLBACK_SIZE_GB="${SLOT_FALLBACK_SIZE_GB:-35}"  # the old worst-case, used when unmeasurable
+MAX_SLOTS="${MAX_SLOTS:-64}"                     # absolute backstop against a runaway loop/typo
+
+# POSIX `df -k` / `du -sk` deliberately, NOT `df --output=` / `du -BG`: those are
+# GNU-only and this script also provisions operator LAPTOPS (macOS), where they fail —
+# and because the guard below is fail-closed, a GNU-ism here would not degrade, it would
+# hard-block every macOS provision. `-k` gives 1024-byte blocks on both platforms.
+_fs_avail_gb() { df -k "$1" 2>/dev/null | tail -1 | awk '{print int($4/1048576)}'; }
+_fs_size_gb()  { df -k "$1" 2>/dev/null | tail -1 | awk '{print int($2/1048576)}'; }
+
+# Measured average cost of an existing slot on this host; falls back to the historical
+# worst case when there is nothing to measure (a fresh --init).
+_measured_slot_gb() {
+    local n total
+    n=$(find "${TABS_DIR}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -dc '0-9')
+    [[ -z "${n}" || "${n}" -eq 0 ]] && { echo "${SLOT_FALLBACK_SIZE_GB}"; return; }
+    total=$(du -sk "${TABS_DIR}" 2>/dev/null | awk '{print int($1/1048576)}')
+    [[ -z "${total}" || "${total}" -eq 0 ]] && { echo "${SLOT_FALLBACK_SIZE_GB}"; return; }
+    echo $(( total / n + 1 ))   # +1 = round up, never under-estimate the cost
+}
+
+# $1 = how many NEW slots this invocation would create.
+_assert_capacity_for() {
+    local new_slots="$1" avail size per_slot need reserve
+    avail=$(_fs_avail_gb "${WORKSPACE_ROOT}"); size=$(_fs_size_gb "${WORKSPACE_ROOT}")
+    if [[ -z "${avail}" || -z "${size}" || "${size}" -eq 0 ]]; then
+        echo "ERROR: cannot measure free space on ${WORKSPACE_ROOT} — refusing to provision (fail-closed)." >&2
+        exit 1
+    fi
+    per_slot=$(_measured_slot_gb)
+    need=$(( new_slots * per_slot ))
+    reserve=$(( size * SLOT_RESERVE_PCT / 100 ))
+    if (( avail - need < reserve )); then
+        echo "ERROR: provisioning ${new_slots} slot(s) needs ~${need}G (measured ~${per_slot}G/slot) but only" >&2
+        echo "       ${avail}G is free on a ${size}G filesystem, and ${reserve}G (${SLOT_RESERVE_PCT}%) must stay free." >&2
+        echo "       A full root WEDGES the orchestrator (incident 2026-06-28) — reclaim space or raise" >&2
+        echo "       SLOT_RESERVE_PCT deliberately. Projected free after: $(( avail - need ))G." >&2
+        exit 1
+    fi
+    echo "capacity check OK: ${new_slots} slot(s) x ~${per_slot}G = ${need}G; ${avail}G free, ${reserve}G reserve, $(( avail - need ))G projected."
+}
+
+if [[ "${MODE}" == "init" && "${SLOT_COUNT:-0}" =~ ^[0-9]+$ ]]; then
+    (( SLOT_COUNT > MAX_SLOTS )) && { echo "ERROR: --slots ${SLOT_COUNT} exceeds the ${MAX_SLOTS}-slot backstop." >&2; exit 1; }
+    _assert_capacity_for "${SLOT_COUNT}"
 fi
-if [[ "${MODE}" == "add-slot" && "${SLOT_NUM:-0}" =~ ^[0-9]+$ ]] && (( SLOT_NUM > MAX_SLOTS )); then
-    echo "ERROR: slot ${SLOT_NUM} exceeds the ${MAX_SLOTS}-slot cap (290G root capacity)." >&2; exit 1
+if [[ "${MODE}" == "add-slot" && "${SLOT_NUM:-0}" =~ ^[0-9]+$ ]]; then
+    (( SLOT_NUM > MAX_SLOTS )) && { echo "ERROR: slot ${SLOT_NUM} exceeds the ${MAX_SLOTS}-slot backstop." >&2; exit 1; }
+    [[ -d "${TABS_DIR}/${SLOT_NUM}" ]] || _assert_capacity_for 1
 fi
 
 # --- Helpers (defined early — the DURABLE IDENTITY block below logs) --------
