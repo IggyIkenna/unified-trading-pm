@@ -114,14 +114,24 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
       mirroring the existing spawn-success-resets-fields tests. Also correct `notify_spawn_failed`'s alert text so it no
       longer implies a dead end when Trigger-3 will, in practice, usually recover the slot ~15 min later. ✅
       agent-orchestrator@bc37d03 (2026-08-06, slot-4).
-- [ ] [SCRIPT] P2. **agent-orchestrator** — audit every sub-mechanism inside `_tick_once()` that currently sits AFTER
+- [x] [SCRIPT] P2. ✅ **agent-orchestrator** — audit every sub-mechanism inside `_tick_once()` that currently sits AFTER
       the daily-kill-cap early-return; move the ones that are cleanup/reconcile (not a NEW kill decision — same
       rationale as the already-fixed `_sweep_dirty_slots`/`_sweep_unpushed_slots`) ahead of the cap check, starting with
       orphan-session reclaim (whose own comment already states it isn't a kill). For the ones that genuinely ARE
       new-kill triggers (the 5 live triggers), decide deliberately whether they should also survive a cap-hit day or
       correctly stay gated — don't leave the boundary implicit. Fix the stale "default 20" docstring to match the live
       default (50, config.py:1090) in the same commit. Update `notify_watchdog_kill`'s cap-hit alert text to disclose
-      which mechanisms actually go dormant.
+      which mechanisms actually go dormant. ✅ agent-orchestrator@bc37d03 (reorder — orphan-session reclaim + the 5
+      reclaim/reconcile mechanisms moved ahead of the cap check, only the active_slots reap loop stays gated; stale
+      "default 20" docstring fixed to 50) + agent-orchestrator@53492cb (`notify_watchdog_kill` cap-hit alert reworded to
+      disclose the 5-live-kill-trigger-only scope; `test_tick_daily_cap_still_runs_orphan_session_reclaim` regression
+      test added). Re-verified 2026-08-08 by the batch7-finalize review todo: both commits' diffs confirmed on origin,
+      both named regression tests exist in the live tree and PASS
+      (`tests/test_autospawn.py::test_do_spawn_resets_spawn_retry_count`,
+      `tests/test_worker_liveness_watchdog.py::test_tick_daily_cap_still_runs_orphan_session_reclaim` — 2 passed), the
+      docstring reads "default 50" (worker_liveness_watchdog.py:37), and `notify_watchdog_kill`'s cap-hit body now
+      states "Only the 5 live kill triggers ... go dormant ... dirty/unpushed sweeps, orphan-session reclaim, and the
+      reconcile mechanisms keep running" (server/notifications/slack.py:1745-1748).
 - [x] [DOC] P3. ✅ **RESOLVED (round5 ao investigation) — already answered by the standing codex HARD RULE, no new
       ruling needed.** The question as posed presupposes no rule bars this yet; it already does, unconditionally (not
       just "during full-fleet hours"). `/codex/05-infrastructure/vm-launcher-runbook.md` § "Heavy COMPUTE/MEMORY on the
