@@ -921,3 +921,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   **Per precedent, NOT probing again until well past tonight's UTC midnight** (~00:00Z) — plan to test-relaunch around
   01:00-01:30Z. INJURIES (next AF-campaign item, same singleton lock/API key) also blocked until then — no point
   launching either.
+- **22:25Z — smallchunk8 died silently (5th occurrence), chunk 26 again (3rd time, same date=2020-10-09 as smallchunk2)
+  — genuine bug, ~15-16min silent gap matches signature exactly.** Relaunched as `smallchunk9` (CHUNK_SIZE=5 explicit).
+  Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`@`9a8cd66da1`. FIXTURE_LINEUPS still
+  paused (AF quota), not due for a check until ~01:00Z+.
