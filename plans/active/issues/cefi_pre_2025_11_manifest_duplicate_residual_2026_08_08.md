@@ -107,3 +107,23 @@ rows and stale parquet columns remain from an era predating this session's scope
 - **2026-08-08** — Filed during the `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` resume, slot 18. The
   safe-residual applies, cron cycle, and loop-until-dry verifier all completed; this final re-proof step surfaced a
   genuinely separate, pre-existing gap. Archival deferred pending resolution.
+- **2026-08-08 (slot 9, characterization todo 1 in progress)**: ran a bounded, single-read, memory-capped scan of the
+  cefi manifest (`_index/availability_index.parquet`, one GET, row-group-filtered in Arrow to `asset_group='cefi' AND
+  date < '2025-11-01'` before any Python materialization — same single-walk pattern as
+  `verify_cefi_canonical_4surface_2026_07_20.py`'s own `load_manifest_cefi`; script kept at
+  `scratchpad/characterize_pre_2025_11_residual.py`, not yet promoted since it's a read-only investigation aid, not a
+  reusable tool an open todo will re-run repeatedly).
+  **STEP 1 result (complete, full pre-2025-11-01 slice, not a sample)**: 5,130,946 pre-2025-11-01 cefi manifest rows
+  total; 5,059,930 after excluding chain-bundle itypes (same exclusion `verify_cefi_canonical_4surface` uses for its
+  corpus fractions); **5,031,110 canonical-form (99.43%), 28,820 non-canonical-form (0.57%)** — i.e. this residual is
+  bounded, not a broad gap (in the same shape/order-of-magnitude as Finding 5's tolerated Surface-C residuals in the
+  parent doc, though a larger absolute count). Non-canonical rows by venue: BYBIT 7,857, DERIBIT 7,026, OKX-SWAP 4,176,
+  KRAKEN-SPOT 2,316, OKX-FUTURES 2,086, BINANCE-FUTURES 2,010, KRAKEN-FUTURES 1,489, OKX-SPOT 890, BITFINEX-SPOT 656,
+  BITFINEX-FUTURES 156 (consistent with the 2 probes' own duplicate counts: 20+3 rows across the 2 specific probe
+  instruments), LIGHTER-ZKSYNC 114, BINANCE-SPOT 37, ASTER 7.
+  STEP 2 (resolve each non-canonical row via the production resolver, check whether a canonical-form sibling for the
+  same resolved id already exists in this slice — i.e. distinguish a genuine "duplicate form alongside canonical" from
+  an orphan pre-migration id with no canonical counterpart here) crashed on a data anomaly the first pass didn't guard
+  for: some pre-2025-11-01 rows carry a NULL `instrument_type` (the resolver's `_resolve_itype` assumes non-null) —
+  fixed the script to skip+count those rows rather than crash, re-running now. Todo 1 stays open pending STEP 2's
+  venue-level genuine-duplicate breakdown (the number that actually determines todo 2's fix scope).
