@@ -354,3 +354,47 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   still an ancestor and no swept path changed since" pre-check (exactly what this entry did by hand) would save real
   cost if this dispatch density continues; not implementing it here since it's an orchestration/dispatch-policy change
   beyond this skill's own charter to alter unilaterally.
+- **docs-reconcile 2026-08-08** (fifth same-day dispatch, one-off boot via slot 25). Phase 0: parity/frontmatter (1898
+  docs)/generator/body-links all clean; freshness `--strict` = 25, exactly at baseline (no gap). Re-verified all 11
+  `doc_body_link_baseline.yaml` `known_broken` entries directly (doc-relative + PM-root-relative + `plans/archive/**`
+  basename + a repo-wide `find` by basename) — all 11 still genuinely dead, unchanged from prior dispatches today; `0`
+  in `doc_reference_baseline.yaml` (unchanged, empty). Phase 1: 3 parallel read-only hunters swept the 33 codex docs
+  touched in the last 24h for structural/self-consistency/summary-quality issues (a narrower, git-diff-scoped sweep than
+  the corpus-wide collision/summary passes the 3rd/4th dispatches already ran fresh today) + a direct (non-agent)
+  authoritative_for collision re-check (1024 claims, 0 collisions, exact + fuzzy ratio>0.95, all fuzzy hits verified as
+  distinct sibling topics sharing template phrasing, not real collisions) + a direct doctrine-consistency check (5 files
+  outside the 2 already-covered QG surfaces reference retrieval-layer terminology; all 5 point at the live, current
+  `doc-frontmatter-schema.md`, none stale). **5 genuinely NEW findings this run, 4 verified + fixed, 1 routed to the
+  owning plan instead of fixed here:**
+  1. `codex/07-security/self-hosted-runner-security-posture.md` — the "Dedicated VM" section overclaimed identity
+     decoupling ("ambient identity is now scoped to the runner box alone and no longer doubles as... the
+     agent-orchestrator's own identity"), contradicting the doc's own mitigation-ladder item 2 ("Not yet done").
+     Verified against `/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` todo 3: the runner
+     VM was launched with the SAME AWS IAM instance profile (`uts-orchestrator-epic`) and the SAME GCP service account
+     (`unified-trading-sa`, freshly-keyed, not a distinct SA) as the orchestrator box — identity genuinely was NOT
+     decoupled, only the VM/box was. Corrected. `unified-trading-pm@27173cdd4`.
+  2. `codex/08-workflows/ci-cd-flow.md` L60-65 — blockquote/list structural break (a continuous 3-item gate-set clause
+     split by a blank `>` line + spurious `- ` prefix), the same defect class an earlier 2026-08-08 dispatch fixed in
+     sibling docs but missed here. Fixed. `unified-trading-pm@27173cdd4`.
+  3. `codex/08-workflows/ci-cd-flow.md` L204 — stale "PM `scripts/**`" phrasing the doc's own D16 correction (~L810+)
+     already superseded with the ratified all-repos framing; L204 wasn't updated when that correction landed. Fixed.
+     `unified-trading-pm@27173cdd4`.
+  4. `codex/15-runbooks/alerting/README.md` + `_template.md` — both had genuine free-prose `authoritative_for:` values
+     (no list syntax at all) and NO `summary:` field, so the CLAUDE.md-documented L1 retrieval grep
+     (`rg -l '^authoritative_for:.*<topic>' codex/`) provably fails to match either doc (tested live). Added a derivable
+     `summary:` from the existing prose, normalized `authoritative_for` to a short topic list. Fixed.
+     `unified-trading-pm@27173cdd4`.
+  5. `codex/02-data/sports-data-types-catalog.md`'s Venue Axis section ("32 canonical members") diverges substantially
+     from the live `VENUES_BY_ASSET_GROUP["sports"]` (31 members, verified via direct import of
+     `unified_api_contracts.registry.market_data_categories` — different names on both sides, not just a count
+     mismatch). NOT fixed here: the file is mid-migration under the active
+     `sports_taxonomy_p1_capture_and_contracts_ 2026_08_08.md` plan (20/23 todos done, `assigned_vm: planning`,
+     unlocked), whose own "Codex SSOTs" section already calls this doc "rewritten... now documents the target model" —
+     ambiguous whether the doc states a target the registry hasn't fully landed or is simply a stale enumeration, a call
+     that needs this chain's full context. Per findings-triage ("fits another plan → annotate it, don't fix — collision
+     risk"), added a new `- [ ] [DOCS] P2.` todo to that plan with the full member-list diff instead of editing the
+     codex doc directly. Confirmed-not-a-finding (adversarially checked, false positive): `codex/10-audit/README.md`'s
+     missing `summary:`/ minimal frontmatter — verified this is the established convention for every section-level
+     `README.md` in the codex (checked 8 siblings: `02-data`, `03-observability`, `04-architecture`, `09-strategy`,
+     `11-project-management`, `12-agent-workflow`, `13-codex-governance`, `14-customer-journeys` — all carry only
+     `scope:` + no title/summary).

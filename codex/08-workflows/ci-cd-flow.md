@@ -201,7 +201,8 @@ promoting, confirm scheduled runs actually resume for the re-entered repo
 
 **Never** push CODE directly to `main`/`staging`/LDR — always via `quickmerge` (the only sanctioned path: it runs the
 two-pass QG, stamps the `Quickmerge:` provenance trailer, and the promote bots gate on it). The closed carve-out for
-direct LDR pushes is narrow: `docs(plans):` flips, PM `scripts/**` + any `.github/**`, dirty-deps, and the FF-pull-in.
+direct LDR pushes is narrow: `docs(plans):` flips, any repo's `scripts/**` + any `.github/**` (all-repos, not PM-only —
+D16, operator-ruled 2026-08-08; see § "Strict quickmerge" below), dirty-deps, and the FF-pull-in.
 
 **Dirty-deps direct push — stamp the trailer, don't just narrate it (ruled 2026-07-29,
 `check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`)**: `check_strict_quickmerge.py`'s provenance check

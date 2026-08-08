@@ -43,10 +43,13 @@ The runner pools no longer run on the orchestrator box. They were split onto a d
 (`i-042a6332509482556`, private IP `172-31-3-59`, `c8i.4xlarge`, SSM-only — no public IP, no SSH), separate from the
 planning VM (`i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`) that runs agent-orchestrator. This was primarily a capacity fix
 (colocation was the root cause of a fleet-wide CI capacity crisis —
-`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`), but it also **completes the
-mitigation ladder's step 3 below**: a glue job's ambient identity is now scoped to the runner box alone and no longer
-doubles as (or gains anything from) the agent-orchestrator's own identity. Deploy reference:
-`/codex/05-infrastructure/agent-orchestrator-deploy.md` § "CI-runner fleet". Relaunch runbook:
+`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`), and it **completes the
+mitigation ladder's step 3 below** (moving runner pools to their own box). **Correction (2026-08-08): this does NOT
+decouple identity** — the runner VM was launched with the SAME AWS IAM instance profile (`uts-orchestrator-epic`) and
+the SAME GCP service account (`unified-trading-sa`, freshly-keyed but not a distinct/scoped SA) as the orchestrator box
+(`/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` todo 3's evidence). A glue job's
+ambient identity still doubles as the agent-orchestrator's own identity — that decoupling is step 2 below, **not yet
+done**. Deploy reference: `/codex/05-infrastructure/agent-orchestrator-deploy.md` § "CI-runner fleet". Relaunch runbook:
 `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`.
 
 ## Public-repo / fork-PR threat model (NOT covered by the posture below — track separately)

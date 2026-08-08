@@ -907,3 +907,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   chunk 19/451, fresh. FIXTURE_LINEUPS needed **52,360 → 51,595** (-765/~27min). Both healthy, no action.
 - **20:25Z** — smallchunk8 now chunk 22/451, still 24 `CHUNK_FAILED` total (zero new OOMs since clearing 18), fresh.
   FIXTURE_LINEUPS needed **51,595 → 50,805** (-790/~27min). Both healthy, no action.
+- **20:52Z** — smallchunk8 chunk 24/451, still 24 `CHUNK_FAILED` total, fresh. FIXTURE_LINEUPS needed **50,805 →
+  49,250** (-1,555/~27min, best rate yet). Both healthy, no action.
