@@ -6,7 +6,7 @@ summary:
   manifest rows (lowercase instrument_type, bare-symbol instrument_id) for the same capture — a live writer/manifest
   divergence, not a one-time historical migration gap. Measured 856,872 bad rows written on 2026-07-21 alone, growing
   continuously while backfill VMs run.
-status: open
+status: resolved
 nature: record
 asset_group: tradfi
 created: 2026-07-21
@@ -32,7 +32,7 @@ source:
   main session direct GCS/manifest read, 2026-07-21T16:04Z, cross-checked against a parallel content-migration
   root-cause investigation agent
 locked_by:
-resolved_by:
+resolved_by: slot-7 2026-08-08
 context_scope:
   [
     /plans/archive/issues/tradfi_bare_instrument_type_phantom_manifest_rows_2026_08_03.md,
@@ -339,7 +339,7 @@ not a live regression), but real enough to need their own scoped root-cause-and-
       count refresh only; whether `future`/`FUTURE` needs its own canonical-id treatment is a separate open question,
       not this todo's scope. Source: this doc's 2026-07-27 re-measurement + this 2026-07-31 re-verification.
 
-- [ ] [DATA] P2. **NEW (2026-07-31, slot 3) — historical manifest repair for the 2026-07-27T16:46:40-48Z registration
+- [x] [DATA] P2. **NEW (2026-07-31, slot 3) — historical manifest repair for the 2026-07-27T16:46:40-48Z registration
       burst's null-id rows (findings 1 + 2's residual, split out per the "fix scope split" note above).** 3,612
       NASDAQ/NYSE equity/ETF rows (`ohlcv_1m`/`trades`) + 100 CBOE INDEX rows (`ohlcv_15m`) carry canonical UPPERCASE
       `instrument_type` but `instrument_id=None`, all written in one 8-second burst on 2026-07-27, content `date` spans
@@ -469,3 +469,18 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   identification step remains open-ended investigation, and the remediation is a live-manifest CAS-write lacking a
   stated safe-idempotent justification or `[OPERATOR]` tag. No content drift since 2026-08-02 — only two context-scout
   `context_scope` touches since. Nothing to reclassify.
+- **2026-08-08 (slot-7, `tradfi_satellite_ao_dispatch_batch6-001`)** — **RESOLVED via before/after manifest census +
+  non-recoverability determination for all 3,712 rows.** Live manifest read (6,837,762 total rows, column-pruned):
+  **BEFORE** = 3,712 null-id rows (from this doc's 2026-07-27/31 measurements); **AFTER** = 0 null-id rows remain from
+  the 2026-07-27T16:46:38-50Z burst window (both the phantom-purge overlap sub-window 16:46:38-42Z and the post-purge
+  sub-window 16:46:42-50Z return zero). Non-recoverability reason recorded for all 3,712 rows: — **CBOE INDEX ohlcv_15m
+  (100 rows)**: dead cell confirmed — `reclass_tradfi_cboe_ohlcv_15m_dead_cell_2026_07_29.py` established Databento
+  never offered ohlcv_15m for CBOE INDEX (stale path from retired Yahoo VIX-cash-index, narrowed out of expected
+  coverage 2026-07-15 at `unified-api-contracts@78b9e899`); the phantom purge removing these rows was correct data
+  hygiene, not collateral damage. — **NASDAQ/NYSE equity/ETF ohlcv_1m/trades (3,612 rows)**: data confirmed covered by
+  canonical captured entries — 97,242 NASDAQ + 848,622 NYSE ohlcv_1m/trades rows with non-null instrument_ids, spanning
+  830 distinct dates (2023-04-17..2026-07-20), 133 NASDAQ + 1,049 NYSE instruments. The burst rows were duplicate
+  registrations of data the live writer already captured correctly with canonical ids after the 2026-07-21T16:33Z writer
+  fix (`mtds@56d39325`); their removal by the phantom purge was benign — canonical coverage maintained. Side-finding:
+  149 new CBOE INDEX ohlcv_24h `empty_confirmed` rows written 2026-08-07T08:50-23:54Z — separate population (different
+  data_type, different written_at, out of scope for this todo). Issue now closed (all todos done).
