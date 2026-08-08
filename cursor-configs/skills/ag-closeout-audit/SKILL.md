@@ -469,7 +469,10 @@ skill auditing the disjoint `assigned_vm: NA` population) runs the identical che
 the procedure lives in one place, not two. For each candidate item, grep the AG's consolidated-closeout plan's OWN todos
 AND every existing batch plan for this AG (Phase 0.1/0.2) for overlap on the same target file(s)/same underlying fix —
 not just "is this covered" (Phase 1's question) but "does something ELSE already claim this exact ground, possibly with
-a different approach". Three outcomes:
+a different approach". **Also check the 4th surface**: any `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md`
+for this tranche from a PRIOR `/ag-closeout-audit` or `/na-eligibility-audit` run, not just this one — grep its
+`Source:`/`## Deferred`/`## Already covered` citations for the candidate doc's path before drafting a new extraction.
+Three outcomes:
 
 - **No overlap** — draft normally.
 - **Clear duplicate or the other side is provably stale/superseded** (a newer dated section in either doc, a commit that
