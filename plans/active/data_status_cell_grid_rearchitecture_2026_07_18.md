@@ -79,9 +79,9 @@ real fix is to never load the whole manifest per request.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Measure + profile** — instrument the current cell-grid build to confirm the per-service memory
+- [x] ✅ [BACKEND] P1. **Measure + profile** — instrument the current cell-grid build to confirm the per-service memory
       footprint + the exact read pattern (which manifest columns/partitions a full-history request touches). Baseline
-      the numbers this plan must beat.
+      the numbers this plan must beat. — deployment-api@8a36931
 - [ ] [BACKEND] P1. **Design doc — bound vs stream vs precompute** — evaluate the three directions against the
       single-walk discipline (no new whole-corpus walk), Cloud Run memory, and UI latency; pick one (or a hybrid) and
       record the decision + the projection schema. This is the design gate.
@@ -138,3 +138,36 @@ real fix is to never load the whole manifest per request.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries).
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; todo 2 is still an
   unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on.
+
+- **2026-08-08 — Todo 1 complete (slot-12 agent, deployment-api@8a36931).** **Instrumentation added**:
+  `_read_index_cached` in `deployment_api/services/data_status_service.py` now logs at INFO on every cache-miss GCS
+  fetch: bucket name, row count, and in-process DataFrame bytes (`df_gb`). Log key:
+  `manifest-read-profile bucket=<bucket> rows=<N> df_bytes=<B> df_gb=<G>`.
+
+  **Read pattern — old cell-grid build path (`_build_manifest_category` via `_read_index_cached`)**:
+  - Calls `read_availability_index(bucket)` with no `date_window` (no row-group pushdown).
+  - Column set: `DRILLDOWN_COLUMNS` (27 columns — same projection all manifest readers share).
+  - Scope: **ALL row groups** — the entire multi-year manifest is loaded unconditionally regardless of the display
+    window. Date/venue/service masks applied AFTER this full load.
+
+  **Memory footprint — calibration anchors from `live_build_guard.py`** (measured 2026-07-13/14, full-history = 3,120
+  days, 5 categories each):
+  - instruments-service: **18 GB** (3,120 days × 5 cats) → ~1.15 MB/day/category
+  - market-tick-data-service: **81 GB** (3,120 days × 5 cats) → ~5.19 MB/day/category
+  - market-data-processing-service: **56 GB** (90 days × 5 cats) → ~124 MB/day/category
+
+  MDPS's rate (~124 MB/day/category) is the conservative default in `live_build_guard.py` for services without their own
+  calibration anchor. A 30-day MDPS window costs ~18.6 GB — already OOM territory for Cloud Run's 4 GiB limit.
+
+  **Architecture contrast — `/coverage-grid` endpoint already has partial fix**: `_coverage_grid.py` calls
+  `read_manifest_index(bucket, date_window=(start_date, end_date))`, enabling date-range row-group pushdown.
+  `manifest_source.py` documents the measured effect: "~14.86 GiB → ~5 MB for a single-day filter on the 27.4M-row DeFi
+  index." The re-architecture (todos 3+) should extend this approach to `_get_manifest_status_sync` /
+  `_build_manifest_category`.
+
+  **Numbers this plan must beat (Cloud Run 4 GiB limit)**:
+  - MTDS full-history: 81 GB → need ≥20× reduction.
+  - The 90-day UI default provides partial relief (90 × 5.19 MB/cat × 5 cats ≈ 2.3 GB MTDS), but full-history windows
+    are still OOM-dangerous — hence the `live_build_guard.py` pre-flight refusal.
+  - Target for todo 2 design: bounded/streamed/precomputed approach must keep peak RSS < 4 GiB even for a full-history
+    request at MTDS's worst-case rate (5.19 MB/day/category).
