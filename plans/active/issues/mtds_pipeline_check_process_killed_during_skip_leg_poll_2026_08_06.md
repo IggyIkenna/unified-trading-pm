@@ -246,6 +246,25 @@ proven this run.
       Reproduction against a real long sweep left as future verification (not required for this todo's own
       done-definition: code shipped + checkbox flipped).
 
+## Progress Log (finalize-plan review)
+
+- **finalize-plan review 2026-08-08** (todo 1 of
+  `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`): re-verified the
+  `[DATA] P2` todo's evidence citation is real. (1) **Code**: confirmed at `unified-trading-library@397ecd1f`
+  (`git show 397ecd1f -- unified_trading_library/pipeline_e2e_check/launcher.py`) — `_driver_rss_mb()`
+  (`resource.getrusage(RUSAGE_SELF).ru_maxrss`, no subprocess) plus a
+  `logger.info("...poll tick %d — driver RSS peak=%.1fMB"...)` call inside `_poll_until_terminal`'s poll loop, matching
+  the citation exactly. (2) **Reproduced, option (b)**: a fresh post-fix driver run independently confirms the
+  instrumentation fires — VM `pipeline-e2e-check-mtds-20260808-225945-c92f6b` started 2026-08-08T22:59:45Z (43 min after
+  the fix commit landed at 22:16:09Z). Its `run.log` shows `poll tick N — driver RSS peak=<X>MB` on every poll tick for
+  each launched sub-VM, with real climbing values across two consecutive sub-VM launches: 5632.4MB → 13341.9MB (+137%)
+  within ~5 minutes — genuine measured RSS growth, not a flat/no-op log line. Evidence:
+  `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mtds-20260808-225945-c92f6b/run.log | grep 'driver RSS peak'`.
+  The VM was still `RUNNING` (no `EXIT_STATUS`/kill yet) at verification time — option (b) only requires confirming the
+  instrumentation fires, which it unambiguously does; a future OOM on this or any future run now leaves a measured RSS
+  timeline instead of a postmortem guess. **Verdict**: `[DATA] P2` citation is accurate and verified — no changes needed
+  to that checkbox.
+
 ## Progress Log (na-eligibility-audit)
 
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The prior KEEP-NA

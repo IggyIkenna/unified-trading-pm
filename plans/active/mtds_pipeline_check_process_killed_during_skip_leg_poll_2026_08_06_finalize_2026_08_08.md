@@ -55,19 +55,27 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify the RSS self-logging landed and was reproduced/verified.** Confirm the source doc's
+- [x] ✅ [REVIEW] P1. **Re-verify the RSS self-logging landed and was reproduced/verified.** Confirm the source doc's
       `[DATA] P2` todo's evidence citation is real: the logging code exists at the cited commit (repo@sha), AND either
       (a) a fresh re-run's `run.log` shows an RSS timeline climbing toward a kill, or (b) a subsequent regularly-
       scheduled `cefi_mtds_smoke_tester` run's log independently confirms the instrumentation fires. Flip the source
       doc's checkbox with the verified evidence if not already flipped. Repo: unified-trading-pm. **Done when**: the
-      source doc's `[DATA] P2` checkbox is `[x]` with a verified repo@sha + log-evidence citation.
-- [ ] [DOC] P2. **Archive
-      `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`** via the standard
-      6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the archive
-      banner → run the codex-alignment check → grep the corpus for every referrer of
+      source doc's `[DATA] P2` checkbox is `[x]` with a verified repo@sha + log-evidence citation. — unified-trading-pm:
+      code confirmed at unified-trading-library@397ecd1f (matches citation exactly); reproduced per option (b) via
+      post-fix VM `pipeline-e2e-check-mtds-20260808-225945-c92f6b` (started 22:59:45Z, 43min after the fix landed) whose
+      `run.log` shows the RSS instrumentation firing every poll tick with real climbing values (5632.4MB→13341.9MB,
+      +137%). `[DATA] P2` checkbox was already `[x]` and its citation verified accurate — no change needed there. Full
+      evidence: source doc's new "Progress Log (finalize-plan review)" section, 2026-08-08.
+- [ ] [DOC] P2. **Archive `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`**
+      via the standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked →
+      add the archive banner → run the codex-alignment check → grep the corpus for every referrer of
       `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06` and fix each path to point at the archived
       location → clear `locked_by` (already empty, confirm). **Done when**: the doc is moved to
       `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
       archived alongside it in the same commit.
 
 ## Progress Log
+
+- **2026-08-08 (slot 9, review-craft task)**: todo 1 done — re-verified the source doc's `[DATA] P2` RSS-self-logging
+  evidence citation (code + a fresh post-fix reproduction). See the source issue doc's new "Progress Log (finalize-plan
+  review)" entry for full detail. Todo 2 (archival) is gated `sequential: true` behind this and not yet started.
