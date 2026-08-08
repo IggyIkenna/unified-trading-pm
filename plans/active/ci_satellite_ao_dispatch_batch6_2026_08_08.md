@@ -243,7 +243,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       round — see § Same-file contention; do not run this concurrently with any other template-rollout todo. **DONE
       2026-08-08, but the "26 consumers" premise was STALE — corrected scope, see
       `issues/notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md` for the full investigation.** Ported the
-      fix into the template + PM's own deployed copy (`unified-trading-pm@f5fe2372e`) and into `deployment-service`
+      fix into the template + PM's own deployed copy (`unified-trading-pm@5d16f57f3`) and into `deployment-service`
       (`deployment-service@00a23128`, its confirmed sole remaining legitimate local caller via
       `cloud-run-traffic-drift-check.yml`). Did NOT blanket-roll to the other 24 manifest repos: 21 of them had their
       local `notify-slack.yml` copies DELIBERATELY DELETED 2026-08-07 as genuinely dead
