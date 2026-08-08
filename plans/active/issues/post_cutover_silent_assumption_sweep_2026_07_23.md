@@ -387,21 +387,33 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 
 ### Sub-steps
 
-- [ ] [INFRA] P1. Implement conventional-commit bump computation + tag mint in `reconcile_release_tags.py`, reusing the
-      proven rules. Gate behind an explicit `--mint` flag so the detector stays usable standalone.
-- [ ] ⛔ [DOC] P1. **SUPERSEDED 2026-07-25 — moot, not an open operator question.** Option B (this whole sub-steps list)
-      was never built; the per-repo `semver-agent` retarget shipped instead (see the ⛔ banner above this section + the
-      Resolution checklist's F2 item). There is no reconciler-side message-only-vs-API-diff tradeoff to rule on since
-      the reconciler itself does not exist and is not being built. Left unticked per the section banner's own "left
-      unticked on purpose" note — not re-tagged `[OPERATOR]` because there is nothing left for an operator to decide
-      here.
-- [ ] [INFRA] P1. Port the bump-rate circuit breaker to the reconciler (tag-mints/hour), plus a low `--max-creates` for
-      the first drain.
-- [ ] [INFRA] P2. Batch the manifest write to ONE commit per run (the whole point of B) — verify by confirming a single
-      `chore(manifest):` commit after a multi-repo mint.
-- [ ] [INFRA] P2. First supervised drain: run with `--dry-run`, eyeball the 22 proposed versions, then mint.
-- [ ] [DOC] P2. Update `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" once B ships — it currently
-      documents B as _planned_.
+- [x] ⛔ [INFRA] P1. **RETIRED 2026-08-08 (operator ruling: formally retire Option B now).** ~~Implement
+      conventional-commit bump computation + tag mint in `reconcile_release_tags.py`, reusing the proven rules. Gate
+      behind an explicit `--mint` flag so the detector stays usable standalone.~~ Moot -- the per-repo `semver-agent`
+      retarget (`unified-trading-pm@0b128a725`, `push:[main]`, fleet-rolled to all 22 `ldr_main` repos) shipped instead
+      and is proven live (see the ⛔ banner above this section). No `--mint` flag exists or will be built;
+      `reconcile_release_tags.py` stays a STALL DETECTOR only (`/codex/08-workflows/ci-cd-flow.md:1004`).
+- [x] ⛔ [DOC] P1. **SUPERSEDED 2026-07-25, formally retired 2026-08-08 (operator ruling).** Option B (this
+      whole sub-steps list) was never built; the per-repo `semver-agent` retarget shipped instead (see the ⛔ banner
+      above this section + the Resolution checklist's F2 item). There is no reconciler-side message-only-vs-API-diff
+      tradeoff to rule on since the reconciler itself does not exist and is not being built.
+- [x] ⛔ [INFRA] P1. **RETIRED 2026-08-08 (operator ruling).** ~~Port the bump-rate circuit breaker to the
+      reconciler (tag-mints/hour), plus a low `--max-creates` for the first drain.~~ Moot -- the reconciler-side minter
+      this circuit breaker would protect is not being built; the per-repo `semver-agent` retarget shipped instead and
+      already carries its own proven circuit breaker (the 2026-06-10 incident's fix, unchanged by this retarget).
+- [x] ⛔ [INFRA] P2. **RETIRED 2026-08-08 (operator ruling).** ~~Batch the manifest write to ONE commit per run
+      (the whole point of B) — verify by confirming a single `chore(manifest):` commit after a multi-repo mint.~~ Moot
+      -- Option B (the whole point of which was this batching) was never built; the per-repo semver-agent retarget
+      shipped instead, with its own unbatched-but-now-restored per-repo manifest commits (F2's outcome achieved by the
+      opposite route -- see the Resolution checklist item).
+- [x] ⛔ [INFRA] P2. **RETIRED 2026-08-08 (operator ruling).** ~~First supervised drain: run with `--dry-run`,
+      eyeball the 22 proposed versions, then mint.~~ Moot -- there is no reconciler-side mint path to drain; minting
+      already happens per-repo via the live semver-agent retarget.
+- [x] ⛔ [DOC] P2. **RETIRED 2026-08-08 (operator ruling) — already superseded in practice.** ~~Update
+      `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" once B ships — it currently documents B as
+      _planned_.~~ B will never ship; codex already reflects the actual shipped state
+      (`/codex/08-workflows/ci-cd-flow.md:1004` § "Release tag reconciler — a STALL DETECTOR, not the minter (corrected
+      2026-07-25)"), so there is nothing left to update for this specific item.
 
 ## Docs (P2)
 
@@ -435,16 +447,17 @@ codex, or a future staging re-entry gets a dead pipeline.
       ⚠️ **Re-entry gate unchanged: this item must be closed BEFORE execution-service handles live order flow** — the
       defect is invisible at runtime (204 reads as success), so it will not resurface on its own. Whoever picks up
       execution-service work owns this.
-- [ ] ⛔ [INFRA] P1. **SUPERSEDED 2026-07-25 — DO NOT IMPLEMENT AS WRITTEN.** ~~F2 — restore version minting via OPTION
-      B (the PM reconciler), NOT the per-repo agent.~~ **F2's OUTCOME (version minting restored) IS ACHIEVED — by the
-      opposite route.** On an operator directive 2026-07-25 the per-repo `semver-agent` was retargeted `staging` →
-      `push:[main]` (`unified-trading-pm@0b128a725`, ancestor-verified), fleet-rolled to all 22 `ldr_main`+git-tag
-      repos, and proven live (`unified-trading-library` v0.57.0 published to Artifact Registry, the first real publish
-      since 2026-06-27). The PM-reconciler minter was **never built** and is architecturally incoherent for git-tag
-      repos. See the ⛔ banner on § "Option B" below and
+- [x] ⛔ [INFRA] P1. **SUPERSEDED 2026-07-25, formally retired 2026-08-08 (operator ruling: retire it formally
+      now).** ~~F2 — restore version minting via OPTION B (the PM reconciler), NOT the per-repo agent.~~ **F2's OUTCOME
+      (version minting restored) IS ACHIEVED — by the opposite route.** On an operator directive 2026-07-25 the
+      per-repo `semver-agent` was retargeted `staging` → `push:[main]` (`unified-trading-pm@0b128a725`,
+      ancestor-verified), fleet-rolled to all 22 `ldr_main`+git-tag repos, and proven live
+      (`unified-trading-library` v0.57.0 published to Artifact Registry, the first real publish since 2026-06-27). The
+      PM-reconciler minter was **never built** and is architecturally incoherent for git-tag repos. See the ⛔ banner on
+      § "Option B" below and
       [/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md](/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
-      § Phase 4. Left unticked because the item as _worded_ must not be executed; its retirement is parked for the
-      operator.
+      § Phase 4. The per-repo semver-agent retarget is what shipped and holds — Option B is closed, not just
+      unimplemented.
 - [x] ✅ [INFRA] P1. **Fix F2 — make the BACKSTOP able to report the outage.** `scripts/cicd/reconcile_release_tags.py`
       now splits two populations: tag-derived repos (all 23 today) are **N/A for tag creation** — minting a tag from a
       version is circular when the tag defines the version — and are instead checked for the real invariant, that `main`
