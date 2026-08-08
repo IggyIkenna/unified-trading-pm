@@ -277,3 +277,7 @@ before launch.
   a delete but ~26h47m later by a different, non-Claude-Code actor (`uts-prd-sa`) — a separate failure mode, not folded
   into this root cause. Added a new P1 hardening todo (remove the copy-pasteable delete command from the refusal
   messages) since a prose CAUTION has already failed to prevent 2 measured incidents.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~38h elapsed)**: 06-27 COMPLETE (all venues confirmed: BIN=563, BYB=488,
+  OKX=353, KRA=252, BITGET=492, BITFINEX=58 — OKX/KRA lag resolved). Frontier at 06-28: BIN=217 (writing), BITGET=128
+  (writing), BITFINEX=58 (done); BYB=0/OKX=0/KRA=0 (structural lag, not stall — will appear in next check). 06-29=all
+  zeros. Throughput ~0.67 days/hour. ETA ~2026-08-12T05:00Z unchanged.
