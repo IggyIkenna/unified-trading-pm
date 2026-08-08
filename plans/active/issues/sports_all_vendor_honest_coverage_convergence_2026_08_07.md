@@ -893,3 +893,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   re-census needed **56,779 → 56,147** (-632/~27min, consistent rate). At this rate full convergence is a long horizon
   (~44h) — expected for a campaign this size, not a stall (metric still climbing each check). Doc nearing its cap (~110
   lines left) — future ticks go terser; will milestone-compact older entries once <50 lines remain.
+- **17:41Z** — both healthy. smallchunk8: chunk 12/451, still zero OOMs. FIXTURE_LINEUPS: `date=2020-11-21`, needed
+  **56,147 → 55,269** (-878/~30min, rate holding/slightly up). No action needed.
