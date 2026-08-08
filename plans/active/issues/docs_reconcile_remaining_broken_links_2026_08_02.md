@@ -117,11 +117,15 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       not a rename, no successor exists. **Fixed 2026-08-05 (docs-reconcile)**: converted all 6 to plain-text
       `pings/slot_N.md` citations with a deletion note, dropping the dead hyperlink syntax while preserving the
       historical "where the evidence used to live" mention. `unified-trading-pm@72b0f5724`.
-- [ ] [DOCS] P3. `plans/epics/agent_operating_framework_master.md` (`related:` frontmatter) cites
+- [x] ✅ [DOCS] P3. `plans/epics/agent_operating_framework_master.md` (`related:` frontmatter) cited
       `../active/orchestrator_v07_multi_vm_topology_2026_05_21.md` — no file under this or any similar slug exists
       anywhere in the repo; multi-VM dispatch itself was deprecated 2026-06-27 in favor of the single-VM architecture,
-      so there is no "current" successor to point to, only a retired concept. Fix: drop the dead `related:` entry (the
-      epic's other `related:` entries remain valid).
+      so there was no "current" successor to point to, only a retired concept. **Already resolved by the time of the
+      2026-08-05 pass** (the Progress Log below recorded this as "found ALREADY ABSENT... no action needed" that day,
+      but the checkbox itself was never flipped — closed now, 2026-08-08, with a fresh live re-verification:
+      `grep -A15 '^related:' plans/epics/agent_operating_framework_master.md` no longer contains the dead slug, and
+      `scripts/plan-hygiene/doc_reference_baseline.yaml`'s `known_broken` list is empty, consistent with there being no
+      outstanding frontmatter-reference debt).
 
 ## Genuinely ambiguous — broken, but no confident single target (P2, report-only per the skill's own severity guidance — not an authority question)
 
@@ -253,3 +257,14 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **docs-reconcile 2026-08-08** (dispatch agt-bb1c67): live-re-verified all 11 `doc_body_link_baseline.yaml`
+  `known_broken` entries via direct filesystem checks (not re-derived logic) — all 11 still genuinely reproduce (no
+  successor found anywhere, including a fresh `plans/archive/**` basename search); these map 1:1 onto the 5 open
+  findings at lines ~66/73/79/88/94 above (the README.md-cluster, ×3-cluster, ui-testing-layers, architecture-v2, and
+  codex/README.md rows). Found and closed one genuine bookkeeping gap: the `agent_operating_framework_master.md`
+  `related:` item (above) was already confirmed resolved by the 2026-08-05 Progress Log entry but its checkbox was never
+  flipped — flipped now with fresh evidence. The remaining open items (QUICK_REFERENCE.md content-staleness,
+  workspace-root-variable.md's `ci-cd.md` ambiguity, root README.md broader staleness, the freshness-ratchet design
+  note, and the custody-onboarding-checklist.md / `fireblocks_copper_client_integration` item) are unchanged — none of
+  these are tracked in either link-existence baseline, so they were not in scope for this pass's live-reproduction
+  check; all remain genuine VALID_JUDGMENT items per the last na-eligibility-audit verdict.

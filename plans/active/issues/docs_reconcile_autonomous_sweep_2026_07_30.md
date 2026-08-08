@@ -179,20 +179,23 @@ correctness fact, not an authority call, but it lives in `codex/**` so this run 
 
 ### P1-C. Four doctrine references point into the archived `unified-trading-codex` with no successor
 
-The run repointed 33 such refs where the target provably exists under PM's `codex/`. These 4 have **no counterpart**, so
-repointing them would have manufactured a knowingly-wrong path, and they were deliberately left alone:
+**Re-verified 2026-08-08 (docs-reconcile, dispatch agt-bb1c67): 3 of 4 rows are now resolved/moot, independently of this
+doc — only row 3 remains genuinely open.** The run repointed 33 such refs where the target provably exists under PM's
+`codex/`. These 4 had **no counterpart** at the time, so repointing them would have manufactured a knowingly-wrong path,
+and they were deliberately left alone:
 
-| Location                                                  | Dead target                                            | Successor hunt result                                                                                                                                                                    |
-| --------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cursor-rules/architecture/strategy-data-access.mdc:11`   | `09-strategy/cross-cutting/config-architecture.md`     | only match is `/codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md` — pointing a live rule at an `_archived_pre_v2` doc is worse than a dead link                   |
-| `.cursor/rules/core/provider-api-version-manifest.mdc:16` | `02-data/provider-api-version-manifest.md`             | none anywhere                                                                                                                                                                            |
-| `.cursor/rules/misc/sync-system.mdc:14`                   | `unified-trading-codex/scripts/sync-rules-and-docs.py` | script does not exist in any repo — the whole rule may be obsolete                                                                                                                       |
-| `.cursor/rules/ui/ui-quality-gates-typescript.mdc:18`     | `06-coding-standards/quality-gates-ui-typescript.md`   | nearest is `quality-gates-ui-template.sh` (a shell template, not the doc); current UI SSOT is likely `/codex/06-coding-standards/ui-testing-layers.md` but that is not a provable rename |
+| Location                                                  | Dead target                                            | Successor hunt result                                                                                                                                                                    | Status                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cursor-rules/architecture/strategy-data-access.mdc:11`   | `09-strategy/cross-cutting/config-architecture.md`     | only match is `/codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md` — pointing a live rule at an `_archived_pre_v2` doc is worse than a dead link                   | ✅ **MOOT** — the whole top-level `cursor-rules/` tree (this file included) was archived 2026-08-02 to `plans/archive/cursor-rules_2026_08_02/architecture/strategy-data-access.mdc`; the citing rule is no longer live, same disposition already applied to 2 sibling `cursor-rules/*.mdc` findings in `docs_reconcile_remaining_broken_links_2026_08_02.md`. |
+| `.cursor/rules/core/provider-api-version-manifest.mdc:16` | `02-data/provider-api-version-manifest.md`             | none anywhere                                                                                                                                                                            | ✅ **FIXED 2026-08-05** (`unified-trading-pm@72b0f5724`, per `docs_reconcile_remaining_broken_links_2026_08_02.md`) — dropped the dead `CODEX:` pointer line; live-verified 2026-08-08, the file no longer contains it and the rule body is self-sufficient.                                                                                                   |
+| `.cursor/rules/misc/sync-system.mdc:14`                   | `unified-trading-codex/scripts/sync-rules-and-docs.py` | script does not exist in any repo — the whole rule may be obsolete                                                                                                                       | ⬜ **STILL OPEN** — live-verified 2026-08-08: the file already carries a 2026-07-30 NOTE explaining the script is gone, but the `DO:` line directly below still instructs running it. Needs a human to decide: strip the `DO:` line (keep RULE/WHY as aspirational pending a successor script) vs. delete the whole rule.                                      |
+| `.cursor/rules/ui/ui-quality-gates-typescript.mdc:18`     | `06-coding-standards/quality-gates-ui-typescript.md`   | nearest is `quality-gates-ui-template.sh` (a shell template, not the doc); current UI SSOT is likely `/codex/06-coding-standards/ui-testing-layers.md` but that is not a provable rename | ✅ **RESOLVED** (date untracked, found already-fixed 2026-08-08) — the file's "Source of truth" section now explicitly states "dead reference, no live successor (2026-07-30)" with the same successor-hunt reasoning, in prose rather than a markdown-link, so it no longer trips the body-link checker and no longer silently asserts a working link.        |
 
-Each needs a human to either repoint the prose at the real current doc or delete the dead reference. **Do not
-blanket-fix the second row with a path rewrite**: it is a markdown body link currently held in
-`scripts/quality_gates/doc_body_link_baseline.yaml`, so rewriting the string without fixing the target converts a
-baselined broken link into a NEW one and fails `check_doc_body_links.py`.
+Only row 3 (`sync-system.mdc`) needs a human decision now. **Do not blanket-fix it with a path rewrite** if that
+decision ever touches the `provider-api-version-manifest.mdc` row's history: that one was (correctly) a markdown body
+link held in `scripts/quality_gates/doc_body_link_baseline.yaml`, so any similar future rewrite of a baselined broken
+link must repoint to a real target, not just delete the string, or it converts a baselined entry into a NEW one and
+fails `check_doc_body_links.py`.
 
 ### P1-D. Unterminated bold span renders a whole block bold in a live issue doc
 
@@ -241,11 +244,13 @@ terminology, not broken links.
 - [x] ✅ [DOC] P0. **P0-B `slot-label grammar` dual-SSOT collision — RESOLVED 2026-07-31** by another session via OPTION
       C (merge), `unified-trading-pm@257ee3a13`; see the resolved banner in §P0-B for the full evidence. Flipped here so
       the register reflects it.
-- [ ] [DOC] P1. **Resolve the 4 dead `unified-trading-codex` doctrine refs with no successor (P1-C)** — each of the 4
-      rows in the §P1-C table needs a human to either repoint the prose at the real current doc or delete the dead
-      reference. **Do NOT blanket-rewrite the `provider-api-version-manifest` row**: it is a body link held in
-      `scripts/quality_gates/doc_body_link_baseline.yaml`, so rewriting the string without a real target converts a
-      baselined broken link into a NEW one and fails `check_doc_body_links.py`. (repo: `unified-trading-pm`)
+- [ ] [DOC] P1. **Resolve the last dead `unified-trading-codex` doctrine ref with no successor (P1-C, narrowed
+      2026-08-08)** — 3 of the original 4 rows are independently resolved/moot (see §P1-C table for evidence:
+      `strategy-data-access.mdc` MOOT via the 2026-08-02 `cursor-rules/` archival, `provider-api-version-manifest.mdc`
+      FIXED 2026-08-05, `ui-quality-gates-typescript.mdc` already rewritten to explanatory prose). Only
+      `.cursor/rules/misc/sync-system.mdc:14-17` remains: needs a human to decide whether to strip the `DO:` line (keep
+      the rule aspirational pending a successor sync script) or delete the rule outright, since the script it names does
+      not exist anywhere. (repo: `unified-trading-pm`)
 - [x] ✅ [DOC] P1. **Fix the unterminated bold span (P1-D)** at
       `/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` — the span never closes before
       the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this is a
@@ -372,3 +377,12 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **docs-reconcile 2026-08-08** (dispatch agt-bb1c67): re-verified P0-A live
+  (`grep -rl "last_reviewed: 2026-05-17" codex/` → **zero** matches, confirming the resolved-2026-08-02 fix holds — the
+  cliff cannot recur). Re-verified all 4 P1-C rows individually against the live filesystem (not trusting the table's
+  prior text): 3 are independently resolved/moot since this doc was last touched (evidence + dates added to the §P1-C
+  table and the todo narrowed accordingly); only `sync-system.mdc` remains a genuine open human decision.
+  `check_codex_doc_freshness.py --strict` re-run against the correct `--workspace-root` (parent of
+  `unified-trading-pm/`, not the PM root itself — the script has no fallback for the latter, unlike
+  `check_doc_retrieval_layer_parity.py`, which does): 309 docs scanned, 26 violations, matches the 26-baseline exactly
+  (gap 0).

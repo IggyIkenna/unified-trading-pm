@@ -31,7 +31,7 @@ hard-blocking since 2026-07-04). This skill covers what THAT gate cannot see:
    field with no matching generator update).
 2. **Cross-agent-instruction gaps** — a retrieval or governance rule meant to reach every agent (Claude Code, Codex,
    Cursor) living in only ONE of the three files that carry shared instructions (`cursor-configs/CLAUDE.md`,
-   `AGENTS.md`, `.cursorrules`/`cursor-rules/`). Real regression found 2026-07-23: the "grep DOC_INDEX first" doctrine
+   `AGENTS.md`, `.cursorrules`/`.cursor/rules/`). Real regression found 2026-07-23: the "grep DOC_INDEX first" doctrine
    was CLAUDE.md-only despite AGENTS.md being documented as the shared file — Codex/Cursor agents never got it.
 3. **`authoritative_for` collisions** — two `codex-ssot` docs, both `status: current`, both claiming the same topic in
    `authoritative_for:`. The whole point of the field is "grep it, land on the ONE right doc" (doc-frontmatter-schema.md
@@ -128,9 +128,9 @@ spawn; set `model=` explicitly, default sonnet):
 2. **Summary-quality hunters** — sweep `summary:` fields corpus-wide for placeholder/near-empty patterns (< ~40 chars,
    "TBD", "see body", a bare restatement of the title). Read the doc body to confirm the summary really is unusable
    before flagging (a short summary can still be a complete one).
-3. **Doctrine-consistency hunters** — beyond the two hardcoded QG surfaces, sweep `cursor-rules/*.mdc` and `agents/*.md`
-   (role charters) for retrieval-doctrine references that have gone stale (naming a retired file path, a superseded
-   index format, or contradicting the current L0/L1/L2/L3 terminology).
+3. **Doctrine-consistency hunters** — beyond the two hardcoded QG surfaces, sweep `.cursor/rules/*.mdc` and
+   `agents/*.md` (role charters) for retrieval-doctrine references that have gone stale (naming a retired file path, a
+   superseded index format, or contradicting the current L0/L1/L2/L3 terminology).
 4. **Codex-freshness scope report** — for docs outside the 4 gated dirs, report staleness distribution (not a per-doc
    finding list) so the operator can decide if/when to widen the ratchet.
 5. **Broken-link triage hunters** — batch the `known_broken` entries from BOTH `doc_reference_baseline.yaml` and
