@@ -129,9 +129,9 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
       SMARKETS leg producing a non-zero expected commission. Test the CANONICAL uppercase spellings specifically — a
       test written in lowercase would have passed against the broken code and is exactly why this shipped. —
       unified-api-contracts@968237b8
-- [ ] [TEST] P1. **Property test: every venue in `SPORTS_BET_PLACEMENT_VENUES` resolves through `get_operator()` without
-      falling through to the identity default unless it is genuinely a standalone operator.** This is the guard that
-      stops the next venue addition from silently reintroducing the bug.
+- [x] [TEST] P1. ✅ **Property test: every venue in `SPORTS_BET_PLACEMENT_VENUES` resolves through `get_operator()`
+      without falling through to the identity default unless it is genuinely a standalone operator.** This is the guard
+      that stops the next venue addition from silently reintroducing the bug. — unified-api-contracts@446c2cb3
 - [ ] [REVIEW] P1. **Audit `arbitrage_detector.py`'s call site for any other casing assumption.**
       `_find_best_odds_per_outcome` passes `entry["bookmaker"]` straight into `arb_legs_are_independent`; confirm what
       casing the live market dict actually carries end-to-end (read the producer, do not assume), and record the
@@ -174,3 +174,10 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
   taxonomy P1) and upgraded from string literal to constant import. LEOVEGAS/LADBROKES/WILLIAMHILL/WINAMAX operator
   groups (which became singleton or empty after phantom deletion) removed entirely — redundant with get_operator()
   identity fallback. QG green.
+- **2026-08-08** — Todo 6 ([TEST] P1 property test) shipped in unified-api-contracts@446c2cb3. Added
+  `TestGetOperatorPropertyAllBetPlacementVenues` to `tests/unit/sports/test_arb_config.py`. Single parametric test
+  iterates all SPORTS_BET_PLACEMENT_VENUES (70+ venues across exchanges, prediction markets, bookmaker API, bookmaker
+  web): builds expected mapping from OPERATOR_GROUP_VENUES, then asserts each venue resolves correctly — declared group
+  members to their group, standalone venues to themselves (identity is expected). Both failure modes covered: a grouped
+  venue silently falling through to identity, or a standalone venue unexpectedly mapping to a non-identity result. QG
+  green, SHA verified ancestor of origin/live-defi-rollout.
