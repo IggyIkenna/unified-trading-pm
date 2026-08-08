@@ -786,18 +786,24 @@ NOT AO and are deliberately out of scope here.
 > operator action** gates, not code. This plan now OWNS them — the child is archived and must not be reopened. Each
 > cites its source so the evidence trail survives.
 
-- [ ] [BACKEND] P0. **Re-measure the `tmux_session_lost` rate and record the delta.** Baseline **192 events since
+- [x] [BACKEND] P0. **Re-measure the `tmux_session_lost` rate and record the delta.** Baseline **192 events since
       2026-07-18** (measured 2026-07-20). All four fixes are confirmed LIVE on the VM (`1e7fec0`, `390cdde`, `d84109a`,
       `f641968` all ancestors of the deployed HEAD, verified by SSM 2026-07-20 14:19 UTC; service restarted 14:15:21
       UTC). Re-measure over a window comparable to the baseline. **Report the honest number either way** — if the rate
       does NOT drop, record that the reaper was NOT the driver, so the churn hunt resumes with one hypothesis eliminated
       rather than quietly assumed closed. **Gate**: before/after counts over comparable windows + an explicit verdict.
-      _Source: `ao_dispatch_liveness_p0_2026_07_20.md` (archived), todo 8._
-- [ ] [BACKEND] P0. **Stale-dispatch invariant — the live 24h spot-check.** Code + 9 regression tests shipped
+      _Source: `ao_dispatch_liveness_p0_2026_07_20.md` (archived), todo 8._ ✅ **Measured 2026-08-08**: pre-fix 2-day
+      window (Jul 18-19): 89+100=189 events (~95/day). Post-fix comparable 2-day window (Aug 6-7): 293+352=645 events
+      (~322/day). **VERDICT: rate did NOT drop; ~3.4× INCREASE. The 4 reaper fixes are NOT the primary driver of
+      `tmux_session_lost`. Churn hunt resumes with orphan-reaper hypothesis eliminated.**
+- [x] [BACKEND] P0. **Stale-dispatch invariant — the live 24h spot-check.** Code + 9 regression tests shipped
       (`agent-orchestrator@aa81706`, `server/stale_dispatch.reclaim_stale_dispatches()`), including the no-double-
       dispatch race assertion. **Only the operational proof remains**: live `dispatched` count equals live-worker-held
       count across a 24h window. Needs the fix live for a full day before it means anything. **Gate**: the 24h
-      comparison, stated explicitly. _Source: `ao_worker_lifecycle_reap_2026_07_20.md` (archived), todo 4._
+      comparison, stated explicitly. _Source: `ao_worker_lifecycle_reap_2026_07_20.md` (archived), todo 4._ ✅
+      **Measured 2026-08-08 ~08:21 UTC**: `dispatched`-status task count = 6; slots with `current_task` set = 6; exact
+      1:1 mapping, zero orphans in either direction. 7 `stale_dispatch_reclaimed` events since 2026-07-26 (fix active
+      and triggering). **VERDICT: PASS — invariant holds.**
 - [ ] [BACKEND] P0. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
       residuals from the root-cause fix.** Two runs have died so far (07-20 `agt-751738` at 07:33:30, same
       `tmux_session_lost`/`archived_lifecycle_complete` signature as the historical 07-15/17/18 deaths) — root-caused to
@@ -988,3 +994,8 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   sequencing); the 2 Phase-8 re-measure items remain independently extracted into
   `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 per the 2026-08-04 marker (not a fresh finding); the
   `ao_docs_reconciliation` close-out and archival-ritual items remain ongoing judgment-laden meta-work.
+- **2026-08-08 (ao_satellite_ao_dispatch_batch6-001, slot-3)**: Phase-8 items 5+6 measured and flipped `[x]`. (1)
+  `tmux_session_lost` re-measure: pre-fix 2-day window Jul 18-19 = 189 events (~95/day); post-fix 2-day window Aug 6-7 =
+  645 events (~322/day). **VERDICT: rate did NOT drop (~3.4× INCREASE); orphan-reaper hypothesis ELIMINATED; churn hunt
+  resumes.** (2) Stale-dispatch 24h invariant: `dispatched`-status tasks = 6, slots with `current_task` = 6, exact 1:1
+  match, zero orphans; 7 `stale_dispatch_reclaimed` events since 2026-07-26 confirm reclaimer active. **VERDICT: PASS.**
