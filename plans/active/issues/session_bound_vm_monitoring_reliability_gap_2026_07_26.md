@@ -142,6 +142,17 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 2, matching (the `[SCRIPT] P2` forward-registration CI guard, and the `[DATA] P3`
+  PREEMPTED-marker survivability audit). The `[SCRIPT] P2` item is very well-specified (4 concrete implementation
+  steps, filed today directly off the operator's item-78 ruling) and is a strong RECLASSIFY candidate on its own — a
+  corpus-wide grep found no conflicting active claim on
+  `deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` or the launcher registries it
+  touches. However `assigned_vm` flips whole-doc: the `[DATA] P3` item remains a genuine judgment call (its own
+  done-when requires "a mitigation is proposed," and the 2 candidate mitigations named in the evidence — write the
+  marker earlier vs. switch to the Compute Operations API fallback — are a real design choice between approaches, not
+  yet decided). Doc stays NA as a whole; flagging the `[SCRIPT] P2` item as ready for extraction into a future infra
+  batch, not actioned this run (the whole-doc constraint blocks a clean flip).
 - **2026-08-08 (operator Q&A round5, infra tranche, item 78)**: Operator ruled (b) — wire into the fleet-level
   `RelaunchPreemptedVm`/exit-code-fleet-monitor actuator. Read the actual current code before filing the follow-up (see
   the flipped todo above for exact file citations): the fleet-level actuator was ALREADY built and cron-scheduled (not
