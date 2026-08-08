@@ -809,3 +809,19 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   next tick or two. odds smallchunk6: chunk 11/451 (`2020-07-26`), zero OOMs, healthy. Both healthy, no intervention.
   (Note: FIXTURE_STATS's `run.log` returned a transient 404 this tick before a retry succeeded — PROGRESS.json stayed
   reliable throughout, consistent with the earlier-documented GCS flakiness pattern, not a real signal.)
+- **2026-08-08T14:54Z — 🎉 MAJOR MILESTONE: FIXTURE_STATS GENUINELY CONVERGED.** `af-backfill-20260807-161736` completed
+  all 26 chunks: `PROGRESS: chunk=26/26 range=2026-08-04→2026-08-07 time=2026-08-08T14:40:07Z`,
+  `instruments-backfill loop complete`, `exit_code=0`, clean graceful self-delete via `VM_SHUTDOWN_ON_COMPLETION`. **Per
+  rule 4a, re-censused live before trusting the clean exit** — ran
+  `instruments-service/scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py`: **FIXTURE_STATS needed
+  dropped from 24,462 to just 116** (99.5%+ resolved — a genuine honest-absence-floor residual, not a real gap, matching
+  the campaign's own stated completion criterion). Same census run also confirmed **PLAYER_STATS is now fully resolved**
+  (`census_all_af_entities_completion_2026_08_03.py`: needed=0, down from 18) — hadn't been re-checked in a while, a
+  nice bonus find. **Launched FIXTURE_LINEUPS immediately** per the AF doc's own todo (line 205, corrected earlier this
+  session from the wrong INJURIES-first assumption): `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh`
+  with `RESUME_ENTITY=FIXTURE_LINEUPS RESUME_START_DATE=2020-06-06 RESUME_END_DATE=2026-08-07` (same range/launcher
+  family FIXTURE_STATS used, singleton lock confirmed free first). Launch took >120s (moved to background) — confirming
+  the new VM actually started next tick, not assuming success from the command alone. FIXTURE_LINEUPS still needs the
+  full 58,523 shards (unchanged, no backfill had run against it yet). This flips the AF campaign's remaining scope to:
+  FIXTURE_LINEUPS (running now) → INJURIES (62,709 needed, queued behind the same singleton lock) → final re-census
+  across all 8 entities → close the doc. AF entity doc flipped + pushed at its 1000-line cap exactly (`0f2ba70293`).
