@@ -60,11 +60,12 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify the venue-scoped completeness check ran and the correct branch was taken.** Confirm the
-      source doc's `[DIAG] P1` todo cites a real completeness verdict for exactly BINANCE-FUTURES/ASTER/OKX-FUTURES
+- [x] ✅ [REVIEW] P1. **Re-verify the venue-scoped completeness check ran and the correct branch was taken.** Confirm
+      the source doc's `[DIAG] P1` todo cites a real completeness verdict for exactly BINANCE-FUTURES/ASTER/OKX-FUTURES
       (repo@sha or script-output citation), and that the doc's stated branch logic was actually followed: clean → paper
       VM launched; gaps found → a new blocking data-completeness issue was filed (cite its filename). Repo:
-      unified-trading-pm. **Done when**: the branch taken is confirmed with evidence in this plan's Progress Log.
+      unified-trading-pm. **Done when**: the branch taken is confirmed with evidence in this plan's Progress Log. —
+      unified-trading-pm@e5cf1613 (verified).
 - [ ] [REVIEW] P1. **If the paper VM was launched: confirm cost-control + P1.2 unblocked.** Verify the VM was spun down
       deliberately per the operator's explicit instruction (not left running for days) — cite the launch and shutdown
       timestamps/evidence. Confirm `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s `[DATA] P1.2`
@@ -80,3 +81,16 @@ context_scope:
       archived alongside it in the same commit.
 
 ## Progress Log
+
+- **2026-08-08 (slot 3, `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize-001`)**: Todo 1
+  verified. Source doc `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`@`e5cf1613` `[DIAG] P1` cites
+  a real venue-scoped completeness verdict for exactly BINANCE-FUTURES/ASTER/OKX-FUTURES: a targeted
+  `read_availability_index(columns=, filters=[("venue","in",[...])])` spot-check against the live prod cefi manifest
+  (3,174,368 rows, not a full-corpus walk) measured reachable-coverage of 53.54% (BINANCE-FUTURES), 83.60% (ASTER),
+  89.66% (OKX-FUTURES) — NOT CLEAN. Confirmed the doc's own pre-specified branch logic was followed: gaps-found branch
+  taken (not the clean/launch-VM branch) — the blocking data-completeness issue
+  `plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`@`3bde56d6`
+  was filed (confirmed exists, cites the same 3-venue coverage numbers, correctly
+  `assigned_vm: planning`/`status: open`). No paper VM was launched (correct — gate stays closed per the cited numbers).
+  Todo 2 is therefore not-applicable per its own stated fallback (gap branch taken, not launch branch) — left for
+  whichever session picks it up next per this plan's `sequential: true` ordering.
