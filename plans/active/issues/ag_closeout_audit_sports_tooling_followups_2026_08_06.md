@@ -65,12 +65,13 @@ run's linkage fixes; the other 2 were genuinely unlinked sports docs fixed by ad
 `related:` block, `unified-trading-pm@83f122e34`). Superseded docs are already closed — per the skill's Phase 0.3 they
 should be excluded from orphan candidacy, same as `resolved`/`archived`.
 
-- [ ] [CI] P3. Add a `status: superseded` exclusion (and audit the other closed statuses the gate may also be missing:
-      `resolved`, `complete`/`completed`) to the orphan-candidate filter in
+- [x] ✅ [CI] P3. Add a `status: superseded` exclusion (and audit the other closed statuses the gate may also be
+      missing: `resolved`, `complete`/`completed`) to the orphan-candidate filter in
       `scripts/plan-hygiene/check_ag_closeout_linkage.py`, mirroring how
       `scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py` already excludes them (`EXCLUDED_STATUS`); then
       re-run the gate and confirm the superseded sports doc drops out. Source: this issue doc. Done when: the gate's
-      orphan count excludes superseded-status docs and the previously-flagged superseded doc no longer appears.
+      orphan count excludes superseded-status docs and the previously-flagged superseded doc no longer appears. —
+      unified-trading-pm@a969d9ba8 (EXCLUDED_STATUS added; baseline lowered 69→49; superseded doc no longer flagged)
 
 ## Finding 2 — batch9 Deferred citations truncated mid-sentence
 
