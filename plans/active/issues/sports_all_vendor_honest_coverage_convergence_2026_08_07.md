@@ -638,3 +638,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   otherwise on this new instance). **Open question, not investigated further**: who/what actually issued the delete —
   worth asking the operator or checking other slots' session logs if this pattern recurs, since an unexplained VM kill
   mid-run is exactly the kind of thing that should be attributable.
+- **2026-08-08T03:15Z** — FIXTURE_STATS +80 days (`last_completed_date=2023-05-24`, fresh `03:14:21Z`), steady, roughly
+  chunk 13/26 now. `smallchunk3` confirmed healthy via `run.log`: chunk 7/451 (`2020-07-06→2020-07-10`), chunks 1-6 each
+  cleared in a steady ~4.5min (subprocess-bootstrap overhead across ~40-60 rostered leagues dominates even pure
+  skip-fast dates — matches the earlier bootstrap-cost pattern seen on smallchunk2), zero OOMs so far (expected —
+  skip-fast dates need minimal memory). At this pace, ETA to reach chunk 26 (`2020-10-09`, where real new work resumes
+  past smallchunk2's last confirmed progress) is roughly another ~1h20m. Both VMs healthy, no intervention.
