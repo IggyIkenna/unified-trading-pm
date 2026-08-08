@@ -110,3 +110,7 @@ is not scoped to the connector's own author.
 - **2026-08-08** — Filed from the sports canonicalisation session after STEP 5.101 blocked an unrelated
   `market_tick_data_service/reader.py` fix (silent cefi-bucket misrouting of sports reads). Sites measured directly from
   `quality-gates.sh --no-fix` output; blocking commit confirmed on LDR via `git merge-base --is-ancestor`.
+- **2026-08-08 (slot-3, fc704195)** — P0 fixed: all 4 sites annotated `# noqa: qg-empty-fallback` with per-field reasons
+  matching the OnChainEventPoller producer's own precedent. STEP 5.101 verified green.
+- **2026-08-08 (slot-2)** — Ratcheted `no_empty_string_fallback_baseline.yaml` down from 73 → 66 for
+  `market-tick-data-service` (stamped at 6c77715e). No new code changes — P0 already shipped by slot-3.
