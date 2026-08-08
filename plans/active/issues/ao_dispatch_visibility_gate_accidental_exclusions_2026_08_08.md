@@ -97,18 +97,17 @@ human already made the call and the fleet still never executes it.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.** Its
-      checkbox reads (truncated): "[DOC] P3. **Document the accepted BLOCKED‑marker `/done`-disposition convention in
-      `task_template.md`.** Add a" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **Triage accidental exclusion in `plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`.**
+      Not genuinely blocked — the todo's own prose merely NAMES two marker families as documentation subject matter
+      (`BLOCKED-CREDENTIALS` as an example ingestion-gate token, `DEFERRED-BY-DESIGN` as a sibling convention it
+      cross-references), and both literal ASCII-hyphen spellings independently matched `_BLOCKED_TOKEN_RE` and
+      `_PERMANENT_NON_DISPATCHABLE_RE` respectively — two separate accidental triggers in the same block, not one.
+      Rewrote all four occurrences to the non-breaking-hyphen spelling (`BLOCKED‑CREDENTIALS`, `BLOCKED‑marker`,
+      `BLOCKED‑ON:<ref>`, `BLOCKED‑<TOKEN>`, `DEFERRED‑BY‑DESIGN`) — the same convention this issue doc's own
+      recommended-decision prose already uses for this exact reason. Verified:
+      `dispatch_visibility_report --pm-path ../unified-trading-pm --json` for
+      `ao_satellite_ao_dispatch_batch6_2026_08_04.md` now shows `excluded: []` (was 1 accidental) and `backlog_open`
+      rose 2→3 matching `disk_open=3`.
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md`.** Its checkbox reads
       (truncated): "[REVIEW] P2. **Reconcile.** Once the source doc's sole open `[VERIFY]` P1 item lands — re-launch
@@ -431,3 +430,10 @@ human already made the call and the fleet still never executes it.
   accidental / 24 zero-dispatchable so the gate ratchets down as these land. Not hand-fixed in the same session, per the
   parent issue's own precedent (its Betfair fix was the exception, not the rule) — 26 docs of individual per-todo
   judgment calls is real, separate remediation work, not part of building the gate itself.
+- **2026-08-08 (slot 3, infra)** — Fixed todo 1 (`ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s `[DOC] P3`
+  task_template.md-documentation todo). Two independent accidental triggers in the same block, not one: the todo's own
+  prose named `BLOCKED-CREDENTIALS` (an example token) and `DEFERRED-BY-DESIGN` (a sibling convention) purely as
+  documentation subject matter, and each literal ASCII-hyphen spelling matched a different gate regex
+  (`_BLOCKED_TOKEN_RE` and `_PERMANENT_NON_DISPATCHABLE_RE` respectively). Rewrote both plus the doc's other two
+  `BLOCKED-` mentions to the non-breaking-hyphen spelling already used elsewhere in this issue doc. Verified via
+  `dispatch_visibility_report --json`: the doc's `excluded` list is now empty, `backlog_open` 2→3.
