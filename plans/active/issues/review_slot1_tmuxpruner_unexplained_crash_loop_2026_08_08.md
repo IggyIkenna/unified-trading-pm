@@ -91,16 +91,12 @@ own Tick history.
       currently the review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding
       `context_recycle_requested` has dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip
       only).
-- [ ] [OPERATOR] P1. **`agent-orchestrator@e32d962` (the TmuxPruner debounce fix) is committed + checked out on the
-      orchestrator VM but NOT loaded — the live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the
-      23:26:25Z commit.** Main attempted `sudo systemctl restart orchestrator` and the sudoless
-      `systemctl restart orchestrator` (per `ao-self-pull.sh`'s own non-interactive pattern) — both failed
-      (`sudo: the "no new privileges" flag is set` / `Interactive authentication required`), a sandbox permission
-      boundary of main's own session, not a policy decision. No installed timer will auto-pick this up either
-      (`ao-self-pull.timer` absent from `systemctl list-timers` — consistent with the already-tracked
-      `[OPERATOR] P1. RE-INSTALL ALL SEVEN timer units` blocked item). Please run `sudo systemctl restart orchestrator`
-      on the orchestrator VM directly (state-safe per `codex/15-runbooks/safe-service-restart-procedures.md` Step 1 —
-      `data/state/state.db` survives untouched).
+- [x] ✅ [OPERATOR] P1. `agent-orchestrator@e32d962` (the TmuxPruner debounce fix) was committed but not loaded — the
+      live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the 23:26:25Z commit. Main could not restart
+      it (sandbox permission boundary: `sudo`/non-interactive `systemctl restart` both blocked). RESOLVED —
+      `GET /api/state` now reports `server_started:2026-08-08T23:45:40Z` (after the commit); `git log` in the
+      orchestrator checkout still confirms HEAD=e32d962. Someone/something with the right privilege restarted it. Todo 3
+      (REVIEW re-verify) can now proceed.
 
 ## Progress log
 
