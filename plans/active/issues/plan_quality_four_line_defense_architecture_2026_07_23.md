@@ -353,3 +353,26 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 12) -- INVESTIGATION per operator request: "Need to see
+  current drift scope first - Claude should investigate and report back before this can be answered."** Ran a fresh
+  `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` (2026-08-08 12:54 UTC) and
+  `bash scripts/plan-hygiene/check_line_caps.sh` directly, live. **Findings**:
+  - `check_frontmatter_yaml`: PASS (all frontmatter parses).
+  - `check_todo_format`: 67 non-canonical todos -- SOFT, unchanged behavior, does not block.
+  - `check_line_caps`: **PASS -- 3 pre-existing violations, within the shrinking-ratchet baseline of 17.** This is a
+    MAJOR change from the 2026-07-24/07-26/07-30 measurements this doc's own history cites (30 -> 13 -> 10 plans
+    HARD-violating) -- the line-caps prerequisite that originally blocked wiring the full sweep is now CLEARED.
+  - `check_reference_paths` (format): **FAIL -- 84 violations vs ratchet baseline 81, a 3-count regression.** This is
+    the one still-live hard blocker: wiring the full `run_hygiene_sweep.sh` into `quality-gates.sh` TODAY would
+    immediately hard-fail QG for every future plan/codex-touching commit workspace-wide, on this specific ratchet
+    regression (tracked separately, not duplicated here: `reference_path_convention_2026_07_23.md`).
+  - `check_reference_paths` (existence): PASS -- 84 dangling refs vs baseline 86 (improved, not a regression).
+  - The full sweep run timed out before reaching the remaining soft checks (estimate sanity, superseded-in-active,
+    codex refs, parent-epic alignment, CLAUDE/SUB_AGENT parity) -- not independently re-measured this pass; no prior
+    entry in this doc's history reports them as failing, so no reason to suspect regression there specifically.
+  **Bottom line for the operator's decision**: the corpus-drift picture has SHIFTED since the 2026-07-30 recommendation
+  (line-caps cleared, reference-paths format newly regressed by 3) -- the underlying fork (rule the already-shipped
+  prek hard gates satisfy line 2's intent, vs. actually wire the full sweep in) is STILL live either way: option (a)
+  needs nothing further (already true today); option (b) would need the reference-paths ratchet regression fixed
+  first (small, 3-count) before it could ship clean. Reporting this back per the operator's own stated precondition;
+  not resolving the actual policy fork myself -- that remains the operator's call this round didn't make.
