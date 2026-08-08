@@ -122,14 +122,38 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
       first), and a bounded rollout (pilot on one role, e.g. `backend_engineer`, before fleet-wide across all roles). If
       (b) alone proves insufficient in practice (workers still skip the read), escalate to (c) as a follow-up — not a
       reason to hold this off now. Source: this issue doc.
-- [ ] [INFRA] P2. **Ship the decided mechanism** — add a STEP 0 instruction to `unified-trading-pm/agents/RULES.md`
-      telling a worker to read its plan/issue's `context_scope` entries (when present) before starting any todo, per the
-      2026-08-08 operator ruling (option (b), see the checked todo above). Then run
-      `scripts/plan-hygiene/generate_context_scope_inventory.py` fresh and confirm the currently-dispatchable
-      (`assigned_vm: planning`, active/open) corpus has real, non-stale `context_scope` coverage before treating this as
-      safely fleet-wide (last measured 2026-08-01: only 222/647 `UP_TO_DATE`, ~34% — almost certainly still
-      majority-uncovered; re-measure, don't assume it closed the gap). This is the actual, currently-open implementation
-      step the checked todo above never executed (see Progress Log 2026-08-08 slot-16 note).
+- [x] ✅ [INFRA] P2. **DONE 2026-08-08 (slot-22, infra craft)** — Shipped the STEP 0 instruction:
+      `unified-trading-pm@b1845c411` adds a new "## 0. STEP 0 — read your plan/issue's `context_scope` before starting
+      any todo (HARD RULE)" section to `agents/RULES.md` (placed before the existing `## 1.` section, no renumbering —
+      preserves every existing `RULES.md § N` cross-reference elsewhere in the corpus), telling a worker to open
+      `task.plan_ref`'s frontmatter and read every `context_scope` entry (when present; a no-op fallback to normal doc
+      retrieval when absent) before starting any todo — per the 2026-08-08 operator ruling's chosen mechanism (option
+      (b), see the checked todo above).
+
+      **Fresh coverage re-measure** (`.venv/bin/python scripts/plan-hygiene/generate_context_scope_inventory.py`, run
+          in background per the async-wait discipline — per-doc `git log` subprocess calls make it slow, not a memory
+          concern):
+
+          ```
+          Total in-scope plan/issue docs: 658
+            NEVER_SCOUTED  27
+            STALE          406
+            COUNT_MISMATCH 1
+            UP_TO_DATE     224
+          ```
+
+          224/658 `UP_TO_DATE` ≈ 34% — same conclusion as the 2026-08-01 measurement (222/647, ~34%): **still
+          majority-uncovered, NOT yet safe to treat as fleet-wide-ready.** Composition shifted materially though:
+          `NEVER_SCOUTED` collapsed 410→27 (real `/context-scout` sweep progress), but `STALE` grew 15→406 — consistent
+          with high-edit-velocity docs (e.g. `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, touched by
+          dozens of Progress Log entries this week alone) outpacing their last `context-scout` marker date faster than the
+          skill's incremental sweep can re-stamp them; this is the staleness heuristic (`marker >= last-touched`) working
+          as designed, not a script defect — not filing a separate issue for it (no fix needed beyond what `/context-scout`
+          already exists to do, more frequent sweeps on high-churn docs). The mechanism (STEP 0 line) itself is safe to ship
+          regardless of corpus coverage — it degrades to a no-op on any doc without `context_scope` — but per the todo's own
+          framing, do NOT treat this as grounds to widen the rollout beyond the pilot scope until coverage genuinely
+          improves. Todo below (freshness re-check immediately before any enforcement flip) stays correctly gated on this.
+
 - [ ] [INFRA] P2. Once the mechanism above ships, re-run the `context-scout` skill's freshness check across the corpus
       once more immediately before flipping enforcement on, to catch any doc whose `context_scope` drifted stale in the
       interim.
@@ -203,3 +227,11 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   then the original freshness re-check (unchanged, now correctly gated behind the new one). Skipping this task — the
   original todo still isn't actionable — so the dispatcher can hand out the newly-split, genuinely-ready implementation
   todo instead.
+- **2026-08-08 (slot-22, infra craft)**: Shipped the STEP 0 mechanism (`unified-trading-pm@b1845c411`, new `## 0.`
+  section in `agents/RULES.md`, no renumbering of existing sections). Ran `generate_context_scope_inventory.py` fresh in
+  the background (avoids the wall-clock/foreground-blocking issue slot-16 hit): 658 in-scope docs, 27 `NEVER_SCOUTED`,
+  406 `STALE`, 1 `COUNT_MISMATCH`, 224 `UP_TO_DATE` (≈34%) — same coverage conclusion as 2026-08-01 (still
+  majority-uncovered, not yet safe for a fleet-wide flip), though composition shifted: `NEVER_SCOUTED` dropped 410→27
+  (real scout progress) while `STALE` grew 15→406 (high-churn docs outpacing scout-marker refresh cadence — the
+  staleness heuristic working as designed, not a defect; no separate issue filed). Flipped this todo done; the remaining
+  freshness-recheck todo stays correctly gated behind it.
