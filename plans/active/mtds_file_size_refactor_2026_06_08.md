@@ -121,8 +121,13 @@ context_scope:
       (8,192L) split tracked in I-2 — same filename, different repo; do not conflate.** —
       market-tick-data-service@6f753c5cb: monolithic engine/orchestrator.py (4230 lines) removed, replaced with
       engine/orchestrator/{**init**,_state,manifest_finalize,partitioned_writer,preflight,...}.
-- [ ] [VERIFY] P2. `quality-gates.sh --no-fix` exit 0 (file-size gate GREEN) → `.qg_last_passed_sha` writes → MTDS
-      commit-quality-boundary restored (no more basedpyright-on-touched-only workaround).
+- [x] ✅ [VERIFY] P2. `quality-gates.sh --no-fix` exit 0 (file-size gate GREEN) → `.qg_last_passed_sha` writes → MTDS
+      commit-quality-boundary restored (no more basedpyright-on-touched-only workaround). — CLOSED na-eligibility-audit
+      2026-08-08: stale, already satisfied. Evidence: this doc's own top banner cites market-tick-data-service@f4dab8f9
+      (2026-07-06, full `quality-gates.sh` exit 0); independently confirmed via `scripts/quality-gates.sh`'s dated
+      2026-06-11 Wave-3 comment + commit `33a14c1f` (same date, "Wave-3 size-debt burn-down... all >900L files split...
+      coverage floor pinned 79.7"); live-verified today that `databento_adapter.py` (352L) and `polymarket_adapter.py`
+      (899L), both cited in this plan as >900L violations, are now under the 900-line cap.
 
 ## Success criterion
 
@@ -206,3 +211,9 @@ elsewhere — it stays captured here so nothing is lost. This plan itself remain
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; contains a [DESIGN] P3 that
   explicitly requires an operator option-pick (Phase-6 `_publish_emission_check` scalability) before implementation.
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, stale items — reaffirms 2026-07-30's standing
+  ruling (item 6, [DESIGN] P3 operator option-pick, dispositive on its own). Additionally closed item 1 ([VERIFY] P2 QG
+  exit 0) as stale/already-satisfied, evidence-backed (see its own checkbox note). Remaining 6 open items are genuine
+  work; item 2's "75 violations / 8 files" framing is now materially smaller than described
+  (`scripts/quality-gates.sh`'s `FUNCTION_SIZE_EXTRA_EXCLUDES` is down to 10 entries per live check) — flagged for a
+  future non-read-only pass to refresh the description, not acted on here (read-only classification scope).

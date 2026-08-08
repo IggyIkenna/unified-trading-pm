@@ -817,3 +817,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- dropped 2 narrower codex pointers + 1 epic to
   make room for the determinism-spine's real source home (batch-live-reconciliation-service `engine/` +
   `stage5_results_writer.py`, both named in the doc's own Progress Log), since prior scope was codex/plan-only.
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): 10
+  open todos span Phase-2 determinism-spine work needing a cross-repo blast-radius pre-audit, the permanent P7.3/ P2.7.3
+  live-wallet/custody `BLOCKED-OPERATOR-DECISION` hard-stop, an explicit operator-confirm-capability-profile ask
+  (P2.11.20), and ML research retrain+validate judgment calls (P2.11.15/18).

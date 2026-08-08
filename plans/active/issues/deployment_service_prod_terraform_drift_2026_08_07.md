@@ -119,3 +119,10 @@ the IaC config; the third is a Cloud Run job module removal.
       members) and confirm they are intentional IaC removals, then run `ENV=prod bash tofu.sh apply` from
       `deployment-service/terraform/gcp` (backend prefix `terraform/state/prod`). Do NOT delegate to AO — this is a prod
       infra apply with destructive changes.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — sole open todo is explicitly
+  `[OPERATOR]`-tagged with the doc's own text stating "Do NOT delegate to AO — this is a prod infra apply with
+  destructive changes" (3 terraform destroys against live prod state, including a live Cloud Run job with 2890 prior
+  executions).
