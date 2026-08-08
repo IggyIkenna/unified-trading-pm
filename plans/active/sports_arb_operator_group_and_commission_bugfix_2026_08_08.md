@@ -132,10 +132,11 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
 - [x] [TEST] P1. ✅ **Property test: every venue in `SPORTS_BET_PLACEMENT_VENUES` resolves through `get_operator()`
       without falling through to the identity default unless it is genuinely a standalone operator.** This is the guard
       that stops the next venue addition from silently reintroducing the bug. — unified-api-contracts@446c2cb3
-- [ ] [REVIEW] P1. **Audit `arbitrage_detector.py`'s call site for any other casing assumption.**
+- [x] [REVIEW] P1. ✅ **Audit `arbitrage_detector.py`'s call site for any other casing assumption.**
       `_find_best_odds_per_outcome` passes `entry["bookmaker"]` straight into `arb_legs_are_independent`; confirm what
       casing the live market dict actually carries end-to-end (read the producer, do not assume), and record the
-      finding. Grep-then-READ — a zero-hit grep is not evidence here.
+      finding. Grep-then-READ — a zero-hit grep is not evidence here. — see Progress Log 2026-08-08 (casing UPPERCASE,
+      no bug).
 - [x] [SCRIPT] P1. ✅ **Quantify the blast radius**: over the paper-trade / backtest record, count how many detected
       arbs had all legs within one operator group (i.e. would have been rejected by the fixed guard) and how many
       carried a SMARKETS leg. This tells us whether any historical "alpha" was this bug. Report the counts in the
@@ -181,6 +182,16 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
   members to their group, standalone venues to themselves (identity is expected). Both failure modes covered: a grouped
   venue silently falling through to identity, or a standalone venue unexpectedly mapping to a non-identity result. QG
   green, SHA verified ancestor of origin/live-defi-rollout.
+- **2026-08-08** — Todo 7 ([REVIEW] P1 casing audit) — end-to-end casing trace confirms UPPERCASE throughout the live
+  path. MTDS applies SPORTS_VENUE_FOLD → canonical UPPERCASE venue keys in the `persist-sports-odds-features` payload.
+  FSS `process_sports_record()` passes payload fields through verbatim (orchestrator.py:149-151); `bookmaker_key`
+  emerges UPPERCASE. Strategy's `_build_market_from_feature_vector()` reads `feature_vector.get("bookmaker_key", "FSS")`
+  without any case transform → UPPERCASE (e.g. `"BETFAIR_EX_UK"`). `entry["bookmaker"]` in the live market dict =
+  **UPPERCASE**. `_expected_commission_pct()` at line 129 (`if bookmaker not in EXCHANGE_VENUES`) correctly matches
+  against the UPPERCASE `EXCHANGE_VENUES` constants — **no casing bug**. Structural note: as established in todo 8
+  (blast radius), the current paper-trade path builds single-bookmaker markets so `arb_legs_are_independent` returns
+  False and `_expected_commission_pct()` is structurally unreachable regardless. The casing confirmation applies to the
+  future multi-bookmaker aggregation path — it will also be safe. No code fix needed.
 - **2026-08-08** — Todo 8 ([SCRIPT] P1 blast radius) — counts: **same-operator-group arbs = 0; SMARKETS arbs = 0**. Two
   structural reasons neither bug was ever triggered in the paper-trade / backtest record: (1) Backtest
   (`SportsArbDutchingEngine`, venues: pinnacle / bet365 / betfair): neither `arb_legs_are_independent()` nor
