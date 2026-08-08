@@ -201,10 +201,10 @@ achieved by exclusion, not canonicalisation.**
       2 rebases onto concurrent slots' commits to the same plan (arb-operator-group bugfix, horizon-axis todo) — no
       conflicts.
 - [x] [CODE] P0. **Make bare `BETFAIR` an operator-group parent, not a venue.** Remove it from the data-axis venue set;
-      add a real venue→operator hierarchy in UAC that `BETFAIR_EX_UK`/`EX_EU`/`SB_UK` roll up to. Coordinate with
-      `/plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`, which ships the consuming fix FIRST
-      — this todo must not regress that fix; if the bugfix already added the hierarchy, extend it rather than
-      duplicating it. 5. ✅ unified-api-contracts@49e83239 — removed BETFAIR from SPORTS_EXCHANGE_VENUES,
+      add a real venue→operator hierarchy in UAC that `BETFAIR_EX_UK`/`EX_EU`/`SB_UK` roll up to. The operator-group
+      hierarchy shipped first in the arb bugfix at `unified-api-contracts@b9a0be80` (OPERATOR_GROUP_VENUES,
+      case-insensitive guard via `get_operator()` `.upper()` normalisation in `e080ef74`); this todo extended it rather
+      than duplicating it. 5. ✅ unified-api-contracts@49e83239 — removed BETFAIR from SPORTS_EXCHANGE_VENUES,
       VENUES_BY_ASSET_GROUP["sports"], VENUE_DATA_TYPE_CAPABILITIES, and representative_sample.py; updated 5 test files
       (test_sports_schemas, test_venue_context_integration, test_instrument_generator, representative_sample) to use
       BETFAIR_EX_UK as the canonical data-axis exchange representative; hierarchy already in place via arb bugfix

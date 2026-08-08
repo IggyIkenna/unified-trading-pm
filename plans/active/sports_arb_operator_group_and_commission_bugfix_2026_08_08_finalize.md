@@ -61,11 +61,11 @@ locked_since:
       commission — against the merged code, and confirm each cited commit exists via `git log` rather than trusting the
       parent's evidence line. **Done when**: all four re-measured results are correct and every cited commit is
       confirmed to exist. — unified-api-contracts@446c2cb3 (final commit in fix chain)
-- [ ] [REVIEW] P1. **Reconcile the prerequisite references in the taxonomy chain.**
+- [x] [REVIEW] P1. ✅ **Reconcile the prerequisite references in the taxonomy chain.**
       `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`'s "make bare BETFAIR an operator-group parent" todo and
       `sports_taxonomy_p3_consumers_2026_08_08.md`'s "consume the CORRECTED operator-group guard" todo both name this
       fix as landing first. Update both to cite the actual shipped commit(s) so they extend the hierarchy rather than
-      duplicating it. **Done when**: both docs cite the real commit instead of a forward reference.
+      duplicating it. **Done when**: both docs cite the real commit instead of a forward reference. — unified-trading-pm
 - [ ] [REVIEW] P2. **Land the blast-radius result as tracked work.** The parent's final todo counts historical arbs that
       were all-one-operator or carried an unmodelled SMARKETS leg. If that count is non-zero, file a `- [ ]` todo
       against `/plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` to recompute its baseline on
@@ -89,3 +89,9 @@ locked_since:
   `True`, `EXCHANGE_COMMISSION_RATES['SMARKETS']` = `0.02` ✅ (was unmodelled pre-fix). All 6 cited commits confirmed
   via `git log` and `git merge-base --is-ancestor` on `origin/live-defi-rollout`: e080ef74 ✅, b9a0be80 ✅, 0fd51983 ✅,
   1a96c482 ✅, 968237b8 ✅, 446c2cb3 ✅. Fix is correct and landed.
+- **2026-08-08** — Todo 2 ([REVIEW] P1 reconcile) — updated both taxonomy plans to cite actual shipped commits instead
+  of forward plan references. P1 plan ("make bare BETFAIR an operator-group parent"): replaced plan-path coordination
+  note with concrete commit reference `unified-api-contracts@b9a0be80` (OPERATOR_GROUP_VENUES hierarchy) +
+  `unified-api-contracts@e080ef74` (case-insensitive guard). P3 plan ("consume the CORRECTED operator-group guard"):
+  replaced plan-path reference with `unified-api-contracts@e080ef74` + `unified-api-contracts@b9a0be80`. Both docs now
+  cite real commits; forward references resolved.
