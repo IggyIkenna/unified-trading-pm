@@ -11,13 +11,13 @@ summary: >-
   venues / 561,260 rows the plan's mapping-ruling todo (todo 1) and its two Move-the-GCS-objects todos enumerate
   (BETFAIR_EX_UK, BETFAIR_EX_EU, SMARKETS, MATCHBOOK, BETFAIR_SB_UK, BETMGM, bare BETFAIR, ODDS_API, PINNACLE).
   Per-venue figures also diverge sharply from the plan's own cited numbers for the same venues it DID enumerate — e.g.
-  PINNACLE: plan says "32,616 rows", live manifest shows 4,887,512 for PINNACLE alone. At least ~19 additional bookmaker
+  PINNACLE: plan says "32,616 rows", live manifest shows 4,887,512 for PINNACLE alone. At least ~21 additional bookmaker
   venues (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER, DRAFTKINGS, UNIBET_UK,
-  SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY, UNIBET_EU) carry
-  substantial instrument_type=odds row_count and are absent from the plan's venue→class mapping entirely. If the plan's
-  two Move todos execute as scoped (5 then 3 venues, 8 total) and a later todo retires the legacy `odds` contract entry,
-  these ~19 unmapped venues' data has no EXCHANGE_ODDS/FIXED_ODDS destination and would be silently orphaned by the
-  cutover. NOT YET DETERMINED (needs operator/data_engineering follow-up, not resolved by this doc): whether the plan's
+  SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY, UNIBET_EU, + 1 more)
+  carry substantial instrument_type=odds row_count and are absent from the plan's venue→class mapping entirely. If the
+  plan's two Move todos execute as scoped (5 then 3 venues, 8 total) and a later todo retires the legacy `odds` contract
+  entry, these ~21 unmapped venues' data has no EXCHANGE_ODDS/FIXED_ODDS destination and would be silently orphaned by
+  the cutover. NOT YET DETERMINED (needs operator/data_engineering follow-up, not resolved by this doc): whether the plan's
   cited 561,260 / 32,616-etc. figures came from a narrower slice (e.g. a specific date range, a `data_type=trades`-only
   cut, or a distinct-shard count rather than a row_count sum) that legitimately excludes the other venues and the
   cumulative history — or whether the plan's venue enumeration is genuinely incomplete. This doc does not attempt that
@@ -83,7 +83,7 @@ context_scope:
 > Do not dispatch that plan's two "Move the `instrument_type=odds/` GCS objects" todos (P1) against their current
 > 8-venue list until this is reconciled — either the 561,260/32,616-etc. figures are confirmed to be a legitimate
 > narrower slice (in which case this doc closes as a false alarm with the slice definition recorded), or the venue list
-> needs to grow to cover the ~19 additional venues found live before any legacy-contract retirement proceeds.
+> needs to grow to cover the ~21 additional venues found live before any legacy-contract retirement proceeds.
 
 ## What was measured (2026-07-27, pre-drain snapshot time)
 
