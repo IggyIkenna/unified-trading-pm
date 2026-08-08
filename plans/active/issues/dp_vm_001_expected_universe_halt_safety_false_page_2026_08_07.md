@@ -69,6 +69,8 @@ source: >-
   expected-universe-v2-sports-20260807-230456 per rb_infra_relaunch.md. Root-caused live instead of relaunching (see
   Progress Log below); the main fix is already shipped (deployment-service@27fd5779) — this doc tracks the 2 minor P3
   follow-ups.
+drift_direction: advance-code
+depends_on: []
 ---
 
 # DP-VM-001 false-paged expected-universe-v2-sports halt-safety exit — root-caused + fixed

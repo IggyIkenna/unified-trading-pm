@@ -29,6 +29,7 @@ source: >-
   violation in files the deletion never touched.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 ## Finding

@@ -46,6 +46,8 @@ source: >-
   Review agent (slot 1) flagged the 4th same-day recurrence in chat (message id 4072, 2026-08-08T09:39:23Z). Main
   independently confirmed `BLK-091671d7` is absent from the live `blocked_queue` and that a prior same-session attempt
   to file this doc via slot 11 was itself lost to a busy-slot dispatch race, then filed this doc directly.
+drift_direction: advance-code
+depends_on: []
 ---
 
 # AO direct-instruction dispatch redelivers a stale message after its underlying blocked-question/escalation resolves

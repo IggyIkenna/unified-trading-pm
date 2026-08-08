@@ -28,6 +28,7 @@ source: >-
   quickmerge's re-gate step failed on a pre-existing basedpyright ratchet violation in files the fix never touched.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 ## Finding
