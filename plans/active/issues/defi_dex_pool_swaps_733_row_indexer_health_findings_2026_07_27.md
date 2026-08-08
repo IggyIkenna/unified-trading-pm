@@ -162,7 +162,7 @@ change required.
 - [x] [SCRIPT] P1. Ship the CURVE/OPTIMISM (and any future "no allocations" subgraph) `EXPECTED_SUBGRAPH_DEINDEXED`
       runtime detection in `dex_swaps_handler.py` — **DONE 2026-07-27, shipped concurrently by slot-11**,
       `market-tick-data-service@dddd1b21`. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Investigate whether UNISWAP_V3/OPTIMISM + PANCAKESWAP_V3/BSC's "bad indexers" gateway errors are a
+- [x] ✅ [DATA] P2. Investigate whether UNISWAP_V3/OPTIMISM + PANCAKESWAP_V3/BSC's "bad indexers" gateway errors are a
       transient indexer-fleet health dip or a permanent de-indexing event — re-probe both subgraph IDs on a later date
       (a same-day probe cannot distinguish transient from structural); if still broken after a multi-day window,
       research replacement subgraph deployment IDs via The Graph Explorer/Network Subgraph, or add a taxonomy reason +
@@ -171,7 +171,17 @@ change required.
       same-day re-probe evidence added 2026-07-27 (slot-5, ~2h later): PANCAKESWAP_V3/BSC self-healed (transient),
       UNISWAP_V3/OPTIMISM did NOT (identical 3 indexer addresses/errors both times) — see "Verified live (re-probe...)"
       below. Still same-day data; the multi-day re-check this todo asks for has not happened yet — do not close on this
-      evidence alone.**
+      evidence alone.** — **✅ CLOSED 2026-08-08 (false-done audit reconciliation). This is a STALE DUPLICATE, not
+      separate work.** A later worker appended a brand-new `[x]` checkbox with near-identical text further down this doc
+      instead of editing this one, leaving this instance orphaned as `- [ ]` — which is why backlog row
+      `defi_dex_pool_swaps_733_row_indexer_health_findings-001` audited as false-done (`done_sha=69d41b26f`, a
+      self-citing Progress Log entry naming this exact task id). **The "do not close on this evidence alone" condition
+      above has since been MET**: the duplicate records a 6-day multi-day re-probe (2026-07-27→2026-08-02, slot 8, 3/3
+      each) — exactly the multi-day window this todo demanded — concluding UNISWAP_V3/OPTIMISM PERMANENT/STRUCTURAL and
+      PANCAKESWAP_V3/BSC transient-and-resolved, with the UNISWAP_V3/OPTIMISM replacement deployment then shipped in
+      `unified-api-contracts@516ae7bb`. Verified before closing rather than trusting the audit verdict. See the
+      `- [x] ✅ [DATA] P2. Investigate whether UNISWAP_V3/OPTIMISM…` entry below for the full evidence; no work is lost
+      by closing this instance.
 - [x] ✅ [SCRIPT] P2. **PARTIALLY DONE 2026-07-27 (slot-11), independently converged on the same finding.**
       TRADER_JOE_V2/AVALANCHE + VELODROME_V2/OPTIMISM: SPOT backfill VM `mtds-dex-swaps-historical`
       (`--protocols trader_joe_v2,velodrome_v2 --start 2023-01-01 --end 2024-10-06`) launched, T+10min health-verified
