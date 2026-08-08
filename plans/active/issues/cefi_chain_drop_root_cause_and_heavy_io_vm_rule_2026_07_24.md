@@ -45,7 +45,7 @@ code_refs:
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
-depends_on: []
+depends_on: [cefi_lighter_zksync_systemic_collision_2026_08_08, cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08]
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -606,6 +606,16 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   unrelated F1-N9 consistency-remediation doc, no shared scope; (c) `cefi_consolidated_closeout_2026_07_18.md` does not
   reference this doc's resume-migration item. Clear. Companion finalize plan:
   `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.
+- **2026-08-08 (slot 16)**: the sole open todo (`re-run verify + archive`) was dispatched to the backlog despite being
+  gated by prose only ("once the 2 blockers above resolve") — no machine-readable `depends_on` existed, so the
+  dispatcher offered it as ready. Both blocker issue docs
+  (`issues/cefi_lighter_zksync_systemic_collision_2026_08_08.md`,
+  `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`) still have every fix todo unchecked, so running
+  the verify script now would just reproduce the same `OVERALL: FAIL` and burn a cycle. Fixed the gap: added
+  `depends_on: [cefi_lighter_zksync_systemic_collision_2026_08_08, cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08]`
+  to this doc's frontmatter so future regen ticks don't re-dispatch this todo until both are actually done. No work done
+  on the todo itself — skipping this task so the dispatcher can hand out the blockers' own (genuinely ready)
+  investigation todos instead.
 - **2026-08-08 (resume executed, slot 18)**: ran the full resume sequence end to end. EXTENDED-STARKNET applied clean
   (3,168 renamed, 0 errors, `canonical-migration-cefi-late-renames-20260808-134921`). LIGHTER-ZKSYNC hit
   STOP-ON-SURPRISE with a much larger collision population than Finding 10 predicted (11,494 across 30+ dates, not a
