@@ -117,12 +117,12 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
       published rate turns out to differ, ship `0.02` anyway and file a follow-up `- [ ]` todo with the corrected figure
       — do NOT stall the fix on a rate lookup, since an unmodelled commission (today's state) is strictly worse than a
       slightly-wrong one.
-- [ ] [CODE] P1. **Reconcile the phantom regional venues** (`betfair_ex_au`, `unibet_fr/nl/se`, `ladbrokes_au`,
-      `williamhill_us`, `winamax_fr/de`, `leovegas_se`). **Decision rule PRE-SPECIFIED, no judgment call**: a venue
-      stays only if it appears in the live prod sports manifest's `venue` column OR in `SPORTS_VENUE_FOLD`'s key set;
-      otherwise DELETE the entry. Measured today, none of the nine appear in either — so the expected outcome is nine
-      deletions. Re-measure at run time and report the actual counts; no shims, workspace rule is delete deprecated
-      code.
+- [x] [CODE] P1. ✅ **Reconcile the phantom regional venues** (`betfair_ex_au`, `unibet_fr/nl/se`, `ladbrokes_au`,
+      `williamhill_us`, `winamax_fr/de`, `leovegas_se`). Re-measured at run time: none of the 9 appear in
+      `VENUES_BY_ASSET_GROUP["sports"]` nor in `SPORTS_VENUE_FOLD` key set (`{"ladbrokes_uk", "sport888"}` only); all 9
+      deleted. `UNIBET_UK` retained (confirmed distinct bookmaker with UAC constant + real shards). Singleton/empty
+      operator groups (LEOVEGAS, LADBROKES, WILLIAMHILL, WINAMAX) removed as redundant with identity fallback. —
+      unified-api-contracts@1a96c482
 - [x] [TEST] P0. ✅ **Regression test asserting the exact measured failures above now pass**:
       `arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU']) is False`,
       `arb_legs_are_independent(['UNIBET_UK','UNIBET']) is False`, `get_operator('BETFAIR_EX_UK') == 'BETFAIR'`, and a
@@ -167,3 +167,10 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
   `TestGetOperatorBug1Regression` tests operator mapping for canonical and lowercase inputs + identity fallback;
   `TestSmarketsCommissionBug2Regression` confirms SMARKETS ∈ EXCHANGE_VENUES and EXCHANGE_COMMISSION_RATES[SMARKETS] ==
   0.02. QG green, SHA verified ancestor of origin/live-defi-rollout.
+- **2026-08-08** — Todo 4 ([CODE] P1 phantom venue reconciliation) shipped in unified-api-contracts@1a96c482.
+  Re-measured at run time against VENUES_BY_ASSET_GROUP["sports"] and SPORTS_VENUE_FOLD key set: all 9 phantom venues
+  absent (betfair_ex_au, unibet_fr/nl/se, ladbrokes_au, williamhill_us, winamax_fr/de, leovegas_se — 0 manifest rows
+  each). All 9 deleted. UNIBET_UK retained (confirmed distinct bookmaker, real shards, UAC constant UNIBET_UK added in
+  taxonomy P1) and upgraded from string literal to constant import. LEOVEGAS/LADBROKES/WILLIAMHILL/WINAMAX operator
+  groups (which became singleton or empty after phantom deletion) removed entirely — redundant with get_operator()
+  identity fallback. QG green.
