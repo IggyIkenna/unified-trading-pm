@@ -216,8 +216,31 @@ QG-green per repo.
 - **context-scout 2026-08-07**: re-verified context_scope (5 entries) -- all 5 still resolve; unchanged after the
   2026-08-06 na-eligibility-audit reaffirmation (no new named artifacts).
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — same as 2026-07-30/2026-08-06; the dated operator
-  HALT (2026-07-14) on the 4-item GO/NO-GO checklist is still in force (criterion 1 last re-measured 2026-07-30, not
-  yet re-checked since); irreversible cutover todos stay correctly blocked.
+  HALT (2026-07-14) on the 4-item GO/NO-GO checklist is still in force (criterion 1 last re-measured 2026-07-30, not yet
+  re-checked since); irreversible cutover todos stay correctly blocked.
+- **2026-08-08 (ui_satellite_ao_dispatch_batch1_finalize, slot 27) — fresh criterion-1 re-measurement; HALT stays in
+  force, and the 2026-07-30 "passive wait + a fresh count" expectation is corrected.** Live Firestore REST query (full
+  pagination, `unified-trading-sa`) of the prod `deployments` collection: **2,351 total docs** (1,345 `completed`, 449
+  `failed`, **557 `running`**), cross-referenced against **176** currently-`RUNNING` GCE instances
+  (`gcloud compute instances list --filter=status=RUNNING`, project `central-element-323112`): only **48 of 176** live
+  VMs have a matching `status=running` Firestore doc (27% coverage — still failing, same under-coverage direction as
+  2026-07-30's 4/19). **New finding this pass**: the other **509** `status=running` Firestore docs do NOT correspond to
+  any currently-running GCE instance, and are not a fresh convergence lag — sampled `last_heartbeat_at` ages: min 0.9h,
+  median **102.2h (~4.3 days)**, max 229.3h, with 488/509 aged >24h. Root-caused (read-only, not fixed here):
+  `SyncService.reap_stale_deployments()` (`deployment_api/services/sync_service.py:564`) instantiates a GCS-only
+  `DeploymentsRegistry` and calls `registry.reap_stale(...)` with zero Firestore reference in that method — confirmed
+  via `grep -n firestore deployment_api/services/sync_service.py` (zero hits). So the periodic reaper that transitions a
+  dead VM's entry to `failed`/`completed` runs ONLY against the GCS registry; Firestore's copy of `status` updates
+  exclusively via the dual-write path on live `register`/`heartbeat`/`complete` API calls, so any VM that disappears
+  without ever calling `/complete` (crash, preemption, external termination — the norm for this workspace's SPOT-default
+  backfill fleet) leaves its Firestore doc stuck at `status=running` forever. This is NOT a new, separately-scoped
+  defect — todo 2 below ("Drop the GCS-write half...Confirm the Phase-0 reaper now operates on the Firestore store")
+  already anticipates migrating the reaper to Firestore as part of that same step. The correction is to the 2026-07-30
+  note's framing: **criterion 1 will NOT converge via a passive wait alone** — the reap-migration work in todo 2 is a
+  load-bearing precondition for the doc-count-parity bar, not an optional add-on discovered after the fact. Criteria 2-4
+  not re-measured this pass (no new dual-write deploy has landed since 2026-07-30; re-verify those independently before
+  trusting this pass's criterion-1 numbers alongside them). **HALT stays correctly in force.** Per this doc's own
+  re-verification convention, do not reuse this note's counts for a future re-measurement — re-run fresh.
 
 ## Codex SSOTs
 

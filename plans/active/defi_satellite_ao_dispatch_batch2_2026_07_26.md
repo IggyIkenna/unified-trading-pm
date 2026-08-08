@@ -681,10 +681,10 @@ context_scope:
   `- [ ] [DATA] P2. Reconcile _INSTRUMENT_TYPE_ALIASES ... against the legacy venue_mapping.DataTypeConfig table` item,
   and grepping the exact mechanism name `_INSTRUMENT_TYPE_ALIASES` across the full covering-plan set (consolidated
   closeout,...
-- **`plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`**: Confirmed via direct read:
-  the doc's Todos list has 4 items. Todos 1 ([DATA] P1 scale measurement) and 2 ([DIAG] P1 content-sample/distribution)
-  are cited and dispatched in defi_satellite_ao_dispatch_batch1_2026_07_25.md (matching Phase-1's "(2 todos)" tally).
-  Todos 3 and 4 are NOT dispatched anywhere. Conflict check:...
+- **`plans/archive/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`** (archived 2026-08-08, delete
+  complete)**: Confirmed via direct read: the doc's Todos list has 4 items. Todos 1 ([DATA] P1 scale measurement) and 2
+  ([DIAG] P1 content-sample/distribution) are cited and dispatched in defi_satellite_ao_dispatch_batch1_2026_07_25.md
+  (matching Phase-1's "(2 todos)" tally). Todos 3 and 4 are NOT dispatched anywhere. Conflict check:...
 - **`plans/active/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`**: Read the target doc and
   confirmed Phase-1's evidence exactly. Of the 3 open todos, the VERIFY (P2) is dispatched by
   defi_satellite_ao_dispatch_batch1_2026_07_25.md (line ~546-549); the other two are explicitly excluded there (lines

@@ -56,11 +56,26 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reproduce the fix against the exact repro recipe the parent doc names** — a one-shot dispatch
-      including a `ScheduleWakeup` gap long enough to trigger idle-reap (both confirmed instances were ~2-3h span
-      dispatches) — and confirm `POST /api/slots/{id}/done` with `one_shot_complete: true` no longer 400s after the fix.
-      **Done when**: a live or test-simulated reproduction is cited, not just a code-review pass. Repo:
-      unified-trading-pm.
+- [x] ✅ [REVIEW] P1. Reproduced via test-simulation, not a code-review pass. Read the full fix diff
+      (agent-orchestrator@43fc142: `slots_worker.py`, `tmux_pruner.py`, `state_store/agents.py`, `orm.py`,
+      `bootstrap.py`, `models/worker_api.py`) end-to-end and confirmed the mechanism matches the parent doc's root
+      cause: `tmux_pruner` now snapshots `last_tmux_session` before nulling `tmux_session` on a `reaped-stale` archive
+      (heuristic `has_session()`-miss, not a genuine completion); `_done_one_off` falls back to
+      `find_reaped_stale_agent_for_session` (or a caller-supplied `agent_id`, scoped to
+      `tmux_session ==     this-slot's-session OR last_tmux_session == this-slot's-session` so a stale/foreign
+      `agent_id` can't be misapplied) and corrects `exit_reason` to `lifecycle-complete` WITHOUT touching `SlotRow`
+      (avoids clobbering a slot already reassigned to unrelated work — exactly occurrence 2's failure mode). Verified
+      the 6 new `tests/test_done_one_off.py` tests exercise the EXACT repro recipe: `_seed_reaped_stale()` mirrors
+      `tmux_pruner`'s real post-archive state (`status=archived`, `tmux_session=None`, `last_tmux_session=<session>`,
+      `exit_reason=reaped-stale`, using the same `kind="cefi_mtds_smoke_tester"` as the live occurrence-2 repro), then
+      calls the real `_done_one_off(slot_id, one_shot_complete=True)` handler and asserts `status == "idle"` with no
+      `HTTPException` raised (i.e. no 400) — plus recovery-via-`agent_id`, cross-slot `agent_id` rejection, evidence
+      persistence, and duplicate-call-409 coverage. Independently re-ran (did not trust the shipping commit's
+      self-report per review's evidence-verification rule) `bash scripts/quality-gates.sh` on agent-orchestrator HEAD
+      `43fc142` — full green: ruff clean, basedpyright 0 errors, **2768 passed, 2 skipped** (superset of the commit's
+      own claimed 2760/2 — consistent with other work landing since), pip-audit cached. Also confirmed `43fc142` is a
+      verified ancestor of `origin/live-defi-rollout`. Done-when satisfied: a test-simulated reproduction (independently
+      re-executed, not just read) is cited above. Repo: unified-trading-pm.
 - [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `one_shot_complete_session_ownership_desync_2026_08_08` and repoint every referrer; clear any lock if set. Then
@@ -80,3 +95,9 @@ source: >-
 - **2026-08-08**: Drafted alongside the parent doc's `na-eligibility-audit round7 RECLASSIFY` flip from
   `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually dispatching
   via `depends_on` + `gate_on_depends: true` until the parent doc's sole todo is done.
+- **2026-08-08 (REVIEW, slot 7)**: `[REVIEW]` todo flipped. Unlike a recent sibling gated-finalize dispatch this session
+  (`defi_expected_unattempted_backlog_1m_2026_07_03_finalize`), this gate genuinely held correctly — the parent doc's
+  sole `[BACKEND] P1` todo was already `[x]` done with a real, verified-on-origin commit (`agent-orchestrator@43fc142`)
+  before this task dispatched. Full evidence in the todo above. `[DOCS]` archival todo intentionally left un-dispatched
+  by me (this plan carries no `sequential: true`, so it could in principle be picked up by another slot independently —
+  that is a plan-authoring gap outside this task's scope, not touched here).

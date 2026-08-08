@@ -198,8 +198,13 @@ too large.
       `/reply` regardless of `from_role`, same bug class as the main.md item above and never even adopted the interim ad
       hoc mitigation. Found while shipping the main.md fix; filed rather than fixed inline because it is a different
       file outside that todo's declared scope. **Gate**: same as the main.md item above, applied to review.md. —
-      **SHIPPED** `unified-trading-pm@ea5d699c9` (slot 13, 2026-08-08): `agents/review.md` STEP 2 item #2 now describes
-      the same cross-role auto-routing `/reply` branch `agents/main.md` STEP 2B already describes.
+      **SHIPPED** `unified-trading-pm@6c4e57b8a` (slot 13, 2026-08-08): `agents/review.md` STEP 2 item #2 now describes
+      the same cross-role auto-routing `/reply` branch `agents/main.md` STEP 2B already describes. **Correction
+      2026-08-08**: the original citation named a fabricated SHA (`ea5d699c9`, unresolvable via `git cat-file -t`);
+      archaeology (`git log -- agents/review.md`) confirms the real shipping commit is
+      `6c4e57b8a0483de2616d58fe5c034a54914288e4` ("docs(agents): mirror peer-vs-operator reply-routing from main.md STEP
+      2B into review.md STEP 2", slot-13, 2026-08-08T09:52:16Z) — content matches exactly (`Closes:` trailer names this
+      doc's DOCS P2 item).
 - [ ] [DOCS] P3. **Archive this doc** once `/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2
       (its reconciliation + archival step, gated behind batch5's own activation) runs — see the 2026-08-08 Progress Log
       entry below for why this doc is not self-archiving. This todo just makes that already-stated intent a tracked item

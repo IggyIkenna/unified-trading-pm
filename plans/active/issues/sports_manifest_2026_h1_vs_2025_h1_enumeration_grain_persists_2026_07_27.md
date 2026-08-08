@@ -56,6 +56,7 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.48
 assigned_role: data_engineering
 drift_direction: advance-code
+sequential: true
 locked_by:
 context_scope:
   [
@@ -271,6 +272,17 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
 
 ## Progress Log
 
+- **data_engineering worker (slot 4) 2026-08-08**: split the single "Complete remaining chunks 3-7" follow-up todo into
+  6 bounded per-chunk todos (one launch+verify todo per chunk 3-7, plus a final gated ratio-recheck todo) +
+  `sequential: true` in frontmatter to preserve required 3→4→5→6→7→recheck ordering. Direct instruction from main
+  (bypasses backlog, BLK-free, 2026-08-08): the prior monolithic todo had wedge-killed 6x in ~3h across 5 slots
+  (9@00:14, 5@00:37, 7@01:44, 9@01:59, 10@02:51, 3@03:14 UTC, all `slot_wedged_killed_for_resume`/kick-failed-idle) with
+  zero forward progress on chunks 3-7 — root cause is a dispatch-model mismatch (one interactive session cannot reliably
+  babysit a multi-hour, multi-VM, high-friction backfill start-to-finish, compounded by the two related open issues
+  cited in each new todo), not a context-tuning problem. Each new chunk todo cites the two already-shipped/open guidance
+  docs (`dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`,
+  `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`) inline so a worker hitting either symptom
+  mid-chunk treats it as expected/tracked rather than a fresh incident.
 - **context-scout 2026-08-03**: re-read in full; existing context_scope (5 entries) still accurate — no new source
   target or SSOT surfaced beyond what's already listed. Refreshed marker only.
 - **data_engineering worker (slot 3) 2026-08-03**: shipped job (1) — deployment-service@1d8ede9. Rolling `today - 120d`
@@ -470,8 +482,41 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
 
 ## Follow-ups
 
-- [ ] [DATA] P2. Complete remaining chunks 3-7 (2022..2026-04-04) of the job (2) historical expected_unattempted
-      backfill and run the post-run cell-seeding ratio re-check (done-when gate).
+- [ ] [DATA] P2. Launch + verify chunk 3/7 (2022-01-01..2022-12-31) of the job (2) historical `expected_unattempted`
+      backfill: invoke the child launcher directly
+      (`deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh     --apply-write sports`,
+      `ENUM_START_DATE=2022-01-01 ENUM_END_DATE=2022-12-31`) in a harness-kill-proof tmux window
+      (`tmux new-window -t orch-slot-<N> -n backfill bash`), not a bare backgrounded shell. Retry the SAME chunk until
+      it reaches EXIT_STATUS=0 — if a run exits EXIT_STATUS=5 (`would-write X > max_writes_per_run`), that is the
+      enumerator's own known, self-managed max-writes-per-run halt-safety trip: expected and retriable, not a new
+      incident (`dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md` already routes this exit-code class
+      to WARN/FILE_ISSUE, never a page — just relaunch the same chunk). If `gcloud compute instances create` fails with
+      `PERMISSION_DENIED` on `compute.instances.create` even though nothing in this task changed the active account,
+      that is the known shared-host `gcloud config set account` cross-slot clobber
+      (`shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`) — check `gcloud config get-value account`,
+      restore/pin to the correct identity (prefer a per-invocation `--account=` override per that doc's recommended
+      fix), then retry; this is not a real IAM gap. Done-when: chunk 3 reaches EXIT_STATUS=0, its per-VM shard is
+      visible under `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/`. Update this doc's
+      Progress Log with the VM name(s) + final status before flipping. (repo: deployment-service)
+- [ ] [DATA] P2. Launch + verify chunk 4/7 (2023-01-01..2023-12-31) of the same backfill — same launcher invocation,
+      halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
+      `ENUM_START_DATE=2023-01-01 ENUM_END_DATE=2023-12-31`. (repo: deployment-service)
+- [ ] [DATA] P2. Launch + verify chunk 5/7 (2024-01-01..2024-12-31) of the same backfill — same launcher invocation,
+      halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
+      `ENUM_START_DATE=2024-01-01 ENUM_END_DATE=2024-12-31`. (repo: deployment-service)
+- [ ] [DATA] P2. Launch + verify chunk 6/7 (2025-01-01..2025-12-31) of the same backfill — same launcher invocation,
+      halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
+      `ENUM_START_DATE=2025-01-01 ENUM_END_DATE=2025-12-31`. (repo: deployment-service)
+- [ ] [DATA] P2. Launch + verify chunk 7/7 (2026-01-01..rolling-boundary−1day, i.e. `today − 120d` computed LIVE at
+      launch time — do NOT reuse the stale `2026-04-04`/`2026-04-09` dates recorded earlier in this doc's Progress Log)
+      of the same backfill — same launcher invocation, halt-safety/gcloud-clobber handling, and done-when as chunk 3's
+      todo above, with `ENUM_START_DATE=2026-01-01` and `ENUM_END_DATE` set to the freshly-computed rolling boundary.
+      (repo: deployment-service)
+- [ ] [DATA] P2. Once chunks 3-7 above are ALL done: run the post-run cell-seeding ratio re-check (same read-only method
+      as this issue's own H1 measurement — single manifest read, columns projected to
+      `date`/`data_type`/`capture_status`/`league_id`/`source`, count total rows per `data_type` for the matched H1
+      windows `2025-01-01..2025-06-30` vs `2026-01-01..2026-06-30`) and record whether the ratio has moved toward ~1x.
+      This is the done-when gate for job (2)'s production run. (repo: instruments-service)
 
 > **2026-08-06 archive-candidate audit**: Todo 4 is flipped [x] but its own text says 'post-run ratio re-check
 > transferred to slot 8 entry (open todo)', and Progress Log (slot 8 + slot 6, 2026-08-04) confirms 'Chunks 3-7 not yet

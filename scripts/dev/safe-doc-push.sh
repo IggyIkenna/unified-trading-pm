@@ -104,8 +104,14 @@ fi
 
 for f in "${FILES[@]}"; do
   if [[ ! -e "$f" ]]; then
-    echo "Refusing: named path does not exist: $f" >&2
-    exit 2
+    # Not on disk -- still acceptable if git knows this path, e.g. the source half of a
+    # `git mv` rename (already gone from the index, since git mv folds it into the
+    # destination's R100 status) or a plain staged deletion. Check both the index and
+    # HEAD's tree so either shape passes.
+    if ! git ls-files --error-unmatch -- "$f" >/dev/null 2>&1 && ! git cat-file -e "HEAD:$f" 2>/dev/null; then
+      echo "Refusing: named path does not exist: $f" >&2
+      exit 2
+    fi
   fi
 done
 
@@ -116,6 +122,51 @@ is_named() {
     [[ "$candidate" == "$_f" ]] && return 0
   done
   return 1
+}
+
+# KNOWN_RENAME_SOURCES -- captured ONCE, right here, before the loop below (or any
+# fetch/pull/rebase) touches the tree. This is the only point where the caller's staged
+# rename is guaranteed to still be intact and unambiguous (a clean R100 pair). Every
+# reconcile step downstream (merge-pull's own conflict handling, rebase, autostash
+# pop-against-a-moved-HEAD) can decompose that pair into a staged ADD of the destination
+# plus an UNSTAGED delete of the source -- observed live: when the concurrent commit that
+# forces reconciliation ALSO touched the source path's content, the autostash pop can no
+# longer cleanly re-apply the rename as one unit, so the deletion half comes back unstaged
+# instead of re-detectable via `git diff --cached -M`. Capturing once up front and
+# reasserting unconditionally before every commit sidesteps re-detecting a rename whose
+# staged shape is not guaranteed to survive reconciliation.
+KNOWN_RENAME_SOURCES=()
+while IFS=$'\t' read -r _status _src _dst; do
+  [[ -z "$_status" ]] && continue
+  case "$_status" in
+    R*)
+      if is_named "$_dst"; then
+        KNOWN_RENAME_SOURCES+=("$_src")
+      fi
+      ;;
+  esac
+done < <(git diff --cached --name-status -M 2>/dev/null)
+
+# reassert_renames -- re-stage the deletion of every KNOWN_RENAME_SOURCES path that is
+# currently missing from disk, regardless of whether the index still shows it as a clean
+# staged rename, an unstaged delete, or nothing at all (a `git restore --staged .` resets
+# the index to match HEAD but never touches the working tree, so the source's absence from
+# disk survives every reconcile step even when its staged/unstaged shape does not).
+# `git add -- <path>` correctly stages a deletion for a path that is tracked but missing
+# from the working tree (default behaviour since git 2.0 for an EXPLICITLY named path) --
+# this is what actually lands the deletion in the next commit, whatever state it was in.
+reassert_renames() {
+  [[ ${#KNOWN_RENAME_SOURCES[@]} -eq 0 ]] && return 0
+  local src
+  for src in "${KNOWN_RENAME_SOURCES[@]}"; do
+    if [[ -e "$src" ]]; then
+      # Source is back on disk (e.g. a concurrent process restored it) -- not our rename
+      # to finish; leave it alone rather than guess.
+      continue
+    fi
+    echo "  -> re-staging deletion of rename source (would otherwise leave the doc at both paths): $src"
+    git add -- "$src" 2>/dev/null || true
+  done
 }
 
 # Pre-commit hooks whose failure is a genuine RACE against a concurrent slot -- the retry
@@ -258,6 +309,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
     git add -- "${FILES[@]}"
     unstage_foreign_paths
+    reassert_renames
 
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit

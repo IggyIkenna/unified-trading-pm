@@ -60,17 +60,19 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify the venue-scoped completeness check ran and the correct branch was taken.** Confirm the
-      source doc's `[DIAG] P1` todo cites a real completeness verdict for exactly BINANCE-FUTURES/ASTER/OKX-FUTURES
+- [x] ✅ [REVIEW] P1. **Re-verify the venue-scoped completeness check ran and the correct branch was taken.** Confirm
+      the source doc's `[DIAG] P1` todo cites a real completeness verdict for exactly BINANCE-FUTURES/ASTER/OKX-FUTURES
       (repo@sha or script-output citation), and that the doc's stated branch logic was actually followed: clean → paper
       VM launched; gaps found → a new blocking data-completeness issue was filed (cite its filename). Repo:
-      unified-trading-pm. **Done when**: the branch taken is confirmed with evidence in this plan's Progress Log.
-- [ ] [REVIEW] P1. **If the paper VM was launched: confirm cost-control + P1.2 unblocked.** Verify the VM was spun down
-      deliberately per the operator's explicit instruction (not left running for days) — cite the launch and shutdown
-      timestamps/evidence. Confirm `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s `[DATA] P1.2`
-      todo was re-attempted against the new ledger and its outcome recorded (pass or a fresh blocker). Repo:
-      unified-trading-pm. **Done when**: VM lifecycle evidence + P1.2's outcome are both cited, or (if the gap branch
-      was taken instead) this todo is marked not-applicable with a one-line note why.
+      unified-trading-pm. **Done when**: the branch taken is confirmed with evidence in this plan's Progress Log. —
+      unified-trading-pm@e5cf1613 (verified).
+- [x] ✅ [REVIEW] P1. **Not applicable — the gap branch was taken, not the launch branch.** **If the paper VM was
+      launched: confirm cost-control + P1.2 unblocked.** Verify the VM was spun down deliberately per the operator's
+      explicit instruction (not left running for days) — cite the launch and shutdown timestamps/evidence. Confirm
+      `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s `[DATA] P1.2` todo was re-attempted
+      against the new ledger and its outcome recorded (pass or a fresh blocker). Repo: unified-trading-pm. **Done
+      when**: VM lifecycle evidence + P1.2's outcome are both cited, or (if the gap branch was taken instead) this todo
+      is marked not-applicable with a one-line note why. — unified-trading-pm@c85dbb4fc (not-applicable, verified).
 - [ ] [DOC] P2. **Archive `plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`** via
       the standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add
       the archive banner → run the codex-alignment check → grep the corpus for every referrer of
@@ -80,3 +82,27 @@ context_scope:
       archived alongside it in the same commit.
 
 ## Progress Log
+
+- **2026-08-08 (slot 3, `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize-001`)**: Todo 1
+  verified. Source doc `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`@`e5cf1613` `[DIAG] P1` cites
+  a real venue-scoped completeness verdict for exactly BINANCE-FUTURES/ASTER/OKX-FUTURES: a targeted
+  `read_availability_index(columns=, filters=[("venue","in",[...])])` spot-check against the live prod cefi manifest
+  (3,174,368 rows, not a full-corpus walk) measured reachable-coverage of 53.54% (BINANCE-FUTURES), 83.60% (ASTER),
+  89.66% (OKX-FUTURES) — NOT CLEAN. Confirmed the doc's own pre-specified branch logic was followed: gaps-found branch
+  taken (not the clean/launch-VM branch) — the blocking data-completeness issue
+  `plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`@`3bde56d6`
+  was filed (confirmed exists, cites the same 3-venue coverage numbers, correctly
+  `assigned_vm: planning`/`status: open`). No paper VM was launched (correct — gate stays closed per the cited numbers).
+  Todo 2 is therefore not-applicable per its own stated fallback (gap branch taken, not launch branch) — left for
+  whichever session picks it up next per this plan's `sequential: true` ordering.
+- **2026-08-08 (slot 22, `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize-59415e713f9a`)**: Todo
+  2 flipped not-applicable. Independently re-verified (not just trusted the prior session's note): read the source doc
+  `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`'s `[DIAG] P1` Progress Log entry directly — it
+  states explicitly "The paper VM was **NOT** started — the gate stays closed"; confirmed the cited blocking issue
+  `plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md` exists on
+  disk. Also ran a fresh, independent live check —
+  `gcloud compute instances list --project=central-element-323112 --filter="name~paper OR name~colocated"` — zero
+  results, corroborating no paper/colocated VM is currently running. Since the gap branch was taken (not the launch
+  branch), this todo's VM-cost-control / P1.2-outcome verification does not apply — marked not-applicable per the todo's
+  own pre-specified fallback. Todo 3 (archival) is next in `sequential: true` order but is out of this task's scope (a
+  separate dispatched unit).

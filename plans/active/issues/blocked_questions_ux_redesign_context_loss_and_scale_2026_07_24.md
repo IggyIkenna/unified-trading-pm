@@ -207,6 +207,14 @@ exists" section together before scoping the workstream.
   park) rather than doing the backend column work myself (out of ui_developer craft scope per `ui_developer.md`) or
   building the UI against a field that doesn't exist yet (unverifiable per the todo's own done-when). Filed the
   `[INFRA]` todo below so this doesn't silently re-happen once `-001` lands and `-002` re-dispatches.
+- **2026-08-08 (slot-27, ui_developer, dispatched onto `-002`, second occurrence)**: same gate gap slot-11 hit earlier
+  today — re-confirmed live via `GET /api/backlog` that `-001` is still `status: queued, dispatched_to: null` and via
+  `grep -n "claude_session_id" agent-orchestrator/server/orm.py` that `BlockedRow` (line 334-382) still has no such
+  column. Declined via `POST /api/slots/27/skip-current-task` (`reason_code: GATED`, no `park_now`, same rationale as
+  slot-11). The `[INFRA]` todo below (attach `prereqs.completed_tasks: [-001]` to `-002`'s derived backlog row) is the
+  actual fix for this recurring dispatch gap and is still unactioned — not doing it myself here since it's outside
+  `ui_developer` craft scope and isn't this session's dispatched task (per worker.md, "I see related work" is not a
+  valid reason to fan out to untasked work); leaving it to dispatch normally to an `infra`-capable worker.
 
 ## Todos (continued)
 

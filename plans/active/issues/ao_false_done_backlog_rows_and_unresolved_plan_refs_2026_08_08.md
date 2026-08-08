@@ -99,14 +99,91 @@ plan + verifying the `done_sha`, never from the row's status alone.
       state.db (consistent with `regen_positional_task_ids_not_content_stable_2026_07_17.md` — positional ids reshuffle
       across regen ticks) between the 2026-08-08 03:15 UTC audit snapshot and this check, and the plan doc it pointed at
       is already in its correct, honest state. Nothing further to do on this item.
-- [ ] [BACKEND] P2. `defi_dex_pool_swaps_733_row_indexer_health_findings-001` (`done_sha=69d41b26f`)
-- [ ] [BACKEND] P2. `cefi_track2_backfill_vm_preempted_no_recovery-003` (**`done_sha` EMPTY** — the strongest reopen
+- [x] ✅ [BACKEND] P2. `defi_dex_pool_swaps_733_row_indexer_health_findings-001` (`done_sha=69d41b26f`) — **FLIP,
+      verified 2026-08-08 (slot 8)**: `69d41b26f` is a real commit
+      (`docs(plans): resolve UNISWAP_V3/OPTIMISM+     PANCAKESWAP_V3/BSC bad-indexers investigation…`, author
+      `ikennaigboaka [slot-8·planning]`, 2026-08-02T21:11:29Z, confirmed ancestor of `origin/live-defi-rollout`) that
+      genuinely resolved the cited plan's "bad indexers transient vs. permanent" investigation todo —
+      UNISWAP_V3/OPTIMISM confirmed PERMANENT/structural, PANCAKESWAP_V3/BSC confirmed transient-and-resolved with a new
+      stalled-indexer-head finding filed separately (full evidence: that plan's Progress Log entry "2026-08-02T~21:10Z
+      (slot 8, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-001`)"). The false-done flag
+      was a plan-doc bookkeeping artifact, not undone work: a later worker appended a near-duplicate `[x]` checkbox
+      elsewhere in the same doc instead of editing the original todo, leaving the original orphaned as `- [ ]` — the doc
+      itself now documents this root cause in full (see its "✅ CLOSED 2026-08-08 (false-done audit reconciliation)"
+      annotation), and that orphaned duplicate was already reconciled by a separate slot-1 session
+      (`unified-trading-pm@b55c96fb0`, confirmed via `git     blame`). No further action needed on the underlying plan;
+      this item only needed its tracker checkbox flipped here.
+- [x] ✅ [BACKEND] P2. `cefi_track2_backfill_vm_preempted_no_recovery-003` (**`done_sha` EMPTY** — the strongest reopen
       candidate: a `done` row with no shipping evidence at all; todo is gate-shaped, "Once the relaunched VM genuinely
-      completes (measured exit, not a wall-clock guess)…")
-- [ ] [BACKEND] P2. `deployment_api_sigabrt_crash_loop-017` (`done_sha=467b28964`)
-- [ ] [BACKEND] P2. `sports_fast_t1_recon_oom_live_capture_outage-003` (`done_sha=80265d6`) — gate-shaped ("Once fixed,
-      backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28…)")
-- [ ] [BACKEND] P2. `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`)
+      completes (measured exit, not a wall-clock guess)…") — **verified 2026-08-08 (slot 19): no REOPEN action needed or
+      possible — the row is no longer false-done.** `GET /api/backlog` for this exact id returns `status: "queued"`,
+      `done_sha: null`, `dispatched_to: null` (not `done`) — the false-done state the 03:15 UTC audit snapshot captured
+      has already self-corrected. Cross-checked against the cited plan
+      (`plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`): the todo's own checkbox is
+      still honestly `- [ ]` (the gate — "the relanched VM genuinely completes, measured exit" — remains unmet as of
+      today; the 6th VM died via `WORKER_STALLED` on 2026-08-06, a 7th relaunch is queued but not yet dispatched, and 5
+      separate review-craft dispatches today alone independently re-verified the gate is still unmet and declined via
+      `reason_code: "GATED"`). Read `server/routes/backlog.py`'s `reopen_backlog_task` to confirm it is a no-op here
+      regardless (resets an already-`queued`/`done_sha: null` row to the same state) — not calling it, since there is
+      nothing to correct. No REOPEN or FLIP was warranted or performed; this item only needed its tracker checkbox
+      resolved with the verification trail above.
+- [x] ✅ [BACKEND] P2. `deployment_api_sigabrt_crash_loop-017` (`done_sha=467b28964`) — **verified 2026-08-08 (slot 18):
+      no REOPEN or FLIP action needed or possible — the row this audit item names has already self-corrected.**
+      `467b28964` (slot-6, 2026-07-31) is a `docs(plans):` commit against
+      `plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` itself — the `[REVIEW] P1` MASTER/WORKER
+      pid-role-correlation todo (now at line 224). At that time the commit's own content shows the todo's done-when
+      genuinely wasn't met ("a SIGABRT occurred, but the correlation is UNRESOLVABLE… Leaving this checkbox unchecked")
+      — i.e. the 03:15 UTC audit snapshot correctly caught a real false-done (backlog row `done`, checkbox honestly
+      still `- [ ]`). Per `GET /api/backlog`, the positional id `deployment_api_sigabrt_crash_loop-017` now points at a
+      DIFFERENT, orphaned row (`title: "(orphan — no longer in backlog.yaml)"`, `done_sha=ffd41f98e`,
+      `dispatched_to=12`, `done_at=2026-08-08T11:12:59Z`) — confirming the
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle gotcha. `ffd41f98e` (slot-12,
+      2026-08-08T11:12:22Z) IS the honest resolution of the same line-224 todo: gate genuinely met (a SIGABRT occurred
+      post-`785405d`-deploy), all 7 correlated pids matched `gunicorn WORKER forked` entries, checkbox correctly flipped
+      `[x]` with a `[BACKEND] P3` follow-up filed for why workers abort(). Current file state: line 224 is `[x]` ✅,
+      matching `ffd41f98e` exactly. The false-done condition the audit captured has already been superseded by genuine,
+      correctly-flipped follow-up work — nothing to REOPEN (would re-open already-honestly-done work) or FLIP (already
+      flipped, by the row now holding the real work).
+- [x] ✅ [BACKEND] P2. `sports_fast_t1_recon_oom_live_capture_outage-003` (`done_sha=80265d6`) — gate-shaped ("Once
+      fixed, backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28…)") — **verified 2026-08-08 (slot 32): no
+      REOPEN or FLIP action needed or possible — the row this audit item names has already self-corrected**, same
+      positional-id-reshuffle pattern as the 4 items above
+      (`regen_positional_task_ids_not_content_stable_2026_07_17.md`). `GET /api/backlog` shows zero rows with
+      `done_sha=80265d6` anywhere in the current 2,430-row set, and no row currently holds the id
+      `sports_fast_t1_recon_oom_live_capture_outage-003` at all. `80265d67` is a real, on-origin commit
+      (`deployment-service`, slot-12, 2026-08-06T00:36:24Z —
+      `fix(vm): odds-api guard counts gcloud     stderr WARNING as a VM, blocking every backfill launch`) that genuinely
+      shipped, but it fixed a launcher pre-flight guard, not the gap-backfill todo itself. Read the cited plan
+      (`plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` line 497): the P1 "Once fixed,
+      backfill/re-fetch the resulting gap…" todo is correctly still `- [ ]` — its own Progress Log records that a
+      slot-12 session on 2026-08-06 prematurely flipped it to done citing `80265d6`'s backfill VM launch, and a same-day
+      interactive session caught that "gate cleared" was premature (final manifest-full-coverage verification was never
+      run) and **reverted the checkbox to open**, then ran the todo's own literal done-when (manifest-only read,
+      `instruments-store-sports-prd`) and found coverage genuinely NOT full on any of the 5 gap days (25–57% reachable
+      coverage, real `attempted_failed` residue). The live backlog now reflects this honestly: the current
+      `sports_fast_t1_recon_oom_live_capture_outage-015` row (same "Once fixed, backfill/re-fetch…" title) is
+      `status: queued`, `done_sha: null`, blocked on an unmet auto-unpark prerequisite — not `done`. So the false-done
+      state the 03:15 UTC audit snapshot captured has already been corrected upstream (both the backlog row and the plan
+      checkbox), by a different session, before this task was ever picked up. No REOPEN (would re-open work that's
+      already honestly open) or FLIP (would falsely mark unmet work done) was warranted or performed; this item only
+      needed its tracker checkbox resolved with the verification trail above.
+- [x] ✅ [BACKEND] P2. `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`) — **verified 2026-08-08 (slot
+      18): no REOPEN or FLIP action needed or possible — already self-corrected by a different session before this task
+      was picked up.** `GET /api/backlog` for this exact id now shows an orphaned row with a DIFFERENT
+      `done_sha=f79fbded3` (not the audit-captured `c3c65402e`), same
+      `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as the 5 items above. `f79fbded3`
+      (slot-10, 2026-08-08T17:26:13Z,
+      `docs(plans): close infra_capture_and_devops_leftovers-001 — api_football struck (BLK-b969f5f0), live odds VM     re-verified healthy`)
+      is a real, on-origin commit that genuinely closed the plan's Live-ODDS P2 todo: (1) api_football second-source
+      wiring correctly STRUCK per operator decision B on `/blocked` `BLK-b969f5f0` (data-correctness risk — no
+      sanctioned business writing sports odds via api_football post-wipe), citing a prior 2026-08-08 false-done-audit
+      pass that had restated this as open doc-drift, not a live gap; (2) the live `odds_api` VM
+      (`mtds-live-sports-odds-api-trades-20260804-131449`) freshly confirmed RUNNING with a clean GCS run.log through
+      2026-08-08T17:23Z, zero errors, manifest shards writing every ~60s. Read the cited plan
+      (`plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` line 292): the checkbox is correctly `[x]` ✅ and
+      matches `f79fbded3` exactly. No REOPEN (would re-open genuinely, freshly-verified-done work) or FLIP (already
+      flipped, honestly) was warranted or performed; this item only needed its tracker checkbox resolved with the
+      verification trail above.
 - [ ] [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
       `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose
 - [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`)
@@ -174,3 +251,58 @@ plan + verifying the `done_sha`, never from the row's status alone.
   (`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`) already carries its own correct, honest state (todo 2
   intentionally `- [ ]` as a recurring re-check pointer, 3 of 4 gated `BLOCKED-*` parent items still open per its
   2026-08-02 Progress Log). See the checklist item above for the full verification trail.
+
+- **2026-08-08 (slot 8, backend_engineer)**: Verdict on `defi_dex_pool_swaps_733_row_indexer_health_findings-001`
+  (`done_sha=69d41b26f`): **FLIP** — verified `69d41b26f` is a real, on-origin commit (authored by this same slot on
+  2026-08-02) that genuinely completed the cited plan's "bad indexers transient vs. permanent" investigation todo. The
+  false-done flag traced to a plan-doc duplicate-checkbox bookkeeping bug, already root-caused and reconciled by a
+  separate slot-1 session earlier the same day (`unified-trading-pm@b55c96fb0`) — confirmed via `git blame` on the
+  reconciled checkbox. No REOPEN warranted; no code work needed. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 19, backend_engineer)**: Verdict on `cefi_track2_backfill_vm_preempted_no_recovery-003` (`done_sha`
+  EMPTY at audit time): **no action possible or needed** — `GET /api/backlog` shows this exact id is currently
+  `status: "queued"`, `done_sha: null`, not `done`. The false-done state the 03:15 UTC audit snapshot captured has
+  already self-corrected by the time of this check (consistent with this task id's own well-documented history of
+  positional-ID/status churn — see the cited issue doc's Progress Log, which records 17+ review-craft dispatches to this
+  same gate-shaped todo over 2026-07-30 through today, each independently re-verifying and declining via
+  `/skip-current-task reason_code: "GATED"`). Cross-checked the underlying plan
+  (`plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`): its own todo checkbox is
+  correctly still `- [ ]` — the gate ("relaunched VM genuinely completes, measured exit") remains genuinely unmet (6th
+  VM died via `WORKER_STALLED` 2026-08-06; 7th relaunch queued, not yet dispatched; 5 independent dispatches today alone
+  confirm no VM is currently running). Read `reopen_backlog_task` in `agent-orchestrator/server/routes/backlog.py` to
+  confirm calling it now would be a pure no-op (already `queued`/`done_sha: null`) — declined to call it since there is
+  nothing to correct. No REOPEN or FLIP warranted; no code work needed. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 18, backend_engineer)**: Verdict on `deployment_api_sigabrt_crash_loop-017` (`done_sha=467b28964`
+  at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting-positional-id pattern as the
+  slot-19/slot-22 items above. `467b28964` (2026-07-31, slot-6) was a genuine false-done AT THE TIME: it's a
+  `docs(plans):` commit whose own content leaves the `[REVIEW] P1` MASTER/WORKER pid-correlation todo (now line 224 of
+  `deployment_api_sigabrt_crash_loop_2026_07_24.md`) explicitly unchecked ("Leaving this checkbox unchecked — done-when
+  genuinely not met"). But `GET /api/backlog` shows the positional id `-017` now belongs to a DIFFERENT, orphaned row
+  (`done_sha=ffd41f98e`, dispatched to slot 12, done `2026-08-08T11:12:59Z`) — the id was reused by a regen tick per
+  `regen_positional_task_ids_not_content_stable_2026_07_17.md`. `ffd41f98e` is the honest, correctly-flipped resolution
+  of that same line-224 todo (slot 12 today: gate met, 7/7 SIGABRT pids matched `gunicorn WORKER`, checkbox flipped
+  `[x]` with a `[BACKEND] P3` follow-up filed). Current plan-doc state already matches `ffd41f98e` exactly — nothing to
+  correct. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 32, backend_engineer)**: Verdict on `sports_fast_t1_recon_oom_live_capture_outage-003`
+  (`done_sha=80265d6` at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting
+  positional-id pattern as the 4 items above. `GET /api/backlog` (2,430 rows) has zero rows with `done_sha=80265d6` and
+  no row currently holding this exact id. `80265d67` (deployment-service, slot-12, 2026-08-06) is a real commit that
+  fixed a VM-launch guard, not the backfill todo itself. The cited plan
+  (`plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` line 497) shows its own Progress Log
+  already caught + reverted a premature flip of this exact todo on 2026-08-06 (checkbox restored to `- [ ]` after a
+  manifest-only re-check found only 25-57% reachable coverage across the 5 gap days, not full coverage) — the current
+  live backlog row for this same todo (`-015`) is correctly `queued`/`done_sha: null`, not `done`. Both the backlog and
+  the plan checkbox already reflect the honest state; nothing to correct. See the checklist item above for the full
+  trail.
+
+- **2026-08-08 (slot 18, backend_engineer)**: Verdict on `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`
+  at audit time): **no REOPEN or FLIP action needed or possible** — already self-corrected by a different session
+  (slot-10) before this task was picked up, same self-correcting positional-id pattern as the 5 items above.
+  `GET /api/backlog` shows this exact id now holds an orphaned row with `done_sha=f79fbded3` (not `c3c65402e`).
+  `f79fbded3` (slot-10, 2026-08-08T17:26:13Z) is a real commit that genuinely closed the cited plan's Live-ODDS P2 todo:
+  api_football second-source wiring correctly STRUCK per operator decision B on `BLK-b969f5f0`, and the live `odds_api`
+  VM freshly re-verified RUNNING with a clean run.log. The plan checkbox at
+  `infra_capture_and_devops_leftovers_2026_07_06.md` line 292 is correctly `[x]` ✅ and matches `f79fbded3` exactly.
+  Nothing to correct. See the checklist item above for the full trail.

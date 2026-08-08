@@ -126,13 +126,22 @@ context_scope:
       pair is classified subset-confirmed (recommend a safe merge path, but do not execute it) or
       genuinely-distinct-content (recommend permanent leave-as-is), with results appended to the issue doc's Findings —
       or the sample proves inconclusive and is escalated as `BLOCKED-OPERATOR-DECISION` with the evidence attached.
-- [ ] [DATA] P2. **Check the terminal state of VM `mdps-backfill-cefi-20260807-130321` and re-run the per-cell
+- [x] ✅ [DATA] P2. **Check the terminal state of VM `mdps-backfill-cefi-20260807-130321` and re-run the per-cell
       symbol-count bundle audit** against the 84 targeted (6 BYBIT + 6 DERIBIT day) cells named in
       `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`. If the VM was preempted again, relaunch (SPOT
       default, per the vm-launcher runbook); if it completed, confirm the 112-cell OK state directly against
       GCS/manifest evidence. Source: `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` (Relaunch todo).
       **Done when**: the doc's Relaunch todo cites either a passing 84+-cell audit result with fresh evidence, or a
       documented further-relaunch action with a new VM id and launch timestamp — not just a stale RUNNING timestamp.
+      **DONE**: VM confirmed preempted at T+1h46m (gcloud op `systemevent-1786114166437`). Ran a fresh 126-path per-cell
+      audit — BYBIT still PARTIAL on all 6 target days. Root-caused + fixed the reason 2 relaunches never actually fixed
+      it: `--force` was silently dropped when MDPS spawns per-date subprocesses
+      (`market-data-processing-service@e9f9819`, see `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`
+      for the cross-cutting writeup). A 3rd VM (`mdps-backfill-cefi-20260808-095136`, launched 2026-08-08T08:57:08Z,
+      pre-fix, same wrong full-range scope, confirmed alive) is currently running — documented + a new per-day-scoped
+      relaunch todo added to the Track-7 doc for once it terminates. Evidence:
+      `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` § "2026-08-08 84-cell audit" +
+      unified-trading-pm@<sha>, market-data-processing-service@e9f9819.
 - [ ] [SCRIPT] P3. **Remove `BINANCE-DELIVERY` from `VENUES_BY_ASSET_GROUP["cefi"]`** in
       `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py` to stop the daily zombie cron (704 wasted
       `attempted_failed`/`empty_confirmed` rows/day). The venue was deliberately excluded from MVP scope by operator

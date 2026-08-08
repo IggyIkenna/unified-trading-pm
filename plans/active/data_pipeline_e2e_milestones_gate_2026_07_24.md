@@ -282,9 +282,10 @@ fold-vs-migrate") presented as a step.
       (beyond the original 10-doc sample) is its own dispatchable todo there. `pm@<commit-pending>`.
 - [x] [DOCS] P2. ✅ **DONE 2026-07-24** — target: 3 named zero-checkbox issue docs. Both known instances converted:
       `pipeline_e2e_check_vm_name_collision_2026_07_12.md` (real `[CODE] P2` todo added) and
-      `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (4 real todos, splitting the undecided
-      fold-vs-migrate judgment call into fact-gathering + a separate `[OPERATOR]` decision todo). The gate doc's own
-      citation had a typo (`2026_07-24` → corrected to `2026_07_24`). `pm@<commit-pending>`.
+      `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (archived 2026-08-08, delete complete; 4 real
+      todos, splitting the undecided fold-vs-migrate judgment call into fact-gathering + a separate `[OPERATOR]`
+      decision todo). The gate doc's own citation had a typo (`2026_07-24` → corrected to `2026_07_24`).
+      `pm@<commit-pending>`.
 
 ## 8. Features service catalogue completeness across all AGs, every adapter smoke-tested
 
@@ -522,5 +523,6 @@ is the single place to scan them all in one pass.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): standing reference surface,
   `archive_exempt: true` by operator ruling, 0 open todos by design.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  `archive_exempt: true`, standing reference surface by operator ruling (`autonomous_session_operator_decisions_
-  2026_07_25.md` entry #10); 0 open todos is expected/by design here, not a reclassification signal.
+  `archive_exempt: true`, standing reference surface by operator ruling
+  (`autonomous_session_operator_decisions_ 2026_07_25.md` entry #10); 0 open todos is expected/by design here, not a
+  reclassification signal.

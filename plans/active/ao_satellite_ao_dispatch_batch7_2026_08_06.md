@@ -111,7 +111,7 @@ conflict/operator/time-gated (parked below, not silently dropped).
 
 ## Todos
 
-- [ ] [DATA] [DOC] P2. **Confirm whether the fleet-wide single-tool-call-per-turn pattern is systemic, then strengthen
+- [x] [DATA] [DOC] P2. **Confirm whether the fleet-wide single-tool-call-per-turn pattern is systemic, then strengthen
       the worker prompt if it is — one combined todo since the second half is conditional on the first's finding.**
       Sample transcripts from 5-10 more completed tasks (mirror the source doc's own SSM-based sampling method: pull
       real transcripts across different models/providers/plan-types) and measure the same batching metrics
@@ -127,7 +127,11 @@ conflict/operator/time-gated (parked below, not silently dropped).
       citing the evidence + (if applicable) the commit sha. The 3rd item ("consider a soft turn-count circuit breaker")
       is explicitly OUT of scope for this todo — unscoped design fork, see Deferred. Source:
       `/plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md` (its first 2 items only).
-      Repo: agent-orchestrator, unified-trading-pm.
+      Repo: agent-orchestrator, unified-trading-pm. ✅ unified-trading-pm@a20e52125 — CONFIRMED SYSTEMIC (12-task
+      stratified sample across all 4 provider/model combos, 88.1% single/0-tool turns, only 10.7% multi-tool turns
+      fleet-wide; full raw metrics + a real parsing-bug fix found along the way in the source doc's Progress Log).
+      Strengthened `agents/worker.md` STEP 1 with a concrete worked example + a cross-referencing bullet in
+      `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`. Source doc's first 2 items flipped `[x]`.
 
 - [x] [SCRIPT] P2. **Reset `spawn_retry_count = 0` in the shared automatic spawn-success path so a slot's diagnostic
       retry-with-pane-diagnosis capability isn't permanently disabled after one lifetime retry-cap trip.** In
@@ -146,8 +150,12 @@ conflict/operator/time-gated (parked below, not silently dropped).
       until manual respawn" text corrected to Trigger-3 auto-recovery message (worker_liveness/_auth_failover.py). QG
       green.
 
-- [ ] [SCRIPT] P2. **Reorder `WorkerLivenessWatchdog._tick_once()`'s cleanup/reconcile sub-mechanisms ahead of the
-      daily-kill-cap early-return, and fix a stale docstring.** Today `if self._daily_cap_reached(): return` sits after
+- [x] ✅ [SCRIPT] P2. **Reorder `WorkerLivenessWatchdog._tick_once()`'s cleanup/reconcile sub-mechanisms ahead of the
+      daily-kill-cap early-return, and fix a stale docstring.** — agent-orchestrator@bc37d03 (reorder + docstring fix) +
+      agent-orchestrator@53492cb (notify_watchdog_kill cap-hit alert text disclosure +
+      test_tick_daily_cap_still_runs_orphan_session_reclaim regression test). Verified: orphan-session reclaim
+      (`_tick_once`, server/worker_liveness_watchdog.py) runs ahead of the `_daily_cap_reached()` check; full
+      `quality-gates.sh` green (2769 passed). Today `if self._daily_cap_reached(): return` sits after
       `_sweep_dirty_slots`/`_sweep_unpushed_slots` (deliberately moved ahead of it in a prior incident fix) but before
       everything else — including orphan-session reclaim, whose OWN comment already states it is cleanup of an
       already-dead worker, not a new kill decision, so it is mis-gated by sitting after the cap check. Move
@@ -248,3 +256,12 @@ methodology step 1), not re-derive the classification from scratch.
 - **2026-08-08 (operator, interactive)**: RULED — the 2026-07-17 local-only ruling is LIFTED going forward; see batch5's
   Progress Log for the full note. `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`
   applied here too.
+- **2026-08-08 (slot 25, `data_engineering`, dispatch `ao_satellite_ao_dispatch_batch7-001`)**: Executed todo 1. Sampled
+  12 real completed tasks (stratified across all 4 live provider/model combos + diverse plan_refs) directly on the
+  orchestrator VM (this worker's session runs ON `i-0c9b283b31d6b5ca7` — direct `localhost:8765`/local sqlite access, no
+  SSM needed; `ikenna-worker` lacks `ssm:SendCommand` on this instance regardless, confirmed live). **Verdict: CONFIRMED
+  SYSTEMIC** — fleet-wide only 10.7% of turns batch >1 tool call (88.1% single/0-tool). Full raw metrics + a real
+  transcript-parsing-bug catch (message-id stream accumulation, not overwrite) are in the source doc's Progress Log.
+  Strengthened `agents/worker.md`'s STEP 1 boot sequence with a concrete worked example + a budget-fit cross-reference
+  in `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`. Source doc's first 2 items flipped `[x]`. Todo 2/3 (file-adjacent,
+  same source doc) untouched by this dispatch.

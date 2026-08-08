@@ -527,24 +527,31 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
 
 ## Todos
 
-- [ ] [DATA] P1. **Resume the paused migration: apply the 2,962-object safe residual + final re-proof + archive** —
-      pause cron → verify PAUSED → 4 sequential venue-scoped `cefi-late-renames` applies (EXTENDED-STARKNET/
-      LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES) → resume cron → verify ENABLED → loop-until-dry full-range verifier (2
-      consecutive clean passes, confirming colon_wire) → `verify_cefi_canonical_4surface_2026_07_20.py` final re-proof →
-      archive this plan + its parent. Session paused 2026-07-25 on operator request (host contention); not yet resumed.
-      **NOT operator-gated (round5-cefi-question-resolution 2026-08-08) — reversibility-verified per
-      `plans/active/task_template.md` finding T/U.** The 5 prior audits citing "missing `[OPERATOR]` tag /
-      reversibility justification" were correct that no citation existed YET; one now does. Fresh same-run check
-      (2026-08-08): `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112
-      --format="value(softDeletePolicy.retentionDurationSeconds)"` → **604800** (exactly the 7-day floor finding T
-      requires, `>=` inclusive) — this is the exact bucket the `cefi-late-renames` renames target. The renames
-      themselves are copy+delete (a rename), zero-collision-verified for all 4 target venues (Finding 10's own
-      analysis: "belong to venues with ZERO collisions anywhere in the full scan"), executed under the established
-      cron-pause drain gate this doc's own Finding 6/7 already prove out twice. This is not a whole-bucket destroy
-      (finding T's one hard exclusion) — it's a named-venue, named-scope, already-safety-characterized rename.
-      Reclassifying as ordinary AO-dispatchable SCRIPT/infra work per the resume sequence already written above; the
-      resume itself (multi-VM sequential launch + verification) was not executed in this pass — out of scope for a
-      documentation-question audit, left for the next infra dispatch.
+- [x] [DATA] P1. **Resume the paused migration: apply the 2,962-object safe residual** — EXECUTED 2026-08-08, slot 18.
+      Pause cron → verify PAUSED → 4 sequential venue-scoped `cefi-late-renames --apply` runs, cron resume → verify
+      ENABLED, loop-until-dry full-range verifier (2 passes), and the final 4-surface re-proof all RAN as scoped.
+      Result: 3 of 4 venues fully resolved (EXTENDED-STARKNET 3,168 renamed 0 errors `...-134921`; BYBIT-SPOT +
+      COINBASE-FUTURES already fully canonical, 0 renames needed, `...-160328`/`...-161004`); LIGHTER-ZKSYNC hit a NEW,
+      much larger collision population than Finding 10's "zero collision risk" assessment (11,494 genuine collisions
+      across 30+ dates, not the single-day precedent) — tracked as its own issue,
+      `issues/cefi_lighter_zksync_systemic_collision_2026_08_08.md`. Cron resumed + verified `ENABLED`
+      (`gcloud scheduler jobs describe` confirms). Loop-until-dry verifier: 2 consecutive full-range dry-run passes show
+      a stable collision population (11695→11681, ~0.1% variance = live ingestion, not scan instability); `colon_wire`
+      is not a distinct tracked category in this script's output (consistent with subsumption, not separately
+      confirmable). **Also surfaced a much larger out-of-scope pending-rename backlog** (HYPERLIQUID ~44.8k, OKX-SWAP
+      1.3k, BITGET-FUTURES 654, etc. across the FULL corpus, not just the 4 named venues) — real, but explicitly outside
+      this todo's declared scope; not actioned here, flagged for a future dedicated plan.
+- [ ] [DATA] P2. **Final 4-surface re-proof FAILED — resolve before archival.**
+      `verify_cefi_canonical_4surface_2026_07_20.py` returned `OVERALL: FAIL [A=PASS B=FAIL C=FAIL D=PASS]` — both
+      failures are duplicate manifest rows on 2025-06-15, BEFORE this migration's 2025-11-01 scope start (a genuinely
+      separate, pre-existing population, not a regression from this session's work). Tracked as
+      `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` with its own investigate+fix todos.
+      Corpus-level canonical fractions measured: FILENAME 95.36%, COLUMN 92.50%, MANIFEST 98.64% — real, measurable, not
+      yet 100%.
+- [ ] [DATA] P2. **Once the 2 blockers above resolve** (LIGHTER-ZKSYNC collision investigation + pre-2025-11-01
+      duplicate residual), re-run `verify_cefi_canonical_4surface_2026_07_20.py` for a clean PASS, then archive this
+      doc + parent per the finalize plan
+      (`plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`).
 
 ## Progress Log
 
@@ -574,24 +581,38 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is resuming the paused migration, a judgment
   call, not worker-determinable.
 - **round5-cefi-question-resolution 2026-08-08**: reversibility-verified per finding T/U (live-checked bucket
-  soft-delete retention = 604800s, meets the 7-day floor) — the sole todo's operator gate is lifted; see the todo's
-  own annotation above. Doc stays `assigned_vm: NA` (the actual multi-VM resume sequence itself wasn't executed in
-  this pass) but is no longer an operator QUESTION — it's ordinary infra work awaiting dispatch.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning`
-  (added `assigned_role: data_engineering` — field was previously absent). The round5-cefi-question-resolution entry
-  directly above already did the substantive work this flip completes: the sole open todo's `[OPERATOR]` gate was
-  lifted via a fresh, same-run `gcs_bucket_soft_delete_retention_seconds()` check (604800s, meets the 7-day floor),
-  matching today's cheat-sheet ruling #6 (reversibility-qualified prod-bucket renames are agent-executable after a
-  fresh soft-delete check) precisely — the todo itself is a named-venue (EXTENDED-STARKNET/LIGHTER-ZKSYNC/BYBIT-SPOT/
-  COINBASE-FUTURES), named-scope (~2,962 objects, zero-collision-verified per Finding 10), already-proven-safe
-  (`cefi-late-renames` category exercised twice successfully, Finding 7/8/10) rename sequence with an explicit
-  done-when (loop-until-dry clean + `verify_cefi_canonical_4surface_2026_07_20.py` + archival) — bounded and
-  worker-determinable, not a judgment call. Conflict-check: (a) grepped `plans/active/` for other
-  `parent_epic: cefi_master` `assigned_vm: planning` docs — none cover the residual-rename resume sequence itself;
-  (b) `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`/`batch10_2026_08_08.md` cite this doc only for the SEPARATE
-  Finding 8/10 HYPERLIQUID/ASTER collision-investigation todo (already independently dispatched as its own batch10
-  `[DATA] P2` todo, read-only, does not touch the 2,962-object safe-residual rename) — no overlap with this doc's own
-  P1 todo; `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (matched a "safe residual" text grep)
-  is an unrelated F1-N9 consistency-remediation doc, no shared scope; (c)
-  `cefi_consolidated_closeout_2026_07_18.md` does not reference this doc's resume-migration item. Clear. Companion
-  finalize plan: `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.
+  soft-delete retention = 604800s, meets the 7-day floor) — the sole todo's operator gate is lifted; see the todo's own
+  annotation above. Doc stays `assigned_vm: NA` (the actual multi-VM resume sequence itself wasn't executed in this
+  pass) but is no longer an operator QUESTION — it's ordinary infra work awaiting dispatch.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning` (added
+  `assigned_role: data_engineering` — field was previously absent). The round5-cefi-question-resolution entry directly
+  above already did the substantive work this flip completes: the sole open todo's `[OPERATOR]` gate was lifted via a
+  fresh, same-run `gcs_bucket_soft_delete_retention_seconds()` check (604800s, meets the 7-day floor), matching today's
+  cheat-sheet ruling #6 (reversibility-qualified prod-bucket renames are agent-executable after a fresh soft-delete
+  check) precisely — the todo itself is a named-venue (EXTENDED-STARKNET/LIGHTER-ZKSYNC/BYBIT-SPOT/ COINBASE-FUTURES),
+  named-scope (~2,962 objects, zero-collision-verified per Finding 10), already-proven-safe (`cefi-late-renames`
+  category exercised twice successfully, Finding 7/8/10) rename sequence with an explicit done-when (loop-until-dry
+  clean + `verify_cefi_canonical_4surface_2026_07_20.py` + archival) — bounded and worker-determinable, not a judgment
+  call. Conflict-check: (a) grepped `plans/active/` for other `parent_epic: cefi_master` `assigned_vm: planning` docs —
+  none cover the residual-rename resume sequence itself; (b)
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`/`batch10_2026_08_08.md` cite this doc only for the SEPARATE Finding
+  8/10 HYPERLIQUID/ASTER collision-investigation todo (already independently dispatched as its own batch10 `[DATA] P2`
+  todo, read-only, does not touch the 2,962-object safe-residual rename) — no overlap with this doc's own P1 todo;
+  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (matched a "safe residual" text grep) is an
+  unrelated F1-N9 consistency-remediation doc, no shared scope; (c) `cefi_consolidated_closeout_2026_07_18.md` does not
+  reference this doc's resume-migration item. Clear. Companion finalize plan:
+  `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.
+- **2026-08-08 (resume executed, slot 18)**: ran the full resume sequence end to end. EXTENDED-STARKNET applied clean
+  (3,168 renamed, 0 errors, `canonical-migration-cefi-late-renames-20260808-134921`). LIGHTER-ZKSYNC hit
+  STOP-ON-SURPRISE with a much larger collision population than Finding 10 predicted (11,494 across 30+ dates, not a
+  single-day artifact) — a single-day exclusion (mirroring Finding 10's Range A/B/C precedent) reduced but did not clear
+  it; filed `issues/cefi_lighter_zksync_systemic_collision_2026_08_08.md` rather than force further date splits through
+  an apparently-systemic, ongoing dual-write. BYBIT-SPOT and COINBASE-FUTURES were already fully canonical (0 renames
+  needed — the corpus caught up since Finding 10's 2026-07-25 scan). Cron resumed + verified `ENABLED`. Loop-until-dry
+  full-range verifier: 2 consecutive dry-run passes show a stable collision population (~0.1% variance = live
+  ingestion). The full-corpus scan also surfaced a much larger pending-rename backlog well beyond this todo's 4-venue
+  scope (HYPERLIQUID ~44.8k alone) — flagged, not actioned, out of scope. Final
+  `verify_cefi_canonical_4surface_2026_07_20.py` re-proof FAILED (Surface B/C) on a PRE-2025-11-01 duplicate population
+  unrelated to this session's work — filed `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`. Archival
+  deferred pending both new issues' resolution; the finalize plan's own gate (`depends_on` this doc) correctly stays
+  closed until then.

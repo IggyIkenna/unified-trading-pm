@@ -140,6 +140,14 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
   bundle, race-winner state unchanged); 14/112 DERIBIT MISSING (2023-11-02, 2024-07-01 — raw data exists); 14/112 BYBIT
   MISSING (2025-11-01, 2026-01-01 — NO raw tick data). Added relaunch (P2 INFRA) and raw-gap investigation (P3 DATA)
   todos.
+- **slot-26 data_engineering 2026-08-08**: Checked terminal state of `mdps-backfill-cefi-20260807-130321` — preempted
+  T+1h46m, only reached 9/~950 days of its wrongly-scoped full-range run. Ran 126-path per-cell audit: BYBIT still
+  PARTIAL on all 6 target days (unchanged since 2026-08-03). Root-caused + fixed a `--force`-drop bug in
+  `market-data-processing-service`'s per-date subprocess spawner (`e9f9819`) that fully explains why 2 relaunches never
+  fixed BYBIT. Found + documented a 3rd VM already running with the same pre-fix scope
+  (`mdps-backfill-cefi-20260808-095136`) — left running (not stale) per the VM-delete guardrail, flagged for operator.
+  Filed `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md` (cross-cutting finding) + added a
+  per-day-scoped relaunch todo above. See "2026-08-08 84-cell audit" section for full detail.
 
 ## Follow-ups
 
@@ -170,9 +178,58 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
       bucket (no `instrument_type=futures_chain` directory under `venue=BYBIT` for those 2 days in batch_tardis).
       Determine if Tardis re-download is needed. (repo: market-tick-data-service)
 
+- [ ] [DATA] P2. **Once `mdps-backfill-cefi-20260808-095136` reaches a terminal state, relaunch scoped PER-DAY** (6
+      single-day launches — `--start-date`==`--end-date` for each of 2023-06-01, 2023-08-02, 2023-11-02, 2024-02-01,
+      2024-02-02, 2024-07-01 — NOT a multi-day range) for BYBIT futures_chain + DERIBIT options_chain, `--force`. The
+      root-cause fix (`market-data-processing-service@e9f9819`, see
+      `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`) is now live, so a fresh VM launch will
+      correctly force-reprocess. **Done when**: 84-cell audit (6 days × 2 venues × 7 timeframes) shows BYBIT bundles
+      carry both BTC+ETH `instrument_id`s and DERIBIT bundles are present for all 6 days (both underlyings).
+
+## 2026-08-08 84-cell audit (6 BYBIT + 6 DERIBIT days, pre-relaunch baseline)
+
+Ran a targeted per-cell existence + `instrument_id`-uniqueness check against GCS for the 6 BYBIT-eligible target days
+(excludes 2025-11-01/2026-01-01, no raw BYBIT data) × {BYBIT futures_chain, DERIBIT options_chain BTC+ETH} × 7
+timeframes = 126 paths:
+
+- **BYBIT (42 cells, all 6 days × 7tf)**: all EXIST but ALL still PARTIAL — every sampled bundle carries exactly 1
+  `instrument_id` (e.g. `2023-06-01/15s` → `BYBIT:FUTURE:BTC-20231229` only, no ETH leg). GCS `Update time` on the
+  2023-06-01/15s object is `2026-08-03T01:59:07Z` — predates BOTH the 2026-08-04 and 2026-08-07 relaunches despite
+  run.log showing 2023-06-01 was actively (re)processed by the 2026-08-07 VM. **Root cause found and fixed**: see below.
+- **DERIBIT (84 cells, 6 days × 2 underlyings × 7tf)**: 2023-08-02, 2024-02-01, 2024-02-02 → OK (1 instrument per
+  underlying-partitioned file, matches the intended per-underlying-partition design, NOT partial). 2023-11-02,
+  2024-07-01 → still MISSING (no raw-tick-triggered write yet — VM hasn't reached these days).
+
+**Root cause of the BYBIT non-fix**: `market-data-processing-service`'s per-date subprocess spawner
+(`process_handler.py::_run_date_as_subprocess`) never forwarded the parent's `--force` flag to the child date-
+subprocess — confirmed via `mdps-backfill-cefi-20260807-130321`'s run.log: parent argv carries `--force`, but the child
+argv for `2023-06-01` does not, and the process log explicitly states `Force: False`. This means BOTH prior "fix"
+relaunches ran with force silently disabled for every date, so already-PARTIAL bundles were skipped, not regenerated —
+while the run still exited 0 as if it worked. Fixed in `market-data-processing-service@e9f9819` (unit-tested,
+quality-gates.sh green, landed on `origin/live-defi-rollout`). Full writeup + cross-cutting impact (this bug affects
+EVERY multi-day `--force` MDPS backfill, not just Track-7):
+`issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`.
+
+**A third VM is currently running** (`mdps-backfill-cefi-20260808-095136`, started 2026-08-08T08:57:08Z, same full
+2023-06-01→2026-01-01 range + BYBIT+DERIBIT+--force scope as the prior 2 relaunches — almost certainly the launcher's
+SPOT-preemption auto-relaunch reusing the persisted pre-fix `LAUNCH_PARAMS.json`). Confirmed alive and progressing (not
+stale — actively logging, currently on `2023-07-14` as of this audit), but its running snapshot predates the
+force-forwarding fix, so it will not actually fix BYBIT even once it reaches the target days, and at the observed ~12
+min/day rate would need ~8 months of continuous uptime to reach `2026-01-01` — virtually guaranteed to be preempted
+again first. NOT terminated by this audit per the VM-delete guardrail (actively progressing, not confirmed-stale —
+deletion is a judgment call outside this agent's scope; flagged for operator visibility given the compute waste). New
+relaunch todo added above for once it reaches a terminal state.
+
 > **2026-08-06 archive-candidate audit**: The only todo's own done-when (VM exit 0 + post-backfill bundle audit shows
 > all 112 cells OK) is unmet — evidence cites only 'Launched... RUNNING as of 2026-08-04T19:04:44Z', and the promised
 > 'Post-completion audit todo below' was never actually created.
 
 > **2026-08-07 audit result**: VM confirmed preempted T+2min. 42/112 cells OK (DERIBIT only). Relaunch + raw-data
 > investigation todos added above.
+
+> **2026-08-08 audit result**: `mdps-backfill-cefi-20260807-130321` confirmed preempted at T+1h46m (gcloud op
+> `systemevent-1786114166437`, `compute.instances.preempted`) after processing only 9 sequential days
+> (2023-06-01→2023-06-09) of the wrongly-scoped full 2023-06-01→2026-01-01 range — never reached 5 of the 6 remaining
+> BYBIT target days. Of the 1 target day it did reach (2023-06-01), the bundle was NOT actually fixed due to the
+> --force-drop bug above. Root cause fixed (market-data-processing-service@e9f9819); next relaunch (todo above) will use
+> corrected per-day scoping once the currently-running mdps-backfill-cefi-20260808-095136 terminates.

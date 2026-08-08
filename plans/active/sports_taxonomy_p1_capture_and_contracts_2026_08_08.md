@@ -288,7 +288,7 @@ achieved by exclusion, not canonicalisation.**
       NOT yet wired to this table (unchanged this phase, per the plan header's "contracts only, no GCS/manifest
       mutation" scope) — that live-wiring is the P2 `[REVIEW] P0` full-enumeration todo referenced above.
       unified-api-contracts
-- [ ] [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
+- [x] ✅ [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
       property of the VENUE (UAC `SportsVenueType` already encodes it), so stamping it per-instrument is redundant.
       Derive at read time. This also resolves
       `/plans/archive/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`'s "classify 19 unmapped
@@ -298,15 +298,46 @@ achieved by exclusion, not canonicalisation.**
       **Consumer inventory** (per codex rename rule): UAC `market_data_categories.py`
       `INSTRUMENT_TYPES_BY_ASSET_GROUP["sports"]` + CONTRACT_REGISTRY keys (`exchange_odds`/`fixed_odds` entries,
       ~L960-1011); MTDS (reads instrument_type keys from UAC registry); manifest rows carrying
-      `instrument_type=exchange_odds`/`fixed_odds`. Full enumeration: P2 `[REVIEW] P0`.
+      `instrument_type=exchange_odds`/`fixed_odds`. Full enumeration: P2 `[REVIEW] P0`. — **DONE 2026-08-08 (slot 25,
+      data_engineering)**: `unified-api-contracts@56f20ad0`. Added `derive_sports_odds_instrument_type(venue)` in
+      `registry/_sports_venue_constants.py`, exported via `registry/__init__.py` — resolves "exchange_odds" for
+      `SportsVenueType.EXCHANGE_API` venues, "fixed_odds" for `BOOKMAKER_API`/`WEB_SCRAPER` venues, `None` for
+      prediction-market/DFS/data-only/unrecognised venues (callers fall back to the legacy generic `"odds"` contract,
+      same fallback `lookup_contract` already performs during the fork's migration window) — built on the pre-existing
+      `SPORTS_VENUE_TYPE_MAP`, so every venue self-classifies mechanically; no per-venue enumeration, which makes the
+      19-vs-21 count discrepancy moot (the resolver covers the map, not a hand-picked subset — did not re-run a fresh
+      live-manifest count since the classification question itself no longer depends on the count; the archived issue
+      doc's own OPERATOR RULING banner already carries the 21-venue correction). **P1 CONTRACT only**, same additive
+      pattern as `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`/`SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM`: deliberately NOT wired
+      into `CONTRACT_REGISTRY`'s `("sports","exchange_odds"/"fixed_odds","trades")` keys, the MTDS writer that still
+      stamps the column, or any existing manifest row this phase — switching the writer/readers to call this instead of
+      the stamped column, and retiring `CONTRACT_REGISTRY`'s exchange_odds/fixed_odds entries + the
+      accepted-noncanonical set entries in `market_data_categories.py`, is the P2 `[REVIEW] P0` full-enumeration scope
+      referenced above. 8 new unit tests (`test_registry_completeness_p1.py::TestDeriveSportsOddsInstrumentType`) green.
+      Full `unified-api-contracts` `quality-gates.sh` green (405s).
 - [x] ✅ [CODE] P1. **Delete `markets`, `outcomes` and `settlements`** from `DATA_TYPES_BY_ASSET_GROUP["sports"]` — 0
       rows ever written, pure phantom declarations. Record in codex that ML labels come from IS `fixtures_outcomes` /
       `matches` (post-lowercasing), so the real label lineage is documented rather than implied by a path that was never
       built. — unified-api-contracts@975f0191
-- [ ] [CODE] P1. **Purge the cross-AG bleed from the sports denominator.** `KALSHI` carries 20,785 `empty_confirmed`
+- [x] ✅ [CODE] P1. **Purge the cross-AG bleed from the sports denominator.** `KALSHI` carries 20,785 `empty_confirmed`
       `trades` rows sourced `polymarket_clob`, spanning 2020-06-06 → 2026-05-21 — prediction-market venues seeded into
       the sports expected-universe. Stop the seeding at the enumerator, and retire
-      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED` once it is genuinely empty. Manifest-row cleanup is P2.
+      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED` once it is genuinely empty. Manifest-row cleanup is P2. — **DONE 2026-08-08
+      (slot 4, data_engineering)**: `unified-api-contracts@e5dd8faf`. Re-investigated "stop the seeding at the
+      enumerator" against live code: `VENUES_BY_ASSET_GROUP["sports"]`, `expected_coverage.py`'s `_SPORTS` dict, and
+      IS's `venue_core.get_venues_for_asset_groups` SPORTS branch are ALL already clean — none seed
+      KALSHI/prediction-market venues into sports today. The archived root-cause doc
+      (`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`) already
+      classified the 20,785 rows as **classification (b) — a dormant legacy artifact** (all `written_at` cluster in one
+      80s window from `rebuild_sports_manifest_v9.py`'s 2026-07-13 re-stamp of pre-existing rows, not a live write), and
+      `sports_satellite_ao_dispatch_batch3_2026_07_25.md`'s tracking todo was DONE + archived 2026-07-31 — so there is
+      no live enumerator bug left to fix. The only stale artifact was `market_data_categories.py`'s own comment above
+      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED`, which still claimed "root-cause classification remains open" — corrected
+      it to cite the closed classification and the no-live-seeding-path finding. **Did NOT retire
+      `SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED`** — the todo's own condition ("once it is genuinely empty") isn't met yet;
+      the 20,785 manifest rows still exist and retiring now would make the deployment-api distinct-values panel falsely
+      reflag them. Retirement stays gated on the P2 manifest-row purge (`sports_taxonomy_p2_migration_2026_08_08.md` P0
+      todo, line 142). No enumerator code change was needed or made.
 - [x] ✅ [CODE] P1. **Stop instruments-service writing into the MTDS tick manifest with a blank venue.** 2,490 rows
       (`service_name=instruments-service`, `venue=""`: 1,106 `odds_horizon_bucket` + 1,273 `trades` + 111
       `trades_inplay`). Find the writer, fix the attribution or stop the write. Row cleanup is P2. — **LANDED 2026-08-03

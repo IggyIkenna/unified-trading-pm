@@ -315,9 +315,9 @@ over all pending draft batches) that independently spot-verified every todo belo
 (live standing hold from main, R3-relaunch decision — same as batch8's Deferred item, still unresolved),
 `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`,
 `issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md`,
-`issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (delete-the-legacy-copies phase — prod-bucket
-delete, re-checked from batch8's own Deferred section this run, still correctly NA/operator-gated per
-`na-eligibility-audit`'s repeated confirmations), `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`,
+`plans/archive/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (archived 2026-08-08 — the
+delete-the-legacy-copies phase completed, reversibility-qualified agent-execution),
+`issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`,
 `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`,
 `issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`,
 `issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`,

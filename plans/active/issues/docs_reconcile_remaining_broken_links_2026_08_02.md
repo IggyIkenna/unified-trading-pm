@@ -331,3 +331,26 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   this is report-only (widening the freshness gate's scope is an operator call, not this skill's to make unilaterally) —
   flagging the scale here rather than leaving it buried in a single run's chat output, consistent with this doc's
   existing freshness-ratchet design-observation entry above.
+- **docs-reconcile 2026-08-08** (fourth same-day dispatch, one-off boot, no `pm_repo_path` in the boot message so this
+  slot's own `unified-trading-pm` clone was treated as the target per the role file's fallback). Phase 0 deterministic
+  checks re-run fresh: parity/frontmatter (1892 docs)/generator/body-links (1938 docs) all clean; freshness `--strict` =
+  25, exactly at the ratcheted baseline (no gap) — identical numbers to the third dispatch above. **Before fanning out a
+  full Phase 1 sweep, checked whether one was actually warranted**: `git log 71e7f700b..HEAD` (the third dispatch's
+  final commit, ~16:08 UTC, to this run's HEAD ~17:1x UTC) touched **zero** files under `codex/`, `cursor-configs/`,
+  `.cursor/rules/`, `AGENTS.md`, or `.cursorrules` — the entire ~1h gap's 38 changed docs were all `plans/**` (routine
+  plan-flip/issue-file traffic, explicitly out of this skill's charter per its own `does_not: touch the plans corpus`).
+  Since the third dispatch's Phase 1 already scanned the full codex/doctrine surface fresh (555 `status:current` docs
+  for collisions, 846 codex docs for summaries) and nothing in that surface changed since, re-running the same 4-agent
+  fan-out would have reproduced the identical zero-new-findings result at real token cost for zero marginal signal. Ran
+  a direct (non-agent) re-verification of the collision check instead as a cheap sanity floor rather than skipping
+  outright: 881 codex docs / 1024 `authoritative_for` claims by `status:current` docs, **0 collisions** — consistent
+  with the third dispatch. Broken-link baseline re-checked directly (not re-derived): all 11
+  `doc_body_link_baseline.yaml` `known_broken` entries individually probed via `find` for a moved/renamed target — none
+  found, all still genuinely dead, matching the third dispatch's numbers exactly (0 in `doc_reference_baseline.yaml`).
+  **No new findings, no fixes to apply this run** — the corpus this skill audits was already fully reconciled by the
+  immediately-prior dispatch. Flagging the dispatch cadence itself as a minor process observation (not a doc-health
+  finding, so not filed as a new issue): 4 separate one-off docs_reconciler boots landed today, the last 2 only ~1h
+  apart with zero intervening doc-surface change — a lightweight "skip full fan-out if the last clean run's HEAD sha is
+  still an ancestor and no swept path changed since" pre-check (exactly what this entry did by hand) would save real
+  cost if this dispatch density continues; not implementing it here since it's an orchestration/dispatch-policy change
+  beyond this skill's own charter to alter unilaterally.

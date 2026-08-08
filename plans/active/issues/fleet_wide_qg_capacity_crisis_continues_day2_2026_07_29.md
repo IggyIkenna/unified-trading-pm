@@ -189,45 +189,45 @@ not just noting.
       todo above it that was already done exactly this way. Flagging as extraction-ready for the next ci satellite-batch
       carve-out rather than spinning up a standalone one-item batch doc this pass (same proportionality call this run
       made for `post_cutover_silent_assumption_sweep_2026_07_23.md`'s F3 item) — doc stays NA in the meantime.
-- [x] ✅ [DEVOPS] P3. **RESOLVED 2026-08-08 — root access confirmed working; ran the check live; result is NOT what
-      the working hypothesis assumed.** Operator believed root access may have already been granted — re-tested live
-      via `aws ssm send-command` (`AWS-RunShellScript` document) against `i-0c9b283b31d6b5ca7`: **`whoami` returns
-      `root`** — SSM Session Manager's `RunShellScript` runs as root on this instance, confirmed working right now, no
-      further grant needed. Went to pull `dmesg`/`journalctl -k` directly: the instance **rebooted 2026-08-07T10:40:44Z**
-      (new kernel `7.0.0-1010-aws`, up from `6.17.0-1019-aws`) — both `dmesg`'s ring buffer and journald's live boot ID
+- [x] ✅ [DEVOPS] P3. **RESOLVED 2026-08-08 — root access confirmed working; ran the check live; result is NOT what the
+      working hypothesis assumed.** Operator believed root access may have already been granted — re-tested live via
+      `aws ssm send-command` (`AWS-RunShellScript` document) against `i-0c9b283b31d6b5ca7`: **`whoami` returns `root`**
+      — SSM Session Manager's `RunShellScript` runs as root on this instance, confirmed working right now, no further
+      grant needed. Went to pull `dmesg`/`journalctl -k` directly: the instance **rebooted 2026-08-07T10:40:44Z** (new
+      kernel `7.0.0-1010-aws`, up from `6.17.0-1019-aws`) — both `dmesg`'s ring buffer and journald's live boot ID
       (`journalctl --list-boots` shows exactly one boot, starting 2026-08-07T16:46:29Z) only cover since that reboot, so
       neither can see 2026-07-30 directly. **Found the data anyway** in the ROTATED classic syslog (not journald) —
       `/var/log/kern.log.1` (rotated 2026-08-01T23:59, so its content spans 2026-07-26 through 2026-08-01, covering the
       incident) is intact and has real content for that day (809 log lines dated `2026-07-30`, verified via
       `awk -F"T" '{print $1}' | sort | uniq -c`). **Grepped the exact incident window** (`2026-07-30T14:` +
-      `2026-07-30T15:` timestamps) for `oom|out of memory|killed process|invoked oom-killer` (case-insensitive):
-      **ZERO matches** — confirmed twice, once windowed to the 14-15Z hours and once for the ENTIRE day 2026-07-30 (also
-      zero). Read the actual full kernel-log content for the 14:00-16:00Z window directly (not just grep counts): every
-      single entry in that 2-hour span is a routine, ~5-minutes-apart `cgroup: fork rejected by pids controller in
-      /system.slice/<audit-stale-gate-references|process-category-sampler|audit-false-done>.service` — a PID-limit
-      rejection on three specific MONITORING/audit systemd services, not memory pressure, and not touching any AO
-      worker/tmux cgroup. Also checked `/var/log/syslog.1` for `systemd-oomd`/`memory.pressure` activity in the same
-      window — zero matches there too. **Verdict: the kernel OOM-killer was NOT invoked during the 2026-07-30
+      `2026-07-30T15:` timestamps) for `oom|out of memory|killed process|invoked oom-killer` (case-insensitive): **ZERO
+      matches** — confirmed twice, once windowed to the 14-15Z hours and once for the ENTIRE day 2026-07-30 (also zero).
+      Read the actual full kernel-log content for the 14:00-16:00Z window directly (not just grep counts): every single
+      entry in that 2-hour span is a routine, ~5-minutes-apart
+      `cgroup: fork rejected by pids controller in     /system.slice/<audit-stale-gate-references|process-category-sampler|audit-false-done>.service`
+      — a PID-limit rejection on three specific MONITORING/audit systemd services, not memory pressure, and not touching
+      any AO worker/tmux cgroup. Also checked `/var/log/syslog.1` for `systemd-oomd`/`memory.pressure` activity in the
+      same window — zero matches there too. **Verdict: the kernel OOM-killer was NOT invoked during the 2026-07-30
       14:54-15:01Z window** — this doc's own working hypothesis ("swap 14-16Gi used + load peak ~26/16vCPU are
       consistent with memory pressure") is NOT supported by the kernel log; the log-confirmable mechanism this todo
       asked for is a clean NO, not a confirmation. **This closes the todo as asked** (get the actual finding and close
       it for real) — the mass `tmux_session_lost` cluster's real cause is NOT a kernel OOM kill and needs a fresh,
-      differently-scoped investigation (new todo below); do not re-open this exact question, it is answered.
-      **Method note for future root-access sessions on this host**: `aws ssm send-command --instance-ids
-      i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript --parameters 'commands=["<cmd>"]'` then
-      `aws ssm get-command-invocation --command-id <id> --instance-id i-0c9b283b31d6b5ca7` — no interactive session,
-      no operator grant needed, works today with the credentials already in this workspace.
+      differently-scoped investigation (new todo below); do not re-open this exact question, it is answered. **Method
+      note for future root-access sessions on this host**:
+      `aws ssm send-command --instance-ids     i-0c9b283b31d6b5ca7 --document-name AWS-RunShellScript --parameters 'commands=["<cmd>"]'`
+      then `aws ssm get-command-invocation --command-id <id> --instance-id i-0c9b283b31d6b5ca7` — no interactive
+      session, no operator grant needed, works today with the credentials already in this workspace.
 - [ ] [DEVOPS] P3. **NEW 2026-08-08 — find the REAL cause of the 2026-07-30 14:54-15:01Z mass `tmux_session_lost`
       cluster** (slots 1, 4, 5, 9, 10, 11 killed across 3 waves in ~7 min), now that the OOM-killer hypothesis above is
       RULED OUT by direct kernel-log evidence. Candidates worth checking first, none yet investigated: (a) a
-      cgroup/systemd unit restart or resource-limit action outside the kernel's own OOM path (e.g. an AO watchdog or
-      the `process-category-sampler`/`audit-*` services seen firing every ~5min in that exact window — check whether
-      any of THOSE three services' own actions, not memory pressure, coincide with the 3 kill waves); (b) a manual or
-      scripted `tmux kill-session`/process-manager action around that timestamp (check AO's own dispatch/respawn logs,
-      not just the host kernel log); (c) an AWS-side event (spot interruption warning, instance status check, EBS
-      throttling) via `aws cloudwatch`/`aws ec2 describe-instance-status` for that exact window (data still available —
-      CloudWatch retention is much longer than a syslog rotation). Root access is now confirmed working (see the
-      resolved todo above) — this is directly investigable, not blocked.
+      cgroup/systemd unit restart or resource-limit action outside the kernel's own OOM path (e.g. an AO watchdog or the
+      `process-category-sampler`/`audit-*` services seen firing every ~5min in that exact window — check whether any of
+      THOSE three services' own actions, not memory pressure, coincide with the 3 kill waves); (b) a manual or scripted
+      `tmux kill-session`/process-manager action around that timestamp (check AO's own dispatch/respawn logs, not just
+      the host kernel log); (c) an AWS-side event (spot interruption warning, instance status check, EBS throttling) via
+      `aws cloudwatch`/`aws ec2 describe-instance-status` for that exact window (data still available — CloudWatch
+      retention is much longer than a syslog rotation). Root access is now confirmed working (see the resolved todo
+      above) — this is directly investigable, not blocked.
 - [ ] [BACKEND] P3. **New, opened by the `plan_health` diagnosis above.** `server/escalation.py`'s
       `retry_queued_escalations()` caps queued-escalation retries at `RETRY_PER_TICK = 2` per `AutoSpawnLoop` tick
       (default 60s), shared GLOBALLY across every `WALL_TYPES` value (not partitioned per wall_type) — a deliberate
@@ -238,7 +238,7 @@ not just noting.
       starve `plan_health`'s (or vice versa) dispatch attempts. Done when: either a deliberate "leave as-is, here's why"
       ruling is recorded, or a scaled/partitioned retry budget ships + is verified to cut tail dispatch latency on the
       next comparable burst.
-- [ ] [BACKEND] P2. **New 2026-08-03 (main agt-1756f6, via review agt-07ff49 msg #3566).** Ship the stranded,
+- [x] ✅ [BACKEND] P2. **New 2026-08-03 (main agt-1756f6, via review agt-07ff49 msg #3566).** Ship the stranded,
       diagnosed-good features-service fix `030c8b95` (`fix(ci): raise PYRIGHT_TIMEOUT 300s→600s` — 300s still timing out
       under fleet QG contention; slot-4 authored 2026-08-03 16:48Z, then went diverged; the unpushed-commits watchdog
       preserved it to `origin/wip-preserve/slot-4-features-service-diverged-20260803T171854Z`). Slots 2/4/9
@@ -246,6 +246,19 @@ not just noting.
       re-diagnose from scratch: rebase the wip-preserve ref onto current `origin/live-defi-rollout`, run
       features-service QG green, ship via quickmerge. Same root wall_type as this doc's capacity crisis. Repo:
       features-service. Done when: `030c8b95`'s timeout bump is an ancestor of `origin/live-defi-rollout` (QG-verified).
+      **RESOLVED 2026-08-08 (`ci_satellite_ao_dispatch_batch6` todo 2) — superseded, not shipped verbatim.** Attempted
+      the rebase: `git rebase origin/live-defi-rollout` onto
+      `origin/wip-preserve/slot-4-features-service-diverged-20260803T171854Z` conflicts on `scripts/quality-gates.sh` —
+      every OTHER commit on the stranded branch (`52a7de5c`, `0f894013`, `87942ac0`, `3b0c0b05`) is already an ancestor
+      of LDR (landed independently since 2026-08-03), and `030c8b95`'s own substance
+      (`PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-600}`) is ALREADY live on LDR via a separately-authored commit,
+      `features-service@7c86a6b1` (2026-08-06, same slot-4 author, same 300s→600s content, different comment/SHA — one
+      of the "Slots 2/4/9 independently re-diagnosed" instances this todo's own text anticipated). The conflict is
+      value-identical (both sides set 600s), confirming there is nothing left to ship — rebasing `030c8b95` forward
+      would only reintroduce a stale comment. Verified: `PYRIGHT_TIMEOUT=${PYRIGHT_TIMEOUT:-600}` present at
+      `features-service/scripts/quality-gates.sh:46` on `origin/live-defi-rollout` HEAD (`3384ea29`);
+      `git merge-base     --is-ancestor 7c86a6b1 origin/live-defi-rollout` → true. No commit needed; local scratch
+      branch `_stranded_pyright_fix` used for the rebase attempt was discarded (never pushed).
 - [x] ✅ [SCRIPT] P2. **New, opened by the `main-backmerge-to-ldr` pipefail+`-e` root-cause fix below.** The template
       SSOT (`unified-trading-pm@598aefd8`) and 2 repos' live copies (`features-service@ccd01cb8`,
       `agent-orchestrator@d43bbde`) are fixed, but `detect_template_drift.py --workflows` shows this template has 28
