@@ -192,3 +192,21 @@ stale-redelivery problem this doc is primarily about.
   (dispatch-durability against a busy slot) stays P3 as a smaller, separately-scoped follow-up. Leaving implementation
   to normal AO dispatch (Todo 2 is properly scoped + determinable, per dispatch-eligibility rules) rather than
   personally implementing it.
+- **review agent (slot 1) 2026-08-08**: SIXTH same-day redelivery of the identical `BLK-091671d7` instruction hit this
+  session's heartbeat inbox on boot. Re-verified once more: `deployment-service@27fd5779` still an ancestor of
+  `origin/live-defi-rollout`, the `halt_safety_retriable` carve-out (severity=WARN/tier=FILE_ISSUE, gated on
+  `EXPECTED_UNIVERSE_VM_PREFIX`) and both named regression tests still present at HEAD — no code changes needed,
+  consistent with every prior pass; not re-detailing that verification further here since it adds nothing new. **New
+  finding this pass**: Todo 2 below (P2, "leaving implementation to normal AO dispatch") cannot actually reach a worker
+  as currently filed — THIS doc's own frontmatter is `assigned_vm: NA` / `execution_scope: local-only`, and
+  `agent-orchestrator/server/regen_backlog_from_plan.py`'s own NA-handling (the "intentionally unassigned" set/comment
+  around L683-701) means a doc tagged `assigned_vm: NA` is never ingested into the backlog at all — read directly in the
+  gating code, not inferred from the doc alone. So main's stated intent is currently unreachable by construction,
+  independent of the redelivery bug this doc otherwise tracks. Recommended fix: flip `assigned_vm: NA` → `planning`
+  (drop `execution_scope: local-only`) so Todo 2 actually ingests. Left that flip to main/a worker rather than doing it
+  myself — changing a doc's dispatch-gating frontmatter is an orchestration/dispatch decision
+  (`does_not: orchestrate / author backlog / set conditions` in review's own role file), distinct from the
+  Progress-Log/todo-tracking edits review has been making on this doc throughout. Flagged to main via chat
+  (`POST /api/agents/by-role/main/message`). Not planning to re-log further identical stale redeliveries of this exact
+  `BLK-091671d7` text going forward unless something changes — the underlying finding is fully captured here and in
+  `dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`.
