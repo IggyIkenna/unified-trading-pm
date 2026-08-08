@@ -253,6 +253,20 @@ a verdict). Heaviest:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged mixed shape. Re-read
+  end-to-end; `grep -cE '^- \[ \]'` = 7, down from 8 (today's item-79 operator ruling closed the D16 carve-scope
+  todo, already reflected above). Checked the remaining 7 against today's operator-Q&A cheat sheet: none matches. The
+  enforcement-wiring item (line ~160) duplicates the folded-in `[SCRIPT] P1` item (line ~385) in substance — both
+  BLOCKED on the same unmet fleet-wide precondition (the 2026-08-02 measurement found 96 invalid-`Epic:` + 136
+  invalid-`Lifecycle:` + 2 `Delete-when:NA`-misuse files, "gate-clearable: NO"). The DEPRECATE-remediation item (line
+  ~197) is CONFLICT-GATED — re-confirmed still claimed by
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (k) ("cloud-agnostic sweep of ~60 scripts... Same
+  fix class, wider scope, already claimed"), matching this doc's own prior audits' citation. The ruff-lint + TID251
+  items (lines ~209/~214) are explicitly sequenced AFTER the DELETE-execution item, which is itself campaign-gated.
+  The Delete-EXECUTION item (line ~190) bundles a genuinely bounded sub-list (the "immediately-safe ~40") with a
+  campaign-gated cohort in one checkbox — same bundling-blocks-whole-doc-flip pattern seen elsewhere this sweep. No
+  clean whole-doc RECLASSIFY; `assigned_vm: NA` correct, consistent with every prior audit of this doc since
+  2026-07-30.
 - **2026-08-08 (operator Q&A round5, infra tranche, item 79)**: Operator ruled the D16 carve scope: all-repos, matching
   what `check_strict_quickmerge.py`'s `CARVE_PREFIX` already does in practice. Read the actual current `CARVE_PREFIX`
   logic (`scripts/cicd/check_strict_quickmerge.py:52`) before closing — confirmed it's a bare path-prefix match with no
