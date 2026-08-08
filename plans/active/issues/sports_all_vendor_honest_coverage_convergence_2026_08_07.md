@@ -172,10 +172,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `--force`), guard confirmed `0 running + 1 planned <= cap 1`, all 4 tarballs fresh. RUNNING as of the check right
       after launch — watching through to actual clean completion next tick (see
       `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the full history/context).
-- [ ] [SCRIPT][BLOCKED-UPSTREAM-OUTAGE] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** once
+- [ ] [SCRIPT][BLOCKED-UPSTREAM-OUTAGE] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** (now the
+      golden-window relaunch's 256-cell scope too — see
+      `/plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 2) once
       `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers — confirmed still
       returning HTTP 502 at 2026-08-07T12:21Z (3h+ after initial failure at 10:17Z; RapidAPI message: "API (not
-      working)"). Tagged BLOCKED-UPSTREAM-OUTAGE; do not relaunch without verifying the endpoint returns 200 first.
+      working)"), and **still 502 at 2026-08-08T01:20Z** (15h+ outage, direct probe with the correct `id`/`season`
+      params, ~52s latency before the 502 — see Progress Log entry below). Tagged BLOCKED-UPSTREAM-OUTAGE; do not
+      relaunch without verifying the endpoint returns 200 first.
 - [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill, ran to `exit_code=0`** —
       `weather-backfill-20260807-120241` completed cleanly but did NOT resolve the gap (re-census:
       `expected_unattempted` barely moved 205,517→205,302; 16,241 new `attempted_failed` rows appeared) — split into the
@@ -581,3 +585,23 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   smallchunk2 (via `run.log`, `PROGRESS.json` still not used per above): now **chunk 25/451** (`2020-10-04`), up from
   chunk 22 — chunks 23 (00:07:19Z) and 24 (00:13:41Z) both cleared, zero new OOMs (still 16 total since chunk 18). Both
   VMs healthy, no intervention.
+- **2026-08-08T01:24Z (slot 14)** — **Recurrence of the exact killed-and-tagged anti-pattern: a second Transfermarkt
+  backfill VM was launched blind, 13h into the still-ongoing outage, and got stuck the same way.** Dispatched
+  `sports_satellite_ao_dispatch_batch9-002` (the golden-window PLAYER_VALUES relaunch todo) and found
+  `tm-backfill-20260807-233040` already RUNNING (launched 2026-08-07T23:30:47Z, exact matching scope:
+  `--sports-entity PLAYER_VALUES --sports-provider TRANSFERMARKT --start-date 2025-09-01 --end-date 2025-11-30`, no
+  `--force`) — some earlier session/dispatch launched it without checking this doc's BLOCKED-UPSTREAM-OUTAGE tag first.
+  `run.log` showed the identical signature this doc already diagnosed at 10:17Z the day before:
+  `transfermarkt_teams_fetch` cycling through leagues, each one exhausting all 10 retry-with-backoff attempts against
+  `GET /api/v1/competitions/standings` (HTTP 502 every time), ~10 min/league, **zero rows written and zero leagues
+  captured across 1h45m** (23:33Z→01:16Z). Direct-probed the endpoint myself with the adapter's real params
+  (`id=GB1&season=2025`, not the malformed query I tried first which returned a fast 422 from RapidAPI's gateway itself)
+  — still **HTTP 502, ~52s latency**, confirming the outage is continuous and now 15h+ old (started 2026-08-07T10:17Z).
+  Killed `tm-backfill-20260807-233040` (`gcloud compute instances delete`, confirmed via heartbeat-blob freshness +
+  run.log zero-progress — same justified-stale basis as the original 2h17m kill this doc already recorded), matching
+  this doc's own standing guidance rather than letting it burn further GCE billing against a call that cannot succeed.
+  Did **not** relaunch. `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 2 stays unchecked, annotated with this
+  citation — real completion requires the vendor endpoint to recover first. **Lesson for future dispatches**: any
+  Transfermarkt PLAYER_VALUES/TEAM launcher todo should grep this doc (or its `BLOCKED-UPSTREAM-OUTAGE` tag) for a live
+  outage before launching, not just check the launcher's own singleton lock — the singleton lock only prevents a
+  _second_ concurrent VM, it doesn't stop the _first_ one from launching blind into a known-dead endpoint.
