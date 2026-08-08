@@ -942,3 +942,5 @@ are genuinely in scope for the operator's "no exceptions" directive.
   22/451** now (`2020-09-19`), chunks 19-21 each cleared in ~6 min, zero new OOMs since chunk 18 closed. Full detail:
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`7889dffd04`,
   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`9422004062`.
+- **2026-08-08T00:16Z** — FIXTURE_STATS +29 days (`last_completed_date=2022-09-29`, fresh `00:15:42Z`), steady. odds
+  smallchunk2 now chunk 25/451 (`2020-10-04`, via `run.log`), zero new OOMs (16 total, unchanged). Both healthy.
