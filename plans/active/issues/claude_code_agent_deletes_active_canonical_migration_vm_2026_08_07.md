@@ -147,16 +147,18 @@ wrapper):
   construction. Ship via quickmerge + verify CI green. — deployment-service@3b25aae4 (QG green, verified on
   origin/live-defi-rollout)
 
-- [ ] [INFRA] P0. **Fix 2 — LDR→main promote `deployment-service@1424037` (`14240378194039fe5a2cfb5e2d86dbed6cffe8d8`,
-      ships `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` + `_resolve_kill_minutes()` in
-      `heartbeat_stall_watcher.py`), then redeploy the Cloud Run image.** The fix is already on `live-defi-rollout`
-      (shipped during dispatch #8, `quality-gates.sh` green — see
+- [x] [INFRA] P0. ✅ **Fix 2 — LDR→main promote `deployment-service@1424037`
+      (`14240378194039fe5a2cfb5e2d86dbed6cffe8d8`, ships `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` +
+      `_resolve_kill_minutes()` in `heartbeat_stall_watcher.py`), then redeploy the Cloud Run image.** The fix is
+      already on `live-defi-rollout` (shipped during dispatch #8, `quality-gates.sh` green — see
       `/plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md`), but the live `deployment-api:latest` Cloud Run
       image was built at 09:31Z on 2026-08-07, pre-fix — the per-prefix `canonical-migration-` 90-minute threshold is
       therefore NOT active in production. Promote LDR→main via the standard pipeline (`sit-gate/fleet-green` +
       `quality-gates-v2` + quickmerge-provenance — the only 3 blocking gates), redeploy the Cloud Run image, verify
       `status.traffic` shows the new revision live (not just a green build), then resume the paused
-      `uts-prod-dp-heartbeat-watcher-cron` (paused as dispatch-#10 mitigation).
+      `uts-prod-dp-heartbeat-watcher-cron` (paused as dispatch-#10 mitigation). — deployment-service@1157abe1 (squash
+      promote, PREFIX_KILL_MINUTES verified on origin/main; `uts-shared-deployment-api-00464` at 100% traffic, image
+      sha256:7042ab88 built 2026-08-08T00:24Z; cron ENABLED, last run 2026-08-08T03:30Z)
 
 - [ ] [INFRA] P1. **Fix 3 — codify a `canonical-migration-` prefix carve-out on the VM-delete guardrail** in the two
       role files that mirror it: `agents/infra.md` STEP 0.65 and `agents/data_engineering.md` STEP 0.55. Both currently
@@ -186,16 +188,28 @@ wrapper):
       (exact snippet in "Required Fixes" Fix 1 above) — confirmed in
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` line 1204. deployment-service@3b25aae4, QG green,
       verified on origin/live-defi-rollout.
-- [ ] [INFRA] P0. LDR→main promote `deployment-service@14240378`, redeploy the Cloud Run image to activate
-      `PREFIX_KILL_MINUTES`, then resume `uts-prod-dp-heartbeat-watcher-cron`. Confirmed as of 2026-08-08 still NOT on
-      `origin/main` (standing LDR→main auto-promote appears stalled on this commit — worth checking why the standard
-      `*/15` auto-promote didn't already carry it, not just re-triggering it blind).
+- [x] [INFRA] P0. ✅ LDR→main promote `deployment-service@14240378`, redeploy the Cloud Run image to activate
+      `PREFIX_KILL_MINUTES`, then resume `uts-prod-dp-heartbeat-watcher-cron`. Content-verified on `origin/main` via
+      squash promote `1157abe1` (Promoted-From-LDR: f514b6a0). `PREFIX_KILL_MINUTES` grep returns 3 lines on main. Image
+      sha256:7042ab88 built 2026-08-08T00:24Z deployed to `uts-shared-deployment-api-00464` (100% traffic, created
+      2026-08-08T00:28Z). `uts-prod-dp-heartbeat-watcher-cron` ENABLED in asia-northeast1, last run 2026-08-08T03:30Z,
+      running every 5 min successfully.
 - [ ] [INFRA] P0. Fleet monitoring agents must verify ALL THREE liveness signals (heartbeat blob mtime, run.log mtime,
       manifest generation advancing) before any `gcloud instances delete` on `canonical-migration-` prefix VMs — fold
       the SIGPIPE-can-fake-a-frozen-run.log nuance into `/codex/05-infrastructure/vm-launcher-runbook.md` (the
       underlying 3-signal HARD RULE already exists there; what's missing is this doc's specific nuance).
 
 ## Progress Log
+
+- **slot-7 Fix 2 verification 2026-08-08T03:35Z**: Fix 2 (PREFIX_KILL_MINUTES promote) confirmed complete. Squash
+  promote `1157abe1` (Promoted-From-LDR: f514b6a0) carried the content of `14240378` to `origin/main` — grep for
+  `PREFIX_KILL_MINUTES` in `deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py` on main returns 3
+  matches (lines 110-117). Image sha256:7042ab88 built 2026-08-08T00:24Z (11h after fix commit at 13:27Z on 2026-08-07)
+  deployed to Cloud Run service `uts-shared-deployment-api-00464-94g` with 100% traffic (created 2026-08-08T00:28Z).
+  Cloud Run job `uts-prod-dp-heartbeat-watcher` uses `deployment-api:latest` (same digest, modified 2026-08-08T00:28Z).
+  `uts-prod-dp-heartbeat-watcher-cron` scheduler is ENABLED in asia-northeast1 (schedule: `*/5 * * * *`), last ran
+  2026-08-08T03:30Z successfully. Flipped Fix 2 checkboxes in Todos and Resolution sections. Fix 3 (codex guardrail
+  update) remains open.
 
 - **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — doc self-flags "Operator notification:
   REQUIRED (cross-agent HARD RULE violation, repeated pattern)," the 5th VM-kill in this saga; continued human
