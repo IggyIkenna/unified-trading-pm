@@ -202,8 +202,9 @@ not urgent enough to block this campaign.
       shows healthy per-fixture progress (`[[VM_PROGRESS]] last_completed_date=2020-06-13→2020-06-14`, manifest writes,
       correct rate-limit backoff handling). No duplicate VM launched — a second concurrent AF-consuming VM would violate
       the shared singleton lock / quota.
-- [ ] [SCRIPT] P1. **Launch FIXTURE_LINEUPS all-leagues backfill** the same way, after FIXTURE_STATS converges.
-      Corrected: 58,523 needed (was 69,165 pre-fix).
+- [x] ✅ [SCRIPT] P1. **Launch FIXTURE_LINEUPS all-leagues backfill** — FIXTURE_STATS CONVERGED 2026-08-08T14:40Z (chunk
+      26/26, needed=116 from 24,462). Launched `af-backfill-*` (`RESUME_ENTITY=FIXTURE_LINEUPS`). Detail:
+      `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
 - [x] ✅ [SCRIPT] P0. ~~Recompute PLAYER_STATS/INJURIES/STANDINGS/TEAMS needed counts~~ — **CORRECTED 2026-08-04**: both
       census scripts had an empty_confirmed blind spot, fixed (`instruments-service@579421bf`). See the corrected table
       above. **PLAYER_STATS reprioritized to P0** — only 1,006 needed (was 17,440), genuinely near-complete.
