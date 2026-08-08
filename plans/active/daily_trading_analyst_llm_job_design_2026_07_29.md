@@ -325,14 +325,13 @@ job's per-category input adapters for the reconciliation-derived categories, per
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality
       is sonnet/hourly-retry per the 2026-07-28/29 rulings) — do this at the same time as adding this job's row (§1
       build recipe step 5), not as a separate pass. (repo: `unified-trading-pm`)
-- [ ] [OPERATOR] P2. **STILL NEEDS YOUR INPUT — a business-risk-tolerance parameter, not something I should invent.**
-      Suggested starting point if useful: N=3 days recurring before severity escalates, initial severity = the
-      finding-type's own stated default if the design doc specifies one — but this is a real policy call about how fast
-      you want to be paged on a recurring, unremediated finding, and I don't have enough context on your tolerance for
-      false-urgency vs missed-escalation to pick it confidently. **Decide the exact escalation-N** (§3, "N days
-      recurring before severity escalates") and the initial `assigned_vm` default for filed issue docs (planning vs NA)
-      — both are policy calls, not code-derivable, so this stays operator-gated and must NOT be guessed by a worker.
-      (repo: `unified-trading-pm`)
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-08 (operator ruling, NA-corpus blocker digest, cross-cutting round 5, id=48)**:
+      escalation-N = **3 days** recurring unremediated before severity escalates (§3, "N days recurring before severity
+      escalates"); initial `assigned_vm` default for freshly auto-filed finding issue docs = **`planning`**
+      (auto-dispatch to AO by default, not `NA`). Both policy calls now settled — wire these two constants into the §3
+      dedup/escalation logic and the §"Issue-doc creation + dedup" frontmatter template (§2.7's
+      `assigned_vm:     planning (or NA if...)` line above) when building todo 1's `trading-analyst` skill. (repo:
+      `unified-trading-pm`)
 
 ## Codex SSOTs
 
@@ -357,12 +356,11 @@ job's per-category input adapters for the reconciliation-derived categories, per
   AO dispatch; each needs its own sizing pass", and item 6 is explicitly `[OPERATOR]`-tagged. NA remains correct.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
-- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 6 open todos, all in §5):
-  items 1-5 stay explicitly framed as "build-phase — not yet scoped for AO dispatch"; item 6 is `[OPERATOR]`-tagged
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 6 open todos, all in §5): items
+  1-5 stay explicitly framed as "build-phase — not yet scoped for AO dispatch"; item 6 is `[OPERATOR]`-tagged
   (escalation-N + `assigned_vm` default for filed issue docs). Note for the record: this session was briefed that a
-  "SIT-red-escalation" design question on this doc was RULED YES (escalate to a background worker) earlier in the
-  parent session — grepped this doc + `plans/active/` + `plans/active/issues/` for "SIT-red" / "SIT red" and found no
-  matching content anywhere in the corpus; item 6's actual open question (the escalation-N day-count + default
-  `assigned_vm` for filed docs) shows no evidence of an operator ruling in this doc or its Progress Log. Treating item 6
-  as still genuinely open rather than assuming the cited ruling applies here — flagging the mismatch rather than
-  guessing.
+  "SIT-red-escalation" design question on this doc was RULED YES (escalate to a background worker) earlier in the parent
+  session — grepped this doc + `plans/active/` + `plans/active/issues/` for "SIT-red" / "SIT red" and found no matching
+  content anywhere in the corpus; item 6's actual open question (the escalation-N day-count + default `assigned_vm` for
+  filed docs) shows no evidence of an operator ruling in this doc or its Progress Log. Treating item 6 as still
+  genuinely open rather than assuming the cited ruling applies here — flagging the mismatch rather than guessing.
