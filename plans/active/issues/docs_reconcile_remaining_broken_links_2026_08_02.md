@@ -303,3 +303,31 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   boundary-awareness), and a specific recommended fix (word/sentence-boundary truncation + flag-for-review) —
   MISCLASSIFIED_LIKELY_AO_ELIGIBLE, flagging for a future partial split rather than acting on it here (doc stays NA in
   full, same as the 2026-08-03 precedent for this exact doc).
+- **docs-reconcile 2026-08-08** (third same-day dispatch, one-off boot): full `/docs-reconcile --autonomous` run. Phase
+  0 deterministic checks: parity/frontmatter/generator/body-links all clean; `check_codex_doc_freshness.py --strict` =
+  25, exactly matching the ratcheted baseline (no gap). Phase 1 semantic sweep (4 parallel sub-agents, read-only): zero
+  NEW `authoritative_for` collisions (555 `status: current` docs scanned, corroborating the second-dispatch fix already
+  landed today); zero bad `summary:` fields (846 codex docs inspected — corpus already clean from prior remediation);
+  **2 genuinely NEW findings, both verified + fixed this run** (not previously surfaced by either of today's earlier
+  dispatches): (1) `cursor-configs/cursorrules` — a 4th, differently-scoped doctrine file (distinct from root
+  `.cursorrules`, propagated verbatim to every non-PM workspace-root host by
+  `scripts/setup-workspace-from-manifest.sh:328-331`) missed the 2026-08-06 doctrine sweep entirely because that sweep's
+  "3 sibling surfaces" enumeration never named this file; it still pointed agents at `codex/00-SSOT-INDEX.md` as the
+  "canonical entry point" instead of the current grep-native `DOC_INDEX.generated.md` L0-L4 doctrine, and carried a dead
+  `OpenClaw/Lobster` section referencing a `.lobster/` dir confirmed absent repo-wide — fixed,
+  `unified-trading-pm@bfbc69910`; (2) `codex/02-data/sports-data-types-catalog.md` self-contradicted within its own body
+  (added within the last 24h) — its `executable` predicate section (line ~91-92) states no exchange-type venue has a
+  complete adapter as of 2026-08-08 (i.e. `executable=False`), but its Venue Axis section (line 249) labeled the same 5
+  exchange venues `executable=True pending credentials` — corrected to `executable=False pending credentials`, matching
+  the predicate section and the sibling Fixed-odds-sportsbooks heading's phrasing, `unified-trading-pm@71e7f700b`.
+  Broken-link ratchet unchanged from the second dispatch's re-verification earlier today (11 `known_broken` in
+  `doc_body_link_baseline.yaml`, all still genuinely reproduce; 0 in `doc_reference_baseline.yaml`) — not re-verified a
+  third time same-day, deferring to that already-fresh check. **New report-only observation**: computed a
+  freshness-staleness distribution for codex dirs OUTSIDE the 4 cutover-critical gated dirs (the existing
+  `check_codex_doc_freshness.py` only scans `02-data`/`04-architecture`/ `05-infrastructure`/`11-project-management`) —
+  564 non-gated codex docs, 510 missing `last_reviewed` entirely (0 flagged as `stale` with a present-but-expired date;
+  the gap is near-universal absence of the field, not expiry). Heaviest concentrations: `09-strategy` (184/202),
+  `14-customer-journeys` (126/129), `15-runbooks` (63/75), `06-coding-standards` (53/63). Per this skill's own charter
+  this is report-only (widening the freshness gate's scope is an operator call, not this skill's to make unilaterally) —
+  flagging the scale here rather than leaving it buried in a single run's chat output, consistent with this doc's
+  existing freshness-ratchet design-observation entry above.
