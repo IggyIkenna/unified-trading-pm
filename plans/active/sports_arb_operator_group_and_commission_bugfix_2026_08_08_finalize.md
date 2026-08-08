@@ -66,12 +66,12 @@ locked_since:
       `sports_taxonomy_p3_consumers_2026_08_08.md`'s "consume the CORRECTED operator-group guard" todo both name this
       fix as landing first. Update both to cite the actual shipped commit(s) so they extend the hierarchy rather than
       duplicating it. **Done when**: both docs cite the real commit instead of a forward reference. — unified-trading-pm
-- [ ] [REVIEW] P2. **Land the blast-radius result as tracked work.** The parent's final todo counts historical arbs that
-      were all-one-operator or carried an unmodelled SMARKETS leg. If that count is non-zero, file a `- [ ]` todo
+- [x] [REVIEW] P2. ✅ **Land the blast-radius result as tracked work.** The parent's final todo counts historical arbs
+      that were all-one-operator or carried an unmodelled SMARKETS leg. If that count is non-zero, file a `- [ ]` todo
       against `/plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` to recompute its baseline on
       the corrected population, and cross-link it from `sports_taxonomy_p3_consumers_2026_08_08.md`'s recompute todo. If
       zero, record that explicitly — a measured zero is a result, not a skip. **Done when**: a follow-up todo exists or
-      a measured zero is recorded with its count.
+      a measured zero is recorded with its count. — unified-trading-pm
 - [ ] [DOC] P2. **Archive `sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`** via the standard 6-step
       ritual: confirm todos above resolved → add the archive banner → codex-alignment check (no new codex doc created by
       this fix, so a no-op confirmation, not a skip) → grep the corpus for every referrer of the plan slug (including
@@ -95,3 +95,12 @@ locked_since:
   `unified-api-contracts@e080ef74` (case-insensitive guard). P3 plan ("consume the CORRECTED operator-group guard"):
   replaced plan-path reference with `unified-api-contracts@e080ef74` + `unified-api-contracts@b9a0be80`. Both docs now
   cite real commits; forward references resolved.
+- **2026-08-08** — Todo 3 ([REVIEW] P2 blast-radius) — **measured zero; no follow-up todo needed.** From the parent
+  plan's Progress Log (Todo 8): same-operator-group arbs = 0; SMARKETS arbs = 0. Two structural reasons neither bug was
+  ever triggered: (1) the dutching backtest (`SportsArbDutchingEngine`) never calls `arb_legs_are_independent()` or
+  `_expected_commission_pct()` — the buggy code paths are structurally unreachable from that engine; (2) the paper-trade
+  path (`SportsFeatureSubscriber`) builds markets from single-FSS-vector bookmakers, so every detected "arb" has
+  identical bookmaker on all legs — `arb_legs_are_independent` returns False unconditionally and no arb signal is ever
+  emitted. No historical alpha was this bug. No baseline recomputation needed for
+  `/plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`. Measured zero recorded per todo
+  done_definition ("a measured zero is a result, not a skip").
