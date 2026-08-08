@@ -18,7 +18,7 @@ summary: >-
   is a systemic pattern, not a one-off. The structural blind spot is already documented
   (`/codex/02-data/orphan-object-detection.md` §2d, "Blind spot 3") but this concrete population was never enumerated or
   swept.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
