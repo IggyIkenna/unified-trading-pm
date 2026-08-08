@@ -128,14 +128,14 @@ wrapper):
 
 ## Todos
 
-- [ ] [INFRA] P0. **Fix 1 (URGENT) — heartbeat sidecar SIGPIPE guard.** Target:
-  `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`, the `_hb_prefix` vm-life-emitter loop construction
-  (currently ~line 1204: `_hb_prefix="( while true; do echo \"PIPELINE_HEARTBEAT vm=${VM_NAME_SELF}
-  ag=${VM_ASSET_GROUP} task=${VM_TASK:-} source=vm-life-emitter ts=\$(date -u +%Y-%m-%dT%H:%M:%SZ)\"; sleep 60; done )
-  & __DP_HB_PID=\$!; trap 'kill \"\$__DP_HB_PID\" 2>/dev/null || true' EXIT; "`). This loop shares stdout with the
-  tee'd main process; when the GCS log uploader closes the pipe (possibly on a 60s flush cycle) the next `echo` gets
-  SIGPIPE and terminates the subshell, making the VM look stale to heartbeat-staleness checks — root cause of all 4
-  kills in the table above. Add a `trap '' SIGPIPE` guard around the loop body:
+- [x] [INFRA] P0. ✅ **Fix 1 (URGENT) — heartbeat sidecar SIGPIPE guard.** Target:
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`, the `_hb_prefix` vm-life-emitter loop construction
+      (currently ~line 1204:
+      `_hb_prefix="( while true; do echo \"PIPELINE_HEARTBEAT vm=${VM_NAME_SELF} ag=${VM_ASSET_GROUP} task=${VM_TASK:-} source=vm-life-emitter ts=\$(date -u +%Y-%m-%dT%H:%M:%SZ)\"; sleep 60; done ) & __DP_HB_PID=\$!; trap 'kill \"\$__DP_HB_PID\" 2>/dev/null || true' EXIT; "`).
+      This loop shares stdout with the tee'd main process; when the GCS log uploader closes the pipe (possibly on a 60s
+      flush cycle) the next `echo` gets SIGPIPE and terminates the subshell, making the VM look stale to
+      heartbeat-staleness checks — root cause of all 4 kills in the table above. Add a `trap '' SIGPIPE` guard around
+      the loop body:
 
   ```bash
   # In the vm-life-emitter loop:
@@ -143,32 +143,33 @@ wrapper):
   ```
 
   Preserve the existing `PIPELINE_HEARTBEAT vm=... ag=... task=... source=vm-life-emitter ts=...` payload and the
-  existing `__DP_HB_PID` / `trap ... EXIT` kill wiring — only add the SIGPIPE guard, do not restructure the rest of
-  the construction. Ship via quickmerge + verify CI green.
+  existing `__DP_HB_PID` / `trap ... EXIT` kill wiring — only add the SIGPIPE guard, do not restructure the rest of the
+  construction. Ship via quickmerge + verify CI green. — deployment-service@3b25aae4 (QG green, verified on
+  origin/live-defi-rollout)
 
-- [ ] [INFRA] P0. **Fix 2 — LDR→main promote `deployment-service@1424037`
-  (`14240378194039fe5a2cfb5e2d86dbed6cffe8d8`, ships `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` +
-  `_resolve_kill_minutes()` in `heartbeat_stall_watcher.py`), then redeploy the Cloud Run image.** The fix is already
-  on `live-defi-rollout` (shipped during dispatch #8, `quality-gates.sh` green — see
-  `/plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md`), but the live `deployment-api:latest` Cloud Run
-  image was built at 09:31Z on 2026-08-07, pre-fix — the per-prefix `canonical-migration-` 90-minute threshold is
-  therefore NOT active in production. Promote LDR→main via the standard pipeline (`sit-gate/fleet-green` +
-  `quality-gates-v2` + quickmerge-provenance — the only 3 blocking gates), redeploy the Cloud Run image, verify
-  `status.traffic` shows the new revision live (not just a green build), then resume the paused
-  `uts-prod-dp-heartbeat-watcher-cron` (paused as dispatch-#10 mitigation).
+- [ ] [INFRA] P0. **Fix 2 — LDR→main promote `deployment-service@1424037` (`14240378194039fe5a2cfb5e2d86dbed6cffe8d8`,
+      ships `PREFIX_KILL_MINUTES = {"canonical-migration-": 90.0}` + `_resolve_kill_minutes()` in
+      `heartbeat_stall_watcher.py`), then redeploy the Cloud Run image.** The fix is already on `live-defi-rollout`
+      (shipped during dispatch #8, `quality-gates.sh` green — see
+      `/plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md`), but the live `deployment-api:latest` Cloud Run
+      image was built at 09:31Z on 2026-08-07, pre-fix — the per-prefix `canonical-migration-` 90-minute threshold is
+      therefore NOT active in production. Promote LDR→main via the standard pipeline (`sit-gate/fleet-green` +
+      `quality-gates-v2` + quickmerge-provenance — the only 3 blocking gates), redeploy the Cloud Run image, verify
+      `status.traffic` shows the new revision live (not just a green build), then resume the paused
+      `uts-prod-dp-heartbeat-watcher-cron` (paused as dispatch-#10 mitigation).
 
 - [ ] [INFRA] P1. **Fix 3 — codify a `canonical-migration-` prefix carve-out on the VM-delete guardrail** in the two
-  role files that mirror it: `agents/infra.md` STEP 0.65 and `agents/data_engineering.md` STEP 0.55. Both currently
-  require confirming genuine staleness via ALL of (1) the heartbeat blob mtime vs. the watchdog's per-prefix
-  threshold, (2) a `run.log` tail/mtime (active writes in the last few minutes = alive), and (3) the manifest shard
-  mtime (is it still advancing) — but treat a pass on all 3 as sufficient to delete. Add, to both files: for
-  `canonical-migration-` prefix VMs specifically, even when all 3 signals read stale, if the manifest generation has
-  been unchanged for **>90 minutes**, that is NOT sufficient to autonomously delete — escalate for human confirmation
-  instead. Rationale to include: these VMs run large-index download-then-filter-then-write operations where the
-  manifest generation is EXPECTED to sit unchanged through the whole download phase (confirmed in this incident: the
-  VM was 22 minutes into a `blob.download_as_bytes(timeout=900)` call when killed, manifest generation genuinely
-  unchanged, not evidence of staleness) — a frozen run.log/heartbeat alone is not dispositive the way it is for other
-  fleet VM classes.
+      role files that mirror it: `agents/infra.md` STEP 0.65 and `agents/data_engineering.md` STEP 0.55. Both currently
+      require confirming genuine staleness via ALL of (1) the heartbeat blob mtime vs. the watchdog's per-prefix
+      threshold, (2) a `run.log` tail/mtime (active writes in the last few minutes = alive), and (3) the manifest shard
+      mtime (is it still advancing) — but treat a pass on all 3 as sufficient to delete. Add, to both files: for
+      `canonical-migration-` prefix VMs specifically, even when all 3 signals read stale, if the manifest generation has
+      been unchanged for **>90 minutes**, that is NOT sufficient to autonomously delete — escalate for human
+      confirmation instead. Rationale to include: these VMs run large-index download-then-filter-then-write operations
+      where the manifest generation is EXPECTED to sit unchanged through the whole download phase (confirmed in this
+      incident: the VM was 22 minutes into a `blob.download_as_bytes(timeout=900)` call when killed, manifest generation
+      genuinely unchanged, not evidence of staleness) — a frozen run.log/heartbeat alone is not dispositive the way it
+      is for other fleet VM classes.
 
 ## Triage Disposition
 
@@ -181,9 +182,10 @@ wrapper):
 
 ## Resolution
 
-- [ ] [INFRA] P0 (URGENT). Heartbeat sidecar SIGPIPE guard: wrap the `vm-life-emitter` loop in `trap '' SIGPIPE` (exact
-      snippet in "Required Fixes" Fix 1 above) — `deployment-service` or `market-tick-data-service` vm-exec wrapper,
-      exact file TBD (not confirmed as a standalone file; may be generated inline in a per-VM startup-script template).
+- [x] [INFRA] P0 (URGENT). ✅ Heartbeat sidecar SIGPIPE guard: wrap the `vm-life-emitter` loop in `trap '' SIGPIPE`
+      (exact snippet in "Required Fixes" Fix 1 above) — confirmed in
+      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` line 1204. deployment-service@3b25aae4, QG green,
+      verified on origin/live-defi-rollout.
 - [ ] [INFRA] P0. LDR→main promote `deployment-service@14240378`, redeploy the Cloud Run image to activate
       `PREFIX_KILL_MINUTES`, then resume `uts-prod-dp-heartbeat-watcher-cron`. Confirmed as of 2026-08-08 still NOT on
       `origin/main` (standing LDR→main auto-promote appears stalled on this commit — worth checking why the standard
