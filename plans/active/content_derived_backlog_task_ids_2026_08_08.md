@@ -167,10 +167,11 @@ Both were established by reading the code, and both are silent — neither raise
       counterpart (the `_orphan_view` case, `routes/backlog.py:67-101`). Emit the map as a durable artifact. Done-when:
       the artifact exists and its row count matches `SELECT COUNT(*) FROM tasks`. See Progress Log for the algorithm +
       live counts. (repo: agent-orchestrator) — agent-orchestrator@8a8454c
-- [ ] [BACKEND] P1. **Exclude the NULL-`brief_hash` tail from the map, permanently.** Those rows' briefs are documented
-      unrecoverable (`bootstrap.py:710-727` — backlog.yaml is gitignored, no VCS history, no archive writer,
-      activity_log never stored the brief), so they can never get a content id. This mirrors the already-ruled "(c)
-      accept permanently" decision for that tail; it is not reopened here. Report the count. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-08 (slot-18, content_derived_backlog_task_ids-009)** — **Exclude the
+      NULL-`brief_hash` tail from the map, permanently.** Those rows' briefs are documented unrecoverable
+      (`bootstrap.py:710-727` — backlog.yaml is gitignored, no VCS history, no archive writer, activity_log never stored
+      the brief), so they can never get a content id. This mirrors the already-ruled "(c) accept permanently" decision
+      for that tail; it is not reopened here. Report the count. (repo: agent-orchestrator) — agent-orchestrator@b143bf5
 - [ ] [BACKEND] P1. **Write the pre/post prereq-remap assertion — hazard 2's gate.** Diff every
       `completed_tasks`/`prerequisites` array before and after the proposed map and assert each old id is either
       remapped or was ALREADY legitimately absent pre-migration. A missed remap does not error at runtime
@@ -407,3 +408,23 @@ Both were established by reading the code, and both are silent — neither raise
   (`--db`/`--backlog`/`--out`); exit code is 1 if collisions are ever found on a future run (loud failure, not silent).
   QG: 2821 passed, 2 skipped (full suite, basedpyright clean). Evidence: agent-orchestrator@8a8454c (verified ancestor
   of origin/live-defi-rollout before this flip).
+
+- **2026-08-08 (slot-18, content_derived_backlog_task_ids-009, Phase 2 todo 2)**: `build_content_id_migration_map.py`
+  previously included the `brief_hash IS NULL` tail INSIDE `entries` (with `new_id=null`), which would have forced every
+  downstream consumer (the not-yet-built prereq-remap assertion + apply scripts) to special-case `new_id is None` on
+  every read. Moved those rows to a new top-level `excluded_null_brief_hash` list (a new `ExcludedEntry` TypedDict —
+  `old_id`/`plan_ref`/`status`/`done_sha`/`orphan`/`reason`, no `new_id`/`dup_index` since neither is meaningful) so
+  `entries` now contains ONLY rows a future apply step can rename/no-op unconditionally. Full-corpus accounting is
+  preserved (nothing silently dropped): `main()`'s row-count assertion now checks
+  `len(entries) + len(excluded_null_brief_hash) == SELECT COUNT(*) FROM tasks`, and `orphan_rows` sums across both
+  lists. `unrecoverable_null_brief_hash` count renamed `excluded_null_brief_hash` throughout (`MapCounts`, docstring,
+  CLI summary) to match the new semantics. The other unrecoverable case (no positional id-suffix + no `plan_ref`) is
+  UNCHANGED — it is not ruled permanent, so it stays inside `entries` with `new_id=null` as a loud hard-stop. Updated 4
+  of the 11 existing unit tests in `tests/test_build_content_id_migration_map.py` to assert the new split (moved count,
+  `excluded_null_brief_hash` list membership, orphan flag now read from that list for a NULL-brief_hash row). **Report
+  the count** (this todo's own done-when): re-ran the script read-only against the LIVE `state.db` + `backlog.yaml`
+  (2026-08-08T23:53Z) — **11 of 2449 rows permanently excluded** (`brief_hash IS NULL`), matching the `-008` baseline
+  exactly (no drift since that run); `entries` now holds 2438 rows (97 already-content-derived + 2341 derived + 0
+  no-slug), 0 collisions, 0 slug mismatches. Output written to a scratch path outside the repo (this script never writes
+  to a root clone; the checked-in artifact from `-008` is unchanged). QG: 2840 passed (full suite, basedpyright clean,
+  ruff clean). Evidence: agent-orchestrator@b143bf5 (verified ancestor of origin/live-defi-rollout before this flip).
