@@ -108,11 +108,12 @@ running even on a cap-hit day — the fleet degrades, it doesn't fully paralyze.
 
 ## Recommended decision / Todos
 
-- [ ] [SCRIPT] P2. **agent-orchestrator** — reset `spawn_retry_count = 0` in the shared automatic spawn-success path
+- [x] [SCRIPT] P2. **agent-orchestrator** — reset `spawn_retry_count = 0` in the shared automatic spawn-success path
       (autospawn.py:2086-2110, alongside the other fields already reset there) so a slot's diagnostic retry-with-
       pane-diagnosis capability isn't permanently disabled after one lifetime retry-cap trip. Add a regression test
       mirroring the existing spawn-success-resets-fields tests. Also correct `notify_spawn_failed`'s alert text so it no
-      longer implies a dead end when Trigger-3 will, in practice, usually recover the slot ~15 min later.
+      longer implies a dead end when Trigger-3 will, in practice, usually recover the slot ~15 min later. ✅
+      agent-orchestrator@bc37d03 (2026-08-06, slot-4).
 - [ ] [SCRIPT] P2. **agent-orchestrator** — audit every sub-mechanism inside `_tick_once()` that currently sits AFTER
       the daily-kill-cap early-return; move the ones that are cleanup/reconcile (not a NEW kill decision — same
       rationale as the already-fixed `_sweep_dirty_slots`/`_sweep_unpushed_slots`) ahead of the cap check, starting with
