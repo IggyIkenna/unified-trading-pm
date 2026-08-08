@@ -270,10 +270,10 @@ achieved by exclusion, not canonicalisation.**
       `INSTRUMENT_TYPES_BY_ASSET_GROUP["sports"]` + CONTRACT_REGISTRY keys (`exchange_odds`/`fixed_odds` entries,
       ~L960-1011); MTDS (reads instrument_type keys from UAC registry); manifest rows carrying
       `instrument_type=exchange_odds`/`fixed_odds`. Full enumeration: P2 `[REVIEW] P0`.
-- [ ] [CODE] P1. **Delete `markets`, `outcomes` and `settlements`** from `DATA_TYPES_BY_ASSET_GROUP["sports"]` — 0 rows
-      ever written, pure phantom declarations. Record in codex that ML labels come from IS `fixtures_outcomes` /
+- [x] ✅ [CODE] P1. **Delete `markets`, `outcomes` and `settlements`** from `DATA_TYPES_BY_ASSET_GROUP["sports"]` — 0
+      rows ever written, pure phantom declarations. Record in codex that ML labels come from IS `fixtures_outcomes` /
       `matches` (post-lowercasing), so the real label lineage is documented rather than implied by a path that was never
-      built.
+      built. — unified-api-contracts@975f0191
 - [ ] [CODE] P1. **Purge the cross-AG bleed from the sports denominator.** `KALSHI` carries 20,785 `empty_confirmed`
       `trades` rows sourced `polymarket_clob`, spanning 2020-06-06 → 2026-05-21 — prediction-market venues seeded into
       the sports expected-universe. Stop the seeding at the enumerator, and retire
@@ -365,3 +365,10 @@ achieved by exclusion, not canonicalisation.**
   shards), `trades_inplay`, and all retired types now documented; (d) `markets`/ `outcomes`/`settlements` marked RETIRED
   (0 rows ever written); (e) 32-member venue axis, `executable` predicate, BETFAIR operator-group parent, and MDPS
   staleness guard documented. Shipped: unified-trading-pm@69db5f8ed.
+- **2026-08-08 (slot 8, data_engineering)** — Block B [CODE] P1 (delete markets/outcomes/settlements) checkbox flip.
+  Code was already shipped by a prior slot-8 session at `unified-api-contracts@975f0191`: removed from
+  `DATA_TYPES_BY_ASSET_GROUP["sports"]`, `FREQUENCY_MAP`, `NEEDS_CANDLE_PROCESSING`,
+  `VALID_DATA_TYPES_BY_INSTRUMENT_TYPE`, `VENUE_DATA_TYPE_CAPABILITIES`, and `SportsMvpRule`; 3 test files updated.
+  Codex note already in `/codex/02-data/sports-data-types-catalog.md` lines 183-185, 200-201: "ML labels come from IS
+  `fixtures_outcomes`/`matches`, not from the retired types." Session ended before the checkbox was flipped; flipping
+  now.

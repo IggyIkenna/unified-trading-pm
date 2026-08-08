@@ -55,12 +55,12 @@ locked_since:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Verify the shipped fix against the measured failures, independently of the plan's own claims.**
+- [x] [REVIEW] P1. ✅ **Verify the shipped fix against the measured failures, independently of the plan's own claims.**
       Re-run the four measurements the parent recorded — `arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU'])`,
       `arb_legs_are_independent(['UNIBET_UK','UNIBET'])`, `get_operator('BETFAIR_EX_UK')`, and a SMARKETS leg's expected
       commission — against the merged code, and confirm each cited commit exists via `git log` rather than trusting the
       parent's evidence line. **Done when**: all four re-measured results are correct and every cited commit is
-      confirmed to exist.
+      confirmed to exist. — unified-api-contracts@446c2cb3 (final commit in fix chain)
 - [ ] [REVIEW] P1. **Reconcile the prerequisite references in the taxonomy chain.**
       `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`'s "make bare BETFAIR an operator-group parent" todo and
       `sports_taxonomy_p3_consumers_2026_08_08.md`'s "consume the CORRECTED operator-group guard" todo both name this
@@ -82,3 +82,10 @@ locked_since:
 ## Progress Log
 
 - **2026-08-08** — Authored alongside the parent per the finalize-plan-coverage rule.
+- **2026-08-08** — Todo 1 ([REVIEW] P1 verify) — independent re-measurement against merged code using UAC .venv: (1)
+  `arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU'])` = `False` ✅ (was `True` pre-fix); (2)
+  `arb_legs_are_independent(['UNIBET_UK','UNIBET'])` = `False` ✅ (was `True` pre-fix); (3)
+  `get_operator('BETFAIR_EX_UK')` = `'BETFAIR'` ✅ (was `'BETFAIR_EX_UK'` pre-fix); (4) `SMARKETS in EXCHANGE_VENUES` =
+  `True`, `EXCHANGE_COMMISSION_RATES['SMARKETS']` = `0.02` ✅ (was unmodelled pre-fix). All 6 cited commits confirmed
+  via `git log` and `git merge-base --is-ancestor` on `origin/live-defi-rollout`: e080ef74 ✅, b9a0be80 ✅, 0fd51983 ✅,
+  1a96c482 ✅, 968237b8 ✅, 446c2cb3 ✅. Fix is correct and landed.
