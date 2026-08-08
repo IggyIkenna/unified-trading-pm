@@ -23,17 +23,18 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
     /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md,
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
-assigned_role: data_engineering
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 source: >-
@@ -95,3 +96,16 @@ to re-derive them.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) -- added
   `generate_ag_closeout_audit_candidates.py`, explicitly named in finding 1's own todo as the reference implementation
   (`EXCLUDED_STATUS`) to mirror.
+- **na-eligibility-audit 2026-08-08 (Phase 2/3, sports tranche)**: RECLASSIFY applied — re-verified both open todos
+  against the whole-doc bar (finding 1 `[CI] P3` and finding 2 `[PROCESS] P3` are each a checkable fact + a scoped code
+  or text change with a stated done-when, no judgment call undecided). Conflict-check (per
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) came back CLEAR for both: (a) no
+  active `assigned_vm: planning` plan in `parent_epic: sports_master` carries a matching todo —
+  `check_ag_closeout_linkage.py` has zero `status`/`EXCLUDED` handling today (independently grepped), and the only prior
+  linkage-gate fix (`ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`, already shipped) was the
+  AG-coverage bug, not the status-exclusion bug finding 1 describes; (b) no sibling batch/finalize doc drafted this week
+  claims either item; (c) `sports_consolidated_closeout_2026_07_19.md` doesn't touch either. Flipped `assigned_vm: NA`
+  -> `planning`, `execution_scope: local-only` -> `orchestrator-agent`, `assigned_role: data_engineering` -> `infra`
+  (better fit — a plan-hygiene script fix + a doc-citation completion, not data-pipeline work; validated against the
+  live `agents/infra.md` registry entry). Companion finalize twin:
+  `ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md`.

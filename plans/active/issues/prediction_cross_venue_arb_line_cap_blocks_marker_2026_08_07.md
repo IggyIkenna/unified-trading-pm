@@ -111,3 +111,13 @@ to confirm the doc is back under the soft cap (not just barely under the hard ca
   audit verdict (KEEP-NA, valid, 5 open items, mixed content) stands independently of this line-cap issue and is
   unaffected by not writing this run's marker — only the FUTURE incremental-skip optimization is lost until this is
   fixed.
+- **na-eligibility-audit 2026-08-08 (Phase 2, prediction tranche)**: this doc's sole todo clears the whole-doc bar
+  (bounded mechanical extraction, done-when stated) — but the conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) found a near-verbatim duplicate
+  already drafted: `plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md` (`status: draft`,
+  `assigned_vm: planning`, authored TODAY by `/ag-closeout-audit prediction`) carries the identical extraction as its
+  own todo, citing this doc's own todo verbatim as its source, and states its own done-when explicitly checks off this
+  doc's todo as part of its close-out. Flipping this doc too would create a genuine duplicate-dispatch hazard (two
+  AO-dispatchable surfaces claiming the same file edit) the moment batch8 flips `draft` -> `active`. NOT reclassified —
+  left `assigned_vm: NA`; the work already has a dispatch path via batch8 (+ its
+  `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md` twin).
