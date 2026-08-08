@@ -141,13 +141,39 @@ close by citation once batch9 ships.
       `asyncio.gather(..., return_exceptions=True)`; new unit tests cover genuine-empty vs HTTP-error vs
       connection-error plus a `_process_protocol`-level test proving the error reaches `record_failed` not
       `record_zero_rows`.
-- [ ] [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
+- [x] ✅ [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
       Alchemy RPC batch client `_aave_oracle_collection.py` uses. If not, this family cannot be closed the same way as
       the HTTP-subgraph family — report that and propose the alternative (RPC-level error code? nothing to thread?)
-      rather than guessing. Read-only research, no code change. (market-tick-data-service) **Extracted verbatim (both
-      this item and the Chainlink/Pyth item below, combined into one todo) into
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179` (status: active, `Source:` cites this doc by name) — do
-      not reclassify this doc on this item's account; close this checkbox by citation once batch9's todo ships.**
+      rather than guessing. Read-only research, no code change. (market-tick-data-service) **RESEARCHED (2026-08-08)** —
+      **not obtainable on the success path; only partially obtainable on failure; no single scalar applies anyway.**
+      `collect_aave_rows`/`query_aave_reserves` (`_aave_oracle_collection.py:40-113`) call
+      `oracle.functions.getAssetPrice(...).call(block_identifier=...)` — web3.py's high-level contract-call API. Traced
+      the transport: `Web3.HTTPProvider.make_request()` (`web3/providers/rpc.py`) calls
+      `web3._utils.request.make_post_request()`, which does `response.raise_for_status(); return response.content` — the
+      `requests.Response` object (and its `.status_code`) is **discarded** on the success path; `.call()`'s return value
+      is only the ABI-decoded result, never the HTTP status. So on a clean 200, there is nothing to thread — the status
+      is implicit and never surfaces past `make_post_request`. On a genuine transport failure, `raise_for_status()`
+      raises `requests.exceptions.HTTPError`, whose `.response.status_code` DOES carry the real non-2xx code —
+      technically obtainable, but only by narrowing the current broad `except Exception` (in both
+      `query_aave_reserves`'s per-reserve loop and `collect_aave_rows`'s setup try/except) to specifically catch
+      `requests.exceptions.HTTPError` and read that attribute; every other web3 failure mode (JSON-RPC-level error on an
+      HTTP-200 response, e.g. a reverted call → `Web3RPCError`/`ContractLogicError`; connection/timeout errors) has no
+      HTTP status at all, by definition. Separately — even if threaded — **there is no single "the" HTTP status for this
+      shard**: `query_aave_reserves` calls `getAssetPrice` once **per reserve** (6 reserves in `_AAVE_ORACLE_ASSETS`,
+      `_oracle_prices_constants.py:334-341`), each its own independent RPC call/HTTP POST, plus
+      `get_block_by_timestamp`'s binary search issues its own multiple `eth_getBlockByNumber` calls — same structural "N
+      independent calls, no single scalar" shape as the already-resolved governance dual-source case (item 5 above),
+      just wider (up to 6+ calls, not 2). **Proposed alternative signal**: since HTTP status isn't the natural unit for
+      an RPC-batch family, the more meaningful signal already exists as the caught exception itself — classify it
+      (transport `HTTPError` w/ real status code vs JSON-RPC `Web3RPCError`/`ContractLogicError` vs connection/timeout)
+      and thread THAT classification (not a literal int) into `fetch_evidence`, OR — more honestly — surface per-reserve
+      exception counts up from `query_aave_reserves` so `record_aave_empty`'s aggregate-zero path can distinguish
+      "genuinely queried, all returned 0" from "one or more RPC calls errored and were silently continued past" (the
+      per-reserve `except Exception` currently swallows and logs only). That distinction is a real design question
+      (mirrors item 5's shape) — out of scope for this read-only DIAG todo; filing it here as the concrete next step
+      rather than attempting it inline. **Chainlink/Pyth (the other half of this doc's original combined scope) NOT
+      researched by this pass** — `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`'s combined todo still needs
+      that half before it can ship; this checkbox closes only the Aave/Alchemy portion.
 - [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
       item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
       (market-tick-data-service) **Same extraction/citation as the Aave item above —
@@ -236,3 +262,15 @@ close by citation once batch9 ships.
   remaining `assigned_vm: NA` blocker (items 2-3 are non-blocking `KEEP-NA-STALE` duplicates already covered by active
   `defi_satellite_ao_dispatch_batch9_2026_08_06.md`) — flipped `assigned_vm: NA` → `planning`,
   `execution_scope: local-only` → `orchestrator-agent`.
+- **defi_clean_path_fetch_evidence_fidelity_scope-001 dispatch (slot-29, 2026-08-08)**: completed the Aave/Alchemy DIAG
+  item (checkbox 2) — traced web3.py's `HTTPProvider.make_request()` → `make_post_request()`
+  (`.venv/site-packages/web3/providers/rpc.py` + `web3/_utils/request.py`): the `requests.Response`/`.status_code` is
+  discarded on the success path (`.call()` returns only the decoded ABI value), so a per-call HTTP status is not
+  obtainable on success at all, only partially obtainable on failure (via
+  `requests.exceptions.HTTPError.response. status_code`, requires narrowing the current broad `except Exception`), and
+  no single scalar applies regardless since `query_aave_reserves` issues one independent RPC call per reserve (6
+  reserves) plus `get_block_by_timestamp`'s own multi-call binary search. Proposed alternative: classify+thread the
+  caught exception type, or surface per-reserve exception counts for `record_aave_empty`'s aggregate-zero path (a design
+  question, filed as the concrete next step, not attempted inline — read-only DIAG scope). Chainlink/Pyth (the doc's
+  other extracted half) NOT researched by this pass — `defi_satellite_ao_dispatch_batch9_2026_08_06.md:175-179`'s
+  combined todo still needs that half.
