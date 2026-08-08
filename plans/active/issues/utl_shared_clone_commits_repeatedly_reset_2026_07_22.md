@@ -32,8 +32,8 @@ created: 2026-07-22
 author: unknown
 last_updated: 2026-07-28
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -181,12 +181,13 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       race-prone band-aid, not a fix, because it re-implements the SAME check-then-act shape as the original 2026-07-22
       bug, just one level in. Repro script + scratch fixtures kept in this session's scratchpad (not committed — no
       product code changed by this todo, root-cause only; the fix itself is todo 8's scope, not duplicated here).
-- [ ] 8. [INFRA] P2. Given todo 7 shows preserve-only is not proven reliable, consider a stronger prevention (not just
-      recovery) fix for `cascade_dep_branch`: e.g. skip the `checkout -B` entirely (log + leave the ancestor clone
-      alone) when local has commits ahead of origin, rather than resetting-then-preserving — the cascade's whole purpose
-      is to align an ancestor's branch name for a _different_ repo's dependency check; forcibly moving a SHARED clone's
-      branch ref out from under a concurrent agent's in-flight commit is arguably never the right default behavior,
-      preserve-net or not.
+- [ ] 8. [INFRA] P2. **AUTHORIZED 2026-08-08 (operator ruling, ao round-5 apply item 16): "Authorize all 3."** Given
+      todo 7 shows preserve-only is not proven reliable, consider a stronger prevention (not just recovery) fix for
+      `cascade_dep_branch`: e.g. skip the `checkout -B` entirely (log + leave the ancestor clone alone) when local has
+      commits ahead of origin, rather than resetting-then-preserving — the cascade's whole purpose is to align an
+      ancestor's branch name for a _different_ repo's dependency check; forcibly moving a SHARED clone's branch ref out
+      from under a concurrent agent's in-flight commit is arguably never the right default behavior, preserve-net or
+      not.
 
 ## Related QG-infra findings this session (worktree isolation vs the QG harness)
 
@@ -195,7 +196,8 @@ Two more structural gaps found while working around the reset issue above by mov
 of the reset issue. Filed here rather than a separate doc since all three are one theme: the QG/git tooling assumes a
 single canonical clone per repo and behaves incorrectly under multi-clone (worktree) use.
 
-- [ ] 4. [INFRA] P2. **`check_backfill_vm_disk_provisioning.py` (deployment-service) resolves its target dir via
+- [ ] 4. [INFRA] P2. **AUTHORIZED 2026-08-08 (operator ruling, ao round-5 apply item 16): "Authorize all 3."**
+      **`check_backfill_vm_disk_provisioning.py` (deployment-service) resolves its target dir via
       `Path(__file__).resolve().parents[2]`, invoked through a HARDCODED absolute path baked into `base-service.sh`**
       (`python3 "${WORKSPACE_ROOT}/deployment-service/scripts/quality_gates/check_backfill_vm_disk_provisioning.py"`),
       so `__file__` always resolves inside the real MAIN clone regardless of which worktree/PROJECT_ROOT invoked
@@ -203,14 +205,15 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
       from FAIL to PASS even though the check was invoked from an unrelated worktree. Net effect: a worktree cannot get
       a clean QG verdict while ANY other concurrent agent has a disk-provisioning violation sitting untracked/dirty in
       the shared MAIN clone — worktree isolation does not isolate this one check.
-- [ ] 5. [INFRA] P2. **`PROJECT_ROOT` override (needed to satisfy the PM `test_repo_in_manifest` integration test in a
-      worktree whose directory name doesn't match a registered repo) appears to redirect MORE than just that one
-      identity check — it changes where the `.qg_last_passed_sha`/`.qg_content_sentinel` files are written AND (observed
-      on `market-tick-data-service`) the sentinel's recorded SHA matched the MAIN clone's HEAD, not the worktree's
-      actual HEAD — i.e. the content-hash basis silently became MAIN's tree, not the worktree's.** Running
-      `quality-gates.sh` with `PROJECT_ROOT=<main-clone>` from inside a worktree therefore risks verifying (and
-      sentinel-stamping) the WRONG tree while reporting success for the worktree's actual diff. Workaround used this
-      session: skip `PROJECT_ROOT` + worktrees entirely for shipping — extract the verified worktree commit as a patch
+- [ ] 5. [INFRA] P2. **AUTHORIZED 2026-08-08 (operator ruling, ao round-5 apply item 16): "Authorize all 3."**
+      **`PROJECT_ROOT` override (needed to satisfy the PM `test_repo_in_manifest` integration test in a worktree whose
+      directory name doesn't match a registered repo) appears to redirect MORE than just that one identity check — it
+      changes where the `.qg_last_passed_sha`/`.qg_content_sentinel` files are written AND (observed on
+      `market-tick-data-service`) the sentinel's recorded SHA matched the MAIN clone's HEAD, not the worktree's actual
+      HEAD — i.e. the content-hash basis silently became MAIN's tree, not the worktree's.** Running `quality-gates.sh`
+      with `PROJECT_ROOT=<main-clone>` from inside a worktree therefore risks verifying (and sentinel-stamping) the
+      WRONG tree while reporting success for the worktree's actual diff. Workaround used this session: skip
+      `PROJECT_ROOT` + worktrees entirely for shipping — extract the verified worktree commit as a patch
       (`git format-patch` / `git am`) and apply it directly onto the real MAIN clone, then run QG there. Needs a real
       fix: either the PM identity test should derive repo identity from `git remote get-url origin` (worktree-safe)
       instead of `Path.cwd().name`, or `PROJECT_ROOT` should scope ONLY the identity-string check and never the
