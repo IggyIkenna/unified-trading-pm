@@ -849,3 +849,12 @@ SLOT_TABS=.tabs/14, PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python —
   `/api/slots/<N>/heartbeat`). Do NOT re-arm either if alive — singleton lock race risk. Expect harness to kill
   background tasks every ~25-46 min per the documented rapid-kill pattern — this is normal, re-arm reactively on each
   kill notification.
+
+### 2026-08-08T02:05Z — slot 14 — re-armed after harness kill (run 2: bqxm55orc)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Prior run (`bal4znoit`, poll 1-7, 01:31Z-02:02Z) killed by harness at
+~02:03Z — normal rapid-kill pattern. Fleet drained 16→14→14→11→11→10→10 across those 7 polls (~31 min). Re-armed
+immediately: watcher **`bqxm55orc`** (poll 1 = 10 VMs at 02:05:46Z), heartbeat **`bkbbkfn9u`**. Same scratchpad/script.
+
+- **NEXT ACTION**: same as prior entry — check checkbox, `TaskOutput bqxm55orc --non-blocking`, re-arm reactively on
+  kill notification, do not re-arm if alive.
