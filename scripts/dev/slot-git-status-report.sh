@@ -597,6 +597,47 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Live heartbeat on .agent-claim (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md
+# candidate fix 1, unblocked by operator ruling 2026-08-08: "build a collision-warning mechanism"). The claim
+# file's own `expires_at` is a poor liveness signal on its own: an AO-dispatched worker's claim already gets
+# `expires_at` refreshed server-side on every heartbeat (worktree_claim.refresh_expiry, called from
+# routes/slots_worker.py), but an INTERACTIVE session's claim is written ONCE at spawn with a flat 12-hour TTL
+# (INTERACTIVE_CLAIM_TTL) and nothing refreshes it afterward — for up to 12 hours an abandoned interactive claim
+# reads identically to a genuinely active one. This gives every claim (interactive or AO-dispatched) a SEPARATE,
+# independently-checkable liveness signal: the file's own mtime. Each tick, if the claim's OWN `tmux_session` is
+# confirmed alive (same exact-match has-session check FM8's maker-liveness classifier uses —
+# server/worktree_clean_check/_liveness.py / server/tmux_spawn.py's exact_target(), which prevents a bare
+# `-t orch-slot-1` from prefix-matching `orch-slot-10`), `touch` the claim file so its mtime advances; if the
+# session is gone (or tmux itself isn't installed on this host), the mtime is left untouched and ages naturally.
+# A future consumer (candidate fix 2, the session-start collision warning) can then treat "mtime within the last
+# ~2 cron ticks" as "claimed AND alive right now" — distinguishable from "claimed" alone, which is all
+# `expires_at` can currently tell you. Read-only w.r.t. the claim's JSON content (never rewrites
+# agent_id/expires_at/etc.) — only the file's own mtime changes, so this can never race the server's own
+# `refresh_expiry()` writes or corrupt a legitimate claim.
+refresh_agent_claim_heartbeat() {
+    local slot_id="$1" slot_dir="$2" claim_file tmux_session
+    claim_file="${slot_dir}.agent-claim"
+    [[ -f "${claim_file}" ]] || return 0
+    tmux_session=$(python3 -c '
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get("tmux_session", ""))
+except Exception:
+    print("")' "${claim_file}" 2>/dev/null || echo "")
+    if [[ -z "${tmux_session}" ]]; then
+        log_quiet "[claim-heartbeat:skip] slot ${slot_id} — claim present but unparseable/no tmux_session field"
+        return 0
+    fi
+    if command -v tmux >/dev/null 2>&1 && tmux has-session -t "=${tmux_session}" 2>/dev/null; then
+        if touch "${claim_file}" 2>/dev/null; then
+            log "[claim-heartbeat] slot ${slot_id} — refreshed (tmux session ${tmux_session} alive)"
+        fi
+    else
+        log "[claim-heartbeat:stale] slot ${slot_id} — tmux session ${tmux_session} not found; mtime left untouched"
+    fi
+}
+
 # Walk each slot.
 for slot_dir in "${TABS_DIR}"/*/; do
     [[ -d "${slot_dir}" ]] || continue
@@ -611,6 +652,7 @@ for slot_dir in "${TABS_DIR}"/*/; do
         rows_tsv+="$(classify_repo "${repo_dir}")"$'\n'
     done
     post_snapshot "${slot_id_str}" "${rows_tsv}"
+    refresh_agent_claim_heartbeat "${slot_id_str}" "${slot_dir}"
     check_starvation_for_slot "${slot_id_str}" "${slot_dir}"
     check_stash_pile_for_slot "${slot_id_str}" "${slot_dir}"
 done
